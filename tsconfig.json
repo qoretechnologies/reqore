@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+      "lib": [
+        "es2017",
+        "es2018",
+        "es2019"
+      ],
+      "module": "commonjs",
+      "sourceMap": true,
+      "moduleResolution": "node",
+      "rootDir": "./src",
+      "strict": true,
+      "noUnusedLocals": true,
+      "noImplicitAny": false,
+      "noImplicitReturns": true,
+      "noUnusedParameters": true,
+      "strictNullChecks": false,
+      "experimentalDecorators": true,
+      "allowSyntheticDefaultImports": true,
+      "declaration": true,
+      "declarationMap": true,
+      "esModuleInterop": true,
+      "jsx": "react",
+      "types": ["node", "react", "react-dom", "styled-components"],
+      "outDir": "dist"
+  },
+  "exclude": ["node_modules"],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
+}
