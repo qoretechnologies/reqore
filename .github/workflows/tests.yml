@@ -31,9 +31,10 @@ jobs:
     - name: Installing modules
       run: |
         yarn install
-    - name: Running tests
-      run: yarn test
-    - name: Posting to slack
+    - name: Slack notification
       uses: rtCamp/action-slack-notify@v2.1.2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+    - name: Running tests
+      run: |
+        yarn test
