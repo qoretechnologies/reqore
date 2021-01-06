@@ -1,25 +1,50 @@
-import { Icon } from '@blueprintjs/core';
+import { Icon, IconName, MaybeElement } from '@blueprintjs/core';
 import classnames from 'classnames';
 import map from 'lodash/map';
 import { darken, lighten } from 'polished';
 import React, { useState } from 'react';
 import Scroll from 'react-scrollbar';
 import { useUpdateEffect } from 'react-use';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { PRIMARY_DARK, PRIMARY_LIGHT, PURPLE } from '../../constants/colors';
 import { transformMenu } from '../../helpers/sidebar';
 import SidebarItem from './item';
 
+export interface IQorusSidebarCustomItem {
+  element: React.FC<any>;
+}
+
+export interface IQorusSidebarItems {
+  [sectionId: string]: {
+    title?: string | undefined;
+    items: IQorusSidebarItem[];
+  };
+}
+
+export interface IQorusSidebarItem {
+  name: string;
+  link?: string;
+  activePaths?: string[];
+  onClick?: () => any;
+  submenu?: IQorusSidebarItem[];
+  id: string;
+  as?: JSX.Element | string;
+  icon?: IconName | MaybeElement;
+  exact?: boolean;
+  element?: JSX.Element;
+}
+
 export interface IQorusSidebarProps {
-  isDefaultCollapsed?: boolean;
+  isCollapsed?: boolean;
   isLight?: boolean;
-  onMenuToggle?: (isToggled?: boolean) => any;
-  menuData: any;
-  favoriteItems?: any;
-  collapseTitle?: string;
+  onCollapseChange?: (isCollapsed?: boolean) => void;
+  items: IQorusSidebarItems;
+  bookmarks?: string[];
+  customItems?: IQorusSidebarCustomItem[];
+  collapseLabel?: string;
   path: string;
   wrapperStyle?: React.CSSProperties;
-  onFavoritesChange?: (items: any[]) => void;
+  onBookmarksChange?: (bookmarks: string[]) => void;
 }
 
 const StyledSidebar = styled.div<{ expanded?: boolean }>`
@@ -92,7 +117,8 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
       border-top-color: ${darken(0.05, PRIMARY_DARK)} !important;
     }
 
-    .sidebarItem {
+    .sidebarItem,
+    .bp3-popover-wrapper {
       border-top-color: ${darken(0.02, PRIMARY_DARK)} !important;
     }
 
@@ -122,7 +148,8 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
       border-top-color: ${darken(0.07, PRIMARY_LIGHT)} !important;
     }
 
-    .sidebarItem {
+    .sidebarItem,
+    .bp3-popover-wrapper {
       border-top-color: ${darken(0.06, PRIMARY_LIGHT)} !important;
     }
 
@@ -145,10 +172,6 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
 
   // Section
   .sidebarSection {
-    &:not(:first-child) {
-      border-top: 1.5px solid;
-    }
-
     .sidebarLink {
       display: inline-block;
       color: inherit;
@@ -163,10 +186,14 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
       }
     }
 
-    .sidebarItem {
+    .sidebarItem,
+    .bp3-popover-wrapper {
       &:not(:first-child) {
         border-top: 1px solid;
       }
+    }
+
+    .sidebarItem {
       position: relative;
 
       span.bp3-icon:not(.favorite) {
@@ -185,26 +212,53 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
   }
 `;
 
+const StyledDivider = styled.div<{ isLight?: boolean }>`
+  width: 100%;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &:first-child {
+    margin-top: 0;
+    padding: 1px;
+  }
+
+  ${({ isLight }) =>
+    isLight
+      ? css`
+          background-color: ${darken(0.12, PRIMARY_LIGHT)};
+        `
+      : css`
+          background-color: ${darken(0.08, PRIMARY_DARK)};
+        `}
+`;
+
 const QorusSidebar: React.FC<IQorusSidebarProps> = ({
-  isDefaultCollapsed,
+  isCollapsed,
   isLight,
-  onMenuToggle,
+  onCollapseChange,
   path,
-  menuData,
-  favoriteItems,
-  collapseTitle,
+  items,
+  bookmarks,
+  customItems,
+  collapseLabel,
   wrapperStyle,
-  onFavoritesChange,
+  onBookmarksChange,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(
-    isDefaultCollapsed || false
+  const [_isCollapsed, setIsCollapsed] = useState<boolean>(
+    isCollapsed || false
   );
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [_fav, setFav] = useState<any>(favoriteItems || []);
+  const [_bookmarks, setBookmarks] = useState<string[]>(bookmarks || []);
 
   useUpdateEffect(() => {
-    onFavoritesChange(_fav);
-  }, [_fav]);
+    if (onBookmarksChange) {
+      onBookmarksChange(_bookmarks);
+    }
+  }, [_bookmarks]);
 
   const handleSectionToggle: (sectionId: string) => void = (sectionId) => {
     setExpandedSection((currentExpandedSection) =>
@@ -213,62 +267,78 @@ const QorusSidebar: React.FC<IQorusSidebarProps> = ({
   };
 
   const handleFavoriteClick = (id: string) => {
-    setFav((current) => {
+    setBookmarks((current) => {
       return [...current, id];
     });
   };
 
   const handleUnfavoriteClick = (id: string) => {
-    setFav((current) => {
+    setBookmarks((current) => {
       return [...current].filter((item) => item !== id);
     });
   };
 
-  const menu = transformMenu(menuData, favoriteItems);
+  const menu: IQorusSidebarItems = transformMenu(
+    items,
+    _bookmarks,
+    customItems
+  );
 
   return (
     <StyledSidebar
       className={classnames('sidebar', isLight ? 'light' : 'dark', {
-        expanded: !isCollapsed,
+        expanded: !_isCollapsed,
       })}
       style={wrapperStyle}
+      role='qorus-sidebar-wrapper'
     >
       <Scroll horizontal={false} className='sidebarScroll'>
-        {map(menu, (menuData: Array<Object>, menuKey: string) => (
-          <div className='sidebarSection' key={menuKey}>
-            {map(menuData, (itemData: Object, key: number) => (
+        {map(menu, ({ title, items }, sectionId: string) => (
+          <div
+            className='sidebarSection'
+            key={sectionId}
+            role='qorus-sidebar-section-title'
+          >
+            <StyledDivider isLight={isLight}>
+              {!_isCollapsed ? title || '' : ''}
+            </StyledDivider>
+            {map(items, (itemData, key) => (
               <SidebarItem
                 itemData={itemData}
                 key={key}
-                isCollapsed={isCollapsed}
+                isCollapsed={_isCollapsed}
                 expandedSection={expandedSection}
                 onSectionToggle={handleSectionToggle}
-                favoriteItems={favoriteItems}
+                bookmarks={bookmarks}
                 currentPath={path}
                 onFavoriteClick={handleFavoriteClick}
                 onUnfavoriteClick={handleUnfavoriteClick}
                 isLight={isLight}
-                sectionName={menuKey}
+                sectionName={sectionId}
+                hasFavorites={!!onBookmarksChange}
               />
             ))}
           </div>
         ))}
       </Scroll>
       <div className='sidebarSection' id='menuCollapse'>
+        <StyledDivider isLight={isLight} />
+
         <div
+          role='qorus-sidebar-collapse-button'
           className='sidebarItem'
           onClick={() => {
-            setIsCollapsed(!isCollapsed);
+            setIsCollapsed(!_isCollapsed);
 
-            if (onMenuToggle) {
-              onMenuToggle(!isCollapsed);
+            if (onCollapseChange) {
+              onCollapseChange(!_isCollapsed);
             }
           }}
         >
           <Icon
-            icon={isCollapsed ? 'double-chevron-right' : 'double-chevron-left'}
+            icon={_isCollapsed ? 'double-chevron-right' : 'double-chevron-left'}
           />{' '}
-          {!isCollapsed && (collapseTitle || 'Collapse')}
+          {!_isCollapsed && (collapseLabel || 'Collapse')}
         </div>
       </div>
     </StyledSidebar>

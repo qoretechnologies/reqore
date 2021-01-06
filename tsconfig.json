@@ -3,7 +3,8 @@
       "lib": [
         "es2017",
         "es2018",
-        "es2019"
+        "es2019",
+        "DOM"
       ],
       "module": "commonjs",
       "sourceMap": true,
@@ -21,9 +22,9 @@
       "declarationMap": true,
       "esModuleInterop": true,
       "jsx": "react",
-      "types": ["node", "react", "react-dom", "styled-components"],
+      "types": ["node", "react", "react-dom", "styled-components", "jest"],
       "outDir": "dist"
   },
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "./src/stories/*", "./src/mock/*", "./src/__tests__/*", ],
   "include": ["./src/**/*.ts", "./src/**/*.tsx"]
 }

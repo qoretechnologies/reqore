@@ -1,15 +1,13 @@
 import { Icon, Position, Tooltip } from '@blueprintjs/core';
 import classnames from 'classnames';
 import map from 'lodash/map';
-import { darken } from 'polished';
 import * as React from 'react';
 import { useMount } from 'react-use';
-import styled, { css } from 'styled-components';
-import { PRIMARY_DARK, PRIMARY_LIGHT } from '../../constants/colors';
+import { IQorusSidebarItem } from '.';
 import { isActiveMulti } from '../../helpers/sidebar';
 
 export interface SidebarItemProps {
-  itemData: any;
+  itemData: IQorusSidebarItem;
   isCollapsed: boolean;
   subItem: boolean;
   onSectionToggle: (sectionId: string) => any;
@@ -25,50 +23,64 @@ export interface SidebarItemProps {
   currentPath: string;
   isLight?: boolean;
   sectionName: string;
+  hasFavorites: boolean;
 }
 
-const StyledDivider = styled.div<{ isLight?: boolean }>`
-  min-height: 5px;
-  width: 100%;
-  margin: 6px 0;
-  text-transform: uppercase;
-  font-size: 11px;
-  font-weight: 600;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  &:first-child {
-    margin-top: 0;
-    padding: 2px;
-  }
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  ${({ isLight }) =>
-    isLight
-      ? css`
-          background-color: ${darken(0.12, PRIMARY_LIGHT)};
-        `
-      : css`
-          background-color: ${darken(0.08, PRIMARY_DARK)};
-        `}
-`;
+export interface ISidebarTooltipProps {
+  isCollapsed?: boolean;
+  children: any;
+  itemData: IQorusSidebarItem;
+  isActive: boolean;
+  isSubcategory: boolean;
+  isSubitem: boolean;
+  onClick: any;
+}
 
 const SidebarItemTooltip: Function = ({
   isCollapsed,
-  tooltip,
   children,
-}: SidebarItemProps) =>
-  isCollapsed ? (
-    <Tooltip content={tooltip} position={Position.RIGHT}>
-      {children}
+  itemData,
+  isActive,
+  isSubitem,
+  isSubcategory,
+  onClick,
+}: ISidebarTooltipProps) => {
+  const Element = itemData.as || 'div';
+
+  return isCollapsed ? (
+    <Tooltip
+      content={itemData.name}
+      position={Position.RIGHT}
+      wrapperTagName='div'
+      targetProps={{
+        to: itemData.link,
+        onClick: itemData.onClick || onClick,
+        role: 'qorus-sidebar-item',
+      }}
+      targetClassName={classnames('sidebarItem', 'sidebarLink', {
+        sidebarSubItem: isSubitem,
+        active: isActive,
+        submenuCategory: isSubcategory,
+      })}
+      targetTagName={Element}
+    >
+      <>{children}</>
     </Tooltip>
   ) : (
-    <>{children}</>
+    <Element
+      role='qorus-sidebar-item'
+      className={classnames('sidebarItem', 'sidebarLink', {
+        sidebarSubItem: isSubitem,
+        active: isActive,
+        submenuCategory: isSubcategory,
+      })}
+      onClick={itemData.onClick || onClick}
+      to={itemData.link}
+    >
+      {children}
+    </Element>
   );
+};
 
 const SidebarItem: Function = ({
   itemData,
@@ -81,9 +93,8 @@ const SidebarItem: Function = ({
   formatItemName,
   currentPath,
   sectionName,
+  hasFavorites,
 }: SidebarItemProps) => {
-  const Link = itemData.as || 'div';
-
   const handleFavoriteClick = (event) => {
     event.stopPropagation();
 
@@ -111,71 +122,46 @@ const SidebarItem: Function = ({
 
   return (
     <>
-      {!itemData.submenu ? (
-        <Link
-          to={itemData.link}
-          className='sidebarLink'
-          onClick={itemData.onClick}
-        >
-          <SidebarItemTooltip
-            isCollapsed={isCollapsed}
-            tooltip={getItemName(itemData.name)}
-          >
-            <div
-              className={classnames('sidebarItem', {
-                sidebarSubItem: subItem,
-                active: isActive,
-              })}
-            >
-              <Icon icon={itemData.icon} />{' '}
-              {!isCollapsed && getItemName(itemData.name)}
-              {!isCollapsed && (
-                <>
-                  {sectionName === '_bookmarks' ? (
-                    <Icon
-                      intent='success'
-                      icon='star'
-                      className='favorite'
-                      onClick={handleUnfavoriteClick}
-                    />
-                  ) : (
-                    <Icon
-                      icon='star-empty'
-                      className='favorite'
-                      onClick={handleFavoriteClick}
-                    />
-                  )}
-                </>
-              )}
-            </div>
-          </SidebarItemTooltip>
-        </Link>
-      ) : (
-        <SidebarItemTooltip
-          isCollapsed={isCollapsed}
-          tooltip={getItemName(itemData.name)}
-        >
-          <div
-            className={classnames('sidebarItem', {
-              sidebarSubItem: subItem,
-              active: isActive,
-              submenuCategory: !!onSectionToggle,
-            })}
-            onClick={() => {
-              onSectionToggle(itemData.name);
-            }}
-          >
-            <Icon icon={itemData.icon} />{' '}
-            {!isCollapsed && getItemName(itemData.name)}
-            {!!onSectionToggle && (
+      <SidebarItemTooltip
+        isCollapsed={isCollapsed}
+        itemData={itemData}
+        isActive={isActive}
+        isSubitem={subItem}
+        onClick={
+          onSectionToggle
+            ? () => {
+                onSectionToggle(itemData.name);
+              }
+            : undefined
+        }
+      >
+        <Icon icon={itemData.icon} />{' '}
+        {!isCollapsed && getItemName(itemData.name)}
+        {itemData.submenu && (
+          <Icon
+            icon={isExpanded ? 'caret-up' : 'caret-down'}
+            className='submenuExpand'
+          />
+        )}
+        {!itemData.submenu && !isCollapsed && hasFavorites ? (
+          <>
+            {sectionName === '_qorusBookmarks' ? (
               <Icon
-                icon={isExpanded ? 'caret-up' : 'caret-down'}
-                className='submenuExpand'
+                intent='success'
+                icon='star'
+                className='favorite'
+                onClick={handleUnfavoriteClick}
+              />
+            ) : (
+              <Icon
+                icon='star-empty'
+                className='favorite'
+                onClick={handleFavoriteClick}
               />
             )}
-          </div>
-        </SidebarItemTooltip>
-      )}
+          </>
+        ) : null}
+      </SidebarItemTooltip>
     </>
   );
 };
@@ -189,7 +175,7 @@ const SidebarItemWrapper: Function = ({
   currentPath,
   onFavoriteClick,
   onUnfavoriteClick,
-  isLight,
+  hasFavorites,
   sectionName,
 }: SidebarItemProps) => {
   useMount(() => {
@@ -205,18 +191,10 @@ const SidebarItemWrapper: Function = ({
     }
   });
 
-  if (itemData.customElement) {
-    const { customElement: Element, customElementProps } = itemData;
+  if (itemData.element) {
+    const { element: Element } = itemData;
 
-    return <Element {...customElementProps} isCollapsed={isCollapsed} />;
-  }
-
-  if (itemData.divider) {
-    return (
-      <StyledDivider isLight={isLight}>
-        {!isCollapsed ? itemData.content || '' : ''}
-      </StyledDivider>
-    );
+    return <Element isCollapsed={isCollapsed} />;
   }
 
   return (
@@ -231,6 +209,7 @@ const SidebarItemWrapper: Function = ({
         onFavoriteClick={onFavoriteClick}
         onUnfavoriteClick={onUnfavoriteClick}
         sectionName={sectionName}
+        hasFavorites={hasFavorites}
       />
       {expandedSection === itemData.name &&
         map(itemData.submenu, (subItemData: any, key: number) => (
@@ -244,6 +223,7 @@ const SidebarItemWrapper: Function = ({
             onFavoriteClick={onFavoriteClick}
             onUnfavoriteClick={onUnfavoriteClick}
             sectionName={sectionName}
+            hasFavorites={hasFavorites}
           />
         ))}
     </>
