@@ -7,5 +7,5 @@ test('Renders sidebar', () => {
   render(<QorusSidebar items={qorusSidebarItems} path='/' />);
 
   expect(document.querySelectorAll('.sidebarItem')).toHaveLength(7);
-  expect(document.querySelectorAll('.sidebarSection')).toHaveLength(3);
+  expect(document.querySelectorAll('.sidebarSection')).toHaveLength(2);
 });
