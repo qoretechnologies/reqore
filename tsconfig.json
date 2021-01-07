@@ -21,6 +21,7 @@
       "declaration": true,
       "declarationMap": true,
       "esModuleInterop": true,
+      "skipLibCheck": true,
       "jsx": "react",
       "types": ["node", "react", "react-dom", "styled-components", "jest"],
       "outDir": "dist"

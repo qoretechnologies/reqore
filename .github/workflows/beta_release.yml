@@ -64,9 +64,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_VERSION: $(node -pe "require('./package.json').version")
       with:
-        tag_name: v${RELEASE_VERSION}
-        release_name: v${RELEASE_VERSION}
-        body: v${RELEASE_VERSION}
+        tag_name: v${{ RELEASE_VERSION }}
+        release_name: v${{ RELEASE_VERSION }}
+        body: v${{ RELEASE_VERSION }}
         draft: false
         prerelease: false
     - name: Slack notification
