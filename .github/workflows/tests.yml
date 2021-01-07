@@ -42,7 +42,7 @@ jobs:
         test-command: "yarn test"
         check-name: "Results"
     - name: Slack notification
-      uses: Foxhoundn/slack
+      uses: Foxhoundn/slack@latest
       with: 
         status: ${{ job.status }}
         steps: ${{ toJson(steps) }}
