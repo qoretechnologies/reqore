@@ -1,11 +1,12 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "ReQore is a UI library of components for Qorus connected apps",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "./node_modules/.bin/jest --silent --json --outputFile=tests.json",
+    "test": "./node_modules/.bin/jest --silent",
+    "test:ci": "./node_modules/.bin/jest --silent --json --outputFile=tests.json",
     "build": "./node_modules/typescript/bin/tsc",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"

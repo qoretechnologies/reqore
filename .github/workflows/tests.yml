@@ -5,12 +5,10 @@ name: Tests
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the develop branch
 on:
-  push:
-    branches:
-      - develop
   pull_request:
     branches:
       - develop
+      - main
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -34,7 +32,7 @@ jobs:
         yarn install
     - name: Running tests
       id: tests
-      run: yarn test
+      run: yarn test:ci
       #uses: negebauer/jest-github-action@v1.0.4
       #env:
         #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
