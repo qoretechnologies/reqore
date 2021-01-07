@@ -14,7 +14,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  unit-tests:
+  Tests:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -40,7 +40,7 @@ jobs:
       with:
         # this is just an example, this could be any command that will trigger jest
         test-command: "yarn test"
-        check-name: "Coverage"
+        check-name: "Results"
     - name: Slack notification
       uses: act10ns/slack@v1
       with: 
