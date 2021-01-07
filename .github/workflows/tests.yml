@@ -33,11 +33,12 @@ jobs:
       run: |
         yarn install
     - name: Running tests
-      id: tests
-      run: |
-        yarn test
+      uses: mattallty/jest-github-action@v1.0.3
       env:
-        CI: true
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # this is just an example, this could be any command that will trigger jest
+        test-command: "yarn test"
     - name: Slack notification
       uses: act10ns/slack@v1
       with: 
