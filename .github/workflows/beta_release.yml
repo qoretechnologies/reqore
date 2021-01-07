@@ -33,6 +33,7 @@ jobs:
       id: build
       run: ./node_modules/.bin/tsc
     - name: Publish
+      if: always()
       id: publish
       env:
         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
