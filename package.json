@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "./node_modules/.bin/jest --silent --json --outputFile=output.json",
+    "test": "./node_modules/.bin/jest --silent --json --outputFile=tests.json",
     "build": "./node_modules/typescript/bin/tsc",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
