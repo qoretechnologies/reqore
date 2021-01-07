@@ -46,6 +46,7 @@
     "babel-loader": "^8.2.2",
     "jest": "^26.6.3",
     "jest-github-actions-reporter": "^1.0.2",
+    "npm-cli-login": "^0.1.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-test-renderer": "^17.0.1",
