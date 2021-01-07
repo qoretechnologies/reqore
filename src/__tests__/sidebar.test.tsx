@@ -6,6 +6,6 @@ import { qorusSidebarItems } from '../mock/menu';
 test('Renders sidebar', () => {
   render(<QorusSidebar items={qorusSidebarItems} path='/' />);
 
-  expect(document.querySelectorAll('.sidebarItem')).toHaveLength(5);
-  expect(document.querySelectorAll('.sidebarSection').length).toBe(2);
+  expect(document.querySelectorAll('.sidebarItem').length).toBe(7);
+  expect(document.querySelectorAll('.sidebarSection').length).toBe(3);
 });
