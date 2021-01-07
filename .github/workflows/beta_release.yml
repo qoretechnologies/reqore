@@ -36,7 +36,7 @@ jobs:
       if: always()
       id: publish
       run: |
-        ./node_modules/.bin/npm-cli-login -u "${{ secrets.NPM_USER }}" -p "${{ secrets.NPM_PASSWORD }}" -e "${{ secrets.NPM_EMAIL }}"
+        ./node_modules/.bin/npm-cli-login -u ${{ secrets.NPM_USER }} -p '${{ secrets.NPM_PASSWORD }}' -e ${{ secrets.NPM_EMAIL }}
         npm publish --access public --tag beta
     - name: Slack notification
       uses: Foxhoundn/slack@v1.2.93
