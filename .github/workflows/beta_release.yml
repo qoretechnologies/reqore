@@ -35,9 +35,9 @@ jobs:
     - name: Publish
       if: always()
       id: publish
+      run: npm publish --access public --tag beta
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      run: npm publish --access public --tag beta
     - name: Slack notification
       uses: Foxhoundn/slack@v1.2.93
       with: 
