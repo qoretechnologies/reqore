@@ -60,7 +60,7 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         SLACK_USERNAME: ReQore Publish & Release
-        SLACK_MESSAGE: '\n :white_check_mark: Release *v${{ steps.save_release_version.outputs.version }}* successfuly created & published!\n'
+        SLACK_MESSAGE: ':white_check_mark: Release *v${{ steps.save_release_version.outputs.version }}* successfuly created & published!'
     - name: Slack notification
       uses: Foxhoundn/slack@v1.2.94
       with: 
@@ -70,4 +70,4 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         SLACK_USERNAME: ReQore Publish & Release
-        SLACK_MESSAGE: '\n :exclamatio: There was an error creating release *v${{ steps.save_release_version.outputs.version }}*. Please check the steps below.\n'
+        SLACK_MESSAGE: ':exclamation: There was an error creating release *v${{ steps.save_release_version.outputs.version }}*. Please check the steps below.'
