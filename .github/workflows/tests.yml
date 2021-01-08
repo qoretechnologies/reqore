@@ -24,22 +24,15 @@ jobs:
       with:
         node-version: 10.19.0
     - name: Preparing environment
-      id: setup
+      id: setup_environment
       run: npm install -g yarn
     - name: Installing modules
-      id: modules
+      id: install_modules
       run: |
         yarn install
     - name: Running tests
       id: tests
       run: yarn test:ci
-      #uses: negebauer/jest-github-action@v1.0.4
-      #env:
-        #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #with:
-        # this is just an example, this could be any command that will trigger jest
-        #test-command: "yarn test"
-        #check-name: "Results"
     - name: Slack notification
       uses: Foxhoundn/slack@v1.2.94
       with: 
