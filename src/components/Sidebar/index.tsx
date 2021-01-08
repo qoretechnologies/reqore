@@ -28,10 +28,10 @@ export interface IQorusSidebarItem {
   onClick?: () => any;
   submenu?: IQorusSidebarItem[];
   id: string;
-  as?: JSX.Element | string;
+  as?: React.ElementType | keyof JSX.IntrinsicElements;
   icon?: IconName | MaybeElement;
   exact?: boolean;
-  element?: JSX.Element;
+  element?: React.ElementType;
 }
 
 export interface IQorusSidebarProps {
