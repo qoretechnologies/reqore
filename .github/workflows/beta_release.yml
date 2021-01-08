@@ -22,34 +22,33 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: 10.19.0
+    - name: Save release version to outputs
+      id: save_release_version
+      run: echo ::set-output name=version::$(node -pe "require('./package.json').version")
     - name: Preparing environment
-      id: setup
+      id: setup_environment
       run: npm install -g yarn
     - name: Installing modules
-      id: modules
+      id: install_modules
       run: |
         yarn install
     - name: Build
       id: build
       run: ./node_modules/.bin/tsc
     - name: Publish
-      if: always()
       id: publish
       run: |
         ./node_modules/.bin/npm-cli-login -u ${{ secrets.NPM_USER }} -p '${{ secrets.NPM_PASSWORD }}' -e ${{ secrets.NPM_EMAIL }}
         npm publish --access public --tag beta
-    - name: Save version to outputs
-      id: version
-      run: echo ::set-output name=version::$(node -pe "require('./package.json').version")
     - name: Create a release
       id: release
       uses: actions/create-release@v1
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{ steps.version.outputs.version }}
-        release_name: v${{ steps.version.outputs.version }}
-        body: v${{ steps.version.outputs.version }}
+        tag_name: v${{ steps.save_release_version.outputs.version }}
+        release_name: v${{ steps.save_release_version.outputs.version }}
+        body: v${{ steps.save_release_version.outputs.version }}
         draft: false
         prerelease: false
     - name: Slack notification
@@ -61,7 +60,7 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         SLACK_USERNAME: ReQore Publish & Release
-        SLACK_MESSAGE: Release *v${{ steps.version.outputs.version }}* successfuly created & published!
+        SLACK_MESSAGE: '\n :white_check_mark: Release *v${{ steps.save_release_version.outputs.version }}* successfuly created & published!\n'
     - name: Slack notification
       uses: Foxhoundn/slack@v1.2.94
       with: 
@@ -71,4 +70,4 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         SLACK_USERNAME: ReQore Publish & Release
-        SLACK_MESSAGE: There was an error creating release *v${{ steps.version.outputs.version }}*. Please check the steps below.
+        SLACK_MESSAGE: '\n :exclamatio: There was an error creating release *v${{ steps.save_release_version.outputs.version }}*. Please check the steps below.\n'

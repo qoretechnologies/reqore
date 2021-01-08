@@ -53,6 +53,7 @@ const SidebarItemTooltip: Function = ({
       position={Position.RIGHT}
       wrapperTagName='div'
       targetProps={{
+        //@ts-ignore
         to: itemData.link,
         onClick: itemData.onClick || onClick,
         role: 'qorus-sidebar-item',
@@ -62,6 +63,7 @@ const SidebarItemTooltip: Function = ({
         active: isActive,
         submenuCategory: isSubcategory,
       })}
+      //@ts-ignore
       targetTagName={Element}
     >
       <>{children}</>
@@ -180,7 +182,7 @@ const SidebarItemWrapper: Function = ({
 }: SidebarItemProps) => {
   useMount(() => {
     if (
-      !itemData.customElement &&
+      !itemData.element &&
       isActiveMulti(
         itemData.activePaths || [itemData.link],
         currentPath,
