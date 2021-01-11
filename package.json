@@ -1,11 +1,17 @@
 {
   "name": "@qoretechnologies/reqore",
+<<<<<<< HEAD
   "version": "0.1.37",
+=======
+  "version": "0.1.42",
+>>>>>>> aa44ce3c20554d48e269da019935442d9c13afd5
   "description": "ReQore is a UI library of components for Qorus connected apps",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "./node_modules/.bin/jest --silent --testLocationInResults --reporters=default --reporters=jest-github-actions-reporter",
+    "test": "./node_modules/.bin/jest",
+    "test:watch": "./node_modules/.bin/jest --watch",
+    "test:ci": "./node_modules/.bin/jest --silent --json --outputFile=tests.json",
     "build": "./node_modules/typescript/bin/tsc",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
@@ -45,6 +51,7 @@
     "babel-loader": "^8.2.2",
     "jest": "^26.6.3",
     "jest-github-actions-reporter": "^1.0.2",
+    "npm-cli-login": "^0.1.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-test-renderer": "^17.0.1",

@@ -21,10 +21,11 @@
       "declaration": true,
       "declarationMap": true,
       "esModuleInterop": true,
+      "skipLibCheck": true,
       "jsx": "react",
       "types": ["node", "react", "react-dom", "styled-components", "jest"],
       "outDir": "dist"
   },
-  "exclude": ["node_modules", "./src/stories/*", "./src/mock/*", "./src/__tests__/*", ],
+  "exclude": ["node_modules", "./src/stories/*", "./src/mock/*", "__tests__/*", ],
   "include": ["./src/**/*.ts", "./src/**/*.tsx"]
 }

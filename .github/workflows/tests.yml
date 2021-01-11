@@ -5,16 +5,14 @@ name: Tests
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the develop branch
 on:
-  push:
-    branches:
-      - develop
   pull_request:
     branches:
       - develop
+      - main
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Tests:
+  Unit-tests:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -24,25 +22,19 @@ jobs:
     - uses: actions/checkout@v2        
     - uses: actions/setup-node@v1
       with:
-        node-version: 10.16.0
+        node-version: 10.19.0
     - name: Preparing environment
-      id: setup
+      id: setup_environment
       run: npm install -g yarn
     - name: Installing modules
-      id: modules
+      id: install_modules
       run: |
         yarn install
     - name: Running tests
       id: tests
-      uses: negebauer/jest-github-action@v1.0.4
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        # this is just an example, this could be any command that will trigger jest
-        test-command: "yarn test"
-        check-name: "Results"
+      run: yarn test:ci
     - name: Slack notification
-      uses: Foxhoundn/slack@v1.2.4
+      uses: Foxhoundn/slack@v1.2.94
       with: 
         status: ${{ job.status }}
         steps: ${{ toJson(steps) }}
