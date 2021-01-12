@@ -1,12 +1,14 @@
 import { Icon, IconName, MaybeElement } from '@blueprintjs/core';
 import classnames from 'classnames';
 import map from 'lodash/map';
-import { darken, lighten } from 'polished';
+import { darken } from 'polished';
 import React, { useState } from 'react';
 import Scroll from 'react-scrollbar';
 import { useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
-import { PRIMARY_DARK, PRIMARY_LIGHT, PURPLE } from '../../constants/colors';
+import styled from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { getMainColor, getReadableColor } from '../../helpers/colors';
 import { transformMenu } from '../../helpers/sidebar';
 import SidebarItem from './item';
 
@@ -28,15 +30,14 @@ export interface IQorusSidebarItem {
   onClick?: () => any;
   submenu?: IQorusSidebarItem[];
   id: string;
-  as?: React.ElementType | keyof JSX.IntrinsicElements;
+  as?: JSX.Element | string;
   icon?: IconName | MaybeElement;
   exact?: boolean;
-  element?: React.ElementType;
+  element?: JSX.Element;
 }
 
 export interface IQorusSidebarProps {
   isCollapsed?: boolean;
-  isLight?: boolean;
   onCollapseChange?: (isCollapsed?: boolean) => void;
   items: IQorusSidebarItems;
   bookmarks?: string[];
@@ -47,12 +48,23 @@ export interface IQorusSidebarProps {
   onBookmarksChange?: (bookmarks: string[]) => void;
 }
 
-const StyledSidebar = styled.div<{ expanded?: boolean }>`
+const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
   // 80px is header + footer
   height: 100%;
   font-size: 14px;
   display: flex;
   flex-flow: column;
+  color: ${({ theme }) =>
+    theme.sidebar?.color ||
+    getReadableColor(
+      getMainColor(theme, 'sidebar'),
+      undefined,
+      undefined,
+      true
+    )};
+  border-right: 1px solid
+    ${({ theme }) =>
+      theme.sidebar?.border || darken(0.09, getMainColor(theme, 'sidebar'))};
 
   // Custom scrollbar
   .sidebarScroll {
@@ -109,65 +121,6 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
   }
 
   &.dark {
-    background-color: ${PRIMARY_DARK};
-    border-right: 1px solid ${darken(0.02, PRIMARY_DARK)};
-    color: #bfccd6;
-
-    .sidebarSection {
-      border-top-color: ${darken(0.05, PRIMARY_DARK)} !important;
-    }
-
-    .sidebarItem,
-    .bp3-popover-wrapper {
-      border-top-color: ${darken(0.02, PRIMARY_DARK)} !important;
-    }
-
-    .sidebarSubItem {
-      background-color: ${lighten(0.07, PRIMARY_DARK)};
-      border-left: 5px solid #bfccd6;
-    }
-
-    .sidebarItem:hover {
-      background-color: ${lighten(0.04, PRIMARY_DARK)};
-    }
-
-    .sidebarSubItem.active,
-    .sidebarItem.active {
-      color: #fff;
-      border-left-color: #fff;
-      background-color: ${lighten(0.03, PRIMARY_DARK)};
-    }
-  }
-
-  &.light {
-    background-color: #fff;
-    border-right: 1px solid ${darken(0.06, PRIMARY_LIGHT)};
-    color: #555;
-
-    .sidebarSection {
-      border-top-color: ${darken(0.07, PRIMARY_LIGHT)} !important;
-    }
-
-    .sidebarItem,
-    .bp3-popover-wrapper {
-      border-top-color: ${darken(0.06, PRIMARY_LIGHT)} !important;
-    }
-
-    .sidebarSubItem {
-      background-color: ${darken(0.04, PRIMARY_LIGHT)};
-      border-left: 5px solid #555;
-    }
-
-    .sidebarItem:hover {
-      background-color: ${darken(0.03, PRIMARY_LIGHT)};
-    }
-
-    .sidebarSubItem.active,
-    .sidebarItem.active {
-      color: ${PURPLE};
-      border-left-color: ${PURPLE};
-      background-color: ${darken(0.05, PRIMARY_LIGHT)};
-    }
   }
 
   // Section
@@ -186,10 +139,28 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
       }
     }
 
-    .sidebarItem,
-    .bp3-popover-wrapper {
-      &:not(:first-child) {
-        border-top: 1px solid;
+    .sidebarItem.active {
+      color: ${({ theme }) =>
+        theme.sidebar?.item?.activeColor ||
+        getReadableColor(getMainColor(theme, 'sidebar'), undefined, undefined)};
+      background-color: ${({ theme }) =>
+        theme.sidebar?.item?.activeBackground ||
+        darken(0.08, getMainColor(theme, 'sidebar'))};
+      span.bp3-icon:not(.favorite) {
+        color: ${({ theme }) => theme.sidebar?.item?.activeColor || 'inherit'};
+      }
+    }
+
+    .sidebarSubItem.active {
+      color: ${({ theme }) =>
+        theme.sidebar?.subItem?.activeColor ||
+        getReadableColor(getMainColor(theme, 'sidebar'), undefined, undefined)};
+      background-color: ${({ theme }) =>
+        theme.sidebar?.subItem?.activeBackground ||
+        darken(0.1, getMainColor(theme, 'sidebar'))};
+      span.bp3-icon:not(.favorite) {
+        color: ${({ theme }) =>
+          theme.sidebar?.subItem?.activeColor || 'inherit'};
       }
     }
 
@@ -199,9 +170,72 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
       span.bp3-icon:not(.favorite) {
         display: inline-block;
         font-size: 16px;
+        color: ${({ theme }) => theme.sidebar?.icon?.color || 'inherit'};
       }
 
       padding: 12px;
+    }
+
+    .sidebarItem,
+    .bp3-popover-wrapper.reqore-sidebar-item {
+      color: ${({ theme }) => theme.sidebar?.item?.color || 'inherit'};
+
+      background-color: ${({ theme }) =>
+        theme.sidebar?.item?.background || getMainColor(theme, 'sidebar')};
+
+      &:not(:first-child) {
+        border-top: 1px solid
+          ${({ theme }) =>
+            theme.sidebar?.item?.border ||
+            darken(0.05, getMainColor(theme, 'sidebar'))};
+      }
+
+      &:hover {
+        color: ${({ theme }) => theme.sidebar?.item?.hoverColor || 'inherit'};
+        background-color: ${({ theme }) =>
+          theme.sidebar?.item?.hoverBackground ||
+          darken(0.03, getMainColor(theme, 'sidebar'))};
+
+        span.bp3-icon:not(.favorite) {
+          color: ${({ theme }) => theme.sidebar?.item?.hoverColor || 'inherit'};
+        }
+      }
+    }
+
+    .sidebarSubItem {
+      border-left: 5px solid
+        ${({ theme }) =>
+          theme.sidebar?.subItem?.border ||
+          darken(0.08, getMainColor(theme, 'sidebar'))};
+    }
+
+    .sidebarSubItem,
+    .bp3-popover-wrapper.reqore-sidebar-subitem {
+      color: ${({ theme }) => theme.sidebar?.subItem?.color || 'inherit'};
+
+      background-color: ${({ theme }) =>
+        theme.sidebar?.subItem?.background ||
+        darken(0.05, getMainColor(theme, 'sidebar'))};
+
+      &:not(:first-child) {
+        border-top: 1px solid
+          ${({ theme }) =>
+            theme.sidebar?.subItem?.border ||
+            darken(0.07, getMainColor(theme, 'sidebar'))};
+      }
+
+      &:hover {
+        color: ${({ theme }) =>
+          theme.sidebar?.subItem?.hoverColor || 'inherit'};
+        background-color: ${({ theme }) =>
+          theme.sidebar?.subItem?.hoverBackground ||
+          darken(0.08, getMainColor(theme, 'sidebar'))};
+
+        span.bp3-icon:not(.favorite) {
+          color: ${({ theme }) =>
+            theme.sidebar?.subItem?.hoverColor || 'inherit'};
+        }
+      }
     }
 
     .sidebarItem,
@@ -212,7 +246,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean }>`
   }
 `;
 
-const StyledDivider = styled.div<{ isLight?: boolean }>`
+const StyledDivider = styled.div<{ theme?: any }>`
   width: 100%;
   text-transform: uppercase;
   font-size: 11px;
@@ -226,19 +260,14 @@ const StyledDivider = styled.div<{ isLight?: boolean }>`
     padding: 1px;
   }
 
-  ${({ isLight }) =>
-    isLight
-      ? css`
-          background-color: ${darken(0.12, PRIMARY_LIGHT)};
-        `
-      : css`
-          background-color: ${darken(0.08, PRIMARY_DARK)};
-        `}
+  background-color: ${({ theme }) =>
+    theme.sidebar?.section?.background ||
+    darken(0.09, getMainColor(theme, 'sidebar'))};
+  color: inherit;
 `;
 
 const QorusSidebar: React.FC<IQorusSidebarProps> = ({
   isCollapsed,
-  isLight,
   onCollapseChange,
   path,
   items,
@@ -285,63 +314,64 @@ const QorusSidebar: React.FC<IQorusSidebarProps> = ({
   );
 
   return (
-    <StyledSidebar
-      className={classnames('sidebar', isLight ? 'light' : 'dark', {
-        expanded: !_isCollapsed,
-      })}
-      style={wrapperStyle}
-      role='qorus-sidebar-wrapper'
-    >
-      <Scroll horizontal={false} className='sidebarScroll'>
-        {map(menu, ({ title, items }, sectionId: string) => (
+    <ReqoreThemeProvider>
+      <StyledSidebar
+        className={classnames('sidebar', {
+          expanded: !_isCollapsed,
+        })}
+        style={wrapperStyle}
+        role='qorus-sidebar-wrapper'
+      >
+        <Scroll horizontal={false} className='sidebarScroll'>
+          {map(menu, ({ title, items }, sectionId: string) => (
+            <div
+              className='sidebarSection'
+              key={sectionId}
+              role='qorus-sidebar-section-title'
+            >
+              <StyledDivider>{!_isCollapsed ? title || '' : ''}</StyledDivider>
+              {map(items, (itemData, key) => (
+                <SidebarItem
+                  itemData={itemData}
+                  key={key}
+                  isCollapsed={_isCollapsed}
+                  expandedSection={expandedSection}
+                  onSectionToggle={handleSectionToggle}
+                  bookmarks={bookmarks}
+                  currentPath={path}
+                  onFavoriteClick={handleFavoriteClick}
+                  onUnfavoriteClick={handleUnfavoriteClick}
+                  sectionName={sectionId}
+                  hasFavorites={!!onBookmarksChange}
+                />
+              ))}
+            </div>
+          ))}
+        </Scroll>
+        <div className='sidebarSection' id='menuCollapse'>
+          <StyledDivider />
+
           <div
-            className='sidebarSection'
-            key={sectionId}
-            role='qorus-sidebar-section-title'
+            role='qorus-sidebar-collapse-button'
+            className='sidebarItem'
+            onClick={() => {
+              setIsCollapsed(!_isCollapsed);
+
+              if (onCollapseChange) {
+                onCollapseChange(!_isCollapsed);
+              }
+            }}
           >
-            <StyledDivider isLight={isLight}>
-              {!_isCollapsed ? title || '' : ''}
-            </StyledDivider>
-            {map(items, (itemData, key) => (
-              <SidebarItem
-                itemData={itemData}
-                key={key}
-                isCollapsed={_isCollapsed}
-                expandedSection={expandedSection}
-                onSectionToggle={handleSectionToggle}
-                bookmarks={bookmarks}
-                currentPath={path}
-                onFavoriteClick={handleFavoriteClick}
-                onUnfavoriteClick={handleUnfavoriteClick}
-                isLight={isLight}
-                sectionName={sectionId}
-                hasFavorites={!!onBookmarksChange}
-              />
-            ))}
+            <Icon
+              icon={
+                _isCollapsed ? 'double-chevron-right' : 'double-chevron-left'
+              }
+            />{' '}
+            {!_isCollapsed && (collapseLabel || 'Collapse')}
           </div>
-        ))}
-      </Scroll>
-      <div className='sidebarSection' id='menuCollapse'>
-        <StyledDivider isLight={isLight} />
-
-        <div
-          role='qorus-sidebar-collapse-button'
-          className='sidebarItem'
-          onClick={() => {
-            setIsCollapsed(!_isCollapsed);
-
-            if (onCollapseChange) {
-              onCollapseChange(!_isCollapsed);
-            }
-          }}
-        >
-          <Icon
-            icon={_isCollapsed ? 'double-chevron-right' : 'double-chevron-left'}
-          />{' '}
-          {!_isCollapsed && (collapseLabel || 'Collapse')}
         </div>
-      </div>
-    </StyledSidebar>
+      </StyledSidebar>
+    </ReqoreThemeProvider>
   );
 };
 
