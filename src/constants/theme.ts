@@ -24,6 +24,8 @@ export interface IReqoreTheme {
     };
     icon?: {
       color?: string;
+      hoverColor?: string;
+      activeColor?: string;
     };
     section?: {
       background?: string;
