@@ -91,26 +91,7 @@ export const WithCustomColors = Template.bind({});
 WithCustomColors.args = {
   theme: {
     main: '#fff',
-    sidebar: {
-      main: '#fff',
-      icon: {
-        color: '#8227a3',
-      },
-      item: {
-        color: '#8227a3',
-        hoverBackground: '#8227a3',
-        hoverColor: '#fff',
-        activeBackground: '#9751b0',
-        activeColor: '#fff',
-      },
-      subItem: {
-        color: '#8227a3',
-        hoverBackground: '#8227a3',
-        hoverColor: '#fff',
-        activeBackground: '#9751b0',
-        activeColor: '#fff',
-      },
-    },
+    sidebar: { icon: { color: '#115e68' } },
   },
   path: '/item-3/item-2',
 } as IReqoreUIProviderProps & IQorusSidebarProps;

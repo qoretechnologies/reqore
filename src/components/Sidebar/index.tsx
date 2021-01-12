@@ -62,9 +62,10 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       undefined,
       true
     )};
+  background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
   border-right: 1px solid
     ${({ theme }) =>
-      theme.sidebar?.border || darken(0.09, getMainColor(theme, 'sidebar'))};
+      theme.sidebar?.border || darken(0.1, getMainColor(theme, 'sidebar'))};
 
   // Custom scrollbar
   .sidebarScroll {
@@ -142,25 +143,42 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
     .sidebarItem.active {
       color: ${({ theme }) =>
         theme.sidebar?.item?.activeColor ||
+        theme.sidebar?.item?.color ||
         getReadableColor(getMainColor(theme, 'sidebar'), undefined, undefined)};
+
       background-color: ${({ theme }) =>
         theme.sidebar?.item?.activeBackground ||
+        theme.sidebar?.item?.background ||
         darken(0.08, getMainColor(theme, 'sidebar'))};
+
       span.bp3-icon:not(.favorite) {
-        color: ${({ theme }) => theme.sidebar?.item?.activeColor || 'inherit'};
+        color: ${({ theme }) =>
+          theme.sidebar?.icon?.activeColor ||
+          theme.sidebar?.icon?.color ||
+          theme.sidebar?.item?.activeColor ||
+          theme.sidebar?.item?.color ||
+          'inherit'};
       }
     }
 
     .sidebarSubItem.active {
       color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeColor ||
+        theme.sidebar?.subItem?.color ||
         getReadableColor(getMainColor(theme, 'sidebar'), undefined, undefined)};
       background-color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeBackground ||
+        theme.sidebar?.subItem?.background ||
         darken(0.1, getMainColor(theme, 'sidebar'))};
       span.bp3-icon:not(.favorite) {
         color: ${({ theme }) =>
-          theme.sidebar?.subItem?.activeColor || 'inherit'};
+          theme.sidebar?.icon?.activeColor ||
+          theme.sidebar?.icon?.color ||
+          theme.sidebar?.subItem?.activeColor ||
+          theme.sidebar?.subItem?.color ||
+          theme.sidebar?.item?.activeColor ||
+          theme.sidebar?.item?.color ||
+          'inherit'};
       }
     }
 
@@ -191,13 +209,22 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       }
 
       &:hover {
-        color: ${({ theme }) => theme.sidebar?.item?.hoverColor || 'inherit'};
+        color: ${({ theme }) =>
+          theme.sidebar?.item?.hoverColor ||
+          theme.sidebar?.item?.color ||
+          'inherit'};
         background-color: ${({ theme }) =>
           theme.sidebar?.item?.hoverBackground ||
+          theme.sidebar?.item?.background ||
           darken(0.03, getMainColor(theme, 'sidebar'))};
 
         span.bp3-icon:not(.favorite) {
-          color: ${({ theme }) => theme.sidebar?.item?.hoverColor || 'inherit'};
+          color: ${({ theme }) =>
+            theme.sidebar?.icon?.hoverColor ||
+            theme.sidebar?.icon?.color ||
+            theme.sidebar?.item?.hoverColor ||
+            theme.sidebar?.item?.color ||
+            'inherit'};
         }
       }
     }
@@ -226,14 +253,21 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
 
       &:hover {
         color: ${({ theme }) =>
-          theme.sidebar?.subItem?.hoverColor || 'inherit'};
+          theme.sidebar?.subItem?.hoverColor ||
+          theme.sidebar?.subItem?.color ||
+          'inherit'};
         background-color: ${({ theme }) =>
           theme.sidebar?.subItem?.hoverBackground ||
+          theme.sidebar?.subItem?.background ||
           darken(0.08, getMainColor(theme, 'sidebar'))};
 
         span.bp3-icon:not(.favorite) {
           color: ${({ theme }) =>
-            theme.sidebar?.subItem?.hoverColor || 'inherit'};
+            theme.sidebar?.icon?.hoverColor ||
+            theme.sidebar?.icon?.color ||
+            theme.sidebar?.subItem?.hoverColor ||
+            theme.sidebar?.subItem?.color ||
+            'inherit'};
         }
       }
     }
@@ -262,7 +296,7 @@ const StyledDivider = styled.div<{ theme?: any }>`
 
   background-color: ${({ theme }) =>
     theme.sidebar?.section?.background ||
-    darken(0.09, getMainColor(theme, 'sidebar'))};
+    darken(0.15, getMainColor(theme, 'sidebar'))};
   color: inherit;
 `;
 
