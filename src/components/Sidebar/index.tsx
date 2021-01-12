@@ -1,5 +1,6 @@
 import { Icon, IconName, MaybeElement } from '@blueprintjs/core';
 import classnames from 'classnames';
+import { size } from 'lodash';
 import map from 'lodash/map';
 import { darken } from 'polished';
 import React, { useState } from 'react';
@@ -154,8 +155,8 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       span.bp3-icon:not(.favorite) {
         color: ${({ theme }) =>
           theme.sidebar?.icon?.activeColor ||
-          theme.sidebar?.icon?.color ||
           theme.sidebar?.item?.activeColor ||
+          theme.sidebar?.icon?.color ||
           theme.sidebar?.item?.color ||
           'inherit'};
       }
@@ -173,10 +174,10 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       span.bp3-icon:not(.favorite) {
         color: ${({ theme }) =>
           theme.sidebar?.icon?.activeColor ||
-          theme.sidebar?.icon?.color ||
           theme.sidebar?.subItem?.activeColor ||
-          theme.sidebar?.subItem?.color ||
           theme.sidebar?.item?.activeColor ||
+          theme.sidebar?.icon?.color ||
+          theme.sidebar?.subItem?.color ||
           theme.sidebar?.item?.color ||
           'inherit'};
       }
@@ -221,8 +222,8 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
         span.bp3-icon:not(.favorite) {
           color: ${({ theme }) =>
             theme.sidebar?.icon?.hoverColor ||
-            theme.sidebar?.icon?.color ||
             theme.sidebar?.item?.hoverColor ||
+            theme.sidebar?.icon?.color ||
             theme.sidebar?.item?.color ||
             'inherit'};
         }
@@ -264,8 +265,8 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
         span.bp3-icon:not(.favorite) {
           color: ${({ theme }) =>
             theme.sidebar?.icon?.hoverColor ||
-            theme.sidebar?.icon?.color ||
             theme.sidebar?.subItem?.hoverColor ||
+            theme.sidebar?.icon?.color ||
             theme.sidebar?.subItem?.color ||
             'inherit'};
         }
@@ -276,6 +277,10 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
     .sidebarSubItem {
       cursor: pointer;
       transition: all 0.2s ease-in-out;
+
+      &.active {
+        font-weight: 500;
+      }
     }
   }
 `;
@@ -290,8 +295,9 @@ const StyledDivider = styled.div<{ theme?: any }>`
   align-items: center;
 
   &:first-child {
+    letter-spacing: 1.5px;
     margin-top: 0;
-    padding: 1px;
+    padding: 0.5px;
   }
 
   background-color: ${({ theme }) =>
@@ -357,30 +363,34 @@ const QorusSidebar: React.FC<IQorusSidebarProps> = ({
         role='qorus-sidebar-wrapper'
       >
         <Scroll horizontal={false} className='sidebarScroll'>
-          {map(menu, ({ title, items }, sectionId: string) => (
-            <div
-              className='sidebarSection'
-              key={sectionId}
-              role='qorus-sidebar-section-title'
-            >
-              <StyledDivider>{!_isCollapsed ? title || '' : ''}</StyledDivider>
-              {map(items, (itemData, key) => (
-                <SidebarItem
-                  itemData={itemData}
-                  key={key}
-                  isCollapsed={_isCollapsed}
-                  expandedSection={expandedSection}
-                  onSectionToggle={handleSectionToggle}
-                  bookmarks={bookmarks}
-                  currentPath={path}
-                  onFavoriteClick={handleFavoriteClick}
-                  onUnfavoriteClick={handleUnfavoriteClick}
-                  sectionName={sectionId}
-                  hasFavorites={!!onBookmarksChange}
-                />
-              ))}
-            </div>
-          ))}
+          {map(menu, ({ title, items }, sectionId: string) =>
+            size(items) ? (
+              <div
+                className='sidebarSection'
+                key={sectionId}
+                role='qorus-sidebar-section-title'
+              >
+                <StyledDivider>
+                  {!_isCollapsed ? title || '' : ''}
+                </StyledDivider>
+                {map(items, (itemData, key) => (
+                  <SidebarItem
+                    itemData={itemData}
+                    key={key}
+                    isCollapsed={_isCollapsed}
+                    expandedSection={expandedSection}
+                    onSectionToggle={handleSectionToggle}
+                    bookmarks={bookmarks}
+                    currentPath={path}
+                    onFavoriteClick={handleFavoriteClick}
+                    onUnfavoriteClick={handleUnfavoriteClick}
+                    sectionName={sectionId}
+                    hasFavorites={!!onBookmarksChange}
+                  />
+                ))}
+              </div>
+            ) : null
+          )}
         </Scroll>
         <div className='sidebarSection' id='menuCollapse'>
           <StyledDivider />
