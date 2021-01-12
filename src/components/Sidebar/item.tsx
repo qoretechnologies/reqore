@@ -21,7 +21,6 @@ export interface SidebarItemProps {
   favoriteItems?: any;
   formatItemName?: (itemName: string) => string;
   currentPath: string;
-  isLight?: boolean;
   sectionName: string;
   hasFavorites: boolean;
 }
@@ -52,6 +51,7 @@ const SidebarItemTooltip: Function = ({
       content={itemData.name}
       position={Position.RIGHT}
       wrapperTagName='div'
+      className={isSubitem ? 'reqore-sidebar-subitem' : 'reqore-sidebar-item'}
       targetProps={{
         //@ts-ignore
         to: itemData.link,

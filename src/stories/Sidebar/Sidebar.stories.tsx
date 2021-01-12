@@ -1,7 +1,8 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import React from 'react';
 import { IQorusSidebarProps } from '../../components/Sidebar';
-import { QorusSidebar } from '../../index';
+import { IReqoreUIProviderProps } from '../../containers/UIProvider';
+import { QorusSidebar, ReqoreUIProvider } from '../../index';
 import { qorusSidebarItems } from '../../mock/menu';
 
 export default {
@@ -15,8 +16,13 @@ export default {
   },
 } as Meta;
 
-const Template: Story<IQorusSidebarProps> = (args: IQorusSidebarProps) => (
-  <QorusSidebar {...args} />
+const Template: Story<IQorusSidebarProps & IReqoreUIProviderProps> = ({
+  theme,
+  ...args
+}: IQorusSidebarProps & IReqoreUIProviderProps) => (
+  <ReqoreUIProvider theme={theme}>
+    <QorusSidebar {...args} />
+  </ReqoreUIProvider>
 );
 
 export const Basic = Template.bind({});
@@ -25,12 +31,6 @@ export const Collapsed = Template.bind({});
 Collapsed.args = {
   isCollapsed: true,
   isLight: false,
-};
-
-export const Light = Template.bind({});
-
-Light.args = {
-  isLight: true,
 };
 
 export const WithBookmarks = Template.bind({});
@@ -55,3 +55,62 @@ WithCustomElement.args = {
     },
   ],
 };
+
+export const WithDarkTheme = Template.bind({});
+
+WithDarkTheme.args = {
+  theme: {
+    main: '#444',
+  },
+  path: '/item-3/item-2',
+};
+
+export const WithLightTheme = Template.bind({});
+
+WithLightTheme.args = {
+  theme: {
+    main: '#fff',
+  },
+  path: '/item-3/item-2',
+};
+
+export const WithCustomMainColor = Template.bind({});
+
+WithCustomMainColor.args = {
+  theme: {
+    main: '#333',
+    sidebar: {
+      main: '#692b75',
+    },
+  },
+  path: '/item-3/item-2',
+} as IReqoreUIProviderProps & IQorusSidebarProps;
+
+export const WithCustomColors = Template.bind({});
+
+WithCustomColors.args = {
+  theme: {
+    main: '#fff',
+    sidebar: {
+      main: '#fff',
+      icon: {
+        color: '#8227a3',
+      },
+      item: {
+        color: '#8227a3',
+        hoverBackground: '#8227a3',
+        hoverColor: '#fff',
+        activeBackground: '#9751b0',
+        activeColor: '#fff',
+      },
+      subItem: {
+        color: '#8227a3',
+        hoverBackground: '#8227a3',
+        hoverColor: '#fff',
+        activeBackground: '#9751b0',
+        activeColor: '#fff',
+      },
+    },
+  },
+  path: '/item-3/item-2',
+} as IReqoreUIProviderProps & IQorusSidebarProps;
