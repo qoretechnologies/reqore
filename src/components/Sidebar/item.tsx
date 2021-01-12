@@ -69,6 +69,7 @@ const SidebarItemTooltip: Function = ({
       <>{children}</>
     </Tooltip>
   ) : (
+    //@ts-ignore
     <Element
       role='qorus-sidebar-item'
       className={classnames('sidebarItem', 'sidebarLink', {
@@ -196,6 +197,7 @@ const SidebarItemWrapper: Function = ({
   if (itemData.element) {
     const { element: Element } = itemData;
 
+    //@ts-ignore
     return <Element isCollapsed={isCollapsed} />;
   }
 
