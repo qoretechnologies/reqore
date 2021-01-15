@@ -73,6 +73,13 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
     flex: 1;
   }
 
+  #menuCollapse {
+    border-top: 1px solid
+      ${({ theme }) =>
+        theme.sidebar?.item?.border ||
+        darken(0.04, getMainColor(theme, 'sidebar'))};
+  }
+
   &.expanded {
     min-width: 180px !important;
     max-width: 180px !important;
@@ -285,7 +292,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
   }
 `;
 
-const StyledDivider = styled.div<{ theme?: any }>`
+const StyledDivider = styled.div<{ theme?: any; hasTitle?: boolean }>`
   width: 100%;
   text-transform: uppercase;
   font-size: 11px;
@@ -293,13 +300,15 @@ const StyledDivider = styled.div<{ theme?: any }>`
   display: flex;
   justify-content: center;
   align-items: center;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.8px;
   margin-top: 0;
-  padding: 0.5px;
+  padding: 8px;
 
-  background-color: ${({ theme }) =>
+  background-color: ${({ theme, hasTitle }) =>
     theme.sidebar?.section?.background ||
-    darken(0.04, getMainColor(theme, 'sidebar'))};
+    (hasTitle
+      ? darken(0.02, getMainColor(theme, 'sidebar'))
+      : getMainColor(theme, 'sidebar'))};
   color: inherit;
 `;
 
@@ -363,9 +372,11 @@ const QorusSidebar: React.FC<IQorusSidebarProps> = ({
           {map(menu, ({ title, items }, sectionId: string) =>
             size(items) ? (
               <>
-                <StyledDivider>
-                  {!_isCollapsed ? title || '' : ''}
-                </StyledDivider>
+                {sectionId !== '_qorusCustomElements' && (
+                  <StyledDivider hasTitle={!!title}>
+                    {!_isCollapsed ? title || '' : ''}
+                  </StyledDivider>
+                )}
                 <div
                   className='sidebarSection'
                   key={sectionId}
