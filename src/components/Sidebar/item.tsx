@@ -202,8 +202,8 @@ const SidebarItemWrapper: Function = ({
   if (itemData.element) {
     const { element: Element } = itemData;
 
-    //@ts-ignore
     return (
+      //@ts-ignore
       <Element
         isCollapsed={isCollapsed}
         backgroundColor={theme.sidebar?.main || theme.main}
