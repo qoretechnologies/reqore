@@ -73,6 +73,13 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
     flex: 1;
   }
 
+  #menuCollapse {
+    border-top: 1px solid
+      ${({ theme }) =>
+        theme.sidebar?.item?.border ||
+        darken(0.04, getMainColor(theme, 'sidebar'))};
+  }
+
   &.expanded {
     min-width: 180px !important;
     max-width: 180px !important;
@@ -150,7 +157,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       background-color: ${({ theme }) =>
         theme.sidebar?.item?.activeBackground ||
         theme.sidebar?.item?.background ||
-        darken(0.08, getMainColor(theme, 'sidebar'))};
+        darken(0.06, getMainColor(theme, 'sidebar'))};
 
       span.bp3-icon:not(.favorite) {
         color: ${({ theme }) =>
@@ -170,7 +177,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       background-color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeBackground ||
         theme.sidebar?.subItem?.background ||
-        darken(0.1, getMainColor(theme, 'sidebar'))};
+        darken(0.08, getMainColor(theme, 'sidebar'))};
       span.bp3-icon:not(.favorite) {
         color: ${({ theme }) =>
           theme.sidebar?.icon?.activeColor ||
@@ -206,7 +213,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
         border-top: 1px solid
           ${({ theme }) =>
             theme.sidebar?.item?.border ||
-            darken(0.05, getMainColor(theme, 'sidebar'))};
+            darken(0.04, getMainColor(theme, 'sidebar'))};
       }
 
       &:hover {
@@ -234,7 +241,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       border-left: 5px solid
         ${({ theme }) =>
           theme.sidebar?.subItem?.border ||
-          darken(0.08, getMainColor(theme, 'sidebar'))};
+          darken(0.05, getMainColor(theme, 'sidebar'))};
     }
 
     .sidebarSubItem,
@@ -243,7 +250,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
 
       background-color: ${({ theme }) =>
         theme.sidebar?.subItem?.background ||
-        darken(0.05, getMainColor(theme, 'sidebar'))};
+        darken(0.04, getMainColor(theme, 'sidebar'))};
 
       &:not(:first-child) {
         border-top: 1px solid
@@ -260,7 +267,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
         background-color: ${({ theme }) =>
           theme.sidebar?.subItem?.hoverBackground ||
           theme.sidebar?.subItem?.background ||
-          darken(0.08, getMainColor(theme, 'sidebar'))};
+          darken(0.06, getMainColor(theme, 'sidebar'))};
 
         span.bp3-icon:not(.favorite) {
           color: ${({ theme }) =>
@@ -285,7 +292,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
   }
 `;
 
-const StyledDivider = styled.div<{ theme?: any }>`
+const StyledDivider = styled.div<{ theme?: any; hasTitle?: boolean }>`
   width: 100%;
   text-transform: uppercase;
   font-size: 11px;
@@ -293,16 +300,15 @@ const StyledDivider = styled.div<{ theme?: any }>`
   display: flex;
   justify-content: center;
   align-items: center;
+  letter-spacing: 1.8px;
+  margin-top: 0;
+  padding: 8px;
 
-  &:first-child {
-    letter-spacing: 1.5px;
-    margin-top: 0;
-    padding: 0.5px;
-  }
-
-  background-color: ${({ theme }) =>
+  background-color: ${({ theme, hasTitle }) =>
     theme.sidebar?.section?.background ||
-    darken(0.15, getMainColor(theme, 'sidebar'))};
+    (hasTitle
+      ? darken(0.02, getMainColor(theme, 'sidebar'))
+      : getMainColor(theme, 'sidebar'))};
   color: inherit;
 `;
 
@@ -365,36 +371,39 @@ const QorusSidebar: React.FC<IQorusSidebarProps> = ({
         <Scroll horizontal={false} className='sidebarScroll'>
           {map(menu, ({ title, items }, sectionId: string) =>
             size(items) ? (
-              <div
-                className='sidebarSection'
-                key={sectionId}
-                role='qorus-sidebar-section-title'
-              >
-                <StyledDivider>
-                  {!_isCollapsed ? title || '' : ''}
-                </StyledDivider>
-                {map(items, (itemData, key) => (
-                  <SidebarItem
-                    itemData={itemData}
-                    key={key}
-                    isCollapsed={_isCollapsed}
-                    expandedSection={expandedSection}
-                    onSectionToggle={handleSectionToggle}
-                    bookmarks={bookmarks}
-                    currentPath={path}
-                    onFavoriteClick={handleFavoriteClick}
-                    onUnfavoriteClick={handleUnfavoriteClick}
-                    sectionName={sectionId}
-                    hasFavorites={!!onBookmarksChange}
-                  />
-                ))}
-              </div>
+              <>
+                {sectionId !== '_qorusCustomElements' && (
+                  <StyledDivider hasTitle={!!title}>
+                    {!_isCollapsed ? title || '' : ''}
+                  </StyledDivider>
+                )}
+                <div
+                  className='sidebarSection'
+                  key={sectionId}
+                  role='qorus-sidebar-section-title'
+                >
+                  {map(items, (itemData, key) => (
+                    <SidebarItem
+                      itemData={itemData}
+                      key={key}
+                      isCollapsed={_isCollapsed}
+                      expandedSection={expandedSection}
+                      onSectionToggle={handleSectionToggle}
+                      bookmarks={bookmarks}
+                      currentPath={path}
+                      onFavoriteClick={handleFavoriteClick}
+                      onUnfavoriteClick={handleUnfavoriteClick}
+                      sectionName={sectionId}
+                      hasFavorites={!!onBookmarksChange}
+                    />
+                  ))}
+                </div>
+              </>
             ) : null
           )}
         </Scroll>
+        <StyledDivider />
         <div className='sidebarSection' id='menuCollapse'>
-          <StyledDivider />
-
           <div
             role='qorus-sidebar-collapse-button'
             className='sidebarItem'

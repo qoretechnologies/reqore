@@ -1,9 +1,12 @@
 import { Icon, Position, Tooltip } from '@blueprintjs/core';
 import classnames from 'classnames';
 import map from 'lodash/map';
-import * as React from 'react';
+import React, { useContext } from 'react';
 import { useMount } from 'react-use';
 import { IQorusSidebarItem } from '.';
+import { IReqoreTheme } from '../../constants/theme';
+import ThemeContext from '../../context/ThemeContext';
+import { getMainColor, getReadableColor } from '../../helpers/colors';
 import { isActiveMulti } from '../../helpers/sidebar';
 
 export interface SidebarItemProps {
@@ -181,6 +184,8 @@ const SidebarItemWrapper: Function = ({
   hasFavorites,
   sectionName,
 }: SidebarItemProps) => {
+  const theme: IReqoreTheme = useContext(ThemeContext);
+
   useMount(() => {
     if (
       !itemData.element &&
@@ -197,8 +202,22 @@ const SidebarItemWrapper: Function = ({
   if (itemData.element) {
     const { element: Element } = itemData;
 
-    //@ts-ignore
-    return <Element isCollapsed={isCollapsed} />;
+    return (
+      //@ts-ignore
+      <Element
+        isCollapsed={isCollapsed}
+        backgroundColor={theme.sidebar?.main || theme.main}
+        textColor={
+          theme.sidebar?.color ||
+          getReadableColor(
+            getMainColor(theme, 'sidebar'),
+            undefined,
+            undefined,
+            true
+          )
+        }
+      />
+    );
   }
 
   return (
