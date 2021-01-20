@@ -2,14 +2,18 @@ import { Icon, IconName, MaybeElement } from '@blueprintjs/core';
 import classnames from 'classnames';
 import { size } from 'lodash';
 import map from 'lodash/map';
-import { darken } from 'polished';
+import { darken, lighten } from 'polished';
 import React, { useState } from 'react';
 import Scroll from 'react-scrollbar';
 import { useUpdateEffect } from 'react-use';
 import styled from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { getMainColor, getReadableColor } from '../../helpers/colors';
+import {
+  getMainColor,
+  getReadableColor,
+  shouldDarken,
+} from '../../helpers/colors';
 import { transformMenu } from '../../helpers/sidebar';
 import SidebarItem from './item';
 
@@ -124,12 +128,11 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
   &:not(.expanded) {
     min-width: 50px !important;
     max-width: 50px !important;
-    .sidebarItem {
+    .sidebarItem,
+    .sidebarSubItem {
       text-align: center;
+      justify-content: center;
     }
-  }
-
-  &.dark {
   }
 
   // Section
@@ -209,13 +212,6 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       background-color: ${({ theme }) =>
         theme.sidebar?.item?.background || getMainColor(theme, 'sidebar')};
 
-      &:not(:first-child) {
-        border-top: 1px solid
-          ${({ theme }) =>
-            theme.sidebar?.item?.border ||
-            darken(0.04, getMainColor(theme, 'sidebar'))};
-      }
-
       &:hover {
         color: ${({ theme }) =>
           theme.sidebar?.item?.hoverColor ||
@@ -239,9 +235,19 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
 
     .sidebarSubItem {
       border-left: 5px solid
-        ${({ theme }) =>
-          theme.sidebar?.subItem?.border ||
-          darken(0.05, getMainColor(theme, 'sidebar'))};
+        ${({ theme }) => {
+          if (theme.sidebar?.subItem?.border) {
+            return theme.sidebar?.subItem?.border;
+          }
+
+          const color = getMainColor(theme, 'sidebar');
+
+          if (shouldDarken(color)) {
+            return darken(0.17, color);
+          }
+
+          return lighten(0.17, color);
+        }};
     }
 
     .sidebarSubItem,
@@ -251,13 +257,6 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       background-color: ${({ theme }) =>
         theme.sidebar?.subItem?.background ||
         darken(0.04, getMainColor(theme, 'sidebar'))};
-
-      &:not(:first-child) {
-        border-top: 1px solid
-          ${({ theme }) =>
-            theme.sidebar?.subItem?.border ||
-            darken(0.07, getMainColor(theme, 'sidebar'))};
-      }
 
       &:hover {
         color: ${({ theme }) =>
@@ -282,6 +281,8 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
 
     .sidebarItem,
     .sidebarSubItem {
+      display: flex;
+      align-items: center;
       cursor: pointer;
       transition: all 0.2s ease-in-out;
 

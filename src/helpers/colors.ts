@@ -14,6 +14,12 @@ export const getReadableColor: (
     ifDark || dimmed ? darken(0.1, Colors.LIGHT) : Colors.LIGHT
   );
 
+export const shouldDarken = (mainColor: string) => {
+  const contrast = readableColor(mainColor);
+
+  return contrast === '#000';
+};
+
 export const getMainColor: (
   theme: IReqoreTheme,
   component: string
