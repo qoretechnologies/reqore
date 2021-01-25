@@ -39,7 +39,7 @@ export const qorusSidebarItems: IQorusSidebarItems = {
             id: 'submenu-item-2',
           },
           {
-            name: 'Submenu item 3',
+            name: 'Super really long Submenu item 3',
             as: 'a',
             link: '/item-3/item-3',
             icon: 'database',
@@ -52,7 +52,7 @@ export const qorusSidebarItems: IQorusSidebarItems = {
   Menu2: {
     items: [
       {
-        name: 'Another item 1',
+        name: 'Super Long Really Another item 1',
         as: 'a',
         link: '/another-item-1',
         icon: 'home',
