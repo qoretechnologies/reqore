@@ -1,10 +1,15 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
+import { ReqoreUIProvider } from '../src';
 import QorusSidebar from '../src/components/Sidebar';
 import { qorusSidebarItems } from '../src/mock/menu';
 
 test('Renders sidebar', () => {
-  render(<QorusSidebar items={qorusSidebarItems} path='/' />);
+  render(
+    <ReqoreUIProvider>
+      <QorusSidebar items={qorusSidebarItems} path='/' />
+    </ReqoreUIProvider>
+  );
 
   expect(document.querySelectorAll('.sidebarItem').length).toBe(7);
   expect(document.querySelectorAll('.sidebarSection').length).toBe(3);
@@ -14,11 +19,13 @@ test('Sidebar can be collapsed', () => {
   const handleClick = jest.fn();
 
   render(
-    <QorusSidebar
-      items={qorusSidebarItems}
-      path='/'
-      onCollapseChange={handleClick}
-    />
+    <ReqoreUIProvider>
+      <QorusSidebar
+        items={qorusSidebarItems}
+        path='/'
+        onCollapseChange={handleClick}
+      />
+    </ReqoreUIProvider>
   );
 
   expect(document.querySelectorAll('.expanded').length).toBe(1);
@@ -31,7 +38,11 @@ test('Sidebar can be collapsed', () => {
 });
 
 test('Can open submenu manually', () => {
-  render(<QorusSidebar items={qorusSidebarItems} path='/' />);
+  render(
+    <ReqoreUIProvider>
+      <QorusSidebar items={qorusSidebarItems} path='/' />
+    </ReqoreUIProvider>
+  );
 
   fireEvent.click(screen.getByText('Menu item 3'));
 
@@ -40,7 +51,11 @@ test('Can open submenu manually', () => {
 });
 
 test('Submenu opens automatically if path matches', () => {
-  render(<QorusSidebar items={qorusSidebarItems} path='/item-3/item-1' />);
+  render(
+    <ReqoreUIProvider>
+      <QorusSidebar items={qorusSidebarItems} path='/item-3/item-1' />
+    </ReqoreUIProvider>
+  );
 
   expect(document.querySelectorAll('.sidebarItem').length).toBe(10);
   expect(document.querySelectorAll('.sidebarSection').length).toBe(3);
@@ -51,11 +66,13 @@ test('Bookmarks can be added and removed', () => {
   const handleBookmarksChange = jest.fn();
 
   render(
-    <QorusSidebar
-      items={qorusSidebarItems}
-      path='/'
-      onBookmarksChange={handleBookmarksChange}
-    />
+    <ReqoreUIProvider>
+      <QorusSidebar
+        items={qorusSidebarItems}
+        path='/'
+        onBookmarksChange={handleBookmarksChange}
+      />
+    </ReqoreUIProvider>
   );
 
   const addBookmarkButton = document.querySelector('.favorite');
@@ -80,24 +97,26 @@ test('Renders item as <p> element with onClick', () => {
   const handleItemClick = jest.fn();
 
   render(
-    <QorusSidebar
-      items={{
-        ...qorusSidebarItems,
-        TestItems: {
-          title: 'TestItems',
-          items: [
-            {
-              name: 'Test',
-              as: 'p',
-              onClick: handleItemClick,
-              id: 'test-item-1',
-              icon: 'add',
-            },
-          ],
-        },
-      }}
-      path='/'
-    />
+    <ReqoreUIProvider>
+      <QorusSidebar
+        items={{
+          ...qorusSidebarItems,
+          TestItems: {
+            title: 'TestItems',
+            items: [
+              {
+                name: 'Test',
+                as: 'p',
+                onClick: handleItemClick,
+                id: 'test-item-1',
+                icon: 'add',
+              },
+            ],
+          },
+        }}
+        path='/'
+      />
+    </ReqoreUIProvider>
   );
 
   const menuItem = document.querySelector('p.sidebarItem');
@@ -114,11 +133,15 @@ test('Renders item as <p> element with onClick', () => {
 
 test('Renders custom item at the top', () => {
   render(
-    <QorusSidebar
-      items={qorusSidebarItems}
-      path='/'
-      customItems={[{ element: () => <span>Hello, I am a custom item!</span> }]}
-    />
+    <ReqoreUIProvider>
+      <QorusSidebar
+        items={qorusSidebarItems}
+        path='/'
+        customItems={[
+          { element: () => <span>Hello, I am a custom item!</span> },
+        ]}
+      />
+    </ReqoreUIProvider>
   );
 
   expect(document.querySelectorAll('.sidebarItem').length).toBe(7);

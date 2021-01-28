@@ -1,5 +1,5 @@
 export interface IReqoreTheme {
-  main: string;
+  main?: string;
   sidebar?: {
     main?: string;
     color?: string;
@@ -31,8 +31,39 @@ export interface IReqoreTheme {
       background?: string;
     };
   };
+  notifications?: {
+    info?: IReqoreThemeNotification;
+    success?: IReqoreThemeNotification;
+    warning?: IReqoreThemeNotification;
+    pending?: IReqoreThemeNotification;
+    danger?: IReqoreThemeNotification;
+  };
 }
 
-export const DEFAULT_THEME = {
+export interface IReqoreThemeNotification {
+  background: string;
+  titleColor?: string;
+  contentColor?: string;
+  iconColor?: string;
+}
+
+export const DEFAULT_THEME: IReqoreTheme = {
   main: '#333',
+  notifications: {
+    info: {
+      background: '#bdebff',
+    },
+    success: {
+      background: '#a7e38f',
+    },
+    pending: {
+      background: '#f5efa2',
+    },
+    warning: {
+      background: '#edcc93',
+    },
+    danger: {
+      background: '#e3aa98',
+    },
+  },
 };
