@@ -15,7 +15,7 @@ export const getReadableColor: (
   );
 
 export const shouldDarken = (mainColor: string) => {
-  const contrast = readableColor(mainColor);
+  const contrast = getColorByBgColor(mainColor);
 
   return contrast === '#000';
 };
@@ -24,3 +24,18 @@ export const getMainColor: (
   theme: IReqoreTheme,
   component: string
 ) => string = (theme, component) => theme[component]?.main || theme.main;
+
+export const changeLightness: (color: string, lightness: number) => string = (
+  color,
+  lightness
+) =>
+  shouldDarken(color) ? darken(lightness, color) : lighten(lightness, color);
+
+export const getColorByBgColor = (bgColor) => {
+  if (!bgColor) {
+    return '';
+  }
+  return parseInt(bgColor.replace('#', ''), 16) > 0xffffff / 2
+    ? '#000'
+    : '#fff';
+};

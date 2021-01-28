@@ -90,7 +90,7 @@ export const WithCustomColors = Template.bind({});
 
 WithCustomColors.args = {
   theme: {
-    main: '#115e68',
+    main: '#c96604',
   },
   path: '/item-3/item-2',
 } as IReqoreUIProviderProps & IQorusSidebarProps;

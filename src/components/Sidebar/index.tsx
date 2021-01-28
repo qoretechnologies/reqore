@@ -369,12 +369,16 @@ const QorusSidebar: React.FC<IQorusSidebarProps> = ({
         style={wrapperStyle}
         role='qorus-sidebar-wrapper'
       >
-        <Scroll horizontal={false} className='sidebarScroll'>
+        <Scroll
+          horizontal={false}
+          className='sidebarScroll'
+          key='reqore-sidebar-scroll'
+        >
           {map(menu, ({ title, items }, sectionId: string) =>
             size(items) ? (
               <>
                 {sectionId !== '_qorusCustomElements' && (
-                  <StyledDivider hasTitle={!!title}>
+                  <StyledDivider hasTitle={!!title} key={sectionId + 'title'}>
                     {!_isCollapsed ? title || '' : ''}
                   </StyledDivider>
                 )}
