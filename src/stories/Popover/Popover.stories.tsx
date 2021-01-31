@@ -1,8 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import Popover from '../../components/Popover';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import PopoverContext from '../../context/PopoverContext';
 import usePopover from '../../hooks/usePopover';
 import { ReqoreUIProvider } from '../../index';
 
@@ -19,7 +18,7 @@ const HoverButton = ({ id }) => {
     <button
       type='button'
       ref={setRefElement}
-      onClick={reqoreAddPopover('I am a popover wooop')}
+      onMouseEnter={reqoreAddPopover('I am a popover wooop')}
       onMouseLeave={reqoreRemovePopover()}
     >
       Hover popover
@@ -29,17 +28,13 @@ const HoverButton = ({ id }) => {
 
 const ClickButton = ({ id }) => {
   const [refElement, setRefElement] = useState(null);
-  const popoverContext = useContext(PopoverContext);
+  const { reqoreAddPopover, reqoreRemovePopover } = usePopover(refElement);
 
   return (
     <button
       type='button'
       ref={setRefElement}
-      onClick={() => {
-        if (refElement) {
-          popoverContext.addPopover({ id, element: refElement });
-        }
-      }}
+      onClick={reqoreAddPopover('Omfg I am so stupid')}
     >
       Click popover
     </button>

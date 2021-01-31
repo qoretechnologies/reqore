@@ -16,6 +16,7 @@ const PopoverProvider = ({ children }) => {
         removePopover: (popoverId) => {
           setPopovers((cur) => [...cur].filter((p) => p.id !== popoverId));
         },
+        popovers,
       }}
     >
       {popovers.map((popover) => (

@@ -2,8 +2,10 @@ import { ElementRef, MutableRefObject, useContext, useRef } from 'react';
 import PopoverContext from '../context/PopoverContext';
 
 const usePopover = (targetElement: ElementRef<any>) => {
-  const { addPopover, removePopover } = useContext(PopoverContext);
-  const id: MutableRefObject<number> = useRef(Date.now());
+  const { addPopover, removePopover, popovers } = useContext(PopoverContext);
+  const { current }: MutableRefObject<number> = useRef(Date.now());
+
+  console.log(current);
 
   return {
     reqoreAddPopover: (content: JSX.Element | string, callback?: any) => (
@@ -14,7 +16,11 @@ const usePopover = (targetElement: ElementRef<any>) => {
       }
 
       if (targetElement) {
-        addPopover({ id, content, element: targetElement });
+        if (popovers.find((p) => p.id === current)) {
+          removePopover(current);
+        } else {
+          addPopover({ id: current, content, element: targetElement });
+        }
       }
     },
     reqoreRemovePopover: (callback?: any) => (event: any) => {
@@ -22,7 +28,7 @@ const usePopover = (targetElement: ElementRef<any>) => {
         callback(event);
       }
 
-      removePopover(id);
+      removePopover(current);
     },
   };
 };
