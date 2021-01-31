@@ -5,8 +5,6 @@ import PopoverContext from '../context/PopoverContext';
 const PopoverProvider = ({ children }) => {
   const [popovers, setPopovers] = useState([]);
 
-  console.log(popovers);
-
   return (
     <PopoverContext.Provider
       value={{

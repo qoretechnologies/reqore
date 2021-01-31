@@ -18,8 +18,12 @@ const HoverButton = ({ id }) => {
     <button
       type='button'
       ref={setRefElement}
-      onMouseEnter={reqoreAddPopover('I am a popover wooop')}
-      onMouseLeave={reqoreRemovePopover()}
+      onMouseEnter={reqoreAddPopover(
+        'I am a popover wooop wooptidy woop its time to get schwifty'
+      )}
+      onMouseLeave={reqoreRemovePopover(() => {
+        console.log('removing popover');
+      })}
     >
       Hover popover
     </button>
@@ -28,13 +32,13 @@ const HoverButton = ({ id }) => {
 
 const ClickButton = ({ id }) => {
   const [refElement, setRefElement] = useState(null);
-  const { reqoreAddPopover, reqoreRemovePopover } = usePopover(refElement);
+  const { reqoreAddPopover } = usePopover(refElement);
 
   return (
     <button
       type='button'
       ref={setRefElement}
-      onClick={reqoreAddPopover('Omfg I am so stupid')}
+      onClick={reqoreAddPopover('YOOOOOOOO WHAT UP')}
     >
       Click popover
     </button>

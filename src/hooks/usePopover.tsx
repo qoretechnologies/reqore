@@ -1,16 +1,18 @@
+import { Placement } from '@popperjs/core';
 import { ElementRef, MutableRefObject, useContext, useRef } from 'react';
+import shortid from 'shortid';
 import PopoverContext from '../context/PopoverContext';
 
 const usePopover = (targetElement: ElementRef<any>) => {
   const { addPopover, removePopover, popovers } = useContext(PopoverContext);
-  const { current }: MutableRefObject<number> = useRef(Date.now());
-
-  console.log(current);
+  const { current }: MutableRefObject<number> = useRef(shortid.generate());
 
   return {
-    reqoreAddPopover: (content: JSX.Element | string, callback?: any) => (
-      event: any
-    ) => {
+    reqoreAddPopover: (
+      content: JSX.Element | string,
+      placement?: Placement,
+      callback?: any
+    ) => (event: any) => {
       if (callback) {
         callback(event);
       }
@@ -19,7 +21,12 @@ const usePopover = (targetElement: ElementRef<any>) => {
         if (popovers.find((p) => p.id === current)) {
           removePopover(current);
         } else {
-          addPopover({ id: current, content, element: targetElement });
+          addPopover({
+            id: current,
+            content,
+            element: targetElement,
+            placement,
+          });
         }
       }
     },
