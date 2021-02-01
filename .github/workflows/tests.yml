@@ -30,6 +30,9 @@ jobs:
       id: install_modules
       run: |
         yarn install
+    - name: Build test
+      id: build_test
+      run: yarn build:test
     - name: Running tests
       id: tests
       run: yarn test:ci
