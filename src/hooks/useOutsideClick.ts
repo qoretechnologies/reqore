@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { MutableRefObject, useEffect } from 'react';
 
-const useOutsideClick = (targetElement: any, callback?: any) => {
-  const handleClick = (e) => {
+const useOutsideClick = (
+  targetElement: MutableRefObject<any>,
+  callback?: Function
+): void => {
+  const handleClick = (event: any): void => {
     if (
       targetElement.current &&
-      !targetElement.current.contains(e.target) &&
+      !targetElement.current.contains(event.target) &&
       callback
     ) {
       callback();

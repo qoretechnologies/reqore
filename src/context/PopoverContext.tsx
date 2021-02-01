@@ -1,7 +1,8 @@
 import { createContext } from 'react';
+import { IPopoverData } from '../containers/PopoverProvider';
 
 export default createContext<{
-  addPopover?: (popoverData: any) => any;
-  removePopover?: (popoverData: any) => any;
-  popovers?: any[];
+  addPopover?: (popoverData: IPopoverData) => void;
+  removePopover?: (popoverId: string) => void;
+  popovers?: IPopoverData[];
 }>({});

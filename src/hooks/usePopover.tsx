@@ -5,14 +5,14 @@ import PopoverContext from '../context/PopoverContext';
 
 const usePopover = (targetElement: ElementRef<any>) => {
   const { addPopover, removePopover, popovers } = useContext(PopoverContext);
-  const { current }: MutableRefObject<number> = useRef(shortid.generate());
+  const { current }: MutableRefObject<string> = useRef(shortid.generate());
 
   return {
     reqoreAddPopover: (
       content: JSX.Element | string,
       placement?: Placement,
-      callback?: any
-    ) => (event: any) => {
+      callback?: (event: unknown) => any
+    ) => (event: unknown) => {
       if (callback) {
         callback(event);
       }
@@ -30,7 +30,9 @@ const usePopover = (targetElement: ElementRef<any>) => {
         }
       }
     },
-    reqoreRemovePopover: (callback?: any) => (event: any) => {
+    reqoreRemovePopover: (callback?: (event: unknown) => any) => (
+      event: unknown
+    ) => {
       if (callback) {
         callback(event);
       }

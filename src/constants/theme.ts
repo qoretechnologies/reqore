@@ -38,6 +38,9 @@ export interface IReqoreTheme {
     pending?: IReqoreThemeNotification;
     danger?: IReqoreThemeNotification;
   };
+  popover?: {
+    main: string;
+  };
 }
 
 export interface IReqoreThemeNotification {
@@ -48,7 +51,7 @@ export interface IReqoreThemeNotification {
 }
 
 export const DEFAULT_THEME: IReqoreTheme = {
-  main: '#333',
+  main: '#333333',
   notifications: {
     info: {
       background: '#bdebff',
