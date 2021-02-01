@@ -24,6 +24,7 @@ const usePopover = (targetElement: ElementRef<any>) => {
           addPopover({
             id: current,
             content,
+            //@ts-ignore
             element: targetElement,
             placement,
           });
