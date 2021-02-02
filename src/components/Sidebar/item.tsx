@@ -1,13 +1,14 @@
-import { Icon, Position, Tooltip } from '@blueprintjs/core';
+import { Icon } from '@blueprintjs/core';
 import classnames from 'classnames';
 import map from 'lodash/map';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useMount } from 'react-use';
 import { IQorusSidebarItem } from '.';
 import { IReqoreTheme } from '../../constants/theme';
 import ThemeContext from '../../context/ThemeContext';
 import { getMainColor, getReadableColor } from '../../helpers/colors';
 import { isActiveMulti } from '../../helpers/sidebar';
+import useSimplePopover from '../../hooks/useSimplePopover';
 
 export interface SidebarItemProps {
   itemData: IQorusSidebarItem;
@@ -48,32 +49,18 @@ const SidebarItemTooltip: Function = ({
   onClick,
 }: ISidebarTooltipProps) => {
   const Element = itemData.as || 'div';
+  const [refElement, setRefElement] = useState(null);
+  const hoverPopover = useSimplePopover(
+    refElement,
+    itemData.name,
+    'hover',
+    'right'
+  );
 
-  return isCollapsed ? (
-    <Tooltip
-      content={itemData.name}
-      position={Position.RIGHT}
-      wrapperTagName='div'
-      className={isSubitem ? 'reqore-sidebar-subitem' : 'reqore-sidebar-item'}
-      targetProps={{
-        //@ts-ignore
-        to: itemData.link,
-        onClick: itemData.onClick || onClick,
-        role: 'qorus-sidebar-item',
-      }}
-      targetClassName={classnames('sidebarItem', 'sidebarLink', {
-        sidebarSubItem: isSubitem,
-        active: isActive,
-        submenuCategory: isSubcategory,
-      })}
-      //@ts-ignore
-      targetTagName={Element}
-    >
-      <>{children}</>
-    </Tooltip>
-  ) : (
+  return (
     //@ts-ignore
     <Element
+      ref={setRefElement}
       role='qorus-sidebar-item'
       className={classnames('sidebarItem', 'sidebarLink', {
         sidebarSubItem: isSubitem,
@@ -82,6 +69,7 @@ const SidebarItemTooltip: Function = ({
       })}
       onClick={itemData.onClick || onClick}
       to={itemData.link}
+      {...(isCollapsed ? hoverPopover : {})}
     >
       {children}
     </Element>
