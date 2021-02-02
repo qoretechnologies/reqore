@@ -1,5 +1,7 @@
 import '@blueprintjs/core/lib/css/blueprint.css';
 
+export { default as ReqoreMenu } from './components/Menu';
+export { default as ReqoreMenuItem } from './components/Menu/item';
 export { default as ReqoreNotificationsWrapper } from './components/Notifications';
 export { default as ReqoreNotification } from './components/Notifications/notification';
 export { default as QorusSidebar } from './components/Sidebar';

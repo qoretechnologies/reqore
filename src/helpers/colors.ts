@@ -17,7 +17,7 @@ export const getReadableColor: (
 export const shouldDarken = (mainColor: string) => {
   const contrast = getColorByBgColor(mainColor);
 
-  return contrast === '#000';
+  return contrast === '#000000';
 };
 
 export const getMainColor: (
@@ -36,6 +36,6 @@ export const getColorByBgColor = (bgColor) => {
     return '';
   }
   return parseInt(bgColor.replace('#', ''), 16) > 0xffffff / 2
-    ? '#000'
-    : '#fff';
+    ? '#000000'
+    : '#ffffff';
 };
