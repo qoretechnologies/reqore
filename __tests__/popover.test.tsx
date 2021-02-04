@@ -1,37 +1,30 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React, { useState } from 'react';
-import usePopover from '../src/hooks/usePopover';
-import useSimplePopover from '../src/hooks/useSimplePopover';
-import { ReqoreUIProvider } from '../src/index';
+import React from 'react';
+import { ReqorePopover, ReqoreUIProvider } from '../src/index';
 
 const SimpleContent = (props: any) => {
-  const [refElement, setRefElement] = useState(null);
-  const hoverPopover = useSimplePopover(
-    refElement,
-    props?.content || 'Tooltip content',
-    props.type
-  );
-
   return (
-    <p id='popover-content' ref={setRefElement} {...hoverPopover}>
+    <ReqorePopover
+      component='p'
+      content={props.content || 'Tooltip content'}
+      handler={props.type}
+      isReqoreComponent
+    >
       Hover me
-    </p>
+    </ReqorePopover>
   );
 };
 
 const FullContent = (props: any) => {
-  const [refElement, setRefElement] = useState(null);
-  const { reqoreAddPopover, reqoreRemovePopover } = usePopover(refElement);
-
   return (
-    <p
-      id='popover-content'
-      ref={setRefElement}
-      onMouseEnter={reqoreAddPopover('test', 'right', () => props.fn())}
-      onMouseLeave={reqoreRemovePopover()}
+    <ReqorePopover
+      component='p'
+      content={props.content || 'test'}
+      placement='right'
+      componentProps={{ onMouseEnter: () => props.fn() }}
     >
       Hover me
-    </p>
+    </ReqorePopover>
   );
 };
 
@@ -40,13 +33,11 @@ beforeAll(() => {
 });
 
 test('Shows popover on hover, hides on leave', async () => {
-  act(() => {
-    render(
-      <ReqoreUIProvider>
-        <SimpleContent />
-      </ReqoreUIProvider>
-    );
-  });
+  render(
+    <ReqoreUIProvider>
+      <SimpleContent />
+    </ReqoreUIProvider>
+  );
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 

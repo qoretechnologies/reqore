@@ -1,6 +1,6 @@
 import { Icon, IconName, MaybeElement } from '@blueprintjs/core';
 import { darken } from 'polished';
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css, keyframes } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
@@ -155,74 +155,82 @@ const typeToIcon: { [type: string]: IconName } = {
   success: 'small-tick',
 };
 
-const ReqoreNotification: React.FC<IReqoreNotificationProps> = ({
-  type = 'info',
-  icon,
-  title,
-  content,
-  onClose,
-  onClick,
-  duration,
-  onFinish,
-}) => {
-  const [internalTimeout, setInternalTimeout] = useState(null);
+const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
+  (
+    {
+      type = 'info',
+      icon,
+      title,
+      content,
+      onClose,
+      onClick,
+      duration,
+      onFinish,
+    },
+    ref: any
+  ) => {
+    const [internalTimeout, setInternalTimeout] = useState(null);
 
-  useMount(() => {
-    if (duration) {
-      setInternalTimeout(
-        setTimeout(() => {
-          onFinish && onFinish();
-        }, duration)
-      );
-    }
-  });
+    useMount(() => {
+      if (duration) {
+        setInternalTimeout(
+          setTimeout(() => {
+            onFinish && onFinish();
+          }, duration)
+        );
+      }
+    });
 
-  useEffect(() => {
-    if (internalTimeout) {
+    useEffect(() => {
+      if (internalTimeout) {
+        clearTimeout(internalTimeout);
+        setInternalTimeout(
+          setTimeout(() => {
+            onFinish && onFinish();
+          }, duration)
+        );
+      }
+    }, [duration, type, content, title]);
+
+    useUnmount(() => {
       clearTimeout(internalTimeout);
-      setInternalTimeout(
-        setTimeout(() => {
-          onFinish && onFinish();
-        }, duration)
-      );
-    }
-  }, [duration, type, content, title]);
+    });
 
-  useUnmount(() => {
-    clearTimeout(internalTimeout);
-  });
-
-  return (
-    <ReqoreThemeProvider>
-      <StyledReqoreNotification
-        key={`${duration}${type}${title}${content}`}
-        type={type}
-        timeout={duration}
-        clickable={!!onClick}
-        onClick={onClick}
-        className='reqore-notification'
-      >
-        <StyledIconWrapper type={type}>
-          <Icon icon={icon || typeToIcon[type]} />
-        </StyledIconWrapper>
-        <StyledNotificationContentWrapper>
-          {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
-          <StyledNotificationContent>{content}</StyledNotificationContent>
-        </StyledNotificationContentWrapper>
-        <StyledIconWrapper
+    return (
+      <ReqoreThemeProvider>
+        <StyledReqoreNotification
+          key={`${duration}${type}${title}${content}`}
           type={type}
-          clickable
-          className='reqore-notification-close'
-          onClick={(event) => {
-            event.stopPropagation();
-            onClose && onClose();
-          }}
+          timeout={duration}
+          clickable={!!onClick}
+          onClick={onClick}
+          className='reqore-notification'
+          ref={ref}
         >
-          <Icon icon='cross' />
-        </StyledIconWrapper>
-      </StyledReqoreNotification>
-    </ReqoreThemeProvider>
-  );
-};
+          <StyledIconWrapper type={type}>
+            <Icon icon={icon || typeToIcon[type]} />
+          </StyledIconWrapper>
+          <StyledNotificationContentWrapper>
+            {title && (
+              <StyledNotificationTitle>{title}</StyledNotificationTitle>
+            )}
+            <StyledNotificationContent>{content}</StyledNotificationContent>
+          </StyledNotificationContentWrapper>
+          <StyledIconWrapper
+            type={type}
+            clickable
+            className='reqore-notification-close'
+            onClick={(event) => {
+              event.stopPropagation();
+              onClose && onClose();
+            }}
+          >
+            <Icon icon='cross' />
+          </StyledIconWrapper>
+        </StyledReqoreNotification>
+      </ReqoreThemeProvider>
+    );
+  }
+);
 
 export default ReqoreNotification;

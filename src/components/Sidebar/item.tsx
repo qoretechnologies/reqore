@@ -1,14 +1,14 @@
 import { Icon } from '@blueprintjs/core';
 import classnames from 'classnames';
 import map from 'lodash/map';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { useMount } from 'react-use';
 import { IQorusSidebarItem } from '.';
+import { ReqorePopover } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import ThemeContext from '../../context/ThemeContext';
 import { getMainColor, getReadableColor } from '../../helpers/colors';
 import { isActiveMulti } from '../../helpers/sidebar';
-import useSimplePopover from '../../hooks/useSimplePopover';
 
 export interface SidebarItemProps {
   itemData: IQorusSidebarItem;
@@ -49,30 +49,27 @@ const SidebarItemTooltip: Function = ({
   onClick,
 }: ISidebarTooltipProps) => {
   const Element = itemData.as || 'div';
-  const [refElement, setRefElement] = useState(null);
-  const hoverPopover = useSimplePopover(
-    refElement,
-    itemData.name,
-    'hover',
-    'right'
-  );
 
   return (
     //@ts-ignore
-    <Element
-      ref={setRefElement}
-      role='qorus-sidebar-item'
-      className={classnames('sidebarItem', 'sidebarLink', {
-        sidebarSubItem: isSubitem,
-        active: isActive,
-        submenuCategory: isSubcategory,
-      })}
-      onClick={itemData.onClick || onClick}
-      to={itemData.link}
-      {...(isCollapsed ? hoverPopover : {})}
+    <ReqorePopover
+      component={Element}
+      componentProps={{
+        className: classnames('sidebarItem', 'sidebarLink', {
+          sidebarSubItem: isSubitem,
+          active: isActive,
+          submenuCategory: isSubcategory,
+        }),
+        onClick: itemData.onClick || onClick,
+        to: itemData.link,
+      }}
+      content={itemData.name}
+      placement='right'
+      isReqoreComponent
+      show={isCollapsed}
     >
       {children}
-    </Element>
+    </ReqorePopover>
   );
 };
 

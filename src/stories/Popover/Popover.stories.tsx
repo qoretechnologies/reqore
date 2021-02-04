@@ -1,45 +1,28 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import React, { useState } from 'react';
-import Popover from '../../components/Popover';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import usePopover from '../../hooks/usePopover';
-import useSimplePopover from '../../hooks/useSimplePopover';
-import { ReqoreUIProvider } from '../../index';
+import { ReqorePopover, ReqoreUIProvider } from '../../index';
 
 export default {
   title: 'ReQore/Popover',
-  component: Popover,
 } as Meta;
 
-const HoverButton = ({ content, placement }: any) => {
-  const [refElement, setRefElement] = useState(null);
-  const { reqoreAddPopover, reqoreRemovePopover } = usePopover(refElement);
-
+const HoverButton = () => {
   return (
-    <button
-      type='button'
-      ref={setRefElement}
-      onMouseEnter={reqoreAddPopover(
-        content || 'I am a hover tooltip',
-        placement
-      )}
-      onMouseLeave={reqoreRemovePopover()}
-    >
+    <ReqorePopover component='button' content='Hello'>
       Hover popover
-    </button>
+    </ReqorePopover>
   );
 };
 
 const ClickButton = ({ content, placement }: any) => {
   const [refElement, setRefElement] = useState(null);
-  const { reqoreAddPopover } = usePopover(refElement);
+
+  usePopover(refElement, content || 'I am a hover tooltip', 'click', placement);
 
   return (
-    <button
-      type='button'
-      ref={setRefElement}
-      onClick={reqoreAddPopover(content || 'I am a hover tooltip', placement)}
-    >
+    <button type='button' ref={setRefElement}>
       Click popover
     </button>
   );
@@ -51,7 +34,7 @@ const Template: Story<IReqoreUIProviderProps> = ({
 }: IReqoreUIProviderProps) => {
   return (
     <ReqoreUIProvider theme={theme}>
-      <HoverButton {...args} />
+      <HoverButton />
       <br />
       <br />
       <ClickButton {...args} />
@@ -83,32 +66,6 @@ CustomPosition.args = {
 
 const SimplePopoverElement = ({ type = 'hover' }: any) => {
   const [refElement, setRefElement] = useState(null);
-  const hoverTooltip = useSimplePopover(
-    refElement,
-    'More information can be found here...',
-    type
-  );
 
-  return (
-    <p ref={setRefElement} {...hoverTooltip}>
-      Hover me for more information
-    </p>
-  );
-};
-
-const SimpleTemplate: Story<IReqoreUIProviderProps> = ({
-  theme,
-  ...args
-}: IReqoreUIProviderProps) => {
-  return (
-    <ReqoreUIProvider theme={theme}>
-      <SimplePopoverElement {...args} />
-    </ReqoreUIProvider>
-  );
-};
-
-export const SimpleHover = SimpleTemplate.bind({});
-export const SimpleClick = SimpleTemplate.bind({});
-SimpleClick.args = {
-  type: 'click',
+  return <p ref={setRefElement}>Hover me for more information</p>;
 };
