@@ -1,9 +1,16 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import React from 'react';
 import styled from 'styled-components';
+import { IReqoreMenuItemProps } from '../../components/Menu/item';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreMenu, ReqoreMenuItem, ReqoreUIProvider } from '../../index';
+import {
+  ReqoreMenu,
+  ReqoreMenuDivider,
+  ReqoreMenuItem,
+  ReqorePopover,
+  ReqoreUIProvider,
+} from '../../index';
 
 export default {
   title: 'ReQore/Menu',
@@ -32,7 +39,13 @@ const Template: Story<IReqoreUIProviderProps> = ({
       <ReqoreThemeProvider>
         <StyledStoriesContent>
           <ReqoreMenu {...args}>
-            <ReqoreMenuItem icon='floppy-disk'>Save</ReqoreMenuItem>
+            <ReqoreMenuItem
+              icon='floppy-disk'
+              tooltip='Save file to disk'
+              tooltipPlacement='right'
+            >
+              Save
+            </ReqoreMenuItem>
             <ReqoreMenuItem icon='cross' rightIcon='warning-sign'>
               Delete
             </ReqoreMenuItem>
@@ -40,8 +53,35 @@ const Template: Story<IReqoreUIProviderProps> = ({
             <ReqoreMenuItem icon='trash'>
               Remove this really long text heh
             </ReqoreMenuItem>
+            <ReqoreMenuDivider />
+            <ReqorePopover
+              component={ReqoreMenuItem}
+              componentProps={
+                {
+                  icon: 'list',
+                  rightIcon: 'chevron-right',
+                } as IReqoreMenuItemProps
+              }
+              content={
+                <ReqoreMenu {...args}>
+                  <ReqoreMenuItem
+                    icon='floppy-disk'
+                    tooltip='Save file to disk'
+                    tooltipPlacement='right'
+                  >
+                    Save
+                  </ReqoreMenuItem>
+                </ReqoreMenu>
+              }
+              isReqoreComponent
+              handler='click'
+              placement='right'
+            >
+              I have a submenu on click
+            </ReqorePopover>
+            <ReqoreMenuDivider label='Divider' />
             <ReqoreMenuItem icon='person' rightIcon='small-tick' selected>
-              Hello
+              I am selected!
             </ReqoreMenuItem>
           </ReqoreMenu>
         </StyledStoriesContent>

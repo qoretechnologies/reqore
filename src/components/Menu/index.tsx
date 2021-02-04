@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
@@ -28,16 +28,14 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   `}
 `;
 
-const ReqoreMenu: React.FC<IReqoreMenuProps> = ({
-  children,
-  position,
-  ...rest
-}) => (
-  <ReqoreThemeProvider>
-    <StyledReqoreMenu {...rest} position={position}>
-      {children}
-    </StyledReqoreMenu>
-  </ReqoreThemeProvider>
+const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
+  ({ children, position, ...rest }, ref: any) => (
+    <ReqoreThemeProvider>
+      <StyledReqoreMenu {...rest} position={position} ref={ref}>
+        {children}
+      </StyledReqoreMenu>
+    </ReqoreThemeProvider>
+  )
 );
 
 export default ReqoreMenu;

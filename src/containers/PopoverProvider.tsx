@@ -1,6 +1,6 @@
 import { Placement, VirtualElement } from '@popperjs/core';
 import React, { useState } from 'react';
-import Popover from '../components/Popover';
+import Popover from '../components/InternalPopover';
 import PopoverContext from '../context/PopoverContext';
 
 export interface IReqorePopoverProviderProps {
@@ -10,7 +10,7 @@ export interface IReqorePopoverProviderProps {
 export interface IPopoverData {
   element: Element | VirtualElement;
   id: string;
-  content: JSX.Element | string;
+  content: JSX.Element | string | number;
   placement?: Placement;
 }
 

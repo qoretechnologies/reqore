@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 
 export interface IReqoreNotificationsWrapperProps {
@@ -40,19 +40,19 @@ const StyledNotificationsWrapper = styled.div<IReqoreNotificationsStyle>`
   }}
 `;
 
-const ReqoreNotificationsWrapper: React.FC<IReqoreNotificationsWrapperProps> = ({
-  children,
-  position = 'TOP',
-}) => (
-  <StyledNotificationsWrapper
-    positions={position
-      .split(' ')
-      .map((p: IReqoreNotificationsPosition | string): string =>
-        p.toLowerCase()
-      )}
-  >
-    {children}
-  </StyledNotificationsWrapper>
+const ReqoreNotificationsWrapper: React.FC<IReqoreNotificationsWrapperProps> = forwardRef(
+  ({ children, position = 'TOP' }, ref: any) => (
+    <StyledNotificationsWrapper
+      positions={position
+        .split(' ')
+        .map((p: IReqoreNotificationsPosition | string): string =>
+          p.toLowerCase()
+        )}
+      ref={ref}
+    >
+      {children}
+    </StyledNotificationsWrapper>
+  )
 );
 
 export default ReqoreNotificationsWrapper;
