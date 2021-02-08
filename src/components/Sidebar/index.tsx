@@ -77,13 +77,6 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
     flex: 1;
   }
 
-  #menuCollapse {
-    border-top: 1px solid
-      ${({ theme }) =>
-        theme.sidebar?.item?.border ||
-        darken(0.04, getMainColor(theme, 'sidebar'))};
-  }
-
   &.expanded {
     min-width: 180px !important;
     max-width: 180px !important;
@@ -281,6 +274,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
 
     .sidebarItem,
     .sidebarSubItem {
+      min-height: 50px;
       display: flex;
       align-items: center;
       cursor: pointer;

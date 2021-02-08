@@ -7,7 +7,7 @@ import {
   ReqoreUIProvider,
 } from '../src/index';
 
-test('Renders Menu properly', async () => {
+test('Renders Menu properly', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreMenu>
