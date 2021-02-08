@@ -41,6 +41,20 @@ export interface IReqoreTheme {
   popover?: {
     main: string;
   };
+  header?: {
+    main?: string;
+    color?: string;
+    border?: string;
+    background?: string;
+    hoverColor?: string;
+  };
+  footer?: {
+    main?: string;
+    color?: string;
+    border?: string;
+    background?: string;
+    hoverColor?: string;
+  };
 }
 
 export interface IReqoreThemeNotification {
