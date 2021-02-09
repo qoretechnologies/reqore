@@ -1,5 +1,7 @@
 import '@blueprintjs/core/lib/css/blueprint.css';
 
+export { default as ReqoreContent } from './components/Content';
+export { default as ReqoreLayoutContent } from './components/Layout/content';
 export { default as ReqoreMenu } from './components/Menu';
 export { default as ReqoreMenuDivider } from './components/Menu/divider';
 export { default as ReqoreMenuItem } from './components/Menu/item';

@@ -60,7 +60,7 @@ export const WithDarkTheme = Template.bind({});
 
 WithDarkTheme.args = {
   theme: {
-    main: '#444',
+    main: '#444444',
   },
   path: '/item-3/item-2',
 };
@@ -69,7 +69,7 @@ export const WithLightTheme = Template.bind({});
 
 WithLightTheme.args = {
   theme: {
-    main: '#fff',
+    main: '#ffffff',
   },
   path: '/item-3/item-2',
 };
@@ -78,7 +78,7 @@ export const WithCustomMainColor = Template.bind({});
 
 WithCustomMainColor.args = {
   theme: {
-    main: '#333',
+    main: '#333333',
     sidebar: {
       main: '#692b75',
     },

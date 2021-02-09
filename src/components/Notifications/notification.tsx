@@ -50,7 +50,6 @@ const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
   overflow: hidden;
   position: relative;
   transition: background-color 0.1s linear;
-  box-shadow: 0px 0px 6px 0px #999;
 
   &:not(:first-child) {
     margin-top: 10px;
@@ -59,6 +58,8 @@ const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
   ${({ theme, type, clickable, timeout }: IReqoreNotificationStyle) => css`
     background-color: ${theme.notifications?.[type]?.background};
     border: 1px solid ${darken(0.3, theme.notifications?.[type]?.background)};
+    box-shadow: 0px 0px 6px 0px
+      ${darken(0.6, theme.notifications?.[type]?.background)};
 
     ${timeout &&
     css`
