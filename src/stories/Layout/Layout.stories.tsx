@@ -28,7 +28,7 @@ const Template: Story<IReqoreUIProviderProps> = (
       {args.withSidebar && <QorusSidebar items={qorusSidebarItems} path='/' />}
       <ReqoreLayoutContent>
         <ReqoreHeader></ReqoreHeader>
-        <h1> I am a header ! </h1>
+        <h2> I am a header ! </h2>
         <ReqoreContent>
           <h3>Hello</h3>
         </ReqoreContent>
@@ -43,3 +43,14 @@ export const WithSidebar = Template.bind({});
 WithSidebar.args = {
   withSidebar: true,
 };
+
+export const WithLightTheme = Template.bind({});
+WithLightTheme.args = {
+  theme: {
+    main: '#ffffff',
+    popover: {
+      main: '#333333',
+    },
+  },
+  withSidebar: true,
+} as IReqoreUIProviderProps;

@@ -25,7 +25,8 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
     transform: rotate(45deg);
     ${({ theme }) => css`
       background-color: ${theme.popover?.main || theme.main};
-      box-shadow: 0px 0px 4px 1px ${darken(0.2, theme.main)};
+      box-shadow: 0px 0px 4px 1px
+        ${darken(0.1, theme.popover?.main || theme.main)};
     `}
   }
 `;
@@ -38,7 +39,8 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       background-color: ${defaultColor};
       color: ${getReadableColor(defaultColor)};
       border-radius: 3.5px;
-      box-shadow: 0px 0px 4px 1px ${darken(0.2, theme.main)};
+      box-shadow: 0px 0px 4px 1px
+        ${darken(0.1, theme.popover?.main || theme.main)};
     `;
   }}
 

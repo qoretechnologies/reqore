@@ -2,7 +2,7 @@ import React from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness } from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 
 export interface IReqoreLayoutWrapperProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -21,7 +21,8 @@ const StyledReqoreLayoutWrapper = styled.div<{
 
   ${({ withSidebar, theme }) => css`
     flex-flow: ${withSidebar ? 'row' : 'column'};
-    background-color: ${changeLightness(theme.main, 0.1)};
+    background-color: ${changeLightness(theme.main, 0.05)};
+    color: ${getReadableColor(theme.main, undefined, undefined, true)};
   `}
 `;
 
