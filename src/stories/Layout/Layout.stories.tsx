@@ -28,6 +28,7 @@ const Template: Story<IReqoreUIProviderProps> = (
       {args.withSidebar && <QorusSidebar items={qorusSidebarItems} path='/' />}
       <ReqoreLayoutContent>
         <ReqoreHeader></ReqoreHeader>
+        <h1> I am a header ! </h1>
         <ReqoreContent>
           <h3>Hello</h3>
         </ReqoreContent>

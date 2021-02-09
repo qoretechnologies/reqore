@@ -19,6 +19,7 @@ const StyledReqoreContentWrapper = styled.div<IReqoreContentStyle>`
   flex-flow: column;
   flex: 1;
   padding: 15px;
+  overflow: hidden;
 `;
 
 const StyledReqoreContent = styled.div<IReqoreContentStyle>`
@@ -29,7 +30,8 @@ const StyledReqoreContent = styled.div<IReqoreContentStyle>`
     border-radius: 10px;
     color: ${getReadableColor(theme.main, undefined, undefined, true)};
     padding: 10px;
-    box-shadow: 0 0 4px 0px ${darken(0.3, theme.main)};
+    box-shadow: 0 0 4px 1px ${darken(0.2, theme.main)};
+    overflow: auto;
   `}
 `;
 
