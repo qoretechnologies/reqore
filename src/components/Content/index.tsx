@@ -1,3 +1,4 @@
+import { darken } from 'polished';
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
@@ -28,6 +29,7 @@ const StyledReqoreContent = styled.div<IReqoreContentStyle>`
     border-radius: 10px;
     color: ${getReadableColor(theme.main, undefined, undefined, true)};
     padding: 10px;
+    box-shadow: 0 0 4px 0px ${darken(0.3, theme.main)};
   `}
 `;
 

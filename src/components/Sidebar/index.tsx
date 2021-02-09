@@ -2,7 +2,7 @@ import { Icon, IconName, MaybeElement } from '@blueprintjs/core';
 import classnames from 'classnames';
 import { size } from 'lodash';
 import map from 'lodash/map';
-import { darken, lighten } from 'polished';
+import { darken } from 'polished';
 import React, { useState } from 'react';
 import Scroll from 'react-scrollbar';
 import { useUpdateEffect } from 'react-use';
@@ -10,9 +10,9 @@ import styled from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
+  changeLightness,
   getMainColor,
   getReadableColor,
-  shouldDarken,
 } from '../../helpers/colors';
 import { transformMenu } from '../../helpers/sidebar';
 import SidebarItem from './item';
@@ -235,11 +235,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
 
           const color = getMainColor(theme, 'sidebar');
 
-          if (shouldDarken(color)) {
-            return darken(0.17, color);
-          }
-
-          return lighten(0.17, color);
+          return changeLightness(color, 0.17);
         }};
     }
 
