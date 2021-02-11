@@ -30,9 +30,8 @@ export interface IQorusSidebarItems {
 
 export interface IQorusSidebarItem {
   name: string;
-  link?: string;
+  props?: any;
   activePaths?: string[];
-  onClick?: () => any;
   submenu?: IQorusSidebarItem[];
   id: string;
   as?: JSX.Element | string;
@@ -303,7 +302,7 @@ const StyledDivider = styled.div<{ theme?: any; hasTitle?: boolean }>`
   color: inherit;
 `;
 
-const QorusSidebar: React.FC<IQorusSidebarProps> = ({
+const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   isCollapsed,
   onCollapseChange,
   path,
@@ -423,4 +422,4 @@ const QorusSidebar: React.FC<IQorusSidebarProps> = ({
   );
 };
 
-export default QorusSidebar;
+export default ReqoreSidebar;

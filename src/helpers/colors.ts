@@ -7,12 +7,12 @@ export const getReadableColor: (
   ifLight?: string,
   ifDark?: string,
   dimmed?: boolean
-) => string = (from, ifLight, ifDark, dimmed) =>
-  readableColor(
-    from,
-    ifLight || dimmed ? lighten(0.1, Colors.DARK) : Colors.DARK,
-    ifDark || dimmed ? darken(0.1, Colors.LIGHT) : Colors.LIGHT
-  );
+) => string = (from, ifLight, ifDark, dimmed) => {
+  const returnIfLight = ifLight || lighten(dimmed ? 0.2 : 0, Colors.DARK);
+  const returnIfDark = ifDark || darken(dimmed ? 0.1 : 0, Colors.LIGHT);
+
+  return readableColor(from, returnIfLight, returnIfDark, false);
+};
 
 export const shouldDarken = (mainColor: string) => {
   const contrast = getColorByBgColor(mainColor);
@@ -29,7 +29,21 @@ export const changeLightness: (color: string, lightness: number) => string = (
   color,
   lightness
 ) =>
-  shouldDarken(color) ? darken(lightness, color) : lighten(lightness, color);
+  color
+    ? shouldDarken(color)
+      ? darken(lightness, color)
+      : lighten(lightness, color)
+    : undefined;
+
+export const changeDarkness: (color: string, lightness: number) => string = (
+  color,
+  lightness
+) =>
+  color
+    ? shouldDarken(color)
+      ? lighten(lightness, color)
+      : darken(lightness, color)
+    : undefined;
 
 export const getColorByBgColor = (bgColor) => {
   if (!bgColor) {

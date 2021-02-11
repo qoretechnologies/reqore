@@ -29,6 +29,8 @@ jobs:
     - name: Installing modules
       id: install_modules
       run: |
+        yarn cache clean
+        rm -rf node_modules
         yarn install
     - name: Build test
       id: build_test

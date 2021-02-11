@@ -55,6 +55,14 @@ export interface IReqoreTheme {
     background?: string;
     hoverColor?: string;
   };
+  breadcrumbs?: {
+    main?: string;
+    item?: {
+      color?: string;
+      hoverColor?: string;
+      activeColor?: string;
+    };
+  };
 }
 
 export interface IReqoreThemeNotification {

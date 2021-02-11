@@ -1,5 +1,7 @@
 import '@blueprintjs/core/lib/css/blueprint.css';
 
+export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
+export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
 export { default as ReqoreMenu } from './components/Menu';
@@ -12,7 +14,7 @@ export { default as ReqoreNavbarItem } from './components/Navbar/item';
 export { default as ReqoreNotificationsWrapper } from './components/Notifications';
 export { default as ReqoreNotification } from './components/Notifications/notification';
 export { default as ReqorePopover } from './components/Popover';
-export { default as QorusSidebar } from './components/Sidebar';
+export { default as ReqoreSidebar } from './components/Sidebar';
 export { default as ReqoreNotifications } from './containers/NotificationsProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreNotificationsContext } from './context/NotificationContext';

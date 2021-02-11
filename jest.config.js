@@ -3,6 +3,8 @@ module.exports = {
   // `<rootDir>` is a token Jest substitutes
   roots: ['<rootDir>/__tests__'],
 
+  testMatch: ['<rootDir>/__tests__/**/*.test.(ts|tsx)'],
+
   // Jest transformations -- this adds support for TypeScript
   // using ts-jest
   transform: {

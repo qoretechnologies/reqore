@@ -1,13 +1,13 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { ReqoreUIProvider } from '../src';
-import QorusSidebar from '../src/components/Sidebar';
+import ReqoreSidebar from '../src/components/Sidebar';
 import { qorusSidebarItems } from '../src/mock/menu';
 
 test('Renders sidebar', () => {
   render(
     <ReqoreUIProvider>
-      <QorusSidebar items={qorusSidebarItems} path='/' />
+      <ReqoreSidebar items={qorusSidebarItems} path='/' />
     </ReqoreUIProvider>
   );
 
@@ -20,7 +20,7 @@ test('Sidebar can be collapsed', () => {
 
   render(
     <ReqoreUIProvider>
-      <QorusSidebar
+      <ReqoreSidebar
         items={qorusSidebarItems}
         path='/'
         onCollapseChange={handleClick}
@@ -40,7 +40,7 @@ test('Sidebar can be collapsed', () => {
 test('Can open submenu manually', () => {
   render(
     <ReqoreUIProvider>
-      <QorusSidebar items={qorusSidebarItems} path='/' />
+      <ReqoreSidebar items={qorusSidebarItems} path='/' />
     </ReqoreUIProvider>
   );
 
@@ -53,7 +53,7 @@ test('Can open submenu manually', () => {
 test('Submenu opens automatically if path matches', () => {
   render(
     <ReqoreUIProvider>
-      <QorusSidebar items={qorusSidebarItems} path='/item-3/item-1' />
+      <ReqoreSidebar items={qorusSidebarItems} path='/item-3/item-1' />
     </ReqoreUIProvider>
   );
 
@@ -67,7 +67,7 @@ test('Bookmarks can be added and removed', () => {
 
   render(
     <ReqoreUIProvider>
-      <QorusSidebar
+      <ReqoreSidebar
         items={qorusSidebarItems}
         path='/'
         onBookmarksChange={handleBookmarksChange}
@@ -93,12 +93,49 @@ test('Bookmarks can be added and removed', () => {
   expect(document.querySelectorAll('.sidebarSection').length).toBe(3);
 });
 
+test('Bookmarks clicks are not propagated through', () => {
+  const handleBookmarksChange = jest.fn();
+  const handleClick = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreSidebar
+        items={{
+          Menu: {
+            title: 'Menu',
+            items: [
+              {
+                name: 'Menu item 1',
+                as: 'p',
+                icon: 'home',
+                id: 'menu-item-1',
+                props: {
+                  onClick: handleClick,
+                },
+              },
+            ],
+          },
+        }}
+        path='/'
+        onBookmarksChange={handleBookmarksChange}
+      />
+    </ReqoreUIProvider>
+  );
+
+  const addBookmarkButton = document.querySelector('.favorite');
+
+  fireEvent.click(addBookmarkButton);
+
+  expect(handleBookmarksChange).toHaveBeenCalledWith(['menu-item-1']);
+  expect(handleClick).toHaveBeenCalledTimes(0);
+});
+
 test('Renders item as <p> element with onClick', () => {
   const handleItemClick = jest.fn();
 
   render(
     <ReqoreUIProvider>
-      <QorusSidebar
+      <ReqoreSidebar
         items={{
           ...qorusSidebarItems,
           TestItems: {
@@ -107,7 +144,9 @@ test('Renders item as <p> element with onClick', () => {
               {
                 name: 'Test',
                 as: 'p',
-                onClick: handleItemClick,
+                props: {
+                  onClick: handleItemClick,
+                },
                 id: 'test-item-1',
                 icon: 'add',
               },
@@ -134,7 +173,7 @@ test('Renders item as <p> element with onClick', () => {
 test('Renders custom item at the top', () => {
   render(
     <ReqoreUIProvider>
-      <QorusSidebar
+      <ReqoreSidebar
         items={qorusSidebarItems}
         path='/'
         customItems={[

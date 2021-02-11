@@ -7,14 +7,18 @@ export const qorusSidebarItems: IQorusSidebarItems = {
       {
         name: 'Menu item 1',
         as: 'a',
-        link: '/item-1',
+        props: {
+          href: '/item-1',
+        },
         icon: 'home',
         id: 'menu-item-1',
       },
       {
         name: 'Menu item 2',
         as: 'a',
-        link: '/item-2',
+        props: {
+          href: '/item-2',
+        },
         icon: 'cog',
         id: 'menu-item-2',
       },
@@ -27,21 +31,27 @@ export const qorusSidebarItems: IQorusSidebarItems = {
           {
             name: 'Submenu item 1',
             as: 'a',
-            link: '/item-3/item-1',
+            props: {
+              href: '/item-3/item-1',
+            },
             icon: 'tree',
             id: 'submenu-item-1',
           },
           {
             name: 'Submenu item 2',
             as: 'a',
-            link: '/item-3/item-2',
+            props: {
+              href: '/item-3/item-2',
+            },
             icon: 'chat',
             id: 'submenu-item-2',
           },
           {
             name: 'Super really long Submenu item 3',
             as: 'a',
-            link: '/item-3/item-3',
+            props: {
+              href: '/item-3/item-3',
+            },
             icon: 'database',
             id: 'submenu-item-3',
           },
@@ -54,21 +64,29 @@ export const qorusSidebarItems: IQorusSidebarItems = {
       {
         name: 'Super Long Really Another item 1',
         as: 'a',
-        link: '/another-item-1',
+        props: {
+          href: '/another-item-1',
+        },
         icon: 'home',
         id: 'another-item-1',
       },
       {
         name: 'Another item 2',
         as: 'a',
-        link: '/another-item-2',
+        props: {
+          href: '/another-item-2',
+        },
         icon: 'cog',
         id: 'another-item-2',
       },
       {
         name: 'Another item 3',
         as: 'a',
-        link: '/another-item-3',
+        props: {
+          onClick: () => {
+            alert('Click');
+          },
+        },
         icon: 'document',
         id: 'another-item-3',
       },
