@@ -5,7 +5,6 @@ const config: Config.InitialOptions = {
   // `<rootDir>` is a token Jest substitutes
   roots: ['<rootDir>/__tests__'],
 
-  testEnvironment: 'jsdom',
   testMatch: ['<rootDir>/__tests__/**/*.test.(ts|tsx)'],
 
   // Jest transformations -- this adds support for TypeScript
@@ -20,8 +19,6 @@ const config: Config.InitialOptions = {
   moduleNameMapper: {
     '\\.(css|less)$': '<rootDir>/src/mock/styleMock.js',
   },
-
-  setupFiles: ['<rootDir>/__tests__/setupTests.ts'],
 
   notify: true,
   notifyMode: 'always',
