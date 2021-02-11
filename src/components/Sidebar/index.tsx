@@ -50,6 +50,7 @@ export interface IQorusSidebarProps {
   path: string;
   wrapperStyle?: React.CSSProperties;
   onBookmarksChange?: (bookmarks: string[]) => void;
+  useNativeTitle?: boolean;
 }
 
 const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
@@ -312,6 +313,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   collapseLabel,
   wrapperStyle,
   onBookmarksChange,
+  useNativeTitle,
 }) => {
   const [_isCollapsed, setIsCollapsed] = useState<boolean>(
     isCollapsed || false
@@ -389,6 +391,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
                       onUnfavoriteClick={handleUnfavoriteClick}
                       sectionName={sectionId}
                       hasFavorites={!!onBookmarksChange}
+                      useNativeTitle={useNativeTitle}
                     />
                   ))}
                 </div>

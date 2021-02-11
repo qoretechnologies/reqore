@@ -94,3 +94,9 @@ WithCustomColors.args = {
   },
   path: '/item-3/item-2',
 } as IReqoreUIProviderProps & IQorusSidebarProps;
+
+export const WithNativeTitles = Template.bind({});
+
+WithNativeTitles.args = {
+  useNativeTitle: true,
+} as IReqoreUIProviderProps & IQorusSidebarProps;
