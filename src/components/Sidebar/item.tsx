@@ -27,6 +27,7 @@ export interface SidebarItemProps {
   currentPath: string;
   sectionName: string;
   hasFavorites: boolean;
+  useNativeTitle?: boolean;
 }
 
 export interface ISidebarTooltipProps {
@@ -37,6 +38,7 @@ export interface ISidebarTooltipProps {
   isSubcategory: boolean;
   isSubitem: boolean;
   onClick: any;
+  useNativeTitle?: boolean;
 }
 
 const SidebarItemTooltip: Function = ({
@@ -47,8 +49,27 @@ const SidebarItemTooltip: Function = ({
   isSubitem,
   isSubcategory,
   onClick,
+  useNativeTitle,
 }: ISidebarTooltipProps) => {
   const Element = itemData.as || 'div';
+
+  if (useNativeTitle) {
+    return (
+      //@ts-ignore
+      <Element
+        {...itemData.props}
+        onClick={itemData.props?.onClick || onClick}
+        className={classnames('sidebarItem', 'sidebarLink', {
+          sidebarSubItem: isSubitem,
+          active: isActive,
+          submenuCategory: isSubcategory,
+        })}
+        title={itemData.name}
+      >
+        {children}
+      </Element>
+    );
+  }
 
   return (
     //@ts-ignore
@@ -85,6 +106,7 @@ const SidebarItem: Function = ({
   currentPath,
   sectionName,
   hasFavorites,
+  useNativeTitle,
 }: SidebarItemProps) => {
   const handleFavoriteClick = (event) => {
     event.persist();
@@ -122,6 +144,7 @@ const SidebarItem: Function = ({
         itemData={itemData}
         isActive={isActive}
         isSubitem={subItem}
+        useNativeTitle={useNativeTitle}
         onClick={
           onSectionToggle
             ? () => {
@@ -172,6 +195,7 @@ const SidebarItemWrapper: Function = ({
   onUnfavoriteClick,
   hasFavorites,
   sectionName,
+  useNativeTitle,
 }: SidebarItemProps) => {
   const theme: IReqoreTheme = useContext(ThemeContext);
 
@@ -222,6 +246,7 @@ const SidebarItemWrapper: Function = ({
         onUnfavoriteClick={onUnfavoriteClick}
         sectionName={sectionName}
         hasFavorites={hasFavorites}
+        useNativeTitle={useNativeTitle}
       />
       {expandedSection === itemData.name &&
         map(itemData.submenu, (subItemData: any, key: number) => (
@@ -236,6 +261,7 @@ const SidebarItemWrapper: Function = ({
             onUnfavoriteClick={onUnfavoriteClick}
             sectionName={sectionName}
             hasFavorites={hasFavorites}
+            useNativeTitle={useNativeTitle}
           />
         ))}
     </>
