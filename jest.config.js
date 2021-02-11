@@ -1,6 +1,4 @@
-import type { Config } from '@jest/types';
-
-const config: Config.InitialOptions = {
+module.exports = {
   // The root of your source code, typically /src
   // `<rootDir>` is a token Jest substitutes
   roots: ['<rootDir>/__tests__'],
@@ -29,5 +27,3 @@ const config: Config.InitialOptions = {
     },
   },
 };
-
-export default config;
