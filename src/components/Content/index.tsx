@@ -14,14 +14,6 @@ export interface IReqoreContentStyle {
   theme: IReqoreTheme;
 }
 
-const StyledReqoreContentWrapper = styled.div<IReqoreContentStyle>`
-  display: flex;
-  flex-flow: column;
-  flex: 1;
-  padding: 15px;
-  overflow: hidden;
-`;
-
 const StyledReqoreContent = styled.div<IReqoreContentStyle>`
   ${({ theme }: IReqoreContentStyle) => css`
     display: flex;
@@ -32,21 +24,20 @@ const StyledReqoreContent = styled.div<IReqoreContentStyle>`
     padding: 10px;
     box-shadow: 0 0 4px 1px ${darken(0.1, theme.main)};
     overflow: auto;
+    margin: 0 15px 15px 15px;
   `}
 `;
 
 const ReqoreContent = forwardRef(
   ({ children, className, ...rest }: IReqoreContentWrapperProps, ref: any) => (
     <ReqoreThemeProvider>
-      <StyledReqoreContentWrapper>
-        <StyledReqoreContent
-          {...rest}
-          ref={ref}
-          className={`${className || ''} reqore-content`}
-        >
-          {children}
-        </StyledReqoreContent>
-      </StyledReqoreContentWrapper>
+      <StyledReqoreContent
+        {...rest}
+        ref={ref}
+        className={`${className || ''} reqore-content`}
+      >
+        {children}
+      </StyledReqoreContent>
     </ReqoreThemeProvider>
   )
 );

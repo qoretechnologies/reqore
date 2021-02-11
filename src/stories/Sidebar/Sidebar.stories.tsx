@@ -2,12 +2,12 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import React from 'react';
 import { IQorusSidebarProps } from '../../components/Sidebar';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { QorusSidebar, ReqoreUIProvider } from '../../index';
+import { ReqoreSidebar, ReqoreUIProvider } from '../../index';
 import { qorusSidebarItems } from '../../mock/menu';
 
 export default {
   title: 'ReQore/Sidebar',
-  component: QorusSidebar,
+  component: ReqoreSidebar,
   args: {
     items: qorusSidebarItems,
     path: '/',
@@ -21,7 +21,7 @@ const Template: Story<IQorusSidebarProps & IReqoreUIProviderProps> = ({
   ...args
 }: IQorusSidebarProps & IReqoreUIProviderProps) => (
   <ReqoreUIProvider theme={theme}>
-    <QorusSidebar {...args} />
+    <ReqoreSidebar {...args} />
   </ReqoreUIProvider>
 );
 

@@ -3,10 +3,10 @@ import React from 'react';
 import { ReqoreFooter } from '../../components/Navbar';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import {
-  QorusSidebar,
   ReqoreContent,
   ReqoreHeader,
   ReqoreLayoutContent,
+  ReqoreSidebar,
   ReqoreUIProvider,
 } from '../../index';
 import { qorusSidebarItems } from '../../mock/menu';
@@ -25,7 +25,7 @@ const Template: Story<IReqoreUIProviderProps> = (
 ) => {
   return (
     <ReqoreUIProvider {...args}>
-      {args.withSidebar && <QorusSidebar items={qorusSidebarItems} path='/' />}
+      {args.withSidebar && <ReqoreSidebar items={qorusSidebarItems} path='/' />}
       <ReqoreLayoutContent>
         <ReqoreHeader></ReqoreHeader>
         <h2> I am a header ! </h2>

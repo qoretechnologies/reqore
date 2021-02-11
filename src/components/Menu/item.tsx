@@ -12,7 +12,7 @@ export interface IReqoreMenuItemProps
   children?: any;
   icon?: IconName;
   rightIcon?: IconName;
-  as?: JSX.Element | React.ElementType;
+  as?: JSX.Element | React.ElementType | never;
   selected?: boolean;
 }
 
@@ -51,6 +51,11 @@ const StyledElement = styled.div<{ theme: IReqoreTheme; selected: boolean }>`
       }
     `}
 
+  &:hover {
+    color: ${({ theme }) => getReadableColor(theme.main, undefined, undefined)};
+    text-decoration: none;
+  }
+
   &:not(:first-child) {
     margin-top: 4px;
   }
@@ -61,6 +66,8 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
     return (
       <ReqoreThemeProvider>
         <StyledElement
+          //@ts-ignore
+          as={as}
           className='reqore-menu-item'
           {...rest}
           onClick={(event) => {

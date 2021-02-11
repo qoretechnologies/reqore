@@ -55,13 +55,13 @@ const SidebarItemTooltip: Function = ({
     <ReqorePopover
       component={Element}
       componentProps={{
+        ...itemData.props,
+        onClick: itemData.props?.onClick || onClick,
         className: classnames('sidebarItem', 'sidebarLink', {
           sidebarSubItem: isSubitem,
           active: isActive,
           submenuCategory: isSubcategory,
         }),
-        onClick: itemData.onClick || onClick,
-        to: itemData.link,
       }}
       content={itemData.name}
       placement='right'
@@ -87,7 +87,9 @@ const SidebarItem: Function = ({
   hasFavorites,
 }: SidebarItemProps) => {
   const handleFavoriteClick = (event) => {
+    event.persist();
     event.stopPropagation();
+    event.preventDefault();
 
     if (onFavoriteClick) {
       onFavoriteClick(itemData.id);
@@ -95,7 +97,9 @@ const SidebarItem: Function = ({
   };
 
   const handleUnfavoriteClick = (event) => {
+    event.persist();
     event.stopPropagation();
+    event.preventDefault();
 
     if (onUnfavoriteClick) {
       onUnfavoriteClick(itemData.id);
@@ -103,7 +107,7 @@ const SidebarItem: Function = ({
   };
 
   const isActive = isActiveMulti(
-    itemData.activePaths || [itemData.link],
+    itemData.activePaths || [itemData.props?.href],
     currentPath,
     itemData.exact
   );
@@ -175,7 +179,7 @@ const SidebarItemWrapper: Function = ({
     if (
       !itemData.element &&
       isActiveMulti(
-        itemData.activePaths || [itemData.link],
+        itemData.activePaths || [itemData.props?.href],
         currentPath,
         itemData.exact
       )
