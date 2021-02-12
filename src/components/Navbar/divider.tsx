@@ -15,7 +15,6 @@ const StyledNavbarDivider = styled.div<{
   position: relative;
   width: 20px;
   height: 100%;
-  background-color: inherit;
   display: flex;
   justify-content: center;
   align-items: center;
