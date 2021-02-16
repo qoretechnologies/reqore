@@ -129,3 +129,173 @@ CustomColors.args = {
     },
   },
 };
+
+export const WithTabs = Template.bind({});
+WithTabs.args = {
+  theme: {
+    main: '#ffffff',
+  },
+  breadcrumbs: {
+    items: [
+      {
+        label: 'Page 1',
+        icon: 'home',
+        tooltip: 'Hooooooome!',
+      },
+      {
+        label: 'Page 2',
+        icon: 'cog',
+        as: 'a',
+        props: {
+          href: 'https://google.com',
+        },
+      },
+      {
+        label: 'Page 3',
+        icon: 'notifications',
+        tooltip: 'Click to go to page 3!',
+      },
+      {
+        label: 'Page 4',
+        icon: 'notifications',
+      },
+      {
+        label: 'Page 5',
+        icon: 'notifications',
+      },
+      {
+        withTabs: {
+          tabs: [
+            {
+              label: 'Tab 1',
+              id: 'tab1',
+              icon: 'home',
+              tooltip: 'Hooooooome!',
+            },
+            {
+              label: 'Tab 2',
+              id: 'tab2',
+              icon: 'cog',
+              as: 'a',
+              props: {
+                href: 'https://google.com',
+              },
+            },
+            {
+              label: 'Tab 3',
+              id: 'tab3',
+              icon: 'notifications',
+              tooltip: 'Click to go to page 3!',
+            },
+            {
+              label: 'Tab 4',
+              id: 'tab4',
+              icon: 'notifications',
+              active: true,
+            },
+            {
+              label: 'Tab 5',
+              id: 'tab5',
+              icon: 'notifications',
+              disabled: true,
+            },
+          ],
+          activeTab: 'tab1',
+          onTabChange: (tabId) => {
+            alert(`Tab ${tabId} clicked`);
+          },
+        },
+      },
+    ],
+    rightElement: (
+      <ReqoreMenu>
+        <ReqoreMenuItem icon='person'>Right Element</ReqoreMenuItem>
+      </ReqoreMenu>
+    ),
+  },
+};
+
+export const WithTabsDark = Template.bind({});
+WithTabsDark.args = {
+  theme: {
+    main: '#222222',
+  },
+  breadcrumbs: {
+    items: [
+      {
+        label: 'Page 1',
+        icon: 'home',
+        tooltip: 'Hooooooome!',
+      },
+      {
+        label: 'Page 2',
+        icon: 'cog',
+        as: 'a',
+        props: {
+          href: 'https://google.com',
+        },
+      },
+      {
+        label: 'Page 3',
+        icon: 'notifications',
+        tooltip: 'Click to go to page 3!',
+      },
+      {
+        label: 'Page 4',
+        icon: 'notifications',
+      },
+      {
+        label: 'Page 5',
+        icon: 'notifications',
+      },
+      {
+        withTabs: {
+          tabs: [
+            {
+              label: 'Tab 1',
+              id: 'tab1',
+              icon: 'home',
+              tooltip: 'Hooooooome!',
+            },
+            {
+              label: 'Tab 2',
+              id: 'tab2',
+              icon: 'cog',
+              as: 'a',
+              props: {
+                href: 'https://google.com',
+              },
+            },
+            {
+              label: 'Tab 3',
+              id: 'tab3',
+              icon: 'notifications',
+              tooltip: 'Click to go to page 3!',
+            },
+            {
+              label: 'Tab 4',
+              id: 'tab4',
+              icon: 'notifications',
+              active: true,
+            },
+            {
+              label: 'Tab 5',
+              id: 'tab5',
+              icon: 'notifications',
+              disabled: true,
+            },
+          ],
+          activeTab: 'tab1',
+          onTabChange: (tabId) => {
+            alert(`Tab ${tabId} clicked`);
+          },
+        },
+      },
+    ],
+    rightElement: (
+      <ReqoreMenu>
+        <ReqoreMenuItem icon='person'>Right Element</ReqoreMenuItem>
+      </ReqoreMenu>
+    ),
+  },
+};

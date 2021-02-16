@@ -1,4 +1,5 @@
 import { Placement, VirtualElement } from '@popperjs/core';
+import { isString } from 'lodash';
 import { darken } from 'polished';
 import React, { MutableRefObject, useContext, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
@@ -73,7 +74,7 @@ const StyledPopoverContent = styled.div`
 
 export interface IReqoreInternalPopoverProps {
   element: Element | VirtualElement;
-  content: JSX.Element | string | number;
+  content: JSX.Element | string | number | any;
   id: string;
   placement?: Placement;
 }
@@ -127,7 +128,18 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
           style={styles.arrow}
           data-popper-arrow
         />
-        <StyledPopoverContent>{content}</StyledPopoverContent>
+        <StyledPopoverContent>
+          {React.Children.map(content, (child) => {
+            if (isString(child)) {
+              return child;
+            }
+
+            return React.cloneElement(child, {
+              _insidePopover: true,
+              _popoverId: id,
+            });
+          })}
+        </StyledPopoverContent>
       </StyledPopoverWrapper>
     </ReqoreThemeProvider>
   );

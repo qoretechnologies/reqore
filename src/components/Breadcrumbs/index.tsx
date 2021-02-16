@@ -5,9 +5,15 @@ import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
+import { IReqoreTabsListItem } from '../Tabs';
+import { StyledTabListItem } from '../Tabs/item';
+import ReqoreTabsList, {
+  getTabsLength,
+  StyledReqoreTabsList,
+} from '../Tabs/list';
 import ReqoreBreadcrumbsItem, { IReqoreBreadcrumbItemProps } from './item';
 
 export interface IReqoreBreadcrumbItem {
@@ -16,7 +22,12 @@ export interface IReqoreBreadcrumbItem {
   icon?: IconName;
   active?: boolean;
   as?: any;
-  props?: React.HTMLAttributes<HTMLDivElement>;
+  props?: React.HTMLAttributes<any>;
+  withTabs?: {
+    tabs: IReqoreTabsListItem[];
+    onTabChange: (tabId: string) => any;
+    activeTab: string;
+  };
 }
 
 export interface IReqoreBreadcrumbsProps
@@ -40,10 +51,28 @@ const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
       display: flex;
       align-items: center;
 
-      > * {
+      > *,
+      ${StyledReqoreTabsList} > *,
+      ${StyledTabListItem} * {
         color: ${theme.breadcrumbs?.item?.color ||
         theme.breadcrumbs?.main ||
         getReadableColor(theme.main, undefined, undefined, true)};
+      }
+
+      ${StyledReqoreTabsList} {
+        flex: 1;
+      }
+
+      ${StyledTabListItem} {
+        &:not(:last-child) {
+          border-right: 1px solid
+            ${changeLightness(
+              theme.breadcrumbs?.item?.color ||
+                theme.breadcrumbs?.main ||
+                getReadableColor(theme.main, undefined, undefined, true),
+              0.65
+            )};
+        }
       }
 
       &:first-child {
@@ -60,6 +89,10 @@ const getBreadcrumbsLength = (
   items.reduce((len, item) => {
     if (isArray(item)) {
       return len + 50;
+    }
+
+    if (item.withTabs) {
+      return len + getTabsLength(item.withTabs.tabs);
     }
 
     return len + 27 + item.label.length * 10 + 35;
@@ -99,6 +132,73 @@ const ReqoreBreadcrumbs = ({
 
   const transformedItems = getTransformedItems(items, _testWidth || width);
 
+  const renderItem = (
+    item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[],
+    index: number
+  ) => {
+    if (isArray(item)) {
+      return (
+        <React.Fragment key={index}>
+          <Icon icon='chevron-right' iconSize={12} key={'icon' + index} />
+          <ReqorePopover
+            key={index}
+            component={ReqoreBreadcrumbsItem}
+            componentProps={
+              {
+                icon: 'more',
+                tooltip: 'Show more...',
+                interactive: true,
+              } as IReqoreBreadcrumbItemProps
+            }
+            handler='click'
+            content={
+              <ReqoreMenu>
+                {item.map(({ icon, label, as, tooltip, props }) => (
+                  <ReqorePopover
+                    component={ReqoreMenuItem}
+                    componentProps={{
+                      icon,
+                      as,
+                      ...props,
+                    }}
+                    placement='right'
+                    isReqoreComponent
+                    content={tooltip}
+                    key={index + label}
+                  >
+                    {label}
+                  </ReqorePopover>
+                ))}
+              </ReqoreMenu>
+            }
+          />
+        </React.Fragment>
+      );
+    }
+
+    if (item.withTabs) {
+      return (
+        <React.Fragment key={index}>
+          <Icon icon='chevron-right' iconSize={12} key={'icon' + index} />
+          <ReqoreTabsList
+            tabs={item.withTabs.tabs}
+            onTabChange={item.withTabs.onTabChange}
+            activeTab={item.withTabs.activeTab}
+          />
+        </React.Fragment>
+      );
+    }
+
+    return (
+      <React.Fragment key={index}>
+        {index !== 0 && (
+          <Icon icon='chevron-right' iconSize={12} key={'icon' + index} />
+        )}
+        <ReqoreBreadcrumbsItem {...item} key={index} />
+      </React.Fragment>
+    );
+  };
+
   return (
     <StyledReqoreBreadcrumbs
       {...rest}
@@ -110,55 +210,7 @@ const ReqoreBreadcrumbs = ({
           (
             item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[],
             index: number
-          ) =>
-            isArray(item) ? (
-              <React.Fragment key={index}>
-                <Icon icon='chevron-right' iconSize={12} key={'icon' + index} />
-                <ReqorePopover
-                  key={index}
-                  component={ReqoreBreadcrumbsItem}
-                  componentProps={
-                    {
-                      icon: 'more',
-                      tooltip: 'Show more...',
-                      interactive: true,
-                    } as IReqoreBreadcrumbItemProps
-                  }
-                  handler='click'
-                  content={
-                    <ReqoreMenu>
-                      {item.map(({ icon, label, as, tooltip, props }) => (
-                        <ReqorePopover
-                          component={ReqoreMenuItem}
-                          componentProps={{
-                            icon,
-                            as,
-                            ...props,
-                          }}
-                          placement='right'
-                          isReqoreComponent
-                          content={tooltip}
-                          key={index + label}
-                        >
-                          {label}
-                        </ReqorePopover>
-                      ))}
-                    </ReqoreMenu>
-                  }
-                />
-              </React.Fragment>
-            ) : (
-              <React.Fragment key={index}>
-                {index !== 0 && (
-                  <Icon
-                    icon='chevron-right'
-                    iconSize={12}
-                    key={'icon' + index}
-                  />
-                )}
-                <ReqoreBreadcrumbsItem {...item} key={index} />
-              </React.Fragment>
-            )
+          ) => renderItem(item, index)
         )}
       </div>
       {rightElement && <div>{rightElement}</div>}

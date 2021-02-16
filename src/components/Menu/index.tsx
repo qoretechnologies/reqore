@@ -3,8 +3,11 @@ import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness } from '../../helpers/colors';
+import { IReqoreComponent } from '../../types/global';
 
-export interface IReqoreMenuProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreMenuProps
+  extends IReqoreComponent,
+    React.HTMLAttributes<HTMLDivElement> {
   children: any;
   position?: 'left' | 'right';
 }
@@ -29,10 +32,15 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
 `;
 
 const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
-  ({ children, position, ...rest }, ref: any) => (
+  ({ children, position, _insidePopover, _popoverId, ...rest }, ref: any) => (
     <ReqoreThemeProvider>
       <StyledReqoreMenu {...rest} position={position} ref={ref}>
-        {children}
+        {React.Children.map(children, (child) =>
+          React.cloneElement(child, {
+            _insidePopover,
+            _popoverId,
+          })
+        )}
       </StyledReqoreMenu>
     </ReqoreThemeProvider>
   )
