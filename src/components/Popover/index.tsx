@@ -1,8 +1,10 @@
 import { Placement } from '@popperjs/core';
 import React, { useState } from 'react';
+import styled from 'styled-components';
 import usePopover from '../../hooks/usePopover';
+import { IReqoreComponent } from '../../types/global';
 
-export interface IReqorePopoverProps {
+export interface IReqorePopoverProps extends IReqoreComponent {
   component: any;
   componentProps?: any;
   children?: any;
@@ -13,6 +15,10 @@ export interface IReqorePopoverProps {
   content: any;
 }
 
+export const StyledPopover = styled.span`
+  overflow: hidden;
+`;
+
 const Popover = ({
   component: Component,
   componentProps,
@@ -22,6 +28,7 @@ const Popover = ({
   placement,
   show,
   isReqoreComponent,
+  ...rest
 }: IReqorePopoverProps) => {
   const [ref, setRef] = useState(null);
 
@@ -29,16 +36,18 @@ const Popover = ({
 
   if (isReqoreComponent) {
     return (
-      <Component {...componentProps} ref={setRef}>
+      <Component {...rest} {...componentProps} ref={setRef}>
         {children}
       </Component>
     );
   }
 
   return (
-    <span className='reqore-popover-wrapper' ref={setRef}>
-      <Component {...componentProps}>{children}</Component>
-    </span>
+    <StyledPopover className='reqore-popover-wrapper' ref={setRef}>
+      <Component {...rest} {...componentProps}>
+        {children}
+      </Component>
+    </StyledPopover>
   );
 };
 

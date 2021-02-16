@@ -15,6 +15,10 @@ export { default as ReqoreNotificationsWrapper } from './components/Notification
 export { default as ReqoreNotification } from './components/Notifications/notification';
 export { default as ReqorePopover } from './components/Popover';
 export { default as ReqoreSidebar } from './components/Sidebar';
+export { default as ReqoreTabs } from './components/Tabs';
+export { default as ReqoreTabsContent } from './components/Tabs/content';
+export { default as ReqoreTabsListItem } from './components/Tabs/item';
+export { default as ReqoreTabsList } from './components/Tabs/list';
 export { default as ReqoreNotifications } from './containers/NotificationsProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreNotificationsContext } from './context/NotificationContext';

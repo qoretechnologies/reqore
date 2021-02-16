@@ -1,6 +1,4 @@
-import { Placement } from '@popperjs/core';
-
 export interface IReqoreComponent {
-  tooltip?: string;
-  tooltipPlacement?: Placement;
+  _insidePopover?: boolean;
+  _popoverId?: string;
 }

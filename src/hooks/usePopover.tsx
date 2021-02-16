@@ -50,6 +50,8 @@ const usePopover = (
       }
     };
   });
+
+  return current;
 };
 
 export default usePopover;
