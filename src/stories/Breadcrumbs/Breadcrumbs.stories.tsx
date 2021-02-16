@@ -276,16 +276,15 @@ WithTabsDark.args = {
               label: 'Tab 4',
               id: 'tab4',
               icon: 'notifications',
-              active: true,
-            },
-            {
-              label: 'Tab 5',
-              id: 'tab5',
-              icon: 'notifications',
               disabled: true,
             },
+            {
+              label: 'Really long tab name',
+              id: 'tab5',
+              icon: 'notifications',
+            },
           ],
-          activeTab: 'tab1',
+          activeTab: 'tab5',
           onTabChange: (tabId) => {
             alert(`Tab ${tabId} clicked`);
           },

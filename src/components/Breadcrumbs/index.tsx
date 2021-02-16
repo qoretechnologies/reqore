@@ -92,7 +92,10 @@ const getBreadcrumbsLength = (
     }
 
     if (item.withTabs) {
-      return len + getTabsLength(item.withTabs.tabs);
+      return (
+        len +
+        getTabsLength(item.withTabs.tabs, 'width', item.withTabs.activeTab)
+      );
     }
 
     return len + 27 + item.label.length * 10 + 35;
@@ -105,9 +108,11 @@ const getTransformedItems = (
   if (!width) {
     return items;
   }
+
+  let stop = false;
   let newItems = [...items];
 
-  while (getBreadcrumbsLength(newItems) > width) {
+  while (getBreadcrumbsLength(newItems) > width && !stop) {
     if (isArray(newItems[1])) {
       newItems[1].push(newItems[2] as IReqoreBreadcrumbItem);
       newItems[2] = undefined;
@@ -117,6 +122,10 @@ const getTransformedItems = (
     }
 
     newItems = newItems.filter((i) => i);
+
+    if ((newItems[2] as IReqoreBreadcrumbItem).withTabs) {
+      stop = true;
+    }
   }
 
   return newItems;
