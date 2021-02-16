@@ -150,13 +150,15 @@ const getTransformedItems = (
     newItems.length > 1
   ) {
     if (isArray(newItems[newItems.length - 1])) {
-      newItems[newItems.length - 1].unshift(
+      (newItems[newItems.length - 1] as IReqoreTabsListItem[]).unshift(
         newItems[newItems.length - 2] as IReqoreTabsListItem
       );
       newItems[newItems.length - 2] = undefined;
     } else {
       const lastItem = newItems[newItems.length - 1];
-      newItems[newItems.length - 1] = [lastItem];
+      (newItems[newItems.length - 1] as IReqoreTabsListItem[]) = [
+        lastItem,
+      ] as IReqoreTabsListItem[];
     }
 
     newItems = newItems.filter((i) => i);

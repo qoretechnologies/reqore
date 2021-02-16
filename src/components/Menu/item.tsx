@@ -7,15 +7,17 @@ import PopoverContext from '../../context/PopoverContext';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreComponent } from '../../types/global';
 
+// @ts-ignore
 export interface IReqoreMenuItemProps
   extends IReqoreComponent,
-    React.HTMLAttributes<HTMLDivElement> {
+    React.HTMLAttributes<HTMLElement> {
   children?: any;
   icon?: IconName;
   rightIcon?: IconName;
   as?: JSX.Element | React.ElementType | never;
   selected?: boolean;
   disabled?: boolean;
+  onClick?: (itemId: string, event: React.MouseEvent<HTMLElement>) => void;
 }
 
 const StyledElementContent = styled.div<{ theme: IReqoreTheme }>`
