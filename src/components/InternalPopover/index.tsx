@@ -37,6 +37,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     const defaultColor: string = theme.popover?.main || theme.main;
 
     return css`
+      z-index: 999999;
       background-color: ${defaultColor};
       color: ${getReadableColor(defaultColor)};
       border-radius: 3.5px;
