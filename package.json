@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "ReQore is a UI library of components for Qorus connected apps",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -71,7 +71,9 @@
     "react-popper": "^2.2.4",
     "react-scrollbar": "^0.5.6",
     "react-use": "^15.3.4",
+    "react-window": "^1.8.6",
     "shortid": "^2.2.16",
-    "styled-components": "^5.2.1"
+    "styled-components": "^5.2.1",
+    "thenby": "^1.3.4"
   }
 }
