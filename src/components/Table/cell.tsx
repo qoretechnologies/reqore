@@ -18,7 +18,7 @@ export interface IReqoreTableCellStyle {
 }
 
 const StyledTableCell = styled.td<IReqoreTableCellStyle>`
-  ${({ theme, width }) => css`
+  ${({ width }) => css`
     width: ${width ? `${width}px` : 'auto'};
     padding: 5px 10px;
     height: 40px;
