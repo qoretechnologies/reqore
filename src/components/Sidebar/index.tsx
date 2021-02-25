@@ -1,4 +1,3 @@
-import { Icon, IconName, MaybeElement } from '@blueprintjs/core';
 import classnames from 'classnames';
 import { size } from 'lodash';
 import map from 'lodash/map';
@@ -15,6 +14,8 @@ import {
   getReadableColor,
 } from '../../helpers/colors';
 import { transformMenu } from '../../helpers/sidebar';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
 import SidebarItem from './item';
 
 export interface IQorusSidebarCustomItem {
@@ -35,7 +36,7 @@ export interface IQorusSidebarItem {
   submenu?: IQorusSidebarItem[];
   id: string;
   as?: JSX.Element | string;
-  icon?: IconName | MaybeElement;
+  icon?: IReqoreIconName;
   exact?: boolean;
   element?: JSX.Element;
 }
@@ -412,10 +413,8 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
               }
             }}
           >
-            <Icon
-              icon={
-                _isCollapsed ? 'double-chevron-right' : 'double-chevron-left'
-              }
+            <ReqoreIcon
+              icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
             />{' '}
             {!_isCollapsed && (collapseLabel || 'Collapse')}
           </div>

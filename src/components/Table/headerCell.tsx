@@ -1,11 +1,11 @@
 /* @flow */
-import { Icon } from '@blueprintjs/core';
 import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
+import ReqoreIcon from '../Icon';
 import { alignToFlex } from './row';
 
 export interface IReqoreTableHeaderCellProps
@@ -95,22 +95,18 @@ const ReqoreTableHeaderCell = ({
         }
       }}
     >
-      {icon && (
-        <Icon
-          icon={icon}
-          iconSize={12}
-          style={{
-            marginRight: '5px',
-          }}
-        />
-      )}
+      {icon && <ReqoreIcon icon={icon} size='13px' margin='right' />}
       <StyledTableHeaderLabel>{header}</StyledTableHeaderLabel>
       {sortable && (
-        <Icon
-          icon={`sort-${sortData.direction}` as 'sort-asc' | 'sort-desc'}
-          iconSize={12}
+        <ReqoreIcon
+          icon={
+            `Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
+              | 'ArrowDownFill'
+              | 'ArrowUpFill'
+          }
+          size='13px'
+          margin='left'
           style={{
-            marginLeft: '5px',
             opacity: sortData.by === dataId ? 1 : 0.5,
           }}
         />

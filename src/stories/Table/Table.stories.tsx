@@ -149,14 +149,14 @@ Complete.args = {
         grow: 3,
         columns: [
           {
-            icon: 'label',
+            icon: 'SlideshowLine',
             dataId: 'firstName',
             header: 'First Name',
             width: 150,
             grow: 2,
           },
           {
-            icon: 'label',
+            icon: 'SlideshowLine',
             dataId: 'lastName',
             header: 'Last Name',
             width: 150,
@@ -173,7 +173,7 @@ Complete.args = {
         onClick: () => alert('clicked address'),
       },
       {
-        icon: 'numerical',
+        icon: 'User4Line',
         dataId: 'age',
         header: 'Really long age header',
         width: 50,

@@ -1,4 +1,3 @@
-import { IconName, MaybeElement } from '@blueprintjs/core';
 import React, { useState } from 'react';
 import ReqoreNotificationsWrapper, {
   IReqoreNotificationsPosition,
@@ -7,12 +6,13 @@ import ReqoreNotification, {
   IReqoreNotificationType,
 } from '../components/Notifications/notification';
 import NotificationContext from '../context/NotificationContext';
+import { IReqoreIconName } from '../types/icons';
 
 export interface IReqoreNotificationData {
   title?: string;
   content: string;
   duration?: number;
-  icon?: IconName | MaybeElement;
+  icon?: IReqoreIconName;
   onClick?: (id?: string) => any;
   onClose?: (id?: string) => any;
   onFinish?: (id?: string) => any;

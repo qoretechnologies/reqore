@@ -17,13 +17,13 @@ const tabs = {
     {
       label: 'Tab 1',
       id: 'tab1',
-      icon: 'home',
+      icon: 'Home3Line',
       tooltip: 'Hooooooome!',
     },
     {
       label: 'Tab 2',
       id: 'tab2',
-      icon: 'cog',
+      icon: 'Settings6Line',
       as: 'a',
       props: {
         href: 'https://google.com',
@@ -32,38 +32,38 @@ const tabs = {
     {
       label: 'Really long tab name with tooltip',
       id: 'tab3',
-      icon: 'notifications',
+      icon: 'FileSettingsLine',
       tooltip: 'Click to go to page 3!',
     },
     {
       id: 'tab4',
-      icon: 'person',
+      icon: 'LightbulbLine',
     },
     {
       label: 'Tab 5',
       id: 'tab5',
-      icon: 'notifications',
+      icon: 'Polaroid2Line',
       disabled: true,
     },
     {
       label: 'Lorem Ipsum',
       id: 'tab6',
-      icon: 'notifications',
+      icon: 'DragMoveLine',
     },
     {
       label: 'Hey I am another long tab',
       id: 'tab7',
-      icon: 'notifications',
+      icon: 'LeafFill',
     },
     {
       label: 'Tab 8',
       id: 'tab8',
-      icon: 'notifications',
+      icon: 'MapPin3Line',
     },
     {
       label: 'Tab 9',
       id: 'tab9',
-      icon: 'notifications',
+      icon: 'EjectLine',
     },
   ] as IReqoreTabsListItem[],
   children: <p>Test</p>,

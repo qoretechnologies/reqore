@@ -1,4 +1,3 @@
-import { Icon, IconName } from '@blueprintjs/core';
 import React, { forwardRef, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
@@ -6,14 +5,16 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import PopoverContext from '../../context/PopoverContext';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreComponent } from '../../types/global';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
 
 // @ts-ignore
 export interface IReqoreMenuItemProps
   extends IReqoreComponent,
     React.HTMLAttributes<HTMLElement> {
   children?: any;
-  icon?: IconName;
-  rightIcon?: IconName;
+  icon?: IReqoreIconName;
+  rightIcon?: IReqoreIconName;
   as?: JSX.Element | React.ElementType | never;
   selected?: boolean;
   disabled?: boolean;
@@ -122,10 +123,12 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
           disabled={disabled}
         >
           <StyledElementContent>
-            {icon && <Icon icon={icon} iconSize={12} />}
+            {icon && <ReqoreIcon icon={icon} size='13px' margin='right' />}
             {children}
           </StyledElementContent>
-          {rightIcon && <Icon icon={rightIcon} />}
+          {rightIcon && (
+            <ReqoreIcon icon={rightIcon} size='13px' margin='left' />
+          )}
         </StyledElement>
       </ReqoreThemeProvider>
     );

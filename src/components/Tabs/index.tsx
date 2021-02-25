@@ -1,11 +1,11 @@
-import { IconName } from '@blueprintjs/core';
 import React, { ReactElement, useState } from 'react';
 import styled, { css } from 'styled-components';
+import { IReqoreIconName } from '../../types/icons';
 import ReqoreTabsList from './list';
 
 export interface IReqoreTabsListItem {
   label: string;
-  icon?: IconName;
+  icon?: IReqoreIconName;
   as?: any;
   disabled?: boolean;
   id: string;
