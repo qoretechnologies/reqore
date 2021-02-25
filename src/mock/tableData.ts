@@ -9,11 +9,10 @@ export default {
       width: 50,
       align: 'center',
     },
-    { icon: 'label', dataId: 'firstName', header: 'First Name', width: 150 },
-    { icon: 'label', dataId: 'lastName', header: 'Last Name', width: 150 },
+    { dataId: 'firstName', header: 'First Name', width: 150 },
+    { dataId: 'lastName', header: 'Last Name', width: 150 },
     { dataId: 'address', header: 'Address', width: 300, grow: 2 },
     {
-      icon: 'numerical',
       dataId: 'age',
       header: 'Really long age header',
       width: 50,

@@ -1,4 +1,3 @@
-import { Icon } from '@blueprintjs/core';
 import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreBreadcrumbItem } from '.';
@@ -10,6 +9,7 @@ import {
   getReadableColor,
 } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
+import ReqoreIcon from '../Icon';
 
 export interface IReqoreBreadcrumbItemProps extends IReqoreBreadcrumbItem {
   interactive?: boolean;
@@ -97,7 +97,7 @@ const ReqoreBreadcrumbsItem = ({
   interactive,
 }: IReqoreBreadcrumbItemProps) => {
   const [ref, setRef] = useState(null);
-  const Element: any = as || 'div';
+  const Element: any = as || 'span';
 
   usePopover(ref, tooltip, undefined, undefined, !!tooltip);
 
@@ -109,7 +109,7 @@ const ReqoreBreadcrumbsItem = ({
         interactive={interactive || !!props?.onClick}
         className='reqore-breadcrumbs-item'
       >
-        {icon && <Icon icon={icon} iconSize={12} />}
+        {icon && <ReqoreIcon icon={icon} size='13px' />}
         {label && <Element {...props}>{label}</Element>}
       </StyledBreadcrumbItem>
     </ReqoreThemeProvider>

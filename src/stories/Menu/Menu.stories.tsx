@@ -39,18 +39,12 @@ const Template: Story<IReqoreUIProviderProps> = ({
       <ReqoreThemeProvider>
         <StyledStoriesContent>
           <ReqoreMenu {...args}>
-            <ReqoreMenuItem
-              icon='floppy-disk'
-              tooltip='Save file to disk'
-              tooltipPlacement='right'
-            >
-              Save
-            </ReqoreMenuItem>
-            <ReqoreMenuItem icon='cross' rightIcon='warning-sign'>
+            <ReqoreMenuItem icon='Save3Fill'>Save</ReqoreMenuItem>
+            <ReqoreMenuItem icon='ChatPollFill' rightIcon='FahrenheitFill'>
               Delete
             </ReqoreMenuItem>
 
-            <ReqoreMenuItem icon='trash'>
+            <ReqoreMenuItem icon='Lock2Fill'>
               Remove this really long text heh
             </ReqoreMenuItem>
             <ReqoreMenuDivider />
@@ -58,19 +52,13 @@ const Template: Story<IReqoreUIProviderProps> = ({
               component={ReqoreMenuItem}
               componentProps={
                 {
-                  icon: 'list',
-                  rightIcon: 'chevron-right',
+                  icon: 'EmotionUnhappyLine',
+                  rightIcon: 'Scissors2Fill',
                 } as IReqoreMenuItemProps
               }
               content={
                 <ReqoreMenu {...args}>
-                  <ReqoreMenuItem
-                    icon='floppy-disk'
-                    tooltip='Save file to disk'
-                    tooltipPlacement='right'
-                  >
-                    Save
-                  </ReqoreMenuItem>
+                  <ReqoreMenuItem icon='ZhihuFill'>Save</ReqoreMenuItem>
                 </ReqoreMenu>
               }
               isReqoreComponent
@@ -80,7 +68,11 @@ const Template: Story<IReqoreUIProviderProps> = ({
               I have a submenu on click
             </ReqorePopover>
             <ReqoreMenuDivider label='Divider' />
-            <ReqoreMenuItem icon='person' rightIcon='small-tick' selected>
+            <ReqoreMenuItem
+              icon='DualSim1Line'
+              rightIcon='MoneyEuroBoxLine'
+              selected
+            >
               I am selected!
             </ReqoreMenuItem>
           </ReqoreMenu>

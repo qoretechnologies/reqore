@@ -1,4 +1,3 @@
-import { Icon } from '@blueprintjs/core';
 import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
@@ -6,6 +5,7 @@ import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
+import ReqoreIcon from '../Icon';
 
 export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   active?: boolean;
@@ -124,7 +124,7 @@ const ReqoreTabsListItem = ({
         }`}
         onClick={onClick}
       >
-        {icon && <Icon icon={icon} iconSize={12} />}
+        {icon && <ReqoreIcon icon={icon} size='13px' />}
         {label && <StyledLabel>{label}</StyledLabel>}
       </StyledTabListItem>
     </ReqoreThemeProvider>

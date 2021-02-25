@@ -1,4 +1,3 @@
-import { Icon, IconName, MaybeElement } from '@blueprintjs/core';
 import { darken } from 'polished';
 import React, { forwardRef, useEffect, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
@@ -6,6 +5,8 @@ import styled, { css, keyframes } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness } from '../../helpers/colors';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
 
 export type IReqoreNotificationType =
   | 'info'
@@ -18,7 +19,7 @@ export interface IReqoreNotificationProps {
   type?: IReqoreNotificationType;
   title?: string;
   content: string;
-  icon?: IconName | MaybeElement;
+  icon?: IReqoreIconName;
   onClose?: () => any;
   onClick?: () => any;
   duration?: number;
@@ -148,12 +149,12 @@ const StyledNotificationContent = styled.p`
   padding: 0;
 `;
 
-const typeToIcon: { [type: string]: IconName } = {
-  info: 'info-sign',
-  pending: 'time',
-  warning: 'warning-sign',
-  danger: 'error',
-  success: 'small-tick',
+const typeToIcon: { [type: string]: IReqoreIconName } = {
+  info: 'InformationLine',
+  pending: 'TimerLine',
+  warning: 'AlarmWarningLine',
+  danger: 'ErrorWarningLine',
+  success: 'CheckFill',
 };
 
 const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
@@ -209,7 +210,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
           ref={ref}
         >
           <StyledIconWrapper type={type}>
-            <Icon icon={icon || typeToIcon[type]} />
+            <ReqoreIcon icon={icon || typeToIcon[type]} />
           </StyledIconWrapper>
           <StyledNotificationContentWrapper>
             {title && (
@@ -226,7 +227,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
               onClose && onClose();
             }}
           >
-            <Icon icon='cross' />
+            <ReqoreIcon icon='CloseFill' />
           </StyledIconWrapper>
         </StyledReqoreNotification>
       </ReqoreThemeProvider>

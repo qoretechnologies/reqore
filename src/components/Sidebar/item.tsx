@@ -1,4 +1,3 @@
-import { Icon } from '@blueprintjs/core';
 import classnames from 'classnames';
 import map from 'lodash/map';
 import React, { useContext } from 'react';
@@ -9,6 +8,7 @@ import { IReqoreTheme } from '../../constants/theme';
 import ThemeContext from '../../context/ThemeContext';
 import { getMainColor, getReadableColor } from '../../helpers/colors';
 import { isActiveMulti } from '../../helpers/sidebar';
+import ReqoreIcon from '../Icon';
 
 export interface SidebarItemProps {
   itemData: IQorusSidebarItem;
@@ -153,26 +153,28 @@ const SidebarItem: Function = ({
             : undefined
         }
       >
-        <Icon icon={itemData.icon} />{' '}
+        <ReqoreIcon
+          icon={itemData.icon}
+          margin={isCollapsed ? undefined : 'right'}
+        />{' '}
         {!isCollapsed && getItemName(itemData.name)}
         {itemData.submenu && (
-          <Icon
-            icon={isExpanded ? 'caret-up' : 'caret-down'}
+          <ReqoreIcon
+            icon={isExpanded ? 'ArrowUpSFill' : 'ArrowDownSFill'}
             className='submenuExpand'
           />
         )}
         {!itemData.submenu && !isCollapsed && hasFavorites ? (
           <>
             {sectionName === '_qorusBookmarks' ? (
-              <Icon
-                intent='success'
-                icon='star'
+              <ReqoreIcon
+                icon='Bookmark3Fill'
                 className='favorite'
                 onClick={handleUnfavoriteClick}
               />
             ) : (
-              <Icon
-                icon='star-empty'
+              <ReqoreIcon
+                icon='Bookmark3Line'
                 className='favorite'
                 onClick={handleFavoriteClick}
               />

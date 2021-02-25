@@ -21,7 +21,7 @@ const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
         addNotification({
           title: 'Created notification',
           content: 'Yo, wassup?',
-          icon: 'person',
+          icon: 'FileChartLine',
           duration: 5000,
           id: id || Date.now(),
           onClick,
@@ -43,7 +43,7 @@ const UpdatingButton = ({ id }) => {
       onClick={() =>
         addNotification({
           content: 'I have just updated!',
-          icon: 'tree',
+          icon: 'AccountPinBoxLine',
           type: 'danger',
           duration: 3000,
           id,

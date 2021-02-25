@@ -202,7 +202,7 @@ const ReqoreTabsList = ({
                 component={ReqoreTabsListItem}
                 componentProps={
                   {
-                    icon: 'chevron-down',
+                    icon: 'ArrowDownSLine',
                     tooltip: 'Show more...',
                     id: 'showMore',
                     label: getMoreLabel(item, activeTab),

@@ -12,6 +12,7 @@ import {
   ReqoreMenuItem,
   ReqoreUIProvider,
 } from '../../index';
+import { IReqoreIconName } from '../../types/icons';
 
 export default {
   title: 'ReQore/Breadcrumbs',
@@ -23,12 +24,12 @@ export default {
       items: [
         {
           label: 'Page 1',
-          icon: 'home',
+          icon: 'Home7Fill' as IReqoreIconName,
           tooltip: 'Hooooooome!',
         },
         {
           label: 'Page 2',
-          icon: 'cog',
+          icon: 'Settings5Fill' as IReqoreIconName,
           as: 'a',
           props: {
             href: 'https://google.com',
@@ -36,38 +37,38 @@ export default {
         },
         {
           label: 'Page 3',
-          icon: 'notifications',
+          icon: 'RainbowFill' as IReqoreIconName,
           tooltip: 'Click to go to page 3!',
         },
         {
           label: 'Page 4',
-          icon: 'notifications',
+          icon: 'Notification3Fill' as IReqoreIconName,
         },
         {
           label: 'Page 5',
-          icon: 'notifications',
+          icon: 'Notification3Fill' as IReqoreIconName,
         },
         {
           label: 'Page 6',
-          icon: 'notifications',
+          icon: 'Notification3Fill' as IReqoreIconName,
         },
         {
           label: 'Page 7',
-          icon: 'notifications',
+          icon: 'Notification3Fill' as IReqoreIconName,
         },
         {
           label: 'Page 8',
-          icon: 'notifications',
+          icon: 'Notification3Fill' as IReqoreIconName,
         },
         {
           label: 'Page 9',
-          icon: 'notifications',
+          icon: 'Notification3Fill' as IReqoreIconName,
           active: true,
         },
       ],
       rightElement: (
         <ReqoreMenu>
-          <ReqoreMenuItem icon='person'>Right Element</ReqoreMenuItem>
+          <ReqoreMenuItem icon='User3Line'>Right Element</ReqoreMenuItem>
         </ReqoreMenu>
       ),
     },
@@ -139,12 +140,12 @@ WithTabs.args = {
     items: [
       {
         label: 'Page 1',
-        icon: 'home',
+        icon: 'Notification3Fill' as IReqoreIconName,
         tooltip: 'Hooooooome!',
       },
       {
         label: 'Page 2',
-        icon: 'cog',
+        icon: 'Notification3Fill' as IReqoreIconName,
         as: 'a',
         props: {
           href: 'https://google.com',
@@ -152,16 +153,16 @@ WithTabs.args = {
       },
       {
         label: 'Page 3',
-        icon: 'notifications',
+        icon: 'Notification3Fill' as IReqoreIconName,
         tooltip: 'Click to go to page 3!',
       },
       {
         label: 'Page 4',
-        icon: 'notifications',
+        icon: 'Notification3Fill' as IReqoreIconName,
       },
       {
         label: 'Page 5',
-        icon: 'notifications',
+        icon: 'Notification3Fill' as IReqoreIconName,
       },
       {
         withTabs: {
@@ -169,13 +170,13 @@ WithTabs.args = {
             {
               label: 'Tab 1',
               id: 'tab1',
-              icon: 'home',
+              icon: 'Home8Fill' as IReqoreIconName,
               tooltip: 'Hooooooome!',
             },
             {
               label: 'Tab 2',
               id: 'tab2',
-              icon: 'cog',
+              icon: 'Notification3Fill' as IReqoreIconName,
               as: 'a',
               props: {
                 href: 'https://google.com',
@@ -184,19 +185,19 @@ WithTabs.args = {
             {
               label: 'Tab 3',
               id: 'tab3',
-              icon: 'notifications',
+              icon: 'Notification3Fill' as IReqoreIconName,
               tooltip: 'Click to go to page 3!',
             },
             {
               label: 'Tab 4',
               id: 'tab4',
-              icon: 'notifications',
+              icon: 'Notification3Fill' as IReqoreIconName,
               active: true,
             },
             {
               label: 'Tab 5',
               id: 'tab5',
-              icon: 'notifications',
+              icon: 'Notification3Fill' as IReqoreIconName,
               disabled: true,
             },
           ],
@@ -209,7 +210,7 @@ WithTabs.args = {
     ],
     rightElement: (
       <ReqoreMenu>
-        <ReqoreMenuItem icon='person'>Right Element</ReqoreMenuItem>
+        <ReqoreMenuItem icon='User3Line'>Right Element</ReqoreMenuItem>
       </ReqoreMenu>
     ),
   },
@@ -224,12 +225,12 @@ WithTabsDark.args = {
     items: [
       {
         label: 'Page 1',
-        icon: 'home',
+        icon: 'Home2Line' as IReqoreIconName,
         tooltip: 'Hooooooome!',
       },
       {
         label: 'Page 2',
-        icon: 'cog',
+        icon: 'Notification3Fill' as IReqoreIconName,
         as: 'a',
         props: {
           href: 'https://google.com',
@@ -237,16 +238,16 @@ WithTabsDark.args = {
       },
       {
         label: 'Page 3',
-        icon: 'notifications',
+        icon: 'Notification3Fill' as IReqoreIconName,
         tooltip: 'Click to go to page 3!',
       },
       {
         label: 'Page 4',
-        icon: 'notifications',
+        icon: 'Notification3Fill' as IReqoreIconName,
       },
       {
         label: 'Page 5',
-        icon: 'notifications',
+        icon: 'Notification3Fill' as IReqoreIconName,
       },
       {
         withTabs: {
@@ -254,13 +255,13 @@ WithTabsDark.args = {
             {
               label: 'Tab 1',
               id: 'tab1',
-              icon: 'home',
+              icon: 'Home8Fill' as IReqoreIconName,
               tooltip: 'Hooooooome!',
             },
             {
               label: 'Tab 2',
               id: 'tab2',
-              icon: 'cog',
+              icon: 'Notification3Fill' as IReqoreIconName,
               as: 'a',
               props: {
                 href: 'https://google.com',
@@ -269,19 +270,19 @@ WithTabsDark.args = {
             {
               label: 'Tab 3',
               id: 'tab3',
-              icon: 'notifications',
+              icon: 'Notification3Fill' as IReqoreIconName,
               tooltip: 'Click to go to page 3!',
             },
             {
               label: 'Tab 4',
               id: 'tab4',
-              icon: 'notifications',
+              icon: 'Notification3Fill' as IReqoreIconName,
               disabled: true,
             },
             {
               label: 'Really long tab name',
               id: 'tab5',
-              icon: 'notifications',
+              icon: 'Notification3Fill' as IReqoreIconName,
             },
           ],
           activeTab: 'tab5',
@@ -293,7 +294,7 @@ WithTabsDark.args = {
     ],
     rightElement: (
       <ReqoreMenu>
-        <ReqoreMenuItem icon='person'>Right Element</ReqoreMenuItem>
+        <ReqoreMenuItem icon='User3Line'>Right Element</ReqoreMenuItem>
       </ReqoreMenu>
     ),
   },

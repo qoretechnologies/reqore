@@ -1,11 +1,11 @@
 /* @flow */
-import { IconName } from '@blueprintjs/core';
 import React, { useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { IReqoreIconName } from '../../types/icons';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader from './header';
 import { fixSort, flipSortDirection, sortTableData } from './helpers';
@@ -21,7 +21,7 @@ export interface IReqoreTableColumn {
   align?: 'center' | 'left' | 'right';
   columns?: IReqoreTableColumn[];
   sortable?: boolean;
-  icon?: IconName;
+  icon?: IReqoreIconName;
 }
 
 export interface IReqoreTableProps

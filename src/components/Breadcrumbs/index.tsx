@@ -1,4 +1,3 @@
-import { Icon, IconName } from '@blueprintjs/core';
 import { isArray } from 'lodash';
 import React from 'react';
 import { useMeasure } from 'react-use';
@@ -6,6 +5,8 @@ import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
 import { IReqoreTabsListItem } from '../Tabs';
@@ -19,7 +20,7 @@ import ReqoreBreadcrumbsItem, { IReqoreBreadcrumbItemProps } from './item';
 export interface IReqoreBreadcrumbItem {
   tooltip?: JSX.Element | string;
   label?: string;
-  icon?: IconName;
+  icon?: IReqoreIconName;
   active?: boolean;
   as?: any;
   props?: React.HTMLAttributes<any>;
@@ -148,13 +149,13 @@ const ReqoreBreadcrumbs = ({
     if (isArray(item)) {
       return (
         <React.Fragment key={index}>
-          <Icon icon='chevron-right' iconSize={12} key={'icon' + index} />
+          <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} />
           <ReqorePopover
             key={index}
             component={ReqoreBreadcrumbsItem}
             componentProps={
               {
-                icon: 'more',
+                icon: 'MoreFill',
                 tooltip: 'Show more...',
                 interactive: true,
               } as IReqoreBreadcrumbItemProps
@@ -188,7 +189,7 @@ const ReqoreBreadcrumbs = ({
     if (item.withTabs) {
       return (
         <React.Fragment key={index}>
-          <Icon icon='chevron-right' iconSize={12} key={'icon' + index} />
+          <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} />
           <ReqoreTabsList
             tabs={item.withTabs.tabs}
             onTabChange={item.withTabs.onTabChange}
@@ -201,7 +202,7 @@ const ReqoreBreadcrumbs = ({
     return (
       <React.Fragment key={index}>
         {index !== 0 && (
-          <Icon icon='chevron-right' iconSize={12} key={'icon' + index} />
+          <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} />
         )}
         <ReqoreBreadcrumbsItem {...item} key={index} />
       </React.Fragment>
