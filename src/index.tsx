@@ -1,5 +1,3 @@
-import '@blueprintjs/core/lib/css/blueprint.css';
-
 export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
 export { default as ReqoreContent } from './components/Content';

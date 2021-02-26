@@ -1,4 +1,3 @@
-import { Button } from '@blueprintjs/core';
 import { Meta, Story } from '@storybook/react/types-6-0';
 import React, { useContext } from 'react';
 import ReqoreNotification, {
@@ -16,7 +15,7 @@ const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
   const { addNotification } = useContext(ReqoreNotificationsContext);
 
   return (
-    <Button
+    <button
       onClick={() =>
         addNotification({
           title: 'Created notification',
@@ -31,7 +30,7 @@ const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
       }
     >
       Add notification
-    </Button>
+    </button>
   );
 };
 
@@ -39,7 +38,7 @@ const UpdatingButton = ({ id }) => {
   const { addNotification } = useContext(ReqoreNotificationsContext);
 
   return (
-    <Button
+    <button
       onClick={() =>
         addNotification({
           content: 'I have just updated!',
@@ -51,7 +50,7 @@ const UpdatingButton = ({ id }) => {
       }
     >
       Update notification
-    </Button>
+    </button>
   );
 };
 

@@ -77,6 +77,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
   .sidebarScroll {
     flex: 1;
   }
+  transition: all 0.1s ease-in-out;
 
   &.expanded {
     min-width: 180px !important;
