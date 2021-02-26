@@ -26,13 +26,11 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
 
   return (
     <ThemeContext.Provider value={{ ...merge(_defaultTheme, _theme) }}>
-      <ReqoreNotifications position={notificationsPosition}>
-        <PopoverProvider>
-          <ReqoreLayoutWrapper withSidebar={withSidebar}>
-            {children}
-          </ReqoreLayoutWrapper>
-        </PopoverProvider>
-      </ReqoreNotifications>
+      <ReqoreLayoutWrapper withSidebar={withSidebar}>
+        <ReqoreNotifications position={notificationsPosition}>
+          <PopoverProvider>{children}</PopoverProvider>
+        </ReqoreNotifications>
+      </ReqoreLayoutWrapper>
     </ThemeContext.Provider>
   );
 };

@@ -18,6 +18,18 @@ const StyledReqoreLayoutWrapper = styled.div<{
   width: 100%;
   height: 100%;
   overflow: hidden;
+  font-size: 14px;
+
+  * {
+    font-family: 'Nunito Sans', -apple-system, '.SFNSText-Regular',
+      'San Francisco', BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+      Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+  }
+
+  a {
+    text-decoration: none;
+  }
 
   ${({ withSidebar, theme }) => css`
     flex-flow: ${withSidebar ? 'row' : 'column'};

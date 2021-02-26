@@ -1,4 +1,3 @@
-import { Button } from '@blueprintjs/core';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React, { useContext } from 'react';
 import { ReqoreNotificationsContext, ReqoreUIProvider } from '../src/index';
@@ -7,7 +6,7 @@ const AddButton = (props: any) => {
   const { addNotification } = useContext(ReqoreNotificationsContext);
 
   return (
-    <Button
+    <button
       id='add-notification'
       onClick={() =>
         addNotification({
@@ -20,7 +19,7 @@ const AddButton = (props: any) => {
       }
     >
       Add Notification
-    </Button>
+    </button>
   );
 };
 
@@ -28,7 +27,7 @@ const UpdateButton = (props: any) => {
   const { addNotification } = useContext(ReqoreNotificationsContext);
 
   return (
-    <Button
+    <button
       id='update-notification'
       onClick={() =>
         addNotification({
@@ -40,7 +39,7 @@ const UpdateButton = (props: any) => {
       }
     >
       Update Notification
-    </Button>
+    </button>
   );
 };
 

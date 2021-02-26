@@ -63,14 +63,18 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-const StyledPopoverContent = styled.div`
+const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   width: 100%;
   height: 100%;
-  padding: 10px;
+  padding: ${({ isString }) => (isString ? '8px' : '5px')};
   z-index: 20;
   position: relative;
   background-color: ${({ theme }) => theme.popover?.main || theme.main};
   border-radius: 3.5px;
+
+  .reqore-popover-text {
+    font-size: 14px;
+  }
 `;
 
 export interface IReqoreInternalPopoverProps {
@@ -129,17 +133,19 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
           style={styles.arrow}
           data-popper-arrow
         />
-        <StyledPopoverContent>
-          {React.Children.map(content, (child) => {
-            if (isString(child)) {
-              return child;
-            }
-
-            return React.cloneElement(child, {
-              _insidePopover: true,
-              _popoverId: id,
-            });
-          })}
+        <StyledPopoverContent isString={isString(content)}>
+          {isString(content) ? (
+            <span className='reqore-popover-text'>{content}</span>
+          ) : (
+            <>
+              {React.Children.map(content, (child) => {
+                return React.cloneElement(child, {
+                  _insidePopover: true,
+                  _popoverId: id,
+                });
+              })}
+            </>
+          )}
         </StyledPopoverContent>
       </StyledPopoverWrapper>
     </ReqoreThemeProvider>
