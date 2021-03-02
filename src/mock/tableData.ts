@@ -29,6 +29,7 @@ export default {
     age: 99 - index,
     occupation: shortid.generate(),
     group: shortid.generate(),
+    _selectId: index !== 3 && index !== 6 ? `Row-${index}` : null,
   })),
   height: 300,
 };

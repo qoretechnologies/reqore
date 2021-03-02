@@ -26,6 +26,7 @@ const StyledReqoreContent = styled.div<IReqoreContentStyle>`
     overflow: auto;
     margin: 0 15px 15px 15px;
     align-items: flex-start;
+    flex-flow: column;
   `}
 `;
 

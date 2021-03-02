@@ -25,7 +25,6 @@ export interface IReqoreTableHeaderStyle {
 
 export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
   ${({ width }) =>
-    width &&
     css`
       width: ${!width || width < 80 ? 80 : width}px;
     `};
@@ -71,6 +70,7 @@ const ReqoreTableHeaderCell = ({
   onClick,
   className,
   icon,
+  iconSize,
   ...props
 }: IReqoreTableHeaderCellProps) => {
   const [ref, setRef] = useState(null);
@@ -95,7 +95,13 @@ const ReqoreTableHeaderCell = ({
         }
       }}
     >
-      {icon && <ReqoreIcon icon={icon} size='13px' margin='right' />}
+      {icon && (
+        <ReqoreIcon
+          icon={icon}
+          size={iconSize || '13px'}
+          margin={header ? 'right' : undefined}
+        />
+      )}
       <StyledTableHeaderLabel>{header}</StyledTableHeaderLabel>
       {sortable && (
         <ReqoreIcon
@@ -104,7 +110,7 @@ const ReqoreTableHeaderCell = ({
               | 'ArrowDownFill'
               | 'ArrowUpFill'
           }
-          size='13px'
+          size={iconSize || '13px'}
           margin='left'
           style={{
             opacity: sortData.by === dataId ? 1 : 0.5,

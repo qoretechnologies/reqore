@@ -4,13 +4,17 @@ import React from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness } from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
+import ReqoreIcon from '../Icon';
 
 export interface IReqoreTableRowProps
   extends React.HTMLAttributes<HTMLTableRowElement> {
   data: {
     columns: IReqoreTableColumn[];
     data?: any[];
+    selectable?: boolean;
+    onSelectClick?: (selectId: string) => void;
+    selected?: string[];
   };
   style: React.StyleHTMLAttributes<HTMLDivElement>;
   index: number;
@@ -18,41 +22,11 @@ export interface IReqoreTableRowProps
 
 export interface IReqoreTableRowStyle {
   theme: IReqoreTheme;
-  active?: boolean;
-  striped?: boolean;
-  bordered?: boolean;
-  hover?: boolean;
 }
 
 export const StyledTableRow = styled.div<IReqoreTableRowStyle>`
-  ${({ theme, active, hover, striped }: IReqoreTableRowStyle) => css`
-    display: flex;
-    height: 30px;
-
-    ${
-      striped &&
-      css`
-        &:nth-child(even) {
-          background-color: ${changeLightness(theme.main, 0.04)};
-        }
-      `
-    }
-    ${
-      active &&
-      css`
-        background-color: ${changeLightness(theme.main, 0.055)};
-      `
-    }
-    ${
-      hover &&
-      css`
-        cursor: pointer;
-        &:hover {
-          background-color: ${changeLightness(theme.main, 0.02)};
-        }
-      `
-    }
-  `}
+  display: flex;
+  height: 30px;
 `;
 
 export interface IReqoreTableCellStyle {
@@ -60,6 +34,7 @@ export interface IReqoreTableCellStyle {
   grow?: number;
   theme: IReqoreTheme;
   align?: 'center' | 'left' | 'right';
+  interactive?: boolean;
 }
 
 export const alignToFlex = {
@@ -80,7 +55,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       flex-grow: ${grow};
     `}
 
-  ${({ theme, align }: IReqoreTableCellStyle) => css`
+  ${({ theme, align, interactive }: IReqoreTableCellStyle) => css`
     display: flex;
     align-items: center;
     justify-content: ${align ? alignToFlex[align] : 'flex-start'};
@@ -90,6 +65,17 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     padding: 0 10px;
 
     border-bottom: 1px solid ${changeLightness(theme.main, 0.05)};
+
+    ${interactive &&
+    css`
+      cursor: pointer;
+      transition: background-color 0.1s linear;
+
+      &:hover {
+        color: ${getReadableColor(theme.main, undefined, undefined)};
+        background-color: ${changeLightness(theme.main, 0.025)};
+      }
+    `};
 
     p.reqore-table-text {
       overflow: hidden;
@@ -102,7 +88,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
 `;
 
 const ReqoreTableRow = ({
-  data: { data, columns },
+  data: { data, columns, selectable, onSelectClick, selected },
   style,
   index,
 }: IReqoreTableRowProps) => {
@@ -127,8 +113,32 @@ const ReqoreTableRow = ({
       )
     );
 
+  const isSelected = selected.find(
+    (selectId) => selectId === data[index]._selectId
+  );
+
   return (
     <StyledTableRow style={style} className='reqore-table-row'>
+      {selectable && (
+        <StyledTableCell
+          align='center'
+          className='reqore-table-cell'
+          interactive={!!data[index]._selectId}
+          onClick={
+            data[index]._selectId
+              ? () => {
+                  onSelectClick(data[index]._selectId);
+                }
+              : undefined
+          }
+        >
+          <ReqoreIcon
+            icon={isSelected ? 'CheckboxFill' : 'CheckboxBlankLine'}
+            size='19px'
+            style={{ opacity: !data[index]._selectId ? 0.4 : 1 }}
+          />
+        </StyledTableCell>
+      )}
       {renderCells(columns, data)}
     </StyledTableRow>
   );

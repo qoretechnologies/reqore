@@ -5,20 +5,20 @@ import { IReqoreTableColumn } from '.';
 import ReqoreTableRow from './row';
 
 export interface IReqoreTableSectionBodyProps {
-  hover?: boolean;
-  striped?: boolean;
-  bordered?: boolean;
   data?: any[];
   columns?: IReqoreTableColumn[];
   setLeftScroll: Dispatch<SetStateAction<number>>;
   height: number;
+  selectable?: boolean;
+  selected?: string[];
+  onSelectClick?: (selectId: string) => void;
 }
 
 const ReqoreTableBody = ({
   data,
-  columns,
   setLeftScroll,
   height,
+  ...rest
 }: IReqoreTableSectionBodyProps) => {
   const ref = useRef(null);
   const { x }: { x: number } = useScroll(ref);
@@ -35,8 +35,8 @@ const ReqoreTableBody = ({
       className='reqore-table-body'
       itemSize={40}
       itemData={{
-        columns,
         data,
+        ...rest,
       }}
     >
       {ReqoreTableRow}

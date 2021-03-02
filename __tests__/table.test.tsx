@@ -120,3 +120,103 @@ test('Sorting on <Table /> works properly', () => {
   expect(ageCell.textContent).toBe('0');
   expect(idCell.textContent).toBe('99');
 });
+
+test('Rows on <Table /> can be selected', () => {
+  const data = {
+    ...tableData,
+    selectable: true,
+  };
+
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} onSelectedChange={fn} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const firstRow = document.querySelector('.reqore-table-row');
+  const firstCheckCell = firstRow.querySelector('.reqore-table-cell');
+
+  fireEvent.click(firstCheckCell);
+
+  expect(fn).toHaveBeenCalledWith(['Row-0']);
+
+  const secondRow = document.querySelectorAll('.reqore-table-row')[1];
+  const secondCheckCell = secondRow.querySelector('.reqore-table-cell');
+
+  fireEvent.click(secondCheckCell);
+
+  expect(fn).toHaveBeenLastCalledWith(['Row-0', 'Row-1']);
+});
+
+test('Rows on <Table /> cannot be selected if _selectId is missing', () => {
+  const data = {
+    ...tableData,
+    selectable: true,
+  };
+
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} onSelectedChange={fn} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const firstRow = document.querySelector('.reqore-table-row');
+  const firstCheckCell = firstRow.querySelector('.reqore-table-cell');
+
+  fireEvent.click(firstCheckCell);
+
+  const fourthRow = document.querySelectorAll('.reqore-table-row')[3];
+  const fourthCheckCell = fourthRow.querySelector('.reqore-table-cell');
+
+  fireEvent.click(fourthCheckCell);
+
+  expect(fn).toHaveBeenCalledTimes(1);
+});
+
+test('Rows on <Table /> are all selected/deselected when clicking on header', () => {
+  const data = {
+    ...tableData,
+    selectable: true,
+  };
+
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} onSelectedChange={fn} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const header = document.querySelector('.reqore-table-header-wrapper');
+  const firstHeaderCell = header.querySelector('.reqore-table-header-cell');
+
+  fireEvent.click(firstHeaderCell);
+
+  const selectableData: string[] = tableData.data
+    .filter((datum) => datum._selectId ?? false)
+    .map((datum) => datum._selectId);
+
+  expect(fn).toHaveBeenCalledWith(selectableData);
+
+  fireEvent.click(firstHeaderCell);
+
+  expect(fn).toHaveBeenLastCalledWith([]);
+
+  const firstRow = document.querySelector('.reqore-table-row');
+  const firstCheckCell = firstRow.querySelector('.reqore-table-cell');
+
+  fireEvent.click(firstCheckCell);
+  fireEvent.click(firstHeaderCell);
+
+  expect(fn).toHaveBeenLastCalledWith(selectableData);
+});

@@ -1,5 +1,5 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import React from 'react';
+import React, { useState } from 'react';
 import { IReqoreTableColumn } from '../../components/Table';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import {
@@ -22,14 +22,31 @@ export default {
 
 const Template: Story<
   IReqoreUIProviderProps & {
-    table: { columns: IReqoreTableColumn[]; data: any[] };
+    table: {
+      columns: IReqoreTableColumn[];
+      data: any[];
+      selectable?: boolean;
+      onSelectedChange?: (data: string[]) => void;
+    };
   }
 > = ({ theme, table }) => {
+  const [selected, setSelected] = useState(null);
+
   return (
     <ReqoreUIProvider theme={theme}>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreTable {...table} />
+          <ReqoreTable
+            {...table}
+            onSelectedChange={table.selectable ? setSelected : undefined}
+          />
+          {selected && (
+            <div style={{ marginTop: '10px' }}>
+              {selected.map((s) => (
+                <span style={{ marginRight: '5px' }}>{s}</span>
+              ))}
+            </div>
+          )}
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -191,5 +208,14 @@ Complete.args = {
     ] as IReqoreTableColumn[],
     sort: { by: 'age', direction: 'desc' },
     striped: true,
+    selectable: true,
+  },
+};
+
+export const Selectable = Template.bind({});
+Selectable.args = {
+  table: {
+    ...tableData,
+    selectable: true,
   },
 };

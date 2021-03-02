@@ -15,6 +15,7 @@ export interface IReqoreTableCellProps
 export interface IReqoreTableCellStyle {
   theme: IReqoreTheme;
   width?: number;
+  interactive?: boolean;
 }
 
 const StyledTableCell = styled.td<IReqoreTableCellStyle>`
@@ -44,6 +45,7 @@ const ReqoreTableCell = ({
         width={width}
         ref={setRef}
         colSpan={colspan}
+        interactive={!!rest.onClick}
         className={`${className || ''} reqore-table-cell`}
       >
         {children}
