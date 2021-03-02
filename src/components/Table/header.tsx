@@ -4,6 +4,7 @@ import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
+import { IReqoreIconName } from '../../types/icons';
 import ReqoreTableHeaderCell, { StyledTableHeader } from './headerCell';
 import { alignToFlex } from './row';
 
@@ -12,6 +13,9 @@ export interface IReqoreTableSectionProps {
   leftScroll: number;
   onSortChange?: (sort: string) => void;
   sortData: IReqoreTableSort;
+  selectable?: boolean;
+  selectedQuant: 'none' | 'all' | 'some';
+  onToggleSelectClick: () => void;
 }
 
 const StyledTableHeaderWrapper = styled.div<{ leftScroll?: number }>`
@@ -76,6 +80,9 @@ const ReqoreTableHeader = ({
   leftScroll,
   onSortChange,
   sortData,
+  selectable,
+  selectedQuant,
+  onToggleSelectClick,
 }: IReqoreTableSectionProps) => {
   const renderColumns = (columns: IReqoreTableColumn[]) =>
     columns.map(
@@ -112,12 +119,39 @@ const ReqoreTableHeader = ({
         )
     );
 
+  const getSelectedIcon = (): IReqoreIconName => {
+    switch (selectedQuant) {
+      case 'all':
+        return 'CheckboxFill';
+      case 'some':
+        return 'CheckboxIndeterminateFill';
+      default:
+        return 'CheckboxBlankLine';
+    }
+  };
+
   return (
     <StyledTableHeaderWrapper
       className='reqore-table-header-wrapper'
       leftScroll={leftScroll}
     >
-      <StyledTableHeaderRow>{renderColumns(columns)}</StyledTableHeaderRow>
+      <StyledTableHeaderRow>
+        {selectable && (
+          <ReqoreTableHeaderCell
+            dataId='selextbox'
+            key='selectbox'
+            sortData={sortData}
+            align='center'
+            onSortChange={onSortChange}
+            icon={getSelectedIcon()}
+            iconSize='15px'
+            onClick={() => {
+              onToggleSelectClick();
+            }}
+          />
+        )}
+        {renderColumns(columns)}
+      </StyledTableHeaderRow>
     </StyledTableHeaderWrapper>
   );
 };
