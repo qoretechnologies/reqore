@@ -52,6 +52,7 @@ export interface IQorusSidebarProps {
   wrapperStyle?: React.CSSProperties;
   onBookmarksChange?: (bookmarks: string[]) => void;
   useNativeTitle?: boolean;
+  position?: 'left' | 'right';
 }
 
 const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
@@ -71,7 +72,7 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
   border-right: 1px solid
     ${({ theme }) =>
-      theme.sidebar?.border || darken(0.1, getMainColor(theme, 'sidebar'))};
+      theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
 
   // Custom scrollbar
   .sidebarScroll {
@@ -316,6 +317,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   wrapperStyle,
   onBookmarksChange,
   useNativeTitle,
+  position = 'left',
 }) => {
   const [_isCollapsed, setIsCollapsed] = useState<boolean>(
     isCollapsed || false
@@ -406,6 +408,9 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
           <div
             role='qorus-sidebar-collapse-button'
             className='sidebarItem'
+            style={{
+              justifyContent: position === 'left' ? 'flex-start' : 'flex-end',
+            }}
             onClick={() => {
               setIsCollapsed(!_isCollapsed);
 
@@ -414,10 +419,17 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
               }
             }}
           >
-            <ReqoreIcon
-              icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
-            />{' '}
+            {position === 'left' && (
+              <ReqoreIcon
+                icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
+              />
+            )}{' '}
             {!_isCollapsed && (collapseLabel || 'Collapse')}
+            {position === 'right' && (
+              <ReqoreIcon
+                icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'}
+              />
+            )}{' '}
           </div>
         </div>
       </StyledSidebar>

@@ -1,4 +1,3 @@
-import { darken } from 'polished';
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
@@ -18,13 +17,8 @@ const StyledReqoreContent = styled.div<IReqoreContentStyle>`
   ${({ theme }: IReqoreContentStyle) => css`
     display: flex;
     flex: 1;
-    background-color: ${theme.main};
-    border-radius: 10px;
     color: ${getReadableColor(theme.main, undefined, undefined, true)};
-    padding: 10px;
-    box-shadow: 0 0 4px 1px ${darken(0.1, theme.main)};
     overflow: auto;
-    margin: 0 15px 15px 15px;
     align-items: flex-start;
     flex-flow: column;
   `}

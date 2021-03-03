@@ -33,8 +33,11 @@ const StyledNavbar = styled.div<IReqoreNavbarStyle>`
     background-color: ${
       theme[type]?.background || theme[type]?.main || theme.main
     };
+    box-shadow: rgba(37, 11, 54, 0.01) 0px ${
+      type === 'header' ? '2px' : '-2px'
+    } 0px;
     border-${type === 'header' ? 'bottom' : 'top'}: 1px solid ${
-    theme[type]?.border || darken(0.1, getMainColor(theme, type))
+    theme[type]?.border || darken(0.05, getMainColor(theme, type))
   };
   `}
 `;

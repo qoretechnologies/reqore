@@ -33,7 +33,7 @@ const StyledReqoreLayoutWrapper = styled.div<{
 
   ${({ withSidebar, theme }) => css`
     flex-flow: ${withSidebar ? 'row' : 'column'};
-    background-color: ${changeLightness(theme.main, 0.05)};
+    background-color: ${changeLightness(theme.main, 0.02)};
     color: ${getReadableColor(theme.main, undefined, undefined, true)};
   `}
 `;

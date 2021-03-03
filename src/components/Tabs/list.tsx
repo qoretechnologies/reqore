@@ -51,16 +51,6 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
       `
     }
 
-    > * {
-      &:first-child {
-        border-top-left-radius: 10px;
-      }
-
-      &:last-child {
-        border-${vertical ? 'bottom-left' : 'top-right'}-radius: 10px;
-      }
-    }
-
     ${StyledPopover} {
       min-height: 40px;
       > ${StyledTabListItem} {

@@ -90,9 +90,6 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       text-decoration: underline;
     }
   }
-
-  ${StyledLabel} {
-  }
 `;
 
 const ReqoreTabsListItem = ({
