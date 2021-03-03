@@ -4,7 +4,7 @@ import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { getReadableColor } from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
@@ -42,9 +42,9 @@ export interface IReqoreBreadcrumbsProps
 const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
   ${({ theme }) => css`
     width: 100%;
-    height: 50px;
+    height: 40px;
     display: flex;
-    padding: 0 15px;
+    padding: 0 10px;
     justify-content: space-between;
 
     > div {
@@ -62,18 +62,7 @@ const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
 
       ${StyledReqoreTabsList} {
         flex: 1;
-      }
-
-      ${StyledTabListItem} {
-        &:not(:last-child) {
-          border-right: 1px solid
-            ${changeLightness(
-              theme.breadcrumbs?.item?.color ||
-                theme.breadcrumbs?.main ||
-                getReadableColor(theme.main, undefined, undefined, true),
-              0.65
-            )};
-        }
+        border-bottom: 0;
       }
 
       &:first-child {
