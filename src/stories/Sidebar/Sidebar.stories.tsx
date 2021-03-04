@@ -20,8 +20,12 @@ const Template: Story<IQorusSidebarProps & IReqoreUIProviderProps> = ({
   theme,
   ...args
 }: IQorusSidebarProps & IReqoreUIProviderProps) => (
-  <ReqoreUIProvider theme={theme}>
-    <ReqoreSidebar {...args} />
+  <ReqoreUIProvider theme={theme} withSidebar>
+    {!args.position || args.position === 'left' ? (
+      <ReqoreSidebar {...args} />
+    ) : null}
+    <div style={{ flex: 1, width: '100%', height: '100%' }} />
+    {args.position === 'right' ? <ReqoreSidebar {...args} /> : null}
   </ReqoreUIProvider>
 );
 
@@ -99,4 +103,21 @@ export const WithNativeTitles = Template.bind({});
 
 WithNativeTitles.args = {
   useNativeTitle: true,
+} as IReqoreUIProviderProps & IQorusSidebarProps;
+
+export const CollapsingDisabled = Template.bind({});
+
+CollapsingDisabled.args = {
+  disableCollapsing: true,
+  isCollapsed: true,
+} as IReqoreUIProviderProps & IQorusSidebarProps;
+
+export const OnRight = Template.bind({});
+OnRight.args = {
+  position: 'right',
+} as IReqoreUIProviderProps & IQorusSidebarProps;
+
+export const Bordered = Template.bind({});
+Bordered.args = {
+  bordered: true,
 } as IReqoreUIProviderProps & IQorusSidebarProps;

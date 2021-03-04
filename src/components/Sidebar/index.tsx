@@ -5,7 +5,7 @@ import { darken } from 'polished';
 import React, { useState } from 'react';
 import Scroll from 'react-scrollbar';
 import { useUpdateEffect } from 'react-use';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
@@ -53,12 +53,22 @@ export interface IQorusSidebarProps {
   onBookmarksChange?: (bookmarks: string[]) => void;
   useNativeTitle?: boolean;
   position?: 'left' | 'right';
+  disableCollapsing?: boolean;
+  bordered?: boolean;
 }
 
-const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
+export interface IReqoreSidebarStyle {
+  expanded?: boolean;
+  theme: IReqoreTheme;
+  bordered?: boolean;
+  position?: 'left' | 'right';
+}
+
+const StyledSidebar = styled.div<IReqoreSidebarStyle>`
   // 80px is header + footer
   height: 100%;
   font-size: 14px;
+  font-weight: 500;
   display: flex;
   flex-flow: column;
   color: ${({ theme }) =>
@@ -70,9 +80,19 @@ const StyledSidebar = styled.div<{ expanded?: boolean; theme: IReqoreTheme }>`
       true
     )};
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
-  border-right: 1px solid
-    ${({ theme }) =>
-      theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+
+  ${({ theme, bordered, position }) => css`
+    ${(position === 'left' || bordered) &&
+    css`
+      border-right: 1px solid
+        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+    `}
+    ${(position === 'right' || bordered) &&
+    css`
+      border-left: 1px solid
+        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+    `}
+  `}
 
   // Custom scrollbar
   .sidebarScroll {
@@ -318,6 +338,8 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   onBookmarksChange,
   useNativeTitle,
   position = 'left',
+  disableCollapsing,
+  bordered,
 }) => {
   const [_isCollapsed, setIsCollapsed] = useState<boolean>(
     isCollapsed || false
@@ -363,6 +385,8 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
         })}
         style={wrapperStyle}
         role='qorus-sidebar-wrapper'
+        position={position}
+        bordered={bordered}
       >
         <Scroll
           horizontal={false}
@@ -404,34 +428,40 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
           )}
         </Scroll>
         <StyledDivider />
-        <div className='sidebarSection' id='menuCollapse'>
-          <div
-            role='qorus-sidebar-collapse-button'
-            className='sidebarItem'
-            style={{
-              justifyContent: position === 'left' ? 'flex-start' : 'flex-end',
-            }}
-            onClick={() => {
-              setIsCollapsed(!_isCollapsed);
+        {!disableCollapsing && (
+          <div className='sidebarSection' id='menuCollapse'>
+            <div
+              role='qorus-sidebar-collapse-button'
+              className='sidebarItem'
+              style={{
+                justifyContent: _isCollapsed
+                  ? 'center'
+                  : position === 'left'
+                  ? 'flex-start'
+                  : 'flex-end',
+              }}
+              onClick={() => {
+                setIsCollapsed(!_isCollapsed);
 
-              if (onCollapseChange) {
-                onCollapseChange(!_isCollapsed);
-              }
-            }}
-          >
-            {position === 'left' && (
-              <ReqoreIcon
-                icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
-              />
-            )}{' '}
-            {!_isCollapsed && (collapseLabel || 'Collapse')}
-            {position === 'right' && (
-              <ReqoreIcon
-                icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'}
-              />
-            )}{' '}
+                if (onCollapseChange) {
+                  onCollapseChange(!_isCollapsed);
+                }
+              }}
+            >
+              {position === 'left' && (
+                <ReqoreIcon
+                  icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
+                />
+              )}{' '}
+              {!_isCollapsed && (collapseLabel || 'Collapse')}
+              {position === 'right' && (
+                <ReqoreIcon
+                  icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'}
+                />
+              )}{' '}
+            </div>
           </div>
-        </div>
+        )}
       </StyledSidebar>
     </ReqoreThemeProvider>
   );

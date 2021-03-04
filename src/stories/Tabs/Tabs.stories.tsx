@@ -38,12 +38,18 @@ const tabs = {
     {
       id: 'tab4',
       icon: 'LightbulbLine',
+      onCloseClick: (id) => {
+        alert(`${id} close click`);
+      },
     },
     {
       label: 'Tab 5',
       id: 'tab5',
       icon: 'Polaroid2Line',
       disabled: true,
+      onCloseClick: (id) => {
+        alert(`${id} close click`);
+      },
     },
     {
       label: 'Lorem Ipsum',
@@ -54,6 +60,9 @@ const tabs = {
       label: 'Hey I am another long tab',
       id: 'tab7',
       icon: 'LeafFill',
+      onCloseClick: (id) => {
+        alert(`${id} close click`);
+      },
     },
     {
       label: 'Tab 8',

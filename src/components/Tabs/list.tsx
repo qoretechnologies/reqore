@@ -7,11 +7,11 @@ import { ReqorePopover } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import ReqoreMenu from '../Menu';
-import ReqoreMenuItem from '../Menu/item';
+import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
 import { StyledPopover } from '../Popover';
 import ReqoreTabsListItem, {
   IReqoreTabListItemProps,
-  StyledTabListItem,
+  StyledTabListItem
 } from './item';
 
 export interface IReqoreTabsListProps
@@ -121,7 +121,7 @@ export const getTabsLength = (
       return len + rows * 15 + 10;
     }
 
-    return len + 27 + getLabel(item, activeTab) * 10 + 15;
+    return len + 27 + getLabel(item, activeTab) * 10 + 45;
   }, 0);
 
 const getTransformedItems = (
@@ -204,25 +204,42 @@ const ReqoreTabsList = ({
                 content={
                   <ReqoreMenu>
                     {item.map(
-                      ({ icon, label, as, tooltip, props, disabled, id }) => (
+                      ({
+                        icon,
+                        label,
+                        as,
+                        tooltip,
+                        props,
+                        disabled,
+                        id,
+                        onCloseClick,
+                      }) => (
                         <ReqorePopover
                           component={ReqoreMenuItem}
-                          componentProps={{
-                            ...props,
-                            icon,
-                            as,
-                            disabled,
-                            selected: activeTab === id,
-                            onClick: (event: React.MouseEvent<any>) => {
-                              if (!disabled) {
-                                onTabChange(id);
+                          componentProps={
+                            {
+                              ...props,
+                              icon,
+                              as,
+                              disabled,
+                              rightIcon: onCloseClick ? 'CloseLine' : undefined,
+                              onRightIconClick: onCloseClick
+                                ? () => {
+                                    onCloseClick(id);
+                                  }
+                                : undefined,
+                              selected: activeTab === id,
+                              onClick: (_id, event: React.MouseEvent<any>) => {
+                                if (!disabled) {
+                                  onTabChange(id);
 
-                                if (props?.onClick) {
-                                  props.onClick(event);
+                                  if (props?.onClick) {
+                                    props.onClick(event);
+                                  }
                                 }
-                              }
-                            },
-                          }}
+                              },
+                            } as IReqoreMenuItemProps
+                          }
                           placement='right'
                           isReqoreComponent
                           content={tooltip}
@@ -252,6 +269,13 @@ const ReqoreTabsList = ({
                     }
                   }
                 }}
+                onCloseClick={
+                  item.onCloseClick
+                    ? () => {
+                        item.onCloseClick(item.id);
+                      }
+                    : undefined
+                }
               />
             </React.Fragment>
           )

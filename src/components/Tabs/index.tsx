@@ -12,6 +12,7 @@ export interface IReqoreTabsListItem {
   tooltip?: string;
   props?: React.HTMLAttributes<any>;
   onClick?: (event: any) => any;
+  onCloseClick?: (id: string | number) => any;
 }
 
 export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {

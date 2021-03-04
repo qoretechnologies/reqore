@@ -10,6 +10,7 @@ import ReqoreIcon from '../Icon';
 export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   active?: boolean;
   vertical?: boolean;
+  onCloseClick?: any;
 }
 
 export interface IReqoreTabListItemStyle {
@@ -17,6 +18,7 @@ export interface IReqoreTabListItemStyle {
   active?: boolean;
   disabled?: boolean;
   vertical?: boolean;
+  closable?: boolean;
 }
 
 const StyledLabel = styled.span`
@@ -25,13 +27,21 @@ const StyledLabel = styled.span`
 `;
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ theme, active, disabled, vertical }: IReqoreTabListItemStyle) => {
+  ${({
+    theme,
+    active,
+    disabled,
+    vertical,
+    closable,
+  }: IReqoreTabListItemStyle) => {
     const textColor = getReadableColor(theme.main, undefined, undefined, true);
 
     return css`
       display: flex;
+      position: relative;
       align-items: center;
       padding: ${vertical ? '10px' : 0} 15px;
+      padding-right: ${closable ? '43px' : undefined};
       transition: background-color 0.15s linear;
 
       text-transform: uppercase;
@@ -62,7 +72,8 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
 
       ${
         !disabled
-          ? css`
+          ? !active &&
+            css`
               cursor: pointer;
               &:hover {
                 color: ${getReadableColor(theme.main, undefined, undefined)};
@@ -79,10 +90,6 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     `;
   }}
 
-  > *:first-child:not(:last-child) {
-    margin-right: 5px;
-  }
-
   a {
     text-decoration: none;
 
@@ -90,6 +97,25 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       text-decoration: underline;
     }
   }
+`;
+
+const StyledCloseButton = styled.div`
+  ${({ theme }) => css`
+    position: absolute;
+    right: 0px;
+    height: 100%;
+    width: 33px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    z-index: 1;
+    transition: background-color 0.1s linear;
+    cursor: pointer;
+    &:hover {
+      background-color: ${changeLightness(theme.main, 0.09)};
+    }
+  `}
 `;
 
 const ReqoreTabsListItem = ({
@@ -102,6 +128,7 @@ const ReqoreTabsListItem = ({
   disabled,
   vertical,
   onClick,
+  onCloseClick,
 }: IReqoreTabListItemProps) => {
   const [ref, setRef] = useState(null);
 
@@ -120,9 +147,28 @@ const ReqoreTabsListItem = ({
           active ? 'reqore-tabs-list-item__active' : ''
         }`}
         onClick={onClick}
+        closable={!!onCloseClick && !disabled}
       >
-        {icon && <ReqoreIcon icon={icon} size='13px' />}
+        {icon && (
+          <ReqoreIcon
+            icon={icon}
+            size='13px'
+            margin={label ? 'right' : undefined}
+          />
+        )}
         {label && <StyledLabel>{label}</StyledLabel>}
+        {onCloseClick && !disabled ? (
+          <StyledCloseButton
+            className='reqore-tabs-list-item-close'
+            onClick={(event) => {
+              event.stopPropagation();
+
+              onCloseClick && onCloseClick();
+            }}
+          >
+            <ReqoreIcon icon='CloseLine' size='13px' />
+          </StyledCloseButton>
+        ) : null}
       </StyledTabListItem>
     </ReqoreThemeProvider>
   );

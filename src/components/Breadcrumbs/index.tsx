@@ -4,7 +4,7 @@ import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
@@ -46,6 +46,7 @@ const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
     display: flex;
     padding: 0 10px;
     justify-content: space-between;
+    border-bottom: 1px solid ${changeLightness(theme.main, 0.05)};
 
     > div {
       height: 100%;
@@ -78,7 +79,7 @@ const getBreadcrumbsLength = (
 ): number =>
   items.reduce((len, item) => {
     if (isArray(item)) {
-      return len + 50;
+      return len + 70;
     }
 
     if (item.withTabs) {
@@ -113,7 +114,7 @@ const getTransformedItems = (
 
     newItems = newItems.filter((i) => i);
 
-    if ((newItems[2] as IReqoreBreadcrumbItem).withTabs) {
+    if (!newItems[2] || (newItems[2] as IReqoreBreadcrumbItem).withTabs) {
       stop = true;
     }
   }

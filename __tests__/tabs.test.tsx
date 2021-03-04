@@ -14,11 +14,11 @@ test('Renders full <Tabs /> properly', () => {
         <ReqoreLayoutContent>
           <ReqoreTabs
             tabs={[
-              { label: 'Tab 1', icon: 'home', id: 'tab1' },
-              { label: 'Tab 2', icon: 'home', id: 'tab2' },
-              { label: 'Tab 3', icon: 'home', id: 'tab3' },
-              { label: 'Tab 4', icon: 'home', id: 'tab4' },
-              { label: 'Tab 5', icon: 'home', id: 'tab5' },
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3' },
+              { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
             ]}
           >
             <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
@@ -47,11 +47,11 @@ test('Renders shortened <Tabs /> properly', () => {
           <ReqoreTabs
             _testWidth={300}
             tabs={[
-              { label: 'Tab 1', icon: 'home', id: 'tab1' },
-              { label: 'Tab 2', icon: 'home', id: 'tab2' },
-              { label: 'Tab 3', icon: 'home', id: 'tab3' },
-              { label: 'Tab 4', icon: 'home', id: 'tab4' },
-              { label: 'Tab 5', icon: 'home', id: 'tab5' },
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3' },
+              { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
             ]}
           >
             <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
@@ -65,7 +65,7 @@ test('Renders shortened <Tabs /> properly', () => {
     );
   });
 
-  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(3);
+  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(2);
   expect(
     document.querySelectorAll('.reqore-tabs-list .reqore-popover-wrapper')
       .length
@@ -79,11 +79,11 @@ test('Default active tab can be specified', () => {
         <ReqoreLayoutContent>
           <ReqoreTabs
             tabs={[
-              { label: 'Tab 1', icon: 'home', id: 'tab1' },
-              { label: 'Tab 2', icon: 'home', id: 'tab2' },
-              { label: 'Tab 3', icon: 'home', id: 'tab3' },
-              { label: 'Tab 4', icon: 'home', id: 'tab4' },
-              { label: 'Tab 5', icon: 'home', id: 'tab5' },
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3' },
+              { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
             ]}
             activeTab='tab4'
           >
@@ -110,11 +110,11 @@ test('Changes tab and runs callback', () => {
         <ReqoreLayoutContent>
           <ReqoreTabs
             tabs={[
-              { label: 'Tab 1', icon: 'home', id: 'tab1' },
-              { label: 'Tab 2', icon: 'home', id: 'tab2' },
-              { label: 'Tab 3', icon: 'home', id: 'tab3' },
-              { label: 'Tab 4', icon: 'home', id: 'tab4' },
-              { label: 'Tab 5', icon: 'home', id: 'tab5' },
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3' },
+              { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
             ]}
             onTabChange={cb}
           >
@@ -147,11 +147,11 @@ test('Does not change tab and run callback when disabled', () => {
         <ReqoreLayoutContent>
           <ReqoreTabs
             tabs={[
-              { label: 'Tab 1', icon: 'home', id: 'tab1' },
-              { label: 'Tab 2', icon: 'home', id: 'tab2' },
-              { label: 'Tab 3', icon: 'home', id: 'tab3', disabled: true },
-              { label: 'Tab 4', icon: 'home', id: 'tab4' },
-              { label: 'Tab 5', icon: 'home', id: 'tab5' },
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3', disabled: true },
+              { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
             ]}
             onTabChange={cb}
           >
@@ -173,4 +173,45 @@ test('Does not change tab and run callback when disabled', () => {
   expect(
     document.querySelectorAll('.reqore-tabs-list-item__active').length
   ).toBe(1);
+});
+
+test('Closable tab can be closed if not disabled', () => {
+  const cb = jest.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs
+            tabs={[
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3', disabled: true },
+              {
+                label: 'Tab 4',
+                icon: 'Home3Line',
+                id: 'tab4',
+                onCloseClick: cb,
+              },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
+            ]}
+            onTabChange={cb}
+          >
+            <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    fireEvent.click(
+      document.querySelectorAll('.reqore-tabs-list-item-close')[0]
+    );
+  });
+
+  expect(cb).toHaveBeenCalledWith('tab4');
+  expect(screen.getByText('Tab 1 content')).toBeTruthy();
 });
