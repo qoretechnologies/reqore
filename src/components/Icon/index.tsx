@@ -22,7 +22,7 @@ const StyledIconWrapper = styled.span<{ margin?: 'right' | 'left' }>`
   ${({ margin }) =>
     margin &&
     css`
-    margin-${margin}: 6px;
+    margin-${margin}: 10px;
   `}
 `;
 

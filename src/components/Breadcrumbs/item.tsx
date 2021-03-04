@@ -74,10 +74,6 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
     `;
   }}
 
-  > *:first-child:not(:last-child) {
-    margin-right: 5px;
-  }
-
   a {
     text-decoration: none;
 
@@ -109,7 +105,13 @@ const ReqoreBreadcrumbsItem = ({
         interactive={interactive || !!props?.onClick}
         className='reqore-breadcrumbs-item'
       >
-        {icon && <ReqoreIcon icon={icon} size='13px' />}
+        {icon && (
+          <ReqoreIcon
+            icon={icon}
+            size='13px'
+            margin={label ? 'right' : undefined}
+          />
+        )}
         {label && <Element {...props}>{label}</Element>}
       </StyledBreadcrumbItem>
     </ReqoreThemeProvider>

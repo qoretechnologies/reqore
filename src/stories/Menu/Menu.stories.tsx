@@ -40,7 +40,12 @@ const Template: Story<IReqoreUIProviderProps> = ({
         <StyledStoriesContent>
           <ReqoreMenu {...args}>
             <ReqoreMenuItem icon='Save3Fill'>Save</ReqoreMenuItem>
-            <ReqoreMenuItem icon='ChatPollFill' rightIcon='FahrenheitFill'>
+            <ReqoreMenuItem
+              icon='ChatPollFill'
+              onClick={() => alert('Item clicked')}
+              rightIcon='FahrenheitFill'
+              onRightIconClick={(itemId) => alert('Icon clicked')}
+            >
               Delete
             </ReqoreMenuItem>
 
