@@ -114,7 +114,7 @@ const getTransformedItems = (
 
     newItems = newItems.filter((i) => i);
 
-    if ((newItems[2] as IReqoreBreadcrumbItem).withTabs) {
+    if (!newItems[2] || (newItems[2] as IReqoreBreadcrumbItem).withTabs) {
       stop = true;
     }
   }

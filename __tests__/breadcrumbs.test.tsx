@@ -13,11 +13,11 @@ test('Renders full <Breadcrumbs /> properly', () => {
         <ReqoreLayoutContent>
           <ReqoreBreadcrumbs
             items={[
-              { label: 'Page 1', icon: 'home' },
-              { label: 'Page 2', icon: 'home' },
-              { label: 'Page 3', icon: 'home' },
-              { label: 'Page 4', icon: 'home' },
-              { label: 'Page 5', icon: 'home' },
+              { label: 'Page 1', icon: 'Home3Line' },
+              { label: 'Page 2', icon: 'Home3Line' },
+              { label: 'Page 3', icon: 'Home3Line' },
+              { label: 'Page 4', icon: 'Home3Line' },
+              { label: 'Page 5', icon: 'Home3Line' },
             ]}
           />
         </ReqoreLayoutContent>
@@ -39,11 +39,11 @@ test('Renders shortened <Breadcrumbs /> properly', () => {
           <ReqoreBreadcrumbs
             _testWidth={300}
             items={[
-              { label: 'Page 1', icon: 'home' },
-              { label: 'Page 2', icon: 'home' },
-              { label: 'Page 3', icon: 'home' },
-              { label: 'Page 4', icon: 'home' },
-              { label: 'Page 5', icon: 'home' },
+              { label: 'Page 1', icon: 'Home3Line' },
+              { label: 'Page 2', icon: 'Home3Line' },
+              { label: 'Page 3', icon: 'Home3Line' },
+              { label: 'Page 4', icon: 'Home3Line' },
+              { label: 'Page 5', icon: 'Home3Line' },
             ]}
           />
         </ReqoreLayoutContent>
@@ -54,5 +54,5 @@ test('Renders shortened <Breadcrumbs /> properly', () => {
   expect(document.querySelectorAll('.reqore-breadcrumbs-wrapper').length).toBe(
     1
   );
-  expect(document.querySelectorAll('.reqore-breadcrumbs-item').length).toBe(3);
+  expect(document.querySelectorAll('.reqore-breadcrumbs-item').length).toBe(2);
 });
