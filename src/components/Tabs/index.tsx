@@ -1,4 +1,4 @@
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTabsList from './list';
@@ -48,6 +48,16 @@ const ReqoreTabs = ({
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string>(activeTab || tabs[0].id);
+
+  useEffect(() => {
+    if (activeTab) {
+      setActiveTab(activeTab);
+
+      if (onTabChange) {
+        onTabChange(activeTab);
+      }
+    }
+  }, [activeTab]);
 
   return (
     <StyledTabs
