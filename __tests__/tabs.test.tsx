@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ReqoreLayoutContent,
   ReqoreTabs,
@@ -173,6 +173,51 @@ test('Does not change tab and run callback when disabled', () => {
   expect(
     document.querySelectorAll('.reqore-tabs-list-item__active').length
   ).toBe(1);
+});
+
+test('Changes tab programatically and runs callback', () => {
+  const cb = jest.fn();
+
+  const Component = () => {
+    const [activeTab, setActiveTab] = useState('tab1');
+
+    return (
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs
+            tabs={[
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3', disabled: true },
+              { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
+            ]}
+            onTabChange={cb}
+            activeTab={activeTab}
+          >
+            <ReqoreTabsContent id='tab1'>
+              <button onClick={() => setActiveTab('tab2')}>
+                Change active tab
+              </button>
+            </ReqoreTabsContent>
+            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  };
+
+  act(() => {
+    render(<Component />);
+
+    fireEvent.click(screen.getByText('Change active tab'));
+  });
+
+  expect(screen.getByText('Tab 2 content')).toBeTruthy();
+  expect(cb).toHaveBeenCalled();
 });
 
 test('Closable tab can be closed if not disabled', () => {
