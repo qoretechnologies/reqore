@@ -3,18 +3,30 @@ import { MutableRefObject, useContext, useEffect, useRef } from 'react';
 import shortid from 'shortid';
 import PopoverContext from '../context/PopoverContext';
 
+const startEvents = {
+  hover: 'mouseenter',
+  click: 'click',
+  focus: 'focus',
+}
+
+const endEvents = {
+  hover: 'mouseleave',
+  click: null,
+  focus: 'blur',
+}
+
 const usePopover = (
   targetElement: HTMLElement,
   content: JSX.Element | string | number,
-  type: 'hover' | 'click' = 'hover',
+  type: 'hover' | 'click' | 'focus' = 'hover',
   placement?: Placement,
   show: boolean = true
 ) => {
   const { addPopover, removePopover, popovers } = useContext(PopoverContext);
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
 
-  const startEvent = type === 'hover' ? 'mouseenter' : 'click';
-  const endEvent = type === 'hover' ? 'mouseleave' : null;
+  const startEvent = startEvents[type];
+  const endEvent = endEvents[type];
 
   const _addPopover = () => {
     if (popovers.find((p) => p.id === current)) {
