@@ -122,11 +122,11 @@ const ReqoreTableHeader = ({
   const getSelectedIcon = (): IReqoreIconName => {
     switch (selectedQuant) {
       case 'all':
-        return 'CheckboxFill';
+        return 'CheckboxCircleLine';
       case 'some':
-        return 'CheckboxIndeterminateFill';
+        return 'IndeterminateCircleLine';
       default:
-        return 'CheckboxBlankLine';
+        return 'CheckboxBlankCircleLine';
     }
   };
 
@@ -144,7 +144,7 @@ const ReqoreTableHeader = ({
             align='center'
             onSortChange={onSortChange}
             icon={getSelectedIcon()}
-            iconSize='15px'
+            iconSize='19px'
             onClick={() => {
               onToggleSelectClick();
             }}
