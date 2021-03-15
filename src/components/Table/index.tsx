@@ -24,6 +24,7 @@ export interface IReqoreTableColumn {
   sortable?: boolean;
   icon?: IReqoreIconName;
   iconSize?: string;
+  tooltip?: string | number;
 }
 
 export type IReqoreTableData = { [key: string]: any; _selectId?: string }[];
