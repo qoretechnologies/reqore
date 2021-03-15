@@ -113,7 +113,7 @@ const ReqoreTableHeaderCell = ({
           size={iconSize || '13px'}
           margin='left'
           style={{
-            opacity: sortData.by === dataId ? 1 : 0.5,
+            opacity: sortData.by === dataId ? 1 : 0.2,
           }}
         />
       )}
