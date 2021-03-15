@@ -17,7 +17,7 @@ export interface IReqoreTableColumn {
   header?: string | number | JSX.Element;
   grow?: 1 | 2 | 3 | 4;
   width?: number;
-  content?: React.FC<{ data: any }>;
+  content?: React.FC<{ [key: string]: any; _selectId?: string }>;
   props?: React.HTMLAttributes<HTMLDivElement>;
   align?: 'center' | 'left' | 'right';
   columns?: IReqoreTableColumn[];

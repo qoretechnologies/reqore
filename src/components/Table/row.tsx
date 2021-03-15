@@ -105,7 +105,7 @@ const ReqoreTableRow = ({
           className='reqore-table-cell'
         >
           {isFunction(Content) ? (
-            <Content data={data[index][dataId]} />
+            <Content {...data[index]} />
           ) : (
             <p className='reqore-table-text'>{data[index][dataId]}</p>
           )}

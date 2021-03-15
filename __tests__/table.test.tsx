@@ -62,6 +62,54 @@ test('Renders <Table /> with grouped columns properly', () => {
   expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(7);
 });
 
+test('Renders <Table /> with custom content', () => {
+  const data = {
+    ...tableData,
+    columns: [
+      {
+        dataId: 'id',
+        header: 'ID',
+        width: 50,
+        align: 'center',
+        content: ({ id }) => (
+          <span>ID {id}</span>
+        )
+      },
+      {
+        header: 'Name',
+        dataId: 'name',
+        grow: 3,
+        columns: [
+          { dataId: 'firstName', header: 'First Name', width: 150, grow: 2 },
+          { dataId: 'lastName', header: 'Last Name', width: 150, grow: 1 },
+        ],
+      },
+      { dataId: 'address', header: 'Address', width: 300, grow: 2 },
+      {
+        dataId: 'age',
+        header: 'Really long age header',
+        width: 50,
+        align: 'center',
+      },
+      { dataId: 'occupation', header: 'Ocuppation', width: 200 },
+      { dataId: 'group', header: 'Group', width: 150 },
+    ] as IReqoreTableColumn[],
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const firstRow = document.querySelector('.reqore-table-row');
+  const idCell = firstRow.querySelector('.reqore-table-cell');
+
+  expect(idCell.textContent).toBe('ID 0');
+});
+
 test('Sorting on <Table /> works properly', () => {
   const data = {
     ...tableData,
