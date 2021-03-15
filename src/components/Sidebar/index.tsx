@@ -11,7 +11,7 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
   changeLightness,
   getMainColor,
-  getReadableColor,
+  getReadableColor
 } from '../../helpers/colors';
 import { transformMenu } from '../../helpers/sidebar';
 import { IReqoreIconName } from '../../types/icons';
@@ -74,10 +74,11 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
   color: ${({ theme }) =>
     theme.sidebar?.color ||
     getReadableColor(
-      getMainColor(theme, 'sidebar'),
+      theme,
       undefined,
       undefined,
-      true
+      true,
+      getMainColor(theme, 'sidebar')
     )};
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
 
@@ -171,7 +172,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       color: ${({ theme }) =>
         theme.sidebar?.item?.activeColor ||
         theme.sidebar?.item?.color ||
-        getReadableColor(getMainColor(theme, 'sidebar'), undefined, undefined)};
+        getReadableColor(theme, undefined, undefined, false, getMainColor(theme, 'sidebar'))};
 
       background-color: ${({ theme }) =>
         theme.sidebar?.item?.activeBackground ||
@@ -192,7 +193,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeColor ||
         theme.sidebar?.subItem?.color ||
-        getReadableColor(getMainColor(theme, 'sidebar'), undefined, undefined)};
+        getReadableColor(theme, undefined, undefined, false, getMainColor(theme, 'sidebar'))};
       background-color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeBackground ||
         theme.sidebar?.subItem?.background ||

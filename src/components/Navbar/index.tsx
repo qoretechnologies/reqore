@@ -24,18 +24,19 @@ const StyledNavbar = styled.div<IReqoreNavbarStyle>`
     color: ${
       theme[type]?.color ||
       getReadableColor(
+        theme,
+        undefined,
+        undefined,
+        true,
         theme[type]?.background || theme[type]?.main || theme.main,
-        undefined,
-        undefined,
-        true
       )
     };
     background-color: ${
       theme[type]?.background || theme[type]?.main || theme.main
     };
-    box-shadow: rgba(37, 11, 54, 0.01) 0px ${
+    box-shadow: rgba(31, 26, 34, 0.05) 0px ${
       type === 'header' ? '2px' : '-2px'
-    } 0px;
+    } 6px;
     border-${type === 'header' ? 'bottom' : 'top'}: 1px solid ${
     theme[type]?.border || darken(0.05, getMainColor(theme, type))
   };

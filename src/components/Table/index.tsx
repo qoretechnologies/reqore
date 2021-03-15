@@ -35,6 +35,7 @@ export interface IReqoreTableProps
   className?: string;
   width?: number;
   height?: number;
+  rowHeight?: number;
   sort?: IReqoreTableSort;
   striped?: boolean;
   selectable?: boolean;
@@ -65,7 +66,7 @@ const StyledTableWrapper = styled.div<IReqoreTableStyle>`
     display: flex;
     flex-flow: column;
 
-    color: ${getReadableColor(theme.main, undefined, undefined, true)};
+    color: ${getReadableColor(theme, undefined, undefined, true)};
 
     ${striped &&
     css`
@@ -89,6 +90,7 @@ const ReqoreTable = ({
   onSortChange,
   selectable,
   onSelectedChange,
+  rowHeight,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -196,6 +198,7 @@ const ReqoreTable = ({
           selectable={selectable}
           onSelectClick={handleSelectClick}
           selected={_selected}
+          rowHeight={rowHeight}
         />
       </StyledTableWrapper>
     </ReqoreThemeProvider>

@@ -3,11 +3,18 @@ import { Colors } from '../constants/colors';
 import { IReqoreTheme } from '../constants/theme';
 
 export const getReadableColor: (
-  from: string,
+  theme: IReqoreTheme,
   ifLight?: string,
   ifDark?: string,
-  dimmed?: boolean
-) => string = (from, ifLight, ifDark, dimmed) => {
+  dimmed?: boolean,
+  fallback?: string,
+) => string = (theme, ifLight, ifDark, dimmed, fallback) => {
+  if (theme.color) {
+    return dimmed ? changeDarkness(theme.color, 0.05) : theme.color;
+  }
+
+  const from = fallback || theme.main;
+
   const returnIfLight = ifLight || lighten(dimmed ? 0.2 : 0, Colors.DARK);
   const returnIfDark = ifDark || darken(dimmed ? 0.1 : 0, Colors.LIGHT);
 

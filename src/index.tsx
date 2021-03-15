@@ -1,5 +1,7 @@
 export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
+export { default as ReqoreButton } from './components/Button';
+export { default as ReqoreButtonGroup } from './components/Button/group';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreIcon } from './components/Icon';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
@@ -22,3 +24,4 @@ export { default as ReqoreTabsList } from './components/Tabs/list';
 export { default as ReqoreNotifications } from './containers/NotificationsProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreNotificationsContext } from './context/NotificationContext';
+

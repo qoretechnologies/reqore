@@ -11,6 +11,7 @@ export interface IReqoreTableSectionBodyProps {
   height: number;
   selectable?: boolean;
   selected?: string[];
+  rowHeight?: number;
   onSelectClick?: (selectId: string) => void;
 }
 
@@ -18,6 +19,7 @@ const ReqoreTableBody = ({
   data,
   setLeftScroll,
   height,
+  rowHeight,
   ...rest
 }: IReqoreTableSectionBodyProps) => {
   const ref = useRef(null);
@@ -33,7 +35,7 @@ const ReqoreTableBody = ({
       itemCount={data.length}
       height={height}
       className='reqore-table-body'
-      itemSize={40}
+      itemSize={rowHeight || 40}
       itemData={{
         data,
         ...rest,

@@ -50,7 +50,7 @@ export interface IReqoreMenuItemStyle {
 const StyledElement = styled.div<IReqoreMenuItemStyle>`
   min-height: 35px;
   color: ${({ theme, selected }) =>
-    getReadableColor(theme.main, undefined, undefined, !selected)};
+    getReadableColor(theme, undefined, undefined, !selected)};
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -77,7 +77,7 @@ const StyledElement = styled.div<IReqoreMenuItemStyle>`
 
           &:hover {
             color: ${({ theme }) =>
-              getReadableColor(theme.main, undefined, undefined)};
+              getReadableColor(theme, undefined, undefined)};
             text-decoration: none;
           }
         `

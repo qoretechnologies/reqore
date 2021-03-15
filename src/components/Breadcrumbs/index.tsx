@@ -13,7 +13,7 @@ import { IReqoreTabsListItem } from '../Tabs';
 import { StyledTabListItem } from '../Tabs/item';
 import ReqoreTabsList, {
   getTabsLength,
-  StyledReqoreTabsList,
+  StyledReqoreTabsList
 } from '../Tabs/list';
 import ReqoreBreadcrumbsItem, { IReqoreBreadcrumbItemProps } from './item';
 
@@ -40,7 +40,7 @@ export interface IReqoreBreadcrumbsProps
 }
 
 const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
-  ${({ theme }) => css`
+  ${({ theme }: { theme: IReqoreTheme }) => css`
     width: 100%;
     height: 40px;
     display: flex;
@@ -58,7 +58,7 @@ const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
       ${StyledTabListItem} * {
         color: ${theme.breadcrumbs?.item?.color ||
         theme.breadcrumbs?.main ||
-        getReadableColor(theme.main, undefined, undefined, true)};
+        getReadableColor(theme, undefined, undefined, true)};
       }
 
       ${StyledReqoreTabsList} {

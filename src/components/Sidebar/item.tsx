@@ -225,10 +225,11 @@ const SidebarItemWrapper: Function = ({
         textColor={
           theme.sidebar?.color ||
           getReadableColor(
-            getMainColor(theme, 'sidebar'),
+            theme,
             undefined,
             undefined,
-            true
+            true,
+            getMainColor(theme, 'sidebar')
           )
         }
       />

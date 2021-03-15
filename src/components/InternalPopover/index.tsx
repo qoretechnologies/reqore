@@ -1,13 +1,12 @@
 import { Placement, VirtualElement } from '@popperjs/core';
 import { isString } from 'lodash';
-import { darken } from 'polished';
 import React, { MutableRefObject, useContext, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import PopoverContext from '../../context/PopoverContext';
-import { getReadableColor } from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 import useOutsideClick from '../../hooks/useOutsideClick';
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
@@ -25,24 +24,22 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
     z-index: -1;
     transform: rotate(45deg);
     ${({ theme }) => css`
-      background-color: ${theme.popover?.main || theme.main};
-      box-shadow: 0px 0px 4px 1px
-        ${darken(0.1, theme.popover?.main || theme.main)};
+      background-color: ${theme.popover?.main || changeLightness(theme.main, 0.07)};
+      box-shadow: rgba(31, 26, 34, 0.4) 0px 0px 6px;
     `}
   }
 `;
 
 const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   ${({ theme }) => {
-    const defaultColor: string = theme.popover?.main || theme.main;
+    const defaultColor: string = theme.popover?.main || changeLightness(theme.main, 0.07);
 
     return css`
       z-index: 999999;
       background-color: ${defaultColor};
-      color: ${getReadableColor(defaultColor)};
+      color: ${getReadableColor(theme, undefined, undefined, false, defaultColor)};
       border-radius: 3.5px;
-      box-shadow: 0px 0px 4px 1px
-        ${darken(0.1, theme.popover?.main || theme.main)};
+      box-shadow: rgba(31, 26, 34, 0.4) 0px 0px 6px;
     `;
   }}
 
@@ -69,7 +66,7 @@ const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   padding: ${({ isString }) => (isString ? '8px' : '5px')};
   z-index: 20;
   position: relative;
-  background-color: ${({ theme }) => theme.popover?.main || theme.main};
+  background-color: ${({ theme }) => theme.popover?.main || changeLightness(theme.main, 0.07)};
   border-radius: 3.5px;
 
   .reqore-popover-text {

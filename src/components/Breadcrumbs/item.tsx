@@ -6,7 +6,7 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
   changeDarkness,
   changeLightness,
-  getReadableColor,
+  getReadableColor
 } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
 import ReqoreIcon from '../Icon';
@@ -26,7 +26,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
     const textColor =
       theme.breadcrumbs?.item?.color ||
       theme.breadcrumbs?.main ||
-      getReadableColor(theme.main, undefined, undefined, true);
+      getReadableColor(theme, undefined, undefined, true);
 
     return css`
       display: flex;
@@ -51,7 +51,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
           font-weight: 700;
           color: ${theme.breadcrumbs?.item?.activeColor ||
           changeDarkness(theme.breadcrumbs?.main, 0.05) ||
-          getReadableColor(theme.main, undefined, undefined)};
+          getReadableColor(theme, undefined, undefined)};
         }
       `}
 
@@ -61,15 +61,15 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
         &:hover {
           color: ${theme.breadcrumbs?.item?.hoverColor ||
           changeDarkness(theme.breadcrumbs?.main, 0.05) ||
-          getReadableColor(theme.main, undefined, undefined)};
+          getReadableColor(theme, undefined, undefined)};
           background-color: ${changeLightness(theme.main, 0.1)};
         }
       `}
 
     a:hover {
         color: ${theme.breadcrumbs?.item?.hoverColor ||
-        changeDarkness(theme.breadcrumbs?.main, 0.05) ||
-        getReadableColor(theme.main, undefined, undefined)};
+        changeDarkness(theme.breadcrumbs?.main, 0.05) || theme.color ||
+        getReadableColor(theme, undefined, undefined)};
       }
     `;
   }}
