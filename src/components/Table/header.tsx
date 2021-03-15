@@ -86,7 +86,7 @@ const ReqoreTableHeader = ({
 }: IReqoreTableSectionProps) => {
   const renderColumns = (columns: IReqoreTableColumn[]) =>
     columns.map(
-      ({ grow, header, props = {}, columns: cols, align, ...rest }, index) =>
+      ({ grow, header, props = {}, columns: cols, align, content, ...rest }, index) =>
         cols ? (
           <StyledColumnGroup
             width={cols.reduce((wid, col) => wid + (col.width || 80), 0)}
