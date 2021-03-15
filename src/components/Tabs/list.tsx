@@ -60,7 +60,7 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
 
     > *,
     ${StyledPopover} > * {
-      color: ${getReadableColor(theme.main, undefined, undefined, true)};
+      color: ${getReadableColor(theme, undefined, undefined, true)};
       ${vertical ? 'width' : 'height'}: 100%;
       ${
         vertical

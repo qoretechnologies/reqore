@@ -1,5 +1,6 @@
 export interface IReqoreTheme {
   main?: string;
+  color?: string;
   sidebar?: {
     main?: string;
     color?: string;

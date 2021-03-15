@@ -13,7 +13,7 @@ const StyledMenuDivider = styled.div<{ theme: IReqoreTheme }>`
   letter-spacing: 2px;
   font-weight: 600;
 
-  color: ${({ theme }) => getReadableColor(theme.main, undefined, undefined)};
+  color: ${({ theme }) => getReadableColor(theme, undefined, undefined)};
 `;
 
 const ReqoreMenuDivider = forwardRef(

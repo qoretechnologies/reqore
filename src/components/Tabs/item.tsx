@@ -34,7 +34,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     vertical,
     closable,
   }: IReqoreTabListItemStyle) => {
-    const textColor = getReadableColor(theme.main, undefined, undefined, true);
+    const textColor = getReadableColor(theme, undefined, undefined, true);
 
     return css`
       display: flex;
@@ -65,7 +65,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
           background-color: ${changeLightness(theme.main, 0.05)};
           * {
             font-weight: 700;
-            color: ${getReadableColor(theme.main, undefined, undefined)};
+            color: ${getReadableColor(theme, undefined, undefined)};
           }
         `
       }
@@ -76,7 +76,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
             css`
               cursor: pointer;
               &:hover {
-                color: ${getReadableColor(theme.main, undefined, undefined)};
+                color: ${getReadableColor(theme, undefined, undefined)};
                 background-color: ${changeLightness(theme.main, 0.025)};
               }
             `

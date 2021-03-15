@@ -26,10 +26,11 @@ const StyledNavbarDivider = styled.div<{
     height: 50%;
     background-color: ${({ theme, type }) =>
       getReadableColor(
+        theme,
+        undefined,
+        undefined,
+        true,
         theme[type]?.background || theme[type]?.main || theme.main,
-        undefined,
-        undefined,
-        true
       )};
     opacity: 0.2;
   }
