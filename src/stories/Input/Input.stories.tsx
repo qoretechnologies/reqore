@@ -31,6 +31,8 @@ const Template: Story<IReqoreUIProviderProps> = (
           <div style={{ padding: '20px' }}>
             <h4>Default</h4>
             <ReqoreInput placeholder="Hello" /> 
+            <h4>Minimal</h4>
+            <ReqoreInput placeholder="Hello" tooltip='I am Groot!' minimal /> 
             <h4>Disabled</h4>
             <ReqoreInput placeholder="Hello" disabled /> 
             <h4>With Tooltip</h4>

@@ -15,6 +15,7 @@ export interface IReqoreInputProps extends React.HTMLAttributes<HTMLInputElement
   tooltipPlacement?: Placement;
   width?: number;
   size?: TSizes;
+  minimal?: boolean;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -32,15 +33,17 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
   background-color: ${({ theme }: IReqoreInputStyle) => darken(0.01, theme.main)};
   color: ${({ theme }: IReqoreInputStyle) => getReadableColor(theme)};
 
-  border: 1px solid ${({ theme }) => rgba(getReadableColor(theme), 0.2)};
-  border-radius: 3px;
+  border: ${({ minimal, theme }) => !minimal ? `1px solid ${rgba(getReadableColor(theme), 0.2)}` : 0};
+  border-bottom: ${({ minimal, theme }) => minimal ? `1px solid ${rgba(getReadableColor(theme), 0.2)}` : undefined};
+
+  border-radius: ${({ minimal }) => minimal ? 0 : 3}px;
   transition: all 0.2s linear;
 
   &:active,
   &:focus,
   &:hover {
     outline: none;
-    border: 1px solid ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+    border-color: ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
   }
 
   &::placeholder {
@@ -56,7 +59,7 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
 
   &:disabled {
     pointer-events: none;
-    border: 1px solid ${({ theme }) => rgba(getReadableColor(theme), 0.1)};
+    border-color: ${({ theme }) => rgba(getReadableColor(theme), 0.1)};
   }
 `
 

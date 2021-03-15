@@ -13,9 +13,10 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 const StyledControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
 
-  .reqore-control {
+  > * {
     &:not(:last-child) {
       margin-right: ${({ stack }) => !stack ? '5px' : undefined};
+      
     }
 
     border-radius: ${({ stack }) => !stack ? undefined : 0};
