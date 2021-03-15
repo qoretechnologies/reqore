@@ -133,9 +133,9 @@ const ReqoreTableRow = ({
           }
         >
           <ReqoreIcon
-            icon={isSelected ? 'CheckboxFill' : 'CheckboxBlankLine'}
+            icon={!data[index]._selectId ? 'Forbid2Line' : isSelected ? 'CheckboxCircleLine' : 'CheckboxBlankCircleLine'}
             size='19px'
-            style={{ opacity: !data[index]._selectId ? 0.4 : 1 }}
+            style={{ opacity: !data[index]._selectId || !isSelected ? 0.4 : 1 }}
           />
         </StyledTableCell>
       )}

@@ -9,14 +9,15 @@ export const getReadableColor: (
   dimmed?: boolean,
   fallback?: string,
 ) => string = (theme, ifLight, ifDark, dimmed, fallback) => {
-  if (theme.color) {
-    return dimmed ? changeDarkness(theme.color, 0.05) : theme.color;
+  if (theme.text?.color) {
+    return theme.text.dim ? dimmed ? changeDarkness(theme.text.color, 0.05) : theme.text.color : theme.text.color;
   }
 
+  const shouldDim = theme.text?.dim && dimmed;
   const from = fallback || theme.main;
 
-  const returnIfLight = ifLight || lighten(dimmed ? 0.2 : 0, Colors.DARK);
-  const returnIfDark = ifDark || darken(dimmed ? 0.1 : 0, Colors.LIGHT);
+  const returnIfLight = ifLight || lighten(shouldDim ? 0.2 : 0, Colors.DARK);
+  const returnIfDark = ifDark || darken(shouldDim ? 0.1 : 0, Colors.LIGHT);
 
   return readableColor(from, returnIfLight, returnIfDark, false);
 };

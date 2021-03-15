@@ -1,6 +1,9 @@
 export interface IReqoreTheme {
   main?: string;
-  color?: string;
+  text?: {
+    color?: string;
+    dim?: boolean;
+  },
   sidebar?: {
     main?: string;
     color?: string;
@@ -75,6 +78,9 @@ export interface IReqoreThemeNotification {
 
 export const DEFAULT_THEME: IReqoreTheme = {
   main: '#333333',
+  text:{
+    dim: true,
+  },
   notifications: {
     info: {
       background: '#bdebff',

@@ -6,7 +6,7 @@ import {
   ReqoreContent,
   ReqoreLayoutContent,
   ReqoreTable,
-  ReqoreUIProvider,
+  ReqoreUIProvider
 } from '../../index';
 import tableData from '../../mock/tableData';
 
@@ -159,6 +159,7 @@ Complete.args = {
         width: 50,
         align: 'center',
         sortable: true,
+        tooltip: 'Custom ID tooltip nice',
       },
       {
         header: 'Name',
