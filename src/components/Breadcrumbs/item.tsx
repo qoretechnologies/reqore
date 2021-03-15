@@ -68,7 +68,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
 
     a:hover {
         color: ${theme.breadcrumbs?.item?.hoverColor ||
-        changeDarkness(theme.breadcrumbs?.main, 0.05) || theme.color ||
+        changeDarkness(theme.breadcrumbs?.main, 0.05) ||
         getReadableColor(theme, undefined, undefined)};
       }
     `;
