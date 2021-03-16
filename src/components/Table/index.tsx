@@ -40,6 +40,7 @@ export interface IReqoreTableProps
   sort?: IReqoreTableSort;
   striped?: boolean;
   selectable?: boolean;
+  selected?: string[];
   onSortChange?: (sort?: IReqoreTableSort) => void;
   onSelectedChange?: (selected?: any[]) => void;
 }
@@ -90,12 +91,13 @@ const ReqoreTable = ({
   sort,
   onSortChange,
   selectable,
+  selected,
   onSelectedChange,
   rowHeight,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
-  const [_data] = useState<IReqoreTableData>(data || []);
+  const [_data, setData] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
   const [_selected, setSelected] = useState<string[]>([]);
   const [_selectedQuant, setSelectedQuant] = useState<"all" | "none" | "some">(
@@ -107,6 +109,16 @@ const ReqoreTable = ({
       onSortChange(_sort);
     }
   }, [_sort]);
+
+  useUpdateEffect(() => {
+    setData(data);
+  }, [data])
+
+  useUpdateEffect(() => {
+    if (selectable) {
+      setSelected(selected);
+    }
+  }, [selected])
 
   useUpdateEffect(() => {
     if (onSelectedChange) {
