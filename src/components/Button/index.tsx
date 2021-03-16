@@ -1,7 +1,7 @@
 import { Placement } from "@popperjs/core";
 import React, { forwardRef, useRef } from "react";
 import styled from "styled-components";
-import { SIZE_TO_PX, TEXT_FROM_SIZE } from "../../constants/sizes";
+import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from "../../constants/sizes";
 import { IReqoreTheme } from "../../constants/theme";
 import { changeLightness, getReadableColor } from "../../helpers/colors";
 import { useCombinedRefs } from "../../hooks/useCombinedRefs";
@@ -12,17 +12,17 @@ import ReqoreIcon from "../Icon";
 export interface IReqoreButtonProps
   extends React.HTMLAttributes<HTMLButtonElement> {
   icon?: IReqoreIconName;
-  size?: "small" | "normal" | "big";
+  size?: TSizes;
   minimal?: boolean;
   disabled?: boolean;
   tooltip?: string | number;
   tooltipPlacement?: Placement;
+  fluid?: boolean;
+  fixed?: boolean;
 }
 
-export interface IReqoreButtonStyle {
+export interface IReqoreButtonStyle extends IReqoreButtonProps {
   theme: IReqoreTheme;
-  size?: "small" | "normal" | "big";
-  minimal?: boolean;
 }
 
 export const StyledButton = styled.button<IReqoreButtonStyle>`
@@ -37,6 +37,8 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
+
+  flex: ${({ fluid, fixed }) => fixed ? '0 auto' : fluid ? '1' : undefined};
 
   border-radius: 3px;
 
@@ -89,6 +91,8 @@ const ReqoreButton = forwardRef(
       tooltip,
       tooltipPlacement,
       className,
+      fluid,
+      fixed,
       ...rest
     }: IReqoreButtonProps,
     ref
@@ -107,9 +111,11 @@ const ReqoreButton = forwardRef(
     return (
       <StyledButton
         {...rest}
-        className={`${className || ""} reqore-control reqore-button`}
-        size={size}
+        fluid={fluid}
+        fixed={fixed}
         minimal={minimal}
+        size={size}
+        className={`${className || ""} reqore-control reqore-button`}
         ref={combinedRef}
       >
         {icon && (

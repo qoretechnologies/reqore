@@ -9,6 +9,7 @@ export interface IReqoreControlGroupProps
   minimal?: boolean;
   size?: TSizes;
   children: any;
+  fluid?: boolean;
 }
 
 export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
@@ -17,6 +18,8 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 
 const StyledControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
+  flex: ${({ fluid }) => fluid ? '1' : '0 auto'};
+  width: ${({ fluid }) => fluid ? '100%' : undefined};
 
   > .reqore-control,
   * {
@@ -43,16 +46,19 @@ const ReqoreControlGroup = ({
   className,
   minimal,
   size = "normal",
+  fluid,
   ...rest
 }: IReqoreControlGroupProps) => (
   <StyledControlGroup
     {...rest}
+    fluid={fluid}
     className={`${className || ""} reqore-control-group`}
   >
     {React.Children.map(children, (child) =>
       React.cloneElement(child, {
         minimal: minimal || child.props?.minimal,
         size,
+        fluid,
       })
     )}
   </StyledControlGroup>

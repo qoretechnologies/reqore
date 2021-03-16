@@ -17,6 +17,8 @@ export interface IReqoreInputProps
   width?: number;
   size?: TSizes;
   minimal?: boolean;
+  fluid?: boolean;
+  fixed?: boolean;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -30,6 +32,8 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   margin: 0;
   padding: 0 7px;
+
+  flex: ${({ fluid, fixed }) => fixed ? '0 auto' : fluid ? '1' : undefined};
 
   background-color: ${({ theme }: IReqoreInputStyle) =>
     darken(0.01, theme.main)};
