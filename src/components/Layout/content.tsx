@@ -1,5 +1,5 @@
-import React from 'react';
-import styled from 'styled-components';
+import React from "react";
+import styled from "styled-components";
 
 export interface IReqoreLayoutContentProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -22,7 +22,7 @@ const ReqoreLayoutWrapper = ({
 }: IReqoreLayoutContentProps) => (
   <StyledReqoreLayoutContent
     {...rest}
-    className={`${className || ''} reqore-layout-content`}
+    className={`${className || ""} reqore-layout-content`}
   >
     {children}
   </StyledReqoreLayoutContent>

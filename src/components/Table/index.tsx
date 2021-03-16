@@ -1,16 +1,16 @@
 /* @flow */
-import { size } from 'lodash';
-import React, { useState } from 'react';
-import { useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { IReqoreIconName } from '../../types/icons';
-import ReqoreTableBody from './body';
-import ReqoreTableHeader from './header';
-import { fixSort, flipSortDirection, sortTableData } from './helpers';
-import { StyledTableCell, StyledTableRow } from './row';
+import { size } from "lodash";
+import React, { useState } from "react";
+import { useUpdateEffect } from "react-use";
+import styled, { css } from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import { changeLightness, getReadableColor } from "../../helpers/colors";
+import { IReqoreIconName } from "../../types/icons";
+import ReqoreTableBody from "./body";
+import ReqoreTableHeader from "./header";
+import { fixSort, flipSortDirection, sortTableData } from "./helpers";
+import { StyledTableCell, StyledTableRow } from "./row";
 
 export interface IReqoreTableColumn {
   dataId: string;
@@ -19,7 +19,7 @@ export interface IReqoreTableColumn {
   width?: number;
   content?: React.FC<{ [key: string]: any; _selectId?: string }>;
   props?: React.HTMLAttributes<HTMLDivElement>;
-  align?: 'center' | 'left' | 'right';
+  align?: "center" | "left" | "right";
   columns?: IReqoreTableColumn[];
   sortable?: boolean;
   icon?: IReqoreIconName;
@@ -53,12 +53,12 @@ export interface IReqoreTableStyle {
 
 export interface IReqoreTableSort {
   by?: string;
-  direction?: 'asc' | 'desc';
+  direction?: "asc" | "desc";
 }
 
 const StyledTableWrapper = styled.div<IReqoreTableStyle>`
   ${({ theme, width, striped }: IReqoreTableStyle) => css`
-    width: ${width ? `${width}px` : '100%'};
+    width: ${width ? `${width}px` : "100%"};
 
     position: relative;
     clear: both;
@@ -98,8 +98,8 @@ const ReqoreTable = ({
   const [_data] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
   const [_selected, setSelected] = useState<string[]>([]);
-  const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>(
-    'none'
+  const [_selectedQuant, setSelectedQuant] = useState<"all" | "none" | "some">(
+    "none"
   );
 
   useUpdateEffect(() => {
@@ -119,12 +119,12 @@ const ReqoreTable = ({
 
     if (size(_selected)) {
       if (size(_selected) === size(selectableData)) {
-        setSelectedQuant('all');
+        setSelectedQuant("all");
       } else {
-        setSelectedQuant('some');
+        setSelectedQuant("some");
       }
     } else {
-      setSelectedQuant('none');
+      setSelectedQuant("none");
     }
   }, [_selected]);
 
@@ -159,8 +159,8 @@ const ReqoreTable = ({
 
   const handleToggleSelectClick = () => {
     switch (_selectedQuant) {
-      case 'none':
-      case 'some': {
+      case "none":
+      case "some": {
         const selectableData: string[] = _data
           .filter((datum) => datum._selectId ?? false)
           .map((datum) => datum._selectId);
@@ -180,7 +180,7 @@ const ReqoreTable = ({
       <StyledTableWrapper
         {...rest}
         width={width}
-        className={`${className || ''} reqore-table`}
+        className={`${className || ""} reqore-table`}
       >
         <ReqoreTableHeader
           columns={columns}

@@ -1,24 +1,24 @@
-import { Placement } from '@popperjs/core';
-import { MutableRefObject, useContext, useEffect, useRef } from 'react';
-import shortid from 'shortid';
-import PopoverContext from '../context/PopoverContext';
+import { Placement } from "@popperjs/core";
+import { MutableRefObject, useContext, useEffect, useRef } from "react";
+import shortid from "shortid";
+import PopoverContext from "../context/PopoverContext";
 
 const startEvents = {
-  hover: 'mouseenter',
-  click: 'click',
-  focus: 'focus',
-}
+  hover: "mouseenter",
+  click: "click",
+  focus: "focus",
+};
 
 const endEvents = {
-  hover: 'mouseleave',
+  hover: "mouseleave",
   click: null,
-  focus: 'blur',
-}
+  focus: "blur",
+};
 
 const usePopover = (
   targetElement: HTMLElement,
   content: JSX.Element | string | number,
-  type: 'hover' | 'click' | 'focus' = 'hover',
+  type: "hover" | "click" | "focus" = "hover",
   placement?: Placement,
   show: boolean = true
 ) => {

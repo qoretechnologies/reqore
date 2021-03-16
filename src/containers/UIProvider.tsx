@@ -1,12 +1,12 @@
-import { cloneDeep } from 'lodash';
-import merge from 'lodash/merge';
-import React from 'react';
-import ReqoreLayoutWrapper from '../components/Layout';
-import { IReqoreNotificationsPosition } from '../components/Notifications';
-import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
-import ThemeContext from '../context/ThemeContext';
-import ReqoreNotifications from './NotificationsProvider';
-import PopoverProvider from './PopoverProvider';
+import { cloneDeep } from "lodash";
+import merge from "lodash/merge";
+import React from "react";
+import ReqoreLayoutWrapper from "../components/Layout";
+import { IReqoreNotificationsPosition } from "../components/Notifications";
+import { DEFAULT_THEME, IReqoreTheme } from "../constants/theme";
+import ThemeContext from "../context/ThemeContext";
+import ReqoreNotifications from "./NotificationsProvider";
+import PopoverProvider from "./PopoverProvider";
 
 export interface IReqoreUIProviderProps {
   children: any;

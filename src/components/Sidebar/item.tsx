@@ -1,14 +1,14 @@
-import classnames from 'classnames';
-import map from 'lodash/map';
-import React, { useContext } from 'react';
-import { useMount } from 'react-use';
-import { IQorusSidebarItem } from '.';
-import { ReqorePopover } from '../..';
-import { IReqoreTheme } from '../../constants/theme';
-import ThemeContext from '../../context/ThemeContext';
-import { getMainColor, getReadableColor } from '../../helpers/colors';
-import { isActiveMulti } from '../../helpers/sidebar';
-import ReqoreIcon from '../Icon';
+import classnames from "classnames";
+import map from "lodash/map";
+import React, { useContext } from "react";
+import { useMount } from "react-use";
+import { IQorusSidebarItem } from ".";
+import { ReqorePopover } from "../..";
+import { IReqoreTheme } from "../../constants/theme";
+import ThemeContext from "../../context/ThemeContext";
+import { getMainColor, getReadableColor } from "../../helpers/colors";
+import { isActiveMulti } from "../../helpers/sidebar";
+import ReqoreIcon from "../Icon";
 
 export interface SidebarItemProps {
   itemData: IQorusSidebarItem;
@@ -51,7 +51,7 @@ const SidebarItemTooltip: Function = ({
   onClick,
   useNativeTitle,
 }: ISidebarTooltipProps) => {
-  const Element = itemData.as || 'div';
+  const Element = itemData.as || "div";
 
   if (useNativeTitle) {
     return (
@@ -59,7 +59,7 @@ const SidebarItemTooltip: Function = ({
       <Element
         {...itemData.props}
         onClick={itemData.props?.onClick || onClick}
-        className={classnames('sidebarItem', 'sidebarLink', {
+        className={classnames("sidebarItem", "sidebarLink", {
           sidebarSubItem: isSubitem,
           active: isActive,
           submenuCategory: isSubcategory,
@@ -78,14 +78,14 @@ const SidebarItemTooltip: Function = ({
       componentProps={{
         ...itemData.props,
         onClick: itemData.props?.onClick || onClick,
-        className: classnames('sidebarItem', 'sidebarLink', {
+        className: classnames("sidebarItem", "sidebarLink", {
           sidebarSubItem: isSubitem,
           active: isActive,
           submenuCategory: isSubcategory,
         }),
       }}
       content={itemData.name}
-      placement='right'
+      placement="right"
       isReqoreComponent
       show={isCollapsed}
     >
@@ -155,27 +155,27 @@ const SidebarItem: Function = ({
       >
         <ReqoreIcon
           icon={itemData.icon}
-          margin={isCollapsed ? undefined : 'right'}
-        />{' '}
+          margin={isCollapsed ? undefined : "right"}
+        />{" "}
         {!isCollapsed && getItemName(itemData.name)}
         {itemData.submenu && (
           <ReqoreIcon
-            icon={isExpanded ? 'ArrowUpSFill' : 'ArrowDownSFill'}
-            className='submenuExpand'
+            icon={isExpanded ? "ArrowUpSFill" : "ArrowDownSFill"}
+            className="submenuExpand"
           />
         )}
         {!itemData.submenu && !isCollapsed && hasFavorites ? (
           <>
-            {sectionName === '_qorusBookmarks' ? (
+            {sectionName === "_qorusBookmarks" ? (
               <ReqoreIcon
-                icon='Bookmark3Fill'
-                className='favorite'
+                icon="Bookmark3Fill"
+                className="favorite"
                 onClick={handleUnfavoriteClick}
               />
             ) : (
               <ReqoreIcon
-                icon='Bookmark3Line'
-                className='favorite'
+                icon="Bookmark3Line"
+                className="favorite"
                 onClick={handleFavoriteClick}
               />
             )}
@@ -229,7 +229,7 @@ const SidebarItemWrapper: Function = ({
             undefined,
             undefined,
             true,
-            getMainColor(theme, 'sidebar')
+            getMainColor(theme, "sidebar")
           )
         }
       />

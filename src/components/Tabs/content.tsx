@@ -1,5 +1,5 @@
-import React from 'react';
-import styled from 'styled-components';
+import React from "react";
+import styled from "styled-components";
 
 export interface IReqoreTabsContent
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -23,7 +23,7 @@ const ReqoreTabsContent = ({
 }: IReqoreTabsContent) => (
   <StyledTabsContent
     {...rest}
-    className={`${className || ''} reqore-tabs-content`}
+    className={`${className || ""} reqore-tabs-content`}
   >
     {children}
   </StyledTabsContent>

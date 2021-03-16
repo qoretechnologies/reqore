@@ -1,5 +1,5 @@
-import { createContext } from 'react';
-import { IPopoverData } from '../containers/PopoverProvider';
+import { createContext } from "react";
+import { IPopoverData } from "../containers/PopoverProvider";
 
 export default createContext<{
   addPopover?: (popoverData: IPopoverData) => void;

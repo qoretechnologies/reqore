@@ -1,16 +1,16 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
-import React from 'react';
-import { IQorusSidebarProps } from '../../components/Sidebar';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreSidebar, ReqoreUIProvider } from '../../index';
-import { qorusSidebarItems } from '../../mock/menu';
+import { Meta, Story } from "@storybook/react/types-6-0";
+import React from "react";
+import { IQorusSidebarProps } from "../../components/Sidebar";
+import { IReqoreUIProviderProps } from "../../containers/UIProvider";
+import { ReqoreSidebar, ReqoreUIProvider } from "../../index";
+import { qorusSidebarItems } from "../../mock/menu";
 
 export default {
-  title: 'ReQore/Sidebar',
+  title: "ReQore/Sidebar",
   component: ReqoreSidebar,
   args: {
     items: qorusSidebarItems,
-    path: '/',
+    path: "/",
     isLight: false,
     isCollapsed: false,
   },
@@ -21,11 +21,11 @@ const Template: Story<IQorusSidebarProps & IReqoreUIProviderProps> = ({
   ...args
 }: IQorusSidebarProps & IReqoreUIProviderProps) => (
   <ReqoreUIProvider theme={theme} withSidebar>
-    {!args.position || args.position === 'left' ? (
+    {!args.position || args.position === "left" ? (
       <ReqoreSidebar {...args} />
     ) : null}
-    <div style={{ flex: 1, width: '100%', height: '100%' }} />
-    {args.position === 'right' ? <ReqoreSidebar {...args} /> : null}
+    <div style={{ flex: 1, width: "100%", height: "100%" }} />
+    {args.position === "right" ? <ReqoreSidebar {...args} /> : null}
   </ReqoreUIProvider>
 );
 
@@ -40,14 +40,14 @@ Collapsed.args = {
 export const WithBookmarks = Template.bind({});
 
 WithBookmarks.args = {
-  bookmarks: ['submenu-item-2', 'another-item-1'],
+  bookmarks: ["submenu-item-2", "another-item-1"],
   onBookmarksChange: () => true,
 };
 
 export const WithActivePath = Template.bind({});
 
 WithActivePath.args = {
-  path: '/item-3/item-2',
+  path: "/item-3/item-2",
 };
 
 export const WithCustomElement = Template.bind({});
@@ -64,39 +64,39 @@ export const WithDarkTheme = Template.bind({});
 
 WithDarkTheme.args = {
   theme: {
-    main: '#444444',
+    main: "#444444",
   },
-  path: '/item-3/item-2',
+  path: "/item-3/item-2",
 };
 
 export const WithLightTheme = Template.bind({});
 
 WithLightTheme.args = {
   theme: {
-    main: '#ffffff',
+    main: "#ffffff",
   },
-  path: '/item-3/item-2',
+  path: "/item-3/item-2",
 };
 
 export const WithCustomMainColor = Template.bind({});
 
 WithCustomMainColor.args = {
   theme: {
-    main: '#333333',
+    main: "#333333",
     sidebar: {
-      main: '#692b75',
+      main: "#692b75",
     },
   },
-  path: '/item-3/item-2',
+  path: "/item-3/item-2",
 } as IReqoreUIProviderProps & IQorusSidebarProps;
 
 export const WithCustomColors = Template.bind({});
 
 WithCustomColors.args = {
   theme: {
-    main: '#c96604',
+    main: "#c96604",
   },
-  path: '/item-3/item-2',
+  path: "/item-3/item-2",
 } as IReqoreUIProviderProps & IQorusSidebarProps;
 
 export const WithNativeTitles = Template.bind({});
@@ -114,7 +114,7 @@ CollapsingDisabled.args = {
 
 export const OnRight = Template.bind({});
 OnRight.args = {
-  position: 'right',
+  position: "right",
 } as IReqoreUIProviderProps & IQorusSidebarProps;
 
 export const Bordered = Template.bind({});

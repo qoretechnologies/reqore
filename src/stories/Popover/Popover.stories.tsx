@@ -1,16 +1,16 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
-import React, { useState } from 'react';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import usePopover from '../../hooks/usePopover';
-import { ReqorePopover, ReqoreUIProvider } from '../../index';
+import { Meta, Story } from "@storybook/react/types-6-0";
+import React, { useState } from "react";
+import { IReqoreUIProviderProps } from "../../containers/UIProvider";
+import usePopover from "../../hooks/usePopover";
+import { ReqorePopover, ReqoreUIProvider } from "../../index";
 
 export default {
-  title: 'ReQore/Popover',
+  title: "ReQore/Popover",
 } as Meta;
 
 const HoverButton = () => {
   return (
-    <ReqorePopover component='button' content='Hello'>
+    <ReqorePopover component="button" content="Hello">
       Hover popover
     </ReqorePopover>
   );
@@ -19,10 +19,10 @@ const HoverButton = () => {
 const ClickButton = ({ content, placement }: any) => {
   const [refElement, setRefElement] = useState(null);
 
-  usePopover(refElement, content || 'I am a hover tooltip', 'click', placement);
+  usePopover(refElement, content || "I am a hover tooltip", "click", placement);
 
   return (
-    <button type='button' ref={setRefElement}>
+    <button type="button" ref={setRefElement}>
       Click popover
     </button>
   );
@@ -46,7 +46,7 @@ export const Default = Template.bind({});
 export const CustomColor = Template.bind({});
 CustomColor.args = {
   theme: {
-    main: '#d7d7d7',
+    main: "#d7d7d7",
   },
 };
 
@@ -61,10 +61,10 @@ CustomContent.args = {
 
 export const CustomPosition = Template.bind({});
 CustomPosition.args = {
-  placement: 'right',
+  placement: "right",
 };
 
-const SimplePopoverElement = ({ type = 'hover' }: any) => {
+const SimplePopoverElement = ({ type = "hover" }: any) => {
   const [refElement, setRefElement] = useState(null);
 
   return <p ref={setRefElement}>Hover me for more information</p>;

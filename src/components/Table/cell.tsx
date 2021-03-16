@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import usePopover from '../../hooks/usePopover';
+import React, { useState } from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import usePopover from "../../hooks/usePopover";
 
 export interface IReqoreTableCellProps
   extends React.HTMLAttributes<HTMLTableCellElement> {
@@ -20,7 +20,7 @@ export interface IReqoreTableCellStyle {
 
 const StyledTableCell = styled.td<IReqoreTableCellStyle>`
   ${({ width }) => css`
-    width: ${width ? `${width}px` : 'auto'};
+    width: ${width ? `${width}px` : "auto"};
     padding: 5px 10px;
     height: 40px;
   `}
@@ -46,7 +46,7 @@ const ReqoreTableCell = ({
         ref={setRef}
         colSpan={colspan}
         interactive={!!rest.onClick}
-        className={`${className || ''} reqore-table-cell`}
+        className={`${className || ""} reqore-table-cell`}
       >
         {children}
       </StyledTableCell>

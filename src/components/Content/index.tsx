@@ -1,8 +1,8 @@
-import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { getReadableColor } from '../../helpers/colors';
+import React, { forwardRef } from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import { getReadableColor } from "../../helpers/colors";
 
 export interface IReqoreContentWrapperProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -30,7 +30,7 @@ const ReqoreContent = forwardRef(
       <StyledReqoreContent
         {...rest}
         ref={ref}
-        className={`${className || ''} reqore-content`}
+        className={`${className || ""} reqore-content`}
       >
         {children}
       </StyledReqoreContent>

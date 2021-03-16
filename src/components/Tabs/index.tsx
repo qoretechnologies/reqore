@@ -1,7 +1,7 @@
-import React, { ReactElement, useEffect, useState } from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreIconName } from '../../types/icons';
-import ReqoreTabsList from './list';
+import React, { ReactElement, useEffect, useState } from "react";
+import styled, { css } from "styled-components";
+import { IReqoreIconName } from "../../types/icons";
+import ReqoreTabsList from "./list";
 
 export interface IReqoreTabsListItem {
   label: string;
@@ -32,7 +32,7 @@ const StyledTabs = styled.div<{ vertical?: boolean }>`
   ${({ vertical }) => css`
     min-height: 100px;
     width: 100%;
-    flex-flow: ${vertical ? 'row' : 'column'};
+    flex-flow: ${vertical ? "row" : "column"};
   `}
 `;
 
@@ -63,7 +63,7 @@ const ReqoreTabs = ({
     <StyledTabs
       {...rest}
       vertical={vertical}
-      className={`${className || ''} reqore-tabs`}
+      className={`${className || ""} reqore-tabs`}
     >
       <ReqoreTabsList
         tabs={tabs}

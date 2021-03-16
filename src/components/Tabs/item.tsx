@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTabsListItem } from '.';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
-import usePopover from '../../hooks/usePopover';
-import ReqoreIcon from '../Icon';
+import React, { useState } from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTabsListItem } from ".";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import { changeLightness, getReadableColor } from "../../helpers/colors";
+import usePopover from "../../hooks/usePopover";
+import ReqoreIcon from "../Icon";
 
 export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   active?: boolean;
@@ -40,8 +40,8 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       display: flex;
       position: relative;
       align-items: center;
-      padding: ${vertical ? '10px' : 0} 15px;
-      padding-right: ${closable ? '43px' : undefined};
+      padding: ${vertical ? "10px" : 0} 15px;
+      padding-right: ${closable ? "43px" : undefined};
       transition: background-color 0.15s linear;
 
       text-transform: uppercase;
@@ -49,7 +49,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       font-size: 12px;
 
       &:not(:last-child) {
-        border-${vertical ? 'bottom' : 'right'}: 1px solid ${changeLightness(
+        border-${vertical ? "bottom" : "right"}: 1px solid ${changeLightness(
       theme.main,
       0.05
     )};
@@ -143,8 +143,8 @@ const ReqoreTabsListItem = ({
         active={active}
         disabled={disabled}
         vertical={vertical}
-        className={`${props?.className || ''} reqore-tabs-list-item ${
-          active ? 'reqore-tabs-list-item__active' : ''
+        className={`${props?.className || ""} reqore-tabs-list-item ${
+          active ? "reqore-tabs-list-item__active" : ""
         }`}
         onClick={onClick}
         closable={!!onCloseClick && !disabled}
@@ -152,21 +152,21 @@ const ReqoreTabsListItem = ({
         {icon && (
           <ReqoreIcon
             icon={icon}
-            size='13px'
-            margin={label ? 'right' : undefined}
+            size="13px"
+            margin={label ? "right" : undefined}
           />
         )}
         {label && <StyledLabel>{label}</StyledLabel>}
         {onCloseClick && !disabled ? (
           <StyledCloseButton
-            className='reqore-tabs-list-item-close'
+            className="reqore-tabs-list-item-close"
             onClick={(event) => {
               event.stopPropagation();
 
               onCloseClick && onCloseClick();
             }}
           >
-            <ReqoreIcon icon='CloseLine' size='13px' />
+            <ReqoreIcon icon="CloseLine" size="13px" />
           </StyledCloseButton>
         ) : null}
       </StyledTabListItem>

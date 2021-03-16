@@ -1,23 +1,23 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
-import React from 'react';
-import styled from 'styled-components';
-import { IReqoreMenuItemProps } from '../../components/Menu/item';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
+import { Meta, Story } from "@storybook/react/types-6-0";
+import React from "react";
+import styled from "styled-components";
+import { IReqoreMenuItemProps } from "../../components/Menu/item";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import { IReqoreUIProviderProps } from "../../containers/UIProvider";
 import {
   ReqoreMenu,
   ReqoreMenuDivider,
   ReqoreMenuItem,
   ReqorePopover,
   ReqoreUIProvider,
-} from '../../index';
+} from "../../index";
 
 export default {
-  title: 'ReQore/Menu',
+  title: "ReQore/Menu",
   component: ReqoreMenu,
   args: {
     theme: {
-      main: '#ffffff',
+      main: "#ffffff",
     },
   },
 } as Meta;
@@ -39,17 +39,17 @@ const Template: Story<IReqoreUIProviderProps> = ({
       <ReqoreThemeProvider>
         <StyledStoriesContent>
           <ReqoreMenu {...args}>
-            <ReqoreMenuItem icon='Save3Fill'>Save</ReqoreMenuItem>
+            <ReqoreMenuItem icon="Save3Fill">Save</ReqoreMenuItem>
             <ReqoreMenuItem
-              icon='ChatPollFill'
-              onClick={() => alert('Item clicked')}
-              rightIcon='FahrenheitFill'
-              onRightIconClick={(itemId) => alert('Icon clicked')}
+              icon="ChatPollFill"
+              onClick={() => alert("Item clicked")}
+              rightIcon="FahrenheitFill"
+              onRightIconClick={(itemId) => alert("Icon clicked")}
             >
               Delete
             </ReqoreMenuItem>
 
-            <ReqoreMenuItem icon='Lock2Fill'>
+            <ReqoreMenuItem icon="Lock2Fill">
               Remove this really long text heh
             </ReqoreMenuItem>
             <ReqoreMenuDivider />
@@ -57,25 +57,25 @@ const Template: Story<IReqoreUIProviderProps> = ({
               component={ReqoreMenuItem}
               componentProps={
                 {
-                  icon: 'EmotionUnhappyLine',
-                  rightIcon: 'Scissors2Fill',
+                  icon: "EmotionUnhappyLine",
+                  rightIcon: "Scissors2Fill",
                 } as IReqoreMenuItemProps
               }
               content={
                 <ReqoreMenu {...args}>
-                  <ReqoreMenuItem icon='ZhihuFill'>Save</ReqoreMenuItem>
+                  <ReqoreMenuItem icon="ZhihuFill">Save</ReqoreMenuItem>
                 </ReqoreMenu>
               }
               isReqoreComponent
-              handler='click'
-              placement='right'
+              handler="click"
+              placement="right"
             >
               I have a submenu on click
             </ReqorePopover>
-            <ReqoreMenuDivider label='Divider' />
+            <ReqoreMenuDivider label="Divider" />
             <ReqoreMenuItem
-              icon='DualSim1Line'
-              rightIcon='MoneyEuroBoxLine'
+              icon="DualSim1Line"
+              rightIcon="MoneyEuroBoxLine"
               selected
             >
               I am selected!
@@ -90,18 +90,18 @@ const Template: Story<IReqoreUIProviderProps> = ({
 export const Default = Template.bind({});
 export const Bordered = Template.bind({});
 Bordered.args = {
-  position: 'left',
+  position: "left",
 };
 export const Dark = Template.bind({});
 Dark.args = {
-  position: 'left',
+  position: "left",
   theme: {
-    main: '#222222',
+    main: "#222222",
   },
 };
 export const CustomColor = Template.bind({});
 CustomColor.args = {
   theme: {
-    main: '#194d5d',
+    main: "#194d5d",
   },
 };

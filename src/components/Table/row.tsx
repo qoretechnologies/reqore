@@ -1,11 +1,11 @@
 /* @flow */
-import { isFunction } from 'lodash';
-import React from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTableColumn } from '.';
-import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
-import ReqoreIcon from '../Icon';
+import { isFunction } from "lodash";
+import React from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTableColumn } from ".";
+import { IReqoreTheme } from "../../constants/theme";
+import { changeLightness, getReadableColor } from "../../helpers/colors";
+import ReqoreIcon from "../Icon";
 
 export interface IReqoreTableRowProps
   extends React.HTMLAttributes<HTMLTableRowElement> {
@@ -33,14 +33,14 @@ export interface IReqoreTableCellStyle {
   width?: number;
   grow?: number;
   theme: IReqoreTheme;
-  align?: 'center' | 'left' | 'right';
+  align?: "center" | "left" | "right";
   interactive?: boolean;
 }
 
 export const alignToFlex = {
-  center: 'center',
-  left: 'flex-start',
-  right: 'flex-end',
+  center: "center",
+  left: "flex-start",
+  right: "flex-end",
 };
 
 export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
@@ -58,7 +58,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
   ${({ theme, align, interactive }: IReqoreTableCellStyle) => css`
     display: flex;
     align-items: center;
-    justify-content: ${align ? alignToFlex[align] : 'flex-start'};
+    justify-content: ${align ? alignToFlex[align] : "flex-start"};
     flex-shrink: 0;
 
     height: 100%;
@@ -102,12 +102,12 @@ const ReqoreTableRow = ({
           grow={grow}
           key={dataId}
           align={align}
-          className='reqore-table-cell'
+          className="reqore-table-cell"
         >
           {isFunction(Content) ? (
             <Content {...data[index]} />
           ) : (
-            <p className='reqore-table-text'>{data[index][dataId]}</p>
+            <p className="reqore-table-text">{data[index][dataId]}</p>
           )}
         </StyledTableCell>
       )
@@ -118,11 +118,11 @@ const ReqoreTableRow = ({
   );
 
   return (
-    <StyledTableRow style={style} className='reqore-table-row'>
+    <StyledTableRow style={style} className="reqore-table-row">
       {selectable && (
         <StyledTableCell
-          align='center'
-          className='reqore-table-cell'
+          align="center"
+          className="reqore-table-cell"
           interactive={!!data[index]._selectId}
           onClick={
             data[index]._selectId
@@ -133,8 +133,14 @@ const ReqoreTableRow = ({
           }
         >
           <ReqoreIcon
-            icon={!data[index]._selectId ? 'Forbid2Line' : isSelected ? 'CheckboxCircleLine' : 'CheckboxBlankCircleLine'}
-            size='19px'
+            icon={
+              !data[index]._selectId
+                ? "Forbid2Line"
+                : isSelected
+                ? "CheckboxCircleLine"
+                : "CheckboxBlankCircleLine"
+            }
+            size="19px"
             style={{ opacity: !data[index]._selectId || !isSelected ? 0.4 : 1 }}
           />
         </StyledTableCell>

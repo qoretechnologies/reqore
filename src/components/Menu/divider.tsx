@@ -1,7 +1,7 @@
-import React, { forwardRef } from 'react';
-import styled from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import React, { forwardRef } from "react";
+import styled from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import { getReadableColor } from "../../helpers/colors";
 
 const StyledMenuDivider = styled.div<{ theme: IReqoreTheme }>`
   width: 100%;
@@ -18,7 +18,7 @@ const StyledMenuDivider = styled.div<{ theme: IReqoreTheme }>`
 
 const ReqoreMenuDivider = forwardRef(
   ({ label }: { label?: string }, ref: any) => (
-    <StyledMenuDivider className='reqore-menu-divider' ref={ref}>
+    <StyledMenuDivider className="reqore-menu-divider" ref={ref}>
       {label}
     </StyledMenuDivider>
   )

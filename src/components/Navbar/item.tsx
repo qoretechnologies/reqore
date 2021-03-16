@@ -1,14 +1,14 @@
-import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getMainColor } from '../../helpers/colors';
+import React, { forwardRef } from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import { changeLightness, getMainColor } from "../../helpers/colors";
 
 export interface IReqoreNavbarItemProps
   extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   interactive?: boolean;
-  type?: 'header' | 'footer';
+  type?: "header" | "footer";
 }
 
 export interface IReqoreNavbarItemStyle extends IReqoreNavbarItemProps {
@@ -45,7 +45,7 @@ const ReqoreNavbarItem = forwardRef(
     <ReqoreThemeProvider>
       <StyledNavbarItem
         {...rest}
-        className={`${rest.className || ''} reqore-navbar-item`}
+        className={`${rest.className || ""} reqore-navbar-item`}
         interactive={interactive}
         type={type}
         ref={ref}
