@@ -19,6 +19,7 @@ export interface IReqoreInputProps
   minimal?: boolean;
   fluid?: boolean;
   fixed?: boolean;
+  value?: string | number;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
