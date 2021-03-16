@@ -144,12 +144,12 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
             <span className="reqore-popover-text">{content}</span>
           ) : (
             <>
-              {React.Children.map(content, (child) => {
-                return React.cloneElement(child, {
+              {React.Children.map(content, (child) => 
+                child ? React.cloneElement(child, {
                   _insidePopover: true,
                   _popoverId: id,
-                });
-              })}
+                }) : null
+              )}
             </>
           )}
         </StyledPopoverContent>

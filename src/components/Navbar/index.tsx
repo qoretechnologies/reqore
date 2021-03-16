@@ -57,7 +57,7 @@ const ReqoreNavbar = forwardRef(
         ref={ref}
       >
         {React.Children.map(children, (child) =>
-          React.cloneElement(child, { type })
+          child ? React.cloneElement(child, { type }) : null
         )}
       </StyledNavbar>
     </ReqoreThemeProvider>

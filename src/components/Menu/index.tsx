@@ -36,10 +36,10 @@ const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
     <ReqoreThemeProvider>
       <StyledReqoreMenu {...rest} position={position} ref={ref}>
         {React.Children.map(children, (child) =>
-          React.cloneElement(child, {
+          child ? React.cloneElement(child, {
             _insidePopover,
             _popoverId,
-          })
+          }) : null
         )}
       </StyledReqoreMenu>
     </ReqoreThemeProvider>

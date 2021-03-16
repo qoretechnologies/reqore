@@ -55,11 +55,11 @@ const ReqoreControlGroup = ({
     className={`${className || ""} reqore-control-group`}
   >
     {React.Children.map(children, (child) =>
-      React.cloneElement(child, {
+      child ? React.cloneElement(child, {
         minimal: minimal || child.props?.minimal,
         size,
         fluid,
-      })
+      }) : null
     )}
   </StyledControlGroup>
 );

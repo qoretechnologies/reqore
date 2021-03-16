@@ -80,7 +80,7 @@ const ReqoreTabs = ({
         }}
       />
       {React.Children.map(children, (child) =>
-        child.props.id === _activeTab ? child : null
+        child && child.props?.id === _activeTab ? child : null
       )}
     </StyledTabs>
   );
