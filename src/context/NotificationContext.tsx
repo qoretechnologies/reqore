@@ -1,5 +1,5 @@
-import { createContext } from 'react';
-import { IReqoreNotificationData } from '../containers/NotificationsProvider';
+import { createContext } from "react";
+import { IReqoreNotificationData } from "../containers/NotificationsProvider";
 
 export default createContext<{
   notifications?: IReqoreNotificationData[] | null;

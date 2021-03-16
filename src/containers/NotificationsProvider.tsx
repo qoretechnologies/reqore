@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import ReqoreNotificationsWrapper, {
   IReqoreNotificationsPosition,
-} from '../components/Notifications';
+} from "../components/Notifications";
 import ReqoreNotification, {
   IReqoreNotificationType,
-} from '../components/Notifications/notification';
-import NotificationContext from '../context/NotificationContext';
-import { IReqoreIconName } from '../types/icons';
+} from "../components/Notifications/notification";
+import NotificationContext from "../context/NotificationContext";
+import { IReqoreIconName } from "../types/icons";
 
 export interface IReqoreNotificationData {
   title?: string;

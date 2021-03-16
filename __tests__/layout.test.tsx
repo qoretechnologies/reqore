@@ -1,5 +1,5 @@
-import { render } from '@testing-library/react';
-import React from 'react';
+import { render } from "@testing-library/react";
+import React from "react";
 import {
   ReqoreContent,
   ReqoreHeader,
@@ -8,9 +8,9 @@ import {
   ReqoreNavbarGroup,
   ReqoreNavbarItem,
   ReqoreUIProvider,
-} from '../src';
+} from "../src";
 
-test('Renders Layout properly', () => {
+test("Renders Layout properly", () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -18,7 +18,7 @@ test('Renders Layout properly', () => {
           <ReqoreNavbarGroup>
             <ReqoreNavbarItem>Logo</ReqoreNavbarItem>
           </ReqoreNavbarGroup>
-          <ReqoreNavbarGroup position='right'>
+          <ReqoreNavbarGroup position="right">
             <ReqoreNavbarItem>Item</ReqoreNavbarItem>
             <ReqoreNavbarDivider />
             <ReqoreNavbarItem>Item 2</ReqoreNavbarItem>
@@ -31,7 +31,7 @@ test('Renders Layout properly', () => {
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll('.reqore-layout-wrapper').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-layout-content').length).toBe(1);
-  expect(document.querySelectorAll('h1').length).toBe(1);
+  expect(document.querySelectorAll(".reqore-layout-wrapper").length).toBe(1);
+  expect(document.querySelectorAll(".reqore-layout-content").length).toBe(1);
+  expect(document.querySelectorAll("h1").length).toBe(1);
 });

@@ -1,12 +1,12 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
-import { ReqorePopover, ReqoreUIProvider } from '../src/index';
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import React from "react";
+import { ReqorePopover, ReqoreUIProvider } from "../src/index";
 
 const SimpleContent = (props: any) => {
   return (
     <ReqorePopover
-      component='p'
-      content={props.content || 'Tooltip content'}
+      component="p"
+      content={props.content || "Tooltip content"}
       handler={props.type}
       isReqoreComponent
     >
@@ -18,9 +18,9 @@ const SimpleContent = (props: any) => {
 const FullContent = (props: any) => {
   return (
     <ReqorePopover
-      component='p'
-      content={props.content || 'test'}
-      placement='right'
+      component="p"
+      content={props.content || "test"}
+      placement="right"
       componentProps={{ onMouseEnter: () => props.fn() }}
     >
       Hover me
@@ -32,45 +32,45 @@ beforeAll(() => {
   jest.useFakeTimers();
 });
 
-test('Shows popover on hover, hides on leave', async () => {
+test("Shows popover on hover, hides on leave", async () => {
   render(
     <ReqoreUIProvider>
       <SimpleContent />
     </ReqoreUIProvider>
   );
 
-  fireEvent.mouseEnter(screen.getByText('Hover me'));
+  fireEvent.mouseEnter(screen.getByText("Hover me"));
 
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll(".reqore-popover-content").length).toBe(1);
 
-  fireEvent.mouseLeave(screen.getByText('Hover me'));
+  fireEvent.mouseLeave(screen.getByText("Hover me"));
 
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+  expect(document.querySelectorAll(".reqore-popover-content").length).toBe(0);
 });
 
-test('Shows popover on click, hides only on click away', async () => {
+test("Shows popover on click, hides only on click away", async () => {
   act(() => {
     render(
       <ReqoreUIProvider>
-        <SimpleContent type='click' />
+        <SimpleContent type="click" />
       </ReqoreUIProvider>
     );
   });
 
-  fireEvent.click(screen.getByText('Hover me'));
+  fireEvent.click(screen.getByText("Hover me"));
 
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll(".reqore-popover-content").length).toBe(1);
 
-  fireEvent.click(screen.getByText('Tooltip content'));
+  fireEvent.click(screen.getByText("Tooltip content"));
 
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll(".reqore-popover-content").length).toBe(1);
 
-  fireEvent.click(screen.getByText('Hover me'));
+  fireEvent.click(screen.getByText("Hover me"));
 
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+  expect(document.querySelectorAll(".reqore-popover-content").length).toBe(0);
 });
 
-test('Shows custom content', async () => {
+test("Shows custom content", async () => {
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -79,14 +79,14 @@ test('Shows custom content', async () => {
     );
   });
 
-  fireEvent.mouseEnter(screen.getByText('Hover me'));
+  fireEvent.mouseEnter(screen.getByText("Hover me"));
 
-  expect(document.querySelectorAll('h1').length).toBe(1);
+  expect(document.querySelectorAll("h1").length).toBe(1);
 
-  fireEvent.mouseLeave(screen.getByText('Hover me'));
+  fireEvent.mouseLeave(screen.getByText("Hover me"));
 });
 
-test('Runs callback function', async () => {
+test("Runs callback function", async () => {
   const fn = jest.fn();
 
   act(() => {
@@ -97,9 +97,9 @@ test('Runs callback function', async () => {
     );
   });
 
-  fireEvent.mouseEnter(screen.getByText('Hover me'));
+  fireEvent.mouseEnter(screen.getByText("Hover me"));
 
   expect(fn).toHaveBeenCalled();
 
-  fireEvent.mouseLeave(screen.getByText('Hover me'));
+  fireEvent.mouseLeave(screen.getByText("Hover me"));
 });

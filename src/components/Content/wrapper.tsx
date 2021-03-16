@@ -1,7 +1,7 @@
-import React, { forwardRef } from 'react';
-import styled from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import React, { forwardRef } from "react";
+import styled from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
 
 export interface IReqoreContentWrapperProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -26,7 +26,7 @@ const ReqoreContentWrapper = forwardRef(
       <StyledReqoreContentWrapper
         {...rest}
         ref={ref}
-        className={`${className || ''} reqore-content-wrapper`}
+        className={`${className || ""} reqore-content-wrapper`}
       >
         {children}
       </StyledReqoreContentWrapper>

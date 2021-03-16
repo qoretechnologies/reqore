@@ -1,12 +1,12 @@
-import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import React, { forwardRef } from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
 
 export interface IReqoreNavbarGroupProps
   extends React.HTMLAttributes<HTMLDivElement> {
-  position?: 'right' | 'left';
-  type?: 'footer' | 'header';
+  position?: "right" | "left";
+  type?: "footer" | "header";
   children?: any;
 }
 
@@ -28,13 +28,13 @@ const StyledNavbarGroup = styled.div<IReqoreNavbarGroupStyle>`
 
 const ReqoreNavbarGroup = forwardRef(
   (
-    { position = 'left', children, type, ...rest }: IReqoreNavbarGroupProps,
+    { position = "left", children, type, ...rest }: IReqoreNavbarGroupProps,
     ref: any
   ) => (
     <ReqoreThemeProvider>
       <StyledNavbarGroup
         {...rest}
-        className={`${rest.className || ''} reqore-navbar-group`}
+        className={`${rest.className || ""} reqore-navbar-group`}
         position={position}
         ref={ref}
       >

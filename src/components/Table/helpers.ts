@@ -1,11 +1,11 @@
-import { firstBy } from 'thenby';
-import { IReqoreTableSort } from '.';
+import { firstBy } from "thenby";
+import { IReqoreTableSort } from ".";
 
-export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
-  direction === 'asc' ? 'desc' : 'asc';
+export const flipSortDirection = (direction: "asc" | "desc"): "asc" | "desc" =>
+  direction === "asc" ? "desc" : "asc";
 
 export const fixSort = (sort?: IReqoreTableSort) => {
-  return { ...(sort || {}), direction: sort?.direction || 'desc' };
+  return { ...(sort || {}), direction: sort?.direction || "desc" };
 };
 
 export const sortTableData = (data: any[], sort: IReqoreTableSort) => {

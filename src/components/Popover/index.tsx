@@ -1,14 +1,14 @@
-import { Placement } from '@popperjs/core';
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import usePopover from '../../hooks/usePopover';
-import { IReqoreComponent } from '../../types/global';
+import { Placement } from "@popperjs/core";
+import React, { useState } from "react";
+import styled from "styled-components";
+import usePopover from "../../hooks/usePopover";
+import { IReqoreComponent } from "../../types/global";
 
 export interface IReqorePopoverProps extends IReqoreComponent {
   component: any;
   componentProps?: any;
   children?: any;
-  handler?: 'hover' | 'click';
+  handler?: "hover" | "click";
   placement?: Placement;
   isReqoreComponent?: boolean;
   show?: boolean;
@@ -43,7 +43,7 @@ const Popover = ({
   }
 
   return (
-    <StyledPopover className='reqore-popover-wrapper' ref={setRef}>
+    <StyledPopover className="reqore-popover-wrapper" ref={setRef}>
       <Component {...rest} {...componentProps}>
         {children}
       </Component>

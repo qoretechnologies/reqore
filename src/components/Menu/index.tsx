@@ -1,20 +1,20 @@
-import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness } from '../../helpers/colors';
-import { IReqoreComponent } from '../../types/global';
+import React, { forwardRef } from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import { changeLightness } from "../../helpers/colors";
+import { IReqoreComponent } from "../../types/global";
 
 export interface IReqoreMenuProps
   extends IReqoreComponent,
     React.HTMLAttributes<HTMLDivElement> {
   children: any;
-  position?: 'left' | 'right';
+  position?: "left" | "right";
 }
 
 export interface IReqoreMenuStyle {
   theme: IReqoreTheme;
-  position?: 'left' | 'right';
+  position?: "left" | "right";
 }
 
 const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
@@ -25,9 +25,9 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
     position &&
     css`
     border-${
-      position === 'left' ? 'right' : 'left'
+      position === "left" ? "right" : "left"
     }: 1px solid ${changeLightness(theme.main, 0.05)};
-    padding-${position === 'left' ? 'right' : 'left'}: 10px;
+    padding-${position === "left" ? "right" : "left"}: 10px;
   `}
 `;
 

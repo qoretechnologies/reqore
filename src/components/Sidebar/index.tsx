@@ -1,22 +1,22 @@
-import classnames from 'classnames';
-import { size } from 'lodash';
-import map from 'lodash/map';
-import { darken } from 'polished';
-import React, { useState } from 'react';
-import Scroll from 'react-scrollbar';
-import { useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import classnames from "classnames";
+import { size } from "lodash";
+import map from "lodash/map";
+import { darken } from "polished";
+import React, { useState } from "react";
+import Scroll from "react-scrollbar";
+import { useUpdateEffect } from "react-use";
+import styled, { css } from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
 import {
   changeLightness,
   getMainColor,
-  getReadableColor
-} from '../../helpers/colors';
-import { transformMenu } from '../../helpers/sidebar';
-import { IReqoreIconName } from '../../types/icons';
-import ReqoreIcon from '../Icon';
-import SidebarItem from './item';
+  getReadableColor,
+} from "../../helpers/colors";
+import { transformMenu } from "../../helpers/sidebar";
+import { IReqoreIconName } from "../../types/icons";
+import ReqoreIcon from "../Icon";
+import SidebarItem from "./item";
 
 export interface IQorusSidebarCustomItem {
   element: React.FC<any>;
@@ -52,7 +52,7 @@ export interface IQorusSidebarProps {
   wrapperStyle?: React.CSSProperties;
   onBookmarksChange?: (bookmarks: string[]) => void;
   useNativeTitle?: boolean;
-  position?: 'left' | 'right';
+  position?: "left" | "right";
   disableCollapsing?: boolean;
   bordered?: boolean;
 }
@@ -61,7 +61,7 @@ export interface IReqoreSidebarStyle {
   expanded?: boolean;
   theme: IReqoreTheme;
   bordered?: boolean;
-  position?: 'left' | 'right';
+  position?: "left" | "right";
 }
 
 const StyledSidebar = styled.div<IReqoreSidebarStyle>`
@@ -78,20 +78,20 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       undefined,
       undefined,
       true,
-      getMainColor(theme, 'sidebar')
+      getMainColor(theme, "sidebar")
     )};
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
 
   ${({ theme, bordered, position }) => css`
-    ${(position === 'left' || bordered) &&
+    ${(position === "left" || bordered) &&
     css`
       border-right: 1px solid
-        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, "sidebar"))};
     `}
-    ${(position === 'right' || bordered) &&
+    ${(position === "right" || bordered) &&
     css`
       border-left: 1px solid
-        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, "sidebar"))};
     `}
   `}
 
@@ -172,12 +172,18 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       color: ${({ theme }) =>
         theme.sidebar?.item?.activeColor ||
         theme.sidebar?.item?.color ||
-        getReadableColor(theme, undefined, undefined, false, getMainColor(theme, 'sidebar'))};
+        getReadableColor(
+          theme,
+          undefined,
+          undefined,
+          false,
+          getMainColor(theme, "sidebar")
+        )};
 
       background-color: ${({ theme }) =>
         theme.sidebar?.item?.activeBackground ||
         theme.sidebar?.item?.background ||
-        darken(0.06, getMainColor(theme, 'sidebar'))};
+        darken(0.06, getMainColor(theme, "sidebar"))};
 
       span.bp3-icon:not(.favorite) {
         color: ${({ theme }) =>
@@ -185,7 +191,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
           theme.sidebar?.item?.activeColor ||
           theme.sidebar?.icon?.color ||
           theme.sidebar?.item?.color ||
-          'inherit'};
+          "inherit"};
       }
     }
 
@@ -193,11 +199,17 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeColor ||
         theme.sidebar?.subItem?.color ||
-        getReadableColor(theme, undefined, undefined, false, getMainColor(theme, 'sidebar'))};
+        getReadableColor(
+          theme,
+          undefined,
+          undefined,
+          false,
+          getMainColor(theme, "sidebar")
+        )};
       background-color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeBackground ||
         theme.sidebar?.subItem?.background ||
-        darken(0.08, getMainColor(theme, 'sidebar'))};
+        darken(0.08, getMainColor(theme, "sidebar"))};
       span.bp3-icon:not(.favorite) {
         color: ${({ theme }) =>
           theme.sidebar?.icon?.activeColor ||
@@ -206,7 +218,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
           theme.sidebar?.icon?.color ||
           theme.sidebar?.subItem?.color ||
           theme.sidebar?.item?.color ||
-          'inherit'};
+          "inherit"};
       }
     }
 
@@ -216,7 +228,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       span.bp3-icon:not(.favorite) {
         display: inline-block;
         font-size: 16px;
-        color: ${({ theme }) => theme.sidebar?.icon?.color || 'inherit'};
+        color: ${({ theme }) => theme.sidebar?.icon?.color || "inherit"};
       }
 
       padding: 12px;
@@ -224,20 +236,20 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
 
     .sidebarItem,
     .bp3-popover-wrapper.reqore-sidebar-item {
-      color: ${({ theme }) => theme.sidebar?.item?.color || 'inherit'};
+      color: ${({ theme }) => theme.sidebar?.item?.color || "inherit"};
 
       background-color: ${({ theme }) =>
-        theme.sidebar?.item?.background || getMainColor(theme, 'sidebar')};
+        theme.sidebar?.item?.background || getMainColor(theme, "sidebar")};
 
       &:hover {
         color: ${({ theme }) =>
           theme.sidebar?.item?.hoverColor ||
           theme.sidebar?.item?.color ||
-          'inherit'};
+          "inherit"};
         background-color: ${({ theme }) =>
           theme.sidebar?.item?.hoverBackground ||
           theme.sidebar?.item?.background ||
-          darken(0.03, getMainColor(theme, 'sidebar'))};
+          darken(0.03, getMainColor(theme, "sidebar"))};
 
         span.bp3-icon:not(.favorite) {
           color: ${({ theme }) =>
@@ -245,7 +257,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
             theme.sidebar?.item?.hoverColor ||
             theme.sidebar?.icon?.color ||
             theme.sidebar?.item?.color ||
-            'inherit'};
+            "inherit"};
         }
       }
     }
@@ -257,7 +269,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
             return theme.sidebar?.subItem?.border;
           }
 
-          const color = getMainColor(theme, 'sidebar');
+          const color = getMainColor(theme, "sidebar");
 
           return changeLightness(color, 0.17);
         }};
@@ -265,21 +277,21 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
 
     .sidebarSubItem,
     .bp3-popover-wrapper.reqore-sidebar-subitem {
-      color: ${({ theme }) => theme.sidebar?.subItem?.color || 'inherit'};
+      color: ${({ theme }) => theme.sidebar?.subItem?.color || "inherit"};
 
       background-color: ${({ theme }) =>
         theme.sidebar?.subItem?.background ||
-        darken(0.04, getMainColor(theme, 'sidebar'))};
+        darken(0.04, getMainColor(theme, "sidebar"))};
 
       &:hover {
         color: ${({ theme }) =>
           theme.sidebar?.subItem?.hoverColor ||
           theme.sidebar?.subItem?.color ||
-          'inherit'};
+          "inherit"};
         background-color: ${({ theme }) =>
           theme.sidebar?.subItem?.hoverBackground ||
           theme.sidebar?.subItem?.background ||
-          darken(0.06, getMainColor(theme, 'sidebar'))};
+          darken(0.06, getMainColor(theme, "sidebar"))};
 
         span.bp3-icon:not(.favorite) {
           color: ${({ theme }) =>
@@ -287,7 +299,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
             theme.sidebar?.subItem?.hoverColor ||
             theme.sidebar?.icon?.color ||
             theme.sidebar?.subItem?.color ||
-            'inherit'};
+            "inherit"};
         }
       }
     }
@@ -322,8 +334,8 @@ const StyledDivider = styled.div<{ theme?: any; hasTitle?: boolean }>`
   background-color: ${({ theme, hasTitle }) =>
     theme.sidebar?.section?.background ||
     (hasTitle
-      ? darken(0.02, getMainColor(theme, 'sidebar'))
-      : getMainColor(theme, 'sidebar'))};
+      ? darken(0.02, getMainColor(theme, "sidebar"))
+      : getMainColor(theme, "sidebar"))};
   color: inherit;
 `;
 
@@ -338,7 +350,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   wrapperStyle,
   onBookmarksChange,
   useNativeTitle,
-  position = 'left',
+  position = "left",
   disableCollapsing,
   bordered,
 }) => {
@@ -381,31 +393,31 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   return (
     <ReqoreThemeProvider>
       <StyledSidebar
-        className={classnames('sidebar', {
+        className={classnames("sidebar", {
           expanded: !_isCollapsed,
         })}
         style={wrapperStyle}
-        role='qorus-sidebar-wrapper'
+        role="qorus-sidebar-wrapper"
         position={position}
         bordered={bordered}
       >
         <Scroll
           horizontal={false}
-          className='sidebarScroll'
-          key='reqore-sidebar-scroll'
+          className="sidebarScroll"
+          key="reqore-sidebar-scroll"
         >
           {map(menu, ({ title, items }, sectionId: string) =>
             size(items) ? (
               <>
-                {sectionId !== '_qorusCustomElements' && (
-                  <StyledDivider hasTitle={!!title} key={sectionId + 'title'}>
-                    {!_isCollapsed ? title || '' : ''}
+                {sectionId !== "_qorusCustomElements" && (
+                  <StyledDivider hasTitle={!!title} key={sectionId + "title"}>
+                    {!_isCollapsed ? title || "" : ""}
                   </StyledDivider>
                 )}
                 <div
-                  className='sidebarSection'
+                  className="sidebarSection"
                   key={sectionId}
-                  role='qorus-sidebar-section-title'
+                  role="qorus-sidebar-section-title"
                 >
                   {map(items, (itemData, key) => (
                     <SidebarItem
@@ -430,16 +442,16 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
         </Scroll>
         <StyledDivider />
         {!disableCollapsing && (
-          <div className='sidebarSection' id='menuCollapse'>
+          <div className="sidebarSection" id="menuCollapse">
             <div
-              role='qorus-sidebar-collapse-button'
-              className='sidebarItem'
+              role="qorus-sidebar-collapse-button"
+              className="sidebarItem"
               style={{
                 justifyContent: _isCollapsed
-                  ? 'center'
-                  : position === 'left'
-                  ? 'flex-start'
-                  : 'flex-end',
+                  ? "center"
+                  : position === "left"
+                  ? "flex-start"
+                  : "flex-end",
               }}
               onClick={() => {
                 setIsCollapsed(!_isCollapsed);
@@ -449,17 +461,17 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
                 }
               }}
             >
-              {position === 'left' && (
+              {position === "left" && (
                 <ReqoreIcon
-                  icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
+                  icon={_isCollapsed ? "ArrowRightSLine" : "ArrowLeftSLine"}
                 />
-              )}{' '}
-              {!_isCollapsed && (collapseLabel || 'Collapse')}
-              {position === 'right' && (
+              )}{" "}
+              {!_isCollapsed && (collapseLabel || "Collapse")}
+              {position === "right" && (
                 <ReqoreIcon
-                  icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'}
+                  icon={_isCollapsed ? "ArrowLeftSLine" : "ArrowRightSLine"}
                 />
-              )}{' '}
+              )}{" "}
             </div>
           </div>
         )}

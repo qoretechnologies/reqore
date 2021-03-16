@@ -1,12 +1,12 @@
-import React, { forwardRef, useContext } from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import PopoverContext from '../../context/PopoverContext';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { IReqoreComponent } from '../../types/global';
-import { IReqoreIconName } from '../../types/icons';
-import ReqoreIcon from '../Icon';
+import React, { forwardRef, useContext } from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTheme } from "../../constants/theme";
+import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import PopoverContext from "../../context/PopoverContext";
+import { changeLightness, getReadableColor } from "../../helpers/colors";
+import { IReqoreComponent } from "../../types/global";
+import { IReqoreIconName } from "../../types/icons";
+import ReqoreIcon from "../Icon";
 
 // @ts-ignore
 export interface IReqoreMenuItemProps
@@ -62,7 +62,7 @@ const StyledElement = styled.div<IReqoreMenuItemStyle>`
   transition: background-color 0.05s linear;
   border-radius: 4px;
   background-color: ${({ theme, selected }) =>
-    selected ? changeLightness(theme.main, 0.07) : 'transparent'};
+    selected ? changeLightness(theme.main, 0.07) : "transparent"};
   overflow: hidden;
 
   ${({ theme, selected, disabled }) =>
@@ -171,23 +171,23 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
           //@ts-ignore
           as={as}
           {...rest}
-          className='reqore-menu-item'
+          className="reqore-menu-item"
           onClick={handleClick}
           selected={selected}
           ref={ref}
           disabled={disabled}
         >
           <StyledElementContent hasRightIcon={!!rightIcon}>
-            {icon && <ReqoreIcon icon={icon} size='13px' margin='right' />}
+            {icon && <ReqoreIcon icon={icon} size="13px" margin="right" />}
             {children}
           </StyledElementContent>
           {rightIcon && (
             <StyledRightIcon
-              className='reqore-menu-item-right-icon'
+              className="reqore-menu-item-right-icon"
               interactive={!!onRightIconClick}
               onClick={handleRightIconClick}
             >
-              <ReqoreIcon icon={rightIcon} size='13px' />
+              <ReqoreIcon icon={rightIcon} size="13px" />
             </StyledRightIcon>
           )}
         </StyledElement>

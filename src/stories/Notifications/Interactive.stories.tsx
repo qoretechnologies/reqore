@@ -1,13 +1,13 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
-import React, { useContext } from 'react';
+import { Meta, Story } from "@storybook/react/types-6-0";
+import React, { useContext } from "react";
 import ReqoreNotification, {
   IReqoreNotificationProps,
-} from '../../components/Notifications/notification';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreNotificationsContext, ReqoreUIProvider } from '../../index';
+} from "../../components/Notifications/notification";
+import { IReqoreUIProviderProps } from "../../containers/UIProvider";
+import { ReqoreNotificationsContext, ReqoreUIProvider } from "../../index";
 
 export default {
-  title: 'ReQore/Notifications/Interactive',
+  title: "ReQore/Notifications/Interactive",
   component: ReqoreNotification,
 } as Meta;
 
@@ -18,9 +18,9 @@ const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
     <button
       onClick={() =>
         addNotification({
-          title: 'Created notification',
-          content: 'Yo, wassup?',
-          icon: 'FileChartLine',
+          title: "Created notification",
+          content: "Yo, wassup?",
+          icon: "FileChartLine",
           duration: 5000,
           id: id || Date.now(),
           onClick,
@@ -41,9 +41,9 @@ const UpdatingButton = ({ id }) => {
     <button
       onClick={() =>
         addNotification({
-          content: 'I have just updated!',
-          icon: 'AccountPinBoxLine',
-          type: 'danger',
+          content: "I have just updated!",
+          icon: "AccountPinBoxLine",
+          type: "danger",
           duration: 3000,
           id,
         })
@@ -62,12 +62,12 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
   <ReqoreUIProvider theme={theme}>
     <div
       style={{
-        width: '100%',
-        height: '500px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexFlow: 'column',
+        width: "100%",
+        height: "500px",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexFlow: "column",
       }}
     >
       <h4>Hello, I am a notification testing page</h4>
@@ -81,7 +81,7 @@ export const Adding = Template.bind({});
 
 export const Updating = Template.bind({});
 Updating.args = {
-  id: 'test',
+  id: "test",
 };
 
 export const Clickable = Template.bind({});

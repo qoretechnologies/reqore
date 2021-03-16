@@ -18,32 +18,32 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v2        
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 10.19.0
-    - name: Preparing environment
-      id: setup_environment
-      run: npm install -g yarn
-    - name: Installing modules
-      id: install_modules
-      run: |
-        yarn cache clean
-        rm -rf node_modules
-        yarn install
-    - name: Build test
-      id: build_test
-      run: yarn build:test
-    - name: Running tests
-      id: tests
-      run: yarn test:ci
-    - name: Slack notification
-      uses: Foxhoundn/slack@v1.2.94
-      with: 
-        status: ${{ job.status }}
-        steps: ${{ toJson(steps) }}
-      if: always()
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-        SLACK_USERNAME: ReQore Tests
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10.19.0
+      - name: Preparing environment
+        id: setup_environment
+        run: npm install -g yarn
+      - name: Installing modules
+        id: install_modules
+        run: |
+          yarn cache clean
+          rm -rf node_modules
+          yarn install
+      - name: Build test
+        id: build_test
+        run: yarn build:test
+      - name: Running tests
+        id: tests
+        run: yarn test:ci
+      - name: Slack notification
+        uses: Foxhoundn/slack@v1.2.94
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_USERNAME: ReQore Tests

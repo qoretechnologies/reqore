@@ -1,12 +1,12 @@
 /* @flow */
-import React from 'react';
-import styled, { css } from 'styled-components';
-import { IReqoreTableColumn, IReqoreTableSort } from '.';
-import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness } from '../../helpers/colors';
-import { IReqoreIconName } from '../../types/icons';
-import ReqoreTableHeaderCell, { StyledTableHeader } from './headerCell';
-import { alignToFlex } from './row';
+import React from "react";
+import styled, { css } from "styled-components";
+import { IReqoreTableColumn, IReqoreTableSort } from ".";
+import { IReqoreTheme } from "../../constants/theme";
+import { changeLightness } from "../../helpers/colors";
+import { IReqoreIconName } from "../../types/icons";
+import ReqoreTableHeaderCell, { StyledTableHeader } from "./headerCell";
+import { alignToFlex } from "./row";
 
 export interface IReqoreTableSectionProps {
   columns: IReqoreTableColumn[];
@@ -14,7 +14,7 @@ export interface IReqoreTableSectionProps {
   onSortChange?: (sort: string) => void;
   sortData: IReqoreTableSort;
   selectable?: boolean;
-  selectedQuant: 'none' | 'all' | 'some';
+  selectedQuant: "none" | "all" | "some";
   onToggleSelectClick: () => void;
 }
 
@@ -31,12 +31,12 @@ export interface IReqoreTableHeaderStyle {
   width?: number;
   grow?: number;
   theme: IReqoreTheme;
-  align?: 'center' | 'left' | 'right';
+  align?: "center" | "left" | "right";
 }
 
 const StyledColumnGroupHeader = styled.div<IReqoreTableHeaderStyle>`
   ${({ align }) => css`
-    justify-content: ${align ? alignToFlex[align] : 'flex-start'};
+    justify-content: ${align ? alignToFlex[align] : "flex-start"};
   `}
 `;
 
@@ -86,22 +86,25 @@ const ReqoreTableHeader = ({
 }: IReqoreTableSectionProps) => {
   const renderColumns = (columns: IReqoreTableColumn[]) =>
     columns.map(
-      ({ grow, header, props = {}, columns: cols, align, content, ...rest }, index) =>
+      (
+        { grow, header, props = {}, columns: cols, align, content, ...rest },
+        index
+      ) =>
         cols ? (
           <StyledColumnGroup
             width={cols.reduce((wid, col) => wid + (col.width || 80), 0)}
             grow={grow}
             key={index}
-            className='reqore-table-column-group'
+            className="reqore-table-column-group"
           >
             <StyledColumnGroupHeader
               align={align}
               {...props}
-              className='reqore-table-column-group-header'
+              className="reqore-table-column-group-header"
             >
               {header}
             </StyledColumnGroupHeader>
-            <StyledColumnGroupHeaders className='reqore-table-headers'>
+            <StyledColumnGroupHeaders className="reqore-table-headers">
               {renderColumns(cols)}
             </StyledColumnGroupHeaders>
           </StyledColumnGroup>
@@ -121,30 +124,30 @@ const ReqoreTableHeader = ({
 
   const getSelectedIcon = (): IReqoreIconName => {
     switch (selectedQuant) {
-      case 'all':
-        return 'CheckboxCircleLine';
-      case 'some':
-        return 'IndeterminateCircleLine';
+      case "all":
+        return "CheckboxCircleLine";
+      case "some":
+        return "IndeterminateCircleLine";
       default:
-        return 'CheckboxBlankCircleLine';
+        return "CheckboxBlankCircleLine";
     }
   };
 
   return (
     <StyledTableHeaderWrapper
-      className='reqore-table-header-wrapper'
+      className="reqore-table-header-wrapper"
       leftScroll={leftScroll}
     >
       <StyledTableHeaderRow>
         {selectable && (
           <ReqoreTableHeaderCell
-            dataId='selextbox'
-            key='selectbox'
+            dataId="selextbox"
+            key="selectbox"
             sortData={sortData}
-            align='center'
+            align="center"
             onSortChange={onSortChange}
             icon={getSelectedIcon()}
-            iconSize='19px'
+            iconSize="19px"
             onClick={() => {
               onToggleSelectClick();
             }}

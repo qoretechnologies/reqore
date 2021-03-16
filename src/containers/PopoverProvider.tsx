@@ -1,7 +1,7 @@
-import { Placement, VirtualElement } from '@popperjs/core';
-import React, { useState } from 'react';
-import Popover from '../components/InternalPopover';
-import PopoverContext from '../context/PopoverContext';
+import { Placement, VirtualElement } from "@popperjs/core";
+import React, { useState } from "react";
+import Popover from "../components/InternalPopover";
+import PopoverContext from "../context/PopoverContext";
 
 export interface IReqorePopoverProviderProps {
   children: any;

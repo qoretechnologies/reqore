@@ -3,7 +3,7 @@ export interface IReqoreTheme {
   text?: {
     color?: string;
     dim?: boolean;
-  },
+  };
   sidebar?: {
     main?: string;
     color?: string;
@@ -77,25 +77,25 @@ export interface IReqoreThemeNotification {
 }
 
 export const DEFAULT_THEME: IReqoreTheme = {
-  main: '#333333',
-  text:{
+  main: "#333333",
+  text: {
     dim: true,
   },
   notifications: {
     info: {
-      background: '#bdebff',
+      background: "#bdebff",
     },
     success: {
-      background: '#a7e38f',
+      background: "#a7e38f",
     },
     pending: {
-      background: '#f5efa2',
+      background: "#f5efa2",
     },
     warning: {
-      background: '#edcc93',
+      background: "#edcc93",
     },
     danger: {
-      background: '#e3aa98',
+      background: "#e3aa98",
     },
   },
 };

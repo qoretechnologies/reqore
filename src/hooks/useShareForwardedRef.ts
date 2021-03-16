@@ -1,4 +1,4 @@
-import { Ref, useEffect, useRef } from 'react';
+import { Ref, useEffect, useRef } from "react";
 
 export default function useShareForwardedRef<T>(forwardedRef: Ref<T>) {
   // final ref that will share value with forward ref. this is the one we will attach to components
@@ -9,7 +9,7 @@ export default function useShareForwardedRef<T>(forwardedRef: Ref<T>) {
     if (!forwardedRef) {
       return;
     }
-    if (typeof forwardedRef === 'function') {
+    if (typeof forwardedRef === "function") {
       forwardedRef(innerRef.current);
       return;
     } else {

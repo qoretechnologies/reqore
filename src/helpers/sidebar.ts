@@ -1,8 +1,8 @@
-import { reduce, size } from 'lodash';
+import { reduce, size } from "lodash";
 import {
   IQorusSidebarCustomItem,
   IQorusSidebarItems,
-} from '../components/Sidebar';
+} from "../components/Sidebar";
 
 export const transformMenu: Function = (
   menu: IQorusSidebarItems,
@@ -15,7 +15,7 @@ export const transformMenu: Function = (
 
   if (size(bookmarks)) {
     _qorusBookmarks = {
-      title: 'Bookmarks',
+      title: "Bookmarks",
       items: [],
     };
 
