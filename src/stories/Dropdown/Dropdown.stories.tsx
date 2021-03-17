@@ -1,6 +1,9 @@
 import { Meta, Story } from "@storybook/react/types-6-0";
 import React from "react";
-import { ReqoreDropdownItem } from "../../components/Dropdown/item";
+import {
+  ReqoreDropdownDivider,
+  ReqoreDropdownItem,
+} from "../../components/Dropdown/item";
 import { IReqoreUIProviderProps } from "../../containers/UIProvider";
 import {
   ReqoreContent,
@@ -73,6 +76,7 @@ const Template: Story<IReqoreUIProviderProps> = (
             <ReqoreDropdownItem selected icon="SunCloudyLine">
               Hello
             </ReqoreDropdownItem>
+            <ReqoreDropdownDivider />
             <ReqoreDropdownItem icon="BatteryChargeFill">
               How are ya
             </ReqoreDropdownItem>

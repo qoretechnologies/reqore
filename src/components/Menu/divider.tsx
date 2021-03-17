@@ -10,7 +10,7 @@ export interface IReqoreMenuDividerProps
 
 const StyledMenuDivider = styled.div<{ theme: IReqoreTheme }>`
   width: 100%;
-  padding: 3px 0;
+  padding: 8px 0;
   background-color: transparent;
   font-size: 11px;
   text-transform: uppercase;
