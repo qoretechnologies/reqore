@@ -3,6 +3,11 @@ export { default as ReqoreBreadcrumbsItem } from "./components/Breadcrumbs/item"
 export { default as ReqoreButton } from "./components/Button";
 export { default as ReqoreContent } from "./components/Content";
 export { default as ReqoreControlGroup } from "./components/ControlGroup";
+export { default as ReqoreDropdown } from "./components/Dropdown";
+export {
+  ReqoreDropdownDivider,
+  ReqoreDropdownItem,
+} from "./components/Dropdown/item";
 export { default as ReqoreIcon } from "./components/Icon";
 export { default as ReqoreInput } from "./components/Input";
 export { default as ReqoreLayoutContent } from "./components/Layout/content";
@@ -26,4 +31,3 @@ export { default as ReqoreTextarea } from "./components/Textarea";
 export { default as ReqoreNotifications } from "./containers/NotificationsProvider";
 export { default as ReqoreUIProvider } from "./containers/UIProvider";
 export { default as ReqoreNotificationsContext } from "./context/NotificationContext";
-

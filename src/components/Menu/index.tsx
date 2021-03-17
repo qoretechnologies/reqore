@@ -10,15 +10,15 @@ export interface IReqoreMenuProps
     React.HTMLAttributes<HTMLDivElement> {
   children: any;
   position?: "left" | "right";
+  width?: string;
 }
 
-export interface IReqoreMenuStyle {
+export interface IReqoreMenuStyle extends IReqoreMenuProps {
   theme: IReqoreTheme;
-  position?: "left" | "right";
 }
 
 const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
-  width: 160px;
+  width: ${({ width }) => width || "160px"};
   background-color: transparent;
 
   ${({ theme, position }) =>
@@ -36,10 +36,13 @@ const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
     <ReqoreThemeProvider>
       <StyledReqoreMenu {...rest} position={position} ref={ref}>
         {React.Children.map(children, (child) =>
-          child ? React.cloneElement(child, {
-            _insidePopover,
-            _popoverId,
-          }) : null
+          child
+            ? // @ts-ignore
+              React.cloneElement(child, {
+                _insidePopover,
+                _popoverId,
+              })
+            : null
         )}
       </StyledReqoreMenu>
     </ReqoreThemeProvider>

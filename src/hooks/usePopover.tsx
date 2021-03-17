@@ -5,28 +5,46 @@ import PopoverContext from "../context/PopoverContext";
 
 const startEvents = {
   hover: "mouseenter",
+  hoverStay: "mouseenter",
   click: "click",
-  focus: "focus",
+  focus: "focusin",
 };
 
 const endEvents = {
   hover: "mouseleave",
+  hoverStay: null,
   click: null,
-  focus: "blur",
+  focus: "focusout",
 };
 
-const usePopover = (
-  targetElement: HTMLElement,
-  content: JSX.Element | string | number,
-  type: "hover" | "click" | "focus" = "hover",
-  placement?: Placement,
-  show: boolean = true
-) => {
-  const { addPopover, removePopover, popovers } = useContext(PopoverContext);
+export interface IPopoverOptions {
+  targetElement?: HTMLElement;
+  content?: JSX.Element | string;
+  handler?: "hover" | "click" | "focus" | "hoverStay";
+  placement?: Placement;
+  show?: boolean;
+  noArrow?: boolean;
+  useTargetWidth?: boolean;
+  closeOnOutsideClick?: boolean;
+}
+
+const usePopover = ({
+  targetElement,
+  content,
+  handler = "hover",
+  placement,
+  show = true,
+  noArrow,
+  useTargetWidth,
+  closeOnOutsideClick = true,
+}: IPopoverOptions) => {
+  const { addPopover, removePopover, updatePopover, popovers } = useContext(
+    PopoverContext
+  );
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
 
-  const startEvent = startEvents[type];
-  const endEvent = endEvents[type];
+  const startEvent = startEvents[handler];
+  const endEvent = endEvents[handler];
 
   const _addPopover = () => {
     if (popovers.find((p) => p.id === current)) {
@@ -35,9 +53,11 @@ const usePopover = (
       addPopover({
         id: current,
         content,
-        //@ts-ignore
-        element: targetElement,
+        targetElement,
         placement,
+        noArrow,
+        useTargetWidth,
+        closeOnOutsideClick,
       });
     }
   };
@@ -47,7 +67,19 @@ const usePopover = (
   };
 
   useEffect(() => {
-    if (targetElement && (content || content === 0)) {
+    updatePopover(current, {
+      id: current,
+      content,
+      targetElement,
+      placement,
+      noArrow,
+      useTargetWidth,
+      closeOnOutsideClick,
+    });
+  }, [content]);
+
+  useEffect(() => {
+    if (targetElement && content) {
       targetElement.addEventListener(startEvent, _addPopover);
 
       if (endEvent) {
@@ -56,7 +88,7 @@ const usePopover = (
     }
 
     return () => {
-      if (targetElement && (content || content === 0)) {
+      if (targetElement && content) {
         targetElement.removeEventListener(startEvent, _addPopover);
         targetElement.removeEventListener(endEvent, _removePopover);
       }

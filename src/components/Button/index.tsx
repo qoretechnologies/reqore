@@ -1,7 +1,12 @@
 import { Placement } from "@popperjs/core";
 import React, { forwardRef, useRef } from "react";
 import styled from "styled-components";
-import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from "../../constants/sizes";
+import {
+  PADDING_FROM_SIZE,
+  SIZE_TO_PX,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from "../../constants/sizes";
 import { IReqoreTheme } from "../../constants/theme";
 import { changeLightness, getReadableColor } from "../../helpers/colors";
 import { useCombinedRefs } from "../../hooks/useCombinedRefs";
@@ -15,7 +20,7 @@ export interface IReqoreButtonProps
   size?: TSizes;
   minimal?: boolean;
   disabled?: boolean;
-  tooltip?: string | number;
+  tooltip?: string;
   tooltipPlacement?: Placement;
   fluid?: boolean;
   fixed?: boolean;
@@ -38,7 +43,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
 
-  flex: ${({ fluid, fixed }) => fixed ? '0 auto' : fluid ? '1' : undefined};
+  flex: ${({ fluid, fixed }) => (fixed ? "0 auto" : fluid ? "1" : undefined)};
 
   border-radius: 3px;
 
@@ -82,7 +87,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
   &:focus {
     border-color: ${({ minimal, theme }) =>
-        minimal ? undefined : changeLightness(theme.main, 0.3)};
+      minimal ? undefined : changeLightness(theme.main, 0.3)};
   }
 `;
 
@@ -105,13 +110,12 @@ const ReqoreButton = forwardRef(
     const innerRef = useRef(null);
     const combinedRef = useCombinedRefs(innerRef, ref);
 
-    usePopover(
-      combinedRef.current,
-      tooltip,
-      undefined,
-      tooltipPlacement,
-      !!tooltip
-    );
+    usePopover({
+      targetElement: combinedRef.current,
+      content: tooltip,
+      placement: tooltipPlacement,
+      show: !!tooltip,
+    });
 
     return (
       <StyledButton

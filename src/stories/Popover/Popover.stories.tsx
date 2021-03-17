@@ -19,7 +19,15 @@ const HoverButton = () => {
 const ClickButton = ({ content, placement }: any) => {
   const [refElement, setRefElement] = useState(null);
 
-  usePopover(refElement, content || "I am a hover tooltip", "click", placement);
+  usePopover({
+    targetElement: refElement,
+    content: content || "I am a hover tooltip",
+    handler: "click",
+    placement,
+    closeOnOutsideClick: false,
+    noArrow: true,
+    useTargetWidth: true,
+  });
 
   return (
     <button type="button" ref={setRefElement}>

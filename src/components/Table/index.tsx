@@ -14,7 +14,7 @@ import { StyledTableCell, StyledTableRow } from "./row";
 
 export interface IReqoreTableColumn {
   dataId: string;
-  header?: string | number | JSX.Element;
+  header?: string | JSX.Element;
   grow?: 1 | 2 | 3 | 4;
   width?: number;
   content?: React.FC<{ [key: string]: any; _selectId?: string }>;
@@ -24,7 +24,7 @@ export interface IReqoreTableColumn {
   sortable?: boolean;
   icon?: IReqoreIconName;
   iconSize?: string;
-  tooltip?: string | number;
+  tooltip?: string;
   cellTooltip?: string;
   onCellClick?: (data: { [key: string]: any; _selectId?: string }) => void;
 }

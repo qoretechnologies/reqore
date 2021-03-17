@@ -95,7 +95,7 @@ const ReqoreBreadcrumbsItem = ({
   const [ref, setRef] = useState(null);
   const Element: any = as || "span";
 
-  usePopover(ref, tooltip, undefined, undefined, !!tooltip);
+  usePopover({ targetElement: ref, content: tooltip, show: !!tooltip });
 
   return (
     <ReqoreThemeProvider>

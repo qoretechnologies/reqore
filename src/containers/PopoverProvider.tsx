@@ -1,17 +1,14 @@
-import { Placement, VirtualElement } from "@popperjs/core";
 import React, { useState } from "react";
 import Popover from "../components/InternalPopover";
 import PopoverContext from "../context/PopoverContext";
+import { IPopoverOptions } from "../hooks/usePopover";
 
 export interface IReqorePopoverProviderProps {
   children: any;
 }
 
-export interface IPopoverData {
-  element: Element | VirtualElement;
+export interface IPopoverData extends IPopoverOptions {
   id: string;
-  content: JSX.Element | string | number;
-  placement?: Placement;
 }
 
 const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({
@@ -24,6 +21,17 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({
       value={{
         addPopover: (popoverData: IPopoverData) => {
           setPopovers((cur: IPopoverData[]) => [...cur, popoverData]);
+        },
+        updatePopover: (popoverId: string, popoverData: IPopoverData) => {
+          setPopovers((cur: IPopoverData[]) =>
+            [...cur].reduce((newPopovers, popover) => {
+              if (popover.id === popoverId) {
+                return [...newPopovers, popoverData];
+              }
+
+              return [...newPopovers, popover];
+            }, [])
+          );
         },
         removePopover: (popoverId: string) => {
           setPopovers((cur: IPopoverData[]) =>

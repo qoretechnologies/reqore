@@ -1,13 +1,23 @@
-import { Placement, VirtualElement } from "@popperjs/core";
 import { isString } from "lodash";
 import React, { MutableRefObject, useContext, useRef, useState } from "react";
 import { usePopper } from "react-popper";
-import styled, { css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { IReqoreTheme } from "../../constants/theme";
+import { IPopoverData } from "../../containers/PopoverProvider";
 import ReqoreThemeProvider from "../../containers/ThemeProvider";
 import PopoverContext from "../../context/PopoverContext";
 import { changeLightness, getReadableColor } from "../../helpers/colors";
 import useOutsideClick from "../../hooks/useOutsideClick";
+
+const fadeIn = keyframes`
+  0% {
+    opacity: 0;
+  }
+
+  100%{ 
+    opacity: 1;
+  }
+`;
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
@@ -32,6 +42,8 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
 `;
 
 const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
+  animation: 0.1s ${fadeIn} ease-in;
+
   ${({ theme }) => {
     const defaultColor: string =
       theme.popover?.main || changeLightness(theme.main, 0.15);
@@ -83,31 +95,29 @@ const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   }
 `;
 
-export interface IReqoreInternalPopoverProps {
-  element: Element | VirtualElement;
-  content: JSX.Element | string | number | any;
-  id: string;
-  placement?: Placement;
-}
+export interface IReqoreInternalPopoverProps extends IPopoverData {}
 
 const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
-  element,
-  content = "Popover",
+  targetElement,
+  content,
   id,
   placement,
+  noArrow,
+  useTargetWidth,
+  closeOnOutsideClick,
 }) => {
   const { removePopover } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);
   const [arrowElement, setArrowElement] = useState(null);
 
   const popperRef: MutableRefObject<any> = useRef(null);
-  const { styles, attributes } = usePopper(element, popperElement, {
+  const { styles, attributes } = usePopper(targetElement, popperElement, {
     placement,
     modifiers: [
       {
         name: "offset",
         options: {
-          offset: [0, 10],
+          offset: [0, noArrow ? -1 : 10],
         },
       },
       {
@@ -120,7 +130,9 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   });
 
   useOutsideClick(popperRef, () => {
-    removePopover(id);
+    if (closeOnOutsideClick) {
+      removePopover(id);
+    }
   });
 
   return (
@@ -131,14 +143,21 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
           setPopperElement(el);
           popperRef.current = el;
         }}
-        style={styles.popper}
+        style={{
+          ...styles.popper,
+          width:
+            useTargetWidth &&
+            (targetElement?.getBoundingClientRect()?.width || undefined),
+        }}
         {...attributes.popper}
       >
-        <StyledPopoverArrow
-          ref={setArrowElement}
-          style={styles.arrow}
-          data-popper-arrow
-        />
+        {!noArrow && (
+          <StyledPopoverArrow
+            ref={setArrowElement}
+            style={styles.arrow}
+            data-popper-arrow
+          />
+        )}
         <StyledPopoverContent isString={isString(content)}>
           {isString(content) ? (
             <span className="reqore-popover-text">{content}</span>
