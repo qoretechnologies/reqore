@@ -120,7 +120,7 @@ const ReqoreTableRow = ({
                 interactive: !!onCellClick,
                 onClick: () => {
                   if (onCellClick) {
-                    onCellClick(data[index][dataId]);
+                    onCellClick(data[index]);
                   }
                 },
                 className: "reqore-table-cell",
