@@ -11,3 +11,9 @@ export const TEXT_FROM_SIZE = {
   normal: 15,
   big: 17,
 };
+
+export const PADDING_FROM_SIZE = {
+  small: 5,
+  normal: 8,
+  big: 11,
+};

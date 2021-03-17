@@ -25,6 +25,8 @@ export interface IReqoreTableColumn {
   icon?: IReqoreIconName;
   iconSize?: string;
   tooltip?: string | number;
+  cellTooltip?: string;
+  onCellClick?: (data: { [key: string]: any; _selectId?: string }) => void;
 }
 
 export type IReqoreTableData = { [key: string]: any; _selectId?: string }[];
@@ -43,6 +45,7 @@ export interface IReqoreTableProps
   selected?: string[];
   onSortChange?: (sort?: IReqoreTableSort) => void;
   onSelectedChange?: (selected?: any[]) => void;
+  selectToggleTooltip?: string;
 }
 
 export interface IReqoreTableStyle {
@@ -74,7 +77,7 @@ const StyledTableWrapper = styled.div<IReqoreTableStyle>`
     css`
       ${StyledTableRow}:nth-child(odd) {
         ${StyledTableCell} {
-          background-color: ${changeLightness(theme.main, 0.025)};
+          background-color: ${changeLightness(theme.main, 0.055)};
         }
       }
     `}
@@ -93,7 +96,8 @@ const ReqoreTable = ({
   selectable,
   selected,
   onSelectedChange,
-  rowHeight,
+  selectToggleTooltip,
+  rowHeight = 40,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -112,13 +116,13 @@ const ReqoreTable = ({
 
   useUpdateEffect(() => {
     setData(data);
-  }, [data])
+  }, [data]);
 
   useUpdateEffect(() => {
     if (selectable) {
       setSelected(selected);
     }
-  }, [selected])
+  }, [selected]);
 
   useUpdateEffect(() => {
     if (onSelectedChange) {
@@ -202,6 +206,8 @@ const ReqoreTable = ({
           selectable={selectable}
           selectedQuant={_selectedQuant}
           onToggleSelectClick={handleToggleSelectClick}
+          hasVerticalScroll={size(_data) * rowHeight > height}
+          selectToggleTooltip={selectToggleTooltip}
         />
         <ReqoreTableBody
           data={_sort ? sortTableData(_data, _sort) : _data}

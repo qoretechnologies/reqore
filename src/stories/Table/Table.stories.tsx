@@ -1,6 +1,7 @@
 import { Meta, Story } from "@storybook/react/types-6-0";
 import React, { useState } from "react";
 import { IReqoreTableColumn } from "../../components/Table";
+import { IReqoreTheme } from "../../constants/theme";
 import { IReqoreUIProviderProps } from "../../containers/UIProvider";
 import {
   ReqoreContent,
@@ -145,11 +146,96 @@ Sortable.args = {
   },
 };
 
+export const Selectable = Template.bind({});
+Selectable.args = {
+  table: {
+    ...tableData,
+    selectable: true,
+  },
+};
+
+export const InteractiveCells = Template.bind({});
+InteractiveCells.args = {
+  theme: {
+    main: "#0d0221",
+    text: {
+      dim: false,
+    },
+  } as IReqoreTheme,
+  table: {
+    ...tableData,
+    columns: [
+      {
+        dataId: "id",
+        header: "ID",
+        width: 50,
+        align: "center",
+        sortable: true,
+        tooltip: "Custom ID tooltip nice",
+      },
+      {
+        header: "Name",
+        dataId: "name",
+        grow: 3,
+        columns: [
+          {
+            icon: "SlideshowLine",
+            dataId: "firstName",
+            header: "First Name",
+            cellTooltip: "This is first name",
+            width: 150,
+            grow: 2,
+          },
+          {
+            icon: "SlideshowLine",
+            dataId: "lastName",
+            header: "Last Name",
+            cellTooltip: "This is first name",
+            width: 150,
+            grow: 1,
+            sortable: true,
+          },
+        ],
+      },
+      {
+        dataId: "address",
+        header: "Address",
+        width: 300,
+        grow: 2,
+        onClick: () => alert("clicked address"),
+        onCellClick: ({ address }) => alert(`Clicked address cell ${address}`),
+      },
+      {
+        icon: "User4Line",
+        dataId: "age",
+        header: "Really long age header",
+        width: 50,
+        align: "center",
+        sortable: true,
+      },
+      {
+        header: "Data",
+        dataId: "data",
+        columns: [
+          { dataId: "occupation", header: "Ocuppation", width: 200 },
+          { dataId: "group", header: "Group", width: 150 },
+        ],
+      },
+    ] as IReqoreTableColumn[],
+    sort: { by: "age", direction: "desc" },
+    striped: true,
+    selectable: true,
+  },
+};
+
 export const Complete = Template.bind({});
 Complete.args = {
   theme: {
-    main: "#194d5d",
-  },
+    main: "#0d0221",
+    text: {
+      dim: false,
+    },
+  } as IReqoreTheme,
   table: {
     ...tableData,
     columns: [
@@ -209,14 +295,6 @@ Complete.args = {
     ] as IReqoreTableColumn[],
     sort: { by: "age", direction: "desc" },
     striped: true,
-    selectable: true,
-  },
-};
-
-export const Selectable = Template.bind({});
-Selectable.args = {
-  table: {
-    ...tableData,
     selectable: true,
   },
 };

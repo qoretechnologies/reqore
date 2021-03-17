@@ -3,6 +3,7 @@ import { isFunction } from "lodash";
 import React from "react";
 import styled, { css } from "styled-components";
 import { IReqoreTableColumn } from ".";
+import { ReqorePopover } from "../..";
 import { IReqoreTheme } from "../../constants/theme";
 import { changeLightness, getReadableColor } from "../../helpers/colors";
 import ReqoreIcon from "../Icon";
@@ -32,7 +33,7 @@ export const StyledTableRow = styled.div<IReqoreTableRowStyle>`
 export interface IReqoreTableCellStyle {
   width?: number;
   grow?: number;
-  theme: IReqoreTheme;
+  theme?: IReqoreTheme;
   align?: "center" | "left" | "right";
   interactive?: boolean;
 }
@@ -73,7 +74,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
 
       &:hover {
         color: ${getReadableColor(theme, undefined, undefined)};
-        background-color: ${changeLightness(theme.main, 0.025)};
+        background-color: ${changeLightness(theme.main, 0.07)} !important;
       }
     `};
 
@@ -93,24 +94,47 @@ const ReqoreTableRow = ({
   index,
 }: IReqoreTableRowProps) => {
   const renderCells = (columns: IReqoreTableColumn[], data: any[]) =>
-    columns.map(({ width, grow, dataId, content: Content, columns, align }) =>
-      columns ? (
-        renderCells(columns, data)
-      ) : (
-        <StyledTableCell
-          width={width}
-          grow={grow}
-          key={dataId}
-          align={align}
-          className="reqore-table-cell"
-        >
-          {isFunction(Content) ? (
-            <Content {...data[index]} />
-          ) : (
-            <p className="reqore-table-text">{data[index][dataId]}</p>
-          )}
-        </StyledTableCell>
-      )
+    columns.map(
+      ({
+        width,
+        grow,
+        dataId,
+        content: Content,
+        columns,
+        align,
+        onCellClick,
+        cellTooltip,
+      }) =>
+        columns ? (
+          renderCells(columns, data)
+        ) : (
+          <ReqorePopover
+            key={dataId}
+            component={StyledTableCell}
+            isReqoreComponent
+            componentProps={
+              {
+                width,
+                grow,
+                align,
+                interactive: !!onCellClick,
+                onClick: () => {
+                  if (onCellClick) {
+                    onCellClick(data[index]);
+                  }
+                },
+                className: "reqore-table-cell",
+              } as IReqoreTableCellStyle
+            }
+            content={cellTooltip}
+          >
+            {isFunction(Content) ? (
+              <Content {...data[index]} />
+            ) : (
+              <p className="reqore-table-text">{data[index][dataId]}</p>
+            )}
+          </ReqorePopover>
+        )
     );
 
   const isSelected = selected.find(

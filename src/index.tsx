@@ -22,6 +22,7 @@ export { default as ReqoreTabs } from "./components/Tabs";
 export { default as ReqoreTabsContent } from "./components/Tabs/content";
 export { default as ReqoreTabsListItem } from "./components/Tabs/item";
 export { default as ReqoreTabsList } from "./components/Tabs/list";
+export { default as ReqoreTextarea } from "./components/Textarea";
 export { default as ReqoreNotifications } from "./containers/NotificationsProvider";
 export { default as ReqoreUIProvider } from "./containers/UIProvider";
 export { default as ReqoreNotificationsContext } from "./context/NotificationContext";

@@ -47,7 +47,7 @@ export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
 
       &:hover {
         color: ${getReadableColor(theme, undefined, undefined)};
-        background-color: ${changeLightness(theme.main, 0.025)};
+        background-color: ${changeLightness(theme.main, 0.07)};
       }
     `};
 `;
