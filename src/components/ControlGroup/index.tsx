@@ -21,8 +21,13 @@ const StyledControlGroup = styled.div<IReqoreControlGroupStyle>`
   flex: ${({ fluid }) => fluid ? '1' : '0 auto'};
   width: ${({ fluid }) => fluid ? '100%' : undefined};
 
+  > .reqore-control-wrapper .reqore-control {
+    border-radius: ${({ stack }) => (!stack ? undefined : 0)};
+  }
+
   > .reqore-control,
-  * {
+  > .reqore-control-wrapper,
+  > * {
     &:not(:last-child) {
       margin-right: ${({ stack }) => (!stack ? "5px" : undefined)};
     }

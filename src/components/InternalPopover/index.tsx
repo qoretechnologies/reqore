@@ -25,8 +25,8 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
     transform: rotate(45deg);
     ${({ theme }) => css`
       background-color: ${theme.popover?.main ||
-      changeLightness(theme.main, 0.07)};
-      box-shadow: rgba(31, 26, 34, 0.4) 0px 0px 6px;
+      changeLightness(theme.main, 0.15)};
+      box-shadow: rgba(31, 26, 34, 0.6) 0px 0px 4px;
     `}
   }
 `;
@@ -34,7 +34,7 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
 const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   ${({ theme }) => {
     const defaultColor: string =
-      theme.popover?.main || changeLightness(theme.main, 0.07);
+      theme.popover?.main || changeLightness(theme.main, 0.15);
 
     return css`
       z-index: 999999;
@@ -47,7 +47,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
         defaultColor
       )};
       border-radius: 3.5px;
-      box-shadow: rgba(31, 26, 34, 0.4) 0px 0px 6px;
+      box-shadow: rgba(31, 26, 34, 0.6) 0px 0px 4px;
     `;
   }}
 
@@ -75,7 +75,7 @@ const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   z-index: 20;
   position: relative;
   background-color: ${({ theme }) =>
-    theme.popover?.main || changeLightness(theme.main, 0.07)};
+    theme.popover?.main || changeLightness(theme.main, 0.15)};
   border-radius: 3.5px;
 
   .reqore-popover-text {
@@ -144,11 +144,13 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
             <span className="reqore-popover-text">{content}</span>
           ) : (
             <>
-              {React.Children.map(content, (child) => 
-                child ? React.cloneElement(child, {
-                  _insidePopover: true,
-                  _popoverId: id,
-                }) : null
+              {React.Children.map(content, (child) =>
+                child
+                  ? React.cloneElement(child, {
+                      _insidePopover: true,
+                      _popoverId: id,
+                    })
+                  : null
               )}
             </>
           )}

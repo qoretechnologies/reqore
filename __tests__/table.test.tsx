@@ -266,3 +266,85 @@ test("Rows on <Table /> are all selected/deselected when clicking on header", ()
 
   expect(fn).toHaveBeenLastCalledWith(selectableData);
 });
+
+test("Cells on <Table /> are interactive", () => {
+  const fn = jest.fn();
+  const data = {
+    ...tableData,
+    columns: [
+      {
+        dataId: "id",
+        header: "ID",
+        width: 50,
+        align: "center",
+        sortable: true,
+        tooltip: "Custom ID tooltip nice",
+        onCellClick: ({ id }) => {
+          fn(id);
+        },
+      },
+      {
+        header: "Name",
+        dataId: "name",
+        grow: 3,
+        columns: [
+          {
+            icon: "SlideshowLine",
+            dataId: "firstName",
+            header: "First Name",
+            cellTooltip: "This is first name",
+            width: 150,
+            grow: 2,
+          },
+          {
+            icon: "SlideshowLine",
+            dataId: "lastName",
+            header: "Last Name",
+            cellTooltip: "This is first name",
+            width: 150,
+            grow: 1,
+            sortable: true,
+          },
+        ],
+      },
+      {
+        dataId: "address",
+        header: "Address",
+        width: 300,
+        grow: 2,
+        onClick: () => alert("clicked address"),
+      },
+      {
+        icon: "User4Line",
+        dataId: "age",
+        header: "Really long age header",
+        width: 50,
+        align: "center",
+        sortable: true,
+      },
+      {
+        header: "Data",
+        dataId: "data",
+        columns: [
+          { dataId: "occupation", header: "Ocuppation", width: 200 },
+          { dataId: "group", header: "Group", width: 150 },
+        ],
+      },
+    ] as IReqoreTableColumn[],
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const firstRow = document.querySelector(".reqore-table-row");
+  const firstCheckCell = firstRow.querySelector(".reqore-table-cell");
+
+  fireEvent.click(firstCheckCell);
+
+  expect(fn).toHaveBeenCalledWith(0);
+});

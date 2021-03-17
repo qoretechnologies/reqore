@@ -3,39 +3,37 @@ import { noop } from "lodash";
 import React from "react";
 import {
   ReqoreContent,
-  ReqoreInput,
   ReqoreLayoutContent,
+  ReqoreTextarea,
   ReqoreUIProvider,
 } from "../src";
 
-test("Renders <Input /> properly", () => {
+test("Renders <TextArea /> properly", () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreInput minimal />
-          <ReqoreInput disabled />
-          <ReqoreInput size="big" />
+          <ReqoreTextarea />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll(".reqore-input").length).toBe(3);
+  expect(document.querySelectorAll(".reqore-textarea").length).toBe(1);
   // No clear button
   expect(document.querySelectorAll(".reqore-clear-input-button").length).toBe(
     0
   );
 });
 
-test("Renders <Input /> with clear button properly", () => {
+test("Renders <TextArea /> with clear button properly", () => {
   const fn = jest.fn();
 
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreInput minimal onChange={noop} onClearClick={fn} />
+          <ReqoreTextarea minimal onChange={noop} onClearClick={fn} />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -51,14 +49,14 @@ test("Renders <Input /> with clear button properly", () => {
   expect(fn).toHaveBeenCalled();
 });
 
-test("Disabled <Input /> cannot be cleared", () => {
+test("Disabled <TextArea /> cannot be cleared", () => {
   const fn = jest.fn();
 
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreInput minimal onChange={noop} onClearClick={fn} disabled />
+          <ReqoreTextarea minimal onChange={noop} onClearClick={fn} disabled />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>

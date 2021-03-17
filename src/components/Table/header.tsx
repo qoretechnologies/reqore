@@ -16,13 +16,21 @@ export interface IReqoreTableSectionProps {
   selectable?: boolean;
   selectedQuant: "none" | "all" | "some";
   onToggleSelectClick: () => void;
+  hasVerticalScroll: boolean;
+  selectToggleTooltip?: string;
 }
 
-const StyledTableHeaderWrapper = styled.div<{ leftScroll?: number }>`
+export interface IReqoreTableSectionStyle {
+  leftScroll: number;
+  hasVerticalScroll: boolean;
+}
+
+const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
   ${({ leftScroll }) => css`
     display: flex;
     flex-flow: column;
-    width: calc(100% - 15px);
+    width: ${({ hasVerticalScroll }: IReqoreTableSectionStyle) =>
+      hasVerticalScroll ? "calc(100% - 15px)" : "100%"};
     transform: translate3d(${-leftScroll}px, 0, 0);
   `}
 `;
@@ -83,6 +91,8 @@ const ReqoreTableHeader = ({
   selectable,
   selectedQuant,
   onToggleSelectClick,
+  selectToggleTooltip,
+  hasVerticalScroll,
 }: IReqoreTableSectionProps) => {
   const renderColumns = (columns: IReqoreTableColumn[]) =>
     columns.map(
@@ -137,6 +147,7 @@ const ReqoreTableHeader = ({
     <StyledTableHeaderWrapper
       className="reqore-table-header-wrapper"
       leftScroll={leftScroll}
+      hasVerticalScroll={hasVerticalScroll}
     >
       <StyledTableHeaderRow>
         {selectable && (
@@ -148,6 +159,7 @@ const ReqoreTableHeader = ({
             onSortChange={onSortChange}
             icon={getSelectedIcon()}
             iconSize="19px"
+            tooltip={selectToggleTooltip || "Toggle selection on all data"}
             onClick={() => {
               onToggleSelectClick();
             }}

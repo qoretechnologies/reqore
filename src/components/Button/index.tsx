@@ -1,7 +1,7 @@
 import { Placement } from "@popperjs/core";
 import React, { forwardRef, useRef } from "react";
 import styled from "styled-components";
-import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from "../../constants/sizes";
+import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from "../../constants/sizes";
 import { IReqoreTheme } from "../../constants/theme";
 import { changeLightness, getReadableColor } from "../../helpers/colors";
 import { useCombinedRefs } from "../../hooks/useCombinedRefs";
@@ -32,7 +32,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   font-weight: 500;
   border: ${({ theme, minimal }) =>
     !minimal ? `1px solid ${changeLightness(theme.main, 0.2)}` : 0};
-  padding: 0 8px;
+  padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
   height: ${({ size }) => SIZE_TO_PX[size]}px;
@@ -54,7 +54,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
   &:not(:disabled) {
     cursor: pointer;
-    transition: all 0.15s linear;
+    transition: all 0.1s linear;
 
     &:hover {
       background-color: ${({ minimal, theme }) =>
@@ -65,7 +65,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
     }
 
     &:active {
-      transform: scale(0.9);
+      transform: scale(0.95);
     }
   }
 
@@ -78,6 +78,11 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   &:focus,
   &:active {
     outline: none;
+  }
+
+  &:focus {
+    border-color: ${({ minimal, theme }) =>
+        minimal ? undefined : changeLightness(theme.main, 0.3)};
   }
 `;
 
@@ -117,6 +122,7 @@ const ReqoreButton = forwardRef(
         size={size}
         className={`${className || ""} reqore-control reqore-button`}
         ref={combinedRef}
+        tabIndex={1}
       >
         {icon && (
           <ReqoreIcon
