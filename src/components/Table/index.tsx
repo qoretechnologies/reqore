@@ -25,7 +25,10 @@ export interface IReqoreTableColumn {
   icon?: IReqoreIconName;
   iconSize?: string;
   tooltip?: string;
-  cellTooltip?: string;
+  cellTooltip?: (data: {
+    [key: string]: any;
+    _selectId?: string;
+  }) => string | JSX.Element;
   onCellClick?: (data: { [key: string]: any; _selectId?: string }) => void;
 }
 
