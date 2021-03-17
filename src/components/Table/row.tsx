@@ -126,7 +126,7 @@ const ReqoreTableRow = ({
                 className: "reqore-table-cell",
               } as IReqoreTableCellStyle
             }
-            content={cellTooltip}
+            content={cellTooltip ? cellTooltip(data[index]) : undefined}
           >
             {isFunction(Content) ? (
               <Content {...data[index]} />

@@ -1,18 +1,16 @@
-import { Placement } from "@popperjs/core";
 import React, { useState } from "react";
 import styled from "styled-components";
-import usePopover from "../../hooks/usePopover";
+import usePopover, { IPopoverOptions } from "../../hooks/usePopover";
 import { IReqoreComponent } from "../../types/global";
 
-export interface IReqorePopoverProps extends IReqoreComponent {
+export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
   component: any;
   componentProps?: any;
   children?: any;
-  handler?: "hover" | "click";
-  placement?: Placement;
   isReqoreComponent?: boolean;
-  show?: boolean;
-  content: any;
+  noWrapper?: boolean;
+  wrapperTag?: string;
+  wrapperStyle?: React.CSSProperties;
 }
 
 export const StyledPopover = styled.span`
@@ -23,28 +21,45 @@ const Popover = ({
   component: Component,
   componentProps,
   children,
-  handler,
-  content,
-  placement,
-  show,
   isReqoreComponent,
+  noWrapper,
+  wrapperTag = "span",
+  wrapperStyle = {},
+  _insidePopover,
+  _popoverId,
   ...rest
 }: IReqorePopoverProps) => {
   const [ref, setRef] = useState(null);
 
-  usePopover(ref, content, handler, placement, show);
+  usePopover({ targetElement: ref, ...rest });
 
-  if (isReqoreComponent) {
+  if (isReqoreComponent || noWrapper) {
     return (
-      <Component {...rest} {...componentProps} ref={setRef}>
+      <Component
+        {...componentProps}
+        _insidePopover={_insidePopover}
+        _popoverId={_popoverId}
+        ref={setRef}
+      >
         {children}
       </Component>
     );
   }
 
   return (
-    <StyledPopover className="reqore-popover-wrapper" ref={setRef}>
-      <Component {...rest} {...componentProps}>
+    // @ts-ignore
+    <StyledPopover
+      // @ts-ignore
+      as={wrapperTag}
+      className="reqore-popover-wrapper"
+      ref={setRef}
+      style={wrapperStyle}
+    >
+      <Component
+        {...componentProps}
+        _insidePopover={_insidePopover}
+        _popoverId={_popoverId}
+      >
         {children}
       </Component>
     </StyledPopover>

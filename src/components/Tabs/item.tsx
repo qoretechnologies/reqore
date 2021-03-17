@@ -132,7 +132,7 @@ const ReqoreTabsListItem = ({
 }: IReqoreTabListItemProps) => {
   const [ref, setRef] = useState(null);
 
-  usePopover(ref, tooltip, undefined, undefined, !!tooltip);
+  usePopover({ targetElement: ref, content: tooltip, show: !!tooltip });
 
   return (
     <ReqoreThemeProvider>

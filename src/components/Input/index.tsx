@@ -13,7 +13,7 @@ export interface IReqoreInputProps
   extends React.HTMLAttributes<HTMLInputElement> {
   autoFocus?: boolean;
   disabled?: boolean;
-  tooltip?: string | number;
+  tooltip?: string;
   tooltipPlacement?: Placement;
   width?: number;
   size?: TSizes;
@@ -22,6 +22,7 @@ export interface IReqoreInputProps
   fixed?: boolean;
   value?: string | number;
   onClearClick?: () => void;
+  maxLength?: number;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -102,13 +103,13 @@ const ReqoreInput = forwardRef(
     const innerRef = useRef(null);
     const combinedRef = useCombinedRefs(innerRef, ref);
 
-    usePopover(
-      combinedRef.current,
-      tooltip,
-      "hover",
-      tooltipPlacement,
-      !!tooltip
-    );
+    usePopover({
+      targetElement: combinedRef.current,
+      content: tooltip,
+      handler: "hover",
+      placement: tooltipPlacement,
+      show: !!tooltip,
+    });
 
     return (
       <StyledInputWrapper

@@ -76,7 +76,7 @@ const ReqoreTableHeaderCell = ({
 }: IReqoreTableHeaderCellProps) => {
   const [ref, setRef] = useState(null);
 
-  usePopover(ref, tooltip || header, undefined, undefined);
+  usePopover({ targetElement: ref, content: tooltip || header });
 
   return (
     <StyledTableHeader

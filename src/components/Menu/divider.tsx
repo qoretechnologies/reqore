@@ -3,9 +3,14 @@ import styled from "styled-components";
 import { IReqoreTheme } from "../../constants/theme";
 import { getReadableColor } from "../../helpers/colors";
 
+export interface IReqoreMenuDividerProps
+  extends React.HTMLAttributes<HTMLDivElement> {
+  label?: string;
+}
+
 const StyledMenuDivider = styled.div<{ theme: IReqoreTheme }>`
   width: 100%;
-  padding: 3px 0;
+  padding: 8px 0;
   background-color: transparent;
   font-size: 11px;
   text-transform: uppercase;
@@ -17,8 +22,12 @@ const StyledMenuDivider = styled.div<{ theme: IReqoreTheme }>`
 `;
 
 const ReqoreMenuDivider = forwardRef(
-  ({ label }: { label?: string }, ref: any) => (
-    <StyledMenuDivider className="reqore-menu-divider" ref={ref}>
+  ({ label, className, ...rest }: IReqoreMenuDividerProps, ref: any) => (
+    <StyledMenuDivider
+      {...rest}
+      className={`${className || ""} reqore-menu-divider`}
+      ref={ref}
+    >
       {label}
     </StyledMenuDivider>
   )
