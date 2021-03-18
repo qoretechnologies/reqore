@@ -4,6 +4,7 @@ import { useMount, useUnmount } from "react-use";
 import styled, { css, keyframes } from "styled-components";
 import { IReqoreTheme } from "../../constants/theme";
 import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import { fadeIn } from "../../helpers/animations";
 import { changeLightness } from "../../helpers/colors";
 import { IReqoreIconName } from "../../types/icons";
 import ReqoreIcon from "../Icon";
@@ -51,6 +52,7 @@ const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
   overflow: hidden;
   position: relative;
   transition: background-color 0.1s linear;
+  animation: 0.1s ${fadeIn} ease-in;
 
   &:not(:first-child) {
     margin-top: 10px;
@@ -134,6 +136,7 @@ const StyledNotificationContentWrapper = styled.div`
   min-height: 40px;
   display: flex;
   flex-flow: column;
+  justify-content: center;
   padding: 10px 0;
 `;
 

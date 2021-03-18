@@ -28,7 +28,7 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       {...args}
       type="pending"
       icon="TimerLine"
-      content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
+      content="I am still waiting"
       onClick={noop}
     />
     <ReqoreNotification
