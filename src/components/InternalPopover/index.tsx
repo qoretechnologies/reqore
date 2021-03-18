@@ -1,23 +1,14 @@
 import { isString } from "lodash";
 import React, { MutableRefObject, useContext, useRef, useState } from "react";
 import { usePopper } from "react-popper";
-import styled, { css, keyframes } from "styled-components";
+import styled, { css } from "styled-components";
 import { IReqoreTheme } from "../../constants/theme";
 import { IPopoverData } from "../../containers/PopoverProvider";
 import ReqoreThemeProvider from "../../containers/ThemeProvider";
 import PopoverContext from "../../context/PopoverContext";
+import { fadeIn } from "../../helpers/animations";
 import { changeLightness, getReadableColor } from "../../helpers/colors";
 import useOutsideClick from "../../hooks/useOutsideClick";
-
-const fadeIn = keyframes`
-  0% {
-    opacity: 0;
-  }
-
-  100%{ 
-    opacity: 1;
-  }
-`;
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;

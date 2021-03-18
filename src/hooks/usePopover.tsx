@@ -17,8 +17,7 @@ const endEvents = {
   focus: "focusout",
 };
 
-export interface IPopoverOptions {
-  targetElement?: HTMLElement;
+export interface IPopover {
   content?: JSX.Element | string;
   handler?: "hover" | "click" | "focus" | "hoverStay";
   placement?: Placement;
@@ -26,6 +25,10 @@ export interface IPopoverOptions {
   noArrow?: boolean;
   useTargetWidth?: boolean;
   closeOnOutsideClick?: boolean;
+}
+
+export interface IPopoverOptions extends IPopover {
+  targetElement?: HTMLElement;
 }
 
 const usePopover = ({

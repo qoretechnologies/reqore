@@ -4,10 +4,11 @@ import ReqoreInput from "../../components/Input";
 import { IReqoreUIProviderProps } from "../../containers/UIProvider";
 import {
   ReqoreButton,
+  ReqoreCheckbox,
   ReqoreContent,
   ReqoreControlGroup,
   ReqoreLayoutContent,
-  ReqoreUIProvider
+  ReqoreUIProvider,
 } from "../../index";
 
 export default {
@@ -26,110 +27,173 @@ const Template: Story<IReqoreUIProviderProps> = (
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <div style={{ padding: "20px", width: '100%', height: '100%' }}>
+          <div style={{ padding: "20px", width: "100%", height: "100%" }}>
             <h4>Buttons</h4>
             <ReqoreControlGroup size="small">
               <ReqoreButton>Button</ReqoreButton>
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup>
               <ReqoreButton>Button</ReqoreButton>
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup size="big">
               <ReqoreButton>Button</ReqoreButton>
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup stack size="small">
               <ReqoreButton>Button</ReqoreButton>
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup stack>
               <ReqoreButton>Button</ReqoreButton>
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup stack size="big">
               <ReqoreButton>Button</ReqoreButton>
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <h4>Inputs</h4>
             <ReqoreControlGroup size="small">
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreInput placeholder="Minimal" tooltip="I am Groot!" minimal />
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Minimal"
+                tooltip="I am Groot!"
+                minimal
+              />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup>
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreInput placeholder="Minimal" tooltip="I am Groot!" minimal />
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Minimal"
+                tooltip="I am Groot!"
+                minimal
+              />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup size="big">
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreInput placeholder="Minimal" tooltip="I am Groot!" minimal />
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Minimal"
+                tooltip="I am Groot!"
+                minimal
+              />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup stack size="small">
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreInput placeholder="Minimal" tooltip="I am Groot!" minimal />
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Minimal"
+                tooltip="I am Groot!"
+                minimal
+              />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup stack>
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreInput placeholder="Minimal" tooltip="I am Groot!" minimal />
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Minimal"
+                tooltip="I am Groot!"
+                minimal
+              />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup stack size="big">
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreInput placeholder="Minimal" tooltip="I am Groot!" minimal />
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Minimal"
+                tooltip="I am Groot!"
+                minimal
+              />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
             </ReqoreControlGroup>
             <h4>Combined</h4>
             <ReqoreControlGroup>
               <ReqoreButton>Button</ReqoreButton>
+              <ReqoreCheckbox fixed label="I am fixed lol" />
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup stack>
               <ReqoreButton>Button</ReqoreButton>
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
+              <ReqoreCheckbox fixed label="I am fixed lol" checked />
               <ReqoreButton disabled>Disabled</ReqoreButton>
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup stack size="big">
               <ReqoreButton>Button</ReqoreButton>
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreCheckbox fixed label="I am fixed lol" />
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
@@ -137,28 +201,57 @@ const Template: Story<IReqoreUIProviderProps> = (
             <ReqoreControlGroup fluid>
               <ReqoreButton>Button</ReqoreButton>
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
               <ReqoreButton minimal>Minimal</ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup fluid stack minimal>
               <ReqoreButton fixed>Button</ReqoreButton>
               <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" />
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
               <ReqoreButton disabled>Disabled</ReqoreButton>
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
-              <ReqoreButton minimal fixed>Minimal</ReqoreButton>
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
+              <ReqoreButton minimal fixed>
+                Minimal
+              </ReqoreButton>
             </ReqoreControlGroup>
             <br />
             <ReqoreControlGroup fluid stack>
               <ReqoreButton fixed>Button</ReqoreButton>
-              <ReqoreInput placeholder="I am Groot!" tooltip="I am Groot!" fixed />
-              <ReqoreButton icon='4KFill'>4K UHD</ReqoreButton>
-              <ReqoreButton disabled fixed>Disabled</ReqoreButton>
-              <ReqoreInput placeholder="Disabled" tooltip="I am Groot!" disabled />
-              <ReqoreButton minimal>Minimal</ReqoreButton>
+              <ReqoreInput
+                placeholder="I am Groot!"
+                tooltip="I am Groot!"
+                fixed
+                width={100}
+              />
+              <ReqoreButton icon="4KFill">4K UHD</ReqoreButton>
+              <ReqoreButton disabled fixed>
+                Disabled
+              </ReqoreButton>
+              <ReqoreInput
+                placeholder="Disabled"
+                tooltip="I am Groot!"
+                disabled
+              />
+              <ReqoreButton minimal fixed>
+                Minimal
+              </ReqoreButton>
+            </ReqoreControlGroup>
+            <br />
+            <ReqoreControlGroup fluid stack>
+              <ReqoreCheckbox fixed label="I am fixed lol" />
+              <ReqoreCheckbox label="I not fixed :(" />
+              <ReqoreCheckbox fixed label="I am fixed lol" />
             </ReqoreControlGroup>
             <br />
           </div>

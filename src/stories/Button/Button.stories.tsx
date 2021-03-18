@@ -24,7 +24,7 @@ const Template: Story<IReqoreUIProviderProps> = (
   return (
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
-        <ReqoreContent>
+        <ReqoreContent style={{ padding: "20px" }}>
           <h4>Default</h4>
           <ReqoreButton>Button</ReqoreButton>
           <h4>Small</h4>

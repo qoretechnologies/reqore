@@ -43,6 +43,7 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
 export const StyledInput = styled.input<IReqoreInputStyle>`
   height: 100%;
   width: 100%;
+  flex: 1;
   margin: 0;
   padding: 0 7px;
   padding-right: ${({ clearable, _size }) =>

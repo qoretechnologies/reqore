@@ -1,6 +1,7 @@
 export { default as ReqoreBreadcrumbs } from "./components/Breadcrumbs";
 export { default as ReqoreBreadcrumbsItem } from "./components/Breadcrumbs/item";
 export { default as ReqoreButton } from "./components/Button";
+export { default as ReqoreCheckbox } from "./components/Checkbox";
 export { default as ReqoreContent } from "./components/Content";
 export { default as ReqoreControlGroup } from "./components/ControlGroup";
 export { default as ReqoreDropdown } from "./components/Dropdown";
@@ -21,6 +22,7 @@ export { default as ReqoreNavbarItem } from "./components/Navbar/item";
 export { default as ReqoreNotificationsWrapper } from "./components/Notifications";
 export { default as ReqoreNotification } from "./components/Notifications/notification";
 export { default as ReqorePopover } from "./components/Popover";
+export { default as ReqoreRadioGroup } from "./components/RadioGroup";
 export { default as ReqoreSidebar } from "./components/Sidebar";
 export { default as ReqoreTable } from "./components/Table";
 export { default as ReqoreTabs } from "./components/Tabs";
