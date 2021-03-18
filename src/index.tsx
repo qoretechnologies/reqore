@@ -22,6 +22,7 @@ export { default as ReqoreNavbarItem } from "./components/Navbar/item";
 export { default as ReqoreNotificationsWrapper } from "./components/Notifications";
 export { default as ReqoreNotification } from "./components/Notifications/notification";
 export { default as ReqorePopover } from "./components/Popover";
+export { default as ReqoreRadioGroup } from "./components/RadioGroup";
 export { default as ReqoreSidebar } from "./components/Sidebar";
 export { default as ReqoreTable } from "./components/Table";
 export { default as ReqoreTabs } from "./components/Tabs";

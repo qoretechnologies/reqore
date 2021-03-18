@@ -1,5 +1,5 @@
 import { Meta, Story } from "@storybook/react/types-6-0";
-import React from "react";
+import React, { useState } from "react";
 import { IReqoreUIProviderProps } from "../../containers/UIProvider";
 import {
   ReqoreCheckbox,
@@ -20,6 +20,8 @@ export default {
 const Template: Story<IReqoreUIProviderProps> = (
   args: IReqoreUIProviderProps
 ) => {
+  const [check, setCheck] = useState(false);
+
   return (
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
@@ -45,12 +47,18 @@ const Template: Story<IReqoreUIProviderProps> = (
             labelPosition="left"
           />
           <h4>As switch</h4>
-          <ReqoreCheckbox label="Select me maybe?" size="small" asSwitch />
+          <ReqoreCheckbox
+            label="Select me maybe?"
+            size="small"
+            asSwitch
+            checked={check}
+          />
           <br />
           <ReqoreCheckbox
             label="Select me maybe?"
             asSwitch
-            checked
+            checked={check}
+            onClick={() => setCheck(!check)}
             tooltip={{
               content: "Basic tooltip",
             }}
@@ -61,6 +69,7 @@ const Template: Story<IReqoreUIProviderProps> = (
             size="big"
             asSwitch
             disabled
+            checked={check}
           />
           <h4>Checked</h4>
           <ReqoreCheckbox label="Select me maybe?" size="small" checked />

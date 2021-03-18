@@ -7,6 +7,7 @@ import { getReadableColor } from "../../helpers/colors";
 import { useCombinedRefs } from "../../hooks/useCombinedRefs";
 import usePopover from "../../hooks/usePopover";
 import { IReqoreTooltip } from "../../types/global";
+import { IReqoreIconName } from "../../types/icons";
 import ReqoreIcon from "../Icon";
 
 export interface IReqoreCheckboxProps
@@ -20,6 +21,8 @@ export interface IReqoreCheckboxProps
   fixed?: boolean;
   tooltip?: IReqoreTooltip;
   asSwitch?: boolean;
+  uncheckedIcon?: IReqoreIconName;
+  checkedIcon?: IReqoreIconName;
 }
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
@@ -55,8 +58,10 @@ const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
     width: ${({ size }) => SIZE_TO_PX[size] - 13}px;
     top: 50%;
     transform: translateY(-50%);
-    left: ${({ checked }) => !checked && "5px"};
-    right: ${({ checked }) => checked && "5px"};
+    left: ${({ checked, size }) =>
+      !checked
+        ? "5px"
+        : `${SIZE_TO_PX[size] * 1.8 - (SIZE_TO_PX[size] - 7)}px`};
     border-radius: 100%;
     background-color: ${({ theme, checked }) =>
       !checked
@@ -108,6 +113,8 @@ const Checkbox = forwardRef(
       labelPosition = "right",
       tooltip,
       asSwitch,
+      uncheckedIcon = "CheckboxBlankCircleLine",
+      checkedIcon = "CheckboxCircleFill",
       ...rest
     }: IReqoreCheckboxProps,
     ref
@@ -139,7 +146,7 @@ const Checkbox = forwardRef(
         ) : (
           <ReqoreIcon
             size={`${TEXT_FROM_SIZE[size]}px`}
-            icon={checked ? "CheckboxCircleFill" : "CheckboxBlankCircleLine"}
+            icon={checked ? checkedIcon : uncheckedIcon}
             margin={labelPosition}
           />
         )}
