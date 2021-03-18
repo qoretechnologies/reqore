@@ -1,6 +1,7 @@
 export { default as ReqoreBreadcrumbs } from "./components/Breadcrumbs";
 export { default as ReqoreBreadcrumbsItem } from "./components/Breadcrumbs/item";
 export { default as ReqoreButton } from "./components/Button";
+export { default as ReqoreCheckbox } from "./components/Checkbox";
 export { default as ReqoreContent } from "./components/Content";
 export { default as ReqoreControlGroup } from "./components/ControlGroup";
 export { default as ReqoreDropdown } from "./components/Dropdown";

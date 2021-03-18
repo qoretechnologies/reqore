@@ -17,12 +17,8 @@ const StyledReqoreContent = styled.div<IReqoreContentStyle>`
   ${({ theme }: IReqoreContentStyle) => css`
     width: 100%;
     height: 100%;
-    display: flex;
-    flex: 1;
     color: ${getReadableColor(theme, undefined, undefined, true)};
     overflow: auto;
-    align-items: flex-start;
-    flex-flow: column;
   `}
 `;
 

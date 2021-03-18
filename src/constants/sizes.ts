@@ -7,9 +7,9 @@ export const SIZE_TO_PX = {
 };
 
 export const TEXT_FROM_SIZE = {
-  small: 13,
+  small: 12,
   normal: 15,
-  big: 17,
+  big: 18,
 };
 
 export const PADDING_FROM_SIZE = {

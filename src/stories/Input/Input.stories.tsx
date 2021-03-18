@@ -57,6 +57,12 @@ const Template: Story<IReqoreUIProviderProps> = (
               minimal
               size="big"
             />
+            <h4>Custom width</h4>
+            <ReqoreInput placeholder="Hello" size="small" width={200} />
+            <br />
+            <ReqoreInput placeholder="Hello" width={300} />
+            <br />
+            <ReqoreInput placeholder="Hello" size="big" width={400} />
             <h4>Disabled</h4>
             <ReqoreInput placeholder="Hello" disabled />
             <h4>Clearable</h4>
