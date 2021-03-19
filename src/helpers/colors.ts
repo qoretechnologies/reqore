@@ -1,6 +1,6 @@
-import { darken, lighten, readableColor } from "polished";
-import { Colors } from "../constants/colors";
-import { IReqoreTheme } from "../constants/theme";
+import { darken, lighten, readableColor } from 'polished';
+import { Colors } from '../constants/colors';
+import { IReqoreTheme } from '../constants/theme';
 
 export const getReadableColor: (
   theme: IReqoreTheme,
@@ -20,8 +20,17 @@ export const getReadableColor: (
   const shouldDim = theme.text?.dim && dimmed;
   const from = fallback || theme.main;
 
-  const returnIfLight = ifLight || lighten(shouldDim ? 0.2 : 0, Colors.DARK);
-  const returnIfDark = ifDark || darken(shouldDim ? 0.1 : 0, Colors.LIGHT);
+  return getReadableColorFrom(from, shouldDim, ifLight, ifDark);
+};
+
+export const getReadableColorFrom = (
+  from: string,
+  dim?: boolean,
+  ifLight?: string,
+  ifDark?: string
+) => {
+  const returnIfLight = ifLight || lighten(dim ? 0.2 : 0, Colors.DARK);
+  const returnIfDark = ifDark || darken(dim ? 0.1 : 0, Colors.LIGHT);
 
   return readableColor(from, returnIfLight, returnIfDark, false);
 };
@@ -29,7 +38,7 @@ export const getReadableColor: (
 export const shouldDarken = (mainColor: string) => {
   const contrast = getColorByBgColor(mainColor);
 
-  return contrast === "#000000";
+  return contrast === '#000000';
 };
 
 export const getMainColor: (
@@ -59,9 +68,9 @@ export const changeDarkness: (color: string, lightness: number) => string = (
 
 export const getColorByBgColor = (bgColor) => {
   if (!bgColor) {
-    return "";
+    return '';
   }
-  return parseInt(bgColor.replace("#", ""), 16) > 0xffffff / 2
-    ? "#000000"
-    : "#ffffff";
+  return parseInt(bgColor.replace('#', ''), 16) > 0xffffff / 2
+    ? '#000000'
+    : '#ffffff';
 };
