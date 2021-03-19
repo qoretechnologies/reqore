@@ -1,22 +1,24 @@
-import { size } from "lodash";
-import React from "react";
-import { ReqorePopover } from "../..";
-import { IPopoverOptions } from "../../hooks/usePopover";
-import ReqoreButton, { IReqoreButtonProps } from "../Button";
-import ReqoreDropdownList from "./list";
+import { size } from 'lodash';
+import React from 'react';
+import { ReqorePopover } from '../..';
+import { IPopoverOptions } from '../../hooks/usePopover';
+import ReqoreButton, { IReqoreButtonProps } from '../Button';
+import { IReqoreDropdownItemProps } from './item';
+import ReqoreDropdownList from './list';
 
 export interface IReqoreDropdownProps extends IPopoverOptions {
-  children?: any;
+  items?: IReqoreDropdownItemProps[];
   multiSelect?: boolean;
   buttonStyle?: React.CSSProperties;
   listStyle?: React.CSSProperties;
   component?: any;
   componentProps?: { [key: string]: any };
+  filterable?: boolean;
   label?: any;
 }
 
 const ReqoreDropdown = ({
-  children,
+  items,
   component,
   componentProps = {},
   label,
@@ -25,6 +27,7 @@ const ReqoreDropdown = ({
   listStyle,
   handler,
   placement,
+  filterable,
   ...rest
 }: IReqoreDropdownProps) => {
   return (
@@ -33,23 +36,25 @@ const ReqoreDropdown = ({
       component={component || ReqoreButton}
       componentProps={
         {
-          icon: "ArrowDownSFill",
+          icon: 'ArrowDownSFill',
           style: buttonStyle,
-          disabled: !size(children),
+          disabled: !size(items),
           ...componentProps,
         } as IReqoreButtonProps
       }
       noWrapper
-      placement={placement || "bottom"}
-      handler={handler || "click"}
+      placement={placement || 'bottom-start'}
+      handler={handler || 'click'}
       content={
-        <ReqoreDropdownList
-          multiSelect={multiSelect}
-          listStyle={listStyle}
-          width={rest.useTargetWidth ? "100%" : undefined}
-        >
-          {children}
-        </ReqoreDropdownList>
+        size(items) ? (
+          <ReqoreDropdownList
+            multiSelect={multiSelect}
+            listStyle={listStyle}
+            width={rest.useTargetWidth ? '100%' : undefined}
+            items={items}
+            filterable={filterable}
+          />
+        ) : null
       }
       noArrow
     >

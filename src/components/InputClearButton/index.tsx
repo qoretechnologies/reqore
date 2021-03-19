@@ -26,6 +26,7 @@ const ReqoreInputClearButton = ({
       className="reqore-clear-input-button"
       icon="CloseLine"
       minimal
+      tabIndex={show ? 1 : -1}
       size={size}
       show={show}
     />

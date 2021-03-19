@@ -1,50 +1,55 @@
-import { fireEvent, render } from "@testing-library/react";
-import React from "react";
-import { act } from "react-dom/test-utils";
+import { fireEvent, render } from '@testing-library/react';
+import React from 'react';
+import { act } from 'react-dom/test-utils';
 import {
   ReqoreContent,
   ReqoreDropdown,
-  ReqoreDropdownDivider,
-  ReqoreDropdownItem,
   ReqoreInput,
   ReqoreLayoutContent,
   ReqoreUIProvider,
-} from "../src";
+} from '../src';
 
-test("Renders <Dropdown /> properly", () => {
+test('Renders <Dropdown /> properly', () => {
   act(() => {
     render(
       <ReqoreUIProvider>
         <ReqoreLayoutContent>
           <ReqoreContent>
-            <ReqoreDropdown>
-              <ReqoreDropdownItem selected icon="SunCloudyLine">
-                Hello
-              </ReqoreDropdownItem>
-              <ReqoreDropdownItem icon="BatteryChargeFill">
-                How are ya
-              </ReqoreDropdownItem>
-              <ReqoreDropdownItem disabled icon="StopCircleLine">
-                i aM diSAblEd
-              </ReqoreDropdownItem>
-            </ReqoreDropdown>
+            <ReqoreDropdown
+              items={[
+                {
+                  selected: true,
+                  label: 'Hello',
+                  icon: 'SunCloudyLine',
+                },
+                {
+                  label: 'How are ya',
+                  icon: 'BatteryChargeFill',
+                },
+                {
+                  disabled: true,
+                  label: 'i aM diSAblEd',
+                  icon: 'StopCircleLine',
+                },
+              ]}
+            />
           </ReqoreContent>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
   });
 
-  fireEvent.click(document.querySelector(".reqore-button"));
+  fireEvent.click(document.querySelector('.reqore-button'));
 
   expect(
-    document.querySelector(".reqore-button").getAttribute("disabled")
+    document.querySelector('.reqore-button').getAttribute('disabled')
   ).toBe(null);
-  expect(document.querySelectorAll(".reqore-button").length).toBe(1);
-  expect(document.querySelectorAll(".reqore-popover-content").length).toBe(1);
-  expect(document.querySelectorAll(".reqore-menu-item").length).toBe(3);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(3);
 });
 
-test("Renders disabled <Dropdown /> when children are empty", () => {
+test('Renders disabled <Dropdown /> when children are empty', () => {
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -57,14 +62,14 @@ test("Renders disabled <Dropdown /> when children are empty", () => {
     );
   });
 
-  fireEvent.click(document.querySelector(".reqore-button"));
+  fireEvent.click(document.querySelector('.reqore-button'));
 
   expect(
-    document.querySelector(".reqore-button").getAttribute("disabled")
-  ).toBe("");
+    document.querySelector('.reqore-button').getAttribute('disabled')
+  ).toBe('');
 });
 
-test("Renders <Dropdown /> with custom component and custom handler", () => {
+test('Renders <Dropdown /> with custom component and custom handler', () => {
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -72,33 +77,89 @@ test("Renders <Dropdown /> with custom component and custom handler", () => {
           <ReqoreContent>
             <ReqoreDropdown
               component={ReqoreInput}
-              handler="focus"
+              handler='focus'
               useTargetWidth
               componentProps={{
                 width: 500,
-                placeholder: "Focus me to see some crazy stuff",
+                placeholder: 'Focus me to see some crazy stuff',
               }}
-            >
-              <ReqoreDropdownItem selected icon="SunCloudyLine">
-                Hello
-              </ReqoreDropdownItem>
-              <ReqoreDropdownDivider label="DANGER ZONE" />
-              <ReqoreDropdownItem icon="BatteryChargeFill">
-                How are ya
-              </ReqoreDropdownItem>
-              <ReqoreDropdownItem disabled icon="StopCircleLine">
-                i aM diSAblEd
-              </ReqoreDropdownItem>
-            </ReqoreDropdown>
+              items={[
+                {
+                  selected: true,
+                  label: 'Hello',
+                  icon: 'SunCloudyLine',
+                },
+                {
+                  label: 'How are ya',
+                  icon: 'BatteryChargeFill',
+                },
+                {
+                  disabled: true,
+                  label: 'i aM diSAblEd',
+                  icon: 'StopCircleLine',
+                },
+              ]}
+            />
           </ReqoreContent>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
   });
 
-  fireEvent.focus(document.querySelector(".reqore-input"));
+  fireEvent.focus(document.querySelector('.reqore-input'));
 
-  expect(document.querySelectorAll(".reqore-popover-content").length).toBe(1);
-  expect(document.querySelectorAll(".reqore-menu-item").length).toBe(3);
-  expect(document.querySelectorAll(".reqore-menu-divider").length).toBe(1);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(3);
+});
+
+test('Renders filterable <Dropdown /> and filters items correctly', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDropdown
+              filterable
+              items={[
+                {
+                  selected: true,
+                  label: 'Hello',
+                  icon: 'SunCloudyLine',
+                },
+                {
+                  label: 'How are ya',
+                  icon: 'BatteryChargeFill',
+                },
+                {
+                  disabled: true,
+                  label: 'i aM diSAblEd',
+                  icon: 'StopCircleLine',
+                },
+              ]}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.click(document.querySelector('.reqore-button'));
+  fireEvent.change(document.querySelector('.reqore-input'), {
+    target: { value: 'how' },
+  });
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(1);
+
+  fireEvent.change(document.querySelector('.reqore-input'), {
+    target: { value: '' },
+  });
+
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(3);
+
+  fireEvent.change(document.querySelector('.reqore-input'), {
+    target: { value: 'asfd' },
+  });
+
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(0);
 });
