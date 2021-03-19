@@ -41,7 +41,7 @@ const ReqoreDropdownList = ({
 
       return text.toLowerCase().indexOf(query.toLowerCase()) !== -1;
     });
-  }, [items, query]);
+  }, [items, query, _items]);
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);

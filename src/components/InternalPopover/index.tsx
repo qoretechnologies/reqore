@@ -7,7 +7,6 @@ import React, {
   useState,
 } from 'react';
 import { usePopper } from 'react-popper';
-import { useInterval } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import { IPopoverData } from '../../containers/PopoverProvider';
@@ -112,11 +111,6 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   const { removePopover } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);
   const [arrowElement, setArrowElement] = useState(null);
-
-  useInterval(() => {
-    console.log(targetElement);
-  }, 1000);
-
   const popperRef: MutableRefObject<any> = useRef(null);
   const { styles, attributes } = usePopper(targetElement, popperElement, {
     placement,

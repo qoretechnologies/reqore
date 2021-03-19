@@ -1,5 +1,6 @@
 import { Placement } from '@popperjs/core';
 import { MutableRefObject, useContext, useEffect, useRef } from 'react';
+import { useUpdateEffect } from 'react-use';
 import shortid from 'shortid';
 import PopoverContext from '../context/PopoverContext';
 
@@ -69,16 +70,18 @@ const usePopover = ({
     removePopover(current);
   };
 
-  useEffect(() => {
-    updatePopover(current, {
-      id: current,
-      content,
-      targetElement,
-      placement,
-      noArrow,
-      useTargetWidth,
-      closeOnOutsideClick,
-    });
+  useUpdateEffect(() => {
+    if (show) {
+      updatePopover(current, {
+        id: current,
+        content,
+        targetElement,
+        placement,
+        noArrow,
+        useTargetWidth,
+        closeOnOutsideClick,
+      });
+    }
   }, [content]);
 
   useEffect(() => {
