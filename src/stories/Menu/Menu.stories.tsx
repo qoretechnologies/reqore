@@ -45,6 +45,9 @@ const Template: Story<IReqoreUIProviderProps> = ({
               onClick={() => alert("Item clicked")}
               rightIcon="FahrenheitFill"
               onRightIconClick={(itemId) => alert("Icon clicked")}
+              tooltip={{
+                content: "You sure?",
+              }}
             >
               Delete
             </ReqoreMenuItem>

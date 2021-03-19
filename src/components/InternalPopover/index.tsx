@@ -1,14 +1,21 @@
-import { isString } from "lodash";
-import React, { MutableRefObject, useContext, useRef, useState } from "react";
-import { usePopper } from "react-popper";
-import styled, { css } from "styled-components";
-import { IReqoreTheme } from "../../constants/theme";
-import { IPopoverData } from "../../containers/PopoverProvider";
-import ReqoreThemeProvider from "../../containers/ThemeProvider";
-import PopoverContext from "../../context/PopoverContext";
-import { fadeIn } from "../../helpers/animations";
-import { changeLightness, getReadableColor } from "../../helpers/colors";
-import useOutsideClick from "../../hooks/useOutsideClick";
+import { isString } from 'lodash';
+import React, {
+  MutableRefObject,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { usePopper } from 'react-popper';
+import { useInterval } from 'react-use';
+import styled, { css } from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import { IPopoverData } from '../../containers/PopoverProvider';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import PopoverContext from '../../context/PopoverContext';
+import { fadeIn } from '../../helpers/animations';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
+import useOutsideClick from '../../hooks/useOutsideClick';
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
@@ -17,7 +24,7 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   z-index: -1;
 
   &:before {
-    content: "";
+    content: '';
     display: block;
     width: 10px;
     height: 10px;
@@ -58,23 +65,28 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     bottom: -5px;
   }
 
-  &[data-popper-placement^="bottom"] > ${StyledPopoverArrow} {
+  &[data-popper-placement^='bottom'] > ${StyledPopoverArrow} {
     top: -5px;
   }
 
-  &[data-popper-placement^="left"] > ${StyledPopoverArrow} {
+  &[data-popper-placement^='left'] > ${StyledPopoverArrow} {
     right: -5px;
   }
 
-  &[data-popper-placement^="right"] > ${StyledPopoverArrow} {
+  &[data-popper-placement^='right'] > ${StyledPopoverArrow} {
     left: -5px;
+  }
+
+  &[data-popper-reference-hidden='true'] {
+    visibility: hidden;
+    pointer-events: none;
   }
 `;
 
 const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   width: 100%;
   height: 100%;
-  padding: ${({ isString }) => (isString ? "8px" : "5px")};
+  padding: ${({ isString }) => (isString ? '8px' : '5px')};
   z-index: 20;
   position: relative;
   background-color: ${({ theme }) =>
@@ -101,21 +113,29 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   const [popperElement, setPopperElement] = useState(null);
   const [arrowElement, setArrowElement] = useState(null);
 
+  useInterval(() => {
+    console.log(targetElement);
+  }, 1000);
+
   const popperRef: MutableRefObject<any> = useRef(null);
   const { styles, attributes } = usePopper(targetElement, popperElement, {
     placement,
     modifiers: [
       {
-        name: "offset",
+        name: 'offset',
         options: {
           offset: [0, noArrow ? -1 : 10],
         },
       },
       {
-        name: "arrow",
+        name: 'arrow',
         options: {
           element: arrowElement,
         },
+      },
+      {
+        name: 'hide',
+        enabled: true,
       },
     ],
   });
@@ -126,10 +146,16 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
     }
   });
 
+  useEffect(() => {
+    if (attributes?.popper?.['data-popper-reference-hidden']) {
+      removePopover(id);
+    }
+  }, [attributes?.popper]);
+
   return (
     <ReqoreThemeProvider>
       <StyledPopoverWrapper
-        className="reqore-popover-content"
+        className='reqore-popover-content'
         ref={(el) => {
           setPopperElement(el);
           popperRef.current = el;
@@ -151,7 +177,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
         )}
         <StyledPopoverContent isString={isString(content)}>
           {isString(content) ? (
-            <span className="reqore-popover-text">{content}</span>
+            <span className='reqore-popover-text'>{content}</span>
           ) : (
             <>
               {React.Children.map(content, (child) =>

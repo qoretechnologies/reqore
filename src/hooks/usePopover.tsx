@@ -1,25 +1,25 @@
-import { Placement } from "@popperjs/core";
-import { MutableRefObject, useContext, useEffect, useRef } from "react";
-import shortid from "shortid";
-import PopoverContext from "../context/PopoverContext";
+import { Placement } from '@popperjs/core';
+import { MutableRefObject, useContext, useEffect, useRef } from 'react';
+import shortid from 'shortid';
+import PopoverContext from '../context/PopoverContext';
 
 const startEvents = {
-  hover: "mouseenter",
-  hoverStay: "mouseenter",
-  click: "click",
-  focus: "focusin",
+  hover: 'mouseenter',
+  hoverStay: 'mouseenter',
+  click: 'click',
+  focus: 'focusin',
 };
 
 const endEvents = {
-  hover: "mouseleave",
+  hover: 'mouseleave',
   hoverStay: null,
   click: null,
-  focus: "focusout",
+  focus: null,
 };
 
 export interface IPopover {
   content?: JSX.Element | string;
-  handler?: "hover" | "click" | "focus" | "hoverStay";
+  handler?: 'hover' | 'click' | 'focus' | 'hoverStay';
   placement?: Placement;
   show?: boolean;
   noArrow?: boolean;
@@ -34,7 +34,7 @@ export interface IPopoverOptions extends IPopover {
 const usePopover = ({
   targetElement,
   content,
-  handler = "hover",
+  handler = 'hover',
   placement,
   show = true,
   noArrow,

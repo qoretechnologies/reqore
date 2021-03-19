@@ -1,10 +1,12 @@
-import React, { forwardRef, useContext } from "react";
+import React, { forwardRef, useContext, useRef } from "react";
 import styled, { css } from "styled-components";
 import { IReqoreTheme } from "../../constants/theme";
 import ReqoreThemeProvider from "../../containers/ThemeProvider";
 import PopoverContext from "../../context/PopoverContext";
 import { changeLightness, getReadableColor } from "../../helpers/colors";
-import { IReqoreComponent } from "../../types/global";
+import { useCombinedRefs } from "../../hooks/useCombinedRefs";
+import usePopover from "../../hooks/usePopover";
+import { IReqoreComponent, IReqoreTooltip } from "../../types/global";
 import { IReqoreIconName } from "../../types/icons";
 import ReqoreIcon from "../Icon";
 
@@ -12,7 +14,8 @@ import ReqoreIcon from "../Icon";
 export interface IReqoreMenuItemProps
   extends IReqoreComponent,
     React.HTMLAttributes<HTMLElement> {
-  children?: any;
+  children?: string;
+  label?: string;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
   as?: JSX.Element | React.ElementType | never;
@@ -23,6 +26,7 @@ export interface IReqoreMenuItemProps
     itemId: string,
     event: React.MouseEvent<HTMLElement>
   ) => void;
+  tooltip?: IReqoreTooltip;
 }
 
 const StyledElementContent = styled.div<{
@@ -125,6 +129,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
   (
     {
       children,
+      label,
       icon,
       rightIcon,
       as,
@@ -135,11 +140,14 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       id,
       _insidePopover,
       _popoverId,
+      tooltip,
       ...rest
     },
     ref: any
   ) => {
     const { removePopover } = useContext(PopoverContext);
+    const innerRef = useRef(null);
+    const combinedRef = useCombinedRefs(innerRef, ref);
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.persist();
@@ -165,6 +173,12 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       }
     };
 
+    usePopover({
+      ...tooltip,
+      targetElement: combinedRef.current,
+      show: !!tooltip?.content,
+    });
+
     return (
       <ReqoreThemeProvider>
         <StyledElement
@@ -174,12 +188,12 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
           className="reqore-menu-item"
           onClick={handleClick}
           selected={selected}
-          ref={ref}
+          ref={combinedRef}
           disabled={disabled}
         >
           <StyledElementContent hasRightIcon={!!rightIcon}>
             {icon && <ReqoreIcon icon={icon} size="13px" margin="right" />}
-            {children}
+            {label || children}
           </StyledElementContent>
           {rightIcon && (
             <StyledRightIcon

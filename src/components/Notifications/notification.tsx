@@ -1,20 +1,20 @@
-import { darken } from "polished";
-import React, { forwardRef, useEffect, useState } from "react";
-import { useMount, useUnmount } from "react-use";
-import styled, { css, keyframes } from "styled-components";
-import { IReqoreTheme } from "../../constants/theme";
-import ReqoreThemeProvider from "../../containers/ThemeProvider";
-import { fadeIn } from "../../helpers/animations";
-import { changeLightness } from "../../helpers/colors";
-import { IReqoreIconName } from "../../types/icons";
-import ReqoreIcon from "../Icon";
+import { darken, rgba } from 'polished';
+import React, { forwardRef, useEffect, useState } from 'react';
+import { useMount, useUnmount } from 'react-use';
+import styled, { css, keyframes } from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { fadeIn } from '../../helpers/animations';
+import { changeLightness } from '../../helpers/colors';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
 
 export type IReqoreNotificationType =
-  | "info"
-  | "success"
-  | "danger"
-  | "pending"
-  | "warning";
+  | 'info'
+  | 'success'
+  | 'danger'
+  | 'pending'
+  | 'warning';
 
 export interface IReqoreNotificationProps {
   type?: IReqoreNotificationType;
@@ -61,13 +61,12 @@ const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
   ${({ theme, type, clickable, timeout }: IReqoreNotificationStyle) => css`
     background-color: ${theme.notifications?.[type]?.background};
     border: 1px solid ${darken(0.3, theme.notifications?.[type]?.background)};
-    box-shadow: 0px 0px 6px 0px
-      ${darken(0.6, theme.notifications?.[type]?.background)};
+    box-shadow: 0px 0px 30px 10px ${rgba('#000000', 0.3)};
 
     ${timeout &&
     css`
       &::before {
-        content: "";
+        content: '';
         position: absolute;
         display: block;
         top: 0;
@@ -153,17 +152,17 @@ const StyledNotificationContent = styled.p`
 `;
 
 const typeToIcon: { [type: string]: IReqoreIconName } = {
-  info: "InformationLine",
-  pending: "TimerLine",
-  warning: "AlarmWarningLine",
-  danger: "ErrorWarningLine",
-  success: "CheckFill",
+  info: 'InformationLine',
+  pending: 'TimerLine',
+  warning: 'AlarmWarningLine',
+  danger: 'ErrorWarningLine',
+  success: 'CheckFill',
 };
 
 const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
   (
     {
-      type = "info",
+      type = 'info',
       icon,
       title,
       content,
@@ -209,7 +208,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
           timeout={duration}
           clickable={!!onClick}
           onClick={onClick}
-          className="reqore-notification"
+          className='reqore-notification'
           ref={ref}
         >
           <StyledIconWrapper type={type}>
@@ -224,13 +223,13 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
           <StyledIconWrapper
             type={type}
             clickable
-            className="reqore-notification-close"
+            className='reqore-notification-close'
             onClick={(event) => {
               event.stopPropagation();
               onClose && onClose();
             }}
           >
-            <ReqoreIcon icon="CloseFill" />
+            <ReqoreIcon icon='CloseFill' />
           </StyledIconWrapper>
         </StyledReqoreNotification>
       </ReqoreThemeProvider>
