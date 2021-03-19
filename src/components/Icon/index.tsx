@@ -1,9 +1,9 @@
-import React from "react";
-import { IconContext } from "react-icons";
-import { IconBaseProps, IconType } from "react-icons/lib";
-import * as RemixIcons from "react-icons/ri";
-import styled, { css } from "styled-components";
-import { IReqoreIconName } from "../../types/icons";
+import React from 'react';
+import { IconContext } from 'react-icons';
+import { IconBaseProps, IconType } from 'react-icons/lib';
+import * as RemixIcons from 'react-icons/ri';
+import styled, { css } from 'styled-components';
+import { IReqoreIconName } from '../../types/icons';
 
 export interface IReqoreIconProps
   extends React.HTMLAttributes<HTMLSpanElement> {
@@ -11,10 +11,10 @@ export interface IReqoreIconProps
   color?: string;
   size?: string;
   iconProps?: IconBaseProps;
-  margin?: "right" | "left";
+  margin?: 'right' | 'left' | 'both';
 }
 
-const StyledIconWrapper = styled.span<{ margin?: "right" | "left" }>`
+const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-block;
   flex: 0 0 auto;
   vertical-align: text-bottom;
@@ -22,13 +22,14 @@ const StyledIconWrapper = styled.span<{ margin?: "right" | "left" }>`
   ${({ margin }) =>
     margin &&
     css`
-    margin-${margin}: 10px;
-  `}
+      margin-left: ${(margin === 'left' || margin === 'both') && '10px'};
+      margin-right: ${(margin === 'right' || margin === 'both') && '10px'};
+    `}
 `;
 
 const ReqoreIcon = ({
   icon,
-  size = "17px",
+  size = '17px',
   className,
   color,
   margin,
@@ -43,7 +44,7 @@ const ReqoreIcon = ({
       <StyledIconWrapper
         {...rest}
         margin={margin}
-        className={`${className || ""} reqore-icon`}
+        className={`${className || ''} reqore-icon`}
         style={{ ...style, width: size, height: size }}
       />
     );
@@ -54,14 +55,14 @@ const ReqoreIcon = ({
       {...rest}
       margin={margin}
       style={{ ...style, width: size, height: size }}
-      className={`${className || ""} reqore-icon`}
+      className={`${className || ''} reqore-icon`}
     >
       <IconContext.Provider
         value={{
-          color: color || "inherit",
+          color: color || 'inherit',
           size,
           style: {
-            verticalAlign: "super",
+            verticalAlign: 'super',
           },
         }}
       >
