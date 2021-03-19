@@ -1,14 +1,20 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import React from 'react';
-import { IReqoreButtonProps } from '../../components/Button';
+import { size } from 'lodash';
+import React, { useState } from 'react';
+import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
+import { IReqoreDropdownItemProps } from '../../components/Dropdown/item';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import {
   ReqoreContent,
+  ReqoreControlGroup,
   ReqoreDropdown,
   ReqoreInput,
   ReqoreLayoutContent,
+  ReqoreTag,
+  ReqoreTagGroup,
   ReqoreUIProvider,
 } from '../../index';
+import { IReqoreIconName } from '../../types/icons';
 
 export default {
   title: 'ReQore/Dropdown',
@@ -139,4 +145,145 @@ const Template: Story<IReqoreUIProviderProps> = (
   );
 };
 
+export interface ISelectFieldData {
+  items?: IReqoreDropdownItemProps[];
+  multiSelect?: boolean;
+  withCreate?: boolean;
+  value?: { name: string; description?: string }[];
+  tagIcon?: IReqoreIconName;
+}
+
+export interface ISelectFieldProps extends ISelectFieldData {
+  onChange: (value?: string) => void;
+  onRemove?: (value?: string) => void;
+}
+
+const InteractiveTemplate: Story<any> = ({ dropdownData, ...args }) => {
+  const [val, setVal] = useState<any>([]);
+
+  return (
+    <ReqoreUIProvider {...args}>
+      <ReqoreLayoutContent>
+        <ReqoreContent style={{ padding: '40px' }}>
+          <InteractiveDropdown
+            value={val}
+            onChange={(value) => {
+              setVal([...val, { name: value }]);
+            }}
+            onRemove={(value) => {
+              setVal([...val].filter((item) => item.name !== value));
+            }}
+            {...dropdownData}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+};
+
+const InteractiveDropdown = ({
+  onChange,
+  value = [],
+  withCreate,
+  multiSelect,
+  onRemove,
+  tagIcon,
+  items = [],
+}: ISelectFieldProps) => {
+  const [val, setVal] = useState<string>('');
+
+  return (
+    <div>
+      <h4> Basic </h4>
+      <ReqoreTagGroup>
+        {size(value) === 0 && (
+          <p
+            style={{
+              opacity: 0.6,
+              height: '30px',
+              marginBottom: '5px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            {' '}
+            No entries selected{' '}
+          </p>
+        )}
+        {value.map((item) => (
+          <ReqoreTag
+            icon={tagIcon}
+            key={item.name}
+            label={item.name}
+            tooltip={{ content: item.description }}
+            onRemoveClick={
+              onRemove
+                ? () => {
+                    onRemove(item.name);
+                  }
+                : undefined
+            }
+          />
+        ))}
+      </ReqoreTagGroup>
+      <ReqoreControlGroup>
+        {withCreate && (
+          <ReqoreControlGroup stack>
+            <ReqoreInput
+              placeholder='Add new author manually'
+              value={val}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setVal(e.target.value)
+              }
+              onClearClick={() => setVal('')}
+            />
+            <ReqoreButton
+              icon='AddFill'
+              onClick={() => {
+                onChange(val);
+                setVal('');
+              }}
+            />
+          </ReqoreControlGroup>
+        )}
+        <ReqoreDropdown
+          label='Select existing author'
+          multiSelect={multiSelect}
+          items={items.map((item) => ({
+            ...item,
+            selected: !!value.find((v) => v.name === item.label),
+            onClick: () => {
+              value.find((v) => v.name === item.label)
+                ? onRemove && onRemove(item.label)
+                : onChange(item.label);
+            },
+          }))}
+        />
+      </ReqoreControlGroup>
+    </div>
+  );
+};
+
 export const Basic = Template.bind({});
+export const Interactive = InteractiveTemplate.bind({});
+Interactive.args = {
+  dropdownData: {
+    tagIcon: 'User2Line',
+    items: [
+      {
+        label: 'Filip Witosz',
+        icon: 'User2Line',
+      },
+      {
+        label: 'David Nichols',
+        icon: 'User2Line',
+      },
+      {
+        label: 'Martin Zemek',
+        icon: 'User2Line',
+      },
+    ] as IReqoreDropdownItemProps[],
+    multiSelect: true,
+    withCreate: true,
+  },
+};
