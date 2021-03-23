@@ -1,18 +1,18 @@
-import { Placement } from "@popperjs/core";
-import React, { forwardRef, useRef } from "react";
-import styled from "styled-components";
+import { Placement } from '@popperjs/core';
+import React, { forwardRef, useRef } from 'react';
+import styled from 'styled-components';
 import {
   PADDING_FROM_SIZE,
   SIZE_TO_PX,
   TEXT_FROM_SIZE,
   TSizes,
-} from "../../constants/sizes";
-import { IReqoreTheme } from "../../constants/theme";
-import { changeLightness, getReadableColor } from "../../helpers/colors";
-import { useCombinedRefs } from "../../hooks/useCombinedRefs";
-import usePopover from "../../hooks/usePopover";
-import { IReqoreIconName } from "../../types/icons";
-import ReqoreIcon from "../Icon";
+} from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import usePopover from '../../hooks/usePopover';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
 
 export interface IReqoreButtonProps
   extends React.HTMLAttributes<HTMLButtonElement> {
@@ -43,13 +43,13 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
 
-  flex: ${({ fluid, fixed }) => (fixed ? "0 auto" : fluid ? "1" : undefined)};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1' : undefined)};
 
   border-radius: 3px;
 
   background-color: ${({ minimal, theme }) => {
     if (minimal) {
-      return "transparent";
+      return 'transparent';
     }
 
     return changeLightness(theme.main, 0.1);
@@ -95,7 +95,7 @@ const ReqoreButton = forwardRef(
   (
     {
       icon,
-      size = "normal",
+      size = 'normal',
       minimal,
       children,
       tooltip,
@@ -120,18 +120,18 @@ const ReqoreButton = forwardRef(
     return (
       <StyledButton
         {...rest}
+        ref={combinedRef}
         fluid={fluid}
         fixed={fixed}
         minimal={minimal}
         size={size}
-        className={`${className || ""} reqore-control reqore-button`}
-        ref={combinedRef}
+        className={`${className || ''} reqore-control reqore-button`}
         tabIndex={1}
       >
         {icon && (
           <ReqoreIcon
             icon={icon}
-            margin={children ? "right" : undefined}
+            margin={children ? 'right' : undefined}
             size={`${TEXT_FROM_SIZE[size]}px`}
           />
         )}
