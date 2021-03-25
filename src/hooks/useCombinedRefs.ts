@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export function useCombinedRefs(...refs) {
   const targetRef = React.useRef();
@@ -7,7 +7,7 @@ export function useCombinedRefs(...refs) {
     refs.forEach((ref) => {
       if (!ref) return;
 
-      if (typeof ref === "function") {
+      if (typeof ref === 'function') {
         ref(targetRef.current);
       } else {
         ref.current = targetRef.current;

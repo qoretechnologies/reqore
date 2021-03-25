@@ -1,22 +1,22 @@
-import { darken } from "polished";
-import React, { forwardRef } from "react";
-import styled, { css } from "styled-components";
-import { IReqoreTheme } from "../../constants/theme";
-import ReqoreThemeProvider from "../../containers/ThemeProvider";
-import { getMainColor, getReadableColor } from "../../helpers/colors";
+import { darken } from 'polished';
+import React, { forwardRef } from 'react';
+import styled, { css } from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { getMainColor, getReadableColor } from '../../helpers/colors';
 
 export interface IReqoreNavbarProps
   extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
-  position?: "top" | "bottom";
-  type?: "header" | "footer";
+  position?: 'top' | 'bottom';
+  type?: 'header' | 'footer';
 }
 
 export interface IReqoreNavbarStyle extends IReqoreNavbarProps {
   theme: IReqoreTheme;
 }
 
-const StyledNavbar = styled.div<IReqoreNavbarStyle>`
+export const StyledNavbar = styled.div<IReqoreNavbarStyle>`
   ${({ theme, type }: IReqoreNavbarStyle) => css`
     height: 50px;
     width: 100%;
@@ -35,9 +35,9 @@ const StyledNavbar = styled.div<IReqoreNavbarStyle>`
       theme[type]?.background || theme[type]?.main || theme.main
     };
     box-shadow: rgba(31, 26, 34, 0.05) 0px ${
-      type === "header" ? "2px" : "-2px"
+      type === 'header' ? '2px' : '-2px'
     } 6px;
-    border-${type === "header" ? "bottom" : "top"}: 1px solid ${
+    border-${type === 'header' ? 'bottom' : 'top'}: 1px solid ${
     theme[type]?.border || darken(0.05, getMainColor(theme, type))
   };
   `}
@@ -45,13 +45,13 @@ const StyledNavbar = styled.div<IReqoreNavbarStyle>`
 
 const ReqoreNavbar = forwardRef(
   (
-    { position = "top", children, type, ...rest }: IReqoreNavbarProps,
+    { position = 'top', children, type, ...rest }: IReqoreNavbarProps,
     ref: any
   ) => (
     <ReqoreThemeProvider>
       <StyledNavbar
         {...rest}
-        className={`${rest.className || ""} reqore-navbar-${type}`}
+        className={`${rest.className || ''} reqore-navbar-${type}`}
         position={position}
         type={type}
         ref={ref}
@@ -66,12 +66,12 @@ const ReqoreNavbar = forwardRef(
 
 export const ReqoreHeader = forwardRef(
   (props: IReqoreNavbarProps, ref: any) => (
-    <ReqoreNavbar {...props} type="header" ref={ref} />
+    <ReqoreNavbar {...props} type='header' ref={ref} />
   )
 );
 
 export const ReqoreFooter = forwardRef(
   (props: IReqoreNavbarProps, ref: any) => (
-    <ReqoreNavbar {...props} type="footer" ref={ref} />
+    <ReqoreNavbar {...props} type='footer' ref={ref} />
   )
 );
