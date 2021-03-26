@@ -1,6 +1,7 @@
+import { cloneDeep } from 'lodash';
 import { darken, lighten, readableColor } from 'polished';
 import { Colors } from '../constants/colors';
-import { IReqoreTheme } from '../constants/theme';
+import { DEFAULT_INTENTS, IReqoreTheme } from '../constants/theme';
 
 export const getReadableColor: (
   theme: IReqoreTheme,
@@ -73,4 +74,34 @@ export const getColorByBgColor = (bgColor) => {
   return parseInt(bgColor.replace('#', ''), 16) > 0xffffff / 2
     ? '#000000'
     : '#ffffff';
+};
+
+export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
+  const newTheme: IReqoreTheme = cloneDeep(theme);
+
+  if (!newTheme.notifications?.info) {
+    newTheme.notifications.info = newTheme.intents.info || DEFAULT_INTENTS.info;
+  }
+
+  if (!newTheme.notifications?.success) {
+    newTheme.notifications.success =
+      newTheme.intents.success || DEFAULT_INTENTS.success;
+  }
+
+  if (!newTheme.notifications?.pending) {
+    newTheme.notifications.pending =
+      newTheme.intents.pending || DEFAULT_INTENTS.pending;
+  }
+
+  if (!newTheme.notifications?.warning) {
+    newTheme.notifications.warning =
+      newTheme.intents.warning || DEFAULT_INTENTS.warning;
+  }
+
+  if (!newTheme.notifications?.danger) {
+    newTheme.notifications.danger =
+      newTheme.intents.danger || DEFAULT_INTENTS.danger;
+  }
+
+  return newTheme;
 };

@@ -1,11 +1,11 @@
-import { darken, rgba } from 'polished';
+import { darken, lighten, rgba } from 'polished';
 import React, { forwardRef, useEffect, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css, keyframes } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
-import { changeLightness } from '../../helpers/colors';
+import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
@@ -59,8 +59,8 @@ const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
   }
 
   ${({ theme, type, clickable, timeout }: IReqoreNotificationStyle) => css`
-    background-color: ${theme.notifications?.[type]?.background};
-    border: 1px solid ${darken(0.3, theme.notifications?.[type]?.background)};
+    background-color: ${theme.notifications?.[type]};
+    border: 1px solid ${darken(0.2, theme.notifications?.[type])};
     box-shadow: 0px 0px 30px 10px ${rgba('#000000', 0.3)};
 
     ${timeout &&
@@ -71,38 +71,19 @@ const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
         display: block;
         top: 0;
         height: 3px;
-        background-color: ${changeLightness(
-          theme.notifications?.[type]?.background,
-          0.3
-        )};
+        background-color: ${changeLightness(theme.notifications?.[type], 0.1)};
         animation-name: ${timeoutAnimation};
         animation-duration: ${timeout}ms;
       }
     `}
 
-    ${StyledNotificationContent} {
-      color: ${theme.notifications?.[type]?.contentColor ||
-      changeLightness(theme.notifications?.[type]?.background, 0.5)};
-    }
-
-    ${StyledNotificationTitle} {
-      color: ${theme.notifications?.[type]?.titleColor ||
-      changeLightness(theme.notifications?.[type]?.background, 0.5)};
-    }
-
-    ${StyledIconWrapper} {
-      color: ${theme.notifications?.[type]?.iconColor ||
-      changeLightness(theme.notifications?.[type]?.background, 0.5)};
-    }
+    color: ${getReadableColorFrom(theme.notifications?.[type], true)};
 
     ${clickable &&
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${changeLightness(
-          theme.notifications?.[type]?.background,
-          0.03
-        )};
+        background-color: ${lighten(0.0625, theme.notifications?.[type])};
       }
     `}
   `}
@@ -122,10 +103,7 @@ const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
       &:hover {
         cursor: pointer;
         border-bottom-left-radius: 6px;
-        background-color: ${changeLightness(
-          theme.notifications?.[type]?.background,
-          0.1
-        )};
+        background-color: ${changeLightness(theme.notifications?.[type], 0.02)};
       }
     `}
 `;
