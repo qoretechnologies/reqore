@@ -43,6 +43,23 @@ const Template: Story<IReqoreUIProviderProps> = (
           <ReqoreButton icon='BallPenFill' size='big'>
             Button
           </ReqoreButton>
+          <h2>Activve</h2>
+          <h4>Default</h4>
+          <ReqoreButton icon='4KLine' active>
+            Button
+          </ReqoreButton>
+          <h4>Minimal</h4>
+          <ReqoreButton icon='24HoursFill' size='small' active>
+            Button
+          </ReqoreButton>
+          <h4>With intents</h4>
+          <ReqoreButton icon='BallPenFill' size='big' intent='pending' active>
+            Button
+          </ReqoreButton>
+          <br />
+          <ReqoreButton icon='BallPenFill' size='big' intent='info' active>
+            Button
+          </ReqoreButton>
           <h2>Only icons</h2>
           <h4>Default</h4>
           <ReqoreButton icon='4KLine'></ReqoreButton>

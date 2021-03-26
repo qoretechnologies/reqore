@@ -1,7 +1,7 @@
 import { Placement } from '@popperjs/core';
 import { darken, lighten, rgba } from 'polished';
 import React, { forwardRef, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
   SIZE_TO_PX,
@@ -30,6 +30,7 @@ export interface IReqoreButtonProps
   fluid?: boolean;
   fixed?: boolean;
   intent?: IReqoreIntent;
+  active?: boolean;
 }
 
 export interface IReqoreButtonStyle extends IReqoreButtonProps {
@@ -90,7 +91,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
     transition: all 0.1s linear;
 
     &:hover {
-      background-color: ${({ minimal, theme, intent }) =>
+      background-color: ${({ minimal, theme, intent }: IReqoreButtonStyle) =>
         intent
           ? lighten(0.0625, theme.intents[intent])
           : minimal
@@ -112,6 +113,24 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
       transform: scale(0.95);
     }
   }
+
+  ${({ active, minimal, theme, intent }: IReqoreButtonStyle) =>
+    active &&
+    css`
+      background-color: ${intent
+        ? lighten(0.0625, theme.intents[intent])
+        : minimal
+        ? changeLightness(getButtonMainColor(theme, intent), 0.09)
+        : changeLightness(getButtonMainColor(theme, intent), 0.2)};
+      color: ${intent
+        ? getReadableColorFrom(theme.intents[intent])
+        : getReadableColor(theme, undefined, undefined)};
+      border-color: ${minimal
+        ? undefined
+        : intent
+        ? darken(0.25, theme.intents[intent])
+        : changeLightness(getButtonMainColor(theme, intent), 0.4)};
+    `}
 
   &:disabled {
     opacity: 0.5;
@@ -145,6 +164,7 @@ const ReqoreButton = forwardRef(
       fluid,
       fixed,
       intent,
+      active,
       ...rest
     }: IReqoreButtonProps,
     ref
@@ -168,6 +188,7 @@ const ReqoreButton = forwardRef(
         minimal={minimal}
         size={size}
         intent={intent}
+        active={active}
         className={`${className || ''} reqore-control reqore-button`}
         tabIndex={1}
       >
