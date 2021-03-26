@@ -4,6 +4,7 @@ export interface IReqoreTheme {
     color?: string;
     dim?: boolean;
   };
+  intents?: IReqoreIntents;
   sidebar?: {
     main?: string;
     color?: string;
@@ -36,11 +37,11 @@ export interface IReqoreTheme {
     };
   };
   notifications?: {
-    info?: IReqoreThemeNotification;
-    success?: IReqoreThemeNotification;
-    warning?: IReqoreThemeNotification;
-    pending?: IReqoreThemeNotification;
-    danger?: IReqoreThemeNotification;
+    info?: string;
+    success?: string;
+    warning?: string;
+    pending?: string;
+    danger?: string;
   };
   popover?: {
     main: string;
@@ -69,33 +70,34 @@ export interface IReqoreTheme {
   };
 }
 
-export interface IReqoreThemeNotification {
-  background: string;
-  titleColor?: string;
-  contentColor?: string;
-  iconColor?: string;
+export interface IReqoreIntents {
+  info: string;
+  success: string;
+  pending: string;
+  warning: string;
+  danger: string;
 }
 
+export type IReqoreIntent =
+  | 'info'
+  | 'success'
+  | 'pending'
+  | 'warning'
+  | 'danger';
+
+export const DEFAULT_INTENTS: IReqoreIntents = {
+  info: '#0E5A8A',
+  success: '#0A6640',
+  pending: '#d1a036',
+  warning: '#A66321',
+  danger: '#A82A2A',
+};
+
 export const DEFAULT_THEME: IReqoreTheme = {
-  main: "#333333",
+  main: '#333333',
   text: {
     dim: true,
   },
-  notifications: {
-    info: {
-      background: "#bdebff",
-    },
-    success: {
-      background: "#a7e38f",
-    },
-    pending: {
-      background: "#f5efa2",
-    },
-    warning: {
-      background: "#edcc93",
-    },
-    danger: {
-      background: "#e3aa98",
-    },
-  },
+  intents: DEFAULT_INTENTS,
+  notifications: {},
 };
