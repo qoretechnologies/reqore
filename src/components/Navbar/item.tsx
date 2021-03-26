@@ -1,14 +1,16 @@
-import React, { forwardRef } from "react";
-import styled, { css } from "styled-components";
-import { IReqoreTheme } from "../../constants/theme";
-import ReqoreThemeProvider from "../../containers/ThemeProvider";
-import { changeLightness, getMainColor } from "../../helpers/colors";
+import React, { forwardRef } from 'react';
+import styled, { css } from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { changeLightness, getMainColor } from '../../helpers/colors';
 
 export interface IReqoreNavbarItemProps
   extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   interactive?: boolean;
-  type?: "header" | "footer";
+  type?: 'header' | 'footer';
+  disabled?: boolean;
+  active?: boolean;
 }
 
 export interface IReqoreNavbarItemStyle extends IReqoreNavbarItemProps {
@@ -23,7 +25,10 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
   align-items: center;
   padding: 10px;
   color: inherit;
-  background-color: inherit;
+  background-color: ${({ theme, active, type }) =>
+    active &&
+    (theme[type]?.hoverColor ||
+      changeLightness(getMainColor(theme, type), 0.05))};
 
   ${({ interactive, theme, type }: IReqoreNavbarItemStyle) =>
     interactive &&
@@ -35,18 +40,37 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
         changeLightness(getMainColor(theme, type), 0.05)};
       }
     `}
+
+  opacity: ${({ disabled }) => disabled && 0.3};
+
+  ${({ disabled }) =>
+    disabled &&
+    css`
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: not-allowed;
+    `}
 `;
 
 const ReqoreNavbarItem = forwardRef(
   (
-    { interactive, children, type, ...rest }: IReqoreNavbarItemProps,
+    {
+      interactive,
+      children,
+      type,
+      disabled,
+      active,
+      ...rest
+    }: IReqoreNavbarItemProps,
     ref: any
   ) => (
     <ReqoreThemeProvider>
       <StyledNavbarItem
         {...rest}
-        className={`${rest.className || ""} reqore-navbar-item`}
-        interactive={interactive}
+        className={`${rest.className || ''} reqore-navbar-item`}
+        interactive={interactive || !!rest.onClick}
+        disabled={disabled}
+        active={active}
         type={type}
         ref={ref}
       >
