@@ -41,3 +41,4 @@ export { default as ReqoreTextarea } from './components/Textarea';
 export { default as ReqoreNotifications } from './containers/NotificationsProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreNotificationsContext } from './context/NotificationContext';
+export { default as ReqoreContext } from './context/ReqoreContext';
