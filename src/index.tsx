@@ -38,7 +38,6 @@ export { default as ReqoreTabsList } from './components/Tabs/list';
 export { default as ReqoreTag } from './components/Tag';
 export { default as ReqoreTagGroup } from './components/Tag/group';
 export { default as ReqoreTextarea } from './components/Textarea';
-export { default as ReqoreNotifications } from './containers/NotificationsProvider';
+export { default as ReqoreNotifications } from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
-export { default as ReqoreNotificationsContext } from './context/NotificationContext';
 export { default as ReqoreContext } from './context/ReqoreContext';
