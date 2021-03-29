@@ -8,6 +8,7 @@ import ThemeContext from '../context/ThemeContext';
 import { buildTheme } from '../helpers/colors';
 import ReqoreNotifications from './NotificationsProvider';
 import PopoverProvider from './PopoverProvider';
+import { ReqoreProvider } from './Reqore';
 
 export interface IReqoreUIProviderProps {
   children: any;
@@ -25,7 +26,6 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
   const _theme: IReqoreTheme = cloneDeep(theme || {});
   const _defaultTheme: IReqoreTheme = cloneDeep(DEFAULT_THEME);
   const [modalPortal, setModalPortal] = useState<any>(false);
-
   const rebuiltTheme = buildTheme(merge(_defaultTheme, _theme));
 
   return (
@@ -34,8 +34,10 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
         <ReqoreLayoutWrapper withSidebar={withSidebar}>
           <ReqoreNotifications position={notificationsPosition}>
             <PopoverProvider>
-              {modalPortal ? children : null}
-              <div id='reqore-modal-portal' ref={setModalPortal} />
+              <ReqoreProvider>
+                {modalPortal ? children : null}
+                <div id='reqore-modal-portal' ref={setModalPortal} />
+              </ReqoreProvider>
             </PopoverProvider>
           </ReqoreNotifications>
         </ReqoreLayoutWrapper>
