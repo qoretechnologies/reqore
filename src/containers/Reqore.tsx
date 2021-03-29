@@ -17,7 +17,7 @@ export interface IReqoreConfirmationModal {
   title?: string;
   description?: string;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   confirmButtonIntent?: IReqoreIntent;
   confirmLabel?: string;
   confirmIcon?: IReqoreIconName;
