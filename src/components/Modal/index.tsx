@@ -50,7 +50,7 @@ const StyledModalBackdrop = styled.div<IReqoreModalStyle>`
   right: 0;
   bottom: 0;
 
-  background-color: ${({ theme }) => rgba(theme.main, 0.8)};
+  background-color: ${({ theme }) => rgba(theme.main, 0.9)};
   z-index: 9999;
   cursor: ${({ onClose }) => (onClose ? 'pointer' : 'initial')};
 `;
