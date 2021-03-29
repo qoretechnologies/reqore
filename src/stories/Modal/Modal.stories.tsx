@@ -30,10 +30,25 @@ const ConfirmButton = () => {
   const reqoreContext = useContext(ReqoreContext);
   const [status, setStatus] = useState(null);
 
-  console.log(reqoreContext);
-
   return (
     <>
+      <ReqoreButton
+        onClick={() => {
+          reqoreContext?.confirmAction({
+            title: 'Are you sure mate?',
+            description: 'Do you really wanna do this?',
+            confirmButtonIntent: 'warning',
+            confirmIcon: 'SunFill',
+            confirmLabel: 'Yep',
+            onConfirm: () => setStatus('Confirmed'),
+            onCancel: () => setStatus('Cancelled'),
+          });
+        }}
+      >
+        {' '}
+        Custom confirm action{' '}
+      </ReqoreButton>
+      <br />
       <ReqoreButton
         onClick={() => {
           reqoreContext?.confirmAction({
