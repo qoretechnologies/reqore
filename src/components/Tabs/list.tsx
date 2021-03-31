@@ -22,6 +22,7 @@ export interface IReqoreTabsListProps
   fill?: boolean;
   vertical?: boolean;
   activeTabIntent?: IReqoreIntent;
+  parentBackground?: string;
 
   // Internal prop, ignore!
   _testWidth?: number;
@@ -166,6 +167,7 @@ const ReqoreTabsList = ({
   fill,
   vertical,
   activeTabIntent,
+  parentBackground,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width, height }] = useMeasure();
@@ -200,6 +202,7 @@ const ReqoreTabsList = ({
                     label: getMoreLabel(item, activeTab),
                     active: !!isTabHidden(item, activeTab),
                     activeIntent: activeTabIntent,
+                    parentBackground,
                     vertical,
                   } as IReqoreTabListItemProps
                 }
@@ -261,6 +264,7 @@ const ReqoreTabsList = ({
               <ReqoreTabsListItem
                 {...item}
                 activeIntent={activeTabIntent}
+                parentBackground={parentBackground}
                 key={index}
                 vertical={vertical}
                 active={activeTab === item.id}

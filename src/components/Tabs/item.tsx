@@ -15,6 +15,7 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   active?: boolean;
   vertical?: boolean;
   onCloseClick?: any;
+  parentBackground?: string;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
@@ -35,8 +36,11 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     vertical,
     closable,
     activeIntent,
+    parentBackground,
   }: IReqoreTabListItemStyle) => {
-    const textColor = getReadableColor(theme, undefined, undefined, true);
+    const textColor = parentBackground
+      ? getReadableColorFrom(parentBackground, true)
+      : getReadableColor(theme, undefined, undefined, true);
 
     return css`
       display: flex;
@@ -52,7 +56,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
 
       &:not(:last-child) {
         border-${vertical ? 'bottom' : 'right'}: 1px solid ${changeLightness(
-      theme.main,
+      parentBackground || theme.main,
       0.05
     )};
       }
@@ -66,11 +70,13 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
         css`
           background-color: ${activeIntent
             ? theme.intents[activeIntent]
-            : changeLightness(theme.main, 0.05)};
+            : changeLightness(parentBackground || theme.main, 0.05)};
           * {
             font-weight: 700;
             color: ${activeIntent
               ? getReadableColorFrom(theme.intents[activeIntent])
+              : parentBackground
+              ? getReadableColorFrom(parentBackground)
               : getReadableColor(theme, undefined, undefined)};
           }
         `
@@ -82,8 +88,13 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
             css`
               cursor: pointer;
               &:hover {
-                color: ${getReadableColor(theme, undefined, undefined)};
-                background-color: ${changeLightness(theme.main, 0.05)};
+                color: ${parentBackground
+                  ? getReadableColorFrom(parentBackground)
+                  : getReadableColor(theme)};
+                background-color: ${changeLightness(
+                  parentBackground || theme.main,
+                  0.05
+                )};
               }
             `
           : css`
@@ -136,6 +147,7 @@ const ReqoreTabsListItem = ({
   onClick,
   activeIntent,
   onCloseClick,
+  parentBackground,
 }: IReqoreTabListItemProps) => {
   const [ref, setRef] = useState(null);
 
@@ -151,6 +163,7 @@ const ReqoreTabsListItem = ({
         disabled={disabled}
         vertical={vertical}
         activeIntent={activeIntent}
+        parentBackground={parentBackground}
         className={`${props?.className || ''} reqore-tabs-list-item ${
           active ? 'reqore-tabs-list-item__active' : ''
         }`}
