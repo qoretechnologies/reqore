@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import styled, { css } from "styled-components";
-import { IReqoreBreadcrumbItem } from ".";
-import { IReqoreTheme } from "../../constants/theme";
-import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import React, { useState } from 'react';
+import styled, { css } from 'styled-components';
+import { IReqoreBreadcrumbItem } from '.';
+import { IReqoreTheme } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
-  changeDarkness,
   changeLightness,
   getReadableColor,
-} from "../../helpers/colors";
-import usePopover from "../../hooks/usePopover";
-import ReqoreIcon from "../Icon";
+  getReadableColorFrom,
+} from '../../helpers/colors';
+import usePopover from '../../hooks/usePopover';
+import ReqoreIcon from '../Icon';
 
 export interface IReqoreBreadcrumbItemProps extends IReqoreBreadcrumbItem {
   interactive?: boolean;
@@ -25,8 +25,9 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
   ${({ theme, active, interactive }: IReqoreBreadcrumbItemStyle) => {
     const textColor =
       theme.breadcrumbs?.item?.color ||
-      theme.breadcrumbs?.main ||
-      getReadableColor(theme, undefined, undefined, true);
+      (theme.breadcrumbs?.main
+        ? getReadableColorFrom(theme.breadcrumbs.main, true)
+        : getReadableColor(theme, undefined, undefined, true));
 
     return css`
       display: flex;
@@ -50,8 +51,9 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
         * {
           font-weight: 700;
           color: ${theme.breadcrumbs?.item?.activeColor ||
-          changeDarkness(theme.breadcrumbs?.main, 0.05) ||
-          getReadableColor(theme, undefined, undefined)};
+          (theme.breadcrumbs?.main
+            ? getReadableColorFrom(theme.breadcrumbs.main, true)
+            : getReadableColor(theme, undefined, undefined))};
         }
       `}
 
@@ -60,16 +62,21 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
         cursor: pointer;
         &:hover {
           color: ${theme.breadcrumbs?.item?.hoverColor ||
-          changeDarkness(theme.breadcrumbs?.main, 0.05) ||
-          getReadableColor(theme, undefined, undefined)};
-          background-color: ${changeLightness(theme.main, 0.1)};
+          (theme.breadcrumbs?.main
+            ? getReadableColorFrom(theme.breadcrumbs.main)
+            : getReadableColor(theme, undefined, undefined))};
+          background-color: ${changeLightness(
+            theme.breadcrumbs?.main || theme.main,
+            0.05
+          )};
         }
       `}
 
     a:hover {
         color: ${theme.breadcrumbs?.item?.hoverColor ||
-        changeDarkness(theme.breadcrumbs?.main, 0.05) ||
-        getReadableColor(theme, undefined, undefined)};
+        (theme.breadcrumbs?.main
+          ? getReadableColorFrom(theme.breadcrumbs?.main)
+          : getReadableColor(theme, undefined, undefined))};
       }
     `;
   }}
@@ -93,7 +100,7 @@ const ReqoreBreadcrumbsItem = ({
   interactive,
 }: IReqoreBreadcrumbItemProps) => {
   const [ref, setRef] = useState(null);
-  const Element: any = as || "span";
+  const Element: any = as || 'span';
 
   usePopover({ targetElement: ref, content: tooltip, show: !!tooltip });
 
@@ -103,13 +110,13 @@ const ReqoreBreadcrumbsItem = ({
         ref={setRef}
         active={active}
         interactive={interactive || !!props?.onClick}
-        className="reqore-breadcrumbs-item"
+        className='reqore-breadcrumbs-item'
       >
         {icon && (
           <ReqoreIcon
             icon={icon}
-            size="13px"
-            margin={label ? "right" : undefined}
+            size='13px'
+            margin={label ? 'right' : undefined}
           />
         )}
         {label && <Element {...props}>{label}</Element>}

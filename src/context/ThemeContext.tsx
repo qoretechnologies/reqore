@@ -1,3 +1,4 @@
-import { createContext } from "react";
+import { createContext } from 'react';
+import { IReqoreTheme } from '../constants/theme';
 
-export default createContext({});
+export default createContext<IReqoreTheme>({});

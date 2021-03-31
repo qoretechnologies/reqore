@@ -1,16 +1,20 @@
 import { isArray } from 'lodash';
-import React from 'react';
+import React, { useContext } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import ThemeContext from '../../context/ThemeContext';
+import {
+  changeLightness,
+  getReadableColor,
+  getReadableColorFrom,
+} from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
 import { IReqoreTabsListItem } from '../Tabs';
-import { StyledTabListItem } from '../Tabs/item';
 import ReqoreTabsList, {
   getTabsLength,
   StyledReqoreTabsList,
@@ -48,18 +52,19 @@ const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
     padding: 0 10px;
     justify-content: space-between;
     border-bottom: 1px solid ${changeLightness(theme.main, 0.05)};
+    background-color: ${({ theme }: { theme: IReqoreTheme }) =>
+      theme.breadcrumbs?.main || 'transparent'};
 
     > div {
       height: 100%;
       display: flex;
       align-items: center;
 
-      > *,
-      ${StyledReqoreTabsList} > *,
-      ${StyledTabListItem} * {
+      > * {
         color: ${theme.breadcrumbs?.item?.color ||
-        theme.breadcrumbs?.main ||
-        getReadableColor(theme, undefined, undefined, true)};
+        (theme.breadcrumbs?.main
+          ? getReadableColorFrom(theme.breadcrumbs.main, true)
+          : getReadableColor(theme, undefined, undefined, true))};
       }
 
       ${StyledReqoreTabsList} {
@@ -130,6 +135,7 @@ const ReqoreBreadcrumbs = ({
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
+  const theme = useContext(ThemeContext);
 
   const transformedItems = getTransformedItems(items, _testWidth || width);
 
@@ -186,6 +192,7 @@ const ReqoreBreadcrumbs = ({
             onTabChange={item.withTabs.onTabChange}
             activeTab={item.withTabs.activeTab}
             activeTabIntent={item.withTabs.activeTabIntent}
+            parentBackground={theme.breadcrumbs?.main}
           />
         </React.Fragment>
       );
