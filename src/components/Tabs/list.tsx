@@ -1,18 +1,18 @@
-import { isArray } from "lodash";
-import React from "react";
-import { useMeasure } from "react-use";
-import styled, { css } from "styled-components";
-import { IReqoreTabsListItem } from ".";
-import { ReqorePopover } from "../..";
-import { IReqoreTheme } from "../../constants/theme";
-import { changeLightness, getReadableColor } from "../../helpers/colors";
-import ReqoreMenu from "../Menu";
-import ReqoreMenuItem, { IReqoreMenuItemProps } from "../Menu/item";
-import { StyledPopover } from "../Popover";
+import { isArray } from 'lodash';
+import React from 'react';
+import { useMeasure } from 'react-use';
+import styled, { css } from 'styled-components';
+import { IReqoreTabsListItem } from '.';
+import { ReqorePopover } from '../..';
+import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
+import ReqoreMenu from '../Menu';
+import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
+import { StyledPopover } from '../Popover';
 import ReqoreTabsListItem, {
   IReqoreTabListItemProps,
   StyledTabListItem,
-} from "./item";
+} from './item';
 
 export interface IReqoreTabsListProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -21,6 +21,7 @@ export interface IReqoreTabsListProps
   onTabChange?: (tabId: string) => any;
   fill?: boolean;
   vertical?: boolean;
+  activeTabIntent?: IReqoreIntent;
 
   // Internal prop, ignore!
   _testWidth?: number;
@@ -34,12 +35,12 @@ export interface IReqoreTabsListStyle {
 
 export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
   ${({ theme, fill, vertical }) => css`
-    height: ${vertical ? "100%" : "40px"};
-    width: ${vertical ? "140px" : "100%"};
-    flex-flow: ${vertical ? "column" : "row"};
+    height: ${vertical ? '100%' : '40px'};
+    width: ${vertical ? '140px' : '100%'};
+    flex-flow: ${vertical ? 'column' : 'row'};
     display: flex;
     align-items: center;
-    border-${vertical ? "right" : "bottom"}: 1px solid ${changeLightness(
+    border-${vertical ? 'right' : 'bottom'}: 1px solid ${changeLightness(
     theme.main,
     0.05
   )};
@@ -61,18 +62,18 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
     > *,
     ${StyledPopover} > * {
       color: ${getReadableColor(theme, undefined, undefined, true)};
-      ${vertical ? "width" : "height"}: 100%;
+      ${vertical ? 'width' : 'height'}: 100%;
       ${
         vertical
           ? css`
-              height: ${fill ? "100%" : "auto"};
+              height: ${fill ? '100%' : 'auto'};
             `
           : css`
               white-space: nowrap;
             `
       };
 
-      justify-content: ${vertical ? "flex-start" : "space-evenly"};
+      justify-content: ${vertical ? 'flex-start' : 'space-evenly'};
       
 
       ${
@@ -95,7 +96,7 @@ const getMoreLabel = (items: IReqoreTabsListItem[], activeTab: string) => {
     return isTabHidden(items, activeTab).label;
   }
 
-  return "More";
+  return 'More';
 };
 
 const getLabel = (
@@ -111,11 +112,11 @@ const getLabel = (
 
 export const getTabsLength = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
-  type: "width" | "height" = "width",
+  type: 'width' | 'height' = 'width',
   activeTab: string
 ): number =>
   items.reduce((len, item) => {
-    if (type === "height") {
+    if (type === 'height') {
       const rows = getLabel(item, activeTab) / 4 || 1;
 
       return len + rows * 15 + 10;
@@ -127,7 +128,7 @@ export const getTabsLength = (
 const getTransformedItems = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
   size: number,
-  type: "width" | "height" = "width",
+  type: 'width' | 'height' = 'width',
   activeTab: string
 ): (IReqoreTabsListItem | IReqoreTabsListItem[])[] => {
   if (!size) {
@@ -164,6 +165,7 @@ const ReqoreTabsList = ({
   _testWidth,
   fill,
   vertical,
+  activeTabIntent,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width, height }] = useMeasure();
@@ -171,7 +173,7 @@ const ReqoreTabsList = ({
   const transformedItems = getTransformedItems(
     tabs,
     vertical ? height : _testWidth || width,
-    vertical ? "height" : "width",
+    vertical ? 'height' : 'width',
     activeTab
   );
 
@@ -180,7 +182,7 @@ const ReqoreTabsList = ({
       {...rest}
       fill={fill}
       vertical={vertical}
-      className={`${rest.className || ""} reqore-tabs-list`}
+      className={`${rest.className || ''} reqore-tabs-list`}
       ref={ref}
     >
       {transformedItems.map(
@@ -192,15 +194,16 @@ const ReqoreTabsList = ({
                 component={ReqoreTabsListItem}
                 componentProps={
                   {
-                    icon: "ArrowDownSLine",
-                    tooltip: "Show more...",
-                    id: "showMore",
+                    icon: 'ArrowDownSLine',
+                    tooltip: 'Show more...',
+                    id: 'showMore',
                     label: getMoreLabel(item, activeTab),
                     active: !!isTabHidden(item, activeTab),
+                    activeIntent: activeTabIntent,
                     vertical,
                   } as IReqoreTabListItemProps
                 }
-                handler="click"
+                handler='click'
                 content={
                   <ReqoreMenu>
                     {item.map(
@@ -222,7 +225,7 @@ const ReqoreTabsList = ({
                               icon,
                               as,
                               disabled,
-                              rightIcon: onCloseClick ? "CloseLine" : undefined,
+                              rightIcon: onCloseClick ? 'CloseLine' : undefined,
                               onRightIconClick: onCloseClick
                                 ? () => {
                                     onCloseClick(id);
@@ -240,7 +243,7 @@ const ReqoreTabsList = ({
                               },
                             } as IReqoreMenuItemProps
                           }
-                          placement="right"
+                          placement='right'
                           isReqoreComponent
                           content={tooltip}
                           key={index + label}
@@ -257,6 +260,7 @@ const ReqoreTabsList = ({
             <React.Fragment key={index}>
               <ReqoreTabsListItem
                 {...item}
+                activeIntent={activeTabIntent}
                 key={index}
                 vertical={vertical}
                 active={activeTab === item.id}

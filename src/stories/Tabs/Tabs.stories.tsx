@@ -1,8 +1,8 @@
-import { Meta, Story } from "@storybook/react/types-6-0";
-import React from "react";
-import { ReqoreFooter } from "../../components/Navbar";
-import { IReqoreTabsListItem, IReqoreTabsProps } from "../../components/Tabs";
-import { IReqoreTheme } from "../../constants/theme";
+import { Meta, Story } from '@storybook/react/types-6-0';
+import React from 'react';
+import { ReqoreFooter } from '../../components/Navbar';
+import { IReqoreTabsListItem, IReqoreTabsProps } from '../../components/Tabs';
+import { IReqoreTheme } from '../../constants/theme';
 import {
   ReqoreContent,
   ReqoreHeader,
@@ -10,79 +10,79 @@ import {
   ReqoreTabs,
   ReqoreTabsContent,
   ReqoreUIProvider,
-} from "../../index";
+} from '../../index';
 
 const tabs = {
   tabs: [
     {
-      label: "Tab 1",
-      id: "tab1",
-      icon: "Home3Line",
-      tooltip: "Hooooooome!",
+      label: 'Tab 1',
+      id: 'tab1',
+      icon: 'Home3Line',
+      tooltip: 'Hooooooome!',
     },
     {
-      label: "Tab 2",
-      id: "tab2",
-      icon: "Settings6Line",
-      as: "a",
+      label: 'Tab 2',
+      id: 'tab2',
+      icon: 'Settings6Line',
+      as: 'a',
       props: {
-        href: "https://google.com",
+        href: 'https://google.com',
       },
     },
     {
-      label: "Really long tab name with tooltip",
-      id: "tab3",
-      icon: "FileSettingsLine",
-      tooltip: "Click to go to page 3!",
+      label: 'Really long tab name with tooltip',
+      id: 'tab3',
+      icon: 'FileSettingsLine',
+      tooltip: 'Click to go to page 3!',
     },
     {
-      id: "tab4",
-      icon: "LightbulbLine",
+      id: 'tab4',
+      icon: 'LightbulbLine',
       onCloseClick: (id) => {
         alert(`${id} close click`);
       },
     },
     {
-      label: "Tab 5",
-      id: "tab5",
-      icon: "Polaroid2Line",
+      label: 'Tab 5',
+      id: 'tab5',
+      icon: 'Polaroid2Line',
       disabled: true,
       onCloseClick: (id) => {
         alert(`${id} close click`);
       },
     },
     {
-      label: "Lorem Ipsum",
-      id: "tab6",
-      icon: "DragMoveLine",
+      label: 'Lorem Ipsum',
+      id: 'tab6',
+      icon: 'DragMoveLine',
     },
     {
-      label: "Hey I am another long tab",
-      id: "tab7",
-      icon: "LeafFill",
+      label: 'Hey I am another long tab',
+      id: 'tab7',
+      icon: 'LeafFill',
       onCloseClick: (id) => {
         alert(`${id} close click`);
       },
     },
     {
-      label: "Tab 8",
-      id: "tab8",
-      icon: "MapPin3Line",
+      label: 'Tab 8',
+      id: 'tab8',
+      icon: 'MapPin3Line',
     },
     {
-      label: "Tab 9",
-      id: "tab9",
-      icon: "EjectLine",
+      label: 'Tab 9',
+      id: 'tab9',
+      icon: 'EjectLine',
     },
   ] as IReqoreTabsListItem[],
   children: <p>Test</p>,
 } as IReqoreTabsProps;
 
 export default {
-  title: "ReQore/Tabs",
+  title: 'ReQore/Tabs',
   args: {
     theme: {
-      main: "#ffffff",
+      main: '#ffffff',
     },
     tabs,
   },
@@ -97,23 +97,23 @@ const Template: Story<{
       <ReqoreLayoutContent>
         <ReqoreHeader></ReqoreHeader>
         <ReqoreContent>
-          <ReqoreTabs {...tabs}>
-            <ReqoreTabsContent id="tab1">
+          <ReqoreTabs {...tabs} activeTabIntent='info'>
+            <ReqoreTabsContent id='tab1'>
               <h3>Tab 1</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id="tab2">
+            <ReqoreTabsContent id='tab2'>
               <h3>Tab 2</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id="tab3">
+            <ReqoreTabsContent id='tab3'>
               <h3>Tab 3</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id="tab4">
+            <ReqoreTabsContent id='tab4'>
               <h3>Tab 4</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id="tab5">
+            <ReqoreTabsContent id='tab5'>
               <h3>Tab 5</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id="tab6">
+            <ReqoreTabsContent id='tab6'>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur
               vitae nisi ligula. Proin laoreet vitae risus sed pretium. Sed eu
               elit non tortor congue molestie vel ut elit. Duis id turpis
@@ -193,13 +193,13 @@ const Template: Story<{
               Maecenas scelerisque commodo magna eget blandit. Praesent vitae
               bibendum mauris, eu blandit dui.
             </ReqoreTabsContent>
-            <ReqoreTabsContent id="tab7">
+            <ReqoreTabsContent id='tab7'>
               <h3>Tab 7</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id="tab8">
+            <ReqoreTabsContent id='tab8'>
               <h3>Tab 8</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id="tab9">
+            <ReqoreTabsContent id='tab9'>
               <h3>Tab 9</h3>
             </ReqoreTabsContent>
           </ReqoreTabs>
@@ -239,13 +239,13 @@ VerticalFill.args = {
 export const Dark = Template.bind({});
 Dark.args = {
   theme: {
-    main: "#222222",
+    main: '#222222',
   },
 };
 
 export const CustomMainColor = Template.bind({});
 CustomMainColor.args = {
   theme: {
-    main: "#194d5d",
+    main: '#194d5d',
   },
 };

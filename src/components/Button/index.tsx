@@ -93,7 +93,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
     &:hover {
       background-color: ${({ minimal, theme, intent }: IReqoreButtonStyle) =>
         intent
-          ? lighten(0.0625, theme.intents[intent])
+          ? changeLightness(theme.intents[intent], 0.0325)
           : minimal
           ? changeLightness(getButtonMainColor(theme, intent), 0.09)
           : changeLightness(getButtonMainColor(theme, intent), 0.2)};
