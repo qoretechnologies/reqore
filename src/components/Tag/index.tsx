@@ -39,6 +39,7 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
 export const StyledTag = styled.span<IReqoreTagStyle>`
   display: inline-flex;
   justify-content: center;
+  flex-shrink: 0;
   align-items: center;
   overflow: hidden;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
