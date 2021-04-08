@@ -1,4 +1,5 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
+import { noop } from 'lodash';
 import React from 'react';
 import { ReqoreTree } from '../../components/Tree';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
@@ -29,6 +30,8 @@ const Template: Story<IReqoreUIProviderProps> = (
         <ReqoreContent style={{ padding: '20px' }}>
           <h4> Default </h4>
           <ReqoreTree data={data} />
+          <h4> Interactive & Copy </h4>
+          <ReqoreTree data={data} onItemClick={noop} withLabelCopy />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -36,3 +39,9 @@ const Template: Story<IReqoreUIProviderProps> = (
 };
 
 export const Basic = Template.bind({});
+export const WithLightColor = Template.bind({});
+WithLightColor.args = {
+  theme: {
+    main: '#ffffff',
+  },
+};
