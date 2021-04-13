@@ -139,6 +139,98 @@ const Template: Story<IReqoreUIProviderProps> = (
               },
             ]}
           />
+          <h4> Scrollable </h4>
+          <ReqoreDropdown
+            label='Please select'
+            placement='top'
+            filterable
+            items={[
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+            ]}
+          />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>

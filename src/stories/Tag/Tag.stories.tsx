@@ -72,6 +72,95 @@ const Template: Story<IReqoreUIProviderProps> = (
           <br />
           <br />
           <ReqoreTag label='Something' size='big' disabled />
+          <h4> Custom actions </h4>
+          <ReqoreTag
+            label='Something'
+            size='small'
+            actions={[
+              {
+                icon: 'AccountPinBoxFill',
+                tooltip: {
+                  content: 'Hey yo',
+                },
+              },
+              {
+                icon: 'Anticlockwise2Line',
+                tooltip: {
+                  content: 'Disabled :(',
+                },
+                disabled: true,
+              },
+              {
+                icon: 'BankCardLine',
+                tooltip: {
+                  handler: 'click',
+                  noArrow: true,
+                  content: 'Super special tooltip',
+                },
+              },
+            ]}
+          />
+          <br />
+          <br />
+          <ReqoreTag
+            label='Something'
+            actions={[
+              {
+                icon: 'AccountPinBoxFill',
+                tooltip: {
+                  content: 'Hey yo',
+                },
+              },
+              {
+                icon: 'Anticlockwise2Line',
+                tooltip: {
+                  content: 'Disabled :(',
+                },
+                disabled: true,
+              },
+              {
+                icon: 'BankCardLine',
+                tooltip: {
+                  handler: 'click',
+                  noArrow: true,
+                  content: 'Super special tooltip',
+                },
+              },
+            ]}
+          />
+          <br />
+          <br />
+          <ReqoreTag
+            label='Something'
+            size='big'
+            actions={[
+              {
+                icon: 'AccountPinBoxFill',
+                tooltip: {
+                  content: 'Hey yo',
+                },
+                onClick: () => alert('clicked first action'),
+              },
+              {
+                icon: 'Anticlockwise2Line',
+                tooltip: {
+                  content: 'Disabled :(',
+                },
+                disabled: true,
+                onClick: () => alert('clicked middle action'),
+              },
+              {
+                icon: 'BankCardLine',
+                tooltip: {
+                  handler: 'click',
+                  noArrow: true,
+                  content: 'Super special tooltip',
+                },
+                onClick: () => alert('clicked last action'),
+              },
+            ]}
+            onRemoveClick={() => alert('clicked remove')}
+          />
           <h4> Custom colors </h4>
           <ReqoreTag label='Something' size='small' color='#0f7c80' />
           <br />
@@ -80,6 +169,21 @@ const Template: Story<IReqoreUIProviderProps> = (
           <br />
           <br />
           <ReqoreTag label='Something' size='big' color='#db785a' />
+          <h4> Icons only </h4>
+          <ReqoreTag size='small' icon='AccountCircleLine' />
+          <br />
+          <br />
+          <ReqoreTag size='normal' icon='ArrowGoBackFill' />
+          <br />
+          <br />
+          <ReqoreTag size='big' icon='BarChartBoxLine' />
+          <br />
+          <br />
+          <ReqoreTag
+            size='normal'
+            icon='ArrowGoBackFill'
+            rightIcon='Compass3Line'
+          />
           <h4> Interactive </h4>
           <ReqoreTag
             label='Something'
