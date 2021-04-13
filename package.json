@@ -2,7 +2,7 @@
   "name": "@qoretechnologies/reqore",
   "version": "0.13.1",
   "description": "ReQore is a UI library of components for Qorus connected apps",
-  "main": "dist/index.js",
+  "main": "dist/index.js",     
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "./node_modules/.bin/jest",
