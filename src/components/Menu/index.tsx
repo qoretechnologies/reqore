@@ -1,16 +1,17 @@
-import React, { forwardRef } from "react";
-import styled, { css } from "styled-components";
-import { IReqoreTheme } from "../../constants/theme";
-import ReqoreThemeProvider from "../../containers/ThemeProvider";
-import { changeLightness } from "../../helpers/colors";
-import { IReqoreComponent } from "../../types/global";
+import React, { forwardRef } from 'react';
+import styled, { css } from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { changeLightness } from '../../helpers/colors';
+import { IReqoreComponent } from '../../types/global';
 
 export interface IReqoreMenuProps
   extends IReqoreComponent,
     React.HTMLAttributes<HTMLDivElement> {
   children: any;
-  position?: "left" | "right";
+  position?: 'left' | 'right';
   width?: string;
+  maxHeight?: string;
 }
 
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
@@ -18,16 +19,20 @@ export interface IReqoreMenuStyle extends IReqoreMenuProps {
 }
 
 const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
-  width: ${({ width }) => width || "160px"};
+  width: ${({ width }) => width || '160px'};
+  max-height: ${({ maxHeight }) => maxHeight || undefined};
+  overflow-y: auto;
+  overflow-x: hidden;
+
   background-color: transparent;
 
   ${({ theme, position }) =>
     position &&
     css`
     border-${
-      position === "left" ? "right" : "left"
+      position === 'left' ? 'right' : 'left'
     }: 1px solid ${changeLightness(theme.main, 0.05)};
-    padding-${position === "left" ? "right" : "left"}: 10px;
+    padding-${position === 'left' ? 'right' : 'left'}: 10px;
   `}
 `;
 

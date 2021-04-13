@@ -9,6 +9,7 @@ export interface IReqoreDropdownListProps extends IReqoreComponent {
   multiSelect?: boolean;
   listStyle?: React.CSSProperties;
   width?: string;
+  height?: string;
   filterable?: boolean;
 }
 
@@ -19,6 +20,7 @@ const ReqoreDropdownList = ({
   _popoverId,
   filterable,
   width,
+  height,
 }: IReqoreDropdownListProps) => {
   const [_items, setItems] = useState<IReqoreMenuItemProps[]>(items);
   const [query, setQuery] = useState<string>('');
@@ -53,6 +55,7 @@ const ReqoreDropdownList = ({
       _popoverId={_popoverId}
       style={listStyle}
       width={width}
+      maxHeight={height || '300px'}
     >
       {filterable && (
         <ReqoreInput

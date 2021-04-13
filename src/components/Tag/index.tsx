@@ -1,5 +1,7 @@
+import _size from 'lodash/size';
 import React, { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
+import { ReqorePopover } from '../..';
 import {
   PADDING_FROM_SIZE,
   SIZE_TO_PX,
@@ -18,6 +20,13 @@ import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
+export interface IReqoreTagAction {
+  icon: IReqoreIconName;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
+  disabled?: boolean;
+  tooltip?: IReqoreTooltip;
+}
+
 export interface IReqoreTagProps extends React.HTMLAttributes<HTMLSpanElement> {
   size?: TSizes;
   label?: string;
@@ -28,6 +37,7 @@ export interface IReqoreTagProps extends React.HTMLAttributes<HTMLSpanElement> {
   color?: string;
   tooltip?: IReqoreTooltip;
   disabled?: boolean;
+  actions?: IReqoreTagAction[];
 }
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
@@ -91,7 +101,7 @@ const StyledTagContent = styled.span<{ size: TSizes }>`
   align-items: center;
 `;
 
-const StyledRemoveWrapper = styled.div<IReqoreTagStyle>`
+const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   width: ${({ size }) => SIZE_TO_PX[size]}px;
@@ -123,6 +133,7 @@ const ReqoreTag = forwardRef(
       onClick,
       size = 'normal',
       onRemoveClick,
+      actions,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -154,7 +165,7 @@ const ReqoreTag = forwardRef(
             <ReqoreIcon
               icon={icon}
               size={`${TEXT_FROM_SIZE[size]}px`}
-              margin='right'
+              margin={label || rightIcon ? 'right' : undefined}
             />
           )}
           {label}
@@ -162,19 +173,46 @@ const ReqoreTag = forwardRef(
             <ReqoreIcon
               icon={rightIcon}
               size={`${TEXT_FROM_SIZE[size]}px`}
-              margin='left'
+              margin={label ? 'left' : undefined}
             />
           )}
         </StyledTagContent>
+        {_size(actions)
+          ? actions.map((action) => (
+              <>
+                <ReqorePopover
+                  {...action.tooltip}
+                  component={StyledButtonWrapper}
+                  componentProps={{
+                    size,
+                    color: rest.color,
+                    className: 'reqore-tag-action',
+                    onClick: action.onClick,
+                  }}
+                  noWrapper
+                >
+                  <ReqoreIcon
+                    icon={action.icon}
+                    size={`${TEXT_FROM_SIZE[size]}px`}
+                  />
+                </ReqorePopover>
+              </>
+            ))
+          : null}
         {onRemoveClick && !rest.disabled ? (
-          <StyledRemoveWrapper
-            size={size}
-            color={rest.color}
-            className='reqore-tag-remove'
-            onClick={onRemoveClick}
+          <ReqorePopover
+            component={StyledButtonWrapper}
+            componentProps={{
+              size,
+              color: rest.color,
+              className: 'reqore-tag-remove',
+              onClick: onRemoveClick,
+            }}
+            noWrapper
+            content='Remove'
           >
             <ReqoreIcon icon='CloseLine' size={`${TEXT_FROM_SIZE[size]}px`} />
-          </StyledRemoveWrapper>
+          </ReqorePopover>
         ) : null}
       </StyledTag>
     );
