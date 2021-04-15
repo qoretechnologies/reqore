@@ -62,8 +62,8 @@ export const StyledTag = styled.span<IReqoreTagStyle>`
       background-color: ${color || changeLightness(theme.main, 0.1)};
       color: ${
         color
-          ? getReadableColorFrom(color, true)
-          : getReadableColor(theme, undefined, undefined, true)
+          ? getReadableColorFrom(color)
+          : getReadableColor(theme, undefined, undefined)
       };
       }
     `}
