@@ -294,6 +294,60 @@ const Template: Story<IReqoreUIProviderProps> = (
               size='big'
             />
           </ReqoreTagGroup>
+          <h4> In group with columns </h4>
+          <ReqoreTagGroup size='big' columns={3}>
+            <ReqoreTag label='Something' size='small' />
+            <ReqoreTag label='Something incredibly long and weird and actually even longer and weirder' />
+            <ReqoreTag label='Something' />
+            <ReqoreTag
+              label='Something incredibly long and weird and actually even longer and weirder'
+              size='big'
+              icon='AccountPinBoxFill'
+              rightIcon='Anticlockwise2Line'
+              onClick={noop}
+              actions={[
+                {
+                  icon: 'AccountPinBoxFill',
+                  tooltip: {
+                    content: 'Hey yo',
+                  },
+                  onClick: () => alert('clicked first action'),
+                },
+                {
+                  icon: 'Anticlockwise2Line',
+                  tooltip: {
+                    content: 'Disabled :(',
+                  },
+                  disabled: true,
+                  onClick: () => alert('clicked middle action'),
+                },
+                {
+                  icon: 'BankCardLine',
+                  tooltip: {
+                    handler: 'click',
+                    noArrow: true,
+                    content: 'Super special tooltip',
+                  },
+                  onClick: () => alert('clicked last action'),
+                },
+              ]}
+              onRemoveClick={() => alert('clicked remove')}
+            />
+            <ReqoreTag label='Something' onClick={noop} />
+            <ReqoreTag
+              label='Something'
+              onClick={noop}
+              onRemoveClick={noop}
+              size='big'
+            />
+            <ReqoreTag label='Something' disabled size='small' />
+            <ReqoreTag label='Something' />
+            <ReqoreTag
+              label='Something'
+              tooltip={{ content: 'HEY MATE' }}
+              size='big'
+            />
+          </ReqoreTagGroup>
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
