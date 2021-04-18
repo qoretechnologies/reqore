@@ -6,6 +6,7 @@ import { TSizes } from '../../constants/sizes';
 export interface IReqoreTagGroup extends React.HTMLAttributes<HTMLDivElement> {
   children: any;
   size?: TSizes;
+  columns?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 }
 
 const StyledTagGroup = styled.div`
@@ -19,6 +20,7 @@ const ReqoreTagGroup = ({
   children,
   size,
   className,
+  columns,
   ...rest
 }: IReqoreTagGroup) => (
   <StyledTagGroup {...rest} className={`${className || ''} reqore-tag-group`}>
@@ -26,6 +28,7 @@ const ReqoreTagGroup = ({
       child
         ? React.cloneElement(child, {
             size,
+            width: columns ? `calc(${100 / columns}% - 5px)` : undefined,
           })
         : null
     )}

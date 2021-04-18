@@ -123,6 +123,7 @@ test('Fires onClick and onRemoveClick <Tag /> events', () => {
               <ReqoreTag
                 icon='24HoursLine'
                 rightIcon='4KLine'
+                label='Test'
                 onClick={clickFn}
                 onRemoveClick={removeClickFn}
               />

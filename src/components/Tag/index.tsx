@@ -38,6 +38,7 @@ export interface IReqoreTagProps extends React.HTMLAttributes<HTMLSpanElement> {
   tooltip?: IReqoreTooltip;
   disabled?: boolean;
   actions?: IReqoreTagAction[];
+  width?: string;
 }
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
@@ -46,7 +47,7 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   interactive?: boolean;
 }
 
-export const StyledTag = styled.span<IReqoreTagStyle>`
+export const StyledTag = styled.div<IReqoreTagStyle>`
   display: inline-flex;
   justify-content: center;
   flex-shrink: 0;
@@ -56,6 +57,7 @@ export const StyledTag = styled.span<IReqoreTagStyle>`
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   border-radius: 3px;
+  width: ${({ width }) => width || undefined};
 
   ${({ theme, color }) =>
     css`
@@ -93,15 +95,25 @@ export const StyledTag = styled.span<IReqoreTagStyle>`
     `}
 `;
 
-const StyledTagContent = styled.span<{ size: TSizes }>`
+const StyledTagContentWrapper = styled.div<{ size: TSizes }>`
   padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
-  height: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
+  flex-shrink: 0;
+  flex: 1;
+  overflow: hidden;
+`;
+
+const StyledTagContent = styled.span<{ size: TSizes }>`
+  height: 100%;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
+  flex-shrink: 0;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   width: ${({ size }) => SIZE_TO_PX[size]}px;
@@ -156,10 +168,10 @@ const ReqoreTag = forwardRef(
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
       >
-        <StyledTagContent
+        <StyledTagContentWrapper
           size={size}
-          onClick={onClick}
           className='reqore-tag-content'
+          onClick={onClick}
         >
           {icon && (
             <ReqoreIcon
@@ -168,7 +180,7 @@ const ReqoreTag = forwardRef(
               margin={label || rightIcon ? 'right' : undefined}
             />
           )}
-          {label}
+          {label && <StyledTagContent size={size}>{label}</StyledTagContent>}
           {rightIcon && (
             <ReqoreIcon
               icon={rightIcon}
@@ -176,7 +188,7 @@ const ReqoreTag = forwardRef(
               margin={label ? 'left' : undefined}
             />
           )}
-        </StyledTagContent>
+        </StyledTagContentWrapper>
         {_size(actions)
           ? actions.map((action) => (
               <>
