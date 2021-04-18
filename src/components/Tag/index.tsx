@@ -168,7 +168,11 @@ const ReqoreTag = forwardRef(
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
       >
-        <StyledTagContentWrapper size={size}>
+        <StyledTagContentWrapper
+          size={size}
+          className='reqore-tag-content'
+          onClick={onClick}
+        >
           {icon && (
             <ReqoreIcon
               icon={icon}
@@ -176,15 +180,7 @@ const ReqoreTag = forwardRef(
               margin={label || rightIcon ? 'right' : undefined}
             />
           )}
-          {label && (
-            <StyledTagContent
-              size={size}
-              onClick={onClick}
-              className='reqore-tag-content'
-            >
-              {label}
-            </StyledTagContent>
-          )}
+          {label && <StyledTagContent size={size}>{label}</StyledTagContent>}
           {rightIcon && (
             <ReqoreIcon
               icon={rightIcon}
