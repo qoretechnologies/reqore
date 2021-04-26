@@ -15,6 +15,7 @@ export { default as ReqoreLayoutContent } from './components/Layout/content';
 export { default as ReqoreMenu } from './components/Menu';
 export { default as ReqoreMenuDivider } from './components/Menu/divider';
 export { default as ReqoreMenuItem } from './components/Menu/item';
+export { default as ReqoreMessage } from './components/Message';
 export { ReqoreModal } from './components/Modal';
 export {
   ReqoreModalActions,

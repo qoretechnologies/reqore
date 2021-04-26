@@ -2,7 +2,7 @@ import { darken, lighten, rgba } from 'polished';
 import React, { forwardRef, useEffect, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css, keyframes } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
@@ -18,6 +18,7 @@ export type IReqoreNotificationType =
 
 export interface IReqoreNotificationProps {
   type?: IReqoreNotificationType;
+  intent?: IReqoreIntent;
   title?: string;
   content: string;
   icon?: IReqoreIconName;
@@ -25,13 +26,17 @@ export interface IReqoreNotificationProps {
   onClick?: () => any;
   duration?: number;
   onFinish?: () => any;
+  fluid?: boolean;
 }
 
 export interface IReqoreNotificationStyle {
   theme: IReqoreTheme;
-  type: IReqoreNotificationType;
+  type?: IReqoreNotificationType;
   clickable?: boolean;
   timeout?: number;
+  intent?: IReqoreIntent;
+  hasShadow?: boolean;
+  fluid?: boolean;
 }
 
 const timeoutAnimation = keyframes`
@@ -43,13 +48,14 @@ const timeoutAnimation = keyframes`
   }
 `;
 
-const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
+export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
   min-width: 200px;
-  max-width: 450px;
+  max-width: ${({ fluid }) => (!fluid ? '450px' : undefined)};
   border-radius: 5px;
   min-height: 40px;
   display: flex;
-  overflow: hidden;
+  flex: 0 1 auto;
+  overflow: auto;
   position: relative;
   transition: background-color 0.1s linear;
   animation: 0.1s ${fadeIn} ease-in;
@@ -58,10 +64,21 @@ const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
     margin-top: 10px;
   }
 
-  ${({ theme, type, clickable, timeout }: IReqoreNotificationStyle) => css`
-    background-color: ${theme.notifications?.[type]};
-    border: 1px solid ${darken(0.2, theme.notifications?.[type])};
-    box-shadow: 0px 0px 30px 10px ${rgba('#000000', 0.3)};
+  ${({
+    theme,
+    type,
+    intent,
+    clickable,
+    timeout,
+    hasShadow,
+  }: IReqoreNotificationStyle) => css`
+    background-color: ${theme.notifications?.[intent || type]};
+    border: 1px solid ${darken(0.2, theme.notifications?.[intent || type])};
+
+    ${hasShadow &&
+    css`
+      box-shadow: 0px 0px 30px 10px ${rgba('#000000', 0.3)};
+    `}
 
     ${timeout &&
     css`
@@ -71,44 +88,54 @@ const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
         display: block;
         top: 0;
         height: 3px;
-        background-color: ${changeLightness(theme.notifications?.[type], 0.1)};
+        background-color: ${changeLightness(
+          theme.notifications?.[intent || type],
+          0.1
+        )};
         animation-name: ${timeoutAnimation};
         animation-duration: ${timeout}ms;
       }
     `}
 
-    color: ${getReadableColorFrom(theme.notifications?.[type], true)};
+    color: ${getReadableColorFrom(theme.notifications?.[intent || type], true)};
 
     ${clickable &&
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${lighten(0.0625, theme.notifications?.[type])};
+        background-color: ${lighten(
+          0.0625,
+          theme.notifications?.[intent || type]
+        )};
       }
     `}
   `}
 `;
 
-const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
+export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
   width: 40px;
-  height: 40px;
+  min-height: 40px;
+  flex: 0 1 auto;
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: background-color 0.1s linear;
 
-  ${({ clickable, theme, type }) =>
+  ${({ clickable, theme, intent, type }) =>
     clickable &&
     css`
       &:hover {
         cursor: pointer;
-        border-bottom-left-radius: 6px;
-        background-color: ${changeLightness(theme.notifications?.[type], 0.02)};
+        background-color: ${changeLightness(
+          theme.notifications?.[intent || type],
+          0.02
+        )};
       }
     `}
 `;
 
-const StyledNotificationContentWrapper = styled.div`
+export const StyledNotificationContentWrapper = styled.div`
   flex: 1;
   min-height: 40px;
   display: flex;
@@ -117,19 +144,20 @@ const StyledNotificationContentWrapper = styled.div`
   padding: 10px 0;
 `;
 
-const StyledNotificationTitle = styled.h4`
+export const StyledNotificationTitle = styled.h4`
   margin: 0 0 5px 0;
   padding: 0;
   display: flex;
   align-items: center;
 `;
 
-const StyledNotificationContent = styled.p`
+export const StyledNotificationContent = styled.p`
   margin: 0;
   padding: 0;
+  flex: 1;
 `;
 
-const typeToIcon: { [type: string]: IReqoreIconName } = {
+export const typeToIcon: { [type: string]: IReqoreIconName } = {
   info: 'InformationLine',
   pending: 'TimerLine',
   warning: 'AlarmWarningLine',
@@ -183,6 +211,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
         <StyledReqoreNotification
           key={`${duration}${type}${title}${content}`}
           type={type}
+          hasShadow
           timeout={duration}
           clickable={!!onClick}
           onClick={onClick}
