@@ -1,28 +1,32 @@
-import { render } from "@testing-library/react";
-import React from "react";
+import { render } from '@testing-library/react';
+import React from 'react';
 import {
   ReqoreCheckbox,
   ReqoreContent,
   ReqoreLayoutContent,
   ReqoreUIProvider,
-} from "../src";
+} from '../src';
 
-test("Renders <Checkbox /> properly", () => {
+test('Renders <Checkbox /> properly', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreCheckbox />
-          <ReqoreCheckbox size="small" />
-          <ReqoreCheckbox size="big" />
+          <ReqoreCheckbox size='small' />
+          <ReqoreCheckbox size='big' />
           <ReqoreCheckbox disabled />
-          <ReqoreCheckbox label="Right" />
-          <ReqoreCheckbox label="Left" />
-          <ReqoreCheckbox label="Right" asSwitch />
+          <ReqoreCheckbox
+            label='Right'
+            labelDetail={<p className='label-detail'></p>}
+          />
+          <ReqoreCheckbox label='Left' />
+          <ReqoreCheckbox label='Right' asSwitch />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll(".reqore-checkbox").length).toBe(7);
+  expect(document.querySelectorAll('.reqore-checkbox').length).toBe(7);
+  expect(document.querySelectorAll('.label-detail').length).toBe(1);
 });
