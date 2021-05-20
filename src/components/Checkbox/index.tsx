@@ -1,22 +1,23 @@
-import { rgba } from "polished";
-import React, { forwardRef, useRef } from "react";
-import styled from "styled-components";
-import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from "../../constants/sizes";
-import { IReqoreTheme } from "../../constants/theme";
-import { getReadableColor } from "../../helpers/colors";
-import { useCombinedRefs } from "../../hooks/useCombinedRefs";
-import usePopover from "../../hooks/usePopover";
-import { IReqoreTooltip } from "../../types/global";
-import { IReqoreIconName } from "../../types/icons";
-import ReqoreIcon from "../Icon";
+import { rgba } from 'polished';
+import React, { forwardRef, useRef } from 'react';
+import styled from 'styled-components';
+import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
+import { getReadableColor } from '../../helpers/colors';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import usePopover from '../../hooks/usePopover';
+import { IReqoreTooltip } from '../../types/global';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
 
 export interface IReqoreCheckboxProps
   extends React.HTMLAttributes<HTMLDivElement> {
   label?: string;
+  labelDetail?: any;
   size?: TSizes;
   checked?: boolean;
   disabled?: boolean;
-  labelPosition?: "right" | "left";
+  labelPosition?: 'right' | 'left';
   fluid?: boolean;
   fixed?: boolean;
   tooltip?: IReqoreTooltip;
@@ -41,17 +42,17 @@ const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
       rgba(getReadableColor(theme, undefined, undefined), checked ? 0.6 : 0.3)};
   border-radius: 50px;
 
-  margin-right: ${({ labelPosition }) => labelPosition === "right" && "8px"};
-  margin-left: ${({ labelPosition }) => labelPosition === "left" && "8px"};
+  margin-right: ${({ labelPosition }) => labelPosition === 'right' && '8px'};
+  margin-left: ${({ labelPosition }) => labelPosition === 'left' && '8px'};
 
   background-color: ${({ theme, checked }) =>
     checked
       ? rgba(getReadableColor(theme, undefined, undefined), 0.2)
-      : "transparent"};
+      : 'transparent'};
 
   &::before {
     transition: all 0.1s ease-in-out;
-    content: "";
+    content: '';
     display: block;
     position: absolute;
     height: ${({ size }) => SIZE_TO_PX[size] - 13}px;
@@ -60,7 +61,7 @@ const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
     transform: translateY(-50%);
     left: ${({ checked, size }) =>
       !checked
-        ? "5px"
+        ? '5px'
         : `${SIZE_TO_PX[size] * 1.8 - (SIZE_TO_PX[size] - 7)}px`};
     border-radius: 100%;
     background-color: ${({ theme, checked }) =>
@@ -80,10 +81,10 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
-  flex: ${({ fluid, fixed }) => (fixed ? "0 auto" : fluid ? "1" : undefined)};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1' : undefined)};
 
   opacity: ${({ disabled }) => disabled && 0.5};
-  pointer-events: ${({ disabled }) => disabled && "none"};
+  pointer-events: ${({ disabled }) => disabled && 'none'};
 
   color: ${({ theme, checked }) =>
     getReadableColor(theme, undefined, undefined, !checked)};
@@ -106,15 +107,16 @@ const Checkbox = forwardRef(
   (
     {
       label,
-      size = "normal",
+      labelDetail,
+      size = 'normal',
       checked,
       disabled,
       className,
-      labelPosition = "right",
+      labelPosition = 'right',
       tooltip,
       asSwitch,
-      uncheckedIcon = "CheckboxBlankCircleLine",
-      checkedIcon = "CheckboxCircleFill",
+      uncheckedIcon = 'CheckboxBlankCircleLine',
+      checkedIcon = 'CheckboxCircleFill',
       ...rest
     }: IReqoreCheckboxProps,
     ref
@@ -134,9 +136,14 @@ const Checkbox = forwardRef(
         size={size}
         disabled={disabled}
         checked={checked}
-        className={`${className || ""} reqore-checkbox reqore-control`}
+        className={`${className || ''} reqore-checkbox reqore-control`}
       >
-        {label && labelPosition === "left" ? <span>{label}</span> : null}
+        {label && labelPosition === 'left' ? (
+          <>
+            {labelDetail}
+            <span>{label}</span>
+          </>
+        ) : null}
         {asSwitch ? (
           <StyledSwitch
             size={size}
@@ -150,7 +157,12 @@ const Checkbox = forwardRef(
             margin={labelPosition}
           />
         )}
-        {label && labelPosition === "right" ? <span>{label}</span> : null}
+        {label && labelPosition === 'right' ? (
+          <>
+            <span>{label}</span>
+            {labelDetail}
+          </>
+        ) : null}
       </StyledCheckbox>
     );
   }
