@@ -5,6 +5,7 @@ import ReqoreContent from '../../components/Content';
 import ReqoreIcon from '../../components/Icon';
 import { IReqoreNavbarProps, ReqoreFooter } from '../../components/Navbar';
 import { IReqoreNavbarItemProps } from '../../components/Navbar/item';
+import { IReqoreNavbarTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import {
@@ -27,17 +28,26 @@ export default {
       main: '#ffffff',
     },
   },
-} as Meta;
+} as Meta<IReqoreUIProviderProps & IReqoreNavbarProps & IThemeData>;
 
-const Template: Story<IReqoreUIProviderProps & IReqoreNavbarProps> = ({
+interface IThemeData {
+  customHeaderTheme: IReqoreNavbarTheme;
+  customFooterTheme: IReqoreNavbarTheme;
+}
+
+const Template: Story<
+  IReqoreUIProviderProps & IReqoreNavbarProps & IThemeData
+> = ({
   theme,
+  customHeaderTheme,
+  customFooterTheme,
   ...args
-}: IReqoreUIProviderProps & IReqoreNavbarProps) => {
+}: IReqoreUIProviderProps & IReqoreNavbarProps & IThemeData) => {
   return (
     <ReqoreUIProvider theme={theme}>
       <ReqoreThemeProvider>
         <ReqoreLayoutContent>
-          <ReqoreHeader>
+          <ReqoreHeader customTheme={customHeaderTheme}>
             <ReqoreNavbarGroup>
               <ReqoreNavbarItem>
                 <h3>I am a logo on the left</h3>
@@ -83,7 +93,7 @@ const Template: Story<IReqoreUIProviderProps & IReqoreNavbarProps> = ({
           </ReqoreHeader>
 
           <ReqoreContent>Hey!</ReqoreContent>
-          <ReqoreFooter>
+          <ReqoreFooter customTheme={customFooterTheme}>
             <ReqoreNavbarGroup>
               <ReqoreNavbarItem>
                 <h3>I am a logo on the left</h3>
@@ -139,4 +149,14 @@ CustomColor.args = {
   theme: {
     main: '#194d5d',
   },
+};
+
+export const CustomTheme = Template.bind({});
+CustomTheme.args = {
+  customHeaderTheme: {
+    main: '#4f2769',
+  } as IReqoreNavbarTheme,
+  customFooterTheme: {
+    main: '#ad973b',
+  } as IReqoreNavbarTheme,
 };

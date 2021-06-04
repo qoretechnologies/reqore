@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreBreadcrumbItem } from '.';
 import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
   changeLightness,
   getReadableColor,
   getReadableColorFrom,
 } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreBreadcrumbItemProps extends IReqoreBreadcrumbItem {
@@ -98,30 +98,31 @@ const ReqoreBreadcrumbsItem = ({
   active,
   as,
   interactive,
+  customTheme,
 }: IReqoreBreadcrumbItemProps) => {
   const [ref, setRef] = useState(null);
   const Element: any = as || 'span';
+  const theme = useReqoreTheme('breadcrumbs', customTheme);
 
   usePopover({ targetElement: ref, content: tooltip, show: !!tooltip });
 
   return (
-    <ReqoreThemeProvider>
-      <StyledBreadcrumbItem
-        ref={setRef}
-        active={active}
-        interactive={interactive || !!props?.onClick}
-        className='reqore-breadcrumbs-item'
-      >
-        {icon && (
-          <ReqoreIcon
-            icon={icon}
-            size='13px'
-            margin={label ? 'right' : undefined}
-          />
-        )}
-        {label && <Element {...props}>{label}</Element>}
-      </StyledBreadcrumbItem>
-    </ReqoreThemeProvider>
+    <StyledBreadcrumbItem
+      ref={setRef}
+      active={active}
+      interactive={interactive || !!props?.onClick}
+      className='reqore-breadcrumbs-item'
+      theme={theme}
+    >
+      {icon && (
+        <ReqoreIcon
+          icon={icon}
+          size='13px'
+          margin={label ? 'right' : undefined}
+        />
+      )}
+      {label && <Element {...props}>{label}</Element>}
+    </StyledBreadcrumbItem>
   );
 };
 

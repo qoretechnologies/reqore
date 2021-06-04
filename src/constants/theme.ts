@@ -1,3 +1,52 @@
+export interface IReqoreSidebarTheme {
+  main?: string;
+  color?: string;
+  border?: string;
+  item?: {
+    color?: string;
+    background?: string;
+    border?: string;
+    hoverColor?: string;
+    hoverBackground?: string;
+    activeColor?: string;
+    activeBackground?: string;
+  };
+  subItem?: {
+    color?: string;
+    border?: string;
+    background?: string;
+    hoverColor?: string;
+    hoverBackground?: string;
+    activeColor?: string;
+    activeBackground?: string;
+  };
+  icon?: {
+    color?: string;
+    hoverColor?: string;
+    activeColor?: string;
+  };
+  section?: {
+    background?: string;
+  };
+}
+
+export interface IReqoreBreadcrumbsTheme {
+  main?: string;
+  item?: {
+    color?: string;
+    hoverColor?: string;
+    activeColor?: string;
+  };
+}
+
+export interface IReqoreNavbarTheme {
+  main?: string;
+  color?: string;
+  border?: string;
+  background?: string;
+  hoverColor?: string;
+}
+
 export interface IReqoreTheme {
   main?: string;
   text?: {
@@ -5,37 +54,7 @@ export interface IReqoreTheme {
     dim?: boolean;
   };
   intents?: IReqoreIntents;
-  sidebar?: {
-    main?: string;
-    color?: string;
-    border?: string;
-    item?: {
-      color?: string;
-      background?: string;
-      border?: string;
-      hoverColor?: string;
-      hoverBackground?: string;
-      activeColor?: string;
-      activeBackground?: string;
-    };
-    subItem?: {
-      color?: string;
-      border?: string;
-      background?: string;
-      hoverColor?: string;
-      hoverBackground?: string;
-      activeColor?: string;
-      activeBackground?: string;
-    };
-    icon?: {
-      color?: string;
-      hoverColor?: string;
-      activeColor?: string;
-    };
-    section?: {
-      background?: string;
-    };
-  };
+  sidebar?: IReqoreSidebarTheme;
   notifications?: {
     info?: string;
     success?: string;
@@ -46,28 +65,9 @@ export interface IReqoreTheme {
   popover?: {
     main: string;
   };
-  header?: {
-    main?: string;
-    color?: string;
-    border?: string;
-    background?: string;
-    hoverColor?: string;
-  };
-  footer?: {
-    main?: string;
-    color?: string;
-    border?: string;
-    background?: string;
-    hoverColor?: string;
-  };
-  breadcrumbs?: {
-    main?: string;
-    item?: {
-      color?: string;
-      hoverColor?: string;
-      activeColor?: string;
-    };
-  };
+  header?: IReqoreNavbarTheme;
+  footer?: IReqoreNavbarTheme;
+  breadcrumbs?: IReqoreBreadcrumbsTheme;
 }
 
 export interface IReqoreIntents {

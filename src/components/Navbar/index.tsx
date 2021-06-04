@@ -1,15 +1,16 @@
 import { darken } from 'polished';
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { IReqoreNavbarTheme, IReqoreTheme } from '../../constants/theme';
 import { getMainColor, getReadableColor } from '../../helpers/colors';
+import { useReqoreTheme } from '../../hooks/useTheme';
 
 export interface IReqoreNavbarProps
   extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   position?: 'top' | 'bottom';
   type?: 'header' | 'footer';
+  customTheme?: IReqoreNavbarTheme;
 }
 
 export interface IReqoreNavbarStyle extends IReqoreNavbarProps {
@@ -45,23 +46,38 @@ export const StyledNavbar = styled.div<IReqoreNavbarStyle>`
 
 const ReqoreNavbar = forwardRef(
   (
-    { position = 'top', children, type, ...rest }: IReqoreNavbarProps,
+    {
+      position = 'top',
+      children,
+      type,
+      customTheme,
+      ...rest
+    }: IReqoreNavbarProps,
     ref: any
-  ) => (
-    <ReqoreThemeProvider>
+  ) => {
+    const theme = useReqoreTheme(type, customTheme);
+
+    return (
       <StyledNavbar
         {...rest}
         className={`${rest.className || ''} reqore-navbar-${type}`}
         position={position}
         type={type}
         ref={ref}
+        theme={theme}
       >
         {React.Children.map(children, (child) =>
-          child ? React.cloneElement(child, { type }) : null
+          child
+            ? React.cloneElement(child, {
+                type,
+                theme,
+                componentProps: { theme },
+              })
+            : null
         )}
       </StyledNavbar>
-    </ReqoreThemeProvider>
-  )
+    );
+  }
 );
 
 export const ReqoreHeader = forwardRef(

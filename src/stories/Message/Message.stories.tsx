@@ -31,7 +31,17 @@ const Template: Story<IReqoreUIProviderProps> = (
           <br />
           <ReqoreMessage intent='danger'> I am a message </ReqoreMessage>
           <br />
-          <ReqoreMessage intent='warning'> I am a message </ReqoreMessage>
+          <ReqoreMessage intent='warning' title='Message with title'>
+            {' '}
+            I am a message a very long message - Shadowlands has mechanisms put
+            in place for allowing players to catch up on Renown, the system of
+            gaining favor and unlocking rewards, Campaign chapters, and
+            soulbinds within your Covenant. This system works for main
+            characters who have started late, for alts, for players who have
+            switched Covenants and are starting over, and for players who have
+            simply missed weekly quests for earning Renown due to being away
+            from the game.
+          </ReqoreMessage>
           <br />
         </ReqoreContent>
       </ReqoreLayoutContent>

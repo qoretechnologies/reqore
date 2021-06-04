@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep, merge } from 'lodash';
 import { darken, lighten, readableColor } from 'polished';
 import { Colors } from '../constants/colors';
 import { DEFAULT_INTENTS, IReqoreTheme } from '../constants/theme';
@@ -42,10 +42,8 @@ export const shouldDarken = (mainColor: string) => {
   return contrast === '#000000';
 };
 
-export const getMainColor: (
-  theme: IReqoreTheme,
-  component: string
-) => string = (theme, component) => theme[component]?.main || theme.main;
+export const getMainColor: (theme: IReqoreTheme, component: string) => string =
+  (theme, component) => theme[component]?.main || theme.main;
 
 export const changeLightness: (color: string, lightness: number) => string = (
   color,
@@ -104,4 +102,16 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
   }
 
   return newTheme;
+};
+
+export const mergeThemes = (
+  element: string,
+  theme: IReqoreTheme,
+  customTheme: any = {}
+) => {
+  const clonedTheme = cloneDeep(theme);
+
+  merge(clonedTheme, { [element]: customTheme });
+
+  return clonedTheme;
 };

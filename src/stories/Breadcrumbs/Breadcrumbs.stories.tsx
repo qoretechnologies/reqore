@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import React from 'react';
 import { IReqoreBreadcrumbsProps } from '../../components/Breadcrumbs';
 import { ReqoreFooter } from '../../components/Navbar';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreBreadcrumbsTheme, IReqoreTheme } from '../../constants/theme';
 import {
   ReqoreBreadcrumbs,
   ReqoreContent,
@@ -299,6 +299,96 @@ WithTabsDark.args = {
     main: '#222222',
   },
   breadcrumbs: {
+    items: [
+      {
+        label: 'Page 1',
+        icon: 'Home2Line' as IReqoreIconName,
+        tooltip: 'Hooooooome!',
+      },
+      {
+        label: 'Page 2',
+        icon: 'Notification3Fill' as IReqoreIconName,
+        as: 'a',
+        props: {
+          href: 'https://google.com',
+        },
+      },
+      {
+        label: 'Page 3',
+        icon: 'Notification3Fill' as IReqoreIconName,
+        tooltip: 'Click to go to page 3!',
+        props: {
+          onClick: () => noop(),
+        },
+      },
+      {
+        label: 'Page 4',
+        icon: 'Notification3Fill' as IReqoreIconName,
+      },
+      {
+        label: 'Page 5',
+        icon: 'Notification3Fill' as IReqoreIconName,
+      },
+      {
+        withTabs: {
+          tabs: [
+            {
+              label: 'Tab 1',
+              id: 'tab1',
+              icon: 'Home8Fill' as IReqoreIconName,
+              tooltip: 'Hooooooome!',
+            },
+            {
+              label: 'Tab 2',
+              id: 'tab2',
+              icon: 'Notification3Fill' as IReqoreIconName,
+              as: 'a',
+              props: {
+                href: 'https://google.com',
+              },
+            },
+            {
+              label: 'Tab 3',
+              id: 'tab3',
+              icon: 'Notification3Fill' as IReqoreIconName,
+              tooltip: 'Click to go to page 3!',
+            },
+            {
+              label: 'Tab 4',
+              id: 'tab4',
+              icon: 'Notification3Fill' as IReqoreIconName,
+              disabled: true,
+            },
+            {
+              label: 'Really long tab name',
+              id: 'tab5',
+              icon: 'Notification3Fill' as IReqoreIconName,
+            },
+          ],
+          activeTab: 'tab5',
+          onTabChange: (tabId) => {
+            alert(`Tab ${tabId} clicked`);
+          },
+        },
+      },
+    ],
+    rightElement: (
+      <ReqoreMenu>
+        <ReqoreMenuItem icon='User3Line'>Right Element</ReqoreMenuItem>
+      </ReqoreMenu>
+    ),
+  },
+};
+
+export const WithCustomTheme = Template.bind({});
+WithCustomTheme.args = {
+  breadcrumbs: {
+    customTheme: {
+      main: '#ff0000',
+      item: {
+        color: '#ffffff',
+      },
+    } as IReqoreBreadcrumbsTheme,
     items: [
       {
         label: 'Page 1',

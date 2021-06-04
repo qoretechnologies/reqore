@@ -1,16 +1,17 @@
-import React, { forwardRef } from "react";
-import styled from "styled-components";
-import { IReqoreTheme } from "../../constants/theme";
-import { getReadableColor } from "../../helpers/colors";
+import React, { forwardRef } from 'react';
+import styled from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import { getReadableColor } from '../../helpers/colors';
 
 export interface IReqoreNavbarDividerProps
   extends React.HTMLAttributes<HTMLDivElement> {
-  type?: "header" | "footer";
+  type?: 'header' | 'footer';
+  theme?: IReqoreTheme;
 }
 
 const StyledNavbarDivider = styled.div<{
   theme: IReqoreTheme;
-  type?: "header" | "footer";
+  type?: 'header' | 'footer';
 }>`
   position: relative;
   width: 20px;
@@ -20,7 +21,7 @@ const StyledNavbarDivider = styled.div<{
   align-items: center;
 
   &:before {
-    content: "";
+    content: '';
     display: block;
     width: 1px;
     height: 50%;
@@ -39,8 +40,9 @@ const StyledNavbarDivider = styled.div<{
 const ReqoreNavbarDivider = forwardRef(
   ({ type, ...rest }: IReqoreNavbarDividerProps, ref: any) => (
     <StyledNavbarDivider
+      {...rest}
       type={type}
-      className={`${rest.className || ""} reqore-navbar-divider`}
+      className={`${rest.className || ''} reqore-navbar-divider`}
       ref={ref}
     />
   )

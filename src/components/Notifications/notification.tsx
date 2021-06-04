@@ -155,6 +155,8 @@ export const StyledNotificationContent = styled.p`
   margin: 0;
   padding: 0;
   flex: 1;
+  display: flex;
+  align-items: center;
 `;
 
 export const typeToIcon: { [type: string]: IReqoreIconName } = {
