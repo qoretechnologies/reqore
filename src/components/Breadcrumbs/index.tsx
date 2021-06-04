@@ -1,15 +1,19 @@
 import { isArray } from 'lodash';
-import React, { useContext } from 'react';
+import React from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
-import ThemeContext from '../../context/ThemeContext';
+import {
+  IReqoreBreadcrumbsTheme,
+  IReqoreIntent,
+  IReqoreTheme,
+} from '../../constants/theme';
 import {
   changeLightness,
   getReadableColor,
   getReadableColorFrom,
 } from '../../helpers/colors';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
@@ -34,6 +38,7 @@ export interface IReqoreBreadcrumbItem {
     activeTab: string;
     activeTabIntent?: IReqoreIntent;
   };
+  customTheme?: IReqoreBreadcrumbsTheme;
 }
 
 export interface IReqoreBreadcrumbsProps
@@ -42,6 +47,7 @@ export interface IReqoreBreadcrumbsProps
   rightElement?: JSX.Element;
   // Internal prop, ignore!
   _testWidth?: number;
+  customTheme?: IReqoreBreadcrumbsTheme;
 }
 
 const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
@@ -132,10 +138,11 @@ const ReqoreBreadcrumbs = ({
   items,
   rightElement,
   _testWidth,
+  customTheme,
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
-  const theme = useContext(ThemeContext);
+  const theme = useReqoreTheme('breadcrumbs', customTheme);
 
   const transformedItems = getTransformedItems(items, _testWidth || width);
 
@@ -203,7 +210,11 @@ const ReqoreBreadcrumbs = ({
         {index !== 0 && (
           <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} />
         )}
-        <ReqoreBreadcrumbsItem {...item} key={index} />
+        <ReqoreBreadcrumbsItem
+          {...item}
+          key={index}
+          customTheme={customTheme}
+        />
       </React.Fragment>
     );
   };
@@ -213,6 +224,7 @@ const ReqoreBreadcrumbs = ({
       {...rest}
       className={`${rest.className || ''} reqore-breadcrumbs-wrapper`}
       ref={ref}
+      theme={theme}
     >
       <div key='reqore-breadcrumbs-left-wrapper'>
         {transformedItems.map(
