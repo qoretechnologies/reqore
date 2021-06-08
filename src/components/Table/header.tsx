@@ -3,7 +3,7 @@ import React from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness } from '../../helpers/colors';
+import { changeDarkness, changeLightness } from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTableHeaderCell, { StyledTableHeader } from './headerCell';
 import { alignToFlex } from './row';
@@ -23,6 +23,7 @@ export interface IReqoreTableSectionProps {
 export interface IReqoreTableSectionStyle {
   leftScroll: number;
   hasVerticalScroll: boolean;
+  theme: IReqoreTheme;
 }
 
 const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
@@ -43,7 +44,8 @@ export interface IReqoreTableHeaderStyle {
 }
 
 const StyledColumnGroupHeader = styled.div<IReqoreTableHeaderStyle>`
-  ${({ align }) => css`
+  ${({ align, theme }) => css`
+    background-color: ${changeDarkness(theme.main, 0.03)};
     justify-content: ${align ? alignToFlex[align] : 'flex-start'};
   `}
 `;

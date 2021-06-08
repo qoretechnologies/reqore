@@ -3,6 +3,7 @@ import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness } from '../../helpers/colors';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreComponent } from '../../types/global';
 
 export interface IReqoreMenuProps
@@ -12,6 +13,7 @@ export interface IReqoreMenuProps
   position?: 'left' | 'right';
   width?: string;
   maxHeight?: string;
+  accent?: string;
 }
 
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
@@ -20,11 +22,12 @@ export interface IReqoreMenuStyle extends IReqoreMenuProps {
 
 const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   width: ${({ width }) => width || '160px'};
+  padding: 5px;
   max-height: ${({ maxHeight }) => maxHeight || undefined};
   overflow-y: auto;
   overflow-x: hidden;
 
-  background-color: transparent;
+  background-color: ${({ theme }) => theme.main};
 
   ${({ theme, position }) =>
     position &&
@@ -37,21 +40,30 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
 `;
 
 const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
-  ({ children, position, _insidePopover, _popoverId, ...rest }, ref: any) => (
-    <ReqoreThemeProvider>
-      <StyledReqoreMenu {...rest} position={position} ref={ref}>
-        {React.Children.map(children, (child) =>
-          child
-            ? // @ts-ignore
-              React.cloneElement(child, {
-                _insidePopover,
-                _popoverId,
-              })
-            : null
-        )}
-      </StyledReqoreMenu>
-    </ReqoreThemeProvider>
-  )
+  (
+    { children, position, _insidePopover, _popoverId, accent, ...rest },
+    ref: any
+  ) => {
+    const theme = useReqoreTheme('main', {
+      main: accent,
+    });
+
+    return (
+      <ReqoreThemeProvider theme={theme}>
+        <StyledReqoreMenu {...rest} position={position} ref={ref}>
+          {React.Children.map(children, (child) =>
+            child
+              ? // @ts-ignore
+                React.cloneElement(child, {
+                  _insidePopover,
+                  _popoverId,
+                })
+              : null
+          )}
+        </StyledReqoreMenu>
+      </ReqoreThemeProvider>
+    );
+  }
 );
 
 export default ReqoreMenu;

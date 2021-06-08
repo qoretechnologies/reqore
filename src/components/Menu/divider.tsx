@@ -1,7 +1,7 @@
-import React, { forwardRef } from "react";
-import styled from "styled-components";
-import { IReqoreTheme } from "../../constants/theme";
-import { getReadableColor } from "../../helpers/colors";
+import React, { forwardRef } from 'react';
+import styled from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import { getReadableColor } from '../../helpers/colors';
 
 export interface IReqoreMenuDividerProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -11,7 +11,7 @@ export interface IReqoreMenuDividerProps
 const StyledMenuDivider = styled.div<{ theme: IReqoreTheme }>`
   width: 100%;
   padding: 8px 0;
-  background-color: transparent;
+  background-color: ${({ theme }) => theme.main};
   font-size: 11px;
   text-transform: uppercase;
   text-align: center;
@@ -25,7 +25,7 @@ const ReqoreMenuDivider = forwardRef(
   ({ label, className, ...rest }: IReqoreMenuDividerProps, ref: any) => (
     <StyledMenuDivider
       {...rest}
-      className={`${className || ""} reqore-menu-divider`}
+      className={`${className || ''} reqore-menu-divider`}
       ref={ref}
     >
       {label}

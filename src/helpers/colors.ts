@@ -107,11 +107,19 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
 export const mergeThemes = (
   element: string,
   theme: IReqoreTheme,
-  customTheme: any = {}
+  customTheme: any
 ) => {
   const clonedTheme = cloneDeep(theme);
 
-  merge(clonedTheme, { [element]: customTheme });
+  if (!customTheme) {
+    return clonedTheme;
+  }
+
+  if (element === 'main' && customTheme) {
+    merge(clonedTheme, { main: customTheme.main });
+  } else {
+    merge(clonedTheme, { [element]: customTheme || {} });
+  }
 
   return clonedTheme;
 };
