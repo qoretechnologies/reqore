@@ -1,12 +1,16 @@
 /* @flow */
-import React, { useState } from "react";
-import styled, { css } from "styled-components";
-import { IReqoreTableColumn, IReqoreTableSort } from ".";
-import { IReqoreTheme } from "../../constants/theme";
-import { changeLightness, getReadableColor } from "../../helpers/colors";
-import usePopover from "../../hooks/usePopover";
-import ReqoreIcon from "../Icon";
-import { alignToFlex } from "./row";
+import React, { useState } from 'react';
+import styled, { css } from 'styled-components';
+import { IReqoreTableColumn, IReqoreTableSort } from '.';
+import { IReqoreTheme } from '../../constants/theme';
+import {
+  changeDarkness,
+  changeLightness,
+  getReadableColor,
+} from '../../helpers/colors';
+import usePopover from '../../hooks/usePopover';
+import ReqoreIcon from '../Icon';
+import { alignToFlex } from './row';
 
 export interface IReqoreTableHeaderCellProps
   extends React.HTMLAttributes<HTMLDivElement>,
@@ -19,7 +23,7 @@ export interface IReqoreTableHeaderStyle {
   width?: number;
   grow?: number;
   theme: IReqoreTheme;
-  align?: "center" | "left" | "right";
+  align?: 'center' | 'left' | 'right';
   interactive?: boolean;
 }
 
@@ -35,8 +39,9 @@ export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
       flex-grow: ${grow};
     `};
 
-  ${({ align }) => css`
-    justify-content: ${align ? alignToFlex[align] : "flex-start"};
+  ${({ align, theme }) => css`
+    background-color: ${changeDarkness(theme.main, 0.03)};
+    justify-content: ${align ? alignToFlex[align] : 'flex-start'};
   `}
 
   ${({ interactive, theme }) =>
@@ -81,7 +86,7 @@ const ReqoreTableHeaderCell = ({
   return (
     <StyledTableHeader
       {...props}
-      className={`${className || ""} reqore-table-header-cell`}
+      className={`${className || ''} reqore-table-header-cell`}
       ref={setRef}
       width={width}
       grow={grow}
@@ -99,20 +104,20 @@ const ReqoreTableHeaderCell = ({
       {icon && (
         <ReqoreIcon
           icon={icon}
-          size={iconSize || "13px"}
-          margin={header ? "right" : undefined}
+          size={iconSize || '13px'}
+          margin={header ? 'right' : undefined}
         />
       )}
       <StyledTableHeaderLabel>{header}</StyledTableHeaderLabel>
       {sortable && (
         <ReqoreIcon
           icon={
-            `Arrow${sortData.direction === "desc" ? "Down" : "Up"}Fill` as
-              | "ArrowDownFill"
-              | "ArrowUpFill"
+            `Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
+              | 'ArrowDownFill'
+              | 'ArrowUpFill'
           }
-          size={iconSize || "13px"}
-          margin="left"
+          size={iconSize || '13px'}
+          margin='left'
           style={{
             opacity: sortData.by === dataId ? 1 : 0.2,
           }}
