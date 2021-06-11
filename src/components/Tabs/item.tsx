@@ -116,8 +116,8 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
   }
 `;
 
-const StyledCloseButton = styled.div`
-  ${({ theme }) => css`
+const StyledCloseButton = styled.div<Partial<IReqoreTabListItemStyle>>`
+  ${({ theme, activeIntent, active }) => css`
     position: absolute;
     right: 0px;
     height: 100%;
@@ -126,11 +126,14 @@ const StyledCloseButton = styled.div`
     justify-content: center;
     align-items: center;
     top: 0;
-    z-index: 1;
+    z-index: 0;
     transition: background-color 0.1s linear;
     cursor: pointer;
     &:hover {
-      background-color: ${changeLightness(theme.main, 0.09)};
+      background-color: ${changeLightness(
+        activeIntent && active ? theme.intents[activeIntent] : theme.main,
+        0.09
+      )};
     }
   `}
 `;
@@ -186,6 +189,8 @@ const ReqoreTabsListItem = ({
 
               onCloseClick && onCloseClick();
             }}
+            activeIntent={activeIntent}
+            active={active}
           >
             <ReqoreIcon icon='CloseLine' size='13px' />
           </StyledCloseButton>

@@ -13,7 +13,7 @@ import { IPopoverData } from '../../containers/PopoverProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import PopoverContext from '../../context/PopoverContext';
 import { fadeIn } from '../../helpers/animations';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { getReadableColor } from '../../helpers/colors';
 import useOutsideClick from '../../hooks/useOutsideClick';
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
@@ -31,8 +31,7 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
     z-index: -1;
     transform: rotate(45deg);
     ${({ theme }) => css`
-      background-color: ${theme.popover?.main ||
-      changeLightness(theme.main, 0.15)};
+      background-color: ${theme.popover?.main || theme.main};
       box-shadow: rgba(31, 26, 34, 0.6) 0px 0px 4px;
     `}
   }
@@ -42,8 +41,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   animation: 0.1s ${fadeIn} ease-in;
 
   ${({ theme }) => {
-    const defaultColor: string =
-      theme.popover?.main || changeLightness(theme.main, 0.15);
+    const defaultColor: string = theme.popover?.main || theme.main;
 
     return css`
       z-index: 999999;
@@ -88,8 +86,7 @@ const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   padding: ${({ isString }) => (isString ? '8px' : '5px')};
   z-index: 20;
   position: relative;
-  background-color: ${({ theme }) =>
-    theme.popover?.main || changeLightness(theme.main, 0.15)};
+  background-color: ${({ theme }) => theme.popover?.main || theme.main};
   border-radius: 3.5px;
 
   .reqore-popover-text {

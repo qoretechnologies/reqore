@@ -1,8 +1,12 @@
 import React, { forwardRef, useContext, useRef } from 'react';
 import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getReadableColor,
+  getReadableColorFrom,
+} from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import usePopover from '../../hooks/usePopover';
 import { IReqoreComponent, IReqoreTooltip } from '../../types/global';
@@ -26,6 +30,7 @@ export interface IReqoreMenuItemProps
     event: React.MouseEvent<HTMLElement>
   ) => void;
   tooltip?: IReqoreTooltip;
+  intent?: IReqoreIntent;
 }
 
 const StyledElementContent = styled.div<{
@@ -36,6 +41,7 @@ const StyledElementContent = styled.div<{
   align-items: center;
   flex: 1;
   margin-right: 3px;
+  word-break: break-word;
 
   ${({ hasRightIcon }) =>
     hasRightIcon &&
@@ -48,12 +54,15 @@ export interface IReqoreMenuItemStyle {
   theme: IReqoreTheme;
   selected: boolean;
   disabled: boolean;
+  intent?: IReqoreIntent;
 }
 
 const StyledElement = styled.div<IReqoreMenuItemStyle>`
   min-height: 35px;
-  color: ${({ theme, selected }) =>
-    getReadableColor(theme, undefined, undefined, !selected)};
+  color: ${({ theme, selected, intent }) =>
+    intent
+      ? getReadableColorFrom(theme.intents[intent], true)
+      : getReadableColor(theme, undefined, undefined, !selected)};
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -64,23 +73,33 @@ const StyledElement = styled.div<IReqoreMenuItemStyle>`
   cursor: pointer;
   transition: background-color 0.05s linear;
   border-radius: 4px;
-  background-color: ${({ theme, selected }) =>
-    selected ? changeLightness(theme.main, 0.07) : theme.main};
+  ${({ theme, selected, intent }: IReqoreMenuItemStyle) => {
+    const bg = intent ? theme.intents[intent] : theme.main;
+
+    return css`
+      background-color: ${selected ? changeLightness(bg, 0.07) : bg};
+    `;
+  }};
   overflow: hidden;
 
-  ${({ theme, selected, disabled }) =>
+  ${({ theme, selected, disabled, intent }) =>
     !disabled
       ? css`
           ${!selected &&
           css`
             &:hover {
-              background-color: ${changeLightness(theme.main, 0.05)};
+              background-color: ${changeLightness(
+                intent ? theme.intents[intent] : theme.main,
+                0.05
+              )};
             }
           `}
 
           &:hover {
             color: ${({ theme }) =>
-              getReadableColor(theme, undefined, undefined)};
+              intent
+                ? getReadableColorFrom(theme.intents[intent])
+                : getReadableColor(theme, undefined, undefined)};
             text-decoration: none;
           }
         `
@@ -99,10 +118,11 @@ const StyledElement = styled.div<IReqoreMenuItemStyle>`
 export interface IReqoreMenuItemRightIconStyle {
   theme: IReqoreTheme;
   interactive?: boolean;
+  intent?: IReqoreIntent;
 }
 
 const StyledRightIcon = styled.div<IReqoreMenuItemRightIconStyle>`
-  ${({ theme, interactive }) => css`
+  ${({ theme, interactive, intent }) => css`
     position: absolute;
     right: 0px;
     height: 100%;
@@ -118,7 +138,10 @@ const StyledRightIcon = styled.div<IReqoreMenuItemRightIconStyle>`
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${changeLightness(theme.main, 0.09)};
+        background-color: ${changeLightness(
+          intent ? theme.intents[intent] : theme.main,
+          0.09
+        )};
       }
     `}
   `}
@@ -140,6 +163,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       _insidePopover,
       _popoverId,
       tooltip,
+      intent,
       ...rest
     },
     ref: any
@@ -188,6 +212,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
         selected={selected}
         ref={combinedRef}
         disabled={disabled}
+        intent={intent}
       >
         <StyledElementContent hasRightIcon={!!rightIcon}>
           {icon && <ReqoreIcon icon={icon} size='13px' margin='right' />}
@@ -198,6 +223,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
             className='reqore-menu-item-right-icon'
             interactive={!!onRightIconClick}
             onClick={handleRightIconClick}
+            intent={intent}
           >
             <ReqoreIcon icon={rightIcon} size='13px' />
           </StyledRightIcon>
