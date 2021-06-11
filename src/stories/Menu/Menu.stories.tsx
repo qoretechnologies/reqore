@@ -39,6 +39,9 @@ const Template: Story<IReqoreUIProviderProps> = ({
       <ReqoreThemeProvider>
         <StyledStoriesContent>
           <ReqoreMenu {...args}>
+            <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
+              Selected success
+            </ReqoreMenuItem>
             <ReqoreMenuItem icon='Save3Fill'>Save</ReqoreMenuItem>
             <ReqoreMenuItem
               icon='ChatPollFill'
@@ -48,12 +51,19 @@ const Template: Story<IReqoreUIProviderProps> = ({
               tooltip={{
                 content: 'You sure?',
               }}
+              intent='danger'
             >
               Delete
             </ReqoreMenuItem>
 
             <ReqoreMenuItem icon='Lock2Fill'>
               Remove this really long text heh
+            </ReqoreMenuItem>
+            <ReqoreMenuItem icon='Lock2Fill' disabled>
+              Disabled
+            </ReqoreMenuItem>
+            <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
+              Disabled intent
             </ReqoreMenuItem>
             <ReqoreMenuDivider />
             <ReqorePopover

@@ -374,6 +374,10 @@ Interactive.args = {
         label: 'Martin Zemek',
         icon: 'User2Line',
       },
+      {
+        label: 'ThisIsASuperReallyLongStringThatsNotGonnaWrap',
+        intent: 'success',
+      },
     ] as IReqoreDropdownItemProps[],
     multiSelect: true,
     withCreate: true,
