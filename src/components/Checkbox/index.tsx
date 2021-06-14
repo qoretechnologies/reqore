@@ -14,6 +14,7 @@ export interface IReqoreCheckboxProps
   extends React.HTMLAttributes<HTMLDivElement> {
   label?: string;
   labelDetail?: any;
+  labelDetailPosition?: 'left' | 'right';
   size?: TSizes;
   checked?: boolean;
   disabled?: boolean;
@@ -108,6 +109,7 @@ const Checkbox = forwardRef(
     {
       label,
       labelDetail,
+      labelDetailPosition = 'right',
       size = 'normal',
       checked,
       disabled,
@@ -140,8 +142,9 @@ const Checkbox = forwardRef(
       >
         {label && labelPosition === 'left' ? (
           <>
-            {labelDetail}
+            {labelDetailPosition === 'left' && labelDetail}
             <span>{label}</span>
+            {labelDetailPosition === 'right' && labelDetail}
           </>
         ) : null}
         {asSwitch ? (
@@ -159,8 +162,9 @@ const Checkbox = forwardRef(
         )}
         {label && labelPosition === 'right' ? (
           <>
+            {labelDetailPosition === 'left' && labelDetail}
             <span>{label}</span>
-            {labelDetail}
+            {labelDetailPosition === 'right' && labelDetail}
           </>
         ) : null}
       </StyledCheckbox>
