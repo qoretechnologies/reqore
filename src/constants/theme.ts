@@ -71,11 +71,11 @@ export interface IReqoreTheme {
 }
 
 export interface IReqoreIntents {
-  info: string;
-  success: string;
-  pending: string;
-  warning: string;
-  danger: string;
+  info?: string;
+  success?: string;
+  pending?: string;
+  warning?: string;
+  danger?: string;
 }
 
 export type IReqoreIntent =

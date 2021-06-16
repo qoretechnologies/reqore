@@ -63,7 +63,7 @@ const Template: Story<IReqoreUIProviderProps> = (
             <ReqoreInput placeholder='Hello' width={300} />
             <br />
             <ReqoreInput placeholder='Hello' size='big' width={400} />
-            <h4>With Icon</h4>3
+            <h4>With Icon</h4>
             <ReqoreInput placeholder='Hello' size='small' icon='Search2Line' />
             <br />
             <ReqoreInput placeholder='Hello' icon='Search2Line' />
