@@ -1,13 +1,15 @@
-import { Placement } from "@popperjs/core";
-import { darken, rgba } from "polished";
-import React, { forwardRef, useRef } from "react";
-import styled from "styled-components";
-import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from "../../constants/sizes";
-import { IReqoreTheme } from "../../constants/theme";
-import { getReadableColor } from "../../helpers/colors";
-import { useCombinedRefs } from "../../hooks/useCombinedRefs";
-import usePopover from "../../hooks/usePopover";
-import ReqoreInputClearButton from "../InputClearButton";
+import { Placement } from '@popperjs/core';
+import { darken, rgba } from 'polished';
+import React, { forwardRef, useRef } from 'react';
+import styled from 'styled-components';
+import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
+import { getReadableColor } from '../../helpers/colors';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import usePopover from '../../hooks/usePopover';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
+import ReqoreInputClearButton from '../InputClearButton';
 
 export interface IReqoreInputProps
   extends React.HTMLAttributes<HTMLInputElement> {
@@ -23,21 +25,32 @@ export interface IReqoreInputProps
   value?: string | number;
   onClearClick?: () => void;
   maxLength?: number;
+  icon?: IReqoreIconName;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
   theme: IReqoreTheme;
   _size?: TSizes;
   clearable?: boolean;
+  hasIcon?: boolean;
 }
 
 export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   height: ${({ _size }) => SIZE_TO_PX[_size]}px;
-  width: ${({ width }) => (width ? `${width}px` : "auto")};
-  flex: ${({ fluid, fixed }) => (fixed ? "0 auto" : fluid ? "1" : undefined)};
+  width: ${({ width }) => (width ? `${width}px` : 'auto')};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1' : undefined)};
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   position: relative;
   overflow: hidden;
+`;
+
+const StyledIconWrapper = styled.div<IReqoreInputStyle>`
+  position: absolute;
+  height: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  width: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 export const StyledInput = styled.input<IReqoreInputStyle>`
@@ -48,10 +61,11 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
   padding: 0 7px;
   padding-right: ${({ clearable, _size }) =>
     clearable ? SIZE_TO_PX[_size] : 7}px;
+  padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
 
   background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-    minimal ? "transparent" : darken(0.01, theme.main)};
+    minimal ? 'transparent' : darken(0.01, theme.main)};
   color: ${({ theme }: IReqoreInputStyle) => getReadableColor(theme)};
 
   border: ${({ minimal, theme }) =>
@@ -92,11 +106,12 @@ const ReqoreInput = forwardRef(
       tooltip,
       tooltipPlacement,
       width,
-      size = "normal",
+      size = 'normal',
       fluid,
       fixed,
       className,
       onClearClick,
+      icon,
       ...rest
     }: IReqoreInputProps,
     ref
@@ -107,31 +122,37 @@ const ReqoreInput = forwardRef(
     usePopover({
       targetElement: combinedRef.current,
       content: tooltip,
-      handler: "hover",
+      handler: 'hover',
       placement: tooltipPlacement,
       show: !!tooltip,
     });
 
     return (
       <StyledInputWrapper
-        className="reqore-control-wrapper"
+        className='reqore-control-wrapper'
         fluid={fluid}
         fixed={fixed}
         width={width}
         _size={size}
         ref={combinedRef}
       >
+        {icon && (
+          <StyledIconWrapper _size={size}>
+            <ReqoreIcon size={`${TEXT_FROM_SIZE[size]}px`} icon={icon} />
+          </StyledIconWrapper>
+        )}
         <StyledInput
           {...rest}
           _size={size}
+          hasIcon={!!icon}
           clearable={!rest?.disabled && !!(onClearClick && rest?.onChange)}
-          className={`${className || ""} reqore-control reqore-input`}
+          className={`${className || ''} reqore-control reqore-input`}
         />
         <ReqoreInputClearButton
           enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
           onClick={onClearClick}
           size={size}
-          show={rest?.value && rest.value !== ""}
+          show={rest?.value && rest.value !== ''}
         />
       </StyledInputWrapper>
     );
