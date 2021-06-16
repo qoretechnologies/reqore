@@ -52,6 +52,27 @@ const Template: Story<IReqoreUIProviderProps> = (
               },
             ]}
           />
+          <h4> Custom width </h4>
+          <ReqoreDropdown
+            width='500px'
+            label='Please select'
+            items={[
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+            ]}
+          />
           <h4> Disabled if empty </h4>
           <ReqoreDropdown />
           <h4> With tooltip </h4>

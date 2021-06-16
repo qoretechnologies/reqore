@@ -15,6 +15,7 @@ export interface IReqoreDropdownProps extends IPopoverOptions {
   componentProps?: { [key: string]: any };
   filterable?: boolean;
   label?: any;
+  width?: string;
 }
 
 const ReqoreDropdown = ({
@@ -50,7 +51,7 @@ const ReqoreDropdown = ({
           <ReqoreDropdownList
             multiSelect={multiSelect}
             listStyle={listStyle}
-            width={rest.useTargetWidth ? '100%' : undefined}
+            width={rest.useTargetWidth ? '100%' : rest.width}
             items={items}
             filterable={filterable}
           />

@@ -167,11 +167,9 @@ CustomIntentColors.args = {
   theme: {
     main: '#0d0221',
     intents: {
-      info: '#952cc9',
       success: '#eb98cf',
       pending: '#636363',
       warning: '#15057a',
-      danger: '#9cd6c1',
     },
   } as IReqoreTheme,
 };
