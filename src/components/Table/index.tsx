@@ -94,12 +94,11 @@ const StyledTableWrapper = styled.div<IReqoreTableStyle>`
 `;
 
 const ReqoreTable = ({
-  children,
   className,
-  height,
+  height = 300,
   width,
   columns,
-  data,
+  data = [],
   sort,
   onSortChange,
   selectable,
@@ -114,8 +113,9 @@ const ReqoreTable = ({
   const [_data, setData] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
   const [_selected, setSelected] = useState<string[]>([]);
-  const [_selectedQuant, setSelectedQuant] =
-    useState<'all' | 'none' | 'some'>('none');
+  const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>(
+    'none'
+  );
   const theme = useReqoreTheme('main', customTheme);
 
   useUpdateEffect(() => {
