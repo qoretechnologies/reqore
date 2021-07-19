@@ -1,8 +1,8 @@
-import React, { Dispatch, SetStateAction, useEffect, useRef } from "react";
-import { useScroll } from "react-use";
-import { FixedSizeList as List } from "react-window";
-import { IReqoreTableColumn } from ".";
-import ReqoreTableRow from "./row";
+import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
+import { useScroll } from 'react-use';
+import { FixedSizeList as List } from 'react-window';
+import { IReqoreTableColumn } from '.';
+import ReqoreTableRow from './row';
 
 export interface IReqoreTableSectionBodyProps {
   data?: any[];
@@ -34,7 +34,7 @@ const ReqoreTableBody = ({
       outerRef={ref}
       itemCount={data.length}
       height={height}
-      className="reqore-table-body"
+      className='reqore-table-body'
       itemSize={rowHeight || 40}
       itemData={{
         data,

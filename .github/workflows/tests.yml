@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 10.19.0
+          node-version: 14.16.0
       - name: Preparing environment
         id: setup_environment
         run: npm install -g yarn

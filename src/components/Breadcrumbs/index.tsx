@@ -1,5 +1,5 @@
 import { isArray } from 'lodash';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
@@ -134,7 +134,7 @@ const getTransformedItems = (
   return newItems;
 };
 
-const ReqoreBreadcrumbs = ({
+const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   items,
   rightElement,
   _testWidth,
@@ -143,8 +143,10 @@ const ReqoreBreadcrumbs = ({
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
   const theme = useReqoreTheme('breadcrumbs', customTheme);
-
-  const transformedItems = getTransformedItems(items, _testWidth || width);
+  const transformedItems = useMemo(
+    () => getTransformedItems(items, _testWidth || width),
+    [items, width, _testWidth]
+  );
 
   const renderItem = (
     item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[],
