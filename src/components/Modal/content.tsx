@@ -1,4 +1,3 @@
-import React from 'react';
 import Scroll from 'react-scrollbar';
 
 export interface IReqoreModalContent {
