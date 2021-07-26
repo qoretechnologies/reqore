@@ -1,5 +1,6 @@
+import { preview } from '@reactpreview/types';
 import { size } from 'lodash';
-import { useMemo, useState } from 'react';
+import { forwardRef, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled from 'styled-components';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
@@ -59,78 +60,119 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 export const StyledPanelTitleActions = styled.div``;
 export const StyledPanelTitleHeader = styled.div``;
 
-export const ReqorePanel = ({
-  children,
-  title,
-  collapsible,
-  onClose,
-  rounded,
-  actions = [],
-  isCollapsed,
-  customTheme,
-  icon,
-  intent,
-  className,
-  ...rest
-}: IReqorePanelProps) => {
-  const [_isCollapsed, setIsCollapsed] = useState(isCollapsed || false);
-  const theme = useReqoreTheme('main', customTheme, intent);
+export const ReqorePanel = forwardRef(
+  (
+    {
+      children,
+      title,
+      collapsible,
+      onClose,
+      rounded,
+      actions = [],
+      isCollapsed,
+      customTheme,
+      icon,
+      intent,
+      className,
+      ...rest
+    }: IReqorePanelProps,
+    ref
+  ) => {
+    const [_isCollapsed, setIsCollapsed] = useState(isCollapsed || false);
+    const theme = useReqoreTheme('main', customTheme, intent);
 
-  useUpdateEffect(() => {
-    setIsCollapsed(isCollapsed);
-  }, [isCollapsed]);
+    useUpdateEffect(() => {
+      setIsCollapsed(isCollapsed);
+    }, [isCollapsed]);
 
-  const hasTitleBar: boolean = useMemo(
-    () => !!title || collapsible || !!onClose || !!size(actions),
-    [title, collapsible, onClose, actions]
-  );
+    const hasTitleBar: boolean = useMemo(
+      () => !!title || collapsible || !!onClose || !!size(actions),
+      [title, collapsible, onClose, actions]
+    );
 
-  return (
-    <ReqoreThemeProvider theme={theme}>
-      <StyledPanel
-        rounded={rounded}
-        {...rest}
-        className={`${className || ''} reqore-panel`}
-      >
-        {hasTitleBar && (
-          <StyledPanelTitle
-            isCollapsed={_isCollapsed}
-            className='reqore-panel-title'
-          >
-            <StyledPanelTitleHeader>
-              {icon && <ReqoreIcon icon={icon} margin='right' />}
-              {title}
-            </StyledPanelTitleHeader>
-            <ReqoreControlGroup minimal>
-              {actions.map(({ label, actions, ...rest }) =>
-                size(actions) ? (
-                  <ReqoreDropdown
-                    {...rest}
-                    label={label}
-                    componentProps={{
-                      minimal: true,
-                    }}
-                    items={actions}
+    return (
+      <ReqoreThemeProvider theme={theme}>
+        <StyledPanel
+          ref={ref as any}
+          rounded={rounded}
+          {...rest}
+          className={`${className || ''} reqore-panel`}
+        >
+          {hasTitleBar && (
+            <StyledPanelTitle
+              isCollapsed={_isCollapsed}
+              className='reqore-panel-title'
+            >
+              <StyledPanelTitleHeader>
+                {icon && <ReqoreIcon icon={icon} margin='right' />}
+                {title}
+              </StyledPanelTitleHeader>
+              <ReqoreControlGroup minimal>
+                {actions.map(({ label, actions, ...rest }) =>
+                  size(actions) ? (
+                    <ReqoreDropdown
+                      {...rest}
+                      label={label}
+                      componentProps={{
+                        minimal: true,
+                      }}
+                      items={actions}
+                    />
+                  ) : (
+                    <ReqoreButton {...rest}>{label}</ReqoreButton>
+                  )
+                )}
+                {collapsible && (
+                  <ReqoreButton
+                    icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
+                    onClick={() => setIsCollapsed(!_isCollapsed)}
+                    tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
                   />
-                ) : (
-                  <ReqoreButton {...rest}>{label}</ReqoreButton>
-                )
-              )}
-              {collapsible && (
-                <ReqoreButton
-                  icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
-                  onClick={() => setIsCollapsed(!_isCollapsed)}
-                  tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
-                />
-              )}
-              {onClose && <ReqoreButton icon='CloseLine' onClick={onClose} />}
-            </ReqoreControlGroup>
-          </StyledPanelTitle>
-        )}
-        {!_isCollapsed && (
-          <div className='reqore-panel-content'>{children}</div>
-        )}
-      </StyledPanel>
-    </ReqoreThemeProvider>
-  );
-};
+                )}
+                {onClose && <ReqoreButton icon='CloseLine' onClick={onClose} />}
+              </ReqoreControlGroup>
+            </StyledPanelTitle>
+          )}
+          {!_isCollapsed && (
+            <div className='reqore-panel-content'>{children}</div>
+          )}
+        </StyledPanel>
+      </ReqoreThemeProvider>
+    );
+  }
+);
+
+preview(
+  ReqorePanel,
+  {
+    base: {
+      title: 'helloo',
+      intent: 'info',
+      children: (
+        <div style={{ padding: '15px' }}>
+          This is a test This is a test This is a test This is a test
+        </div>
+      ),
+    },
+    Collapsible: {
+      collapsible: true,
+    },
+    Danger: {
+      intent: 'danger',
+      collapsible: true,
+    },
+    Success: {
+      rounded: true,
+      intent: 'success',
+    },
+    Warning: {
+      intent: 'warning',
+    },
+    DefaultCollapsed: {
+      isCollapsed: true,
+    },
+  },
+  {
+    layout: 'tabbed',
+  }
+);
