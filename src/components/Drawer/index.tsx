@@ -273,6 +273,8 @@ preview(
       position: 'bottom',
       isOpen: true,
       hidable: true,
+      resizable: true,
+      maxSize: '80vh',
       onClose: noop,
     },
     Left: {
