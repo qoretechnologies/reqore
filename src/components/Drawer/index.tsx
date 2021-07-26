@@ -10,6 +10,7 @@ import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
+import { ReqorePanel } from '../Panel';
 
 export interface IReqoreDrawerProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -260,7 +261,19 @@ preview(
   ReqoreDrawer,
   {
     base: {
-      children: 'Hello',
+      children: (
+        <div style={{ padding: '20px' }}>
+          <ReqorePanel
+            title='Some title'
+            icon='User2Fill'
+            rounded
+            collapsible
+            intent='info'
+          >
+            <div style={{ padding: '20px' }}>This is a simple test</div>
+          </ReqorePanel>
+        </div>
+      ),
     },
     Top: {
       position: 'top',
