@@ -1,4 +1,3 @@
-import { preview } from '@reactpreview/types';
 import { size } from 'lodash';
 import { forwardRef, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
@@ -139,40 +138,5 @@ export const ReqorePanel = forwardRef(
         </StyledPanel>
       </ReqoreThemeProvider>
     );
-  }
-);
-
-preview(
-  ReqorePanel,
-  {
-    base: {
-      title: 'helloo',
-      intent: 'info',
-      children: (
-        <div style={{ padding: '15px' }}>
-          This is a test This is a test This is a test This is a test
-        </div>
-      ),
-    },
-    Collapsible: {
-      collapsible: true,
-    },
-    Danger: {
-      intent: 'danger',
-      collapsible: true,
-    },
-    Success: {
-      rounded: true,
-      intent: 'success',
-    },
-    Warning: {
-      intent: 'warning',
-    },
-    DefaultCollapsed: {
-      isCollapsed: true,
-    },
-  },
-  {
-    layout: 'tabbed',
   }
 );

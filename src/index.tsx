@@ -4,6 +4,7 @@ export { default as ReqoreButton } from './components/Button';
 export { default as ReqoreCheckbox } from './components/Checkbox';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreControlGroup } from './components/ControlGroup';
+export { ReqoreDrawer } from './components/Drawer';
 export { default as ReqoreDropdown } from './components/Dropdown';
 export {
   ReqoreDropdownDivider,

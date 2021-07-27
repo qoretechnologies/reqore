@@ -1,5 +1,3 @@
-import { preview } from '@reactpreview/types';
-import { noop } from 'lodash';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { useEffect, useMemo, useState } from 'react';
@@ -10,11 +8,10 @@ import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
-import { ReqorePanel } from '../Panel';
 
 export interface IReqoreDrawerProps
   extends React.HTMLAttributes<HTMLDivElement> {
-  children: any;
+  children?: any;
   isOpen?: boolean;
   isHidden?: boolean;
   customTheme?: IReqoreTheme;
@@ -22,8 +19,7 @@ export interface IReqoreDrawerProps
   hidable?: boolean;
   resizable?: boolean;
   onClose?: () => void;
-  onOpen?: () => void;
-  onHide?: () => void;
+  onHideToggle?: (isHidden: boolean) => void;
   hasBackdrop?: boolean;
   size?: string;
   maxSize?: string;
@@ -33,8 +29,10 @@ export interface IReqoreDrawerProps
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
   theme: IReqoreTheme;
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
+  w?: number | string;
+  h?: number | string;
 }
 
 export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
@@ -71,50 +69,61 @@ export const StyledHorizontalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
 export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
   position: absolute;
 
-  ${({ position }) => {
+  ${({ position, w, h }) => {
     switch (position) {
       case 'bottom':
         return css`
           display: flex;
-          width: 100%;
+          right: 0;
           justify-content: flex-end;
-          margin-top: -40px;
+          margin-top: -25px;
           > * {
-            margin-right: 10px;
+            margin-right: 5px;
           }
         `;
       case 'top':
         return css`
           display: flex;
-          width: 100%;
+          right: 0;
           justify-content: flex-end;
-          margin-top: 40px;
+          margin-top: calc(${h || '0px'} + 5px);
           > * {
-            margin-right: 10px;
+            margin-right: 5px;
           }
         `;
       case 'left':
         return css`
           display: flex;
           flex-flow: column;
-          height: 100%;
-          margin-left: 40px;
+          top: 0;
+          margin-left: calc(${w || '0px'} + 5px);
           > * {
-            margin-top: 10px;
+            margin-top: 5px;
           }
         `;
       case 'right':
         return css`
           display: flex;
           flex-flow: column;
-          height: 100%;
-          margin-left: -40px;
+          top: 0;
+          margin-left: -30px;
           > * {
-            margin-top: 10px;
+            margin-top: 5px;
           }
         `;
     }
   }}
+`;
+
+const StyledBackdrop = styled.div<IReqoreDrawerStyle & { closable: boolean }>`
+  position: fixed;
+  z-index: 998;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background-color: ${({ theme }) => rgba(theme.main, 0.8)};
+  cursor: ${({ closable }) => (closable ? 'pointer' : 'initial')};
 `;
 
 const getHideShowIcon = (
@@ -140,14 +149,14 @@ export const ReqoreDrawer = ({
   customTheme,
   position = 'right',
   maxSize,
-  minSize = '50px',
+  minSize = '55px',
   onClose,
-  onOpen,
   hasBackdrop,
   size,
   resizable,
   hidable,
-  onHide,
+  onHideToggle,
+  className,
   ...rest
 }: IReqoreDrawerProps) => {
   const theme = useReqoreTheme('main', customTheme);
@@ -186,7 +195,15 @@ export const ReqoreDrawer = ({
 
   return (
     <ReqoreThemeProvider theme={theme}>
+      {hasBackdrop && !_isHidden ? (
+        <StyledBackdrop
+          className='reqore-drawer-backdrop'
+          onClick={() => onClose && onClose()}
+          closable={!!onClose}
+        />
+      ) : null}
       <Resizable
+        className='reqore-drawer-resizable'
         maxHeight={layout === 'horizontal' ? maxSize : undefined}
         minHeight={
           layout === 'horizontal' ? (_isHidden ? 0 : minSize) : undefined
@@ -194,6 +211,7 @@ export const ReqoreDrawer = ({
         maxWidth={layout === 'vertical' ? maxSize : undefined}
         minWidth={layout === 'vertical' ? (_isHidden ? 0 : minSize) : undefined}
         style={{
+          zIndex: 999,
           position: 'fixed',
           top: position === 'top' || layout === 'vertical' ? 0 : undefined,
           bottom:
@@ -228,15 +246,28 @@ export const ReqoreDrawer = ({
         }}
       >
         {onClose || hidable ? (
-          <StyledCloseWrapper position={position}>
+          <StyledCloseWrapper
+            className='reqore-drawer-controls'
+            position={position}
+            w={layout === 'vertical' && _isHidden ? 0 : _size.width}
+            h={layout === 'horizontal' && _isHidden ? 0 : _size.height}
+          >
             {onClose && (
-              <ReqoreButton icon='CloseLine' onClick={() => onClose()} />
+              <ReqoreButton
+                size='small'
+                icon='CloseLine'
+                onClick={() => onClose && onClose()}
+                className='reqore-drawer-control reqore-drawer-close'
+              />
             )}
             {hidable && (
               <ReqoreButton
+                size='small'
+                className='reqore-drawer-control reqore-drawer-hide'
                 icon={getHideShowIcon(position, _isHidden)}
                 onClick={() => {
                   setIsHidden(!_isHidden);
+                  onHideToggle && onHideToggle(!_isHidden);
                 }}
               />
             )}
@@ -245,6 +276,7 @@ export const ReqoreDrawer = ({
         {!_isHidden && (
           <Wrapper
             {...rest}
+            className={`${className || ''} reqore-drawer`}
             width={_size.width}
             height={_size.height}
             position={position}
@@ -256,54 +288,3 @@ export const ReqoreDrawer = ({
     </ReqoreThemeProvider>
   );
 };
-
-preview(
-  ReqoreDrawer,
-  {
-    base: {
-      children: (
-        <div style={{ padding: '20px' }}>
-          <ReqorePanel
-            title='Some title'
-            icon='User2Fill'
-            rounded
-            collapsible
-            intent='info'
-          >
-            <div style={{ padding: '20px' }}>This is a simple test</div>
-          </ReqorePanel>
-        </div>
-      ),
-    },
-    Top: {
-      position: 'top',
-      isOpen: false,
-      resizable: true,
-      hidable: true,
-      onClose: noop,
-    },
-    Bottom: {
-      position: 'bottom',
-      isOpen: true,
-      hidable: true,
-      resizable: true,
-      maxSize: '80vh',
-      onClose: noop,
-    },
-    Left: {
-      position: 'left',
-      maxSize: '80vw',
-      minSize: '30vw',
-    },
-    Right: {
-      position: 'right',
-      isOpen: true,
-      resizable: true,
-      hidable: true,
-      onClose: noop,
-    },
-  },
-  {
-    layout: 'tabbed',
-  }
-);
