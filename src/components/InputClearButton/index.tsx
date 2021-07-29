@@ -1,6 +1,5 @@
-import React from "react";
-import styled from "styled-components";
-import ReqoreButton, { IReqoreButtonProps } from "../Button";
+import styled from 'styled-components';
+import ReqoreButton, { IReqoreButtonProps } from '../Button';
 
 export interface IReqoreInputClearButtonProps extends IReqoreButtonProps {
   show: boolean;
@@ -17,14 +16,14 @@ export const StyledInputClearButton = styled(ReqoreButton)<{ show?: boolean }>`
 const ReqoreInputClearButton = ({
   show,
   enabled,
-  size = "normal",
+  size = 'normal',
   ...rest
 }: IReqoreInputClearButtonProps) =>
   enabled ? (
     <StyledInputClearButton
       {...rest}
-      className="reqore-clear-input-button"
-      icon="CloseLine"
+      className='reqore-clear-input-button'
+      icon='CloseLine'
       minimal
       tabIndex={show ? 1 : -1}
       size={size}

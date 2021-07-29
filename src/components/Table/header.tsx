@@ -1,5 +1,3 @@
-/* @flow */
-import React from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
@@ -163,7 +161,7 @@ const ReqoreTableHeader = ({
       <StyledTableHeaderRow>
         {selectable && (
           <ReqoreTableHeaderCell
-            dataId='selextbox'
+            dataId='selectbox'
             key='selectbox'
             sortData={sortData}
             align='center'

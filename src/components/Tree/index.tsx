@@ -1,8 +1,7 @@
-// @flow
 import { cloneDeep } from 'lodash';
 import size from 'lodash/size';
 import { rgba } from 'polished';
-import React, { useContext, useState } from 'react';
+import { useContext, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqoreTextarea } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
