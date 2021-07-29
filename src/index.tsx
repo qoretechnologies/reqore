@@ -10,6 +10,14 @@ export {
   ReqoreDropdownDivider,
   ReqoreDropdownItem,
 } from './components/Dropdown/item';
+export {
+  ReqoreH1,
+  ReqoreH2,
+  ReqoreH3,
+  ReqoreH4,
+  ReqoreH5,
+  ReqoreH6,
+} from './components/Header';
 export { default as ReqoreIcon } from './components/Icon';
 export { default as ReqoreInput } from './components/Input';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
@@ -30,6 +38,7 @@ export { default as ReqoreNavbarItem } from './components/Navbar/item';
 export { default as ReqoreNotificationsWrapper } from './components/Notifications';
 export { default as ReqoreNotification } from './components/Notifications/notification';
 export { ReqorePanel } from './components/Panel';
+export { ReqoreP, ReqoreP as ReqoreParagraph } from './components/Paragraph';
 export { default as ReqorePopover } from './components/Popover';
 export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export { default as ReqoreSidebar } from './components/Sidebar';
