@@ -1,4 +1,3 @@
-import React from 'react';
 import styled from 'styled-components';
 import { IReqoreNavbarProps, StyledNavbar } from '../Navbar';
 import ReqoreNavbarGroup, { IReqoreNavbarGroupProps } from '../Navbar/group';
