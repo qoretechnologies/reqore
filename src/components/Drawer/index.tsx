@@ -1,3 +1,4 @@
+import { preview } from '@reactpreview/config';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { useEffect, useMemo, useState } from 'react';
@@ -212,6 +213,7 @@ export const ReqoreDrawer = ({
         minWidth={layout === 'vertical' ? (_isHidden ? 0 : minSize) : undefined}
         style={{
           zIndex: 999,
+          display: 'flex',
           position: 'fixed',
           top: position === 'top' || layout === 'vertical' ? 0 : undefined,
           bottom:
@@ -288,3 +290,16 @@ export const ReqoreDrawer = ({
     </ReqoreThemeProvider>
   );
 };
+
+preview(ReqoreDrawer, {
+  base: {
+    children: <p>Hello</p>,
+    isOpen: true,
+    position: 'top',
+  },
+  Right: {
+    position: 'bottom',
+    resizable: true,
+    hidable: true,
+  },
+});
