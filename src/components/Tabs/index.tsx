@@ -25,6 +25,7 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   fill?: boolean;
   vertical?: boolean;
   activeTabIntent?: IReqoreIntent;
+  flat?: boolean;
 
   // Internal prop, ignore!
   _testWidth?: number;
@@ -49,6 +50,7 @@ const ReqoreTabs = ({
   _testWidth,
   vertical,
   activeTabIntent,
+  flat,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string>(activeTab || tabs[0].id);
@@ -64,13 +66,10 @@ const ReqoreTabs = ({
   }, [activeTab]);
 
   return (
-    <StyledTabs
-      {...rest}
-      vertical={vertical}
-      className={`${className || ''} reqore-tabs`}
-    >
+    <StyledTabs {...rest} vertical={vertical} className={`${className || ''} reqore-tabs`}>
       <ReqoreTabsList
         tabs={tabs}
+        flat={flat}
         fill={fill}
         vertical={vertical}
         _testWidth={_testWidth}

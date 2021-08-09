@@ -3,11 +3,7 @@ import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import {
-  changeLightness,
-  getReadableColor,
-  getReadableColorFrom,
-} from '../../helpers/colors';
+import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
 import ReqoreIcon from '../Icon';
 
@@ -16,6 +12,7 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   vertical?: boolean;
   onCloseClick?: any;
   parentBackground?: string;
+  flat?: boolean;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
@@ -37,6 +34,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     closable,
     activeIntent,
     parentBackground,
+    flat,
   }: IReqoreTabListItemStyle) => {
     const textColor = parentBackground
       ? getReadableColorFrom(parentBackground, true)
@@ -49,16 +47,15 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       padding: ${vertical ? '10px' : 0} 15px;
       padding-right: ${closable ? '43px' : undefined};
       transition: background-color 0.15s linear;
-      
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.9;
+      border-${vertical ? 'right' : 'bottom'}: 2px solid transparent;
 
       &:not(:last-child) {
-        border-${vertical ? 'bottom' : 'right'}: 1px solid ${changeLightness(
-      parentBackground || theme.main,
-      0.05
-    )};
+        border-${vertical ? 'bottom' : 'right'}: ${
+      flat ? 0 : `1px solid ${changeLightness(parentBackground || theme.main, 0.05)}`
+    };
       }
 
       * {
@@ -68,16 +65,15 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       ${
         active &&
         css`
-          background-color: ${activeIntent
+          border-${vertical ? 'right' : 'bottom'}: 2px solid ${
+          activeIntent
             ? theme.intents[activeIntent]
-            : changeLightness(parentBackground || theme.main, 0.05)};
+            : changeLightness(parentBackground || theme.main, 0.05)
+        };
+          opacity: 1;
+          
           * {
             font-weight: 700;
-            color: ${activeIntent
-              ? getReadableColorFrom(theme.intents[activeIntent])
-              : parentBackground
-              ? getReadableColorFrom(parentBackground)
-              : getReadableColor(theme, undefined, undefined)};
           }
         `
       }
@@ -91,10 +87,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
                 color: ${parentBackground
                   ? getReadableColorFrom(parentBackground)
                   : getReadableColor(theme)};
-                background-color: ${changeLightness(
-                  parentBackground || theme.main,
-                  0.05
-                )};
+                background-color: ${changeLightness(parentBackground || theme.main, 0.05)};
               }
             `
           : css`
@@ -151,6 +144,7 @@ const ReqoreTabsListItem = ({
   activeIntent,
   onCloseClick,
   parentBackground,
+  flat,
 }: IReqoreTabListItemProps) => {
   const [ref, setRef] = useState(null);
 
@@ -161,6 +155,7 @@ const ReqoreTabsListItem = ({
       <StyledTabListItem
         {...props}
         as={as}
+        flat={flat}
         ref={setRef}
         active={active}
         disabled={disabled}
@@ -173,13 +168,7 @@ const ReqoreTabsListItem = ({
         onClick={disabled ? undefined : onClick}
         closable={!!onCloseClick && !disabled}
       >
-        {icon && (
-          <ReqoreIcon
-            icon={icon}
-            size='13px'
-            margin={label ? 'right' : undefined}
-          />
-        )}
+        {icon && <ReqoreIcon icon={icon} size='13px' margin={label ? 'right' : undefined} />}
         {label && <StyledLabel>{label}</StyledLabel>}
         {onCloseClick && !disabled ? (
           <StyledCloseButton

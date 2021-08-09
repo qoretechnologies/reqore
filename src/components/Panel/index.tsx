@@ -20,8 +20,7 @@ export interface IReqorePanelAction {
   actions?: IReqoreDropdownItemProps[];
 }
 
-export interface IReqorePanelProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   icon?: IReqoreIconName;
   title?: string;
@@ -32,6 +31,7 @@ export interface IReqorePanelProps
   actions?: IReqorePanelAction[];
   customTheme?: IReqoreTheme;
   intent?: IReqoreIntent;
+  flat?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -41,20 +41,21 @@ export interface IStyledPanel extends IReqorePanelProps {
 export const StyledPanel = styled.div<IStyledPanel>`
   background-color: ${({ theme }: IStyledPanel) => theme.main};
   border-radius: ${({ rounded }) => (rounded ? 5 : 0)}px;
-  border: ${({ theme }) => `1px solid ${changeLightness(theme.main, 0.2)}`};
+  border: ${({ theme, flat }) =>
+    flat ? undefined : `1px solid ${changeLightness(theme.main, 0.2)}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  overflow: hidden;
 `;
 
 export const StyledPanelTitle = styled.div<IStyledPanel>`
   display: flex;
-  background-color: ${({ theme }: IStyledPanel) =>
-    changeLightness(theme.main, 0.07)};
+  background-color: ${({ theme }: IStyledPanel) => changeLightness(theme.main, 0.07)};
   justify-content: space-between;
   height: 40px;
   align-items: center;
   padding: 0 5px 0 15px;
-  border-bottom: ${({ theme, isCollapsed }) =>
-    !isCollapsed ? `1px solid ${changeLightness(theme.main, 0.2)}` : null};
+  border-bottom: ${({ theme, isCollapsed, flat }) =>
+    !isCollapsed && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : null};
 `;
 export const StyledPanelTitleActions = styled.div``;
 export const StyledPanelTitleHeader = styled.div``;
@@ -73,6 +74,7 @@ export const ReqorePanel = forwardRef(
       icon,
       intent,
       className,
+      flat,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -92,16 +94,14 @@ export const ReqorePanel = forwardRef(
     return (
       <ReqoreThemeProvider theme={theme}>
         <StyledPanel
+          {...rest}
           ref={ref as any}
           rounded={rounded}
-          {...rest}
+          flat={flat}
           className={`${className || ''} reqore-panel`}
         >
           {hasTitleBar && (
-            <StyledPanelTitle
-              isCollapsed={_isCollapsed}
-              className='reqore-panel-title'
-            >
+            <StyledPanelTitle flat={flat} isCollapsed={_isCollapsed} className='reqore-panel-title'>
               <StyledPanelTitleHeader>
                 {icon && <ReqoreIcon icon={icon} margin='right' />}
                 {title}
@@ -132,9 +132,7 @@ export const ReqorePanel = forwardRef(
               </ReqoreControlGroup>
             </StyledPanelTitle>
           )}
-          {!_isCollapsed && (
-            <div className='reqore-panel-content'>{children}</div>
-          )}
+          {!_isCollapsed && <div className='reqore-panel-content'>{children}</div>}
         </StyledPanel>
       </ReqoreThemeProvider>
     );

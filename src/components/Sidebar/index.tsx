@@ -7,11 +7,7 @@ import Scroll from 'react-scrollbar';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreSidebarTheme, IReqoreTheme } from '../../constants/theme';
-import {
-  changeLightness,
-  getMainColor,
-  getReadableColor,
-} from '../../helpers/colors';
+import { changeLightness, getMainColor, getReadableColor } from '../../helpers/colors';
 import { transformMenu } from '../../helpers/sidebar';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
@@ -56,6 +52,7 @@ export interface IQorusSidebarProps {
   disableCollapsing?: boolean;
   bordered?: boolean;
   customTheme?: IReqoreSidebarTheme;
+  flat?: boolean;
 }
 
 export interface IReqoreSidebarStyle {
@@ -64,6 +61,7 @@ export interface IReqoreSidebarStyle {
   bordered?: boolean;
   position?: 'left' | 'right';
   customThemeId?: string;
+  flat?: boolean;
 }
 
 const StyledSidebar = styled.div<IReqoreSidebarStyle>`
@@ -75,22 +73,18 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
   flex-flow: column;
   color: ${({ theme }: IReqoreSidebarStyle) =>
     theme.sidebar?.color ||
-    getReadableColor(
-      theme,
-      undefined,
-      undefined,
-      true,
-      getMainColor(theme, 'sidebar')
-    )};
+    getReadableColor(theme, undefined, undefined, true, getMainColor(theme, 'sidebar'))};
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
 
-  ${({ theme, bordered, position }) => css`
+  ${({ theme, bordered, position, flat }) => css`
     ${(position === 'left' || bordered) &&
+    !flat &&
     css`
       border-right: 1px solid
         ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
     `}
     ${(position === 'right' || bordered) &&
+    !flat &&
     css`
       border-left: 1px solid
         ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
@@ -174,13 +168,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       color: ${({ theme }) =>
         theme.sidebar?.item?.activeColor ||
         theme.sidebar?.item?.color ||
-        getReadableColor(
-          theme,
-          undefined,
-          undefined,
-          false,
-          getMainColor(theme, 'sidebar')
-        )};
+        getReadableColor(theme, undefined, undefined, false, getMainColor(theme, 'sidebar'))};
 
       background-color: ${({ theme }) =>
         theme.sidebar?.item?.activeBackground ||
@@ -201,13 +189,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeColor ||
         theme.sidebar?.subItem?.color ||
-        getReadableColor(
-          theme,
-          undefined,
-          undefined,
-          false,
-          getMainColor(theme, 'sidebar')
-        )};
+        getReadableColor(theme, undefined, undefined, false, getMainColor(theme, 'sidebar'))};
       background-color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeBackground ||
         theme.sidebar?.subItem?.background ||
@@ -245,9 +227,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
 
       &:hover {
         color: ${({ theme }) =>
-          theme.sidebar?.item?.hoverColor ||
-          theme.sidebar?.item?.color ||
-          'inherit'};
+          theme.sidebar?.item?.hoverColor || theme.sidebar?.item?.color || 'inherit'};
         background-color: ${({ theme }) =>
           theme.sidebar?.item?.hoverBackground ||
           theme.sidebar?.item?.background ||
@@ -282,14 +262,11 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       color: ${({ theme }) => theme.sidebar?.subItem?.color || 'inherit'};
 
       background-color: ${({ theme }) =>
-        theme.sidebar?.subItem?.background ||
-        darken(0.04, getMainColor(theme, 'sidebar'))};
+        theme.sidebar?.subItem?.background || darken(0.04, getMainColor(theme, 'sidebar'))};
 
       &:hover {
         color: ${({ theme }) =>
-          theme.sidebar?.subItem?.hoverColor ||
-          theme.sidebar?.subItem?.color ||
-          'inherit'};
+          theme.sidebar?.subItem?.hoverColor || theme.sidebar?.subItem?.color || 'inherit'};
         background-color: ${({ theme }) =>
           theme.sidebar?.subItem?.hoverBackground ||
           theme.sidebar?.subItem?.background ||
@@ -335,9 +312,7 @@ const StyledDivider = styled.div<{ theme?: any; hasTitle?: boolean }>`
 
   background-color: ${({ theme, hasTitle }) =>
     theme.sidebar?.section?.background ||
-    (hasTitle
-      ? darken(0.02, getMainColor(theme, 'sidebar'))
-      : getMainColor(theme, 'sidebar'))};
+    (hasTitle ? darken(0.02, getMainColor(theme, 'sidebar')) : getMainColor(theme, 'sidebar'))};
   color: inherit;
 `;
 
@@ -356,10 +331,9 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   disableCollapsing,
   bordered,
   customTheme,
+  flat,
 }) => {
-  const [_isCollapsed, setIsCollapsed] = useState<boolean>(
-    isCollapsed || false
-  );
+  const [_isCollapsed, setIsCollapsed] = useState<boolean>(isCollapsed || false);
   useState;
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [_bookmarks, setBookmarks] = useState<string[]>(bookmarks || []);
@@ -389,11 +363,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
     });
   };
 
-  const menu: IQorusSidebarItems = transformMenu(
-    items,
-    _bookmarks,
-    customItems
-  );
+  const menu: IQorusSidebarItems = transformMenu(items, _bookmarks, customItems);
 
   return (
     <StyledSidebar
@@ -405,29 +375,18 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
       position={position}
       bordered={bordered}
       theme={theme}
+      flat={flat}
     >
-      <Scroll
-        horizontal={false}
-        className='sidebarScroll'
-        key='reqore-sidebar-scroll'
-      >
+      <Scroll horizontal={false} className='sidebarScroll' key='reqore-sidebar-scroll'>
         {map(menu, ({ title, items }, sectionId: string) =>
           size(items) ? (
             <>
               {sectionId !== '_qorusCustomElements' && (
-                <StyledDivider
-                  hasTitle={!!title}
-                  key={sectionId + 'title'}
-                  theme={theme}
-                >
+                <StyledDivider hasTitle={!!title} key={sectionId + 'title'} theme={theme}>
                   {!_isCollapsed ? title || '' : ''}
                 </StyledDivider>
               )}
-              <div
-                className='sidebarSection'
-                key={sectionId}
-                role='qorus-sidebar-section-title'
-              >
+              <div className='sidebarSection' key={sectionId} role='qorus-sidebar-section-title'>
                 {map(items, (itemData, key) => (
                   <SidebarItem
                     itemData={itemData}
@@ -471,15 +430,11 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
             }}
           >
             {position === 'left' && (
-              <ReqoreIcon
-                icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
-              />
+              <ReqoreIcon icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'} />
             )}{' '}
             {!_isCollapsed && (collapseLabel || 'Collapse')}
             {position === 'right' && (
-              <ReqoreIcon
-                icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'}
-              />
+              <ReqoreIcon icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'} />
             )}{' '}
           </div>
         </div>

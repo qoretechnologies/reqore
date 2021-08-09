@@ -138,6 +138,16 @@ const Template: Story<IReqoreUIProviderProps> = (
           <ReqoreButton intent='danger' minimal>
             Danger
           </ReqoreButton>
+          <h4>Flat</h4>
+          <ReqoreButton flat>Info</ReqoreButton>
+          <br />
+          <ReqoreButton intent='info' flat>
+            Info
+          </ReqoreButton>
+          <br />
+          <ReqoreButton icon='User2Line' flat intent='warning'>
+            Info
+          </ReqoreButton>
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>

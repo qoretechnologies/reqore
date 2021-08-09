@@ -22,9 +22,7 @@ const Template: Story<IQorusSidebarProps & IReqoreUIProviderProps> = ({
   ...args
 }: IQorusSidebarProps & IReqoreUIProviderProps) => (
   <ReqoreUIProvider theme={theme} withSidebar>
-    {!args.position || args.position === 'left' ? (
-      <ReqoreSidebar {...args} />
-    ) : null}
+    {!args.position || args.position === 'left' ? <ReqoreSidebar {...args} /> : null}
     <div style={{ flex: 1, width: '100%', height: '100%' }} />
     {args.position === 'right' ? <ReqoreSidebar {...args} /> : null}
   </ReqoreUIProvider>
@@ -144,4 +142,9 @@ OnRight.args = {
 export const Bordered = Template.bind({});
 Bordered.args = {
   bordered: true,
+} as IReqoreUIProviderProps & IQorusSidebarProps;
+
+export const Flat = Template.bind({});
+Flat.args = {
+  flat: true,
 } as IReqoreUIProviderProps & IQorusSidebarProps;
