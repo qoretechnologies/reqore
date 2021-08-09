@@ -35,19 +35,18 @@ interface IThemeData {
   customFooterTheme: IReqoreNavbarTheme;
 }
 
-const Template: Story<
-  IReqoreUIProviderProps & IReqoreNavbarProps & IThemeData
-> = ({
+const Template: Story<IReqoreUIProviderProps & IReqoreNavbarProps & IThemeData> = ({
   theme,
   customHeaderTheme,
   customFooterTheme,
+  flat,
   ...args
 }: IReqoreUIProviderProps & IReqoreNavbarProps & IThemeData) => {
   return (
     <ReqoreUIProvider theme={theme}>
       <ReqoreThemeProvider>
         <ReqoreLayoutContent>
-          <ReqoreHeader customTheme={customHeaderTheme}>
+          <ReqoreHeader customTheme={customHeaderTheme} flat={flat}>
             <ReqoreNavbarGroup>
               <ReqoreNavbarItem>
                 <h3>I am a logo on the left</h3>
@@ -65,12 +64,8 @@ const Template: Story<
                 content={
                   <ReqoreMenu>
                     <ReqoreMenuDivider label='User area' />
-                    <ReqoreMenuItem icon='ArrowGoBackFill'>
-                      Profile
-                    </ReqoreMenuItem>
-                    <ReqoreMenuItem icon='DeleteBack2Fill'>
-                      Alerts
-                    </ReqoreMenuItem>
+                    <ReqoreMenuItem icon='ArrowGoBackFill'>Profile</ReqoreMenuItem>
+                    <ReqoreMenuItem icon='DeleteBack2Fill'>Alerts</ReqoreMenuItem>
                     <ReqoreMenuItem icon='FileTextFill'>Log out</ReqoreMenuItem>
                   </ReqoreMenu>
                 }
@@ -93,7 +88,7 @@ const Template: Story<
           </ReqoreHeader>
 
           <ReqoreContent>Hey!</ReqoreContent>
-          <ReqoreFooter customTheme={customFooterTheme}>
+          <ReqoreFooter customTheme={customFooterTheme} flat={flat}>
             <ReqoreNavbarGroup>
               <ReqoreNavbarItem>
                 <h3>I am a logo on the left</h3>
@@ -106,12 +101,8 @@ const Template: Story<
                   <ReqoreMenu>
                     <ReqoreMenuDivider label='User area' />
                     <ReqoreMenuItem icon='DualSim1Fill'>Profile</ReqoreMenuItem>
-                    <ReqoreMenuItem icon='FolderReceivedFill'>
-                      Alerts
-                    </ReqoreMenuItem>
-                    <ReqoreMenuItem icon='FolderOpenFill'>
-                      Log out
-                    </ReqoreMenuItem>
+                    <ReqoreMenuItem icon='FolderReceivedFill'>Alerts</ReqoreMenuItem>
+                    <ReqoreMenuItem icon='FolderOpenFill'>Log out</ReqoreMenuItem>
                   </ReqoreMenu>
                 }
                 handler='click'
@@ -159,4 +150,12 @@ CustomTheme.args = {
   customFooterTheme: {
     main: '#ad973b',
   } as IReqoreNavbarTheme,
+};
+
+export const Flat = Template.bind({});
+Flat.args = {
+  theme: {
+    main: '#222222',
+  },
+  flat: true,
 };

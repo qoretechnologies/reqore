@@ -9,12 +9,7 @@ import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
-export type IReqoreNotificationType =
-  | 'info'
-  | 'success'
-  | 'danger'
-  | 'pending'
-  | 'warning';
+export type IReqoreNotificationType = 'info' | 'success' | 'danger' | 'pending' | 'warning';
 
 export interface IReqoreNotificationProps {
   type?: IReqoreNotificationType;
@@ -27,6 +22,7 @@ export interface IReqoreNotificationProps {
   duration?: number;
   onFinish?: () => any;
   fluid?: boolean;
+  flat?: boolean;
 }
 
 export interface IReqoreNotificationStyle {
@@ -37,6 +33,7 @@ export interface IReqoreNotificationStyle {
   intent?: IReqoreIntent;
   hasShadow?: boolean;
   fluid?: boolean;
+  flat?: boolean;
 }
 
 const timeoutAnimation = keyframes`
@@ -64,16 +61,10 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
     margin-top: 10px;
   }
 
-  ${({
-    theme,
-    type,
-    intent,
-    clickable,
-    timeout,
-    hasShadow,
-  }: IReqoreNotificationStyle) => css`
+  ${({ theme, type, intent, clickable, timeout, hasShadow, flat }: IReqoreNotificationStyle) => css`
     background-color: ${theme.notifications?.[intent || type]};
-    border: 1px solid ${darken(0.2, theme.notifications?.[intent || type])};
+    border: ${flat ? 0 : '1px solid'};
+    border-color: ${darken(0.2, theme.notifications?.[intent || type])};
 
     ${hasShadow &&
     css`
@@ -88,10 +79,7 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
         display: block;
         top: 0;
         height: 3px;
-        background-color: ${changeLightness(
-          theme.notifications?.[intent || type],
-          0.1
-        )};
+        background-color: ${changeLightness(theme.notifications?.[intent || type], 0.1)};
         animation-name: ${timeoutAnimation};
         animation-duration: ${timeout}ms;
       }
@@ -103,10 +91,7 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${lighten(
-          0.0625,
-          theme.notifications?.[intent || type]
-        )};
+        background-color: ${lighten(0.0625, theme.notifications?.[intent || type])};
       }
     `}
   `}
@@ -127,10 +112,7 @@ export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
     css`
       &:hover {
         cursor: pointer;
-        background-color: ${changeLightness(
-          theme.notifications?.[intent || type],
-          0.02
-        )};
+        background-color: ${changeLightness(theme.notifications?.[intent || type], 0.02)};
       }
     `}
 `;
@@ -168,19 +150,7 @@ export const typeToIcon: { [type: string]: IReqoreIconName } = {
 };
 
 const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
-  (
-    {
-      type = 'info',
-      icon,
-      title,
-      content,
-      onClose,
-      onClick,
-      duration,
-      onFinish,
-    },
-    ref: any
-  ) => {
+  ({ type = 'info', icon, title, content, onClose, onClick, duration, onFinish, flat }, ref: any) => {
     const [internalTimeout, setInternalTimeout] = useState(null);
 
     useMount(() => {
@@ -217,6 +187,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
           timeout={duration}
           clickable={!!onClick}
           onClick={onClick}
+          flat={flat}
           className='reqore-notification'
           ref={ref}
         >
@@ -224,9 +195,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
             <ReqoreIcon icon={icon || typeToIcon[type]} />
           </StyledIconWrapper>
           <StyledNotificationContentWrapper>
-            {title && (
-              <StyledNotificationTitle>{title}</StyledNotificationTitle>
-            )}
+            {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
             <StyledNotificationContent>{content}</StyledNotificationContent>
           </StyledNotificationContentWrapper>
           <StyledIconWrapper

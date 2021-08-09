@@ -31,6 +31,7 @@ export interface IReqoreButtonProps
   fixed?: boolean;
   intent?: IReqoreIntent;
   active?: boolean;
+  flat?: boolean;
 }
 
 export interface IReqoreButtonStyle extends IReqoreButtonProps {
@@ -50,8 +51,8 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   align-items: center;
   margin: 0;
   font-weight: 500;
-  border: ${({ theme, minimal, intent }) =>
-    !minimal
+  border: ${({ theme, minimal, intent, flat }) =>
+    !minimal && !flat
       ? `1px solid ${
           intent
             ? darken(0.2, theme.intents[intent])
@@ -165,6 +166,7 @@ const ReqoreButton = forwardRef(
       fixed,
       intent,
       active,
+      flat,
       ...rest
     }: IReqoreButtonProps,
     ref
@@ -188,6 +190,7 @@ const ReqoreButton = forwardRef(
         minimal={minimal}
         size={size}
         intent={intent}
+        flat={flat}
         active={active}
         className={`${className || ''} reqore-control reqore-button`}
         tabIndex={1}

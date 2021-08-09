@@ -2,11 +2,7 @@ import { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreBreadcrumbItem } from '.';
 import { IReqoreTheme } from '../../constants/theme';
-import {
-  changeLightness,
-  getReadableColor,
-  getReadableColorFrom,
-} from '../../helpers/colors';
+import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreIcon from '../Icon';
@@ -36,10 +32,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
       align-items: center;
       padding: 0 5px;
       transition: background-color 0.15s linear;
-
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 450;
 
       * {
@@ -65,10 +58,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
           (theme.breadcrumbs?.main
             ? getReadableColorFrom(theme.breadcrumbs.main)
             : getReadableColor(theme, undefined, undefined))};
-          background-color: ${changeLightness(
-            theme.breadcrumbs?.main || theme.main,
-            0.05
-          )};
+          background-color: ${changeLightness(theme.breadcrumbs?.main || theme.main, 0.05)};
         }
       `}
 
@@ -114,13 +104,7 @@ const ReqoreBreadcrumbsItem = ({
       className='reqore-breadcrumbs-item'
       theme={theme}
     >
-      {icon && (
-        <ReqoreIcon
-          icon={icon}
-          size='13px'
-          margin={label ? 'right' : undefined}
-        />
-      )}
+      {icon && <ReqoreIcon icon={icon} size='13px' margin={label ? 'right' : undefined} />}
       {label && <Element {...props}>{label}</Element>}
     </StyledBreadcrumbItem>
   );

@@ -3,26 +3,15 @@ import React, { useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
-import {
-  IReqoreBreadcrumbsTheme,
-  IReqoreIntent,
-  IReqoreTheme,
-} from '../../constants/theme';
-import {
-  changeLightness,
-  getReadableColor,
-  getReadableColorFrom,
-} from '../../helpers/colors';
+import { IReqoreBreadcrumbsTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
 import { IReqoreTabsListItem } from '../Tabs';
-import ReqoreTabsList, {
-  getTabsLength,
-  StyledReqoreTabsList,
-} from '../Tabs/list';
+import ReqoreTabsList, { getTabsLength, StyledReqoreTabsList } from '../Tabs/list';
 import ReqoreBreadcrumbsItem, { IReqoreBreadcrumbItemProps } from './item';
 
 export interface IReqoreBreadcrumbItem {
@@ -41,23 +30,23 @@ export interface IReqoreBreadcrumbItem {
   customTheme?: IReqoreBreadcrumbsTheme;
 }
 
-export interface IReqoreBreadcrumbsProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreBreadcrumbsProps extends React.HTMLAttributes<HTMLDivElement> {
   items: IReqoreBreadcrumbItem[];
   rightElement?: JSX.Element;
   // Internal prop, ignore!
   _testWidth?: number;
   customTheme?: IReqoreBreadcrumbsTheme;
+  flat?: boolean;
 }
 
-const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
-  ${({ theme }: { theme: IReqoreTheme }) => css`
+const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme; flat?: boolean }>`
+  ${({ theme, flat }: { theme: IReqoreTheme; flat?: boolean }) => css`
     width: 100%;
     height: 40px;
     display: flex;
     padding: 0 10px;
     justify-content: space-between;
-    border-bottom: 1px solid ${changeLightness(theme.main, 0.05)};
+    border-bottom: ${flat ? 0 : `1px solid ${changeLightness(theme.main, 0.05)}`};
     background-color: ${({ theme }: { theme: IReqoreTheme }) =>
       theme.breadcrumbs?.main || 'transparent'};
 
@@ -86,19 +75,14 @@ const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme }>`
   `}
 `;
 
-const getBreadcrumbsLength = (
-  items: (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[]
-): number =>
+const getBreadcrumbsLength = (items: (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[]): number =>
   items.reduce((len, item) => {
     if (isArray(item)) {
       return len + 70;
     }
 
     if (item.withTabs) {
-      return (
-        len +
-        getTabsLength(item.withTabs.tabs, 'width', item.withTabs.activeTab)
-      );
+      return len + getTabsLength(item.withTabs.tabs, 'width', item.withTabs.activeTab);
     }
 
     return len + 27 + item.label.length * 10 + 35;
@@ -139,6 +123,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   rightElement,
   _testWidth,
   customTheme,
+  flat,
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
@@ -148,10 +133,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     [items, width, _testWidth]
   );
 
-  const renderItem = (
-    item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[],
-    index: number
-  ) => {
+  const renderItem = (item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[], index: number) => {
     if (isArray(item)) {
       return (
         <React.Fragment key={index}>
@@ -202,6 +184,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             activeTab={item.withTabs.activeTab}
             activeTabIntent={item.withTabs.activeTabIntent}
             parentBackground={theme.breadcrumbs?.main}
+            flat={flat}
           />
         </React.Fragment>
       );
@@ -209,14 +192,8 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
 
     return (
       <React.Fragment key={index}>
-        {index !== 0 && (
-          <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} />
-        )}
-        <ReqoreBreadcrumbsItem
-          {...item}
-          key={index}
-          customTheme={customTheme}
-        />
+        {index !== 0 && <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} />}
+        <ReqoreBreadcrumbsItem {...item} key={index} customTheme={customTheme} />
       </React.Fragment>
     );
   };
@@ -226,14 +203,13 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       {...rest}
       className={`${rest.className || ''} reqore-breadcrumbs-wrapper`}
       ref={ref}
+      flat={flat}
       theme={theme}
     >
       <div key='reqore-breadcrumbs-left-wrapper'>
         {transformedItems.map(
-          (
-            item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[],
-            index: number
-          ) => renderItem(item, index)
+          (item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[], index: number) =>
+            renderItem(item, index)
         )}
       </div>
       {rightElement && <div>{rightElement}</div>}

@@ -22,6 +22,7 @@ export interface IReqoreMessageProps {
   onClick?: () => any;
   duration?: number;
   onFinish?: () => any;
+  flat?: boolean;
 }
 
 export interface IReqoreNotificationStyle {
@@ -42,6 +43,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
       onClick,
       duration,
       onFinish,
+      flat,
     },
     ref: any
   ) => {
@@ -80,6 +82,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
           timeout={duration}
           clickable={!!onClick}
           onClick={onClick}
+          flat={flat}
           fluid
           className='reqore-message'
           ref={ref}
