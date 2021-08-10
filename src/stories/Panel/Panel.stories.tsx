@@ -108,6 +108,35 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
             </div>
           </ReqorePanel>
           <br />
+          <h4>Keeps content when collapsed</h4>
+          <ReqorePanel
+            {...args}
+            rounded
+            onClose={noop}
+            collapsible
+            unMountContentOnCollapse={false}
+            actions={[
+              {
+                icon: 'Settings2Line',
+                onClick: noop,
+              },
+              {
+                icon: 'UserFill',
+                onClick: noop,
+                label: 'Test',
+              },
+            ]}
+          >
+            <div style={{ padding: '15px' }}>
+              I am a message a very long message - Shadowlands has mechanisms put in place for
+              allowing players to catch up on Renown, the system of gaining favor and unlocking
+              rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+              main characters who have started late, for alts, for players who have switched
+              Covenants and are starting over, and for players who have simply missed weekly quests
+              for earning Renown due to being away from the game.
+            </div>
+          </ReqorePanel>
+          <br />
           <h4>Default collapsed</h4>
           <ReqorePanel
             {...args}
@@ -231,6 +260,7 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
             onClose={noop}
             collapsible
             intent='success'
+            flat
             actions={[
               {
                 icon: 'Settings2Line',
