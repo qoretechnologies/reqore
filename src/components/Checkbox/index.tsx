@@ -10,8 +10,7 @@ import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
-export interface IReqoreCheckboxProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreCheckboxProps extends React.HTMLAttributes<HTMLDivElement> {
   label?: string;
   labelDetail?: any;
   labelDetailPosition?: 'left' | 'right';
@@ -47,9 +46,7 @@ const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
   margin-left: ${({ labelPosition }) => labelPosition === 'left' && '8px'};
 
   background-color: ${({ theme, checked }) =>
-    checked
-      ? rgba(getReadableColor(theme, undefined, undefined), 0.2)
-      : 'transparent'};
+    checked ? rgba(getReadableColor(theme, undefined, undefined), 0.2) : 'transparent'};
 
   &::before {
     transition: all 0.1s ease-in-out;
@@ -61,9 +58,7 @@ const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
     top: 50%;
     transform: translateY(-50%);
     left: ${({ checked, size }) =>
-      !checked
-        ? '5px'
-        : `${SIZE_TO_PX[size] * 1.8 - (SIZE_TO_PX[size] - 7)}px`};
+      !checked ? '5px' : `${SIZE_TO_PX[size] * 1.8 - (SIZE_TO_PX[size] - 7)}px`};
     border-radius: 100%;
     background-color: ${({ theme, checked }) =>
       !checked
@@ -76,7 +71,7 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 0 8px;
+  padding: 0px;
   transition: all 0.1s linear;
 
   height: ${({ size }) => SIZE_TO_PX[size]}px;
@@ -87,19 +82,14 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   opacity: ${({ disabled }) => disabled && 0.5};
   pointer-events: ${({ disabled }) => disabled && 'none'};
 
-  color: ${({ theme, checked }) =>
-    getReadableColor(theme, undefined, undefined, !checked)};
+  color: ${({ theme, checked }) => getReadableColor(theme, undefined, undefined, !checked)};
 
   &:hover {
-    color: ${({ theme }) =>
-      getReadableColor(theme, undefined, undefined, false)};
+    color: ${({ theme }) => getReadableColor(theme, undefined, undefined, false)};
 
     > ${StyledSwitch} {
       border-color: ${({ theme, checked }) =>
-        rgba(
-          getReadableColor(theme, undefined, undefined, false),
-          checked ? 0.8 : 0.5
-        )};
+        rgba(getReadableColor(theme, undefined, undefined, false), checked ? 0.8 : 0.5)};
     }
   }
 `;
@@ -148,11 +138,7 @@ const Checkbox = forwardRef(
           </>
         ) : null}
         {asSwitch ? (
-          <StyledSwitch
-            size={size}
-            labelPosition={labelPosition}
-            checked={checked}
-          />
+          <StyledSwitch size={size} labelPosition={labelPosition} checked={checked} />
         ) : (
           <ReqoreIcon
             size={`${TEXT_FROM_SIZE[size]}px`}
