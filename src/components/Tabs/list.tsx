@@ -4,6 +4,7 @@ import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { ReqorePopover } from '../..';
+import { TABS_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import ReqoreMenu from '../Menu';
@@ -20,21 +21,19 @@ export interface IReqoreTabsListProps extends React.HTMLAttributes<HTMLDivElemen
   activeTabIntent?: IReqoreIntent;
   parentBackground?: string;
   flat?: boolean;
+  size?: TSizes;
 
   // Internal prop, ignore!
   _testWidth?: number;
 }
 
-export interface IReqoreTabsListStyle {
+export interface IReqoreTabsListStyle extends Omit<IReqoreTabsListProps, 'tabs'> {
   theme: IReqoreTheme;
-  fill?: boolean;
-  vertical?: boolean;
-  flat?: boolean;
 }
 
 export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
-  ${({ theme, fill, vertical }) => css`
-    height: ${vertical ? '100%' : '40px'};
+  ${({ theme, fill, vertical, size }) => css`
+    height: ${vertical ? '100%' : `${TABS_SIZE_TO_PX[size]}px`};
     width: ${vertical ? '140px' : '100%'};
     flex-flow: ${vertical ? 'column' : 'row'};
     display: flex;
@@ -159,6 +158,7 @@ const ReqoreTabsList = ({
   activeTabIntent,
   parentBackground,
   flat,
+  size,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width, height }] = useMeasure();
@@ -173,6 +173,7 @@ const ReqoreTabsList = ({
   return (
     <StyledReqoreTabsList
       {...rest}
+      size={size}
       fill={fill}
       vertical={vertical}
       className={`${rest.className || ''} reqore-tabs-list`}
@@ -244,6 +245,7 @@ const ReqoreTabsList = ({
           <React.Fragment key={index}>
             <ReqoreTabsListItem
               {...item}
+              size={size}
               flat={flat}
               activeIntent={activeTabIntent}
               parentBackground={parentBackground}
