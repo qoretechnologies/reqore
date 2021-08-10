@@ -32,6 +32,7 @@ export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> 
   customTheme?: IReqoreTheme;
   intent?: IReqoreIntent;
   flat?: boolean;
+  unMountContentOnCollapse?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -67,7 +68,9 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
       }
     `}
 `;
-export const StyledPanelTitleActions = styled.div``;
+export const StyledPanelContent = styled.div<IStyledPanel>`
+  display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
+`;
 export const StyledPanelTitleHeader = styled.div``;
 
 export const ReqorePanel = forwardRef(
@@ -85,6 +88,7 @@ export const ReqorePanel = forwardRef(
       intent,
       className,
       flat,
+      unMountContentOnCollapse = true,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -130,11 +134,26 @@ export const ReqorePanel = forwardRef(
                       label={label}
                       componentProps={{
                         minimal: true,
+                        onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.stopPropagation();
+                        },
                       }}
                       items={actions}
                     />
                   ) : (
-                    <ReqoreButton {...rest}>{label}</ReqoreButton>
+                    <ReqoreButton
+                      {...rest}
+                      onClick={
+                        rest.onClick
+                          ? (e: React.MouseEvent<HTMLButtonElement>) => {
+                              e.stopPropagation();
+                              rest.onClick();
+                            }
+                          : undefined
+                      }
+                    >
+                      {label}
+                    </ReqoreButton>
                   )
                 )}
                 {collapsible && (
@@ -148,7 +167,11 @@ export const ReqorePanel = forwardRef(
               </ReqoreControlGroup>
             </StyledPanelTitle>
           )}
-          {!_isCollapsed && <div className='reqore-panel-content'>{children}</div>}
+          {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
+            <StyledPanelContent className='reqore-panel-content' isCollapsed={_isCollapsed}>
+              {children}
+            </StyledPanelContent>
+          ) : null}
         </StyledPanel>
       </ReqoreThemeProvider>
     );
