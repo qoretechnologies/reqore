@@ -43,7 +43,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
       ${active &&
       css`
         * {
-          font-weight: 700;
+          font-weight: 600;
           color: ${theme.breadcrumbs?.item?.activeColor ||
           (theme.breadcrumbs?.main
             ? getReadableColorFrom(theme.breadcrumbs.main, true)

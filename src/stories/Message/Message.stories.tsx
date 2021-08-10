@@ -2,11 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import React, { useState } from 'react';
 import ReqoreMessage from '../../components/Message';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import {
-  ReqoreContent,
-  ReqoreLayoutContent,
-  ReqoreUIProvider,
-} from '../../index';
+import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../../index';
 
 export default {
   title: 'ReQore/Message',
@@ -17,9 +13,7 @@ export default {
   },
 } as Meta;
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
+const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
   const [check, setCheck] = useState(false);
 
   return (
@@ -33,14 +27,54 @@ const Template: Story<IReqoreUIProviderProps> = (
           <br />
           <ReqoreMessage intent='warning' title='Message with title'>
             {' '}
-            I am a message a very long message - Shadowlands has mechanisms put
-            in place for allowing players to catch up on Renown, the system of
-            gaining favor and unlocking rewards, Campaign chapters, and
-            soulbinds within your Covenant. This system works for main
-            characters who have started late, for alts, for players who have
-            switched Covenants and are starting over, and for players who have
-            simply missed weekly quests for earning Renown due to being away
-            from the game.
+            I am a message a very long message - Shadowlands has mechanisms put in place for
+            allowing players to catch up on Renown, the system of gaining favor and unlocking
+            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+            main characters who have started late, for alts, for players who have switched Covenants
+            and are starting over, and for players who have simply missed weekly quests for earning
+            Renown due to being away from the game.
+          </ReqoreMessage>
+          <br />
+          <h4>Flat</h4>
+          <ReqoreMessage intent='info' flat>
+            {' '}
+            I am a message{' '}
+          </ReqoreMessage>
+          <br />
+          <ReqoreMessage intent='danger' flat>
+            {' '}
+            I am a message{' '}
+          </ReqoreMessage>
+          <br />
+          <ReqoreMessage intent='warning' title='Message with title' flat>
+            {' '}
+            I am a message a very long message - Shadowlands has mechanisms put in place for
+            allowing players to catch up on Renown, the system of gaining favor and unlocking
+            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+            main characters who have started late, for alts, for players who have switched Covenants
+            and are starting over, and for players who have simply missed weekly quests for earning
+            Renown due to being away from the game.
+          </ReqoreMessage>
+          <br />
+          <h4>Inverted</h4>
+          <ReqoreMessage intent='info' inverted>
+            {' '}
+            I am a message{' '}
+          </ReqoreMessage>
+          <br />
+          <ReqoreMessage intent='danger' inverted>
+            {' '}
+            I am a message{' '}
+          </ReqoreMessage>
+          <br />
+          <ReqoreMessage intent='warning' title='Message with title' flat inverted>
+            {' '}
+            I am a message a very long message - Shadowlands has mechanisms put in place for
+            allowing players to catch up on Renown, the system of gaining favor and unlocking
+            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+            main characters who have started late, for alts, for players who have switched Covenants
+            and are starting over, and for players who have simply missed weekly quests for earning
+            Renown due to being away from the game.
           </ReqoreMessage>
           <br />
         </ReqoreContent>

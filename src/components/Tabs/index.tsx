@@ -36,7 +36,6 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
 const StyledTabs = styled.div<{ vertical?: boolean }>`
   display: flex;
   ${({ vertical }) => css`
-    min-height: 100px;
     width: 100%;
     flex-flow: ${vertical ? 'row' : 'column'};
   `}
