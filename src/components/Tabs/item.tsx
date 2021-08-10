@@ -53,16 +53,13 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       font-size: ${TEXT_FROM_SIZE[size]}px;
       font-weight: 450;
       opacity: 0.9;
+      color: ${textColor};
       border-${vertical ? 'right' : 'bottom'}: 2px solid transparent;
 
       &:not(:last-child) {
         border-${vertical ? 'bottom' : 'right'}: ${
       flat ? 0 : `1px solid ${changeLightness(parentBackground || theme.main, 0.05)}`
     };
-      }
-
-      * {
-        color: ${textColor};
       }
 
       ${

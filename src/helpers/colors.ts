@@ -30,8 +30,8 @@ export const getReadableColorFrom = (
   ifLight?: string,
   ifDark?: string
 ) => {
-  const returnIfLight = ifLight || lighten(dim ? 0.2 : 0, Colors.DARK);
-  const returnIfDark = ifDark || darken(dim ? 0.1 : 0, Colors.LIGHT);
+  const returnIfLight = ifLight || lighten(dim ? 0.05 : 0, Colors.DARK);
+  const returnIfDark = ifDark || darken(dim ? 0.05 : 0, Colors.LIGHT);
 
   return readableColor(from, returnIfLight, returnIfDark, false);
 };
@@ -42,36 +42,22 @@ export const shouldDarken = (mainColor: string) => {
   return contrast === '#000000';
 };
 
-export const getMainColor: (theme: IReqoreTheme, component: string) => string =
-  (theme, component) => theme[component]?.main || theme.main;
+export const getMainColor: (theme: IReqoreTheme, component: string) => string = (
+  theme,
+  component
+) => theme[component]?.main || theme.main;
 
-export const changeLightness: (color: string, lightness: number) => string = (
-  color,
-  lightness
-) =>
-  color
-    ? shouldDarken(color)
-      ? darken(lightness, color)
-      : lighten(lightness, color)
-    : undefined;
+export const changeLightness: (color: string, lightness: number) => string = (color, lightness) =>
+  color ? (shouldDarken(color) ? darken(lightness, color) : lighten(lightness, color)) : undefined;
 
-export const changeDarkness: (color: string, lightness: number) => string = (
-  color,
-  lightness
-) =>
-  color
-    ? shouldDarken(color)
-      ? lighten(lightness, color)
-      : darken(lightness, color)
-    : undefined;
+export const changeDarkness: (color: string, lightness: number) => string = (color, lightness) =>
+  color ? (shouldDarken(color) ? lighten(lightness, color) : darken(lightness, color)) : undefined;
 
 export const getColorByBgColor = (bgColor) => {
   if (!bgColor) {
     return '';
   }
-  return parseInt(bgColor.replace('#', ''), 16) > 0xffffff / 2
-    ? '#000000'
-    : '#ffffff';
+  return parseInt(bgColor.replace('#', ''), 16) > 0xffffff / 2 ? '#000000' : '#ffffff';
 };
 
 export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
@@ -82,33 +68,25 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
   }
 
   if (!newTheme.notifications?.success) {
-    newTheme.notifications.success =
-      newTheme.intents.success || DEFAULT_INTENTS.success;
+    newTheme.notifications.success = newTheme.intents.success || DEFAULT_INTENTS.success;
   }
 
   if (!newTheme.notifications?.pending) {
-    newTheme.notifications.pending =
-      newTheme.intents.pending || DEFAULT_INTENTS.pending;
+    newTheme.notifications.pending = newTheme.intents.pending || DEFAULT_INTENTS.pending;
   }
 
   if (!newTheme.notifications?.warning) {
-    newTheme.notifications.warning =
-      newTheme.intents.warning || DEFAULT_INTENTS.warning;
+    newTheme.notifications.warning = newTheme.intents.warning || DEFAULT_INTENTS.warning;
   }
 
   if (!newTheme.notifications?.danger) {
-    newTheme.notifications.danger =
-      newTheme.intents.danger || DEFAULT_INTENTS.danger;
+    newTheme.notifications.danger = newTheme.intents.danger || DEFAULT_INTENTS.danger;
   }
 
   return newTheme;
 };
 
-export const mergeThemes = (
-  element: string,
-  theme: IReqoreTheme,
-  customTheme: any
-) => {
+export const mergeThemes = (element: string, theme: IReqoreTheme, customTheme: any) => {
   const clonedTheme = cloneDeep(theme);
 
   if (!customTheme) {
