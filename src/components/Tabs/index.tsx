@@ -1,5 +1,6 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
+import { TSizes } from '../../constants/sizes';
 import { IReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTabsList from './list';
@@ -26,6 +27,7 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   vertical?: boolean;
   activeTabIntent?: IReqoreIntent;
   flat?: boolean;
+  size?: TSizes;
 
   // Internal prop, ignore!
   _testWidth?: number;
@@ -51,6 +53,7 @@ const ReqoreTabs = ({
   vertical,
   activeTabIntent,
   flat,
+  size = 'normal',
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string>(activeTab || tabs[0].id);
@@ -71,6 +74,7 @@ const ReqoreTabs = ({
         tabs={tabs}
         flat={flat}
         fill={fill}
+        size={size}
         vertical={vertical}
         _testWidth={_testWidth}
         activeTab={_activeTab}

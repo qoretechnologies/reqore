@@ -84,7 +84,9 @@ const Template: Story<{
     <ReqoreUIProvider theme={theme}>
       <ReqoreLayoutContent>
         <ReqoreHeader></ReqoreHeader>
+        <ReqoreBreadcrumbs {...breadcrumbs} size='small' />
         <ReqoreBreadcrumbs {...breadcrumbs} />
+        <ReqoreBreadcrumbs {...breadcrumbs} size='big' />
         <ReqoreContent>
           <h3>Hello</h3>
         </ReqoreContent>

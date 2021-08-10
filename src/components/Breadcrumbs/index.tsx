@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
+import { MARGIN_FROM_SIZE, TABS_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -36,13 +37,19 @@ export interface IReqoreBreadcrumbsProps extends React.HTMLAttributes<HTMLDivEle
   // Internal prop, ignore!
   _testWidth?: number;
   customTheme?: IReqoreBreadcrumbsTheme;
+  size?: TSizes;
   flat?: boolean;
 }
 
-const StyledReqoreBreadcrumbs = styled.div<{ theme: IReqoreTheme; flat?: boolean }>`
-  ${({ theme, flat }: { theme: IReqoreTheme; flat?: boolean }) => css`
+interface IStyledBreadcrumbs extends Omit<IReqoreBreadcrumbsProps, 'items'> {
+  theme: IReqoreTheme;
+}
+
+const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
+  ${({ theme, flat, size }: IStyledBreadcrumbs) => css`
     width: 100%;
-    height: 40px;
+    height: ${TABS_SIZE_TO_PX[size]}px;
+    margin: ${MARGIN_FROM_SIZE[size]}px 0;
     display: flex;
     padding: 0 10px;
     justify-content: space-between;
@@ -124,6 +131,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   _testWidth,
   customTheme,
   flat,
+  size = 'normal',
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
@@ -177,7 +185,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     if (item.withTabs) {
       return (
         <React.Fragment key={index}>
-          <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} />
+          <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} margin='both' />
           <ReqoreTabsList
             tabs={item.withTabs.tabs}
             onTabChange={item.withTabs.onTabChange}
@@ -185,6 +193,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             activeTabIntent={item.withTabs.activeTabIntent}
             parentBackground={theme.breadcrumbs?.main}
             flat={flat}
+            size={size}
           />
         </React.Fragment>
       );
@@ -192,8 +201,10 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
 
     return (
       <React.Fragment key={index}>
-        {index !== 0 && <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} />}
-        <ReqoreBreadcrumbsItem {...item} key={index} customTheme={customTheme} />
+        {index !== 0 && (
+          <ReqoreIcon icon='ArrowRightSLine' size='15px' key={'icon' + index} margin='both' />
+        )}
+        <ReqoreBreadcrumbsItem {...item} key={index} customTheme={customTheme} size={size} />
       </React.Fragment>
     );
   };
@@ -205,6 +216,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       ref={ref}
       flat={flat}
       theme={theme}
+      size={size}
     >
       <div key='reqore-breadcrumbs-left-wrapper'>
         {transformedItems.map(

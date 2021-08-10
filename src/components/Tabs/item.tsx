@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
+import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
@@ -13,6 +14,7 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   onCloseClick?: any;
   parentBackground?: string;
   flat?: boolean;
+  size?: TSizes;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
@@ -35,6 +37,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     activeIntent,
     parentBackground,
     flat,
+    size,
   }: IReqoreTabListItemStyle) => {
     const textColor = parentBackground
       ? getReadableColorFrom(parentBackground, true)
@@ -47,7 +50,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       padding: ${vertical ? '10px' : 0} 15px;
       padding-right: ${closable ? '43px' : undefined};
       transition: background-color 0.15s linear;
-      font-size: 13px;
+      font-size: ${TEXT_FROM_SIZE[size]}px;
       font-weight: 600;
       opacity: 0.9;
       border-${vertical ? 'right' : 'bottom'}: 2px solid transparent;
@@ -145,6 +148,7 @@ const ReqoreTabsListItem = ({
   onCloseClick,
   parentBackground,
   flat,
+  size,
 }: IReqoreTabListItemProps) => {
   const [ref, setRef] = useState(null);
 
@@ -156,6 +160,7 @@ const ReqoreTabsListItem = ({
         {...props}
         as={as}
         flat={flat}
+        size={size}
         ref={setRef}
         active={active}
         disabled={disabled}
