@@ -2,18 +2,9 @@ import _size from 'lodash/size';
 import React, { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
-import {
-  PADDING_FROM_SIZE,
-  SIZE_TO_PX,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import {
-  changeLightness,
-  getReadableColor,
-  getReadableColorFrom,
-} from '../../helpers/colors';
+import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import usePopover from '../../hooks/usePopover';
 import { IReqoreTooltip } from '../../types/global';
@@ -39,6 +30,7 @@ export interface IReqoreTagProps extends React.HTMLAttributes<HTMLSpanElement> {
   disabled?: boolean;
   actions?: IReqoreTagAction[];
   width?: string;
+  badge?: boolean;
 }
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
@@ -56,17 +48,13 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  border-radius: 3px;
+  border-radius: ${({ badge }) => (badge ? '20px' : '3px')};
   width: ${({ width }) => width || undefined};
 
   ${({ theme, color }) =>
     css`
       background-color: ${color || changeLightness(theme.main, 0.1)};
-      color: ${
-        color
-          ? getReadableColorFrom(color)
-          : getReadableColor(theme, undefined, undefined)
-      };
+      color: ${color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
       }
     `}
 
@@ -75,10 +63,7 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${changeLightness(
-          color || theme.main,
-          color ? 0.05 : 0.15
-        )};
+        background-color: ${changeLightness(color || theme.main, color ? 0.05 : 0.15)};
         color: ${color
           ? getReadableColorFrom(color)
           : getReadableColor(theme, undefined, undefined)};
@@ -126,10 +111,7 @@ const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
     css`
       &:hover {
         cursor: pointer;
-        background-color: ${changeLightness(
-          color || theme.main,
-          color ? 0.09 : 0.19
-        )};
+        background-color: ${changeLightness(color || theme.main, color ? 0.09 : 0.19)};
       }
     `}
 `;
@@ -146,6 +128,7 @@ const ReqoreTag = forwardRef(
       size = 'normal',
       onRemoveClick,
       actions,
+      badge,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -165,14 +148,11 @@ const ReqoreTag = forwardRef(
         className={`${className || ''} reqore-tag`}
         size={size}
         ref={combinedRef}
+        badge={badge}
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
       >
-        <StyledTagContentWrapper
-          size={size}
-          className='reqore-tag-content'
-          onClick={onClick}
-        >
+        <StyledTagContentWrapper size={size} className='reqore-tag-content' onClick={onClick}>
           {icon && (
             <ReqoreIcon
               icon={icon}
@@ -203,10 +183,7 @@ const ReqoreTag = forwardRef(
                   }}
                   noWrapper
                 >
-                  <ReqoreIcon
-                    icon={action.icon}
-                    size={`${TEXT_FROM_SIZE[size]}px`}
-                  />
+                  <ReqoreIcon icon={action.icon} size={`${TEXT_FROM_SIZE[size]}px`} />
                 </ReqorePopover>
               </>
             ))

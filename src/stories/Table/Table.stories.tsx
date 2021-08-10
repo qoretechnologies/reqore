@@ -38,10 +38,7 @@ const Template: Story<
     <ReqoreUIProvider theme={theme}>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreTable
-            {...table}
-            onSelectedChange={table.selectable ? setSelected : undefined}
-          />
+          <ReqoreTable {...table} onSelectedChange={table.selectable ? setSelected : undefined} />
           {selected && (
             <div style={{ marginTop: '10px' }}>
               {selected.map((s) => (
@@ -78,10 +75,7 @@ const MultiTemplate: Story<
     <ReqoreUIProvider theme={theme}>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreTable
-            {...table}
-            onSelectedChange={table.selectable ? setSelected : undefined}
-          />
+          <ReqoreTable {...table} onSelectedChange={table.selectable ? setSelected : undefined} />
           <ReqoreTable
             {...secondTable}
             onSelectedChange={secondTable.selectable ? setSelected : undefined}
@@ -101,6 +95,13 @@ const MultiTemplate: Story<
 };
 
 export const Basic = Template.bind({});
+export const Rounded = Template.bind({});
+Rounded.args = {
+  table: {
+    rounded: true,
+    ...tableData,
+  },
+};
 export const WithDarkColor = Template.bind({});
 WithDarkColor.args = {
   theme: {

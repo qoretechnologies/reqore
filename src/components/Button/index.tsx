@@ -2,25 +2,15 @@ import { Placement } from '@popperjs/core';
 import { darken, lighten, rgba } from 'polished';
 import React, { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
-import {
-  PADDING_FROM_SIZE,
-  SIZE_TO_PX,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
-import {
-  changeLightness,
-  getReadableColor,
-  getReadableColorFrom,
-} from '../../helpers/colors';
+import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import usePopover from '../../hooks/usePopover';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
-export interface IReqoreButtonProps
-  extends React.HTMLAttributes<HTMLButtonElement> {
+export interface IReqoreButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
   icon?: IReqoreIconName;
   size?: TSizes;
   minimal?: boolean;
@@ -146,9 +136,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
   &:focus {
     border-color: ${({ minimal, theme, intent }) =>
-      minimal
-        ? undefined
-        : changeLightness(getButtonMainColor(theme, intent), 0.4)};
+      minimal ? undefined : changeLightness(getButtonMainColor(theme, intent), 0.4)};
   }
 `;
 

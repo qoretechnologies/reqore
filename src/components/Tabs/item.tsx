@@ -51,7 +51,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       padding-right: ${closable ? '43px' : undefined};
       transition: background-color 0.15s linear;
       font-size: ${TEXT_FROM_SIZE[size]}px;
-      font-weight: 600;
+      font-weight: 450;
       opacity: 0.9;
       border-${vertical ? 'right' : 'bottom'}: 2px solid transparent;
 
@@ -76,7 +76,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
           opacity: 1;
           
           * {
-            font-weight: 700;
+            font-weight: 600;
           }
         `
       }

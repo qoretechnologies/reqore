@@ -1,7 +1,7 @@
 import { size } from 'lodash';
 import { forwardRef, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
@@ -56,6 +56,16 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   padding: 0 5px 0 15px;
   border-bottom: ${({ theme, isCollapsed, flat }) =>
     !isCollapsed && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : null};
+  transition: background-color 0.1s linear;
+
+  ${({ collapsible }) =>
+    collapsible &&
+    css`
+      cursor: pointer;
+      &:hover {
+        background-color: ${({ theme }: IStyledPanel) => changeLightness(theme.main, 0.1)};
+      }
+    `}
 `;
 export const StyledPanelTitleActions = styled.div``;
 export const StyledPanelTitleHeader = styled.div``;
@@ -101,7 +111,13 @@ export const ReqorePanel = forwardRef(
           className={`${className || ''} reqore-panel`}
         >
           {hasTitleBar && (
-            <StyledPanelTitle flat={flat} isCollapsed={_isCollapsed} className='reqore-panel-title'>
+            <StyledPanelTitle
+              flat={flat}
+              isCollapsed={_isCollapsed}
+              collapsible={collapsible}
+              className='reqore-panel-title'
+              onClick={() => (collapsible ? setIsCollapsed(!_isCollapsed) : undefined)}
+            >
               <StyledPanelTitleHeader>
                 {icon && <ReqoreIcon icon={icon} margin='right' />}
                 {title}

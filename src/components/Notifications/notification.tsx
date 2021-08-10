@@ -34,6 +34,7 @@ export interface IReqoreNotificationStyle {
   hasShadow?: boolean;
   fluid?: boolean;
   flat?: boolean;
+  inverted?: boolean;
 }
 
 const timeoutAnimation = keyframes`
@@ -61,10 +62,21 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
     margin-top: 10px;
   }
 
-  ${({ theme, type, intent, clickable, timeout, hasShadow, flat }: IReqoreNotificationStyle) => css`
-    background-color: ${theme.notifications?.[intent || type]};
+  ${({
+    theme,
+    type,
+    intent,
+    clickable,
+    timeout,
+    hasShadow,
+    flat,
+    inverted,
+  }: IReqoreNotificationStyle) => css`
+    background-color: ${inverted ? 'transparent' : theme.notifications?.[intent || type]};
     border: ${flat ? 0 : '1px solid'};
-    border-color: ${darken(0.2, theme.notifications?.[intent || type])};
+    border-color: ${inverted
+      ? theme.notifications?.[intent || type]
+      : darken(0.2, theme.notifications?.[intent || type])};
 
     ${hasShadow &&
     css`
@@ -85,13 +97,17 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
       }
     `}
 
-    color: ${getReadableColorFrom(theme.notifications?.[intent || type], true)};
+    color: ${inverted
+      ? theme.notifications?.[intent || type]
+      : getReadableColorFrom(theme.notifications?.[intent || type], true)};
 
     ${clickable &&
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${lighten(0.0625, theme.notifications?.[intent || type])};
+        background-color: ${inverted
+          ? 'transparent'
+          : lighten(0.0625, theme.notifications?.[intent || type])};
       }
     `}
   `}
@@ -150,7 +166,10 @@ export const typeToIcon: { [type: string]: IReqoreIconName } = {
 };
 
 const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
-  ({ type = 'info', icon, title, content, onClose, onClick, duration, onFinish, flat }, ref: any) => {
+  (
+    { type = 'info', icon, title, content, onClose, onClick, duration, onFinish, flat },
+    ref: any
+  ) => {
     const [internalTimeout, setInternalTimeout] = useState(null);
 
     useMount(() => {

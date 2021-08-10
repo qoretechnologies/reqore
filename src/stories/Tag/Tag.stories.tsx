@@ -19,9 +19,7 @@ export default {
   },
 } as Meta;
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
+const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
   return (
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
@@ -34,6 +32,14 @@ const Template: Story<IReqoreUIProviderProps> = (
           <br />
           <br />
           <ReqoreTag label='Something' size='big' />
+          <h4> Badge </h4>
+          <ReqoreTag label='123' size='small' badge />
+          <br />
+          <br />
+          <ReqoreTag label='123' badge icon='24HoursLine' />
+          <br />
+          <br />
+          <ReqoreTag label='123' size='big' badge />
           <h4> With icons </h4>
           <ReqoreTag label='Something' size='small' icon='24HoursLine' />
           <br />
@@ -41,12 +47,7 @@ const Template: Story<IReqoreUIProviderProps> = (
           <ReqoreTag label='Something' rightIcon='24HoursLine' />
           <br />
           <br />
-          <ReqoreTag
-            label='Something'
-            size='big'
-            icon='24HoursLine'
-            rightIcon='4KLine'
-          />
+          <ReqoreTag label='Something' size='big' icon='24HoursLine' rightIcon='4KLine' />
           <br />
           <br />
           <ReqoreTag
@@ -179,18 +180,9 @@ const Template: Story<IReqoreUIProviderProps> = (
           <ReqoreTag size='big' icon='BarChartBoxLine' />
           <br />
           <br />
-          <ReqoreTag
-            size='normal'
-            icon='ArrowGoBackFill'
-            rightIcon='Compass3Line'
-          />
+          <ReqoreTag size='normal' icon='ArrowGoBackFill' rightIcon='Compass3Line' />
           <h4> Interactive </h4>
-          <ReqoreTag
-            label='Something'
-            size='small'
-            color='#0f7c80'
-            onClick={noop}
-          />
+          <ReqoreTag label='Something' size='small' color='#0f7c80' onClick={noop} />
           <br />
           <br />
           <ReqoreTag label='Something' color='#702f7a' onClick={noop} />
@@ -223,12 +215,7 @@ const Template: Story<IReqoreUIProviderProps> = (
           <ReqoreTag label='Something' tooltip={{ content: 'Hello' }} />
           <br />
           <br />
-          <ReqoreTag
-            label='Something'
-            size='big'
-            color='#db785a'
-            tooltip={{ content: 'Hello' }}
-          />
+          <ReqoreTag label='Something' size='big' color='#db785a' tooltip={{ content: 'Hello' }} />
           <h4> In group </h4>
           <div style={{ width: '300px' }}>
             <ReqoreTagGroup size='small'>
@@ -237,19 +224,10 @@ const Template: Story<IReqoreUIProviderProps> = (
               <ReqoreTag label='Something' size='big' />
               <ReqoreTag label='Something' onClick={noop} size='small' />
               <ReqoreTag label='Something' onClick={noop} />
-              <ReqoreTag
-                label='Something'
-                onClick={noop}
-                onRemoveClick={noop}
-                size='big'
-              />
+              <ReqoreTag label='Something' onClick={noop} onRemoveClick={noop} size='big' />
               <ReqoreTag label='Something' disabled size='small' />
               <ReqoreTag label='Something' />
-              <ReqoreTag
-                label='Something'
-                tooltip={{ content: 'HEY MATE' }}
-                size='big'
-              />
+              <ReqoreTag label='Something' tooltip={{ content: 'HEY MATE' }} size='big' />
             </ReqoreTagGroup>
           </div>
           <br />
@@ -259,19 +237,10 @@ const Template: Story<IReqoreUIProviderProps> = (
             <ReqoreTag label='Something' size='big' />
             <ReqoreTag label='Something' onClick={noop} size='small' />
             <ReqoreTag label='Something' onClick={noop} />
-            <ReqoreTag
-              label='Something'
-              onClick={noop}
-              onRemoveClick={noop}
-              size='big'
-            />
+            <ReqoreTag label='Something' onClick={noop} onRemoveClick={noop} size='big' />
             <ReqoreTag label='Something' disabled size='small' />
             <ReqoreTag label='Something' />
-            <ReqoreTag
-              label='Something'
-              tooltip={{ content: 'HEY MATE' }}
-              size='big'
-            />
+            <ReqoreTag label='Something' tooltip={{ content: 'HEY MATE' }} size='big' />
           </ReqoreTagGroup>
           <br />
           <ReqoreTagGroup size='big'>
@@ -280,19 +249,10 @@ const Template: Story<IReqoreUIProviderProps> = (
             <ReqoreTag label='Something' size='big' />
             <ReqoreTag label='Something' onClick={noop} size='small' />
             <ReqoreTag label='Something' onClick={noop} />
-            <ReqoreTag
-              label='Something'
-              onClick={noop}
-              onRemoveClick={noop}
-              size='big'
-            />
+            <ReqoreTag label='Something' onClick={noop} onRemoveClick={noop} size='big' />
             <ReqoreTag label='Something' disabled size='small' />
             <ReqoreTag label='Something' />
-            <ReqoreTag
-              label='Something'
-              tooltip={{ content: 'HEY MATE' }}
-              size='big'
-            />
+            <ReqoreTag label='Something' tooltip={{ content: 'HEY MATE' }} size='big' />
           </ReqoreTagGroup>
           <h4> In group with columns </h4>
           <ReqoreTagGroup size='big' columns={3}>
@@ -334,19 +294,10 @@ const Template: Story<IReqoreUIProviderProps> = (
               onRemoveClick={() => alert('clicked remove')}
             />
             <ReqoreTag label='Something' onClick={noop} />
-            <ReqoreTag
-              label='Something'
-              onClick={noop}
-              onRemoveClick={noop}
-              size='big'
-            />
+            <ReqoreTag label='Something' onClick={noop} onRemoveClick={noop} size='big' />
             <ReqoreTag label='Something' disabled size='small' />
             <ReqoreTag label='Something' />
-            <ReqoreTag
-              label='Something'
-              tooltip={{ content: 'HEY MATE' }}
-              size='big'
-            />
+            <ReqoreTag label='Something' tooltip={{ content: 'HEY MATE' }} size='big' />
           </ReqoreTagGroup>
         </ReqoreContent>
       </ReqoreLayoutContent>

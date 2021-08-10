@@ -23,11 +23,11 @@ export interface IReqoreMessageProps {
   duration?: number;
   onFinish?: () => any;
   flat?: boolean;
+  inverted?: boolean;
 }
 
-export interface IReqoreNotificationStyle {
+export interface IReqoreNotificationStyle extends IReqoreMessageProps {
   theme: IReqoreTheme;
-  intent: IReqoreIntent;
   clickable?: boolean;
   timeout?: number;
 }
@@ -44,6 +44,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
       duration,
       onFinish,
       flat,
+      inverted,
     },
     ref: any
   ) => {
@@ -83,6 +84,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
           clickable={!!onClick}
           onClick={onClick}
           flat={flat}
+          inverted={inverted}
           fluid
           className='reqore-message'
           ref={ref}
@@ -91,9 +93,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
             <ReqoreIcon icon={icon || typeToIcon[intent]} />
           </StyledIconWrapper>
           <StyledNotificationContentWrapper>
-            {title && (
-              <StyledNotificationTitle>{title}</StyledNotificationTitle>
-            )}
+            {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
             <StyledNotificationContent>{children}</StyledNotificationContent>
           </StyledNotificationContentWrapper>
           {onClose && (
