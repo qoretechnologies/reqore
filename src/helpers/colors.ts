@@ -1,7 +1,7 @@
 import { cloneDeep, merge } from 'lodash';
 import { darken, lighten, readableColor } from 'polished';
 import { Colors } from '../constants/colors';
-import { DEFAULT_INTENTS, IReqoreTheme } from '../constants/theme';
+import { DEFAULT_INTENTS, IReqoreIntent, IReqoreTheme } from '../constants/theme';
 
 export const getReadableColor: (
   theme: IReqoreTheme,
@@ -100,4 +100,12 @@ export const mergeThemes = (element: string, theme: IReqoreTheme, customTheme: a
   }
 
   return clonedTheme;
+};
+
+export const getNotificationIntent = (theme: IReqoreTheme, intent?: IReqoreIntent) => {
+  if (intent) {
+    return theme.notifications[intent];
+  }
+
+  return theme.main;
 };

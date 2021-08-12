@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
+import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { IReqoreIconName } from '../../types/icons';
@@ -24,6 +25,7 @@ export interface IReqoreMessageProps {
   onFinish?: () => any;
   flat?: boolean;
   inverted?: boolean;
+  size?: TSizes;
 }
 
 export interface IReqoreNotificationStyle extends IReqoreMessageProps {
@@ -35,7 +37,7 @@ export interface IReqoreNotificationStyle extends IReqoreMessageProps {
 const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
   (
     {
-      intent = 'info',
+      intent,
       icon,
       title,
       children,
@@ -45,6 +47,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
       onFinish,
       flat,
       inverted,
+      size = 'normal',
     },
     ref: any
   ) => {
@@ -88,19 +91,22 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
           fluid
           className='reqore-message'
           ref={ref}
+          size={size}
         >
-          <StyledIconWrapper intent={intent}>
+          <StyledIconWrapper intent={intent} size={size}>
             <ReqoreIcon
               icon={icon || typeToIcon[intent]}
               margin={flat && inverted ? 'right' : 'both'}
+              size={`${TEXT_FROM_SIZE[size]}px`}
             />
           </StyledIconWrapper>
-          <StyledNotificationContentWrapper>
+          <StyledNotificationContentWrapper size={size}>
             {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
             <StyledNotificationContent>{children}</StyledNotificationContent>
           </StyledNotificationContentWrapper>
           {onClose && (
             <StyledIconWrapper
+              size={size}
               intent={intent}
               clickable
               className='reqore-message-close'
@@ -109,7 +115,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
                 onClose && onClose();
               }}
             >
-              <ReqoreIcon icon='CloseFill' />
+              <ReqoreIcon icon='CloseFill' margin='both' size={`${TEXT_FROM_SIZE[size]}px`} />
             </StyledIconWrapper>
           )}
         </StyledReqoreNotification>

@@ -2,10 +2,11 @@ import { darken, lighten, rgba } from 'polished';
 import React, { forwardRef, useEffect, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css, keyframes } from 'styled-components';
+import { PADDING_FROM_SIZE, TABS_SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
-import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import { changeLightness, getNotificationIntent, getReadableColorFrom } from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
@@ -35,6 +36,7 @@ export interface IReqoreNotificationStyle {
   fluid?: boolean;
   flat?: boolean;
   inverted?: boolean;
+  size?: TSizes;
 }
 
 const timeoutAnimation = keyframes`
@@ -50,13 +52,14 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
   min-width: 200px;
   max-width: ${({ fluid }) => (!fluid ? '450px' : undefined)};
   border-radius: 5px;
-  min-height: 40px;
+  min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
   display: flex;
   flex: 0 1 auto;
   overflow: auto;
   position: relative;
   transition: background-color 0.1s linear;
   animation: 0.1s ${fadeIn} ease-in;
+  font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
 
   &:not(:first-child) {
     margin-top: 10px;
@@ -72,11 +75,11 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
     flat,
     inverted,
   }: IReqoreNotificationStyle) => css`
-    background-color: ${inverted ? 'transparent' : theme.notifications?.[intent || type]};
+    background-color: ${inverted ? 'transparent' : getNotificationIntent(theme, intent || type)};
     border: ${flat ? 0 : '1px solid'};
     border-color: ${inverted
-      ? theme.notifications?.[intent || type]
-      : darken(0.2, theme.notifications?.[intent || type])};
+      ? getNotificationIntent(theme, intent || type)
+      : darken(0.2, getNotificationIntent(theme, intent || type))};
 
     ${hasShadow &&
     css`
@@ -91,15 +94,15 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
         display: block;
         top: 0;
         height: 3px;
-        background-color: ${changeLightness(theme.notifications?.[intent || type], 0.1)};
+        background-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.1)};
         animation-name: ${timeoutAnimation};
         animation-duration: ${timeout}ms;
       }
     `}
 
-    color: ${inverted
-      ? theme.notifications?.[intent || type]
-      : getReadableColorFrom(theme.notifications?.[intent || type], true)};
+    color: ${inverted && (intent || type)
+      ? getNotificationIntent(theme, intent || type)
+      : getReadableColorFrom(getNotificationIntent(theme, intent || type), true)};
 
     ${clickable &&
     css`
@@ -107,14 +110,14 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
       &:hover {
         background-color: ${inverted
           ? 'transparent'
-          : lighten(0.0625, theme.notifications?.[intent || type])};
+          : lighten(0.0625, getNotificationIntent(theme, intent || type))};
       }
     `}
   `}
 `;
 
 export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
-  min-height: 40px;
+  min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
   flex: 0 1 auto;
   flex-shrink: 0;
   display: flex;
@@ -127,18 +130,18 @@ export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
     css`
       &:hover {
         cursor: pointer;
-        background-color: ${changeLightness(theme.notifications?.[intent || type], 0.02)};
+        background-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.02)};
       }
     `}
 `;
 
-export const StyledNotificationContentWrapper = styled.div`
+export const StyledNotificationContentWrapper = styled.div<IReqoreNotificationStyle>`
   flex: 1;
-  min-height: 40px;
+  min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
   display: flex;
   flex-flow: column;
   justify-content: center;
-  padding: 10px 0;
+  padding: ${({ size = 'normal' }: IReqoreNotificationStyle) => `${PADDING_FROM_SIZE[size]}px 0px`};
 `;
 
 export const StyledNotificationTitle = styled.h4`
@@ -225,7 +228,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
               onClose && onClose();
             }}
           >
-            <ReqoreIcon icon='CloseFill' />
+            <ReqoreIcon icon='CloseFill' margin='both' />
           </StyledIconWrapper>
         </StyledReqoreNotification>
       </ReqoreThemeProvider>
