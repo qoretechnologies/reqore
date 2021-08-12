@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import { forwardRef, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
@@ -33,6 +33,7 @@ export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> 
   intent?: IReqoreIntent;
   flat?: boolean;
   unMountContentOnCollapse?: boolean;
+  onCollapseChange?: (isCollapsed?: boolean) => void;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -89,6 +90,7 @@ export const ReqorePanel = forwardRef(
       className,
       flat,
       unMountContentOnCollapse = true,
+      onCollapseChange,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -105,6 +107,13 @@ export const ReqorePanel = forwardRef(
       [title, collapsible, onClose, actions]
     );
 
+    const handleCollapseClick = useCallback(() => {
+      if (collapsible) {
+        setIsCollapsed(!_isCollapsed);
+        onCollapseChange?.(!_isCollapsed);
+      }
+    }, [collapsible, _isCollapsed, onCollapseChange]);
+
     return (
       <ReqoreThemeProvider theme={theme}>
         <StyledPanel
@@ -120,7 +129,7 @@ export const ReqorePanel = forwardRef(
               isCollapsed={_isCollapsed}
               collapsible={collapsible}
               className='reqore-panel-title'
-              onClick={() => (collapsible ? setIsCollapsed(!_isCollapsed) : undefined)}
+              onClick={handleCollapseClick}
             >
               <StyledPanelTitleHeader>
                 {icon && <ReqoreIcon icon={icon} margin='right' />}
@@ -159,7 +168,7 @@ export const ReqorePanel = forwardRef(
                 {collapsible && (
                   <ReqoreButton
                     icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
-                    onClick={() => setIsCollapsed(!_isCollapsed)}
+                    onClick={handleCollapseClick}
                     tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
                   />
                 )}
