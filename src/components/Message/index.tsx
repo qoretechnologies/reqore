@@ -90,7 +90,10 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
           ref={ref}
         >
           <StyledIconWrapper intent={intent}>
-            <ReqoreIcon icon={icon || typeToIcon[intent]} />
+            <ReqoreIcon
+              icon={icon || typeToIcon[intent]}
+              margin={flat && inverted ? 'right' : 'both'}
+            />
           </StyledIconWrapper>
           <StyledNotificationContentWrapper>
             {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
