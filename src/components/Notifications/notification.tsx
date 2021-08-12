@@ -114,7 +114,6 @@ export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
 `;
 
 export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
-  width: 40px;
   min-height: 40px;
   flex: 0 1 auto;
   flex-shrink: 0;
@@ -211,7 +210,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
           ref={ref}
         >
           <StyledIconWrapper type={type}>
-            <ReqoreIcon icon={icon || typeToIcon[type]} />
+            <ReqoreIcon icon={icon || typeToIcon[type]} margin={'both'} />
           </StyledIconWrapper>
           <StyledNotificationContentWrapper>
             {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
