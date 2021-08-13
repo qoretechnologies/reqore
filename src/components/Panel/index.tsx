@@ -47,6 +47,8 @@ export const StyledPanel = styled.div<IStyledPanel>`
     flat ? undefined : `1px solid ${changeLightness(theme.main, 0.2)}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
+  display: flex;
+  flex-flow: column;
 `;
 
 export const StyledPanelTitle = styled.div<IStyledPanel>`
@@ -71,6 +73,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
+  min-height: ${({ isCollapsed }) => (isCollapsed ? undefined : '40px')};
+  flex: 1;
 `;
 export const StyledPanelTitleHeader = styled.div``;
 
