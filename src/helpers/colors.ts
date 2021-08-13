@@ -109,3 +109,6 @@ export const getNotificationIntent = (theme: IReqoreTheme, intent?: IReqoreInten
 
   return theme.main;
 };
+
+export const getMainBackgroundColor = (theme: IReqoreTheme): string =>
+  changeLightness(theme.main, 0.02);
