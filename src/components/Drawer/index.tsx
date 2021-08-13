@@ -5,13 +5,12 @@ import { useEffect, useMemo, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
 
-export interface IReqoreDrawerProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreDrawerProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   isOpen?: boolean;
   isHidden?: boolean;
@@ -26,6 +25,7 @@ export interface IReqoreDrawerProps
   maxSize?: string;
   minSize?: string;
   opacity?: number;
+  flat?: boolean;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -37,33 +37,39 @@ export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
 }
 
 export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
-  background-color: ${({ theme, opacity = 1 }) => rgba(theme.main, opacity)};
+  background-color: ${({ theme, opacity = 1 }) => rgba(getMainBackgroundColor(theme), opacity)};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
 `;
 
 export const StyledVerticalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
   top: 0;
   bottom: 0;
-  height: ${({ height }: IReqoreDrawerStyle) => height};
-  width: ${({ width }: IReqoreDrawerStyle) => width};
+  height: 100%;
+  width: 100%;
 
-  ${({ position, theme }) => css`
-    border-${
-      position === 'left' ? 'right' : 'left'
-    }: 1px solid ${changeLightness(theme.main, 0.2)};
+  ${({ position, theme, flat }) =>
+    !flat &&
+    css`
+    border-${position === 'left' ? 'right' : 'left'}: 1px solid ${changeLightness(
+      getMainBackgroundColor(theme),
+      0.2
+    )};
   `}
 `;
 
 export const StyledHorizontalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
   left: 0;
   right: 0;
-  height: ${({ height }: IReqoreDrawerStyle) => height};
-  width: ${({ width }: IReqoreDrawerStyle) => width};
+  height: 100%;
+  width: 100%;
 
-  ${({ position, theme }) => css`
-    border-${
-      position === 'top' ? 'bottom' : 'top'
-    }: 1px solid ${changeLightness(theme.main, 0.2)};
+  ${({ position, theme, flat }) =>
+    !flat &&
+    css`
+    border-${position === 'top' ? 'bottom' : 'top'}: 1px solid ${changeLightness(
+      getMainBackgroundColor(theme),
+      0.2
+    )};
   `}
 `;
 
@@ -123,7 +129,7 @@ const StyledBackdrop = styled.div<IReqoreDrawerStyle & { closable: boolean }>`
   bottom: 0;
   right: 0;
   left: 0;
-  background-color: ${({ theme }) => rgba(theme.main, 0.8)};
+  background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.8)};
   cursor: ${({ closable }) => (closable ? 'pointer' : 'initial')};
 `;
 
@@ -158,13 +164,13 @@ export const ReqoreDrawer = ({
   hidable,
   onHideToggle,
   className,
+  flat,
   ...rest
 }: IReqoreDrawerProps) => {
   const theme = useReqoreTheme('main', customTheme);
 
   const layout = useMemo(
-    () =>
-      position === 'top' || position === 'bottom' ? 'horizontal' : 'vertical',
+    () => (position === 'top' || position === 'bottom' ? 'horizontal' : 'vertical'),
     [position]
   );
 
@@ -177,9 +183,7 @@ export const ReqoreDrawer = ({
 
   const Wrapper = useMemo(
     () =>
-      position === 'top' || position === 'bottom'
-        ? StyledHorizontalDrawer
-        : StyledVerticalDrawer,
+      position === 'top' || position === 'bottom' ? StyledHorizontalDrawer : StyledVerticalDrawer,
     [position]
   );
 
@@ -206,9 +210,7 @@ export const ReqoreDrawer = ({
       <Resizable
         className='reqore-drawer-resizable'
         maxHeight={layout === 'horizontal' ? maxSize : undefined}
-        minHeight={
-          layout === 'horizontal' ? (_isHidden ? 0 : minSize) : undefined
-        }
+        minHeight={layout === 'horizontal' ? (_isHidden ? 0 : minSize) : undefined}
         maxWidth={layout === 'vertical' ? maxSize : undefined}
         minWidth={layout === 'vertical' ? (_isHidden ? 0 : minSize) : undefined}
         style={{
@@ -216,10 +218,8 @@ export const ReqoreDrawer = ({
           display: 'flex',
           position: 'fixed',
           top: position === 'top' || layout === 'vertical' ? 0 : undefined,
-          bottom:
-            position === 'bottom' || layout === 'vertical' ? 0 : undefined,
-          right:
-            position === 'right' || layout === 'horizontal' ? 0 : undefined,
+          bottom: position === 'bottom' || layout === 'vertical' ? 0 : undefined,
+          right: position === 'right' || layout === 'horizontal' ? 0 : undefined,
           left: position === 'left' || layout === 'horizontal' ? 0 : undefined,
         }}
         size={{
@@ -257,6 +257,7 @@ export const ReqoreDrawer = ({
             {onClose && (
               <ReqoreButton
                 size='small'
+                flat={flat}
                 icon='CloseLine'
                 onClick={() => onClose && onClose()}
                 className='reqore-drawer-control reqore-drawer-close'
@@ -265,6 +266,7 @@ export const ReqoreDrawer = ({
             {hidable && (
               <ReqoreButton
                 size='small'
+                flat={flat}
                 className='reqore-drawer-control reqore-drawer-hide'
                 icon={getHideShowIcon(position, _isHidden)}
                 onClick={() => {
@@ -278,6 +280,7 @@ export const ReqoreDrawer = ({
         {!_isHidden && (
           <Wrapper
             {...rest}
+            flat={flat}
             className={`${className || ''} reqore-drawer`}
             width={_size.width}
             height={_size.height}

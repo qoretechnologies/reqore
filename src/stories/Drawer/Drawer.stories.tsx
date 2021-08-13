@@ -5,12 +5,7 @@ import ReqoreControlGroup from '../../components/ControlGroup';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import ReqoreDropdown from '../../components/Dropdown';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import {
-  ReqoreButton,
-  ReqoreContent,
-  ReqoreLayoutContent,
-  ReqoreUIProvider,
-} from '../../index';
+import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../../index';
 
 export default {
   title: 'ReQore/Drawer',
@@ -21,9 +16,7 @@ export default {
   },
 } as Meta;
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
+const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
   const [drawerData, setDrawerData] = useState<IReqoreDrawerProps>({
     position: 'top',
     isHidden: false,
@@ -36,6 +29,7 @@ const Template: Story<IReqoreUIProviderProps> = (
     size: '500px',
     maxSize: '80%',
     minSize: '20%',
+    flat: false,
   });
 
   const updateItem = (item: string, value: any) => {
@@ -48,9 +42,7 @@ const Template: Story<IReqoreUIProviderProps> = (
   return (
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
-        <ReqoreContent
-          style={{ width: '100%', height: '100%', padding: '20px' }}
-        >
+        <ReqoreContent style={{ width: '100%', height: '100%', padding: '20px' }}>
           <ReqoreControlGroup>
             <ReqoreButton
               intent={drawerData.isOpen ? 'success' : undefined}
@@ -76,6 +68,12 @@ const Template: Story<IReqoreUIProviderProps> = (
             >
               Has backdrop
             </ReqoreButton>
+            <ReqoreButton
+              intent={drawerData.flat ? 'success' : undefined}
+              onClick={() => updateItem('flat', !drawerData.flat)}
+            >
+              Flat
+            </ReqoreButton>
             <ReqoreDropdown
               items={[
                 {
@@ -98,19 +96,14 @@ const Template: Story<IReqoreUIProviderProps> = (
               label={drawerData.position}
             />
           </ReqoreControlGroup>
-          <ReqoreDrawer
-            {...drawerData}
-            onClose={() => updateItem('isOpen', false)}
-          >
+          <ReqoreDrawer {...drawerData} onClose={() => updateItem('isOpen', false)}>
             <div style={{ padding: '15px' }}>
-              I am a message a very long message - Shadowlands has mechanisms
-              put in place for allowing players to catch up on Renown, the
-              system of gaining favor and unlocking rewards, Campaign chapters,
-              and soulbinds within your Covenant. This system works for main
-              characters who have started late, for alts, for players who have
-              switched Covenants and are starting over, and for players who have
-              simply missed weekly quests for earning Renown due to being away
-              from the game.
+              I am a message a very long message - Shadowlands has mechanisms put in place for
+              allowing players to catch up on Renown, the system of gaining favor and unlocking
+              rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+              main characters who have started late, for alts, for players who have switched
+              Covenants and are starting over, and for players who have simply missed weekly quests
+              for earning Renown due to being away from the game.
             </div>
           </ReqoreDrawer>
         </ReqoreContent>
