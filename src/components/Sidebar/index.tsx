@@ -82,6 +82,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
     theme.sidebar?.color ||
     getReadableColor(theme, undefined, undefined, true, getMainColor(theme, 'sidebar'))};
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
+  box-shadow: ${({ floating }) => (floating ? '0px 0px 10px -4px #000' : undefined)};
 
   ${({ theme, bordered, position, flat, floating }) =>
     !floating &&

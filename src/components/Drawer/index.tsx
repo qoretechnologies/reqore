@@ -41,6 +41,7 @@ export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
   background-color: ${({ theme, opacity = 1 }) => rgba(getMainBackgroundColor(theme), opacity)};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   border-radius: ${({ floating }) => (floating ? 10 : 0)}px;
+  box-shadow: ${({ floating }) => (floating ? '0px 0px 10px -4px #000' : undefined)};
 
   ${({ theme, flat, floating }) =>
     !flat && floating
