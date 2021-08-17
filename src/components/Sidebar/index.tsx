@@ -11,6 +11,7 @@ import { changeLightness, getMainColor, getReadableColor } from '../../helpers/c
 import { transformMenu } from '../../helpers/sidebar';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
+import { StyledBackdrop } from '../Drawer';
 import ReqoreIcon from '../Icon';
 import SidebarItem from './item';
 
@@ -107,6 +108,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
           ${position}: ${isOpen ? 10 : -200}px;
           bottom: 10px;
           border-radius: 10px;
+          z-index: 999;
           border: ${!flat
             ? `1px solid ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))}`
             : undefined};
@@ -399,91 +401,102 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   const menu: IQorusSidebarItems = transformMenu(items, _bookmarks, customItems);
 
   return (
-    <StyledSidebar
-      className={classnames('sidebar', {
-        expanded: !_isCollapsed,
-      })}
-      style={wrapperStyle}
-      role='qorus-sidebar-wrapper'
-      position={position}
-      bordered={bordered}
-      theme={theme}
-      flat={flat}
-      floating={floating}
-      isOpen={isOpen}
-    >
-      <Scroll horizontal={false} className='sidebarScroll' key='reqore-sidebar-scroll'>
-        {map(menu, ({ title, items }, sectionId: string) =>
-          size(items) ? (
-            <>
-              {sectionId !== '_qorusCustomElements' && (
-                <StyledDivider hasTitle={!!title} key={sectionId + 'title'} theme={theme}>
-                  {!_isCollapsed ? title || '' : ''}
-                </StyledDivider>
-              )}
-              <div className='sidebarSection' key={sectionId} role='qorus-sidebar-section-title'>
-                {map(items, (itemData, key) => (
-                  <SidebarItem
-                    itemData={itemData}
-                    key={key}
-                    isCollapsed={_isCollapsed}
-                    expandedSection={expandedSection}
-                    onSectionToggle={handleSectionToggle}
-                    bookmarks={bookmarks}
-                    currentPath={path}
-                    onFavoriteClick={handleFavoriteClick}
-                    onUnfavoriteClick={handleUnfavoriteClick}
-                    sectionName={sectionId}
-                    hasFavorites={!!onBookmarksChange}
-                    useNativeTitle={useNativeTitle}
-                  />
-                ))}
-              </div>
-            </>
-          ) : null
-        )}
-      </Scroll>
-      <StyledDivider theme={theme} />
-      {collapsible && (
-        <div className='sidebarSection' id='menuCollapse'>
-          <div
-            role='qorus-sidebar-collapse-button'
-            className='sidebarItem'
-            style={{
-              justifyContent: _isCollapsed
-                ? 'center'
-                : position === 'left'
-                ? 'flex-start'
-                : 'flex-end',
-            }}
-            onClick={() => {
-              if (floating) {
-                onCloseClick?.();
-                return;
-              }
+    <>
+      {hasFloatingBackdrop && isOpen ? (
+        <StyledBackdrop
+          className='reqore-sidebar-backdrop'
+          onClick={() => onCloseClick?.()}
+          closable
+        />
+      ) : null}
+      <StyledSidebar
+        className={classnames('sidebar', {
+          expanded: !_isCollapsed,
+        })}
+        style={wrapperStyle}
+        role='qorus-sidebar-wrapper'
+        position={position}
+        bordered={bordered}
+        theme={theme}
+        flat={flat}
+        floating={floating}
+        isOpen={isOpen}
+      >
+        <Scroll horizontal={false} className='sidebarScroll' key='reqore-sidebar-scroll'>
+          {map(menu, ({ title, items }, sectionId: string) =>
+            size(items) ? (
+              <>
+                {sectionId !== '_qorusCustomElements' && (
+                  <StyledDivider hasTitle={!!title} key={sectionId + 'title'} theme={theme}>
+                    {!_isCollapsed ? title || '' : ''}
+                  </StyledDivider>
+                )}
+                <div className='sidebarSection' key={sectionId} role='qorus-sidebar-section-title'>
+                  {map(items, (itemData, key) => (
+                    <SidebarItem
+                      itemData={itemData}
+                      key={key}
+                      isCollapsed={_isCollapsed}
+                      expandedSection={expandedSection}
+                      onSectionToggle={handleSectionToggle}
+                      bookmarks={bookmarks}
+                      currentPath={path}
+                      onFavoriteClick={handleFavoriteClick}
+                      onUnfavoriteClick={handleUnfavoriteClick}
+                      sectionName={sectionId}
+                      hasFavorites={!!onBookmarksChange}
+                      useNativeTitle={useNativeTitle}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : null
+          )}
+        </Scroll>
+        <StyledDivider theme={theme} />
+        {collapsible && (
+          <div className='sidebarSection' id='menuCollapse'>
+            <div
+              role='qorus-sidebar-collapse-button'
+              className='sidebarItem'
+              style={{
+                justifyContent: _isCollapsed
+                  ? 'center'
+                  : position === 'left'
+                  ? 'flex-start'
+                  : 'flex-end',
+              }}
+              onClick={() => {
+                if (floating) {
+                  onCloseClick?.();
+                  return;
+                }
 
-              setIsCollapsed(!_isCollapsed);
+                setIsCollapsed(!_isCollapsed);
 
-              if (onCollapseChange) {
-                onCollapseChange(!_isCollapsed);
-              }
-            }}
-          >
-            {position === 'left' && (
-              <ReqoreIcon
-                icon={floating ? 'CloseLine' : isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
-              />
-            )}{' '}
-            {!_isCollapsed && (collapseLabel || floating ? 'Close' : 'Collapse')}
-            {position === 'right' && (
-              <ReqoreIcon
-                icon={floating ? 'CloseLine' : _isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'}
-              />
-            )}{' '}
+                if (onCollapseChange) {
+                  onCollapseChange(!_isCollapsed);
+                }
+              }}
+            >
+              {position === 'left' && (
+                <ReqoreIcon
+                  icon={floating ? 'CloseLine' : isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
+                />
+              )}{' '}
+              {!_isCollapsed && (collapseLabel || floating ? 'Close' : 'Collapse')}
+              {position === 'right' && (
+                <ReqoreIcon
+                  icon={
+                    floating ? 'CloseLine' : _isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'
+                  }
+                />
+              )}{' '}
+            </div>
           </div>
-        </div>
-      )}
-    </StyledSidebar>
+        )}
+      </StyledSidebar>
+    </>
   );
 };
 

@@ -122,7 +122,7 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
   }}
 `;
 
-const StyledBackdrop = styled.div<IReqoreDrawerStyle & { closable: boolean }>`
+export const StyledBackdrop = styled.div<IReqoreDrawerStyle & { closable: boolean }>`
   position: fixed;
   z-index: 998;
   top: 0;
