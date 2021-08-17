@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useMedia } from 'react-use';
 import styled from 'styled-components';
 import {
   ReqoreButton,
@@ -53,17 +54,16 @@ const StyledConfirmContent = styled.div`
   min-height: 150px;
 `;
 
-const ReqoreProvider: React.FC<IReqoreNotifications> = ({
-  children,
-  position,
-}) => {
-  const [notifications, setNotifications] = useState<
-    IReqoreNotificationData[] | null
-  >([]);
-  const [
-    confirmationModal,
-    setConfirmationModal,
-  ] = useState<IReqoreConfirmationModal>(null);
+const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) => {
+  const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
+  const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>(null);
+
+  const isMobile = process.env.NODE_ENV === 'test' ? false : useMedia('(max-width: 480px)');
+  const isTablet =
+    process.env.NODE_ENV === 'test'
+      ? false
+      : useMedia('(min-width: 480px) and (max-width: 1200px)');
+  const isMobileOrTablet = isMobile || isTablet;
 
   const confirmAction = (data: IReqoreConfirmationModal): void => {
     setConfirmationModal(data);
@@ -73,9 +73,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({
     setNotifications((cur) => {
       let newNotifications = [...cur];
 
-      const index = cur.findIndex(
-        (notification) => notification.id === data.id
-      );
+      const index = cur.findIndex((notification) => notification.id === data.id);
 
       if (index >= 0) {
         newNotifications[index] = data;
@@ -106,6 +104,9 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({
           addNotification,
           removeNotification,
           confirmAction,
+          isMobile,
+          isTablet,
+          isMobileOrTablet,
         }}
       >
         {notifications.length > 0 ? (
@@ -147,8 +148,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({
           >
             <ReqoreModalContent>
               <StyledConfirmContent>
-                {confirmationModal.description ||
-                  'Are you sure you want to proceed?'}
+                {confirmationModal.description || 'Are you sure you want to proceed?'}
               </StyledConfirmContent>
             </ReqoreModalContent>
             <ReqoreModalActions>

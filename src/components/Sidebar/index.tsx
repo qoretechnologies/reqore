@@ -49,10 +49,14 @@ export interface IQorusSidebarProps {
   onBookmarksChange?: (bookmarks: string[]) => void;
   useNativeTitle?: boolean;
   position?: 'left' | 'right';
-  disableCollapsing?: boolean;
+  collapsible?: boolean;
   bordered?: boolean;
   customTheme?: IReqoreSidebarTheme;
   flat?: boolean;
+  floating?: boolean;
+  hasFloatingBackdrop?: boolean;
+  onCloseClick?: () => void;
+  isOpen?: boolean;
 }
 
 export interface IReqoreSidebarStyle {
@@ -62,39 +66,60 @@ export interface IReqoreSidebarStyle {
   position?: 'left' | 'right';
   customThemeId?: string;
   flat?: boolean;
+  floating?: boolean;
+  isOpen?: boolean;
 }
 
 const StyledSidebar = styled.div<IReqoreSidebarStyle>`
   // 80px is header + footer
-  height: 100%;
   font-size: 14px;
   font-weight: 500;
   display: flex;
+  overflow: hidden;
   flex-flow: column;
   color: ${({ theme }: IReqoreSidebarStyle) =>
     theme.sidebar?.color ||
     getReadableColor(theme, undefined, undefined, true, getMainColor(theme, 'sidebar'))};
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
 
-  ${({ theme, bordered, position, flat }) => css`
-    ${(position === 'left' || bordered) &&
-    !flat &&
+  ${({ theme, bordered, position, flat, floating }) =>
+    !floating &&
     css`
-      border-right: 1px solid
-        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+      ${(position === 'left' || bordered) &&
+      !flat &&
+      css`
+        border-right: 1px solid
+          ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+      `}
+      ${(position === 'right' || bordered) &&
+      !flat &&
+      css`
+        border-left: 1px solid
+          ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+      `}
     `}
-    ${(position === 'right' || bordered) &&
-    !flat &&
-    css`
-      border-left: 1px solid
-        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
-    `}
-  `}
+
+  ${({ floating, flat, theme, position, isOpen }) =>
+    floating
+      ? css`
+          position: fixed;
+          top: 10px;
+          ${position}: ${isOpen ? 10 : -200}px;
+          bottom: 10px;
+          border-radius: 10px;
+          border: ${!flat
+            ? `1px solid ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))}`
+            : undefined};
+        `
+      : css`
+          height: 100%;
+        `}
 
   // Custom scrollbar
   .sidebarScroll {
     flex: 1;
   }
+
   transition: all 0.1s ease-in-out;
 
   &.expanded {
@@ -319,6 +344,7 @@ const StyledDivider = styled.div<{ theme?: any; hasTitle?: boolean }>`
 const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   isCollapsed,
   onCollapseChange,
+  onCloseClick,
   path,
   items,
   bookmarks,
@@ -328,10 +354,13 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   onBookmarksChange,
   useNativeTitle,
   position = 'left',
-  disableCollapsing,
+  collapsible = true,
   bordered,
   customTheme,
   flat,
+  floating,
+  hasFloatingBackdrop,
+  isOpen,
 }) => {
   const [_isCollapsed, setIsCollapsed] = useState<boolean>(isCollapsed || false);
   useState;
@@ -344,6 +373,10 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
       onBookmarksChange(_bookmarks);
     }
   }, [_bookmarks]);
+
+  useUpdateEffect(() => {
+    setIsCollapsed(isCollapsed);
+  }, [isCollapsed]);
 
   const handleSectionToggle: (sectionId: string) => void = (sectionId) => {
     setExpandedSection((currentExpandedSection) =>
@@ -376,6 +409,8 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
       bordered={bordered}
       theme={theme}
       flat={flat}
+      floating={floating}
+      isOpen={isOpen}
     >
       <Scroll horizontal={false} className='sidebarScroll' key='reqore-sidebar-scroll'>
         {map(menu, ({ title, items }, sectionId: string) =>
@@ -409,7 +444,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
         )}
       </Scroll>
       <StyledDivider theme={theme} />
-      {!disableCollapsing && (
+      {collapsible && (
         <div className='sidebarSection' id='menuCollapse'>
           <div
             role='qorus-sidebar-collapse-button'
@@ -422,6 +457,11 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
                 : 'flex-end',
             }}
             onClick={() => {
+              if (floating) {
+                onCloseClick?.();
+                return;
+              }
+
               setIsCollapsed(!_isCollapsed);
 
               if (onCollapseChange) {
@@ -430,11 +470,15 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
             }}
           >
             {position === 'left' && (
-              <ReqoreIcon icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'} />
+              <ReqoreIcon
+                icon={floating ? 'CloseLine' : isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
+              />
             )}{' '}
-            {!_isCollapsed && (collapseLabel || 'Collapse')}
+            {!_isCollapsed && (collapseLabel || floating ? 'Close' : 'Collapse')}
             {position === 'right' && (
-              <ReqoreIcon icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'} />
+              <ReqoreIcon
+                icon={floating ? 'CloseLine' : _isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'}
+              />
             )}{' '}
           </div>
         </div>
