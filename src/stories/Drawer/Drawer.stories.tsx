@@ -9,6 +9,7 @@ import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } fr
 
 export default {
   title: 'ReQore/Drawer',
+  component: ReqoreDrawer,
   args: {
     theme: {
       main: '#222222',
@@ -16,9 +17,11 @@ export default {
   },
 } as Meta;
 
-const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
+const Template: Story<IReqoreUIProviderProps & IReqoreDrawerProps> = (
+  args: IReqoreUIProviderProps & IReqoreDrawerProps
+) => {
   const [drawerData, setDrawerData] = useState<IReqoreDrawerProps>({
-    position: 'top',
+    position: 'right',
     isHidden: false,
     resizable: false,
     isOpen: true,
@@ -30,6 +33,7 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
     maxSize: '80%',
     minSize: '20%',
     flat: false,
+    floating: false,
   });
 
   const updateItem = (item: string, value: any) => {
@@ -74,6 +78,12 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
             >
               Flat
             </ReqoreButton>
+            <ReqoreButton
+              intent={drawerData.floating ? 'success' : undefined}
+              onClick={() => updateItem('floating', !drawerData.floating)}
+            >
+              Floating
+            </ReqoreButton>
             <ReqoreDropdown
               items={[
                 {
@@ -113,6 +123,7 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
 };
 
 export const Basic = Template.bind({});
+Basic.args = {} as IReqoreUIProviderProps & IReqoreDrawerProps;
 
 export const LightColor = Template.bind({});
 LightColor.args = {

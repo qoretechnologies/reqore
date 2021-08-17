@@ -26,6 +26,7 @@ export interface IReqoreDrawerProps extends React.HTMLAttributes<HTMLDivElement>
   minSize?: string;
   opacity?: number;
   flat?: boolean;
+  floating?: boolean;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -39,38 +40,48 @@ export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
 export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
   background-color: ${({ theme, opacity = 1 }) => rgba(getMainBackgroundColor(theme), opacity)};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  border-radius: ${({ floating }) => (floating ? 10 : 0)}px;
+
+  ${({ theme, flat, floating }) =>
+    !flat && floating
+      ? css`
+          border: 1px solid ${changeLightness(getMainBackgroundColor(theme), 0.2)};
+        `
+      : undefined}
 `;
 
 export const StyledVerticalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
-  top: 0;
-  bottom: 0;
-  height: 100%;
+  top: ${({ floating }) => (floating ? 10 : 0)}px;
+  bottom: ${({ floating }) => (floating ? 10 : 0)}px;
+  height: ${({ floating }) => (floating ? undefined : '100%')};
   width: 100%;
 
-  ${({ position, theme, flat }) =>
-    !flat &&
-    css`
+  ${({ position, theme, flat, floating }) =>
+    !flat && !floating
+      ? css`
     border-${position === 'left' ? 'right' : 'left'}: 1px solid ${changeLightness(
-      getMainBackgroundColor(theme),
-      0.2
-    )};
-  `}
+          getMainBackgroundColor(theme),
+          0.2
+        )};
+  `
+      : undefined}
 `;
 
 export const StyledHorizontalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
-  left: 0;
-  right: 0;
+  left: ${({ floating }) => (floating ? 10 : 0)}px;
+  right: ${({ floating }) => (floating ? 10 : 0)}px;
   height: 100%;
-  width: 100%;
+  width: ${({ floating }) => (floating ? undefined : '100%')};
 
-  ${({ position, theme, flat }) =>
-    !flat &&
-    css`
+  ${({ position, theme, flat, floating }) =>
+    !flat && !floating
+      ? css`
     border-${position === 'top' ? 'bottom' : 'top'}: 1px solid ${changeLightness(
-      getMainBackgroundColor(theme),
-      0.2
-    )};
-  `}
+          getMainBackgroundColor(theme),
+          0.2
+        )};
+  `
+      : undefined}
 `;
 
 export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
@@ -165,6 +176,7 @@ export const ReqoreDrawer = ({
   onHideToggle,
   className,
   flat,
+  floating,
   ...rest
 }: IReqoreDrawerProps) => {
   const theme = useReqoreTheme('main', customTheme);
@@ -177,8 +189,8 @@ export const ReqoreDrawer = ({
   const [_isHidden, setIsHidden] = useState<boolean>(isHidden || false);
 
   const [_size, setSize] = useState<any>({
-    width: layout === 'horizontal' ? '100vw' : size || '300px',
-    height: layout === 'vertical' ? '100vh' : size || '300px',
+    width: layout === 'horizontal' ? 'auto' : size || '300px',
+    height: layout === 'vertical' ? 'auto' : size || '300px',
   });
 
   const Wrapper = useMemo(
@@ -189,8 +201,8 @@ export const ReqoreDrawer = ({
 
   useEffect(() => {
     setSize({
-      width: layout === 'horizontal' ? '100vw' : size || '300px',
-      height: layout === 'vertical' ? '100vh' : size || '300px',
+      width: layout === 'horizontal' ? 'auto' : size || '300px',
+      height: layout === 'vertical' ? 'auto' : size || '300px',
     });
   }, [position, size]);
 
@@ -217,14 +229,17 @@ export const ReqoreDrawer = ({
           zIndex: 999,
           display: 'flex',
           position: 'fixed',
-          top: position === 'top' || layout === 'vertical' ? 0 : undefined,
-          bottom: position === 'bottom' || layout === 'vertical' ? 0 : undefined,
-          right: position === 'right' || layout === 'horizontal' ? 0 : undefined,
-          left: position === 'left' || layout === 'horizontal' ? 0 : undefined,
+          top: position === 'top' || layout === 'vertical' ? (floating ? '10px' : 0) : undefined,
+          bottom:
+            position === 'bottom' || layout === 'vertical' ? (floating ? '10px' : 0) : undefined,
+          right:
+            position === 'right' || layout === 'horizontal' ? (floating ? '10px' : 0) : undefined,
+          left:
+            position === 'left' || layout === 'horizontal' ? (floating ? '10px' : 0) : undefined,
         }}
         size={{
-          width: layout === 'vertical' && _isHidden ? 0 : _size.width,
-          height: layout === 'horizontal' && _isHidden ? 0 : _size.height,
+          width: layout === 'vertical' ? (_isHidden ? 0 : _size.width) : 'auto',
+          height: layout === 'horizontal' ? (_isHidden ? 0 : _size.height) : 'auto',
         }}
         onResize={
           resizable
@@ -285,6 +300,7 @@ export const ReqoreDrawer = ({
             width={_size.width}
             height={_size.height}
             position={position}
+            floating={floating}
           >
             {children}
           </Wrapper>
