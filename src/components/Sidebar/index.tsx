@@ -11,6 +11,7 @@ import { changeLightness, getMainColor, getReadableColor } from '../../helpers/c
 import { transformMenu } from '../../helpers/sidebar';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
+import { StyledBackdrop } from '../Drawer';
 import ReqoreIcon from '../Icon';
 import SidebarItem from './item';
 
@@ -49,10 +50,14 @@ export interface IQorusSidebarProps {
   onBookmarksChange?: (bookmarks: string[]) => void;
   useNativeTitle?: boolean;
   position?: 'left' | 'right';
-  disableCollapsing?: boolean;
+  collapsible?: boolean;
   bordered?: boolean;
   customTheme?: IReqoreSidebarTheme;
   flat?: boolean;
+  floating?: boolean;
+  hasFloatingBackdrop?: boolean;
+  onCloseClick?: () => void;
+  isOpen?: boolean;
 }
 
 export interface IReqoreSidebarStyle {
@@ -62,39 +67,61 @@ export interface IReqoreSidebarStyle {
   position?: 'left' | 'right';
   customThemeId?: string;
   flat?: boolean;
+  floating?: boolean;
+  isOpen?: boolean;
 }
 
 const StyledSidebar = styled.div<IReqoreSidebarStyle>`
   // 80px is header + footer
-  height: 100%;
   font-size: 14px;
   font-weight: 500;
   display: flex;
+  overflow: hidden;
   flex-flow: column;
   color: ${({ theme }: IReqoreSidebarStyle) =>
     theme.sidebar?.color ||
     getReadableColor(theme, undefined, undefined, true, getMainColor(theme, 'sidebar'))};
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
 
-  ${({ theme, bordered, position, flat }) => css`
-    ${(position === 'left' || bordered) &&
-    !flat &&
+  ${({ theme, bordered, position, flat, floating }) =>
+    !floating &&
     css`
-      border-right: 1px solid
-        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+      ${(position === 'left' || bordered) &&
+      !flat &&
+      css`
+        border-right: 1px solid
+          ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+      `}
+      ${(position === 'right' || bordered) &&
+      !flat &&
+      css`
+        border-left: 1px solid
+          ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
+      `}
     `}
-    ${(position === 'right' || bordered) &&
-    !flat &&
-    css`
-      border-left: 1px solid
-        ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))};
-    `}
-  `}
+
+  ${({ floating, flat, theme, position, isOpen }) =>
+    floating
+      ? css`
+          position: fixed;
+          top: 10px;
+          ${position}: ${isOpen ? 10 : -200}px;
+          bottom: 10px;
+          border-radius: 10px;
+          z-index: 999;
+          border: ${!flat
+            ? `1px solid ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))}`
+            : undefined};
+        `
+      : css`
+          height: 100%;
+        `}
 
   // Custom scrollbar
   .sidebarScroll {
     flex: 1;
   }
+
   transition: all 0.1s ease-in-out;
 
   &.expanded {
@@ -319,6 +346,7 @@ const StyledDivider = styled.div<{ theme?: any; hasTitle?: boolean }>`
 const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   isCollapsed,
   onCollapseChange,
+  onCloseClick,
   path,
   items,
   bookmarks,
@@ -328,10 +356,13 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   onBookmarksChange,
   useNativeTitle,
   position = 'left',
-  disableCollapsing,
+  collapsible = true,
   bordered,
   customTheme,
   flat,
+  floating,
+  hasFloatingBackdrop,
+  isOpen,
 }) => {
   const [_isCollapsed, setIsCollapsed] = useState<boolean>(isCollapsed || false);
   useState;
@@ -344,6 +375,10 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
       onBookmarksChange(_bookmarks);
     }
   }, [_bookmarks]);
+
+  useUpdateEffect(() => {
+    setIsCollapsed(isCollapsed);
+  }, [isCollapsed]);
 
   const handleSectionToggle: (sectionId: string) => void = (sectionId) => {
     setExpandedSection((currentExpandedSection) =>
@@ -366,80 +401,102 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   const menu: IQorusSidebarItems = transformMenu(items, _bookmarks, customItems);
 
   return (
-    <StyledSidebar
-      className={classnames('sidebar', {
-        expanded: !_isCollapsed,
-      })}
-      style={wrapperStyle}
-      role='qorus-sidebar-wrapper'
-      position={position}
-      bordered={bordered}
-      theme={theme}
-      flat={flat}
-    >
-      <Scroll horizontal={false} className='sidebarScroll' key='reqore-sidebar-scroll'>
-        {map(menu, ({ title, items }, sectionId: string) =>
-          size(items) ? (
-            <>
-              {sectionId !== '_qorusCustomElements' && (
-                <StyledDivider hasTitle={!!title} key={sectionId + 'title'} theme={theme}>
-                  {!_isCollapsed ? title || '' : ''}
-                </StyledDivider>
-              )}
-              <div className='sidebarSection' key={sectionId} role='qorus-sidebar-section-title'>
-                {map(items, (itemData, key) => (
-                  <SidebarItem
-                    itemData={itemData}
-                    key={key}
-                    isCollapsed={_isCollapsed}
-                    expandedSection={expandedSection}
-                    onSectionToggle={handleSectionToggle}
-                    bookmarks={bookmarks}
-                    currentPath={path}
-                    onFavoriteClick={handleFavoriteClick}
-                    onUnfavoriteClick={handleUnfavoriteClick}
-                    sectionName={sectionId}
-                    hasFavorites={!!onBookmarksChange}
-                    useNativeTitle={useNativeTitle}
-                  />
-                ))}
-              </div>
-            </>
-          ) : null
-        )}
-      </Scroll>
-      <StyledDivider theme={theme} />
-      {!disableCollapsing && (
-        <div className='sidebarSection' id='menuCollapse'>
-          <div
-            role='qorus-sidebar-collapse-button'
-            className='sidebarItem'
-            style={{
-              justifyContent: _isCollapsed
-                ? 'center'
-                : position === 'left'
-                ? 'flex-start'
-                : 'flex-end',
-            }}
-            onClick={() => {
-              setIsCollapsed(!_isCollapsed);
+    <>
+      {hasFloatingBackdrop && isOpen ? (
+        <StyledBackdrop
+          className='reqore-sidebar-backdrop'
+          onClick={() => onCloseClick?.()}
+          closable
+        />
+      ) : null}
+      <StyledSidebar
+        className={classnames('sidebar', {
+          expanded: !_isCollapsed,
+        })}
+        style={wrapperStyle}
+        role='qorus-sidebar-wrapper'
+        position={position}
+        bordered={bordered}
+        theme={theme}
+        flat={flat}
+        floating={floating}
+        isOpen={isOpen}
+      >
+        <Scroll horizontal={false} className='sidebarScroll' key='reqore-sidebar-scroll'>
+          {map(menu, ({ title, items }, sectionId: string) =>
+            size(items) ? (
+              <>
+                {sectionId !== '_qorusCustomElements' && (
+                  <StyledDivider hasTitle={!!title} key={sectionId + 'title'} theme={theme}>
+                    {!_isCollapsed ? title || '' : ''}
+                  </StyledDivider>
+                )}
+                <div className='sidebarSection' key={sectionId} role='qorus-sidebar-section-title'>
+                  {map(items, (itemData, key) => (
+                    <SidebarItem
+                      itemData={itemData}
+                      key={key}
+                      isCollapsed={_isCollapsed}
+                      expandedSection={expandedSection}
+                      onSectionToggle={handleSectionToggle}
+                      bookmarks={bookmarks}
+                      currentPath={path}
+                      onFavoriteClick={handleFavoriteClick}
+                      onUnfavoriteClick={handleUnfavoriteClick}
+                      sectionName={sectionId}
+                      hasFavorites={!!onBookmarksChange}
+                      useNativeTitle={useNativeTitle}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : null
+          )}
+        </Scroll>
+        <StyledDivider theme={theme} />
+        {collapsible && (
+          <div className='sidebarSection' id='menuCollapse'>
+            <div
+              role='qorus-sidebar-collapse-button'
+              className='sidebarItem'
+              style={{
+                justifyContent: _isCollapsed
+                  ? 'center'
+                  : position === 'left'
+                  ? 'flex-start'
+                  : 'flex-end',
+              }}
+              onClick={() => {
+                if (floating) {
+                  onCloseClick?.();
+                  return;
+                }
 
-              if (onCollapseChange) {
-                onCollapseChange(!_isCollapsed);
-              }
-            }}
-          >
-            {position === 'left' && (
-              <ReqoreIcon icon={_isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'} />
-            )}{' '}
-            {!_isCollapsed && (collapseLabel || 'Collapse')}
-            {position === 'right' && (
-              <ReqoreIcon icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'} />
-            )}{' '}
+                setIsCollapsed(!_isCollapsed);
+
+                if (onCollapseChange) {
+                  onCollapseChange(!_isCollapsed);
+                }
+              }}
+            >
+              {position === 'left' && (
+                <ReqoreIcon
+                  icon={floating ? 'CloseLine' : isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
+                />
+              )}{' '}
+              {!_isCollapsed && (collapseLabel || floating ? 'Close' : 'Collapse')}
+              {position === 'right' && (
+                <ReqoreIcon
+                  icon={
+                    floating ? 'CloseLine' : _isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'
+                  }
+                />
+              )}{' '}
+            </div>
           </div>
-        </div>
-      )}
-    </StyledSidebar>
+        )}
+      </StyledSidebar>
+    </>
   );
 };
 

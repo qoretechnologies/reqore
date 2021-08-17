@@ -1,6 +1,6 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { omit } from 'lodash';
-import React from 'react';
+import React, { useState } from 'react';
 import { IQorusSidebarProps } from '../../components/Sidebar';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreSidebar, ReqoreUIProvider } from '../../index';
@@ -20,13 +20,21 @@ export default {
 const Template: Story<IQorusSidebarProps & IReqoreUIProviderProps> = ({
   theme,
   ...args
-}: IQorusSidebarProps & IReqoreUIProviderProps) => (
-  <ReqoreUIProvider theme={theme} withSidebar>
-    {!args.position || args.position === 'left' ? <ReqoreSidebar {...args} /> : null}
-    <div style={{ flex: 1, width: '100%', height: '100%' }} />
-    {args.position === 'right' ? <ReqoreSidebar {...args} /> : null}
-  </ReqoreUIProvider>
-);
+}: IQorusSidebarProps & IReqoreUIProviderProps) => {
+  const [isOpen, setIsOpen] = useState<boolean>(args.isOpen || true);
+
+  return (
+    <ReqoreUIProvider theme={theme} withSidebar>
+      {!args.position || args.position === 'left' ? (
+        <ReqoreSidebar {...args} onCloseClick={() => setIsOpen(false)} isOpen={isOpen} />
+      ) : null}
+      <div style={{ flex: 1, width: '100%', height: '100%' }} />
+      {args.position === 'right' ? (
+        <ReqoreSidebar {...args} onCloseClick={() => setIsOpen(false)} isOpen={isOpen} />
+      ) : null}
+    </ReqoreUIProvider>
+  );
+};
 
 const MultiTemplate: Story<IQorusSidebarProps & IReqoreUIProviderProps> = ({
   theme,
@@ -130,7 +138,7 @@ WithNativeTitles.args = {
 export const CollapsingDisabled = Template.bind({});
 
 CollapsingDisabled.args = {
-  disableCollapsing: true,
+  collapsible: false,
   isCollapsed: true,
 } as IReqoreUIProviderProps & IQorusSidebarProps;
 
@@ -147,4 +155,13 @@ Bordered.args = {
 export const Flat = Template.bind({});
 Flat.args = {
   flat: true,
+} as IReqoreUIProviderProps & IQorusSidebarProps;
+
+export const Floating = Template.bind({});
+Floating.args = {
+  floating: true,
+  isOpen: true,
+  flat: true,
+  isCollapsed: false,
+  hasFloatingBackdrop: true,
 } as IReqoreUIProviderProps & IQorusSidebarProps;
