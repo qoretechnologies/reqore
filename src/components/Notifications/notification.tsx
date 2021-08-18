@@ -49,7 +49,7 @@ const timeoutAnimation = keyframes`
 `;
 
 export const StyledReqoreNotification = styled.div<IReqoreNotificationStyle>`
-  min-width: 200px;
+  min-width: ${({ fluid }) => (!fluid ? '200px' : undefined)};
   max-width: ${({ fluid }) => (!fluid ? '450px' : undefined)};
   border-radius: 5px;
   min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
