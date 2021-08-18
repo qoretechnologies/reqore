@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import { size } from 'lodash';
 import map from 'lodash/map';
-import { darken } from 'polished';
+import { darken, rgba } from 'polished';
 import React, { useState } from 'react';
 import Scroll from 'react-scrollbar';
 import { useUpdateEffect } from 'react-use';
@@ -45,6 +45,7 @@ export interface IQorusSidebarProps {
   bookmarks?: string[];
   customItems?: IQorusSidebarCustomItem[];
   collapseLabel?: string;
+  closeLabel?: string;
   path: string;
   wrapperStyle?: React.CSSProperties;
   onBookmarksChange?: (bookmarks: string[]) => void;
@@ -82,7 +83,8 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
     theme.sidebar?.color ||
     getReadableColor(theme, undefined, undefined, true, getMainColor(theme, 'sidebar'))};
   background-color: ${({ theme }) => theme.sidebar?.main || theme.main};
-  box-shadow: ${({ floating }) => (floating ? '0px 0px 10px -4px #000' : undefined)};
+  box-shadow: ${({ floating }) =>
+    floating ? `0px 0px 30px 0px ${rgba('#000000', 0.4)}` : undefined};
 
   ${({ theme, bordered, position, flat, floating }) =>
     !floating &&
@@ -353,6 +355,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   bookmarks,
   customItems,
   collapseLabel,
+  closeLabel,
   wrapperStyle,
   onBookmarksChange,
   useNativeTitle,
@@ -403,7 +406,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
 
   return (
     <>
-      {hasFloatingBackdrop && isOpen ? (
+      {floating && hasFloatingBackdrop && isOpen ? (
         <StyledBackdrop
           className='reqore-sidebar-backdrop'
           onClick={() => onCloseClick?.()}
@@ -468,11 +471,6 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
                   : 'flex-end',
               }}
               onClick={() => {
-                if (floating) {
-                  onCloseClick?.();
-                  return;
-                }
-
                 setIsCollapsed(!_isCollapsed);
 
                 if (onCollapseChange) {
@@ -481,21 +479,35 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
               }}
             >
               {position === 'left' && (
-                <ReqoreIcon
-                  icon={floating ? 'CloseLine' : isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'}
-                />
+                <ReqoreIcon icon={isCollapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'} />
               )}{' '}
-              {!_isCollapsed && (collapseLabel || floating ? 'Close' : 'Collapse')}
+              {!_isCollapsed && (collapseLabel || 'Collapse')}
               {position === 'right' && (
-                <ReqoreIcon
-                  icon={
-                    floating ? 'CloseLine' : _isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'
-                  }
-                />
+                <ReqoreIcon icon={_isCollapsed ? 'ArrowLeftSLine' : 'ArrowRightSLine'} />
               )}{' '}
             </div>
           </div>
         )}
+        {floating && onCloseClick ? (
+          <div className='sidebarSection' id='menuClose'>
+            <div
+              role='qorus-sidebar-close-button'
+              className='sidebarItem'
+              style={{
+                justifyContent: _isCollapsed
+                  ? 'center'
+                  : position === 'left'
+                  ? 'flex-start'
+                  : 'flex-end',
+              }}
+              onClick={() => void onCloseClick()}
+            >
+              {position === 'left' && <ReqoreIcon icon='CloseLine' />}{' '}
+              {!_isCollapsed && (closeLabel || 'Close')}
+              {position === 'right' && <ReqoreIcon icon='CloseLine' />}{' '}
+            </div>
+          </div>
+        ) : null}
       </StyledSidebar>
     </>
   );
