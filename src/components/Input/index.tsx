@@ -11,8 +11,7 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 
-export interface IReqoreInputProps
-  extends React.HTMLAttributes<HTMLInputElement> {
+export interface IReqoreInputProps extends React.HTMLAttributes<HTMLInputElement> {
   autoFocus?: boolean;
   disabled?: boolean;
   tooltip?: string;
@@ -38,7 +37,7 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
 export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   width: ${({ width }) => (width ? `${width}px` : 'auto')};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1' : undefined)};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1' : '0 0 auto')};
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   position: relative;
   overflow: hidden;
@@ -59,8 +58,7 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
   flex: 1;
   margin: 0;
   padding: 0 7px;
-  padding-right: ${({ clearable, _size }) =>
-    clearable ? SIZE_TO_PX[_size] : 7}px;
+  padding-right: ${({ clearable, _size }) => (clearable ? SIZE_TO_PX[_size] : 7)}px;
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
 
