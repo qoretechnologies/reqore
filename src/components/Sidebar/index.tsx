@@ -403,7 +403,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
 
   return (
     <>
-      {hasFloatingBackdrop && isOpen ? (
+      {floating && hasFloatingBackdrop && isOpen ? (
         <StyledBackdrop
           className='reqore-sidebar-backdrop'
           onClick={() => onCloseClick?.()}
