@@ -2,10 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import React, { useContext, useState } from 'react';
 import ReqoreButton from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
-import {
-  ReqoreModalActions,
-  ReqoreModalActionsGroup,
-} from '../../components/Modal/actions';
+import { ReqoreModalActions, ReqoreModalActionsGroup } from '../../components/Modal/actions';
 import { ReqoreModalContent } from '../../components/Modal/content';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import {
@@ -66,9 +63,7 @@ const ConfirmButton = () => {
   );
 };
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
+const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
   const [isFirstModalOpen, setIsFirstModalOpen] = useState(false);
   const [isSecModalOpen, setIsSecModalOpen] = useState(false);
 
@@ -76,6 +71,7 @@ const Template: Story<IReqoreUIProviderProps> = (
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
         <ReqoreContent style={{ padding: '20px' }}>
+          {/*@ts-ignore*/}
           {args.confirmModal ? (
             <ConfirmButton />
           ) : (
@@ -126,11 +122,7 @@ const Template: Story<IReqoreUIProviderProps> = (
                   </ReqoreModalActionsGroup>
                 </ReqoreModalActions>
               </ReqoreModal>
-              <ReqoreModal
-                onClose={() => setIsSecModalOpen(false)}
-                isOpen={isSecModalOpen}
-                minimal
-              >
+              <ReqoreModal onClose={() => setIsSecModalOpen(false)} isOpen={isSecModalOpen} flat>
                 <ReqoreModalContent>This is a minimal modal</ReqoreModalContent>
                 <ReqoreModalActions>
                   <ReqoreModalActionsGroup position='right'>
