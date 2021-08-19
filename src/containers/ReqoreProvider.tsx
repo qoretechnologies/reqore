@@ -142,7 +142,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
         {confirmationModal && (
           <ReqoreModal
             isOpen
-            minimal
+            flat
             title={confirmationModal.title || 'Confirm your action'}
             icon='ErrorWarningFill'
           >
@@ -155,6 +155,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
               <ReqoreModalActionsGroup>
                 <ReqoreButton
                   icon='CloseLine'
+                  flat
                   onClick={() => {
                     setConfirmationModal(null);
 
@@ -168,6 +169,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
               </ReqoreModalActionsGroup>
               <ReqoreModalActionsGroup position='right'>
                 <ReqoreButton
+                  flat
                   icon={confirmationModal.confirmIcon || 'CheckLine'}
                   intent={confirmationModal.confirmButtonIntent || 'success'}
                   onClick={() => {

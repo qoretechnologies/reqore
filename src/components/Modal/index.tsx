@@ -5,19 +5,16 @@ import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
 import ReqoreIcon from '../Icon';
 
-export interface IReqoreModalProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreModalProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
-  onClose?: (
-    event: React.MouseEvent<HTMLDivElement | HTMLButtonElement>
-  ) => void;
+  onClose?: (event: React.MouseEvent<HTMLDivElement | HTMLButtonElement>) => void;
   backdropVisible?: boolean;
-  minimal?: boolean;
+  flat?: boolean;
   position?: 'top' | 'center';
   width?: string;
   height?: string;
@@ -50,7 +47,7 @@ const StyledModalBackdrop = styled.div<IReqoreModalStyle>`
   right: 0;
   bottom: 0;
 
-  background-color: ${({ theme }) => rgba(theme.main, 0.9)};
+  background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.8)};
   z-index: 9999;
   cursor: ${({ onClose }) => (onClose ? 'pointer' : 'initial')};
 `;
@@ -64,19 +61,18 @@ const StyledModalWrapper = styled.div<IReqoreModalStyle>`
   flex-flow: column;
 
   .reqore-modal-content {
-    min-width: 500px;
+    width: 100%;
     min-height: 150px;
     width: ${({ width }) => width || undefined};
     height: ${({ height }) => height || undefined};
+    border-radius: 10px;
+    background-color: ${({ theme }) => getMainBackgroundColor(theme)};
+    box-shadow: 0px 0px 30px 0px ${rgba('#000000', 0.4)};
 
-    ${({ minimal }) =>
-      !minimal &&
+    ${({ flat }) =>
+      !flat &&
       css`
-        border: 1px solid
-          ${({ theme }) =>
-            rgba(theme.text.color || getReadableColor(theme), 0.1)};
-        border-radius: 5px;
-        background-color: ${({ theme }) => changeLightness(theme.main, 0.02)};
+        border: 1px solid ${({ theme }) => rgba(theme.text.color || getReadableColor(theme), 0.1)};
       `};
   }
 `;
@@ -93,11 +89,11 @@ const StyledModalHeader = styled.div`
 
 export const ReqoreModal = ({
   children,
-  minimal,
+  flat,
   backdropVisible = true,
   onClose,
   position,
-  width,
+  width = '80vw',
   height,
   title,
   icon,
@@ -120,7 +116,7 @@ export const ReqoreModal = ({
           {...rest}
           width={width}
           height={height}
-          minimal={minimal}
+          flat={flat}
           className={`${rest.className || ''} reqore-modal`}
         >
           <StyledModalHeader>

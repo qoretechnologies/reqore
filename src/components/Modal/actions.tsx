@@ -6,6 +6,7 @@ const StyledActions = styled(StyledNavbar)`
   background-color: transparent;
   border: 0;
   box-shadow: none;
+  padding: 0;
 `;
 
 export const ReqoreModalActionsGroup = ({
@@ -13,23 +14,13 @@ export const ReqoreModalActionsGroup = ({
   className,
   ...rest
 }: IReqoreNavbarGroupProps) => (
-  <ReqoreNavbarGroup
-    {...rest}
-    className={`${className || ''} reqore-modal-actions-group`}
-  >
+  <ReqoreNavbarGroup {...rest} className={`${className || ''} reqore-modal-actions-group`}>
     {children}
   </ReqoreNavbarGroup>
 );
 
-export const ReqoreModalActions = ({
-  children,
-  className,
-  ...rest
-}: IReqoreNavbarProps) => (
-  <StyledActions
-    {...rest}
-    className={`${className || ''} reqore-modal-actions`}
-  >
+export const ReqoreModalActions = ({ children, className, ...rest }: IReqoreNavbarProps) => (
+  <StyledActions {...rest} className={`${className || ''} reqore-modal-actions`}>
     {children}
   </StyledActions>
 );
