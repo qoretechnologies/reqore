@@ -3,11 +3,7 @@ import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
-import {
-  changeDarkness,
-  changeLightness,
-  getReadableColor,
-} from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
 import ReqoreIcon from '../Icon';
 import { alignToFlex } from './row';
@@ -40,7 +36,7 @@ export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
     `};
 
   ${({ align, theme }) => css`
-    background-color: ${changeDarkness(theme.main, 0.03)};
+    background-color: ${theme.main};
     justify-content: ${align ? alignToFlex[align] : 'flex-start'};
   `}
 
@@ -52,7 +48,7 @@ export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
 
       &:hover {
         color: ${getReadableColor(theme, undefined, undefined)};
-        background-color: ${changeLightness(theme.main, 0.07)};
+        background-color: ${changeLightness(theme.main, 0.02)};
       }
     `};
 `;
@@ -102,11 +98,7 @@ const ReqoreTableHeaderCell = ({
       }}
     >
       {icon && (
-        <ReqoreIcon
-          icon={icon}
-          size={iconSize || '13px'}
-          margin={header ? 'right' : undefined}
-        />
+        <ReqoreIcon icon={icon} size={iconSize || '13px'} margin={header ? 'right' : undefined} />
       )}
       <StyledTableHeaderLabel>{header}</StyledTableHeaderLabel>
       {sortable && (

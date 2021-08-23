@@ -1,7 +1,7 @@
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeDarkness, changeLightness } from '../../helpers/colors';
+import { changeLightness } from '../../helpers/colors';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTableHeaderCell, { StyledTableHeader } from './headerCell';
 import { alignToFlex } from './row';
@@ -31,6 +31,10 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
     width: ${({ hasVerticalScroll }: IReqoreTableSectionStyle) =>
       hasVerticalScroll ? 'calc(100% - 15px)' : '100%'};
     transform: translate3d(${-leftScroll}px, 0, 0);
+
+    ${({ theme }) => css`
+      background-color: ${theme.main};
+    `}
   `}
 `;
 
@@ -42,8 +46,7 @@ export interface IReqoreTableHeaderStyle {
 }
 
 const StyledColumnGroupHeader = styled.div<IReqoreTableHeaderStyle>`
-  ${({ align, theme }) => css`
-    background-color: ${changeDarkness(theme.main, 0.03)};
+  ${({ align }) => css`
     justify-content: ${align ? alignToFlex[align] : 'flex-start'};
   `}
 `;
@@ -96,19 +99,7 @@ const ReqoreTableHeader = ({
 }: IReqoreTableSectionProps) => {
   const renderColumns = (columns: IReqoreTableColumn[]) =>
     columns.map(
-      (
-        {
-          grow,
-          header,
-          props = {},
-          columns: cols,
-          align,
-          content,
-          onCellClick,
-          ...rest
-        },
-        index
-      ) =>
+      ({ grow, header, props = {}, columns: cols, align, content, onCellClick, ...rest }, index) =>
         cols ? (
           <StyledColumnGroup
             width={cols.reduce((wid, col) => wid + (col.width || 80), 0)}

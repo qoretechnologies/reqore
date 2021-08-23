@@ -30,14 +30,14 @@ const Template: Story<
       selectable?: boolean;
       onSelectedChange?: (data: string[]) => void;
     };
-  }
-> = ({ theme, table }) => {
+  } & { padding?: string }
+> = ({ theme, table, padding }) => {
   const [selected, setSelected] = useState(null);
 
   return (
     <ReqoreUIProvider theme={theme}>
       <ReqoreLayoutContent>
-        <ReqoreContent>
+        <ReqoreContent style={{ padding }}>
           <ReqoreTable {...table} onSelectedChange={table.selectable ? setSelected : undefined} />
           {selected && (
             <div style={{ marginTop: '10px' }}>
@@ -97,6 +97,10 @@ const MultiTemplate: Story<
 export const Basic = Template.bind({});
 export const Rounded = Template.bind({});
 Rounded.args = {
+  padding: '15px',
+  theme: {
+    main: '#222222',
+  },
   table: {
     rounded: true,
     ...tableData,
