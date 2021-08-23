@@ -76,6 +76,7 @@ const StyledTableWrapper = styled.div<IReqoreTableStyle>`
 
     border-radius: ${rounded ? '10px' : undefined};
 
+    background-color: ${theme.main};
     color: ${getReadableColor(theme, undefined, undefined, true)};
 
     ${StyledTableCell} {

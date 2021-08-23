@@ -2,22 +2,13 @@ export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
 export { default as ReqoreButton } from './components/Button';
 export { default as ReqoreCheckbox } from './components/Checkbox';
+export { ReqoreColumns } from './components/Columns';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreControlGroup } from './components/ControlGroup';
 export { ReqoreDrawer } from './components/Drawer';
 export { default as ReqoreDropdown } from './components/Dropdown';
-export {
-  ReqoreDropdownDivider,
-  ReqoreDropdownItem,
-} from './components/Dropdown/item';
-export {
-  ReqoreH1,
-  ReqoreH2,
-  ReqoreH3,
-  ReqoreH4,
-  ReqoreH5,
-  ReqoreH6,
-} from './components/Header';
+export { ReqoreDropdownDivider, ReqoreDropdownItem } from './components/Dropdown/item';
+export { ReqoreH1, ReqoreH2, ReqoreH3, ReqoreH4, ReqoreH5, ReqoreH6 } from './components/Header';
 export { default as ReqoreIcon } from './components/Icon';
 export { default as ReqoreInput } from './components/Input';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
@@ -26,10 +17,7 @@ export { default as ReqoreMenuDivider } from './components/Menu/divider';
 export { default as ReqoreMenuItem } from './components/Menu/item';
 export { default as ReqoreMessage } from './components/Message';
 export { ReqoreModal } from './components/Modal';
-export {
-  ReqoreModalActions,
-  ReqoreModalActionsGroup,
-} from './components/Modal/actions';
+export { ReqoreModalActions, ReqoreModalActionsGroup } from './components/Modal/actions';
 export { ReqoreModalContent } from './components/Modal/content';
 export { ReqoreFooter, ReqoreHeader } from './components/Navbar';
 export { default as ReqoreNavbarDivider } from './components/Navbar/divider';
