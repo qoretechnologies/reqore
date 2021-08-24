@@ -2,11 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import React, { useState } from 'react';
 import ReqoreInput from '../../components/Input';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import {
-  ReqoreContent,
-  ReqoreLayoutContent,
-  ReqoreUIProvider,
-} from '../../index';
+import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../../index';
 
 export default {
   title: 'ReQore/Input',
@@ -17,9 +13,7 @@ export default {
   },
 } as Meta;
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
+const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
   const [value, setValue] = useState('I can be cleared');
 
   const handleValueChange = (e) => {
@@ -42,19 +36,21 @@ const Template: Story<IReqoreUIProviderProps> = (
             <br />
             <ReqoreInput placeholder='Hello' size='big' />
             <h4>Minimal</h4>
-            <ReqoreInput
-              placeholder='Hello'
-              tooltip='I am Groot!'
-              minimal
-              size='small'
-            />
+            <ReqoreInput placeholder='Hello' tooltip='I am Groot!' minimal size='small' />
             <br />
             <ReqoreInput placeholder='Hello' tooltip='I am Groot!' minimal />
             <br />
+            <ReqoreInput placeholder='Hello' tooltip='I am Groot!' minimal size='big' />
+            <h4>Flat</h4>
+            <ReqoreInput placeholder='Hello' tooltip='I am Groot!' flat size='small' />
+            <br />
+            <ReqoreInput placeholder='Hello' tooltip='I am Groot!' minimal flat />
+            <br />
             <ReqoreInput
               placeholder='Hello'
               tooltip='I am Groot!'
-              minimal
+              flat
+              rounded={false}
               size='big'
             />
             <h4>Custom width</h4>
@@ -68,12 +64,7 @@ const Template: Story<IReqoreUIProviderProps> = (
             <br />
             <ReqoreInput placeholder='Hello' icon='Search2Line' />
             <br />
-            <ReqoreInput
-              placeholder='Hello'
-              size='big'
-              icon='Search2Line'
-              disabled
-            />
+            <ReqoreInput placeholder='Hello' size='big' icon='Search2Line' disabled />
             <h4>Disabled</h4>
             <ReqoreInput placeholder='Hello' disabled />
             <h4>Clearable</h4>

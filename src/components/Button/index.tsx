@@ -2,7 +2,13 @@ import { Placement } from '@popperjs/core';
 import { darken, lighten, rgba } from 'polished';
 import React, { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
-import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  PADDING_FROM_SIZE,
+  RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -57,7 +63,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 0 auto' : '0 0 auto')};
 
-  border-radius: 3px;
+  border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
 
   background-color: ${({ minimal, theme, intent }) => {
     if (minimal) {

@@ -29,3 +29,9 @@ export const PADDING_FROM_SIZE = {
   normal: 8,
   big: 11,
 };
+
+export const RADIUS_FROM_SIZE = {
+  small: 3,
+  normal: 5,
+  big: 7,
+};

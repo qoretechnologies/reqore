@@ -2,9 +2,9 @@ import { Placement } from '@popperjs/core';
 import { darken, rgba } from 'polished';
 import React, { forwardRef, useRef } from 'react';
 import styled from 'styled-components';
-import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import usePopover from '../../hooks/usePopover';
 import { IReqoreIconName } from '../../types/icons';
@@ -25,6 +25,8 @@ export interface IReqoreInputProps extends React.HTMLAttributes<HTMLInputElement
   onClearClick?: () => void;
   maxLength?: number;
   icon?: IReqoreIconName;
+  flat?: boolean;
+  rounded?: boolean;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -41,6 +43,21 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   position: relative;
   overflow: hidden;
+  border-radius: ${({ minimal, rounded, _size }) =>
+    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
+  border: ${({ minimal, theme, flat }) =>
+    !minimal && !flat ? `1px solid ${rgba(getReadableColor(theme), 0.2)}` : 0};
+  border-bottom: ${({ minimal, theme, flat }) =>
+    minimal && !flat ? `0.5px solid ${rgba(getReadableColor(theme), 0.2)}` : undefined};
+
+  transition: all 0.2s linear;
+
+  &:active,
+  &:focus,
+  &:hover {
+    outline: none;
+    border-color: ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+  }
 `;
 
 const StyledIconWrapper = styled.div<IReqoreInputStyle>`
@@ -61,24 +78,24 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
   padding-right: ${({ clearable, _size }) => (clearable ? SIZE_TO_PX[_size] : 7)}px;
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
+  border: none;
 
   background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
     minimal ? 'transparent' : darken(0.01, theme.main)};
   color: ${({ theme }: IReqoreInputStyle) => getReadableColor(theme)};
 
-  border: ${({ minimal, theme }) =>
-    !minimal ? `1px solid ${rgba(getReadableColor(theme), 0.2)}` : 0};
-  border-bottom: ${({ minimal, theme }) =>
-    minimal ? `0.5px solid ${rgba(getReadableColor(theme), 0.2)}` : undefined};
-
-  border-radius: ${({ minimal }) => (minimal ? 0 : 3)}px;
   transition: all 0.2s linear;
 
   &:active,
   &:focus,
   &:hover {
     outline: none;
-    border-color: ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+  }
+
+  &:active,
+  &:focus {
+    background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
+      minimal ? 'transparent' : changeLightness(darken(0.01, theme.main), 0.01)};
   }
 
   &::placeholder {
@@ -110,6 +127,9 @@ const ReqoreInput = forwardRef(
       className,
       onClearClick,
       icon,
+      flat,
+      rounded = true,
+      minimal,
       ...rest
     }: IReqoreInputProps,
     ref
@@ -131,6 +151,9 @@ const ReqoreInput = forwardRef(
         fluid={fluid}
         fixed={fixed}
         width={width}
+        flat={flat}
+        rounded={rounded}
+        minimal={minimal}
         _size={size}
         ref={combinedRef}
       >
@@ -142,6 +165,7 @@ const ReqoreInput = forwardRef(
         <StyledInput
           {...rest}
           _size={size}
+          minimal={minimal}
           hasIcon={!!icon}
           clearable={!rest?.disabled && !!(onClearClick && rest?.onChange)}
           className={`${className || ''} reqore-control reqore-input`}
