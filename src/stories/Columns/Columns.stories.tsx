@@ -2,7 +2,13 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import React from 'react';
 import { IReqoreColumnsProps } from '../../components/Columns';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreColumns, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../../index';
+import {
+  ReqoreColumn,
+  ReqoreColumns,
+  ReqoreContent,
+  ReqoreLayoutContent,
+  ReqoreUIProvider,
+} from '../../index';
 
 export default {
   title: 'ReQore/Columns',
@@ -22,9 +28,17 @@ const Template: Story<IReqoreUIProviderProps & { segment: IReqoreColumnsProps }>
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
         <ReqoreContent style={{ padding: '20px' }}>
+          <h4> Default </h4>
           <ReqoreColumns {...segment}>
-            <div style={{ border: '1px solid red' }}>1st column</div>
-            <div style={{ border: '1px solid red' }}>2nd column</div>
+            <ReqoreColumn style={{ border: '1px solid red' }}>1st column</ReqoreColumn>
+            <ReqoreColumn style={{ border: '1px solid red' }}>2nd column</ReqoreColumn>
+          </ReqoreColumns>
+          <h4> Custom align & justify </h4>
+          <ReqoreColumns {...segment}>
+            <ReqoreColumn style={{ border: '1px solid red' }}>1st column</ReqoreColumn>
+            <ReqoreColumn style={{ border: '1px solid red' }} justifyContent='center'>
+              2nd column
+            </ReqoreColumn>
           </ReqoreColumns>
         </ReqoreContent>
       </ReqoreLayoutContent>
