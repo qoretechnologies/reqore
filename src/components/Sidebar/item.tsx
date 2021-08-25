@@ -12,22 +12,24 @@ import ReqoreIcon from '../Icon';
 
 export interface SidebarItemProps {
   itemData: IQorusSidebarItem;
-  isCollapsed: boolean;
-  subItem: boolean;
-  onSectionToggle: (sectionId: string) => any;
-  isExpanded: boolean;
-  isActive: boolean;
-  tooltip: string;
-  children: any;
-  expandedSection: string;
+  isCollapsed?: boolean;
+  subItem?: boolean;
+  onSectionToggle?: (sectionId: string) => any;
+  isExpanded?: boolean;
+  isActive?: boolean;
+  tooltip?: string;
+  children?: any;
+  expandedSection?: string;
   onFavoriteClick?: Function;
   onUnfavoriteClick?: Function;
   favoriteItems?: any;
   formatItemName?: (itemName: string) => string;
-  currentPath: string;
-  sectionName: string;
-  hasFavorites: boolean;
+  currentPath?: string;
+  sectionName?: string;
+  hasFavorites?: boolean;
   useNativeTitle?: boolean;
+  bookmarks?: string[];
+  onClick(): void;
 }
 
 export interface ISidebarTooltipProps {
@@ -58,7 +60,10 @@ const SidebarItemTooltip: Function = ({
       //@ts-ignore
       <Element
         {...itemData.props}
-        onClick={itemData.props?.onClick || onClick}
+        onClick={(e) => {
+          itemData.props?.onClick?.(e);
+          onClick?.(e);
+        }}
         className={classnames('sidebarItem', 'sidebarLink', {
           sidebarSubItem: isSubitem,
           active: isActive,
@@ -77,7 +82,10 @@ const SidebarItemTooltip: Function = ({
       component={Element}
       componentProps={{
         ...itemData.props,
-        onClick: itemData.props?.onClick || onClick,
+        onClick: (e) => {
+          itemData.props?.onClick?.(e);
+          onClick?.(e);
+        },
         className: classnames('sidebarItem', 'sidebarLink', {
           sidebarSubItem: isSubitem,
           active: isActive,
@@ -94,7 +102,7 @@ const SidebarItemTooltip: Function = ({
   );
 };
 
-const SidebarItem: Function = ({
+const SidebarItem = ({
   itemData,
   isCollapsed,
   subItem,
@@ -107,6 +115,7 @@ const SidebarItem: Function = ({
   sectionName,
   hasFavorites,
   useNativeTitle,
+  onClick,
 }: SidebarItemProps) => {
   const handleFavoriteClick = (event) => {
     event.persist();
@@ -150,13 +159,10 @@ const SidebarItem: Function = ({
             ? () => {
                 onSectionToggle(itemData.name);
               }
-            : undefined
+            : () => void onClick?.()
         }
       >
-        <ReqoreIcon
-          icon={itemData.icon}
-          margin={isCollapsed ? undefined : 'right'}
-        />{' '}
+        <ReqoreIcon icon={itemData.icon} margin={isCollapsed ? undefined : 'right'} />{' '}
         {!isCollapsed && getItemName(itemData.name)}
         {itemData.submenu && (
           <ReqoreIcon
@@ -173,11 +179,7 @@ const SidebarItem: Function = ({
                 onClick={handleUnfavoriteClick}
               />
             ) : (
-              <ReqoreIcon
-                icon='Bookmark3Line'
-                className='favorite'
-                onClick={handleFavoriteClick}
-              />
+              <ReqoreIcon icon='Bookmark3Line' className='favorite' onClick={handleFavoriteClick} />
             )}
           </>
         ) : null}
@@ -186,7 +188,7 @@ const SidebarItem: Function = ({
   );
 };
 
-const SidebarItemWrapper: Function = ({
+const SidebarItemWrapper = ({
   itemData,
   isCollapsed,
   onSectionToggle,
@@ -198,17 +200,14 @@ const SidebarItemWrapper: Function = ({
   hasFavorites,
   sectionName,
   useNativeTitle,
+  onClick,
 }: SidebarItemProps) => {
   const theme: IReqoreTheme = useContext(ThemeContext);
 
   useMount(() => {
     if (
       !itemData.element &&
-      isActiveMulti(
-        itemData.activePaths || [itemData.props?.href],
-        currentPath,
-        itemData.exact
-      )
+      isActiveMulti(itemData.activePaths || [itemData.props?.href], currentPath, itemData.exact)
     ) {
       onSectionToggle(itemData.name);
     }
@@ -224,13 +223,7 @@ const SidebarItemWrapper: Function = ({
         backgroundColor={theme.sidebar?.main || theme.main}
         textColor={
           theme.sidebar?.color ||
-          getReadableColor(
-            theme,
-            undefined,
-            undefined,
-            true,
-            getMainColor(theme, 'sidebar')
-          )
+          getReadableColor(theme, undefined, undefined, true, getMainColor(theme, 'sidebar'))
         }
       />
     );
@@ -250,6 +243,7 @@ const SidebarItemWrapper: Function = ({
         sectionName={sectionName}
         hasFavorites={hasFavorites}
         useNativeTitle={useNativeTitle}
+        onClick={onClick}
       />
       {expandedSection === itemData.name &&
         map(itemData.submenu, (subItemData: any, key: number) => (
@@ -265,6 +259,7 @@ const SidebarItemWrapper: Function = ({
             sectionName={sectionName}
             hasFavorites={hasFavorites}
             useNativeTitle={useNativeTitle}
+            onClick={onClick}
           />
         ))}
     </>
