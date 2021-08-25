@@ -162,6 +162,52 @@ test('Renders item as <p> element with onClick', () => {
   expect(document.querySelectorAll('.sidebarSection').length).toBe(4);
 });
 
+test('Renders floating sidebar with item as <p> element with onClick, closes on item click', () => {
+  const handleItemClick = jest.fn();
+  const handleClose = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreSidebar
+        items={{
+          ...qorusSidebarItems,
+          TestItems: {
+            title: 'TestItems',
+            items: [
+              {
+                name: 'Test',
+                as: 'p',
+                props: {
+                  onClick: handleItemClick,
+                },
+                id: 'test-item-1',
+                icon: 'AddBoxLine',
+              },
+            ],
+          },
+        }}
+        closeOnItemClick
+        onCloseClick={handleClose}
+        floating
+        isOpen
+        path='/'
+      />
+    </ReqoreUIProvider>
+  );
+
+  const menuItem = document.querySelector('p.sidebarItem');
+
+  expect(menuItem).toBeTruthy();
+
+  fireEvent.click(menuItem);
+
+  expect(handleItemClick).toHaveBeenCalled();
+  expect(handleClose).toHaveBeenCalled();
+
+  expect(document.querySelectorAll('.sidebarItem').length).toBe(9);
+  expect(document.querySelectorAll('.sidebarSection').length).toBe(5);
+});
+
 test('Renders custom item at the top', () => {
   render(
     <ReqoreUIProvider>

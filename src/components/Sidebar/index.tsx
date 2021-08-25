@@ -59,6 +59,7 @@ export interface IQorusSidebarProps {
   hasFloatingBackdrop?: boolean;
   onCloseClick?: () => void;
   isOpen?: boolean;
+  closeOnItemClick?: boolean;
 }
 
 export interface IReqoreSidebarStyle {
@@ -367,6 +368,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   floating,
   hasFloatingBackdrop,
   isOpen,
+  closeOnItemClick,
 }) => {
   const [_isCollapsed, setIsCollapsed] = useState<boolean>(isCollapsed || false);
   useState;
@@ -450,6 +452,9 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
                       sectionName={sectionId}
                       hasFavorites={!!onBookmarksChange}
                       useNativeTitle={useNativeTitle}
+                      onClick={
+                        closeOnItemClick && onCloseClick ? () => void onCloseClick() : undefined
+                      }
                     />
                   ))}
                 </div>

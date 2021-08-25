@@ -163,5 +163,6 @@ Floating.args = {
   isOpen: true,
   flat: true,
   isCollapsed: false,
-  hasFloatingBackdrop: true,
+  hasFloatingBackdrop: false,
+  closeOnItemClick: true,
 } as IReqoreUIProviderProps & IQorusSidebarProps;
