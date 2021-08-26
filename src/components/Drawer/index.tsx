@@ -53,9 +53,7 @@ export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
 `;
 
 export const StyledVerticalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
-  top: ${({ floating }) => (floating ? 10 : 0)}px;
-  bottom: ${({ floating }) => (floating ? 10 : 0)}px;
-  height: ${({ floating }) => (floating ? undefined : '100%')};
+  height: 100%;
   width: 100%;
 
   ${({ position, theme, flat, floating }) =>
@@ -70,10 +68,8 @@ export const StyledVerticalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
 `;
 
 export const StyledHorizontalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
-  left: ${({ floating }) => (floating ? 10 : 0)}px;
-  right: ${({ floating }) => (floating ? 10 : 0)}px;
   height: 100%;
-  width: ${({ floating }) => (floating ? undefined : '100%')};
+  width: 100%;
 
   ${({ position, theme, flat, floating }) =>
     !flat && !floating
