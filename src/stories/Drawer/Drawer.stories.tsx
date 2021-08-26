@@ -5,7 +5,14 @@ import ReqoreControlGroup from '../../components/ControlGroup';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import ReqoreDropdown from '../../components/Dropdown';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../../index';
+import {
+  ReqoreButton,
+  ReqoreContent,
+  ReqoreLayoutContent,
+  ReqoreTabs,
+  ReqoreTabsContent,
+  ReqoreUIProvider,
+} from '../../index';
 
 export default {
   title: 'ReQore/Drawer',
@@ -107,14 +114,15 @@ const Template: Story<IReqoreUIProviderProps & IReqoreDrawerProps> = (
             />
           </ReqoreControlGroup>
           <ReqoreDrawer {...drawerData} onClose={() => updateItem('isOpen', false)}>
-            <div style={{ padding: '15px' }}>
-              I am a message a very long message - Shadowlands has mechanisms put in place for
-              allowing players to catch up on Renown, the system of gaining favor and unlocking
-              rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
-              main characters who have started late, for alts, for players who have switched
-              Covenants and are starting over, and for players who have simply missed weekly quests
-              for earning Renown due to being away from the game.
-            </div>
+            <ReqoreTabs
+              tabs={[
+                { label: 'Tab 1 with some long label', id: 'tab1' },
+                { label: 'Tab 2 another long label', id: 'tab2' },
+              ]}
+            >
+              <ReqoreTabsContent id='tab1'>Tab 1 here</ReqoreTabsContent>
+              <ReqoreTabsContent id='tab2'>Tab 2 here</ReqoreTabsContent>
+            </ReqoreTabs>
           </ReqoreDrawer>
         </ReqoreContent>
       </ReqoreLayoutContent>
