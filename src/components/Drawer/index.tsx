@@ -2,6 +2,7 @@ import { preview } from '@reactpreview/config';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
@@ -208,7 +209,7 @@ export const ReqoreDrawer = ({
     return null;
   }
 
-  return (
+  return createPortal(
     <ReqoreThemeProvider theme={theme}>
       {hasBackdrop && !_isHidden ? (
         <StyledBackdrop
@@ -304,7 +305,8 @@ export const ReqoreDrawer = ({
           </Wrapper>
         )}
       </Resizable>
-    </ReqoreThemeProvider>
+    </ReqoreThemeProvider>,
+    document.querySelector('#reqore-portal')
   );
 };
 

@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import merge from 'lodash/merge';
 import React, { useState } from 'react';
+import styled from 'styled-components';
 import ReqoreLayoutWrapper from '../components/Layout';
 import { IReqoreNotificationsPosition } from '../components/Notifications';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
@@ -15,6 +16,10 @@ export interface IReqoreUIProviderProps {
   notificationsPosition?: IReqoreNotificationsPosition;
   withSidebar?: boolean;
 }
+
+const StyledPortal = styled.div`
+  z-index: 9999;
+`;
 
 const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
   children,
@@ -34,7 +39,7 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
           <ReqoreProvider position={notificationsPosition}>
             <PopoverProvider>
               {modalPortal ? children : null}
-              <div id='reqore-modal-portal' ref={setModalPortal} />
+              <StyledPortal id='reqore-portal' ref={setModalPortal} />
             </PopoverProvider>
           </ReqoreProvider>
         </ReqoreLayoutWrapper>

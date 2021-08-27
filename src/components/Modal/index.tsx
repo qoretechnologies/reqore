@@ -137,6 +137,6 @@ export const ReqoreModal = ({
         </StyledModalWrapper>
       </StyledModal>
     </ReqoreThemeProvider>,
-    document.querySelector('#reqore-modal-portal')
+    document.querySelector('#reqore-portal')
   );
 };
