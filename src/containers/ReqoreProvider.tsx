@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useMedia } from 'react-use';
 import styled from 'styled-components';
 import {
@@ -57,6 +57,7 @@ const StyledConfirmContent = styled.div`
 const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
   const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>(null);
+  const latestZIndex = useRef<number>(9000);
 
   const isMobile = process.env.NODE_ENV === 'test' ? false : useMedia('(max-width: 480px)');
   const isTablet =
@@ -64,6 +65,12 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
       ? false
       : useMedia('(min-width: 480px) and (max-width: 1200px)');
   const isMobileOrTablet = isMobile || isTablet;
+
+  const getAndIncreaseZIndex = (): number => {
+    latestZIndex.current += 1;
+
+    return latestZIndex.current;
+  };
 
   const confirmAction = (data: IReqoreConfirmationModal): void => {
     setConfirmationModal(data);
@@ -107,6 +114,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
           isMobile,
           isTablet,
           isMobileOrTablet,
+          getAndIncreaseZIndex,
         }}
       >
         {notifications.length > 0 ? (

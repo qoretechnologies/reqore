@@ -9,6 +9,7 @@ import styled, { css } from 'styled-components';
 import { IReqoreSidebarTheme, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getMainColor, getReadableColor } from '../../helpers/colors';
 import { transformMenu } from '../../helpers/sidebar';
+import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledBackdrop } from '../Drawer';
@@ -71,6 +72,7 @@ export interface IReqoreSidebarStyle {
   flat?: boolean;
   floating?: boolean;
   isOpen?: boolean;
+  zIndex?: number;
 }
 
 const StyledSidebar = styled.div<IReqoreSidebarStyle>`
@@ -104,7 +106,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
       `}
     `}
 
-  ${({ floating, flat, theme, position, isOpen }) =>
+  ${({ floating, flat, theme, position, isOpen, zIndex }) =>
     floating
       ? css`
           position: fixed;
@@ -112,7 +114,7 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
           ${position}: ${isOpen ? 10 : -200}px;
           bottom: 10px;
           border-radius: 10px;
-          z-index: 999;
+          z-index: ${zIndex};
           border: ${!flat
             ? `1px solid ${theme.sidebar?.border || darken(0.05, getMainColor(theme, 'sidebar'))}`
             : undefined};
@@ -375,6 +377,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [_bookmarks, setBookmarks] = useState<string[]>(bookmarks || []);
   const theme: IReqoreTheme = useReqoreTheme('sidebar', customTheme);
+  const zIndex = useLatestZIndex();
 
   useUpdateEffect(() => {
     if (onBookmarksChange) {
@@ -413,6 +416,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
           className='reqore-sidebar-backdrop'
           onClick={() => onCloseClick?.()}
           closable
+          zIndex={zIndex}
         />
       ) : null}
       <StyledSidebar
@@ -427,6 +431,7 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
         flat={flat}
         floating={floating}
         isOpen={isOpen}
+        zIndex={zIndex}
       >
         <Scroll horizontal={false} className='sidebarScroll' key='reqore-sidebar-scroll'>
           {map(menu, ({ title, items }, sectionId: string) =>
