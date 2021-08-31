@@ -2,13 +2,14 @@ import { createContext } from 'react';
 import { IReqoreConfirmationModal, IReqoreNotificationData } from '../containers/ReqoreProvider';
 
 export interface IReqoreContext {
-  confirmAction: (data: IReqoreConfirmationModal) => void;
-  notifications?: IReqoreNotificationData[] | null;
-  addNotification?: (data: IReqoreNotificationData) => any;
-  removeNotification?: (id: string) => any;
-  isMobile?: boolean;
-  isTablet?: boolean;
-  isMobileOrTablet?: boolean;
+  readonly confirmAction: (data: IReqoreConfirmationModal) => void;
+  readonly notifications?: IReqoreNotificationData[] | null;
+  readonly addNotification?: (data: IReqoreNotificationData) => any;
+  readonly removeNotification?: (id: string) => any;
+  readonly isMobile?: boolean;
+  readonly isTablet?: boolean;
+  readonly isMobileOrTablet?: boolean;
+  readonly getAndIncreaseZIndex?: () => number;
 }
 
 export default createContext<IReqoreContext>({

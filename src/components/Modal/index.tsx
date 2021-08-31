@@ -1,11 +1,13 @@
+import { animated, useTransition } from '@react-spring/web';
 import { rgba } from 'polished';
 import React from 'react';
 import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
+import { SPRING_CONFIG } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { fadeIn } from '../../helpers/animations';
 import { getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
+import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
 import ReqoreIcon from '../Icon';
@@ -25,6 +27,7 @@ export interface IReqoreModalProps extends React.HTMLAttributes<HTMLDivElement> 
 
 export interface IReqoreModalStyle extends IReqoreModalProps {
   theme: IReqoreTheme;
+  zIndex?: number;
 }
 
 const StyledModal = styled.div<IReqoreModalStyle>`
@@ -36,8 +39,7 @@ const StyledModal = styled.div<IReqoreModalStyle>`
   left: 0;
   right: 0;
   bottom: 0;
-
-  animation: 0.2s ${fadeIn} ease-in-out;
+  z-index: ${({ zIndex }) => zIndex};
 `;
 
 const StyledModalBackdrop = styled.div<IReqoreModalStyle>`
@@ -48,15 +50,13 @@ const StyledModalBackdrop = styled.div<IReqoreModalStyle>`
   bottom: 0;
 
   background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.8)};
-  z-index: 9999;
   cursor: ${({ onClose }) => (onClose ? 'pointer' : 'initial')};
 `;
 
-const StyledModalWrapper = styled.div<IReqoreModalStyle>`
+const StyledModalWrapper = styled(animated.div)<IReqoreModalStyle>`
   max-width: 90vw;
   max-height: 90vh;
   position: relative;
-  z-index: 9999;
   display: flex;
   flex-flow: column;
 
@@ -100,43 +100,52 @@ export const ReqoreModal = ({
   isOpen,
   ...rest
 }: IReqoreModalProps) => {
-  if (!isOpen) {
-    return null;
-  }
+  const transitions = useTransition(isOpen, {
+    from: { opacity: 0, scale: 0.9 },
+    enter: { opacity: 1, scale: 1 },
+    config: SPRING_CONFIG,
+  });
 
-  return createPortal(
-    <ReqoreThemeProvider>
-      <StyledModal>
-        <StyledModalBackdrop
-          {...{ onClose }}
-          onClick={onClose || undefined}
-          className='reqore-modal-backdrop'
-        />
-        <StyledModalWrapper
-          {...rest}
-          width={width}
-          height={height}
-          flat={flat}
-          className={`${rest.className || ''} reqore-modal`}
-        >
-          <StyledModalHeader>
-            <h3>
-              {icon && <ReqoreIcon icon={icon} margin='right' />}
-              {title && <>{title}</>}
-            </h3>
-            {onClose && (
-              <ReqoreButton
-                icon='CloseLine'
-                minimal
-                onClick={onClose}
-                className='reqore-modal-close-button'
-              />
-            )}
-          </StyledModalHeader>
-          {children}
-        </StyledModalWrapper>
-      </StyledModal>
-    </ReqoreThemeProvider>,
-    document.querySelector('#reqore-portal')
+  const zIndex: number = useLatestZIndex();
+
+  return transitions(
+    (style, item) =>
+      item &&
+      createPortal(
+        <ReqoreThemeProvider>
+          <StyledModal zIndex={zIndex}>
+            <StyledModalBackdrop
+              {...{ onClose }}
+              onClick={onClose || undefined}
+              className='reqore-modal-backdrop'
+            />
+            <StyledModalWrapper
+              {...rest}
+              width={width}
+              height={height}
+              flat={flat}
+              className={`${rest.className || ''} reqore-modal`}
+              style={style as any}
+            >
+              <StyledModalHeader>
+                <h3>
+                  {icon && <ReqoreIcon icon={icon} margin='right' />}
+                  {title && <>{title}</>}
+                </h3>
+                {onClose && (
+                  <ReqoreButton
+                    icon='CloseLine'
+                    minimal
+                    onClick={onClose}
+                    className='reqore-modal-close-button'
+                  />
+                )}
+              </StyledModalHeader>
+              {children}
+            </StyledModalWrapper>
+          </StyledModal>
+        </ReqoreThemeProvider>,
+        document.querySelector('#reqore-portal')
+      )
   );
 };

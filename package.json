@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.17.4",
+  "version": "0.17.5",
   "description": "ReQore is a UI library of components for Qorus connected apps",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -65,6 +65,7 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.6.0",
+    "@react-spring/web": "^9.2.4",
     "@reactpreview/config": "^0.2.3",
     "@types/lodash": "^4.14.166",
     "classnames": "^2.2.6",

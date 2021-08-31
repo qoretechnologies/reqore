@@ -45,3 +45,4 @@ export { default as ReqoreNotifications } from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';
+export { default as useLatestZIndex } from './hooks/useLatestZIndex';
