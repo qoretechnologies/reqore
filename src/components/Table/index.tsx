@@ -70,6 +70,7 @@ const StyledTableWrapper = styled.div<IReqoreTableStyle>`
     position: relative;
     clear: both;
     overflow: hidden;
+    z-index: 1;
 
     display: flex;
     flex-flow: column;

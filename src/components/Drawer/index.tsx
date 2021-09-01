@@ -31,6 +31,7 @@ export interface IReqoreDrawerProps extends React.HTMLAttributes<HTMLDivElement>
   opacity?: number;
   flat?: boolean;
   floating?: boolean;
+  padded?: boolean;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -45,8 +46,11 @@ export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
   background-color: ${({ theme, opacity = 1 }) => rgba(getMainBackgroundColor(theme), opacity)};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   border-radius: ${({ floating }) => (floating ? 10 : 0)}px;
+  padding: ${({ padded }) => (padded ? 10 : 0)}px;
   box-shadow: ${({ floating }) =>
     floating ? `0px 0px 30px 0px ${rgba('#000000', 0.4)}` : undefined};
+  overflow: hidden;
+  display: flex;
 
   ${({ theme, flat, floating }) =>
     !flat && floating

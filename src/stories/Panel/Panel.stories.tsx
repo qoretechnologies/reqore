@@ -14,6 +14,52 @@ export default {
   },
 } as Meta;
 
+const SingleTemplate: Story<IReqoreUIProviderProps> = ({
+  theme,
+  ...args
+}: IReqoreUIProviderProps) => {
+  return (
+    <ReqoreUIProvider theme={theme}>
+      <ReqoreLayoutContent>
+        <ReqoreContent style={{ padding: '20px' }}>
+          <ReqorePanel {...args}>
+            <div style={{ padding: '15px' }}>
+              I am a message a very long message - Shadowlands has mechanisms put in place for
+              allowing players to catch up on Renown, the system of gaining favor and unlocking
+              rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+              main characters who have started late, for alts, for players who have switched
+              Covenants and are starting over, and for players who have simply missed weekly quests
+              for earning Renown due to being away from the game. I am a message a very long message
+              - Shadowlands has mechanisms put in place for allowing players to catch up on Renown,
+              the system of gaining favor and unlocking rewards, Campaign chapters, and soulbinds
+              within your Covenant. This system works for main characters who have started late, for
+              alts, for players who have switched Covenants and are starting over, and for players
+              who have simply missed weekly quests for earning Renown due to being away from the
+              game. I am a message a very long message - Shadowlands has mechanisms put in place for
+              allowing players to catch up on Renown, the system of gaining favor and unlocking
+              rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+              main characters who have started late, for alts, for players who have switched
+              Covenants and are starting over, and for players who have simply missed weekly quests
+              for earning Renown due to being away from the game. I am a message a very long message
+              - Shadowlands has mechanisms put in place for allowing players to catch up on Renown,
+              the system of gaining favor and unlocking rewards, Campaign chapters, and soulbinds
+              within your Covenant. This system works for main characters who have started late, for
+              alts, for players who have switched Covenants and are starting over, and for players
+              who have simply missed weekly quests for earning Renown due to being away from the
+              game. I am a message a very long message - Shadowlands has mechanisms put in place for
+              allowing players to catch up on Renown, the system of gaining favor and unlocking
+              rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+              main characters who have started late, for alts, for players who have switched
+              Covenants and are starting over, and for players who have simply missed weekly quests
+              for earning Renown due to being away from the game.
+            </div>
+          </ReqorePanel>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+};
+
 const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIProviderProps) => {
   return (
     <ReqoreUIProvider theme={theme}>
@@ -41,6 +87,16 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
               Covenants and are starting over, and for players who have simply missed weekly quests
               for earning Renown due to being away from the game.
             </div>
+          </ReqorePanel>
+          <br />
+          <h4>Padded</h4>
+          <ReqorePanel {...args} rounded title='I am a title' icon='UserFill' padded>
+            I am a message a very long message - Shadowlands has mechanisms put in place for
+            allowing players to catch up on Renown, the system of gaining favor and unlocking
+            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+            main characters who have started late, for alts, for players who have switched Covenants
+            and are starting over, and for players who have simply missed weekly quests for earning
+            Renown due to being away from the game.
           </ReqorePanel>
           <br />
           <h4>With actions</h4>
@@ -362,4 +418,13 @@ CustomColor.args = {
   customTheme: {
     main: '#0d0221',
   },
+};
+
+export const Fill = SingleTemplate.bind({});
+Fill.args = {
+  fill: true,
+  flat: true,
+  rounded: true,
+  title: 'Fills the whole space',
+  collapsible: true,
 };
