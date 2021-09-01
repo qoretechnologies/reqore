@@ -9,6 +9,7 @@ import {
   ReqoreButton,
   ReqoreContent,
   ReqoreLayoutContent,
+  ReqorePanel,
   ReqoreTabs,
   ReqoreTabsContent,
   ReqoreUIProvider,
@@ -120,7 +121,14 @@ const Template: Story<IReqoreUIProviderProps & IReqoreDrawerProps> = (
                 { label: 'Tab 2 another long label', id: 'tab2' },
               ]}
             >
-              <ReqoreTabsContent id='tab1'>Tab 1 here</ReqoreTabsContent>
+              <ReqoreTabsContent id='tab1'>
+                <ReqorePanel fill title='Tab 1 contents' collapsible flat rounded padded>
+                  I am a message a very long message - Shadowlands has mechanisms put in place for
+                  allowing players to catch up on Renown, the system of gaining favor and unlocking
+                  rewards, Campaign chapters, and soulbinds within your Covenant.
+                </ReqorePanel>
+                <ReqoreButton>Hello</ReqoreButton>
+              </ReqoreTabsContent>
               <ReqoreTabsContent id='tab2'>Tab 2 here</ReqoreTabsContent>
             </ReqoreTabs>
           </ReqoreDrawer>

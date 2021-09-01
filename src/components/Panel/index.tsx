@@ -2,6 +2,7 @@ import { size } from 'lodash';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
+import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
@@ -34,6 +35,8 @@ export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> 
   flat?: boolean;
   unMountContentOnCollapse?: boolean;
   onCollapseChange?: (isCollapsed?: boolean) => void;
+  fill?: boolean;
+  padded?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -42,13 +45,21 @@ export interface IStyledPanel extends IReqorePanelProps {
 
 export const StyledPanel = styled.div<IStyledPanel>`
   background-color: ${({ theme }: IStyledPanel) => theme.main};
-  border-radius: ${({ rounded }) => (rounded ? 5 : 0)}px;
+  border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
   border: ${({ theme, flat }) =>
     flat ? undefined : `1px solid ${changeLightness(theme.main, 0.2)}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
   display: flex;
   flex-flow: column;
+
+  ${({ fill, isCollapsed }) =>
+    !isCollapsed && fill
+      ? css`
+          height: 100%;
+          flex: 1;
+        `
+      : undefined}
 `;
 
 export const StyledPanelTitle = styled.div<IStyledPanel>`
@@ -61,6 +72,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   border-bottom: ${({ theme, isCollapsed, flat }) =>
     !isCollapsed && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : null};
   transition: background-color 0.1s linear;
+  overflow: hidden;
+  flex: 0 0 auto;
 
   ${({ collapsible }) =>
     collapsible &&
@@ -74,7 +87,9 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
   min-height: ${({ isCollapsed }) => (isCollapsed ? undefined : '40px')};
+  padding: ${({ padded }) => (!padded ? undefined : '10px')};
   flex: 1;
+  overflow: hidden;
 `;
 export const StyledPanelTitleHeader = styled.div``;
 
@@ -95,6 +110,7 @@ export const ReqorePanel = forwardRef(
       flat,
       unMountContentOnCollapse = true,
       onCollapseChange,
+      padded,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -123,6 +139,7 @@ export const ReqorePanel = forwardRef(
         <StyledPanel
           {...rest}
           ref={ref as any}
+          isCollapsed={_isCollapsed}
           rounded={rounded}
           flat={flat}
           className={`${className || ''} reqore-panel`}
@@ -181,7 +198,11 @@ export const ReqorePanel = forwardRef(
             </StyledPanelTitle>
           )}
           {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
-            <StyledPanelContent className='reqore-panel-content' isCollapsed={_isCollapsed}>
+            <StyledPanelContent
+              className='reqore-panel-content'
+              isCollapsed={_isCollapsed}
+              padded={padded}
+            >
               {children}
             </StyledPanelContent>
           ) : null}

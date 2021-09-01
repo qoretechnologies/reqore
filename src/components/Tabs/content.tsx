@@ -1,8 +1,7 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import styled from 'styled-components';
 
-export interface IReqoreTabsContent
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreTabsContent extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   id: string;
 }
@@ -10,21 +9,13 @@ export interface IReqoreTabsContent
 const StyledTabsContent = styled.div`
   display: flex;
   flex-flow: column;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   flex: 1;
   padding: 10px;
 `;
 
-const ReqoreTabsContent = ({
-  children,
-  className,
-  ...rest
-}: IReqoreTabsContent) => (
-  <StyledTabsContent
-    {...rest}
-    className={`${className || ""} reqore-tabs-content`}
-  >
+const ReqoreTabsContent = ({ children, className, ...rest }: IReqoreTabsContent) => (
+  <StyledTabsContent {...rest} className={`${className || ''} reqore-tabs-content`}>
     {children}
   </StyledTabsContent>
 );
