@@ -51,6 +51,7 @@ export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
     floating ? `0px 0px 30px 0px ${rgba('#000000', 0.4)}` : undefined};
   overflow: hidden;
   display: flex;
+  flex-flow: column;
 
   ${({ theme, flat, floating }) =>
     !flat && floating

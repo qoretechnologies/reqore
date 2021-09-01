@@ -18,7 +18,7 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 
 const StyledControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
-  flex: ${({ fluid }) => (fluid ? '1' : '0 auto')};
+  flex: 0 auto;
   width: ${({ fluid }) => (fluid ? '100%' : undefined)};
 
   > .reqore-control-wrapper .reqore-control {
