@@ -86,7 +86,9 @@ export const ReqoreComment = ({
         <StyledInfoWrapper>
           {title && <StyledCommentTitle>{title}</StyledCommentTitle>}
           {detail && <StyledCommentDetail>{detail}</StyledCommentDetail>}
-          <StyledCommentText marginTop={title || detail ? '10px' : 0}>{children}</StyledCommentText>
+          <StyledCommentText marginTop={title || detail ? '10px' : '0px'}>
+            {children}
+          </StyledCommentText>
         </StyledInfoWrapper>
       </StyledCommentWrapper>
     </ReqorePanel>
