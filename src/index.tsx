@@ -4,6 +4,8 @@ export { default as ReqoreButton } from './components/Button';
 export { default as ReqoreCheckbox } from './components/Checkbox';
 export { ReqoreColumns } from './components/Columns';
 export { ReqoreColumn } from './components/Columns/column';
+export { ReqoreComment } from './components/Comment';
+export { ReqoreCommentFeed } from './components/CommentFeed';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreControlGroup } from './components/ControlGroup';
 export { ReqoreDrawer } from './components/Drawer';
