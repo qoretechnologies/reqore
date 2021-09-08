@@ -11,7 +11,7 @@ import {
 } from '../../index';
 
 export default {
-  title: 'ReQore/Comment',
+  title: 'ReQore/Comments',
   args: {
     theme: {
       main: '#222222',
@@ -62,7 +62,63 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
             >
               This is a test of some kind
             </ReqoreComment>
-            <ReqoreComment icon='UserFill' rounded flat intent='info'>
+            <ReqoreComment icon='UserFill' rounded flat intent='info' detail='2 hours ago'>
+              root@f075a0285dc4:/usr/src/app# yarn storybook yarn run v1.22.5 $ start-storybook -p
+              6006 --no-dll info @storybook/react v6.3.6 info (node:94152) DeprecationWarning:
+              DLL-related CLI flags are deprecated, see:
+              https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#deprecated-dll-flags
+              (Use `node --trace-deprecation ...` to show where the warning was created) info =
+              Loading presets info = Loading 1 config file in "/usr/src/app/.storybook" info =
+              Loading 9 other files in "/usr/src/app/.storybook" info = Adding stories defined in
+              "/usr/src/app/.storybook/main.js" info = Using implicit CSS loaders info = Using
+              prebuilt manager info = Using default Webpack4 setup (node:94152) DeprecationWarning:
+              Default PostCSS plugins are deprecated. When switching to '@storybook/addon-postcss',
+              you will need to add your own plugins, such as 'postcss-flexbugs-fixes' and
+              'autoprefixer'. See
+              https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#deprecated-default-postcss-plugins
+              for details. webpack built preview fa5eb92344441c8f8b60 in 13740ms
+            </ReqoreComment>
+            <ReqoreComment
+              rounded
+              flat
+              intent='info'
+              title='Awesome comment'
+              actions={[
+                {
+                  label: 'Edit',
+                  icon: 'Edit2Line',
+                },
+              ]}
+            >
+              root@f075a0285dc4:/usr/src/app# yarn storybook yarn run v1.22.5 $ start-storybook -p
+              6006 --no-dll info @storybook/react v6.3.6 info (node:94152) DeprecationWarning:
+              DLL-related CLI flags are deprecated, see:
+              https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#deprecated-dll-flags
+              (Use `node --trace-deprecation ...` to show where the warning was created) info =
+              Loading presets info = Loading 1 config file in "/usr/src/app/.storybook" info =
+              Loading 9 other files in "/usr/src/app/.storybook" info = Adding stories defined in
+              "/usr/src/app/.storybook/main.js" info = Using implicit CSS loaders info = Using
+              prebuilt manager info = Using default Webpack4 setup (node:94152) DeprecationWarning:
+              Default PostCSS plugins are deprecated. When switching to '@storybook/addon-postcss',
+              you will need to add your own plugins, such as 'postcss-flexbugs-fixes' and
+              'autoprefixer'. See
+              https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#deprecated-default-postcss-plugins
+              for details. webpack built preview fa5eb92344441c8f8b60 in 13740ms
+            </ReqoreComment>
+            <ReqoreComment
+              rounded
+              flat
+              intent='warning'
+              actions={[
+                {
+                  label: 'Edit',
+                  icon: 'Edit2Line',
+                },
+                {
+                  icon: 'DeleteBin2Fill',
+                },
+              ]}
+            >
               root@f075a0285dc4:/usr/src/app# yarn storybook yarn run v1.22.5 $ start-storybook -p
               6006 --no-dll info @storybook/react v6.3.6 info (node:94152) DeprecationWarning:
               DLL-related CLI flags are deprecated, see:
@@ -86,3 +142,15 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
 };
 
 export const Basic = Template.bind({});
+export const LightColor = Template.bind({});
+LightColor.args = {
+  theme: {
+    main: '#ffffff',
+  },
+};
+export const CustomColor = Template.bind({});
+CustomColor.args = {
+  theme: {
+    main: '#0d0122',
+  },
+};

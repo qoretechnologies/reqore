@@ -1,9 +1,12 @@
+import { size } from 'lodash';
 import styled from 'styled-components';
+import { ReqoreButton, ReqoreColumn, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
+import { ReqoreColumns } from '../Columns';
 import { ReqoreH3 } from '../Header';
 import ReqoreIcon from '../Icon';
-import { ReqorePanel } from '../Panel';
+import { IReqorePanelAction, ReqorePanel } from '../Panel';
 import { ReqoreP } from '../Paragraph';
 
 export interface IReqoreCommentProps {
@@ -15,6 +18,7 @@ export interface IReqoreCommentProps {
   rounded?: boolean;
   flat?: boolean;
   detail?: string;
+  actions?: IReqorePanelAction[];
 }
 
 export const StyledCommentWrapper = styled.div`
@@ -73,10 +77,11 @@ export const ReqoreComment = ({
   image,
   title,
   detail,
+  actions,
   ...rest
 }: IReqoreCommentProps) => {
   return (
-    <ReqorePanel rounded={rounded} flat={flat} intent={intent} {...rest}>
+    <ReqorePanel rounded={rounded} flat={flat} intent={intent} className='reqore-comment' {...rest}>
       <StyledCommentWrapper>
         {icon || image ? (
           <StyledIconWrapper>
@@ -84,9 +89,48 @@ export const ReqoreComment = ({
           </StyledIconWrapper>
         ) : null}
         <StyledInfoWrapper>
-          {title && <StyledCommentTitle>{title}</StyledCommentTitle>}
-          {detail && <StyledCommentDetail>{detail}</StyledCommentDetail>}
-          <StyledCommentText marginTop={title || detail ? '10px' : '0px'}>
+          <ReqoreColumns>
+            <ReqoreColumn flexFlow='column' justifyContent='center'>
+              {title && <StyledCommentTitle>{title}</StyledCommentTitle>}
+              {detail && <StyledCommentDetail>{detail}</StyledCommentDetail>}
+            </ReqoreColumn>
+            {size(actions) ? (
+              <ReqoreColumn justifyContent='flex-end'>
+                <ReqoreControlGroup minimal size='small'>
+                  {actions.map(({ label, actions, ...rest }) =>
+                    size(actions) ? (
+                      <ReqoreDropdown
+                        {...rest}
+                        label={label}
+                        componentProps={{
+                          minimal: true,
+                          onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                            e.stopPropagation();
+                          },
+                        }}
+                        items={actions}
+                      />
+                    ) : (
+                      <ReqoreButton
+                        {...rest}
+                        onClick={
+                          rest.onClick
+                            ? (e: React.MouseEvent<HTMLButtonElement>) => {
+                                e.stopPropagation();
+                                rest.onClick();
+                              }
+                            : undefined
+                        }
+                      >
+                        {label}
+                      </ReqoreButton>
+                    )
+                  )}
+                </ReqoreControlGroup>
+              </ReqoreColumn>
+            ) : null}
+          </ReqoreColumns>
+          <StyledCommentText marginTop={title || detail || size(actions) ? '10px' : '0px'}>
             {children}
           </StyledCommentText>
         </StyledInfoWrapper>
