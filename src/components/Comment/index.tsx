@@ -44,9 +44,8 @@ export const StyledInfoWrapper = styled.div`
 `;
 
 export const StyledCommentText = styled(ReqoreP)<{ marginTop?: string }>`
-  max-height: 300px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  min-height: 10px;
+  overflow: hidden;
   padding: 0;
   margin: 0;
   margin-top: ${({ marginTop }: { marginTop?: string }) => marginTop};
@@ -89,7 +88,7 @@ export const ReqoreComment = ({
           </StyledIconWrapper>
         ) : null}
         <StyledInfoWrapper>
-          <ReqoreColumns>
+          <ReqoreColumns minColumnWidth='100px'>
             <ReqoreColumn flexFlow='column' justifyContent='center'>
               {title && <StyledCommentTitle>{title}</StyledCommentTitle>}
               {detail && <StyledCommentDetail>{detail}</StyledCommentDetail>}
