@@ -2,7 +2,13 @@ import _size from 'lodash/size';
 import React, { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
-import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  PADDING_FROM_SIZE,
+  RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -48,7 +54,7 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  border-radius: ${({ badge }) => (badge ? '20px' : '3px')};
+  border-radius: ${({ badge, size }) => (badge ? 20 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
 
   ${({ theme, color }) =>
@@ -69,7 +75,7 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
           : getReadableColor(theme, undefined, undefined)};
       }
     `}
-  
+
 
   ${({ disabled }) =>
     disabled &&

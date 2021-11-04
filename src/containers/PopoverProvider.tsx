@@ -1,24 +1,24 @@
-import React, { useState } from "react";
-import Popover from "../components/InternalPopover";
-import PopoverContext from "../context/PopoverContext";
-import { IPopoverOptions } from "../hooks/usePopover";
+import React, { useState } from 'react';
+import Popover from '../components/InternalPopover';
+import PopoverContext from '../context/PopoverContext';
+import { IPopoverOptions } from '../hooks/usePopover';
 
 export interface IReqorePopoverProviderProps {
   children: any;
+  uiScale?: number;
 }
 
 export interface IPopoverData extends IPopoverOptions {
   id: string;
 }
 
-const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({
-  children,
-}) => {
+const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiScale }) => {
   const [popovers, setPopovers] = useState<IPopoverData[]>([]);
 
   return (
     <PopoverContext.Provider
       value={{
+        uiScale,
         addPopover: (popoverData: IPopoverData) => {
           setPopovers((cur: IPopoverData[]) => [...cur, popoverData]);
         },
@@ -34,9 +34,7 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({
           );
         },
         removePopover: (popoverId: string) => {
-          setPopovers((cur: IPopoverData[]) =>
-            [...cur].filter((p) => p.id !== popoverId)
-          );
+          setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== popoverId));
         },
         popovers,
       }}

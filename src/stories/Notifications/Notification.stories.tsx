@@ -53,12 +53,74 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       onClick={noop}
       onClose={noop}
     />
+    <h4> Flat and inverted </h4>
+    <ReqoreNotification
+      {...args}
+      type='danger'
+      title='Simple notification'
+      content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
+      onClick={noop}
+      onClose={noop}
+      flat
+      inverted
+    />
+    <ReqoreNotification
+      {...args}
+      title='Simple notification'
+      content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
+      onClick={noop}
+      onClose={noop}
+      inverted
+    />
+    <ReqoreNotification
+      {...args}
+      title='Simple notification'
+      content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
+      onClick={noop}
+      onClose={noop}
+      flat
+      intent='info'
+      size='big'
+    />
+    <ReqoreNotification
+      {...args}
+      title='Simple notification'
+      content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
+      onClick={noop}
+      onClose={noop}
+      intent='success'
+      flat
+      icon='4KLine'
+      size='small'
+    />
+    <ReqoreNotification
+      {...args}
+      title='Simple notification'
+      content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
+      onClick={noop}
+      onClose={noop}
+      flat
+      intent='danger'
+      size='huge'
+    />
+    <ReqoreNotification
+      {...args}
+      title='Simple notification'
+      content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
+      onClick={noop}
+      onClose={noop}
+      intent='warning'
+      flat
+      icon='4KLine'
+      size='tiny'
+    />
   </ReqoreUIProvider>
 );
 
-const SingleTemplate: Story<
-  IReqoreNotificationProps & IReqoreUIProviderProps
-> = ({ theme, ...args }: IReqoreNotificationProps & IReqoreUIProviderProps) => (
+const SingleTemplate: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
+  theme,
+  ...args
+}: IReqoreNotificationProps & IReqoreUIProviderProps) => (
   <ReqoreUIProvider theme={theme}>
     <ReqoreNotification {...args} />
   </ReqoreUIProvider>
@@ -103,9 +165,10 @@ WithTimeout.args = {
   duration: 10000,
 };
 
-const UpdateTemplate: Story<
-  IReqoreNotificationProps & IReqoreUIProviderProps
-> = ({ theme, ...args }: IReqoreNotificationProps & IReqoreUIProviderProps) => {
+const UpdateTemplate: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
+  theme,
+  ...args
+}: IReqoreNotificationProps & IReqoreUIProviderProps) => {
   const [notificationData, setNotificationData] = useState({ ...args });
 
   useMount(() => {

@@ -13,7 +13,7 @@ const AddButton = (props: any) => {
           title: 'Test Notification',
           content: 'I am a notification in tests',
           duration: 3000,
-          id: props.id || Date.now(),
+          id: props.id,
           ...props,
         })
       }

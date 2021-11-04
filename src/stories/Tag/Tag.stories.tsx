@@ -25,6 +25,9 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
       <ReqoreLayoutContent>
         <ReqoreContent style={{ padding: '40px' }}>
           <h4> Basic </h4>
+          <ReqoreTag label='Something' size='tiny' />
+          <br />
+          <br />
           <ReqoreTag label='Something' size='small' />
           <br />
           <br />
@@ -32,6 +35,9 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
           <br />
           <br />
           <ReqoreTag label='Something' size='big' />
+          <br />
+          <br />
+          <ReqoreTag label='Something' size='huge' />
           <h4> Badge </h4>
           <ReqoreTag label='123' size='small' badge />
           <br />
