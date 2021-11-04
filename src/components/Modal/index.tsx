@@ -42,7 +42,7 @@ const StyledModal = styled.div<IReqoreModalStyle>`
   z-index: ${({ zIndex }) => zIndex};
 `;
 
-const StyledModalBackdrop = styled.div<IReqoreModalStyle>`
+const StyledModalBackdrop = styled(animated.div)<IReqoreModalStyle>`
   position: absolute;
   top: 0;
   left: 0;
@@ -103,6 +103,7 @@ export const ReqoreModal = ({
   const transitions = useTransition(isOpen, {
     from: { opacity: 0, scale: 0.9 },
     enter: { opacity: 1, scale: 1 },
+    leave: { opacity: 0, scale: 0.9 },
     config: SPRING_CONFIG,
   });
 
@@ -118,6 +119,9 @@ export const ReqoreModal = ({
               {...{ onClose }}
               onClick={onClose || undefined}
               className='reqore-modal-backdrop'
+              style={{
+                opacity: style.opacity,
+              }}
             />
             <StyledModalWrapper
               {...rest}
