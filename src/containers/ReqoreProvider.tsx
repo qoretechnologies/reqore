@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useMedia } from 'react-use';
+import shortid from 'shortid';
 import styled from 'styled-components';
 import {
   ReqoreButton,
@@ -14,6 +15,7 @@ import ReqoreNotificationsWrapper, {
 import ReqoreNotification, {
   IReqoreNotificationType,
 } from '../components/Notifications/notification';
+import { TSizes } from '../constants/sizes';
 import { IReqoreIntent } from '../constants/theme';
 import ReqoreContext from '../context/ReqoreContext';
 import { IReqoreIconName } from '../types/icons';
@@ -26,8 +28,12 @@ export interface IReqoreNotificationData {
   onClick?: (id?: string) => any;
   onClose?: (id?: string) => any;
   onFinish?: (id?: string) => any;
-  id: string;
+  id?: string;
   type?: IReqoreNotificationType;
+  intent?: IReqoreIntent;
+  flat?: boolean;
+  inverted?: boolean;
+  size?: TSizes;
 }
 
 export interface IReqoreNotifications {
@@ -80,7 +86,9 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
     setNotifications((cur) => {
       let newNotifications = [...cur];
 
-      const index = cur.findIndex((notification) => notification.id === data.id);
+      const index = cur.findIndex(
+        (notification) => notification.id === (data.id || shortid.generate())
+      );
 
       if (index >= 0) {
         newNotifications[index] = data;
@@ -123,11 +131,11 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
               <ReqoreNotification
                 {...notification}
                 key={notification.id}
-                onClick={() => {
-                  if (notification.onClick) {
-                    notification.onClick(notification.id);
-                  }
-                }}
+                onClick={
+                  notification?.onClick
+                    ? () => void notification.onClick(notification.id)
+                    : undefined
+                }
                 onClose={() => {
                   if (notification.onClose) {
                     notification.onClose(notification.id);
