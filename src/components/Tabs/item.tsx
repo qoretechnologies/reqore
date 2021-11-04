@@ -49,11 +49,11 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       align-items: center;
       padding: ${vertical ? '10px' : 0} 15px;
       padding-right: ${closable ? '43px' : undefined};
-      transition: background-color 0.15s linear;
       font-size: ${TEXT_FROM_SIZE[size]}px;
       font-weight: 450;
       opacity: 0.9;
       color: ${textColor};
+      transition: all 0.2s ease-in-out;
       border-${vertical ? 'right' : 'bottom'}: 2px solid transparent;
 
       &:not(:last-child) {
@@ -71,7 +71,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
             : changeLightness(parentBackground || theme.main, 0.05)
         };
           opacity: 1;
-          
+
           * {
             font-weight: 600;
           }
