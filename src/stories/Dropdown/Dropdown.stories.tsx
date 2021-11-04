@@ -25,9 +25,7 @@ export default {
   },
 } as Meta;
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
+const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
   return (
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
@@ -345,9 +343,7 @@ const InteractiveDropdown = ({
             <ReqoreInput
               placeholder='Add new author manually'
               value={val}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setVal(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVal(e.target.value)}
               onClearClick={() => setVal('')}
             />
             <ReqoreButton

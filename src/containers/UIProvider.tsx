@@ -15,6 +15,7 @@ export interface IReqoreUIProviderProps {
   theme?: IReqoreTheme;
   notificationsPosition?: IReqoreNotificationsPosition;
   withSidebar?: boolean;
+  uiScale?: number;
 }
 
 const StyledPortal = styled.div`
@@ -26,6 +27,7 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
   theme,
   notificationsPosition,
   withSidebar,
+  uiScale,
 }) => {
   const _theme: IReqoreTheme = cloneDeep(theme || {});
   const _defaultTheme: IReqoreTheme = cloneDeep(DEFAULT_THEME);
@@ -37,7 +39,7 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
       <ThemeContext.Provider value={{ ...rebuiltTheme }}>
         <ReqoreLayoutWrapper withSidebar={withSidebar}>
           <ReqoreProvider position={notificationsPosition}>
-            <PopoverProvider>
+            <PopoverProvider uiScale={uiScale}>
               {modalPortal ? children : null}
               <StyledPortal id='reqore-portal' ref={setModalPortal} />
             </PopoverProvider>

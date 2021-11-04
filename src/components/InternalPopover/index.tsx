@@ -1,11 +1,5 @@
 import { isString } from 'lodash';
-import React, {
-  MutableRefObject,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { MutableRefObject, useContext, useEffect, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
@@ -46,13 +40,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     return css`
       z-index: 999999;
       background-color: ${defaultColor};
-      color: ${getReadableColor(
-        theme,
-        undefined,
-        undefined,
-        false,
-        defaultColor
-      )};
+      color: ${getReadableColor(theme, undefined, undefined, false, defaultColor)};
       border-radius: 3.5px;
       box-shadow: rgba(31, 26, 34, 0.6) 0px 0px 4px;
     `;
@@ -105,7 +93,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   useTargetWidth,
   closeOnOutsideClick,
 }) => {
-  const { removePopover } = useContext(PopoverContext);
+  const { removePopover, uiScale } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);
   const [arrowElement, setArrowElement] = useState(null);
   const popperRef: MutableRefObject<any> = useRef(null);
@@ -143,6 +131,17 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
     }
   }, [attributes?.popper]);
 
+  const translateValues = styles.popper.transform
+    ?.replace('translate(', '')
+    .replace(')', '')
+    .split(',')
+    .map((axis) => {
+      if (uiScale || uiScale === 0) {
+        return parseInt(axis, 10) < 0 ? parseInt(axis, 10) * uiScale : parseInt(axis, 10) / uiScale;
+      }
+      return parseInt(axis, 10);
+    });
+
   return (
     <ReqoreThemeProvider>
       <StyledPopoverWrapper
@@ -153,18 +152,13 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
         }}
         style={{
           ...styles.popper,
-          width:
-            useTargetWidth &&
-            (targetElement?.getBoundingClientRect()?.width || undefined),
+          transform: `translate(${translateValues?.[0] || 0}px, ${translateValues?.[1] || 0}px)`,
+          width: useTargetWidth && (targetElement?.getBoundingClientRect()?.width || undefined),
         }}
         {...attributes.popper}
       >
         {!noArrow && (
-          <StyledPopoverArrow
-            ref={setArrowElement}
-            style={styles.arrow}
-            data-popper-arrow
-          />
+          <StyledPopoverArrow ref={setArrowElement} style={styles.arrow} data-popper-arrow />
         )}
         <StyledPopoverContent isString={isString(content)}>
           {isString(content) ? (
