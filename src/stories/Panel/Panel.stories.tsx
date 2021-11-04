@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import React from 'react';
 import { ReqorePanel } from '../../components/Panel';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../../index';
+import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../../index';
 
 export default {
   title: 'ReQore/Panel',
@@ -78,7 +78,7 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
           </ReqorePanel>
           <br />
           <h4>Rounded with title</h4>
-          <ReqorePanel {...args} rounded title='I am a title' icon='UserFill'>
+          <ReqorePanel {...args} rounded label='I am a title' icon='UserFill'>
             <div style={{ padding: '15px' }}>
               I am a message a very long message - Shadowlands has mechanisms put in place for
               allowing players to catch up on Renown, the system of gaining favor and unlocking
@@ -90,7 +90,7 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
           </ReqorePanel>
           <br />
           <h4>Padded</h4>
-          <ReqorePanel {...args} rounded title='I am a title' icon='UserFill' padded>
+          <ReqorePanel {...args} rounded label='I am a title' icon='UserFill' padded>
             I am a message a very long message - Shadowlands has mechanisms put in place for
             allowing players to catch up on Renown, the system of gaining favor and unlocking
             rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
@@ -282,6 +282,36 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
             </div>
           </ReqorePanel>
           <br />
+          <h4>React element as label</h4>
+          <ReqorePanel
+            {...args}
+            rounded
+            onClose={noop}
+            collapsible
+            flat
+            label={<ReqoreButton>Hello</ReqoreButton>}
+            actions={[
+              {
+                icon: 'Settings2Line',
+                onClick: noop,
+              },
+              {
+                icon: 'UserFill',
+                onClick: noop,
+                label: 'Test',
+              },
+            ]}
+          >
+            <div style={{ padding: '15px' }}>
+              I am a message a very long message - Shadowlands has mechanisms put in place for
+              allowing players to catch up on Renown, the system of gaining favor and unlocking
+              rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
+              main characters who have started late, for alts, for players who have switched
+              Covenants and are starting over, and for players who have simply missed weekly quests
+              for earning Renown due to being away from the game.
+            </div>
+          </ReqorePanel>
+          <br />
           <h4>With intent</h4>
           <ReqorePanel
             {...args}
@@ -289,7 +319,7 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
             onClose={noop}
             collapsible
             intent='warning'
-            title='Warning panel'
+            label='Warning panel'
             icon='AlarmWarningLine'
             actions={[
               {
@@ -317,7 +347,7 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
             {...args}
             collapsible
             intent='danger'
-            title='DANGER'
+            label='DANGER'
             icon='AlarmWarningLine'
             actions={[
               {
@@ -425,6 +455,6 @@ Fill.args = {
   fill: true,
   flat: true,
   rounded: true,
-  title: 'Fills the whole space',
+  label: 'Fills the whole space',
   collapsible: true,
 };

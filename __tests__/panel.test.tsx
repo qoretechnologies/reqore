@@ -23,7 +23,7 @@ test('Renders basic <Panel /> with title properly', () => {
     <div style={{ width: '1000px' }}>
       <ReqoreUIProvider>
         <ReqoreLayoutContent>
-          <ReqorePanel title='Test'> Panel </ReqorePanel>
+          <ReqorePanel label='Test'> Panel </ReqorePanel>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     </div>
@@ -39,7 +39,7 @@ test('Renders basic <Panel /> that is collapsed by default and can be expanded',
     <div style={{ width: '1000px' }}>
       <ReqoreUIProvider>
         <ReqoreLayoutContent>
-          <ReqorePanel title='Test' isCollapsed collapsible>
+          <ReqorePanel label='Test' isCollapsed collapsible>
             {' '}
             Panel{' '}
           </ReqorePanel>
@@ -71,7 +71,7 @@ test('Renders closable <Panel /> properly', () => {
     <div style={{ width: '1000px' }}>
       <ReqoreUIProvider>
         <ReqoreLayoutContent>
-          <ReqorePanel title='Test' onClose={fn}>
+          <ReqorePanel label='Test' onClose={fn}>
             {' '}
             Panel{' '}
           </ReqorePanel>

@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import { forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
@@ -24,7 +24,7 @@ export interface IReqorePanelAction {
 export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   icon?: IReqoreIconName;
-  title?: string;
+  label?: string | ReactElement<any>;
   collapsible?: boolean;
   isCollapsed?: boolean;
   onClose?: () => void;
@@ -97,7 +97,7 @@ export const ReqorePanel = forwardRef(
   (
     {
       children,
-      title,
+      label,
       collapsible,
       onClose,
       rounded,
@@ -123,8 +123,8 @@ export const ReqorePanel = forwardRef(
     }, [isCollapsed]);
 
     const hasTitleBar: boolean = useMemo(
-      () => !!title || collapsible || !!onClose || !!size(actions),
-      [title, collapsible, onClose, actions]
+      () => !!label || collapsible || !!onClose || !!size(actions),
+      [label, collapsible, onClose, actions]
     );
 
     const handleCollapseClick = useCallback(() => {
@@ -154,7 +154,7 @@ export const ReqorePanel = forwardRef(
             >
               <StyledPanelTitleHeader>
                 {icon && <ReqoreIcon icon={icon} margin='right' />}
-                {title}
+                {label}
               </StyledPanelTitleHeader>
               <ReqoreControlGroup minimal>
                 {actions.map(({ label, actions, ...rest }) =>
@@ -193,7 +193,15 @@ export const ReqorePanel = forwardRef(
                     tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
                   />
                 )}
-                {onClose && <ReqoreButton icon='CloseLine' onClick={onClose} />}
+                {onClose && (
+                  <ReqoreButton
+                    icon='CloseLine'
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                      e.stopPropagation();
+                      onClose?.();
+                    }}
+                  />
+                )}
               </ReqoreControlGroup>
             </StyledPanelTitle>
           )}
