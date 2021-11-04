@@ -15,7 +15,7 @@ import ReqoreIcon from '../Icon';
 export interface IReqoreModalProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   onClose?: (event: React.MouseEvent<HTMLDivElement | HTMLButtonElement>) => void;
-  backdropVisible?: boolean;
+  hasBackdrop?: boolean;
   flat?: boolean;
   position?: 'top' | 'center';
   width?: string;
@@ -23,6 +23,7 @@ export interface IReqoreModalProps extends React.HTMLAttributes<HTMLDivElement> 
   isOpen?: boolean;
   title?: string;
   icon?: IReqoreIconName;
+  opacity?: number;
 }
 
 export interface IReqoreModalStyle extends IReqoreModalProps {
@@ -66,7 +67,7 @@ const StyledModalWrapper = styled(animated.div)<IReqoreModalStyle>`
     width: ${({ width }) => width || undefined};
     height: ${({ height }) => height || undefined};
     border-radius: 10px;
-    background-color: ${({ theme }) => getMainBackgroundColor(theme)};
+    background-color: ${({ theme, opacity = 1 }) => rgba(getMainBackgroundColor(theme), opacity)};
     box-shadow: 0px 0px 30px 0px ${rgba('#000000', 0.4)};
 
     ${({ flat }) =>
@@ -90,7 +91,8 @@ const StyledModalHeader = styled.div`
 export const ReqoreModal = ({
   children,
   flat,
-  backdropVisible = true,
+  hasBackdrop = true,
+  opacity,
   onClose,
   position,
   width = '80vw',
@@ -115,36 +117,42 @@ export const ReqoreModal = ({
       createPortal(
         <ReqoreThemeProvider>
           <StyledModal zIndex={zIndex}>
-            <StyledModalBackdrop
-              {...{ onClose }}
-              onClick={onClose || undefined}
-              className='reqore-modal-backdrop'
-              style={{
-                opacity: style.opacity,
-              }}
-            />
+            {hasBackdrop && (
+              <StyledModalBackdrop
+                {...{ onClose }}
+                onClick={onClose || undefined}
+                className='reqore-modal-backdrop'
+                opacity={opacity}
+                style={{
+                  opacity: style.opacity,
+                }}
+              />
+            )}
             <StyledModalWrapper
               {...rest}
+              opacity={opacity}
               width={width}
               height={height}
               flat={flat}
               className={`${rest.className || ''} reqore-modal`}
               style={style as any}
             >
-              <StyledModalHeader>
-                <h3>
-                  {icon && <ReqoreIcon icon={icon} margin='right' />}
-                  {title && <>{title}</>}
-                </h3>
-                {onClose && (
-                  <ReqoreButton
-                    icon='CloseLine'
-                    minimal
-                    onClick={onClose}
-                    className='reqore-modal-close-button'
-                  />
-                )}
-              </StyledModalHeader>
+              {icon || title || onClose ? (
+                <StyledModalHeader>
+                  <h3>
+                    {icon && <ReqoreIcon icon={icon} margin='right' />}
+                    {title && <>{title}</>}
+                  </h3>
+                  {onClose && (
+                    <ReqoreButton
+                      icon='CloseLine'
+                      minimal
+                      onClick={onClose}
+                      className='reqore-modal-close-button'
+                    />
+                  )}
+                </StyledModalHeader>
+              ) : null}
               {children}
             </StyledModalWrapper>
           </StyledModal>

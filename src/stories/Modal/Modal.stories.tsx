@@ -122,7 +122,14 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
                   </ReqoreModalActionsGroup>
                 </ReqoreModalActions>
               </ReqoreModal>
-              <ReqoreModal onClose={() => setIsSecModalOpen(false)} isOpen={isSecModalOpen} flat>
+              <ReqoreModal
+                isOpen={isSecModalOpen}
+                flat
+                hasBackdrop={false}
+                opacity={0.8}
+                width='99vw'
+                icon='24HoursFill'
+              >
                 <ReqoreModalContent>This is a minimal modal</ReqoreModalContent>
                 <ReqoreModalActions>
                   <ReqoreModalActionsGroup position='right'>
