@@ -132,7 +132,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   }, [attributes?.popper]);
 
   const translateValues = styles.popper.transform
-    ?.replace('translate(', '')
+    ?.replace('translate3d(', '')
+    .replace('translate(', '')
     .replace(')', '')
     .split(',')
     .map((axis) => {

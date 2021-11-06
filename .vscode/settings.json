@@ -1,6 +1,4 @@
 {
-  "editor.fontFamily": "Fira Code",
-  "editor.codeLensFontFamily": "Fira Code",
   "editor.cursorBlinking": "phase",
   "editor.cursorStyle": "underline",
   "typescript.tsdk": "node_modules/typescript/lib"
