@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.18.4",
+  "version": "0.18.5",
   "description": "ReQore is a UI library of components for Qorus connected apps",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

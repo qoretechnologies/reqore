@@ -16,6 +16,7 @@ export interface IReqoreModalProps extends React.HTMLAttributes<HTMLDivElement> 
   children?: any;
   onClose?: (event: React.MouseEvent<HTMLDivElement | HTMLButtonElement>) => void;
   hasBackdrop?: boolean;
+  blur?: number;
   flat?: boolean;
   position?: 'top' | 'center';
   width?: string;
@@ -50,6 +51,7 @@ const StyledModalBackdrop = styled(animated.div)<IReqoreModalStyle>`
   right: 0;
   bottom: 0;
 
+  backdrop-filter: ${({ blur }) => (blur ? `blur(${blur}px)` : undefined)};
   background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.8)};
   cursor: ${({ onClose }) => (onClose ? 'pointer' : 'initial')};
 `;
@@ -69,6 +71,9 @@ const StyledModalWrapper = styled(animated.div)<IReqoreModalStyle>`
     border-radius: 10px;
     background-color: ${({ theme, opacity = 1 }) => rgba(getMainBackgroundColor(theme), opacity)};
     box-shadow: 0px 0px 30px 0px ${rgba('#000000', 0.4)};
+    // Only apply the blur filter if the modal has no backdrop & transparent background.
+    backdrop-filter: ${({ blur, opacity, hasBackdrop }) =>
+      blur && !hasBackdrop && opacity < 1 ? `blur(${blur}px)` : undefined};
 
     ${({ flat }) =>
       !flat &&
@@ -100,6 +105,7 @@ export const ReqoreModal = ({
   title,
   icon,
   isOpen,
+  blur,
   ...rest
 }: IReqoreModalProps) => {
   const transitions = useTransition(isOpen, {
@@ -123,6 +129,7 @@ export const ReqoreModal = ({
                 onClick={onClose || undefined}
                 className='reqore-modal-backdrop'
                 opacity={opacity}
+                blur={blur}
                 style={{
                   opacity: style.opacity,
                 }}
@@ -131,6 +138,8 @@ export const ReqoreModal = ({
             <StyledModalWrapper
               {...rest}
               opacity={opacity}
+              hasBackdrop={hasBackdrop}
+              blur={blur}
               width={width}
               height={height}
               flat={flat}

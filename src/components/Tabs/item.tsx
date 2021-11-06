@@ -120,7 +120,7 @@ const StyledCloseButton = styled.div<Partial<IReqoreTabListItemStyle>>`
     align-items: center;
     top: 0;
     z-index: 0;
-    transition: background-color 0.1s linear;
+    transition: background-color 0.2s ease-out;
     cursor: pointer;
     &:hover {
       background-color: ${changeLightness(

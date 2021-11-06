@@ -2,11 +2,7 @@ import React, { forwardRef, useContext, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
-import {
-  changeLightness,
-  getReadableColor,
-  getReadableColorFrom,
-} from '../../helpers/colors';
+import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import usePopover from '../../hooks/usePopover';
 import { IReqoreComponent, IReqoreTooltip } from '../../types/global';
@@ -14,9 +10,7 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
 // @ts-ignore
-export interface IReqoreMenuItemProps
-  extends IReqoreComponent,
-    React.HTMLAttributes<HTMLElement> {
+export interface IReqoreMenuItemProps extends IReqoreComponent, React.HTMLAttributes<HTMLElement> {
   children?: string;
   label?: string;
   icon?: IReqoreIconName;
@@ -25,10 +19,7 @@ export interface IReqoreMenuItemProps
   selected?: boolean;
   disabled?: boolean;
   onClick?: (itemId: string, event: React.MouseEvent<HTMLElement>) => void;
-  onRightIconClick?: (
-    itemId: string,
-    event: React.MouseEvent<HTMLElement>
-  ) => void;
+  onRightIconClick?: (itemId: string, event: React.MouseEvent<HTMLElement>) => void;
   tooltip?: IReqoreTooltip;
   intent?: IReqoreIntent;
 }
@@ -71,7 +62,7 @@ const StyledElement = styled.div<IReqoreMenuItemStyle>`
   width: 100%;
   z-index: 0;
   cursor: pointer;
-  transition: background-color 0.05s linear;
+  transition: background-color 0.05s ease-out;
   border-radius: 4px;
   ${({ theme, selected, intent }: IReqoreMenuItemStyle) => {
     const bg = intent ? theme.intents[intent] : theme.main;
@@ -132,16 +123,13 @@ const StyledRightIcon = styled.div<IReqoreMenuItemRightIconStyle>`
     align-items: center;
     top: 0;
     z-index: 1;
-    transition: background-color 0.1s linear;
+    transition: background-color 0.2s ease-out;
 
     ${interactive &&
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${changeLightness(
-          intent ? theme.intents[intent] : theme.main,
-          0.09
-        )};
+        background-color: ${changeLightness(intent ? theme.intents[intent] : theme.main, 0.09)};
       }
     `}
   `}

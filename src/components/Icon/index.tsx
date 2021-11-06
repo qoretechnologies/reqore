@@ -5,8 +5,7 @@ import * as RemixIcons from 'react-icons/ri';
 import styled, { css } from 'styled-components';
 import { IReqoreIconName } from '../../types/icons';
 
-export interface IReqoreIconProps
-  extends React.HTMLAttributes<HTMLSpanElement> {
+export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> {
   icon: IReqoreIconName;
   color?: string;
   size?: string;
@@ -18,6 +17,7 @@ const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-block;
   flex: 0 0 auto;
   vertical-align: text-bottom;
+  transition: all 0.2s ease-out;
 
   ${({ margin }) =>
     margin &&

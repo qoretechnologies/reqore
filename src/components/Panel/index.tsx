@@ -71,7 +71,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   padding: 0 5px 0 15px;
   border-bottom: ${({ theme, isCollapsed, flat }) =>
     !isCollapsed && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : null};
-  transition: background-color 0.1s linear;
+  transition: background-color 0.2s ease-out;
   overflow: hidden;
   flex: 0 0 auto;
 

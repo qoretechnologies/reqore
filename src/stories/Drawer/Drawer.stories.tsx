@@ -42,6 +42,8 @@ const Template: Story<IReqoreUIProviderProps & IReqoreDrawerProps> = (
     minSize: '20%',
     flat: false,
     floating: false,
+    blur: 0,
+    opacity: 1,
   });
 
   const updateItem = (item: string, value: any) => {
@@ -91,6 +93,18 @@ const Template: Story<IReqoreUIProviderProps & IReqoreDrawerProps> = (
               onClick={() => updateItem('floating', !drawerData.floating)}
             >
               Floating
+            </ReqoreButton>
+            <ReqoreButton
+              intent={drawerData.blur ? 'success' : undefined}
+              onClick={() => updateItem('blur', drawerData.blur ? 0 : 2)}
+            >
+              Blur
+            </ReqoreButton>
+            <ReqoreButton
+              intent={drawerData.opacity === 0.5 ? 'success' : undefined}
+              onClick={() => updateItem('opacity', drawerData.opacity ? 0.5 : 1)}
+            >
+              Transparent
             </ReqoreButton>
             <ReqoreDropdown
               items={[

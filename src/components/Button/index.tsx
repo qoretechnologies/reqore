@@ -104,9 +104,13 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
         : getReadableColorFrom(theme.intents[intent], true)
       : getReadableColor(theme, undefined, undefined, true)};
 
+  .reqore-icon {
+    transform: scale(0.85);
+  }
+
   &:not(:disabled) {
     cursor: pointer;
-    transition: all 0.2s linear;
+    transition: all 0.2s ease-out;
 
     &:active {
       transform: scale(0.95);
@@ -114,12 +118,10 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
     &:hover,
     &:focus {
-      background-color: ${({ minimal, theme, intent }: IReqoreButtonStyle) =>
+      background-color: ${({ theme, intent }: IReqoreButtonStyle) =>
         intent
           ? changeLightness(theme.intents[intent], 0.09)
-          : minimal
-          ? changeLightness(getButtonMainColor(theme, intent), 0.15)
-          : changeLightness(getButtonMainColor(theme, intent), 0.35)};
+          : changeLightness(getButtonMainColor(theme, intent), 0.2)};
       color: ${({ theme, intent }) =>
         intent
           ? getReadableColorFrom(theme.intents[intent])
@@ -129,7 +131,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
           ? undefined
           : intent
           ? darken(0.4, theme.intents[intent])
-          : changeLightness(getButtonMainColor(theme, intent), 0.6)};
+          : changeLightness(getButtonMainColor(theme, intent), 0.4)};
 
       .reqore-icon {
         transform: scale(1);
@@ -153,9 +155,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
     active &&
     css`
       background-color: ${intent
-        ? changeLightness(theme.intents[intent], 0.025)
-        : minimal
-        ? changeLightness(getButtonMainColor(theme, intent), 0.07)
+        ? changeLightness(theme.intents[intent], 0.045)
         : changeLightness(getButtonMainColor(theme, intent), 0.16)};
       color: ${intent
         ? getReadableColorFrom(theme.intents[intent])
@@ -165,6 +165,10 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
         : intent
         ? darken(0.2, theme.intents[intent])
         : changeLightness(getButtonMainColor(theme, intent), 0.34)};
+
+      .reqore-icon {
+        transform: scale(1);
+      }
     `}
 
   &:disabled {
@@ -181,11 +185,6 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   &:focus {
     border-color: ${({ minimal, theme, intent }) =>
       minimal ? undefined : changeLightness(getButtonMainColor(theme, intent), 0.4)};
-  }
-
-  .reqore-icon {
-    transform: scale(0.85);
-    transition: all 0.2s ease-out;
   }
 `;
 

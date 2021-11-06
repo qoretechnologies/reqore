@@ -111,13 +111,20 @@ const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: background-color 0.1s linear;
+  transition: background-color 0.2s ease-out;
 
   ${({ theme, color }) =>
     css`
+      .reqore-icon {
+        transform: scale(0.85);
+      }
       &:hover {
         cursor: pointer;
         background-color: ${changeLightness(color || theme.main, color ? 0.09 : 0.19)};
+
+        .reqore-icon {
+          transform: scale(1);
+        }
       }
     `}
 `;

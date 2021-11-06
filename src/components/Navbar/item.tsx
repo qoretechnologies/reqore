@@ -3,8 +3,7 @@ import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getMainColor } from '../../helpers/colors';
 
-export interface IReqoreNavbarItemProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreNavbarItemProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   interactive?: boolean;
   type?: 'header' | 'footer';
@@ -26,14 +25,12 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
   padding: 10px;
   color: inherit;
   background-color: ${({ theme, active, type }) =>
-    active &&
-    (theme[type]?.hoverColor ||
-      changeLightness(getMainColor(theme, type), 0.05))};
+    active && (theme[type]?.hoverColor || changeLightness(getMainColor(theme, type), 0.05))};
 
   ${({ interactive, theme, type }: IReqoreNavbarItemStyle) => {
     if (interactive) {
       return css`
-        transition: background-color 0.1s linear;
+        transition: background-color 0.2s ease-out;
         cursor: pointer;
         &:hover {
           background-color: ${theme[type]?.hoverColor ||
@@ -58,14 +55,7 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
 
 const ReqoreNavbarItem = forwardRef(
   (
-    {
-      interactive,
-      children,
-      type,
-      disabled,
-      active,
-      ...rest
-    }: IReqoreNavbarItemProps,
+    { interactive, children, type, disabled, active, ...rest }: IReqoreNavbarItemProps,
     ref: any
   ) => (
     <StyledNavbarItem

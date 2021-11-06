@@ -1,13 +1,12 @@
-import { darken, rgba } from "polished";
-import React, { forwardRef } from "react";
-import styled from "styled-components";
-import { TEXT_FROM_SIZE, TSizes } from "../../constants/sizes";
-import { IReqoreTheme } from "../../constants/theme";
-import { getReadableColor } from "../../helpers/colors";
-import ReqoreInputClearButton from "../InputClearButton";
+import { darken, rgba } from 'polished';
+import React, { forwardRef } from 'react';
+import styled from 'styled-components';
+import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
+import { getReadableColor } from '../../helpers/colors';
+import ReqoreInputClearButton from '../InputClearButton';
 
-export interface IReqoreTextareaProps
-  extends React.HTMLAttributes<HTMLTextAreaElement> {
+export interface IReqoreTextareaProps extends React.HTMLAttributes<HTMLTextAreaElement> {
   autoFocus?: boolean;
   disabled?: boolean;
   width?: number;
@@ -29,9 +28,8 @@ export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
 
 export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   height: ${({ height }) => (height ? `${height}px` : undefined)};
-  width: ${({ width, fluid }) =>
-    fluid ? "100%" : width ? `${width}px` : "auto"};
-  flex: ${({ fluid }) => (fluid ? "1" : undefined)};
+  width: ${({ width, fluid }) => (fluid ? '100%' : width ? `${width}px` : 'auto')};
+  flex: ${({ fluid }) => (fluid ? '1' : undefined)};
   position: relative;
   overflow: hidden;
 `;
@@ -45,7 +43,7 @@ export const StyledTextarea = styled.textarea<IReqoreTextareaStyle>`
   resize: none;
 
   background-color: ${({ theme, minimal }: IReqoreTextareaStyle) =>
-    minimal ? "transparent" : darken(0.01, theme.main)};
+    minimal ? 'transparent' : darken(0.01, theme.main)};
   color: ${({ theme }: IReqoreTextareaStyle) => getReadableColor(theme)};
 
   border: ${({ minimal, theme }) =>
@@ -54,7 +52,7 @@ export const StyledTextarea = styled.textarea<IReqoreTextareaStyle>`
     minimal ? `0.5px solid ${rgba(getReadableColor(theme), 0.2)}` : undefined};
 
   border-radius: ${({ minimal }) => (minimal ? 0 : 3)}px;
-  transition: all 0.2s linear;
+  transition: all 0.2s ease-out;
 
   &:active,
   &:focus,
@@ -64,7 +62,7 @@ export const StyledTextarea = styled.textarea<IReqoreTextareaStyle>`
   }
 
   &::placeholder {
-    transition: all 0.2s linear;
+    transition: all 0.2s ease-out;
     color: ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
   }
 
@@ -86,7 +84,7 @@ const ReqoreInput = forwardRef(
       width,
       height,
       scaleWithContent,
-      size = "normal",
+      size = 'normal',
       className,
       onClearClick,
       fluid,
@@ -96,7 +94,7 @@ const ReqoreInput = forwardRef(
   ) => {
     return (
       <StyledTextareaWrapper
-        className={`${className || ""} reqore-control-wrapper`}
+        className={`${className || ''} reqore-control-wrapper`}
         width={width}
         height={height}
         fluid={fluid}
@@ -104,20 +102,16 @@ const ReqoreInput = forwardRef(
       >
         <StyledTextarea
           {...rest}
-          className={`${className || ""} reqore-control reqore-textarea`}
+          className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
           ref={ref}
-          rows={
-            scaleWithContent
-              ? (rest?.value?.split(/\r\n|\r|\n/).length || 1) + 1
-              : rest.rows
-          }
+          rows={scaleWithContent ? (rest?.value?.split(/\r\n|\r|\n/).length || 1) + 1 : rest.rows}
         />
         <ReqoreInputClearButton
           enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
-          show={rest?.value && rest.value !== ""}
+          show={rest?.value && rest.value !== ''}
           onClick={onClearClick}
-          size="big"
+          size='big'
         />
       </StyledTextareaWrapper>
     );

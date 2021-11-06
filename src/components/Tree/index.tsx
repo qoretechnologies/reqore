@@ -35,7 +35,7 @@ const StyledLabel = styled.span<ITreeStyle>`
   display: inline-block;
   line-height: 30px;
   padding: 0 10px;
-  transition: all 0.2s linear;
+  transition: all 0.2s ease-out;
 
   ${({ interactive, theme }: ITreeStyle) =>
     interactive &&
@@ -94,9 +94,7 @@ export const ReqoreTree = ({
   };
 
   const isDeep = () =>
-    Object.keys(data).some(
-      (key: string): boolean => typeof data[key] === 'object'
-    );
+    Object.keys(data).some((key: string): boolean => typeof data[key] === 'object');
 
   const renderTree = (data, k?: any, level = 1, path: string[] = []) => {
     return Object.keys(data).map((key, index) => {
@@ -131,18 +129,12 @@ export const ReqoreTree = ({
             ) : (
               <ReqoreTag label={`${displayKey}: `} />
             )}
-            {_showTypes && (
-              <ReqoreTag label={dataType} className='reqore-tree-type' />
-            )}
+            {_showTypes && <ReqoreTag label={dataType} className='reqore-tree-type' />}
             {!isObject && (
               <StyledLabel
                 className='reqore-tree-label'
                 interactive={!!onItemClick}
-                onClick={
-                  onItemClick
-                    ? () => onItemClick(data[key], [...path, key])
-                    : undefined
-                }
+                onClick={onItemClick ? () => onItemClick(data[key], [...path, key]) : undefined}
               >
                 {JSON.stringify(data[key])}
               </StyledLabel>

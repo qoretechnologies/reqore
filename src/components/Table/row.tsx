@@ -1,15 +1,14 @@
 /* @flow */
-import { isFunction } from "lodash";
-import React from "react";
-import styled, { css } from "styled-components";
-import { IReqoreTableColumn } from ".";
-import { ReqorePopover } from "../..";
-import { IReqoreTheme } from "../../constants/theme";
-import { changeLightness, getReadableColor } from "../../helpers/colors";
-import ReqoreIcon from "../Icon";
+import { isFunction } from 'lodash';
+import React from 'react';
+import styled, { css } from 'styled-components';
+import { IReqoreTableColumn } from '.';
+import { ReqorePopover } from '../..';
+import { IReqoreTheme } from '../../constants/theme';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
+import ReqoreIcon from '../Icon';
 
-export interface IReqoreTableRowProps
-  extends React.HTMLAttributes<HTMLTableRowElement> {
+export interface IReqoreTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   data: {
     columns: IReqoreTableColumn[];
     data?: any[];
@@ -34,14 +33,14 @@ export interface IReqoreTableCellStyle {
   width?: number;
   grow?: number;
   theme?: IReqoreTheme;
-  align?: "center" | "left" | "right";
+  align?: 'center' | 'left' | 'right';
   interactive?: boolean;
 }
 
 export const alignToFlex = {
-  center: "center",
-  left: "flex-start",
-  right: "flex-end",
+  center: 'center',
+  left: 'flex-start',
+  right: 'flex-end',
 };
 
 export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
@@ -59,7 +58,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
   ${({ theme, align, interactive }: IReqoreTableCellStyle) => css`
     display: flex;
     align-items: center;
-    justify-content: ${align ? alignToFlex[align] : "flex-start"};
+    justify-content: ${align ? alignToFlex[align] : 'flex-start'};
     flex-shrink: 0;
 
     height: 100%;
@@ -70,7 +69,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     ${interactive &&
     css`
       cursor: pointer;
-      transition: background-color 0.1s linear;
+      transition: background-color 0.2s ease-out;
 
       &:hover {
         color: ${getReadableColor(theme, undefined, undefined)};
@@ -95,16 +94,7 @@ const ReqoreTableRow = ({
 }: IReqoreTableRowProps) => {
   const renderCells = (columns: IReqoreTableColumn[], data: any[]) =>
     columns.map(
-      ({
-        width,
-        grow,
-        dataId,
-        content: Content,
-        columns,
-        align,
-        onCellClick,
-        cellTooltip,
-      }) =>
+      ({ width, grow, dataId, content: Content, columns, align, onCellClick, cellTooltip }) =>
         columns ? (
           renderCells(columns, data)
         ) : (
@@ -123,7 +113,7 @@ const ReqoreTableRow = ({
                     onCellClick(data[index]);
                   }
                 },
-                className: "reqore-table-cell",
+                className: 'reqore-table-cell',
               } as IReqoreTableCellStyle
             }
             content={cellTooltip ? cellTooltip(data[index]) : undefined}
@@ -131,22 +121,20 @@ const ReqoreTableRow = ({
             {isFunction(Content) ? (
               <Content {...data[index]} />
             ) : (
-              <p className="reqore-table-text">{data[index][dataId]}</p>
+              <p className='reqore-table-text'>{data[index][dataId]}</p>
             )}
           </ReqorePopover>
         )
     );
 
-  const isSelected = selected.find(
-    (selectId) => selectId === data[index]._selectId
-  );
+  const isSelected = selected.find((selectId) => selectId === data[index]._selectId);
 
   return (
-    <StyledTableRow style={style} className="reqore-table-row">
+    <StyledTableRow style={style} className='reqore-table-row'>
       {selectable && (
         <StyledTableCell
-          align="center"
-          className="reqore-table-cell"
+          align='center'
+          className='reqore-table-cell'
           interactive={!!data[index]._selectId}
           onClick={
             data[index]._selectId
@@ -159,12 +147,12 @@ const ReqoreTableRow = ({
           <ReqoreIcon
             icon={
               !data[index]._selectId
-                ? "Forbid2Line"
+                ? 'Forbid2Line'
                 : isSelected
-                ? "CheckboxCircleLine"
-                : "CheckboxBlankCircleLine"
+                ? 'CheckboxCircleLine'
+                : 'CheckboxBlankCircleLine'
             }
-            size="19px"
+            size='19px'
             style={{ opacity: !data[index]._selectId || !isSelected ? 0.4 : 1 }}
           />
         </StyledTableCell>

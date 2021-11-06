@@ -50,7 +50,7 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   border-bottom: ${({ minimal, theme, flat }) =>
     minimal && !flat ? `0.5px solid ${rgba(getReadableColor(theme), 0.2)}` : undefined};
 
-  transition: all 0.2s linear;
+  transition: all 0.2s ease-out;
 
   &:active,
   &:focus,
@@ -84,7 +84,7 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
     minimal ? 'transparent' : darken(0.01, theme.main)};
   color: ${({ theme }: IReqoreInputStyle) => getReadableColor(theme)};
 
-  transition: all 0.2s linear;
+  transition: all 0.2s ease-out;
 
   &:active,
   &:focus,
@@ -99,7 +99,7 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
   }
 
   &::placeholder {
-    transition: all 0.2s linear;
+    transition: all 0.2s ease-out;
     color: ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
   }
 

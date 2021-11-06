@@ -66,8 +66,8 @@ export const StyledReqoreNotification = styled(animated.div)<IReqoreNotification
   flex: 0 1 auto;
   overflow: auto;
   position: relative;
-  transition: background-color 0.1s linear;
-  animation: 0.1s ${fadeIn} ease-in;
+  transition: all 0.2s ease-out;
+  animation: 0.2s ${fadeIn} ease-in;
   font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
 
   &:not(:first-child) {
@@ -132,14 +132,21 @@ export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: background-color 0.1s linear;
+  transition: all 0.2s ease-out;
 
   ${({ clickable, theme, intent, type }) =>
     clickable &&
     css`
+      .reqore-icon {
+        transform: scale(0.85);
+      }
+
       &:hover {
         cursor: pointer;
         background-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.02)};
+        .reqore-icon {
+          transform: scale(1);
+        }
       }
     `}
 `;

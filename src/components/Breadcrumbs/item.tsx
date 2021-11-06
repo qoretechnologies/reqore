@@ -31,7 +31,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
       justify-content: space-evenly;
       align-items: center;
       padding: 0 5px;
-      transition: background-color 0.15s linear;
+      transition: background-color 0.15s ease-out;
       font-size: ${TEXT_FROM_SIZE[size]}px;
       font-weight: 450;
       border-bottom: 2px solid transparent;
