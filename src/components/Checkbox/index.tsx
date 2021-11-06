@@ -31,7 +31,7 @@ export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
 }
 
 const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
-  transition: all 0.1s linear;
+  transition: all 0.2s ease-out;
   position: relative;
 
   height: ${({ size }) => SIZE_TO_PX[size] - 5}px;
@@ -49,7 +49,7 @@ const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
     checked ? rgba(getReadableColor(theme, undefined, undefined), 0.2) : 'transparent'};
 
   &::before {
-    transition: all 0.1s ease-in-out;
+    transition: all 0.2s ease-in-out;
     content: '';
     display: block;
     position: absolute;
@@ -72,7 +72,7 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   align-items: center;
   cursor: pointer;
   padding: 0px;
-  transition: all 0.1s linear;
+  transition: all 0.2s ease-out;
 
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;

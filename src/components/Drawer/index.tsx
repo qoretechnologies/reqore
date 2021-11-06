@@ -32,6 +32,7 @@ export interface IReqoreDrawerProps extends React.HTMLAttributes<HTMLDivElement>
   flat?: boolean;
   floating?: boolean;
   padded?: boolean;
+  blur?: number;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -53,6 +54,10 @@ export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
   display: flex;
   flex-flow: column;
   transition: all 0.2s ease-in-out;
+
+  // Only apply the blur filter if the modal has no backdrop & transparent background.
+  backdrop-filter: ${({ blur, opacity, hasBackdrop }) =>
+    blur && !hasBackdrop && opacity < 1 ? `blur(${blur}px)` : undefined};
 
   ${({ theme, flat, floating }) =>
     !flat && floating
@@ -149,10 +154,10 @@ export const StyledBackdrop = styled(animated.div)<
   bottom: 0;
   right: 0;
   left: 0;
+  backdrop-filter: ${({ blur }) => (blur ? `blur(${blur}px)` : undefined)};
   z-index: ${({ zIndex }) => zIndex};
   background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.8)};
   cursor: ${({ closable }) => (closable ? 'pointer' : 'initial')};
-  transition: all 0.2s ease-in-out;
 `;
 
 const getHideShowIcon = (
@@ -188,6 +193,7 @@ export const ReqoreDrawer = ({
   className,
   flat,
   floating,
+  blur,
   ...rest
 }: IReqoreDrawerProps) => {
   const theme = useReqoreTheme('main', customTheme);
@@ -236,6 +242,7 @@ export const ReqoreDrawer = ({
                 onClick={() => onClose && onClose()}
                 closable={!!onClose}
                 zIndex={zIndex}
+                blur={blur}
                 style={{
                   opacity: styles.opacity,
                 }}
@@ -345,6 +352,7 @@ export const ReqoreDrawer = ({
                   height={_size.height}
                   position={position}
                   floating={floating}
+                  blur={blur}
                 >
                   {children}
                 </Wrapper>

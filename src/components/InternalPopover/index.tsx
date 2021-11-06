@@ -32,7 +32,7 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
 `;
 
 const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
-  animation: 0.1s ${fadeIn} ease-in;
+  animation: 0.2s ${fadeIn} ease-out;
 
   ${({ theme }) => {
     const defaultColor: string = theme.popover?.main || theme.main;

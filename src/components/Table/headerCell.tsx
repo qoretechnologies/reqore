@@ -44,7 +44,7 @@ export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
     interactive &&
     css`
       cursor: pointer;
-      transition: background-color 0.1s linear;
+      transition: background-color 0.2s ease-out;
 
       &:hover {
         color: ${getReadableColor(theme, undefined, undefined)};
