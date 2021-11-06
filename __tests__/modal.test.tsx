@@ -119,22 +119,22 @@ test('Renders confirmation <Modal /> ', () => {
   });
 
   fireEvent.click(document.getElementById('custom-confirm'));
-  fireEvent.click(screen.getByText('Yep'));
+  fireEvent.click(screen.getAllByText('Yep')[0]);
 
   expect(confirmFn).toHaveBeenCalled();
 
   fireEvent.click(document.getElementById('confirm'));
-  fireEvent.click(screen.getByText('Confirm'));
+  fireEvent.click(screen.getAllByText('Confirm')[0]);
 
   expect(confirmFn).toHaveBeenCalledTimes(2);
 
   fireEvent.click(document.getElementById('custom-confirm'));
-  fireEvent.click(screen.getByText('Cancel'));
+  fireEvent.click(screen.getAllByText('Cancel')[0]);
 
   expect(cancelFn).toHaveBeenCalled();
 
   fireEvent.click(document.getElementById('confirm'));
-  fireEvent.click(screen.getByText('Cancel'));
+  fireEvent.click(screen.getAllByText('Cancel')[0]);
 
   expect(cancelFn).toHaveBeenCalledTimes(2);
 });
