@@ -1,5 +1,5 @@
 import { Placement } from '@popperjs/core';
-import { darken, lighten, rgba } from 'polished';
+import { darken, rgba } from 'polished';
 import React, { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import {
@@ -42,11 +42,32 @@ const getButtonMainColor = (theme: IReqoreTheme, intent?: IReqoreIntent) => {
   return theme.main;
 };
 
+export const StyledActiveContent = styled.span`
+  position: absolute;
+  transform: translateY(-150%);
+  opacity: 0;
+  transition: all 0.2s ease-out;
+  filter: blur(10px);
+`;
+
+export const StyledInActiveContent = styled.span`
+  position: absolute;
+  transform: translateY(0);
+  transition: all 0.2s ease-out;
+`;
+
+export const StyledInvisibleContent = styled.span`
+  visibility: hidden;
+  position: relative;
+`;
+
 export const StyledButton = styled.button<IReqoreButtonStyle>`
   display: flex;
   align-items: center;
   margin: 0;
-  font-weight: 500;
+  font-weight: 400;
+  position: relative;
+  overflow: hidden;
   border: ${({ theme, minimal, intent, flat }) =>
     !minimal && !flat
       ? `1px solid ${
@@ -85,15 +106,20 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
   &:not(:disabled) {
     cursor: pointer;
-    transition: all 0.1s linear;
+    transition: all 0.2s linear;
 
-    &:hover {
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &:hover,
+    &:focus {
       background-color: ${({ minimal, theme, intent }: IReqoreButtonStyle) =>
         intent
-          ? changeLightness(theme.intents[intent], 0.0325)
+          ? changeLightness(theme.intents[intent], 0.09)
           : minimal
-          ? changeLightness(getButtonMainColor(theme, intent), 0.09)
-          : changeLightness(getButtonMainColor(theme, intent), 0.2)};
+          ? changeLightness(getButtonMainColor(theme, intent), 0.15)
+          : changeLightness(getButtonMainColor(theme, intent), 0.35)};
       color: ${({ theme, intent }) =>
         intent
           ? getReadableColorFrom(theme.intents[intent])
@@ -102,12 +128,24 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
         minimal
           ? undefined
           : intent
-          ? darken(0.25, theme.intents[intent])
-          : changeLightness(getButtonMainColor(theme, intent), 0.4)};
-    }
+          ? darken(0.4, theme.intents[intent])
+          : changeLightness(getButtonMainColor(theme, intent), 0.6)};
 
-    &:active {
-      transform: scale(0.95);
+      .reqore-icon {
+        transform: scale(1);
+      }
+
+      ${StyledActiveContent} {
+        transform: translateY(0px);
+        filter: blur(0);
+        opacity: 1;
+      }
+
+      ${StyledInActiveContent} {
+        transform: translateY(150%);
+        filter: blur(10px);
+        opacity: 0;
+      }
     }
   }
 
@@ -115,18 +153,18 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
     active &&
     css`
       background-color: ${intent
-        ? lighten(0.0625, theme.intents[intent])
+        ? changeLightness(theme.intents[intent], 0.025)
         : minimal
-        ? changeLightness(getButtonMainColor(theme, intent), 0.09)
-        : changeLightness(getButtonMainColor(theme, intent), 0.2)};
+        ? changeLightness(getButtonMainColor(theme, intent), 0.07)
+        : changeLightness(getButtonMainColor(theme, intent), 0.16)};
       color: ${intent
         ? getReadableColorFrom(theme.intents[intent])
         : getReadableColor(theme, undefined, undefined)};
       border-color: ${minimal
         ? undefined
         : intent
-        ? darken(0.25, theme.intents[intent])
-        : changeLightness(getButtonMainColor(theme, intent), 0.4)};
+        ? darken(0.2, theme.intents[intent])
+        : changeLightness(getButtonMainColor(theme, intent), 0.34)};
     `}
 
   &:disabled {
@@ -143,6 +181,11 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   &:focus {
     border-color: ${({ minimal, theme, intent }) =>
       minimal ? undefined : changeLightness(getButtonMainColor(theme, intent), 0.4)};
+  }
+
+  .reqore-icon {
+    transform: scale(0.85);
+    transition: all 0.2s ease-out;
   }
 `;
 
@@ -196,7 +239,11 @@ const ReqoreButton = forwardRef(
             size={`${TEXT_FROM_SIZE[size]}px`}
           />
         )}
-        {children}
+        <span>
+          <StyledActiveContent>{children}</StyledActiveContent>
+          <StyledInActiveContent>{children}</StyledInActiveContent>
+          <StyledInvisibleContent>{children}</StyledInvisibleContent>
+        </span>
       </StyledButton>
     );
   }

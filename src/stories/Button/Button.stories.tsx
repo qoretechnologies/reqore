@@ -3,12 +3,7 @@ import React from 'react';
 import ReqoreButton from '../../components/Button';
 import { IReqoreTheme } from '../../constants/theme';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import {
-  ReqoreContent,
-  ReqoreLayoutContent,
-  ReqorePopover,
-  ReqoreUIProvider,
-} from '../../index';
+import { ReqoreContent, ReqoreLayoutContent, ReqorePopover, ReqoreUIProvider } from '../../index';
 
 export default {
   title: 'ReQore/Button',
@@ -19,9 +14,7 @@ export default {
   },
 } as Meta;
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
+const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
   return (
     <ReqoreUIProvider {...args}>
       <ReqoreLayoutContent>
@@ -43,13 +36,13 @@ const Template: Story<IReqoreUIProviderProps> = (
           <ReqoreButton icon='BallPenFill' size='big'>
             Button
           </ReqoreButton>
-          <h2>Activve</h2>
+          <h2>Active</h2>
           <h4>Default</h4>
           <ReqoreButton icon='4KLine' active>
             Button
           </ReqoreButton>
           <h4>Minimal</h4>
-          <ReqoreButton icon='24HoursFill' size='small' active>
+          <ReqoreButton icon='24HoursFill' size='small' active minimal>
             Button
           </ReqoreButton>
           <h4>With intents</h4>
