@@ -22,6 +22,8 @@ export interface IReqoreTabsListProps extends React.HTMLAttributes<HTMLDivElemen
   parentBackground?: string;
   flat?: boolean;
   size?: TSizes;
+  width?: string;
+  fillParent?: boolean;
 
   // Internal prop, ignore!
   _testWidth?: number;
@@ -32,14 +34,14 @@ export interface IReqoreTabsListStyle extends Omit<IReqoreTabsListProps, 'tabs'>
 }
 
 export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
-  ${({ theme, fill, vertical, size }) => css`
+  ${({ theme, fill, vertical, size, width }) => css`
     height: ${vertical ? '100%' : `${TABS_SIZE_TO_PX[size]}px`};
-    width: ${vertical ? '140px' : '100%'};
+    width: ${vertical ? width || '200px' : '100%'};
     flex-flow: ${vertical ? 'column' : 'row'};
     display: flex;
     align-items: center;
     border-${vertical ? 'right' : 'bottom'}: 1px solid ${changeLightness(theme.main, 0.05)};
-  
+
 
     ${
       fill &&
@@ -49,7 +51,8 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
     }
 
     ${StyledPopover} {
-      min-height: 40px;
+      min-height: ${TABS_SIZE_TO_PX[size]}px;
+
       > ${StyledTabListItem} {
         height: 100%;
       }
@@ -70,7 +73,7 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
       };
 
       justify-content: ${vertical ? 'flex-start' : 'space-evenly'};
-      
+
 
       ${
         fill &&
@@ -197,6 +200,7 @@ const ReqoreTabsList = ({
                   parentBackground,
                   vertical,
                   flat,
+                  size,
                 } as IReqoreTabListItemProps
               }
               handler='click'

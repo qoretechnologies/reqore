@@ -1,0 +1,17 @@
+vscode:
+  extensions:
+    - oderwat.indent-rainbow
+    - tombonnike.vscode-status-bar-format-toggle
+    - usernamehw.errorlens
+    - emmanuelbeziat.vscode-great-icons
+    - esbenp.prettier-vscode
+    - jpoissonnier.vscode-styled-components
+    - streetsidesoftware.code-spell-checker
+    - foxhoundn.synthax
+    - alefragnani.bookmarks
+    - tabnine.tabnine-vscode
+    - akosyakov.gitpod-monitor
+    - eamodio.gitlens
+tasks:
+  - init: "yarn install"
+  - command: "yarn storybook"

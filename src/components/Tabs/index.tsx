@@ -24,10 +24,12 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   onTabChange?: (tabId: string) => any;
   children?: ReactElement<any>[] | ReactElement<any>;
   fill?: boolean;
+  fillParent?: boolean;
   vertical?: boolean;
   activeTabIntent?: IReqoreIntent;
   flat?: boolean;
   size?: TSizes;
+  width?: string;
 
   // Internal prop, ignore!
   _testWidth?: number;
@@ -35,8 +37,9 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const StyledTabs = styled.div<{ vertical?: boolean }>`
   display: flex;
-  ${({ vertical }) => css`
+  ${({ vertical, fillParent }) => css`
     width: 100%;
+    height: ${fillParent ? '100%' : undefined};
     flex-flow: ${vertical ? 'row' : 'column'};
   `}
 `;
@@ -53,6 +56,7 @@ const ReqoreTabs = ({
   activeTabIntent,
   flat,
   size = 'normal',
+  width,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string>(activeTab || tabs[0].id);
@@ -74,6 +78,7 @@ const ReqoreTabs = ({
         flat={flat}
         fill={fill}
         size={size}
+        width={width}
         vertical={vertical}
         _testWidth={_testWidth}
         activeTab={_activeTab}

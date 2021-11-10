@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreBreadcrumbItem } from '.';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import usePopover from '../../hooks/usePopover';
@@ -30,7 +30,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
       height: 100%;
       justify-content: space-evenly;
       align-items: center;
-      padding: 0 5px;
+      padding: 0 ${PADDING_FROM_SIZE[size]}px;
       transition: background-color 0.15s ease-out;
       font-size: ${TEXT_FROM_SIZE[size]}px;
       font-weight: 450;
@@ -107,7 +107,13 @@ const ReqoreBreadcrumbsItem = ({
       theme={theme}
       size={size}
     >
-      {icon && <ReqoreIcon icon={icon} size='13px' margin={label ? 'right' : undefined} />}
+      {icon && (
+        <ReqoreIcon
+          icon={icon}
+          size={`${TEXT_FROM_SIZE[size]}px`}
+          margin={label ? 'right' : undefined}
+        />
+      )}
       {label && <Element {...props}>{label}</Element>}
     </StyledBreadcrumbItem>
   );
