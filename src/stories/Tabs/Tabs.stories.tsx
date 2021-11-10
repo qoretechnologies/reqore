@@ -97,7 +97,7 @@ const Template: Story<{
       <ReqoreLayoutContent>
         <ReqoreHeader></ReqoreHeader>
         <ReqoreContent>
-          <ReqoreTabs {...tabs} activeTabIntent='info'>
+          <ReqoreTabs {...tabs}>
             <ReqoreTabsContent id='tab1'>
               <h3>Tab 1</h3>
             </ReqoreTabsContent>
@@ -201,11 +201,48 @@ Fill.args = {
   },
 };
 
+export const Tiny = Template.bind({});
+Tiny.args = {
+  tabs: {
+    ...tabs,
+    fill: true,
+    size: 'tiny',
+  },
+};
+
+export const Small = Template.bind({});
+Small.args = {
+  tabs: {
+    ...tabs,
+    fill: true,
+    size: 'small',
+  },
+};
+
+export const Big = Template.bind({});
+Big.args = {
+  tabs: {
+    ...tabs,
+    fill: true,
+    size: 'big',
+  },
+};
+
+export const Huge = Template.bind({});
+Huge.args = {
+  tabs: {
+    ...tabs,
+    fill: true,
+    size: 'huge',
+  },
+};
+
 export const Vertical = Template.bind({});
 Vertical.args = {
   tabs: {
     ...tabs,
     vertical: true,
+    fillParent: true,
   },
 };
 
@@ -215,6 +252,32 @@ VerticalFill.args = {
     ...tabs,
     vertical: true,
     fill: true,
+    fillParent: true,
+  },
+};
+
+export const VerticalCustomWidth = Template.bind({});
+VerticalCustomWidth.args = {
+  tabs: {
+    ...tabs,
+    vertical: true,
+    fill: true,
+    fillParent: true,
+    width: '300px',
+  },
+};
+
+export const VerticalWithIntent = Template.bind({});
+VerticalWithIntent.args = {
+  theme: {
+    main: '#222222',
+  },
+  tabs: {
+    ...tabs,
+    vertical: true,
+    fillParent: true,
+    activeTabIntent: 'info',
+    width: '300px',
   },
 };
 

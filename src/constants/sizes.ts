@@ -16,6 +16,14 @@ export const TABS_SIZE_TO_PX = {
   huge: 60,
 };
 
+export const TABS_PADDING_TO_PX = {
+  tiny: 5,
+  small: 10,
+  normal: 15,
+  big: 20,
+  huge: 25,
+};
+
 export const MARGIN_FROM_SIZE = {
   tiny: 0,
   small: 0,
