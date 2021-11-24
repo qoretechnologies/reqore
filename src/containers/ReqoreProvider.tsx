@@ -44,12 +44,14 @@ export interface IReqoreNotifications {
 export interface IReqoreConfirmationModal {
   title?: string;
   description?: string;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   onCancel?: () => void;
   confirmButtonIntent?: IReqoreIntent;
   confirmLabel?: string;
   confirmIcon?: IReqoreIconName;
   cancelLabel?: string;
+  isOpen?: boolean;
+  intent?: IReqoreIntent;
 }
 
 const StyledConfirmContent = styled.div`
@@ -62,7 +64,7 @@ const StyledConfirmContent = styled.div`
 
 const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
-  const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>(null);
+  const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>({});
   const latestZIndex = useRef<number>(9000);
 
   const isMobile = process.env.NODE_ENV === 'test' ? false : useMedia('(max-width: 480px)');
@@ -79,7 +81,18 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
   };
 
   const confirmAction = (data: IReqoreConfirmationModal): void => {
-    setConfirmationModal(data);
+    setConfirmationModal({
+      ...data,
+      isOpen: true,
+    });
+  };
+
+  // FUnction that closes the confirmation modal
+  const closeConfirmationModal = (): void => {
+    setConfirmationModal((cur: IReqoreConfirmationModal) => ({
+      ...cur,
+      isOpen: false,
+    }));
   };
 
   const addNotification = (data: IReqoreNotificationData) => {
@@ -155,53 +168,48 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
           </ReqoreNotificationsWrapper>
         ) : null}
         {children}
-        {confirmationModal && (
-          <ReqoreModal
-            isOpen
-            flat
-            title={confirmationModal.title || 'Confirm your action'}
-            icon='ErrorWarningFill'
-          >
-            <ReqoreModalContent>
-              <StyledConfirmContent>
-                {confirmationModal.description || 'Are you sure you want to proceed?'}
-              </StyledConfirmContent>
-            </ReqoreModalContent>
-            <ReqoreModalActions>
-              <ReqoreModalActionsGroup>
-                <ReqoreButton
-                  icon='CloseLine'
-                  flat
-                  onClick={() => {
-                    setConfirmationModal(null);
-
-                    if (confirmationModal.onCancel) {
-                      confirmationModal.onCancel();
-                    }
-                  }}
-                >
-                  {confirmationModal.cancelLabel || 'Cancel'}
-                </ReqoreButton>
-              </ReqoreModalActionsGroup>
-              <ReqoreModalActionsGroup position='right'>
-                <ReqoreButton
-                  flat
-                  icon={confirmationModal.confirmIcon || 'CheckLine'}
-                  intent={confirmationModal.confirmButtonIntent || 'success'}
-                  onClick={() => {
-                    setConfirmationModal(null);
-
-                    if (confirmationModal.onConfirm) {
-                      confirmationModal.onConfirm();
-                    }
-                  }}
-                >
-                  {confirmationModal.confirmLabel || 'Confirm'}
-                </ReqoreButton>
-              </ReqoreModalActionsGroup>
-            </ReqoreModalActions>
-          </ReqoreModal>
-        )}
+        <ReqoreModal
+          isOpen={confirmationModal.isOpen}
+          flat
+          opacity={0.9}
+          blur={2}
+          intent={confirmationModal.intent}
+          title={confirmationModal.title || 'Confirm your action'}
+          icon='ErrorWarningFill'
+        >
+          <ReqoreModalContent>
+            <StyledConfirmContent>
+              {confirmationModal.description || 'Are you sure you want to proceed?'}
+            </StyledConfirmContent>
+          </ReqoreModalContent>
+          <ReqoreModalActions>
+            <ReqoreModalActionsGroup>
+              <ReqoreButton
+                icon='CloseLine'
+                flat={!confirmationModal.intent}
+                onClick={() => {
+                  confirmationModal?.onCancel?.();
+                  closeConfirmationModal();
+                }}
+              >
+                {confirmationModal.cancelLabel || 'Cancel'}
+              </ReqoreButton>
+            </ReqoreModalActionsGroup>
+            <ReqoreModalActionsGroup position='right'>
+              <ReqoreButton
+                flat
+                icon={confirmationModal.confirmIcon || 'CheckLine'}
+                intent={confirmationModal.confirmButtonIntent || 'success'}
+                onClick={() => {
+                  confirmationModal?.onConfirm?.();
+                  closeConfirmationModal();
+                }}
+              >
+                {confirmationModal.confirmLabel || 'Confirm'}
+              </ReqoreButton>
+            </ReqoreModalActionsGroup>
+          </ReqoreModalActions>
+        </ReqoreModal>
       </ReqoreContext.Provider>
     </>
   );
