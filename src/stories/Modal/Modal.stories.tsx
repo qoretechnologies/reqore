@@ -40,6 +40,7 @@ const ConfirmButton = () => {
             confirmLabel: 'Yep',
             onConfirm: () => setStatus('Confirmed'),
             onCancel: () => setStatus('Cancelled'),
+            intent: 'danger',
           });
         }}
       >
@@ -272,19 +273,19 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
               </ReqoreModal>
               <ReqoreModal
                 isOpen={isSecModalOpen}
-                flat
                 onClose={() => setIsSecModalOpen(false)}
                 opacity={0.7}
                 blur={2.5}
                 width='30vw'
                 icon='24HoursFill'
+                intent='danger'
               >
                 <ReqoreModalContent>This is a minimal modal</ReqoreModalContent>
                 <ReqoreModalActions>
                   <ReqoreModalActionsGroup position='right'>
                     <ReqoreControlGroup>
                       <ReqoreButton>Cancel</ReqoreButton>
-                      <ReqoreButton>Submit</ReqoreButton>
+                      <ReqoreButton color='#ffff00'>Submit</ReqoreButton>
                     </ReqoreControlGroup>
                   </ReqoreModalActionsGroup>
                 </ReqoreModalActions>

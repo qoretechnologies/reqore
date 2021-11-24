@@ -21,10 +21,15 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
         <ReqoreContent style={{ padding: '20px' }}>
           <h4>Default</h4>
           <ReqoreButton>Button</ReqoreButton>
+          <h4>Tiny</h4>
+          <ReqoreButton size='tiny'>Button</ReqoreButton>
           <h4>Small</h4>
           <ReqoreButton size='small'>Button</ReqoreButton>
           <h4>Big</h4>
           <ReqoreButton size='big'>Button</ReqoreButton>
+          <h4>Huge</h4>
+          <ReqoreButton size='huge'>Huge</ReqoreButton>
+
           <h2>With icons</h2>
           <h4>Default</h4>
           <ReqoreButton icon='4KLine'>Button</ReqoreButton>
@@ -36,6 +41,16 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
           <ReqoreButton icon='BallPenFill' size='big'>
             Button
           </ReqoreButton>
+          <h4>Right icons</h4>
+          <ReqoreButton rightIcon='BallPenFill' size='big'>
+            Button
+          </ReqoreButton>
+          <ReqoreButton icon='24HoursLine' rightIcon='BallPenFill' size='big' />
+          <ReqoreButton icon='24HoursLine' rightIcon='BallPenFill' size='big'>
+            {' '}
+            HMmmmmmm{' '}
+          </ReqoreButton>
+
           <h2>Active</h2>
           <h4>Default</h4>
           <ReqoreButton icon='4KLine' active>
@@ -45,6 +60,7 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
           <ReqoreButton icon='24HoursFill' size='small' active minimal>
             Button
           </ReqoreButton>
+
           <h4>With intents</h4>
           <ReqoreButton icon='BallPenFill' size='big' intent='pending' active>
             Button
@@ -53,6 +69,7 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
           <ReqoreButton icon='BallPenFill' size='big' intent='info' active>
             Button
           </ReqoreButton>
+
           <h2>Only icons</h2>
           <h4>Default</h4>
           <ReqoreButton icon='4KLine'></ReqoreButton>
@@ -140,6 +157,22 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
           <br />
           <ReqoreButton icon='User2Line' flat intent='warning'>
             Info
+          </ReqoreButton>
+          <h4>Custom color</h4>
+          <ReqoreButton flat color='#ff0000'>
+            Red
+          </ReqoreButton>
+          <br />
+          <ReqoreButton flat color='#000000'>
+            Black
+          </ReqoreButton>
+          <br />
+          <ReqoreButton flat color='#0000ff'>
+            Blue
+          </ReqoreButton>
+          <br />
+          <ReqoreButton color='#00ff00' minimal active>
+            Green minimal active
           </ReqoreButton>
         </ReqoreContent>
       </ReqoreLayoutContent>

@@ -192,6 +192,20 @@ Striped.args = {
     sort: { by: 'age', direction: 'desc' },
   },
 };
+
+export const Flat = Template.bind({});
+Flat.args = {
+  theme: {
+    main: '#222222',
+  },
+  table: {
+    ...tableData,
+    flat: true,
+    striped: true,
+    sort: { by: 'age', direction: 'desc' },
+  },
+};
+
 export const WithGroupedColumns = Template.bind({});
 WithGroupedColumns.args = {
   table: {
