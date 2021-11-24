@@ -76,14 +76,10 @@ export interface IReqoreIntents {
   pending?: string;
   warning?: string;
   danger?: string;
+  muted?: string;
 }
 
-export type IReqoreIntent =
-  | 'info'
-  | 'success'
-  | 'pending'
-  | 'warning'
-  | 'danger';
+export type IReqoreIntent = 'info' | 'success' | 'pending' | 'warning' | 'danger' | 'muted';
 
 export const DEFAULT_INTENTS: IReqoreIntents = {
   info: '#0E5A8A',
@@ -91,6 +87,7 @@ export const DEFAULT_INTENTS: IReqoreIntents = {
   pending: '#d1a036',
   warning: '#A66321',
   danger: '#A82A2A',
+  muted: '#444444',
 };
 
 export const DEFAULT_THEME: IReqoreTheme = {
