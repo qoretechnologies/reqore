@@ -24,7 +24,7 @@ export interface IReqoreTagAction {
   tooltip?: IReqoreTooltip;
 }
 
-export interface IReqoreTagProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface IReqoreTagProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
   size?: TSizes;
   label?: string;
   onRemoveClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
@@ -50,6 +50,8 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
   justify-content: center;
   flex-shrink: 0;
   align-items: center;
+  font-family: system-ui;
+  font-weight: 600;
   overflow: hidden;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   height: ${({ size }) => SIZE_TO_PX[size]}px;
