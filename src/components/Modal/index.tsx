@@ -4,12 +4,13 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
 import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
+import { ReqoreH3 } from '../Header';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreModalProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -25,6 +26,7 @@ export interface IReqoreModalProps extends React.HTMLAttributes<HTMLDivElement> 
   title?: string;
   icon?: IReqoreIconName;
   opacity?: number;
+  intent?: IReqoreIntent;
 }
 
 export interface IReqoreModalStyle extends IReqoreModalProps {
@@ -69,7 +71,8 @@ const StyledModalWrapper = styled(animated.div)<IReqoreModalStyle>`
     width: ${({ width }) => width || undefined};
     height: ${({ height }) => height || undefined};
     border-radius: 10px;
-    background-color: ${({ theme, opacity = 1 }) => rgba(getMainBackgroundColor(theme), opacity)};
+    background-color: ${({ theme, opacity = 1, intent }: IReqoreModalStyle) =>
+      rgba(intent ? theme.intents[intent] : getMainBackgroundColor(theme), opacity)};
     box-shadow: 0px 0px 30px 0px ${rgba('#000000', 0.4)};
     // Only apply the blur filter if the modal has no backdrop & transparent background.
     backdrop-filter: ${({ blur, opacity, hasBackdrop }) =>
@@ -78,7 +81,11 @@ const StyledModalWrapper = styled(animated.div)<IReqoreModalStyle>`
     ${({ flat }) =>
       !flat &&
       css`
-        border: 1px solid ${({ theme }) => rgba(theme.text.color || getReadableColor(theme), 0.1)};
+        border: 1px solid
+          ${({ theme, intent }) =>
+            intent
+              ? theme.intents[intent]
+              : rgba(theme.text.color || getReadableColor(theme), 0.1)};
       `};
   }
 `;
@@ -148,10 +155,10 @@ export const ReqoreModal = ({
             >
               {icon || title || onClose ? (
                 <StyledModalHeader>
-                  <h3>
+                  <ReqoreH3>
                     {icon && <ReqoreIcon icon={icon} margin='right' />}
                     {title && <>{title}</>}
-                  </h3>
+                  </ReqoreH3>
                   {onClose && (
                     <ReqoreButton
                       icon='CloseLine'

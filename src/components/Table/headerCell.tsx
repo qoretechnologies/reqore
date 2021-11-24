@@ -36,7 +36,7 @@ export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
     `};
 
   ${({ align, theme }) => css`
-    background-color: ${theme.main};
+    background-color: ${changeLightness(theme.main, 0.03)};
     justify-content: ${align ? alignToFlex[align] : 'flex-start'};
   `}
 
@@ -48,7 +48,7 @@ export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
 
       &:hover {
         color: ${getReadableColor(theme, undefined, undefined)};
-        background-color: ${changeLightness(theme.main, 0.02)};
+        background-color: ${changeLightness(theme.main, 0.06)};
       }
     `};
 `;

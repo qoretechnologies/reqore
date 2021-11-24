@@ -139,7 +139,6 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
                 onClick: noop,
               },
               {
-                icon: 'ListCheck2',
                 label: 'List',
                 actions: [
                   {

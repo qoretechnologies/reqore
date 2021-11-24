@@ -2,6 +2,7 @@ import { size } from 'lodash';
 import React from 'react';
 import { ReqorePopover } from '../..';
 import { IPopoverOptions } from '../../hooks/usePopover';
+import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItemProps } from './item';
 import ReqoreDropdownList from './list';
@@ -15,7 +16,11 @@ export interface IReqoreDropdownProps extends IPopoverOptions {
   componentProps?: { [key: string]: any };
   filterable?: boolean;
   label?: any;
+  children?: any;
   width?: string;
+  icon?: IReqoreIconName;
+  rightIcon?: IReqoreIconName;
+  caretPosition?: 'left' | 'right';
 }
 
 const ReqoreDropdown = ({
@@ -23,12 +28,16 @@ const ReqoreDropdown = ({
   component,
   componentProps = {},
   label,
+  children,
   multiSelect,
   buttonStyle,
   listStyle,
   handler,
   placement,
   filterable,
+  icon,
+  rightIcon,
+  caretPosition = 'left',
   ...rest
 }: IReqoreDropdownProps) => {
   return (
@@ -37,7 +46,8 @@ const ReqoreDropdown = ({
       component={component || ReqoreButton}
       componentProps={
         {
-          icon: 'ArrowDownSFill',
+          icon: caretPosition === 'left' ? icon || 'ArrowDownSFill' : rightIcon,
+          rightIcon: caretPosition === 'right' ? icon || 'ArrowDownSFill' : rightIcon,
           style: buttonStyle,
           disabled: !size(items),
           ...componentProps,
@@ -59,7 +69,7 @@ const ReqoreDropdown = ({
       }
       noArrow
     >
-      {label}
+      {children || label}
     </ReqorePopover>
   );
 };

@@ -1,17 +1,18 @@
 /* @flow */
 import { isFunction } from 'lodash';
+import { rgba } from 'polished';
 import React from 'react';
 import styled, { css } from 'styled-components';
-import { IReqoreTableColumn } from '.';
+import { IReqoreTableColumn, IReqoreTableData } from '.';
 import { ReqorePopover } from '../..';
-import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   data: {
     columns: IReqoreTableColumn[];
-    data?: any[];
+    data?: IReqoreTableData;
     selectable?: boolean;
     onSelectClick?: (selectId: string) => void;
     selected?: string[];
@@ -34,6 +35,7 @@ export interface IReqoreTableCellStyle {
   grow?: number;
   theme?: IReqoreTheme;
   align?: 'center' | 'left' | 'right';
+  intent?: IReqoreIntent;
   interactive?: boolean;
 }
 
@@ -55,7 +57,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       flex-grow: ${grow};
     `}
 
-  ${({ theme, align, interactive }: IReqoreTableCellStyle) => css`
+  ${({ theme, align, interactive, intent }: IReqoreTableCellStyle) => css`
     display: flex;
     align-items: center;
     justify-content: ${align ? alignToFlex[align] : 'flex-start'};
@@ -64,7 +66,12 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     height: 100%;
     padding: 0 10px;
 
-    border-bottom: 1px solid ${changeLightness(theme.main, 0.05)};
+    // Background color based on the intent
+    ${intent &&
+    css`
+      color: ${getReadableColorFrom(rgba(theme.intents[intent], 0.8), true)};
+      background-color: ${rgba(theme.intents[intent], 0.8)} !important;
+    `};
 
     ${interactive &&
     css`
@@ -72,8 +79,12 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       transition: background-color 0.2s ease-out;
 
       &:hover {
-        color: ${getReadableColor(theme, undefined, undefined)};
-        background-color: ${changeLightness(theme.main, 0.07)} !important;
+        color: ${intent
+          ? getReadableColorFrom(rgba(theme.intents[intent], 0.9))
+          : getReadableColor(theme, undefined, undefined)};
+        background-color: ${intent
+          ? rgba(theme.intents[intent], 0.9)
+          : rgba('#000000', 0.15)} !important;
       }
     `};
 
@@ -92,9 +103,19 @@ const ReqoreTableRow = ({
   style,
   index,
 }: IReqoreTableRowProps) => {
-  const renderCells = (columns: IReqoreTableColumn[], data: any[]) =>
+  const renderCells = (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
     columns.map(
-      ({ width, grow, dataId, content: Content, columns, align, onCellClick, cellTooltip }) =>
+      ({
+        width,
+        grow,
+        dataId,
+        content: Content,
+        columns,
+        align,
+        onCellClick,
+        cellTooltip,
+        intent,
+      }) =>
         columns ? (
           renderCells(columns, data)
         ) : (
@@ -107,6 +128,7 @@ const ReqoreTableRow = ({
                 width,
                 grow,
                 align,
+                intent: data[index]._reqoreIntent || intent,
                 interactive: !!onCellClick,
                 onClick: () => {
                   if (onCellClick) {
@@ -136,6 +158,7 @@ const ReqoreTableRow = ({
           align='center'
           className='reqore-table-cell'
           interactive={!!data[index]._selectId}
+          intent={data[index]._reqoreIntent}
           onClick={
             data[index]._selectId
               ? () => {

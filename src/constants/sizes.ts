@@ -1,4 +1,5 @@
 export type TSizes = 'tiny' | 'small' | 'normal' | 'big' | 'huge';
+export type TWeights = 'soft' | 'normal' | 'heavy';
 
 export const SIZE_TO_PX = {
   tiny: 10,

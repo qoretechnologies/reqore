@@ -102,6 +102,62 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
               },
             ]}
           />
+          <h4> Custom icon </h4>
+          <ReqoreDropdown
+            icon='SunCloudyLine'
+            componentProps={{
+              tooltip: 'WOAH!',
+              width: 500,
+              tooltipPlacement: 'top',
+              placeholder: 'Focus me to see some crazy stuff',
+            }}
+            items={[
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+            ]}
+          />
+          <h4> Custom icon with caret on right</h4>
+          <ReqoreDropdown
+            rightIcon='SunCloudyLine'
+            caretPosition='right'
+            componentProps={{
+              tooltip: 'WOAH!',
+              width: 500,
+              tooltipPlacement: 'top',
+              placeholder: 'Focus me to see some crazy stuff',
+            }}
+            items={[
+              {
+                selected: true,
+                label: 'Hello',
+                icon: 'SunCloudyLine',
+              },
+              {
+                label: 'How are ya',
+                icon: 'BatteryChargeFill',
+              },
+              {
+                disabled: true,
+                label: 'i aM diSAblEd',
+                icon: 'StopCircleLine',
+              },
+            ]}
+          >
+            {' '}
+            Weather info{' '}
+          </ReqoreDropdown>
           <h4> Custom component as label </h4>
           <ReqoreDropdown
             component={ReqoreInput}
