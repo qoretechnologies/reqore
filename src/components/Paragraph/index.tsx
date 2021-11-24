@@ -11,6 +11,8 @@ const style = ({ theme, intent }: IReqoreParagraphStyle) => css`
   color: ${intent ? theme.intents[intent] : getReadableColor(theme, undefined, undefined, true)};
 `;
 
-export const ReqoreP = styled.p<IReqoreParagraphStyle>`
-  ${(props) => style(props)};
+export const ReqoreP: React.FC<
+  Omit<IReqoreParagraphStyle, 'theme'>
+> = styled.p<IReqoreParagraphStyle>`
+  ${(props: IReqoreParagraphStyle) => style(props)};
 `;
