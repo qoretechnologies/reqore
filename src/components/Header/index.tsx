@@ -11,26 +11,26 @@ const style = ({ theme, intent }: IReqoreHeaderStyle) => css`
   color: ${intent ? theme.intents[intent] : getReadableColor(theme, undefined, undefined, true)};
 `;
 
-export const ReqoreH1 = styled.h1<IReqoreHeaderStyle>`
+export const ReqoreH1: React.FC<Omit<IReqoreHeaderStyle, 'theme'>> = styled.h1<IReqoreHeaderStyle>`
   ${(props) => style(props)};
 `;
 
-export const ReqoreH2 = styled.h2<IReqoreHeaderStyle>`
+export const ReqoreH2: React.FC<Omit<IReqoreHeaderStyle, 'theme'>> = styled.h2<IReqoreHeaderStyle>`
   ${(props) => style(props)};
 `;
 
-export const ReqoreH3 = styled.h3<IReqoreHeaderStyle>`
+export const ReqoreH3: React.FC<Omit<IReqoreHeaderStyle, 'theme'>> = styled.h3<IReqoreHeaderStyle>`
   ${(props) => style(props)};
 `;
 
-export const ReqoreH4 = styled.h4<IReqoreHeaderStyle>`
+export const ReqoreH4: React.FC<Omit<IReqoreHeaderStyle, 'theme'>> = styled.h4<IReqoreHeaderStyle>`
   ${(props) => style(props)};
 `;
 
-export const ReqoreH5 = styled.h5<IReqoreHeaderStyle>`
+export const ReqoreH5: React.FC<Omit<IReqoreHeaderStyle, 'theme'>> = styled.h5<IReqoreHeaderStyle>`
   ${(props) => style(props)};
 `;
 
-export const ReqoreH6 = styled.h6<IReqoreHeaderStyle>`
+export const ReqoreH6: React.FC<Omit<IReqoreHeaderStyle, 'theme'>> = styled.h6<IReqoreHeaderStyle>`
   ${(props) => style(props)};
 `;
