@@ -1,15 +1,17 @@
 /* @flow */
 import { size } from 'lodash';
+import { rgba } from 'polished';
 import React, { useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTableBody from './body';
-import ReqoreTableHeader from './header';
+import ReqoreTableHeader, { StyledColumnGroupHeader } from './header';
+import { IReqoreTableHeaderStyle, StyledTableHeader } from './headerCell';
 import { fixSort, flipSortDirection, sortTableData } from './helpers';
 import { StyledTableCell, StyledTableRow } from './row';
 
@@ -26,11 +28,16 @@ export interface IReqoreTableColumn {
   icon?: IReqoreIconName;
   iconSize?: string;
   tooltip?: string;
+  intent?: IReqoreIntent;
   cellTooltip?: (data: { [key: string]: any; _selectId?: string }) => string | JSX.Element;
   onCellClick?: (data: { [key: string]: any; _selectId?: string }) => void;
 }
 
-export type IReqoreTableData = { [key: string]: any; _selectId?: string }[];
+export type IReqoreTableData = {
+  [key: string]: any;
+  _selectId?: string;
+  _reqoreIntent?: IReqoreIntent;
+}[];
 
 export interface IReqoreTableProps extends React.HTMLAttributes<HTMLDivElement> {
   columns: IReqoreTableColumn[];
@@ -48,6 +55,7 @@ export interface IReqoreTableProps extends React.HTMLAttributes<HTMLDivElement> 
   selectToggleTooltip?: string;
   customTheme?: IReqoreTheme;
   rounded?: boolean;
+  flat?: boolean;
 }
 
 export interface IReqoreTableStyle {
@@ -56,6 +64,7 @@ export interface IReqoreTableStyle {
   striped?: boolean;
   selectable?: boolean;
   rounded?: boolean;
+  flat?: boolean;
 }
 
 export interface IReqoreTableSort {
@@ -64,7 +73,7 @@ export interface IReqoreTableSort {
 }
 
 const StyledTableWrapper = styled.div<IReqoreTableStyle>`
-  ${({ theme, width, striped, rounded }: IReqoreTableStyle) => css`
+  ${({ theme, width, striped, rounded, flat }: IReqoreTableStyle) => css`
     width: ${width ? `${width}px` : '100%'};
 
     position: relative;
@@ -80,16 +89,21 @@ const StyledTableWrapper = styled.div<IReqoreTableStyle>`
     background-color: ${theme.main};
     color: ${getReadableColor(theme, undefined, undefined, true)};
 
-    ${StyledTableCell} {
-      background-color: ${changeLightness(theme.main, 0.085)};
-    }
-
     ${striped &&
     css`
       ${StyledTableRow}:nth-child(odd) {
         ${StyledTableCell} {
-          background-color: ${changeLightness(theme.main, 0.055)};
+          background-color: ${rgba('#000000', 0.1)};
         }
+      }
+    `}
+
+    ${!flat &&
+    css`
+      ${StyledTableHeader}, ${StyledColumnGroupHeader}, ${StyledTableCell} {
+        ${({ theme }: IReqoreTableHeaderStyle) => css`
+          border-bottom: 1px solid ${changeLightness(theme.main, 0.07)};
+        `}
       }
     `}
   `}

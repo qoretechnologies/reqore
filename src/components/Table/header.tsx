@@ -28,8 +28,7 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
   ${({ leftScroll }) => css`
     display: flex;
     flex-flow: column;
-    width: ${({ hasVerticalScroll }: IReqoreTableSectionStyle) =>
-      hasVerticalScroll ? 'calc(100% - 15px)' : '100%'};
+    width: 100%;
     transform: translate3d(${-leftScroll}px, 0, 0);
 
     ${({ theme }) => css`
@@ -45,8 +44,9 @@ export interface IReqoreTableHeaderStyle {
   align?: 'center' | 'left' | 'right';
 }
 
-const StyledColumnGroupHeader = styled.div<IReqoreTableHeaderStyle>`
-  ${({ align }) => css`
+export const StyledColumnGroupHeader = styled.div<IReqoreTableHeaderStyle>`
+  ${({ align, theme }) => css`
+    background-color: ${changeLightness(theme.main, 0.035)};
     justify-content: ${align ? alignToFlex[align] : 'flex-start'};
   `}
 `;
@@ -72,17 +72,13 @@ const StyledTableHeaderRow = styled.div<{ theme: IReqoreTheme }>`
   flex: 1;
 
   ${StyledTableHeader}, ${StyledColumnGroupHeader} {
-    ${({ theme }: IReqoreTableHeaderStyle) => css`
-      border-bottom: 1px solid ${changeLightness(theme.main, 0.07)};
+    font-size: 13px;
+    font-weight: 600;
+    padding: 5px 10px;
 
-      font-size: 13px;
-      font-weight: 500;
-      padding: 10px;
-
-      display: flex;
-      flex-shrink: 0;
-      align-items: center;
-    `}
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
   }
 `;
 
