@@ -48,7 +48,7 @@
     "jest": "^26.6.3",
     "jest-github-actions-reporter": "^1.0.2",
     "npm-cli-login": "^0.1.1",
-    "playwright": "^1.12.3",
+    "playwright": "^1.16.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-test-renderer": "^17.0.2",
@@ -56,7 +56,7 @@
     "ts-jest": "^26.4.4",
     "ts-node": "^9.1.1",
     "typescript": "^4.4.1-rc",
-    "viteshot": "^0.1.4"
+    "viteshot": "^0.3.1"
   },
   "peerDependencies": {
     "react": "^17.0.1",

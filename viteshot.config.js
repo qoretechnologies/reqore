@@ -1,8 +1,14 @@
-const playwrightShooter = require("viteshot/shooters/playwright");
-const playwright = require("playwright");
+const playwrightShooter = require('viteshot/shooters/playwright');
+const playwright = require('playwright');
 
 module.exports = {
-  framework: "react",
+  framework: {
+    type: 'react',
+  },
   shooter: playwrightShooter(playwright.chromium),
-  filePathPattern: "**/*.screenshot.@(js|jsx|tsx|vue|svelte)",
+  filePathPattern: '**/*.screenshot.@(js|jsx|tsx|vue|svelte)',
+  wrapper: {
+    path: '__reactpreview__/Wrapper.tsx',
+    componentName: 'Wrapper',
+  },
 };
