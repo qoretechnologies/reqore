@@ -1,15 +1,16 @@
 import { Placement } from '@popperjs/core';
 import { darken, rgba } from 'polished';
-import React, { forwardRef, useRef } from 'react';
+import React, { forwardRef, useContext, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
   TEXT_FROM_SIZE,
-  TSizes,
+  TSizes
 } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import ThemeContext from '../../context/ThemeContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import usePopover from '../../hooks/usePopover';
@@ -28,15 +29,17 @@ export interface IReqoreButtonProps extends React.HTMLAttributes<HTMLButtonEleme
   intent?: IReqoreIntent;
   active?: boolean;
   flat?: boolean;
+  rightIcon?: IReqoreIconName;
+  color?: string;
 }
 
-export interface IReqoreButtonStyle extends IReqoreButtonProps {
+export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
   theme: IReqoreTheme;
 }
 
-const getButtonMainColor = (theme: IReqoreTheme, intent?: IReqoreIntent) => {
-  if (intent) {
-    return theme.intents[intent];
+const getButtonMainColor = (theme: IReqoreTheme, color?: string) => {
+  if (color) {
+    return color;
   }
 
   return theme.main;
@@ -65,15 +68,13 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   display: flex;
   align-items: center;
   margin: 0;
-  font-weight: 400;
+  font-weight: 600;
   position: relative;
   overflow: hidden;
-  border: ${({ theme, minimal, intent, flat }) =>
+  border: ${({ theme, minimal, color, flat }) =>
     !minimal && !flat
       ? `1px solid ${
-          intent
-            ? darken(0.2, theme.intents[intent])
-            : changeLightness(getButtonMainColor(theme, intent), 0.2)
+          color ? darken(0.2, color) : changeLightness(getButtonMainColor(theme, color), 0.2)
         }`
       : 0};
   padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
@@ -86,22 +87,22 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
   border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
 
-  background-color: ${({ minimal, theme, intent }) => {
+  background-color: ${({ minimal, theme, color }) => {
     if (minimal) {
-      if (intent) {
-        return rgba(theme.intents[intent], 0.3);
+      if (color) {
+        return rgba(color, 0.3);
       }
       return 'transparent';
     }
 
-    return intent ? theme.intents[intent] : changeLightness(theme.main, 0.1);
+    return color || changeLightness(theme.main, 0.1);
   }};
 
-  color: ${({ theme, intent, minimal }) =>
-    intent
+  color: ${({ theme, color, minimal }) =>
+    color
       ? minimal
         ? getReadableColor(theme, undefined, undefined, true)
-        : getReadableColorFrom(theme.intents[intent], true)
+        : getReadableColorFrom(color, true)
       : getReadableColor(theme, undefined, undefined, true)};
 
   .reqore-icon {
@@ -118,20 +119,18 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
 
     &:hover,
     &:focus {
-      background-color: ${({ theme, intent }: IReqoreButtonStyle) =>
-        intent
-          ? changeLightness(theme.intents[intent], 0.09)
-          : changeLightness(getButtonMainColor(theme, intent), 0.2)};
-      color: ${({ theme, intent }) =>
-        intent
-          ? getReadableColorFrom(theme.intents[intent])
-          : getReadableColor(theme, undefined, undefined)};
-      border-color: ${({ minimal, theme, intent }) =>
+      background-color: ${({ theme, color }: IReqoreButtonStyle) =>
+        color
+          ? changeLightness(color, 0.09)
+          : changeLightness(getButtonMainColor(theme, color), 0.2)};
+      color: ${({ theme, color }) =>
+        color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
+      border-color: ${({ minimal, theme, color }) =>
         minimal
           ? undefined
-          : intent
-          ? darken(0.4, theme.intents[intent])
-          : changeLightness(getButtonMainColor(theme, intent), 0.4)};
+          : color
+          ? darken(0.4, color)
+          : changeLightness(getButtonMainColor(theme, color), 0.4)};
 
       .reqore-icon {
         transform: scale(1);
@@ -151,20 +150,18 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
     }
   }
 
-  ${({ active, minimal, theme, intent }: IReqoreButtonStyle) =>
+  ${({ active, minimal, theme, color }: IReqoreButtonStyle) =>
     active &&
     css`
-      background-color: ${intent
-        ? changeLightness(theme.intents[intent], 0.045)
-        : changeLightness(getButtonMainColor(theme, intent), 0.16)};
-      color: ${intent
-        ? getReadableColorFrom(theme.intents[intent])
-        : getReadableColor(theme, undefined, undefined)};
+      background-color: ${color
+        ? changeLightness(color, 0.045)
+        : changeLightness(getButtonMainColor(theme, color), 0.16)};
+      color: ${color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
       border-color: ${minimal
         ? undefined
-        : intent
-        ? darken(0.2, theme.intents[intent])
-        : changeLightness(getButtonMainColor(theme, intent), 0.34)};
+        : color
+        ? darken(0.2, color)
+        : changeLightness(getButtonMainColor(theme, color), 0.34)};
 
       .reqore-icon {
         transform: scale(1);
@@ -183,8 +180,8 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   }
 
   &:focus {
-    border-color: ${({ minimal, theme, intent }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, intent), 0.4)};
+    border-color: ${({ minimal, theme, color }) =>
+      minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.4)};
   }
 `;
 
@@ -203,12 +200,15 @@ const ReqoreButton = forwardRef(
       intent,
       active,
       flat,
+      rightIcon,
+      color,
       ...rest
     }: IReqoreButtonProps,
     ref
   ) => {
     const innerRef = useRef(null);
     const combinedRef = useCombinedRefs(innerRef, ref);
+    const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
 
     usePopover({
       targetElement: combinedRef.current,
@@ -216,6 +216,9 @@ const ReqoreButton = forwardRef(
       placement: tooltipPlacement,
       show: !!tooltip,
     });
+
+    // If color or intent was specified, set the color
+    const customColor = intent ? theme.intents[intent] : color;
 
     return (
       <StyledButton
@@ -225,7 +228,7 @@ const ReqoreButton = forwardRef(
         fixed={fixed}
         minimal={minimal}
         size={size}
-        intent={intent}
+        color={customColor}
         flat={flat}
         active={active}
         className={`${className || ''} reqore-control reqore-button`}
@@ -234,15 +237,24 @@ const ReqoreButton = forwardRef(
         {icon && (
           <ReqoreIcon
             icon={icon}
-            margin={children ? 'right' : undefined}
+            margin={children || rightIcon ? 'right' : undefined}
             size={`${TEXT_FROM_SIZE[size]}px`}
           />
         )}
-        <span>
-          <StyledActiveContent>{children}</StyledActiveContent>
-          <StyledInActiveContent>{children}</StyledInActiveContent>
-          <StyledInvisibleContent>{children}</StyledInvisibleContent>
-        </span>
+        {children && (
+          <span>
+            <StyledActiveContent>{children}</StyledActiveContent>
+            <StyledInActiveContent>{children}</StyledInActiveContent>
+            <StyledInvisibleContent>{children}</StyledInvisibleContent>
+          </span>
+        )}
+        {rightIcon && (
+          <ReqoreIcon
+            icon={rightIcon}
+            margin={children ? 'left' : undefined}
+            size={`${TEXT_FROM_SIZE[size]}px`}
+          />
+        )}
       </StyledButton>
     );
   }
