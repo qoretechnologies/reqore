@@ -17,6 +17,14 @@ export const TABS_SIZE_TO_PX = {
   huge: 60,
 };
 
+export const TABLE_SIZE_TO_PX = {
+  tiny: 20,
+  small: 30,
+  normal: 40,
+  big: 50,
+  huge: 60,
+};
+
 export const TABS_PADDING_TO_PX = {
   tiny: 5,
   small: 10,

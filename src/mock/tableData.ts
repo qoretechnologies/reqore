@@ -30,8 +30,9 @@ export default {
     age: 99 - index,
     occupation: shortid.generate(),
     group: shortid.generate(),
-    _reqoreIntent: index === 2 ? 'info' : undefined,
+    _intent: index === 2 || index === 3 || index === 4 ? 'info' : undefined,
     _selectId: index !== 3 && index !== 6 ? `Row-${index}` : null,
+    _disabled: index === 5,
   })) as IReqoreTableData,
   height: 300,
 };

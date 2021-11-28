@@ -1,18 +1,13 @@
 import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 import { useScroll } from 'react-use';
 import { FixedSizeList as List } from 'react-window';
-import { IReqoreTableColumn } from '.';
-import ReqoreTableRow from './row';
+import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
+import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 
-export interface IReqoreTableSectionBodyProps {
-  data?: any[];
-  columns?: IReqoreTableColumn[];
+export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
   setLeftScroll: Dispatch<SetStateAction<number>>;
-  height: number;
-  selectable?: boolean;
-  selected?: string[];
   rowHeight?: number;
-  onSelectClick?: (selectId: string) => void;
+  height: number;
 }
 
 const ReqoreTableBody = ({
@@ -20,6 +15,7 @@ const ReqoreTableBody = ({
   setLeftScroll,
   height,
   rowHeight,
+  size = 'normal',
   ...rest
 }: IReqoreTableSectionBodyProps) => {
   const ref = useRef(null);
@@ -35,9 +31,10 @@ const ReqoreTableBody = ({
       itemCount={data.length}
       height={height}
       className='reqore-table-body'
-      itemSize={rowHeight || 40}
+      itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
       itemData={{
         data,
+        size,
         ...rest,
       }}
     >

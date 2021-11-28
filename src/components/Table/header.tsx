@@ -28,7 +28,6 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
   ${({ leftScroll }) => css`
     display: flex;
     flex-flow: column;
-    width: 100%;
     transform: translate3d(${-leftScroll}px, 0, 0);
 
     ${({ theme }) => css`
@@ -70,6 +69,10 @@ const StyledColumnGroupHeaders = styled.div`
 const StyledTableHeaderRow = styled.div<{ theme: IReqoreTheme }>`
   display: flex;
   flex: 1;
+
+  ${({ leftScroll }) => css`
+    transform: translate3d(${-leftScroll}px, 0, 0);
+  `}
 
   ${StyledTableHeader}, ${StyledColumnGroupHeader} {
     font-size: 13px;
@@ -142,10 +145,9 @@ const ReqoreTableHeader = ({
   return (
     <StyledTableHeaderWrapper
       className='reqore-table-header-wrapper'
-      leftScroll={leftScroll}
       hasVerticalScroll={hasVerticalScroll}
     >
-      <StyledTableHeaderRow>
+      <StyledTableHeaderRow leftScroll={leftScroll}>
         {selectable && (
           <ReqoreTableHeaderCell
             dataId='selectbox'
@@ -154,7 +156,8 @@ const ReqoreTableHeader = ({
             align='center'
             onSortChange={onSortChange}
             icon={getSelectedIcon()}
-            iconSize='19px'
+            iconSize='15px'
+            width={60}
             tooltip={selectToggleTooltip || 'Toggle selection on all data'}
             onClick={() => {
               onToggleSelectClick();
