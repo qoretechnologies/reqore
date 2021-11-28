@@ -1,6 +1,6 @@
 /* @flow */
 import { isFunction } from 'lodash';
-import { lighten } from 'polished';
+import { lighten, rgba } from 'polished';
 import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
@@ -103,7 +103,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       }
       // Is the table striped and this row odd
       if (striped && !even) {
-        opacity += 0.03;
+        opacity += 0.05;
       }
       // Is this row selected
       if (selected) {
@@ -134,7 +134,9 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       height: 100%;
       padding: 0 10px;
       font-size: ${TEXT_FROM_SIZE[size]}px;
-      background-color: ${getBackgroundColor()};
+      background-color: ${backgroundColor === 'transparent'
+        ? 'transparent'
+        : rgba(getBackgroundColor(), 0.8)};
       color: ${getReadableColorFrom(
         backgroundColor === 'transparent' ? theme.main : getBackgroundColor(),
         !hovered
