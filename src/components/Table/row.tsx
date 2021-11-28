@@ -221,6 +221,12 @@ const ReqoreTableRow = ({
                   if (onCellClick) {
                     e.stopPropagation();
                     onCellClick?.(data[index]);
+                  } else if (onRowClick) {
+                    e.stopPropagation();
+                    onRowClick?.(data[index]);
+                  } else if (selectable && data[index]._selectId) {
+                    // Otherwise select the row if selectable
+                    onSelectClick(data[index]._selectId);
                   }
                 },
                 className: 'reqore-table-cell',
@@ -250,17 +256,6 @@ const ReqoreTableRow = ({
       }}
       onMouseLeave={() => {
         setIsHovered(false);
-      }}
-      onClick={() => {
-        // If custom click was provided run only that
-        if (onRowClick) {
-          onRowClick(data[index]);
-          return;
-        }
-        // Otherwise select the row if selectable
-        if (data[index]._selectId && selectable) {
-          onSelectClick(data[index]._selectId);
-        }
       }}
     >
       {selectable && (
