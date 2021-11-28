@@ -24,15 +24,10 @@ export interface IReqoreTableHeaderStyle {
 }
 
 export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
-  ${({ width }) =>
+  ${({ width, grow }) =>
     css`
       width: ${!width || width < 80 ? 80 : width}px;
-    `};
-
-  ${({ grow }) =>
-    grow &&
-    css`
-      flex-grow: ${grow};
+      flex-grow: ${grow || (width ? undefined : 1)};
     `};
 
   ${({ align, theme }) => css`

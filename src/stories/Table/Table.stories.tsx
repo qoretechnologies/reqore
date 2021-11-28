@@ -279,6 +279,18 @@ Selectable.args = {
   },
 };
 
+export const InteractiveRows = Template.bind({});
+InteractiveRows.args = {
+  table: {
+    ...tableData,
+    onRowClick: (data) => {
+      console.log(data);
+    },
+    selectable: true,
+    striped: true,
+  },
+};
+
 export const InteractiveCells = Template.bind({});
 InteractiveCells.args = {
   theme: {
@@ -356,10 +368,7 @@ InteractiveCells.args = {
 export const Complete = Template.bind({});
 Complete.args = {
   theme: {
-    main: '#0d0221',
-    text: {
-      dim: false,
-    },
+    main: '#222222',
   } as IReqoreTheme,
   table: {
     ...tableData,
@@ -391,6 +400,7 @@ Complete.args = {
             width: 150,
             grow: 1,
             sortable: true,
+            onCellClick: ({ lastName }) => alert(`Clicked last name cell ${lastName}`),
           },
         ],
       },
@@ -408,18 +418,24 @@ Complete.args = {
         width: 50,
         align: 'center',
         sortable: true,
+        intent: 'danger',
+        onCellClick: ({ age }) => alert(`Clicked age cell ${age}`),
       },
       {
         header: 'Data',
         dataId: 'data',
         columns: [
           { dataId: 'occupation', header: 'Ocuppation', width: 200 },
-          { dataId: 'group', header: 'Group', width: 150 },
+          { dataId: 'group', header: 'Group', width: 150, intent: 'muted' },
         ],
       },
     ] as IReqoreTableColumn[],
     sort: { by: 'age', direction: 'desc' },
     striped: true,
     selectable: true,
+    onRowClick: (data) => {
+      console.log(data);
+    },
+    selectedRowIntent: 'warning',
   },
 };
