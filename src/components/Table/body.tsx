@@ -31,7 +31,7 @@ const ReqoreTableBody = ({
       itemCount={data.length}
       height={height}
       className='reqore-table-body'
-      itemSize={TABLE_SIZE_TO_PX[size]}
+      itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
       itemData={{
         data,
         size,

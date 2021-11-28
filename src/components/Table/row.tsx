@@ -1,13 +1,13 @@
 /* @flow */
 import { isFunction } from 'lodash';
-import { lighten, rgba } from 'polished';
+import { lighten } from 'polished';
 import React, { useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
 import { ReqorePopover } from '../..';
 import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
-import { getReadableColorFrom } from '../../helpers/colors';
+import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreTableRowOptions {
@@ -94,20 +94,20 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     hovered,
   }: IReqoreTableCellStyle) => {
     const getBackgroundColor = () => {
-      let color = '#000000';
+      let color = theme.main;
       let opacity = 0;
       // Is there any intent
       if (intent || (selected && selectedIntent)) {
         color = theme.intents[intent || selectedIntent];
-        opacity += 0.2;
+        opacity += 0.02;
       }
       // Is the table striped and this row odd
       if (striped && !even) {
-        opacity += 0.1;
+        opacity += 0.03;
       }
       // Is this row selected
       if (selected) {
-        opacity += 0.2;
+        opacity += 0.02;
       }
       // Is this row hovered
       if (hovered) {
@@ -119,7 +119,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
         return 'transparent';
       }
 
-      return rgba(color, opacity);
+      return changeLightness(color, opacity);
     };
 
     const backgroundColor = getBackgroundColor();
@@ -131,14 +131,17 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       flex-shrink: 0;
       border-bottom: ${!flat ? '1px solid ' : undefined};
 
-      height: ${flat ? '100%' : 'calc(100% + 1px)'};
+      height: 100%;
       padding: 0 10px;
       font-size: ${TEXT_FROM_SIZE[size]}px;
       background-color: ${getBackgroundColor()};
-      color: ${getReadableColorFrom(theme.main, !hovered)};
-      border-color: ${rgba(
+      color: ${getReadableColorFrom(
         backgroundColor === 'transparent' ? theme.main : getBackgroundColor(),
-        0.2
+        !hovered
+      )};
+      border-color: ${changeLightness(
+        backgroundColor === 'transparent' ? theme.main : getBackgroundColor(),
+        0.1
       )};
       transition: background-color 0.2s ease-out;
       opacity: ${disabled ? 0.2 : 1};

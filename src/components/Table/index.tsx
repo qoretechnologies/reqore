@@ -213,7 +213,12 @@ const ReqoreTable = ({
 
   return (
     <ReqoreThemeProvider theme={theme}>
-      <StyledTableWrapper {...rest} className={`${className || ''} reqore-table`} rounded={rounded}>
+      <StyledTableWrapper
+        {...rest}
+        className={`${className || ''} reqore-table`}
+        rounded={rounded}
+        width={width}
+      >
         <ReqoreTableHeader
           columns={columns}
           leftScroll={leftScroll}
