@@ -78,7 +78,7 @@ export interface IReqoreTableSort {
 }
 
 const StyledTableWrapper = styled.div<IReqoreTableStyle>`
-  ${({ theme, width, striped, rounded, flat }: IReqoreTableStyle) => css`
+  ${({ theme, width, rounded, flat }: IReqoreTableStyle) => css`
     width: ${width ? `${width}px` : '100%'};
 
     position: relative;
