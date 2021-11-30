@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { useInterval } from 'react-use';
 import { getTimeAgoIntervalDelay } from '../../helpers/time';
 
-export const TimeAgo = ({ time }: { time: number }) => {
+export const TimeAgo = ({ time }: { time: number | string }) => {
   const [_lastUpdate, _setLastUpdate] = useState<number>(Date.now());
+  const _time = typeof time === 'number' ? time : Date.parse(time);
 
   useInterval(() => {
     _setLastUpdate(Date.now());
-  }, getTimeAgoIntervalDelay(time));
+  }, getTimeAgoIntervalDelay(_time));
 
-  return timeago(time);
+  return timeago(_time);
 };
