@@ -14,12 +14,23 @@ import ReqoreTableHeader, { StyledColumnGroupHeader } from './header';
 import { IReqoreTableHeaderStyle, StyledTableHeader } from './headerCell';
 import { fixSort, flipSortDirection, sortTableData } from './helpers';
 
+export type TReqoreTableColumnContent =
+  | React.FC<{ [key: string]: any; _selectId?: string }>
+  | 'time-ago'
+  | 'tag'
+  | `tag:${IReqoreIntent}`
+  | `tag:#${string}`
+  | 'title'
+  | `title:${IReqoreIntent}`
+  | 'text'
+  | `text:${IReqoreIntent}`;
+
 export interface IReqoreTableColumn {
   dataId: string;
   header?: string | JSX.Element;
   grow?: 1 | 2 | 3 | 4;
   width?: number;
-  content?: React.FC<{ [key: string]: any; _selectId?: string }>;
+  content?: TReqoreTableColumnContent;
   props?: React.HTMLAttributes<HTMLDivElement>;
   align?: 'center' | 'left' | 'right';
   columns?: IReqoreTableColumn[];

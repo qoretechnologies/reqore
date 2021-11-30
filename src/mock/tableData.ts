@@ -21,6 +21,7 @@ export default {
     },
     { dataId: 'occupation', header: 'Ocuppation', width: 200 },
     { dataId: 'group', header: 'Group', width: 150, intent: 'muted' },
+    { dataId: 'date', header: 'Date', width: 150, content: 'time-ago' },
   ] as IReqoreTableColumn[],
   data: [...new Array(100)].map((_val, index) => ({
     id: index,
@@ -30,6 +31,7 @@ export default {
     age: 99 - index,
     occupation: shortid.generate(),
     group: shortid.generate(),
+    date: Date.now(),
     _intent: index === 2 || index === 3 || index === 4 ? 'info' : undefined,
     _selectId: index !== 3 && index !== 6 ? `Row-${index}` : null,
     _disabled: index === 5,

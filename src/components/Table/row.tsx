@@ -1,14 +1,23 @@
 /* @flow */
-import { isFunction } from 'lodash';
+import { isFunction, isString } from 'lodash';
 import { lighten, rgba } from 'polished';
-import React, { useState } from 'react';
+import React, { ReactElement, useState } from 'react';
 import styled, { css } from 'styled-components';
-import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
+import {
+  IReqoreTableColumn,
+  IReqoreTableData,
+  IReqoreTableRowClick,
+  TReqoreTableColumnContent,
+} from '.';
 import { ReqorePopover } from '../..';
 import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import { ReqoreH3 } from '../Header';
 import ReqoreIcon from '../Icon';
+import { ReqoreP } from '../Paragraph';
+import ReqoreTag from '../Tag';
+import { TimeAgo } from '../TimeAgo';
 
 export interface IReqoreTableRowOptions {
   columns: IReqoreTableColumn[];
@@ -111,7 +120,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       }
       // Is this row hovered
       if (hovered) {
-        opacity += 0.05;
+        opacity += 0.08;
       }
 
       // Set the color as transparent if opacity is 0
@@ -186,19 +195,59 @@ const ReqoreTableRow = ({
 }: IReqoreTableRowProps) => {
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const isSelected = selected.find((selectId) => selectId === data[index]._selectId);
+
+  const renderContent = (
+    content: TReqoreTableColumnContent,
+    data: any,
+    dataId: string
+  ): ReactElement<any, any> => {
+    if (isFunction(content)) {
+      const Content = content;
+
+      return <Content {...data} />;
+    }
+
+    if (isString(content)) {
+      // Separate the content string by colon
+      let [type, intentOrColor] = content.split(':');
+      // Check if the intent starts with hash for tags
+      let intent: IReqoreIntent = intentOrColor?.startsWith('#')
+        ? undefined
+        : (intentOrColor as IReqoreIntent);
+      let color: string =
+        intentOrColor?.startsWith('#') && type === 'tag' ? intentOrColor : undefined;
+      // Render content based on the type
+      switch (type) {
+        case 'time-ago':
+          return <TimeAgo time={data[dataId]} />;
+        case 'tag':
+          return (
+            <ReqoreTag
+              label={data[dataId]}
+              size={size}
+              intent={intent as IReqoreIntent}
+              color={color}
+            />
+          );
+        case 'title':
+          return <ReqoreH3 intent={intent as IReqoreIntent}>{data[dataId]}</ReqoreH3>;
+        case 'text':
+          return (
+            <ReqoreP className='reqore-table-text' intent={intent as IReqoreIntent}>
+              {data[dataId]}
+            </ReqoreP>
+          );
+        default:
+          return <ReqoreP className='reqore-table-text'>{data[dataId]}</ReqoreP>;
+      }
+    }
+
+    return <ReqoreP className='reqore-table-text'>{data[dataId]}</ReqoreP>;
+  };
+
   const renderCells = (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
     columns.map(
-      ({
-        width,
-        grow,
-        dataId,
-        content: Content,
-        columns,
-        align,
-        onCellClick,
-        cellTooltip,
-        intent,
-      }) =>
+      ({ width, grow, dataId, content, columns, align, onCellClick, cellTooltip, intent }) =>
         columns ? (
           renderCells(columns, data)
         ) : (
@@ -239,11 +288,7 @@ const ReqoreTableRow = ({
             }
             content={cellTooltip ? cellTooltip(data[index]) : undefined}
           >
-            {isFunction(Content) ? (
-              <Content {...data[index]} />
-            ) : (
-              <p className='reqore-table-text'>{data[index][dataId]}</p>
-            )}
+            {renderContent(content, data[index], dataId)}
           </ReqorePopover>
         )
     );
