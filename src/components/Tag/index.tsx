@@ -1,5 +1,5 @@
 import _size from 'lodash/size';
-import React, { forwardRef, useRef } from 'react';
+import React, { forwardRef, useContext, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import {
@@ -9,7 +9,8 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import ThemeContext from '../../context/ThemeContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import usePopover from '../../hooks/usePopover';
@@ -22,6 +23,7 @@ export interface IReqoreTagAction {
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   disabled?: boolean;
   tooltip?: IReqoreTooltip;
+  intent?: IReqoreIntent;
 }
 
 export interface IReqoreTagProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
@@ -37,6 +39,7 @@ export interface IReqoreTagProps extends Omit<React.HTMLAttributes<HTMLSpanEleme
   actions?: IReqoreTagAction[];
   width?: string;
   badge?: boolean;
+  intent?: IReqoreIntent;
 }
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
@@ -92,6 +95,7 @@ const StyledTagContentWrapper = styled.div<{ size: TSizes }>`
   padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   flex: 1;
   overflow: hidden;
@@ -144,12 +148,15 @@ const ReqoreTag = forwardRef(
       onRemoveClick,
       actions,
       badge,
+      intent,
+      color,
       ...rest
     }: IReqoreTagProps,
     ref
   ) => {
     const innerRef = useRef(null);
     const combinedRef = useCombinedRefs(innerRef, ref);
+    const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
 
     usePopover({
       ...tooltip,
@@ -157,9 +164,13 @@ const ReqoreTag = forwardRef(
       show: !!tooltip?.content,
     });
 
+    // If color or intent was specified, set the color
+    const customColor = intent ? theme.intents[intent] : color;
+
     return (
       <StyledTag
         {...rest}
+        color={customColor}
         className={`${className || ''} reqore-tag`}
         size={size}
         ref={combinedRef}
@@ -192,7 +203,7 @@ const ReqoreTag = forwardRef(
                   component={StyledButtonWrapper}
                   componentProps={{
                     size,
-                    color: rest.color,
+                    color: customColor,
                     className: 'reqore-tag-action',
                     onClick: action.onClick,
                   }}
@@ -208,7 +219,7 @@ const ReqoreTag = forwardRef(
             component={StyledButtonWrapper}
             componentProps={{
               size,
-              color: rest.color,
+              color: customColor,
               className: 'reqore-tag-remove',
               onClick: onRemoveClick,
             }}

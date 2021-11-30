@@ -168,6 +168,44 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
             ]}
             onRemoveClick={() => alert('clicked remove')}
           />
+          <h4> Intent </h4>
+          <ReqoreTag label='Something' size='small' intent='danger' />
+          <br />
+          <br />
+          <ReqoreTag label='Something' intent='success' />
+          <br />
+          <br />
+          <ReqoreTag
+            label='Something'
+            size='big'
+            intent='info'
+            actions={[
+              {
+                icon: 'AccountPinBoxFill',
+                tooltip: {
+                  content: 'Hey yo',
+                },
+                onClick: () => alert('clicked first action'),
+              },
+              {
+                icon: 'Anticlockwise2Line',
+                tooltip: {
+                  content: 'Disabled :(',
+                },
+                disabled: true,
+                onClick: () => alert('clicked middle action'),
+              },
+              {
+                icon: 'BankCardLine',
+                tooltip: {
+                  handler: 'click',
+                  noArrow: true,
+                  content: 'Super special tooltip',
+                },
+                onClick: () => alert('clicked last action'),
+              },
+            ]}
+          />
           <h4> Custom colors </h4>
           <ReqoreTag label='Something' size='small' color='#0f7c80' />
           <br />
