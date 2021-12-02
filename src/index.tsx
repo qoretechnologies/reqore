@@ -41,6 +41,7 @@ export { default as ReqoreTabsList } from './components/Tabs/list';
 export { default as ReqoreTag } from './components/Tag';
 export { default as ReqoreTagGroup } from './components/Tag/group';
 export { default as ReqoreTextarea } from './components/Textarea';
+export { TimeAgo as ReqoreTimeAgo } from './components/TimeAgo';
 export { ReqoreTree } from './components/Tree';
 export { Colors as ReqoreColors } from './constants/colors';
 export { default as ReqoreNotifications } from './containers/ReqoreProvider';

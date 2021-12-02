@@ -31,6 +31,7 @@ test('Renders basic <Panel /> with title properly', () => {
 
   expect(document.querySelectorAll('.reqore-panel').length).toBe(1);
   expect(document.querySelectorAll('.reqore-panel-title').length).toBe(1);
+  expect(document.querySelectorAll('h3').length).toBe(1);
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(1);
 });
 

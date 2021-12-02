@@ -12,6 +12,7 @@ import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
+import { ReqoreH3 } from '../Header';
 import ReqoreIcon from '../Icon';
 
 export interface IReqorePanelAction {
@@ -52,6 +53,8 @@ export const StyledPanel = styled.div<IStyledPanel>`
   overflow: hidden;
   display: flex;
   flex-flow: column;
+  position: relative;
+  z-index: 1;
 
   ${({ fill, isCollapsed }) =>
     !isCollapsed && fill
@@ -154,7 +157,7 @@ export const ReqorePanel = forwardRef(
             >
               <StyledPanelTitleHeader>
                 {icon && <ReqoreIcon icon={icon} margin='right' />}
-                {label}
+                {typeof label === 'string' ? <ReqoreH3>{label}</ReqoreH3> : label}
               </StyledPanelTitleHeader>
               <ReqoreControlGroup minimal>
                 {actions.map(({ label, actions, ...rest }) =>
