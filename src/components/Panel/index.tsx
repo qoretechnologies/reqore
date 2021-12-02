@@ -12,7 +12,6 @@ import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
-import { ReqoreH3 } from '../Header';
 import ReqoreIcon from '../Icon';
 
 export interface IReqorePanelAction {
@@ -94,10 +93,17 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   flex: 1;
   overflow: hidden;
 `;
+
+export const StyledPanelTitleLabel = styled.span``;
+
 export const StyledPanelTitleHeader = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+
+  ${StyledPanelTitleLabel} {
+    font-weight: 600;
+  }
 `;
 
 export const ReqorePanel = forwardRef(
@@ -161,7 +167,11 @@ export const ReqorePanel = forwardRef(
             >
               <StyledPanelTitleHeader>
                 {icon && <ReqoreIcon icon={icon} margin='right' />}
-                {typeof label === 'string' ? <ReqoreH3>{label}</ReqoreH3> : label}
+                {typeof label === 'string' ? (
+                  <StyledPanelTitleLabel>{label}</StyledPanelTitleLabel>
+                ) : (
+                  label
+                )}
               </StyledPanelTitleHeader>
               <ReqoreControlGroup minimal>
                 {actions.map(({ label, actions, ...rest }) =>

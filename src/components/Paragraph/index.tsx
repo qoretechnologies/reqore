@@ -8,6 +8,8 @@ export interface IReqoreParagraphStyle extends React.HTMLAttributes<HTMLHeadingE
 }
 
 const style = ({ theme, intent }: IReqoreParagraphStyle) => css`
+  margin: 0;
+  padding: 0;
   color: ${intent ? theme.intents[intent] : getReadableColor(theme, undefined, undefined, true)};
 `;
 

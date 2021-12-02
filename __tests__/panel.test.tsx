@@ -23,7 +23,10 @@ test('Renders basic <Panel /> with title properly', () => {
     <div style={{ width: '1000px' }}>
       <ReqoreUIProvider>
         <ReqoreLayoutContent>
-          <ReqorePanel label='Test'> Panel </ReqorePanel>
+          <ReqorePanel icon='4KFill' label='Test'>
+            {' '}
+            Panel{' '}
+          </ReqorePanel>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     </div>
@@ -31,7 +34,7 @@ test('Renders basic <Panel /> with title properly', () => {
 
   expect(document.querySelectorAll('.reqore-panel').length).toBe(1);
   expect(document.querySelectorAll('.reqore-panel-title').length).toBe(1);
-  expect(document.querySelectorAll('h3').length).toBe(1);
+  expect(document.querySelectorAll('span').length).toBe(2);
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(1);
 });
 
