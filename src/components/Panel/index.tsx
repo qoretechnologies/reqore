@@ -94,7 +94,11 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   flex: 1;
   overflow: hidden;
 `;
-export const StyledPanelTitleHeader = styled.div``;
+export const StyledPanelTitleHeader = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
 
 export const ReqorePanel = forwardRef(
   (
