@@ -13,7 +13,7 @@ import { ReqorePopover } from '../..';
 import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
-import { ReqoreH3 } from '../Header';
+import { ReqoreH4 } from '../Header';
 import ReqoreIcon from '../Icon';
 import { ReqoreP } from '../Paragraph';
 import ReqoreTag from '../Tag';
@@ -230,7 +230,7 @@ const ReqoreTableRow = ({
             />
           );
         case 'title':
-          return <ReqoreH3 intent={intent as IReqoreIntent}>{data[dataId]}</ReqoreH3>;
+          return <ReqoreH4 intent={intent as IReqoreIntent}>{data[dataId]}</ReqoreH4>;
         case 'text':
           return (
             <ReqoreP className='reqore-table-text' intent={intent as IReqoreIntent}>

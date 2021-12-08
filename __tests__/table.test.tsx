@@ -169,7 +169,7 @@ test('Renders <Table /> with predefined content', () => {
 
   expect(idCell.querySelector('.reqore-tag')).toBeTruthy();
   expect(firstNameCell.querySelector('.reqore-tag')).toBeTruthy();
-  expect(lastNameCell.querySelector('h3')).toBeTruthy();
+  expect(lastNameCell.querySelector('h4')).toBeTruthy();
   expect(addressCell.querySelector('p.reqore-paragraph-warning')).toBeTruthy();
   expect(dateCell.textContent).toBe('just now');
 });
