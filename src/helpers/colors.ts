@@ -83,6 +83,10 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
     newTheme.notifications.danger = newTheme.intents.danger || DEFAULT_INTENTS.danger;
   }
 
+  if (!newTheme.notifications?.muted) {
+    newTheme.notifications.muted = newTheme.intents.muted || DEFAULT_INTENTS.muted;
+  }
+
   return newTheme;
 };
 

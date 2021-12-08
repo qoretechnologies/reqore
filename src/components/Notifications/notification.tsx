@@ -181,6 +181,7 @@ export const typeToIcon: { [type: string]: IReqoreIconName } = {
   warning: 'AlarmWarningLine',
   danger: 'ErrorWarningLine',
   success: 'CheckFill',
+  muted: 'Forbid2Line',
 };
 
 const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(

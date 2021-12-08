@@ -55,13 +55,7 @@ export interface IReqoreTheme {
   };
   intents?: IReqoreIntents;
   sidebar?: IReqoreSidebarTheme;
-  notifications?: {
-    info?: string;
-    success?: string;
-    warning?: string;
-    pending?: string;
-    danger?: string;
-  };
+  notifications?: IReqoreIntents;
   popover?: {
     main: string;
   };
