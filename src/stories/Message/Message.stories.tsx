@@ -29,6 +29,8 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
           <br />
           <ReqoreMessage intent='danger'> I am a message </ReqoreMessage>
           <br />
+          <ReqoreMessage intent='muted'> Shhhhh </ReqoreMessage>
+          <br />
           <ReqoreMessage intent='warning' title='Message with title'>
             {' '}
             I am a message a very long message - Shadowlands has mechanisms put in place for
