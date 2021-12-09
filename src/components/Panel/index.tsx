@@ -18,6 +18,7 @@ export interface IReqorePanelAction {
   icon?: IReqoreIconName;
   label?: string;
   onClick?: () => void;
+  intent?: IReqoreIntent;
   actions?: IReqoreDropdownItemProps[];
 }
 
@@ -174,12 +175,13 @@ export const ReqorePanel = forwardRef(
                 )}
               </StyledPanelTitleHeader>
               <ReqoreControlGroup minimal>
-                {actions.map(({ label, actions, ...rest }) =>
+                {actions.map(({ label, actions, intent, ...rest }) =>
                   size(actions) ? (
                     <ReqoreDropdown
                       {...rest}
                       label={label}
                       componentProps={{
+                        intent,
                         minimal: true,
                         onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
                           e.stopPropagation();
@@ -190,6 +192,7 @@ export const ReqorePanel = forwardRef(
                   ) : (
                     <ReqoreButton
                       {...rest}
+                      intent={intent}
                       onClick={
                         rest.onClick
                           ? (e: React.MouseEvent<HTMLButtonElement>) => {

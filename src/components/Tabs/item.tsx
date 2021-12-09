@@ -16,6 +16,7 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   parentBackground?: string;
   flat?: boolean;
   size?: TSizes;
+  wrapTabNames?: boolean;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
@@ -25,7 +26,7 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 
 const StyledLabel = styled.span`
   overflow: hidden;
-  text-overflow: ellipsis;
+  position: relative;
 `;
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
@@ -39,13 +40,16 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     parentBackground,
     flat,
     size,
+    intent,
   }: IReqoreTabListItemStyle) => {
     const textColor = parentBackground
       ? getReadableColorFrom(parentBackground, true)
       : getReadableColor(theme, undefined, undefined, true);
+    const currentIntent = intent || activeIntent;
 
     return css`
       display: flex;
+      overflow: hidden;
       position: relative;
       align-items: center;
       padding: ${vertical ? `${TABS_PADDING_TO_PX[size]}px` : `0 ${TABS_PADDING_TO_PX[size]}px`};
@@ -69,15 +73,23 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     }
 
       ${
+        intent &&
+        css`
+          border-${vertical ? 'right' : 'bottom'}: 2px solid ${theme.intents[intent]};
+          background-color: ${`${theme.intents[currentIntent]}20`};
+        `
+      }
+
+      ${
         active &&
         css`
           border-${vertical ? 'right' : 'bottom'}: 2px solid ${
-          activeIntent
-            ? theme.intents[activeIntent]
+          currentIntent
+            ? theme.intents[currentIntent]
             : changeLightness(parentBackground || theme.main, 0.2)
         };
           opacity: 1;
-          background-color: ${activeIntent ? `${theme.intents[activeIntent]}30` : undefined};
+          background-color: ${currentIntent ? `${theme.intents[currentIntent]}30` : undefined};
 
           > .reqore-icon {
             transform: scale(1);
@@ -101,8 +113,8 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
                 color: ${parentBackground
                   ? getReadableColorFrom(parentBackground)
                   : getReadableColor(theme)};
-                background-color: ${activeIntent
-                  ? `${theme.intents[activeIntent]}50`
+                background-color: ${currentIntent
+                  ? `${theme.intents[currentIntent]}50`
                   : changeLightness(parentBackground || theme.main, 0.05)};
 
                 ${StyledActiveContent} {
@@ -138,7 +150,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
 `;
 
 const StyledCloseButton = styled.div<Partial<IReqoreTabListItemStyle>>`
-  ${({ theme, activeIntent }) => css`
+  ${({ theme, activeIntent, intent }) => css`
     position: absolute;
     right: 0px;
     height: 100%;
@@ -155,9 +167,11 @@ const StyledCloseButton = styled.div<Partial<IReqoreTabListItemStyle>>`
       .reqore-icon {
         transform: scale(1);
       }
-      color: ${getReadableColorFrom(activeIntent ? theme.intents[activeIntent] : theme.main)};
+      color: ${getReadableColorFrom(
+        intent || activeIntent ? theme.intents[intent || activeIntent] : theme.main
+      )};
       background-color: ${changeLightness(
-        activeIntent ? theme.intents[activeIntent] : theme.main,
+        intent || activeIntent ? theme.intents[intent || activeIntent] : theme.main,
         0.09
       )};
     }
@@ -177,17 +191,25 @@ const ReqoreTabsListItem = ({
   activeIntent,
   onCloseClick,
   parentBackground,
+  wrapTabNames,
+  intent,
   flat,
   size,
+  closeIcon,
 }: IReqoreTabListItemProps) => {
   const [ref, setRef] = useState(null);
 
-  usePopover({ targetElement: ref, content: tooltip, show: !!tooltip });
+  usePopover({
+    targetElement: ref,
+    content: wrapTabNames ? tooltip || label : tooltip,
+    show: wrapTabNames ? !!(tooltip || label) : !!tooltip,
+  });
 
   return (
     <ReqoreThemeProvider>
       <StyledTabListItem
         {...props}
+        intent={intent}
         as={as}
         flat={flat}
         size={size}
@@ -212,9 +234,9 @@ const ReqoreTabsListItem = ({
         )}
         {label && (
           <StyledLabel>
-            <StyledActiveContent>{label}</StyledActiveContent>
-            <StyledInActiveContent>{label}</StyledInActiveContent>
-            <StyledInvisibleContent>{label}</StyledInvisibleContent>
+            <StyledActiveContent wrap={wrapTabNames}>{label}</StyledActiveContent>
+            <StyledInActiveContent wrap={wrapTabNames}>{label}</StyledInActiveContent>
+            <StyledInvisibleContent wrap={wrapTabNames}>{label}</StyledInvisibleContent>
           </StyledLabel>
         )}
         {onCloseClick && !disabled ? (
@@ -226,9 +248,10 @@ const ReqoreTabsListItem = ({
               onCloseClick && onCloseClick();
             }}
             activeIntent={activeIntent}
+            intent={intent}
             active={active}
           >
-            <ReqoreIcon icon='CloseLine' size={`${TEXT_FROM_SIZE[size]}px`} />
+            <ReqoreIcon icon={closeIcon || 'CloseLine'} size={`${TEXT_FROM_SIZE[size]}px`} />
           </StyledCloseButton>
         ) : null}
       </StyledTabListItem>

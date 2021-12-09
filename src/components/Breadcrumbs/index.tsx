@@ -30,7 +30,7 @@ export interface IReqoreBreadcrumbItem {
   props?: React.HTMLAttributes<any>;
   withTabs?: {
     tabs: IReqoreTabsListItem[];
-    onTabChange: (tabId: string) => any;
+    onTabChange: (tabId: string | number) => any;
     activeTab: string;
     activeTabIntent?: IReqoreIntent;
   };

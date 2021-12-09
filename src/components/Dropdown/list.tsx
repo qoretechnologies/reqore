@@ -41,7 +41,7 @@ const ReqoreDropdownList = ({
         return false;
       }
 
-      return text.toLowerCase().indexOf(query.toLowerCase()) !== -1;
+      return text.toString().toLowerCase().indexOf(query.toLowerCase()) !== -1;
     });
   }, [items, query, _items]);
 
@@ -67,11 +67,7 @@ const ReqoreDropdownList = ({
         />
       )}
       {filteredItems.map((item: IReqoreMenuItemProps, index: number) => (
-        <ReqoreMenuItem
-          key={index}
-          {...item}
-          rightIcon={item.selected ? 'CheckLine' : undefined}
-        />
+        <ReqoreMenuItem key={index} {...item} rightIcon={item.selected ? 'CheckLine' : undefined} />
       ))}
     </ReqoreMenu>
   );

@@ -12,7 +12,7 @@ import ReqoreIcon from '../Icon';
 // @ts-ignore
 export interface IReqoreMenuItemProps extends IReqoreComponent, React.HTMLAttributes<HTMLElement> {
   children?: string;
-  label?: string;
+  label?: string | number;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
   as?: JSX.Element | React.ElementType | never;
