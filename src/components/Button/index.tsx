@@ -7,7 +7,7 @@ import {
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
   TEXT_FROM_SIZE,
-  TSizes
+  TSizes,
 } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ThemeContext from '../../context/ThemeContext';
@@ -51,17 +51,42 @@ export const StyledActiveContent = styled.span`
   opacity: 0;
   transition: all 0.2s ease-out;
   filter: blur(10px);
+
+  ${({ wrap }) =>
+    wrap &&
+    css`
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+    `}
 `;
 
 export const StyledInActiveContent = styled.span`
   position: absolute;
   transform: translateY(0);
   transition: all 0.2s ease-out;
+
+  ${({ wrap }) =>
+    wrap &&
+    css`
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+    `}
 `;
 
 export const StyledInvisibleContent = styled.span`
   visibility: hidden;
   position: relative;
+  overflow: hidden;
+
+  ${({ wrap }) =>
+    wrap &&
+    css`
+      white-space: nowrap;
+    `}
 `;
 
 export const StyledButton = styled.button<IReqoreButtonStyle>`

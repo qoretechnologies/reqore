@@ -1,11 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React, { useState } from 'react';
-import {
-  ReqoreLayoutContent,
-  ReqoreTabs,
-  ReqoreTabsContent,
-  ReqoreUIProvider,
-} from '../src';
+import { ReqoreLayoutContent, ReqoreTabs, ReqoreTabsContent, ReqoreUIProvider } from '../src';
 
 test('Renders full <Tabs /> properly', () => {
   render(
@@ -21,11 +16,11 @@ test('Renders full <Tabs /> properly', () => {
               { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
             ]}
           >
-            <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
           </ReqoreTabs>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -54,11 +49,11 @@ test('Renders shortened <Tabs /> properly', () => {
               { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
             ]}
           >
-            <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
           </ReqoreTabs>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -66,10 +61,7 @@ test('Renders shortened <Tabs /> properly', () => {
   });
 
   expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(2);
-  expect(
-    document.querySelectorAll('.reqore-tabs-list .reqore-popover-wrapper')
-      .length
-  ).toBe(1);
+  expect(document.querySelectorAll('.reqore-tabs-list .reqore-popover-wrapper').length).toBe(1);
 });
 
 test('Default active tab can be specified', () => {
@@ -87,11 +79,11 @@ test('Default active tab can be specified', () => {
             ]}
             activeTab='tab4'
           >
-            <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
           </ReqoreTabs>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -118,11 +110,11 @@ test('Changes tab and runs callback', () => {
             ]}
             onTabChange={cb}
           >
-            <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
           </ReqoreTabs>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -133,9 +125,7 @@ test('Changes tab and runs callback', () => {
 
   expect(screen.getByText('Tab 3 content')).toBeTruthy();
   expect(cb).toHaveBeenCalledWith('tab3');
-  expect(
-    document.querySelectorAll('.reqore-tabs-list-item__active').length
-  ).toBe(1);
+  expect(document.querySelectorAll('.reqore-tabs-list-item__active').length).toBe(1);
 });
 
 test('Does not change tab and run callback when disabled', () => {
@@ -155,11 +145,11 @@ test('Does not change tab and run callback when disabled', () => {
             ]}
             onTabChange={cb}
           >
-            <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
           </ReqoreTabs>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -170,9 +160,7 @@ test('Does not change tab and run callback when disabled', () => {
 
   expect(screen.getByText('Tab 1 content')).toBeTruthy();
   expect(cb).not.toHaveBeenCalled();
-  expect(
-    document.querySelectorAll('.reqore-tabs-list-item__active').length
-  ).toBe(1);
+  expect(document.querySelectorAll('.reqore-tabs-list-item__active').length).toBe(1);
 });
 
 test('Changes tab programatically and runs callback', () => {
@@ -195,15 +183,13 @@ test('Changes tab programatically and runs callback', () => {
             onTabChange={cb}
             activeTab={activeTab}
           >
-            <ReqoreTabsContent id='tab1'>
-              <button onClick={() => setActiveTab('tab2')}>
-                Change active tab
-              </button>
+            <ReqoreTabsContent tabId='tab1'>
+              <button onClick={() => setActiveTab('tab2')}>Change active tab</button>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
           </ReqoreTabs>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -242,11 +228,11 @@ test('Closable tab can be closed if not disabled', () => {
             ]}
             onTabChange={cb}
           >
-            <ReqoreTabsContent id='tab1'>Tab 1 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab2'>Tab 2 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab3'>Tab 3 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab4'>Tab 4 content</ReqoreTabsContent>
-            <ReqoreTabsContent id='tab5'>Tab 5 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
           </ReqoreTabs>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>

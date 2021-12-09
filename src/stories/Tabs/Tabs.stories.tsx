@@ -31,16 +31,18 @@ const tabs = {
     },
     {
       label: 'Really long tab name with tooltip',
-      id: 'tab3',
+      id: 3,
       icon: 'FileSettingsLine',
       tooltip: 'Click to go to page 3!',
     },
     {
       id: 'tab4',
       icon: 'LightbulbLine',
+      intent: 'success',
       onCloseClick: (id) => {
         alert(`${id} close click`);
       },
+      closeIcon: 'DeleteBinFill',
     },
     {
       label: 'Tab 5',
@@ -55,6 +57,7 @@ const tabs = {
       label: 'Lorem Ipsum',
       id: 'tab6',
       icon: 'DragMoveLine',
+      intent: 'danger',
     },
     {
       label: 'Hey I am another long tab',
@@ -98,22 +101,22 @@ const Template: Story<{
         <ReqoreHeader></ReqoreHeader>
         <ReqoreContent>
           <ReqoreTabs {...tabs}>
-            <ReqoreTabsContent id='tab1'>
+            <ReqoreTabsContent tabId='tab1'>
               <h3>Tab 1</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab2'>
+            <ReqoreTabsContent tabId='tab2'>
               <h3>Tab 2</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab3'>
+            <ReqoreTabsContent tabId={3}>
               <h3>Tab 3</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab4'>
+            <ReqoreTabsContent tabId='tab4'>
               <h3>Tab 4</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab5'>
+            <ReqoreTabsContent tabId='tab5'>
               <h3>Tab 5</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab6'>
+            <ReqoreTabsContent tabId='tab6'>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae nisi ligula.
               Proin laoreet vitae risus sed pretium. Sed eu elit non tortor congue molestie vel ut
               elit. Duis id turpis tincidunt libero accumsan cursus. Quisque urna nibh, tempor ac
@@ -175,13 +178,13 @@ const Template: Story<{
               quis sem. Maecenas scelerisque commodo magna eget blandit. Praesent vitae bibendum
               mauris, eu blandit dui.
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab7'>
+            <ReqoreTabsContent tabId='tab7'>
               <h3>Tab 7</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab8'>
+            <ReqoreTabsContent tabId='tab8'>
               <h3>Tab 8</h3>
             </ReqoreTabsContent>
-            <ReqoreTabsContent id='tab9'>
+            <ReqoreTabsContent tabId='tab9'>
               <h3>Tab 9</h3>
             </ReqoreTabsContent>
           </ReqoreTabs>
@@ -243,6 +246,16 @@ Vertical.args = {
     ...tabs,
     vertical: true,
     fillParent: true,
+  },
+};
+
+export const VerticalWithWrapping = Template.bind({});
+VerticalWithWrapping.args = {
+  tabs: {
+    ...tabs,
+    vertical: true,
+    fillParent: true,
+    wrapTabNames: true,
   },
 };
 

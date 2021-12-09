@@ -10,23 +10,26 @@ export interface IReqoreTabsListItem {
   icon?: IReqoreIconName;
   as?: any;
   disabled?: boolean;
-  id: string;
+  id: string | number;
   tooltip?: string;
   props?: React.HTMLAttributes<any>;
   onClick?: (event: any) => any;
   onCloseClick?: (id: string | number) => any;
   activeIntent?: IReqoreIntent;
+  intent?: IReqoreIntent;
+  closeIcon?: IReqoreIconName;
 }
 
 export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   tabs: IReqoreTabsListItem[];
-  activeTab?: string;
-  onTabChange?: (tabId: string) => any;
+  activeTab?: string | number;
+  onTabChange?: (tabId: string | number) => any;
   children?: ReactElement<any>[] | ReactElement<any>;
   fill?: boolean;
   fillParent?: boolean;
   vertical?: boolean;
   activeTabIntent?: IReqoreIntent;
+  wrapTabNames?: boolean;
   flat?: boolean;
   size?: TSizes;
   width?: string;
@@ -35,10 +38,10 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   _testWidth?: number;
 }
 
-const StyledTabs = styled.div<{ vertical?: boolean }>`
+const StyledTabs = styled.div<Partial<IReqoreTabsProps>>`
   display: flex;
-  ${({ vertical, fillParent }) => css`
-    width: 100%;
+  ${({ vertical, fillParent, width }) => css`
+    width: ${width ? `${width}px` : '100%'};
     height: ${fillParent ? '100%' : undefined};
     flex-flow: ${vertical ? 'row' : 'column'};
   `}
@@ -57,12 +60,13 @@ const ReqoreTabs = ({
   flat,
   size = 'normal',
   width,
+  wrapTabNames,
   ...rest
 }: IReqoreTabsProps) => {
-  const [_activeTab, setActiveTab] = useState<string>(activeTab || tabs[0].id);
+  const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
 
   useEffect(() => {
-    if (activeTab) {
+    if (activeTab || activeTab === 0) {
       setActiveTab(activeTab);
 
       if (onTabChange) {
@@ -72,7 +76,12 @@ const ReqoreTabs = ({
   }, [activeTab]);
 
   return (
-    <StyledTabs {...rest} vertical={vertical} className={`${className || ''} reqore-tabs`}>
+    <StyledTabs
+      {...rest}
+      width={width}
+      vertical={vertical}
+      className={`${className || ''} reqore-tabs`}
+    >
       <ReqoreTabsList
         tabs={tabs}
         flat={flat}
@@ -82,8 +91,9 @@ const ReqoreTabs = ({
         vertical={vertical}
         _testWidth={_testWidth}
         activeTab={_activeTab}
+        wrapTabNames={wrapTabNames}
         activeTabIntent={activeTabIntent}
-        onTabChange={(tabId: string) => {
+        onTabChange={(tabId: string | number) => {
           setActiveTab(tabId);
 
           if (onTabChange) {
@@ -92,7 +102,7 @@ const ReqoreTabs = ({
         }}
       />
       {React.Children.map(children, (child) =>
-        child && child.props?.id === _activeTab ? child : null
+        child && child.props?.tabId === _activeTab ? child : null
       )}
     </StyledTabs>
   );

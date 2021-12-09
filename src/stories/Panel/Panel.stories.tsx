@@ -137,6 +137,7 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
               {
                 icon: 'Settings2Line',
                 onClick: noop,
+                intent: 'warning',
               },
               {
                 label: 'List',
@@ -144,6 +145,7 @@ const Template: Story<IReqoreUIProviderProps> = ({ theme, ...args }: IReqoreUIPr
                   {
                     label: 'Action 1',
                     onClick: noop,
+                    intent: 'success',
                   },
                   {
                     label: 'Action 2',

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 export interface IReqoreTabsContent extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
-  id: string;
+  tabId: string | number;
 }
 
 const StyledTabsContent = styled.div`

@@ -1,11 +1,6 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import {
-  ReqoreMenu,
-  ReqoreMenuDivider,
-  ReqoreMenuItem,
-  ReqoreUIProvider,
-} from '../src/index';
+import { ReqoreMenu, ReqoreMenuDivider, ReqoreMenuItem, ReqoreUIProvider } from '../src/index';
 
 test('Renders <Menu /> properly', () => {
   render(
@@ -14,13 +9,14 @@ test('Renders <Menu /> properly', () => {
         <ReqoreMenuItem> Item 1 </ReqoreMenuItem>
         <ReqoreMenuItem> Item 2 </ReqoreMenuItem>
         <ReqoreMenuDivider label='Divider' />
+        <ReqoreMenuItem label={2.5} />
         <ReqoreMenuItem> Item 3 </ReqoreMenuItem>
         <ReqoreMenuItem> Item 4 </ReqoreMenuItem>
       </ReqoreMenu>
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(4);
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(5);
   expect(document.querySelectorAll('.reqore-menu-divider').length).toBe(1);
 });
 
@@ -52,11 +48,7 @@ test('<Menu /> item has right clickable button', () => {
     <ReqoreUIProvider>
       <ReqoreMenu>
         <ReqoreMenuItem> Item 1 </ReqoreMenuItem>
-        <ReqoreMenuItem
-          onClick={itemCb}
-          rightIcon='24HoursFill'
-          onRightIconClick={iconCb}
-        >
+        <ReqoreMenuItem onClick={itemCb} rightIcon='24HoursFill' onRightIconClick={iconCb}>
           Item 2
         </ReqoreMenuItem>
         <ReqoreMenuDivider label='Divider' />
