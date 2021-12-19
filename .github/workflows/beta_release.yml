@@ -37,7 +37,9 @@ jobs:
         run: ./node_modules/.bin/tsc
       - name: Publish
         id: publish
-        run: npm publish --access public --tag beta
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm publish --access public --tag beta
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Create a release
