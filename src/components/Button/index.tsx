@@ -45,6 +45,11 @@ const getButtonMainColor = (theme: IReqoreTheme, color?: string) => {
   return theme.main;
 };
 
+const StyledLabel = styled.span`
+  overflow: hidden;
+  position: relative;
+`;
+
 export const StyledActiveContent = styled.span`
   position: absolute;
   transform: translateY(-150%);
@@ -267,11 +272,11 @@ const ReqoreButton = forwardRef(
           />
         )}
         {children && (
-          <span>
+          <StyledLabel>
             <StyledActiveContent>{children}</StyledActiveContent>
             <StyledInActiveContent>{children}</StyledInActiveContent>
             <StyledInvisibleContent>{children}</StyledInvisibleContent>
-          </span>
+          </StyledLabel>
         )}
         {rightIcon && (
           <ReqoreIcon

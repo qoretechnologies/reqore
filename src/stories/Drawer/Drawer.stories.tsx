@@ -1,6 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
 import React, { useState } from 'react';
+import { useMount, useUnmount } from 'react-use';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import ReqoreDropdown from '../../components/Dropdown';
@@ -24,6 +25,18 @@ export default {
     },
   },
 } as Meta;
+
+const TestComponent = () => {
+  useMount(() => {
+    console.log('mounted test component');
+  });
+
+  useUnmount(() => {
+    console.log('unmounted test component');
+  });
+
+  return <p> Testing mounting and Unmounting</p>;
+};
 
 const Template: Story<IReqoreUIProviderProps & IReqoreDrawerProps> = (
   args: IReqoreUIProviderProps & IReqoreDrawerProps
@@ -135,7 +148,8 @@ const Template: Story<IReqoreUIProviderProps & IReqoreDrawerProps> = (
                 { label: 'Tab 2 another long label', id: 'tab2' },
               ]}
             >
-              <ReqoreTabsContent id='tab1'>
+              <ReqoreTabsContent tabId='tab1'>
+                <TestComponent />
                 <ReqorePanel fill title='Tab 1 contents' collapsible flat rounded padded>
                   I am a message a very long message - Shadowlands has mechanisms put in place for
                   allowing players to catch up on Renown, the system of gaining favor and unlocking
@@ -143,7 +157,7 @@ const Template: Story<IReqoreUIProviderProps & IReqoreDrawerProps> = (
                 </ReqorePanel>
                 <ReqoreButton>Hello</ReqoreButton>
               </ReqoreTabsContent>
-              <ReqoreTabsContent id='tab2'>Tab 2 here</ReqoreTabsContent>
+              <ReqoreTabsContent tabId='tab2'>Tab 2 here</ReqoreTabsContent>
             </ReqoreTabs>
           </ReqoreDrawer>
         </ReqoreContent>
