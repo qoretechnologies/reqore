@@ -38,10 +38,8 @@ jobs:
       - name: Publish
         id: publish
         run: |
-          npm config set registry https://registry.npmjs.org/
-          npm publish --access public --tag beta
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+           ./node_modules/.bin/npm-cli-login -u ${{ secrets.NPM_USER }} -p '${{ secrets.NPM_PASSWORD }}' -e ${{ secrets.NPM_EMAIL }}
+           npm publish --access public --tag beta
       - name: Create a release
         id: release
         uses: actions/create-release@v1
