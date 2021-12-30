@@ -33,7 +33,12 @@ jobs:
       - name: Installing modules
         id: install_modules
         run: |
+          yarn cache clean
+          rm -rf node_modules
           yarn install
+      - name: Running tests
+        id: tests
+        run: yarn test:ci
       - name: Build
         id: build
         run: ./node_modules/.bin/tsc
