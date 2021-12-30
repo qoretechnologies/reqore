@@ -12,6 +12,9 @@ export default {
       main: '#222222',
     },
   },
+  parameters: {
+    jest: ['button.test.tsx'],
+  },
 } as Meta;
 
 const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {

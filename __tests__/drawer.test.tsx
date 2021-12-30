@@ -1,11 +1,6 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import {
-  ReqoreContent,
-  ReqoreDrawer,
-  ReqoreLayoutContent,
-  ReqoreUIProvider,
-} from '../src';
+import { ReqoreContent, ReqoreDrawer, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
 test('Does not render <Drawer /> if not open', () => {
   render(
