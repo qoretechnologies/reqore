@@ -35,11 +35,18 @@ jobs:
       - name: Build
         id: build
         run: ./node_modules/.bin/tsc
-      - name: Publish
-        id: publish
-        run: |
-           ./node_modules/.bin/npm-cli-login -u ${{ secrets.NPM_USER }} -p '${{ secrets.NPM_PASSWORD }}' -e ${{ secrets.NPM_EMAIL }}
-           npm publish --access public --tag beta
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          tag: beta
+          access: public
+      - name: Publish to Chromatic
+        uses: chromaui/action@v1
+        # Chromatic GitHub Action options
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # 👇 Chromatic projectToken, refer to the manage page to obtain it.
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Create a release
         id: release
         uses: actions/create-release@v1
