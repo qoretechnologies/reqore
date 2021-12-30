@@ -20,6 +20,8 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+        with:
+            fetch-depth: 0
       - uses: actions/setup-node@v1
         with:
           node-version: 14.16.0
@@ -38,6 +40,13 @@ jobs:
       - name: Running tests
         id: tests
         run: yarn test:ci
+      - name: Publish to Chromatic
+        id: chromatic_publish
+        uses: chromaui/action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          exitZeroOnChanges: true
       - name: Slack notification
         uses: Foxhoundn/slack@v1.2.94
         with:

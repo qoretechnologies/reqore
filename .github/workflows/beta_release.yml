@@ -19,6 +19,8 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v1
         with:
           node-version: 14.16.0
@@ -35,17 +37,18 @@ jobs:
       - name: Build
         id: build
         run: ./node_modules/.bin/tsc
-      - uses: JS-DevTools/npm-publish@v1
+      - name: Publish to NPM
+        id: npm_publish
+        uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
           tag: beta
           access: public
       - name: Publish to Chromatic
+        id: chromatic_publish
         uses: chromaui/action@v1
-        # Chromatic GitHub Action options
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # 👇 Chromatic projectToken, refer to the manage page to obtain it.
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
       - name: Create a release
         id: release
