@@ -1,5 +1,6 @@
 import { withTests } from '@storybook/addon-jest';
-import results from '../.jest-test-results.json';
+// @ts-expect-error
+import results from '../tests.json';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
