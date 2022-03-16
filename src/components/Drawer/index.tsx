@@ -1,5 +1,4 @@
 import { animated, useTransition } from '@react-spring/web';
-import { preview } from '@reactpreview/config';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { useEffect, useMemo, useState } from 'react';
@@ -360,16 +359,3 @@ export const ReqoreDrawer = ({
     document.querySelector('#reqore-portal')
   );
 };
-
-preview(ReqoreDrawer, {
-  base: {
-    children: <p>Hello</p>,
-    isOpen: true,
-    position: 'top',
-  },
-  Right: {
-    position: 'bottom',
-    resizable: true,
-    hidable: true,
-  },
-});

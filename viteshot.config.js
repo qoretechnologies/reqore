@@ -7,8 +7,4 @@ module.exports = {
   },
   shooter: playwrightShooter(playwright.chromium),
   filePathPattern: '**/*.screenshot.@(js|jsx|tsx|vue|svelte)',
-  wrapper: {
-    path: '__reactpreview__/Wrapper.tsx',
-    componentName: 'Wrapper',
-  },
 };
