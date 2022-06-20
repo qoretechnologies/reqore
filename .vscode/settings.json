@@ -1,5 +1,3 @@
 {
-  "editor.cursorBlinking": "phase",
-  "editor.cursorStyle": "underline",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "docwriter.hotkey.mac": "⌥ + ."
 }

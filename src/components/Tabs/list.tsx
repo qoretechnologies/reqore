@@ -33,7 +33,6 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
     align-items: center;
     border-${vertical ? 'right' : 'bottom'}: 1px solid ${changeLightness(theme.main, 0.05)};
 
-
     ${
       fill &&
       css`
@@ -78,12 +77,12 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
   `}
 `;
 
-const isTabHidden = (items: IReqoreTabsListItem[], activeTab: string | number) =>
+const isTabHidden = (items: IReqoreTabsListItem[], activeTab?: string | number) =>
   items.find((item) => item.id === activeTab);
 
-const getMoreLabel = (items: IReqoreTabsListItem[], activeTab: string | number) => {
+const getMoreLabel = (items: IReqoreTabsListItem[], activeTab?: string | number) => {
   if (isTabHidden(items, activeTab)) {
-    return isTabHidden(items, activeTab).label;
+    return isTabHidden(items, activeTab)?.label;
   }
 
   return 'More';
@@ -91,19 +90,19 @@ const getMoreLabel = (items: IReqoreTabsListItem[], activeTab: string | number) 
 
 const getLabel = (
   item: IReqoreTabsListItem | IReqoreTabsListItem[],
-  activeTab: string | number
+  activeTab?: string | number
 ) => {
   if (!isArray(item)) {
     return item.label?.length || 0;
   }
 
-  return getMoreLabel(item, activeTab).length;
+  return getMoreLabel(item, activeTab)?.length || 0;
 };
 
 export const getTabsLength = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
   type: 'width' | 'height' = 'width',
-  activeTab: string | number
+  activeTab?: string | number
 ): number =>
   items.reduce((len, item) => {
     if (type === 'height') {
@@ -119,7 +118,7 @@ const getTransformedItems = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
   size: number,
   type: 'width' | 'height' = 'width',
-  activeTab: string | number
+  activeTab?: string | number
 ): (IReqoreTabsListItem | IReqoreTabsListItem[])[] => {
   if (!size) {
     return items;
@@ -131,7 +130,7 @@ const getTransformedItems = (
       (newItems[newItems.length - 1] as IReqoreTabsListItem[]).unshift(
         newItems[newItems.length - 2] as IReqoreTabsListItem
       );
-      newItems[newItems.length - 2] = undefined;
+      newItems[newItems.length - 2] = undefined!;
     } else {
       const lastItem = newItems[newItems.length - 1];
       (newItems[newItems.length - 1] as IReqoreTabsListItem[]) = [
@@ -232,7 +231,7 @@ const ReqoreTabsList = ({
                             selected: activeTab === id,
                             onClick: (_id, event: React.MouseEvent<any>) => {
                               if (!disabled) {
-                                onTabChange(id);
+                                onTabChange?.(id);
 
                                 if (props?.onClick) {
                                   props.onClick(event);
@@ -268,7 +267,7 @@ const ReqoreTabsList = ({
               active={activeTab === item.id}
               onClick={(event: React.MouseEvent<any>) => {
                 if (!item.disabled) {
-                  onTabChange(item.id);
+                  onTabChange?.(item.id);
 
                   if (item.props?.onClick) {
                     item.props.onClick(event);
@@ -278,7 +277,7 @@ const ReqoreTabsList = ({
               onCloseClick={
                 item.onCloseClick
                   ? () => {
-                      item.onCloseClick(item.id);
+                      item.onCloseClick?.(item.id);
                     }
                   : undefined
               }

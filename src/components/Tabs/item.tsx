@@ -52,9 +52,9 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       overflow: hidden;
       position: relative;
       align-items: center;
-      padding: ${vertical ? `${TABS_PADDING_TO_PX[size]}px` : `0 ${TABS_PADDING_TO_PX[size]}px`};
+      padding: ${vertical ? `${TABS_PADDING_TO_PX[size!]}px` : `0 ${TABS_PADDING_TO_PX[size!]}px`};
       padding-right: ${closable ? '43px' : undefined};
-      font-size: ${TEXT_FROM_SIZE[size]}px;
+      font-size: ${TEXT_FROM_SIZE[size!]}px;
       font-weight: 450;
       opacity: 0.9;
       color: ${textColor};
@@ -73,9 +73,9 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     }
 
       ${
-        intent &&
+        currentIntent &&
         css`
-          border-${vertical ? 'right' : 'bottom'}: 2px solid ${theme.intents[intent]};
+          border-${vertical ? 'right' : 'bottom'}: 2px solid ${theme.intents[currentIntent]};
           background-color: ${`${theme.intents[currentIntent]}20`};
         `
       }

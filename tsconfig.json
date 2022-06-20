@@ -10,7 +10,7 @@
     "noImplicitAny": false,
     "noImplicitReturns": true,
     "noUnusedParameters": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true,

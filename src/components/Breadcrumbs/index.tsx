@@ -18,8 +18,16 @@ import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
 import { IReqoreTabsListItem } from '../Tabs';
+import { StyledTabListItem } from '../Tabs/item';
 import ReqoreTabsList, { getTabsLength, StyledReqoreTabsList } from '../Tabs/list';
 import ReqoreBreadcrumbsItem, { IReqoreBreadcrumbItemProps } from './item';
+
+export interface IReqoreBreadcrumbItemTabs {
+  tabs: IReqoreTabsListItem[];
+  onTabChange: (tabId: string | number) => any;
+  activeTab: string;
+  activeTabIntent?: IReqoreIntent;
+}
 
 export interface IReqoreBreadcrumbItem {
   tooltip?: JSX.Element | string;
@@ -28,12 +36,7 @@ export interface IReqoreBreadcrumbItem {
   active?: boolean;
   as?: any;
   props?: React.HTMLAttributes<any>;
-  withTabs?: {
-    tabs: IReqoreTabsListItem[];
-    onTabChange: (tabId: string | number) => any;
-    activeTab: string;
-    activeTabIntent?: IReqoreIntent;
-  };
+  withTabs?: IReqoreBreadcrumbItemTabs;
   customTheme?: IReqoreBreadcrumbsTheme;
 }
 
@@ -52,14 +55,14 @@ interface IStyledBreadcrumbs extends Omit<IReqoreBreadcrumbsProps, 'items'> {
 }
 
 const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
-  ${({ theme, flat, size }: IStyledBreadcrumbs) => css`
+  ${({ theme, size }: IStyledBreadcrumbs) => css`
     width: 100%;
-    height: ${TABS_SIZE_TO_PX[size]}px;
-    margin: ${MARGIN_FROM_SIZE[size]}px 0;
+    height: ${TABS_SIZE_TO_PX[size!]}px;
+    margin: ${MARGIN_FROM_SIZE[size!]}px 0;
     display: flex;
-    padding: 0 ${PADDING_FROM_SIZE[size]}px;
+    padding: 0 ${PADDING_FROM_SIZE[size!]}px;
     justify-content: space-between;
-    border-bottom: ${flat ? 0 : `1px solid ${changeLightness(theme.main, 0.05)}`};
+    border-bottom: 1px solid ${changeLightness(theme.main, 0.05)};
     background-color: ${({ theme }: { theme: IReqoreTheme }) =>
       theme.breadcrumbs?.main || 'transparent'};
 
@@ -77,6 +80,9 @@ const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
 
       ${StyledReqoreTabsList} {
         flex: 1;
+      }
+
+      ${StyledReqoreTabsList}, ${StyledTabListItem} {
         border-bottom: 0;
       }
 
@@ -98,7 +104,7 @@ const getBreadcrumbsLength = (items: (IReqoreBreadcrumbItem | IReqoreBreadcrumbI
       return len + getTabsLength(item.withTabs.tabs, 'width', item.withTabs.activeTab);
     }
 
-    return len + 27 + item.label.length * 10 + 35;
+    return len + 27 + (item.label?.length || 0) * 10 + 35;
   }, 0);
 
 const getTransformedItems = (
@@ -115,7 +121,7 @@ const getTransformedItems = (
   while (getBreadcrumbsLength(newItems) > width && !stop) {
     if (isArray(newItems[1])) {
       newItems[1].push(newItems[2] as IReqoreBreadcrumbItem);
-      newItems[2] = undefined;
+      newItems[2] = undefined!;
     } else {
       const secondItem = newItems[1];
       newItems[1] = [secondItem];
@@ -180,7 +186,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
                     placement='right'
                     isReqoreComponent
                     content={tooltip}
-                    key={index + label}
+                    key={index + (label || icon || '')}
                   >
                     {label}
                   </ReqorePopover>

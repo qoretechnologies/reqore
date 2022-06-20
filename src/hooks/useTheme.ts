@@ -6,15 +6,15 @@ import { mergeThemes } from '../helpers/colors';
 
 export const useReqoreTheme = (
   element: string,
-  customTheme: IReqoreTheme = {},
+  customTheme: Partial<IReqoreTheme> = {},
   intent?: IReqoreIntent
 ) => {
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
-  let _customTheme: IReqoreTheme = cloneDeep(customTheme);
+  let _customTheme: Partial<IReqoreTheme> = cloneDeep(customTheme);
 
   if (element === 'main' && intent) {
     _customTheme.main = theme.intents[intent];
   }
 
-  return mergeThemes(element, theme, _customTheme);
+  return mergeThemes(element, theme, _customTheme) as IReqoreTheme;
 };

@@ -1,29 +1,35 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
-import React from 'react';
+import { expect } from '@storybook/jest';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { userEvent, within } from '@storybook/testing-library';
 import ReqoreButton from '../../components/Button';
 import { IReqoreTheme } from '../../constants/theme';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreContent, ReqoreLayoutContent, ReqorePopover, ReqoreUIProvider } from '../../index';
+import { buildTemplate } from '../utils';
 
 export default {
-  title: 'ReQore/Button',
-  args: {
-    theme: {
-      main: '#222222',
-    },
+  title: 'Button',
+  argTypes: {
+    onClick: { action: true },
   },
   parameters: {
     jest: ['button.test.tsx'],
   },
-} as Meta;
+} as ComponentMeta<typeof ReqoreButton>;
 
-const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
+const Template: ComponentStory<typeof ReqoreUIProvider> = ({
+  onClick,
+  ...args
+}: IReqoreUIProviderProps & any) => {
+  console.log(args.theme);
   return (
-    <ReqoreUIProvider {...args}>
+    <ReqoreUIProvider {...args} theme={{ main: args.theme }}>
       <ReqoreLayoutContent>
         <ReqoreContent style={{ padding: '20px' }}>
           <h4>Default</h4>
-          <ReqoreButton>Button</ReqoreButton>
+          <ReqoreButton onClick={onClick} data-testid='test'>
+            Click me
+          </ReqoreButton>
           <h4>Tiny</h4>
           <ReqoreButton size='tiny'>Button</ReqoreButton>
           <h4>Small</h4>
@@ -174,7 +180,7 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
             Blue
           </ReqoreButton>
           <br />
-          <ReqoreButton color='#00ff00' minimal active>
+          <ReqoreButton color='#00ff00' minimal>
             Green minimal active
           </ReqoreButton>
         </ReqoreContent>
@@ -184,12 +190,10 @@ const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) =
 };
 
 export const Basic = Template.bind({});
-export const LightColor = Template.bind({});
-LightColor.args = {
-  theme: {
-    main: '#ffffff',
-  },
-};
+
+export const LightColor = buildTemplate<IReqoreUIProviderProps>(Template, {
+  theme: '#ffffff',
+});
 
 export const CustomColor = Template.bind({});
 CustomColor.args = {
@@ -211,4 +215,10 @@ CustomIntentColors.args = {
       warning: '#15057a',
     },
   } as IReqoreTheme,
+};
+
+Basic.play = async ({ args, canvasElement }) => {
+  const canvas = within(canvasElement);
+  await userEvent.click(canvas.getByTestId('test'));
+  await expect(args.onClick).toHaveBeenCalled();
 };

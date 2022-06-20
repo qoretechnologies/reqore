@@ -12,7 +12,7 @@ import ReqoreProvider from './ReqoreProvider';
 
 export interface IReqoreUIProviderProps {
   children: any;
-  theme?: IReqoreTheme;
+  theme?: Partial<IReqoreTheme>;
   notificationsPosition?: IReqoreNotificationsPosition;
   withSidebar?: boolean;
   uiScale?: number;
@@ -29,10 +29,11 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
   withSidebar,
   uiScale,
 }) => {
-  const _theme: IReqoreTheme = cloneDeep(theme || {});
-  const _defaultTheme: IReqoreTheme = cloneDeep(DEFAULT_THEME);
   const [modalPortal, setModalPortal] = useState<any>(false);
-  const rebuiltTheme = buildTheme(merge(_defaultTheme, _theme));
+
+  const _theme: Partial<IReqoreTheme> = cloneDeep(theme || {});
+  const _defaultTheme: IReqoreTheme = cloneDeep(DEFAULT_THEME);
+  const rebuiltTheme: IReqoreTheme = buildTheme(merge(_defaultTheme, _theme));
 
   return (
     <>

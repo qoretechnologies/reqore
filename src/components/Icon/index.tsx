@@ -37,6 +37,7 @@ const ReqoreIcon = ({
   iconProps,
   ...rest
 }: IReqoreIconProps) => {
+  console.log(iconProps, size);
   const Icon: IconType = RemixIcons[`Ri${icon}`];
 
   if (!Icon) {

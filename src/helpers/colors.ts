@@ -47,11 +47,11 @@ export const getMainColor: (theme: IReqoreTheme, component: string) => string = 
   component
 ) => theme[component]?.main || theme.main;
 
-export const changeLightness: (color: string, lightness: number) => string = (color, lightness) =>
-  color ? (shouldDarken(color) ? darken(lightness, color) : lighten(lightness, color)) : undefined;
+export const changeLightness = (color: string, lightness?: number): string =>
+  lightness ? (shouldDarken(color) ? darken(lightness, color) : lighten(lightness, color)) : color;
 
-export const changeDarkness: (color: string, lightness: number) => string = (color, lightness) =>
-  color ? (shouldDarken(color) ? lighten(lightness, color) : darken(lightness, color)) : undefined;
+export const changeDarkness = (color: string, lightness?: number): string =>
+  lightness ? (shouldDarken(color) ? lighten(lightness, color) : darken(lightness, color)) : color;
 
 export const getColorByBgColor = (bgColor) => {
   if (!bgColor) {
@@ -60,8 +60,17 @@ export const getColorByBgColor = (bgColor) => {
   return parseInt(bgColor.replace('#', ''), 16) > 0xffffff / 2 ? '#000000' : '#ffffff';
 };
 
+export const isValidSixCharHex = (hex: string): boolean => {
+  return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hex);
+};
+
 export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
   const newTheme: IReqoreTheme = cloneDeep(theme);
+
+  // Check if the main color is a valid hex color
+  if (!isValidSixCharHex(newTheme.main)) {
+    newTheme.main = '#333333';
+  }
 
   if (!newTheme.notifications?.info) {
     newTheme.notifications.info = newTheme.intents.info || DEFAULT_INTENTS.info;

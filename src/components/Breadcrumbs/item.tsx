@@ -30,9 +30,9 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
       height: 100%;
       justify-content: space-evenly;
       align-items: center;
-      padding: 0 ${PADDING_FROM_SIZE[size]}px;
+      padding: 0 ${PADDING_FROM_SIZE[size!]}px;
       transition: background-color 0.15s ease-out;
-      font-size: ${TEXT_FROM_SIZE[size]}px;
+      font-size: ${TEXT_FROM_SIZE[size!]}px;
       font-weight: 450;
       border-bottom: 2px solid transparent;
 
@@ -90,9 +90,9 @@ const ReqoreBreadcrumbsItem = ({
   as,
   interactive,
   customTheme,
-  size,
+  size = 'normal',
 }: IReqoreBreadcrumbItemProps) => {
-  const [ref, setRef] = useState(null);
+  const [ref, setRef] = useState(undefined);
   const Element: any = as || 'span';
   const theme = useReqoreTheme('breadcrumbs', customTheme);
 
