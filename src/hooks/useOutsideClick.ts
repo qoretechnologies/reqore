@@ -1,22 +1,12 @@
-import { MutableRefObject, useCallback, useEffect, useRef } from 'react';
-
-let listeners: any = [];
-
-const _handleClick = (event: any, targetElement, checkTarget, callBack): void => {
-  console.log('🚀 ~ file: useOutsideClick.ts ~ line 4 ~ listeners', listeners);
-  listeners.forEach((listener: any) => {
-    listener(event, targetElement, checkTarget, callBack);
-  });
-};
+import { MutableRefObject, useCallback, useEffect } from 'react';
 
 const useOutsideClick = (
   targetElement?: MutableRefObject<any>,
   checkTarget?: boolean,
   callback?: () => void
 ): void => {
-  const idx = useRef(listeners.length);
   const handleClick = useCallback(
-    (event: MouseEvent, targetElement, checkTarget, callback): void => {
+    (event: any): void => {
       if (
         !checkTarget ||
         (targetElement?.current && !targetElement.current.contains(event.target))
@@ -28,17 +18,10 @@ const useOutsideClick = (
   );
 
   useEffect(() => {
-    listeners[idx.current] = handleClick;
-
-    document.addEventListener('click', (event) =>
-      _handleClick(event, targetElement, checkTarget, callback)
-    );
+    document.addEventListener('click', handleClick);
 
     return () => {
-      listeners = listeners.filter((_, i) => i !== idx.current);
-      document.removeEventListener('click', (event) =>
-        _handleClick(event, targetElement, checkTarget, callback)
-      );
+      document.removeEventListener('click', handleClick);
     };
   });
 };

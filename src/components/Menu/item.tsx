@@ -162,7 +162,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.persist();
-      event.stopPropagation();
+      //event.stopPropagation();
 
       onClick && onClick(id, event);
 
@@ -173,7 +173,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
 
     const handleRightIconClick = (event: React.MouseEvent<HTMLSpanElement>) => {
       event.persist();
-      event.stopPropagation();
+      //event.stopPropagation();
 
       if (onRightIconClick) {
         onRightIconClick(id, event);

@@ -42,6 +42,9 @@ export const breadcrumbsTabs = {
   withTabs: {
     activeTab: 'releases',
     activeTabIntent: 'info',
+    onTabChange(tabId) {
+      console.log('🚀 ~ file: breadcrumbs.ts ~ line 46 ~ onTabChange ~ tabId', tabId);
+    },
     tabs: [
       {
         label: 'RBAC',
