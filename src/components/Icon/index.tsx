@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
@@ -27,50 +27,52 @@ const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
     `}
 `;
 
-const ReqoreIcon = ({
-  icon,
-  size = '17px',
-  className,
-  color,
-  margin,
-  style = {},
-  iconProps,
-  ...rest
-}: IReqoreIconProps) => {
-  console.log(iconProps, size);
-  const Icon: IconType = RemixIcons[`Ri${icon}`];
+const ReqoreIcon = memo(
+  ({
+    icon,
+    size = '17px',
+    className,
+    color,
+    margin,
+    style = {},
+    iconProps,
+    ...rest
+  }: IReqoreIconProps) => {
+    console.log(iconProps, size);
+    const Icon: IconType = RemixIcons[`Ri${icon}`];
 
-  if (!Icon) {
+    if (!Icon) {
+      return (
+        <StyledIconWrapper
+          {...rest}
+          margin={margin}
+          className={`${className || ''} reqore-icon`}
+          style={{ ...style, width: size, height: size }}
+        />
+      );
+    }
+
     return (
       <StyledIconWrapper
         {...rest}
         margin={margin}
-        className={`${className || ''} reqore-icon`}
         style={{ ...style, width: size, height: size }}
-      />
+        className={`${className || ''} reqore-icon`}
+      >
+        <IconContext.Provider
+          value={{
+            color: color || 'inherit',
+            size,
+            style: {
+              verticalAlign: 'super',
+            },
+          }}
+        >
+          <Icon {...iconProps} />
+        </IconContext.Provider>
+      </StyledIconWrapper>
     );
   }
-
-  return (
-    <StyledIconWrapper
-      {...rest}
-      margin={margin}
-      style={{ ...style, width: size, height: size }}
-      className={`${className || ''} reqore-icon`}
-    >
-      <IconContext.Provider
-        value={{
-          color: color || 'inherit',
-          size,
-          style: {
-            verticalAlign: 'super',
-          },
-        }}
-      >
-        <Icon {...iconProps} />
-      </IconContext.Provider>
-    </StyledIconWrapper>
-  );
-};
+);
 
 export default ReqoreIcon;

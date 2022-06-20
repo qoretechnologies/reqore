@@ -1,6 +1,7 @@
 import { isString } from 'lodash';
 import React, { MutableRefObject, useContext, useEffect, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
+import { useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import { IPopoverData } from '../../containers/PopoverProvider';
@@ -92,6 +93,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   noArrow,
   useTargetWidth,
   closeOnOutsideClick,
+  closeOnAnyClick,
 }) => {
   const { removePopover, uiScale } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);
@@ -119,8 +121,12 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
     ],
   });
 
-  useOutsideClick(popperRef, () => {
-    if (closeOnOutsideClick) {
+  useUnmount(() => {
+    console.log('unmounting', id);
+  });
+
+  useOutsideClick(popperRef, closeOnAnyClick === false, () => {
+    if (closeOnOutsideClick || closeOnAnyClick) {
       removePopover(id);
     }
   });
@@ -131,6 +137,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
     }
   }, [attributes?.popper]);
 
+  /* Getting the x and y values from the transform property of the popper element. */
   const translateValues = styles.popper.transform
     ?.replace('translate3d(', '')
     .replace('translate(', '')

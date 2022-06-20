@@ -1,11 +1,18 @@
-import { useState } from 'react';
+import { useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreBreadcrumbItem } from '.';
 import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
-import usePopover from '../../hooks/usePopover';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { useTooltip } from '../../hooks/useTooltip';
+import { AnimatedTextElement } from '../../styles';
+import {
+  StyledActiveContent,
+  StyledAnimatedTextWrapper,
+  StyledInActiveContent,
+  StyledInvisibleContent,
+} from '../Button';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreBreadcrumbItemProps extends IReqoreBreadcrumbItem {
@@ -34,7 +41,8 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
       transition: background-color 0.15s ease-out;
       font-size: ${TEXT_FROM_SIZE[size!]}px;
       font-weight: 450;
-      border-bottom: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
 
       * {
         color: ${textColor};
@@ -60,6 +68,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
             ? getReadableColorFrom(theme.breadcrumbs.main)
             : getReadableColor(theme, undefined, undefined))};
           background-color: ${changeLightness(theme.breadcrumbs?.main || theme.main, 0.05)};
+          ${AnimatedTextElement}
         }
       `}
 
@@ -92,15 +101,14 @@ const ReqoreBreadcrumbsItem = ({
   customTheme,
   size = 'normal',
 }: IReqoreBreadcrumbItemProps) => {
-  const [ref, setRef] = useState(undefined);
-  const Element: any = as || 'span';
+  const innerRef = useRef(undefined);
   const theme = useReqoreTheme('breadcrumbs', customTheme);
 
-  usePopover({ targetElement: ref, content: tooltip, show: !!tooltip });
+  useTooltip(innerRef?.current, tooltip);
 
   return (
     <StyledBreadcrumbItem
-      ref={setRef}
+      ref={innerRef}
       active={active}
       interactive={interactive || !!props?.onClick}
       className='reqore-breadcrumbs-item'
@@ -114,7 +122,13 @@ const ReqoreBreadcrumbsItem = ({
           margin={label ? 'right' : undefined}
         />
       )}
-      {label && <Element {...props}>{label}</Element>}
+      {label && (
+        <StyledAnimatedTextWrapper as={as || 'span'} {...props}>
+          <StyledActiveContent>{label}</StyledActiveContent>
+          <StyledInActiveContent>{label}</StyledInActiveContent>
+          <StyledInvisibleContent>{label}</StyledInvisibleContent>
+        </StyledAnimatedTextWrapper>
+      )}
     </StyledBreadcrumbItem>
   );
 };

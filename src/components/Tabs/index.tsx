@@ -2,6 +2,7 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreIntent } from '../../constants/theme';
+import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTabsList from './list';
 
@@ -11,7 +12,7 @@ export interface IReqoreTabsListItem {
   as?: any;
   disabled?: boolean;
   id: string | number;
-  tooltip?: string;
+  tooltip?: TReqoreTooltipProp;
   props?: React.HTMLAttributes<any>;
   onClick?: (event: any) => any;
   onCloseClick?: (id: string | number) => any;

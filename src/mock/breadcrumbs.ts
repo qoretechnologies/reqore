@@ -1,3 +1,4 @@
+import { noop } from 'lodash';
 import { IReqoreBreadcrumbItem, IReqoreBreadcrumbItemTabs } from '../components/Breadcrumbs';
 import { Icons } from './icons';
 
@@ -21,6 +22,9 @@ export default [
     label: 'Services',
     icon: Icons.Services,
     tooltip: 'Services',
+    props: {
+      onClick: noop,
+    },
   },
   {
     label: 'Jobs',
@@ -36,31 +40,51 @@ export default [
 
 export const breadcrumbsTabs = {
   withTabs: {
+    activeTab: 'releases',
+    activeTabIntent: 'info',
     tabs: [
       {
         label: 'RBAC',
         icon: Icons.RBAC,
         id: 'rbac',
+        props: {
+          onClick() {
+            console.log('rbac');
+          },
+        },
       },
       {
         label: 'Value Maps',
         icon: Icons.Valuemaps,
         id: 'valuemaps',
+        onCloseClick(id) {
+          console.log('🚀 ~ file: breadcrumbs.ts ~ line 54 ~ onCloseClick ~ id', id);
+        },
+        intent: 'success',
       },
       {
         label: 'SLAs',
         icon: Icons.SLAs,
         id: 'sla',
+        intent: 'danger',
       },
       {
         label: 'Releases',
         icon: Icons.Releases,
         id: 'releases',
+        tooltip: {
+          content: 'Releases',
+        },
       },
       {
         label: 'Errors',
         icon: Icons.Errors,
         id: 'errors',
+        props: {
+          onClick() {
+            console.log('errors');
+          },
+        },
       },
     ],
   } as IReqoreBreadcrumbItemTabs,

@@ -4,8 +4,8 @@ import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import usePopover from '../../hooks/usePopover';
-import { IReqoreComponent, IReqoreTooltip } from '../../types/global';
+import { useTooltip } from '../../hooks/useTooltip';
+import { IReqoreComponent, TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
@@ -20,7 +20,7 @@ export interface IReqoreMenuItemProps extends IReqoreComponent, React.HTMLAttrib
   disabled?: boolean;
   onClick?: (itemId: string, event: React.MouseEvent<HTMLElement>) => void;
   onRightIconClick?: (itemId: string, event: React.MouseEvent<HTMLElement>) => void;
-  tooltip?: IReqoreTooltip;
+  tooltip?: TReqoreTooltipProp;
   intent?: IReqoreIntent;
 }
 
@@ -184,11 +184,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       }
     };
 
-    usePopover({
-      ...tooltip,
-      targetElement: combinedRef.current,
-      show: !!tooltip?.content,
-    });
+    useTooltip(combinedRef.current, tooltip);
 
     return (
       <StyledElement

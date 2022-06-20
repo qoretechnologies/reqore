@@ -13,6 +13,7 @@ import {
 import { IReqoreBreadcrumbsTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
@@ -30,7 +31,7 @@ export interface IReqoreBreadcrumbItemTabs {
 }
 
 export interface IReqoreBreadcrumbItem {
-  tooltip?: JSX.Element | string;
+  tooltip?: TReqoreTooltipProp;
   label?: string;
   icon?: IReqoreIconName;
   active?: boolean;
@@ -161,6 +162,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             icon='ArrowRightSLine'
             size={`${TEXT_FROM_SIZE[size]}px`}
             key={'icon' + index}
+            margin='both'
           />
           <ReqorePopover
             key={index}
@@ -168,28 +170,25 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             componentProps={
               {
                 icon: 'MoreFill',
-                tooltip: 'Show more...',
                 interactive: true,
               } as IReqoreBreadcrumbItemProps
             }
-            handler='click'
+            handler='hoverStay'
             content={
               <ReqoreMenu>
                 {item.map(({ icon, label, as, tooltip, props }) => (
-                  <ReqorePopover
-                    component={ReqoreMenuItem}
-                    componentProps={{
-                      icon,
-                      as,
-                      ...props,
+                  <ReqoreMenuItem
+                    {...props}
+                    icon={icon}
+                    as={as}
+                    onClick={(_itemId, event) => {
+                      props?.onClick?.(event);
                     }}
-                    placement='right'
-                    isReqoreComponent
-                    content={tooltip}
+                    tooltip={tooltip}
                     key={index + (label || icon || '')}
                   >
                     {label}
-                  </ReqorePopover>
+                  </ReqoreMenuItem>
                 ))}
               </ReqoreMenu>
             }

@@ -14,9 +14,6 @@ export default {
       control: 'boolean',
     },
   },
-  args: {
-    withTabs: false,
-  },
   parameters: {
     jest: ['breadcrumbs.test.tsx'],
   },

@@ -13,7 +13,8 @@ import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ThemeContext from '../../context/ThemeContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import usePopover from '../../hooks/usePopover';
+import { useTooltip } from '../../hooks/useTooltip';
+import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
@@ -22,7 +23,7 @@ export interface IReqoreButtonProps extends React.HTMLAttributes<HTMLButtonEleme
   size?: TSizes;
   minimal?: boolean;
   disabled?: boolean;
-  tooltip?: string;
+  tooltip?: TReqoreTooltipProp;
   tooltipPlacement?: Placement;
   fluid?: boolean;
   fixed?: boolean;
@@ -45,7 +46,7 @@ const getButtonMainColor = (theme: IReqoreTheme, color?: string) => {
   return theme.main;
 };
 
-const StyledLabel = styled.span`
+export const StyledAnimatedTextWrapper = styled.span`
   overflow: hidden;
   position: relative;
 `;
@@ -223,7 +224,6 @@ const ReqoreButton = forwardRef(
       minimal,
       children,
       tooltip,
-      tooltipPlacement,
       className,
       fluid,
       fixed,
@@ -240,12 +240,8 @@ const ReqoreButton = forwardRef(
     const combinedRef = useCombinedRefs(innerRef, ref);
     const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
 
-    usePopover({
-      targetElement: combinedRef.current,
-      content: tooltip,
-      placement: tooltipPlacement,
-      show: !!tooltip,
-    });
+    /* A custom hook that is used to add a tooltip to the button. */
+    useTooltip(combinedRef.current, tooltip);
 
     // If color or intent was specified, set the color
     const customColor = intent ? theme.intents[intent] : color;
@@ -262,7 +258,6 @@ const ReqoreButton = forwardRef(
         flat={flat}
         active={active}
         className={`${className || ''} reqore-control reqore-button`}
-        tabIndex={1}
       >
         {icon && (
           <ReqoreIcon
@@ -272,11 +267,11 @@ const ReqoreButton = forwardRef(
           />
         )}
         {children && (
-          <StyledLabel>
+          <StyledAnimatedTextWrapper>
             <StyledActiveContent>{children}</StyledActiveContent>
             <StyledInActiveContent>{children}</StyledInActiveContent>
             <StyledInvisibleContent>{children}</StyledInvisibleContent>
-          </StyledLabel>
+          </StyledAnimatedTextWrapper>
         )}
         {rightIcon && (
           <ReqoreIcon

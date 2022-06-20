@@ -19,13 +19,14 @@ const endEvents = {
 };
 
 export interface IPopover {
-  content?: JSX.Element | string;
+  content?: JSX.Element | string | undefined;
   handler?: 'hover' | 'click' | 'focus' | 'hoverStay';
   placement?: Placement;
   show?: boolean;
   noArrow?: boolean;
   useTargetWidth?: boolean;
   closeOnOutsideClick?: boolean;
+  closeOnAnyClick?: boolean;
 }
 
 export interface IPopoverOptions extends IPopover {
@@ -42,9 +43,7 @@ const usePopover = ({
   useTargetWidth,
   closeOnOutsideClick = true,
 }: IPopoverOptions) => {
-  const { addPopover, removePopover, updatePopover, popovers } = useContext(
-    PopoverContext
-  );
+  const { addPopover, removePopover, updatePopover, popovers } = useContext(PopoverContext);
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
 
   const startEvent = startEvents[handler];
@@ -80,6 +79,8 @@ const usePopover = ({
         noArrow,
         useTargetWidth,
         closeOnOutsideClick,
+        closeOnAnyClick:
+          closeOnOutsideClick || startEvent === 'hover' || startEvent === 'hoverStay',
       });
     }
   }, [content]);
@@ -96,7 +97,9 @@ const usePopover = ({
     return () => {
       if (targetElement && content) {
         targetElement.removeEventListener(startEvent, _addPopover);
-        targetElement.removeEventListener(endEvent, _removePopover);
+        if (endEvent) {
+          targetElement.removeEventListener(endEvent, _removePopover);
+        }
       }
     };
   });

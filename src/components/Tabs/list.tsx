@@ -186,7 +186,6 @@ const ReqoreTabsList = ({
               componentProps={
                 {
                   icon: 'ArrowDownSLine',
-                  tooltip: 'Show more...',
                   id: 'showMore',
                   label: getMoreLabel(item, activeTab),
                   active: !!isTabHidden(item, activeTab),
@@ -197,7 +196,8 @@ const ReqoreTabsList = ({
                   size,
                 } as IReqoreTabListItemProps
               }
-              handler='click'
+              closeOnOutsideClick
+              handler='hoverStay'
               content={
                 <ReqoreMenu>
                   {item.map(
@@ -211,42 +211,38 @@ const ReqoreTabsList = ({
                       id,
                       onCloseClick,
                       intent,
+                      activeIntent,
                       closeIcon,
                     }) => (
-                      <ReqorePopover
-                        component={ReqoreMenuItem}
-                        componentProps={
-                          {
-                            ...props,
-                            icon,
-                            as,
-                            intent,
-                            disabled,
-                            rightIcon: onCloseClick ? closeIcon || 'CloseLine' : undefined,
-                            onRightIconClick: onCloseClick
-                              ? () => {
-                                  onCloseClick(id);
-                                }
-                              : undefined,
-                            selected: activeTab === id,
-                            onClick: (_id, event: React.MouseEvent<any>) => {
-                              if (!disabled) {
-                                onTabChange?.(id);
-
-                                if (props?.onClick) {
-                                  props.onClick(event);
-                                }
+                      <ReqoreMenuItem
+                        {...({
+                          ...props,
+                          icon,
+                          as,
+                          intent: activeTab === id ? activeIntent || intent : intent,
+                          disabled,
+                          rightIcon: onCloseClick ? closeIcon || 'CloseLine' : undefined,
+                          onRightIconClick: onCloseClick
+                            ? () => {
+                                onCloseClick(id);
                               }
-                            },
-                          } as IReqoreMenuItemProps
-                        }
-                        placement='right'
-                        isReqoreComponent
-                        content={tooltip}
+                            : undefined,
+                          selected: activeTab === id,
+                          onClick: (_id, event: React.MouseEvent<any>) => {
+                            if (!disabled) {
+                              onTabChange?.(id);
+
+                              if (props?.onClick) {
+                                props.onClick(event);
+                              }
+                            }
+                          },
+                        } as IReqoreMenuItemProps)}
+                        tooltip={tooltip}
                         key={index + label}
                       >
                         {label}
-                      </ReqorePopover>
+                      </ReqoreMenuItem>
                     )
                   )}
                 </ReqoreMenu>

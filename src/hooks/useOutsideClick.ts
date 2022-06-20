@@ -1,28 +1,44 @@
-import { MutableRefObject, useEffect } from "react";
+import { MutableRefObject, useCallback, useEffect, useRef } from 'react';
+
+let listeners: any = [];
+
+const _handleClick = (event: any, targetElement, checkTarget, callBack): void => {
+  console.log('🚀 ~ file: useOutsideClick.ts ~ line 4 ~ listeners', listeners);
+  listeners.forEach((listener: any) => {
+    listener(event, targetElement, checkTarget, callBack);
+  });
+};
 
 const useOutsideClick = (
-  targetElement: MutableRefObject<any>,
-  callback?: Function
+  targetElement?: MutableRefObject<any>,
+  checkTarget?: boolean,
+  callback?: () => void
 ): void => {
-  const handleClick = (event: any): void => {
-    if (
-      targetElement.current &&
-      !targetElement.current.contains(event.target) &&
-      callback
-    ) {
-      callback();
-    }
-  };
+  const idx = useRef(listeners.length);
+  const handleClick = useCallback(
+    (event: MouseEvent, targetElement, checkTarget, callback): void => {
+      if (
+        !checkTarget ||
+        (targetElement?.current && !targetElement.current.contains(event.target))
+      ) {
+        callback?.();
+      }
+    },
+    [checkTarget, targetElement, callback]
+  );
 
   useEffect(() => {
-    if (targetElement.current) {
-      setTimeout(() => {
-        document.addEventListener("click", handleClick);
-      }, 150);
-    }
+    listeners[idx.current] = handleClick;
+
+    document.addEventListener('click', (event) =>
+      _handleClick(event, targetElement, checkTarget, callback)
+    );
 
     return () => {
-      document.removeEventListener("click", handleClick);
+      listeners = listeners.filter((_, i) => i !== idx.current);
+      document.removeEventListener('click', (event) =>
+        _handleClick(event, targetElement, checkTarget, callback)
+      );
     };
   });
 };
