@@ -197,7 +197,7 @@ const ReqoreTabsList = ({
                 } as IReqoreTabListItemProps
               }
               closeOnOutsideClick
-              handler='hoverStay'
+              handler='click'
               content={
                 <ReqoreMenu>
                   {item.map(

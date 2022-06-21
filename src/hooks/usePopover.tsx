@@ -53,6 +53,7 @@ const usePopover = ({
     if (popovers.find((p) => p.id === current)) {
       removePopover(current);
     } else if (show) {
+      console.log(content, startEvent);
       addPopover({
         id: current,
         content,
@@ -61,6 +62,7 @@ const usePopover = ({
         noArrow,
         useTargetWidth,
         closeOnOutsideClick,
+        closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
       });
     }
   };
@@ -79,8 +81,7 @@ const usePopover = ({
         noArrow,
         useTargetWidth,
         closeOnOutsideClick,
-        closeOnAnyClick:
-          closeOnOutsideClick || startEvent === 'hover' || startEvent === 'hoverStay',
+        closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
       });
     }
   }, [content]);

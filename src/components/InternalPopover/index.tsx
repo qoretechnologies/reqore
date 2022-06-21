@@ -9,7 +9,6 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import PopoverContext from '../../context/PopoverContext';
 import { fadeIn } from '../../helpers/animations';
 import { getReadableColor } from '../../helpers/colors';
-import useOutsideClick from '../../hooks/useOutsideClick';
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
@@ -95,7 +94,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   closeOnOutsideClick,
   closeOnAnyClick,
 }) => {
-  const { removePopover, uiScale } = useContext(PopoverContext);
+  const { removePopover, updatePopover, uiScale } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);
   const [arrowElement, setArrowElement] = useState(null);
   const popperRef: MutableRefObject<any> = useRef(null);
@@ -125,11 +124,17 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
     console.log('unmounting', id);
   });
 
-  useOutsideClick(popperRef, closeOnAnyClick === false, () => {
-    if (closeOnOutsideClick || closeOnAnyClick) {
-      removePopover(id);
+  // useOutsideClick(popperRef, closeOnAnyClick === false, () => {
+  //   if (closeOnOutsideClick || closeOnAnyClick) {
+  //     removePopover(id);
+  //   }
+  // });
+
+  useEffect(() => {
+    if (popperRef.current) {
+      updatePopover?.(id, { popperRef });
     }
-  });
+  }, [popperRef]);
 
   useEffect(() => {
     if (attributes?.popper?.['data-popper-reference-hidden']) {

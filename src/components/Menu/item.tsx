@@ -162,9 +162,8 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.persist();
-      //event.stopPropagation();
 
-      onClick && onClick(id, event);
+      onClick?.(id, event);
 
       if (_insidePopover) {
         removePopover(_popoverId);
@@ -173,7 +172,6 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
 
     const handleRightIconClick = (event: React.MouseEvent<HTMLSpanElement>) => {
       event.persist();
-      //event.stopPropagation();
 
       if (onRightIconClick) {
         onRightIconClick(id, event);
