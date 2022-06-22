@@ -50,11 +50,10 @@ const usePopover = ({
   const endEvent = endEvents[handler];
 
   const _addPopover = () => {
-    if (popovers.find((p) => p.id === current)) {
-      removePopover(current);
+    if (popovers?.find((p) => p.id === current)) {
+      removePopover?.(current);
     } else if (show) {
-      console.log(content, startEvent);
-      addPopover({
+      addPopover?.({
         id: current,
         content,
         targetElement,
@@ -68,12 +67,12 @@ const usePopover = ({
   };
 
   const _removePopover = () => {
-    removePopover(current);
+    removePopover?.(current);
   };
 
   useUpdateEffect(() => {
     if (show) {
-      updatePopover(current, {
+      updatePopover?.(current, {
         id: current,
         content,
         targetElement,

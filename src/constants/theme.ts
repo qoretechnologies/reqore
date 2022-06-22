@@ -64,6 +64,14 @@ export interface IReqoreTheme {
   breadcrumbs?: IReqoreBreadcrumbsTheme;
 }
 
+export interface IReqoreCustomTheme {
+  main?: string;
+  text?: {
+    color?: string;
+    dim?: boolean;
+  };
+}
+
 export interface IReqoreIntents {
   info?: string;
   success?: string;

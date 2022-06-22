@@ -1,9 +1,8 @@
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { TABS_PADDING_TO_PX, TSizes } from '../../constants/sizes';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness } from '../../helpers/colors';
+import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 
@@ -11,8 +10,7 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   active?: boolean;
   vertical?: boolean;
   onCloseClick?: any;
-  parentBackground?: string;
-  flat?: boolean;
+  customTheme?: IReqoreCustomTheme;
   size?: TSizes;
   wrapTabNames?: boolean;
 }
@@ -20,22 +18,11 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
   theme: IReqoreTheme;
   closable?: boolean;
+  activeColor: string;
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({
-    theme,
-    active,
-    disabled,
-    vertical,
-    activeIntent,
-    parentBackground,
-    flat,
-    size,
-    intent,
-  }: IReqoreTabListItemStyle) => {
-    const currentIntent = intent || activeIntent;
-
+  ${({ theme, active, disabled, vertical, activeColor, size, intent }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       overflow: hidden;
@@ -47,7 +34,15 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
 
       ${active &&
       css`
-        box-shadow: 0 -2px 0 2px ${currentIntent ? theme.intents[currentIntent] : changeLightness(parentBackground || theme.main, 0.2)};
+        &:after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          width: 100%;
+          height: 1px;
+          z-index: 1;
+          background-color: ${activeColor};
+        }
       `}
 
       ${disabled &&
@@ -81,57 +76,63 @@ const ReqoreTabsListItem = ({
   onClick,
   activeIntent,
   onCloseClick,
-  parentBackground,
   wrapTabNames,
   intent,
-  flat,
   size = 'normal',
   closeIcon,
+  customTheme,
 }: IReqoreTabListItemProps) => {
+  const theme = useReqoreTheme('main', customTheme);
+  const _intent = activeIntent || intent;
+  const activeColor = _intent ? theme.intents[_intent] : theme.main;
+
   return (
-    <ReqoreThemeProvider>
-      <StyledTabListItem
-        {...props}
-        intent={intent}
-        as={as}
-        size={size}
-        active={active}
-        disabled={disabled}
-        vertical={vertical}
-        className={`${props?.className || ''} reqore-tabs-list-item ${
-          active ? 'reqore-tabs-list-item__active' : ''
-        }`}
-      >
-        {label || icon ? (
-          <ReqoreControlGroup stack size={size}>
+    <StyledTabListItem
+      {...props}
+      intent={intent}
+      activeIntent={activeIntent}
+      activeColor={activeColor}
+      as={as}
+      size={size}
+      active={active}
+      disabled={disabled}
+      vertical={vertical}
+      theme={theme}
+      className={`${props?.className || ''} reqore-tabs-list-item ${
+        active ? 'reqore-tabs-list-item__active' : ''
+      }`}
+    >
+      {label || icon ? (
+        <ReqoreControlGroup stack size={size}>
+          <ReqoreButton
+            flat
+            icon={icon}
+            minimal
+            intent={active ? activeIntent || intent : intent}
+            active={active}
+            disabled={disabled}
+            onClick={onClick}
+            tooltip={tooltip}
+            customTheme={customTheme}
+          >
+            {label}
+          </ReqoreButton>
+          {onCloseClick && !disabled ? (
             <ReqoreButton
               flat
-              icon={icon}
-              minimal
+              icon={closeIcon || 'CloseLine'}
               intent={active ? activeIntent || intent : intent}
-              active={active}
-              disabled={disabled}
-              onClick={onClick}
-              tooltip={tooltip}
-            >
-              {label}
-            </ReqoreButton>
-            {onCloseClick && !disabled ? (
-              <ReqoreButton
-                flat
-                icon={closeIcon || 'CloseLine'}
-                intent={active ? activeIntent || intent : intent}
-                minimal
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onCloseClick?.();
-                }}
-              />
-            ) : null}
-          </ReqoreControlGroup>
-        ) : null}
-      </StyledTabListItem>
-    </ReqoreThemeProvider>
+              minimal
+              customTheme={customTheme}
+              onClick={(event) => {
+                event.stopPropagation();
+                onCloseClick?.();
+              }}
+            />
+          ) : null}
+        </ReqoreControlGroup>
+      ) : null}
+    </StyledTabListItem>
   );
 };
 

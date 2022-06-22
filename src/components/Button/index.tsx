@@ -1,6 +1,6 @@
 import { Placement } from '@popperjs/core';
-import { darken, rgba } from 'polished';
-import React, { forwardRef, useContext, useRef } from 'react';
+import { rgba } from 'polished';
+import React, { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
@@ -9,10 +9,10 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
-import ThemeContext from '../../context/ThemeContext';
+import { IReqoreCustomTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -31,7 +31,7 @@ export interface IReqoreButtonProps extends React.HTMLAttributes<HTMLButtonEleme
   active?: boolean;
   flat?: boolean;
   rightIcon?: IReqoreIconName;
-  color?: string;
+  customTheme?: IReqoreCustomTheme;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -103,11 +103,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   position: relative;
   overflow: hidden;
   border: ${({ theme, minimal, color, flat }) =>
-    !minimal && !flat
-      ? `1px solid ${
-          color ? darken(0.2, color) : changeLightness(getButtonMainColor(theme, color), 0.2)
-        }`
-      : 0};
+    !minimal && !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.05)}` : 0};
   padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
@@ -126,7 +122,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
       return 'transparent';
     }
 
-    return color || changeLightness(theme.main, 0.1);
+    return color;
   }};
 
   color: ${({ theme, color, minimal }) =>
@@ -151,17 +147,11 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
     &:hover,
     &:focus {
       background-color: ${({ theme, color }: IReqoreButtonStyle) =>
-        color
-          ? changeLightness(color, 0.09)
-          : changeLightness(getButtonMainColor(theme, color), 0.2)};
+        changeLightness(getButtonMainColor(theme, color), 0.05)};
       color: ${({ theme, color }) =>
-        color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
+        getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
       border-color: ${({ minimal, theme, color }) =>
-        minimal
-          ? undefined
-          : color
-          ? darken(0.4, color)
-          : changeLightness(getButtonMainColor(theme, color), 0.4)};
+        minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
 
       .reqore-icon {
         transform: scale(1);
@@ -184,15 +174,11 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   ${({ active, minimal, theme, color }: IReqoreButtonStyle) =>
     active &&
     css`
-      background-color: ${color
-        ? changeLightness(color, 0.045)
-        : changeLightness(getButtonMainColor(theme, color), 0.16)};
-      color: ${color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
+      background-color: ${changeLightness(getButtonMainColor(theme, color), 0.16)};
+      color: ${getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
       border-color: ${minimal
         ? undefined
-        : color
-        ? darken(0.2, color)
-        : changeLightness(getButtonMainColor(theme, color), 0.34)};
+        : changeLightness(getButtonMainColor(theme, color), 0.075)};
 
       .reqore-icon {
         transform: scale(1);
@@ -231,20 +217,20 @@ const ReqoreButton = forwardRef(
       active,
       flat,
       rightIcon,
-      color,
+      customTheme,
       ...rest
     }: IReqoreButtonProps,
     ref
   ) => {
     const innerRef = useRef(null);
     const combinedRef = useCombinedRefs(innerRef, ref);
-    const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
+    const theme: IReqoreTheme = useReqoreTheme('main', customTheme, intent);
 
     /* A custom hook that is used to add a tooltip to the button. */
     useTooltip(combinedRef.current, tooltip);
 
     // If color or intent was specified, set the color
-    const customColor = intent ? theme.intents[intent] : color;
+    const customColor = theme.main;
 
     return (
       <StyledButton

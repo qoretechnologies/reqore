@@ -168,19 +168,19 @@ const Template: ComponentStory<typeof ReqoreUIProvider> = ({
             Info
           </ReqoreButton>
           <h4>Custom color</h4>
-          <ReqoreButton flat color='#ff0000'>
+          <ReqoreButton flat customTheme={{ main: '#ff0000' }}>
             Red
           </ReqoreButton>
           <br />
-          <ReqoreButton flat color='#000000'>
+          <ReqoreButton flat customTheme={{ main: '#000000' }}>
             Black
           </ReqoreButton>
           <br />
-          <ReqoreButton flat color='#0000ff'>
+          <ReqoreButton flat customTheme={{ main: '#0000ff' }}>
             Blue
           </ReqoreButton>
           <br />
-          <ReqoreButton color='#00ff00' minimal>
+          <ReqoreButton customTheme={{ main: '#00ff00' }} minimal>
             Green minimal active
           </ReqoreButton>
         </ReqoreContent>

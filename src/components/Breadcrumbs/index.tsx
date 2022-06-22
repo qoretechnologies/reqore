@@ -173,7 +173,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
                 interactive: true,
               } as IReqoreBreadcrumbItemProps
             }
-            handler='click'
+            handler='hoverStay'
             content={
               <ReqoreMenu>
                 {item.map(({ icon, label, as, tooltip, props }) => (
@@ -211,7 +211,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             onTabChange={item.withTabs.onTabChange}
             activeTab={item.withTabs.activeTab}
             activeTabIntent={item.withTabs.activeTabIntent}
-            parentBackground={theme.breadcrumbs?.main}
+            customTheme={customTheme}
             flat={flat}
             size={size}
           />

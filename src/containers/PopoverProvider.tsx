@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import React, { MutableRefObject, useEffect, useState } from 'react';
+import React, { MutableRefObject, useCallback, useEffect, useState } from 'react';
 import Popover from '../components/InternalPopover';
 import PopoverContext from '../context/PopoverContext';
 import { IPopoverOptions } from '../hooks/usePopover';
@@ -17,40 +17,31 @@ export interface IPopoverData extends IPopoverOptions {
 const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiScale }) => {
   const [popovers, setPopovers] = useState<IPopoverData[]>([]);
 
-  const handleClick = (event: MouseEvent) => {
-    console.log(popovers);
-    popovers.forEach(({ popperRef, closeOnAnyClick, closeOnOutsideClick, id, targetElement }) => {
-      console.log(
-        closeOnAnyClick,
-        closeOnOutsideClick,
-        popperRef?.current && !popperRef.current.contains(event.target),
-        !targetElement?.contains(event.target as Node)
-      );
-      console.log(
-        closeOnAnyClick ||
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      popovers.forEach(({ popperRef, closeOnAnyClick, closeOnOutsideClick, id, targetElement }) => {
+        if (
+          closeOnAnyClick ||
           (closeOnOutsideClick &&
             popperRef?.current &&
             !popperRef.current.contains(event.target) &&
             !targetElement?.contains(event.target as Node))
-      );
-      if (
-        closeOnAnyClick ||
-        (closeOnOutsideClick &&
-          popperRef?.current &&
-          !popperRef.current.contains(event.target) &&
-          !targetElement?.contains(event.target as Node))
-      ) {
-        console.log('should close popover with id: ', id);
-        setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== id));
-      }
-    });
+        ) {
+          removePopover(id);
+        }
+      });
+    },
+    [popovers]
+  );
+
+  const removePopover = (id: string) => {
+    setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== id));
   };
 
   useEffect(() => {
     document.addEventListener('click', handleClick);
 
     return () => {
-      console.log('removing handle click');
       document.removeEventListener('click', handleClick);
     };
   }, [popovers]);
@@ -79,9 +70,7 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
             }, [])
           );
         },
-        removePopover: (popoverId: string) => {
-          setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== popoverId));
-        },
+        removePopover,
         popovers,
       }}
     >

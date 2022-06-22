@@ -5,8 +5,9 @@ import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
 import { TABS_SIZE_TO_PX } from '../../constants/sizes';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreBreadcrumbsTheme, IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
 import { StyledPopover } from '../Popover';
@@ -17,7 +18,7 @@ export interface IReqoreTabsListProps
     React.HTMLAttributes<HTMLDivElement> {
   onTabChange?: (tabId: string | number) => any;
   children?: any;
-  parentBackground?: string;
+  customTheme?: IReqoreCustomTheme | IReqoreBreadcrumbsTheme;
 }
 
 export interface IReqoreTabsListStyle extends Omit<IReqoreTabsListProps, 'tabs'> {
@@ -152,13 +153,14 @@ const ReqoreTabsList = ({
   fill,
   vertical,
   activeTabIntent,
-  parentBackground,
+  customTheme,
   wrapTabNames,
   flat,
   size,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width, height }] = useMeasure();
+  const theme = useReqoreTheme('main', customTheme);
 
   const transformedItems = getTransformedItems(
     tabs,
@@ -176,6 +178,7 @@ const ReqoreTabsList = ({
       className={`${rest.className || ''} reqore-tabs-list`}
       ref={ref}
       flat={flat}
+      theme={theme}
     >
       {transformedItems.map((item: IReqoreTabsListItem | IReqoreTabsListItem[], index: number) =>
         isArray(item) ? (
@@ -190,14 +193,14 @@ const ReqoreTabsList = ({
                   label: getMoreLabel(item, activeTab),
                   active: !!isTabHidden(item, activeTab),
                   activeIntent: activeTabIntent,
-                  parentBackground,
+                  customTheme,
                   vertical,
                   flat,
                   size,
                 } as IReqoreTabListItemProps
               }
               closeOnOutsideClick
-              handler='click'
+              handler='hoverStay'
               content={
                 <ReqoreMenu>
                   {item.map(
@@ -254,9 +257,8 @@ const ReqoreTabsList = ({
             <ReqoreTabsListItem
               {...item}
               size={size}
-              flat={flat}
               activeIntent={activeTabIntent}
-              parentBackground={parentBackground}
+              customTheme={customTheme}
               wrapTabNames={wrapTabNames}
               key={index}
               vertical={vertical}

@@ -4,7 +4,7 @@ import { Colors } from '../constants/colors';
 import { DEFAULT_INTENTS, IReqoreIntent, IReqoreTheme } from '../constants/theme';
 
 export const getReadableColor: (
-  theme: IReqoreTheme,
+  theme: Partial<IReqoreTheme>,
   ifLight?: string,
   ifDark?: string,
   dimmed?: boolean,
@@ -19,7 +19,7 @@ export const getReadableColor: (
   }
 
   const shouldDim = theme.text?.dim && dimmed;
-  const from = fallback || theme.main;
+  const from = fallback || theme.main!;
 
   return getReadableColorFrom(from, shouldDim, ifLight, ifDark);
 };

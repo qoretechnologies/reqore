@@ -1,7 +1,7 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { TSizes } from '../../constants/sizes';
-import { IReqoreIntent } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreIntent } from '../../constants/theme';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTabsList from './list';
@@ -34,6 +34,7 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   flat?: boolean;
   size?: TSizes;
   width?: string;
+  customTheme?: IReqoreCustomTheme;
 
   // Internal prop, ignore!
   _testWidth?: number;
@@ -62,6 +63,7 @@ const ReqoreTabs = ({
   size = 'normal',
   width,
   wrapTabNames,
+  customTheme,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
@@ -94,6 +96,7 @@ const ReqoreTabs = ({
         activeTab={_activeTab}
         wrapTabNames={wrapTabNames}
         activeTabIntent={activeTabIntent}
+        customTheme={customTheme}
         onTabChange={(tabId: string | number) => {
           setActiveTab(tabId);
 

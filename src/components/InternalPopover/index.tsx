@@ -1,7 +1,6 @@
 import { isString } from 'lodash';
 import React, { MutableRefObject, useContext, useEffect, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
-import { useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import { IPopoverData } from '../../containers/PopoverProvider';
@@ -120,16 +119,6 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
     ],
   });
 
-  useUnmount(() => {
-    console.log('unmounting', id);
-  });
-
-  // useOutsideClick(popperRef, closeOnAnyClick === false, () => {
-  //   if (closeOnOutsideClick || closeOnAnyClick) {
-  //     removePopover(id);
-  //   }
-  // });
-
   useEffect(() => {
     if (popperRef.current) {
       updatePopover?.(id, { popperRef });
@@ -138,7 +127,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
 
   useEffect(() => {
     if (attributes?.popper?.['data-popper-reference-hidden']) {
-      removePopover(id);
+      removePopover?.(id);
     }
   }, [attributes?.popper]);
 
