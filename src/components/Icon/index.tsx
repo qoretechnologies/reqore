@@ -13,7 +13,7 @@ export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> 
   margin?: 'right' | 'left' | 'both';
 }
 
-const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
+export const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-block;
   flex: 0 0 auto;
   vertical-align: text-bottom;

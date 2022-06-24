@@ -40,8 +40,7 @@ export default [
 
 export const breadcrumbsTabs = {
   withTabs: {
-    activeTab: 'releases',
-    activeTabIntent: 'info',
+    activeTab: 'valuemaps',
     onTabChange(tabId) {
       console.log('🚀 ~ file: breadcrumbs.ts ~ line 46 ~ onTabChange ~ tabId', tabId);
     },

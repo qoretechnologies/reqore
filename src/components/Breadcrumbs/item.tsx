@@ -6,7 +6,7 @@ import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
-import { AnimatedTextElement } from '../../styles';
+import { ActiveIconScale, InactiveIconScale } from '../../styles';
 import {
   StyledActiveContent,
   StyledAnimatedTextWrapper,
@@ -48,6 +48,8 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
         color: ${textColor};
       }
 
+      ${InactiveIconScale}
+
       ${active &&
       css`
         * {
@@ -57,6 +59,8 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
             ? getReadableColorFrom(theme.breadcrumbs.main, true)
             : getReadableColor(theme, undefined, undefined))};
         }
+
+        ${ActiveIconScale}
       `}
 
       ${interactive &&
@@ -68,7 +72,19 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
             ? getReadableColorFrom(theme.breadcrumbs.main)
             : getReadableColor(theme, undefined, undefined))};
           background-color: ${changeLightness(theme.breadcrumbs?.main || theme.main, 0.05)};
-          ${AnimatedTextElement}
+          ${ActiveIconScale}
+
+          ${StyledActiveContent} {
+            transform: translateY(0px);
+            filter: blur(0);
+            opacity: 1;
+          }
+
+          ${StyledInActiveContent} {
+            transform: translateY(150%);
+            filter: blur(10px);
+            opacity: 0;
+          }
         }
       `}
 

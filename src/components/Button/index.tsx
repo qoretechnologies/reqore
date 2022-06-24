@@ -14,6 +14,7 @@ import { changeLightness, getReadableColor, getReadableColorFrom } from '../../h
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
+import { ActiveIconScale, ScaleIconOnHover } from '../../styles';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
@@ -132,9 +133,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
         : getReadableColorFrom(color, true)
       : getReadableColor(theme, undefined, undefined, true)};
 
-  .reqore-icon {
-    transform: scale(0.85);
-  }
+  ${ScaleIconOnHover}
 
   &:not(:disabled) {
     cursor: pointer;
@@ -152,10 +151,6 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
         getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
       border-color: ${({ minimal, theme, color }) =>
         minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
-
-      .reqore-icon {
-        transform: scale(1);
-      }
 
       ${StyledActiveContent} {
         transform: translateY(0px);
@@ -180,9 +175,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
         ? undefined
         : changeLightness(getButtonMainColor(theme, color), 0.075)};
 
-      .reqore-icon {
-        transform: scale(1);
-      }
+      ${ActiveIconScale}
     `}
 
   &:disabled {

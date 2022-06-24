@@ -22,7 +22,7 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ theme, active, disabled, vertical, activeColor, size, intent }: IReqoreTabListItemStyle) => {
+  ${({ active, disabled, vertical, activeColor, size }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       overflow: hidden;
@@ -31,18 +31,9 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       padding: ${vertical
         ? `${TABS_PADDING_TO_PX[size!]}px`
         : `0 ${TABS_PADDING_TO_PX[size!]}px 0 ${TABS_PADDING_TO_PX[size!]}px`};
-
       ${active &&
       css`
-        &:after {
-          content: '';
-          position: absolute;
-          bottom: -1px;
-          width: 100%;
-          height: 1px;
-          z-index: 1;
-          background-color: ${activeColor};
-        }
+        background-color: ${activeColor}60;
       `}
 
       ${disabled &&
