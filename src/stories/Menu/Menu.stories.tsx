@@ -1,128 +1,93 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import React from 'react';
-import styled from 'styled-components';
+import { IReqoreMenuProps } from '../../components/Menu';
 import { IReqoreMenuItemProps } from '../../components/Menu/item';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import {
-  ReqoreMenu,
-  ReqoreMenuDivider,
-  ReqoreMenuItem,
-  ReqorePopover,
-  ReqoreUIProvider,
-} from '../../index';
+import { ReqoreMenu, ReqoreMenuDivider, ReqoreMenuItem, ReqorePopover } from '../../index';
+import { argManager } from '../utils/args';
+
+const { createArg } = argManager<IReqoreMenuProps>();
 
 export default {
-  title: 'ReQore/Menu',
-  component: ReqoreMenu,
-  args: {
-    theme: {
-      main: '#ffffff',
-    },
+  title: 'Components/Menu',
+  argTypes: {
+    ...createArg('width', {
+      type: 'string',
+      defaultValue: '160px',
+      name: 'Width',
+    }),
+    ...createArg('maxHeight', {
+      type: 'string',
+      defaultValue: undefined,
+      name: 'Max Height',
+    }),
+    ...createArg('position', {
+      defaultValue: undefined,
+      name: 'Position',
+      options: ['left', 'right'],
+      control: {
+        type: 'select',
+      },
+    }),
   },
-} as Meta;
+} as Meta<IReqoreMenuProps>;
 
-const StyledStoriesContent = styled.div`
-  padding: 10px;
-  display: flex;
-  width: 100%;
-  height: 500px;
-  background-color: ${({ theme }) => theme.main};
-`;
-
-const Template: Story<IReqoreUIProviderProps> = ({
-  theme,
-  ...args
-}: IReqoreUIProviderProps) => {
+export const MenuStory: Story<IReqoreMenuProps> = (args) => {
   return (
-    <ReqoreUIProvider theme={theme}>
-      <ReqoreThemeProvider>
-        <StyledStoriesContent>
-          <ReqoreMenu {...args}>
-            <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
-              Selected success
-            </ReqoreMenuItem>
-            <ReqoreMenuItem icon='Save3Fill'>Save</ReqoreMenuItem>
-            <ReqoreMenuItem
-              icon='ChatPollFill'
-              onClick={() => alert('Item clicked')}
-              rightIcon='FahrenheitFill'
-              onRightIconClick={(itemId) => alert('Icon clicked')}
-              tooltip={{
-                content: 'You sure?',
-              }}
-              intent='danger'
-            >
-              Delete
-            </ReqoreMenuItem>
+    <ReqoreMenu {...args}>
+      <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
+        Selected success
+      </ReqoreMenuItem>
+      <ReqoreMenuItem icon='Save3Fill'>Save</ReqoreMenuItem>
+      <ReqoreMenuItem
+        icon='ChatPollFill'
+        onClick={() => alert('Item clicked')}
+        rightIcon='FahrenheitFill'
+        onRightIconClick={(itemId) => alert('Icon clicked')}
+        tooltip={{
+          content: 'You sure?',
+        }}
+        intent='danger'
+      >
+        Delete
+      </ReqoreMenuItem>
 
-            <ReqoreMenuItem icon='Lock2Fill'>
-              Remove this really long text heh
+      <ReqoreMenuItem icon='Lock2Fill'>This is a really long item that should wrap</ReqoreMenuItem>
+      <ReqoreMenuItem icon='Lock2Fill' disabled>
+        Disabled
+      </ReqoreMenuItem>
+      <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
+        Disabled intent
+      </ReqoreMenuItem>
+      <ReqoreMenuDivider />
+      <ReqorePopover
+        component={ReqoreMenuItem}
+        componentProps={
+          {
+            icon: 'EmotionUnhappyLine',
+            rightIcon: 'Scissors2Fill',
+          } as IReqoreMenuItemProps
+        }
+        content={
+          <ReqoreMenu {...args}>
+            <ReqoreMenuItem icon='ZhihuFill'>Item 1</ReqoreMenuItem>
+            <ReqoreMenuItem icon='AccountCircleFill'>Item 2</ReqoreMenuItem>
+            <ReqoreMenuItem icon='AnticlockwiseFill' disabled>
+              Item 3
             </ReqoreMenuItem>
-            <ReqoreMenuItem icon='Lock2Fill' disabled>
-              Disabled
-            </ReqoreMenuItem>
-            <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
-              Disabled intent
-            </ReqoreMenuItem>
-            <ReqoreMenuDivider />
-            <ReqorePopover
-              component={ReqoreMenuItem}
-              componentProps={
-                {
-                  icon: 'EmotionUnhappyLine',
-                  rightIcon: 'Scissors2Fill',
-                } as IReqoreMenuItemProps
-              }
-              content={
-                <ReqoreMenu {...args}>
-                  <ReqoreMenuItem icon='ZhihuFill'>Save</ReqoreMenuItem>
-                </ReqoreMenu>
-              }
-              isReqoreComponent
-              handler='click'
-              placement='right'
-            >
-              I have a submenu on click
-            </ReqorePopover>
-            <ReqoreMenuDivider label='Divider' />
-            <ReqoreMenuItem
-              icon='DualSim1Line'
-              rightIcon='MoneyEuroBoxLine'
-              selected
-            >
-              I am selected!
-            </ReqoreMenuItem>
+            <ReqoreMenuItem icon='ArchiveFill'>Item 4</ReqoreMenuItem>
           </ReqoreMenu>
-        </StyledStoriesContent>
-      </ReqoreThemeProvider>
-    </ReqoreUIProvider>
+        }
+        isReqoreComponent
+        handler='click'
+        placement='right'
+      >
+        I have a submenu on click
+      </ReqorePopover>
+      <ReqoreMenuDivider label='Divider' />
+      <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' selected>
+        I am selected!
+      </ReqoreMenuItem>
+    </ReqoreMenu>
   );
 };
 
-export const Default = Template.bind({});
-export const Bordered = Template.bind({});
-Bordered.args = {
-  position: 'left',
-};
-export const Dark = Template.bind({});
-Dark.args = {
-  position: 'left',
-  theme: {
-    main: '#222222',
-  },
-};
-export const CustomColor = Template.bind({});
-CustomColor.args = {
-  theme: {
-    main: '#194d5d',
-  },
-};
-
-export const CustomAccent = Template.bind({});
-CustomAccent.args = {
-  theme: {
-    main: '#194d5d',
-  },
-  accent: '#57195d',
-};
+MenuStory.storyName = 'Menu';

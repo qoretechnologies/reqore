@@ -7,13 +7,13 @@ import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItemProps } from './item';
 import ReqoreDropdownList from './list';
 
-export interface IReqoreDropdownProps extends IPopoverOptions {
+export interface IReqoreDropdownProps<T> extends IPopoverOptions {
   items?: IReqoreDropdownItemProps[];
   multiSelect?: boolean;
   buttonStyle?: React.CSSProperties;
   listStyle?: React.CSSProperties;
   component?: any;
-  componentProps?: { [key: string]: any };
+  componentProps?: T;
   filterable?: boolean;
   label?: any;
   children?: any;
@@ -21,12 +21,13 @@ export interface IReqoreDropdownProps extends IPopoverOptions {
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
   caretPosition?: 'left' | 'right';
+  isDefaultOpen?: boolean;
 }
 
-const ReqoreDropdown = ({
+const ReqoreDropdown = <T extends unknown = IReqoreButtonProps>({
   items,
   component,
-  componentProps = {},
+  componentProps,
   label,
   children,
   multiSelect,
@@ -38,8 +39,9 @@ const ReqoreDropdown = ({
   icon,
   rightIcon,
   caretPosition = 'left',
+  isDefaultOpen = false,
   ...rest
-}: IReqoreDropdownProps) => {
+}: IReqoreDropdownProps<T>) => {
   return (
     <ReqorePopover
       {...rest}
@@ -50,12 +52,14 @@ const ReqoreDropdown = ({
           rightIcon: caretPosition === 'right' ? icon || 'ArrowDownSFill' : rightIcon,
           style: buttonStyle,
           disabled: !size(items),
-          ...componentProps,
-        } as IReqoreButtonProps
+          ...rest,
+          ...((componentProps || {}) as Object),
+        } as T
       }
       noWrapper
       placement={placement || 'bottom-start'}
       handler={handler || 'click'}
+      openOnMount={isDefaultOpen}
       content={
         size(items) ? (
           <ReqoreDropdownList
@@ -65,7 +69,7 @@ const ReqoreDropdown = ({
             items={items}
             filterable={filterable}
           />
-        ) : null
+        ) : undefined
       }
       noArrow
     >

@@ -5,7 +5,7 @@ import breadcrumbs, { breadcrumbsTabs } from '../../mock/breadcrumbs';
 import { buildTemplate } from '../utils';
 
 export default {
-  title: 'Breadcrumbs',
+  title: 'Components/Breadcrumbs',
   argTypes: {
     withTabs: {
       name: 'With tabs',

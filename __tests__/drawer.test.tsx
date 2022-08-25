@@ -49,12 +49,12 @@ test('Renders hidable <Drawer /> properly', () => {
   expect(document.querySelectorAll('.reqore-drawer-hide').length).toBe(1);
   expect(document.querySelectorAll('.reqore-drawer-close').length).toBe(0);
 
-  fireEvent.click(document.querySelector('.reqore-drawer-hide'));
+  fireEvent.click(document.querySelector('.reqore-drawer-hide')!);
 
   expect(fn).toHaveBeenCalledWith(false);
   expect(document.querySelectorAll('.reqore-drawer').length).toBe(1);
 
-  fireEvent.click(document.querySelector('.reqore-drawer-hide'));
+  fireEvent.click(document.querySelector('.reqore-drawer-hide')!);
 
   expect(fn).toHaveBeenLastCalledWith(true);
   expect(document.querySelectorAll('.reqore-drawer').length).toBe(0);
@@ -79,7 +79,7 @@ test('Renders closable <Drawer /> properly', () => {
   expect(document.querySelectorAll('.reqore-drawer').length).toBe(1);
   expect(document.querySelectorAll('.reqore-drawer-close').length).toBe(1);
 
-  fireEvent.click(document.querySelector('.reqore-drawer-close'));
+  fireEvent.click(document.querySelector('.reqore-drawer-close')!);
 
   expect(fn).toHaveBeenCalled();
 });
@@ -103,7 +103,7 @@ test('Renders <Drawer /> with interactive backdrop', () => {
   expect(document.querySelectorAll('.reqore-drawer-close').length).toBe(1);
   expect(document.querySelectorAll('.reqore-drawer-backdrop').length).toBe(1);
 
-  fireEvent.click(document.querySelector('.reqore-drawer-backdrop'));
+  fireEvent.click(document.querySelector('.reqore-drawer-backdrop')!);
 
   expect(fn).toHaveBeenCalled();
 });

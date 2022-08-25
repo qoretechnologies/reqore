@@ -182,11 +182,11 @@ export const ReqoreDrawer = ({
   customTheme,
   position = 'right',
   maxSize,
-  minSize = '55px',
+  minSize = '150px',
   onClose,
-  hasBackdrop,
+  hasBackdrop = true,
   size,
-  resizable,
+  resizable = true,
   hidable,
   onHideToggle,
   className,
@@ -356,6 +356,6 @@ export const ReqoreDrawer = ({
         </ReqoreThemeProvider>
       ) : null
     ),
-    document.querySelector('#reqore-portal')
+    document.querySelector('#reqore-portal')!
   );
 };

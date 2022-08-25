@@ -228,6 +228,7 @@ const ReqoreButton = forwardRef(
     return (
       <StyledButton
         {...rest}
+        theme={theme}
         ref={combinedRef}
         fluid={fluid}
         fixed={fixed}

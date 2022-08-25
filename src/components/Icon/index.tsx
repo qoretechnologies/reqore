@@ -1,8 +1,10 @@
-import React, { memo } from 'react';
+import React, { memo, useContext } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
 import styled, { css } from 'styled-components';
+import { ReqoreThemeContext } from '../..';
+import { IReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 
 export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -10,6 +12,7 @@ export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> 
   color?: string;
   size?: string;
   iconProps?: IconBaseProps;
+  intent?: IReqoreIntent;
   margin?: 'right' | 'left' | 'both';
 }
 
@@ -36,9 +39,12 @@ const ReqoreIcon = memo(
     margin,
     style = {},
     iconProps,
+    intent,
     ...rest
   }: IReqoreIconProps) => {
+    const theme = useContext(ReqoreThemeContext);
     const Icon: IconType = RemixIcons[`Ri${icon}`];
+    const finalColor: string | undefined = intent ? theme.intents[intent] : color;
 
     if (!Icon) {
       return (
@@ -60,7 +66,7 @@ const ReqoreIcon = memo(
       >
         <IconContext.Provider
           value={{
-            color: color || 'inherit',
+            color: finalColor || 'inherit',
             size,
             style: {
               verticalAlign: 'super',

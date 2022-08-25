@@ -70,7 +70,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
 const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   width: 100%;
   height: 100%;
-  padding: ${({ isString }) => (isString ? '8px' : '5px')};
+  padding: ${({ isString }) => (isString ? '8px' : '0px')};
   z-index: 20;
   position: relative;
   background-color: ${({ theme }) => theme.popover?.main || theme.main};

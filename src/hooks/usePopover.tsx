@@ -23,6 +23,7 @@ export interface IPopover {
   handler?: 'hover' | 'click' | 'focus' | 'hoverStay';
   placement?: Placement;
   show?: boolean;
+  openOnMount?: boolean;
   noArrow?: boolean;
   useTargetWidth?: boolean;
   closeOnOutsideClick?: boolean;
@@ -42,6 +43,7 @@ const usePopover = ({
   noArrow,
   useTargetWidth,
   closeOnOutsideClick = true,
+  openOnMount = false,
 }: IPopoverOptions) => {
   const { addPopover, removePopover, updatePopover, popovers } = useContext(PopoverContext);
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
@@ -84,6 +86,12 @@ const usePopover = ({
       });
     }
   }, [content]);
+
+  useEffect(() => {
+    if (openOnMount && targetElement) {
+      _addPopover();
+    }
+  }, [targetElement]);
 
   useEffect(() => {
     if (targetElement && content) {

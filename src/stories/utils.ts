@@ -12,6 +12,6 @@ export const buildTemplate = <T, C>(
   props?: Partial<T> & C
 ) => {
   const result = template.bind({});
-  result.args = props;
+  result.args = props as any;
   return result;
 };

@@ -1,18 +1,29 @@
 import { withTests } from '@storybook/addon-jest';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
-import { TSizes } from '../src/constants/sizes';
 import results from '../tests.json';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
   layout: 'fullscreen',
+  options: {
+    enableShortcuts: false,
+    panelPosition: 'right',
+    sidebar: {
+      showRoots: true,
+    },
+  },
   controls: {
+    matchers: {
+      color: /(background|color)$/i,
+      date: /Date$/,
+    },
+    hideNoControlsWarning: true,
     expanded: true,
   },
 };
 
 export const argTypes = {
-  theme: {
+  mainTheme: {
     control: 'color',
     description: 'The overall theme for all ReQore components',
     name: 'Main Theme',
@@ -34,21 +45,11 @@ export const argTypes = {
       },
     },
   },
-  size: {
-    control: 'select',
-    description: 'The size of the element',
-    options: ['tiny', 'small', 'normal', 'big', 'huge'] as TSizes[],
-    name: 'Size',
-    defaultValue: 'normal' as TSizes,
-    table: {
-      defaultValue: { summary: 'normal' },
-    },
-  },
 };
 
 export const decorators = [
   (Story, context) => (
-    <ReqoreUIProvider theme={{ main: context.args.theme }}>
+    <ReqoreUIProvider theme={{ main: context.args.mainTheme }}>
       <ReqoreLayoutContent>
         <ReqoreContent style={{ padding: '20px' }}>
           <Story />

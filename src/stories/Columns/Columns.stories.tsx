@@ -1,65 +1,71 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
-import React from 'react';
+import { Meta, Story } from '@storybook/react';
 import { IReqoreColumnsProps } from '../../components/Columns';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import {
-  ReqoreColumn,
-  ReqoreColumns,
-  ReqoreContent,
-  ReqoreLayoutContent,
-  ReqoreUIProvider,
-} from '../../index';
+import { ReqoreColumn, ReqoreColumns } from '../../index';
+import { argManager } from '../utils/args';
+
+export interface IColumnsStoryArgs extends IReqoreColumnsProps {
+  multipleColumns?: boolean;
+}
+
+const { createArg, disableArgs } = argManager<IColumnsStoryArgs>();
 
 export default {
-  title: 'ReQore/Columns',
+  title: 'Components/Columns',
   component: ReqoreColumns,
-  args: {
-    theme: {
-      main: '#222222',
-    },
+  argTypes: {
+    ...createArg('multipleColumns', {
+      defaultValue: false,
+      control: 'boolean',
+      name: 'Multiple Columns',
+    }),
+    ...createArg('minColumnWidth', {
+      defaultValue: '200px',
+    }),
+    ...createArg('maxColumnWidth', {
+      defaultValue: '300px',
+    }),
+    ...createArg('alignItems', {
+      defaultValue: 'normal',
+    }),
+    ...createArg('alignItems', {
+      defaultValue: 'normal',
+    }),
+    ...createArg('columns', {
+      defaultValue: undefined,
+      type: 'number',
+    }),
+    ...createArg('columnsGap', {
+      defaultValue: undefined,
+    }),
+    ...disableArgs(['className', 'multipleColumns']),
   },
-} as Meta;
+} as Meta<IColumnsStoryArgs>;
 
-const Template: Story<IReqoreUIProviderProps & { segment: IReqoreColumnsProps }> = ({
-  segment,
-  ...args
-}: IReqoreUIProviderProps & { segment: IReqoreColumnsProps }) => {
+const Template: Story<IColumnsStoryArgs> = (args) => {
   return (
-    <ReqoreUIProvider {...args}>
-      <ReqoreLayoutContent>
-        <ReqoreContent style={{ padding: '20px' }}>
-          <h4> Default </h4>
-          <ReqoreColumns {...segment}>
-            <ReqoreColumn style={{ border: '1px solid red' }}>1st column</ReqoreColumn>
-            <ReqoreColumn style={{ border: '1px solid red' }}>2nd column</ReqoreColumn>
-          </ReqoreColumns>
-          <h4> Custom align & justify </h4>
-          <ReqoreColumns {...segment}>
-            <ReqoreColumn style={{ border: '1px solid red' }}>1st column</ReqoreColumn>
-            <ReqoreColumn style={{ border: '1px solid red' }} justifyContent='center'>
-              2nd column
-            </ReqoreColumn>
-          </ReqoreColumns>
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
+    <ReqoreColumns {...args}>
+      <ReqoreColumn {...args} style={{ border: '1px solid white', padding: '10px' }}>
+        1st column
+      </ReqoreColumn>
+      <ReqoreColumn {...args} style={{ border: '1px solid white', padding: '10px' }}>
+        2nd column
+      </ReqoreColumn>
+      {args.multipleColumns && (
+        <>
+          <ReqoreColumn {...args} style={{ border: '1px solid white', padding: '10px' }}>
+            4th column
+          </ReqoreColumn>
+          <ReqoreColumn {...args} style={{ border: '1px solid white', padding: '10px' }}>
+            3rd column
+          </ReqoreColumn>
+        </>
+      )}
+    </ReqoreColumns>
   );
 };
 
 export const Basic = Template.bind({});
-
-export const WithLightColor = Template.bind({});
-WithLightColor.args = {
-  theme: {
-    main: '#ffffff',
-  },
-};
-
-export const CustomColumns = Template.bind({});
-CustomColumns.args = {
-  segment: {
-    columns: 2,
-    columnsGap: '20px',
-    alignItems: 'stretch',
-  } as IReqoreColumnsProps,
+export const MultipleColumns = Template.bind({});
+MultipleColumns.args = {
+  multipleColumns: true,
 };

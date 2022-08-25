@@ -1,6 +1,8 @@
 tasks:
-  - init: "yarn install"
-  - command: "yarn storybook"
-vscode:
-  extensions:
-    - "DeepScan.vscode-deepscan"
+  - init: 'yarn install'
+  - command: 'yarn storybook'
+ports:
+  - port: 6007
+    visibility: public
+    name: Storybook
+    onOpen: open-browser

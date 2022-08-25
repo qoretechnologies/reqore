@@ -72,7 +72,7 @@ const StyledModalWrapper = styled(animated.div)<IReqoreModalStyle>`
     height: ${({ height }) => height || undefined};
     border-radius: 10px;
     background-color: ${({ theme, opacity = 1, intent }: IReqoreModalStyle) =>
-      rgba(intent ? theme.intents[intent] : getMainBackgroundColor(theme), opacity)};
+      rgba(intent ? theme.intents[intent]! : getMainBackgroundColor(theme), opacity)};
     box-shadow: 0px 0px 30px 0px ${rgba('#000000', 0.4)};
     // Only apply the blur filter if the modal has no backdrop & transparent background.
     backdrop-filter: ${({ blur, opacity, hasBackdrop }) =>
@@ -173,7 +173,7 @@ export const ReqoreModal = ({
             </StyledModalWrapper>
           </StyledModal>
         </ReqoreThemeProvider>,
-        document.querySelector('#reqore-portal')
+        document.querySelector('#reqore-portal')!
       )
   );
 };

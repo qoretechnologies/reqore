@@ -6,9 +6,7 @@ import { changeLightness } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreComponent } from '../../types/global';
 
-export interface IReqoreMenuProps
-  extends IReqoreComponent,
-    React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreMenuProps extends IReqoreComponent, React.HTMLAttributes<HTMLDivElement> {
   children: any;
   position?: 'left' | 'right';
   width?: string;
@@ -32,18 +30,16 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   ${({ theme, position }) =>
     position &&
     css`
-    border-${
-      position === 'left' ? 'right' : 'left'
-    }: 1px solid ${changeLightness(theme.main, 0.05)};
+    border-${position === 'left' ? 'right' : 'left'}: 1px solid ${changeLightness(
+      theme.main,
+      0.05
+    )};
     padding-${position === 'left' ? 'right' : 'left'}: 10px;
   `}
 `;
 
 const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
-  (
-    { children, position, _insidePopover, _popoverId, accent, ...rest },
-    ref: any
-  ) => {
+  ({ children, position, _insidePopover, _popoverId, accent, ...rest }, ref: any) => {
     const theme = useReqoreTheme('main', {
       main: accent,
     });
