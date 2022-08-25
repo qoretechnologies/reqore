@@ -22,7 +22,12 @@ export interface IReqorePanelAction {
   actions?: IReqoreDropdownItemProps[];
 }
 
+export interface IReqorePanelBottomAction extends IReqorePanelAction {
+  position: 'left' | 'right';
+}
+
 export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> {
+  as?: any;
   children?: any;
   icon?: IReqoreIconName;
   label?: string | ReactElement<any>;
@@ -31,6 +36,7 @@ export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> 
   onClose?: () => void;
   rounded?: boolean;
   actions?: IReqorePanelAction[];
+  bottomActions?: IReqorePanelBottomAction[];
   customTheme?: IReqoreTheme;
   intent?: IReqoreIntent;
   flat?: boolean;
@@ -38,6 +44,7 @@ export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> 
   onCollapseChange?: (isCollapsed?: boolean) => void;
   fill?: boolean;
   padded?: boolean;
+  contentStyle?: React.CSSProperties;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -87,12 +94,17 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
       }
     `}
 `;
+
+export const StyledPanelBottomActions = styled(StyledPanelTitle)`
+  padding-left: 5px;
+`;
+
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
   min-height: ${({ isCollapsed }) => (isCollapsed ? undefined : '40px')};
   padding: ${({ padded }) => (!padded ? undefined : '10px')};
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
 `;
 
 export const StyledPanelTitleLabel = styled.span``;
@@ -114,8 +126,9 @@ export const ReqorePanel = forwardRef(
       label,
       collapsible,
       onClose,
-      rounded,
+      rounded = true,
       actions = [],
+      bottomActions = [],
       isCollapsed,
       customTheme,
       icon,
@@ -124,7 +137,8 @@ export const ReqorePanel = forwardRef(
       flat,
       unMountContentOnCollapse = true,
       onCollapseChange,
-      padded,
+      padded = true,
+      contentStyle,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -133,7 +147,7 @@ export const ReqorePanel = forwardRef(
     const theme = useReqoreTheme('main', customTheme, intent);
 
     useUpdateEffect(() => {
-      setIsCollapsed(isCollapsed);
+      setIsCollapsed(!!isCollapsed);
     }, [isCollapsed]);
 
     const hasTitleBar: boolean = useMemo(
@@ -148,10 +162,57 @@ export const ReqorePanel = forwardRef(
       }
     }, [collapsible, _isCollapsed, onCollapseChange]);
 
+    const leftBottomActions: IReqorePanelBottomAction[] = useMemo(
+      () => bottomActions.filter(({ position }) => position === 'left'),
+      [bottomActions]
+    );
+
+    const rightBottomActions: IReqorePanelBottomAction[] = useMemo(
+      () => bottomActions.filter(({ position }) => position === 'right'),
+      [bottomActions]
+    );
+
+    const hasBottomActions: boolean = useMemo(
+      () => !!(size(leftBottomActions) || size(rightBottomActions)),
+      [leftBottomActions, rightBottomActions]
+    );
+
+    const renderActions = ({ label, actions, intent, ...rest }: IReqorePanelAction) =>
+      size(actions) ? (
+        <ReqoreDropdown
+          {...rest}
+          label={label}
+          componentProps={{
+            intent,
+            minimal: true,
+            onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+              e.stopPropagation();
+            },
+          }}
+          items={actions}
+        />
+      ) : (
+        <ReqoreButton
+          {...rest}
+          intent={intent}
+          onClick={
+            rest.onClick
+              ? (e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.stopPropagation();
+                  rest.onClick?.();
+                }
+              : undefined
+          }
+        >
+          {label}
+        </ReqoreButton>
+      );
+
     return (
       <ReqoreThemeProvider theme={theme}>
         <StyledPanel
           {...rest}
+          as={rest.as || 'div'}
           ref={ref as any}
           isCollapsed={_isCollapsed}
           rounded={rounded}
@@ -175,37 +236,7 @@ export const ReqorePanel = forwardRef(
                 )}
               </StyledPanelTitleHeader>
               <ReqoreControlGroup minimal>
-                {actions.map(({ label, actions, intent, ...rest }) =>
-                  size(actions) ? (
-                    <ReqoreDropdown
-                      {...rest}
-                      label={label}
-                      componentProps={{
-                        intent,
-                        minimal: true,
-                        onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
-                          e.stopPropagation();
-                        },
-                      }}
-                      items={actions}
-                    />
-                  ) : (
-                    <ReqoreButton
-                      {...rest}
-                      intent={intent}
-                      onClick={
-                        rest.onClick
-                          ? (e: React.MouseEvent<HTMLButtonElement>) => {
-                              e.stopPropagation();
-                              rest.onClick();
-                            }
-                          : undefined
-                      }
-                    >
-                      {label}
-                    </ReqoreButton>
-                  )
-                )}
+                {actions.map(renderActions)}
                 {collapsible && (
                   <ReqoreButton
                     icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
@@ -229,10 +260,21 @@ export const ReqorePanel = forwardRef(
             <StyledPanelContent
               className='reqore-panel-content'
               isCollapsed={_isCollapsed}
+              style={contentStyle}
               padded={padded}
             >
               {children}
             </StyledPanelContent>
+          ) : null}
+          {hasBottomActions ? (
+            <StyledPanelBottomActions flat className='reqore-panel-bottom-actions'>
+              <ReqoreControlGroup minimal>
+                {leftBottomActions.map(renderActions)}
+              </ReqoreControlGroup>
+              <ReqoreControlGroup minimal>
+                {rightBottomActions.map(renderActions)}
+              </ReqoreControlGroup>
+            </StyledPanelBottomActions>
           ) : null}
         </StyledPanel>
       </ReqoreThemeProvider>

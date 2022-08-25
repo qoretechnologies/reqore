@@ -4,9 +4,10 @@ import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
-import { TABS_SIZE_TO_PX } from '../../constants/sizes';
+import { TABS_SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
@@ -79,7 +80,7 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
 `;
 
 const isTabHidden = (items: IReqoreTabsListItem[], activeTab?: string | number) =>
-  items.find((item) => item.id === activeTab);
+  items.find((item) => item?.id === activeTab);
 
 const getMoreLabel = (items: IReqoreTabsListItem[], activeTab?: string | number) => {
   if (isTabHidden(items, activeTab)) {
@@ -91,42 +92,48 @@ const getMoreLabel = (items: IReqoreTabsListItem[], activeTab?: string | number)
 
 const getLabel = (
   item: IReqoreTabsListItem | IReqoreTabsListItem[],
-  activeTab?: string | number
+  activeTab?: string | number,
+  tabsSize: TSizes = 'normal'
 ) => {
-  if (!isArray(item)) {
-    return item.label?.length || 0;
+  if (!item) {
+    return 0;
   }
 
-  return getMoreLabel(item, activeTab)?.length || 0;
+  const label: string = isArray(item) ? getMoreLabel(item, activeTab) : item.label;
+  const icon: number = isArray(item) || item.icon ? TEXT_FROM_SIZE[tabsSize] : 0;
+
+  return calculateStringSizeInPixels(label, TEXT_FROM_SIZE[tabsSize]) + icon;
 };
 
 export const getTabsLength = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
   type: 'width' | 'height' = 'width',
-  activeTab?: string | number
+  activeTab?: string | number,
+  tabsSize?: TSizes
 ): number =>
   items.reduce((len, item) => {
     if (type === 'height') {
-      const rows = getLabel(item, activeTab) / 4 || 1;
+      const rows = getLabel(item, activeTab, tabsSize) / 4 || 1;
 
       return len + rows * 15 + 10;
     }
 
-    return len + 27 + getLabel(item, activeTab) * 10 + 45;
+    return len + 26 + getLabel(item, activeTab, tabsSize);
   }, 0);
 
 const getTransformedItems = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
   size: number,
   type: 'width' | 'height' = 'width',
-  activeTab?: string | number
+  activeTab?: string | number,
+  tabsSize?: TSizes
 ): (IReqoreTabsListItem | IReqoreTabsListItem[])[] => {
   if (!size) {
     return items;
   }
   let newItems = [...items];
 
-  while (getTabsLength(newItems, type, activeTab) > size && newItems.length > 1) {
+  while (getTabsLength(newItems, type, activeTab, tabsSize) > size && newItems.length > 1) {
     if (isArray(newItems[newItems.length - 1])) {
       (newItems[newItems.length - 1] as IReqoreTabsListItem[]).unshift(
         newItems[newItems.length - 2] as IReqoreTabsListItem
@@ -142,7 +149,7 @@ const getTransformedItems = (
     newItems = newItems.filter((i) => i);
   }
 
-  return newItems;
+  return newItems.filter((i) => i);
 };
 
 const ReqoreTabsList = ({
@@ -166,7 +173,8 @@ const ReqoreTabsList = ({
     tabs,
     vertical ? height : _testWidth || width,
     vertical ? 'height' : 'width',
-    activeTab
+    activeTab,
+    size
   );
 
   return (

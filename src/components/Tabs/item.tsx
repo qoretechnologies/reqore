@@ -25,6 +25,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
   ${({ active, disabled, vertical, activeColor, size }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
+      flex-shrink: 0;
       overflow: hidden;
       position: relative;
       align-items: center;

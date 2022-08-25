@@ -12,6 +12,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
+import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -95,22 +96,47 @@ const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
   `}
 `;
 
-const getBreadcrumbsLength = (items: (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[]): number =>
+const StyledBreadcrumbsTabsWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+`;
+
+const itemPadding = 27;
+const iconSize = 11;
+const arrowSize = 50;
+
+const getBreadcrumbsLength = (
+  items: (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[],
+  size: TSizes
+): number =>
   items.reduce((len, item) => {
     if (isArray(item)) {
       return len + 70;
     }
 
     if (item.withTabs) {
-      return len + getTabsLength(item.withTabs.tabs, 'width', item.withTabs.activeTab);
+      return (
+        len +
+        itemPadding +
+        arrowSize +
+        getTabsLength(item.withTabs.tabs, 'width', item.withTabs.activeTab, size)
+      );
     }
 
-    return len + 27 + (item.label?.length || 0) * 10 + 35;
+    return (
+      len +
+      itemPadding +
+      iconSize +
+      arrowSize +
+      calculateStringSizeInPixels(item.label || '', TEXT_FROM_SIZE[size])
+    );
   }, 0);
 
 const getTransformedItems = (
   items: (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[],
-  width: number
+  width: number,
+  size: TSizes
 ): (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[] => {
   if (!width) {
     return items;
@@ -119,7 +145,9 @@ const getTransformedItems = (
   let stop = false;
   let newItems = [...items];
 
-  while (getBreadcrumbsLength(newItems) > width && !stop) {
+  console.log(getBreadcrumbsLength(newItems, size), width);
+
+  while (getBreadcrumbsLength(newItems, size) > width && !stop) {
     if (isArray(newItems[1])) {
       newItems[1].push(newItems[2] as IReqoreBreadcrumbItem);
       newItems[2] = undefined!;
@@ -150,7 +178,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   const [ref, { width }] = useMeasure();
   const theme = useReqoreTheme('breadcrumbs', customTheme);
   const transformedItems = useMemo(
-    () => getTransformedItems(items, _testWidth || width),
+    () => getTransformedItems(items, _testWidth || width, size),
     [items, width, _testWidth]
   );
 
@@ -167,6 +195,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           <ReqorePopover
             key={index}
             component={ReqoreBreadcrumbsItem}
+            isReqoreComponent
             componentProps={
               {
                 icon: 'MoreFill',
@@ -199,7 +228,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
 
     if (item.withTabs) {
       return (
-        <React.Fragment key={index}>
+        <StyledBreadcrumbsTabsWrapper key={index}>
           <ReqoreIcon
             icon='ArrowRightSLine'
             size={`${TEXT_FROM_SIZE[size]}px`}
@@ -215,7 +244,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             flat={flat}
             size={size}
           />
-        </React.Fragment>
+        </StyledBreadcrumbsTabsWrapper>
       );
     }
 
