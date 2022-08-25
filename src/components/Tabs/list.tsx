@@ -6,6 +6,7 @@ import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
 import { TABS_SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -178,120 +179,122 @@ const ReqoreTabsList = ({
   );
 
   return (
-    <StyledReqoreTabsList
-      {...rest}
-      size={size}
-      fill={fill}
-      vertical={vertical}
-      className={`${rest.className || ''} reqore-tabs-list`}
-      ref={ref}
-      flat={flat}
-      theme={theme}
-    >
-      {transformedItems.map((item: IReqoreTabsListItem | IReqoreTabsListItem[], index: number) =>
-        isArray(item) ? (
-          <React.Fragment key={index}>
-            <ReqorePopover
-              key={index}
-              component={ReqoreTabsListItem}
-              componentProps={
-                {
-                  icon: 'ArrowDownSLine',
-                  id: 'showMore',
-                  label: getMoreLabel(item, activeTab),
-                  active: !!isTabHidden(item, activeTab),
-                  activeIntent: activeTabIntent,
-                  customTheme,
-                  vertical,
-                  flat,
-                  size,
-                } as IReqoreTabListItemProps
-              }
-              closeOnOutsideClick
-              handler='hoverStay'
-              content={
-                <ReqoreMenu>
-                  {item.map(
-                    ({
-                      icon,
-                      label,
-                      as,
-                      tooltip,
-                      props,
-                      disabled,
-                      id,
-                      onCloseClick,
-                      intent,
-                      activeIntent,
-                      closeIcon,
-                    }) => (
-                      <ReqoreMenuItem
-                        {...({
-                          ...props,
-                          icon,
-                          as,
-                          intent: activeTab === id ? activeIntent || intent : intent,
-                          disabled,
-                          rightIcon: onCloseClick ? closeIcon || 'CloseLine' : undefined,
-                          onRightIconClick: onCloseClick
-                            ? () => {
-                                onCloseClick(id);
-                              }
-                            : undefined,
-                          selected: activeTab === id,
-                          onClick: (_id, event: React.MouseEvent<any>) => {
-                            if (!disabled) {
-                              onTabChange?.(id);
-
-                              if (props?.onClick) {
-                                props.onClick(event);
-                              }
-                            }
-                          },
-                        } as IReqoreMenuItemProps)}
-                        tooltip={tooltip}
-                        key={index + label}
-                      >
-                        {label}
-                      </ReqoreMenuItem>
-                    )
-                  )}
-                </ReqoreMenu>
-              }
-            />
-          </React.Fragment>
-        ) : (
-          <React.Fragment key={index}>
-            <ReqoreTabsListItem
-              {...item}
-              size={size}
-              activeIntent={activeTabIntent}
-              customTheme={customTheme}
-              wrapTabNames={wrapTabNames}
-              key={index}
-              vertical={vertical}
-              active={activeTab === item.id}
-              onClick={(event: React.MouseEvent<any>) => {
-                if (!item.disabled) {
-                  onTabChange?.(item.id);
-
-                  if (item.props?.onClick) {
-                    item.props.onClick(event);
-                  }
+    <ReqoreThemeProvider theme={theme}>
+      <StyledReqoreTabsList
+        {...rest}
+        size={size}
+        fill={fill}
+        vertical={vertical}
+        className={`${rest.className || ''} reqore-tabs-list`}
+        ref={ref}
+        flat={flat}
+        theme={theme}
+      >
+        {transformedItems.map((item: IReqoreTabsListItem | IReqoreTabsListItem[], index: number) =>
+          isArray(item) ? (
+            <React.Fragment key={index}>
+              <ReqorePopover
+                key={index}
+                component={ReqoreTabsListItem}
+                componentProps={
+                  {
+                    icon: 'ArrowDownSLine',
+                    id: 'showMore',
+                    label: getMoreLabel(item, activeTab),
+                    active: !!isTabHidden(item, activeTab),
+                    activeIntent: activeTabIntent,
+                    customTheme,
+                    vertical,
+                    flat,
+                    size,
+                  } as IReqoreTabListItemProps
                 }
-              }}
-              onCloseClick={
-                item.onCloseClick
-                  ? () => {
-                      item.onCloseClick?.(item.id);
+                closeOnOutsideClick
+                handler='hoverStay'
+                content={
+                  <ReqoreMenu>
+                    {item.map(
+                      ({
+                        icon,
+                        label,
+                        as,
+                        tooltip,
+                        props,
+                        disabled,
+                        id,
+                        onCloseClick,
+                        intent,
+                        activeIntent,
+                        closeIcon,
+                      }) => (
+                        <ReqoreMenuItem
+                          {...({
+                            ...props,
+                            icon,
+                            as,
+                            intent: activeTab === id ? activeIntent || intent : intent,
+                            disabled,
+                            rightIcon: onCloseClick ? closeIcon || 'CloseLine' : undefined,
+                            onRightIconClick: onCloseClick
+                              ? () => {
+                                  onCloseClick(id);
+                                }
+                              : undefined,
+                            selected: activeTab === id,
+                            onClick: (_id, event: React.MouseEvent<any>) => {
+                              if (!disabled) {
+                                onTabChange?.(id);
+
+                                if (props?.onClick) {
+                                  props.onClick(event);
+                                }
+                              }
+                            },
+                          } as IReqoreMenuItemProps)}
+                          tooltip={tooltip}
+                          key={index + label}
+                        >
+                          {label}
+                        </ReqoreMenuItem>
+                      )
+                    )}
+                  </ReqoreMenu>
+                }
+              />
+            </React.Fragment>
+          ) : (
+            <React.Fragment key={index}>
+              <ReqoreTabsListItem
+                {...item}
+                size={size}
+                activeIntent={activeTabIntent}
+                customTheme={customTheme}
+                wrapTabNames={wrapTabNames}
+                key={index}
+                vertical={vertical}
+                active={activeTab === item.id}
+                onClick={(event: React.MouseEvent<any>) => {
+                  if (!item.disabled) {
+                    onTabChange?.(item.id);
+
+                    if (item.props?.onClick) {
+                      item.props.onClick(event);
                     }
-                  : undefined
-              }
-            />
-          </React.Fragment>
-        )
-      )}
-    </StyledReqoreTabsList>
+                  }
+                }}
+                onCloseClick={
+                  item.onCloseClick
+                    ? () => {
+                        item.onCloseClick?.(item.id);
+                      }
+                    : undefined
+                }
+              />
+            </React.Fragment>
+          )
+        )}
+      </StyledReqoreTabsList>
+    </ReqoreThemeProvider>
   );
 };
 

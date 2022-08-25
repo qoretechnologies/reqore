@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import { ReqoreButton, ReqorePanel, ReqoreTabs, ReqoreTabsContent } from '../../index';
-import { argManager, FlatArg } from '../utils/args';
+import { argManager, FlatArg, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreDrawerProps>();
 
@@ -67,6 +67,7 @@ export default {
       name: 'Has Backdrop',
       type: 'boolean',
     }),
+    ...IntentArg,
   },
 } as Meta;
 
@@ -114,7 +115,7 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
         attacks inhabit pursuit our but. Lasted hunted enough an up seeing in lively letter. Had
         judgment out opinions property the supplied.
       </ReqorePanel>
-      <ReqoreDrawer {...args}>
+      <ReqoreDrawer {...args} label='This is a test'>
         <ReqoreTabs
           flat
           tabs={[

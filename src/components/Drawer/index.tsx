@@ -7,17 +7,17 @@ import styled, { css } from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
+import { getMainBackgroundColor } from '../../helpers/colors';
 import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
+import { IReqorePanelProps, ReqorePanel } from '../Panel';
 
-export interface IReqoreDrawerProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreDrawerProps extends IReqorePanelProps {
   children?: any;
   isOpen?: boolean;
   isHidden?: boolean;
-  customTheme?: IReqoreTheme;
   position?: 'top' | 'bottom' | 'left' | 'right';
   hidable?: boolean;
   resizable?: boolean;
@@ -28,9 +28,7 @@ export interface IReqoreDrawerProps extends React.HTMLAttributes<HTMLDivElement>
   maxSize?: string;
   minSize?: string;
   opacity?: number;
-  flat?: boolean;
   floating?: boolean;
-  padded?: boolean;
   blur?: number;
 }
 
@@ -41,60 +39,6 @@ export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
   w?: number | string;
   h?: number | string;
 }
-
-export const StyledDrawer = styled.div<IReqoreDrawerStyle>`
-  background-color: ${({ theme, opacity = 1 }) => rgba(getMainBackgroundColor(theme), opacity)};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  border-radius: ${({ floating }) => (floating ? 10 : 0)}px;
-  padding: ${({ padded }) => (padded ? 10 : 0)}px;
-  box-shadow: ${({ floating }) =>
-    floating ? `0px 0px 30px 0px ${rgba('#000000', 0.4)}` : undefined};
-  overflow: hidden;
-  display: flex;
-  flex-flow: column;
-  transition: all 0.2s ease-in-out;
-
-  // Only apply the blur filter if the modal has no backdrop & transparent background.
-  backdrop-filter: ${({ blur, opacity, hasBackdrop }) =>
-    blur && !hasBackdrop && opacity < 1 ? `blur(${blur}px)` : undefined};
-
-  ${({ theme, flat, floating }) =>
-    !flat && floating
-      ? css`
-          border: 1px solid ${changeLightness(getMainBackgroundColor(theme), 0.2)};
-        `
-      : undefined}
-`;
-
-export const StyledVerticalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
-  height: 100%;
-  width: 100%;
-
-  ${({ position, theme, flat, floating }) =>
-    !flat && !floating
-      ? css`
-    border-${position === 'left' ? 'right' : 'left'}: 1px solid ${changeLightness(
-          getMainBackgroundColor(theme),
-          0.2
-        )};
-  `
-      : undefined}
-`;
-
-export const StyledHorizontalDrawer = styled(StyledDrawer)<IReqoreDrawerStyle>`
-  height: 100%;
-  width: 100%;
-
-  ${({ position, theme, flat, floating }) =>
-    !flat && !floating
-      ? css`
-    border-${position === 'top' ? 'bottom' : 'top'}: 1px solid ${changeLightness(
-          getMainBackgroundColor(theme),
-          0.2
-        )};
-  `
-      : undefined}
-`;
 
 export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
   position: absolute;
@@ -193,9 +137,10 @@ export const ReqoreDrawer = ({
   flat,
   floating,
   blur,
+  intent,
   ...rest
 }: IReqoreDrawerProps) => {
-  const theme = useReqoreTheme('main', customTheme);
+  const theme = useReqoreTheme('main', customTheme, intent);
 
   const layout = useMemo(
     () => (position === 'top' || position === 'bottom' ? 'horizontal' : 'vertical'),
@@ -208,12 +153,6 @@ export const ReqoreDrawer = ({
     width: layout === 'horizontal' ? 'auto' : size || '300px',
     height: layout === 'vertical' ? 'auto' : size || '300px',
   });
-
-  const Wrapper = useMemo(
-    () =>
-      position === 'top' || position === 'bottom' ? StyledHorizontalDrawer : StyledVerticalDrawer,
-    [position]
-  );
 
   useEffect(() => {
     setSize({
@@ -339,18 +278,20 @@ export const ReqoreDrawer = ({
               </StyledCloseWrapper>
             ) : null}
             {!_isHidden && (
-              <Wrapper
+              <ReqorePanel
                 {...rest}
-                flat={flat}
+                customTheme={customTheme}
+                intent={intent}
+                rounded={floating}
+                flat
                 className={`${className || ''} reqore-drawer`}
-                width={_size.width}
-                height={_size.height}
-                position={position}
-                floating={floating}
-                blur={blur}
+                style={{
+                  width: _size.width,
+                  height: _size.height,
+                }}
               >
                 {children}
-              </Wrapper>
+              </ReqorePanel>
             )}
           </Resizable>
         </ReqoreThemeProvider>
