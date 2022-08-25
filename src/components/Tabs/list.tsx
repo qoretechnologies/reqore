@@ -118,7 +118,7 @@ export const getTabsLength = (
       return len + rows * 15 + 10;
     }
 
-    return len + 26 + getLabel(item, activeTab, tabsSize);
+    return len + 36 + getLabel(item, activeTab, tabsSize);
   }, 0);
 
 const getTransformedItems = (
