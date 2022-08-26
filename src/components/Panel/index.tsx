@@ -6,7 +6,12 @@ import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
+import {
+  changeDarkness,
+  changeLightness,
+  getMainBackgroundColor,
+  getReadableColor,
+} from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
@@ -56,10 +61,12 @@ export interface IStyledPanel extends IReqorePanelProps {
 
 export const StyledPanel = styled.div<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(getMainBackgroundColor(theme), opacity)};
+    changeDarkness(rgba(getMainBackgroundColor(theme), opacity), 0.03)};
   border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
-  border: ${({ theme, flat }) =>
-    flat ? undefined : `1px solid ${changeLightness(theme.main, 0.2)}`};
+  border: ${({ theme, flat, opacity = 1 }) =>
+    flat
+      ? undefined
+      : `1px solid ${changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.2)}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
   display: flex;
@@ -106,6 +113,11 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   padding-left: 5px;
+  border-bottom: 0;
+  border-top: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
+    !flat
+      ? `1px solid ${changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.2)}`
+      : null};
 `;
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
@@ -203,6 +215,7 @@ export const ReqorePanel = forwardRef(
       ) : (
         <ReqoreButton
           {...rest}
+          customTheme={theme}
           intent={intent}
           onClick={
             rest.onClick
@@ -250,6 +263,7 @@ export const ReqorePanel = forwardRef(
                 {actions.map(renderActions)}
                 {collapsible && (
                   <ReqoreButton
+                    customTheme={theme}
                     icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
                     onClick={handleCollapseClick}
                     tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
@@ -257,6 +271,7 @@ export const ReqorePanel = forwardRef(
                 )}
                 {onClose && (
                   <ReqoreButton
+                    customTheme={theme}
                     icon='CloseLine'
                     onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.stopPropagation();
@@ -279,7 +294,7 @@ export const ReqorePanel = forwardRef(
           ) : null}
           {hasBottomActions ? (
             <StyledPanelBottomActions
-              flat
+              flat={flat}
               className='reqore-panel-bottom-actions'
               theme={theme}
               opacity={rest.opacity}
