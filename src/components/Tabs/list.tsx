@@ -165,10 +165,11 @@ const ReqoreTabsList = ({
   wrapTabNames,
   flat,
   size,
+  intent,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width, height }] = useMeasure();
-  const theme = useReqoreTheme('main', customTheme);
+  const theme = useReqoreTheme('main', customTheme, intent);
 
   const transformedItems = getTransformedItems(
     tabs,
@@ -203,7 +204,7 @@ const ReqoreTabsList = ({
                     label: getMoreLabel(item, activeTab),
                     active: !!isTabHidden(item, activeTab),
                     activeIntent: activeTabIntent,
-                    customTheme,
+                    customTheme: theme,
                     vertical,
                     flat,
                     size,
@@ -212,7 +213,7 @@ const ReqoreTabsList = ({
                 closeOnOutsideClick
                 handler='hoverStay'
                 content={
-                  <ReqoreMenu>
+                  <ReqoreMenu customTheme={theme}>
                     {item.map(
                       ({
                         icon,
@@ -268,7 +269,7 @@ const ReqoreTabsList = ({
                 {...item}
                 size={size}
                 activeIntent={activeTabIntent}
-                customTheme={customTheme}
+                customTheme={theme}
                 wrapTabNames={wrapTabNames}
                 key={index}
                 vertical={vertical}

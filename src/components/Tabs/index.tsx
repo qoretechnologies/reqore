@@ -35,7 +35,7 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: TSizes;
   width?: string;
   customTheme?: IReqoreCustomTheme;
-
+  intent?: IReqoreIntent;
   // Internal prop, ignore!
   _testWidth?: number;
 }
@@ -64,6 +64,7 @@ const ReqoreTabs = ({
   width,
   wrapTabNames,
   customTheme,
+  intent,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
@@ -97,6 +98,7 @@ const ReqoreTabs = ({
         wrapTabNames={wrapTabNames}
         activeTabIntent={activeTabIntent}
         customTheme={customTheme}
+        intent={intent}
         onTabChange={(tabId: string | number) => {
           setActiveTab(tabId);
 
