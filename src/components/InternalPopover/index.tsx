@@ -73,6 +73,7 @@ const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   padding: ${({ isString }) => (isString ? '8px' : '0px')};
   z-index: 20;
   position: relative;
+  overflow: hidden;
   background-color: ${({ theme }) => theme.popover?.main || theme.main};
   border-radius: 3.5px;
 
