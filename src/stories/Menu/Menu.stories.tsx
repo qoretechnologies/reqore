@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreMenuProps } from '../../components/Menu';
 import { IReqoreMenuItemProps } from '../../components/Menu/item';
 import { ReqoreMenu, ReqoreMenuDivider, ReqoreMenuItem, ReqorePopover } from '../../index';
-import { argManager } from '../utils/args';
+import { argManager, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMenuProps>();
 
@@ -27,6 +27,7 @@ export default {
         type: 'select',
       },
     }),
+    ...IntentArg,
   },
 } as Meta<IReqoreMenuProps>;
 

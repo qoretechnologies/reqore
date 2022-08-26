@@ -119,6 +119,7 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
       <ReqoreDrawer {...args} label='This is a test' onClose={noop}>
         <ReqoreTabs
           flat
+          intent={args.intent}
           tabs={[
             { label: 'Tab 1 with some long label', id: 'tab1' },
             { label: 'Tab 2 another long label', id: 'tab2' },
@@ -130,7 +131,7 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
               allowing players to catch up on Renown, the system of gaining favor and unlocking
               rewards, Campaign chapters, and soulbinds within your Covenant.
             </ReqorePanel>
-            <ReqoreButton>Hello</ReqoreButton>
+            <ReqoreButton>Hello I am a super long button hehe chi chi</ReqoreButton>
           </ReqoreTabsContent>
           <ReqoreTabsContent tabId='tab2'>Tab 2 here</ReqoreTabsContent>
         </ReqoreTabs>
