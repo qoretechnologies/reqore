@@ -116,7 +116,7 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
         attacks inhabit pursuit our but. Lasted hunted enough an up seeing in lively letter. Had
         judgment out opinions property the supplied.
       </ReqorePanel>
-      <ReqoreDrawer {...args} label='This is a test' onClose={noop}>
+      <ReqoreDrawer {...args} label='This is a test' icon='EmphasisCn' onClose={noop}>
         <ReqoreTabs
           flat
           intent={args.intent}

@@ -128,12 +128,18 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   overflow: auto;
 `;
 
-export const StyledPanelTitleLabel = styled.span``;
+export const StyledPanelTitleLabel = styled.span`
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+`;
 
 export const StyledPanelTitleHeader = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
+  padding-right: 5px;
 
   ${StyledPanelTitleLabel} {
     font-weight: 600;
