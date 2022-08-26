@@ -2,7 +2,6 @@ import { size } from 'lodash';
 import React, { useRef, useState } from 'react';
 import { useMedia } from 'react-use';
 import shortid from 'shortid';
-import styled from 'styled-components';
 import { ReqoreModal } from '..';
 import ReqoreNotificationsWrapper, {
   IReqoreNotificationsPosition,
@@ -48,14 +47,6 @@ export interface IReqoreConfirmationModal {
   isOpen?: boolean;
   intent?: IReqoreIntent;
 }
-
-const StyledConfirmContent = styled.div`
-  display: flex;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 150px;
-`;
 
 const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);

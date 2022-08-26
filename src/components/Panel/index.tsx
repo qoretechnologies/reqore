@@ -1,11 +1,12 @@
 import { size } from 'lodash';
+import { rgba } from 'polished';
 import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
@@ -45,6 +46,8 @@ export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> 
   fill?: boolean;
   padded?: boolean;
   contentStyle?: React.CSSProperties;
+  opacity?: number;
+  blur?: number;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -52,7 +55,8 @@ export interface IStyledPanel extends IReqorePanelProps {
 }
 
 export const StyledPanel = styled.div<IStyledPanel>`
-  background-color: ${({ theme }: IStyledPanel) => theme.main};
+  background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
+    rgba(getMainBackgroundColor(theme), opacity)};
   border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
   border: ${({ theme, flat }) =>
     flat ? undefined : `1px solid ${changeLightness(theme.main, 0.2)}`};
@@ -62,6 +66,7 @@ export const StyledPanel = styled.div<IStyledPanel>`
   flex-flow: column;
   position: relative;
   z-index: 1;
+  backdrop-filter: ${({ blur, opacity }) => (blur && opacity < 1 ? `blur(${blur}px)` : undefined)};
 
   ${({ fill, isCollapsed }) =>
     !isCollapsed && fill
@@ -74,13 +79,16 @@ export const StyledPanel = styled.div<IStyledPanel>`
 
 export const StyledPanelTitle = styled.div<IStyledPanel>`
   display: flex;
-  background-color: ${({ theme }: IStyledPanel) => changeLightness(theme.main, 0.07)};
+  background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
+    changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.07)};
   justify-content: space-between;
   height: 40px;
   align-items: center;
   padding: 0 5px 0 15px;
-  border-bottom: ${({ theme, isCollapsed, flat }) =>
-    !isCollapsed && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : null};
+  border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
+    !isCollapsed && !flat
+      ? `1px solid ${changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.2)}`
+      : null};
   transition: background-color 0.2s ease-out;
   overflow: hidden;
   flex: 0 0 auto;
@@ -90,7 +98,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${({ theme }: IStyledPanel) => changeLightness(theme.main, 0.1)};
+        background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
+          changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.1)};
       }
     `}
 `;
@@ -226,6 +235,8 @@ export const ReqorePanel = forwardRef(
               collapsible={collapsible}
               className='reqore-panel-title'
               onClick={handleCollapseClick}
+              theme={theme}
+              opacity={rest.opacity}
             >
               <StyledPanelTitleHeader>
                 {icon && <ReqoreIcon icon={icon} margin='right' />}
@@ -267,7 +278,12 @@ export const ReqorePanel = forwardRef(
             </StyledPanelContent>
           ) : null}
           {hasBottomActions ? (
-            <StyledPanelBottomActions flat className='reqore-panel-bottom-actions'>
+            <StyledPanelBottomActions
+              flat
+              className='reqore-panel-bottom-actions'
+              theme={theme}
+              opacity={rest.opacity}
+            >
               <ReqoreControlGroup minimal>
                 {leftBottomActions.map(renderActions)}
               </ReqoreControlGroup>

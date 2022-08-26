@@ -12,7 +12,7 @@ import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
-import { IReqorePanelProps, ReqorePanel } from '../Panel';
+import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../Panel';
 
 export interface IReqoreDrawerProps extends IReqorePanelProps {
   children?: any;
@@ -50,7 +50,7 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
           display: flex;
           right: 0;
           justify-content: flex-end;
-          margin-top: -25px;
+          margin-top: -35px;
           > * {
             margin-right: 5px;
           }
@@ -80,7 +80,7 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
           display: flex;
           flex-flow: column;
           top: 0;
-          margin-left: -30px;
+          margin-left: -35px;
           > * {
             margin-top: 5px;
           }
@@ -88,6 +88,8 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
     }
   }}
 `;
+
+export const StyledDrawerResizable = styled(animated.div)``;
 
 export const StyledBackdrop = styled(animated.div)<
   IReqoreDrawerStyle & { closable: boolean; zIndex?: number }
@@ -99,10 +101,17 @@ export const StyledBackdrop = styled(animated.div)<
   left: 0;
   backdrop-filter: ${({ blur }) => (blur ? `blur(${blur}px)` : undefined)};
   z-index: ${({ zIndex }) => zIndex};
-  background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.8)};
+  background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.3)};
   cursor: ${({ closable }) => (closable ? 'pointer' : 'initial')};
 `;
 
+/**
+ * It returns an icon name based on the position and whether the panel is hidden or not
+ * @param {'top' | 'bottom' | 'left' | 'right'} position - The position of the panel.
+ * @param {boolean} isHidden - boolean - This is a boolean value that determines whether the panel is
+ * hidden or not.
+ * @returns A function that takes two arguments, position and isHidden, and returns an IReqoreIconName.
+ */
 const getHideShowIcon = (
   position: 'top' | 'bottom' | 'left' | 'right',
   isHidden: boolean
@@ -137,6 +146,7 @@ export const ReqoreDrawer = ({
   flat,
   floating,
   blur,
+  opacity,
   intent,
   ...rest
 }: IReqoreDrawerProps) => {
@@ -169,6 +179,33 @@ export const ReqoreDrawer = ({
   });
 
   const zIndex = useLatestZIndex();
+  const wrapperZIndex = useLatestZIndex();
+  const actions: IReqorePanelAction[] = useMemo(() => {
+    const actions: IReqorePanelAction[] = [];
+
+    /* Adding a hide/show button to the drawer. */
+    if (hidable) {
+      actions.push({
+        icon: getHideShowIcon(position, _isHidden),
+        onClick: () => {
+          setIsHidden(!_isHidden);
+          if (onHideToggle) {
+            onHideToggle(_isHidden);
+          }
+        },
+      });
+    }
+
+    /* Adding a close button to the drawer. */
+    if (onClose) {
+      actions.push({
+        icon: 'CloseLine',
+        onClick: onClose,
+      });
+    }
+
+    return actions;
+  }, [hidable, position, onClose]);
 
   return createPortal(
     transitions((styles, item) =>
@@ -192,10 +229,10 @@ export const ReqoreDrawer = ({
             minHeight={layout === 'horizontal' ? (_isHidden ? 0 : minSize) : undefined}
             maxWidth={layout === 'vertical' ? maxSize : undefined}
             minWidth={layout === 'vertical' ? (_isHidden ? 0 : minSize) : undefined}
-            as={animated.div}
+            as={StyledDrawerResizable}
             style={
               {
-                zIndex,
+                zIndex: wrapperZIndex,
                 display: 'flex',
                 position: 'fixed',
                 overflow: hidable ? undefined : 'hidden',
@@ -222,6 +259,9 @@ export const ReqoreDrawer = ({
                 ...styles,
               } as any
             }
+            handleWrapperStyle={{
+              zIndex: wrapperZIndex + 1,
+            }}
             size={{
               width: layout === 'vertical' ? (_isHidden ? 0 : _size.width) : 'auto',
               height: layout === 'horizontal' ? (_isHidden ? 0 : _size.height) : 'auto',
@@ -247,26 +287,17 @@ export const ReqoreDrawer = ({
               topRight: false,
             }}
           >
-            {onClose || hidable ? (
+            {_isHidden && hidable ? (
               <StyledCloseWrapper
                 className='reqore-drawer-controls'
                 position={position}
                 w={layout === 'vertical' && _isHidden ? 0 : _size.width}
                 h={layout === 'horizontal' && _isHidden ? 0 : _size.height}
               >
-                {onClose && (
-                  <ReqoreButton
-                    size='small'
-                    flat={flat}
-                    icon='CloseLine'
-                    onClick={() => onClose && onClose()}
-                    className='reqore-drawer-control reqore-drawer-close'
-                  />
-                )}
                 {hidable && (
                   <ReqoreButton
-                    size='small'
-                    flat={flat}
+                    flat
+                    customTheme={theme}
                     className='reqore-drawer-control reqore-drawer-hide'
                     icon={getHideShowIcon(position, _isHidden)}
                     onClick={() => {
@@ -280,10 +311,13 @@ export const ReqoreDrawer = ({
             {!_isHidden && (
               <ReqorePanel
                 {...rest}
+                opacity={opacity}
+                blur={hasBackdrop ? 0 : blur}
+                actions={actions}
                 customTheme={customTheme}
                 intent={intent}
                 rounded={floating}
-                flat
+                flat={flat}
                 className={`${className || ''} reqore-drawer`}
                 style={{
                   width: _size.width,

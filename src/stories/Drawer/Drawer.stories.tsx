@@ -1,4 +1,5 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
+import { noop } from 'lodash';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import { ReqoreButton, ReqorePanel, ReqoreTabs, ReqoreTabsContent } from '../../index';
 import { argManager, FlatArg, IntentArg } from '../utils/args';
@@ -115,7 +116,7 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
         attacks inhabit pursuit our but. Lasted hunted enough an up seeing in lively letter. Had
         judgment out opinions property the supplied.
       </ReqorePanel>
-      <ReqoreDrawer {...args} label='This is a test'>
+      <ReqoreDrawer {...args} label='This is a test' onClose={noop}>
         <ReqoreTabs
           flat
           tabs={[
