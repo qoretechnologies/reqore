@@ -248,9 +248,9 @@ const ReqoreButton = forwardRef(
         )}
         {children && (
           <StyledAnimatedTextWrapper>
-            <StyledActiveContent>{children}</StyledActiveContent>
-            <StyledInActiveContent>{children}</StyledInActiveContent>
-            <StyledInvisibleContent>{children}</StyledInvisibleContent>
+            <StyledActiveContent wrap>{children}</StyledActiveContent>
+            <StyledInActiveContent wrap>{children}</StyledInActiveContent>
+            <StyledInvisibleContent wrap>{children}</StyledInvisibleContent>
           </StyledAnimatedTextWrapper>
         )}
         {rightIcon && (
