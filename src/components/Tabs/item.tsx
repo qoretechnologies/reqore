@@ -29,9 +29,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       overflow: hidden;
       position: relative;
       align-items: center;
-      padding: ${vertical
-        ? `${TABS_PADDING_TO_PX[size!]}px`
-        : `0 ${TABS_PADDING_TO_PX[size!]}px 0 ${TABS_PADDING_TO_PX[size!]}px`};
+      padding: ${vertical ? `${TABS_PADDING_TO_PX[size!]}px` : `${TABS_PADDING_TO_PX[size!]}px`};
       ${active &&
       css`
         background-color: ${activeColor}60;

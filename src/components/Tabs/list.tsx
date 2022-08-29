@@ -7,7 +7,7 @@ import { ReqorePopover } from '../..';
 import { TABS_SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { changeLightness } from '../../helpers/colors';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreMenu from '../Menu';
@@ -44,37 +44,8 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
     }
 
     ${StyledPopover} {
-      min-height: ${TABS_SIZE_TO_PX[size]}px;
-
       > ${StyledTabListItem} {
         height: 100%;
-      }
-    }
-
-    > *,
-    ${StyledPopover} > * {
-      color: ${getReadableColor(theme, undefined, undefined, true)};
-      ${vertical ? 'width' : 'height'}: 100%;
-      ${
-        vertical
-          ? css`
-              height: ${fill ? '100%' : 'auto'};
-            `
-          : css`
-              white-space: nowrap;
-            `
-      };
-
-      justify-content: ${vertical ? 'flex-start' : 'space-evenly'};
-
-
-      ${
-        fill &&
-        !vertical &&
-        css`
-          width: 100%;
-          justify-content: center;
-        `
       }
     }
   `}

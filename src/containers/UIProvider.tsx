@@ -39,14 +39,14 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
     <>
       <ThemeContext.Provider value={{ ...rebuiltTheme }}>
         <ReqoreLayoutWrapper withSidebar={withSidebar}>
-          <ReqoreProvider position={notificationsPosition}>
-            <PopoverProvider uiScale={uiScale}>
-              {modalPortal ? children : null}
-              <StyledPortal id='reqore-portal' ref={setModalPortal} />
-            </PopoverProvider>
-          </ReqoreProvider>
+          {modalPortal ? (
+            <ReqoreProvider position={notificationsPosition}>
+              <PopoverProvider uiScale={uiScale}>{children}</PopoverProvider>
+            </ReqoreProvider>
+          ) : null}
         </ReqoreLayoutWrapper>
       </ThemeContext.Provider>
+      <StyledPortal id='reqore-portal' ref={setModalPortal} />
     </>
   );
 };

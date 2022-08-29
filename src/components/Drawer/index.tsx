@@ -14,11 +14,13 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../Panel';
 
+export type TPosition = 'top' | 'bottom' | 'left' | 'right';
+
 export interface IReqoreDrawerProps extends IReqorePanelProps {
   children?: any;
   isOpen?: boolean;
   isHidden?: boolean;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  position?: TPosition;
   hidable?: boolean;
   resizable?: boolean;
   onClose?: () => void;
@@ -30,6 +32,9 @@ export interface IReqoreDrawerProps extends IReqorePanelProps {
   opacity?: number;
   floating?: boolean;
   blur?: number;
+  _isModal?: boolean;
+  width?: number | string;
+  height?: number | string;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -128,6 +133,19 @@ const getHideShowIcon = (
   }
 };
 
+const getSpringConfig = (isModal?: boolean, position?: TPosition, floating?: boolean) =>
+  isModal
+    ? {
+        from: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)', filter: 'blur(10px)' },
+        enter: { opacity: 1, transform: 'scale(1) translate(-50%, -50%)', filter: 'blur(0px)' },
+        leave: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)', filter: 'blur(10px)' },
+      }
+    : {
+        from: { opacity: 0, [position]: '-80px' },
+        enter: { opacity: 1, [position]: floating ? '10px' : '0px' },
+        leave: { opacity: 0, [position]: '-80px' },
+      };
+
 export const ReqoreDrawer = ({
   children,
   isOpen,
@@ -148,33 +166,32 @@ export const ReqoreDrawer = ({
   blur,
   opacity,
   intent,
+  _isModal,
+  width,
+  height,
   ...rest
 }: IReqoreDrawerProps) => {
   const theme = useReqoreTheme('main', customTheme, intent);
-
   const layout = useMemo(
-    () => (position === 'top' || position === 'bottom' ? 'horizontal' : 'vertical'),
-    [position]
+    () =>
+      _isModal ? 'center' : position === 'top' || position === 'bottom' ? 'horizontal' : 'vertical',
+    [position, _isModal]
   );
-
   const [_isHidden, setIsHidden] = useState<boolean>(isHidden || false);
-
   const [_size, setSize] = useState<any>({
-    width: layout === 'horizontal' ? 'auto' : size || '300px',
-    height: layout === 'vertical' ? 'auto' : size || '300px',
+    width: width || (layout === 'horizontal' ? 'auto' : size || '300px'),
+    height: height || (layout === 'vertical' ? 'auto' : size || '300px'),
   });
 
   useEffect(() => {
     setSize({
-      width: layout === 'horizontal' ? 'auto' : size || '300px',
-      height: layout === 'vertical' ? 'auto' : size || '300px',
+      width: width || (layout === 'horizontal' ? 'auto' : size || '300px'),
+      height: height || (layout === 'vertical' ? 'auto' : size || '300px'),
     });
-  }, [position, size]);
+  }, [position, size, width, height]);
 
   const transitions = useTransition(isOpen, {
-    from: { opacity: 0, [position]: '-80px' },
-    enter: { opacity: 1, [position]: floating ? '10px' : '0px' },
-    leave: { opacity: 0, [position]: '-80px' },
+    ...getSpringConfig(_isModal, position, floating),
     config: SPRING_CONFIG,
   });
 
@@ -207,8 +224,28 @@ export const ReqoreDrawer = ({
     return actions;
   }, [hidable, position, onClose]);
 
+  const positions = useMemo(() => {
+    /* Centering the modal. */
+    if (_isModal) {
+      return {
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%)',
+      };
+    }
+
+    return {
+      top: position === 'top' || layout === 'vertical' ? (floating ? '10px' : 0) : undefined,
+      bottom: position === 'bottom' || layout === 'vertical' ? (floating ? '10px' : 0) : undefined,
+      right: position === 'right' || layout === 'horizontal' ? (floating ? '10px' : 0) : undefined,
+      left: position === 'left' || layout === 'horizontal' ? (floating ? '10px' : 0) : undefined,
+    };
+  }, [_isModal, position, layout, floating]);
+
+  console.log(width, height, _size);
+
   return createPortal(
-    transitions((styles, item) =>
+    transitions((styles: any, item) =>
       item ? (
         <ReqoreThemeProvider theme={theme}>
           {hasBackdrop && !_isHidden ? (
@@ -225,10 +262,28 @@ export const ReqoreDrawer = ({
           ) : null}
           <Resizable
             className='reqore-drawer-resizable'
-            maxHeight={layout === 'horizontal' ? maxSize : undefined}
-            minHeight={layout === 'horizontal' ? (_isHidden ? 0 : minSize) : undefined}
-            maxWidth={layout === 'vertical' ? maxSize : undefined}
-            minWidth={layout === 'vertical' ? (_isHidden ? 0 : minSize) : undefined}
+            maxHeight={
+              layout === 'horizontal' || layout === 'center' ? maxSize || '90vh' : undefined
+            }
+            minHeight={
+              layout === 'center'
+                ? '140px'
+                : layout === 'horizontal'
+                ? _isHidden
+                  ? 0
+                  : minSize || '140px'
+                : undefined
+            }
+            maxWidth={layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined}
+            minWidth={
+              layout === 'center'
+                ? '140px'
+                : layout === 'vertical'
+                ? _isHidden
+                  ? 0
+                  : minSize || '140px'
+                : undefined
+            }
             as={StyledDrawerResizable}
             style={
               {
@@ -236,26 +291,8 @@ export const ReqoreDrawer = ({
                 display: 'flex',
                 position: 'fixed',
                 overflow: hidable ? undefined : 'hidden',
-                top:
-                  position === 'top' || layout === 'vertical' ? (floating ? '10px' : 0) : undefined,
-                bottom:
-                  position === 'bottom' || layout === 'vertical'
-                    ? floating
-                      ? '10px'
-                      : 0
-                    : undefined,
-                right:
-                  position === 'right' || layout === 'horizontal'
-                    ? floating
-                      ? '10px'
-                      : 0
-                    : undefined,
-                left:
-                  position === 'left' || layout === 'horizontal'
-                    ? floating
-                      ? '10px'
-                      : 0
-                    : undefined,
+                transformOrigin: 'top left',
+                ...positions,
                 ...styles,
               } as any
             }
@@ -263,8 +300,20 @@ export const ReqoreDrawer = ({
               zIndex: wrapperZIndex + 1,
             }}
             size={{
-              width: layout === 'vertical' ? (_isHidden ? 0 : _size.width) : 'auto',
-              height: layout === 'horizontal' ? (_isHidden ? 0 : _size.height) : 'auto',
+              width: _isModal
+                ? _size.width
+                : layout === 'vertical'
+                ? _isHidden
+                  ? 0
+                  : _size.width
+                : 'auto',
+              height: _isModal
+                ? _size.height
+                : layout === 'horizontal'
+                ? _isHidden
+                  ? 0
+                  : _size.height
+                : 'auto',
             }}
             onResize={
               resizable
@@ -277,14 +326,14 @@ export const ReqoreDrawer = ({
                 : undefined
             }
             enable={{
-              top: resizable && position === 'bottom' ? true : false,
-              right: resizable && position === 'left' ? true : false,
-              left: resizable && position === 'right' ? true : false,
-              bottom: resizable && position === 'top' ? true : false,
-              bottomLeft: false,
-              bottomRight: false,
-              topLeft: false,
-              topRight: false,
+              top: (resizable && position === 'bottom') || _isModal ? true : false,
+              right: (resizable && position === 'left') || _isModal ? true : false,
+              left: (resizable && position === 'right') || _isModal ? true : false,
+              bottom: (resizable && position === 'top') || _isModal ? true : false,
+              bottomLeft: _isModal,
+              bottomRight: _isModal,
+              topLeft: _isModal,
+              topRight: _isModal,
             }}
           >
             {_isHidden && hidable ? (
@@ -316,12 +365,12 @@ export const ReqoreDrawer = ({
                 actions={actions}
                 customTheme={customTheme}
                 intent={intent}
-                rounded={floating}
+                rounded={floating || _isModal ? true : false}
                 flat={flat}
                 className={`${className || ''} reqore-drawer`}
                 style={{
-                  width: _size.width,
-                  height: _size.height,
+                  width: '100%',
+                  height: '100%',
                 }}
               >
                 {children}

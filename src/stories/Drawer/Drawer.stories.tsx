@@ -1,7 +1,14 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
+import { useContext } from 'react';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
-import { ReqoreButton, ReqorePanel, ReqoreTabs, ReqoreTabsContent } from '../../index';
+import {
+  ReqoreButton,
+  ReqoreContext,
+  ReqorePanel,
+  ReqoreTabs,
+  ReqoreTabsContent,
+} from '../../index';
 import { argManager, FlatArg, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreDrawerProps>();
@@ -73,6 +80,7 @@ export default {
 } as Meta;
 
 const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
+  const { confirmAction } = useContext(ReqoreContext);
   return (
     <>
       <ReqorePanel label='Just some background text' padded>
@@ -126,12 +134,30 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
           ]}
         >
           <ReqoreTabsContent tabId='tab1'>
-            <ReqorePanel fill title='Tab 1 contents' collapsible flat rounded padded>
+            <ReqorePanel
+              fill
+              title='Tab 1 contents'
+              collapsible
+              flat
+              rounded
+              padded
+              label='I AM A PANEL'
+            >
               I am a message a very long message - Shadowlands has mechanisms put in place for
               allowing players to catch up on Renown, the system of gaining favor and unlocking
               rewards, Campaign chapters, and soulbinds within your Covenant.
             </ReqorePanel>
-            <ReqoreButton>Hello I am a super long button hehe chi chi</ReqoreButton>
+            <br />
+            <ReqoreButton
+              onClick={() =>
+                confirmAction({
+                  description:
+                    'This is a simple test to establish the proper balance of your loud speakers',
+                })
+              }
+            >
+              Hello I am a super long button that opens a modal on click
+            </ReqoreButton>
           </ReqoreTabsContent>
           <ReqoreTabsContent tabId='tab2'>Tab 2 here</ReqoreTabsContent>
         </ReqoreTabs>
