@@ -1,15 +1,12 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreIconProps } from '../../components/Icon';
 import { ReqoreIcon } from '../../index';
-import { argManager } from '../utils/args';
-
-const { createArg } = argManager<IReqoreIconProps>();
 
 export default {
   title: 'Components/Icon',
 } as Meta;
 
-export const Icon: Story<IReqoreIconProps> = (args: IReqoreIconProps) => {
+export const Icon: Story<IReqoreIconProps> = () => {
   return (
     <>
       <ReqoreIcon icon='AccountCircleLine' size='12px' />

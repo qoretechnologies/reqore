@@ -2,9 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { ReqoreControlGroup } from '../../index';
-import { argManager, FlatArg, MinimalArg } from '../utils/args';
-
-const { createArg } = argManager<IReqoreInputProps>();
+import { FlatArg, MinimalArg } from '../utils/args';
 
 export default {
   title: 'Components/Input',

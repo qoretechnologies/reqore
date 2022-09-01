@@ -42,7 +42,7 @@ export const MenuStory: Story<IReqoreMenuProps> = (args) => {
         icon='ChatPollFill'
         onClick={() => alert('Item clicked')}
         rightIcon='FahrenheitFill'
-        onRightIconClick={(itemId) => alert('Icon clicked')}
+        onRightIconClick={() => alert('Icon clicked')}
         tooltip={{
           content: 'You sure?',
         }}
