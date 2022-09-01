@@ -9,7 +9,7 @@ const { createArg } = argManager<IReqoreControlGroupProps>();
 export default {
   title: 'Components/Control Group',
   argTypes: {
-    ...SizeArg(),
+    ...SizeArg,
     ...MinimalArg(),
     ...createArg('stack', {
       name: 'Stack',
@@ -19,16 +19,6 @@ export default {
     }),
   },
 } as Meta<IReqoreControlGroupProps>;
-
-console.log({
-  argTypes: {
-    ...SizeArg,
-    ...createArg('stack', {
-      name: 'Stack',
-    }),
-    ...MinimalArg,
-  },
-});
 
 const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProps) => {
   return (
