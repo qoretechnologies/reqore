@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import styled from "styled-components";
-import usePopover, { IPopoverOptions } from "../../hooks/usePopover";
-import { IReqoreComponent } from "../../types/global";
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import usePopover, { IPopoverOptions } from '../../hooks/usePopover';
+import { IReqoreComponent } from '../../types/global';
 
 export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
   component: any;
@@ -23,13 +23,13 @@ const Popover = ({
   children,
   isReqoreComponent,
   noWrapper,
-  wrapperTag = "span",
+  wrapperTag = 'span',
   wrapperStyle = {},
   _insidePopover,
   _popoverId,
   ...rest
 }: IReqorePopoverProps) => {
-  const [ref, setRef] = useState(null);
+  const [ref, setRef] = useState(undefined);
 
   usePopover({ targetElement: ref, ...rest });
 
@@ -51,15 +51,11 @@ const Popover = ({
     <StyledPopover
       // @ts-ignore
       as={wrapperTag}
-      className="reqore-popover-wrapper"
+      className='reqore-popover-wrapper'
       ref={setRef}
       style={wrapperStyle}
     >
-      <Component
-        {...componentProps}
-        _insidePopover={_insidePopover}
-        _popoverId={_popoverId}
-      >
+      <Component {...componentProps} _insidePopover={_insidePopover} _popoverId={_popoverId}>
         {children}
       </Component>
     </StyledPopover>

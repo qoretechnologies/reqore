@@ -8,7 +8,6 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import PopoverContext from '../../context/PopoverContext';
 import { fadeIn } from '../../helpers/animations';
 import { getReadableColor } from '../../helpers/colors';
-import useOutsideClick from '../../hooks/useOutsideClick';
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
@@ -71,9 +70,10 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
 const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   width: 100%;
   height: 100%;
-  padding: ${({ isString }) => (isString ? '8px' : '5px')};
+  padding: ${({ isString }) => (isString ? '8px' : '0px')};
   z-index: 20;
   position: relative;
+  overflow: hidden;
   background-color: ${({ theme }) => theme.popover?.main || theme.main};
   border-radius: 3.5px;
 
@@ -91,9 +91,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   placement,
   noArrow,
   useTargetWidth,
-  closeOnOutsideClick,
 }) => {
-  const { removePopover, uiScale } = useContext(PopoverContext);
+  const { removePopover, updatePopover, uiScale } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);
   const [arrowElement, setArrowElement] = useState(null);
   const popperRef: MutableRefObject<any> = useRef(null);
@@ -119,18 +118,19 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
     ],
   });
 
-  useOutsideClick(popperRef, () => {
-    if (closeOnOutsideClick) {
-      removePopover(id);
+  useEffect(() => {
+    if (popperRef.current) {
+      updatePopover?.(id, { popperRef });
     }
-  });
+  }, [popperRef]);
 
   useEffect(() => {
     if (attributes?.popper?.['data-popper-reference-hidden']) {
-      removePopover(id);
+      removePopover?.(id);
     }
   }, [attributes?.popper]);
 
+  /* Getting the x and y values from the transform property of the popper element. */
   const translateValues = styles.popper.transform
     ?.replace('translate3d(', '')
     .replace('translate(', '')

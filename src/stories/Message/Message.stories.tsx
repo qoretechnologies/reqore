@@ -1,148 +1,52 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import React, { useState } from 'react';
-import ReqoreMessage from '../../components/Message';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../../index';
+import ReqoreMessage, { IReqoreMessageProps } from '../../components/Message';
+import { argManager, FlatArg, IntentArg, SizeArg } from '../utils/args';
+
+const { createArg } = argManager<IReqoreMessageProps>();
 
 export default {
-  title: 'ReQore/Message',
-  args: {
-    theme: {
-      main: '#222222',
-    },
+  title: 'Components/Message',
+  argTypes: {
+    ...SizeArg,
+    ...FlatArg,
+    ...IntentArg,
+    ...createArg('title', {
+      defaultValue: 'This is a test',
+      name: 'Message Header',
+      type: 'string',
+      description: 'The title of the message',
+    }),
+    ...createArg('inverted', {
+      defaultValue: false,
+      name: 'Inverted',
+      description: 'Inverts the message colors',
+      type: 'boolean',
+    }),
   },
-} as Meta;
+} as Meta<IReqoreMessageProps>;
 
-const Template: Story<IReqoreUIProviderProps> = (args: IReqoreUIProviderProps) => {
-  const [check, setCheck] = useState(false);
-
+const Template: Story<IReqoreMessageProps> = (args: IReqoreMessageProps) => {
   return (
-    <ReqoreUIProvider {...args}>
-      <ReqoreLayoutContent>
-        <ReqoreContent style={{ padding: '20px' }}>
-          <h4>Default</h4>
-          <ReqoreMessage> I am a message </ReqoreMessage>
-          <br />
-          <ReqoreMessage inverted> Inverted message without intent </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='info'> I am a message </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='danger'> I am a message </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='muted'> Shhhhh </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='warning' title='Message with title'>
-            {' '}
-            I am a message a very long message - Shadowlands has mechanisms put in place for
-            allowing players to catch up on Renown, the system of gaining favor and unlocking
-            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
-            main characters who have started late, for alts, for players who have switched Covenants
-            and are starting over, and for players who have simply missed weekly quests for earning
-            Renown due to being away from the game.
-          </ReqoreMessage>
-          <br />
-          <h4>Small</h4>
-          <ReqoreMessage intent='info' size='small'>
-            {' '}
-            I am a message{' '}
-          </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='danger' size='small' flat>
-            {' '}
-            I am a message{' '}
-          </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='warning' title='Message with title' size='small' inverted>
-            {' '}
-            I am a message a very long message - Shadowlands has mechanisms put in place for
-            allowing players to catch up on Renown, the system of gaining favor and unlocking
-            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
-            main characters who have started late, for alts, for players who have switched Covenants
-            and are starting over, and for players who have simply missed weekly quests for earning
-            Renown due to being away from the game.
-          </ReqoreMessage>
-          <br />
-          <h4>Big</h4>
-          <ReqoreMessage intent='info' size='big'>
-            {' '}
-            I am a message{' '}
-          </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='danger' size='big' flat>
-            {' '}
-            I am a message{' '}
-          </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='warning' title='Message with title' size='big' inverted>
-            {' '}
-            I am a message a very long message - Shadowlands has mechanisms put in place for
-            allowing players to catch up on Renown, the system of gaining favor and unlocking
-            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
-            main characters who have started late, for alts, for players who have switched Covenants
-            and are starting over, and for players who have simply missed weekly quests for earning
-            Renown due to being away from the game.
-          </ReqoreMessage>
-          <br />
-          <h4>Flat</h4>
-          <ReqoreMessage intent='info' flat>
-            {' '}
-            I am a message{' '}
-          </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='danger' flat>
-            {' '}
-            I am a message{' '}
-          </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='warning' title='Message with title' flat>
-            {' '}
-            I am a message a very long message - Shadowlands has mechanisms put in place for
-            allowing players to catch up on Renown, the system of gaining favor and unlocking
-            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
-            main characters who have started late, for alts, for players who have switched Covenants
-            and are starting over, and for players who have simply missed weekly quests for earning
-            Renown due to being away from the game.
-          </ReqoreMessage>
-          <br />
-          <h4>Inverted</h4>
-          <ReqoreMessage intent='info' inverted>
-            {' '}
-            I am a message{' '}
-          </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='danger' inverted>
-            {' '}
-            I am a message{' '}
-          </ReqoreMessage>
-          <br />
-          <ReqoreMessage intent='warning' title='Message with title' flat inverted>
-            {' '}
-            I am a message a very long message - Shadowlands has mechanisms put in place for
-            allowing players to catch up on Renown, the system of gaining favor and unlocking
-            rewards, Campaign chapters, and soulbinds within your Covenant. This system works for
-            main characters who have started late, for alts, for players who have switched Covenants
-            and are starting over, and for players who have simply missed weekly quests for earning
-            Renown due to being away from the game.
-          </ReqoreMessage>
-          <br />
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
+    <>
+      <ReqoreMessage {...args}>
+        In to am attended desirous raptures declared diverted confined at. Collected instantly
+        remaining up certainly to necessary as. Over walk dull into son boy door went new. At or
+        happiness commanded daughters as. Is handsome an declared at received in extended vicinity
+        subjects. Into miss on he over been late pain an. Only week bore boy what fat case left use.
+        Match round scale now sex style far times. Your me past an much.
+      </ReqoreMessage>
+    </>
   );
 };
 
-export const Basic = Template.bind({});
-export const LightColor = Template.bind({});
-LightColor.args = {
-  theme: {
-    main: '#ffffff',
-  },
+export const Basic: Story<IReqoreMessageProps> = Template.bind({});
+export const Flat: Story<IReqoreMessageProps> = Template.bind({});
+Flat.args = {
+  flat: true,
+  intent: 'success',
 };
-
-export const CustomColor = Template.bind({});
-CustomColor.args = {
-  theme: {
-    main: '#0d0221',
-    color: '#2de2e6',
-  },
+export const Inverted: Story<IReqoreMessageProps> = Template.bind({});
+Inverted.args = {
+  inverted: true,
+  intent: 'danger',
 };

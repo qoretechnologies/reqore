@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreBreadcrumbItem } from '.';
 import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
-import usePopover from '../../hooks/usePopover';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { useTooltip } from '../../hooks/useTooltip';
+import { ActiveIconScale, InactiveIconScale } from '../../styles';
+import {
+  StyledActiveContent,
+  StyledAnimatedTextWrapper,
+  StyledInActiveContent,
+  StyledInvisibleContent,
+} from '../Button';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreBreadcrumbItemProps extends IReqoreBreadcrumbItem {
@@ -27,18 +35,22 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
 
     return css`
       display: flex;
+      flex-shrink: 0;
       height: 100%;
       justify-content: space-evenly;
       align-items: center;
-      padding: 0 ${PADDING_FROM_SIZE[size]}px;
+      padding: 0 ${PADDING_FROM_SIZE[size!]}px;
       transition: background-color 0.15s ease-out;
-      font-size: ${TEXT_FROM_SIZE[size]}px;
+      font-size: ${TEXT_FROM_SIZE[size!]}px;
       font-weight: 450;
-      border-bottom: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
 
       * {
         color: ${textColor};
       }
+
+      ${InactiveIconScale}
 
       ${active &&
       css`
@@ -49,6 +61,8 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
             ? getReadableColorFrom(theme.breadcrumbs.main, true)
             : getReadableColor(theme, undefined, undefined))};
         }
+
+        ${ActiveIconScale}
       `}
 
       ${interactive &&
@@ -60,6 +74,19 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
             ? getReadableColorFrom(theme.breadcrumbs.main)
             : getReadableColor(theme, undefined, undefined))};
           background-color: ${changeLightness(theme.breadcrumbs?.main || theme.main, 0.05)};
+          ${ActiveIconScale}
+
+          ${StyledActiveContent} {
+            transform: translateY(0px);
+            filter: blur(0);
+            opacity: 1;
+          }
+
+          ${StyledInActiveContent} {
+            transform: translateY(150%);
+            filter: blur(10px);
+            opacity: 0;
+          }
         }
       `}
 
@@ -81,42 +108,55 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
   }
 `;
 
-const ReqoreBreadcrumbsItem = ({
-  tooltip,
-  label,
-  props,
-  icon,
-  active,
-  as,
-  interactive,
-  customTheme,
-  size,
-}: IReqoreBreadcrumbItemProps) => {
-  const [ref, setRef] = useState(null);
-  const Element: any = as || 'span';
-  const theme = useReqoreTheme('breadcrumbs', customTheme);
+const ReqoreBreadcrumbsItem = forwardRef(
+  (
+    {
+      tooltip,
+      label,
+      props,
+      icon,
+      active,
+      as,
+      interactive,
+      customTheme,
+      size = 'normal',
+    }: IReqoreBreadcrumbItemProps,
+    ref
+  ) => {
+    const innerRef = useRef(null);
+    const combinedRef = useCombinedRefs(innerRef, ref);
+    const theme = useReqoreTheme('breadcrumbs', customTheme);
 
-  usePopover({ targetElement: ref, content: tooltip, show: !!tooltip });
+    console.log(combinedRef, tooltip);
 
-  return (
-    <StyledBreadcrumbItem
-      ref={setRef}
-      active={active}
-      interactive={interactive || !!props?.onClick}
-      className='reqore-breadcrumbs-item'
-      theme={theme}
-      size={size}
-    >
-      {icon && (
-        <ReqoreIcon
-          icon={icon}
-          size={`${TEXT_FROM_SIZE[size]}px`}
-          margin={label ? 'right' : undefined}
-        />
-      )}
-      {label && <Element {...props}>{label}</Element>}
-    </StyledBreadcrumbItem>
-  );
-};
+    useTooltip(combinedRef?.current, tooltip);
+
+    return (
+      <StyledBreadcrumbItem
+        ref={combinedRef}
+        active={active}
+        interactive={interactive || !!props?.onClick}
+        className='reqore-breadcrumbs-item'
+        theme={theme}
+        size={size}
+      >
+        {icon && (
+          <ReqoreIcon
+            icon={icon}
+            size={`${TEXT_FROM_SIZE[size]}px`}
+            margin={label ? 'right' : undefined}
+          />
+        )}
+        {label && (
+          <StyledAnimatedTextWrapper as={as || 'span'} {...props}>
+            <StyledActiveContent>{label}</StyledActiveContent>
+            <StyledInActiveContent>{label}</StyledInActiveContent>
+            <StyledInvisibleContent>{label}</StyledInvisibleContent>
+          </StyledAnimatedTextWrapper>
+        )}
+      </StyledBreadcrumbItem>
+    );
+  }
+);
 
 export default ReqoreBreadcrumbsItem;

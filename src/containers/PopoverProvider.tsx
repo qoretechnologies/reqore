@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { size } from 'lodash';
+import React, { MutableRefObject, useCallback, useEffect, useState } from 'react';
 import Popover from '../components/InternalPopover';
 import PopoverContext from '../context/PopoverContext';
 import { IPopoverOptions } from '../hooks/usePopover';
@@ -10,10 +11,46 @@ export interface IReqorePopoverProviderProps {
 
 export interface IPopoverData extends IPopoverOptions {
   id: string;
+  popperRef?: MutableRefObject<any>;
 }
 
 const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiScale }) => {
   const [popovers, setPopovers] = useState<IPopoverData[]>([]);
+
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      popovers.forEach(({ popperRef, closeOnAnyClick, closeOnOutsideClick, id, targetElement }) => {
+        if (
+          closeOnAnyClick ||
+          (closeOnOutsideClick &&
+            popperRef?.current &&
+            !popperRef.current.contains(event.target) &&
+            !targetElement?.contains(event.target as Node))
+        ) {
+          removePopover(id);
+        }
+      });
+    },
+    [popovers]
+  );
+
+  const removePopover = (id: string) => {
+    setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== id));
+  };
+
+  useEffect(() => {
+    document.addEventListener('click', handleClick);
+
+    return () => {
+      document.removeEventListener('click', handleClick);
+    };
+  }, [popovers]);
+
+  useEffect(() => {
+    if (!size(popovers)) {
+      document.removeEventListener('click', handleClick);
+    }
+  }, [popovers]);
 
   return (
     <PopoverContext.Provider
@@ -22,20 +59,18 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
         addPopover: (popoverData: IPopoverData) => {
           setPopovers((cur: IPopoverData[]) => [...cur, popoverData]);
         },
-        updatePopover: (popoverId: string, popoverData: IPopoverData) => {
+        updatePopover: (popoverId: string, popoverData: Partial<IPopoverData>) => {
           setPopovers((cur: IPopoverData[]) =>
-            [...cur].reduce((newPopovers, popover) => {
+            [...cur].reduce<IPopoverData[]>((newPopovers, popover) => {
               if (popover.id === popoverId) {
-                return [...newPopovers, popoverData];
+                return [...newPopovers, { ...popover, ...popoverData }];
               }
 
               return [...newPopovers, popover];
             }, [])
           );
         },
-        removePopover: (popoverId: string) => {
-          setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== popoverId));
-        },
+        removePopover,
         popovers,
       }}
     >

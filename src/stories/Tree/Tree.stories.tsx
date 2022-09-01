@@ -1,47 +1,43 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
-import React from 'react';
-import { ReqoreTree } from '../../components/Tree';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import {
-  ReqoreContent,
-  ReqoreLayoutContent,
-  ReqoreUIProvider,
-} from '../../index';
+import { IReqoreTreeProps, ReqoreTree } from '../../components/Tree';
 import MockObject from '../../mock/object.json';
+import { argManager } from '../utils/args';
+
+const { createArg } = argManager<IReqoreTreeProps>();
 
 export default {
-  title: 'ReQore/Tree',
-  args: {
-    theme: {
-      main: '#222222',
-    },
+  title: 'Components/Tree',
+  argTypes: {
+    ...createArg('withLabelCopy', {
+      name: 'With label copy',
+      description: 'With label copy',
+      control: 'boolean',
+      defaultValue: true,
+    }),
+    ...createArg('showTypes', {
+      name: 'Show types',
+      description: 'Show types',
+      control: 'boolean',
+      defaultValue: true,
+    }),
+    ...createArg('expanded', {
+      name: 'Expanded',
+      description: 'Expanded',
+      control: 'boolean',
+      defaultValue: false,
+    }),
   },
-} as Meta;
+} as Meta<IReqoreTreeProps>;
 
 const data = MockObject;
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
-  return (
-    <ReqoreUIProvider {...args}>
-      <ReqoreLayoutContent>
-        <ReqoreContent style={{ padding: '20px' }}>
-          <h4> Default </h4>
-          <ReqoreTree data={data} />
-          <h4> Interactive & Copy </h4>
-          <ReqoreTree data={data} onItemClick={noop} withLabelCopy />
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  );
+const Template: Story<IReqoreTreeProps> = (args: IReqoreTreeProps) => {
+  return <ReqoreTree data={data} onItemClick={noop} {...args} />;
 };
 
 export const Basic = Template.bind({});
-export const WithLightColor = Template.bind({});
-WithLightColor.args = {
-  theme: {
-    main: '#ffffff',
-  },
+export const TextView = Template.bind({});
+TextView.args = {
+  mode: 'copy',
 };

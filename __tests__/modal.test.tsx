@@ -24,7 +24,6 @@ test('Renders basic <Modal /> properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-modal').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-modal-content').length).toBe(1);
 });
 
 test('Does not renders <Modal /> if its not open', () => {
@@ -41,7 +40,6 @@ test('Does not renders <Modal /> if its not open', () => {
   );
 
   expect(document.querySelectorAll('.reqore-modal').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-modal-content').length).toBe(0);
 });
 
 test('Renders <Modal /> with custom dimensions', () => {
@@ -58,7 +56,6 @@ test('Renders <Modal /> with custom dimensions', () => {
   );
 
   expect(document.querySelectorAll('.reqore-modal').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-modal-content').length).toBe(0);
 });
 
 const ConfirmButton = ({ confirmFn, cancelFn }) => {
@@ -118,22 +115,22 @@ test('Renders confirmation <Modal /> ', () => {
     );
   });
 
-  fireEvent.click(document.getElementById('custom-confirm'));
+  fireEvent.click(document.getElementById('custom-confirm')!);
   fireEvent.click(screen.getAllByText('Yep')[0]);
 
   expect(confirmFn).toHaveBeenCalled();
 
-  fireEvent.click(document.getElementById('confirm'));
+  fireEvent.click(document.getElementById('confirm')!);
   fireEvent.click(screen.getAllByText('Confirm')[0]);
 
   expect(confirmFn).toHaveBeenCalledTimes(2);
 
-  fireEvent.click(document.getElementById('custom-confirm'));
+  fireEvent.click(document.getElementById('custom-confirm')!);
   fireEvent.click(screen.getAllByText('Cancel')[0]);
 
   expect(cancelFn).toHaveBeenCalled();
 
-  fireEvent.click(document.getElementById('confirm'));
+  fireEvent.click(document.getElementById('confirm')!);
   fireEvent.click(screen.getAllByText('Cancel')[0]);
 
   expect(cancelFn).toHaveBeenCalledTimes(2);

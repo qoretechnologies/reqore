@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
@@ -51,7 +51,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
     },
     ref: any
   ) => {
-    const [internalTimeout, setInternalTimeout] = useState(null);
+    const [internalTimeout, setInternalTimeout] = useState<NodeJS.Timeout | null>(null);
 
     useMount(() => {
       if (duration) {
@@ -75,8 +75,15 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
     }, [duration, intent, children, title]);
 
     useUnmount(() => {
-      clearTimeout(internalTimeout);
+      if (internalTimeout) {
+        clearTimeout(internalTimeout);
+      }
     });
+
+    const leftIcon: IReqoreIconName | undefined = useMemo(
+      () => icon || (intent ? typeToIcon[intent] : undefined),
+      [icon, intent]
+    );
 
     return (
       <ReqoreThemeProvider>
@@ -93,13 +100,15 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
           ref={ref}
           size={size}
         >
-          <StyledIconWrapper intent={intent} size={size}>
-            <ReqoreIcon
-              icon={icon || typeToIcon[intent]}
-              margin={flat && inverted ? 'right' : 'both'}
-              size={`${TEXT_FROM_SIZE[size]}px`}
-            />
-          </StyledIconWrapper>
+          {leftIcon ? (
+            <StyledIconWrapper intent={intent} size={size}>
+              <ReqoreIcon
+                icon={leftIcon}
+                margin={flat && inverted ? undefined : 'left'}
+                size={`${TEXT_FROM_SIZE[size]}px`}
+              />
+            </StyledIconWrapper>
+          ) : null}
           <StyledNotificationContentWrapper size={size}>
             {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
             <StyledNotificationContent>{children}</StyledNotificationContent>

@@ -1,5 +1,23 @@
 {
-  "editor.cursorBlinking": "phase",
-  "editor.cursorStyle": "underline",
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "docwriter.hotkey.mac": "⌥ + .",
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#721288",
+    "activityBar.background": "#721288",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "activityBarBadge.background": "#000000",
+    "activityBarBadge.foreground": "#e7e7e7",
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#721288",
+    "statusBar.background": "#4c0c5b",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#721288",
+    "statusBarItem.remoteBackground": "#4c0c5b",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#4c0c5b",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#4c0c5b99",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.remoteColor": "#4c0c5b"
 }

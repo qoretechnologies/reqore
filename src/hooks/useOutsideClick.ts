@@ -1,28 +1,27 @@
-import { MutableRefObject, useEffect } from "react";
+import { MutableRefObject, useCallback, useEffect } from 'react';
 
 const useOutsideClick = (
-  targetElement: MutableRefObject<any>,
-  callback?: Function
+  targetElement?: MutableRefObject<any>,
+  checkTarget?: boolean,
+  callback?: () => void
 ): void => {
-  const handleClick = (event: any): void => {
-    if (
-      targetElement.current &&
-      !targetElement.current.contains(event.target) &&
-      callback
-    ) {
-      callback();
-    }
-  };
+  const handleClick = useCallback(
+    (event: any): void => {
+      if (
+        !checkTarget ||
+        (targetElement?.current && !targetElement.current.contains(event.target))
+      ) {
+        callback?.();
+      }
+    },
+    [checkTarget, targetElement, callback]
+  );
 
   useEffect(() => {
-    if (targetElement.current) {
-      setTimeout(() => {
-        document.addEventListener("click", handleClick);
-      }, 150);
-    }
+    window.addEventListener('click', handleClick);
 
     return () => {
-      document.removeEventListener("click", handleClick);
+      window.removeEventListener('click', handleClick);
     };
   });
 };

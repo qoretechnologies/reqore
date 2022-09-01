@@ -130,6 +130,7 @@ const ReqoreInput = forwardRef(
       flat,
       rounded = true,
       minimal,
+      children,
       ...rest
     }: IReqoreInputProps,
     ref
@@ -174,7 +175,7 @@ const ReqoreInput = forwardRef(
           enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
           onClick={onClearClick}
           size={size}
-          show={rest?.value && rest.value !== ''}
+          show={rest?.value && rest.value !== '' ? true : false}
         />
       </StyledInputWrapper>
     );

@@ -27,10 +27,10 @@ export const TABLE_SIZE_TO_PX = {
 
 export const TABS_PADDING_TO_PX = {
   tiny: 5,
-  small: 10,
-  normal: 15,
-  big: 20,
-  huge: 25,
+  small: 5,
+  normal: 5,
+  big: 5,
+  huge: 5,
 };
 
 export const MARGIN_FROM_SIZE = {

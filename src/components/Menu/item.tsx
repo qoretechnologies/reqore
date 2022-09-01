@@ -4,8 +4,8 @@ import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import usePopover from '../../hooks/usePopover';
-import { IReqoreComponent, IReqoreTooltip } from '../../types/global';
+import { useTooltip } from '../../hooks/useTooltip';
+import { IReqoreComponent, TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
@@ -18,9 +18,9 @@ export interface IReqoreMenuItemProps extends IReqoreComponent, React.HTMLAttrib
   as?: JSX.Element | React.ElementType | never;
   selected?: boolean;
   disabled?: boolean;
-  onClick?: (itemId: string, event: React.MouseEvent<HTMLElement>) => void;
-  onRightIconClick?: (itemId: string, event: React.MouseEvent<HTMLElement>) => void;
-  tooltip?: IReqoreTooltip;
+  onClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
+  onRightIconClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
+  tooltip?: TReqoreTooltipProp;
   intent?: IReqoreIntent;
 }
 
@@ -68,7 +68,7 @@ const StyledElement = styled.div<IReqoreMenuItemStyle>`
     const bg = intent ? theme.intents[intent] : theme.main;
 
     return css`
-      background-color: ${selected ? changeLightness(bg, 0.07) : bg};
+      background-color: ${selected ? changeLightness(bg!, 0.07) : bg};
     `;
   }};
   overflow: hidden;
@@ -162,12 +162,11 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.persist();
-      event.stopPropagation();
 
-      onClick && onClick(id, event);
+      onClick?.(id, event);
 
-      if (_insidePopover) {
-        removePopover(_popoverId);
+      if (_insidePopover && _popoverId) {
+        removePopover!(_popoverId);
       }
     };
 
@@ -178,17 +177,13 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       if (onRightIconClick) {
         onRightIconClick(id, event);
 
-        if (_insidePopover) {
-          removePopover(_popoverId);
+        if (_insidePopover && _popoverId) {
+          removePopover!(_popoverId);
         }
       }
     };
 
-    usePopover({
-      ...tooltip,
-      targetElement: combinedRef.current,
-      show: !!tooltip?.content,
-    });
+    useTooltip(combinedRef.current, tooltip);
 
     return (
       <StyledElement

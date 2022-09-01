@@ -19,13 +19,15 @@ const endEvents = {
 };
 
 export interface IPopover {
-  content?: JSX.Element | string;
+  content?: JSX.Element | string | undefined;
   handler?: 'hover' | 'click' | 'focus' | 'hoverStay';
   placement?: Placement;
   show?: boolean;
+  openOnMount?: boolean;
   noArrow?: boolean;
   useTargetWidth?: boolean;
   closeOnOutsideClick?: boolean;
+  closeOnAnyClick?: boolean;
 }
 
 export interface IPopoverOptions extends IPopover {
@@ -41,20 +43,19 @@ const usePopover = ({
   noArrow,
   useTargetWidth,
   closeOnOutsideClick = true,
+  openOnMount = false,
 }: IPopoverOptions) => {
-  const { addPopover, removePopover, updatePopover, popovers } = useContext(
-    PopoverContext
-  );
+  const { addPopover, removePopover, updatePopover, popovers } = useContext(PopoverContext);
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
 
   const startEvent = startEvents[handler];
   const endEvent = endEvents[handler];
 
   const _addPopover = () => {
-    if (popovers.find((p) => p.id === current)) {
-      removePopover(current);
+    if (popovers?.find((p) => p.id === current)) {
+      removePopover?.(current);
     } else if (show) {
-      addPopover({
+      addPopover?.({
         id: current,
         content,
         targetElement,
@@ -62,17 +63,18 @@ const usePopover = ({
         noArrow,
         useTargetWidth,
         closeOnOutsideClick,
+        closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
       });
     }
   };
 
   const _removePopover = () => {
-    removePopover(current);
+    removePopover?.(current);
   };
 
   useUpdateEffect(() => {
     if (show) {
-      updatePopover(current, {
+      updatePopover?.(current, {
         id: current,
         content,
         targetElement,
@@ -80,9 +82,16 @@ const usePopover = ({
         noArrow,
         useTargetWidth,
         closeOnOutsideClick,
+        closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
       });
     }
   }, [content]);
+
+  useEffect(() => {
+    if (openOnMount && targetElement) {
+      _addPopover();
+    }
+  }, [targetElement]);
 
   useEffect(() => {
     if (targetElement && content) {
@@ -96,7 +105,9 @@ const usePopover = ({
     return () => {
       if (targetElement && content) {
         targetElement.removeEventListener(startEvent, _addPopover);
-        targetElement.removeEventListener(endEvent, _removePopover);
+        if (endEvent) {
+          targetElement.removeEventListener(endEvent, _removePopover);
+        }
       }
     };
   });

@@ -1,4 +1,4 @@
-import { IPopoverOptions } from "../hooks/usePopover";
+import { IPopoverOptions } from '../hooks/usePopover';
 
 export interface IReqoreComponent {
   _insidePopover?: boolean;
@@ -6,3 +6,4 @@ export interface IReqoreComponent {
 }
 
 export interface IReqoreTooltip extends IPopoverOptions {}
+export type TReqoreTooltipProp = string | IReqoreTooltip;

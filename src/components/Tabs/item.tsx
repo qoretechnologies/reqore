@@ -1,262 +1,151 @@
-import { useState } from 'react';
+import { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
-import { TABS_PADDING_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
-import usePopover from '../../hooks/usePopover';
-import { StyledActiveContent, StyledInActiveContent, StyledInvisibleContent } from '../Button';
-import ReqoreIcon from '../Icon';
+import { TABS_PADDING_TO_PX, TSizes } from '../../constants/sizes';
+import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreTheme } from '../../hooks/useTheme';
+import ReqoreButton from '../Button';
+import ReqoreControlGroup from '../ControlGroup';
 
 export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   active?: boolean;
   vertical?: boolean;
   onCloseClick?: any;
-  parentBackground?: string;
-  flat?: boolean;
+  customTheme?: IReqoreCustomTheme;
   size?: TSizes;
   wrapTabNames?: boolean;
+  fill?: boolean;
+  className?: string;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
   theme: IReqoreTheme;
   closable?: boolean;
+  activeColor: string;
 }
 
-const StyledLabel = styled.span`
-  overflow: hidden;
-  position: relative;
-`;
-
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({
-    theme,
-    active,
-    disabled,
-    vertical,
-    closable,
-    activeIntent,
-    parentBackground,
-    flat,
-    size,
-    intent,
-  }: IReqoreTabListItemStyle) => {
-    const textColor = parentBackground
-      ? getReadableColorFrom(parentBackground, true)
-      : getReadableColor(theme, undefined, undefined, true);
-    const currentIntent = intent || activeIntent;
-
+  ${({ active, disabled, vertical, activeColor, size, fill }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
+      flex-shrink: 0;
       overflow: hidden;
       position: relative;
       align-items: center;
-      padding: ${vertical ? `${TABS_PADDING_TO_PX[size]}px` : `0 ${TABS_PADDING_TO_PX[size]}px`};
-      padding-right: ${closable ? '43px' : undefined};
-      font-size: ${TEXT_FROM_SIZE[size]}px;
-      font-weight: 450;
-      opacity: 0.9;
-      color: ${textColor};
-      transition: all 0.2s ease-in-out;
-      border-${vertical ? 'right' : 'bottom'}: 2px solid transparent;
+      width: ${vertical ? `100%` : undefined};
+      padding: ${vertical ? `${TABS_PADDING_TO_PX[size!]}px` : `${TABS_PADDING_TO_PX[size!]}px`};
+      ${active &&
+      css`
+        background-color: ${activeColor}60;
+      `}
 
-      &:not(:last-child) {
-        border-${vertical ? 'bottom' : 'right'}: ${
-      flat ? 0 : `1px solid ${changeLightness(parentBackground || theme.main, 0.05)}`
-    };
-      }
+      ${fill &&
+      css`
+        flex: 1;
+      `}
 
-
-    .reqore-icon {
-      transform: scale(0.85);
-    }
-
-      ${
-        intent &&
-        css`
-          border-${vertical ? 'right' : 'bottom'}: 2px solid ${theme.intents[intent]};
-          background-color: ${`${theme.intents[currentIntent]}20`};
-        `
-      }
-
-      ${
-        active &&
-        css`
-          border-${vertical ? 'right' : 'bottom'}: 2px solid ${
-          currentIntent
-            ? theme.intents[currentIntent]
-            : changeLightness(parentBackground || theme.main, 0.2)
-        };
-          opacity: 1;
-          background-color: ${currentIntent ? `${theme.intents[currentIntent]}30` : undefined};
-
-          > .reqore-icon {
-            transform: scale(1);
-          }
-
-          * {
-            font-weight: 600;
-          }
-        `
-      }
-
-      ${
-        !disabled
-          ? !active &&
-            css`
-              cursor: pointer;
-              &:hover {
-                > .reqore-icon {
-                  transform: scale(1);
-                }
-                color: ${parentBackground
-                  ? getReadableColorFrom(parentBackground)
-                  : getReadableColor(theme)};
-                background-color: ${currentIntent
-                  ? `${theme.intents[currentIntent]}50`
-                  : changeLightness(parentBackground || theme.main, 0.05)};
-
-                ${StyledActiveContent} {
-                  transform: translateY(0px);
-                  filter: blur(0);
-                  opacity: 1;
-                }
-
-                ${StyledInActiveContent} {
-                  transform: translateY(150%);
-                  filter: blur(10px);
-                  opacity: 0;
-                }
-              }
-            `
-          : css`
-              cursor: not-allowed;
-              > * {
-                opacity: 0.5;
-              }
-            `
-      }
+      ${disabled &&
+      css`
+        cursor: not-allowed;
+        > * {
+          opacity: 0.5;
+        }
+      `}
     `;
   }}
 
   a {
     text-decoration: none;
 
-    &:hover {
+    &:hover > * {
       text-decoration: underline;
     }
   }
 `;
 
-const StyledCloseButton = styled.div<Partial<IReqoreTabListItemStyle>>`
-  ${({ theme, activeIntent, intent }) => css`
-    position: absolute;
-    right: 0px;
-    height: 100%;
-    width: 33px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    z-index: 0;
-    transition: background-color 0.2s ease-out;
-    cursor: pointer;
+const ReqoreTabsListItem = forwardRef(
+  (
+    {
+      tooltip,
+      label,
+      props,
+      icon,
+      active,
+      as,
+      disabled,
+      vertical,
+      onClick,
+      activeIntent,
+      onCloseClick,
+      fill,
+      intent,
+      size = 'normal',
+      closeIcon,
+      customTheme,
+      className,
+    }: IReqoreTabListItemProps,
+    ref
+  ) => {
+    const innerRef = useRef(null);
+    const combinedRef = useCombinedRefs(innerRef, ref);
+    const theme = useReqoreTheme('main', customTheme);
+    const _intent = activeIntent || intent;
+    const activeColor = _intent ? theme.intents[_intent] : theme.main;
 
-    &:hover {
-      .reqore-icon {
-        transform: scale(1);
-      }
-      color: ${getReadableColorFrom(
-        intent || activeIntent ? theme.intents[intent || activeIntent] : theme.main
-      )};
-      background-color: ${changeLightness(
-        intent || activeIntent ? theme.intents[intent || activeIntent] : theme.main,
-        0.09
-      )};
-    }
-  `}
-`;
-
-const ReqoreTabsListItem = ({
-  tooltip,
-  label,
-  props,
-  icon,
-  active,
-  as,
-  disabled,
-  vertical,
-  onClick,
-  activeIntent,
-  onCloseClick,
-  parentBackground,
-  wrapTabNames,
-  intent,
-  flat,
-  size,
-  closeIcon,
-}: IReqoreTabListItemProps) => {
-  const [ref, setRef] = useState(null);
-
-  usePopover({
-    targetElement: ref,
-    content: wrapTabNames ? tooltip || label : tooltip,
-    show: wrapTabNames ? !!(tooltip || label) : !!tooltip,
-  });
-
-  return (
-    <ReqoreThemeProvider>
+    return (
       <StyledTabListItem
+        ref={combinedRef}
         {...props}
+        className={className}
         intent={intent}
+        activeIntent={activeIntent}
+        activeColor={activeColor}
         as={as}
-        flat={flat}
         size={size}
-        ref={setRef}
         active={active}
         disabled={disabled}
         vertical={vertical}
-        activeIntent={activeIntent}
-        parentBackground={parentBackground}
-        className={`${props?.className || ''} reqore-tabs-list-item ${
-          active ? 'reqore-tabs-list-item__active' : ''
-        }`}
-        onClick={disabled ? undefined : onClick}
-        closable={!!onCloseClick && !disabled}
+        theme={theme}
+        fill={fill}
       >
-        {icon && (
-          <ReqoreIcon
-            icon={icon}
-            size={`${TEXT_FROM_SIZE[size]}px`}
-            margin={label ? 'right' : undefined}
-          />
-        )}
-        {label && (
-          <StyledLabel>
-            <StyledActiveContent wrap={wrapTabNames}>{label}</StyledActiveContent>
-            <StyledInActiveContent wrap={wrapTabNames}>{label}</StyledInActiveContent>
-            <StyledInvisibleContent wrap={wrapTabNames}>{label}</StyledInvisibleContent>
-          </StyledLabel>
-        )}
-        {onCloseClick && !disabled ? (
-          <StyledCloseButton
-            className='reqore-tabs-list-item-close'
-            onClick={(event) => {
-              event.stopPropagation();
-
-              onCloseClick && onCloseClick();
-            }}
-            activeIntent={activeIntent}
-            intent={intent}
-            active={active}
-          >
-            <ReqoreIcon icon={closeIcon || 'CloseLine'} size={`${TEXT_FROM_SIZE[size]}px`} />
-          </StyledCloseButton>
+        {label || icon ? (
+          <ReqoreControlGroup stack size={size} fluid={fill || vertical}>
+            <ReqoreButton
+              flat
+              fluid={fill || vertical}
+              icon={icon}
+              minimal
+              intent={active ? activeIntent || intent : intent}
+              active={active}
+              disabled={disabled}
+              onClick={onClick}
+              tooltip={tooltip}
+              customTheme={customTheme}
+              className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
+            >
+              {label}
+            </ReqoreButton>
+            {onCloseClick && !disabled ? (
+              <ReqoreButton
+                fixed
+                flat
+                icon={closeIcon || 'CloseLine'}
+                intent={active ? activeIntent || intent : intent}
+                minimal
+                className='reqore-tabs-list-item-close'
+                customTheme={customTheme}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onCloseClick?.();
+                }}
+              />
+            ) : null}
+          </ReqoreControlGroup>
         ) : null}
       </StyledTabListItem>
-    </ReqoreThemeProvider>
-  );
-};
+    );
+  }
+);
 
 export default ReqoreTabsListItem;

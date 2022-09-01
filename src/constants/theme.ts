@@ -48,20 +48,28 @@ export interface IReqoreNavbarTheme {
 }
 
 export interface IReqoreTheme {
-  main?: string;
+  main: string;
   text?: {
     color?: string;
     dim?: boolean;
   };
-  intents?: IReqoreIntents;
+  intents: IReqoreIntents;
   sidebar?: IReqoreSidebarTheme;
-  notifications?: IReqoreIntents;
+  notifications: IReqoreIntents;
   popover?: {
     main: string;
   };
   header?: IReqoreNavbarTheme;
   footer?: IReqoreNavbarTheme;
   breadcrumbs?: IReqoreBreadcrumbsTheme;
+}
+
+export interface IReqoreCustomTheme {
+  main?: string;
+  text?: {
+    color?: string;
+    dim?: boolean;
+  };
 }
 
 export interface IReqoreIntents {

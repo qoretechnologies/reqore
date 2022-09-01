@@ -69,6 +69,7 @@ export interface IReqoreTableProps extends React.HTMLAttributes<HTMLDivElement> 
   selectToggleTooltip?: string;
   onRowClick?: IReqoreTableRowClick;
   customTheme?: IReqoreTheme;
+  intent?: IReqoreIntent;
   rounded?: boolean;
   flat?: boolean;
   size?: TSizes;
@@ -134,6 +135,7 @@ const ReqoreTable = ({
   striped,
   selectedRowIntent,
   size,
+  intent,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -141,7 +143,7 @@ const ReqoreTable = ({
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
   const [_selected, setSelected] = useState<string[]>([]);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
-  const theme = useReqoreTheme('main', customTheme);
+  const theme = useReqoreTheme('main', customTheme, intent);
 
   useUpdateEffect(() => {
     if (onSortChange) {

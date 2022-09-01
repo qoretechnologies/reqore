@@ -6,8 +6,8 @@ module.exports = {
     '@storybook/addon-links',
     '@storybook/addon-essentials',
     '@storybook/addon-outline',
-    'storybook-dark-mode',
     '@storybook/addon-jest',
+    '@storybook/addon-interactions',
     {
       name: '@storybook/addon-storysource',
       options: {
@@ -31,4 +31,7 @@ module.exports = {
       },
     },
   ],
+  features: {
+    storyStoreV7: true,
+  },
 };

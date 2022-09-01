@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { memo, useContext } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
 import styled, { css } from 'styled-components';
+import { ReqoreThemeContext } from '../..';
+import { IReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 
 export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -10,10 +12,11 @@ export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> 
   color?: string;
   size?: string;
   iconProps?: IconBaseProps;
+  intent?: IReqoreIntent;
   margin?: 'right' | 'left' | 'both';
 }
 
-const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
+export const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-block;
   flex: 0 0 auto;
   vertical-align: text-bottom;
@@ -27,49 +30,54 @@ const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
     `}
 `;
 
-const ReqoreIcon = ({
-  icon,
-  size = '17px',
-  className,
-  color,
-  margin,
-  style = {},
-  iconProps,
-  ...rest
-}: IReqoreIconProps) => {
-  const Icon: IconType = RemixIcons[`Ri${icon}`];
+const ReqoreIcon = memo(
+  ({
+    icon,
+    size = '17px',
+    className,
+    color,
+    margin,
+    style = {},
+    iconProps,
+    intent,
+    ...rest
+  }: IReqoreIconProps) => {
+    const theme = useContext(ReqoreThemeContext);
+    const Icon: IconType = RemixIcons[`Ri${icon}`];
+    const finalColor: string | undefined = intent ? theme.intents[intent] : color;
 
-  if (!Icon) {
+    if (!Icon) {
+      return (
+        <StyledIconWrapper
+          {...rest}
+          margin={margin}
+          className={`${className || ''} reqore-icon`}
+          style={{ ...style, width: size, height: size }}
+        />
+      );
+    }
+
     return (
       <StyledIconWrapper
         {...rest}
         margin={margin}
-        className={`${className || ''} reqore-icon`}
         style={{ ...style, width: size, height: size }}
-      />
+        className={`${className || ''} reqore-icon`}
+      >
+        <IconContext.Provider
+          value={{
+            color: finalColor || 'inherit',
+            size,
+            style: {
+              verticalAlign: 'super',
+            },
+          }}
+        >
+          <Icon {...iconProps} />
+        </IconContext.Provider>
+      </StyledIconWrapper>
     );
   }
-
-  return (
-    <StyledIconWrapper
-      {...rest}
-      margin={margin}
-      style={{ ...style, width: size, height: size }}
-      className={`${className || ''} reqore-icon`}
-    >
-      <IconContext.Provider
-        value={{
-          color: color || 'inherit',
-          size,
-          style: {
-            verticalAlign: 'super',
-          },
-        }}
-      >
-        <Icon {...iconProps} />
-      </IconContext.Provider>
-    </StyledIconWrapper>
-  );
-};
+);
 
 export default ReqoreIcon;

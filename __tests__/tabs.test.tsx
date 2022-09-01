@@ -60,8 +60,8 @@ test('Renders shortened <Tabs /> properly', () => {
     );
   });
 
-  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(2);
-  expect(document.querySelectorAll('.reqore-tabs-list .reqore-popover-wrapper').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(3);
+  expect(document.querySelectorAll('.reqore-tabs-list-item-menu').length).toBe(1);
 });
 
 test('Default active tab can be specified', () => {
@@ -125,7 +125,7 @@ test('Changes tab and runs callback', () => {
 
   expect(screen.getByText('Tab 3 content')).toBeTruthy();
   expect(cb).toHaveBeenCalledWith('tab3');
-  expect(document.querySelectorAll('.reqore-tabs-list-item__active').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-tabs-list-item-active').length).toBe(1);
 });
 
 test('Does not change tab and run callback when disabled', () => {
@@ -160,7 +160,7 @@ test('Does not change tab and run callback when disabled', () => {
 
   expect(screen.getByText('Tab 1 content')).toBeTruthy();
   expect(cb).not.toHaveBeenCalled();
-  expect(document.querySelectorAll('.reqore-tabs-list-item__active').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-tabs-list-item-active').length).toBe(1);
 });
 
 test('Changes tab programatically and runs callback', () => {
