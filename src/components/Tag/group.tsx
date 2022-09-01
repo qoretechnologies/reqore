@@ -16,19 +16,13 @@ const StyledTagGroup = styled.div`
   }
 `;
 
-const ReqoreTagGroup = ({
-  children,
-  size,
-  className,
-  columns,
-  ...rest
-}: IReqoreTagGroup) => (
+const ReqoreTagGroup = ({ children, size, className, columns, ...rest }: IReqoreTagGroup) => (
   <StyledTagGroup {...rest} className={`${className || ''} reqore-tag-group`}>
     {React.Children.map(children, (child) =>
       child
         ? React.cloneElement(child, {
             size,
-            width: columns ? `calc(${100 / columns}% - 5px)` : undefined,
+            width: columns ? `calc(${100 / columns}% - 5px)` : child.props.width,
           })
         : null
     )}
