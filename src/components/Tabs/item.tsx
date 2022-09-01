@@ -1,7 +1,9 @@
+import { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { TABS_PADDING_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -13,6 +15,8 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
   customTheme?: IReqoreCustomTheme;
   size?: TSizes;
   wrapTabNames?: boolean;
+  fill?: boolean;
+  className?: string;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
@@ -22,17 +26,23 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ active, disabled, vertical, activeColor, size }: IReqoreTabListItemStyle) => {
+  ${({ active, disabled, vertical, activeColor, size, fill }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       flex-shrink: 0;
       overflow: hidden;
       position: relative;
       align-items: center;
+      width: ${vertical ? `100%` : undefined};
       padding: ${vertical ? `${TABS_PADDING_TO_PX[size!]}px` : `${TABS_PADDING_TO_PX[size!]}px`};
       ${active &&
       css`
         background-color: ${activeColor}60;
+      `}
+
+      ${fill &&
+      css`
+        flex: 1;
       `}
 
       ${disabled &&
@@ -54,76 +64,88 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
   }
 `;
 
-const ReqoreTabsListItem = ({
-  tooltip,
-  label,
-  props,
-  icon,
-  active,
-  as,
-  disabled,
-  vertical,
-  onClick,
-  activeIntent,
-  onCloseClick,
-  wrapTabNames,
-  intent,
-  size = 'normal',
-  closeIcon,
-  customTheme,
-}: IReqoreTabListItemProps) => {
-  const theme = useReqoreTheme('main', customTheme);
-  const _intent = activeIntent || intent;
-  const activeColor = _intent ? theme.intents[_intent] : theme.main;
+const ReqoreTabsListItem = forwardRef(
+  (
+    {
+      tooltip,
+      label,
+      props,
+      icon,
+      active,
+      as,
+      disabled,
+      vertical,
+      onClick,
+      activeIntent,
+      onCloseClick,
+      fill,
+      intent,
+      size = 'normal',
+      closeIcon,
+      customTheme,
+      className,
+    }: IReqoreTabListItemProps,
+    ref
+  ) => {
+    const innerRef = useRef(null);
+    const combinedRef = useCombinedRefs(innerRef, ref);
+    const theme = useReqoreTheme('main', customTheme);
+    const _intent = activeIntent || intent;
+    const activeColor = _intent ? theme.intents[_intent] : theme.main;
 
-  return (
-    <StyledTabListItem
-      {...props}
-      intent={intent}
-      activeIntent={activeIntent}
-      activeColor={activeColor}
-      as={as}
-      size={size}
-      active={active}
-      disabled={disabled}
-      vertical={vertical}
-      theme={theme}
-      className={`${props?.className || ''} reqore-tabs-list-item ${
-        active ? 'reqore-tabs-list-item__active' : ''
-      }`}
-    >
-      {label || icon ? (
-        <ReqoreControlGroup stack size={size}>
-          <ReqoreButton
-            flat
-            icon={icon}
-            minimal
-            intent={active ? activeIntent || intent : intent}
-            active={active}
-            disabled={disabled}
-            onClick={onClick}
-            tooltip={tooltip}
-            customTheme={customTheme}
-          >
-            {label}
-          </ReqoreButton>
-          {onCloseClick && !disabled ? (
+    return (
+      <StyledTabListItem
+        ref={combinedRef}
+        {...props}
+        className={className}
+        intent={intent}
+        activeIntent={activeIntent}
+        activeColor={activeColor}
+        as={as}
+        size={size}
+        active={active}
+        disabled={disabled}
+        vertical={vertical}
+        theme={theme}
+        fill={fill}
+      >
+        {label || icon ? (
+          <ReqoreControlGroup stack size={size} fluid={fill || vertical}>
             <ReqoreButton
               flat
-              icon={closeIcon || 'CloseLine'}
-              intent={active ? activeIntent || intent : intent}
+              fluid={fill || vertical}
+              icon={icon}
               minimal
+              intent={active ? activeIntent || intent : intent}
+              active={active}
+              disabled={disabled}
+              onClick={onClick}
+              tooltip={tooltip}
               customTheme={customTheme}
-              onClick={(event) => {
-                event.stopPropagation();
-                onCloseClick?.();
-              }}
-            />
-          ) : null}
-        </ReqoreControlGroup>
-      ) : null}
-    </StyledTabListItem>
-  );
-};
+              className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
+            >
+              {label}
+            </ReqoreButton>
+            {onCloseClick && !disabled ? (
+              <ReqoreButton
+                fixed
+                flat
+                icon={closeIcon || 'CloseLine'}
+                intent={active ? activeIntent || intent : intent}
+                minimal
+                className='reqore-tabs-list-item-close'
+                customTheme={customTheme}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onCloseClick?.();
+                }}
+              />
+            ) : null}
+          </ReqoreControlGroup>
+        ) : null}
+      </StyledTabListItem>
+    );
+  }
+);
 
 export default ReqoreTabsListItem;

@@ -73,8 +73,9 @@ const getLabel = (
 
   const label: string = isArray(item) ? getMoreLabel(item, activeTab) : item.label;
   const icon: number = isArray(item) || item.icon ? TEXT_FROM_SIZE[tabsSize] : 0;
+  const closeIconSize = isArray(item) || !item.onCloseClick ? 0 : 30;
 
-  return calculateStringSizeInPixels(label, TEXT_FROM_SIZE[tabsSize]) + icon;
+  return calculateStringSizeInPixels(label, TEXT_FROM_SIZE[tabsSize]) + icon + closeIconSize;
 };
 
 export const getTabsLength = (
@@ -104,6 +105,8 @@ const getTransformedItems = (
     return items;
   }
   let newItems = [...items];
+
+  console.log('SIZES', getTabsLength(newItems, type, activeTab, tabsSize), size);
 
   while (getTabsLength(newItems, type, activeTab, tabsSize) > size && newItems.length > 1) {
     if (isArray(newItems[newItems.length - 1])) {
@@ -142,13 +145,15 @@ const ReqoreTabsList = ({
   const [ref, { width, height }] = useMeasure();
   const theme = useReqoreTheme('main', customTheme, intent);
 
-  const transformedItems = getTransformedItems(
-    tabs,
-    vertical ? height : _testWidth || width,
-    vertical ? 'height' : 'width',
-    activeTab,
-    size
-  );
+  const transformedItems = vertical
+    ? tabs
+    : getTransformedItems(
+        tabs,
+        vertical ? height : _testWidth || width,
+        vertical ? 'height' : 'width',
+        activeTab,
+        size
+      );
 
   return (
     <ReqoreThemeProvider theme={theme}>
@@ -179,9 +184,11 @@ const ReqoreTabsList = ({
                     vertical,
                     flat,
                     size,
+                    className: 'reqore-tabs-list-item-menu',
                   } as IReqoreTabListItemProps
                 }
                 closeOnOutsideClick
+                isReqoreComponent
                 handler='hoverStay'
                 content={
                   <ReqoreMenu customTheme={theme}>
@@ -238,6 +245,7 @@ const ReqoreTabsList = ({
             <React.Fragment key={index}>
               <ReqoreTabsListItem
                 {...item}
+                fill={fill}
                 size={size}
                 activeIntent={activeTabIntent}
                 customTheme={theme}
