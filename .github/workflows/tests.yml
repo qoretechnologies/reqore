@@ -21,7 +21,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
-            fetch-depth: 0
+          fetch-depth: 0
       - uses: actions/setup-node@v1
         with:
           node-version: 14.16.0
@@ -34,12 +34,12 @@ jobs:
           yarn cache clean
           rm -rf node_modules
           yarn install
-      - name: Build test
-        id: build_test
-        run: yarn build:test
       - name: Running tests
         id: tests
         run: yarn test:ci
+      - name: Build test
+        id: build_test
+        run: yarn build:test
       - name: Publish to Chromatic
         id: chromatic_publish
         uses: chromaui/action@v1
