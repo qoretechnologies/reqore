@@ -1,16 +1,16 @@
-import { Meta, Story } from "@storybook/react/types-6-0";
-import React, { useState } from "react";
-import { IReqoreUIProviderProps } from "../../containers/UIProvider";
-import usePopover from "../../hooks/usePopover";
-import { ReqorePopover, ReqoreUIProvider } from "../../index";
+import { Meta, Story } from '@storybook/react/types-6-0';
+import { useState } from 'react';
+import { IReqorePopoverProps } from '../../components/Popover';
+import usePopover from '../../hooks/usePopover';
+import { ReqoreButton, ReqorePopover } from '../../index';
 
 export default {
-  title: "ReQore/Popover",
-} as Meta;
+  title: 'Components/Popover',
+} as Meta<IReqorePopoverProps>;
 
 const HoverButton = () => {
   return (
-    <ReqorePopover component="button" content="Hello">
+    <ReqorePopover component={ReqoreButton} content='I am shown on hover' isReqoreComponent>
       Hover popover
     </ReqorePopover>
   );
@@ -21,59 +21,34 @@ const ClickButton = ({ content, placement }: any) => {
 
   usePopover({
     targetElement: refElement,
-    content: content || "I am a hover tooltip",
-    handler: "click",
+    content: content || 'I am a tooltip on click',
+    handler: 'click',
     placement,
     closeOnOutsideClick: false,
     noArrow: true,
     useTargetWidth: true,
   });
 
-  return (
-    <button type="button" ref={setRefElement}>
-      Click popover
-    </button>
-  );
+  return <ReqoreButton ref={setRefElement}>Click popover</ReqoreButton>;
 };
 
-const Template: Story<IReqoreUIProviderProps> = ({
-  theme,
-  ...args
-}: IReqoreUIProviderProps) => {
+const Template: Story<IReqorePopoverProps> = (args: IReqorePopoverProps) => {
   return (
-    <ReqoreUIProvider theme={theme}>
+    <>
       <HoverButton />
       <br />
-      <br />
       <ClickButton {...args} />
-    </ReqoreUIProvider>
+      <br />
+      <ReqorePopover
+        component={ReqoreButton}
+        content='I am shown on mount'
+        isReqoreComponent
+        openOnMount
+      >
+        Auto open popover
+      </ReqorePopover>
+    </>
   );
 };
 
-export const Default = Template.bind({});
-export const CustomColor = Template.bind({});
-CustomColor.args = {
-  theme: {
-    main: "#d7d7d7",
-  },
-};
-
-export const CustomContent = Template.bind({});
-CustomContent.args = {
-  content: (
-    <div>
-      <h1>Tooltip title</h1> Some kind of awesome tooltip text
-    </div>
-  ),
-};
-
-export const CustomPosition = Template.bind({});
-CustomPosition.args = {
-  placement: "right",
-};
-
-const SimplePopoverElement = ({ type = "hover" }: any) => {
-  const [refElement, setRefElement] = useState(null);
-
-  return <p ref={setRefElement}>Hover me for more information</p>;
-};
+export const Basic = Template.bind({});
