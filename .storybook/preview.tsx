@@ -6,7 +6,6 @@ export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
   layout: 'fullscreen',
   options: {
-    enableShortcuts: false,
     panelPosition: 'right',
     sidebar: {
       showRoots: true,
@@ -48,15 +47,22 @@ export const argTypes = {
 };
 
 export const decorators = [
-  (Story, context) => (
-    <ReqoreUIProvider theme={{ main: context.args.mainTheme }}>
-      <ReqoreLayoutContent>
-        <ReqoreContent style={{ padding: '20px' }}>
+  (Story, context) =>
+    context.args.withoutContent ? (
+      <ReqoreUIProvider theme={{ main: context.args.mainTheme }}>
+        <ReqoreLayoutContent>
           <Story />
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  ),
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    ) : (
+      <ReqoreUIProvider theme={{ main: context.args.mainTheme }}>
+        <ReqoreLayoutContent>
+          <ReqoreContent style={{ padding: '20px' }}>
+            <Story />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    ),
   withTests({
     results,
   }),

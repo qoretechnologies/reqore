@@ -88,6 +88,15 @@ export const FlatArg = {
   }),
 };
 
+export const NoContentArg = {
+  ...argManager<any>().createArg('withoutContent', {
+    defaultValue: true,
+    table: {
+      disable: true,
+    },
+  }),
+};
+
 export const SizeArg = {
   ...argManager<any>().createArg('size', {
     control: 'select',
@@ -107,5 +116,23 @@ export const IntentArg = {
     description: 'The intent of the element',
     options: Object.keys(DEFAULT_INTENTS),
     name: 'Intent',
+  }),
+};
+
+export const CustomIntentArg = (key: string) => ({
+  ...argManager<any>().createArg(key, {
+    control: 'select',
+    description: 'The custom intent',
+    options: Object.keys(DEFAULT_INTENTS),
+    name: 'Custom Intent',
+  }),
+});
+
+export const DisabledArg = {
+  ...argManager<any>().createArg('disabled', {
+    control: 'boolean',
+    description: 'Whether the element should be disabled',
+    name: 'Disabled',
+    defaultValue: false,
   }),
 };

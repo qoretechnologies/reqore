@@ -51,7 +51,7 @@ export const getLineCount = (value: string): number => {
   }
 };
 
-export const calculateStringSizeInPixels = (value: string, fontSize: number): number => {
+export const calculateStringSizeInPixels = (value: string = '', fontSize: number): number => {
   const widths = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0.2796875, 0.2765625, 0.3546875, 0.5546875, 0.5546875, 0.8890625, 0.665625, 0.190625, 0.3328125,
@@ -68,6 +68,7 @@ export const calculateStringSizeInPixels = (value: string, fontSize: number): nu
   ];
   const avg = 0.5279276315789471;
 
+  /* It's calculating the width of a string in pixels. */
   return (
     Array.from(value).reduce((acc, cur) => acc + (widths[cur.charCodeAt(0)] ?? avg), 0) * fontSize
   );
