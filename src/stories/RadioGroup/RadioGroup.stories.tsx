@@ -1,148 +1,51 @@
-import { Meta, Story } from "@storybook/react/types-6-0";
-import React, { useState } from "react";
-import ReqoreRadioGroup from "../../components/RadioGroup";
-import { IReqoreUIProviderProps } from "../../containers/UIProvider";
-import {
-  ReqoreContent,
-  ReqoreLayoutContent,
-  ReqoreUIProvider,
-} from "../../index";
+import { Meta, Story } from '@storybook/react/types-6-0';
+import { useState } from 'react';
+import ReqoreRadioGroup, { IReqoreRadioGroupProps } from '../../components/RadioGroup';
+import { argManager, DisabledArg } from '../utils/args';
+
+const { createArg } = argManager<IReqoreRadioGroupProps>();
 
 export default {
-  title: "ReQore/RadioGroup",
-  args: {
-    theme: {
-      main: "#222222",
-    },
+  title: 'Components/Radio Group',
+  argTypes: {
+    ...createArg('asSwitch', {
+      type: 'boolean',
+      defaultValue: false,
+      name: 'As Switch',
+      description: 'If the radio group should be rendered as a switch',
+    }),
+    ...DisabledArg,
   },
-} as Meta;
+} as Meta<IReqoreRadioGroupProps>;
 
-const Template: Story<IReqoreUIProviderProps> = (
-  args: IReqoreUIProviderProps
-) => {
+const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) => {
   const [selected, setSelected] = useState(null);
 
   return (
-    <ReqoreUIProvider {...args}>
-      <ReqoreLayoutContent>
-        <ReqoreContent style={{ padding: "20px" }}>
-          <h4>Default</h4>
-          <ReqoreRadioGroup
-            size="small"
-            items={[
-              {
-                label: "Option 1",
-                value: "opt1",
-              },
-              {
-                label: "Option 2",
-                value: "opt2",
-              },
-              {
-                label: "Option 3",
-                value: "opt3",
-              },
-            ]}
-            onSelectClick={(value) => setSelected(value)}
-            selected={selected}
-          />
-          <br />
-          <ReqoreRadioGroup
-            items={[
-              {
-                label: "Option 1",
-                value: "opt1",
-              },
-              {
-                label: "Option 2",
-                value: "opt2",
-              },
-              {
-                label: "Option 3",
-                value: "opt3",
-              },
-            ]}
-            onSelectClick={(value) => setSelected(value)}
-            selected={selected}
-          />
-          <br />
-          <ReqoreRadioGroup
-            size="big"
-            items={[
-              {
-                label: "Option 1",
-                value: "opt1",
-              },
-              {
-                label: "Option 2",
-                value: "opt2",
-              },
-              {
-                label: "Option 3",
-                value: "opt3",
-              },
-            ]}
-            onSelectClick={(value) => setSelected(value)}
-            selected={selected}
-          />
-          <h4>As switch</h4>
-          <ReqoreRadioGroup
-            asSwitch
-            items={[
-              {
-                label: "Option 1",
-                value: "opt1",
-              },
-              {
-                label: "Option 2",
-                value: "opt2",
-              },
-              {
-                label: "Option 3",
-                value: "opt3",
-              },
-            ]}
-            onSelectClick={(value) => setSelected(value)}
-            selected={selected}
-          />
-          <h4>Disabled</h4>
-          <ReqoreRadioGroup
-            disabled
-            items={[
-              {
-                label: "Option 1",
-                value: "opt1",
-              },
-              {
-                label: "Option 2",
-                value: "opt2",
-              },
-              {
-                label: "Option 3",
-                value: "opt3",
-              },
-            ]}
-            onSelectClick={(value) => setSelected(value)}
-            selected={selected}
-          />
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
+    <ReqoreRadioGroup
+      {...args}
+      items={[
+        {
+          label: 'Option 1',
+          value: 'opt1',
+        },
+        {
+          label: 'Option 2',
+          value: 'opt2',
+        },
+        {
+          label: 'Option 3',
+          value: 'opt3',
+        },
+      ]}
+      onSelectClick={(value) => setSelected(value)}
+      selected={selected}
+    />
   );
 };
 
 export const Basic = Template.bind({});
-export const LightColor = Template.bind({});
-LightColor.args = {
-  theme: {
-    main: "#ffffff",
-  },
-};
-
-export const CustomColor = Template.bind({});
-CustomColor.args = {
-  theme: {
-    main: "#0d0221",
-    color: "#2de2e6",
-  },
+export const Switch = Template.bind({});
+Switch.args = {
+  asSwitch: true,
 };
