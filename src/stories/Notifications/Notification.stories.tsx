@@ -1,6 +1,6 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useMount } from 'react-use';
 import ReqoreNotification, {
   IReqoreNotificationProps,
@@ -9,7 +9,7 @@ import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreUIProvider } from '../../index';
 
 export default {
-  title: 'ReQore/Notifications/Item',
+  title: 'Components/Notifications/Item',
   component: ReqoreNotification,
 } as Meta;
 

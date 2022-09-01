@@ -1,5 +1,5 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import ReqoreNotification, {
   IReqoreNotificationProps,
 } from '../../components/Notifications/notification';
@@ -7,7 +7,7 @@ import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreContext, ReqoreUIProvider } from '../../index';
 
 export default {
-  title: 'ReQore/Notifications/Interactive',
+  title: 'Components/Notifications/Interactive',
   component: ReqoreNotification,
 } as Meta;
 
@@ -57,8 +57,7 @@ const UpdatingButton = ({ id }) => {
 const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
   theme,
   ...args
-}: IReqoreNotificationProps &
-  IReqoreUIProviderProps & { id?: string | number }) => (
+}: IReqoreNotificationProps & IReqoreUIProviderProps & { id?: string | number }) => (
   <ReqoreUIProvider theme={theme}>
     <div
       style={{
