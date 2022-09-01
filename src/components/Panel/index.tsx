@@ -26,6 +26,8 @@ export interface IReqorePanelAction {
   onClick?: () => void;
   intent?: IReqoreIntent;
   actions?: IReqoreDropdownItemProps[];
+  className?: string;
+  id?: string;
 }
 
 export interface IReqorePanelBottomAction extends IReqorePanelAction {
@@ -114,7 +116,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   padding-left: 5px;
   border-bottom: 0;
-  border-top: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
+  border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
       ? `1px solid ${changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.2)}`
       : null};
@@ -204,14 +206,23 @@ export const ReqorePanel = forwardRef(
       [leftBottomActions, rightBottomActions]
     );
 
-    const renderActions = ({ label, actions, intent, ...rest }: IReqorePanelAction) =>
+    const renderActions = ({
+      label,
+      actions,
+      intent,
+      className,
+      id,
+      ...rest
+    }: IReqorePanelAction) =>
       size(actions) ? (
         <ReqoreDropdown
           {...rest}
           label={label}
           componentProps={{
             intent,
+            id,
             minimal: true,
+            className,
             onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
               e.stopPropagation();
             },
@@ -221,6 +232,8 @@ export const ReqorePanel = forwardRef(
       ) : (
         <ReqoreButton
           {...rest}
+          id={id}
+          className={className}
           customTheme={theme}
           intent={intent}
           onClick={
@@ -298,7 +311,7 @@ export const ReqorePanel = forwardRef(
               {children}
             </StyledPanelContent>
           ) : null}
-          {hasBottomActions ? (
+          {hasBottomActions && !_isCollapsed ? (
             <StyledPanelBottomActions
               flat={flat}
               className='reqore-panel-bottom-actions'

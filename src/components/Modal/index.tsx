@@ -13,5 +13,14 @@ export interface IReqoreModalStyle extends IReqoreModalProps {
 }
 
 export const ReqoreModal = ({ width = '80vw', height = 'auto', ...rest }: IReqoreModalProps) => {
-  return <ReqoreDrawer {...rest} width={width} height={height} position='left' _isModal />;
+  return (
+    <ReqoreDrawer
+      {...rest}
+      width={width}
+      height={height}
+      position='left'
+      _isModal
+      className={`${rest.className || ''} reqore-modal`}
+    />
+  );
 };

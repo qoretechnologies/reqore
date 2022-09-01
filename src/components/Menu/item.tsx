@@ -172,6 +172,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
 
     const handleRightIconClick = (event: React.MouseEvent<HTMLSpanElement>) => {
       event.persist();
+      event.stopPropagation();
 
       if (onRightIconClick) {
         onRightIconClick(id, event);

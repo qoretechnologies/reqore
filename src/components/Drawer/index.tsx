@@ -210,6 +210,7 @@ export const ReqoreDrawer = ({
             onHideToggle(_isHidden);
           }
         },
+        className: 'reqore-drawer-hide-button',
       });
     }
 
@@ -218,6 +219,7 @@ export const ReqoreDrawer = ({
       actions.push({
         icon: 'CloseLine',
         onClick: onClose,
+        className: 'reqore-drawer-close-button',
       });
     }
 
@@ -347,7 +349,7 @@ export const ReqoreDrawer = ({
                   <ReqoreButton
                     flat
                     customTheme={theme}
-                    className='reqore-drawer-control reqore-drawer-hide'
+                    className='reqore-drawer-control reqore-drawer-hide-button'
                     icon={getHideShowIcon(position, _isHidden)}
                     onClick={() => {
                       setIsHidden(!_isHidden);

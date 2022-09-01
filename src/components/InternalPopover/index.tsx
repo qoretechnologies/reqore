@@ -91,8 +91,6 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   placement,
   noArrow,
   useTargetWidth,
-  closeOnOutsideClick,
-  closeOnAnyClick,
 }) => {
   const { removePopover, updatePopover, uiScale } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);

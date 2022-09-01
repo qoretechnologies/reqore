@@ -33,6 +33,7 @@ export interface IReqoreButtonProps extends React.HTMLAttributes<HTMLButtonEleme
   flat?: boolean;
   rightIcon?: IReqoreIconName;
   customTheme?: IReqoreCustomTheme;
+  wrap?: boolean;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -111,11 +112,11 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
 
-  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 0 auto' : '0 0 auto')};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 0 auto')};
 
   border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
 
-  background-color: ${({ minimal, theme, color }) => {
+  background-color: ${({ minimal, color }) => {
     if (minimal) {
       if (color) {
         return rgba(color, 0.3);
@@ -211,6 +212,7 @@ const ReqoreButton = forwardRef(
       flat,
       rightIcon,
       customTheme,
+      wrap = true,
       ...rest
     }: IReqoreButtonProps,
     ref
@@ -248,9 +250,9 @@ const ReqoreButton = forwardRef(
         )}
         {children && (
           <StyledAnimatedTextWrapper>
-            <StyledActiveContent wrap>{children}</StyledActiveContent>
-            <StyledInActiveContent wrap>{children}</StyledInActiveContent>
-            <StyledInvisibleContent wrap>{children}</StyledInvisibleContent>
+            <StyledActiveContent wrap={wrap}>{children}</StyledActiveContent>
+            <StyledInActiveContent wrap={wrap}>{children}</StyledInActiveContent>
+            <StyledInvisibleContent wrap={wrap}>{children}</StyledInvisibleContent>
           </StyledAnimatedTextWrapper>
         )}
         {rightIcon && (
