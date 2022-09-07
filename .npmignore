@@ -1,5 +1,4 @@
 .storybook
-src
 .gitignore
 *.config.js
 tsconfig.json
