@@ -6,7 +6,6 @@ import {
   ReqoreContext,
   ReqoreLayoutContent,
   ReqoreModal,
-  ReqoreModalContent,
   ReqoreUIProvider,
 } from '../src';
 
@@ -15,9 +14,7 @@ test('Renders basic <Modal /> properly', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreModal isOpen>
-            <ReqoreModalContent>Basic modal</ReqoreModalContent>
-          </ReqoreModal>
+          <ReqoreModal isOpen>Basic modal</ReqoreModal>
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -31,9 +28,7 @@ test('Does not renders <Modal /> if its not open', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreModal>
-            <ReqoreModalContent>Basic modal</ReqoreModalContent>
-          </ReqoreModal>
+          <ReqoreModal>Basic modal</ReqoreModal>
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -48,7 +43,7 @@ test('Renders <Modal /> with custom dimensions', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreModal width='700px' height='700px'>
-            <ReqoreModalContent>Resized modal</ReqoreModalContent>
+            Resized modal
           </ReqoreModal>
         </ReqoreContent>
       </ReqoreLayoutContent>
