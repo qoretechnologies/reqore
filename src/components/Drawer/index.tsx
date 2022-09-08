@@ -371,7 +371,7 @@ export const ReqoreDrawer = ({
                 style={{
                   width: '100%',
                   maxHeight: '100%',
-                  ...rest?.style,
+                  ...rest.style,
                 }}
               >
                 {children}
