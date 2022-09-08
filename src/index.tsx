@@ -20,8 +20,6 @@ export { default as ReqoreMenuDivider } from './components/Menu/divider';
 export { default as ReqoreMenuItem } from './components/Menu/item';
 export { default as ReqoreMessage } from './components/Message';
 export { ReqoreModal } from './components/Modal';
-export { ReqoreModalActions, ReqoreModalActionsGroup } from './components/Modal/actions';
-export { ReqoreModalContent } from './components/Modal/content';
 export { ReqoreFooter, ReqoreHeader } from './components/Navbar';
 export { default as ReqoreNavbarDivider } from './components/Navbar/divider';
 export { default as ReqoreNavbarGroup } from './components/Navbar/group';
