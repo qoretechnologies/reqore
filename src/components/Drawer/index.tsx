@@ -370,7 +370,8 @@ export const ReqoreDrawer = ({
                 className={`${className || ''} reqore-drawer`}
                 style={{
                   width: '100%',
-                  height: '100%',
+                  maxHeight: '100%',
+                  ...rest.style,
                 }}
               >
                 {children}
