@@ -101,7 +101,7 @@ export const Flat = Template.bind({});
 Flat.args = {
   flat: true,
 };
-export const NoLabel = Template.bind({});
+export const NoLabel: Story<IReqorePanelProps> = Template.bind({});
 NoLabel.args = {
   label: undefined,
 };

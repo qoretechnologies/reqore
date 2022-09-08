@@ -4,7 +4,7 @@ import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react'
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
   changeDarkness,
@@ -45,7 +45,7 @@ export interface IReqorePanelProps extends React.HTMLAttributes<HTMLDivElement> 
   rounded?: boolean;
   actions?: IReqorePanelAction[];
   bottomActions?: IReqorePanelBottomAction[];
-  customTheme?: IReqoreTheme;
+  customTheme?: IReqoreCustomTheme;
   intent?: IReqoreIntent;
   flat?: boolean;
   unMountContentOnCollapse?: boolean;

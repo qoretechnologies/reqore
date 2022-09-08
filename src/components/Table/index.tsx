@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -68,7 +68,7 @@ export interface IReqoreTableProps extends React.HTMLAttributes<HTMLDivElement> 
   onSelectedChange?: (selected?: any[]) => void;
   selectToggleTooltip?: string;
   onRowClick?: IReqoreTableRowClick;
-  customTheme?: IReqoreTheme;
+  customTheme?: IReqoreCustomTheme;
   intent?: IReqoreIntent;
   rounded?: boolean;
   flat?: boolean;

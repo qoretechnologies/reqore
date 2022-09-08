@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -11,7 +11,7 @@ export interface IReqoreMenuProps extends IReqoreComponent, React.HTMLAttributes
   position?: 'left' | 'right';
   width?: string;
   maxHeight?: string;
-  customTheme?: IReqoreTheme;
+  customTheme?: IReqoreCustomTheme;
   intent?: IReqoreIntent;
 }
 

@@ -59,11 +59,11 @@ test('Renders basic <Panel /> that is collapsed by default and can be expanded',
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(0);
   expect(collapseButton).toBeTruthy();
 
-  fireEvent.click(collapseButton);
+  fireEvent.click(collapseButton!);
 
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(1);
 
-  fireEvent.click(collapseButton);
+  fireEvent.click(collapseButton!);
 
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(0);
 });
@@ -91,7 +91,7 @@ test('Renders closable <Panel /> properly', () => {
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(1);
   expect(closeButton).toBeTruthy();
 
-  fireEvent.click(closeButton);
+  fireEvent.click(closeButton!);
 
   expect(fn).toHaveBeenCalled();
 });
