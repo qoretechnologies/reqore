@@ -41,7 +41,7 @@ jobs:
         run: yarn test:ci
       - name: Build
         id: build
-        run: ./node_modules/.bin/tsc
+        run: yarn build
       - name: Publish to NPM
         id: npm_publish
         uses: JS-DevTools/npm-publish@v1
@@ -75,7 +75,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_USERNAME: ReQore Publish & Release
-          SLACK_MESSAGE: ":white_check_mark: Release *v${{ steps.save_release_version.outputs.version }}* successfuly created & published!"
+          SLACK_MESSAGE: ':white_check_mark: Release *v${{ steps.save_release_version.outputs.version }}* successfuly created & published!'
       - name: Slack notification
         uses: Foxhoundn/slack@v1.2.94
         with:
@@ -85,4 +85,4 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_USERNAME: ReQore Publish & Release
-          SLACK_MESSAGE: ":exclamation: There was an error creating release *v${{ steps.save_release_version.outputs.version }}*. Please check the steps below."
+          SLACK_MESSAGE: ':exclamation: There was an error creating release *v${{ steps.save_release_version.outputs.version }}*. Please check the steps below.'
