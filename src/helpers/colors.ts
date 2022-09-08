@@ -36,6 +36,14 @@ export const getReadableColorFrom = (
   return readableColor(from, returnIfLight, returnIfDark, false);
 };
 
+export const percentToHexAlpha = (p: number) => {
+  const percent = Math.max(0, Math.min(100, p)); // bound percent from 0 to 100
+  const intValue = Math.round((percent / 100) * 255); // map percent to nearest integer (0 - 255)
+  const hexValue = intValue.toString(16); // get hexadecimal representation
+
+  return hexValue.padStart(2, '0').toUpperCase(); // format with leading 0 and upper case characters
+};
+
 export const shouldDarken = (mainColor: string) => {
   const contrast = getColorByBgColor(mainColor);
 
@@ -47,8 +55,15 @@ export const getMainColor: (theme: IReqoreTheme, component: string) => string = 
   component
 ) => theme[component]?.main || theme.main;
 
-export const changeLightness = (color: string, lightness?: number): string =>
-  lightness ? (shouldDarken(color) ? darken(lightness, color) : lighten(lightness, color)) : color;
+//export const changeBasedOnContrast = (color: string, lightness?: number): string =>
+
+export const changeLightness = (color: string, lightness?: number): string => {
+  return lightness
+    ? shouldDarken(color)
+      ? darken(lightness, color)
+      : lighten(lightness, color)
+    : color;
+};
 
 export const changeDarkness = (color: string, lightness?: number): string =>
   lightness ? (shouldDarken(color) ? lighten(lightness, color) : darken(lightness, color)) : color;

@@ -244,8 +244,6 @@ export const ReqoreDrawer = ({
     };
   }, [_isModal, position, layout, floating]);
 
-  console.log(width, height, _size);
-
   return createPortal(
     transitions((styles: any, item) =>
       item ? (
