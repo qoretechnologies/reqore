@@ -63,12 +63,12 @@ export interface IStyledPanel extends IReqorePanelProps {
 
 export const StyledPanel = styled.div<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    changeDarkness(rgba(getMainBackgroundColor(theme), opacity), 0.03)};
+    rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
   border: ${({ theme, flat, opacity = 1 }) =>
     flat
       ? undefined
-      : `1px solid ${changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.2)}`};
+      : `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
   display: flex;
@@ -89,14 +89,14 @@ export const StyledPanel = styled.div<IStyledPanel>`
 export const StyledPanelTitle = styled.div<IStyledPanel>`
   display: flex;
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.07)};
+    rgba(changeLightness(getMainBackgroundColor(theme), 0.07), opacity)};
   justify-content: space-between;
   height: 40px;
   align-items: center;
   padding: 0 5px 0 15px;
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat
-      ? `1px solid ${changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.2)}`
+      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
       : null};
   transition: background-color 0.2s ease-out;
   overflow: hidden;
@@ -108,7 +108,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
       cursor: pointer;
       &:hover {
         background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-          changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.1)};
+          rgba(changeLightness(getMainBackgroundColor(theme), 0.1), opacity)};
       }
     `}
 `;
@@ -118,7 +118,7 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
-      ? `1px solid ${changeLightness(rgba(getMainBackgroundColor(theme), opacity), 0.2)}`
+      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
       : null};
 `;
 

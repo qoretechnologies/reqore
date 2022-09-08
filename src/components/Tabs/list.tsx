@@ -106,8 +106,6 @@ const getTransformedItems = (
   }
   let newItems = [...items];
 
-  console.log('SIZES', getTabsLength(newItems, type, activeTab, tabsSize), size);
-
   while (getTabsLength(newItems, type, activeTab, tabsSize) > size && newItems.length > 1) {
     if (isArray(newItems[newItems.length - 1])) {
       (newItems[newItems.length - 1] as IReqoreTabsListItem[]).unshift(

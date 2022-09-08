@@ -145,8 +145,6 @@ const getTransformedItems = (
   let stop = false;
   let newItems = [...items];
 
-  console.log(getBreadcrumbsLength(newItems, size), width);
-
   while (getBreadcrumbsLength(newItems, size) > width && !stop) {
     if (isArray(newItems[1])) {
       newItems[1].push(newItems[2] as IReqoreBreadcrumbItem);

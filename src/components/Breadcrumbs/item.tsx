@@ -127,8 +127,6 @@ const ReqoreBreadcrumbsItem = forwardRef(
     const combinedRef = useCombinedRefs(innerRef, ref);
     const theme = useReqoreTheme('breadcrumbs', customTheme);
 
-    console.log(combinedRef, tooltip);
-
     useTooltip(combinedRef?.current, tooltip);
 
     return (
