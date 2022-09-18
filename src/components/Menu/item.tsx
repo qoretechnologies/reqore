@@ -1,4 +1,4 @@
-import React, { forwardRef, useContext, useRef } from 'react';
+import React, { forwardRef, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
@@ -157,8 +157,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
     ref: any
   ) => {
     const { removePopover } = useContext(PopoverContext);
-    const innerRef = useRef(null);
-    const combinedRef = useCombinedRefs(innerRef, ref);
+    const { targetRef } = useCombinedRefs(ref);
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
       event.persist();
@@ -183,7 +182,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       }
     };
 
-    useTooltip(combinedRef.current, tooltip);
+    useTooltip(targetRef.current, tooltip);
 
     return (
       <StyledElement
@@ -193,7 +192,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
         className='reqore-menu-item'
         onClick={handleClick}
         selected={selected}
-        ref={combinedRef}
+        ref={targetRef}
         disabled={disabled}
         intent={intent}
       >
