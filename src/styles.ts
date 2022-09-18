@@ -36,3 +36,14 @@ export const ScaleIconOnHover = css`
     ${ActiveIconScale}
   }
 `;
+
+export const DisabledElement = css`
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+`;
+
+export const ReadOnlyElement = css`
+  pointer-events: none;
+  cursor: not-allowed;
+`;
