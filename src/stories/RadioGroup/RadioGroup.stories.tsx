@@ -37,6 +37,16 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
           label: 'Option 3',
           value: 'opt3',
         },
+        {
+          label: 'Read Only Option',
+          value: 'opt4',
+          readOnly: true,
+        },
+        {
+          label: 'Disabled Option',
+          value: 'opt5',
+          disabled: true,
+        },
       ]}
       onSelectClick={(value) => setSelected(value)}
       selected={selected}
