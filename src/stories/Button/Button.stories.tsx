@@ -22,7 +22,7 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} disabled>
           Disabled
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} active>
+        <ReqoreButton {...buttonProps} active tooltip='hello'>
           Active
         </ReqoreButton>
         <ReqoreButton {...buttonProps} flat>
@@ -30,6 +30,9 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
         <ReqoreButton {...buttonProps} minimal>
           Minimal
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} readOnly onClick={alert}>
+          Read only
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />

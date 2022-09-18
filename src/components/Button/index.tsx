@@ -1,6 +1,5 @@
-import { Placement } from '@popperjs/core';
 import { rgba } from 'polished';
-import React, { forwardRef, useRef } from 'react';
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
@@ -9,26 +8,32 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreCustomTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
-import { ActiveIconScale, ScaleIconOnHover } from '../../styles';
-import { TReqoreTooltipProp } from '../../types/global';
+import { ActiveIconScale, DisabledElement, ReadOnlyElement, ScaleIconOnHover } from '../../styles';
+import {
+  IReqoreDisabled,
+  IReqoreIntent,
+  IReqoreReadOnly,
+  TReqoreTooltipProp,
+} from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
-export interface IReqoreButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
+export interface IReqoreButtonProps
+  extends React.HTMLAttributes<HTMLButtonElement>,
+    IReqoreDisabled,
+    IReqoreIntent,
+    IReqoreReadOnly {
   icon?: IReqoreIconName;
   size?: TSizes;
   minimal?: boolean;
-  disabled?: boolean;
   tooltip?: TReqoreTooltipProp;
-  tooltipPlacement?: Placement;
   fluid?: boolean;
   fixed?: boolean;
-  intent?: IReqoreIntent;
   active?: boolean;
   flat?: boolean;
   rightIcon?: IReqoreIconName;
@@ -134,38 +139,45 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
         : getReadableColorFrom(color, true)
       : getReadableColor(theme, undefined, undefined, true)};
 
-  ${ScaleIconOnHover}
+  ${({ readOnly }) =>
+    !readOnly
+      ? css`
+          &:not(:disabled) {
+            ${ScaleIconOnHover}
 
-  &:not(:disabled) {
-    cursor: pointer;
-    transition: all 0.2s ease-out;
+            cursor: pointer;
+            transition: all 0.2s ease-out;
 
-    &:active {
-      transform: scale(0.95);
-    }
+            &:active {
+              transform: scale(0.95);
+            }
 
-    &:hover,
-    &:focus {
-      background-color: ${({ theme, color }: IReqoreButtonStyle) =>
-        changeLightness(getButtonMainColor(theme, color), 0.05)};
-      color: ${({ theme, color }) =>
-        getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
-      border-color: ${({ minimal, theme, color }) =>
-        minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
+            &:hover,
+            &:focus {
+              background-color: ${({ theme, color }: IReqoreButtonStyle) =>
+                changeLightness(getButtonMainColor(theme, color), 0.05)};
+              color: ${({ theme, color }) =>
+                getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
+              border-color: ${({ minimal, theme, color }) =>
+                minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
 
-      ${StyledActiveContent} {
-        transform: translateY(0px);
-        filter: blur(0);
-        opacity: 1;
-      }
+              ${StyledActiveContent} {
+                transform: translateY(0px);
+                filter: blur(0);
+                opacity: 1;
+              }
 
-      ${StyledInActiveContent} {
-        transform: translateY(150%);
-        filter: blur(10px);
-        opacity: 0;
-      }
-    }
-  }
+              ${StyledInActiveContent} {
+                transform: translateY(150%);
+                filter: blur(10px);
+                opacity: 0;
+              }
+            }
+          }
+        `
+      : css`
+          ${ReadOnlyElement};
+        `}
 
   ${({ active, minimal, theme, color }: IReqoreButtonStyle) =>
     active &&
@@ -180,9 +192,7 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
     `}
 
   &:disabled {
-    opacity: 0.5;
-    pointer-events: none;
-    cursor: not-allowed;
+    ${DisabledElement};
   }
 
   &:focus,
@@ -213,16 +223,16 @@ const ReqoreButton = forwardRef(
       rightIcon,
       customTheme,
       wrap = true,
+      readOnly,
       ...rest
     }: IReqoreButtonProps,
     ref
   ) => {
-    const innerRef = useRef(null);
-    const combinedRef = useCombinedRefs(innerRef, ref);
+    const { targetRef } = useCombinedRefs(ref);
     const theme: IReqoreTheme = useReqoreTheme('main', customTheme, intent);
 
     /* A custom hook that is used to add a tooltip to the button. */
-    useTooltip(combinedRef.current, tooltip);
+    useTooltip(targetRef.current, tooltip);
 
     // If color or intent was specified, set the color
     const customColor = theme.main;
@@ -231,7 +241,7 @@ const ReqoreButton = forwardRef(
       <StyledButton
         {...rest}
         theme={theme}
-        ref={combinedRef}
+        ref={targetRef}
         fluid={fluid}
         fixed={fixed}
         minimal={minimal}
@@ -239,6 +249,7 @@ const ReqoreButton = forwardRef(
         color={customColor}
         flat={flat}
         active={active}
+        readOnly={readOnly}
         className={`${className || ''} reqore-control reqore-button`}
       >
         {icon && (
