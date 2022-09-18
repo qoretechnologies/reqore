@@ -10,7 +10,7 @@ import ReqoreNotification, {
   IReqoreNotificationType,
 } from '../components/Notifications/notification';
 import { TSizes } from '../constants/sizes';
-import { IReqoreIntent } from '../constants/theme';
+import { TReqoreIntent } from '../constants/theme';
 import ReqoreContext from '../context/ReqoreContext';
 import { IReqoreIconName } from '../types/icons';
 
@@ -24,7 +24,7 @@ export interface IReqoreNotificationData {
   onFinish?: (id?: string) => any;
   id?: string;
   type?: IReqoreNotificationType;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   flat?: boolean;
   inverted?: boolean;
   size?: TSizes;
@@ -40,12 +40,12 @@ export interface IReqoreConfirmationModal {
   description?: string;
   onConfirm?: () => void;
   onCancel?: () => void;
-  confirmButtonIntent?: IReqoreIntent;
+  confirmButtonIntent?: TReqoreIntent;
   confirmLabel?: string;
   confirmIcon?: IReqoreIconName;
   cancelLabel?: string;
   isOpen?: boolean;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
 }
 
 const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) => {

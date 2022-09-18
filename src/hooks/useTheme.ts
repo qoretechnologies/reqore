@@ -1,13 +1,13 @@
 import { cloneDeep } from 'lodash';
 import { useContext } from 'react';
-import { IReqoreIntent, IReqoreTheme } from '../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import ThemeContext from '../context/ThemeContext';
 import { mergeThemes } from '../helpers/colors';
 
 export const useReqoreTheme = (
   element: string,
   customTheme: Partial<IReqoreTheme> = {},
-  intent?: IReqoreIntent
+  intent?: TReqoreIntent
 ) => {
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
   let _customTheme: Partial<IReqoreTheme> = cloneDeep(customTheme);

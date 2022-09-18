@@ -1,6 +1,6 @@
 import React, { forwardRef, useContext, useRef } from 'react';
 import styled, { css } from 'styled-components';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -21,7 +21,7 @@ export interface IReqoreMenuItemProps extends IReqoreComponent, React.HTMLAttrib
   onClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
   onRightIconClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
   tooltip?: TReqoreTooltipProp;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
 }
 
 const StyledElementContent = styled.div<{
@@ -45,7 +45,7 @@ export interface IReqoreMenuItemStyle {
   theme: IReqoreTheme;
   selected: boolean;
   disabled: boolean;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
 }
 
 const StyledElement = styled.div<IReqoreMenuItemStyle>`
@@ -109,7 +109,7 @@ const StyledElement = styled.div<IReqoreMenuItemStyle>`
 export interface IReqoreMenuItemRightIconStyle {
   theme: IReqoreTheme;
   interactive?: boolean;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
 }
 
 const StyledRightIcon = styled.div<IReqoreMenuItemRightIconStyle>`

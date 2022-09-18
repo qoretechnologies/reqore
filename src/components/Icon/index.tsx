@@ -4,7 +4,7 @@ import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
 import styled, { css } from 'styled-components';
 import { ReqoreThemeContext } from '../..';
-import { IReqoreIntent } from '../../constants/theme';
+import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 
 export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -12,7 +12,7 @@ export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> 
   color?: string;
   size?: string;
   iconProps?: IconBaseProps;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   margin?: 'right' | 'left' | 'both';
 }
 

@@ -9,7 +9,7 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ThemeContext from '../../context/ThemeContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -23,7 +23,7 @@ export interface IReqoreTagAction {
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   disabled?: boolean;
   tooltip?: IReqoreTooltip;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
 }
 
 export interface IReqoreTagProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
@@ -39,7 +39,7 @@ export interface IReqoreTagProps extends Omit<React.HTMLAttributes<HTMLSpanEleme
   actions?: IReqoreTagAction[];
   width?: string;
   badge?: boolean;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
 }
 
 export interface IReqoreTagStyle extends IReqoreTagProps {

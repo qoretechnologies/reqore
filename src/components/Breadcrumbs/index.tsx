@@ -10,7 +10,7 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreBreadcrumbsTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreBreadcrumbsTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -28,7 +28,7 @@ export interface IReqoreBreadcrumbItemTabs {
   tabs: IReqoreTabsListItem[];
   onTabChange: (tabId: string | number) => any;
   activeTab: string;
-  activeTabIntent?: IReqoreIntent;
+  activeTabIntent?: TReqoreIntent;
 }
 
 export interface IReqoreBreadcrumbItem {

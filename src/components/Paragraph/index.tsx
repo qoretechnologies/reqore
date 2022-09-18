@@ -1,10 +1,10 @@
 import styled, { css } from 'styled-components';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
 
 export interface IReqoreParagraphStyle extends React.HTMLAttributes<HTMLHeadingElement> {
   theme: IReqoreTheme;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
 }
 
 const style = ({ theme, intent }: IReqoreParagraphStyle) => css`
