@@ -1,26 +1,29 @@
 import { rgba } from 'polished';
-import React, { forwardRef, useRef } from 'react';
-import styled from 'styled-components';
+import React, { forwardRef } from 'react';
+import styled, { css } from 'styled-components';
 import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import usePopover from '../../hooks/usePopover';
-import { IReqoreTooltip } from '../../types/global';
+import { useTooltip } from '../../hooks/useTooltip';
+import { DisabledElement, ReadOnlyElement } from '../../styles';
+import { IReqoreDisabled, IReqoreReadOnly, TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
-export interface IReqoreCheckboxProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreCheckboxProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    IReqoreDisabled,
+    IReqoreReadOnly {
   label?: string;
   labelDetail?: any;
   labelDetailPosition?: 'left' | 'right';
   size?: TSizes;
   checked?: boolean;
-  disabled?: boolean;
   labelPosition?: 'right' | 'left';
   fluid?: boolean;
   fixed?: boolean;
-  tooltip?: IReqoreTooltip;
+  tooltip?: TReqoreTooltipProp;
   asSwitch?: boolean;
   uncheckedIcon?: IReqoreIconName;
   checkedIcon?: IReqoreIconName;
@@ -68,7 +71,7 @@ const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
 `;
 
 const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
-  display: flex;
+  display: inline-flex;
   align-items: center;
   cursor: pointer;
   padding: 0px;
@@ -79,8 +82,17 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1' : '0 0 auto')};
 
-  opacity: ${({ disabled }) => disabled && 0.5};
-  pointer-events: ${({ disabled }) => disabled && 'none'};
+  ${({ disabled }) =>
+    disabled &&
+    css`
+      ${DisabledElement};
+    `}
+
+  ${({ readOnly }) =>
+    readOnly &&
+    css`
+      ${ReadOnlyElement};
+    `}
 
   color: ${({ theme, checked }) => getReadableColor(theme, undefined, undefined, !checked)};
 
@@ -109,25 +121,23 @@ const Checkbox = forwardRef(
       asSwitch,
       uncheckedIcon = 'CheckboxBlankCircleLine',
       checkedIcon = 'CheckboxCircleFill',
+      readOnly,
       ...rest
     }: IReqoreCheckboxProps,
     ref
   ) => {
-    const innerRef = useRef(null);
-    const combinedRef = useCombinedRefs(innerRef, ref);
+    const { targetRef } = useCombinedRefs(ref);
 
-    usePopover({
-      targetElement: combinedRef.current,
-      ...tooltip,
-    });
+    useTooltip(targetRef.current, tooltip);
 
     return (
       <StyledCheckbox
         {...rest}
-        ref={combinedRef}
+        ref={targetRef}
         size={size}
         disabled={disabled}
         checked={checked}
+        readOnly={readOnly}
         className={`${className || ''} reqore-checkbox reqore-control`}
       >
         {label && labelPosition === 'left' ? (
