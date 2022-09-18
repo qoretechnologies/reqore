@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import { IReqoreTextareaProps } from '../../components/Textarea';
-import { ReqoreTextarea } from '../../index';
+import { ReqoreControlGroup, ReqoreTextarea } from '../../index';
 import { argManager, DisabledArg, MinimalArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
@@ -54,21 +54,91 @@ const Template: Story<IReqoreTextareaProps> = (args) => {
   };
 
   return (
-    <ReqoreTextarea
-      {...args}
-      onChange={handleValueChange}
-      onClearClick={handleValueClear}
-      value={value}
-    />
+    <>
+      <ReqoreControlGroup fluid>
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          value={value}
+        />
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          value={value}
+          tooltip={{
+            placement: 'right-start',
+            content: 'I am a tooltip',
+          }}
+          minimal
+        />
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          value={value}
+          tooltip="I'm a tooltip"
+          flat
+        />
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          value={value}
+          disabled
+        />
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          value={value}
+          readOnly
+        />
+      </ReqoreControlGroup>
+      <br />
+      <ReqoreControlGroup fluid>
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          value={value}
+          fluid
+        />
+      </ReqoreControlGroup>
+    </>
   );
 };
 
 export const Basic = Template.bind({});
-export const Minimal = Template.bind({});
-Minimal.args = {
-  minimal: true,
+export const Info = Template.bind({});
+Info.args = {
+  intent: 'info',
 };
-export const Disabled = Template.bind({});
-Disabled.args = {
-  disabled: true,
+export const Success = Template.bind({});
+Success.args = {
+  intent: 'success',
+};
+export const Warning = Template.bind({});
+Warning.args = {
+  intent: 'warning',
+};
+export const Danger = Template.bind({});
+Danger.args = {
+  intent: 'danger',
+};
+export const Pending = Template.bind({});
+Pending.args = {
+  intent: 'pending',
+};
+export const Muted = Template.bind({});
+Muted.args = {
+  intent: 'muted',
+};
+
+export const Custom = Template.bind({});
+Custom.args = {
+  customTheme: {
+    main: '#38fdb2',
+  },
 };

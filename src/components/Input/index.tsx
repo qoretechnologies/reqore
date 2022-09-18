@@ -186,7 +186,7 @@ const ReqoreInput = forwardRef(
           readOnly={readOnly}
         />
         <ReqoreInputClearButton
-          enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
+          enabled={!readOnly && !rest?.disabled && !!(onClearClick && rest?.onChange)}
           onClick={onClearClick}
           size={size}
           show={rest?.value && rest.value !== '' ? true : false}

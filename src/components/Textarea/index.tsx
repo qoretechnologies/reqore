@@ -1,14 +1,31 @@
-import { darken, rgba } from 'polished';
+import { rgba } from 'polished';
 import React, { forwardRef } from 'react';
-import styled from 'styled-components';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import styled, { css } from 'styled-components';
+import { RADIUS_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreTheme } from '../../hooks/useTheme';
+import { useTooltip } from '../../hooks/useTooltip';
+import { DisabledElement, ReadOnlyElement } from '../../styles';
+import {
+  IReqoreDisabled,
+  IReqoreIntent,
+  IReqoreReadOnly,
+  IWithReqoreCustomTheme,
+  IWithReqoreTooltip,
+} from '../../types/global';
+import { IReqoreInputStyle } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 
-export interface IReqoreTextareaProps extends React.HTMLAttributes<HTMLTextAreaElement> {
+export interface IReqoreTextareaProps
+  extends React.HTMLAttributes<HTMLTextAreaElement>,
+    IReqoreReadOnly,
+    IReqoreDisabled,
+    IWithReqoreCustomTheme,
+    IWithReqoreTooltip,
+    IReqoreIntent {
   autoFocus?: boolean;
-  disabled?: boolean;
   width?: number;
   height?: number;
   scaleWithContent?: boolean;
@@ -18,6 +35,8 @@ export interface IReqoreTextareaProps extends React.HTMLAttributes<HTMLTextAreaE
   value?: string;
   rows?: number;
   cols?: number;
+  rounded?: boolean;
+  flat?: boolean;
   onClearClick?: () => any;
 }
 
@@ -42,24 +61,38 @@ export const StyledTextarea = styled.textarea<IReqoreTextareaStyle>`
   padding: 5px 7px;
   resize: none;
 
-  background-color: ${({ theme, minimal }: IReqoreTextareaStyle) =>
-    minimal ? 'transparent' : darken(0.01, theme.main)};
-  color: ${({ theme }: IReqoreTextareaStyle) => getReadableColor(theme)};
+  background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
+    minimal ? 'transparent' : rgba(theme.main, 0.3)};
+  color: ${({ theme }: IReqoreInputStyle) => getReadableColor(theme)};
 
-  border: ${({ minimal, theme }) =>
-    !minimal ? `1px solid ${rgba(getReadableColor(theme), 0.2)}` : 0};
-  border-bottom: ${({ minimal, theme }) =>
-    minimal ? `0.5px solid ${rgba(getReadableColor(theme), 0.2)}` : undefined};
-
-  border-radius: ${({ minimal }) => (minimal ? 0 : 3)}px;
   transition: all 0.2s ease-out;
 
   &:active,
-  &:focus,
-  &:hover {
-    outline: none;
-    border-color: ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+  &:focus {
+    background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
+      minimal ? 'transparent' : rgba(theme.main, 0.5)};
   }
+
+  border-radius: ${({ minimal, rounded, _size }) =>
+    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
+  border: ${({ minimal, theme, flat }) =>
+    !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.05)}` : 0};
+  border-bottom: ${({ minimal, theme, flat }) =>
+    minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.05)}` : undefined};
+
+  transition: all 0.2s ease-out;
+
+  ${({ disabled, readOnly }) =>
+    !disabled && !readOnly
+      ? css`
+          &:active,
+          &:focus,
+          &:hover {
+            outline: none;
+            border-color: ${({ theme }) => changeLightness(theme.main, 0.1)};
+          }
+        `
+      : undefined}
 
   &::placeholder {
     transition: all 0.2s ease-out;
@@ -72,9 +105,10 @@ export const StyledTextarea = styled.textarea<IReqoreTextareaStyle>`
     }
   }
 
+  ${({ readOnly }) => readOnly && ReadOnlyElement};
+
   &:disabled {
-    pointer-events: none;
-    opacity: 0.3;
+    ${DisabledElement};
   }
 `;
 
@@ -88,10 +122,19 @@ const ReqoreInput = forwardRef(
       className,
       onClearClick,
       fluid,
+      tooltip,
+      customTheme,
+      intent,
+      rounded = true,
       ...rest
     }: IReqoreTextareaProps,
     ref: any
   ) => {
+    const { targetRef } = useCombinedRefs(ref);
+    const theme = useReqoreTheme('main', customTheme, intent);
+
+    useTooltip(targetRef?.current, tooltip);
+
     return (
       <StyledTextareaWrapper
         className={`${className || ''} reqore-control-wrapper`}
@@ -99,20 +142,25 @@ const ReqoreInput = forwardRef(
         height={height}
         fluid={fluid}
         _size={size}
+        theme={theme}
       >
         <StyledTextarea
           {...rest}
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
-          ref={ref}
+          ref={targetRef}
+          theme={theme}
+          rounded={rounded}
           rows={scaleWithContent ? (rest?.value?.split(/\r\n|\r|\n/).length || 1) + 1 : rest.rows}
         />
-        <ReqoreInputClearButton
-          enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
-          show={rest?.value && rest.value !== ''}
-          onClick={onClearClick}
-          size='big'
-        />
+        {!rest.readOnly && (
+          <ReqoreInputClearButton
+            enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
+            show={rest?.value && rest.value !== ''}
+            onClick={onClearClick}
+            size='big'
+          />
+        )}
       </StyledTextareaWrapper>
     );
   }
