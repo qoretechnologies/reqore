@@ -200,9 +200,9 @@ const ReqoreTag = forwardRef(
                     onClick: action.onClick,
                   }}
                   {...(action.tooltip
-                    ? typeof action?.tooltip === 'string'
+                    ? typeof action.tooltip === 'string'
                       ? { tooltip: action.tooltip }
-                      : action?.tooltip || {}
+                      : action.tooltip || {}
                     : {})}
                   noWrapper
                 >
