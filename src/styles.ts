@@ -29,8 +29,6 @@ export const ActiveIconScale = css`
 `;
 
 export const ScaleIconOnHover = css`
-  ${InactiveIconScale}
-
   &:hover,
   &:focus {
     ${ActiveIconScale}

@@ -16,7 +16,7 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
   theme: IReqoreTheme;
 }
 
-const StyledControlGroup = styled.div<IReqoreControlGroupStyle>`
+export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
   flex: 0 auto;
   width: ${({ fluid }) => (fluid ? '100%' : undefined)};
@@ -59,7 +59,7 @@ const ReqoreControlGroup = ({
   rounded = true,
   ...rest
 }: IReqoreControlGroupProps) => (
-  <StyledControlGroup
+  <StyledReqoreControlGroup
     {...rest}
     size={size}
     rounded={rounded}
@@ -75,7 +75,7 @@ const ReqoreControlGroup = ({
           })
         : null
     )}
-  </StyledControlGroup>
+  </StyledReqoreControlGroup>
 );
 
 export default ReqoreControlGroup;

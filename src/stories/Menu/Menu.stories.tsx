@@ -27,11 +27,19 @@ export default {
         type: 'select',
       },
     }),
+    ...createArg('wrapText', {
+      defaultValue: true,
+      name: 'Wrap text',
+      control: {
+        type: 'boolean',
+      },
+      description: 'Whether to wrap text or not',
+    }),
     ...IntentArg,
   },
 } as Meta<IReqoreMenuProps>;
 
-export const MenuStory: Story<IReqoreMenuProps> = (args) => {
+const Template: Story<IReqoreMenuProps> = (args) => {
   return (
     <ReqoreMenu {...args}>
       <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
@@ -91,4 +99,8 @@ export const MenuStory: Story<IReqoreMenuProps> = (args) => {
   );
 };
 
-MenuStory.storyName = 'Menu';
+export const Basic = Template.bind({});
+export const WrappedText = Template.bind({});
+WrappedText.args = {
+  wrapText: false,
+};

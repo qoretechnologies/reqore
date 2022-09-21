@@ -2,6 +2,12 @@ import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getMainColor } from '../../helpers/colors';
+import {
+  ActiveIconScale,
+  DisabledElement,
+  InactiveIconScale,
+  ScaleIconOnHover,
+} from '../../styles';
 
 export interface IReqoreNavbarItemProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
@@ -27,6 +33,18 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
   background-color: ${({ theme, active, type }) =>
     active && (theme[type]?.hoverColor || changeLightness(getMainColor(theme, type), 0.05))};
 
+  ${InactiveIconScale}
+
+  ${({ active }: IReqoreNavbarItemStyle) => {
+    if (active) {
+      return css`
+        ${ActiveIconScale}
+      `;
+    }
+
+    return undefined;
+  }}
+
   ${({ interactive, theme, type }: IReqoreNavbarItemStyle) => {
     if (interactive) {
       return css`
@@ -36,6 +54,7 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
           background-color: ${theme[type]?.hoverColor ||
           changeLightness(getMainColor(theme, type), 0.05)};
         }
+        ${ScaleIconOnHover}
       `;
     }
 
@@ -47,9 +66,7 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
   ${({ disabled }) =>
     disabled &&
     css`
-      opacity: 0.5;
-      pointer-events: none;
-      cursor: not-allowed;
+      ${DisabledElement}
     `}
 `;
 

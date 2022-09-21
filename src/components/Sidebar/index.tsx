@@ -11,6 +11,7 @@ import { changeLightness, getMainColor, getReadableColor } from '../../helpers/c
 import { transformMenu } from '../../helpers/sidebar';
 import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { ActiveIconScale, InactiveIconScale, ScaleIconOnHover } from '../../styles';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledBackdrop } from '../Drawer';
 import ReqoreIcon from '../Icon';
@@ -198,6 +199,8 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
     }
 
     .sidebarItem.active {
+      ${ActiveIconScale}
+
       color: ${({ theme }) =>
         theme.sidebar?.item?.activeColor ||
         theme.sidebar?.item?.color ||
@@ -219,6 +222,8 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
     }
 
     .sidebarSubItem.active {
+      ${ActiveIconScale}
+
       color: ${({ theme }) =>
         theme.sidebar?.subItem?.activeColor ||
         theme.sidebar?.subItem?.color ||
@@ -240,6 +245,8 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
     }
 
     .sidebarItem {
+      ${InactiveIconScale}
+
       position: relative;
 
       span.bp3-icon:not(.favorite) {
@@ -259,6 +266,8 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
         theme.sidebar?.item?.background || getMainColor(theme, 'sidebar')};
 
       &:hover {
+        ${ScaleIconOnHover}
+
         color: ${({ theme }) =>
           theme.sidebar?.item?.hoverColor || theme.sidebar?.item?.color || 'inherit'};
         background-color: ${({ theme }) =>
@@ -298,6 +307,8 @@ const StyledSidebar = styled.div<IReqoreSidebarStyle>`
         theme.sidebar?.subItem?.background || darken(0.04, getMainColor(theme, 'sidebar'))};
 
       &:hover {
+        ${ScaleIconOnHover}
+
         color: ${({ theme }) =>
           theme.sidebar?.subItem?.hoverColor || theme.sidebar?.subItem?.color || 'inherit'};
         background-color: ${({ theme }) =>

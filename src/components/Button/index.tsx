@@ -13,7 +13,13 @@ import { changeLightness, getReadableColor, getReadableColorFrom } from '../../h
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
-import { ActiveIconScale, DisabledElement, ReadOnlyElement, ScaleIconOnHover } from '../../styles';
+import {
+  ActiveIconScale,
+  DisabledElement,
+  InactiveIconScale,
+  ReadOnlyElement,
+  ScaleIconOnHover,
+} from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -56,6 +62,7 @@ const getButtonMainColor = (theme: IReqoreTheme, color?: string) => {
 export const StyledAnimatedTextWrapper = styled.span`
   overflow: hidden;
   position: relative;
+  padding: 4px 0;
 `;
 
 export const StyledActiveContent = styled.span`
@@ -104,6 +111,7 @@ export const StyledInvisibleContent = styled.span`
 
 export const StyledButton = styled.button<IReqoreButtonStyle>`
   display: flex;
+  text-align: left;
   align-items: center;
   margin: 0;
   font-weight: 600;
@@ -114,7 +122,14 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
   padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
-  height: ${({ size }) => SIZE_TO_PX[size]}px;
+  min-height: ${({ size }) => SIZE_TO_PX[size]}px;
+
+  ${({ wrap }) =>
+    wrap &&
+    css`
+      max-height: ${({ size }) => SIZE_TO_PX[size]}px;
+    `}
+
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 0 auto')};
@@ -138,6 +153,8 @@ export const StyledButton = styled.button<IReqoreButtonStyle>`
         ? getReadableColor(theme, undefined, undefined, true)
         : getReadableColorFrom(color, true)
       : getReadableColor(theme, undefined, undefined, true)};
+
+  ${InactiveIconScale}
 
   ${({ readOnly }) =>
     !readOnly
