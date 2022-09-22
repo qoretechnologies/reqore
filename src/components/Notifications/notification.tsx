@@ -5,7 +5,7 @@ import { useMount, useUnmount } from 'react-use';
 import styled, { css, keyframes } from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { PADDING_FROM_SIZE, TABS_SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
 import {
@@ -17,11 +17,11 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
-export type IReqoreNotificationType = IReqoreIntent;
+export type IReqoreNotificationType = TReqoreIntent;
 
 export interface IReqoreNotificationProps {
   type?: IReqoreNotificationType;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   title?: string;
   content: string;
   icon?: IReqoreIconName;
@@ -40,7 +40,7 @@ export interface IReqoreNotificationStyle {
   type?: IReqoreNotificationType;
   clickable?: boolean;
   timeout?: number;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   hasShadow?: boolean;
   fluid?: boolean;
   flat?: boolean;

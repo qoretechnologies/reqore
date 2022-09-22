@@ -1,7 +1,7 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { TSizes } from '../../constants/sizes';
-import { IReqoreCustomTheme, IReqoreIntent } from '../../constants/theme';
+import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTabsList from './list';
@@ -16,8 +16,8 @@ export interface IReqoreTabsListItem {
   props?: React.HTMLAttributes<any>;
   onClick?: (event: any) => any;
   onCloseClick?: (id: string | number) => any;
-  activeIntent?: IReqoreIntent;
-  intent?: IReqoreIntent;
+  activeIntent?: TReqoreIntent;
+  intent?: TReqoreIntent;
   closeIcon?: IReqoreIconName;
 }
 
@@ -29,13 +29,13 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   fill?: boolean;
   fillParent?: boolean;
   vertical?: boolean;
-  activeTabIntent?: IReqoreIntent;
+  activeTabIntent?: TReqoreIntent;
   wrapTabNames?: boolean;
   flat?: boolean;
   size?: TSizes;
   width?: string;
   customTheme?: IReqoreCustomTheme;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   // Internal prop, ignore!
   _testWidth?: number;
 }

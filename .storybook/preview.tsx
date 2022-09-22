@@ -34,16 +34,6 @@ export const argTypes = {
       defaultValue: { summary: '#333333' },
     },
   },
-  customTheme: {
-    control: 'color',
-    description: 'The theme just for the current component',
-    name: 'Component Theme',
-    table: {
-      type: {
-        summary: 'hex color of 6 characters',
-      },
-    },
-  },
 };
 
 export const decorators = [

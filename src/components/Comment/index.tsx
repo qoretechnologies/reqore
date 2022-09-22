@@ -1,7 +1,7 @@
 import { size } from 'lodash';
 import styled from 'styled-components';
 import { ReqoreButton, ReqoreColumn, ReqoreControlGroup, ReqoreDropdown } from '../..';
-import { IReqoreIntent } from '../../constants/theme';
+import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 import { ReqoreColumns } from '../Columns';
 import { ReqoreH3 } from '../Header';
@@ -14,7 +14,7 @@ export interface IReqoreCommentProps {
   image?: string;
   title?: string;
   children: any;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   rounded?: boolean;
   flat?: boolean;
   detail?: string;

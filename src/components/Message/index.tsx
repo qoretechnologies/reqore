@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
@@ -15,7 +15,7 @@ import {
 } from '../Notifications/notification';
 
 export interface IReqoreMessageProps {
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   title?: string;
   children: any;
   icon?: IReqoreIconName;

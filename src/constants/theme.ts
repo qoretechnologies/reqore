@@ -81,7 +81,7 @@ export interface IReqoreIntents {
   muted?: string;
 }
 
-export type IReqoreIntent = 'info' | 'success' | 'pending' | 'warning' | 'danger' | 'muted';
+export type TReqoreIntent = 'info' | 'success' | 'pending' | 'warning' | 'danger' | 'muted';
 
 export const DEFAULT_INTENTS: IReqoreIntents = {
   info: '#0E5A8A',

@@ -11,7 +11,7 @@ import {
 } from '.';
 import { ReqorePopover } from '../..';
 import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import { ReqoreH4 } from '../Header';
 import ReqoreIcon from '../Icon';
@@ -27,7 +27,7 @@ export interface IReqoreTableRowOptions {
   selected?: string[];
   onRowClick?: IReqoreTableRowClick;
   striped?: boolean;
-  selectedRowIntent?: IReqoreIntent;
+  selectedRowIntent?: TReqoreIntent;
   size?: TSizes;
   flat?: boolean;
 }
@@ -41,9 +41,9 @@ export interface IReqoreTableRowProps extends React.HTMLAttributes<HTMLTableRowE
 export interface IReqoreTableRowStyle {
   theme: IReqoreTheme;
   interactive?: boolean;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   selected?: boolean;
-  selectedIntent?: IReqoreIntent;
+  selectedIntent?: TReqoreIntent;
   flat?: boolean;
   disabled?: boolean;
   hovered?: boolean;
@@ -61,7 +61,7 @@ export interface IReqoreTableCellStyle {
   grow?: number;
   theme?: IReqoreTheme;
   align?: 'center' | 'left' | 'right';
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   interactive?: boolean;
   interactiveCell?: boolean;
   size?: TSizes;
@@ -69,7 +69,7 @@ export interface IReqoreTableCellStyle {
   disabled?: boolean;
   selected?: boolean;
   hovered?: boolean;
-  selectedIntent?: IReqoreIntent;
+  selectedIntent?: TReqoreIntent;
   even?: boolean;
   striped?: boolean;
 }
@@ -211,9 +211,9 @@ const ReqoreTableRow = ({
       // Separate the content string by colon
       let [type, intentOrColor] = content.split(':');
       // Check if the intent starts with hash for tags
-      let intent: IReqoreIntent = intentOrColor?.startsWith('#')
+      let intent: TReqoreIntent = intentOrColor?.startsWith('#')
         ? undefined
-        : (intentOrColor as IReqoreIntent);
+        : (intentOrColor as TReqoreIntent);
       let color: string =
         intentOrColor?.startsWith('#') && type === 'tag' ? intentOrColor : undefined;
       // Render content based on the type
@@ -225,15 +225,15 @@ const ReqoreTableRow = ({
             <ReqoreTag
               label={data[dataId]}
               size={size}
-              intent={intent as IReqoreIntent}
+              intent={intent as TReqoreIntent}
               color={color}
             />
           );
         case 'title':
-          return <ReqoreH4 intent={intent as IReqoreIntent}>{data[dataId]}</ReqoreH4>;
+          return <ReqoreH4 intent={intent as TReqoreIntent}>{data[dataId]}</ReqoreH4>;
         case 'text':
           return (
-            <ReqoreP className='reqore-table-text' intent={intent as IReqoreIntent}>
+            <ReqoreP className='reqore-table-text' intent={intent as TReqoreIntent}>
               {data[dataId]}
             </ReqoreP>
           );

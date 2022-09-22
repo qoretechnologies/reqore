@@ -1,4 +1,4 @@
-import { forwardRef, useRef } from 'react';
+import { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { TABS_PADDING_TO_PX, TSizes } from '../../constants/sizes';
@@ -87,15 +87,14 @@ const ReqoreTabsListItem = forwardRef(
     }: IReqoreTabListItemProps,
     ref
   ) => {
-    const innerRef = useRef(null);
-    const combinedRef = useCombinedRefs(innerRef, ref);
+    const { targetRef } = useCombinedRefs(ref);
     const theme = useReqoreTheme('main', customTheme);
     const _intent = activeIntent || intent;
     const activeColor = _intent ? theme.intents[_intent] : theme.main;
 
     return (
       <StyledTabListItem
-        ref={combinedRef}
+        ref={targetRef}
         {...props}
         className={className}
         intent={intent}

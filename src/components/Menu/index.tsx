@@ -1,10 +1,11 @@
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
-import { IReqoreCustomTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreComponent } from '../../types/global';
+import { StyledReqoreControlGroup } from '../ControlGroup';
 
 export interface IReqoreMenuProps extends IReqoreComponent, React.HTMLAttributes<HTMLDivElement> {
   children: any;
@@ -12,7 +13,8 @@ export interface IReqoreMenuProps extends IReqoreComponent, React.HTMLAttributes
   width?: string;
   maxHeight?: string;
   customTheme?: IReqoreCustomTheme;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
+  wrapText?: boolean;
 }
 
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
@@ -37,10 +39,17 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
     )};
     padding-${position === 'left' ? 'right' : 'left'}: 10px;
   `}
+
+  ${StyledReqoreControlGroup}:not(:last-child) {
+    margin-bottom: 5px;
+  }
 `;
 
 const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
-  ({ children, position, _insidePopover, _popoverId, customTheme, intent, ...rest }, ref: any) => {
+  (
+    { children, position, _insidePopover, _popoverId, customTheme, intent, wrapText, ...rest },
+    ref: any
+  ) => {
     const theme = useReqoreTheme('main', customTheme, intent);
 
     return (
@@ -52,6 +61,8 @@ const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
                 React.cloneElement(child, {
                   _insidePopover,
                   _popoverId,
+                  customTheme: theme,
+                  wrapText,
                 })
               : null
           )}

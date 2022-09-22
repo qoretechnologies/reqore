@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
-import { IReqoreCustomTheme, IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -18,12 +18,12 @@ export type TReqoreTableColumnContent =
   | React.FC<{ [key: string]: any; _selectId?: string }>
   | 'time-ago'
   | 'tag'
-  | `tag:${IReqoreIntent}`
+  | `tag:${TReqoreIntent}`
   | `tag:#${string}`
   | 'title'
-  | `title:${IReqoreIntent}`
+  | `title:${TReqoreIntent}`
   | 'text'
-  | `text:${IReqoreIntent}`;
+  | `text:${TReqoreIntent}`;
 
 export interface IReqoreTableColumn {
   dataId: string;
@@ -38,7 +38,7 @@ export interface IReqoreTableColumn {
   icon?: IReqoreIconName;
   iconSize?: string;
   tooltip?: string;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   cellTooltip?: (data: { [key: string]: any; _selectId?: string }) => string | JSX.Element;
   onCellClick?: (data: { [key: string]: any; _selectId?: string }) => void;
 }
@@ -46,7 +46,7 @@ export interface IReqoreTableColumn {
 export interface IReqoreTableRowData {
   [key: string]: any;
   _selectId?: string;
-  _intent?: IReqoreIntent;
+  _intent?: TReqoreIntent;
   _disabled?: boolean;
 }
 
@@ -63,13 +63,13 @@ export interface IReqoreTableProps extends React.HTMLAttributes<HTMLDivElement> 
   striped?: boolean;
   selectable?: boolean;
   selected?: string[];
-  selectedRowIntent?: IReqoreIntent;
+  selectedRowIntent?: TReqoreIntent;
   onSortChange?: (sort?: IReqoreTableSort) => void;
   onSelectedChange?: (selected?: any[]) => void;
   selectToggleTooltip?: string;
   onRowClick?: IReqoreTableRowClick;
   customTheme?: IReqoreCustomTheme;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
   rounded?: boolean;
   flat?: boolean;
   size?: TSizes;

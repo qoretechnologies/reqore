@@ -1,5 +1,5 @@
 import _size from 'lodash/size';
-import React, { forwardRef, useContext, useRef } from 'react';
+import React, { forwardRef, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import {
@@ -9,24 +9,24 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreIntent, IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ThemeContext from '../../context/ThemeContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import usePopover from '../../hooks/usePopover';
-import { IReqoreTooltip } from '../../types/global';
+import { useTooltip } from '../../hooks/useTooltip';
+import { IReqoreDisabled, IReqoreIntent, IWithReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 
-export interface IReqoreTagAction {
+export interface IReqoreTagAction extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent {
   icon: IReqoreIconName;
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
-  disabled?: boolean;
-  tooltip?: IReqoreTooltip;
-  intent?: IReqoreIntent;
 }
 
-export interface IReqoreTagProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
+export interface IReqoreTagProps
+  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'>,
+    IWithReqoreTooltip,
+    IReqoreDisabled {
   size?: TSizes;
   label?: string;
   onRemoveClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
@@ -34,12 +34,10 @@ export interface IReqoreTagProps extends Omit<React.HTMLAttributes<HTMLSpanEleme
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
   color?: string;
-  tooltip?: IReqoreTooltip;
-  disabled?: boolean;
   actions?: IReqoreTagAction[];
   width?: string;
   badge?: boolean;
-  intent?: IReqoreIntent;
+  intent?: TReqoreIntent;
 }
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
@@ -154,15 +152,10 @@ const ReqoreTag = forwardRef(
     }: IReqoreTagProps,
     ref
   ) => {
-    const innerRef = useRef(null);
-    const combinedRef = useCombinedRefs(innerRef, ref);
+    const { targetRef } = useCombinedRefs(ref);
     const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
 
-    usePopover({
-      ...tooltip,
-      targetElement: combinedRef.current,
-      show: !!tooltip?.content,
-    });
+    useTooltip(targetRef.current, tooltip);
 
     // If color or intent was specified, set the color
     const customColor = intent ? theme.intents[intent] : color;
@@ -173,7 +166,7 @@ const ReqoreTag = forwardRef(
         color={customColor}
         className={`${className || ''} reqore-tag`}
         size={size}
-        ref={combinedRef}
+        ref={targetRef}
         badge={badge}
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
@@ -199,7 +192,6 @@ const ReqoreTag = forwardRef(
           ? actions.map((action) => (
               <>
                 <ReqorePopover
-                  {...action.tooltip}
                   component={StyledButtonWrapper}
                   componentProps={{
                     size,
@@ -207,6 +199,11 @@ const ReqoreTag = forwardRef(
                     className: 'reqore-tag-action',
                     onClick: action.onClick,
                   }}
+                  {...(action.tooltip
+                    ? typeof action.tooltip === 'string'
+                      ? { tooltip: action.tooltip }
+                      : action.tooltip || {}
+                    : {})}
                   noWrapper
                 >
                   <ReqoreIcon icon={action.icon} size={`${TEXT_FROM_SIZE[size]}px`} />
