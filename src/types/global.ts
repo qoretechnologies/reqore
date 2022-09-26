@@ -79,5 +79,20 @@ export interface IWithReqoreTooltip {
   tooltip?: string | IReqoreTooltip;
 }
 
+export interface IWithReqoreFlat {
+  /**
+   * If true, the component will be flat
+   * @default false
+   * @type boolean
+   * @memberof IWithReqoreFlat
+   * @example
+   * <ReqoreInput flat />
+   * <ReqoreInput flat={true} />
+   * <ReqoreInput flat={false} />
+   *
+   */
+  flat?: boolean;
+}
+
 export interface IReqoreTooltip extends IPopoverOptions {}
 export type TReqoreTooltipProp = string | IReqoreTooltip;

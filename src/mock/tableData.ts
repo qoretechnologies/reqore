@@ -1,5 +1,5 @@
-import shortid from 'shortid';
-import { IReqoreTableColumn, IReqoreTableData } from '../components/Table';
+import { IReqoreTableColumn } from '../components/Table';
+import data from './data.json';
 
 export default {
   columns: [
@@ -23,18 +23,9 @@ export default {
     { dataId: 'group', header: 'Group', width: 150, intent: 'muted' },
     { dataId: 'date', header: 'Date', width: 150, content: 'time-ago' },
   ] as IReqoreTableColumn[],
-  data: [...new Array(100)].map((_val, index) => ({
-    id: index,
-    firstName: shortid.generate(),
-    lastName: shortid.generate(),
-    address: `${shortid.generate()}, ${shortid.generate()}, ${shortid.generate()}`,
-    age: 99 - index,
-    occupation: shortid.generate(),
-    group: shortid.generate(),
+  data: data.map((datum) => ({
+    ...datum,
     date: Date.now(),
-    _intent: index === 2 || index === 3 || index === 4 ? 'info' : undefined,
-    _selectId: index !== 3 && index !== 6 ? `Row-${index}` : null,
-    _disabled: index === 5,
-  })) as IReqoreTableData,
+  })),
   height: 300,
 };

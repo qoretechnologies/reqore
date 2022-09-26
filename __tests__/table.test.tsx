@@ -103,7 +103,7 @@ test('Renders <Table /> with custom content', () => {
   const firstRow = document.querySelector('.reqore-table-row');
   const idCell = firstRow.querySelector('.reqore-table-cell');
 
-  expect(idCell.textContent).toBe('ID 0');
+  expect(idCell.textContent).toBe('ID 1');
 });
 
 test('Renders <Table /> with predefined content', () => {
@@ -186,7 +186,7 @@ test('Sorting on <Table /> works properly', () => {
         sortable: true,
       },
       { dataId: 'firstName', header: 'First Name', width: 150 },
-      { dataId: 'lastName', header: 'Last Name', width: 150 },
+      { dataId: 'lastName', header: 'Last Name', width: 150, sortable: true },
       { dataId: 'address', header: 'Address', width: 300, grow: 2 },
       {
         dataId: 'age',
@@ -217,20 +217,22 @@ test('Sorting on <Table /> works properly', () => {
   const firstRow = document.querySelector('.reqore-table-row');
   const idCell = firstRow.querySelector('.reqore-table-cell');
 
-  expect(idCell.textContent).toBe('99');
+  expect(idCell.textContent).toBe('1000');
 
-  fireEvent.click(document.querySelectorAll('.reqore-table-header-cell')[4]);
+  const lastNameHeaderCell = document.querySelectorAll('.reqore-table-header-cell')[2];
 
-  const ageCell = firstRow.querySelectorAll('.reqore-table-cell')[4];
+  fireEvent.click(lastNameHeaderCell);
+  expect(fn).toHaveBeenCalledWith({ by: 'lastName', direction: 'desc' });
 
-  expect(fn).toHaveBeenCalledWith({ by: 'age', direction: 'desc' });
-  expect(ageCell.textContent).toBe('99');
+  const lastNameCell = firstRow.querySelectorAll('.reqore-table-cell')[2];
 
-  fireEvent.click(document.querySelectorAll('.reqore-table-header-cell')[4]);
+  expect(lastNameCell.textContent).toBe('Zold');
 
-  expect(fn).toHaveBeenLastCalledWith({ by: 'age', direction: 'asc' });
-  expect(ageCell.textContent).toBe('0');
-  expect(idCell.textContent).toBe('99');
+  fireEvent.click(document.querySelectorAll('.reqore-table-header-cell')[2]);
+
+  expect(fn).toHaveBeenLastCalledWith({ by: 'lastName', direction: 'asc' });
+  expect(lastNameCell.textContent).toBe('Abbess');
+  expect(idCell.textContent).toBe('543');
 });
 
 test('Rows on <Table /> can be selected', () => {
@@ -254,14 +256,14 @@ test('Rows on <Table /> can be selected', () => {
 
   fireEvent.click(firstCheckCell);
 
-  expect(fn).toHaveBeenCalledWith(['Row-0']);
+  expect(fn).toHaveBeenCalledWith([1]);
 
   const secondRow = document.querySelectorAll('.reqore-table-row')[1];
   const secondCheckCell = secondRow.querySelector('.reqore-table-cell');
 
   fireEvent.click(secondCheckCell);
 
-  expect(fn).toHaveBeenLastCalledWith(['Row-0', 'Row-1']);
+  expect(fn).toHaveBeenLastCalledWith([1, 2]);
 });
 
 test('Rows on <Table /> cannot be selected if _selectId is missing', () => {
@@ -280,10 +282,10 @@ test('Rows on <Table /> cannot be selected if _selectId is missing', () => {
     </ReqoreUIProvider>
   );
 
-  const firstRow = document.querySelector('.reqore-table-row');
-  const firstCheckCell = firstRow.querySelector('.reqore-table-cell');
+  const thirdRow = document.querySelectorAll('.reqore-table-row')[2];
+  const thirdCheckCell = thirdRow.querySelector('.reqore-table-cell');
 
-  fireEvent.click(firstCheckCell);
+  fireEvent.click(thirdCheckCell);
 
   const fourthRow = document.querySelectorAll('.reqore-table-row')[3];
   const fourthCheckCell = fourthRow.querySelector('.reqore-table-cell');
@@ -314,7 +316,7 @@ test('Rows on <Table /> are all selected/deselected when clicking on header', ()
 
   fireEvent.click(firstHeaderCell);
 
-  const selectableData: string[] = tableData.data
+  const selectableData: number[] = tableData.data
     .filter((datum) => datum._selectId ?? false)
     .map((datum) => datum._selectId);
 
@@ -410,5 +412,5 @@ test('Cells on <Table /> are interactive', () => {
 
   fireEvent.click(firstCheckCell);
 
-  expect(fn).toHaveBeenCalledWith(0);
+  expect(fn).toHaveBeenCalledWith(1);
 });
