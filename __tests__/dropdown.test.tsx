@@ -9,8 +9,13 @@ import {
   ReqoreUIProvider,
 } from '../src';
 
+beforeAll(() => {
+  jest.useFakeTimers();
+});
+
 test('Renders <Dropdown /> properly', () => {
   act(() => {
+    jest.advanceTimersByTime(1);
     render(
       <ReqoreUIProvider>
         <ReqoreLayoutContent>
@@ -40,6 +45,7 @@ test('Renders <Dropdown /> properly', () => {
   });
 
   fireEvent.click(document.querySelector('.reqore-button')!);
+  jest.advanceTimersByTime(1);
 
   expect(document.querySelector('.reqore-button')?.getAttribute('disabled')).toBe(null);
   expect(document.querySelectorAll('.reqore-button').length).toBe(5);
@@ -106,6 +112,7 @@ test('Renders <Dropdown /> with custom component and custom handler', () => {
 
   if (component) {
     fireEvent.focus(component);
+    jest.advanceTimersByTime(1);
   }
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -148,6 +155,7 @@ test('Renders <Dropdown /> is opened by default', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
+    jest.advanceTimersByTime(1);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -186,6 +194,7 @@ test('Renders filterable <Dropdown /> and filters items correctly', () => {
   });
 
   fireEvent.click(document.querySelector('.reqore-button')!);
+  jest.advanceTimersByTime(1);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'how' },
   });
