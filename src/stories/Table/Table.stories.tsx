@@ -108,7 +108,7 @@ export default {
     }),
     ...createArg('data', {
       type: 'array',
-      defaultValue: tableData.data,
+      defaultValue: tableData.data as any,
       name: 'Data',
       description: 'The data to be displayed in the table',
       table: {
@@ -120,6 +120,12 @@ export default {
       defaultValue: 'Select This Row',
       name: 'Select Toggle Tooltip',
       description: 'The tooltip of the select toggle',
+    }),
+    ...createArg('fill', {
+      type: 'boolean',
+      defaultValue: false,
+      name: 'Fill',
+      description: 'Whether the table should fill the parent',
     }),
     ...SizeArg,
     ...FlatArg,
@@ -148,4 +154,9 @@ Rounded.args = {
 export const Selectable = Template.bind({});
 Selectable.args = {
   selectable: true,
+};
+
+export const FillParent = Template.bind({});
+FillParent.args = {
+  fill: true,
 };

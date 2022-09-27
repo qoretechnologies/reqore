@@ -1,13 +1,14 @@
 /* @flow */
 import { size as count } from 'lodash';
 import React, { useState } from 'react';
-import { useUpdateEffect } from 'react-use';
+import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
-import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreFlat } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader, { StyledColumnGroupHeader } from './header';
@@ -25,7 +26,7 @@ export type TReqoreTableColumnContent =
   | 'text'
   | `text:${TReqoreIntent}`;
 
-export interface IReqoreTableColumn {
+export interface IReqoreTableColumn extends IReqoreIntent {
   dataId: string;
   header?: string | JSX.Element;
   grow?: 1 | 2 | 3 | 4;
@@ -38,7 +39,6 @@ export interface IReqoreTableColumn {
   icon?: IReqoreIconName;
   iconSize?: string;
   tooltip?: string;
-  intent?: TReqoreIntent;
   cellTooltip?: (data: { [key: string]: any; _selectId?: string }) => string | JSX.Element;
   onCellClick?: (data: { [key: string]: any; _selectId?: string }) => void;
 }
@@ -53,7 +53,11 @@ export interface IReqoreTableRowData {
 export type IReqoreTableRowClick = (data: IReqoreTableRowData) => void;
 export type IReqoreTableData = IReqoreTableRowData[];
 
-export interface IReqoreTableProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreTableProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    IReqoreIntent,
+    IWithReqoreFlat,
+    IWithReqoreCustomTheme {
   columns: IReqoreTableColumn[];
   data?: IReqoreTableData;
   className?: string;
@@ -68,16 +72,15 @@ export interface IReqoreTableProps extends React.HTMLAttributes<HTMLDivElement> 
   onSelectedChange?: (selected?: any[]) => void;
   selectToggleTooltip?: string;
   onRowClick?: IReqoreTableRowClick;
-  customTheme?: IReqoreCustomTheme;
-  intent?: TReqoreIntent;
   rounded?: boolean;
-  flat?: boolean;
   size?: TSizes;
+  fill?: boolean;
 }
 
 export interface IReqoreTableStyle {
   theme: IReqoreTheme;
   width?: number;
+  fill?: number;
   striped?: boolean;
   selectable?: boolean;
   rounded?: boolean;
@@ -90,8 +93,9 @@ export interface IReqoreTableSort {
 }
 
 const StyledTableWrapper = styled.div<IReqoreTableStyle>`
-  ${({ theme, width, rounded, flat }: IReqoreTableStyle) => css`
+  ${({ theme, width, rounded, flat, fill }: IReqoreTableStyle) => css`
     width: ${width ? `${width}px` : '100%'};
+    height: ${fill ? '100%' : 'auto'};
 
     position: relative;
     clear: both;
@@ -136,6 +140,7 @@ const ReqoreTable = ({
   selectedRowIntent,
   size,
   intent,
+  fill,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -143,6 +148,7 @@ const ReqoreTable = ({
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
   const [_selected, setSelected] = useState<string[]>([]);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
+  const [wrapperRef, sizes] = useMeasure();
   const theme = useReqoreTheme('main', customTheme, intent);
 
   useUpdateEffect(() => {
@@ -228,9 +234,11 @@ const ReqoreTable = ({
     <ReqoreThemeProvider theme={theme}>
       <StyledTableWrapper
         {...rest}
+        fill={fill}
         className={`${className || ''} reqore-table`}
         rounded={rounded}
         width={width}
+        ref={wrapperRef}
       >
         <ReqoreTableHeader
           columns={columns}
@@ -247,7 +255,7 @@ const ReqoreTable = ({
           data={_sort ? sortTableData(_data, _sort) : _data}
           columns={columns}
           setLeftScroll={setLeftScroll}
-          height={height}
+          height={fill ? sizes.height : height}
           selectable={selectable}
           onSelectClick={handleSelectClick}
           onRowClick={onRowClick}
