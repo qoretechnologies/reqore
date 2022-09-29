@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import usePopover from '../../hooks/usePopover';
+import { useTooltip } from '../../hooks/useTooltip';
 import ReqoreIcon from '../Icon';
 import { alignToFlex } from './row';
 
@@ -72,7 +72,7 @@ const ReqoreTableHeaderCell = ({
 }: IReqoreTableHeaderCellProps) => {
   const [ref, setRef] = useState(null);
 
-  usePopover({ targetElement: ref, content: tooltip || header });
+  useTooltip(ref, { content: tooltip || header, delay: 300 });
 
   return (
     <StyledTableHeader

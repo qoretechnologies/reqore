@@ -201,6 +201,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
               } as IReqoreBreadcrumbItemProps
             }
             handler='hoverStay'
+            delay={500}
             content={
               <ReqoreMenu>
                 {item.map(({ icon, label, as, tooltip, props }) => (
