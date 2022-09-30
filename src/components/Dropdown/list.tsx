@@ -3,6 +3,7 @@ import { IReqoreComponent } from '../../types/global';
 import ReqoreInput from '../Input';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
+import { ReqoreSpacer } from '../Spacer';
 
 export interface IReqoreDropdownListProps extends IReqoreComponent {
   items?: IReqoreMenuItemProps[];
@@ -58,13 +59,16 @@ const ReqoreDropdownList = ({
       maxHeight={height || '300px'}
     >
       {filterable && (
-        <ReqoreInput
-          value={query}
-          onChange={handleQueryChange}
-          placeholder='Filter'
-          autoFocus
-          onClearClick={() => setQuery('')}
-        />
+        <>
+          <ReqoreInput
+            value={query}
+            onChange={handleQueryChange}
+            placeholder='Filter'
+            autoFocus
+            onClearClick={() => setQuery('')}
+          />
+          <ReqoreSpacer height={10} />
+        </>
       )}
       {filteredItems.map((item: IReqoreMenuItemProps, index: number) => (
         <ReqoreMenuItem key={index} {...item} rightIcon={item.selected ? 'CheckLine' : undefined} />
