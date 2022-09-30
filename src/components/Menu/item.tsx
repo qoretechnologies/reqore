@@ -90,7 +90,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
     useTooltip(targetRef.current, tooltip);
 
     return (
-      <ReqoreControlGroup stack fluid>
+      <ReqoreControlGroup stack={!!onRightIconClick} fluid>
         <ReqoreButton
           //@ts-ignore
           as={as}
@@ -113,11 +113,13 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
             icon={rightIcon}
             flat
             fixed
+            minimal={!onRightIconClick}
             customTheme={rest.customTheme}
             className='reqore-menu-item-right-icon'
             onClick={handleRightIconClick}
+            readOnly={!onRightIconClick}
             intent={intent}
-            active={selected}
+            active={selected && !!onRightIconClick}
             wrap={wrapText}
           />
         )}

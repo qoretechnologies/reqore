@@ -38,7 +38,7 @@ export default {
           icon: 'SunCloudyLine',
         },
         {
-          label: 'How are ya',
+          label: 'How are ya, I am super long item and I am not going to fit in the dropdown',
           icon: 'BatteryChargeFill',
         },
         {

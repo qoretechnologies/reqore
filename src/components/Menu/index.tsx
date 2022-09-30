@@ -22,7 +22,8 @@ export interface IReqoreMenuStyle extends IReqoreMenuProps {
 }
 
 const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
-  width: ${({ width }) => width || '160px'};
+  width: ${({ width }) => width || undefined};
+  min-width: ${({ width }) => (width ? undefined : '160px')};
   padding: 5px;
   max-height: ${({ maxHeight }) => maxHeight || undefined};
   overflow-y: auto;
