@@ -1,6 +1,6 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import { ReqoreLayoutContent, ReqorePanel, ReqoreUIProvider } from '../src';
+import { ReqoreInput, ReqoreLayoutContent, ReqorePanel, ReqoreUIProvider } from '../src';
 
 test('Renders basic <Panel /> properly', () => {
   render(
@@ -34,7 +34,7 @@ test('Renders basic <Panel /> with title properly', () => {
 
   expect(document.querySelectorAll('.reqore-panel').length).toBe(1);
   expect(document.querySelectorAll('.reqore-panel-title').length).toBe(1);
-  expect(document.querySelectorAll('span').length).toBe(2);
+  expect(document.querySelectorAll('span').length).toBe(1);
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(1);
 });
 
@@ -94,4 +94,37 @@ test('Renders closable <Panel /> properly', () => {
   fireEvent.click(closeButton!);
 
   expect(fn).toHaveBeenCalled();
+});
+
+test('Renders <Panel /> with actions', () => {
+  const fn = jest.fn();
+
+  render(
+    <div style={{ width: '1000px' }}>
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Test'
+            onClose={fn}
+            actions={[
+              { label: 'Test' },
+              { actions: [{ label: 'Deep' }] },
+              { customContent: () => <ReqoreInput /> },
+            ]}
+            bottomActions={[
+              { label: 'Test', position: 'left' },
+              { actions: [{ label: 'Deep' }], position: 'right' },
+            ]}
+          >
+            {' '}
+            Panel{' '}
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  expect(document.querySelectorAll('.reqore-button').length).toBe(5);
+  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-input').length).toBe(1);
 });

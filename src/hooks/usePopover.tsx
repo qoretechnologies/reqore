@@ -29,6 +29,7 @@ export interface IPopover {
   closeOnOutsideClick?: boolean;
   closeOnAnyClick?: boolean;
   delay?: number;
+  blur?: number;
 }
 
 export interface IPopoverOptions extends IPopover {

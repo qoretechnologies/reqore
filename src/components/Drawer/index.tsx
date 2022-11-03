@@ -16,7 +16,7 @@ import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../Panel';
 
 export type TPosition = 'top' | 'bottom' | 'left' | 'right';
 
-export interface IReqoreDrawerProps extends IReqorePanelProps {
+export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size'> {
   children?: any;
   isOpen?: boolean;
   isHidden?: boolean;

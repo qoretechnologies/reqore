@@ -69,8 +69,11 @@ const ReqoreControlGroup = ({
     {React.Children.map(children, (child) =>
       child
         ? React.cloneElement(child, {
-            minimal: minimal || child.props?.minimal,
-            size,
+            minimal:
+              child.props?.minimal || child.props?.minimal === false
+                ? child.props.minimal
+                : minimal,
+            size: child.props?.size || size,
             fluid,
           })
         : null

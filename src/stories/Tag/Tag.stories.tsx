@@ -59,6 +59,8 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
   return (
     <ReqoreTagGroup columns={columns} size={args.size}>
       <ReqoreTag label='Basic Tag' icon='AlarmWarningLine' {...args} />
+      <ReqoreTag labelKey='Tag with' label='Label Key' icon='AlarmWarningLine' {...args} />
+      <ReqoreTag icon='QuestionAnswerLine' {...args} />
       <ReqoreTag label='Disabled Tag' disabled icon='AlarmWarningLine' {...args} />
       <ReqoreTag
         label='300px Tag'

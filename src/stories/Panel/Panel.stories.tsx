@@ -1,4 +1,5 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
+import ReqoreInput from '../../components/Input';
 import { IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { argManager, FlatArg, IntentArg } from '../utils/args';
 
@@ -33,6 +34,18 @@ export default {
       name: 'Label',
       description: 'The title of the panel component',
     }),
+    ...createArg('opacity', {
+      type: 'number',
+      defaultValue: 1,
+      name: 'Opacity',
+      description: 'The opacity of the panel',
+    }),
+    ...createArg('headerSize', {
+      type: 'number',
+      defaultValue: 4,
+      name: 'Header Size',
+      description: 'The size of the header',
+    }),
   },
 } as Meta<IReqorePanelProps>;
 
@@ -42,6 +55,15 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
       {...args}
       actions={[
         { label: 'Test', icon: '24HoursFill', intent: 'info' },
+        [
+          { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
+          { label: 'Stacked Action 2', icon: 'CopperCoinFill', intent: 'danger' },
+        ],
+        {
+          customContent: () => (
+            <ReqoreInput placeholder={`Custom action!`} icon='Search2Line' minimal={false} />
+          ),
+        },
         {
           label: 'More actions',
           actions: [

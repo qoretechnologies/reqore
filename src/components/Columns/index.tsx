@@ -26,6 +26,7 @@ export const StyledColumns = styled.div<IStyledColumns>`
     alignItems = 'normal',
   }: IStyledColumns) => css`
     grid-template-columns: repeat(${columns}, minmax(${minColumnWidth}, ${maxColumnWidth}));
+    grid-auto-rows: max-content;
     grid-gap: ${columnsGap};
     align-items: ${alignItems};
   `}

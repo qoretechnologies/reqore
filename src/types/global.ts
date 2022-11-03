@@ -1,3 +1,4 @@
+import { TSizes } from '../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../constants/theme';
 import { IPopoverOptions } from '../hooks/usePopover';
 
@@ -77,6 +78,36 @@ export interface IWithReqoreTooltip {
    * <ReqoreInput tooltip={{ content: 'This is a tooltip', position: 'top', handle: 'focus', useTargetWidth: true, noArrow: true }} />
    */
   tooltip?: string | IReqoreTooltip;
+}
+
+export interface IWithReqoreSize {
+  /**
+   * The size of the component
+   * @default normal
+   * @type TSizes
+   * @memberof IWithReqoreSize
+   * @example
+   * <ReqoreInput size="small" />
+   * <ReqoreInput size="normal" />
+   * <ReqoreInput size="big" />
+   *
+   */
+  size?: TSizes;
+}
+
+export interface IWithReqoreOpaque {
+  /**
+   * If true, the component will be opaque
+   * @default false
+   * @type boolean
+   * @memberof IWithReqoreOpaque
+   * @example
+   * <ReqoreInput opaque />
+   * <ReqoreInput opaque={true} />
+   * <ReqoreInput opaque={false} />
+   *
+   */
+  opaque?: boolean;
 }
 
 export interface IWithReqoreFlat {
