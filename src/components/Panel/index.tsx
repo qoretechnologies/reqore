@@ -5,7 +5,6 @@ import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
   changeDarkness,
   changeLightness,
@@ -324,87 +323,82 @@ export const ReqorePanel = forwardRef(
     );
 
     return (
-      <ReqoreThemeProvider theme={theme}>
-        <StyledPanel
-          {...rest}
-          as={rest.as || 'div'}
-          ref={targetRef}
-          isCollapsed={_isCollapsed}
-          rounded={rounded}
-          flat={flat}
-          className={`${className || ''} reqore-panel`}
-          interactive={interactive}
-        >
-          {hasTitleBar && (
-            <StyledPanelTitle
-              flat={flat}
-              isCollapsed={_isCollapsed}
-              collapsible={collapsible}
-              className='reqore-panel-title'
-              onClick={handleCollapseClick}
-              theme={theme}
-              opacity={rest.opacity ?? (minimal ? 0 : 1)}
-            >
-              <StyledPanelTitleHeader>
-                {icon && <ReqoreIcon icon={icon} margin='right' />}
-                {typeof label === 'string' ? (
-                  <StyledPanelTitleLabel as={HTMLheaderElement}>{label}</StyledPanelTitleLabel>
-                ) : (
-                  label
-                )}
-              </StyledPanelTitleHeader>
-              <ReqoreControlGroup minimal>
-                {actions.map(renderActions)}
-                {collapsible && (
-                  <ReqoreButton
-                    customTheme={theme}
-                    icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
-                    onClick={handleCollapseClick}
-                    tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
-                  />
-                )}
-                {onClose && (
-                  <ReqoreButton
-                    customTheme={theme}
-                    icon='CloseLine'
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.stopPropagation();
-                      onClose?.();
-                    }}
-                  />
-                )}
-              </ReqoreControlGroup>
-            </StyledPanelTitle>
-          )}
-          {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
-            <StyledPanelContent
-              className='reqore-panel-content'
-              hasLabel={!!label}
-              isCollapsed={_isCollapsed}
-              style={contentStyle}
-              padded={padded}
-              minimal={minimal}
-            >
-              {children}
-            </StyledPanelContent>
-          ) : null}
-          {hasBottomActions && !_isCollapsed ? (
-            <StyledPanelBottomActions
-              flat={flat}
-              className='reqore-panel-bottom-actions'
-              theme={theme}
-              opacity={rest.opacity ?? (minimal ? 0 : 1)}
-            >
-              <ReqoreControlGroup minimal>
-                {leftBottomActions.map(renderActions)}
-              </ReqoreControlGroup>
-              <ReqoreControlGroup minimal>
-                {rightBottomActions.map(renderActions)}
-              </ReqoreControlGroup>
-            </StyledPanelBottomActions>
-          ) : null}
-        </StyledPanel>
-      </ReqoreThemeProvider>
+      <StyledPanel
+        {...rest}
+        as={rest.as || 'div'}
+        ref={targetRef}
+        isCollapsed={_isCollapsed}
+        rounded={rounded}
+        flat={flat}
+        className={`${className || ''} reqore-panel`}
+        interactive={interactive}
+        theme={theme}
+      >
+        {hasTitleBar && (
+          <StyledPanelTitle
+            flat={flat}
+            isCollapsed={_isCollapsed}
+            collapsible={collapsible}
+            className='reqore-panel-title'
+            onClick={handleCollapseClick}
+            theme={theme}
+            opacity={rest.opacity ?? (minimal ? 0 : 1)}
+          >
+            <StyledPanelTitleHeader>
+              {icon && <ReqoreIcon icon={icon} margin='right' />}
+              {typeof label === 'string' ? (
+                <StyledPanelTitleLabel as={HTMLheaderElement}>{label}</StyledPanelTitleLabel>
+              ) : (
+                label
+              )}
+            </StyledPanelTitleHeader>
+            <ReqoreControlGroup minimal>
+              {actions.map(renderActions)}
+              {collapsible && (
+                <ReqoreButton
+                  customTheme={theme}
+                  icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
+                  onClick={handleCollapseClick}
+                  tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
+                />
+              )}
+              {onClose && (
+                <ReqoreButton
+                  customTheme={theme}
+                  icon='CloseLine'
+                  onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    e.stopPropagation();
+                    onClose?.();
+                  }}
+                />
+              )}
+            </ReqoreControlGroup>
+          </StyledPanelTitle>
+        )}
+        {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
+          <StyledPanelContent
+            className='reqore-panel-content'
+            hasLabel={!!label}
+            isCollapsed={_isCollapsed}
+            style={contentStyle}
+            padded={padded}
+            minimal={minimal}
+          >
+            {children}
+          </StyledPanelContent>
+        ) : null}
+        {hasBottomActions && !_isCollapsed ? (
+          <StyledPanelBottomActions
+            flat={flat}
+            className='reqore-panel-bottom-actions'
+            theme={theme}
+            opacity={rest.opacity ?? (minimal ? 0 : 1)}
+          >
+            <ReqoreControlGroup minimal>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
+            <ReqoreControlGroup minimal>{rightBottomActions.map(renderActions)}</ReqoreControlGroup>
+          </StyledPanelBottomActions>
+        ) : null}
+      </StyledPanel>
     );
   }
 );

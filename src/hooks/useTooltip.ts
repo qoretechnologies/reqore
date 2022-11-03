@@ -1,17 +1,26 @@
-import { IReqoreTooltip } from '../types/global';
+import { useEffect, useState } from 'react';
+import { IReqoreTooltip, TReqoreTooltipProp } from '../types/global';
 import usePopover from './usePopover';
 
 export const useTooltip = (
   targetElement: HTMLElement | undefined,
-  tooltip?: string | IReqoreTooltip
+  tooltip?: TReqoreTooltipProp
 ): void => {
-  if (!tooltip) return;
+  const [element, setElement] = useState<HTMLElement | undefined>(undefined);
+  const [data, setData] = useState<string | IReqoreTooltip | undefined>(undefined);
 
-  const popoverData = typeof tooltip === 'string' ? { content: tooltip } : tooltip;
+  useEffect(() => {
+    if (targetElement && tooltip) {
+      setElement(targetElement);
+      setData(tooltip);
+    }
+  }, [targetElement?.toString(), JSON.stringify(tooltip)]);
+
+  const popoverData = typeof data === 'string' ? { content: data } : data;
 
   usePopover({
     ...popoverData,
-    targetElement,
+    targetElement: element,
     show: !!popoverData?.content,
   });
 };
