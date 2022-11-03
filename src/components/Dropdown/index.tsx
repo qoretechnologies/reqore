@@ -54,6 +54,7 @@ const ReqoreDropdown = <T extends unknown = IReqoreButtonProps>({
           disabled: !size(items),
           ...rest,
           ...((componentProps || {}) as Object),
+          className: `${(componentProps as any)?.className || ''} reqore-dropdown-control`,
         } as T
       }
       noWrapper

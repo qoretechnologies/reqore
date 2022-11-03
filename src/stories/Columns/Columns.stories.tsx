@@ -32,7 +32,7 @@ export default {
     }),
     ...createArg('columns', {
       defaultValue: undefined,
-      type: 'number',
+      type: 'string',
     }),
     ...createArg('columnsGap', {
       defaultValue: undefined,

@@ -40,7 +40,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       z-index: 999999;
       background-color: ${defaultColor};
       color: ${getReadableColor(theme, undefined, undefined, false, defaultColor)};
-      border-radius: 3.5px;
+      border-radius: 5.5px;
       box-shadow: rgba(31, 26, 34, 0.6) 0px 0px 4px;
     `;
   }}

@@ -2,6 +2,7 @@ export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
 export { default as ReqoreButton } from './components/Button';
 export { default as ReqoreCheckbox } from './components/Checkbox';
+export { ReqoreCollection } from './components/Collection';
 export { ReqoreColumns } from './components/Columns';
 export { ReqoreColumn } from './components/Columns/column';
 export { ReqoreComment } from './components/Comment';

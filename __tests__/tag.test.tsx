@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { noop } from 'lodash';
 import React from 'react';
 import {
@@ -16,12 +16,7 @@ test('Renders <Tag /> properly', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreControlGroup minimal>
-            <ReqoreTag
-              icon='24HoursLine'
-              rightIcon='4KLine'
-              onClick={noop}
-              onRemoveClick={noop}
-            />
+            <ReqoreTag icon='24HoursLine' rightIcon='4KLine' onClick={noop} onRemoveClick={noop} />
             <ReqoreTag
               icon='24HoursLine'
               rightIcon='4KLine'
@@ -143,4 +138,23 @@ test('Fires onClick and onRemoveClick <Tag /> events', () => {
 
   expect(clickFn).toHaveBeenCalledTimes(1);
   expect(removeClickFn).toHaveBeenCalledTimes(1);
+});
+
+test('Renders <Tag /> with the label key', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreControlGroup minimal>
+            <ReqoreTagGroup>
+              <ReqoreTag icon='24HoursLine' rightIcon='4KLine' label='Label' labelKey='label key' />
+            </ReqoreTagGroup>
+          </ReqoreControlGroup>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // Get the label key by text from screen
+  expect(screen.getByText('label key')).toBeTruthy();
 });

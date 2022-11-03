@@ -28,7 +28,8 @@ export interface IReqoreTagProps
     IWithReqoreTooltip,
     IReqoreDisabled {
   size?: TSizes;
-  label?: string;
+  label?: string | number;
+  labelKey?: string | number;
   onRemoveClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   icon?: IReqoreIconName;
@@ -59,11 +60,23 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   border-radius: ${({ badge, size }) => (badge ? 20 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
+  transition: all 0.2s ease-out;
 
-  ${({ theme, color }) =>
+  ${({ theme, color, labelKey }) =>
     css`
       background-color: ${color || changeLightness(theme.main, 0.1)};
       color: ${color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
+
+      ${StyledTagContentWrapper} {
+        background-color: ${labelKey ? changeLightness(color || theme.main, 0.05) : undefined};
+      }
+
+      ${StyledTagContent} {
+        background-color: ${labelKey ? changeLightness(color || theme.main, 0.1) : undefined};
+      }
+
+      ${StyledTagContentKey} {
+        background-color: ${labelKey ? changeLightness(color || theme.main, 0.05) : undefined};
       }
     `}
 
@@ -90,21 +103,27 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
 `;
 
 const StyledTagContentWrapper = styled.div<{ size: TSizes }>`
-  padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   flex: 1;
   overflow: hidden;
+  height: 100%;
 `;
 
 const StyledTagContent = styled.span<{ size: TSizes }>`
+  padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   height: 100%;
+  display: flex;
   align-items: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+`;
+
+const StyledTagContentKey = styled(StyledTagContent)`
+  font-weight: 800;
 `;
 
 const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
@@ -115,7 +134,7 @@ const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: background-color 0.2s ease-out;
+  transition: all 0.2s ease-out;
 
   ${({ theme, color }) =>
     css`
@@ -138,6 +157,7 @@ const ReqoreTag = forwardRef(
     {
       tooltip,
       label,
+      labelKey,
       icon,
       rightIcon,
       className,
@@ -163,6 +183,7 @@ const ReqoreTag = forwardRef(
     return (
       <StyledTag
         {...rest}
+        labelKey={labelKey}
         color={customColor}
         className={`${className || ''} reqore-tag`}
         size={size}
@@ -176,9 +197,10 @@ const ReqoreTag = forwardRef(
             <ReqoreIcon
               icon={icon}
               size={`${TEXT_FROM_SIZE[size]}px`}
-              margin={label || rightIcon ? 'right' : undefined}
+              margin={label || rightIcon ? 'left' : 'both'}
             />
           )}
+          {labelKey && <StyledTagContentKey size={size}>{labelKey}</StyledTagContentKey>}
           {label && <StyledTagContent size={size}>{label}</StyledTagContent>}
           {rightIcon && (
             <ReqoreIcon

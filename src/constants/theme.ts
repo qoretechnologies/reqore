@@ -100,3 +100,12 @@ export const DEFAULT_THEME: IReqoreTheme = {
   intents: DEFAULT_INTENTS,
   notifications: {},
 };
+
+export const ReqoreIntents: { [key: string]: TReqoreIntent } = {
+  INFO: 'info',
+  SUCCESS: 'success',
+  PENDING: 'pending',
+  WARNING: 'warning',
+  DANGER: 'danger',
+  MUTED: 'muted',
+};

@@ -23,8 +23,8 @@ export interface IReqoreTableRowOptions {
   columns: IReqoreTableColumn[];
   data?: IReqoreTableData;
   selectable?: boolean;
-  onSelectClick?: (selectId: string) => void;
-  selected?: string[];
+  onSelectClick?: (selectId: string | number) => void;
+  selected?: (string | number)[];
   onRowClick?: IReqoreTableRowClick;
   striped?: boolean;
   selectedRowIntent?: TReqoreIntent;

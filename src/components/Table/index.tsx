@@ -16,7 +16,7 @@ import { IReqoreTableHeaderStyle, StyledTableHeader } from './headerCell';
 import { fixSort, flipSortDirection, sortTableData } from './helpers';
 
 export type TReqoreTableColumnContent =
-  | React.FC<{ [key: string]: any; _selectId?: string }>
+  | React.FC<{ [key: string]: any; _selectId?: string | number }>
   | 'time-ago'
   | 'tag'
   | `tag:${TReqoreIntent}`
@@ -39,13 +39,13 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   icon?: IReqoreIconName;
   iconSize?: string;
   tooltip?: string;
-  cellTooltip?: (data: { [key: string]: any; _selectId?: string }) => string | JSX.Element;
-  onCellClick?: (data: { [key: string]: any; _selectId?: string }) => void;
+  cellTooltip?: (data: { [key: string]: any; _selectId?: string | number }) => string | JSX.Element;
+  onCellClick?: (data: { [key: string]: any; _selectId?: string | number }) => void;
 }
 
 export interface IReqoreTableRowData {
   [key: string]: any;
-  _selectId?: string;
+  _selectId?: string | number;
   _intent?: TReqoreIntent;
   _disabled?: boolean;
 }
@@ -146,7 +146,7 @@ const ReqoreTable = ({
   const [leftScroll, setLeftScroll] = useState<number>(0);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
-  const [_selected, setSelected] = useState<string[]>([]);
+  const [_selected, setSelected] = useState<(string | number)[]>([]);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
   const [wrapperRef, sizes] = useMeasure();
   const theme = useReqoreTheme('main', customTheme, intent);
@@ -197,7 +197,7 @@ const ReqoreTable = ({
     });
   };
 
-  const handleSelectClick = (selectId: string) => {
+  const handleSelectClick = (selectId: string | number) => {
     setSelected((current) => {
       let newSelected = [...current];
       const isSelected = newSelected.find((selected) => selectId === selected);
@@ -216,7 +216,7 @@ const ReqoreTable = ({
     switch (_selectedQuant) {
       case 'none':
       case 'some': {
-        const selectableData: string[] = _data
+        const selectableData: (string | number)[] = _data
           .filter((datum) => datum._selectId ?? false)
           .map((datum) => datum._selectId);
 

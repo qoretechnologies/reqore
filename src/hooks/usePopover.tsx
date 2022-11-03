@@ -29,6 +29,7 @@ export interface IPopover {
   closeOnOutsideClick?: boolean;
   closeOnAnyClick?: boolean;
   delay?: number;
+  blur?: number;
 }
 
 export interface IPopoverOptions extends IPopover {
@@ -88,7 +89,7 @@ const usePopover = ({
   };
 
   useUpdateEffect(() => {
-    if (show) {
+    if (content && show) {
       updatePopover?.(current, {
         id: current,
         content,
@@ -100,13 +101,13 @@ const usePopover = ({
         closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
       });
     }
-  }, [content]);
+  }, [content?.toString()]);
 
   useEffect(() => {
     if (openOnMount && targetElement) {
       _addPopover();
     }
-  }, [targetElement]);
+  }, [targetElement?.toString()]);
 
   useEffect(() => {
     if (targetElement && content) {
@@ -135,9 +136,10 @@ const usePopover = ({
         }
       }
     };
-  }, [targetElement, content, current, currentPopover]);
+  }, [targetElement?.toString(), content?.toString(), current, currentPopover]);
 
   useUnmount(() => {
+    console.log('UNMOUNTING POPOVER', content);
     cancelTimeout();
   });
 
