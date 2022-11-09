@@ -87,7 +87,6 @@ export const StyledPanel = styled.div<IStyledPanel>`
   display: flex;
   flex-flow: column;
   position: relative;
-  z-index: 1;
   backdrop-filter: ${({ blur, opacity }) => (blur && opacity < 1 ? `blur(${blur}px)` : undefined)};
   transition: 0.3s ease-in-out;
 

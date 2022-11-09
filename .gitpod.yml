@@ -1,6 +1,9 @@
 tasks:
   - init: 'yarn install'
-  - command: 'yarn storybook'
+  - command: |
+     - yarn test:ci &
+     - yarn storybook
+
 ports:
   - port: 6007
     visibility: public
