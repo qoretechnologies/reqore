@@ -50,3 +50,10 @@ Inverted.args = {
   inverted: true,
   intent: 'danger',
 };
+
+export const CustomTheme: Story<IReqoreMessageProps> = Template.bind({});
+CustomTheme.args = {
+  customTheme: {
+    main: '#6e1295',
+  },
+};
