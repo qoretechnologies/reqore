@@ -67,15 +67,7 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
       background-color: ${color || changeLightness(theme.main, 0.1)};
       color: ${color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
 
-      ${StyledTagContentWrapper} {
-        background-color: ${labelKey ? changeLightness(color || theme.main, 0.05) : undefined};
-      }
-
-      ${StyledTagContent} {
-        background-color: ${labelKey ? changeLightness(color || theme.main, 0.1) : undefined};
-      }
-
-      ${StyledTagContentKey} {
+      ${StyledTagContentKey}, ${StyledTagContentWrapper} {
         background-color: ${labelKey ? changeLightness(color || theme.main, 0.05) : undefined};
       }
     `}
@@ -101,6 +93,8 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
       cursor: not-allowed;
     `}
 `;
+
+const StyledTagRightIcon = styled(ReqoreIcon)``;
 
 const StyledTagContentWrapper = styled.div<{ size: TSizes }>`
   display: flex;
@@ -197,19 +191,19 @@ const ReqoreTag = forwardRef(
             <ReqoreIcon
               icon={icon}
               size={`${TEXT_FROM_SIZE[size]}px`}
-              margin={label || rightIcon ? 'left' : 'both'}
+              margin={label ? 'left' : 'both'}
             />
           )}
           {labelKey && <StyledTagContentKey size={size}>{labelKey}</StyledTagContentKey>}
-          {label && <StyledTagContent size={size}>{label}</StyledTagContent>}
-          {rightIcon && (
-            <ReqoreIcon
-              icon={rightIcon}
-              size={`${TEXT_FROM_SIZE[size]}px`}
-              margin={label ? 'left' : undefined}
-            />
-          )}
         </StyledTagContentWrapper>
+        {label && <StyledTagContent size={size}>{label}</StyledTagContent>}
+        {rightIcon && (
+          <StyledTagRightIcon
+            icon={rightIcon}
+            size={`${TEXT_FROM_SIZE[size]}px`}
+            margin={label || icon ? 'right' : 'both'}
+          />
+        )}
         {_size(actions)
           ? actions.map((action) => (
               <>

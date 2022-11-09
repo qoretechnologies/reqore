@@ -16,7 +16,7 @@ export default {
 const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
   const [value, setValue] = useState('Input value');
 
-  const handleValueChange = (e) => {
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   };
 
