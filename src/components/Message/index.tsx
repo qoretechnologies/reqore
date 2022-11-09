@@ -3,6 +3,8 @@ import { useMount, useUnmount } from 'react-use';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { useReqoreTheme } from '../../hooks/useTheme';
+import { IWithReqoreCustomTheme } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import {
@@ -14,7 +16,7 @@ import {
   typeToIcon,
 } from '../Notifications/notification';
 
-export interface IReqoreMessageProps {
+export interface IReqoreMessageProps extends IWithReqoreCustomTheme {
   intent?: TReqoreIntent;
   title?: string;
   children: any;
@@ -48,10 +50,12 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
       flat,
       inverted,
       size = 'normal',
+      customTheme,
     },
     ref: any
   ) => {
     const [internalTimeout, setInternalTimeout] = useState<NodeJS.Timeout | null>(null);
+    const theme = useReqoreTheme('main', customTheme, intent);
 
     useMount(() => {
       if (duration) {
@@ -99,9 +103,10 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
           className='reqore-message'
           ref={ref}
           size={size}
+          theme={theme}
         >
           {leftIcon ? (
-            <StyledIconWrapper intent={intent} size={size}>
+            <StyledIconWrapper intent={intent} size={size} theme={theme}>
               <ReqoreIcon
                 icon={leftIcon}
                 margin={flat && inverted ? undefined : 'left'}
@@ -109,12 +114,13 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
               />
             </StyledIconWrapper>
           ) : null}
-          <StyledNotificationContentWrapper size={size}>
-            {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
-            <StyledNotificationContent>{children}</StyledNotificationContent>
+          <StyledNotificationContentWrapper size={size} theme={theme}>
+            {title && <StyledNotificationTitle theme={theme}>{title}</StyledNotificationTitle>}
+            <StyledNotificationContent theme={theme}>{children}</StyledNotificationContent>
           </StyledNotificationContentWrapper>
           {onClose && (
             <StyledIconWrapper
+              theme={theme}
               size={size}
               intent={intent}
               clickable
