@@ -3,7 +3,12 @@ import { rgba } from 'polished';
 import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  ICON_FROM_HEADER_SIZE,
+  RADIUS_FROM_SIZE,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
@@ -350,7 +355,13 @@ export const ReqorePanel = forwardRef(
             opacity={rest.opacity ?? (minimal ? 0 : 1)}
           >
             <StyledPanelTitleHeader>
-              {icon && <ReqoreIcon icon={icon} margin='right' />}
+              {icon && (
+                <ReqoreIcon
+                  size={`${ICON_FROM_HEADER_SIZE[headerSize]}px`}
+                  icon={icon}
+                  margin='right'
+                />
+              )}
               {typeof label === 'string' ? (
                 <StyledPanelTitleLabel as={HTMLheaderElement}>{label}</StyledPanelTitleLabel>
               ) : (

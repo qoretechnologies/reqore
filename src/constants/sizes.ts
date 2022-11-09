@@ -64,3 +64,12 @@ export const RADIUS_FROM_SIZE = {
   big: 7,
   huge: 9,
 };
+
+export const ICON_FROM_HEADER_SIZE = {
+  1: 21,
+  2: 18,
+  3: 15,
+  4: 12,
+  5: 9,
+  6: 6,
+};
