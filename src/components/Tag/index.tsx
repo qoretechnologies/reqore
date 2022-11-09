@@ -186,16 +186,18 @@ const ReqoreTag = forwardRef(
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
       >
-        <StyledTagContentWrapper size={size} className='reqore-tag-content' onClick={onClick}>
-          {icon && (
-            <ReqoreIcon
-              icon={icon}
-              size={`${TEXT_FROM_SIZE[size]}px`}
-              margin={label ? 'left' : 'both'}
-            />
-          )}
-          {labelKey && <StyledTagContentKey size={size}>{labelKey}</StyledTagContentKey>}
-        </StyledTagContentWrapper>
+        {icon || labelKey ? (
+          <StyledTagContentWrapper size={size} className='reqore-tag-content' onClick={onClick}>
+            {icon && (
+              <ReqoreIcon
+                icon={icon}
+                size={`${TEXT_FROM_SIZE[size]}px`}
+                margin={label ? 'left' : 'both'}
+              />
+            )}
+            {labelKey && <StyledTagContentKey size={size}>{labelKey}</StyledTagContentKey>}
+          </StyledTagContentWrapper>
+        ) : null}
         {label && <StyledTagContent size={size}>{label}</StyledTagContent>}
         {rightIcon && (
           <StyledTagRightIcon
