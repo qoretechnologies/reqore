@@ -1,24 +1,25 @@
-import { cloneDeep } from 'lodash';
-import size from 'lodash/size';
+import { cloneDeep, size as lodashSize } from 'lodash';
 import { rgba } from 'polished';
 import { useContext, useState } from 'react';
 import styled, { css } from 'styled-components';
-import { ReqoreTextarea } from '../..';
+import { ReqorePanel, ReqoreTextarea } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreContext from '../../context/ReqoreContext';
 import { changeLightness } from '../../helpers/colors';
 import { getLineCount, getTypeFromValue } from '../../helpers/utils';
+import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreTag from '../Tag';
 
-export interface IReqoreTreeProps {
+export interface IReqoreTreeProps extends IWithReqoreSize {
   data: Object | Array<any>;
   mode?: 'tree' | 'copy';
   expanded?: boolean;
   showTypes?: boolean;
   onItemClick?: (value: any, path?: string[]) => void;
   withLabelCopy?: boolean;
+  showControls?: boolean;
 }
 
 const StyledTreeWrapper = styled.div`
@@ -52,14 +53,16 @@ const StyledLabel = styled.span<ITreeStyle>`
 export const ReqoreTree = ({
   data,
   mode = 'tree',
+  size = 'normal',
   expanded,
   showTypes,
   onItemClick,
   withLabelCopy,
+  showControls = true,
 }: IReqoreTreeProps) => {
   const [_mode, setMode] = useState<'tree' | 'copy'>(mode);
   const [items, setItems] = useState({});
-  const [allExpanded, setAllExpanded] = useState(expanded);
+  const [allExpanded, setAllExpanded] = useState(expanded || !showControls);
   const [_showTypes, setShowTypes] = useState(showTypes);
   const { addNotification } = useContext(ReqoreContext);
 
@@ -108,54 +111,57 @@ export const ReqoreTree = ({
         items[stateKey] ||
         (allExpanded && items[stateKey] !== false);
 
-      if (isObject && size(data[key]) === 0) {
+      if (isObject && lodashSize(data[key]) === 0) {
         isObject = false;
         isExpandable = false;
       }
 
       return (
         <div key={index} style={{ margin: level === 1 ? '15px 0' : `15px` }}>
-          <ReqoreControlGroup>
-            {isObject ? (
-              <ReqoreButton
-                className='reqore-tree-toggle'
-                icon={isExpandable ? 'ArrowDownSFill' : 'ArrowRightSFill'}
-                active={isExpandable}
-                intent={isExpandable ? 'info' : undefined}
-                onClick={() => handleItemClick(stateKey, isExpandable)}
-              >
-                {displayKey}
-              </ReqoreButton>
-            ) : (
-              <ReqoreTag label={`${displayKey}: `} />
-            )}
-            {_showTypes && <ReqoreTag label={dataType} className='reqore-tree-type' />}
-            {!isObject && (
-              <StyledLabel
-                className='reqore-tree-label'
-                interactive={!!onItemClick}
-                onClick={onItemClick ? () => onItemClick(data[key], [...path, key]) : undefined}
-              >
-                {JSON.stringify(data[key])}
-              </StyledLabel>
-            )}
-            {withLabelCopy && (
-              <ReqoreButton
-                className='reqore-tree-copy'
-                icon='FileCopy2Fill'
-                onClick={() => {
-                  navigator.clipboard.writeText(JSON.stringify(data[key]));
-                  addNotification({
-                    content: 'Successfuly copied to clipboard',
-                    id: Date.now().toString(),
-                    type: 'success',
-                    duration: 3000,
-                  });
-                }}
-                minimal
-              />
-            )}
-          </ReqoreControlGroup>
+          {isObject ? (
+            <ReqoreTag
+              className='reqore-tree-toggle'
+              icon={isObject ? (isExpandable ? 'ArrowDownSFill' : 'ArrowRightSFill') : undefined}
+              intent={isObject && isExpandable ? 'info' : undefined}
+              onClick={isObject ? () => handleItemClick(stateKey, isExpandable) : undefined}
+              label={showTypes ? dataType : displayKey}
+              labelKey={showTypes ? displayKey : undefined}
+              size={size}
+            />
+          ) : (
+            <ReqorePanel
+              className='reqore-tree-label'
+              onClick={onItemClick ? () => onItemClick(data[key], [...path, key]) : undefined}
+              contentSize={size}
+              flat
+              opacity={0}
+            >
+              <ReqoreTag
+                labelKey={displayKey}
+                label={showTypes ? dataType : undefined}
+                size={size}
+                actions={
+                  withLabelCopy
+                    ? [
+                        {
+                          icon: 'FileCopy2Fill',
+                          onClick: () => {
+                            navigator.clipboard.writeText(JSON.stringify(data[key]));
+                            addNotification({
+                              content: 'Successfuly copied to clipboard',
+                              id: Date.now().toString(),
+                              type: 'success',
+                              duration: 3000,
+                            });
+                          },
+                        },
+                      ]
+                    : undefined
+                }
+              />{' '}
+              {JSON.stringify(data[key])}
+            </ReqorePanel>
+          )}
           {isExpandable && isObject
             ? renderTree(data[key], stateKey, level + 1, [...path, key])
             : null}
@@ -188,57 +194,59 @@ export const ReqoreTree = ({
 
   return (
     <StyledTreeWrapper className='reqore-tree'>
-      <ReqoreControlGroup stack>
-        {isDeep() && (
-          <>
-            {!allExpanded && (
-              <ReqoreButton
-                className='reqore-tree-expand-all'
-                icon='ArrowDownFill'
-                onClick={handleExpandClick}
-                key='expand-button'
-              >
-                Expand all
-              </ReqoreButton>
-            )}
-            {allExpanded || size(items) > 0 ? (
-              <ReqoreButton
-                className='reqore-tree-collapse-all'
-                icon='ArrowUpFill'
-                onClick={handleCollapseClick}
-                key='collapse-button'
-              >
-                {' '}
-                Collapse all{' '}
-              </ReqoreButton>
-            ) : null}
-          </>
-        )}
-        <ReqoreButton
-          className='reqore-tree-show-types'
-          icon='CodeBoxFill'
-          active={_showTypes}
-          onClick={handleTypesClick}
-        >
-          Show types
-        </ReqoreButton>
-        <ReqoreButton
-          className='reqore-tree-as-tree'
-          active={_mode === 'tree'}
-          onClick={handleTreeClick}
-          icon='Menu2Fill'
-        >
-          Tree View
-        </ReqoreButton>
-        <ReqoreButton
-          className='reqore-tree-as-text'
-          onClick={handleCopyClick}
-          active={_mode === 'copy'}
-          icon='ClipboardFill'
-        >
-          Text View
-        </ReqoreButton>
-      </ReqoreControlGroup>
+      {showControls && (
+        <ReqoreControlGroup stack size={size}>
+          {isDeep() && (
+            <>
+              {!allExpanded && (
+                <ReqoreButton
+                  className='reqore-tree-expand-all'
+                  icon='ArrowDownFill'
+                  onClick={handleExpandClick}
+                  key='expand-button'
+                >
+                  Expand all
+                </ReqoreButton>
+              )}
+              {allExpanded || lodashSize(items) > 0 ? (
+                <ReqoreButton
+                  className='reqore-tree-collapse-all'
+                  icon='ArrowUpFill'
+                  onClick={handleCollapseClick}
+                  key='collapse-button'
+                >
+                  {' '}
+                  Collapse all{' '}
+                </ReqoreButton>
+              ) : null}
+            </>
+          )}
+          <ReqoreButton
+            className='reqore-tree-show-types'
+            icon='CodeBoxFill'
+            active={_showTypes}
+            onClick={handleTypesClick}
+          >
+            Show types
+          </ReqoreButton>
+          <ReqoreButton
+            className='reqore-tree-as-tree'
+            active={_mode === 'tree'}
+            onClick={handleTreeClick}
+            icon='Menu2Fill'
+          >
+            Tree View
+          </ReqoreButton>
+          <ReqoreButton
+            className='reqore-tree-as-text'
+            onClick={handleCopyClick}
+            active={_mode === 'copy'}
+            icon='ClipboardFill'
+          >
+            Text View
+          </ReqoreButton>
+        </ReqoreControlGroup>
+      )}
 
       {_mode === 'tree' && <div>{renderTree(data, true)}</div>}
 
@@ -247,6 +255,7 @@ export const ReqoreTree = ({
           className='reqore-tree-textarea'
           id='tree-content'
           defaultValue={textData}
+          size={size}
           rows={lineCount > 20 ? 20 : lineCount}
         />
       )}
