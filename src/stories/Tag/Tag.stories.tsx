@@ -28,6 +28,12 @@ export default {
         disable: true,
       },
     }),
+    ...createArg('rightIcon', {
+      defaultValue: 'EBike2Line',
+      name: 'Right Icon',
+      description: 'Right icon',
+      control: 'text',
+    }),
     ...createArg('actions', {
       defaultValue: [
         {
@@ -36,10 +42,6 @@ export default {
           disabled: true,
           intent: 'info',
           tooltip: { content: 'I am a tooltip' },
-        },
-        {
-          icon: 'PsychotherapyFill',
-          onClick: noop,
         },
         {
           icon: 'SpyFill',
@@ -71,6 +73,7 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
       />
       <ReqoreTag label='Danger Tag' icon='AlarmWarningLine' intent='danger' {...args} />
       <ReqoreTag label='Custom Color Tag' icon='AlarmWarningLine' color='#38fdb2' {...args} />
+      <ReqoreTag label='No Buttons Tag' icon='CarLine' color='#0b4578' rightIcon={args.rightIcon} />
     </ReqoreTagGroup>
   );
 };

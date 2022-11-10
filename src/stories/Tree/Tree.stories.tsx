@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
 import { IReqoreTreeProps, ReqoreTree } from '../../components/Tree';
 import MockObject from '../../mock/object.json';
-import { argManager } from '../utils/args';
+import { argManager, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTreeProps>();
 
@@ -27,6 +27,7 @@ export default {
       control: 'boolean',
       defaultValue: false,
     }),
+    ...SizeArg,
   },
 } as Meta<IReqoreTreeProps>;
 
@@ -40,4 +41,9 @@ export const Basic = Template.bind({});
 export const TextView = Template.bind({});
 TextView.args = {
   mode: 'copy',
+};
+
+export const NoControls = Template.bind({});
+NoControls.args = {
+  showControls: false,
 };

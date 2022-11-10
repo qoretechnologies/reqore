@@ -46,6 +46,7 @@ export interface IReqoreNotificationStyle {
   flat?: boolean;
   inverted?: boolean;
   size?: TSizes;
+  asMessage?: boolean;
 }
 
 const timeoutAnimation = keyframes`
@@ -67,11 +68,19 @@ export const StyledReqoreNotification = styled(animated.div)<IReqoreNotification
   overflow: auto;
   position: relative;
   transition: all 0.2s ease-out;
-  animation: 0.2s ${fadeIn} ease-in;
+
+  // Do not fade in the component if it's a message
+  ${({ asMessage }) =>
+    asMessage
+      ? undefined
+      : css`
+          animation: 0.2s ${fadeIn} ease-in;
+        `};
+
   font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
 
   &:not(:first-child) {
-    margin-top: 10px;
+    margin-top: ${({ asMessage }) => (asMessage ? undefined : `10px`)};
   }
 
   ${({

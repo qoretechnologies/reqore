@@ -3,7 +3,12 @@ import { rgba } from 'polished';
 import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE } from '../../constants/sizes';
+import {
+  ICON_FROM_HEADER_SIZE,
+  RADIUS_FROM_SIZE,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
@@ -68,6 +73,7 @@ export interface IReqorePanelProps
   blur?: number;
   minimal?: boolean;
   headerSize?: 1 | 2 | 3 | 4 | 5 | 6;
+  contentSize?: TSizes;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -96,7 +102,10 @@ export const StyledPanel = styled.div<IStyledPanel>`
           cursor: pointer;
 
           &:hover {
-            background-color: ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.06), opacity)};
+            background-color: ${rgba(
+              changeDarkness(getMainBackgroundColor(theme), 0.06),
+              opacity === 0 ? 0.2 : opacity
+            )};
 
             ${StyledCollectionItemContent}:after {
               background: linear-gradient(
@@ -157,12 +166,13 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
   min-height: ${({ isCollapsed }) => (isCollapsed ? undefined : '40px')};
-  padding: ${({ padded }) => (!padded ? undefined : '15px')};
+  padding: ${({ padded, contentSize }) => (!padded ? undefined : TEXT_FROM_SIZE[contentSize])}px;
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel }) => (minimal && hasLabel ? '0px' : undefined)};
   flex: 1;
   overflow: auto;
+  font-size: ${({ contentSize }) => TEXT_FROM_SIZE[contentSize]}px;
 `;
 
 export const StyledPanelTitleLabel = styled.span`
@@ -205,6 +215,7 @@ export const ReqorePanel = forwardRef(
       padded = true,
       contentStyle,
       headerSize = 4,
+      contentSize = 'normal',
       minimal,
       tooltip,
       ...rest
@@ -344,7 +355,13 @@ export const ReqorePanel = forwardRef(
             opacity={rest.opacity ?? (minimal ? 0 : 1)}
           >
             <StyledPanelTitleHeader>
-              {icon && <ReqoreIcon icon={icon} margin='right' />}
+              {icon && (
+                <ReqoreIcon
+                  size={`${ICON_FROM_HEADER_SIZE[headerSize]}px`}
+                  icon={icon}
+                  margin='right'
+                />
+              )}
               {typeof label === 'string' ? (
                 <StyledPanelTitleLabel as={HTMLheaderElement}>{label}</StyledPanelTitleLabel>
               ) : (
@@ -382,6 +399,7 @@ export const ReqorePanel = forwardRef(
             style={contentStyle}
             padded={padded}
             minimal={minimal}
+            contentSize={contentSize}
           >
             {children}
           </StyledPanelContent>

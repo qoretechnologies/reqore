@@ -1,11 +1,6 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import {
-  ReqoreContent,
-  ReqoreLayoutContent,
-  ReqoreTree,
-  ReqoreUIProvider,
-} from '../src';
+import { ReqoreContent, ReqoreLayoutContent, ReqoreTree, ReqoreUIProvider } from '../src';
 import MockObject from '../src/mock/object.json';
 
 test('Renders basic <Tree /> properly', () => {
@@ -20,22 +15,6 @@ test('Renders basic <Tree /> properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-tree-toggle').length).toBe(7);
-});
-
-test('Shows types for <Tree /> properly', () => {
-  render(
-    <ReqoreUIProvider>
-      <ReqoreLayoutContent>
-        <ReqoreContent>
-          <ReqoreTree data={MockObject} />
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  );
-
-  fireEvent.click(document.querySelector('.reqore-tree-show-types'));
-
-  expect(document.querySelectorAll('.reqore-tree-type').length).toBe(7);
 });
 
 test('Shows textarea for <Tree /> properly', () => {
@@ -72,6 +51,22 @@ test('<Tree /> items can be expanded and collapsed', () => {
   fireEvent.click(document.querySelector('.reqore-tree-toggle'));
 
   expect(document.querySelectorAll('.reqore-tree-label').length).toBe(0);
+});
+
+test('Shows types for <Tree /> properly', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTree data={MockObject} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(document.querySelector('.reqore-tree-show-types'));
+
+  expect(document.querySelectorAll('.reqore-tree-type').length).toBe(7);
 });
 
 test('Renders <Tree /> with clickable items', () => {

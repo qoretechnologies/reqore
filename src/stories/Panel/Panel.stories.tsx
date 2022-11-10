@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import ReqoreInput from '../../components/Input';
 import { IReqorePanelProps, ReqorePanel } from '../../components/Panel';
-import { argManager, FlatArg, IntentArg } from '../utils/args';
+import { argManager, FlatArg, IconArg, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -46,6 +46,7 @@ export default {
       name: 'Header Size',
       description: 'The size of the header',
     }),
+    ...IconArg(),
   },
 } as Meta<IReqorePanelProps>;
 

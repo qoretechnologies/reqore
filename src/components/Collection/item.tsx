@@ -69,6 +69,7 @@ export const StyledCollectionItemContent = styled.div`
 export const ReqoreCollectionItem = ({
   flat = true,
   minimal = true,
+  headerSize = 3,
   style,
   content,
   actions,
@@ -195,11 +196,11 @@ export const ReqoreCollectionItem = ({
           </>
         )}
         <ReqorePanel
-          {...rest}
           flat={flat}
-          headerSize={3}
+          headerSize={headerSize}
           ref={ref}
           minimal={minimal}
+          {...rest}
           bottomActions={isSelected ? expandedActions : undefined}
           style={{
             ...style,
