@@ -25,7 +25,7 @@ export default {
   },
   parameters: {
     chromatic: {
-      delay: 300,
+      delay: 3000,
     },
   },
 } as Meta<IReqoreMessageProps>;
