@@ -68,7 +68,7 @@ export const StyledReqoreNotification = styled(animated.div)<IReqoreNotification
   overflow: auto;
   position: relative;
   transition: all 0.2s ease-out;
-  animation: 0.2s ${fadeIn} ease-in;
+  animation: ${({ asMessage }) => (asMessage ? undefined : `0.2s ${fadeIn} ease-in`)};
   font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
 
   &:not(:first-child) {

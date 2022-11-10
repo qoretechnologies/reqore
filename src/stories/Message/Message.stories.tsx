@@ -23,11 +23,6 @@ export default {
       type: 'boolean',
     }),
   },
-  parameters: {
-    chromatic: {
-      delay: 3000,
-    },
-  },
 } as Meta<IReqoreMessageProps>;
 
 const Template: Story<IReqoreMessageProps> = (args: IReqoreMessageProps) => {

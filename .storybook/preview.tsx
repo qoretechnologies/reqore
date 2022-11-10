@@ -20,7 +20,7 @@ export const parameters = {
     expanded: true,
   },
   chromatic: {
-    delay: 3000,
+    delay: 500,
   },
 };
 
