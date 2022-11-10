@@ -46,6 +46,7 @@ export interface IReqoreNotificationStyle {
   flat?: boolean;
   inverted?: boolean;
   size?: TSizes;
+  asMessage?: boolean;
 }
 
 const timeoutAnimation = keyframes`
@@ -71,7 +72,7 @@ export const StyledReqoreNotification = styled(animated.div)<IReqoreNotification
   font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
 
   &:not(:first-child) {
-    margin-top: 10px;
+    margin-top: ${({ asMessage }) => (asMessage ? undefined : `10px`)};
   }
 
   ${({

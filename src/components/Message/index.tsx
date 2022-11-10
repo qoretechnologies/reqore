@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -16,7 +16,9 @@ import {
   typeToIcon,
 } from '../Notifications/notification';
 
-export interface IReqoreMessageProps extends IWithReqoreCustomTheme {
+export interface IReqoreMessageProps
+  extends IWithReqoreCustomTheme,
+    React.HTMLAttributes<HTMLDivElement> {
   intent?: TReqoreIntent;
   title?: string;
   children: any;
@@ -51,6 +53,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
       inverted,
       size = 'normal',
       customTheme,
+      ...rest
     },
     ref: any
   ) => {
@@ -92,6 +95,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
     return (
       <ReqoreThemeProvider>
         <StyledReqoreNotification
+          {...rest}
           key={`${duration}${intent}${title}${children}`}
           intent={intent}
           timeout={duration}
@@ -99,8 +103,9 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
           onClick={onClick}
           flat={flat}
           inverted={inverted}
+          asMessage
           fluid
-          className='reqore-message'
+          className={`${rest?.className || ''} reqore-message`}
           ref={ref}
           size={size}
           theme={theme}
