@@ -393,7 +393,7 @@ test('Cells on <Table /> are interactive', () => {
         dataId: 'data',
         columns: [
           { dataId: 'occupation', header: 'Ocuppation', width: 200 },
-          { dataId: 'group', header: 'Group', width: 150 },
+          { dataId: 'group', header: 'Groups', width: 150 },
         ],
       },
     ] as IReqoreTableColumn[],

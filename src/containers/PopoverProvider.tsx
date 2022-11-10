@@ -27,6 +27,8 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
             !popperRef.current.contains(event.target) &&
             !targetElement?.contains(event.target as Node))
         ) {
+          targetElement.style.position = 'initial';
+          targetElement.style.zIndex = 'initial';
           removePopover(id);
         }
       });

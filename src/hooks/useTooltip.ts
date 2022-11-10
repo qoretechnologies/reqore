@@ -14,7 +14,7 @@ export const useTooltip = (
       setElement(targetElement);
       setData(tooltip);
     }
-  }, [targetElement?.toString(), JSON.stringify(tooltip)]);
+  }, [targetElement?.toString(), tooltip?.toString()]);
 
   const popoverData = typeof data === 'string' ? { content: data } : data;
 
