@@ -30,6 +30,9 @@ export interface IPopover {
   closeOnAnyClick?: boolean;
   delay?: number;
   blur?: number;
+  opaque?: boolean;
+  maxWidth?: string;
+  maxHeight?: string;
 }
 
 export interface IPopoverOptions extends IPopover {
@@ -47,6 +50,7 @@ const usePopover = ({
   closeOnOutsideClick = true,
   openOnMount = false,
   delay,
+  ...rest
 }: IPopoverOptions) => {
   const { addPopover, removePopover, updatePopover, popovers } = useContext(PopoverContext);
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
@@ -61,7 +65,9 @@ const usePopover = ({
 
   const _addPopover = () => {
     if (currentPopover) {
-      _removePopover?.();
+      if (handler !== 'hoverStay') {
+        _removePopover?.();
+      }
     } else if (show) {
       timeout = setTimeout(() => {
         addPopover?.({
@@ -73,12 +79,23 @@ const usePopover = ({
           useTargetWidth,
           closeOnOutsideClick,
           closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
+          ...rest,
         });
+
+        if (rest?.blur > 0) {
+          targetElement.style.position = 'relative';
+          targetElement.style.zIndex = '999999';
+        }
       }, delay || 0);
     }
   };
 
   const _removePopover = () => {
+    if (rest?.blur > 0) {
+      targetElement.style.position = 'initial';
+      targetElement.style.zIndex = 'initial';
+    }
+
     cancelTimeout();
     removePopover?.(current);
   };
@@ -99,6 +116,7 @@ const usePopover = ({
         useTargetWidth,
         closeOnOutsideClick,
         closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
+        ...rest,
       });
     }
   }, [content?.toString()]);
@@ -125,6 +143,7 @@ const usePopover = ({
     return () => {
       if (targetElement && content) {
         cancelTimeout();
+
         targetElement.removeEventListener(startEvent, _addPopover);
 
         if (endEvent) {
@@ -139,7 +158,6 @@ const usePopover = ({
   }, [targetElement?.toString(), content?.toString(), current, currentPopover]);
 
   useUnmount(() => {
-    console.log('UNMOUNTING POPOVER', content);
     cancelTimeout();
   });
 

@@ -8,6 +8,7 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import PopoverContext from '../../context/PopoverContext';
 import { fadeIn } from '../../helpers/animations';
 import { getReadableColor } from '../../helpers/colors';
+import { StyledBackdrop } from '../Drawer';
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
@@ -23,18 +24,27 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
     position: absolute;
     z-index: -1;
     transform: rotate(45deg);
-    ${({ theme }) => css`
+    ${({ theme, opaque }) => css`
       background-color: ${theme.popover?.main || theme.main};
-      box-shadow: rgba(31, 26, 34, 0.6) 0px 0px 4px;
+      box-shadow: ${opaque ? undefined : 'rgba(31, 26, 34, 0.6) 0px 0px 4px'};
     `}
   }
 `;
 
 const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   animation: 0.2s ${fadeIn} ease-out;
+  max-width: ${({ maxWidth = '80vw' }) => maxWidth};
+  max-height: ${({ maxHeight = '80vh' }) => maxHeight};
 
-  ${({ theme }) => {
+  ${({ theme, opaque }) => {
     const defaultColor: string = theme.popover?.main || theme.main;
+
+    if (opaque) {
+      return css`
+        z-index: 999999;
+        background-color: transparent;
+      `;
+    }
 
     return css`
       z-index: 999999;
@@ -74,8 +84,9 @@ const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   z-index: 20;
   position: relative;
   overflow: hidden;
-  background-color: ${({ theme }) => theme.popover?.main || theme.main};
-  border-radius: 3.5px;
+  background-color: ${({ theme, opaque }) =>
+    opaque ? 'transparent' : theme.popover?.main || theme.main};
+  border-radius: ${({ opaque }) => (opaque ? undefined : '3.5px')};
 
   .reqore-popover-text {
     font-size: 14px;
@@ -91,6 +102,10 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   placement,
   noArrow,
   useTargetWidth,
+  opaque,
+  maxWidth,
+  maxHeight,
+  blur,
 }) => {
   const { removePopover, updatePopover, uiScale } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);
@@ -117,6 +132,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
       },
     ],
   });
+
+  console.log(opaque);
 
   useEffect(() => {
     if (popperRef.current) {
@@ -145,7 +162,11 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
 
   return (
     <ReqoreThemeProvider>
+      {blur > 0 ? <StyledBackdrop zIndex={999998} blur={blur} closable /> : null}
       <StyledPopoverWrapper
+        maxWidth={maxWidth}
+        maxHeight={maxHeight}
+        opaque={opaque}
         className='reqore-popover-content'
         ref={(el) => {
           setPopperElement(el);
@@ -159,9 +180,14 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
         {...attributes.popper}
       >
         {!noArrow && (
-          <StyledPopoverArrow ref={setArrowElement} style={styles.arrow} data-popper-arrow />
+          <StyledPopoverArrow
+            opaque={opaque}
+            ref={setArrowElement}
+            style={styles.arrow}
+            data-popper-arrow
+          />
         )}
-        <StyledPopoverContent isString={isString(content)}>
+        <StyledPopoverContent isString={isString(content)} opaque={opaque}>
           {isString(content) ? (
             <span className='reqore-popover-text'>{content}</span>
           ) : (
