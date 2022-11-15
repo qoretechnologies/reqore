@@ -10,6 +10,10 @@ export interface IReqoreControlGroupProps extends React.HTMLAttributes<HTMLDivEl
   children: any;
   fluid?: boolean;
   rounded?: boolean;
+  /*
+   * Whether the contents of the control group should be stacked vertically
+   */
+  vertical?: boolean;
 }
 
 export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
@@ -20,34 +24,71 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
   flex: 0 auto;
   width: ${({ fluid }) => (fluid ? '100%' : undefined)};
+  align-items: ${({ fluid }) => (fluid ? 'stretch' : 'flex-start')};
+  flex-flow: ${({ vertical }) => (vertical ? 'column' : 'row')};
 
   > .reqore-control-wrapper .reqore-control {
     border-radius: ${({ stack }) => (!stack ? undefined : 0)};
   }
 
-  > .reqore-control,
-  > .reqore-control-wrapper,
-  > * {
-    &:not(:last-child) {
-      margin-right: ${({ stack }) => (!stack ? '5px' : undefined)};
-    }
+  ${({ vertical }) =>
+    vertical
+      ? css`
+          > .reqore-control,
+          > .reqore-control-wrapper,
+          > * {
+            &:not(:last-child) {
+              margin-bottom: ${({ stack }) => (!stack ? '5px' : undefined)};
+              border-bottom: ${({ stack }) => (!stack ? undefined : 0)};
+            }
 
-    border-radius: ${({ stack }) => (!stack ? undefined : 0)};
+            border-radius: ${({ stack }) => (!stack ? undefined : 0)};
 
-    ${({ rounded, size }) =>
-      rounded &&
-      css`
-        &:first-child {
-          border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-          border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-        }
+            ${({ rounded, size }) =>
+              rounded &&
+              css`
+                &:first-child {
+                  border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
+                  border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
+                }
 
-        &:last-child {
-          border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-          border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-        }
-      `}
-  }
+                &:last-child {
+                  border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
+                  border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
+                }
+              `}
+          }
+
+          > .reqore-control-wrapper:not(:last-child) .reqore-control {
+            margin-bottom: ${({ stack }) => (!stack ? '5px' : undefined)};
+            border-bottom: ${({ stack }) => (!stack ? undefined : 0)};
+          }
+        `
+      : css`
+          > .reqore-control,
+          > .reqore-control-wrapper,
+          > * {
+            &:not(:last-child) {
+              margin-right: ${({ stack }) => (!stack ? '5px' : undefined)};
+            }
+
+            border-radius: ${({ stack }) => (!stack ? undefined : 0)};
+
+            ${({ rounded, size }) =>
+              rounded &&
+              css`
+                &:first-child {
+                  border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
+                  border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
+                }
+
+                &:last-child {
+                  border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
+                  border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
+                }
+              `}
+          }
+        `}
 `;
 
 const ReqoreControlGroup = ({
