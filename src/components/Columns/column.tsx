@@ -8,7 +8,7 @@ export interface IReqoreColumnProps
 
 export const ReqoreColumn = styled.div<IReqoreColumnProps>`
   ${({
-    alignItems,
+    alignItems = 'flex-start',
     justifyContent,
     flex = '1 0 auto',
     flexFlow = 'row',
