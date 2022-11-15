@@ -75,14 +75,13 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
   padding-right: ${({ clearable, _size }) => (clearable ? SIZE_TO_PX[_size] : 7)}px;
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
+  transition: all 0.2s ease-out;
   border-radius: ${({ minimal, rounded, _size }) =>
     minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
   border: ${({ minimal, theme, flat }) =>
     !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.05)}` : 0};
   border-bottom: ${({ minimal, theme, flat }) =>
     minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.05)}` : undefined};
-
-  transition: all 0.2s ease-out;
 
   ${({ disabled, readOnly }) =>
     !disabled && !readOnly
