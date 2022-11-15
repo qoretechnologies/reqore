@@ -95,6 +95,7 @@ export const StyledPanel = styled.div<IStyledPanel>`
   position: relative;
   backdrop-filter: ${({ blur, opacity }) => (blur && opacity < 1 ? `blur(${blur}px)` : undefined)};
   transition: 0.3s ease-in-out;
+  flex: auto;
 
   ${({ interactive, theme, opacity = 1 }) =>
     interactive
