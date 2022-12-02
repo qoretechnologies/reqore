@@ -78,6 +78,7 @@ export interface IReqorePanelProps
 
 export interface IStyledPanel extends IReqorePanelProps {
   theme: IReqoreTheme;
+  noHorizontalPadding?: boolean;
 }
 
 export const StyledPanel = styled.div<IStyledPanel>`
@@ -135,7 +136,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   justify-content: space-between;
   height: 40px;
   align-items: center;
-  padding: 0 5px 0 15px;
+  padding: ${({ noHorizontalPadding }: IStyledPanel) =>
+    `0 5px 0 ${noHorizontalPadding ? 0 : '15px'}`};
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat
       ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
@@ -167,7 +169,12 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
   min-height: ${({ isCollapsed }) => (isCollapsed ? undefined : '40px')};
-  padding: ${({ padded, contentSize }) => (!padded ? undefined : TEXT_FROM_SIZE[contentSize])}px;
+  padding: ${({ padded, contentSize, noHorizontalPadding }) =>
+    !padded
+      ? undefined
+      : noHorizontalPadding
+      ? `${TEXT_FROM_SIZE[contentSize]}px 0`
+      : `${TEXT_FROM_SIZE[contentSize]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel }) => (minimal && hasLabel ? '0px' : undefined)};
@@ -354,6 +361,7 @@ export const ReqorePanel = forwardRef(
             onClick={handleCollapseClick}
             theme={theme}
             opacity={rest.opacity ?? (minimal ? 0 : 1)}
+            noHorizontalPadding={rest.opacity === 0}
           >
             <StyledPanelTitleHeader>
               {icon && (
@@ -401,6 +409,7 @@ export const ReqorePanel = forwardRef(
             padded={padded}
             minimal={minimal}
             contentSize={contentSize}
+            noHorizontalPadding={rest.opacity === 0}
           >
             {children}
           </StyledPanelContent>
@@ -411,6 +420,7 @@ export const ReqorePanel = forwardRef(
             className='reqore-panel-bottom-actions'
             theme={theme}
             opacity={rest.opacity ?? (minimal ? 0 : 1)}
+            noHorizontalPadding={rest.opacity === 0}
           >
             <ReqoreControlGroup minimal>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
             <ReqoreControlGroup minimal>{rightBottomActions.map(renderActions)}</ReqoreControlGroup>

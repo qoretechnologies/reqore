@@ -12,7 +12,7 @@ import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 export interface IReqoreCollectionProps
   extends Pick<
       IReqorePanelProps,
-      'size' | 'intent' | 'customTheme' | 'actions' | 'bottomActions' | 'label'
+      'size' | 'intent' | 'customTheme' | 'actions' | 'bottomActions' | 'label' | 'headerSize'
     >,
     IReqoreColumnsProps {
   items?: IReqoreCollectionItemProps[];
@@ -48,6 +48,7 @@ export const ReqoreCollection = ({
   maxItemHeight,
   filterable,
   sortable,
+  headerSize = 2,
   ...rest
 }: IReqoreCollectionProps) => {
   const [showAs, setShowAs] = useState<'list' | 'grid'>('grid');
@@ -152,11 +153,11 @@ export const ReqoreCollection = ({
   return (
     <ReqorePanel
       {...rest}
+      headerSize={headerSize}
       style={{
         height: height ?? undefined,
       }}
       fill={fill}
-      headerSize={2}
       padded
       opacity={0}
       actions={finalActions}
