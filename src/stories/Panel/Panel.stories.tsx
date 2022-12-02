@@ -128,3 +128,8 @@ export const NoLabel: Story<IReqorePanelProps> = Template.bind({});
 NoLabel.args = {
   label: undefined,
 };
+
+export const Opaque: Story<IReqorePanelProps> = Template.bind({});
+Opaque.args = {
+  opacity: 0,
+};
