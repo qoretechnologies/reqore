@@ -32,6 +32,8 @@ import { StyledCollectionItemContent } from '../Collection/item';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
+import { StyledEffect } from '../Effect';
+import { ReqoreHeading } from '../Header';
 import ReqoreIcon from '../Icon';
 
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
@@ -58,6 +60,7 @@ export interface IReqorePanelProps
   children?: any;
   icon?: IReqoreIconName;
   label?: string | ReactElement<any>;
+
   collapsible?: boolean;
   isCollapsed?: boolean;
   onClose?: () => void;
@@ -166,7 +169,7 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
       : null};
 `;
 
-export const StyledPanelContent = styled.div<IStyledPanel>`
+export const StyledPanelContent = styled(StyledEffect)<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
   min-height: ${({ isCollapsed }) => (isCollapsed ? undefined : '40px')};
   padding: ${({ padded, contentSize, noHorizontalPadding }) =>
@@ -183,23 +186,12 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   font-size: ${({ contentSize }) => TEXT_FROM_SIZE[contentSize]}px;
 `;
 
-export const StyledPanelTitleLabel = styled.span`
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  margin: 0;
-`;
-
 export const StyledPanelTitleHeader = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
   padding-right: 5px;
-
-  ${StyledPanelTitleLabel} {
-    font-weight: 600;
-  }
 `;
 
 export const ReqorePanel = forwardRef(
@@ -328,10 +320,6 @@ export const ReqorePanel = forwardRef(
       );
     };
 
-    const HTMLheaderElement = useMemo(() => {
-      return `h${headerSize}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-    }, [headerSize]);
-
     const interactive: boolean = !!(
       rest.onClick ||
       rest.onMouseOver ||
@@ -372,7 +360,14 @@ export const ReqorePanel = forwardRef(
                 />
               )}
               {typeof label === 'string' ? (
-                <StyledPanelTitleLabel as={HTMLheaderElement}>{label}</StyledPanelTitleLabel>
+                <ReqoreHeading
+                  size={headerSize}
+                  effect={{
+                    noWrap: true,
+                  }}
+                >
+                  {label}
+                </ReqoreHeading>
               ) : (
                 label
               )}
@@ -402,6 +397,8 @@ export const ReqorePanel = forwardRef(
         )}
         {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
           <StyledPanelContent
+            as={'div'}
+            effect={{ gradient: { from: '#ff0000', to: '#00ff00' } }}
             className='reqore-panel-content'
             hasLabel={!!label}
             isCollapsed={_isCollapsed}

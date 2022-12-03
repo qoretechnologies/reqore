@@ -12,7 +12,15 @@ export { default as ReqoreControlGroup } from './components/ControlGroup';
 export { ReqoreDrawer } from './components/Drawer';
 export { default as ReqoreDropdown } from './components/Dropdown';
 export { ReqoreDropdownDivider, ReqoreDropdownItem } from './components/Dropdown/item';
-export { ReqoreH1, ReqoreH2, ReqoreH3, ReqoreH4, ReqoreH5, ReqoreH6 } from './components/Header';
+export {
+  ReqoreH1,
+  ReqoreH2,
+  ReqoreH3,
+  ReqoreH4,
+  ReqoreH5,
+  ReqoreH6,
+  ReqoreHeading,
+} from './components/Header';
 export { default as ReqoreIcon } from './components/Icon';
 export { default as ReqoreInput } from './components/Input';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
