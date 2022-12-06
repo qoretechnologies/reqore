@@ -32,7 +32,7 @@ import { StyledCollectionItemContent } from '../Collection/item';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
-import { StyledEffect } from '../Effect';
+import { IReqoreEffect, StyledEffect } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon from '../Icon';
 
@@ -77,6 +77,8 @@ export interface IReqorePanelProps
   minimal?: boolean;
   headerSize?: 1 | 2 | 3 | 4 | 5 | 6;
   contentSize?: TSizes;
+  contentEffect?: IReqoreEffect;
+  headerEffect?: IReqoreEffect;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -84,7 +86,7 @@ export interface IStyledPanel extends IReqorePanelProps {
   noHorizontalPadding?: boolean;
 }
 
-export const StyledPanel = styled.div<IStyledPanel>`
+export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
@@ -139,8 +141,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   justify-content: space-between;
   height: 40px;
   align-items: center;
-  padding: ${({ noHorizontalPadding }: IStyledPanel) =>
-    `0 5px 0 ${noHorizontalPadding ? 0 : '15px'}`};
+  padding: ${({ noHorizontalPadding, contentSize }: IStyledPanel) =>
+    `0 5px 0 ${noHorizontalPadding ? 0 : `${TEXT_FROM_SIZE[contentSize]}px`}`};
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat
       ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
@@ -162,6 +164,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   padding-left: 5px;
+  padding-right: 5px;
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
@@ -169,7 +172,7 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
       : null};
 `;
 
-export const StyledPanelContent = styled(StyledEffect)<IStyledPanel>`
+export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
   min-height: ${({ isCollapsed }) => (isCollapsed ? undefined : '40px')};
   padding: ${({ padded, contentSize, noHorizontalPadding }) =>
@@ -214,6 +217,8 @@ export const ReqorePanel = forwardRef(
       onCollapseChange,
       padded = true,
       contentStyle,
+      contentEffect,
+      headerEffect = {},
       headerSize = 4,
       contentSize = 'normal',
       minimal,
@@ -339,6 +344,7 @@ export const ReqorePanel = forwardRef(
         className={`${className || ''} reqore-panel`}
         interactive={interactive}
         theme={theme}
+        effect={contentEffect}
       >
         {hasTitleBar && (
           <StyledPanelTitle
@@ -348,6 +354,7 @@ export const ReqorePanel = forwardRef(
             className='reqore-panel-title'
             onClick={handleCollapseClick}
             theme={theme}
+            contentSize={contentSize}
             opacity={rest.opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={rest.opacity === 0}
           >
@@ -364,6 +371,7 @@ export const ReqorePanel = forwardRef(
                   size={headerSize}
                   effect={{
                     noWrap: true,
+                    ...headerEffect,
                   }}
                 >
                   {label}
@@ -398,7 +406,6 @@ export const ReqorePanel = forwardRef(
         {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
           <StyledPanelContent
             as={'div'}
-            effect={{ gradient: { from: '#ff0000', to: '#00ff00' } }}
             className='reqore-panel-content'
             hasLabel={!!label}
             isCollapsed={_isCollapsed}

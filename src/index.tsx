@@ -12,6 +12,7 @@ export { default as ReqoreControlGroup } from './components/ControlGroup';
 export { ReqoreDrawer } from './components/Drawer';
 export { default as ReqoreDropdown } from './components/Dropdown';
 export { ReqoreDropdownDivider, ReqoreDropdownItem } from './components/Dropdown/item';
+export { ReqoreEffect, ReqoreTextEffect } from './components/Effect';
 export {
   ReqoreH1,
   ReqoreH2,

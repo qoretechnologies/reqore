@@ -73,3 +73,11 @@ export const ICON_FROM_HEADER_SIZE = {
   5: 9,
   6: 6,
 };
+
+export const WEIGHT_TO_NUMBER = {
+  thin: 100,
+  light: 250,
+  normal: 400,
+  bold: 550,
+  thick: 700,
+};
