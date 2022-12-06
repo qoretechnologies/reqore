@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import React, { forwardRef, InputHTMLAttributes } from 'react';
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -19,10 +19,7 @@ import ReqoreIcon from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 
 export interface IReqoreInputProps
-  extends Omit<
-      React.DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-      'size'
-    >,
+  extends React.HTMLAttributes<HTMLInputElement>,
     IReqoreDisabled,
     IReqoreReadOnly,
     IReqoreIntent,
@@ -40,6 +37,7 @@ export interface IReqoreInputProps
   icon?: IReqoreIconName;
   flat?: boolean;
   rounded?: boolean;
+  type?: 'text' | 'password' | 'email' | 'number' | 'tel' | 'url';
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
