@@ -7,7 +7,7 @@ import ReqoreContext from '../../context/ReqoreContext';
 import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { StyledBackdrop } from '../Drawer';
-import { IReqoreDropdownItemProps } from '../Dropdown/item';
+import { IReqoreDropdownItem } from '../Dropdown/list';
 import {
   IReqorePanelAction,
   IReqorePanelBottomAction,
@@ -35,7 +35,7 @@ export interface IReqoreCollectionItemProps
   expandedContent?: string | React.ReactNode;
   expandedActions?: IReqorePanelBottomAction[];
   image?: string;
-  actions?: IReqoreDropdownItemProps[];
+  actions?: IReqoreDropdownItem[];
   tags?: IReqoreTagProps[];
   maxContentHeight?: number;
 }
@@ -177,7 +177,10 @@ export const ReqoreCollectionItem = ({
       expandedContent && isSelected ? expandedContent : content;
 
     const actualActions: IReqorePanelAction[] | undefined = isSelected
-      ? [...(actions || []), { icon: 'CloseLine', onClick: handleItemClick }]
+      ? ([
+          ...(actions || []),
+          { icon: 'CloseLine', onClick: handleItemClick },
+        ] as IReqorePanelAction[])
       : size(actions)
       ? [{ icon: 'More2Fill', actions }]
       : undefined;

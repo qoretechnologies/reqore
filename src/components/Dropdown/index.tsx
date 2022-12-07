@@ -1,33 +1,31 @@
 import { size } from 'lodash';
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { ReqorePopover } from '../..';
 import { IPopoverOptions } from '../../hooks/usePopover';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
-import { IReqoreDropdownItemProps } from './item';
-import ReqoreDropdownList from './list';
+import ReqoreDropdownList, { IReqoreDropdownItem, TDropdownItemOnClick } from './list';
 
-export interface IReqoreDropdownProps<T> extends IPopoverOptions {
-  items?: IReqoreDropdownItemProps[];
+export interface IReqoreDropdownProps extends Partial<IPopoverOptions> {
+  items?: IReqoreDropdownItem[];
   multiSelect?: boolean;
   buttonStyle?: React.CSSProperties;
   listStyle?: React.CSSProperties;
   component?: any;
-  componentProps?: T;
   filterable?: boolean;
   label?: any;
   children?: any;
-  width?: string;
+  listWidth?: string;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
   caretPosition?: 'left' | 'right';
   isDefaultOpen?: boolean;
+  onItemSelect?: TDropdownItemOnClick;
 }
 
-const ReqoreDropdown = <T extends unknown = IReqoreButtonProps>({
+function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
   items,
   component,
-  componentProps,
   label,
   children,
   multiSelect,
@@ -40,43 +38,71 @@ const ReqoreDropdown = <T extends unknown = IReqoreButtonProps>({
   rightIcon,
   caretPosition = 'left',
   isDefaultOpen = false,
+  onItemSelect,
+  closeOnOutsideClick,
+  blur,
+  closeOnAnyClick,
+  content,
+  delay,
+  maxHeight,
+  maxWidth,
+  noArrow = true,
+  opaque,
+  openOnMount,
+  show,
+  targetElement,
+  useTargetWidth,
+  listWidth,
   ...rest
-}: IReqoreDropdownProps<T>) => {
+}: IReqoreDropdownProps & T) {
+  const componentProps = useMemo(
+    () =>
+      ({
+        ...rest,
+        icon: caretPosition === 'left' ? icon || 'ArrowDownSFill' : rightIcon,
+        rightIcon: caretPosition === 'right' ? icon || 'ArrowDownSFill' : rightIcon,
+        style: buttonStyle,
+        disabled: !size(items),
+        className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
+      } as T),
+    [items, icon, rightIcon, buttonStyle, caretPosition, rest]
+  );
+
+  const popoverContent = useMemo(() => {
+    return size(items) ? (
+      <ReqoreDropdownList
+        multiSelect={multiSelect}
+        listStyle={listStyle}
+        width={useTargetWidth ? '100%' : listWidth}
+        items={items}
+        filterable={filterable}
+        onItemSelect={onItemSelect}
+      />
+    ) : undefined;
+  }, [items]);
+
   return (
     <ReqorePopover
-      {...rest}
+      closeOnOutsideClick={closeOnOutsideClick}
+      blur={blur}
+      closeOnAnyClick={closeOnAnyClick}
+      delay={delay}
+      maxHeight={maxHeight}
+      maxWidth={maxWidth}
+      noArrow={noArrow}
+      opaque={opaque}
+      useTargetWidth={useTargetWidth}
       component={component || ReqoreButton}
-      componentProps={
-        {
-          icon: caretPosition === 'left' ? icon || 'ArrowDownSFill' : rightIcon,
-          rightIcon: caretPosition === 'right' ? icon || 'ArrowDownSFill' : rightIcon,
-          style: buttonStyle,
-          disabled: !size(items),
-          ...rest,
-          ...((componentProps || {}) as Object),
-          className: `${(componentProps as any)?.className || ''} reqore-dropdown-control`,
-        } as T
-      }
+      componentProps={componentProps}
       noWrapper
       placement={placement || 'bottom-start'}
       handler={handler || 'click'}
       openOnMount={isDefaultOpen}
-      content={
-        size(items) ? (
-          <ReqoreDropdownList
-            multiSelect={multiSelect}
-            listStyle={listStyle}
-            width={rest.useTargetWidth ? '100%' : rest.width}
-            items={items}
-            filterable={filterable}
-          />
-        ) : undefined
-      }
-      noArrow
+      content={popoverContent}
     >
       {children || label}
     </ReqorePopover>
   );
-};
+}
 
-export default ReqoreDropdown;
+export default memo(ReqoreDropdown) as typeof ReqoreDropdown;
