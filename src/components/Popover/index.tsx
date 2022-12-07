@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import styled from 'styled-components';
 import usePopover, { IPopoverOptions } from '../../hooks/usePopover';
+import { useWhyDidYouUpdate } from '../../hooks/useWhyDidYouUpdate';
 import { IReqoreComponent } from '../../types/global';
 
 export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
@@ -17,49 +18,63 @@ export const StyledPopover = styled.span`
   overflow: hidden;
 `;
 
-const Popover = ({
-  component: Component,
-  componentProps,
-  children,
-  isReqoreComponent,
-  noWrapper,
-  wrapperTag = 'span',
-  wrapperStyle = {},
-  _insidePopover,
-  _popoverId,
-  ...rest
-}: IReqorePopoverProps) => {
-  const [ref, setRef] = useState(undefined);
+const Popover = memo(
+  ({
+    component: Component,
+    componentProps,
+    children,
+    isReqoreComponent,
+    noWrapper,
+    wrapperTag = 'span',
+    wrapperStyle = {},
+    _insidePopover,
+    _popoverId,
+    ...rest
+  }: IReqorePopoverProps) => {
+    const [ref, setRef] = useState(undefined);
 
-  usePopover({ targetElement: ref, ...rest });
+    useWhyDidYouUpdate('popover', {
+      component: Component,
+      componentProps,
+      children,
+      isReqoreComponent,
+      noWrapper,
+      wrapperTag,
+      wrapperStyle,
+      _insidePopover,
+      _popoverId,
+      ...rest,
+    });
+    usePopover({ targetElement: ref, ...rest });
 
-  if (isReqoreComponent || noWrapper) {
+    if (isReqoreComponent || noWrapper) {
+      return (
+        <Component
+          {...componentProps}
+          _insidePopover={_insidePopover}
+          _popoverId={_popoverId}
+          ref={setRef}
+        >
+          {children}
+        </Component>
+      );
+    }
+
     return (
-      <Component
-        {...componentProps}
-        _insidePopover={_insidePopover}
-        _popoverId={_popoverId}
+      // @ts-ignore
+      <StyledPopover
+        // @ts-ignore
+        as={wrapperTag}
+        className='reqore-popover-wrapper'
         ref={setRef}
+        style={wrapperStyle}
       >
-        {children}
-      </Component>
+        <Component {...componentProps} _insidePopover={_insidePopover} _popoverId={_popoverId}>
+          {children}
+        </Component>
+      </StyledPopover>
     );
   }
-
-  return (
-    // @ts-ignore
-    <StyledPopover
-      // @ts-ignore
-      as={wrapperTag}
-      className='reqore-popover-wrapper'
-      ref={setRef}
-      style={wrapperStyle}
-    >
-      <Component {...componentProps} _insidePopover={_insidePopover} _popoverId={_popoverId}>
-        {children}
-      </Component>
-    </StyledPopover>
-  );
-};
+);
 
 export default Popover;

@@ -63,30 +63,38 @@ const usePopover = ({
     [popovers, current]
   );
 
+  const openPopover = () => {
+    addPopover?.({
+      id: current,
+      content,
+      targetElement,
+      placement,
+      noArrow,
+      useTargetWidth,
+      closeOnOutsideClick,
+      closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
+      ...rest,
+    });
+
+    if (rest?.blur > 0) {
+      targetElement.style.position = 'relative';
+      targetElement.style.zIndex = '999999';
+    }
+  };
+
   const _addPopover = () => {
     if (currentPopover) {
       if (handler !== 'hoverStay') {
         _removePopover?.();
       }
     } else if (show) {
-      timeout = setTimeout(() => {
-        addPopover?.({
-          id: current,
-          content,
-          targetElement,
-          placement,
-          noArrow,
-          useTargetWidth,
-          closeOnOutsideClick,
-          closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
-          ...rest,
-        });
-
-        if (rest?.blur > 0) {
-          targetElement.style.position = 'relative';
-          targetElement.style.zIndex = '999999';
-        }
-      }, delay || 0);
+      if (delay) {
+        timeout = setTimeout(() => {
+          openPopover();
+        }, delay);
+      } else {
+        openPopover();
+      }
     }
   };
 
@@ -119,7 +127,7 @@ const usePopover = ({
         ...rest,
       });
     }
-  }, [content?.toString()]);
+  }, [content]);
 
   useEffect(() => {
     if (openOnMount && targetElement) {
@@ -155,7 +163,13 @@ const usePopover = ({
         }
       }
     };
-  }, [targetElement?.toString(), content?.toString(), current, currentPopover]);
+  }, [
+    targetElement?.toString(),
+    //@ts-ignore
+    content,
+    current,
+    currentPopover,
+  ]);
 
   useUnmount(() => {
     cancelTimeout();

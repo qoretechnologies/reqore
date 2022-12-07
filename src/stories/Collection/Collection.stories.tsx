@@ -72,7 +72,7 @@ const Template: Story<IReqoreCollectionProps> = (args) => {
   return (
     <ReqoreCollection
       {...args}
-      actions={[{ label: 'Custom action', icon: 'Home7Line' }, { actions: [{ label: 'Test' }] }]}
+      actions={[{ label: 'Custom action', icon: 'Home7Line' }, { actions: [{ value: 'Test' }] }]}
     />
   );
 };

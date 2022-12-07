@@ -133,8 +133,6 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
     ],
   });
 
-  console.log(opaque);
-
   useEffect(() => {
     if (popperRef.current) {
       updatePopover?.(id, { popperRef });

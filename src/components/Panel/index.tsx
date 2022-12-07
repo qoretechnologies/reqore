@@ -31,13 +31,13 @@ import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { StyledCollectionItemContent } from '../Collection/item';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
-import { IReqoreDropdownItemProps } from '../Dropdown/item';
+import { IReqoreDropdownItem } from '../Dropdown/list';
 import ReqoreIcon from '../Icon';
 
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
   onClick?: () => void;
-  actions?: IReqoreDropdownItemProps[];
+  actions?: IReqoreDropdownItem[];
   customContent?: () => string | React.ReactNode;
 }
 
@@ -267,66 +267,68 @@ export const ReqorePanel = forwardRef(
       [leftBottomActions, rightBottomActions]
     );
 
-    const renderActions = (
-      actionOrActions: IReqorePanelAction | IReqorePanelAction[],
-      index: number
-    ) => {
-      if (Array.isArray(actionOrActions)) {
-        return (
-          <ReqoreControlGroup stack minimal>
-            {actionOrActions.map(renderActions)}
-          </ReqoreControlGroup>
-        );
-      }
+    const renderActions = useCallback(
+      (actionOrActions: IReqorePanelAction | IReqorePanelAction[], index: number) => {
+        if (Array.isArray(actionOrActions)) {
+          return (
+            <ReqoreControlGroup stack minimal>
+              {actionOrActions.map(renderActions)}
+            </ReqoreControlGroup>
+          );
+        }
 
-      const { id, actions, label, intent, className, customContent, ...rest }: IReqorePanelAction =
-        actionOrActions;
+        const {
+          id,
+          actions,
+          label,
+          intent,
+          className,
+          customContent,
+          ...rest
+        }: IReqorePanelAction = actionOrActions;
 
-      if (size(actions)) {
+        if (size(actions)) {
+          return (
+            <ReqoreDropdown<IReqoreButtonProps>
+              {...rest}
+              key={index}
+              label={label}
+              items={actions}
+              intent={intent}
+              className={className}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
+              id={id}
+            />
+          );
+        }
+
+        if (customContent) {
+          return customContent();
+        }
+
         return (
-          <ReqoreDropdown
+          <ReqoreButton
             {...rest}
+            id={id}
             key={index}
-            label={label}
-            componentProps={{
-              intent,
-              id,
-              minimal: true,
-              className,
-              onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
-                e.stopPropagation();
-              },
-            }}
-            items={actions}
-          />
+            className={className}
+            customTheme={theme}
+            intent={intent}
+            onClick={
+              rest.onClick
+                ? (e: React.MouseEvent<HTMLButtonElement>) => {
+                    e.stopPropagation();
+                    rest.onClick?.();
+                  }
+                : undefined
+            }
+          >
+            {label}
+          </ReqoreButton>
         );
-      }
-
-      if (customContent) {
-        return customContent();
-      }
-
-      return (
-        <ReqoreButton
-          {...rest}
-          id={id}
-          key={index}
-          className={className}
-          customTheme={theme}
-          intent={intent}
-          onClick={
-            rest.onClick
-              ? (e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.stopPropagation();
-                  rest.onClick?.();
-                }
-              : undefined
-          }
-        >
-          {label}
-        </ReqoreButton>
-      );
-    };
+      },
+      [actions, theme]
+    );
 
     const HTMLheaderElement = useMemo(() => {
       return `h${headerSize}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
