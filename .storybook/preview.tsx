@@ -19,9 +19,6 @@ export const parameters = {
     hideNoControlsWarning: true,
     expanded: true,
   },
-  chromatic: {
-    delay: 500,
-  },
 };
 
 export const argTypes = {

@@ -9,6 +9,11 @@ const { createArg, disableArg } = argManager<IReqoreDropdownProps>();
 
 export default {
   title: 'Components/Dropdown',
+  parameters: {
+    chromatic: {
+      delay: 500,
+    },
+  },
   argTypes: {
     ...disableArg('multiSelect'),
     ...createArg('component', {
