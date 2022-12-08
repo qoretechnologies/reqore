@@ -1,7 +1,6 @@
 import React, { memo, useState } from 'react';
 import styled from 'styled-components';
 import usePopover, { IPopoverOptions } from '../../hooks/usePopover';
-import { useWhyDidYouUpdate } from '../../hooks/useWhyDidYouUpdate';
 import { IReqoreComponent } from '../../types/global';
 
 export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
@@ -33,18 +32,6 @@ const Popover = memo(
   }: IReqorePopoverProps) => {
     const [ref, setRef] = useState(undefined);
 
-    useWhyDidYouUpdate('popover', {
-      component: Component,
-      componentProps,
-      children,
-      isReqoreComponent,
-      noWrapper,
-      wrapperTag,
-      wrapperStyle,
-      _insidePopover,
-      _popoverId,
-      ...rest,
-    });
     usePopover({ targetElement: ref, ...rest });
 
     if (isReqoreComponent || noWrapper) {

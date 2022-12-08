@@ -13,8 +13,10 @@ import {
   IReqoreIntent,
   IReqoreReadOnly,
   IWithReqoreCustomTheme,
+  IWithReqoreEffect,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import { StyledEffect } from '../Effect';
 import ReqoreIcon from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 
@@ -23,7 +25,8 @@ export interface IReqoreInputProps
     IReqoreDisabled,
     IReqoreReadOnly,
     IReqoreIntent,
-    IWithReqoreCustomTheme {
+    IWithReqoreCustomTheme,
+    IWithReqoreEffect {
   autoFocus?: boolean;
   tooltip?: string;
   width?: number;
@@ -67,7 +70,7 @@ const StyledIconWrapper = styled.div<IReqoreInputStyle>`
   align-items: center;
 `;
 
-export const StyledInput = styled.input<IReqoreInputStyle>`
+export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   height: 100%;
   width: 100%;
   flex: 1;
@@ -97,25 +100,28 @@ export const StyledInput = styled.input<IReqoreInputStyle>`
       : undefined}
 
   background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-    minimal ? 'transparent' : rgba(theme.main, 0.3)};
-  color: ${({ theme }: IReqoreInputStyle) => getReadableColor(theme)};
+    minimal ? 'transparent' : rgba(theme.main, 0.1)};
+  color: ${({ theme }: IReqoreInputStyle) =>
+    getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
 
   transition: all 0.2s ease-out;
 
   &:active,
   &:focus {
     background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-      minimal ? 'transparent' : rgba(theme.main, 0.5)};
+      minimal ? 'transparent' : rgba(theme.main, 0.15)};
   }
 
   &::placeholder {
     transition: all 0.2s ease-out;
-    color: ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+    color: ${({ theme }) =>
+      rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)};
   }
 
   &:focus {
     &::placeholder {
-      color: ${({ theme }) => rgba(getReadableColor(theme), 0.5)};
+      color: ${({ theme }) =>
+        rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.5)};
     }
   }
 
@@ -175,6 +181,7 @@ const ReqoreInput = forwardRef(
         )}
         <StyledInput
           {...rest}
+          as='input'
           theme={theme}
           _size={size}
           minimal={minimal}

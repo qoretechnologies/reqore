@@ -62,6 +62,7 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
     <ReqoreTagGroup columns={columns} size={args.size}>
       <ReqoreTag label='Basic Tag' icon='AlarmWarningLine' {...args} />
       <ReqoreTag labelKey='Tag with' label='Label Key' icon='AlarmWarningLine' {...args} />
+      <ReqoreTag labelKey='Key' label='value' {...args} />
       <ReqoreTag icon='QuestionAnswerLine' {...args} />
       <ReqoreTag label='Disabled Tag' disabled icon='AlarmWarningLine' {...args} />
       <ReqoreTag
@@ -81,3 +82,18 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
 export const Basic = Template.bind({});
 export const Badge = Template.bind({});
 Badge.args = { badge: true };
+
+export const Effect = Template.bind({});
+Effect.args = {
+  effect: {
+    gradient: {
+      direction: 'to right bottom',
+      colors: { 0: '#33023c', 100: '#0a487b' },
+    },
+    color: '#ffffff',
+    spaced: 2,
+    uppercase: true,
+    weight: 'thick',
+    textSize: 'small',
+  },
+};

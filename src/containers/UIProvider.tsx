@@ -10,25 +10,25 @@ import { buildTheme } from '../helpers/colors';
 import PopoverProvider from './PopoverProvider';
 import ReqoreProvider from './ReqoreProvider';
 
+export interface IReqoreOptions {
+  withSidebar?: boolean;
+  notificationsPosition?: IReqoreNotificationsPosition;
+  uiScale?: number;
+  animations?: {
+    buttons?: boolean;
+  };
+}
 export interface IReqoreUIProviderProps {
   children: any;
   theme?: Partial<IReqoreTheme>;
-  notificationsPosition?: IReqoreNotificationsPosition;
-  withSidebar?: boolean;
-  uiScale?: number;
+  options?: IReqoreOptions;
 }
 
 const StyledPortal = styled.div`
   z-index: 9999;
 `;
 
-const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
-  children,
-  theme,
-  notificationsPosition,
-  withSidebar,
-  uiScale,
-}) => {
+const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({ children, theme, options }) => {
   const [modalPortal, setModalPortal] = useState<any>(false);
 
   const _theme: Partial<IReqoreTheme> = cloneDeep(theme || {});
@@ -38,10 +38,10 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({
   return (
     <>
       <ThemeContext.Provider value={{ ...rebuiltTheme }}>
-        <ReqoreLayoutWrapper withSidebar={withSidebar}>
+        <ReqoreLayoutWrapper withSidebar={options?.withSidebar}>
           {modalPortal ? (
-            <ReqoreProvider position={notificationsPosition}>
-              <PopoverProvider uiScale={uiScale}>{children}</PopoverProvider>
+            <ReqoreProvider options={options}>
+              <PopoverProvider uiScale={options?.uiScale}>{children}</PopoverProvider>
             </ReqoreProvider>
           ) : null}
         </ReqoreLayoutWrapper>

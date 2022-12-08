@@ -4,26 +4,20 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useTooltip } from '../../hooks/useTooltip';
-import { IReqoreComponent, IWithReqoreCustomTheme, TReqoreTooltipProp } from '../../types/global';
-import { IReqoreIconName } from '../../types/icons';
+import { IReqoreComponent } from '../../types/global';
+import { IReqoreButtonProps } from '../Button';
 
 // @ts-ignore
 export interface IReqoreMenuItemProps
   extends IReqoreComponent,
     React.HTMLAttributes<HTMLElement>,
-    IWithReqoreCustomTheme {
-  children?: string;
+    IReqoreButtonProps {
   label?: string | number;
-  icon?: IReqoreIconName;
-  rightIcon?: IReqoreIconName;
   as?: JSX.Element | React.ElementType | never;
   selected?: boolean;
-  disabled?: boolean;
-  onClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
+  itemId?: string;
   onRightIconClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
-  tooltip?: TReqoreTooltipProp;
-  intent?: TReqoreIntent;
-  wrapText?: boolean;
+  onClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
 }
 
 export interface IReqoreMenuItemStyle {
@@ -51,12 +45,11 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       onClick,
       onRightIconClick,
       disabled,
-      id,
+      itemId,
       _insidePopover,
       _popoverId,
       tooltip,
       intent,
-      wrapText,
       ...rest
     },
     ref: any
@@ -67,7 +60,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       event.persist();
 
-      onClick?.(id, event);
+      onClick?.(itemId, event);
 
       if (_insidePopover && _popoverId) {
         removePopover!(_popoverId);
@@ -79,7 +72,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       event.stopPropagation();
 
       if (onRightIconClick) {
-        onRightIconClick(id, event);
+        onRightIconClick(itemId, event);
 
         if (_insidePopover && _popoverId) {
           removePopover!(_popoverId);
@@ -104,7 +97,6 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
           disabled={disabled}
           intent={intent}
           icon={icon}
-          wrap={wrapText}
         >
           {label || children}
         </ReqoreButton>
@@ -120,7 +112,6 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
             readOnly={!onRightIconClick}
             intent={intent}
             active={selected && !!onRightIconClick}
-            wrap={wrapText}
           />
         )}
       </ReqoreControlGroup>

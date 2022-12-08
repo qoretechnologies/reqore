@@ -122,7 +122,7 @@ export const mergeThemes = (element: string, theme: IReqoreTheme, customTheme: a
   }
 
   if (element === 'main' && customTheme) {
-    merge(clonedTheme, { main: customTheme.main });
+    merge(clonedTheme, { main: customTheme.main, originalMain: clonedTheme.main });
   } else {
     merge(clonedTheme, { [element]: customTheme || {} });
   }

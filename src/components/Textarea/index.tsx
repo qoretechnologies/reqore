@@ -13,8 +13,10 @@ import {
   IReqoreIntent,
   IReqoreReadOnly,
   IWithReqoreCustomTheme,
+  IWithReqoreEffect,
   IWithReqoreTooltip,
 } from '../../types/global';
+import { StyledEffect } from '../Effect';
 import { IReqoreInputStyle } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 
@@ -24,7 +26,8 @@ export interface IReqoreTextareaProps
     IReqoreDisabled,
     IWithReqoreCustomTheme,
     IWithReqoreTooltip,
-    IReqoreIntent {
+    IReqoreIntent,
+    IWithReqoreEffect {
   autoFocus?: boolean;
   width?: number;
   height?: number;
@@ -53,7 +56,7 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   overflow: hidden;
 `;
 
-export const StyledTextarea = styled.textarea<IReqoreTextareaStyle>`
+export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   height: 100%;
   width: 100%;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
@@ -62,15 +65,16 @@ export const StyledTextarea = styled.textarea<IReqoreTextareaStyle>`
   resize: none;
 
   background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-    minimal ? 'transparent' : rgba(theme.main, 0.3)};
-  color: ${({ theme }: IReqoreInputStyle) => getReadableColor(theme)};
+    minimal ? 'transparent' : rgba(theme.main, 0.1)};
+  color: ${({ theme }: IReqoreInputStyle) =>
+    getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
 
   transition: all 0.2s ease-out;
 
   &:active,
   &:focus {
     background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-      minimal ? 'transparent' : rgba(theme.main, 0.5)};
+      minimal ? 'transparent' : rgba(theme.main, 0.15)};
   }
 
   border-radius: ${({ minimal, rounded, _size }) =>
@@ -96,12 +100,14 @@ export const StyledTextarea = styled.textarea<IReqoreTextareaStyle>`
 
   &::placeholder {
     transition: all 0.2s ease-out;
-    color: ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+    color: ${({ theme }) =>
+      rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)};
   }
 
   &:focus {
     &::placeholder {
-      color: ${({ theme }) => rgba(getReadableColor(theme), 0.5)};
+      color: ${({ theme }) =>
+        rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.5)};
     }
   }
 
@@ -146,6 +152,7 @@ const ReqoreInput = forwardRef(
       >
         <StyledTextarea
           {...rest}
+          as='textarea'
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
           ref={targetRef}

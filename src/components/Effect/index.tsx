@@ -1,6 +1,6 @@
 import { reduce } from 'lodash';
 import styled, { css } from 'styled-components';
-import { WEIGHT_TO_NUMBER } from '../../constants/sizes';
+import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
 
 export interface IReqoreEffect {
   gradient?: {
@@ -14,6 +14,8 @@ export interface IReqoreEffect {
   spaced?: number;
   weight?: number | 'thin' | 'light' | 'normal' | 'bold' | 'thick';
   uppercase?: boolean;
+  textSize?: TSizes;
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export interface IReqoreTextEffectProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -69,7 +71,7 @@ export const StyledEffect = styled.span`
       typeof effect.weight === 'number' ? effect.weight : WEIGHT_TO_NUMBER[effect.weight];
 
     return css`
-      font-weight: ${weight};
+      font-weight: ${weight} !important;
     `;
   }}
 
@@ -82,10 +84,24 @@ export const StyledEffect = styled.span`
         `
       : undefined}
 
-${({ effect }: IReqoreTextEffectProps) =>
+  ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.color
       ? css`
-          color: ${effect.color};
+          color: ${effect.color} !important;
+        `
+      : undefined}
+
+  ${({ effect }: IReqoreTextEffectProps) =>
+    effect && effect.textSize
+      ? css`
+          font-size: ${TEXT_FROM_SIZE[effect.textSize]}px !important;
+        `
+      : undefined}
+
+  ${({ effect }: IReqoreTextEffectProps) =>
+    effect && effect.textAlign
+      ? css`
+          text-align: ${effect.textAlign};
         `
       : undefined}
 `;

@@ -57,3 +57,16 @@ CustomTheme.args = {
     main: '#6e1295',
   },
 };
+
+export const Effect: Story<IReqoreMessageProps> = Template.bind({});
+Effect.args = {
+  effect: {
+    gradient: {
+      colors: {
+        0: '#00e3e8',
+        100: '#eb0e8c',
+      },
+    },
+    color: '#000000',
+  },
+};

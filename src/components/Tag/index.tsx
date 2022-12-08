@@ -1,4 +1,5 @@
 import _size from 'lodash/size';
+import { rgba } from 'polished';
 import React, { forwardRef, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
@@ -14,8 +15,14 @@ import ThemeContext from '../../context/ThemeContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useTooltip } from '../../hooks/useTooltip';
-import { IReqoreDisabled, IReqoreIntent, IWithReqoreTooltip } from '../../types/global';
+import {
+  IReqoreDisabled,
+  IReqoreIntent,
+  IWithReqoreEffect,
+  IWithReqoreTooltip,
+} from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import { StyledEffect } from '../Effect';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreTagAction extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent {
@@ -26,7 +33,8 @@ export interface IReqoreTagAction extends IWithReqoreTooltip, IReqoreDisabled, I
 export interface IReqoreTagProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'>,
     IWithReqoreTooltip,
-    IReqoreDisabled {
+    IReqoreDisabled,
+    IWithReqoreEffect {
   size?: TSizes;
   label?: string | number;
   labelKey?: string | number;
@@ -47,7 +55,7 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   interactive?: boolean;
 }
 
-export const StyledTag = styled.div<IReqoreTagStyle>`
+export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   display: inline-flex;
   justify-content: center;
   flex-shrink: 0;
@@ -55,6 +63,7 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
   font-family: system-ui;
   font-weight: 600;
   overflow: hidden;
+  vertical-align: middle;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
@@ -67,8 +76,8 @@ export const StyledTag = styled.div<IReqoreTagStyle>`
       background-color: ${color || changeLightness(theme.main, 0.1)};
       color: ${color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
 
-      ${StyledTagContentKey}, ${StyledTagContentWrapper} {
-        background-color: ${labelKey ? changeLightness(color || theme.main, 0.05) : undefined};
+      ${StyledTagContentWrapper} {
+        background-color: ${labelKey ? rgba('#000000', 0.2) : undefined};
       }
     `}
 
@@ -130,14 +139,14 @@ const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
   align-items: center;
   transition: all 0.2s ease-out;
 
-  ${({ theme, color }) =>
+  ${({ color }) =>
     css`
       .reqore-icon {
         transform: scale(0.85);
       }
       &:hover {
         cursor: pointer;
-        background-color: ${changeLightness(color || theme.main, color ? 0.09 : 0.19)};
+        background-color: ${color ? changeLightness(color, 0.09) : rgba('#000000', 0.2)};
 
         .reqore-icon {
           transform: scale(1);

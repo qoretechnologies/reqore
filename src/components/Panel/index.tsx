@@ -268,9 +268,7 @@ export const ReqorePanel = forwardRef(
       (actionOrActions: IReqorePanelAction | IReqorePanelAction[], index: number) => {
         if (Array.isArray(actionOrActions)) {
           return (
-            <ReqoreControlGroup stack minimal>
-              {actionOrActions.map(renderActions)}
-            </ReqoreControlGroup>
+            <ReqoreControlGroup stack>{actionOrActions.map(renderActions)}</ReqoreControlGroup>
           );
         }
 
@@ -382,7 +380,7 @@ export const ReqorePanel = forwardRef(
                 label
               )}
             </StyledPanelTitleHeader>
-            <ReqoreControlGroup minimal>
+            <ReqoreControlGroup>
               {actions.map(renderActions)}
               {collapsible && (
                 <ReqoreButton
@@ -428,8 +426,8 @@ export const ReqorePanel = forwardRef(
             opacity={rest.opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={rest.opacity === 0}
           >
-            <ReqoreControlGroup minimal>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
-            <ReqoreControlGroup minimal>{rightBottomActions.map(renderActions)}</ReqoreControlGroup>
+            <ReqoreControlGroup>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
+            <ReqoreControlGroup>{rightBottomActions.map(renderActions)}</ReqoreControlGroup>
           </StyledPanelBottomActions>
         ) : null}
       </StyledPanel>

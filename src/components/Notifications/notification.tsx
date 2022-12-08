@@ -14,16 +14,18 @@ import {
   getNotificationIntent,
   getReadableColorFrom,
 } from '../../helpers/colors';
+import { IWithReqoreEffect } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import { StyledEffect } from '../Effect';
 import ReqoreIcon from '../Icon';
 
 export type IReqoreNotificationType = TReqoreIntent;
 
-export interface IReqoreNotificationProps {
+export interface IReqoreNotificationProps extends IWithReqoreEffect {
   type?: IReqoreNotificationType;
   intent?: TReqoreIntent;
   title?: string;
-  content: string;
+  content: string | React.ReactNode;
   icon?: IReqoreIconName;
   onClose?: () => any;
   onClick?: () => any;
@@ -58,7 +60,7 @@ const timeoutAnimation = keyframes`
   }
 `;
 
-export const StyledReqoreNotification = styled(animated.div)<IReqoreNotificationStyle>`
+export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotificationStyle>`
   min-width: ${({ fluid }) => (!fluid ? '200px' : undefined)};
   max-width: ${({ fluid }) => (!fluid ? '450px' : undefined)};
   border-radius: 5px;
@@ -249,6 +251,7 @@ const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef(
       item ? (
         <ReqoreThemeProvider>
           <StyledReqoreNotification
+            as={animated.div}
             key={`${duration}${type || intent}${title}${content}`}
             type={type || intent}
             hasShadow
