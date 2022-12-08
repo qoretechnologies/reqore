@@ -74,8 +74,8 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
         {
           label: 'More actions',
           actions: [
-            { label: 'Sub Test', icon: 'FileDownloadLine' },
-            { label: 'Sub Test 2', icon: 'FileDownloadLine', intent: 'success' },
+            { value: 'Sub Test', icon: 'FileDownloadLine' },
+            { value: 'Sub Test 2', icon: 'FileDownloadLine', intent: 'success' },
           ],
           intent: 'info',
         },
@@ -86,8 +86,8 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
           label: 'More actions',
           position: 'right',
           actions: [
-            { label: 'Sub Test', icon: 'FileDownloadLine', intent: 'success' },
-            { label: 'Sub Test 2', icon: 'FileDownloadLine' },
+            { value: 'Sub Test', icon: 'FileDownloadLine', intent: 'success' },
+            { value: 'Sub Test 2', icon: 'FileDownloadLine' },
           ],
         },
       ]}
