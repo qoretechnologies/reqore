@@ -19,6 +19,9 @@ export const parameters = {
     hideNoControlsWarning: true,
     expanded: true,
   },
+  chromatic: {
+    pauseAnimationAtEnd: true,
+  },
 };
 
 export const argTypes = {

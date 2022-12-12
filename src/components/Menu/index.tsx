@@ -63,7 +63,7 @@ const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
                   _insidePopover,
                   _popoverId,
                   customTheme: theme,
-                  wrapText,
+                  wrap: wrapText,
                 })
               : null
           )}

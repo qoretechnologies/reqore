@@ -1,3 +1,4 @@
+import { IReqoreEffect } from '../components/Effect';
 import { TSizes } from '../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../constants/theme';
 import { IPopoverOptions } from '../hooks/usePopover';
@@ -123,6 +124,19 @@ export interface IWithReqoreFlat {
    *
    */
   flat?: boolean;
+}
+
+export interface IWithReqoreEffect {
+  /**
+   * If true, the component will have an effect
+   * @default undefined
+   * @type IReqoreEffect
+   * @memberof IWithReqoreEffect
+   * @example
+   * <ReqoreHeading effect={{ gradient: { from | to }}} />
+   *
+   */
+  effect?: IReqoreEffect;
 }
 
 export interface IReqoreTooltip extends IPopoverOptions {}

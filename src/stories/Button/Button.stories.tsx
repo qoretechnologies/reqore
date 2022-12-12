@@ -25,8 +25,8 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} active tooltip='hello'>
           Active
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} flat>
-          Flat
+        <ReqoreButton {...buttonProps} flat={false}>
+          Not Flat
         </ReqoreButton>
         <ReqoreButton {...buttonProps} minimal>
           Minimal
@@ -69,4 +69,17 @@ Danger.args = {
 export const Muted = Template.bind({});
 Muted.args = {
   intent: 'muted',
+};
+export const Effect: ComponentStory<typeof ReqoreButton> = Template.bind({});
+Effect.args = {
+  effect: {
+    gradient: {
+      direction: 'to right bottom',
+      colors: { 0: '#33023c', 100: '#0a487b' },
+    },
+    spaced: 2,
+    uppercase: true,
+    weight: 'thick',
+    textSize: 'small',
+  },
 };

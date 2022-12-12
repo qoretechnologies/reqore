@@ -28,6 +28,12 @@ export default {
       name: 'Collapsible',
       description: 'If the panel should be collapsible',
     }),
+    ...createArg('minimal', {
+      type: 'boolean',
+      defaultValue: false,
+      name: 'Minimal',
+      description: 'If the panel should be minimal',
+    }),
     ...createArg('label', {
       type: 'string',
       defaultValue: 'Reqore panel component',
@@ -36,7 +42,7 @@ export default {
     }),
     ...createArg('opacity', {
       type: 'number',
-      defaultValue: 1,
+      defaultValue: undefined,
       name: 'Opacity',
       description: 'The opacity of the panel',
     }),
@@ -132,4 +138,34 @@ NoLabel.args = {
 export const Opaque: Story<IReqorePanelProps> = Template.bind({});
 Opaque.args = {
   opacity: 0,
+};
+
+export const Minimal: Story<IReqorePanelProps> = Template.bind({});
+Minimal.args = {
+  minimal: true,
+  flat: true,
+};
+
+export const WithEffect: Story<IReqorePanelProps> = Template.bind({});
+WithEffect.args = {
+  minimal: true,
+  flat: true,
+  contentEffect: {
+    gradient: {
+      type: 'radial',
+      shape: 'ellipse',
+      colors: { 0: '#670079', 100: '#180222' },
+    },
+  },
+  headerEffect: {
+    gradient: {
+      type: 'linear',
+      colors: { 0: '#3b065e', 100: '#00d3c8' },
+      direction: 'to right bottom',
+    },
+    uppercase: true,
+    weight: 'normal',
+    spaced: 2,
+  },
+  headerSize: 2,
 };

@@ -95,6 +95,20 @@ const Template: Story<IReqoreMenuProps> = (args) => {
       <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' selected>
         I am selected!
       </ReqoreMenuItem>
+      <ReqoreMenuItem
+        icon='FireLine'
+        rightIcon='ArrowRightDownLine'
+        effect={{
+          gradient: {
+            colors: {
+              0: '#000000',
+              100: 'transparent',
+            },
+          },
+        }}
+      >
+        Fancy
+      </ReqoreMenuItem>
     </ReqoreMenu>
   );
 };

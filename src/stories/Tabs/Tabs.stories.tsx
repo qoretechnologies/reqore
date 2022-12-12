@@ -83,6 +83,18 @@ export default {
       name: 'Fill',
       description: 'If the tabs should fill the container',
     }),
+    ...createArg('fillParent', {
+      type: 'boolean',
+      defaultValue: false,
+      name: 'Fill Parent',
+      description: 'If the tabs should fill the parent container',
+    }),
+    ...createArg('wrapTabNames', {
+      type: 'boolean',
+      defaultValue: false,
+      name: 'Wrap Tab Names',
+      description: 'If the tab names should wrap',
+    }),
     ...createArg('vertical', {
       type: 'boolean',
       defaultValue: false,
@@ -195,39 +207,27 @@ Vertical.args = {
 
 export const VerticalWithWrapping = Template.bind({});
 VerticalWithWrapping.args = {
-  tabs: {
-    ...tabs,
-    vertical: true,
-    fillParent: true,
-    wrapTabNames: true,
-  },
+  vertical: true,
+  fillParent: true,
+  wrapTabNames: true,
 };
 
 export const VerticalFill = Template.bind({});
 VerticalFill.args = {
-  tabs: {
-    ...tabs,
-    vertical: true,
-    fill: true,
-    fillParent: true,
-  },
+  vertical: true,
+  fill: true,
+  fillParent: true,
 };
 
 export const VerticalCustomWidth = Template.bind({});
 VerticalCustomWidth.args = {
-  tabs: {
-    ...tabs,
-    vertical: true,
-    fill: true,
-    fillParent: true,
-    width: '300px',
-  },
+  vertical: true,
+  fill: true,
+  fillParent: true,
+  width: '300px',
 };
 
 export const Flat = Template.bind({});
 Flat.args = {
-  tabs: {
-    ...tabs,
-    flat: true,
-  },
+  flat: true,
 };

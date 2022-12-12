@@ -6,7 +6,7 @@ import ReqoreNotification, {
   IReqoreNotificationProps,
 } from '../../components/Notifications/notification';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreUIProvider } from '../../index';
+import { ReqoreTag, ReqoreUIProvider } from '../../index';
 
 export default {
   title: 'Components/Notifications/Item',
@@ -35,7 +35,12 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       {...args}
       type='success'
       title='Simple notification'
-      content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
+      content={
+        <ReqoreTag
+          label='Custom content in notification'
+          effect={{ gradient: { colors: { 0: '#a11c58', 100: '#ff47a3' } } }}
+        />
+      }
       onClick={noop}
     />
     <ReqoreNotification

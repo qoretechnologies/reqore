@@ -108,3 +108,15 @@ export const Muted = Template.bind({});
 Muted.args = {
   intent: 'muted',
 };
+
+export const Effect = Template.bind({});
+Effect.args = {
+  effect: {
+    gradient: {
+      colors: {
+        0: '#56345e',
+        100: 'transparent',
+      },
+    },
+  },
+};

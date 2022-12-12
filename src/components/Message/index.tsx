@@ -1,10 +1,16 @@
+import { animated } from '@react-spring/web';
 import React, { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import { TEXT_FROM_SIZE } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { IWithReqoreCustomTheme } from '../../types/global';
+import {
+  IReqoreIntent,
+  IWithReqoreCustomTheme,
+  IWithReqoreEffect,
+  IWithReqoreSize,
+} from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreIcon from '../Icon';
 import {
@@ -18,8 +24,10 @@ import {
 
 export interface IReqoreMessageProps
   extends IWithReqoreCustomTheme,
+    IWithReqoreEffect,
+    IWithReqoreSize,
+    IReqoreIntent,
     React.HTMLAttributes<HTMLDivElement> {
-  intent?: TReqoreIntent;
   title?: string;
   children: any;
   icon?: IReqoreIconName;
@@ -29,7 +37,6 @@ export interface IReqoreMessageProps
   onFinish?: () => any;
   flat?: boolean;
   inverted?: boolean;
-  size?: TSizes;
 }
 
 export interface IReqoreNotificationStyle extends IReqoreMessageProps {
@@ -96,6 +103,7 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
       <ReqoreThemeProvider>
         <StyledReqoreNotification
           {...rest}
+          as={animated.div}
           key={`${duration}${intent}${title}${children}`}
           intent={intent}
           timeout={duration}

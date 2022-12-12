@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import { IReqoreConfirmationModal, IReqoreNotificationData } from '../containers/ReqoreProvider';
+import { IReqoreOptions } from '../containers/UIProvider';
 
 export interface IReqoreContext {
   readonly confirmAction: (data: IReqoreConfirmationModal) => void;
@@ -10,6 +11,7 @@ export interface IReqoreContext {
   readonly isTablet?: boolean;
   readonly isMobileOrTablet?: boolean;
   readonly getAndIncreaseZIndex?: () => number;
+  readonly animations?: IReqoreOptions['animations'];
 }
 
 export default createContext<IReqoreContext>({
@@ -17,4 +19,7 @@ export default createContext<IReqoreContext>({
   notifications: null,
   addNotification: null,
   removeNotification: null,
+  animations: {
+    buttons: true,
+  },
 });

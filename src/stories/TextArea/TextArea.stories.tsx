@@ -142,3 +142,21 @@ Custom.args = {
     main: '#38fdb2',
   },
 };
+
+export const Effect = Template.bind({});
+Effect.args = {
+  effect: {
+    gradient: {
+      type: 'radial',
+      colors: {
+        0: '#361554',
+        50: '#160013',
+      },
+    },
+    spaced: 2,
+    color: '#ffffff',
+    uppercase: true,
+    textSize: 'small',
+    weight: 'bold',
+  },
+};

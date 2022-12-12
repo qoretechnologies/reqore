@@ -2,10 +2,8 @@ import { size } from 'lodash';
 import React, { useRef, useState } from 'react';
 import { useMedia } from 'react-use';
 import shortid from 'shortid';
-import { ReqoreModal } from '..';
-import ReqoreNotificationsWrapper, {
-  IReqoreNotificationsPosition,
-} from '../components/Notifications';
+import { ReqoreModal, ReqoreTextEffect } from '..';
+import ReqoreNotificationsWrapper from '../components/Notifications';
 import ReqoreNotification, {
   IReqoreNotificationType,
 } from '../components/Notifications/notification';
@@ -13,6 +11,7 @@ import { TSizes } from '../constants/sizes';
 import { TReqoreIntent } from '../constants/theme';
 import ReqoreContext from '../context/ReqoreContext';
 import { IReqoreIconName } from '../types/icons';
+import { IReqoreOptions } from './UIProvider';
 
 export interface IReqoreNotificationData {
   title?: string;
@@ -32,7 +31,7 @@ export interface IReqoreNotificationData {
 
 export interface IReqoreNotifications {
   children: any;
-  position?: IReqoreNotificationsPosition;
+  options?: IReqoreOptions;
 }
 
 export interface IReqoreConfirmationModal {
@@ -48,7 +47,7 @@ export interface IReqoreConfirmationModal {
   intent?: TReqoreIntent;
 }
 
-const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) => {
+const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
   const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>({});
   const latestZIndex = useRef<number>(9000);
@@ -110,6 +109,8 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
     });
   };
 
+  console.log(options);
+
   return (
     <>
       <ReqoreContext.Provider
@@ -122,10 +123,11 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
           isTablet,
           isMobileOrTablet,
           getAndIncreaseZIndex,
+          animations: options?.animations || { buttons: true },
         }}
       >
         {size(notifications) > 0 ? (
-          <ReqoreNotificationsWrapper position={position}>
+          <ReqoreNotificationsWrapper position={options?.notificationsPosition}>
             {notifications.map((notification) => (
               <ReqoreNotification
                 {...notification}
@@ -159,6 +161,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
           flat
           opacity={0.9}
           blur={2}
+          width='500px'
           intent={confirmationModal.intent}
           label={confirmationModal.title || 'Confirm your action'}
           icon='ErrorWarningFill'
@@ -184,7 +187,12 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, position }) 
             },
           ]}
         >
-          {confirmationModal.description || 'Are you sure you want to proceed?'}
+          <ReqoreTextEffect
+            as='p'
+            effect={{ textAlign: 'center', weight: 'bold', textSize: 'big' }}
+          >
+            {confirmationModal.description || 'Are you sure you want to proceed?'}
+          </ReqoreTextEffect>
         </ReqoreModal>
       </ReqoreContext.Provider>
     </>

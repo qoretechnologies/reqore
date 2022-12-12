@@ -49,6 +49,7 @@ export interface IReqoreNavbarTheme {
 
 export interface IReqoreTheme {
   main: string;
+  originalMain?: string;
   text?: {
     color?: string;
     dim?: boolean;

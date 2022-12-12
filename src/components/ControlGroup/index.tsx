@@ -70,6 +70,7 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
           > * {
             &:not(:last-child) {
               margin-right: ${({ stack }) => (!stack ? '5px' : undefined)};
+              border-right: ${({ stack }) => (!stack ? undefined : 0)};
             }
 
             border-radius: ${({ stack }) => (!stack ? undefined : 0)};
