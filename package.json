@@ -10,7 +10,8 @@
     "test:ci": "./node_modules/.bin/jest --silent --json --outputFile=tests.json",
     "build": "./node_modules/typescript/bin/tsc --project tsconfig.prod.json",
     "build:test": "./node_modules/typescript/bin/tsc --noEmit",
-    "storybook": "yarn test:ci && start-storybook -p 6007 --no-dll",
+    "storybook": "start-storybook -p 6007 --no-dll",
+    "init-storybook": "yarn test:ci && yarn storybook",
     "build-storybook": "build-storybook"
   },
   "repository": {

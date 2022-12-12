@@ -109,6 +109,8 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options }) =
     });
   };
 
+  console.log(options);
+
   return (
     <>
       <ReqoreContext.Provider
@@ -121,7 +123,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options }) =
           isTablet,
           isMobileOrTablet,
           getAndIncreaseZIndex,
-          animations: options?.animations || { buttons: false },
+          animations: options?.animations || { buttons: true },
         }}
       >
         {size(notifications) > 0 ? (

@@ -261,6 +261,8 @@ const ReqoreButton = forwardRef(
     const customColor = theme.main;
     const _flat = minimal ? flat : flat !== false;
 
+    console.log(animations);
+
     return (
       <StyledButton
         {...rest}

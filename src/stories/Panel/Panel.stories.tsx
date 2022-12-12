@@ -30,7 +30,7 @@ export default {
     }),
     ...createArg('minimal', {
       type: 'boolean',
-      defaultValue: true,
+      defaultValue: false,
       name: 'Minimal',
       description: 'If the panel should be minimal',
     }),
