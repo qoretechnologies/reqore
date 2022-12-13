@@ -1,8 +1,8 @@
 tasks:
   - init: 'yarn install'
   - command: |
-     - yarn test:ci &
-     - yarn storybook
+      yarn test:ci &
+      yarn storybook
 
 ports:
   - port: 6007

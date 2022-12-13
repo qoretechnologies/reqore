@@ -35,8 +35,6 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({ children, theme, o
   const _defaultTheme: IReqoreTheme = cloneDeep(DEFAULT_THEME);
   const rebuiltTheme: IReqoreTheme = buildTheme(merge(_defaultTheme, _theme));
 
-  console.log(options);
-
   return (
     <>
       <ThemeContext.Provider value={{ ...rebuiltTheme }}>

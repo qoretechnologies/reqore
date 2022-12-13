@@ -109,8 +109,6 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options }) =
     });
   };
 
-  console.log(options);
-
   return (
     <>
       <ReqoreContext.Provider

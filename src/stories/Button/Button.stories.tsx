@@ -31,6 +31,9 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} minimal>
           Minimal
         </ReqoreButton>
+        <ReqoreButton {...buttonProps} minimal flat>
+          Minimal flat
+        </ReqoreButton>
         <ReqoreButton {...buttonProps} readOnly onClick={alert}>
           Read only
         </ReqoreButton>

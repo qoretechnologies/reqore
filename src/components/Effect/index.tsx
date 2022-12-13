@@ -1,6 +1,7 @@
 import { reduce } from 'lodash';
 import styled, { css } from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
+import { changeDarkness } from '../../helpers/colors';
 
 export interface IReqoreEffect {
   gradient?: {
@@ -45,6 +46,8 @@ export const StyledEffect = styled.span`
 
     return css`
       background-image: ${gradient};
+      // Get the first color from the colors object
+      border-color: ${changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)} !important;
     `;
   }}
 
