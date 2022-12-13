@@ -66,7 +66,7 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
   border-radius: 5px;
   min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
   display: flex;
-  flex: 0 auto;
+  flex: 0 0 auto;
   overflow: auto;
   position: relative;
   transition: all 0.2s ease-out;

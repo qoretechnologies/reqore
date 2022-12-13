@@ -142,7 +142,9 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   height: 40px;
   align-items: center;
   padding: ${({ noHorizontalPadding, contentSize }: IStyledPanel) =>
-    `0 5px 0 ${noHorizontalPadding ? 0 : `${TEXT_FROM_SIZE[contentSize]}px`}`};
+    `0 ${noHorizontalPadding ? 0 : '5px'} 0 ${
+      noHorizontalPadding ? 0 : `${TEXT_FROM_SIZE[contentSize]}px`
+    }`};
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat
       ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
@@ -163,8 +165,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  padding-left: 5px;
-  padding-right: 5px;
+  padding: ${({ noHorizontalPadding }: IStyledPanel) => `0 ${noHorizontalPadding ? 0 : '5px'}`};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat

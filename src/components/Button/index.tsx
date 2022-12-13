@@ -168,7 +168,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             transition: all 0.2s ease-out;
 
             &:active {
-              transform: scale(0.95);
+              transform: translateY(2px);
             }
 
             &:hover,
@@ -179,6 +179,13 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                 getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
               border-color: ${({ minimal, theme, color }) =>
                 minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
+              box-shadow: ${({ theme, color, effect }) => {
+                return `0 0 0 2px ${
+                  effect?.gradient
+                    ? Object.values(effect.gradient.colors)[0]
+                    : changeLightness(getButtonMainColor(theme, color), 0.1)
+                }`;
+              }};
 
               ${animate &&
               css`
@@ -260,8 +267,6 @@ const ReqoreButton = forwardRef(
     // If color or intent was specified, set the color
     const customColor = theme.main;
     const _flat = minimal ? flat : flat !== false;
-
-    console.log(animations);
 
     return (
       <StyledButton
