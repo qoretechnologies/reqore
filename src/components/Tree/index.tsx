@@ -30,6 +30,10 @@ export interface ITreeStyle {
   theme: IReqoreTheme;
 }
 
+export const StyledTreeLabel = styled(ReqoreMessage)`
+  flex-shrink: 1;
+`;
+
 export const ReqoreTree = ({
   data,
   mode = 'tree',
@@ -135,13 +139,13 @@ export const ReqoreTree = ({
                 }
               />
               {_showTypes ? <ReqoreTag className='reqore-tree-type' label={dataType} /> : null}
-              <ReqoreMessage
+              <StyledTreeLabel
                 flat
                 onClick={() => onItemClick(data[key], [...path, key])}
                 className='reqore-tree-label'
               >
                 {JSON.stringify(data[key])}
-              </ReqoreMessage>
+              </StyledTreeLabel>
             </ReqoreControlGroup>
           )}
           {isExpandable && isObject
