@@ -59,7 +59,7 @@ const ReqoreTabs = ({
   _testWidth,
   vertical,
   activeTabIntent,
-  flat,
+  flat = true,
   size = 'normal',
   width,
   wrapTabNames,
