@@ -47,7 +47,6 @@ export default {
           icon: 'SpyFill',
           onClick: noop,
           intent: 'success',
-          tooltip: { content: 'Hm, another tooltip', openOnMount: true },
         },
       ],
       table: {
@@ -60,7 +59,17 @@ export default {
 const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }) => {
   return (
     <ReqoreTagGroup columns={columns} size={args.size}>
-      <ReqoreTag label='Basic Tag' icon='AlarmWarningLine' {...args} />
+      <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label={1} />
+      <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label='Basic Tag' />
+      <ReqoreTag
+        {...args}
+        actions={null}
+        onRemoveClick={null}
+        rightIcon={null}
+        labelKey='Number'
+        label={2}
+      />
+      <ReqoreTag label='With Icon' icon='AlarmWarningLine' {...args} />
       <ReqoreTag labelKey='Tag with' label='Label Key' icon='AlarmWarningLine' {...args} />
       <ReqoreTag labelKey='Key' label='value' {...args} />
       <ReqoreTag icon='QuestionAnswerLine' {...args} />
@@ -71,10 +80,39 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
         icon='AlarmWarningLine'
         {...args}
         tooltip='I am wiiiiiiide'
+        actions={[
+          {
+            icon: '24HoursFill',
+            onClick: noop,
+            disabled: true,
+            intent: 'info',
+            tooltip: { content: 'I am a tooltip' },
+          },
+          {
+            icon: 'SpyFill',
+            onClick: noop,
+            intent: 'success',
+            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
+          },
+        ]}
       />
       <ReqoreTag label='Danger Tag' icon='AlarmWarningLine' intent='danger' {...args} />
-      <ReqoreTag label='Custom Color Tag' icon='AlarmWarningLine' color='#38fdb2' {...args} />
-      <ReqoreTag label='No Buttons Tag' icon='CarLine' color='#0b4578' rightIcon={args.rightIcon} />
+      <ReqoreTag
+        label='Custom Color Tag'
+        icon='AlarmWarningLine'
+        color='#38fdb2'
+        {...args}
+        tooltip={{ content: 'Hm, another tooltip', openOnMount: true }}
+      />
+      <ReqoreTag
+        {...args}
+        label='No Buttons Tag'
+        icon='CarLine'
+        color='#0b4578'
+        rightIcon={args.rightIcon}
+        actions={null}
+        onRemoveClick={null}
+      />
     </ReqoreTagGroup>
   );
 };

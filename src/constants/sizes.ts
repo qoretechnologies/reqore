@@ -1,12 +1,36 @@
 export type TSizes = 'tiny' | 'small' | 'normal' | 'big' | 'huge';
 export type TWeights = 'soft' | 'normal' | 'heavy';
 
+export const SIZE_TO_NUMBER = {
+  tiny: 1,
+  small: 2,
+  normal: 3,
+  big: 4,
+  huge: 5,
+};
+
+export const NUMBER_TO_SIZE = {
+  1: 'tiny',
+  2: 'small',
+  3: 'normal',
+  4: 'big',
+  5: 'huge',
+};
+
 export const SIZE_TO_PX = {
   tiny: 10,
   small: 20,
   normal: 30,
   big: 40,
   huge: 50,
+};
+
+export const BADGE_SIZE_TO_PX = {
+  tiny: 10,
+  small: 17,
+  normal: 23,
+  big: 30,
+  huge: 36,
 };
 
 export const TABS_SIZE_TO_PX = {

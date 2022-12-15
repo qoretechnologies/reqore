@@ -29,7 +29,7 @@ export const argTypes = {
     control: 'color',
     description: 'The overall theme for all ReQore components',
     name: 'Main Theme',
-    defaultValue: '#333333',
+    defaultValue: '#222222',
     table: {
       type: {
         summary: 'hex color of 6 characters',

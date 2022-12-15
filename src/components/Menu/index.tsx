@@ -15,6 +15,7 @@ export interface IReqoreMenuProps extends IReqoreComponent, React.HTMLAttributes
   customTheme?: IReqoreCustomTheme;
   intent?: TReqoreIntent;
   wrapText?: boolean;
+  flat?: boolean;
 }
 
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
@@ -48,7 +49,17 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
 
 const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
   (
-    { children, position, _insidePopover, _popoverId, customTheme, intent, wrapText, ...rest },
+    {
+      children,
+      position,
+      _insidePopover,
+      _popoverId,
+      customTheme,
+      intent,
+      wrapText,
+      flat = true,
+      ...rest
+    },
     ref: any
   ) => {
     const theme = useReqoreTheme('main', customTheme, intent);
@@ -64,6 +75,7 @@ const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
                   _popoverId,
                   customTheme: theme,
                   wrap: wrapText,
+                  flat,
                 })
               : null
           )}

@@ -4,6 +4,7 @@ import React, { forwardRef, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import {
+  BADGE_SIZE_TO_PX,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
@@ -65,9 +66,9 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   overflow: hidden;
   vertical-align: middle;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
-  height: ${({ size }) => SIZE_TO_PX[size]}px;
+  height: ${({ size, badge }) => (badge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  border-radius: ${({ badge, size }) => (badge ? 20 : RADIUS_FROM_SIZE[size])}px;
+  border-radius: ${({ badge, size }) => (badge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
