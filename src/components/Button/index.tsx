@@ -124,6 +124,8 @@ export const StyledInvisibleContent = styled.span`
 export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   font-weight: 600;
   position: relative;
