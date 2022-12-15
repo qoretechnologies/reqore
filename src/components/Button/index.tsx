@@ -136,13 +136,6 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
 
-  ${({ wrap, description }) =>
-    !wrap && !description
-      ? css`
-          max-height: ${({ size }) => SIZE_TO_PX[size]}px;
-        `
-      : null}
-
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ maxWidth }) => maxWidth || undefined};
 
@@ -256,6 +249,12 @@ export const StyledButtonContent = styled.div`
   flex: 1;
   flex-shrink: 0;
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
+  ${({ wrap, description }) =>
+    !wrap && !description
+      ? css`
+          max-height: ${({ size }) => SIZE_TO_PX[size]}px;
+        `
+      : null}
 `;
 
 const ReqoreButton = memo(
@@ -333,7 +332,7 @@ const ReqoreButton = memo(
           description={description}
           className={`${className || ''} reqore-control reqore-button`}
         >
-          <StyledButtonContent size={size}>
+          <StyledButtonContent size={size} wrap={wrap} description={description}>
             {icon && (
               <>
                 <ReqoreIcon icon={icon} size={`${TEXT_FROM_SIZE[size]}px`} />

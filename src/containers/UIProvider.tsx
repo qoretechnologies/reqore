@@ -16,6 +16,7 @@ export interface IReqoreOptions {
   uiScale?: number;
   animations?: {
     buttons?: boolean;
+    dialogs?: boolean;
   };
 }
 export interface IReqoreUIProviderProps {
