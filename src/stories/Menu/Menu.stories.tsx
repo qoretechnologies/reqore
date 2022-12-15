@@ -137,7 +137,7 @@ const Template: Story<IReqoreMenuProps> = (args) => {
 export const Basic = Template.bind({});
 export const WrappedText = Template.bind({});
 WrappedText.args = {
-  wrapText: false,
+  wrapText: true,
 };
 export const NotFlat = Template.bind({});
 NotFlat.args = {
