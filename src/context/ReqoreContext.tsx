@@ -21,5 +21,6 @@ export default createContext<IReqoreContext>({
   removeNotification: null,
   animations: {
     buttons: true,
+    dialogs: true,
   },
 });

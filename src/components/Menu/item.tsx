@@ -50,6 +50,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
       _popoverId,
       tooltip,
       intent,
+      flat = true,
       ...rest
     },
     ref: any
@@ -88,7 +89,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
           //@ts-ignore
           as={as}
           {...rest}
-          flat
+          flat={flat}
           className='reqore-menu-item'
           fluid
           onClick={handleClick}
@@ -103,7 +104,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
         {rightIcon && (
           <ReqoreButton
             icon={rightIcon}
-            flat
+            flat={flat}
             fixed
             minimal={!onRightIconClick}
             customTheme={rest.customTheme}

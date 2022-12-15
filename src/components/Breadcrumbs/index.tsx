@@ -100,6 +100,7 @@ const StyledBreadcrumbsTabsWrapper = styled.div`
   display: flex;
   align-items: center;
   overflow: hidden;
+  width: 100%;
 `;
 
 const itemPadding = 27;

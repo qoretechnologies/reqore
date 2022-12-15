@@ -1,4 +1,4 @@
-import React, { forwardRef, useContext } from 'react';
+import React, { forwardRef, memo, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
@@ -10,6 +10,7 @@ import {
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import ReqoreContext from '../../context/ReqoreContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
+import { getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -28,8 +29,10 @@ import {
   TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { StyledEffect } from '../Effect';
+import { ReqoreTextEffect, StyledEffect, StyledTextEffect } from '../Effect';
 import ReqoreIcon from '../Icon';
+import { ReqoreSpacer } from '../Spacer';
+import ReqoreTag, { IReqoreTagProps } from '../Tag';
 
 export interface IReqoreButtonProps
   extends React.HTMLAttributes<HTMLButtonElement>,
@@ -48,6 +51,10 @@ export interface IReqoreButtonProps
   rightIcon?: IReqoreIconName;
   customTheme?: IReqoreCustomTheme;
   wrap?: boolean;
+  badge?: string | number | IReqoreTagProps;
+  description?: string | number;
+  maxWidth?: string;
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -67,6 +74,7 @@ export const StyledAnimatedTextWrapper = styled.span`
   overflow: hidden;
   position: relative;
   padding: 4px 0;
+  text-align: left;
 `;
 
 export const StyledActiveContent = styled.span`
@@ -77,7 +85,7 @@ export const StyledActiveContent = styled.span`
   filter: blur(10px);
 
   ${({ wrap }) =>
-    wrap &&
+    !wrap &&
     css`
       overflow: hidden;
       text-overflow: ellipsis;
@@ -92,7 +100,7 @@ export const StyledInActiveContent = styled.span`
   transition: all 0.2s ease-out;
 
   ${({ wrap }) =>
-    wrap &&
+    !wrap &&
     css`
       overflow: hidden;
       text-overflow: ellipsis;
@@ -107,7 +115,7 @@ export const StyledInvisibleContent = styled.span`
   overflow: hidden;
 
   ${({ wrap }) =>
-    wrap &&
+    !wrap &&
     css`
       white-space: nowrap;
     `}
@@ -115,8 +123,9 @@ export const StyledInvisibleContent = styled.span`
 
 export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   display: flex;
-  text-align: left;
+  flex-flow: column;
   align-items: center;
+  justify-content: center;
   margin: 0;
   font-weight: 600;
   position: relative;
@@ -129,13 +138,8 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
 
-  ${({ wrap }) =>
-    wrap &&
-    css`
-      max-height: ${({ size }) => SIZE_TO_PX[size]}px;
-    `}
-
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
+  max-width: ${({ maxWidth }) => maxWidth || undefined};
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 0 auto')};
 
@@ -233,82 +237,149 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
     border-color: ${({ minimal, theme, color }) =>
       minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.4)};
   }
+
+  ${StyledTextEffect} {
+    padding-bottom: ${({ size }) => PADDING_FROM_SIZE[getOneLessSize(size)]}px;
+  }
 `;
 
-const ReqoreButton = forwardRef(
-  (
-    {
-      icon,
-      size = 'normal',
-      minimal,
-      children,
-      tooltip,
-      className,
-      fluid,
-      fixed,
-      intent,
-      active,
-      flat,
-      rightIcon,
-      customTheme,
-      wrap = true,
-      readOnly,
-      ...rest
-    }: IReqoreButtonProps,
-    ref
-  ) => {
-    const { targetRef } = useCombinedRefs(ref);
-    const { animations } = useContext(ReqoreContext);
-    const theme: IReqoreTheme = useReqoreTheme('main', customTheme, intent);
+export const StyledButtonContent = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  flex-shrink: 0;
+  min-height: ${({ size }) => SIZE_TO_PX[size]}px;
+  ${({ wrap, description }) =>
+    !wrap && !description
+      ? css`
+          max-height: ${({ size }) => SIZE_TO_PX[size]}px;
+        `
+      : null}
+`;
 
-    /* A custom hook that is used to add a tooltip to the button. */
-    useTooltip(targetRef.current, tooltip);
+const ReqoreButton = memo(
+  forwardRef(
+    (
+      {
+        icon,
+        size = 'normal',
+        minimal,
+        children,
+        tooltip,
+        className,
+        fluid,
+        fixed,
+        intent,
+        active,
+        flat,
+        rightIcon,
+        customTheme,
+        wrap,
+        readOnly,
+        badge,
+        description,
+        maxWidth,
+        textAlign = 'left',
+        ...rest
+      }: IReqoreButtonProps,
+      ref
+    ) => {
+      const { targetRef } = useCombinedRefs(ref);
+      const { animations } = useContext(ReqoreContext);
+      const theme: IReqoreTheme = useReqoreTheme('main', customTheme, intent);
 
-    // If color or intent was specified, set the color
-    const customColor = theme.main;
-    const _flat = minimal ? flat : flat !== false;
+      /* A custom hook that is used to add a tooltip to the button. */
+      useTooltip(targetRef.current, tooltip);
 
-    return (
-      <StyledButton
-        {...rest}
-        as='button'
-        theme={theme}
-        ref={targetRef}
-        fluid={fluid}
-        fixed={fixed}
-        minimal={minimal}
-        size={size}
-        color={customColor}
-        animate={animations.buttons}
-        flat={_flat}
-        active={active}
-        readOnly={readOnly}
-        className={`${className || ''} reqore-control reqore-button`}
-      >
-        {icon && (
-          <ReqoreIcon
-            icon={icon}
-            margin={children || rightIcon ? 'right' : undefined}
-            size={`${TEXT_FROM_SIZE[size]}px`}
+      // If color or intent was specified, set the color
+      const customColor = theme.main;
+      const _flat = minimal ? flat : flat !== false;
+      const color = customColor
+        ? minimal
+          ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
+          : getReadableColorFrom(customColor, true)
+        : getReadableColor(theme, undefined, undefined, true);
+
+      const renderBadge = () => (
+        <>
+          <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
+          <ReqoreTag
+            size={getOneLessSize(size)}
+            badge
+            color={`${color}70`}
+            {...(typeof badge === 'string' || typeof badge === 'number' ? { label: badge } : badge)}
           />
-        )}
-        {children && (
-          <StyledAnimatedTextWrapper>
-            <StyledActiveContent wrap={wrap}>{children}</StyledActiveContent>
-            <StyledInActiveContent wrap={wrap}>{children}</StyledInActiveContent>
-            <StyledInvisibleContent wrap={wrap}>{children}</StyledInvisibleContent>
-          </StyledAnimatedTextWrapper>
-        )}
-        {rightIcon && (
-          <ReqoreIcon
-            icon={rightIcon}
-            margin={children ? 'left' : undefined}
-            size={`${TEXT_FROM_SIZE[size]}px`}
-          />
-        )}
-      </StyledButton>
-    );
-  }
+        </>
+      );
+
+      return (
+        <StyledButton
+          {...rest}
+          as='button'
+          theme={theme}
+          ref={targetRef}
+          fluid={fluid}
+          fixed={fixed}
+          maxWidth={maxWidth}
+          minimal={minimal}
+          size={size}
+          color={customColor}
+          animate={animations.buttons}
+          flat={_flat}
+          active={active}
+          readOnly={readOnly}
+          wrap={wrap}
+          description={description}
+          className={`${className || ''} reqore-control reqore-button`}
+        >
+          <StyledButtonContent size={size} wrap={wrap} description={description}>
+            {icon && (
+              <>
+                <ReqoreIcon icon={icon} size={`${TEXT_FROM_SIZE[size]}px`} />
+                {children || badge || rightIcon ? (
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
+                ) : null}
+              </>
+            )}
+            {children && (
+              <StyledAnimatedTextWrapper textAlign={textAlign}>
+                <StyledActiveContent wrap={wrap}>{children}</StyledActiveContent>
+                <StyledInActiveContent wrap={wrap}>{children}</StyledInActiveContent>
+                <StyledInvisibleContent wrap={wrap}>{children}</StyledInvisibleContent>
+                {badge && wrap ? renderBadge() : null}
+              </StyledAnimatedTextWrapper>
+            )}
+            {badge && !wrap ? renderBadge() : null}
+            {rightIcon && (
+              <>
+                {children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
+                <ReqoreIcon
+                  icon={rightIcon}
+                  size={`${TEXT_FROM_SIZE[size]}px`}
+                  style={{ marginLeft: 'auto' }}
+                />
+              </>
+            )}
+          </StyledButtonContent>
+
+          {description && (
+            <ReqoreTextEffect
+              effect={{
+                textSize: getOneLessSize(size),
+                weight: 'light',
+                color: `${color}90`,
+                textAlign,
+              }}
+            >
+              {description}
+            </ReqoreTextEffect>
+          )}
+        </StyledButton>
+      );
+    }
+  )
 );
 
 export default ReqoreButton;

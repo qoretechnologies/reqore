@@ -6,10 +6,11 @@ import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { IWithReqoreFlat } from '../../types/global';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 
-export interface IReqoreTabListItemProps extends IReqoreTabsListItem {
+export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqoreFlat {
   active?: boolean;
   vertical?: boolean;
   onCloseClick?: any;
@@ -95,6 +96,8 @@ const ReqoreTabsListItem = memo(
         closeIcon,
         customTheme,
         className,
+        flat = true,
+        wrapTabNames,
       }: IReqoreTabListItemProps,
       ref
     ) => {
@@ -122,10 +125,11 @@ const ReqoreTabsListItem = memo(
           {label || icon ? (
             <ReqoreControlGroup stack size={size} fluid={fill || vertical}>
               <ReqoreButton
-                flat={!active && !intent}
+                flat={active || intent ? false : flat}
                 fluid={fill || vertical}
                 icon={icon}
                 minimal
+                wrap={wrapTabNames}
                 intent={active ? activeIntent || intent : intent}
                 active={active}
                 disabled={disabled}
@@ -139,7 +143,7 @@ const ReqoreTabsListItem = memo(
               {onCloseClick && !disabled ? (
                 <ReqoreButton
                   fixed
-                  flat={!active && !intent}
+                  flat={active || intent ? false : flat}
                   icon={closeIcon || 'CloseLine'}
                   intent={active ? activeIntent || intent : intent}
                   minimal

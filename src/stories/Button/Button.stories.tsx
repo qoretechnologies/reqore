@@ -1,7 +1,8 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { noop } from 'lodash';
 import ReqoreButton from '../../components/Button';
 import { ReqoreControlGroup } from '../../index';
-import { IconArg } from '../utils/args';
+import { IconArg, SizeArg } from '../utils/args';
 
 export default {
   title: 'Components/Button',
@@ -11,6 +12,7 @@ export default {
   argTypes: {
     ...IconArg('icon', 'Icon'),
     ...IconArg('rightIcon', 'Right Icon'),
+    ...SizeArg,
   },
 } as ComponentMeta<typeof ReqoreButton>;
 
@@ -18,7 +20,12 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
   return (
     <>
       <ReqoreControlGroup size={buttonProps.size}>
+        <ReqoreButton {...buttonProps} icon='BankFill' rightIcon={null} />
+        <ReqoreButton {...buttonProps} />
         <ReqoreButton {...buttonProps}>Default</ReqoreButton>
+        <ReqoreButton {...buttonProps} wrap maxWidth='150px'>
+          Default wrapped button with long text
+        </ReqoreButton>
         <ReqoreButton {...buttonProps} disabled>
           Disabled
         </ReqoreButton>
@@ -37,12 +44,73 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} readOnly onClick={alert}>
           Read only
         </ReqoreButton>
+        <ReqoreButton {...buttonProps} readOnly badge={10} onClick={alert}>
+          With Badge
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          badge={{
+            effect: {
+              gradient: { colors: { 0: '#00fafd', 100: '#eb0e8c' }, direction: 'to right bottom' },
+            },
+            labelKey: 'Cool',
+            label: 1234,
+            actions: [{ icon: 'ShuffleLine', onClick: noop }],
+          }}
+          onClick={alert}
+        >
+          With modified Badge
+        </ReqoreButton>
       </ReqoreControlGroup>
       <br />
       <ReqoreControlGroup fluid>
         <ReqoreButton {...buttonProps} fluid>
           Fluid button
         </ReqoreButton>
+      </ReqoreControlGroup>
+      <br />
+      <ReqoreControlGroup>
+        <ReqoreButton
+          {...buttonProps}
+          description='This is a very interesting description for a button, I like it very much'
+        >
+          With Default Description
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          description='This is a very interesting description for a button, I like it very much'
+          maxWidth='200px'
+          badge={{
+            color: '#00fafd',
+            labelKey: 'Cool',
+            label: 1234,
+            actions: [{ icon: 'ShuffleLine', onClick: noop }],
+          }}
+        >
+          With description and max width
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          description='This is a very interesting description for a button, I like it very much'
+          maxWidth='200px'
+          badge={{
+            effect: {
+              gradient: { colors: { 0: '#00fafd', 130: '#eb0e8c' }, direction: 'to right bottom' },
+              uppercase: true,
+            },
+            labelKey: 'Cool',
+            label: 1234,
+            actions: [{ icon: 'ShuffleLine', onClick: noop }],
+          }}
+          wrap
+        >
+          With description and max width, wrapped
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          description='This is a very interesting description for a button, I like it very much'
+          wrap
+        />
       </ReqoreControlGroup>
     </>
   );

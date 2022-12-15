@@ -1,10 +1,11 @@
 import { animated, useTransition } from '@react-spring/web';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
-import { SPRING_CONFIG } from '../../constants/animations';
+import { ReqoreContext } from '../..';
+import { SPRING_CONFIG, SPRING_CONFIG_NO_ANIMATIONS } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { getMainBackgroundColor } from '../../helpers/colors';
@@ -171,6 +172,7 @@ export const ReqoreDrawer = ({
   height,
   ...rest
 }: IReqoreDrawerProps) => {
+  const { animations } = useContext(ReqoreContext);
   const theme = useReqoreTheme('main', customTheme, intent);
   const layout = useMemo(
     () =>
@@ -192,7 +194,7 @@ export const ReqoreDrawer = ({
 
   const transitions = useTransition(isOpen, {
     ...getSpringConfig(_isModal, position, floating),
-    config: SPRING_CONFIG,
+    config: animations.dialogs ? SPRING_CONFIG : SPRING_CONFIG_NO_ANIMATIONS,
   });
 
   const zIndex = useLatestZIndex();

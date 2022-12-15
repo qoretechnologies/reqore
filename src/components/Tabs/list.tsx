@@ -245,6 +245,7 @@ const ReqoreTabsList = ({
                 {...item}
                 fill={fill}
                 size={size}
+                flat={flat}
                 activeIntent={activeTabIntent}
                 customTheme={theme}
                 wrapTabNames={wrapTabNames}

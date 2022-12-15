@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreTabsProps } from '../../components/Tabs';
 import { ReqoreTabs, ReqoreTabsContent } from '../../index';
-import { argManager, FlatArg, IntentArg, SizeArg } from '../utils/args';
+import { argManager, IntentArg, SizeArg } from '../utils/args';
 
 const tabs = [
   {
@@ -74,9 +74,14 @@ const { createArg } = argManager<IReqoreTabsProps>();
 export default {
   title: 'Components/Tabs',
   argTypes: {
-    ...FlatArg,
     ...SizeArg,
     ...IntentArg,
+    ...createArg('flat', {
+      type: 'boolean',
+      defaultValue: true,
+      name: 'Flat',
+      description: 'Whether the tabs should be flat or not',
+    }),
     ...createArg('fill', {
       type: 'boolean',
       defaultValue: false,
@@ -227,7 +232,7 @@ VerticalCustomWidth.args = {
   width: '300px',
 };
 
-export const Flat = Template.bind({});
-Flat.args = {
-  flat: true,
+export const NotFlat = Template.bind({});
+NotFlat.args = {
+  flat: false,
 };

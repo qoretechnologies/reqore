@@ -28,7 +28,7 @@ export default {
       },
     }),
     ...createArg('wrapText', {
-      defaultValue: true,
+      defaultValue: false,
       name: 'Wrap text',
       control: {
         type: 'boolean',
@@ -59,7 +59,9 @@ const Template: Story<IReqoreMenuProps> = (args) => {
         Delete
       </ReqoreMenuItem>
 
-      <ReqoreMenuItem icon='Lock2Fill'>This is a really long item that should wrap</ReqoreMenuItem>
+      <ReqoreMenuItem icon='Lock2Fill' description='I also have a description'>
+        This is a really long item that should wrap
+      </ReqoreMenuItem>
       <ReqoreMenuItem icon='Lock2Fill' disabled>
         Disabled
       </ReqoreMenuItem>
@@ -73,16 +75,33 @@ const Template: Story<IReqoreMenuProps> = (args) => {
           {
             icon: 'EmotionUnhappyLine',
             rightIcon: 'Scissors2Fill',
+            wrap: args.wrapText,
+            flat: args.flat,
           } as IReqoreMenuItemProps
         }
+        openOnMount
         content={
           <ReqoreMenu {...args}>
             <ReqoreMenuItem icon='ZhihuFill'>Item 1</ReqoreMenuItem>
-            <ReqoreMenuItem icon='AccountCircleFill'>Item 2</ReqoreMenuItem>
+            <ReqoreMenuItem
+              icon='AccountCircleFill'
+              description='Would you look at that beautiful description'
+              intent='warning'
+            >
+              Item 2
+            </ReqoreMenuItem>
             <ReqoreMenuItem icon='AnticlockwiseFill' disabled>
               Item 3
             </ReqoreMenuItem>
-            <ReqoreMenuItem icon='ArchiveFill'>Item 4</ReqoreMenuItem>
+            <ReqoreMenuItem
+              icon='ArchiveFill'
+              badge={{
+                label: '10',
+                effect: { gradient: { colors: { 0: '#00e3e8', 100: '#eb0e8c' } } },
+              }}
+            >
+              Item 4
+            </ReqoreMenuItem>
           </ReqoreMenu>
         }
         isReqoreComponent
@@ -106,6 +125,8 @@ const Template: Story<IReqoreMenuProps> = (args) => {
             },
           },
         }}
+        description='I also have a description'
+        badge={10}
       >
         Fancy
       </ReqoreMenuItem>
@@ -116,5 +137,9 @@ const Template: Story<IReqoreMenuProps> = (args) => {
 export const Basic = Template.bind({});
 export const WrappedText = Template.bind({});
 WrappedText.args = {
-  wrapText: false,
+  wrapText: true,
+};
+export const NotFlat = Template.bind({});
+NotFlat.args = {
+  flat: false,
 };
