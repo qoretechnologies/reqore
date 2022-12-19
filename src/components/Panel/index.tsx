@@ -177,7 +177,6 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
-  min-height: ${({ isCollapsed }) => (isCollapsed ? undefined : '40px')};
   padding: ${({ padded, contentSize, noHorizontalPadding }) =>
     !padded
       ? undefined
@@ -186,7 +185,9 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
       : `${TEXT_FROM_SIZE[contentSize]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
-  padding-top: ${({ minimal, hasLabel }) => (minimal && hasLabel ? '0px' : undefined)};
+  padding-top: ${({ minimal, hasLabel, padded }) =>
+    minimal && hasLabel && !padded ? '0px' : undefined};
+  padding-bottom: ${({ minimal, padded }) => (minimal && !padded ? '10px' : undefined)};
   flex: 1;
   overflow: auto;
   font-size: ${({ contentSize }) => TEXT_FROM_SIZE[contentSize]}px;
@@ -306,6 +307,7 @@ export const ReqorePanel = forwardRef(
           return (
             <CustomElement
               {...props}
+              key={index}
               customTheme={theme}
               onClick={(e: React.MouseEvent<any>) => {
                 e.stopPropagation();

@@ -108,12 +108,12 @@ test('Renders <Panel /> with actions', () => {
             onClose={fn}
             actions={[
               { label: 'Test' },
-              { actions: [{ label: 'Deep' }] },
-              { customContent: () => <ReqoreInput /> },
+              { actions: [{ label: 'Deep', value: 'deep' }] },
+              { as: ReqoreInput },
             ]}
             bottomActions={[
               { label: 'Test', position: 'left' },
-              { actions: [{ label: 'Deep' }], position: 'right' },
+              { actions: [{ label: 'Deep', value: 'deep' }], position: 'right' },
             ]}
           >
             {' '}
