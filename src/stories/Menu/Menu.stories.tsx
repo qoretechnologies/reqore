@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreMenuProps } from '../../components/Menu';
 import { IReqoreMenuItemProps } from '../../components/Menu/item';
 import { ReqoreMenu, ReqoreMenuDivider, ReqoreMenuItem, ReqorePopover } from '../../index';
-import { argManager, IntentArg } from '../utils/args';
+import { IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMenuProps>();
 
@@ -68,7 +68,7 @@ const Template: Story<IReqoreMenuProps> = (args) => {
       <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
         Disabled intent
       </ReqoreMenuItem>
-      <ReqoreMenuDivider />
+      <ReqoreMenuDivider label='Divider' />
       <ReqorePopover
         component={ReqoreMenuItem}
         componentProps={
@@ -110,7 +110,10 @@ const Template: Story<IReqoreMenuProps> = (args) => {
       >
         I have a submenu on click
       </ReqorePopover>
-      <ReqoreMenuDivider label='Divider' />
+      <ReqoreMenuDivider
+        label='Fancy divider'
+        effect={{ textAlign: 'left', gradient: { colors: { 0: '#0d5ba5', 100: '#ff5dfd' } } }}
+      />
       <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' selected>
         I am selected!
       </ReqoreMenuItem>

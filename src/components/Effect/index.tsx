@@ -133,16 +133,18 @@ export const StyledEffect = styled.span`
   ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.textAlign
       ? css`
+          width: 100%;
           text-align: ${effect.textAlign};
         `
       : undefined}
 `;
 
 export const StyledTextEffect = styled(StyledEffect)`
+  display: inline-block;
+
   ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.gradient
       ? css`
-          display: inline-block;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         `

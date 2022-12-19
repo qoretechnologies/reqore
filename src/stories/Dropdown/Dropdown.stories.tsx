@@ -55,6 +55,8 @@ export default {
         {
           value: 'How are ya',
           icon: 'BatteryChargeFill',
+          description:
+            "Yep, and the description is now also available and possible, isn't that great?",
         },
         {
           disabled: true,
