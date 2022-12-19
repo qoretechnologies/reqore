@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import ReqoreInput from '../../components/Input';
+import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelProps, ReqorePanel } from '../../components/Panel';
-import { argManager, FlatArg, IconArg, IntentArg } from '../utils/args';
+import { FlatArg, IconArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -67,9 +67,12 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
           { label: 'Stacked Action 2', icon: 'CopperCoinFill', intent: 'danger' },
         ],
         {
-          customContent: () => (
-            <ReqoreInput placeholder={`Custom action!`} icon='Search2Line' minimal={false} />
-          ),
+          as: ReqoreInput,
+          props: {
+            placeholder: 'Custom action!',
+            icon: 'Search2Line',
+            minimal: false,
+          } as IReqoreInputProps,
         },
         {
           label: 'More actions',

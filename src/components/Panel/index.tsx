@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { rgba } from 'polished';
-import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -40,7 +40,9 @@ export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreToolt
   label?: string | number;
   onClick?: () => void;
   actions?: IReqoreDropdownItem[];
-  customContent?: () => string | React.ReactNode;
+  // Custom react element
+  as?: React.ElementType;
+  props?: any;
 }
 
 export interface IReqorePanelBottomAction extends IReqorePanelAction {
@@ -229,7 +231,7 @@ export const ReqorePanel = forwardRef(
     ref
   ) => {
     const [_isCollapsed, setIsCollapsed] = useState(isCollapsed || false);
-    const theme = useReqoreTheme('main', customTheme, intent);
+    const theme = useReqoreTheme('main', customTheme);
     const { targetRef } = useCombinedRefs(ref);
 
     useTooltip(targetRef.current, tooltip);
@@ -279,7 +281,8 @@ export const ReqorePanel = forwardRef(
           label,
           intent,
           className,
-          customContent,
+          as: CustomElement,
+          props,
           ...rest
         }: IReqorePanelAction = actionOrActions;
 
@@ -292,14 +295,24 @@ export const ReqorePanel = forwardRef(
               items={actions}
               intent={intent}
               className={className}
+              customTheme={theme}
               onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
               id={id}
             />
           );
         }
 
-        if (customContent) {
-          return customContent();
+        if (CustomElement) {
+          return (
+            <CustomElement
+              {...props}
+              customTheme={theme}
+              onClick={(e: React.MouseEvent<any>) => {
+                e.stopPropagation();
+                props?.onClick?.(e);
+              }}
+            />
+          );
         }
 
         return (
@@ -345,7 +358,18 @@ export const ReqorePanel = forwardRef(
         className={`${className || ''} reqore-panel`}
         interactive={interactive}
         theme={theme}
-        effect={contentEffect}
+        effect={
+          {
+            glow: intent
+              ? {
+                  color: intent,
+                  size: 2,
+                  useBorder: true,
+                }
+              : undefined,
+            ...contentEffect,
+          } as IReqoreEffect
+        }
       >
         {hasTitleBar && (
           <StyledPanelTitle
@@ -370,6 +394,7 @@ export const ReqorePanel = forwardRef(
               {typeof label === 'string' ? (
                 <ReqoreHeading
                   size={headerSize}
+                  customTheme={theme}
                   effect={{
                     noWrap: true,
                     ...headerEffect,

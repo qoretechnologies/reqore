@@ -140,3 +140,18 @@ export const getNotificationIntent = (theme: IReqoreTheme, intent?: TReqoreInten
 
 export const getMainBackgroundColor = (theme: IReqoreTheme): string =>
   changeLightness(theme.main, 0.02);
+
+export const getColorFromMaybeIntentOrString = (
+  theme: IReqoreTheme,
+  intent: TReqoreIntent | string
+): string => {
+  if (theme.intents[intent]) {
+    return theme.intents[intent];
+  }
+
+  if (isValidSixCharHex(intent)) {
+    return intent;
+  }
+
+  return theme.main;
+};

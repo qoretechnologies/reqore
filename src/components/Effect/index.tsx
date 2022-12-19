@@ -1,7 +1,9 @@
 import { reduce } from 'lodash';
+import { HTMLAttributes } from 'react';
 import styled, { css } from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
-import { changeDarkness } from '../../helpers/colors';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import { changeDarkness, getColorFromMaybeIntentOrString } from '../../helpers/colors';
 
 export interface IReqoreEffect {
   gradient?: {
@@ -17,15 +19,24 @@ export interface IReqoreEffect {
   uppercase?: boolean;
   textSize?: TSizes;
   textAlign?: 'left' | 'center' | 'right';
+  glow?: {
+    size?: number;
+    color: TReqoreIntent | string;
+    inset?: boolean;
+    useBorder?: boolean;
+  };
 }
 
-export interface IReqoreTextEffectProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface IReqoreTextEffectProps extends HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
   effect: IReqoreEffect;
   as?: React.ElementType;
+  theme?: IReqoreTheme;
 }
 
 export const StyledEffect = styled.span`
+  transition: all 0.2s ease-in-out;
+
   // If gradient was supplied
   ${({ effect }: IReqoreTextEffectProps) => {
     if (!effect || !effect.gradient) {
@@ -48,6 +59,24 @@ export const StyledEffect = styled.span`
       background-image: ${gradient};
       // Get the first color from the colors object
       border-color: ${changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)} !important;
+    `;
+  }}
+
+  ${({ effect, theme }: IReqoreTextEffectProps) => {
+    if (!effect || !effect.glow) {
+      return undefined;
+    }
+
+    if (effect.glow.useBorder) {
+      return css`
+        border: ${effect.glow.size || 2}px solid
+          ${getColorFromMaybeIntentOrString(theme, effect.glow.color)} !important;
+      `;
+    }
+
+    return css`
+      box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 0 ${effect.glow.size || 2}px
+        ${getColorFromMaybeIntentOrString(theme, effect.glow.color)};
     `;
   }}
 
