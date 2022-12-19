@@ -178,7 +178,7 @@ export default [
   {
     label: 'I have intent!',
     content: (
-      <p>
+      <ReqoreP>
         'Well would you look at that. Lorem ipsum dolor{' '}
         <ReqoreTag label='dolor' icon='Briefcase3Line' /> <ReqoreTag label='sit amet' />,
         consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis
@@ -220,7 +220,7 @@ export default [
         nibh, nec pellentesque velit pede quis nunc. Vestibulum ante ipsum primis in faucibus orci
         luctus et ultrices posuere cubilia Curae; Fusce id purus. Ut varius tincidunt libero.
         Phasellus dolor. Maecenas vestibulum mollis'
-      </p>
+      </ReqoreP>
     ),
     expandable: true,
     intent: 'info',

@@ -82,22 +82,21 @@ export const ReqoreCollection = ({
 
   const finalItems = filteredItems;
   const finalActions: (IReqorePanelAction[] | IReqorePanelAction)[] = useMemo(() => {
-    let actions = [];
+    let actions: (IReqorePanelAction[] | IReqorePanelAction)[] = [];
 
     if (filterable) {
       actions = [
         ...actions,
         {
-          customContent: () => (
-            <ReqoreInput
-              placeholder={`Filter ${size(items)} items`}
-              onClearClick={() => setQuery('')}
-              onChange={handleQueryChange}
-              value={query}
-              icon='Search2Line'
-              minimal={false}
-            />
-          ),
+          as: ReqoreInput,
+          props: {
+            placeholder: `Filter ${size(items)} items`,
+            onClearClick: () => setQuery(''),
+            onChange: handleQueryChange,
+            value: query,
+            icon: 'Search2Line',
+            minimal: false,
+          },
         },
       ];
     }
