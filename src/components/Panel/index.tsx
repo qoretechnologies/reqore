@@ -186,8 +186,8 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel, padded }) =>
-    minimal && hasLabel && !padded ? '0px' : undefined};
-  padding-bottom: ${({ minimal, padded }) => (minimal && !padded ? '10px' : undefined)};
+    minimal && hasLabel && padded ? '0px' : undefined};
+  padding-bottom: ${({ minimal, padded }) => (minimal && padded ? '10px' : undefined)};
   flex: 1;
   overflow: auto;
   font-size: ${({ contentSize }) => TEXT_FROM_SIZE[contentSize]}px;
