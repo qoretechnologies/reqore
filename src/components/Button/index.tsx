@@ -135,8 +135,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
-  min-height: ${({ size }) => SIZE_TO_PX[size]}px;
-
+  min-height: ${({ size, flat }) => (flat ? SIZE_TO_PX[size] : SIZE_TO_PX[size] - 2)}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ maxWidth }) => maxWidth || undefined};
 
@@ -182,13 +181,6 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                 getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
               border-color: ${({ minimal, theme, color }) =>
                 minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
-              box-shadow: ${({ theme, color, effect }) => {
-                return `0 0 0 2px ${
-                  effect?.gradient
-                    ? Object.values(effect.gradient.colors)[0]
-                    : changeLightness(getButtonMainColor(theme, color), 0.1)
-                }`;
-              }};
 
               ${animate &&
               css`
@@ -249,7 +241,7 @@ export const StyledButtonContent = styled.div`
   height: 100%;
   flex: 1;
   flex-shrink: 0;
-  min-height: ${({ size }) => SIZE_TO_PX[size]}px;
+  min-height: ${({ size, flat }) => (flat ? SIZE_TO_PX[size] : SIZE_TO_PX[size] - 2)}px;
   ${({ wrap, description }) =>
     !wrap && !description
       ? css`
@@ -333,7 +325,7 @@ const ReqoreButton = memo(
           description={description}
           className={`${className || ''} reqore-control reqore-button`}
         >
-          <StyledButtonContent size={size} wrap={wrap} description={description}>
+          <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {icon && (
               <>
                 <ReqoreIcon icon={icon} size={`${TEXT_FROM_SIZE[size]}px`} />
