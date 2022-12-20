@@ -1,4 +1,5 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
+import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { FlatArg, IconArg, IntentArg, argManager } from '../utils/args';
@@ -51,6 +52,12 @@ export default {
       defaultValue: 4,
       name: 'Header Size',
       description: 'The size of the header',
+    }),
+    ...createArg('onClick', {
+      type: 'function',
+      defaultValue: noop,
+      name: 'On click',
+      description: 'The function to call when the panel is clicked',
     }),
     ...IconArg(),
   },

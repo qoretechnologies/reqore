@@ -102,24 +102,33 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   flex-flow: column;
   position: relative;
   backdrop-filter: ${({ blur, opacity }) => (blur && opacity < 1 ? `blur(${blur}px)` : undefined)};
-  transition: 0.3s ease-in-out;
+  transition: 0.2s ease-in-out;
   flex: auto;
 
-  ${({ interactive, theme, opacity = 1 }) =>
+  ${({ interactive, theme, opacity = 1, effect, flat }) =>
     interactive
       ? css`
           cursor: pointer;
 
           &:hover {
             background-color: ${rgba(
-              changeDarkness(getMainBackgroundColor(theme), 0.06),
+              changeLightness(getMainBackgroundColor(theme), 0.02),
               opacity === 0 ? 0.2 : opacity
             )};
+
+            border: ${flat
+              ? undefined
+              : `2px solid
+              ${
+                effect?.gradient
+                  ? Object.values(effect.gradient.colors)[0]
+                  : rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)
+              }`};
 
             ${StyledCollectionItemContent}:after {
               background: linear-gradient(
                 to top,
-                ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.06), opacity)} 0%,
+                ${rgba(changeLightness(getMainBackgroundColor(theme), 0.02), opacity)} 0%,
                 transparent 100%
               );
             }
