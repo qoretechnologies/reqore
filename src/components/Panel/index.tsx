@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import { rgba } from 'polished';
+import { darken, rgba } from 'polished';
 import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
@@ -92,10 +92,13 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
-  border: ${({ theme, flat, opacity = 1 }) =>
-    flat
+  border: ${({ theme, flat, opacity = 1, intent }) =>
+    flat && !intent
       ? undefined
-      : `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`};
+      : `1px solid ${rgba(
+          changeLightness(intent ? theme.intents[intent] : getMainBackgroundColor(theme), 0.2),
+          opacity
+        )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
   display: flex;
@@ -105,30 +108,42 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   transition: 0.2s ease-in-out;
   flex: auto;
 
-  ${({ interactive, theme, opacity = 1, effect, flat }) =>
+  ${({ interactive, theme, opacity = 1, effect, flat, intent }) =>
     interactive
       ? css`
           cursor: pointer;
 
           &:hover {
             background-color: ${rgba(
-              changeLightness(getMainBackgroundColor(theme), 0.02),
+              darken(0.025, rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)),
               opacity === 0 ? 0.2 : opacity
             )};
 
-            border: ${flat
+            border-color: ${flat && !intent
               ? undefined
-              : `2px solid
-              ${
-                effect?.gradient
-                  ? Object.values(effect.gradient.colors)[0]
-                  : rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)
-              }`};
+              : `${
+                  effect?.gradient
+                    ? changeLightness(Object.values(effect.gradient.colors)[0] as string, 0.2)
+                    : rgba(
+                        changeLightness(
+                          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+                          0.3
+                        ),
+                        opacity
+                      )
+                }`};
 
             ${StyledCollectionItemContent}:after {
               background: linear-gradient(
                 to top,
-                ${rgba(changeLightness(getMainBackgroundColor(theme), 0.02), opacity)} 0%,
+                ${rgba(
+                    darken(
+                      0.025,
+                      rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                    ),
+                    opacity === 0 ? 0.2 : opacity
+                  )}
+                  0%,
                 transparent 100%
               );
             }
@@ -366,21 +381,11 @@ export const ReqorePanel = forwardRef(
         isCollapsed={_isCollapsed}
         rounded={rounded}
         flat={flat}
+        intent={intent}
         className={`${className || ''} reqore-panel`}
         interactive={interactive}
         theme={theme}
-        effect={
-          {
-            glow: intent
-              ? {
-                  color: intent,
-                  size: 2,
-                  useBorder: true,
-                }
-              : undefined,
-            ...contentEffect,
-          } as IReqoreEffect
-        }
+        effect={contentEffect}
       >
         {hasTitleBar && (
           <StyledPanelTitle

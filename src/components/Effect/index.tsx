@@ -11,6 +11,7 @@ export interface IReqoreEffect {
     shape?: 'circle' | 'ellipse';
     colors: { [key: number]: string };
     direction?: string;
+    borderColor?: string;
   };
   noWrap?: boolean;
   color?: string;
@@ -23,6 +24,7 @@ export interface IReqoreEffect {
     size?: number;
     color: TReqoreIntent | string;
     inset?: boolean;
+    blur?: number;
     useBorder?: boolean;
   };
 }
@@ -58,7 +60,8 @@ export const StyledEffect = styled.span`
     return css`
       background-image: ${gradient};
       // Get the first color from the colors object
-      border-color: ${changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)} !important;
+      border-color: ${effect.gradient.borderColor ||
+      changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)} !important;
     `;
   }}
 
@@ -75,8 +78,8 @@ export const StyledEffect = styled.span`
     }
 
     return css`
-      box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 0 ${effect.glow.size || 2}px
-        ${getColorFromMaybeIntentOrString(theme, effect.glow.color)};
+      box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 ${effect.glow.blur || 0}
+        ${effect.glow.size || 2}px ${getColorFromMaybeIntentOrString(theme, effect.glow.color)};
     `;
   }}
 
