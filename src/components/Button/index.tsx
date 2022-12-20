@@ -273,6 +273,7 @@ const ReqoreButton = memo(
         description,
         maxWidth,
         textAlign = 'left',
+        effect,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -308,6 +309,10 @@ const ReqoreButton = memo(
       return (
         <StyledButton
           {...rest}
+          effect={{
+            interactive: !readOnly && !rest.disabled,
+            ...effect,
+          }}
           as='button'
           theme={theme}
           ref={targetRef}

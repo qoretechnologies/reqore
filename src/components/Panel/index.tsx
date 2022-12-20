@@ -108,7 +108,7 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   transition: 0.2s ease-in-out;
   flex: auto;
 
-  ${({ interactive, theme, opacity = 1, effect, flat, intent }) =>
+  ${({ interactive, theme, opacity = 1, flat, intent }) =>
     interactive
       ? css`
           cursor: pointer;
@@ -121,17 +121,13 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
 
             border-color: ${flat && !intent
               ? undefined
-              : `${
-                  effect?.gradient
-                    ? changeLightness(Object.values(effect.gradient.colors)[0] as string, 0.2)
-                    : rgba(
-                        changeLightness(
-                          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-                          0.3
-                        ),
-                        opacity
-                      )
-                }`};
+              : `${rgba(
+                  changeLightness(
+                    intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+                    0.3
+                  ),
+                  opacity
+                )}`};
 
             ${StyledCollectionItemContent}:after {
               background: linear-gradient(
@@ -256,7 +252,13 @@ export const ReqorePanel = forwardRef(
     ref
   ) => {
     const [_isCollapsed, setIsCollapsed] = useState(isCollapsed || false);
-    const theme = useReqoreTheme('main', customTheme);
+    const theme = useReqoreTheme(
+      'main',
+      customTheme ||
+        (contentEffect?.gradient && minimal
+          ? { main: Object.values(contentEffect.gradient.colors)[0] }
+          : undefined)
+    );
     const { targetRef } = useCombinedRefs(ref);
 
     useTooltip(targetRef.current, tooltip);
@@ -373,6 +375,20 @@ export const ReqorePanel = forwardRef(
       rest.onContextMenu
     );
 
+    const transformedContentEffect: IReqoreEffect = useMemo(() => {
+      const newContentEffect: IReqoreEffect = { ...contentEffect };
+
+      if (newContentEffect?.gradient) {
+        newContentEffect.gradient.borderColor = intent
+          ? theme.intents[intent]
+          : newContentEffect.gradient.borderColor;
+      }
+
+      newContentEffect.interactive = interactive;
+
+      return newContentEffect;
+    }, [intent, theme, contentEffect, interactive]);
+
     return (
       <StyledPanel
         {...rest}
@@ -385,7 +401,7 @@ export const ReqorePanel = forwardRef(
         className={`${className || ''} reqore-panel`}
         interactive={interactive}
         theme={theme}
-        effect={contentEffect}
+        effect={transformedContentEffect}
       >
         {hasTitleBar && (
           <StyledPanelTitle

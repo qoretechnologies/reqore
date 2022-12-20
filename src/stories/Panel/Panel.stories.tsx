@@ -159,12 +159,12 @@ Minimal.args = {
 export const WithEffect: Story<IReqorePanelProps> = Template.bind({});
 WithEffect.args = {
   minimal: true,
-  flat: true,
   contentEffect: {
     gradient: {
       type: 'radial',
       shape: 'ellipse',
       colors: { 0: '#670079', 100: '#180222' },
+      //borderColor: '#fff349',
     },
   },
   headerEffect: {
