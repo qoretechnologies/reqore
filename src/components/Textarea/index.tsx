@@ -152,6 +152,10 @@ const ReqoreInput = forwardRef(
       >
         <StyledTextarea
           {...rest}
+          effect={{
+            interactive: !rest?.disabled && !rest.readOnly,
+            ...rest?.effect,
+          }}
           as='textarea'
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}

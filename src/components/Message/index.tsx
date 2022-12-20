@@ -103,6 +103,10 @@ const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef(
       <ReqoreThemeProvider>
         <StyledReqoreNotification
           {...rest}
+          effect={{
+            interactive: !!onClick,
+            ...rest?.effect,
+          }}
           as={animated.div}
           key={`${duration}${intent}${title}${children}`}
           intent={intent}

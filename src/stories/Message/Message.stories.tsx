@@ -1,6 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
+import { noop } from 'lodash';
 import ReqoreMessage, { IReqoreMessageProps } from '../../components/Message';
-import { argManager, FlatArg, IntentArg, SizeArg } from '../utils/args';
+import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMessageProps>();
 
@@ -28,7 +29,7 @@ export default {
 const Template: Story<IReqoreMessageProps> = (args: IReqoreMessageProps) => {
   return (
     <>
-      <ReqoreMessage {...args}>
+      <ReqoreMessage {...args} onClick={noop}>
         In to am attended desirous raptures declared diverted confined at. Collected instantly
         remaining up certainly to necessary as. Over walk dull into son boy door went new. At or
         happiness commanded daughters as. Is handsome an declared at received in extended vicinity

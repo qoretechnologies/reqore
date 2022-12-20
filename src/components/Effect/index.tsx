@@ -3,7 +3,11 @@ import { HTMLAttributes } from 'react';
 import styled, { css } from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeDarkness, getColorFromMaybeIntentOrString } from '../../helpers/colors';
+import {
+  changeDarkness,
+  changeLightness,
+  getColorFromMaybeIntentOrString,
+} from '../../helpers/colors';
 
 export interface IReqoreEffect {
   gradient?: {
@@ -11,7 +15,7 @@ export interface IReqoreEffect {
     shape?: 'circle' | 'ellipse';
     colors: { [key: number]: string };
     direction?: string;
-    borderColor?: string;
+    borderColor?: TReqoreIntent | string;
   };
   noWrap?: boolean;
   color?: string;
@@ -27,6 +31,7 @@ export interface IReqoreEffect {
     blur?: number;
     useBorder?: boolean;
   };
+  interactive?: boolean;
 }
 
 export interface IReqoreTextEffectProps extends HTMLAttributes<HTMLSpanElement> {
@@ -40,7 +45,7 @@ export const StyledEffect = styled.span`
   transition: all 0.2s ease-in-out;
 
   // If gradient was supplied
-  ${({ effect }: IReqoreTextEffectProps) => {
+  ${({ effect, theme }: IReqoreTextEffectProps) => {
     if (!effect || !effect.gradient) {
       return undefined;
     }
@@ -48,20 +53,47 @@ export const StyledEffect = styled.span`
     const gradientType: string = effect.gradient.type || 'linear';
     const gradientColors = reduce(
       effect.gradient.colors,
+      (colorsString, color, percentage) =>
+        `${colorsString}, ${
+          color === 'transparent' || !effect.interactive ? color : changeLightness(color, 0.03)
+        } ${percentage}%`,
+      ''
+    );
+    const gradientColorsActive = reduce(
+      effect.gradient.colors,
       (colorsString, color, percentage) => `${colorsString}, ${color} ${percentage}%`,
       ''
     );
+
     const gradientDirectionOrShape =
       gradientType === 'linear'
         ? effect.gradient.direction || 'to right'
         : effect.gradient.shape || 'circle';
     const gradient = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColors})`;
+    const gradientActive = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColorsActive})`;
 
     return css`
       background-image: ${gradient};
       // Get the first color from the colors object
-      border-color: ${effect.gradient.borderColor ||
-      changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)} !important;
+      border-color: ${getColorFromMaybeIntentOrString(
+        theme,
+        effect.gradient.borderColor ||
+          changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)
+      )}92 !important;
+
+      ${effect.interactive &&
+      css`
+        &:hover,
+        &:focus,
+        &:active {
+          background-image: ${gradientActive};
+          border-color: ${getColorFromMaybeIntentOrString(
+            theme,
+            effect.gradient.borderColor ||
+              changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)
+          )} !important;
+        }
+      `}
     `;
   }}
 

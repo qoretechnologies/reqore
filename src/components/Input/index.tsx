@@ -181,6 +181,10 @@ const ReqoreInput = forwardRef(
         )}
         <StyledInput
           {...rest}
+          effect={{
+            interactive: !rest?.disabled && !readOnly,
+            ...rest?.effect,
+          }}
           as='input'
           theme={theme}
           _size={size}
