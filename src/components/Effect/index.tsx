@@ -81,7 +81,7 @@ export const StyledEffect = styled.span`
           effect.gradient.borderColor ||
             changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)
         ),
-        0.05
+        0.04
       )} !important;
 
       ${effect.interactive &&
