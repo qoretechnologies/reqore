@@ -75,11 +75,14 @@ export const StyledEffect = styled.span`
     return css`
       background-image: ${gradient};
       // Get the first color from the colors object
-      border-color: ${getColorFromMaybeIntentOrString(
-        theme,
-        effect.gradient.borderColor ||
-          changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)
-      )}92 !important;
+      border-color: ${changeLightness(
+        getColorFromMaybeIntentOrString(
+          theme,
+          effect.gradient.borderColor ||
+            changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)
+        ),
+        0.05
+      )} !important;
 
       ${effect.interactive &&
       css`
