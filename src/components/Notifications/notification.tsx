@@ -195,10 +195,7 @@ export const typeToIcon: { [type: string]: IReqoreIconName } = {
   muted: 'Forbid2Line',
 };
 
-const ReqoreNotification: React.FC<IReqoreNotificationProps> = forwardRef<
-  HTMLDivElement,
-  IReqoreNotificationProps
->(
+const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
   (
     {
       type,

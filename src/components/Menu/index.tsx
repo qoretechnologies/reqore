@@ -47,7 +47,7 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   }
 `;
 
-const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef<HTMLDivElement, IReqoreMenuProps>(
+const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
   (
     {
       children,
@@ -59,7 +59,7 @@ const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef<HTMLDivElement, IReqor
       wrapText,
       flat = true,
       ...rest
-    },
+    }: IReqoreMenuProps,
     ref: any
   ) => {
     const theme = useReqoreTheme('main', customTheme, intent);
