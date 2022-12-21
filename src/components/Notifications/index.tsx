@@ -40,17 +40,18 @@ const StyledNotificationsWrapper = styled.div<IReqoreNotificationsStyle>`
   }}
 `;
 
-const ReqoreNotificationsWrapper: React.FC<IReqoreNotificationsWrapperProps> = forwardRef(
-  ({ children, position = 'TOP' }, ref: any) => (
-    <StyledNotificationsWrapper
-      positions={position
-        .split(' ')
-        .map((p: IReqoreNotificationsPosition | string): string => p.toLowerCase())}
-      ref={ref}
-    >
-      {children}
-    </StyledNotificationsWrapper>
-  )
-);
+const ReqoreNotificationsWrapper: React.FC<IReqoreNotificationsWrapperProps> = forwardRef<
+  HTMLDivElement,
+  IReqoreNotificationsWrapperProps
+>(({ children, position = 'TOP' }, ref: any) => (
+  <StyledNotificationsWrapper
+    positions={position
+      .split(' ')
+      .map((p: IReqoreNotificationsPosition | string): string => p.toLowerCase())}
+    ref={ref}
+  >
+    {children}
+  </StyledNotificationsWrapper>
+));
 
 export default ReqoreNotificationsWrapper;

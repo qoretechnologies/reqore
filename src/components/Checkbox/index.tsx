@@ -106,7 +106,7 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   }
 `;
 
-const Checkbox = forwardRef(
+const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
   (
     {
       label,

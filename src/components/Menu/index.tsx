@@ -47,7 +47,7 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   }
 `;
 
-const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef(
+const ReqoreMenu: React.FC<IReqoreMenuProps> = forwardRef<HTMLDivElement, IReqoreMenuProps>(
   (
     {
       children,

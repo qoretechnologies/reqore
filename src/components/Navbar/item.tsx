@@ -70,7 +70,7 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
     `}
 `;
 
-const ReqoreNavbarItem = forwardRef(
+const ReqoreNavbarItem = forwardRef<HTMLDivElement, IReqoreNavbarItemProps>(
   (
     { interactive, children, type, disabled, active, ...rest }: IReqoreNavbarItemProps,
     ref: any

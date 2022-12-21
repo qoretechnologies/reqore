@@ -118,7 +118,7 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   }
 `;
 
-const ReqoreInput = forwardRef(
+const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
   (
     {
       width,

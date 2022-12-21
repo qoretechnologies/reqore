@@ -251,7 +251,7 @@ export const StyledButtonContent = styled.div`
 `;
 
 const ReqoreButton = memo(
-  forwardRef(
+  forwardRef<HTMLButtonElement, IReqoreButtonProps>(
     (
       {
         icon,

@@ -18,7 +18,7 @@ const StyledMenuDivider = styled(StyledTextEffect)`
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined)};
 `;
 
-const ReqoreMenuDivider = forwardRef(
+const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
   ({ label, className, effect, ...rest }: IReqoreMenuDividerProps, ref: any) => (
     <StyledMenuDivider
       as='div'

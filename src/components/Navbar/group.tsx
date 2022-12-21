@@ -2,8 +2,7 @@ import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 
-export interface IReqoreNavbarGroupProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreNavbarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   position?: 'right' | 'left';
   type?: 'footer' | 'header';
   children?: any;
@@ -26,11 +25,8 @@ export const StyledNavbarGroup = styled.div<IReqoreNavbarGroupStyle>`
   `}
 `;
 
-const ReqoreNavbarGroup = forwardRef(
-  (
-    { position = 'left', children, type, ...rest }: IReqoreNavbarGroupProps,
-    ref: any
-  ) => (
+const ReqoreNavbarGroup = forwardRef<HTMLDivElement, IReqoreNavbarGroupProps>(
+  ({ position = 'left', children, type, ...rest }: IReqoreNavbarGroupProps, ref: any) => (
     <StyledNavbarGroup
       {...rest}
       className={`${rest.className || ''} reqore-navbar-group`}

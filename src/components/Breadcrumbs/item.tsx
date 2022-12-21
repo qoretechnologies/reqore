@@ -108,7 +108,7 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
   }
 `;
 
-const ReqoreBreadcrumbsItem = forwardRef(
+const ReqoreBreadcrumbsItem = forwardRef<HTMLDivElement, IReqoreBreadcrumbItemProps>(
   (
     {
       tooltip,

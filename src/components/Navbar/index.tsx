@@ -37,7 +37,7 @@ export const StyledNavbar = styled.div<IReqoreNavbarStyle>`
     !flat
       ? css`
     box-shadow: rgba(31, 26, 34, 0.05) 0px ${type === 'header' ? '2px' : '-2px'} 6px;
-    
+
     border-${type === 'header' ? 'bottom' : 'top'}: 1px solid ${
           theme[type]?.border || darken(0.05, getMainColor(theme, type))
         };
@@ -45,7 +45,7 @@ export const StyledNavbar = styled.div<IReqoreNavbarStyle>`
       : undefined}
 `;
 
-const ReqoreNavbar = forwardRef(
+const ReqoreNavbar = forwardRef<HTMLDivElement, IReqoreNavbarProps>(
   ({ position = 'top', children, type, customTheme, ...rest }: IReqoreNavbarProps, ref: any) => {
     const theme = useReqoreTheme(type, customTheme);
 
@@ -72,10 +72,10 @@ const ReqoreNavbar = forwardRef(
   }
 );
 
-export const ReqoreHeader = forwardRef((props: IReqoreNavbarProps, ref: any) => (
-  <ReqoreNavbar {...props} type='header' ref={ref} />
-));
+export const ReqoreHeader = forwardRef<HTMLDivElement, IReqoreNavbarProps>(
+  (props: IReqoreNavbarProps, ref: any) => <ReqoreNavbar {...props} type='header' ref={ref} />
+);
 
-export const ReqoreFooter = forwardRef((props: IReqoreNavbarProps, ref: any) => (
-  <ReqoreNavbar {...props} type='footer' ref={ref} />
-));
+export const ReqoreFooter = forwardRef<HTMLDivElement, IReqoreNavbarProps>(
+  (props: IReqoreNavbarProps, ref: any) => <ReqoreNavbar {...props} type='footer' ref={ref} />
+);

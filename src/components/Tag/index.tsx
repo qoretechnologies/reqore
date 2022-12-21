@@ -156,7 +156,7 @@ const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
     `}
 `;
 
-const ReqoreTag = forwardRef(
+const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
   (
     {
       tooltip,
