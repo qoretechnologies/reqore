@@ -45,10 +45,7 @@ export interface IReqoreNotificationStyle extends IReqoreMessageProps {
   timeout?: number;
 }
 
-const ReqoreMessage: React.FC<IReqoreMessageProps> = forwardRef<
-  HTMLDivElement,
-  IReqoreMessageProps
->(
+const ReqoreMessage = forwardRef<HTMLDivElement, IReqoreMessageProps>(
   (
     {
       intent,

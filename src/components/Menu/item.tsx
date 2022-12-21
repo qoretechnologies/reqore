@@ -33,10 +33,7 @@ export interface IReqoreMenuItemRightIconStyle {
   intent?: TReqoreIntent;
 }
 
-const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef<
-  HTMLDivElement,
-  IReqoreMenuItemProps
->(
+const ReqoreMenuItem = forwardRef<HTMLDivElement, IReqoreMenuItemProps>(
   (
     {
       children,
@@ -55,7 +52,7 @@ const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef<
       intent,
       flat = true,
       ...rest
-    },
+    }: IReqoreMenuItemProps,
     ref: any
   ) => {
     const { removePopover } = useContext(PopoverContext);
