@@ -221,7 +221,7 @@ export const StyledPanelTitleHeader = styled.div`
   padding-right: 5px;
 `;
 
-export const ReqorePanel = forwardRef(
+export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
   (
     {
       children,

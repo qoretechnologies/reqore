@@ -76,7 +76,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
 `;
 
 const ReqoreTabsListItem = memo(
-  forwardRef(
+  forwardRef<HTMLDivElement, IReqoreTabListItemProps>(
     (
       {
         tooltip,

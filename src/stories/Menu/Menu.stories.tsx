@@ -46,6 +46,7 @@ const Template: Story<IReqoreMenuProps> = (args) => {
         Selected success
       </ReqoreMenuItem>
       <ReqoreMenuItem icon='Save3Fill'>Save</ReqoreMenuItem>
+      <ReqoreMenuDivider label='BIG Divider' size='huge' />
       <ReqoreMenuItem
         icon='ChatPollFill'
         onClick={() => alert('Item clicked')}

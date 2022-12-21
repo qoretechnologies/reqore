@@ -33,7 +33,10 @@ export interface IReqoreMenuItemRightIconStyle {
   intent?: TReqoreIntent;
 }
 
-const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef(
+const ReqoreMenuItem: React.FC<IReqoreMenuItemProps> = forwardRef<
+  HTMLDivElement,
+  IReqoreMenuItemProps
+>(
   (
     {
       children,

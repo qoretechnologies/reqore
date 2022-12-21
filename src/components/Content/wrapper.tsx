@@ -1,10 +1,9 @@
-import React, { forwardRef } from "react";
-import styled from "styled-components";
-import { IReqoreTheme } from "../../constants/theme";
-import ReqoreThemeProvider from "../../containers/ThemeProvider";
+import React, { forwardRef } from 'react';
+import styled from 'styled-components';
+import { IReqoreTheme } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
 
-export interface IReqoreContentWrapperProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreContentWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
 }
 
@@ -20,13 +19,13 @@ const StyledReqoreContentWrapper = styled.div<IReqoreContentStyle>`
   overflow: hidden;
 `;
 
-const ReqoreContentWrapper = forwardRef(
+const ReqoreContentWrapper = forwardRef<HTMLDivElement, IReqoreContentWrapperProps>(
   ({ children, className, ...rest }: IReqoreContentWrapperProps, ref: any) => (
     <ReqoreThemeProvider>
       <StyledReqoreContentWrapper
         {...rest}
         ref={ref}
-        className={`${className || ""} reqore-content-wrapper`}
+        className={`${className || ''} reqore-content-wrapper`}
       >
         {children}
       </StyledReqoreContentWrapper>

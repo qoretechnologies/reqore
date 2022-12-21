@@ -132,7 +132,7 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   }
 `;
 
-const ReqoreInput = forwardRef(
+const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
   (
     {
       tooltip,
