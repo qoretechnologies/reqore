@@ -8,7 +8,7 @@ import {
   isString,
   isUndefined,
 } from 'lodash';
-import { NUMBER_TO_SIZE, SIZE_TO_NUMBER, TSizes } from '../constants/sizes';
+import { NUMBER_TO_SIZE, SIZES, SIZE_TO_NUMBER, TSizes } from '../constants/sizes';
 
 export const sleep = async (ms: number) => await new Promise((r) => setTimeout(r, ms));
 
@@ -73,6 +73,10 @@ export const calculateStringSizeInPixels = (value: string = '', fontSize: number
   return (
     Array.from(value).reduce((acc, cur) => acc + (widths[cur.charCodeAt(0)] ?? avg), 0) * fontSize
   );
+};
+
+export const isStringSize = (value: TSizes | string | number) => {
+  return SIZES.includes(value as TSizes);
 };
 
 export const getOneLessSize = (size: TSizes): TSizes => {

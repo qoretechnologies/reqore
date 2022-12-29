@@ -58,7 +58,7 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       onClick={noop}
       onClose={noop}
     />
-    <h4> Flat and inverted </h4>
+    <h4> Flat and minimal </h4>
     <ReqoreNotification
       {...args}
       type='danger'
@@ -67,7 +67,7 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       onClick={noop}
       onClose={noop}
       flat
-      inverted
+      minimal
     />
     <ReqoreNotification
       {...args}
@@ -75,7 +75,8 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
       onClick={noop}
       onClose={noop}
-      inverted
+      intent='pending'
+      minimal
     />
     <ReqoreNotification
       {...args}

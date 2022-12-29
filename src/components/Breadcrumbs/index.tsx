@@ -4,6 +4,7 @@ import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqorePopover } from '../..';
 import {
+  ICON_FROM_SIZE,
   MARGIN_FROM_SIZE,
   PADDING_FROM_SIZE,
   TABS_SIZE_TO_PX,
@@ -21,7 +22,7 @@ import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
 import { IReqoreTabsListItem } from '../Tabs';
 import { StyledTabListItem } from '../Tabs/item';
-import ReqoreTabsList, { getTabsLength, StyledReqoreTabsList } from '../Tabs/list';
+import ReqoreTabsList, { StyledReqoreTabsList, getTabsLength } from '../Tabs/list';
 import ReqoreBreadcrumbsItem, { IReqoreBreadcrumbItemProps } from './item';
 
 export interface IReqoreBreadcrumbItemTabs {
@@ -104,7 +105,6 @@ const StyledBreadcrumbsTabsWrapper = styled.div`
 `;
 
 const itemPadding = 27;
-const iconSize = 11;
 const arrowSize = 50;
 
 const getBreadcrumbsLength = (
@@ -128,7 +128,7 @@ const getBreadcrumbsLength = (
     return (
       len +
       itemPadding +
-      iconSize +
+      ICON_FROM_SIZE[size] +
       arrowSize +
       calculateStringSizeInPixels(item.label || '', TEXT_FROM_SIZE[size])
     );
@@ -185,12 +185,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     if (isArray(item)) {
       return (
         <React.Fragment key={index}>
-          <ReqoreIcon
-            icon='ArrowRightSLine'
-            size={`${TEXT_FROM_SIZE[size]}px`}
-            key={'icon' + index}
-            margin='both'
-          />
+          <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
           <ReqorePopover
             key={index}
             component={ReqoreBreadcrumbsItem}
@@ -229,12 +224,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     if (item.withTabs) {
       return (
         <StyledBreadcrumbsTabsWrapper key={index}>
-          <ReqoreIcon
-            icon='ArrowRightSLine'
-            size={`${TEXT_FROM_SIZE[size]}px`}
-            key={'icon' + index}
-            margin='both'
-          />
+          <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
           <ReqoreTabsList
             tabs={item.withTabs.tabs}
             onTabChange={item.withTabs.onTabChange}
@@ -251,12 +241,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     return (
       <React.Fragment key={index}>
         {index !== 0 && (
-          <ReqoreIcon
-            icon='ArrowRightSLine'
-            size={`${TEXT_FROM_SIZE[size]}px`}
-            key={'icon' + index}
-            margin='both'
-          />
+          <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
         )}
         <ReqoreBreadcrumbsItem {...item} key={index} customTheme={customTheme} size={size} />
       </React.Fragment>

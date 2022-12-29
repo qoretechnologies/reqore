@@ -39,7 +39,7 @@ import ReqoreIcon from '../Icon';
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
   onClick?: () => void;
-  actions?: IReqoreDropdownItem[];
+  actions?: Omit<IReqoreDropdownItem[], 'value'>;
   // Custom react element
   as?: React.ElementType;
   props?: any;
@@ -159,7 +159,7 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
 export const StyledPanelTitle = styled.div<IStyledPanel>`
   display: flex;
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.07), opacity)};
+    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
   height: 40px;
   align-items: center;
@@ -181,7 +181,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
       cursor: pointer;
       &:hover {
         background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-          rgba(changeLightness(getMainBackgroundColor(theme), 0.1), opacity)};
+          rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
       }
     `}
 `;

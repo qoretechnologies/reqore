@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
 import ReqoreInput from '../../components/Input';
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
-import { argManager, MinimalArg, SizeArg } from '../utils/args';
+import { MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
@@ -38,7 +38,7 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
       <ReqoreButton>Button</ReqoreButton>
       <ReqoreInput icon='4KFill' value='Hello' />
       <ReqoreButton disabled fixed>
-        Disabled
+        Disabled & Fixed
       </ReqoreButton>
       <ReqoreButton minimal>Minimal</ReqoreButton>
     </ReqoreControlGroup>

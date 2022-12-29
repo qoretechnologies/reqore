@@ -1,6 +1,7 @@
 import React, { forwardRef, memo, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import {
+  ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
@@ -85,13 +86,16 @@ export const StyledActiveContent = styled.span`
   filter: blur(10px);
 
   ${({ wrap }) =>
-    !wrap &&
-    css`
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-    `}
+    !wrap
+      ? css`
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          width: 100%;
+        `
+      : css`
+          word-break: break-word;
+        `}
 `;
 
 export const StyledInActiveContent = styled.span`
@@ -100,13 +104,16 @@ export const StyledInActiveContent = styled.span`
   transition: all 0.2s ease-out;
 
   ${({ wrap }) =>
-    !wrap &&
-    css`
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 100%;
-    `}
+    !wrap
+      ? css`
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          width: 100%;
+        `
+      : css`
+          word-break: break-word;
+        `}
 `;
 
 export const StyledInvisibleContent = styled.span`
@@ -115,10 +122,13 @@ export const StyledInvisibleContent = styled.span`
   overflow: hidden;
 
   ${({ wrap }) =>
-    !wrap &&
-    css`
-      white-space: nowrap;
-    `}
+    !wrap
+      ? css`
+          white-space: nowrap;
+        `
+      : css`
+          word-break: break-word;
+        `}
 `;
 
 export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
@@ -139,7 +149,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ maxWidth }) => maxWidth || undefined};
 
-  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
 
   border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
 
@@ -206,11 +216,11 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   ${({ active, minimal, theme, color }: IReqoreButtonStyle) =>
     active &&
     css`
-      background-color: ${changeLightness(getButtonMainColor(theme, color), 0.16)};
+      background-color: ${changeLightness(getButtonMainColor(theme, color), 0.1)};
       color: ${getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
       border-color: ${minimal
         ? undefined
-        : changeLightness(getButtonMainColor(theme, color), 0.075)};
+        : changeLightness(getButtonMainColor(theme, color), 0.175)};
 
       ${ActiveIconScale}
     `}
@@ -239,6 +249,7 @@ export const StyledButtonContent = styled.div`
   align-items: center;
   width: 100%;
   height: 100%;
+  min-width: ${({ size }) => ICON_FROM_SIZE[size]}px;
   flex: 1;
   flex-shrink: 0;
   min-height: ${({ size, flat }) => (flat ? SIZE_TO_PX[size] : SIZE_TO_PX[size] - 2)}px;
@@ -286,7 +297,7 @@ const ReqoreButton = memo(
       useTooltip(targetRef.current, tooltip);
 
       // If color or intent was specified, set the color
-      const customColor = theme.main;
+      const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
       const _flat = minimal ? flat : flat !== false;
       const color = customColor
         ? minimal
@@ -333,7 +344,7 @@ const ReqoreButton = memo(
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {icon && (
               <>
-                <ReqoreIcon icon={icon} size={`${TEXT_FROM_SIZE[size]}px`} />
+                <ReqoreIcon icon={icon} size={size} />
                 {children || badge || rightIcon ? (
                   <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
                 ) : null}
@@ -351,11 +362,7 @@ const ReqoreButton = memo(
             {rightIcon && (
               <>
                 {children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
-                <ReqoreIcon
-                  icon={rightIcon}
-                  size={`${TEXT_FROM_SIZE[size]}px`}
-                  style={{ marginLeft: 'auto' }}
-                />
+                <ReqoreIcon icon={rightIcon} size={size} style={{ marginLeft: 'auto' }} />
               </>
             )}
           </StyledButtonContent>

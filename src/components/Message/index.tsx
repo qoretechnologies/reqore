@@ -1,7 +1,6 @@
 import { animated } from '@react-spring/web';
 import React, { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
-import { TEXT_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -9,15 +8,16 @@ import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
+  IWithReqoreMinimal,
   IWithReqoreSize,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import { ReqoreHeading } from '../Header';
 import ReqoreIcon from '../Icon';
 import {
   StyledIconWrapper,
   StyledNotificationContent,
   StyledNotificationContentWrapper,
-  StyledNotificationTitle,
   StyledReqoreNotification,
   typeToIcon,
 } from '../Notifications/notification';
@@ -27,6 +27,7 @@ export interface IReqoreMessageProps
     IWithReqoreEffect,
     IWithReqoreSize,
     IReqoreIntent,
+    IWithReqoreMinimal,
     React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   children: any;
@@ -36,7 +37,6 @@ export interface IReqoreMessageProps
   duration?: number;
   onFinish?: () => any;
   flat?: boolean;
-  inverted?: boolean;
 }
 
 export interface IReqoreNotificationStyle extends IReqoreMessageProps {
@@ -57,7 +57,7 @@ const ReqoreMessage = forwardRef<HTMLDivElement, IReqoreMessageProps>(
       duration,
       onFinish,
       flat,
-      inverted,
+      minimal,
       size = 'normal',
       customTheme,
       ...rest
@@ -114,7 +114,7 @@ const ReqoreMessage = forwardRef<HTMLDivElement, IReqoreMessageProps>(
           clickable={!!onClick}
           onClick={onClick}
           flat={flat}
-          inverted={inverted}
+          minimal={minimal}
           asMessage
           fluid
           className={`${rest?.className || ''} reqore-message`}
@@ -124,16 +124,23 @@ const ReqoreMessage = forwardRef<HTMLDivElement, IReqoreMessageProps>(
         >
           {leftIcon ? (
             <StyledIconWrapper intent={intent} size={size} theme={theme}>
-              <ReqoreIcon
-                icon={leftIcon}
-                margin={flat && inverted ? undefined : 'left'}
-                size={`${TEXT_FROM_SIZE[size]}px`}
-              />
+              <ReqoreIcon icon={leftIcon} margin={flat && minimal ? 'right' : 'both'} size={size} />
             </StyledIconWrapper>
           ) : null}
           <StyledNotificationContentWrapper size={size} theme={theme}>
-            {title && <StyledNotificationTitle theme={theme}>{title}</StyledNotificationTitle>}
-            <StyledNotificationContent theme={theme}>{children}</StyledNotificationContent>
+            {title && (
+              <ReqoreHeading
+                size={size}
+                customTheme={
+                  rest.effect?.color ? { text: { color: rest.effect.color } } : undefined
+                }
+              >
+                {title}
+              </ReqoreHeading>
+            )}
+            <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
+              {children}
+            </StyledNotificationContent>
           </StyledNotificationContentWrapper>
           {onClose && (
             <StyledIconWrapper
@@ -147,7 +154,7 @@ const ReqoreMessage = forwardRef<HTMLDivElement, IReqoreMessageProps>(
                 onClose && onClose();
               }}
             >
-              <ReqoreIcon icon='CloseFill' margin='both' size={`${TEXT_FROM_SIZE[size]}px`} />
+              <ReqoreIcon icon='CloseFill' margin='both' size={size} />
             </StyledIconWrapper>
           )}
         </StyledReqoreNotification>

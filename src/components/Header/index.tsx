@@ -1,7 +1,9 @@
 import { memo, useMemo } from 'react';
 import styled from 'styled-components';
+import { HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
+import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreEffect } from '../../types/global';
 import { StyledTextEffect } from '../Effect';
@@ -10,7 +12,7 @@ export interface IReqoreHeadingProps
   extends IWithReqoreEffect,
     React.HTMLAttributes<HTMLHeadingElement> {
   intent?: TReqoreIntent;
-  size?: 1 | 2 | 3 | 4 | 5 | 6;
+  size?: 1 | 2 | 3 | 4 | 5 | 6 | TSizes;
   customTheme?: Partial<IReqoreTheme>;
 }
 
@@ -28,9 +30,10 @@ export const StyledHeader = styled(StyledTextEffect)`
 export const ReqoreHeading = memo(
   ({ size, children, customTheme, intent, ...props }: IReqoreHeadingProps) => {
     const theme = useReqoreTheme('main', customTheme, intent);
+    const _size: number = isStringSize(size) ? HEADER_SIZE_TO_NUMBER[size] : size;
     const HTMLheaderElement = useMemo(() => {
-      return `h${size}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-    }, [size]);
+      return `h${_size}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+    }, [_size]);
 
     return (
       <StyledHeader as={HTMLheaderElement} theme={theme} intent={intent} {...props}>

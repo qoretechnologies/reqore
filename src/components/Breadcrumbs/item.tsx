@@ -137,13 +137,7 @@ const ReqoreBreadcrumbsItem = forwardRef<HTMLDivElement, IReqoreBreadcrumbItemPr
         theme={theme}
         size={size}
       >
-        {icon && (
-          <ReqoreIcon
-            icon={icon}
-            size={`${TEXT_FROM_SIZE[size]}px`}
-            margin={label ? 'right' : undefined}
-          />
-        )}
+        {icon && <ReqoreIcon icon={icon} size={size} margin={label ? 'right' : undefined} />}
         {label && (
           <StyledAnimatedTextWrapper as={as || 'span'} {...props}>
             <StyledActiveContent>{label}</StyledActiveContent>

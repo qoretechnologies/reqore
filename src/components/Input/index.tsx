@@ -176,7 +176,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       >
         {icon && (
           <StyledIconWrapper _size={size}>
-            <ReqoreIcon size={`${TEXT_FROM_SIZE[size]}px`} icon={icon} />
+            <ReqoreIcon size={size} icon={icon} />
           </StyledIconWrapper>
         )}
         <StyledInput

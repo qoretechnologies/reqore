@@ -1,6 +1,8 @@
 export type TSizes = 'tiny' | 'small' | 'normal' | 'big' | 'huge';
 export type TWeights = 'soft' | 'normal' | 'heavy';
 
+export const SIZES = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
+
 export const SIZE_TO_NUMBER = {
   tiny: 1,
   small: 2,
@@ -15,6 +17,14 @@ export const NUMBER_TO_SIZE = {
   3: 'normal',
   4: 'big',
   5: 'huge',
+};
+
+export const HEADER_SIZE_TO_NUMBER = {
+  tiny: 5,
+  small: 4,
+  normal: 3,
+  big: 2,
+  huge: 1,
 };
 
 export const SIZE_TO_PX = {
@@ -73,12 +83,20 @@ export const TEXT_FROM_SIZE = {
   huge: 21,
 };
 
+export const ICON_FROM_SIZE = {
+  tiny: 11,
+  small: 14,
+  normal: 17,
+  big: 20,
+  huge: 23,
+};
+
 export const PADDING_FROM_SIZE = {
-  tiny: 2,
-  small: 5,
-  normal: 8,
-  big: 11,
-  huge: 14,
+  tiny: 5,
+  small: 8,
+  normal: 11,
+  big: 14,
+  huge: 17,
 };
 
 export const RADIUS_FROM_SIZE = {
@@ -96,6 +114,14 @@ export const ICON_FROM_HEADER_SIZE = {
   4: 12,
   5: 9,
   6: 6,
+};
+
+export const ICON_WRAPPER_FROM_HEADER_SIZE = {
+  huge: 34,
+  big: 26,
+  normal: 19,
+  small: 17,
+  tiny: 15,
 };
 
 export const WEIGHT_TO_NUMBER = {
