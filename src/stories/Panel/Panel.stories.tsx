@@ -69,6 +69,7 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
       {...args}
       badge={[
         10,
+        0,
         {
           effect: {
             gradient: {

@@ -20,6 +20,7 @@ import {
   IReqoreDisabled,
   IReqoreIntent,
   IWithReqoreEffect,
+  IWithReqoreMinimal,
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -35,7 +36,8 @@ export interface IReqoreTagProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'>,
     IWithReqoreTooltip,
     IReqoreDisabled,
-    IWithReqoreEffect {
+    IWithReqoreEffect,
+    IWithReqoreMinimal {
   size?: TSizes;
   label?: string | number;
   labelKey?: string | number;
@@ -48,6 +50,7 @@ export interface IReqoreTagProps
   width?: string;
   badge?: boolean;
   intent?: TReqoreIntent;
+  wrap?: boolean;
 }
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
@@ -60,39 +63,55 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   display: inline-flex;
   justify-content: center;
   flex-shrink: 0;
-  align-items: center;
+  align-items: stretch;
   font-family: system-ui;
   font-weight: 600;
   overflow: hidden;
   vertical-align: middle;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
-  height: ${({ size, badge }) => (badge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
+
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   border-radius: ${({ badge, size }) => (badge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
-  ${({ theme, color, labelKey }) =>
+  ${({ wrap, hasWidth }) =>
+    wrap || hasWidth
+      ? css`
+          min-height: ${({ size, badge }) => (badge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
+        `
+      : css`
+          height: ${({ size, badge }) => (badge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
+        `}
+
+  ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) =>
     css`
       background-color: ${color || changeLightness(theme.main, 0.1)};
-      color: ${color ? getReadableColorFrom(color) : getReadableColor(theme, undefined, undefined)};
+      color: ${minimal
+        ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
+        : color
+        ? getReadableColorFrom(color)
+        : getReadableColor(theme, undefined, undefined)};
 
-      ${StyledTagContentWrapper} {
+      ${StyledTagKeyWrapper} {
         background-color: ${labelKey ? rgba('#000000', 0.2) : undefined};
       }
     `}
 
-  ${({ theme, color, interactive }) =>
-    interactive &&
-    css`
-      cursor: pointer;
-      &:hover {
-        background-color: ${changeLightness(color || theme.main, color ? 0.05 : 0.15)};
-        color: ${color
-          ? getReadableColorFrom(color)
-          : getReadableColor(theme, undefined, undefined)};
-      }
-    `}
+  ${({ theme, color, interactive, minimal, effect }) =>
+    interactive && !effect?.gradient
+      ? css`
+          cursor: pointer;
+          &:hover {
+            background-color: ${changeLightness(color || theme.main, color ? 0.05 : 0.15)};
+            color: ${minimal
+              ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
+              : color
+              ? getReadableColorFrom(color)
+              : getReadableColor(theme, undefined, undefined)};
+          }
+        `
+      : undefined}
 
 
   ${({ disabled }) =>
@@ -106,34 +125,58 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
 
 const StyledTagRightIcon = styled(ReqoreIcon)``;
 
-const StyledTagContentWrapper = styled.div<{ size: TSizes }>`
+const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: ${({ hasKey }) => (hasKey ? 1 : undefined)};
   flex-shrink: 0;
+  min-height: 100%;
+`;
+
+const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 1;
-  overflow: hidden;
-  height: 100%;
+  flex-shrink: 0;
+  min-height: 100%;
 `;
 
 const StyledTagContent = styled.span<{ size: TSizes }>`
-  padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
-  height: 100%;
+  padding: 4px ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  min-height: 100%;
   display: flex;
   align-items: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1;
+
+  ${({ wrap, hasWidth }) =>
+    !wrap && !hasWidth
+      ? css`
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        `
+      : css`
+          word-break: break-word;
+        `}
 `;
 
 const StyledTagContentKey = styled(StyledTagContent)`
   font-weight: 800;
+  flex: 1;
+
+  ${({ wrap, hasWidth }) =>
+    !wrap && !hasWidth
+      ? undefined
+      : css`
+          word-break: break-word;
+        `}
 `;
 
-const StyledButtonWrapper = styled.div<IReqoreTagStyle>`
+const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   flex-shrink: 0;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
-  height: ${({ size }) => SIZE_TO_PX[size]}px;
   width: ${({ size }) => SIZE_TO_PX[size]}px;
   display: flex;
   justify-content: center;
@@ -172,6 +215,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       badge,
       intent,
       color,
+      minimal,
+      wrap = false,
+      width,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -182,38 +228,69 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     useTooltip(targetRef.current, tooltip);
 
     // If color or intent was specified, set the color
-    const customColor = intent ? theme.intents[intent] : color;
+    let customColor = intent ? theme.intents[intent] : color;
+    customColor = minimal ? `${customColor || '#000000'}40` : customColor;
 
     return (
       <StyledTag
         {...rest}
+        effect={{
+          ...rest.effect,
+          interactive: !!onClick && !rest.disabled,
+        }}
+        width={width}
         labelKey={labelKey}
         color={customColor}
         className={`${className || ''} reqore-tag`}
         size={size}
         ref={targetRef}
         badge={badge}
+        minimal={minimal}
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
+        wrap={wrap}
+        hasWidth={!!width}
       >
         {icon || labelKey ? (
-          <StyledTagContentWrapper size={size} className='reqore-tag-content' onClick={onClick}>
+          <StyledTagKeyWrapper
+            size={size}
+            className='reqore-tag-key-content'
+            onClick={onClick}
+            wrap={wrap}
+            hasWidth={!!width}
+            hasKey={!!labelKey}
+          >
             {icon && <ReqoreIcon icon={icon} size={size} margin={label ? 'left' : 'both'} />}
-            {labelKey && <StyledTagContentKey size={size}>{labelKey}</StyledTagContentKey>}
+            {labelKey && (
+              <StyledTagContentKey wrap={wrap} hasWidth={!!width} size={size}>
+                {labelKey}
+              </StyledTagContentKey>
+            )}
+          </StyledTagKeyWrapper>
+        ) : null}
+        {label || label === 0 || rightIcon ? (
+          <StyledTagContentWrapper
+            size={size}
+            className='reqore-tag-content'
+            onClick={onClick}
+            wrap={wrap}
+            hasWidth={!!width}
+            hasKey={!!labelKey}
+          >
+            {label || label === 0 ? (
+              <StyledTagContent size={size} onClick={onClick} wrap={wrap} hasWidth={!!width}>
+                {label}
+              </StyledTagContent>
+            ) : null}
+            {rightIcon && (
+              <StyledTagRightIcon
+                icon={rightIcon}
+                size={size}
+                margin={label || icon ? 'right' : 'both'}
+              />
+            )}
           </StyledTagContentWrapper>
         ) : null}
-        {label && (
-          <StyledTagContent size={size} onClick={onClick}>
-            {label}
-          </StyledTagContent>
-        )}
-        {rightIcon && (
-          <StyledTagRightIcon
-            icon={rightIcon}
-            size={size}
-            margin={label || icon ? 'right' : 'both'}
-          />
-        )}
         {_size(actions)
           ? actions.map((action) => (
               <>

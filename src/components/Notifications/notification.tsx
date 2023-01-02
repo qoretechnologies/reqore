@@ -149,6 +149,9 @@ export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
   ${({ clickable, theme, intent, type }) =>
     clickable &&
     css`
+      margin-top: unset;
+      height: unset;
+
       .reqore-icon {
         transform: scale(0.85);
       }

@@ -173,8 +173,8 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   ${InactiveIconScale}
 
-  ${({ readOnly, animate }) =>
-    !readOnly
+  ${({ readOnly, animate, active }) =>
+    !readOnly && !active
       ? css`
           &:not(:disabled) {
             ${ScaleIconOnHover}
@@ -187,11 +187,16 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             }
 
             &:hover,
+            &:active,
             &:focus {
-              background-color: ${({ theme, color }: IReqoreButtonStyle) =>
-                changeLightness(getButtonMainColor(theme, color), 0.05)};
-              color: ${({ theme, color }) =>
-                getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
+              background-color: ${({ theme, color, minimal }: IReqoreButtonStyle) =>
+                minimal ? `#00000030` : changeLightness(getButtonMainColor(theme, color), 0.05)};
+              color: ${({ theme, color, minimal }) =>
+                getReadableColor(
+                  { main: minimal ? '#00000030' : getButtonMainColor(theme, color) },
+                  undefined,
+                  undefined
+                )};
               border-color: ${({ flat, theme, color }) =>
                 flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
 
@@ -212,16 +217,27 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             }
           }
         `
-      : css`
+      : readOnly
+      ? css`
           ${ReadOnlyElement};
-        `}
+        `
+      : undefined}
 
   ${({ active, flat, theme, color }: IReqoreButtonStyle) =>
     active &&
     css`
+      cursor: pointer;
       background-color: ${changeLightness(getButtonMainColor(theme, color), 0.1)};
       color: ${getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
       border-color: ${flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.175)};
+
+      &:hover,
+      &:active,
+      &:focus {
+        border-color: ${flat
+          ? undefined
+          : changeLightness(getButtonMainColor(theme, color), 0.275)};
+      }
 
       ${ActiveIconScale}
     `}

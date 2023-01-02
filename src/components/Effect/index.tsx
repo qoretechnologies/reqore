@@ -72,6 +72,8 @@ export const StyledEffect = styled.span`
     const gradient = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColors})`;
     const gradientActive = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColorsActive})`;
 
+    console.log(effect);
+
     return css`
       background-image: ${gradient};
       // Get the first color from the colors object
@@ -86,6 +88,8 @@ export const StyledEffect = styled.span`
 
       ${effect.interactive &&
       css`
+        cursor: pointer;
+
         &:hover,
         &:focus,
         &:active {

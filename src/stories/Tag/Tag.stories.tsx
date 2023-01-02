@@ -113,6 +113,49 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
         actions={null}
         onRemoveClick={null}
       />
+      <ReqoreTag
+        {...args}
+        label='Minimal Tag'
+        minimal
+        icon='ShareForward2Fill'
+        rightIcon={args.rightIcon}
+        actions={null}
+        onRemoveClick={null}
+      />
+      <ReqoreTag
+        {...args}
+        label='Minimal Tag with Intent'
+        minimal
+        intent='warning'
+        icon='ShareForward2Fill'
+        rightIcon={args.rightIcon}
+        actions={null}
+        onRemoveClick={null}
+      />
+      <ReqoreTag
+        {...args}
+        labelKey='This is the key for a wrapped tag'
+        label='Wrapped tag with some long text and width specified, no wrap specified'
+        icon='ShareForward2Fill'
+        rightIcon={args.rightIcon}
+        width='400px'
+        onRemoveClick={null}
+        actions={[
+          {
+            icon: '24HoursFill',
+            onClick: noop,
+            disabled: true,
+            intent: 'info',
+            tooltip: { content: 'I am a tooltip' },
+          },
+          {
+            icon: 'SpyFill',
+            onClick: noop,
+            intent: 'success',
+            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
+          },
+        ]}
+      />
     </ReqoreTagGroup>
   );
 };
