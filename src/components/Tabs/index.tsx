@@ -2,22 +2,18 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
-import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import { IReqoreButtonProps } from '../Button';
 import ReqoreTabsList from './list';
 
-export interface IReqoreTabsListItem {
+export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
   label: string;
-  icon?: IReqoreIconName;
   as?: any;
-  disabled?: boolean;
   id: string | number;
-  tooltip?: TReqoreTooltipProp;
   props?: React.HTMLAttributes<any>;
   onClick?: (event: any) => any;
   onCloseClick?: (id: string | number) => any;
   activeIntent?: TReqoreIntent;
-  intent?: TReqoreIntent;
   closeIcon?: IReqoreIconName;
 }
 

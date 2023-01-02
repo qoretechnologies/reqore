@@ -192,8 +192,8 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                 changeLightness(getButtonMainColor(theme, color), 0.05)};
               color: ${({ theme, color }) =>
                 getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
-              border-color: ${({ minimal, theme, color }) =>
-                minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
+              border-color: ${({ flat, theme, color }) =>
+                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
 
               ${animate &&
               css`
@@ -216,14 +216,12 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
           ${ReadOnlyElement};
         `}
 
-  ${({ active, minimal, theme, color }: IReqoreButtonStyle) =>
+  ${({ active, flat, theme, color }: IReqoreButtonStyle) =>
     active &&
     css`
       background-color: ${changeLightness(getButtonMainColor(theme, color), 0.1)};
       color: ${getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
-      border-color: ${minimal
-        ? undefined
-        : changeLightness(getButtonMainColor(theme, color), 0.175)};
+      border-color: ${flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.175)};
 
       ${ActiveIconScale}
     `}

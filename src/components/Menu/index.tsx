@@ -67,18 +67,19 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
     return (
       <ReqoreThemeProvider theme={theme}>
         <StyledReqoreMenu {...rest} position={position} ref={ref} theme={theme}>
-          {React.Children.map(children, (child) =>
-            child
+          {React.Children.map(children, (child) => {
+            console.log(child);
+            return child
               ? // @ts-ignore
                 React.cloneElement(child, {
                   _insidePopover,
                   _popoverId,
-                  customTheme: theme,
+                  customTheme: child?.props.customTheme || theme,
                   wrap: wrapText,
-                  flat,
+                  flat: child?.props.flat || flat,
                 })
-              : null
-          )}
+              : null;
+          })}
         </StyledReqoreMenu>
       </ReqoreThemeProvider>
     );
