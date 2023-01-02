@@ -37,8 +37,8 @@ export const SIZE_TO_PX = {
 
 export const BADGE_SIZE_TO_PX = {
   tiny: 10,
-  small: 17,
-  normal: 23,
+  small: 18,
+  normal: 24,
   big: 30,
   huge: 36,
 };
@@ -108,12 +108,12 @@ export const RADIUS_FROM_SIZE = {
 };
 
 export const ICON_FROM_HEADER_SIZE = {
-  1: 21,
-  2: 18,
-  3: 15,
-  4: 12,
-  5: 9,
-  6: 6,
+  1: 23,
+  2: 20,
+  3: 17,
+  4: 14,
+  5: 11,
+  6: 8,
 };
 
 export const ICON_WRAPPER_FROM_HEADER_SIZE = {

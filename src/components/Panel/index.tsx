@@ -5,6 +5,7 @@ import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
   ICON_FROM_HEADER_SIZE,
+  PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   TEXT_FROM_SIZE,
   TSizes,
@@ -19,6 +20,7 @@ import {
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
+import { ACTIVE_ICON_SCALE, INACTIVE_ICON_SCALE } from '../../styles';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -27,14 +29,15 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import ReqoreButton, { IReqoreButtonProps } from '../Button';
+import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { StyledCollectionItemContent } from '../Collection/item';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect } from '../Effect';
 import { ReqoreHeading } from '../Header';
-import ReqoreIcon from '../Icon';
+import ReqoreIcon, { StyledIconWrapper } from '../Icon';
+import { ReqoreSpacer } from '../Spacer';
 
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
@@ -62,7 +65,7 @@ export interface IReqorePanelProps
   children?: any;
   icon?: IReqoreIconName;
   label?: string | ReactElement<any>;
-
+  badge?: TReqoreBadge | TReqoreBadge[];
   collapsible?: boolean;
   isCollapsed?: boolean;
   onClose?: () => void;
@@ -114,6 +117,10 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
           cursor: pointer;
 
           &:hover {
+            ${StyledPanelTitle} > div > ${StyledIconWrapper} {
+              transform: scale(${ACTIVE_ICON_SCALE});
+            }
+
             background-color: ${rgba(
               darken(0.025, rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)),
               opacity === 0 ? 0.2 : opacity
@@ -175,11 +182,19 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   overflow: hidden;
   flex: 0 0 auto;
 
+  > div > ${StyledIconWrapper} {
+    transform: scale(${INACTIVE_ICON_SCALE});
+  }
+
   ${({ collapsible }) =>
     collapsible &&
     css`
       cursor: pointer;
       &:hover {
+        > div > ${StyledIconWrapper} {
+          transform: scale(${ACTIVE_ICON_SCALE});
+        }
+
         background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
           rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
       }
@@ -247,6 +262,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       contentSize = 'normal',
       minimal,
       tooltip,
+      badge,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -267,12 +283,17 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       setIsCollapsed(!!isCollapsed);
     }, [isCollapsed]);
 
+    // Return true if the card has a title bar, otherwise return false.
     const hasTitleBar: boolean = useMemo(
-      () => !!label || collapsible || !!onClose || !!size(actions),
-      [label, collapsible, onClose, actions]
+      () => !!label || collapsible || !!onClose || !!size(actions) || !!badge,
+      [label, collapsible, onClose, actions, badge]
     );
 
+    // If collapsible is true, toggle the isCollapsed state
+    // If the isCollapsed state is true, the component is expanded
+    // If the isCollapsed state is false, the component is collapsed
     const handleCollapseClick = useCallback(() => {
+      // If collapsible is true, toggle the isCollapsed state
       if (collapsible) {
         setIsCollapsed(!_isCollapsed);
         onCollapseChange?.(!_isCollapsed);
@@ -289,6 +310,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [bottomActions]
     );
 
+    // Calculates whether or not the bottom actions should be displayed.
     const hasBottomActions: boolean = useMemo(
       () => !!(size(leftBottomActions) || size(rightBottomActions)),
       [leftBottomActions, rightBottomActions]
@@ -436,6 +458,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 </ReqoreHeading>
               ) : (
                 label
+              )}
+              {badge && (
+                <>
+                  <ButtonBadge
+                    color={changeLightness(theme.main, 0.18)}
+                    size='big'
+                    content={badge}
+                  />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
+                </>
               )}
             </StyledPanelTitleHeader>
             <ReqoreControlGroup>
