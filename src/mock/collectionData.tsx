@@ -56,7 +56,7 @@ export default [
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     minimal: false,
-    badge: 25,
+    badge: 0,
   },
   {
     icon: 'FolderWarningFill',

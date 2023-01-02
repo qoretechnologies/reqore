@@ -459,7 +459,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               ) : (
                 label
               )}
-              {badge && (
+              {badge || badge === 0 ? (
                 <>
                   <ButtonBadge
                     color={changeLightness(theme.main, 0.18)}
@@ -468,7 +468,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   />
                   <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
                 </>
-              )}
+              ) : null}
             </StyledPanelTitleHeader>
             <ReqoreControlGroup>
               {actions.map(renderActions)}

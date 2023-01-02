@@ -182,7 +182,7 @@ export const ReqoreCollectionItem = ({
           { icon: 'CloseLine', onClick: handleItemClick },
         ] as IReqorePanelAction[])
       : size(actions)
-      ? [{ icon: 'More2Fill', actions }]
+      ? [{ icon: 'More2Fill', actions, minimal: true, flat: true }]
       : undefined;
 
     return (
