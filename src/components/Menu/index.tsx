@@ -68,7 +68,6 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       <ReqoreThemeProvider theme={theme}>
         <StyledReqoreMenu {...rest} position={position} ref={ref} theme={theme}>
           {React.Children.map(children, (child) => {
-            console.log(child);
             return child
               ? // @ts-ignore
                 React.cloneElement(child, {

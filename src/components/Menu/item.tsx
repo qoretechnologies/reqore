@@ -83,8 +83,6 @@ const ReqoreMenuItem = forwardRef<HTMLDivElement, IReqoreMenuItemProps>(
 
     useTooltip(targetRef.current, tooltip);
 
-    console.log(rest);
-
     return (
       <ReqoreControlGroup stack={!!onRightIconClick} fluid>
         <ReqoreButton
