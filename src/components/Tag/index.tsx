@@ -198,21 +198,19 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       >
         {icon || labelKey ? (
           <StyledTagContentWrapper size={size} className='reqore-tag-content' onClick={onClick}>
-            {icon && (
-              <ReqoreIcon
-                icon={icon}
-                size={`${TEXT_FROM_SIZE[size]}px`}
-                margin={label ? 'left' : 'both'}
-              />
-            )}
+            {icon && <ReqoreIcon icon={icon} size={size} margin={label ? 'left' : 'both'} />}
             {labelKey && <StyledTagContentKey size={size}>{labelKey}</StyledTagContentKey>}
           </StyledTagContentWrapper>
         ) : null}
-        {label && <StyledTagContent size={size}>{label}</StyledTagContent>}
+        {label && (
+          <StyledTagContent size={size} onClick={onClick}>
+            {label}
+          </StyledTagContent>
+        )}
         {rightIcon && (
           <StyledTagRightIcon
             icon={rightIcon}
-            size={`${TEXT_FROM_SIZE[size]}px`}
+            size={size}
             margin={label || icon ? 'right' : 'both'}
           />
         )}
@@ -234,7 +232,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                     : {})}
                   noWrapper
                 >
-                  <ReqoreIcon icon={action.icon} size={`${TEXT_FROM_SIZE[size]}px`} />
+                  <ReqoreIcon icon={action.icon} size={size} />
                 </ReqorePopover>
               </>
             ))
@@ -251,7 +249,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             noWrapper
             content='Remove'
           >
-            <ReqoreIcon icon='CloseLine' size={`${TEXT_FROM_SIZE[size]}px`} />
+            <ReqoreIcon icon='CloseLine' size={size} />
           </ReqorePopover>
         ) : null}
       </StyledTag>

@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreTabsProps } from '../../components/Tabs';
 import { ReqoreTabs, ReqoreTabsContent } from '../../index';
-import { argManager, IntentArg, SizeArg } from '../utils/args';
+import { IntentArg, SizeArg, argManager } from '../utils/args';
 
 const tabs = [
   {
@@ -9,6 +9,7 @@ const tabs = [
     id: 'tab1',
     icon: 'Home3Line',
     tooltip: 'Hooooooome!',
+    badge: 5,
   },
   {
     label: 'Tab 2',
@@ -17,6 +18,11 @@ const tabs = [
     as: 'a',
     props: {
       href: 'https://google.com',
+    },
+    badge: {
+      rightIcon: 'ExternalLinkLine',
+      label: 'Link',
+      intent: 'info',
     },
   },
   {
@@ -55,6 +61,9 @@ const tabs = [
     icon: 'LeafFill',
     onCloseClick: (id) => {
       alert(`${id} close click`);
+    },
+    customTheme: {
+      main: '#00e3e8',
     },
   },
   {
@@ -204,6 +213,16 @@ Fill.args = {
   fill: true,
 };
 
+export const CustomActiveIntent = Template.bind({});
+CustomActiveIntent.args = {
+  activeTabIntent: 'warning',
+};
+
+export const NotFlat = Template.bind({});
+NotFlat.args = {
+  flat: false,
+};
+
 export const Vertical = Template.bind({});
 Vertical.args = {
   vertical: true,
@@ -217,22 +236,10 @@ VerticalWithWrapping.args = {
   wrapTabNames: true,
 };
 
-export const VerticalFill = Template.bind({});
-VerticalFill.args = {
-  vertical: true,
-  fill: true,
-  fillParent: true,
-};
-
 export const VerticalCustomWidth = Template.bind({});
 VerticalCustomWidth.args = {
   vertical: true,
   fill: true,
   fillParent: true,
   width: '300px',
-};
-
-export const NotFlat = Template.bind({});
-NotFlat.args = {
-  flat: false,
 };

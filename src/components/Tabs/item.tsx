@@ -3,11 +3,10 @@ import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { TABS_PADDING_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
-import { changeLightness } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreFlat } from '../../types/global';
-import ReqoreButton from '../Button';
+import ReqoreButton, { StyledButton } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 
 export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqoreFlat {
@@ -28,7 +27,7 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ active, disabled, vertical, activeColor, size, fill }: IReqoreTabListItemStyle) => {
+  ${({ disabled, vertical, size, fill }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       flex-shrink: 0;
@@ -37,19 +36,30 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       align-items: center;
       width: ${vertical ? `100%` : undefined};
       padding: ${vertical ? `${TABS_PADDING_TO_PX[size!]}px` : `${TABS_PADDING_TO_PX[size!]}px`};
-      ${active &&
-      css`
-        &:after {
-          width: ${vertical ? '5px' : '1px'};
-          height: ${vertical ? '1px' : '5px'};
-          left: ${vertical ? '0' : '50%'};
-          top: ${vertical ? '50%' : undefined};
-          bottom: ${vertical ? undefined : '0'};
-          content: '';
-          position: absolute;
-          background-color: ${activeColor};
-        }
-      `}
+      padding-bottom: ${!vertical && 0};
+      padding-right: ${vertical && 0};
+
+      ${vertical
+        ? css`
+            ${StyledButton}:last-child {
+              border-right: 0;
+            }
+            ${StyledButton}:last-child {
+              border-top-right-radius: 0;
+              border-bottom-right-radius: 0;
+            }
+          `
+        : css`
+            ${StyledButton} {
+              border-bottom: 0;
+            }
+            ${StyledButton}:first-child {
+              border-bottom-left-radius: 0;
+            }
+            ${StyledButton}:last-child {
+              border-bottom-right-radius: 0;
+            }
+          `}
 
       ${fill &&
       css`
@@ -98,13 +108,13 @@ const ReqoreTabsListItem = memo(
         className,
         flat = true,
         wrapTabNames,
+        id,
+        ...rest
       }: IReqoreTabListItemProps,
       ref
     ) => {
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme);
-      const _intent = activeIntent || intent;
-      const activeColor = _intent ? theme.intents[_intent] : changeLightness(theme.main, 0.05);
 
       return (
         <StyledTabListItem
@@ -112,8 +122,6 @@ const ReqoreTabsListItem = memo(
           {...props}
           className={className}
           intent={intent}
-          activeIntent={activeIntent}
-          activeColor={activeColor}
           as={as}
           size={size}
           active={active}
@@ -125,7 +133,7 @@ const ReqoreTabsListItem = memo(
           {label || icon ? (
             <ReqoreControlGroup stack size={size} fluid={fill || vertical}>
               <ReqoreButton
-                flat={active || intent ? false : flat}
+                flat={intent ? false : flat}
                 fluid={fill || vertical}
                 icon={icon}
                 minimal
@@ -135,21 +143,22 @@ const ReqoreTabsListItem = memo(
                 disabled={disabled}
                 onClick={onClick}
                 tooltip={tooltip}
-                customTheme={customTheme}
+                customTheme={theme}
                 className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
+                {...rest}
               >
                 {label}
               </ReqoreButton>
               {onCloseClick && !disabled ? (
                 <ReqoreButton
                   fixed
-                  flat={active || intent ? false : flat}
+                  flat={intent ? false : flat}
                   icon={closeIcon || 'CloseLine'}
                   intent={active ? activeIntent || intent : intent}
                   minimal
                   active={active}
                   className='reqore-tabs-list-item-close'
-                  customTheme={customTheme}
+                  customTheme={theme}
                   onClick={(event) => {
                     event.stopPropagation();
                     onCloseClick?.();

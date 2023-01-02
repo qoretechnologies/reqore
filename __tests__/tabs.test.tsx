@@ -60,7 +60,7 @@ test('Renders shortened <Tabs /> properly', () => {
     );
   });
 
-  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(3);
+  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(2);
   expect(document.querySelectorAll('.reqore-tabs-list-item-menu').length).toBe(1);
 });
 

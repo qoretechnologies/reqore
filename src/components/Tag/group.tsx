@@ -7,21 +7,38 @@ export interface IReqoreTagGroup extends React.HTMLAttributes<HTMLDivElement> {
   children: any;
   size?: TSizes;
   columns?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+  hasBottomMargin?: boolean;
 }
 
 const StyledTagGroup = styled.div`
+  flex-shrink: 0;
+
   ${StyledTag} {
-    margin-right: 5px;
-    margin-bottom: 5px;
+    &:not(:last-child) {
+      margin-right: 5px;
+    }
+
+    margin-bottom: ${({ hasBottomMargin }) => (hasBottomMargin ? '5px' : '0px')};
   }
 `;
 
-const ReqoreTagGroup = ({ children, size, className, columns, ...rest }: IReqoreTagGroup) => (
-  <StyledTagGroup {...rest} className={`${className || ''} reqore-tag-group`}>
+const ReqoreTagGroup = ({
+  children,
+  size,
+  className,
+  columns,
+  hasBottomMargin = true,
+  ...rest
+}: IReqoreTagGroup) => (
+  <StyledTagGroup
+    {...rest}
+    hasBottomMargin={hasBottomMargin}
+    className={`${className || ''} reqore-tag-group`}
+  >
     {React.Children.map(children, (child) =>
       child
         ? React.cloneElement(child, {
-            size,
+            size: child.props?.size || size,
             width: columns ? `calc(${100 / columns}% - 5px)` : child.props.width,
           })
         : null

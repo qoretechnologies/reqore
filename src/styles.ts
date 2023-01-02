@@ -2,6 +2,9 @@ import { css } from 'styled-components';
 import { StyledActiveContent, StyledInActiveContent } from './components/Button';
 import { StyledIconWrapper } from './components/Icon';
 
+export const INACTIVE_ICON_SCALE = 0.85;
+export const ACTIVE_ICON_SCALE = 1;
+
 export const AnimatedTextElement = css`
   ${StyledActiveContent} {
     transform: translateY(0px);
@@ -18,13 +21,13 @@ export const AnimatedTextElement = css`
 
 export const InactiveIconScale = css`
   ${StyledIconWrapper} {
-    transform: scale(0.85);
+    transform: scale(${INACTIVE_ICON_SCALE});
   }
 `;
 
 export const ActiveIconScale = css`
   ${StyledIconWrapper} {
-    transform: scale(1);
+    transform: scale(${ACTIVE_ICON_SCALE});
   }
 `;
 

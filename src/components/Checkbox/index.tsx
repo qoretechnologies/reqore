@@ -151,7 +151,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
           <StyledSwitch size={size} labelPosition={labelPosition} checked={checked} />
         ) : (
           <ReqoreIcon
-            size={`${TEXT_FROM_SIZE[size]}px`}
+            size={size}
             icon={checked ? checkedIcon : uncheckedIcon}
             margin={labelPosition}
           />

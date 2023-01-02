@@ -50,18 +50,22 @@ export default [
     ],
   },
   {
+    icon: 'TextWrap',
     label: 'Item that is not minimal',
     tooltip: 'This is a test item',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     minimal: false,
+    badge: 25,
   },
   {
+    icon: 'FolderWarningFill',
     label: 'Expandable item',
     tooltip: 'This is a test item',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     expandable: true,
+    badge: 10,
     tags: [
       {
         label: 23,

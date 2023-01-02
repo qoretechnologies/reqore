@@ -25,7 +25,7 @@ export interface IReqoreNotificationData {
   type?: IReqoreNotificationType;
   intent?: TReqoreIntent;
   flat?: boolean;
-  inverted?: boolean;
+  minimal?: boolean;
   size?: TSizes;
 }
 

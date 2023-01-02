@@ -108,7 +108,7 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
   }
 
   if (!newTheme.notifications?.muted) {
-    newTheme.notifications.muted = newTheme.intents.muted || DEFAULT_INTENTS.muted;
+    newTheme.notifications.muted = `${newTheme.intents.muted || DEFAULT_INTENTS.muted}30`;
   }
 
   return newTheme;
@@ -122,9 +122,13 @@ export const mergeThemes = (element: string, theme: IReqoreTheme, customTheme: a
   }
 
   if (element === 'main' && customTheme) {
-    merge(clonedTheme, { main: customTheme.main, originalMain: clonedTheme.main });
+    merge(clonedTheme, {
+      main: customTheme.main,
+      originalMain: clonedTheme.main,
+      text: customTheme.text,
+    });
   } else {
-    merge(clonedTheme, { [element]: customTheme || {} });
+    merge(clonedTheme, { [element]: customTheme || {}, text: customTheme.text });
   }
 
   return clonedTheme;
@@ -135,7 +139,7 @@ export const getNotificationIntent = (theme: IReqoreTheme, intent?: TReqoreInten
     return theme.notifications[intent];
   }
 
-  return theme.main;
+  return changeLightness(theme.main, 0.1);
 };
 
 export const getMainBackgroundColor = (theme: IReqoreTheme): string =>

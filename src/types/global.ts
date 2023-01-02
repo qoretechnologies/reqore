@@ -126,6 +126,20 @@ export interface IWithReqoreFlat {
   flat?: boolean;
 }
 
+export interface IWithReqoreMinimal {
+  /**
+   * If true, the component will be minimal
+   * @default false
+   * @type boolean
+   * @example
+   * <ReqoreButton minimal />
+   * <ReqoreButton minimal={true} />
+   * <ReqoreButton minimal={false} />
+   *
+   */
+  minimal?: boolean;
+}
+
 export interface IWithReqoreEffect {
   /**
    * If true, the component will have an effect

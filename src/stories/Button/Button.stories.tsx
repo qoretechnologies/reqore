@@ -44,23 +44,6 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} readOnly onClick={alert}>
           Read only
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} readOnly badge={10} onClick={alert}>
-          With Badge
-        </ReqoreButton>
-        <ReqoreButton
-          {...buttonProps}
-          badge={{
-            effect: {
-              gradient: { colors: { 0: '#00fafd', 100: '#eb0e8c' }, direction: 'to right bottom' },
-            },
-            labelKey: 'Cool',
-            label: 1234,
-            actions: [{ icon: 'ShuffleLine', onClick: noop }],
-          }}
-          onClick={alert}
-        >
-          With modified Badge
-        </ReqoreButton>
       </ReqoreControlGroup>
       <br />
       <ReqoreControlGroup fluid>
@@ -111,6 +94,49 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
           description='This is a very interesting description for a button, I like it very much'
           wrap
         />
+      </ReqoreControlGroup>
+      <br />
+      <ReqoreControlGroup>
+        <ReqoreButton {...buttonProps} readOnly badge={10} onClick={alert}>
+          With Badge
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} minimal badge={20} onClick={alert}>
+          With Badge
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          badge={[
+            20,
+            {
+              effect: {
+                gradient: {
+                  colors: { 0: '#00fafd', 100: '#eb0e8c' },
+                  direction: 'to right bottom',
+                },
+              },
+              labelKey: 'Cool',
+              label: 1234,
+              actions: [{ icon: 'ShuffleLine', onClick: noop }],
+            },
+          ]}
+          onClick={alert}
+        >
+          With multiple badges
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          badge={{
+            effect: {
+              gradient: { colors: { 0: '#00fafd', 100: '#eb0e8c' }, direction: 'to right bottom' },
+            },
+            labelKey: 'Cool',
+            label: 1234,
+            actions: [{ icon: 'ShuffleLine', onClick: noop }],
+          }}
+          onClick={alert}
+        >
+          With modified Badge
+        </ReqoreButton>
       </ReqoreControlGroup>
     </>
   );

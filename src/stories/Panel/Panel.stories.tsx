@@ -67,11 +67,27 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
   return (
     <ReqorePanel
       {...args}
+      badge={[
+        10,
+        {
+          effect: {
+            gradient: {
+              colors: { 0: '#f98304', 100: '#ffc20c' },
+              direction: 'to right bottom',
+            },
+            spaced: 2,
+            uppercase: true,
+          },
+          labelKey: 'Cool',
+          label: 1234,
+          actions: [{ icon: 'ShuffleLine', onClick: noop }],
+        },
+      ]}
       actions={[
         { label: 'Test', icon: '24HoursFill', intent: 'info' },
         [
           { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
-          { label: 'Stacked Action 2', icon: 'CopperCoinFill', intent: 'danger' },
+          { icon: 'CopperCoinFill', intent: 'danger' },
         ],
         {
           as: ReqoreInput,

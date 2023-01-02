@@ -17,10 +17,10 @@ export default {
       type: 'string',
       description: 'The title of the message',
     }),
-    ...createArg('inverted', {
+    ...createArg('minimal', {
       defaultValue: false,
-      name: 'Inverted',
-      description: 'Inverts the message colors',
+      name: 'Minimal',
+      description: 'If the message should be minimal',
       type: 'boolean',
     }),
   },
@@ -46,9 +46,9 @@ Flat.args = {
   flat: true,
   intent: 'success',
 };
-export const Inverted: Story<IReqoreMessageProps> = Template.bind({});
-Inverted.args = {
-  inverted: true,
+export const Minimal: Story<IReqoreMessageProps> = Template.bind({});
+Minimal.args = {
+  minimal: true,
   intent: 'danger',
 };
 

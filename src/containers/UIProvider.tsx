@@ -27,6 +27,9 @@ export interface IReqoreUIProviderProps {
 
 const StyledPortal = styled.div`
   z-index: 9999;
+  * {
+    box-sizing: border-box;
+  }
 `;
 
 const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({ children, theme, options }) => {

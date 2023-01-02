@@ -342,7 +342,7 @@ const ReqoreTableRow = ({
                 ? 'CheckboxCircleLine'
                 : 'CheckboxBlankCircleLine'
             }
-            size={`${TEXT_FROM_SIZE[size]}px`}
+            size={size}
             style={{ opacity: !data[index]._selectId || !isSelected ? 0.4 : 1 }}
           />
         </StyledTableCell>

@@ -1,27 +1,29 @@
 import { animated, useTransition } from '@react-spring/web';
-import { darken, rgba } from 'polished';
+import { rgba } from 'polished';
 import React, { forwardRef, useEffect, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css, keyframes } from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
-import { PADDING_FROM_SIZE, TABS_SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  ICON_WRAPPER_FROM_HEADER_SIZE,
+  PADDING_FROM_SIZE,
+  TABS_SIZE_TO_PX,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
-import {
-  changeDarkness,
-  changeLightness,
-  getNotificationIntent,
-  getReadableColorFrom,
-} from '../../helpers/colors';
-import { IWithReqoreEffect } from '../../types/global';
+import { changeLightness, getNotificationIntent, getReadableColor } from '../../helpers/colors';
+import { IWithReqoreEffect, IWithReqoreMinimal } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect } from '../Effect';
+import { ReqoreHeading } from '../Header';
 import ReqoreIcon from '../Icon';
 
 export type IReqoreNotificationType = TReqoreIntent;
 
-export interface IReqoreNotificationProps extends IWithReqoreEffect {
+export interface IReqoreNotificationProps extends IWithReqoreEffect, IWithReqoreMinimal {
   type?: IReqoreNotificationType;
   intent?: TReqoreIntent;
   title?: string;
@@ -33,7 +35,6 @@ export interface IReqoreNotificationProps extends IWithReqoreEffect {
   onFinish?: () => any;
   fluid?: boolean;
   flat?: boolean;
-  inverted?: boolean;
   size?: TSizes;
 }
 
@@ -46,7 +47,7 @@ export interface IReqoreNotificationStyle {
   hasShadow?: boolean;
   fluid?: boolean;
   flat?: boolean;
-  inverted?: boolean;
+  minimal?: boolean;
   size?: TSizes;
   asMessage?: boolean;
 }
@@ -79,8 +80,6 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
           animation: 0.2s ${fadeIn} ease-in;
         `};
 
-  font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
-
   &:not(:first-child) {
     margin-top: ${({ asMessage }) => (asMessage ? undefined : `10px`)};
   }
@@ -93,13 +92,13 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     timeout,
     hasShadow,
     flat,
-    inverted,
+    minimal,
   }: IReqoreNotificationStyle) => css`
-    background-color: ${inverted ? 'transparent' : getNotificationIntent(theme, intent || type)};
+    background-color: ${minimal
+      ? 'transparent'
+      : rgba(getNotificationIntent(theme, intent || type), 0.3)};
     border: ${flat ? 0 : '1px solid'};
-    border-color: ${inverted
-      ? getNotificationIntent(theme, intent || type)
-      : darken(0.2, getNotificationIntent(theme, intent || type))};
+    border-color: ${getNotificationIntent(theme, intent || type)};
 
     ${hasShadow &&
     css`
@@ -120,30 +119,32 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
       }
     `}
 
-    color: ${inverted && (intent || type)
-      ? getNotificationIntent(theme, intent || type)
-      : getReadableColorFrom(getNotificationIntent(theme, intent || type), true)};
+    color: ${getReadableColor(theme, null, null, true, theme.originalMain)};
 
     ${clickable &&
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${inverted
-          ? rgba(changeDarkness(getNotificationIntent(theme, intent || type), 0.2), 0.1)
-          : changeLightness(getNotificationIntent(theme, intent || type), 0.0625)};
+        background-color: ${rgba(
+          getNotificationIntent(theme, intent || type),
+          minimal ? 0.2 : 0.5
+        )};
+        border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.1)};
       }
     `}
   `}
 `;
 
 export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
-  min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
+  height: ${({ size = 'normal' }: IReqoreNotificationStyle) =>
+    ICON_WRAPPER_FROM_HEADER_SIZE[size]}px;
   flex: 0 1 auto;
   flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: all 0.2s ease-out;
+  margin-top: ${({ size = 'normal' }: IReqoreNotificationStyle) => `${PADDING_FROM_SIZE[size]}px`};
 
   ${({ clickable, theme, intent, type }) =>
     clickable &&
@@ -178,12 +179,17 @@ export const StyledNotificationTitle = styled.h4`
   align-items: center;
 `;
 
-export const StyledNotificationContent = styled.p`
+export const StyledNotificationContent = styled.div`
   margin: 0;
   padding: 0;
   flex: 1;
-  display: flex;
-  align-items: center;
+  font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
+
+  ${({ hasTitle, size = 'normal' }) =>
+    hasTitle &&
+    css`
+      padding-top: ${PADDING_FROM_SIZE[size]}px;
+    `}
 `;
 
 export const typeToIcon: { [type: string]: IReqoreIconName } = {
@@ -208,7 +214,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       duration,
       onFinish,
       flat,
-      inverted,
+      minimal,
       size = 'normal',
     },
     ref: any
@@ -259,7 +265,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             clickable={!!onClick}
             onClick={onClick}
             flat={flat}
-            inverted={inverted}
+            minimal={minimal}
             className='reqore-notification'
             ref={ref}
             style={styles}
@@ -267,16 +273,14 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
           >
             {type || intent || icon ? (
               <StyledIconWrapper type={type || intent} size={size}>
-                <ReqoreIcon
-                  icon={icon || typeToIcon[type || intent]}
-                  margin={'both'}
-                  size={`${TEXT_FROM_SIZE[size]}px`}
-                />
+                <ReqoreIcon icon={icon || typeToIcon[type || intent]} margin={'both'} size={size} />
               </StyledIconWrapper>
             ) : null}
             <StyledNotificationContentWrapper size={size}>
-              {title && <StyledNotificationTitle>{title}</StyledNotificationTitle>}
-              <StyledNotificationContent>{content}</StyledNotificationContent>
+              {title && <ReqoreHeading size={size}>{title}</ReqoreHeading>}
+              <StyledNotificationContent hasTitle={!!title} size={size}>
+                {content}
+              </StyledNotificationContent>
             </StyledNotificationContentWrapper>
             <StyledIconWrapper
               type={type || intent}
@@ -288,7 +292,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
                 onClose && onClose();
               }}
             >
-              <ReqoreIcon icon='CloseFill' margin='both' size={`${TEXT_FROM_SIZE[size]}px`} />
+              <ReqoreIcon icon='CloseFill' margin='both' size={size} />
             </StyledIconWrapper>
           </StyledReqoreNotification>
         </ReqoreThemeProvider>
