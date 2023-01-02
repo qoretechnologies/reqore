@@ -4,7 +4,14 @@ import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
-import { ICON_FROM_SIZE, TABS_SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  ICON_FROM_SIZE,
+  PADDING_FROM_SIZE,
+  TABS_PADDING_TO_PX,
+  TABS_SIZE_TO_PX,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness } from '../../helpers/colors';
@@ -91,7 +98,12 @@ export const getTabsLength = (
       return len + rows * 15 + 10;
     }
 
-    return len + 36 + getLabel(item, activeTab, tabsSize);
+    return (
+      len +
+      PADDING_FROM_SIZE[tabsSize] * 3 +
+      TABS_PADDING_TO_PX[tabsSize] * 2 +
+      getLabel(item, activeTab, tabsSize)
+    );
   }, 0);
 
 const getTransformedItems = (
