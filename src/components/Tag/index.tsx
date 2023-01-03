@@ -183,14 +183,16 @@ const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   align-items: center;
   transition: all 0.2s ease-out;
 
-  ${({ color }) =>
+  ${({ color, effect }) =>
     css`
       .reqore-icon {
         transform: scale(0.85);
       }
       &:hover {
         cursor: pointer;
-        background-color: ${color ? changeLightness(color, 0.09) : rgba('#000000', 0.2)};
+        background-color: ${color && !effect?.gradient
+          ? changeLightness(color, 0.09)
+          : rgba('#000000', 0.2)};
 
         .reqore-icon {
           transform: scale(1);
@@ -301,6 +303,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                     color: customColor,
                     className: 'reqore-tag-action',
                     onClick: action.onClick,
+                    effect: rest.effect,
                   }}
                   {...(action.tooltip
                     ? typeof action.tooltip === 'string'
@@ -322,6 +325,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               color: customColor,
               className: 'reqore-tag-remove',
               onClick: onRemoveClick,
+              effect: rest.effect,
             }}
             noWrapper
             content='Remove'

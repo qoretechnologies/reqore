@@ -2,7 +2,6 @@ import { memo, useMemo } from 'react';
 import styled from 'styled-components';
 import { HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreEffect } from '../../types/global';
@@ -23,8 +22,7 @@ export interface IReqoreHeadingStyle extends IReqoreHeadingProps {
 export const StyledHeader = styled(StyledTextEffect)`
   margin: 0;
   padding: 0;
-  color: ${({ theme, intent }) =>
-    intent ? theme.intents[intent] : getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ theme, intent }) => (intent ? theme.intents[intent] : 'inherit')};
 `;
 
 export const ReqoreHeading = memo(

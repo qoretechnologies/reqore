@@ -1,4 +1,5 @@
 import { reduce } from 'lodash';
+import { mix } from 'polished';
 import { HTMLAttributes } from 'react';
 import styled, { css } from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
@@ -7,6 +8,7 @@ import {
   changeDarkness,
   changeLightness,
   getColorFromMaybeIntentOrString,
+  getReadableColorFrom,
 } from '../../helpers/colors';
 
 export interface IReqoreEffect {
@@ -19,6 +21,7 @@ export interface IReqoreEffect {
   };
   noWrap?: boolean;
   color?: string;
+
   spaced?: number;
   weight?: number | 'thin' | 'light' | 'normal' | 'bold' | 'thick';
   uppercase?: boolean;
@@ -72,7 +75,17 @@ export const StyledEffect = styled.span`
     const gradient = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColors})`;
     const gradientActive = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColorsActive})`;
 
-    console.log(effect);
+    // Determine the text color based on the gradient colors
+    let color: string | undefined;
+    // Only works if there are 2 colors not more and color was not provided
+    if (!effect.color) {
+      if (Object.keys(effect.gradient.colors).length === 2) {
+        const gradientColor1 = Object.values(effect.gradient.colors)[0];
+        const gradientColor2 = Object.values(effect.gradient.colors)[1];
+
+        color = mix(0.5, gradientColor1, gradientColor2);
+      }
+    }
 
     return css`
       background-image: ${gradient};
@@ -85,6 +98,11 @@ export const StyledEffect = styled.span`
         ),
         0.04
       )} !important;
+
+      ${color &&
+      css`
+        color: ${getReadableColorFrom(color, false)} !important;
+      `}
 
       ${effect.interactive &&
       css`
