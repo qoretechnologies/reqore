@@ -5,23 +5,39 @@ import styled, { css } from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
-  getColorFromMaybeIntentOrString,
+  getColorFromMaybeString,
   getReadableColorFrom,
 } from '../../helpers/colors';
+
+export type TReqoreEffectColorManipulation = 'darken' | 'lighten';
+export type TReqoreEffectColorManipulationMultiplier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type TReqoreHexColor = `#${string}`;
+export type TReqoreColor = TReqoreHexColor | 'transparent';
+export type TReqoreEffectColor =
+  | TReqoreColor
+  | TReqoreIntent
+  | `${TReqoreIntent}:${TReqoreEffectColorManipulation}`
+  | `${TReqoreIntent}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`
+  | 'main'
+  | `main:${TReqoreEffectColorManipulation}`
+  | `main:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`;
+export type TReqoreEffectColorList = [
+  'main' | TReqoreIntent | TReqoreColor,
+  TReqoreEffectColorManipulation | undefined,
+  TReqoreEffectColorManipulationMultiplier | undefined
+];
 
 export interface IReqoreEffect {
   gradient?: {
     type?: 'linear' | 'radial';
     shape?: 'circle' | 'ellipse';
-    colors: { [key: number]: string };
+    colors: Record<number, TReqoreEffectColor>;
     direction?: string;
-    borderColor?: TReqoreIntent | string;
+    borderColor?: TReqoreEffectColor;
   };
   noWrap?: boolean;
-  color?: string;
-
+  color?: TReqoreEffectColor;
   spaced?: number;
   weight?: number | 'thin' | 'light' | 'normal' | 'bold' | 'thick';
   uppercase?: boolean;
@@ -29,7 +45,7 @@ export interface IReqoreEffect {
   textAlign?: 'left' | 'center' | 'right';
   glow?: {
     size?: number;
-    color: TReqoreIntent | string;
+    color: TReqoreEffectColor;
     inset?: boolean;
     blur?: number;
     useBorder?: boolean;
@@ -58,13 +74,16 @@ export const StyledEffect = styled.span`
       effect.gradient.colors,
       (colorsString, color, percentage) =>
         `${colorsString}, ${
-          color === 'transparent' || !effect.interactive ? color : changeLightness(color, 0.03)
+          color === 'transparent' || !effect.interactive
+            ? getColorFromMaybeString(theme, color)
+            : changeLightness(getColorFromMaybeString(theme, color), 0.03)
         } ${percentage}%`,
       ''
     );
     const gradientColorsActive = reduce(
       effect.gradient.colors,
-      (colorsString, color, percentage) => `${colorsString}, ${color} ${percentage}%`,
+      (colorsString, color, percentage) =>
+        `${colorsString}, ${getColorFromMaybeString(theme, color)} ${percentage}%`,
       ''
     );
 
@@ -76,14 +95,24 @@ export const StyledEffect = styled.span`
     const gradientActive = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColorsActive})`;
 
     // Determine the text color based on the gradient colors
-    let color: string | undefined;
+    let color: TReqoreHexColor | undefined;
     // Only works if there are 2 colors not more and color was not provided
     if (!effect.color) {
       if (Object.keys(effect.gradient.colors).length === 2) {
-        const gradientColor1 = Object.values(effect.gradient.colors)[0];
-        const gradientColor2 = Object.values(effect.gradient.colors)[1];
+        const gradientColor1: TReqoreHexColor = getColorFromMaybeString(
+          theme,
+          Object.values(effect.gradient.colors)[0]
+        );
+        const gradientColor2: TReqoreHexColor = getColorFromMaybeString(
+          theme,
+          Object.values(effect.gradient.colors)[1]
+        );
 
-        color = mix(0.5, gradientColor1, gradientColor2);
+        color = mix(
+          0.5,
+          gradientColor1 === '#00000000' ? theme.main : gradientColor1,
+          gradientColor2 === '#00000000' ? theme.main : gradientColor2
+        ) as TReqoreHexColor;
       }
     }
 
@@ -91,17 +120,16 @@ export const StyledEffect = styled.span`
       background-image: ${gradient};
       // Get the first color from the colors object
       border-color: ${changeLightness(
-        getColorFromMaybeIntentOrString(
+        getColorFromMaybeString(
           theme,
-          effect.gradient.borderColor ||
-            changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)
+          effect.gradient.borderColor || Object.values(effect.gradient.colors)[0]
         ),
         0.04
       )} !important;
 
       ${color &&
       css`
-        color: ${getReadableColorFrom(color, false)} !important;
+        color: ${getReadableColorFrom(getColorFromMaybeString(theme, color), false)} !important;
       `}
 
       ${effect.interactive &&
@@ -112,10 +140,9 @@ export const StyledEffect = styled.span`
         &:focus,
         &:active {
           background-image: ${gradientActive};
-          border-color: ${getColorFromMaybeIntentOrString(
+          border-color: ${getColorFromMaybeString(
             theme,
-            effect.gradient.borderColor ||
-              changeDarkness(Object.values(effect.gradient.colors)[0], 0.05)
+            effect.gradient.borderColor || Object.values(effect.gradient.colors)[0]
           )} !important;
         }
       `}
@@ -130,13 +157,13 @@ export const StyledEffect = styled.span`
     if (effect.glow.useBorder) {
       return css`
         border: ${effect.glow.size || 2}px solid
-          ${getColorFromMaybeIntentOrString(theme, effect.glow.color)} !important;
+          ${getColorFromMaybeString(theme, effect.glow.color)} !important;
       `;
     }
 
     return css`
       box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 ${effect.glow.blur || 0}
-        ${effect.glow.size || 2}px ${getColorFromMaybeIntentOrString(theme, effect.glow.color)};
+        ${effect.glow.size || 2}px ${getColorFromMaybeString(theme, effect.glow.color)};
     `;
   }}
 
@@ -176,10 +203,10 @@ export const StyledEffect = styled.span`
         `
       : undefined}
 
-  ${({ effect }: IReqoreTextEffectProps) =>
+  ${({ effect, theme }: IReqoreTextEffectProps) =>
     effect && effect.color
       ? css`
-          color: ${effect.color} !important;
+          color: ${getColorFromMaybeString(theme, effect.color)} !important;
         `
       : undefined}
 

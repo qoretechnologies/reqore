@@ -110,7 +110,7 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
             {
               effect: {
                 gradient: {
-                  colors: { 0: '#ff0000', 100: '#000000' },
+                  colors: { 0: 'danger', 100: 'danger:darken' },
                   direction: 'to right bottom',
                 },
               },

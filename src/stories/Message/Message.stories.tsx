@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
 import ReqoreMessage, { IReqoreMessageProps } from '../../components/Message';
-import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { argManager, FlatArg, IntentArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMessageProps>();
 
@@ -64,10 +64,9 @@ Effect.args = {
   effect: {
     gradient: {
       colors: {
-        0: '#00e3e8',
-        100: '#eb0e8c',
+        0: '#eb0e8c',
+        100: 'danger:darken:2',
       },
     },
-    color: '#000000',
   },
 };

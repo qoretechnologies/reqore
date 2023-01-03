@@ -31,7 +31,13 @@ import {
   TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { ReqoreTextEffect, StyledEffect, StyledTextEffect } from '../Effect';
+import {
+  ReqoreTextEffect,
+  StyledEffect,
+  StyledTextEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+} from '../Effect';
 import ReqoreIcon from '../Icon';
 import { ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
@@ -65,9 +71,10 @@ export interface IReqoreButtonProps
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
   theme: IReqoreTheme;
   animate?: boolean;
+  color?: TReqoreHexColor;
 }
 
-const getButtonMainColor = (theme: IReqoreTheme, color?: string) => {
+const getButtonMainColor = (theme: IReqoreTheme, color?: TReqoreHexColor) => {
   if (color) {
     return color;
   }
@@ -280,7 +287,7 @@ export const StyledButtonContent = styled.div`
 `;
 
 export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
-  color?: string;
+  color?: TReqoreEffectColor;
   content?: TReqoreBadge | TReqoreBadge[];
 }
 
@@ -359,7 +366,7 @@ const ReqoreButton = memo(
       // If color or intent was specified, set the color
       const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
       const _flat = minimal ? flat : flat !== false;
-      const color = customColor
+      const color: TReqoreHexColor = customColor
         ? minimal
           ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
           : getReadableColorFrom(customColor, true)

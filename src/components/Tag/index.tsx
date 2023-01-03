@@ -13,7 +13,12 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ThemeContext from '../../context/ThemeContext';
-import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getReadableColor,
+  getReadableColorFrom,
+} from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useTooltip } from '../../hooks/useTooltip';
 import {
@@ -24,7 +29,7 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { StyledEffect } from '../Effect';
+import { StyledEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreTagAction extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent {
@@ -45,7 +50,7 @@ export interface IReqoreTagProps
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
-  color?: string;
+  color?: TReqoreEffectColor;
   actions?: IReqoreTagAction[];
   width?: string;
   badge?: boolean;
@@ -57,6 +62,7 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   theme: IReqoreTheme;
   removable?: boolean;
   interactive?: boolean;
+  color?: TReqoreHexColor;
 }
 
 export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
@@ -230,7 +236,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     useTooltip(targetRef.current, tooltip);
 
     // If color or intent was specified, set the color
-    let customColor = intent ? theme.intents[intent] : color;
+    let customColor: TReqoreHexColor = intent
+      ? theme.intents[intent]
+      : getColorFromMaybeString(theme, color);
     customColor = minimal ? `${customColor || '#000000'}40` : customColor;
 
     return (

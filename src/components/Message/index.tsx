@@ -3,6 +3,7 @@ import React, { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { getColorFromMaybeString } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreIntent,
@@ -132,7 +133,9 @@ const ReqoreMessage = forwardRef<HTMLDivElement, IReqoreMessageProps>(
               <ReqoreHeading
                 size={size}
                 customTheme={
-                  rest.effect?.color ? { text: { color: rest.effect.color } } : undefined
+                  rest.effect?.color
+                    ? { text: { color: getColorFromMaybeString(theme, rest.effect.color) } }
+                    : undefined
                 }
               >
                 {title}

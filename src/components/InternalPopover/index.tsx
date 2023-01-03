@@ -9,6 +9,7 @@ import PopoverContext from '../../context/PopoverContext';
 import { fadeIn } from '../../helpers/animations';
 import { getReadableColor } from '../../helpers/colors';
 import { StyledBackdrop } from '../Drawer';
+import { TReqoreHexColor } from '../Effect';
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
@@ -37,7 +38,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   max-height: ${({ maxHeight = '80vh' }) => maxHeight};
 
   ${({ theme, opaque }) => {
-    const defaultColor: string = theme.popover?.main || theme.main;
+    const defaultColor: TReqoreHexColor = theme.popover?.main || theme.main;
 
     if (opaque) {
       return css`

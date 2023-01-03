@@ -1,64 +1,66 @@
+import { TReqoreEffectColor, TReqoreHexColor } from '../components/Effect';
+
 export interface IReqoreSidebarTheme {
-  main?: string;
-  color?: string;
-  border?: string;
+  main?: TReqoreHexColor;
+  color?: TReqoreHexColor;
+  border?: TReqoreHexColor;
   item?: {
-    color?: string;
-    background?: string;
-    border?: string;
-    hoverColor?: string;
-    hoverBackground?: string;
-    activeColor?: string;
-    activeBackground?: string;
+    color?: TReqoreHexColor;
+    background?: TReqoreHexColor;
+    border?: TReqoreHexColor;
+    hoverColor?: TReqoreHexColor;
+    hoverBackground?: TReqoreHexColor;
+    activeColor?: TReqoreHexColor;
+    activeBackground?: TReqoreHexColor;
   };
   subItem?: {
-    color?: string;
-    border?: string;
-    background?: string;
-    hoverColor?: string;
-    hoverBackground?: string;
-    activeColor?: string;
-    activeBackground?: string;
+    color?: TReqoreHexColor;
+    border?: TReqoreHexColor;
+    background?: TReqoreHexColor;
+    hoverColor?: TReqoreHexColor;
+    hoverBackground?: TReqoreHexColor;
+    activeColor?: TReqoreHexColor;
+    activeBackground?: TReqoreHexColor;
   };
   icon?: {
-    color?: string;
-    hoverColor?: string;
-    activeColor?: string;
+    color?: TReqoreHexColor;
+    hoverColor?: TReqoreHexColor;
+    activeColor?: TReqoreHexColor;
   };
   section?: {
-    background?: string;
+    background?: TReqoreHexColor;
   };
 }
 
 export interface IReqoreBreadcrumbsTheme {
-  main?: string;
+  main?: TReqoreHexColor;
   item?: {
-    color?: string;
-    hoverColor?: string;
-    activeColor?: string;
+    color?: TReqoreHexColor;
+    hoverColor?: TReqoreHexColor;
+    activeColor?: TReqoreHexColor;
   };
 }
 
 export interface IReqoreNavbarTheme {
-  main?: string;
-  color?: string;
-  border?: string;
-  background?: string;
-  hoverColor?: string;
+  main?: TReqoreHexColor;
+  color?: TReqoreHexColor;
+  border?: TReqoreHexColor;
+  background?: TReqoreHexColor;
+  hoverColor?: TReqoreHexColor;
 }
 
 export interface IReqoreTheme {
-  main: string;
-  originalMain?: string;
+  main: TReqoreHexColor;
+  originalMain?: TReqoreHexColor;
   text?: {
-    color?: string;
+    color?: TReqoreHexColor;
     dim?: boolean;
   };
   intents: IReqoreIntents;
   sidebar?: IReqoreSidebarTheme;
   notifications: IReqoreIntents;
   popover?: {
-    main: string;
+    main: TReqoreHexColor;
   };
   header?: IReqoreNavbarTheme;
   footer?: IReqoreNavbarTheme;
@@ -66,20 +68,20 @@ export interface IReqoreTheme {
 }
 
 export interface IReqoreCustomTheme {
-  main?: string;
+  main?: TReqoreEffectColor;
   text?: {
-    color?: string;
+    color?: TReqoreEffectColor;
     dim?: boolean;
   };
 }
 
 export interface IReqoreIntents {
-  info?: string;
-  success?: string;
-  pending?: string;
-  warning?: string;
-  danger?: string;
-  muted?: string;
+  info?: TReqoreHexColor;
+  success?: TReqoreHexColor;
+  pending?: TReqoreHexColor;
+  warning?: TReqoreHexColor;
+  danger?: TReqoreHexColor;
+  muted?: TReqoreHexColor;
 }
 
 export type TReqoreIntent = 'info' | 'success' | 'pending' | 'warning' | 'danger' | 'muted';
