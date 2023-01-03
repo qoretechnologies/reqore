@@ -34,8 +34,6 @@ export const getReadableColorFrom = (
   const returnIfLight = ifLight || lighten(dim ? 0.05 : 0, Colors.DARK);
   const returnIfDark = ifDark || darken(dim ? 0.05 : 0, Colors.LIGHT);
 
-  console.log(from);
-
   return readableColor(from, returnIfLight, returnIfDark, false) as TReqoreHexColor;
 };
 
