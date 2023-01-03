@@ -81,7 +81,7 @@ export const getColorByBgColor = (bgColor) => {
 };
 
 export const isValidSixCharHex = (hex: string): boolean => {
-  return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hex);
+  return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}|[A-Fa-f0-9]{8})$/.test(hex);
 };
 
 export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
