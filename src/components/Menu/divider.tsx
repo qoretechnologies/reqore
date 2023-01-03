@@ -15,7 +15,7 @@ export interface IReqoreMenuDividerProps
 const StyledMenuDivider = styled(StyledTextEffect)`
   width: 100%;
   padding: ${({ size }) => `${PADDING_FROM_SIZE[size]}px 0`};
-  background-color: ${({ theme }) => theme.main};
+  background-color: transparent;
 
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined)};
 `;

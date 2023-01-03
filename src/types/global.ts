@@ -140,6 +140,20 @@ export interface IWithReqoreMinimal {
   minimal?: boolean;
 }
 
+export interface IWithReqoreTransparent {
+  /**
+   * If true, the component will be transparent
+   * @default false
+   * @type boolean
+   * @example
+   * <ReqoreButton transparent />
+   * <ReqoreButton transparent={true} />
+   * <ReqoreButton transparent={false} />
+   *
+   */
+  transparent?: boolean;
+}
+
 export interface IWithReqoreEffect {
   /**
    * If true, the component will have an effect
