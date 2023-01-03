@@ -41,6 +41,7 @@ export interface IReqoreTextareaProps
   rounded?: boolean;
   flat?: boolean;
   onClearClick?: () => any;
+  wrapperStyle?: React.CSSProperties;
 }
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
@@ -132,6 +133,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
       customTheme,
       intent,
       rounded = true,
+      wrapperStyle,
       ...rest
     }: IReqoreTextareaProps,
     ref: any
@@ -149,6 +151,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
         fluid={fluid}
         _size={size}
         theme={theme}
+        style={wrapperStyle}
       >
         <StyledTextarea
           {...rest}

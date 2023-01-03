@@ -41,6 +41,7 @@ export interface IReqoreInputProps
   flat?: boolean;
   rounded?: boolean;
   type?: 'text' | 'password' | 'email' | 'number' | 'tel' | 'url';
+  wrapperStyle?: React.CSSProperties;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -150,6 +151,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       readOnly,
       customTheme,
       intent,
+      wrapperStyle,
       ...rest
     }: IReqoreInputProps,
     ref
@@ -173,6 +175,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         ref={targetRef}
         readOnly={readOnly}
         disabled={rest.disabled}
+        style={wrapperStyle}
       >
         {icon && (
           <StyledIconWrapper _size={size}>
