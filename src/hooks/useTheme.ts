@@ -1,16 +1,33 @@
 import { cloneDeep } from 'lodash';
 import { useContext } from 'react';
+import { TReqoreEffectColor } from '../components/Effect';
 import { IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import ThemeContext from '../context/ThemeContext';
-import { mergeThemes } from '../helpers/colors';
+import { getColorFromMaybeString, mergeThemes } from '../helpers/colors';
+
+export interface IReqoreCustomTheme extends Partial<Omit<IReqoreTheme, 'main' | 'text'>> {
+  main?: TReqoreEffectColor;
+  text?: {
+    color?: TReqoreEffectColor;
+    dim?: boolean;
+  };
+}
 
 export const useReqoreTheme = (
   element: string,
-  customTheme: Partial<IReqoreTheme> = {},
+  customTheme: IReqoreCustomTheme = {},
   intent?: TReqoreIntent
 ) => {
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
-  let _customTheme: Partial<IReqoreTheme> = cloneDeep(customTheme);
+  let _customTheme: IReqoreCustomTheme = cloneDeep(customTheme);
+
+  if (_customTheme.main) {
+    _customTheme.main = getColorFromMaybeString(theme, customTheme.main);
+  }
+
+  if (_customTheme.text?.color) {
+    _customTheme.text.color = getColorFromMaybeString(theme, customTheme.text.color);
+  }
 
   if (element === 'main' && intent) {
     _customTheme.main = theme.intents[intent];

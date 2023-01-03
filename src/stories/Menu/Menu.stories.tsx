@@ -1,8 +1,14 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreMenuProps } from '../../components/Menu';
 import { IReqoreMenuItemProps } from '../../components/Menu/item';
-import { ReqoreMenu, ReqoreMenuDivider, ReqoreMenuItem, ReqorePopover } from '../../index';
-import { IntentArg, argManager } from '../utils/args';
+import {
+  ReqoreInput,
+  ReqoreMenu,
+  ReqoreMenuDivider,
+  ReqoreMenuItem,
+  ReqorePopover,
+} from '../../index';
+import { argManager, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMenuProps>();
 
@@ -11,7 +17,7 @@ export default {
   argTypes: {
     ...createArg('width', {
       type: 'string',
-      defaultValue: '160px',
+      defaultValue: '210px',
       name: 'Width',
     }),
     ...createArg('maxHeight', {
@@ -35,6 +41,38 @@ export default {
       },
       description: 'Whether to wrap text or not',
     }),
+    ...createArg('minimal', {
+      defaultValue: false,
+      name: 'Minimal',
+      control: {
+        type: 'boolean',
+      },
+      description: 'Whether to use minimal style or not',
+    }),
+    ...createArg('flat', {
+      defaultValue: true,
+      name: 'Flat',
+      control: {
+        type: 'boolean',
+      },
+      description: 'Whether to use flat style or not',
+    }),
+    ...createArg('rounded', {
+      defaultValue: true,
+      name: 'Rounded',
+      control: {
+        type: 'boolean',
+      },
+      description: 'Whether to use rounded style or not',
+    }),
+    ...createArg('transparent', {
+      defaultValue: false,
+      name: 'Transparent',
+      control: {
+        type: 'boolean',
+      },
+      description: 'Whether to use transparent style or not',
+    }),
     ...IntentArg,
   },
 } as Meta<IReqoreMenuProps>;
@@ -42,6 +80,7 @@ export default {
 const Template: Story<IReqoreMenuProps> = (args) => {
   return (
     <ReqoreMenu {...args}>
+      <ReqoreInput placeholder='Custom component' icon='Search2Fill' flat={false} />
       <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
         Selected success
       </ReqoreMenuItem>
@@ -143,7 +182,15 @@ export const WrappedText = Template.bind({});
 WrappedText.args = {
   wrapText: true,
 };
+export const Minimal = Template.bind({});
+Minimal.args = {
+  minimal: true,
+};
 export const NotFlat = Template.bind({});
 NotFlat.args = {
   flat: false,
+};
+export const Transparent = Template.bind({});
+Transparent.args = {
+  transparent: true,
 };

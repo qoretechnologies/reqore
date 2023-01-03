@@ -1,13 +1,17 @@
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
+import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness } from '../../helpers/colors';
+import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { IReqoreComponent } from '../../types/global';
-import { StyledReqoreControlGroup } from '../ControlGroup';
+import { IReqoreComponent, IWithReqoreMinimal, IWithReqoreTransparent } from '../../types/global';
 
-export interface IReqoreMenuProps extends IReqoreComponent, React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreMenuProps
+  extends IReqoreComponent,
+    IWithReqoreMinimal,
+    IWithReqoreTransparent,
+    React.HTMLAttributes<HTMLDivElement> {
   children: any;
   position?: 'left' | 'right';
   width?: string;
@@ -16,6 +20,7 @@ export interface IReqoreMenuProps extends IReqoreComponent, React.HTMLAttributes
   intent?: TReqoreIntent;
   wrapText?: boolean;
   flat?: boolean;
+  rounded?: boolean;
 }
 
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
@@ -30,7 +35,9 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   overflow-y: auto;
   overflow-x: hidden;
 
-  background-color: ${({ theme }) => theme.main};
+  background-color: ${({ theme, transparent }) =>
+    transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+  border-radius: ${({ rounded }) => (rounded ? `${RADIUS_FROM_SIZE['normal']}px` : `0`)};
 
   ${({ theme, position }) =>
     position &&
@@ -42,7 +49,7 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
     padding-${position === 'left' ? 'right' : 'left'}: 10px;
   `}
 
-  ${StyledReqoreControlGroup}:not(:last-child) {
+  > *:not(:last-child) {
     margin-bottom: 5px;
   }
 `;
@@ -58,6 +65,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       intent,
       wrapText,
       flat = true,
+      minimal,
       ...rest
     }: IReqoreMenuProps,
     ref: any
@@ -75,7 +83,8 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
                   _popoverId,
                   customTheme: child?.props.customTheme || theme,
                   wrap: wrapText,
-                  flat: child?.props.flat || flat,
+                  flat: 'flat' in child?.props ? child.props.flat : flat,
+                  minimal: 'minimal' in child?.props ? child.props.minimal : minimal,
                 })
               : null;
           })}

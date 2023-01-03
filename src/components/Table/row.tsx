@@ -13,6 +13,7 @@ import { ReqorePopover } from '../..';
 import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import { TReqoreColor, TReqoreHexColor } from '../Effect';
 import { ReqoreH4 } from '../Header';
 import ReqoreIcon from '../Icon';
 import { ReqoreP } from '../Paragraph';
@@ -102,7 +103,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     disabled,
     hovered,
   }: IReqoreTableCellStyle) => {
-    const getBackgroundColor = () => {
+    const getBackgroundColor = (): TReqoreColor => {
       let color = theme.main;
       let opacity = 0;
       // Is there any intent
@@ -147,11 +148,11 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
         ? 'transparent'
         : rgba(getBackgroundColor(), 0.8)};
       color: ${getReadableColorFrom(
-        backgroundColor === 'transparent' ? theme.main : getBackgroundColor(),
+        backgroundColor === 'transparent' ? theme.main : backgroundColor,
         !hovered
       )};
       border-color: ${changeLightness(
-        backgroundColor === 'transparent' ? theme.main : getBackgroundColor(),
+        backgroundColor === 'transparent' ? theme.main : backgroundColor,
         0.1
       )};
       transition: background-color 0.2s ease-out;
@@ -214,8 +215,10 @@ const ReqoreTableRow = ({
       let intent: TReqoreIntent = intentOrColor?.startsWith('#')
         ? undefined
         : (intentOrColor as TReqoreIntent);
-      let color: string =
-        intentOrColor?.startsWith('#') && type === 'tag' ? intentOrColor : undefined;
+      let color: TReqoreHexColor =
+        intentOrColor?.startsWith('#') && type === 'tag'
+          ? (intentOrColor as TReqoreHexColor)
+          : undefined;
       // Render content based on the type
       switch (type) {
         case 'time-ago':

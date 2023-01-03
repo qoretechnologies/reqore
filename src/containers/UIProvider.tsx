@@ -20,7 +20,7 @@ export interface IReqoreOptions {
   };
 }
 export interface IReqoreUIProviderProps {
-  children: any;
+  children?: any;
   theme?: Partial<IReqoreTheme>;
   options?: IReqoreOptions;
 }

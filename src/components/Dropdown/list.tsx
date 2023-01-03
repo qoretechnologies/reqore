@@ -3,7 +3,6 @@ import { IReqoreComponent } from '../../types/global';
 import ReqoreInput from '../Input';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
-import { ReqoreSpacer } from '../Spacer';
 
 export type TDropdownItemOnClick = (item: IReqoreDropdownItem) => void;
 export interface IReqoreDropdownItem extends Omit<IReqoreMenuItemProps, 'onClick'> {
@@ -86,7 +85,6 @@ const ReqoreDropdownList = memo(
               placeholder='Filter'
               onClearClick={() => setQuery('')}
             />
-            <ReqoreSpacer height={10} />
           </>
         )}
         {filteredItems.map((item: IReqoreDropdownItem, index: number) => (
