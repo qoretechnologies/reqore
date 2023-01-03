@@ -20,14 +20,14 @@ test('Renders <ReqoreEffect /> properly', () => {
                 type: 'radial',
                 shape: 'circle',
                 colors: {
-                  0: 'red',
-                  100: 'blue',
+                  0: 'danger:lighten:2',
+                  100: 'info:darken:1',
                 },
               },
               spaced: 10,
               uppercase: true,
               weight: 'bold',
-              color: 'red',
+              color: 'main',
             }}
           >
             This is a test
@@ -40,7 +40,7 @@ test('Renders <ReqoreEffect /> properly', () => {
   expect(document.querySelectorAll('.reqore-effect').length).toBe(1);
 });
 
-test('Renders empty <Icon /> if icon does not exist', () => {
+test('Renders <ReqoreTextEffect /> properly', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -50,8 +50,8 @@ test('Renders empty <Icon /> if icon does not exist', () => {
             effect={{
               gradient: {
                 colors: {
-                  0: 'red',
-                  100: 'blue',
+                  0: '#ff0000',
+                  100: '#00ff00',
                 },
               },
               spaced: 10,
