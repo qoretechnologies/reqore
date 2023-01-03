@@ -291,7 +291,8 @@ export const ButtonBadge = memo((props: IReqoreButtonBadgeProps) => {
         key={key}
         size={getOneLessSize(size)}
         badge
-        color={color ? `${color}70` : undefined}
+        color={color}
+        minimal={!(content as IReqoreTagProps)?.effect?.gradient}
         {...(typeof content === 'string' || typeof content === 'number'
           ? { label: content }
           : content)}
