@@ -1,7 +1,13 @@
 import { rgba } from 'polished';
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  PADDING_FROM_SIZE,
+  RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -76,7 +82,7 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   width: 100%;
   flex: 1;
   margin: 0;
-  padding: 0 7px;
+  padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px 7px;
   padding-right: ${({ clearable, _size }) => (clearable ? SIZE_TO_PX[_size] : 7)}px;
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;

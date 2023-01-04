@@ -8,7 +8,7 @@ import {
   ReqoreMenuItem,
   ReqorePopover,
 } from '../../index';
-import { argManager, IntentArg } from '../utils/args';
+import { IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMenuProps>();
 
@@ -84,7 +84,9 @@ const Template: Story<IReqoreMenuProps> = (args) => {
       <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
         Selected success
       </ReqoreMenuItem>
-      <ReqoreMenuItem icon='Save3Fill'>Save</ReqoreMenuItem>
+      <ReqoreMenuItem icon='Save3Fill' badge={10}>
+        Save
+      </ReqoreMenuItem>
       <ReqoreMenuDivider label='BIG Divider' size='huge' />
       <ReqoreMenuItem
         icon='ChatPollFill'

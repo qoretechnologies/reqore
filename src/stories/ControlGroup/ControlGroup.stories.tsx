@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
 import ReqoreInput from '../../components/Input';
-import { ReqoreButton, ReqoreControlGroup } from '../../index';
+import { ReqoreButton, ReqoreControlGroup, ReqoreTag } from '../../index';
 import { MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
@@ -36,6 +36,14 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
   return (
     <ReqoreControlGroup {...args}>
       <ReqoreButton>Button</ReqoreButton>
+      <ReqoreButton
+        flat={false}
+        effect={{ gradient: { colors: { 0: 'success', 100: 'success:darken:1' } } }}
+      >
+        Non flat Button
+      </ReqoreButton>
+      <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+      <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
       <ReqoreInput icon='4KFill' value='Hello' />
       <ReqoreButton disabled fixed>
         Disabled & Fixed

@@ -36,6 +36,7 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
       ? css`
           > .reqore-control,
           > .reqore-control-wrapper,
+          > .reqore-tag,
           > * {
             &:not(:last-child) {
               margin-bottom: ${({ stack }) => (!stack ? '5px' : undefined)};
@@ -67,6 +68,7 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
       : css`
           > .reqore-control,
           > .reqore-control-wrapper,
+          > .reqore-tag,
           > * {
             &:not(:last-child) {
               margin-right: ${({ stack }) => (!stack ? '5px' : undefined)};

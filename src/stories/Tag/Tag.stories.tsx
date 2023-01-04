@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup } from '../../index';
-import { argManager, SizeArg } from '../utils/args';
+import { SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
@@ -139,6 +139,30 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
         icon='ShareForward2Fill'
         rightIcon={args.rightIcon}
         width='400px'
+        onRemoveClick={null}
+        actions={[
+          {
+            icon: '24HoursFill',
+            onClick: noop,
+            disabled: true,
+            intent: 'info',
+            tooltip: { content: 'I am a tooltip' },
+          },
+          {
+            icon: 'SpyFill',
+            onClick: noop,
+            intent: 'success',
+            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
+          },
+        ]}
+      />
+      <ReqoreTag
+        {...args}
+        labelKey='This is the key for a wrapped tag'
+        label='Wrapped tag with some long text and NO width specified, AND wrap specified'
+        icon='ShareForward2Fill'
+        rightIcon={args.rightIcon}
+        wrap
         onRemoveClick={null}
         actions={[
           {
