@@ -98,10 +98,11 @@ const ReqoreMenuItem = forwardRef<HTMLDivElement, IReqoreMenuItemProps>(
           disabled={disabled}
           intent={intent}
           icon={icon}
+          rightIcon={onRightIconClick ? undefined : rightIcon}
         >
           {label || children}
         </ReqoreButton>
-        {rightIcon && (
+        {rightIcon && onRightIconClick ? (
           <ReqoreButton
             icon={rightIcon}
             flat={flat}
@@ -114,7 +115,7 @@ const ReqoreMenuItem = forwardRef<HTMLDivElement, IReqoreMenuItemProps>(
             intent={intent}
             active={selected && !!onRightIconClick}
           />
-        )}
+        ) : null}
       </ReqoreControlGroup>
     );
   }

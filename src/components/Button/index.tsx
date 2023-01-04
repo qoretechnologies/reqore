@@ -155,9 +155,15 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
-  min-height: ${({ size, flat }) => (flat ? SIZE_TO_PX[size] : SIZE_TO_PX[size] - 2)}px;
+  min-height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ maxWidth }) => maxWidth || undefined};
+  ${({ wrap, description }) =>
+    !wrap && !description
+      ? css`
+          max-height: ${({ size }) => SIZE_TO_PX[size]}px;
+        `
+      : null}
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
 
@@ -276,8 +282,8 @@ export const StyledButtonContent = styled.div`
   min-width: ${({ size }) => ICON_FROM_SIZE[size]}px;
   flex: 1;
   flex-shrink: 0;
-  padding: 4px 0;
-  min-height: ${({ size, flat }) => (flat ? SIZE_TO_PX[size] : SIZE_TO_PX[size] - 2)}px;
+  padding: ${({ size, flat }) => PADDING_FROM_SIZE[size] / 2 - (!flat ? 1 : 0)}px 0;
+
   ${({ wrap, description }) =>
     !wrap && !description
       ? css`
@@ -289,6 +295,7 @@ export const StyledButtonContent = styled.div`
 export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
   color?: TReqoreEffectColor;
   content?: TReqoreBadge | TReqoreBadge[];
+  wrap?: boolean;
 }
 
 export const ButtonBadge = memo((props: IReqoreButtonBadgeProps) => {
@@ -312,7 +319,10 @@ export const ButtonBadge = memo((props: IReqoreButtonBadgeProps) => {
   if (Array.isArray(props.content)) {
     return (
       <>
-        <ReqoreSpacer width={PADDING_FROM_SIZE[props.size]} />
+        <ReqoreSpacer
+          width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size]}
+          height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
+        />
         <ReqoreTagGroup hasBottomMargin={false}>
           {props.content.map((badge, index) => renderTag({ ...props, content: badge, key: index }))}
         </ReqoreTagGroup>
@@ -322,7 +332,10 @@ export const ButtonBadge = memo((props: IReqoreButtonBadgeProps) => {
 
   return (
     <>
-      <ReqoreSpacer width={PADDING_FROM_SIZE[props.size]} />
+      <ReqoreSpacer
+        width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size]}
+        height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
+      />
       {renderTag({ ...props, key: 0 })}
     </>
   );
@@ -410,7 +423,9 @@ const ReqoreButton = memo(
                 <StyledActiveContent wrap={wrap}>{children}</StyledActiveContent>
                 <StyledInActiveContent wrap={wrap}>{children}</StyledInActiveContent>
                 <StyledInvisibleContent wrap={wrap}>{children}</StyledInvisibleContent>
-                {badge && wrap ? <ButtonBadge content={badge} size={size} color={color} /> : null}
+                {badge && wrap ? (
+                  <ButtonBadge content={badge} size={size} color={color} wrap />
+                ) : null}
               </StyledAnimatedTextWrapper>
             )}
             {badge && !wrap ? <ButtonBadge content={badge} size={size} color={color} /> : null}

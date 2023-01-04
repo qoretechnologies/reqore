@@ -53,7 +53,7 @@ test('Renders <Dropdown /> properly', () => {
   jest.advanceTimersByTime(1);
 
   expect(document.querySelector('.reqore-button')?.getAttribute('disabled')).toBe(null);
-  expect(document.querySelectorAll('.reqore-button').length).toBe(5);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(4);
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(document.querySelectorAll('.reqore-menu-item').length).toBe(3);
 });

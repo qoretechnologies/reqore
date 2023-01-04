@@ -161,6 +161,32 @@ const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
         <ReqoreDropdown rightIcon='SunCloudyLine' caretPosition='right' {...args}>
           Custom icon with caret on right
         </ReqoreDropdown>
+        <ReqoreDropdown
+          items={[
+            {
+              selected: true,
+              label: 'Hello',
+              value: 'hello',
+              icon: 'SunCloudyLine',
+            },
+            {
+              label: 'How are ya',
+              value: 'howareya',
+              icon: 'BatteryChargeFill',
+            },
+            {
+              disabled: true,
+              label: 'i aM diSAblEd',
+              value: 'disabled',
+              icon: 'StopCircleLine',
+            },
+            {
+              label: 'With right button',
+              value: 'kek',
+              icon: 'CheckDoubleLine',
+            },
+          ]}
+        />
       </ReqoreControlGroup>
       <br />
       <ReqoreControlGroup fluid>
