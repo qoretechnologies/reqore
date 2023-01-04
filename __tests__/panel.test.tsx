@@ -110,10 +110,12 @@ test('Renders <Panel /> with actions', () => {
               { label: 'Test' },
               { actions: [{ label: 'Deep', value: 'deep' }] },
               { as: ReqoreInput },
+              { label: 'hidden', show: false },
             ]}
             bottomActions={[
               { label: 'Test', position: 'left' },
               { actions: [{ label: 'Deep', value: 'deep' }], position: 'right' },
+              { label: 'hidden', show: false },
             ]}
           >
             {' '}

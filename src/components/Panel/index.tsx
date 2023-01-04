@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -46,10 +46,12 @@ export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreToolt
   // Custom react element
   as?: React.ElementType;
   props?: any;
+  // Hide the action if the condition is false
+  show?: boolean;
 }
 
 export interface IReqorePanelBottomAction extends IReqorePanelAction {
-  position: 'left' | 'right';
+  position?: 'left' | 'right';
 }
 
 export interface IReqorePanelContent {}
@@ -301,7 +303,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }, [collapsible, _isCollapsed, onCollapseChange]);
 
     const leftBottomActions: IReqorePanelBottomAction[] = useMemo(
-      () => bottomActions.filter(({ position }) => position === 'left'),
+      () => bottomActions.filter(({ position }) => position === 'left' || !position),
       [bottomActions]
     );
 
@@ -322,6 +324,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           return (
             <ReqoreControlGroup stack>{actionOrActions.map(renderActions)}</ReqoreControlGroup>
           );
+        }
+
+        if (actionOrActions.show === false) {
+          return null;
         }
 
         const {
