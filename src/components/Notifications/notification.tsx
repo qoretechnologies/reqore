@@ -15,7 +15,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
 import { changeLightness, getNotificationIntent, getReadableColor } from '../../helpers/colors';
-import { IWithReqoreEffect, IWithReqoreMinimal } from '../../types/global';
+import { IWithReqoreEffect, IWithReqoreMinimal, IWithReqoreOpaque } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect } from '../Effect';
 import { ReqoreHeading } from '../Header';
@@ -23,7 +23,10 @@ import ReqoreIcon from '../Icon';
 
 export type IReqoreNotificationType = TReqoreIntent;
 
-export interface IReqoreNotificationProps extends IWithReqoreEffect, IWithReqoreMinimal {
+export interface IReqoreNotificationProps
+  extends IWithReqoreEffect,
+    IWithReqoreMinimal,
+    IWithReqoreOpaque {
   type?: IReqoreNotificationType;
   intent?: TReqoreIntent;
   title?: string;
@@ -38,7 +41,7 @@ export interface IReqoreNotificationProps extends IWithReqoreEffect, IWithReqore
   size?: TSizes;
 }
 
-export interface IReqoreNotificationStyle {
+export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   theme: IReqoreTheme;
   type?: IReqoreNotificationType;
   clickable?: boolean;
@@ -73,12 +76,14 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
   transition: all 0.2s ease-out;
 
   // Do not fade in the component if it's a message
-  ${({ asMessage }) =>
-    asMessage
-      ? undefined
-      : css`
-          animation: 0.2s ${fadeIn} ease-in;
-        `};
+  ${({ asMessage, theme, intent, type }) => {
+    if (asMessage) {
+      return undefined;
+    }
+    return css`
+      animation: 0.2s ${fadeIn} ease-in;
+    `;
+  }}
 
   &:not(:first-child) {
     margin-top: ${({ asMessage }) => (asMessage ? undefined : `10px`)};
@@ -93,12 +98,15 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     hasShadow,
     flat,
     minimal,
+    opaque,
   }: IReqoreNotificationStyle) => css`
     background-color: ${minimal
       ? 'transparent'
+      : opaque
+      ? changeLightness(theme.main, 0.1)
       : rgba(getNotificationIntent(theme, intent || type), 0.3)};
     border: ${flat ? 0 : '1px solid'};
-    border-color: ${getNotificationIntent(theme, intent || type)};
+    border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.2)};
 
     ${hasShadow &&
     css`
@@ -113,13 +121,13 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
         display: block;
         top: 0;
         height: 3px;
-        background-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.1)};
+        background-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.2)};
         animation-name: ${timeoutAnimation};
         animation-duration: ${timeout}ms;
       }
     `}
 
-    color: ${getReadableColor(theme, null, null, true, theme.originalMain)};
+    color: ${getReadableColor(theme, null, null, true, !opaque ? theme.originalMain : undefined)};
 
     ${clickable &&
     css`
@@ -129,7 +137,7 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
           getNotificationIntent(theme, intent || type),
           minimal ? 0.2 : 0.5
         )};
-        border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.1)};
+        border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.25)};
       }
     `}
   `}
@@ -218,6 +226,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       onFinish,
       flat,
       minimal,
+      opaque,
       size = 'normal',
     },
     ref: any
@@ -273,6 +282,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             ref={ref}
             style={styles}
             size={size}
+            opaque={opaque}
           >
             {type || intent || icon ? (
               <StyledIconWrapper type={type || intent} size={size}>

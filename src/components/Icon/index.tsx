@@ -10,12 +10,22 @@ import { isStringSize } from '../../helpers/utils';
 import { IReqoreIconName } from '../../types/icons';
 
 export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> {
-  icon: IReqoreIconName;
+  icon?: IReqoreIconName;
   color?: string;
   size?: TSizes | string;
   iconProps?: IconBaseProps;
   intent?: TReqoreIntent;
   margin?: 'right' | 'left' | 'both';
+  image?: string;
+  rounded?: boolean;
+  grayscale?: boolean;
+  blur?: number;
+  sepia?: boolean;
+  invert?: boolean;
+  opacity?: number;
+  brightness?: number;
+  contrast?: number;
+  saturate?: number;
 }
 
 export const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
@@ -23,6 +33,51 @@ export const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both'
   flex: 0 0 auto;
   vertical-align: text-bottom;
   transition: all 0.2s ease-out;
+  overflow: hidden;
+
+  border-radius: ${({ rounded }) => (rounded ? '50%' : undefined)};
+
+  ${({ grayscale }) =>
+    grayscale &&
+    css`
+      filter: grayscale(100%);
+    `};
+  ${({ blur }) =>
+    blur &&
+    css`
+      filter: blur(${blur}px);
+    `};
+  ${({ sepia }) =>
+    sepia &&
+    css`
+      filter: sepia(100%);
+    `};
+  ${({ invert }) =>
+    invert &&
+    css`
+      filter: invert(100%);
+    `};
+  ${({ opacity }) =>
+    opacity || opacity === 0
+      ? css`
+          opacity: ${opacity};
+        `
+      : undefined};
+  ${({ brightness }) =>
+    brightness &&
+    css`
+      filter: brightness(${brightness}%);
+    `};
+  ${({ contrast }) =>
+    contrast &&
+    css`
+      filter: contrast(${contrast}%);
+    `};
+  ${({ saturate }) =>
+    saturate &&
+    css`
+      filter: saturate(${saturate}%);
+    `};
 
   ${({ margin, size }) =>
     margin &&
@@ -38,6 +93,10 @@ export const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both'
           : '10px'
         : undefined};
     `}
+
+  img {
+    width: 100%;
+  }
 `;
 
 const ReqoreIcon = memo(
@@ -50,12 +109,27 @@ const ReqoreIcon = memo(
     style = {},
     iconProps,
     intent,
+    image,
     ...rest
   }: IReqoreIconProps) => {
     const theme = useContext(ReqoreThemeContext);
     const Icon: IconType = RemixIcons[`Ri${icon}`];
     const finalColor: string | undefined = intent ? theme.intents[intent] : color;
     const finalSize: string = isStringSize(size) ? ICON_FROM_SIZE[size] : size;
+
+    if (image) {
+      return (
+        <StyledIconWrapper
+          {...rest}
+          size={size}
+          margin={margin}
+          className={`${className || ''} reqore-icon`}
+          style={{ ...style, width: finalSize, height: finalSize }}
+        >
+          <img src={image} alt='' />
+        </StyledIconWrapper>
+      );
+    }
 
     if (!Icon) {
       return (

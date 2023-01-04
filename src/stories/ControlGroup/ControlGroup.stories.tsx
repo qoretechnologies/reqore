@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
 import ReqoreInput from '../../components/Input';
 import { ReqoreButton, ReqoreControlGroup, ReqoreTag } from '../../index';
-import { MinimalArg, SizeArg, argManager } from '../utils/args';
+import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
@@ -10,6 +10,7 @@ export default {
   title: 'Components/Control Group',
   argTypes: {
     ...SizeArg,
+    ...GapSizeArg,
     ...MinimalArg(),
     ...createArg('stack', {
       name: 'Stack',
@@ -67,4 +68,9 @@ Vertical.args = {
 export const Stacked = Template.bind({});
 Stacked.args = {
   stack: true,
+};
+
+export const BigGapSize = Template.bind({});
+BigGapSize.args = {
+  gapSize: 'big',
 };

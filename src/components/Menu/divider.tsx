@@ -1,7 +1,8 @@
 import React, { forwardRef } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { getReadableColor } from '../../helpers/colors';
+import { getOneLessSize, isStringSize } from '../../helpers/utils';
 import { IWithReqoreEffect, IWithReqoreSize } from '../../types/global';
 import { IReqoreEffect, StyledTextEffect } from '../Effect';
 
@@ -10,12 +11,28 @@ export interface IReqoreMenuDividerProps
     IWithReqoreEffect,
     IWithReqoreSize {
   label?: string;
+  margin?: 'left' | 'right' | 'both';
 }
 
-const StyledMenuDivider = styled(StyledTextEffect)`
+export const StyledMenuDivider = styled(StyledTextEffect)`
   width: 100%;
   padding: ${({ size }) => `${PADDING_FROM_SIZE[size]}px 0`};
   background-color: transparent;
+
+  ${({ margin, size }) =>
+    margin &&
+    css`
+      margin-left: ${margin === 'left' || margin === 'both'
+        ? isStringSize(size)
+          ? `${PADDING_FROM_SIZE[size]}px`
+          : '10px'
+        : undefined};
+      margin-right: ${margin === 'right' || margin === 'both'
+        ? isStringSize(size)
+          ? `${PADDING_FROM_SIZE[size]}px`
+          : '10px'
+        : undefined};
+    `}
 
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined)};
 `;
@@ -33,7 +50,7 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
           uppercase: true,
           spaced: 2,
           textAlign: 'center',
-          textSize: 'small',
+          textSize: getOneLessSize(size),
           weight: 'bold',
           ...effect,
         } as IReqoreEffect

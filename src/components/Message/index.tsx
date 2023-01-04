@@ -10,6 +10,7 @@ import {
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
   IWithReqoreMinimal,
+  IWithReqoreOpaque,
   IWithReqoreSize,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -29,6 +30,7 @@ export interface IReqoreMessageProps
     IWithReqoreSize,
     IReqoreIntent,
     IWithReqoreMinimal,
+    IWithReqoreOpaque,
     React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   children: any;
@@ -38,6 +40,7 @@ export interface IReqoreMessageProps
   duration?: number;
   onFinish?: () => any;
   flat?: boolean;
+  hasShadow?: boolean;
 }
 
 export interface IReqoreNotificationStyle extends IReqoreMessageProps {

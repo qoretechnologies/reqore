@@ -1,5 +1,5 @@
 import { cloneDeep, merge } from 'lodash';
-import { darken, lighten, readableColor } from 'polished';
+import { darken, getLuminance, lighten, readableColor } from 'polished';
 import { TReqoreEffectColor, TReqoreEffectColorList, TReqoreHexColor } from '../components/Effect';
 import { Colors } from '../constants/colors';
 import { DEFAULT_INTENTS, IReqoreTheme, TReqoreIntent } from '../constants/theme';
@@ -46,9 +46,7 @@ export const percentToHexAlpha = (p: number) => {
 };
 
 export const shouldDarken = (mainColor: TReqoreHexColor): boolean => {
-  const contrast = getColorByBgColor(mainColor);
-
-  return contrast === '#000000';
+  return getLuminance(mainColor) > 0.2;
 };
 
 export const getMainColor: (theme: IReqoreTheme, component: string) => TReqoreHexColor = (
