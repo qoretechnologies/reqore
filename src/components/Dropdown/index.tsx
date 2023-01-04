@@ -47,7 +47,7 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
   maxHeight,
   maxWidth,
   noArrow = true,
-  opaque,
+  transparent,
   openOnMount,
   show,
   targetElement,
@@ -90,7 +90,7 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
       maxHeight={maxHeight}
       maxWidth={maxWidth}
       noArrow={noArrow}
-      opaque={opaque}
+      transparent={transparent}
       useTargetWidth={useTargetWidth}
       component={component || ReqoreButton}
       componentProps={componentProps}

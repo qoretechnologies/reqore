@@ -76,7 +76,7 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
   transition: all 0.2s ease-out;
 
   // Do not fade in the component if it's a message
-  ${({ asMessage, theme, intent, type }) => {
+  ${({ asMessage }) => {
     if (asMessage) {
       return undefined;
     }

@@ -162,9 +162,9 @@ NoLabel.args = {
   label: undefined,
 };
 
-export const Opaque: Story<IReqorePanelProps> = Template.bind({});
-Opaque.args = {
-  opacity: 0,
+export const Transparent: Story<IReqorePanelProps> = Template.bind({});
+Transparent.args = {
+  transparent: true,
 };
 
 export const Minimal: Story<IReqorePanelProps> = Template.bind({});
