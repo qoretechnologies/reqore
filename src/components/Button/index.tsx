@@ -306,6 +306,7 @@ export const ButtonBadge = memo((props: IReqoreButtonBadgeProps) => {
         size={getOneLessSize(size)}
         badge
         color={color}
+        className='reqore-button-badge'
         minimal={!(content as IReqoreTagProps)?.effect?.gradient}
         {...(typeof content === 'string' || typeof content === 'number'
           ? { label: content }
@@ -423,12 +424,14 @@ const ReqoreButton = memo(
                 <StyledActiveContent wrap={wrap}>{children}</StyledActiveContent>
                 <StyledInActiveContent wrap={wrap}>{children}</StyledInActiveContent>
                 <StyledInvisibleContent wrap={wrap}>{children}</StyledInvisibleContent>
-                {badge && wrap ? (
+                {(badge || badge === 0) && wrap ? (
                   <ButtonBadge content={badge} size={size} color={color} wrap />
                 ) : null}
               </StyledAnimatedTextWrapper>
             )}
-            {badge && !wrap ? <ButtonBadge content={badge} size={size} color={color} /> : null}
+            {(badge || badge === 0) && !wrap ? (
+              <ButtonBadge content={badge} size={size} color={color} />
+            ) : null}
             {rightIcon && (
               <>
                 {children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}

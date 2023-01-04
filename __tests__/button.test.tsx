@@ -124,3 +124,48 @@ test('Renders <Button /> with onClick function', () => {
   fireEvent.click(getAllByText('Click')[0]);
   expect(onClick).toHaveBeenCalledTimes(1);
 });
+
+// A test that tests the onClick function of the button using fireEvent
+test('Renders <Button /> with a 0 badge', () => {
+  const onClick = jest.fn();
+  const { getAllByText } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton badge={0}>Click</ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-button-badge').length).toBe(1);
+});
+
+test('Renders <Button /> with a string badge', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton badge='test'>Click</ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-button-badge').length).toBe(1);
+});
+
+test('Renders <Button /> with a Tag props badge', () => {
+  const onClick = jest.fn();
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton badge={{ label: 0 }}>Click</ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-button-badge').length).toBe(1);
+});
