@@ -5,7 +5,8 @@ import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
 
 export type TDropdownItemOnClick = (item: IReqoreDropdownItem) => void;
-export interface IReqoreDropdownItem extends Omit<IReqoreMenuItemProps, 'onClick'> {
+export interface IReqoreDropdownItem
+  extends Omit<IReqoreMenuItemProps, 'onClick' | 'rightIcon' | 'onRightIconClick'> {
   value: any;
   label?: string;
   onClick?: TDropdownItemOnClick;
