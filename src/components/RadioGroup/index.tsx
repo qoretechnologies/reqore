@@ -1,15 +1,18 @@
-import React from "react";
-import styled from "styled-components";
-import { ReqoreCheckbox } from "../..";
-import { TSizes } from "../../constants/sizes";
-import { IReqoreCheckboxProps } from "../Checkbox";
+import React from 'react';
+import { ReqoreCheckbox, ReqoreControlGroup } from '../..';
+import { TSizes } from '../../constants/sizes';
+import { IReqoreCheckboxProps } from '../Checkbox';
+import { IReqoreControlGroupProps } from '../ControlGroup';
+import ReqoreMenuDivider from '../Menu/divider';
 
 export interface IReqoreRadioGroupItem extends IReqoreCheckboxProps {
-  value: string;
+  value?: string;
+  divider?: boolean;
 }
 
 export interface IReqoreRadioGroupProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+  extends Omit<IReqoreControlGroupProps, 'children'>,
+    Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
   items: IReqoreRadioGroupItem[];
   selected?: string;
   onSelectClick?: (value: string) => void;
@@ -18,11 +21,6 @@ export interface IReqoreRadioGroupProps
   asSwitch?: boolean;
 }
 
-const StyledRadioGroup = styled.div`
-  display: flex;
-  flex-flow: column;
-`;
-
 const ReqoreRadioGroup = ({
   items = [],
   selected,
@@ -30,23 +28,34 @@ const ReqoreRadioGroup = ({
   size,
   disabled,
   asSwitch,
+  vertical = true,
   ...rest
 }: IReqoreRadioGroupProps) => (
-  <StyledRadioGroup {...rest}>
-    {items.map(({ value, ...itemRest }) => (
-      <ReqoreCheckbox
-        asSwitch={asSwitch}
-        {...itemRest}
-        key={value}
-        checked={value === selected}
-        size={size || itemRest.size}
-        disabled={disabled || itemRest.disabled}
-        onClick={() => {
-          onSelectClick(value);
-        }}
-      />
-    ))}
-  </StyledRadioGroup>
+  <ReqoreControlGroup {...rest} vertical={vertical}>
+    {items.map(({ value, divider, ...itemRest }) =>
+      divider ? (
+        <ReqoreMenuDivider
+          {...itemRest}
+          size={size || itemRest.size}
+          effect={{ ...itemRest.effect, textAlign: 'left' }}
+          margin='left'
+          label={vertical ? itemRest.label : undefined}
+        />
+      ) : (
+        <ReqoreCheckbox
+          asSwitch={asSwitch}
+          {...itemRest}
+          key={value}
+          checked={value === selected}
+          size={size || itemRest.size}
+          disabled={disabled || itemRest.disabled}
+          onClick={() => {
+            onSelectClick(value);
+          }}
+        />
+      )
+    )}
+  </ReqoreControlGroup>
 );
 
 export default ReqoreRadioGroup;

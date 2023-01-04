@@ -2,18 +2,25 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import { IReqorePopoverProps } from '../../components/Popover';
 import usePopover from '../../hooks/usePopover';
-import { ReqoreButton, ReqoreMessage, ReqorePanel, ReqorePopover } from '../../index';
-import { argManager } from '../utils/args';
+import {
+  ReqoreButton,
+  ReqoreControlGroup,
+  ReqoreMessage,
+  ReqorePanel,
+  ReqorePopover,
+  ReqoreSpacer,
+} from '../../index';
+import { argManager, FlatArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePopoverProps>();
 
 export default {
   title: 'Components/Popover',
   argTypes: {
-    ...createArg('opaque', {
+    ...createArg('transparent', {
       defaultValue: false,
-      name: 'Opaque',
-      description: 'Makes the popover opaque',
+      name: 'Transparent',
+      description: 'Makes the popover transparent',
       type: 'boolean',
     }),
     ...createArg('blur', {
@@ -40,6 +47,10 @@ export default {
       description: 'The content of the popover',
       type: 'string',
     }),
+    ...FlatArg,
+  },
+  args: {
+    flat: true,
   },
 } as Meta<IReqorePopoverProps>;
 
@@ -95,23 +106,91 @@ const HoverStayButton = (args: any) => {
 
 const Template: Story<IReqorePopoverProps> = (args: IReqorePopoverProps) => {
   return (
-    <>
+    <ReqoreControlGroup vertical gapSize='huge'>
       <HoverButton {...args} />
-      <br />
       <ClickButton {...args} />
-      <br />
       <DelayButton {...args} />
-      <br />
       <HoverStayButton {...args} />
-      <br />
-      <ReqorePopover {...args} component={ReqoreButton} isReqoreComponent openOnMount>
+      {typeof args.content === 'string' && (
+        <>
+          <ReqoreSpacer height={100} />
+          <ReqorePopover
+            {...args}
+            component={ReqoreButton}
+            isReqoreComponent
+            openOnMount
+            title='I opened on my own'
+            icon='CactusFill'
+            intent='success'
+            placement='top'
+          >
+            Full popover
+          </ReqorePopover>
+          <ReqoreControlGroup>
+            <ReqoreSpacer width={200} />
+            <ReqorePopover
+              {...args}
+              component={ReqoreButton}
+              isReqoreComponent
+              openOnMount
+              intent='info'
+              minimal
+              placement='left'
+            >
+              Minimal popover
+            </ReqorePopover>
+          </ReqoreControlGroup>
+          <ReqorePopover
+            {...args}
+            component={ReqoreButton}
+            isReqoreComponent
+            openOnMount
+            icon='CactusFill'
+            effect={{
+              gradient: {
+                colors: {
+                  0: 'warning',
+                  100: 'warning:darken:2',
+                },
+              },
+              spaced: 2,
+              uppercase: true,
+              weight: 'thick',
+            }}
+            placement='right'
+          >
+            Effect popover
+          </ReqorePopover>
+          <ReqorePopover
+            {...args}
+            component={ReqoreButton}
+            isReqoreComponent
+            openOnMount
+            transparent
+            placement='right'
+          >
+            Transparent popover
+          </ReqorePopover>
+        </>
+      )}
+      <ReqorePopover
+        {...args}
+        component={ReqoreButton}
+        isReqoreComponent
+        openOnMount
+        placement='bottom'
+      >
         Auto open popover
       </ReqorePopover>
-    </>
+    </ReqoreControlGroup>
   );
 };
 
 export const Basic = Template.bind({});
+export const NotFlat = Template.bind({});
+NotFlat.args = {
+  flat: false,
+};
 export const CustomContent = Template.bind({});
 CustomContent.args = {
   content: (

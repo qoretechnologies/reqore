@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -8,14 +8,14 @@ import {
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   TEXT_FROM_SIZE,
-  TSizes,
+  TSizes
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
   getMainBackgroundColor,
-  getReadableColor,
+  getReadableColor
 } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -26,7 +26,7 @@ import {
   IWithReqoreCustomTheme,
   IWithReqoreFlat,
   IWithReqoreSize,
-  IWithReqoreTooltip,
+  IWithReqoreTooltip
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
@@ -86,6 +86,7 @@ export interface IReqorePanelProps
   contentSize?: TSizes;
   contentEffect?: IReqoreEffect;
   headerEffect?: IReqoreEffect;
+  transparent?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -133,7 +134,7 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
               : `${rgba(
                   changeLightness(
                     intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-                    0.3
+                    0.25
                   ),
                   opacity
                 )}`};
@@ -417,6 +418,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       return newContentEffect;
     }, [intent, theme, contentEffect, interactive]);
 
+    const opacity = rest.transparent ? 0 : rest.opacity;
+
     return (
       <StyledPanel
         {...rest}
@@ -430,6 +433,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         interactive={interactive}
         theme={theme}
         effect={transformedContentEffect}
+        opacity={opacity}
       >
         {hasTitleBar && (
           <StyledPanelTitle
@@ -440,8 +444,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             onClick={handleCollapseClick}
             theme={theme}
             contentSize={contentSize}
-            opacity={rest.opacity ?? (minimal ? 0 : 1)}
-            noHorizontalPadding={rest.opacity === 0}
+            opacity={opacity ?? (minimal ? 0 : 1)}
+            noHorizontalPadding={opacity === 0}
           >
             <StyledPanelTitleHeader>
               {icon && (
@@ -509,7 +513,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             padded={padded}
             minimal={minimal}
             contentSize={contentSize}
-            noHorizontalPadding={rest.opacity === 0}
+            noHorizontalPadding={opacity === 0}
           >
             {children}
           </StyledPanelContent>
@@ -519,8 +523,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             flat={flat}
             className='reqore-panel-bottom-actions'
             theme={theme}
-            opacity={rest.opacity ?? (minimal ? 0 : 1)}
-            noHorizontalPadding={rest.opacity === 0}
+            opacity={opacity ?? (minimal ? 0 : 1)}
+            noHorizontalPadding={opacity === 0}
           >
             <ReqoreControlGroup>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
             <ReqoreControlGroup>{rightBottomActions.map(renderActions)}</ReqoreControlGroup>

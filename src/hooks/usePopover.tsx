@@ -3,6 +3,13 @@ import { MutableRefObject, useContext, useEffect, useMemo, useRef } from 'react'
 import { useUnmount, useUpdateEffect } from 'react-use';
 import shortid from 'shortid';
 import PopoverContext from '../context/PopoverContext';
+import {
+  IReqoreIntent,
+  IWithReqoreEffect,
+  IWithReqoreFlat,
+  IWithReqoreMinimal,
+} from '../types/global';
+import { IReqoreIconName } from '../types/icons';
 
 const startEvents = {
   hover: 'mouseenter',
@@ -18,7 +25,11 @@ const endEvents = {
   focus: null,
 };
 
-export interface IPopover {
+export interface IPopover
+  extends IReqoreIntent,
+    IWithReqoreMinimal,
+    IWithReqoreEffect,
+    IWithReqoreFlat {
   content?: JSX.Element | string | undefined;
   handler?: 'hover' | 'click' | 'focus' | 'hoverStay';
   placement?: Placement;
@@ -30,9 +41,11 @@ export interface IPopover {
   closeOnAnyClick?: boolean;
   delay?: number;
   blur?: number;
-  opaque?: boolean;
+  transparent?: boolean;
   maxWidth?: string;
   maxHeight?: string;
+  icon?: IReqoreIconName;
+  title?: string;
 }
 
 export interface IPopoverOptions extends IPopover {

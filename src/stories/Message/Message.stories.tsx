@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
 import ReqoreMessage, { IReqoreMessageProps } from '../../components/Message';
-import { argManager, FlatArg, IntentArg, SizeArg } from '../utils/args';
+import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMessageProps>();
 
@@ -50,6 +50,12 @@ export const Minimal: Story<IReqoreMessageProps> = Template.bind({});
 Minimal.args = {
   minimal: true,
   intent: 'danger',
+};
+
+export const Opaque: Story<IReqoreMessageProps> = Template.bind({});
+Opaque.args = {
+  opaque: true,
+  intent: 'info',
 };
 
 export const CustomTheme: Story<IReqoreMessageProps> = Template.bind({});

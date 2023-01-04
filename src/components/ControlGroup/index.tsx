@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 
 export interface IReqoreControlGroupProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -10,6 +10,7 @@ export interface IReqoreControlGroupProps extends React.HTMLAttributes<HTMLDivEl
   children: any;
   fluid?: boolean;
   rounded?: boolean;
+  gapSize?: TSizes;
   /*
    * Whether the contents of the control group should be stacked vertically
    */
@@ -39,7 +40,8 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
           > .reqore-tag,
           > * {
             &:not(:last-child) {
-              margin-bottom: ${({ stack }) => (!stack ? '5px' : undefined)};
+              margin-bottom: ${({ stack, gapSize }) =>
+                !stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined};
               border-bottom: ${({ stack }) => (!stack ? undefined : 0)};
             }
 
@@ -61,7 +63,8 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
           }
 
           > .reqore-control-wrapper:not(:last-child) .reqore-control {
-            margin-bottom: ${({ stack }) => (!stack ? '5px' : undefined)};
+            margin-bottom: ${({ stack, gapSize }) =>
+              !stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined};
             border-bottom: ${({ stack }) => (!stack ? undefined : 0)};
           }
         `
@@ -71,7 +74,8 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
           > .reqore-tag,
           > * {
             &:not(:last-child) {
-              margin-right: ${({ stack }) => (!stack ? '5px' : undefined)};
+              margin-right: ${({ stack, gapSize }) =>
+                !stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined};
               border-right: ${({ stack }) => (!stack ? undefined : 0)};
             }
 
@@ -99,6 +103,7 @@ const ReqoreControlGroup = ({
   className,
   minimal,
   size = 'normal',
+  gapSize = 'normal',
   fluid,
   rounded = true,
   ...rest
@@ -106,6 +111,7 @@ const ReqoreControlGroup = ({
   <StyledReqoreControlGroup
     {...rest}
     size={size}
+    gapSize={gapSize}
     rounded={rounded}
     fluid={fluid}
     className={`${className || ''} reqore-control-group`}

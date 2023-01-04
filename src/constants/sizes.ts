@@ -107,6 +107,14 @@ export const RADIUS_FROM_SIZE = {
   huge: 9,
 };
 
+export const GAP_FROM_SIZE = {
+  tiny: 1,
+  small: 3,
+  normal: 5,
+  big: 18,
+  huge: 30,
+};
+
 export const ICON_FROM_HEADER_SIZE = {
   1: 23,
   2: 20,

@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import ReqoreRadioGroup, { IReqoreRadioGroupProps } from '../../components/RadioGroup';
-import { argManager, DisabledArg } from '../utils/args';
+import { DisabledArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreRadioGroupProps>();
 
@@ -14,6 +14,7 @@ export default {
       name: 'As Switch',
       description: 'If the radio group should be rendered as a switch',
     }),
+    ...SizeArg,
     ...DisabledArg,
   },
 } as Meta<IReqoreRadioGroupProps>;
@@ -34,8 +35,30 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
           value: 'opt2',
         },
         {
-          label: 'Option 3',
+          divider: true,
+          label: 'Divider',
+        },
+        {
+          label: 'Beautiful option 3 with gradient effect',
           value: 'opt3',
+          effect: {
+            gradient: {
+              colors: {
+                0: 'info',
+                100: 'info:lighten:3',
+              },
+            },
+            weight: 'thick',
+          },
+        },
+        {
+          label: 'Custom Image Option',
+          value: 'customOpt',
+          image:
+            'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
+        },
+        {
+          divider: true,
         },
         {
           label: 'Read Only Option',
@@ -55,6 +78,10 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
 };
 
 export const Basic = Template.bind({});
+export const Horizontal = Template.bind({});
+Horizontal.args = {
+  vertical: false,
+};
 export const Switch = Template.bind({});
 Switch.args = {
   asSwitch: true,

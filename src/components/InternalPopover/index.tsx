@@ -1,15 +1,44 @@
 import { isString } from 'lodash';
+import { rgba } from 'polished';
 import React, { MutableRefObject, useContext, useEffect, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
 import styled, { css } from 'styled-components';
+import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { IPopoverData } from '../../containers/PopoverProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import PopoverContext from '../../context/PopoverContext';
 import { fadeIn } from '../../helpers/animations';
-import { getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getNotificationIntent,
+} from '../../helpers/colors';
 import { StyledBackdrop } from '../Drawer';
-import { TReqoreHexColor } from '../Effect';
+import ReqoreMessage from '../Message';
+
+const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
+  rgba(
+    effect
+      ? changeLightness(
+          getColorFromMaybeString(
+            theme,
+            effect.gradient.borderColor || Object.values(effect.gradient.colors)[0]
+          ),
+          0.04
+        )
+      : intent
+      ? changeLightness(getNotificationIntent(theme, intent), flat ? 0.1 : 0.2)
+      : theme.popover?.main ||
+        rgba(
+          changeLightness(
+            flat ? theme.main : getNotificationIntent(theme, intent),
+            flat ? 0.1 : 0.2
+          ),
+          isOpaque ? 1 : 0.3
+        ),
+    dim ? 0.3 : 1
+  );
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
@@ -20,15 +49,10 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   &:before {
     content: '';
     display: block;
-    width: 10px;
-    height: 10px;
+    width: 0;
+    height: 0;
     position: absolute;
     z-index: -1;
-    transform: rotate(45deg);
-    ${({ theme, opaque }) => css`
-      background-color: ${theme.popover?.main || theme.main};
-      box-shadow: ${opaque ? undefined : 'rgba(31, 26, 34, 0.6) 0px 0px 4px'};
-    `}
   }
 `;
 
@@ -36,40 +60,65 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   animation: 0.2s ${fadeIn} ease-out;
   max-width: ${({ maxWidth = '80vw' }) => maxWidth};
   max-height: ${({ maxHeight = '80vh' }) => maxHeight};
+  z-index: 999999;
+  border-radius: ${RADIUS_FROM_SIZE.normal}px;
 
-  ${({ theme, opaque }) => {
-    const defaultColor: TReqoreHexColor = theme.popover?.main || theme.main;
-
-    if (opaque) {
-      return css`
-        z-index: 999999;
-        background-color: transparent;
-      `;
-    }
-
-    return css`
-      z-index: 999999;
-      background-color: ${defaultColor};
-      color: ${getReadableColor(theme, undefined, undefined, false, defaultColor)};
-      border-radius: 5.5px;
-      box-shadow: rgba(31, 26, 34, 0.6) 0px 0px 4px;
-    `;
-  }}
+  ${({ transparent }) =>
+    !transparent &&
+    css`
+      box-shadow: rgba(31, 26, 34, 0.7) 0px 0px 10px;
+    `}
 
   &[data-popper-placement^='top'] > ${StyledPopoverArrow} {
     bottom: -5px;
+
+    &:before {
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid ${(props) => getPopoverArrowColor(props)};
+
+      top: 5px;
+      left: -5px;
+    }
   }
 
   &[data-popper-placement^='bottom'] > ${StyledPopoverArrow} {
     top: -5px;
+
+    &:before {
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid ${(props) => getPopoverArrowColor(props)};
+
+      top: -5px;
+      left: -5px;
+    }
   }
 
   &[data-popper-placement^='left'] > ${StyledPopoverArrow} {
     right: -5px;
+
+    &:before {
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-left: 10px solid ${(props) => getPopoverArrowColor(props)};
+
+      top: -5px;
+      left: 5px;
+    }
   }
 
   &[data-popper-placement^='right'] > ${StyledPopoverArrow} {
     left: -5px;
+
+    &:before {
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 10px solid ${(props) => getPopoverArrowColor(props)};
+
+      top: -5px;
+      left: -5px;
+    }
   }
 
   &[data-popper-reference-hidden='true'] {
@@ -81,17 +130,9 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
 const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   width: 100%;
   height: 100%;
-  padding: ${({ isString }) => (isString ? '8px' : '0px')};
   z-index: 20;
   position: relative;
   overflow: hidden;
-  background-color: ${({ theme, opaque }) =>
-    opaque ? 'transparent' : theme.popover?.main || theme.main};
-  border-radius: ${({ opaque }) => (opaque ? undefined : '3.5px')};
-
-  .reqore-popover-text {
-    font-size: 14px;
-  }
 `;
 
 export interface IReqoreInternalPopoverProps extends IPopoverData {}
@@ -103,10 +144,16 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   placement,
   noArrow,
   useTargetWidth,
-  opaque,
+  transparent,
   maxWidth,
   maxHeight,
   blur,
+  intent,
+  title,
+  icon,
+  minimal,
+  flat = true,
+  effect,
 }) => {
   const { removePopover, updatePopover, uiScale } = useContext(PopoverContext);
   const [popperElement, setPopperElement] = useState(null);
@@ -165,7 +212,12 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
       <StyledPopoverWrapper
         maxWidth={maxWidth}
         maxHeight={maxHeight}
-        opaque={opaque}
+        transparent={transparent}
+        effect={effect}
+        isOpaque={!transparent && !minimal}
+        intent={intent}
+        flat={flat}
+        dim={flat && !transparent && !effect && minimal}
         className='reqore-popover-content'
         ref={(el) => {
           setPopperElement(el);
@@ -178,17 +230,23 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
         }}
         {...attributes.popper}
       >
-        {!noArrow && (
-          <StyledPopoverArrow
-            opaque={opaque}
-            ref={setArrowElement}
-            style={styles.arrow}
-            data-popper-arrow
-          />
-        )}
-        <StyledPopoverContent isString={isString(content)} opaque={opaque}>
+        {!noArrow && !transparent ? (
+          <StyledPopoverArrow ref={setArrowElement} style={styles.arrow} data-popper-arrow />
+        ) : null}
+        <StyledPopoverContent isString={isString(content)}>
           {isString(content) ? (
-            <span className='reqore-popover-text'>{content}</span>
+            <ReqoreMessage
+              opaque={!transparent && !minimal}
+              className='reqore-popover-text'
+              intent={intent}
+              title={title}
+              icon={icon}
+              minimal={transparent}
+              flat={flat || transparent}
+              effect={effect}
+            >
+              {content}
+            </ReqoreMessage>
           ) : (
             <>
               {React.Children.map(content, (child) =>

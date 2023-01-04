@@ -1,20 +1,27 @@
 import { rgba } from 'polished';
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
-import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useTooltip } from '../../hooks/useTooltip';
 import { DisabledElement, ReadOnlyElement } from '../../styles';
-import { IReqoreDisabled, IReqoreReadOnly, TReqoreTooltipProp } from '../../types/global';
+import {
+  IReqoreDisabled,
+  IReqoreReadOnly,
+  IWithReqoreEffect,
+  TReqoreTooltipProp,
+} from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import { ReqoreTextEffect } from '../Effect';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreCheckboxProps
   extends React.HTMLAttributes<HTMLDivElement>,
     IReqoreDisabled,
-    IReqoreReadOnly {
+    IReqoreReadOnly,
+    IWithReqoreEffect {
   label?: string;
   labelDetail?: any;
   labelDetailPosition?: 'left' | 'right';
@@ -27,11 +34,34 @@ export interface IReqoreCheckboxProps
   asSwitch?: boolean;
   uncheckedIcon?: IReqoreIconName;
   checkedIcon?: IReqoreIconName;
+  image?: string;
 }
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
   theme: IReqoreTheme;
 }
+
+const StyledSwitchToggle = styled.div`
+  transition: all 0.2s ease-in-out;
+  content: '';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  height: ${({ size }) => SIZE_TO_PX[size] - 13}px;
+  width: ${({ size }) => SIZE_TO_PX[size] - 13}px;
+  top: 50%;
+  transform: translateY(-50%);
+  left: ${({ checked, size }) =>
+    !checked ? '5px' : `${SIZE_TO_PX[size] * 1.8 - (SIZE_TO_PX[size] - 7)}px`};
+  border-radius: 100%;
+  background-color: ${({ theme, checked, transparent }) =>
+    transparent
+      ? 'transparent'
+      : !checked
+      ? rgba(getReadableColor(theme, undefined, undefined), 0.2)
+      : getReadableColor(theme, undefined, undefined)};
+`;
 
 const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
   transition: all 0.2s ease-out;
@@ -42,32 +72,14 @@ const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
 
   border: 1px solid
     ${({ theme, checked }) =>
-      rgba(getReadableColor(theme, undefined, undefined), checked ? 0.6 : 0.3)};
+      rgba(getReadableColor(theme, undefined, undefined), checked ? 0.8 : 0.2)};
   border-radius: 50px;
 
-  margin-right: ${({ labelPosition }) => labelPosition === 'right' && '8px'};
-  margin-left: ${({ labelPosition }) => labelPosition === 'left' && '8px'};
+  margin-right: ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  margin-left: ${({ size }) => PADDING_FROM_SIZE[size]}px;
 
   background-color: ${({ theme, checked }) =>
-    checked ? rgba(getReadableColor(theme, undefined, undefined), 0.2) : 'transparent'};
-
-  &::before {
-    transition: all 0.2s ease-in-out;
-    content: '';
-    display: block;
-    position: absolute;
-    height: ${({ size }) => SIZE_TO_PX[size] - 13}px;
-    width: ${({ size }) => SIZE_TO_PX[size] - 13}px;
-    top: 50%;
-    transform: translateY(-50%);
-    left: ${({ checked, size }) =>
-      !checked ? '5px' : `${SIZE_TO_PX[size] * 1.8 - (SIZE_TO_PX[size] - 7)}px`};
-    border-radius: 100%;
-    background-color: ${({ theme, checked }) =>
-      !checked
-        ? rgba(getReadableColor(theme, undefined, undefined), 0.2)
-        : getReadableColor(theme, undefined, undefined)};
-  }
+    checked ? rgba(getReadableColor(theme, undefined, undefined), 0.1) : 'transparent'};
 `;
 
 const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
@@ -122,6 +134,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       uncheckedIcon = 'CheckboxBlankCircleLine',
       checkedIcon = 'CheckboxCircleFill',
       readOnly,
+      effect,
+      image,
       ...rest
     }: IReqoreCheckboxProps,
     ref
@@ -143,23 +157,37 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         {label && labelPosition === 'left' ? (
           <>
             {labelDetailPosition === 'left' && labelDetail}
-            <span>{label}</span>
+            <ReqoreTextEffect
+              effect={{ ...effect, interactive: !disabled && !readOnly && !checked }}
+            >
+              {label}
+            </ReqoreTextEffect>
             {labelDetailPosition === 'right' && labelDetail}
           </>
         ) : null}
         {asSwitch ? (
-          <StyledSwitch size={size} labelPosition={labelPosition} checked={checked} />
+          <StyledSwitch size={size} labelPosition={labelPosition} checked={checked}>
+            <StyledSwitchToggle size={size} checked={checked} transparent={!!image}>
+              {image ? <ReqoreIcon size={size} image={image} grayscale={!checked} /> : null}
+            </StyledSwitchToggle>
+          </StyledSwitch>
         ) : (
           <ReqoreIcon
             size={size}
-            icon={checked ? checkedIcon : uncheckedIcon}
-            margin={labelPosition}
+            icon={!image ? (checked ? checkedIcon : uncheckedIcon) : undefined}
+            image={image}
+            grayscale={image ? !checked : undefined}
+            margin='both'
           />
         )}
         {label && labelPosition === 'right' ? (
           <>
             {labelDetailPosition === 'left' && labelDetail}
-            <span>{label}</span>
+            <ReqoreTextEffect
+              effect={{ ...effect, interactive: !disabled && !readOnly && !checked }}
+            >
+              {label}
+            </ReqoreTextEffect>
             {labelDetailPosition === 'right' && labelDetail}
           </>
         ) : null}

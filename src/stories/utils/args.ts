@@ -110,6 +110,19 @@ export const SizeArg = {
   }),
 };
 
+export const GapSizeArg = {
+  ...argManager<any>().createArg('gapSize', {
+    control: 'select',
+    description: 'The gap size of the elements',
+    options: ['tiny', 'small', 'normal', 'big', 'huge'] as TSizes[],
+    name: 'Gap Size',
+    defaultValue: 'normal' as TSizes,
+    table: {
+      defaultValue: { summary: 'normal' },
+    },
+  }),
+};
+
 export const IntentArg = {
   ...argManager<any>().createArg('intent', {
     control: 'select',

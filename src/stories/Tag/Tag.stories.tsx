@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup } from '../../index';
-import { SizeArg, argManager } from '../utils/args';
+import { argManager, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
@@ -58,7 +58,7 @@ export default {
 
 const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }) => {
   return (
-    <ReqoreTagGroup columns={columns} size={args.size}>
+    <ReqoreTagGroup columns={columns} size={args.size} gapSize={args.gapSize}>
       <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label={1} />
       <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label='Basic Tag' />
       <ReqoreTag
@@ -185,6 +185,8 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
 };
 
 export const Basic = Template.bind({});
+export const BigGapSize = Template.bind({});
+BigGapSize.args = { gapSize: 'big' };
 export const Badge = Template.bind({});
 Badge.args = { badge: true };
 

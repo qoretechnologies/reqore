@@ -151,7 +151,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   overflow: hidden;
   vertical-align: middle;
   border: ${({ theme, color, flat }) =>
-    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.05)}` : 0};
+    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.2)}` : 0};
   padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
@@ -206,12 +206,12 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                 minimal ? `#00000030` : changeLightness(getButtonMainColor(theme, color), 0.05)};
               color: ${({ theme, color, minimal }) =>
                 getReadableColor(
-                  { main: minimal ? '#00000030' : getButtonMainColor(theme, color) },
+                  { main: minimal ? theme.originalMain : getButtonMainColor(theme, color) },
                   undefined,
                   undefined
                 )};
               border-color: ${({ flat, theme, color }) =>
-                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
+                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
 
               ${animate &&
               css`
