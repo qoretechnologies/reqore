@@ -1,11 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
 import { StyledTag } from '.';
-import { TSizes } from '../../constants/sizes';
+import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 
 export interface IReqoreTagGroup extends React.HTMLAttributes<HTMLDivElement> {
   children: any;
   size?: TSizes;
+  gapSize?: TSizes;
   columns?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
   hasBottomMargin?: boolean;
 }
@@ -15,7 +16,7 @@ const StyledTagGroup = styled.div`
 
   ${StyledTag} {
     &:not(:last-child) {
-      margin-right: 5px;
+      margin-right: ${({ gapSize }: IReqoreTagGroup) => `${GAP_FROM_SIZE[gapSize]}px`};
     }
 
     margin-bottom: ${({ hasBottomMargin }) => (hasBottomMargin ? '5px' : '0px')};
@@ -25,6 +26,7 @@ const StyledTagGroup = styled.div`
 const ReqoreTagGroup = ({
   children,
   size,
+  gapSize = 'normal',
   className,
   columns,
   hasBottomMargin = true,
@@ -32,6 +34,7 @@ const ReqoreTagGroup = ({
 }: IReqoreTagGroup) => (
   <StyledTagGroup
     {...rest}
+    gapSize={gapSize}
     hasBottomMargin={hasBottomMargin}
     className={`${className || ''} reqore-tag-group`}
   >
