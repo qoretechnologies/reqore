@@ -12,6 +12,7 @@ export interface IReqoreContext {
   readonly isMobileOrTablet?: boolean;
   readonly getAndIncreaseZIndex?: () => number;
   readonly animations?: IReqoreOptions['animations'];
+  readonly closePopoversOnEscPress?: boolean;
 }
 
 export default createContext<IReqoreContext>({
@@ -23,4 +24,5 @@ export default createContext<IReqoreContext>({
     buttons: true,
     dialogs: true,
   },
+  closePopoversOnEscPress: true,
 });

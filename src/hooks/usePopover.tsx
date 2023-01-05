@@ -122,12 +122,6 @@ const usePopover = ({
   };
 
   const _removePopover = () => {
-    console.log('REMOVING POPOVER');
-    if (rest?.blur > 0) {
-      targetElement.style.position = 'initial';
-      targetElement.style.zIndex = 'initial';
-    }
-
     cancelTimeout();
     removePopover?.(current);
   };
@@ -164,7 +158,6 @@ const usePopover = ({
       targetElement.addEventListener(startEvent, _addPopover);
 
       if (endEvent) {
-        console.log('ADDING REMOVE POPOVER EVENT', startEvent, endEvent);
         targetElement.addEventListener(endEvent, _removePopover);
       }
 

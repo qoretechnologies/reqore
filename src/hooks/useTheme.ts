@@ -14,11 +14,16 @@ export interface IReqoreCustomTheme extends Partial<Omit<IReqoreTheme, 'main' | 
 }
 
 export const useReqoreTheme = (
-  element: string,
+  element?: string,
   customTheme: IReqoreCustomTheme = {},
   intent?: TReqoreIntent
 ) => {
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
+
+  if (!element) {
+    return theme;
+  }
+
   let _customTheme: IReqoreCustomTheme = cloneDeep(customTheme);
 
   if (_customTheme.main) {

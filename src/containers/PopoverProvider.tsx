@@ -3,6 +3,7 @@ import React, { MutableRefObject, useCallback, useEffect, useState } from 'react
 import Popover from '../components/InternalPopover';
 import PopoverContext from '../context/PopoverContext';
 import { IPopoverOptions } from '../hooks/usePopover';
+import { useReqore } from '../hooks/useReqore';
 
 export interface IReqorePopoverProviderProps {
   children: any;
@@ -16,6 +17,7 @@ export interface IPopoverData extends IPopoverOptions {
 
 const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiScale }) => {
   const [popovers, setPopovers] = useState<IPopoverData[]>([]);
+  const { closePopoversOnEscPress } = useReqore();
 
   const handleClick = useCallback(
     (event: MouseEvent) => {
@@ -27,8 +29,6 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
             !popperRef.current.contains(event.target) &&
             !targetElement?.contains(event.target as Node))
         ) {
-          targetElement.style.position = 'initial';
-          targetElement.style.zIndex = 'initial';
           removePopover(id);
         }
       });
@@ -36,21 +36,52 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
     [popovers]
   );
 
+  // Close last popover when ESC is pressed
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        const lastPopover = popovers[popovers.length - 1];
+
+        if (lastPopover) {
+          removePopover(lastPopover.id);
+        }
+      }
+    },
+    [popovers]
+  );
+
   const removePopover = (id: string) => {
-    setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== id));
+    // Get the popover
+    const popover = popovers.find((p) => p.id === id);
+
+    if (popover) {
+      // Remove the blur
+      if (popover.blur > 0) {
+        popover.targetElement.style.position = 'initial';
+        popover.targetElement.style.zIndex = 'initial';
+      }
+      // Remove the popover
+      setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== id));
+    }
   };
 
   useEffect(() => {
     document.addEventListener('click', handleClick);
 
+    if (closePopoversOnEscPress) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
     return () => {
       document.removeEventListener('click', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [popovers]);
 
   useEffect(() => {
     if (!size(popovers)) {
       document.removeEventListener('click', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
     }
   }, [popovers]);
 

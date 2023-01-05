@@ -18,6 +18,7 @@ export interface IReqoreOptions {
     buttons?: boolean;
     dialogs?: boolean;
   };
+  closePopoversOnEscPress?: boolean;
 }
 export interface IReqoreUIProviderProps {
   children?: any;

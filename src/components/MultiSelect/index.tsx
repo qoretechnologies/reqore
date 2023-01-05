@@ -1,5 +1,6 @@
 import { size } from 'lodash';
 import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useUpdateEffect } from 'react-use';
 import { ReqoreDropdown, ReqoreInput } from '../..';
 import { TSizes } from '../../constants/sizes';
 import { IPopoverControls } from '../../hooks/usePopover';
@@ -85,9 +86,8 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
     const [query, setQuery] = useState<string>('');
     const popoverData = useRef<IPopoverControls>(undefined);
 
-    useEffect(() => {
+    useUpdateEffect(() => {
       onValueChange?.(_value);
-      console.log('THE CURRENT VALUE', _value);
     }, [_value]);
 
     useEffect(() => {
@@ -112,12 +112,10 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
 
     const addRemoveItem = useCallback(
       (item: TReqoreMultiSelectItem): void => {
-        console.log('THE CURRENT VALUE AFTER PRESSING ENTER', _value, item);
         if (_value.includes(item.value)) {
           setValue(_value.filter((v) => v !== item.value));
         } else {
           setValue([..._value, item.value]);
-          console.log('NEW STATE', [..._value, item.value]);
         }
       },
       [_value, value]
@@ -167,7 +165,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
         selected: _value.includes(item.value),
       }));
 
-      if (!size(filteredItems)) {
+      if (query && !size(filteredItems)) {
         filteredItems = [
           { label: 'No existing items found', readOnly: true, minimal: true, icon: 'ForbidLine' },
         ];
@@ -258,12 +256,16 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
             onClearClick={() => setQuery('')}
             value={query}
             onItemSelect={handleItemSelect}
-            placeholder='Type to search or create an item...'
+            placeholder={
+              canCreateItems ? 'Type to search or create an item...' : 'Type to search...'
+            }
             onChange={(e: any) => setQuery(e.target.value)}
             items={
               size(allItems)
                 ? allItems
-                : [{ label: 'No items found', readOnly: true, minimal: true, icon: 'ForbidLine' }]
+                : canCreateItems
+                ? [{ label: 'No items exist', readOnly: true, minimal: true, icon: 'ForbidLine' }]
+                : []
             }
             useTargetWidth
           />
