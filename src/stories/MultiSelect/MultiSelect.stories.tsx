@@ -4,7 +4,7 @@ import { IReqoreMultiSelectProps, ReqoreMultiSelect } from '../../components/Mul
 import { MultiSelectItems } from '../../mock/multiSelect';
 import { FlatArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
-const { createArg, disableArg } = argManager<IReqoreMultiSelectProps>();
+const { createArg } = argManager<IReqoreMultiSelectProps>();
 
 export default {
   title: 'Components/MultiSelect',
