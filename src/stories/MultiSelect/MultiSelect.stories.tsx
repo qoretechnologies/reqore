@@ -45,7 +45,6 @@ const Template: Story<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProps)
       {...args}
       onValueChange={setSelected}
       enterKeySelects
-      openOnMount
       selectorProps={{
         listHeight: '600px',
         ...args.selectorProps,
@@ -59,6 +58,11 @@ export const Basic = Template.bind({});
 export const Empty = Template.bind({});
 Empty.args = {
   value: [],
+};
+
+export const AutoOpen = Template.bind({});
+AutoOpen.args = {
+  openOnMount: true,
 };
 
 export const Flat = Template.bind({});

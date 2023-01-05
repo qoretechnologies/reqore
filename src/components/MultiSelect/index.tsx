@@ -255,6 +255,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
             component={ReqoreInput}
             onClearClick={() => setQuery('')}
             value={query}
+            isDefaultOpen={openOnMount}
             onItemSelect={handleItemSelect}
             placeholder={
               canCreateItems ? 'Type to search or create an item...' : 'Type to search...'
