@@ -27,6 +27,31 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
   return (
     <>
       <ReqoreControlGroup>
+        <ReqoreInput {...args} placeholder='Reqore Input' onChange={handleValueChange} />
+        <ReqoreInput {...args} placeholder='Minimal Input' minimal onChange={handleValueChange} />
+        <ReqoreInput
+          {...args}
+          placeholder='Flat Input'
+          flat
+          tooltip="I'm a tooltip"
+          onChange={handleValueChange}
+        />
+        <ReqoreInput
+          {...args}
+          placeholder='Clearable Input'
+          onClearClick={handleValueClear}
+          onChange={handleValueChange}
+        />
+        <ReqoreInput {...args} placeholder='Disabled Input' disabled onChange={handleValueChange} />
+        <ReqoreInput
+          {...args}
+          placeholder='Read Only Input'
+          readOnly
+          onChange={handleValueChange}
+        />
+      </ReqoreControlGroup>
+      <br />
+      <ReqoreControlGroup>
         <ReqoreInput
           {...args}
           placeholder='Reqore Input'

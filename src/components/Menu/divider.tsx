@@ -7,11 +7,12 @@ import { IWithReqoreEffect, IWithReqoreSize } from '../../types/global';
 import { IReqoreEffect, StyledTextEffect } from '../Effect';
 
 export interface IReqoreMenuDividerProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'>,
     IWithReqoreEffect,
     IWithReqoreSize {
-  label?: string;
+  label?: string | number;
   margin?: 'left' | 'right' | 'both';
+  align?: 'left' | 'center' | 'right';
 }
 
 export const StyledMenuDivider = styled(StyledTextEffect)`
@@ -38,7 +39,17 @@ export const StyledMenuDivider = styled(StyledTextEffect)`
 `;
 
 const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
-  ({ label, className, effect, size = 'normal', ...rest }: IReqoreMenuDividerProps, ref: any) => (
+  (
+    {
+      label,
+      className,
+      effect,
+      size = 'normal',
+      align = 'center',
+      ...rest
+    }: IReqoreMenuDividerProps,
+    ref: any
+  ) => (
     <StyledMenuDivider
       as='div'
       {...rest}
@@ -49,7 +60,7 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
         {
           uppercase: true,
           spaced: 2,
-          textAlign: 'center',
+          textAlign: align,
           textSize: getOneLessSize(size),
           weight: 'bold',
           ...effect,

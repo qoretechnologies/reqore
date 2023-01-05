@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreTabsProps } from '../../components/Tabs';
 import { ReqoreTabs, ReqoreTabsContent } from '../../index';
-import { IntentArg, SizeArg, argManager } from '../utils/args';
+import { argManager, IntentArg, SizeArg } from '../utils/args';
 
 const tabs = [
   {
@@ -67,14 +67,34 @@ const tabs = [
     },
   },
   {
-    label: 'Tab 8',
+    label: 'With Effect',
     id: 'tab8',
     icon: 'MapPin3Line',
+    flat: false,
+    effect: {
+      gradient: {
+        colors: {
+          0: 'info',
+          100: 'danger',
+        },
+      },
+    },
   },
   {
-    label: 'Tab 9',
+    label: 'With another effect',
     id: 'tab9',
     icon: 'EjectLine',
+    effect: {
+      glow: {
+        color: 'warning',
+        blur: 16,
+        size: -5,
+      },
+      spaced: 3,
+      uppercase: true,
+      weight: 'thick',
+      textSize: 'small',
+    },
   },
 ] as IReqoreTabsProps['tabs'];
 

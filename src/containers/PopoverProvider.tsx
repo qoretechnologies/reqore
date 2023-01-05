@@ -72,6 +72,7 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
             }, [])
           );
         },
+        isPopoverOpen: (popoverId: string) => !!popovers.find((p) => p.id === popoverId),
         removePopover,
         popovers,
       }}

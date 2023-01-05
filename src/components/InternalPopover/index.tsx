@@ -165,7 +165,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
       {
         name: 'offset',
         options: {
-          offset: [0, noArrow ? -1 : 10],
+          offset: [0, noArrow ? 5 : 10],
         },
       },
       {

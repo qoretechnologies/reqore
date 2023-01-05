@@ -1,6 +1,6 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import usePopover, { IPopoverOptions } from '../../hooks/usePopover';
+import usePopover, { IPopoverControls, IPopoverOptions } from '../../hooks/usePopover';
 import { IReqoreComponent } from '../../types/global';
 
 export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
@@ -26,13 +26,18 @@ const Popover = memo(
     noWrapper,
     wrapperTag = 'span',
     wrapperStyle = {},
+    passPopoverData,
     _insidePopover,
     _popoverId,
     ...rest
   }: IReqorePopoverProps) => {
     const [ref, setRef] = useState(undefined);
 
-    usePopover({ targetElement: ref, ...rest });
+    const popoverData: IPopoverControls = usePopover({ targetElement: ref, ...rest });
+
+    useEffect(() => {
+      passPopoverData?.(popoverData);
+    }, [popoverData]);
 
     if (isReqoreComponent || noWrapper) {
       return (

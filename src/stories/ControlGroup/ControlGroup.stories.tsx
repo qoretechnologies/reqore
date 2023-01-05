@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
 import ReqoreInput from '../../components/Input';
 import { ReqoreButton, ReqoreControlGroup, ReqoreTag } from '../../index';
-import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { argManager, GapSizeArg, MinimalArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
@@ -39,7 +39,7 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
       <ReqoreButton>Button</ReqoreButton>
       <ReqoreButton
         flat={false}
-        effect={{ gradient: { colors: { 0: 'success', 100: 'success:darken:1' } } }}
+        effect={{ gradient: { colors: { 0: 'success', 100: 'info:darken:1' } } }}
       >
         Non flat Button
       </ReqoreButton>
@@ -58,6 +58,11 @@ export const Basic = Template.bind({});
 export const Minimal = Template.bind({});
 Minimal.args = {
   minimal: true,
+};
+
+export const NotFlat = Template.bind({});
+NotFlat.args = {
+  flat: false,
 };
 
 export const Vertical = Template.bind({});

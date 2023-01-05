@@ -2,6 +2,7 @@ import { Placement } from '@popperjs/core';
 import { MutableRefObject, useContext, useEffect, useMemo, useRef } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import shortid from 'shortid';
+import { IPopoverData } from '../containers/PopoverProvider';
 import PopoverContext from '../context/PopoverContext';
 import {
   IReqoreIntent,
@@ -24,6 +25,13 @@ const endEvents = {
   click: null,
   focus: null,
 };
+
+export interface IPopoverControls {
+  open: () => void;
+  close: () => void;
+  isOpen: () => boolean;
+  id: string;
+}
 
 export interface IPopover
   extends IReqoreIntent,
@@ -50,6 +58,7 @@ export interface IPopover
 
 export interface IPopoverOptions extends IPopover {
   targetElement?: HTMLElement;
+  passPopoverData?: (data: IPopoverControls) => void;
 }
 
 const usePopover = ({
@@ -64,14 +73,15 @@ const usePopover = ({
   openOnMount = false,
   delay,
   ...rest
-}: IPopoverOptions) => {
-  const { addPopover, removePopover, updatePopover, popovers } = useContext(PopoverContext);
+}: IPopoverOptions): IPopoverControls => {
+  const { addPopover, removePopover, updatePopover, popovers, isPopoverOpen } =
+    useContext(PopoverContext);
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
   let { current: timeout }: MutableRefObject<any> = useRef(0);
 
   const startEvent = startEvents[handler];
   const endEvent = endEvents[handler];
-  const currentPopover = useMemo(
+  const currentPopover: IPopoverData = useMemo(
     () => popovers?.find((p) => p.id === current),
     [popovers, current]
   );
@@ -97,7 +107,7 @@ const usePopover = ({
 
   const _addPopover = () => {
     if (currentPopover) {
-      if (handler !== 'hoverStay') {
+      if (handler !== 'hoverStay' && handler !== 'focus') {
         _removePopover?.();
       }
     } else if (show) {
@@ -112,6 +122,7 @@ const usePopover = ({
   };
 
   const _removePopover = () => {
+    console.log('REMOVING POPOVER');
     if (rest?.blur > 0) {
       targetElement.style.position = 'initial';
       targetElement.style.zIndex = 'initial';
@@ -153,6 +164,7 @@ const usePopover = ({
       targetElement.addEventListener(startEvent, _addPopover);
 
       if (endEvent) {
+        console.log('ADDING REMOVE POPOVER EVENT', startEvent, endEvent);
         targetElement.addEventListener(endEvent, _removePopover);
       }
 
@@ -188,7 +200,16 @@ const usePopover = ({
     cancelTimeout();
   });
 
-  return current;
+  return {
+    id: current,
+    open: () => {
+      if (!isPopoverOpen(current)) {
+        openPopover();
+      }
+    },
+    close: () => _removePopover(),
+    isOpen: () => isPopoverOpen(current),
+  };
 };
 
 export default usePopover;

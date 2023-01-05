@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
+import { IWithReqoreFlat, IWithReqoreMinimal, IWithReqoreSize } from '../../types/global';
 
-export interface IReqoreControlGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreControlGroupProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    IWithReqoreFlat,
+    IWithReqoreSize,
+    IWithReqoreMinimal {
   stack?: boolean;
-  minimal?: boolean;
-  size?: TSizes;
   children: any;
   fluid?: boolean;
   rounded?: boolean;
@@ -98,37 +101,45 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
         `}
 `;
 
-const ReqoreControlGroup = ({
-  children,
-  className,
-  minimal,
-  size = 'normal',
-  gapSize = 'normal',
-  fluid,
-  rounded = true,
-  ...rest
-}: IReqoreControlGroupProps) => (
-  <StyledReqoreControlGroup
-    {...rest}
-    size={size}
-    gapSize={gapSize}
-    rounded={rounded}
-    fluid={fluid}
-    className={`${className || ''} reqore-control-group`}
-  >
-    {React.Children.map(children, (child) =>
-      child
-        ? React.cloneElement(child, {
-            minimal:
-              child.props?.minimal || child.props?.minimal === false
-                ? child.props.minimal
-                : minimal,
-            size: child.props?.size || size,
-            fluid,
-          })
-        : null
-    )}
-  </StyledReqoreControlGroup>
+const ReqoreControlGroup = forwardRef<HTMLDivElement, IReqoreControlGroupProps>(
+  (
+    {
+      children,
+      className,
+      minimal,
+      size = 'normal',
+      gapSize = 'normal',
+      fluid,
+      flat,
+      rounded = true,
+      ...rest
+    }: IReqoreControlGroupProps,
+    ref
+  ) => (
+    <StyledReqoreControlGroup
+      {...rest}
+      size={size}
+      gapSize={gapSize}
+      ref={ref}
+      rounded={rounded}
+      fluid={fluid}
+      className={`${className || ''} reqore-control-group`}
+    >
+      {React.Children.map(children, (child) =>
+        child
+          ? React.cloneElement(child, {
+              minimal:
+                child.props?.minimal || child.props?.minimal === false
+                  ? child.props.minimal
+                  : minimal,
+              size: child.props?.size || size,
+              flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
+              fluid,
+            })
+          : null
+      )}
+    </StyledReqoreControlGroup>
+  )
 );
 
 export default ReqoreControlGroup;

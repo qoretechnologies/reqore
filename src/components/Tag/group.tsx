@@ -2,10 +2,13 @@ import React from 'react';
 import styled from 'styled-components';
 import { StyledTag } from '.';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { IWithReqoreMinimal, IWithReqoreSize } from '../../types/global';
 
-export interface IReqoreTagGroup extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreTagGroup
+  extends React.HTMLAttributes<HTMLDivElement>,
+    IWithReqoreSize,
+    IWithReqoreMinimal {
   children: any;
-  size?: TSizes;
   gapSize?: TSizes;
   columns?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
   hasBottomMargin?: boolean;
@@ -27,6 +30,7 @@ const ReqoreTagGroup = ({
   children,
   size,
   gapSize = 'normal',
+  minimal,
   className,
   columns,
   hasBottomMargin = true,
@@ -43,6 +47,10 @@ const ReqoreTagGroup = ({
         ? React.cloneElement(child, {
             size: child.props?.size || size,
             width: columns ? `calc(${100 / columns}% - 5px)` : child.props.width,
+            minimal:
+              child.props?.minimal || child.props?.minimal === false
+                ? child.props.minimal
+                : minimal,
           })
         : null
     )}

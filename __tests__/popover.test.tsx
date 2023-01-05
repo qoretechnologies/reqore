@@ -173,24 +173,51 @@ test('Shows the hoverStay popover after a delay and stays, ', async () => {
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
 
-test('Shows the hoverStay popover after a delay and stays, ', async () => {
+test('Correctly passes popover data for non-opened popover', async () => {
+  const fn = jest.fn();
+
   render(
     <ReqoreUIProvider>
-      <SimpleContent delay={500} type='hoverStay' />
+      <ReqorePopover
+        component='p'
+        content={'Tooltip content'}
+        passPopoverData={(data) => {
+          fn(data.isOpen());
+        }}
+        isReqoreComponent
+      >
+        Hover me
+      </ReqorePopover>
     </ReqoreUIProvider>
   );
 
-  fireEvent.mouseEnter(screen.getByText('Hover me'));
-
-  jest.advanceTimersByTime(100);
+  jest.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+  expect(fn).toHaveBeenCalledWith(false);
+});
 
-  jest.advanceTimersByTime(500);
+test('Correctly passes popover data for opened popover', async () => {
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqorePopover
+        component='p'
+        content={'Tooltip content'}
+        passPopoverData={(data) => {
+          fn(data.isOpen());
+        }}
+        openOnMount
+        isReqoreComponent
+      >
+        Hover me
+      </ReqorePopover>
+    </ReqoreUIProvider>
+  );
+
+  jest.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
-
-  fireEvent.mouseLeave(screen.getByText('Hover me'));
-
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(fn).toHaveBeenCalledWith(true);
 });

@@ -1,5 +1,5 @@
-import { cloneDeep, merge } from 'lodash';
-import { darken, getLuminance, lighten, readableColor } from 'polished';
+import { cloneDeep, merge, reduce } from 'lodash';
+import { darken, getLuminance, lighten, mix, readableColor } from 'polished';
 import { TReqoreEffectColor, TReqoreEffectColorList, TReqoreHexColor } from '../components/Effect';
 import { Colors } from '../constants/colors';
 import { DEFAULT_INTENTS, IReqoreTheme, TReqoreIntent } from '../constants/theme';
@@ -188,4 +188,52 @@ export const getColorFromMaybeString = (
   }
 
   return _color;
+};
+
+export const createEffectGradient = (
+  theme: IReqoreTheme,
+  colors: Record<number, TReqoreEffectColor>,
+  lighten: number = 0,
+  minimal?: boolean
+): string => {
+  return reduce(
+    colors,
+    (colorsString, color, percentage) => {
+      return `${colorsString}, ${
+        minimal ? theme.main : changeLightness(getColorFromMaybeString(theme, color), lighten)
+      } ${percentage}%`;
+    },
+    ''
+  );
+};
+
+export const getNthGradientColor = (
+  theme: IReqoreTheme,
+  colors?: Record<number, TReqoreEffectColor>,
+  nth: number = 1
+): TReqoreHexColor | undefined => {
+  if (colors) {
+    return getColorFromMaybeString(theme, Object.values(colors)[nth - 1]);
+  }
+
+  return undefined;
+};
+
+export const getGradientMix = (
+  theme: IReqoreTheme,
+  colors: Record<number, TReqoreEffectColor>,
+  fallback?: TReqoreHexColor
+): TReqoreHexColor | undefined => {
+  if (colors && Object.keys(colors).length === 2) {
+    const gradientColor1: TReqoreHexColor = getNthGradientColor(theme, colors);
+    const gradientColor2: TReqoreHexColor = getNthGradientColor(theme, colors, 2);
+
+    return mix(
+      0.5,
+      gradientColor1 === '#00000000' ? theme.main : gradientColor1,
+      gradientColor2 === '#00000000' ? theme.main : gradientColor2
+    ) as TReqoreHexColor;
+  }
+
+  return fallback;
 };
