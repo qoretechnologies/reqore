@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import { IReqoreMultiSelectProps, ReqoreMultiSelect } from '../../components/MultiSelect';
 import { MultiSelectItems } from '../../mock/multiSelect';
-import { FlatArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { argManager, FlatArg, MinimalArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMultiSelectProps>();
 
@@ -45,6 +45,7 @@ const Template: Story<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProps)
       {...args}
       onValueChange={setSelected}
       enterKeySelects
+      onItemClick={(item) => console.log('onItemClick', item)}
       selectorProps={{
         listHeight: '600px',
         ...args.selectorProps,

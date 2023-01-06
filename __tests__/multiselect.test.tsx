@@ -329,3 +329,33 @@ test('Renders <ReqoreMultiSelect /> and calls onValueChange when value changes',
   expect(screen.getAllByText('Existing item 1')).toBeTruthy();
   expect(onValueChange).toHaveBeenNthCalledWith(2, ['Existing item 1']);
 });
+
+test('Renders <ReqoreMultiSelect /> and calls onItemClick when an item is clicked', () => {
+  const onItemClick = jest.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreMultiSelect
+          items={MultiSelectItems}
+          canCreateItems
+          enterKeySelects
+          onItemClick={onItemClick}
+          value={['Existing item 3', 'Disabled item']}
+        />
+      </ReqoreUIProvider>
+    );
+  });
+
+  // The item is already selected
+  fireEvent.click(screen.getByText('Existing item 3'));
+
+  expect(onItemClick).toHaveBeenNthCalledWith(
+    1,
+    MultiSelectItems.find((item) => item.value === 'Existing item 3')
+  );
+
+  fireEvent.click(screen.getByText('Disabled item'));
+
+  expect(onItemClick).toHaveBeenCalledTimes(1);
+});

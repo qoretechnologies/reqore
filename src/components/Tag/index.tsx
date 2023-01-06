@@ -265,7 +265,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
           <StyledTagKeyWrapper
             size={size}
             className='reqore-tag-key-content'
-            onClick={onClick}
+            onClick={rest.disabled ? undefined : onClick}
             wrap={wrap}
             hasWidth={!!width}
             hasKey={!!labelKey}
@@ -282,13 +282,13 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
           <StyledTagContentWrapper
             size={size}
             className='reqore-tag-content'
-            onClick={onClick}
+            onClick={rest.disabled ? undefined : onClick}
             wrap={wrap}
             hasWidth={!!width}
             hasKey={!!labelKey}
           >
             {label || label === 0 ? (
-              <StyledTagContent size={size} onClick={onClick} wrap={wrap} hasWidth={!!width}>
+              <StyledTagContent size={size} wrap={wrap} hasWidth={!!width}>
                 {label}
               </StyledTagContent>
             ) : null}

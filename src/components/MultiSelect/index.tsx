@@ -237,7 +237,13 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
                 key={v}
                 item={getItemByValue(v)}
                 onRemoveClick={canRemoveItems ? () => addRemoveItem(getItemByValue(v)) : undefined}
-                onClick={onItemClick ? () => onItemClick(getItemByValue(v)) : undefined}
+                onClick={
+                  onItemClick
+                    ? () => {
+                        onItemClick(getItemByValue(v));
+                      }
+                    : undefined
+                }
                 selectedItemEffect={selectedItemEffect}
                 selectedItemSize={selectedItemSize}
               />

@@ -60,7 +60,14 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
   return (
     <ReqoreTagGroup columns={columns} size={args.size} gapSize={args.gapSize}>
       <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label={1} />
-      <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label='Basic Tag' />
+      <ReqoreTag
+        {...args}
+        actions={null}
+        onRemoveClick={null}
+        rightIcon={null}
+        label='Basic Tag'
+        onClick={() => console.log('Tag clicked')}
+      />
       <ReqoreTag
         {...args}
         actions={null}
