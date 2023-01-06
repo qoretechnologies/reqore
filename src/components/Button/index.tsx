@@ -304,7 +304,7 @@ export const ButtonBadge = memo((props: IReqoreButtonBadgeProps) => {
       <ReqoreTag
         key={key}
         size={getOneLessSize(size)}
-        badge
+        asBadge
         color={color}
         className='reqore-button-badge'
         minimal={!(content as IReqoreTagProps)?.effect?.gradient}

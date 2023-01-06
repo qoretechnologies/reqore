@@ -33,6 +33,43 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
         {
           label: 'Option 2',
           value: 'opt2',
+          onText: 1,
+          offText: 0,
+        },
+        {
+          label: 'Danger option',
+          value: 'danger',
+          intent: 'danger',
+        },
+        {
+          label: 'Effect option',
+          labelPosition: 'left',
+          value: 'effect',
+          effect: {
+            gradient: {
+              colors: {
+                0: 'info',
+                100: 'success',
+              },
+            },
+          },
+        },
+        {
+          label: 'Text effect & custom theme option',
+          value: 'textEffect',
+          customTheme: {
+            main: '#110134',
+          },
+          onText: 'On',
+          offText: 'Off',
+          switchTextEffect: {
+            gradient: {
+              colors: {
+                0: 'warning',
+                100: 'pending',
+              },
+            },
+          },
         },
         {
           divider: true,
@@ -41,7 +78,7 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
         {
           label: 'Beautiful option 3 with gradient effect',
           value: 'opt3',
-          effect: {
+          labelEffect: {
             gradient: {
               colors: {
                 0: 'info',
@@ -50,6 +87,12 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
             },
             weight: 'thick',
           },
+        },
+        {
+          label: 'Custom Icons Option',
+          value: 'customIconsOpt',
+          checkedIcon: 'EmotionHappyLine',
+          uncheckedIcon: 'EmotionSadLine',
         },
         {
           label: 'Custom Image Option',
@@ -85,4 +128,11 @@ Horizontal.args = {
 export const Switch = Template.bind({});
 Switch.args = {
   asSwitch: true,
+};
+
+export const WithTexts = Template.bind({});
+WithTexts.args = {
+  asSwitch: true,
+  onText: 'True',
+  offText: 'False and wrong',
 };

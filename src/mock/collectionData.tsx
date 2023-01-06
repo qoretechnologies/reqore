@@ -16,12 +16,12 @@ export default [
     tags: [
       {
         label: 23,
-        badge: true,
+        asBadge: true,
       },
       {
         label: 2022,
         labelKey: 'Year',
-        badge: true,
+        asBadge: true,
         onRemoveClick: noop,
       },
     ],
@@ -69,12 +69,12 @@ export default [
     tags: [
       {
         label: 23,
-        badge: true,
+        asBadge: true,
       },
       {
         label: 2022,
         labelKey: 'Year',
-        badge: true,
+        asBadge: true,
         onRemoveClick: noop(),
       },
     ],
@@ -273,12 +273,12 @@ export default [
     tags: [
       {
         label: 23,
-        badge: true,
+        asBadge: true,
       },
       {
         label: 2022,
         labelKey: 'Year',
-        badge: true,
+        asBadge: true,
         onRemoveClick: noop,
       },
     ],

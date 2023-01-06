@@ -19,6 +19,8 @@ export interface IReqoreRadioGroupProps
   size?: TSizes;
   disabled?: boolean;
   asSwitch?: boolean;
+  onText?: string;
+  offText?: string;
 }
 
 const ReqoreRadioGroup = ({
@@ -29,6 +31,8 @@ const ReqoreRadioGroup = ({
   disabled,
   asSwitch,
   vertical = true,
+  onText,
+  offText,
   ...rest
 }: IReqoreRadioGroupProps) => (
   <ReqoreControlGroup {...rest} vertical={vertical}>
@@ -44,6 +48,8 @@ const ReqoreRadioGroup = ({
       ) : (
         <ReqoreCheckbox
           asSwitch={asSwitch}
+          onText={onText}
+          offText={offText}
           {...itemRest}
           key={value}
           checked={value === selected}

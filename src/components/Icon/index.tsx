@@ -7,9 +7,11 @@ import { ReqoreThemeContext } from '../..';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
 import { isStringSize } from '../../helpers/utils';
+import { IWithReqoreEffect } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import { StyledEffect } from '../Effect';
 
-export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement>, IWithReqoreEffect {
   icon?: IReqoreIconName;
   color?: string;
   size?: TSizes | string;
@@ -18,17 +20,9 @@ export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement> 
   margin?: 'right' | 'left' | 'both';
   image?: string;
   rounded?: boolean;
-  grayscale?: boolean;
-  blur?: number;
-  sepia?: boolean;
-  invert?: boolean;
-  opacity?: number;
-  brightness?: number;
-  contrast?: number;
-  saturate?: number;
 }
 
-export const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both' }>`
+export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-block;
   flex: 0 0 auto;
   vertical-align: text-bottom;
@@ -36,48 +30,6 @@ export const StyledIconWrapper = styled.span<{ margin: 'right' | 'left' | 'both'
   overflow: hidden;
 
   border-radius: ${({ rounded }) => (rounded ? '50%' : undefined)};
-
-  ${({ grayscale }) =>
-    grayscale &&
-    css`
-      filter: grayscale(100%);
-    `};
-  ${({ blur }) =>
-    blur &&
-    css`
-      filter: blur(${blur}px);
-    `};
-  ${({ sepia }) =>
-    sepia &&
-    css`
-      filter: sepia(100%);
-    `};
-  ${({ invert }) =>
-    invert &&
-    css`
-      filter: invert(100%);
-    `};
-  ${({ opacity }) =>
-    opacity || opacity === 0
-      ? css`
-          opacity: ${opacity};
-        `
-      : undefined};
-  ${({ brightness }) =>
-    brightness &&
-    css`
-      filter: brightness(${brightness}%);
-    `};
-  ${({ contrast }) =>
-    contrast &&
-    css`
-      filter: contrast(${contrast}%);
-    `};
-  ${({ saturate }) =>
-    saturate &&
-    css`
-      filter: saturate(${saturate}%);
-    `};
 
   ${({ margin, size }) =>
     margin &&

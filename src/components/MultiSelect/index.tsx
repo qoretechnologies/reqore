@@ -1,4 +1,4 @@
-import { size } from 'lodash';
+import { omit, size } from 'lodash';
 import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import { ReqoreDropdown, ReqoreInput } from '../..';
@@ -13,7 +13,7 @@ import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
 
 export type TReqoreMultiSelectItem = Omit<IReqoreDropdownItem, 'color'> &
-  Pick<IReqoreTagProps, 'badge'> & { isNew?: boolean };
+  Pick<IReqoreTagProps, 'asBadge' | 'rightIcon' | 'actions'> & { isNew?: boolean };
 
 export interface IReqoreMultiSelectProps
   extends Omit<IReqoreControlGroupProps, 'children' | 'vertical' | 'stack'> {
@@ -21,6 +21,7 @@ export interface IReqoreMultiSelectProps
   onValueChange?: (value: string[]) => void;
   items?: TReqoreMultiSelectItem[];
   onItemClick?: (item: IReqoreDropdownItem) => void;
+  onItemClickIcon?: IReqoreTagProps['rightIcon'];
   canRemoveItems?: boolean;
   canCreateItems?: boolean;
   selectedItemEffect?: IReqoreEffect;
@@ -35,6 +36,7 @@ export interface IReqoreMultiSelectItemProps
   item: TReqoreMultiSelectItem;
   onClick?: () => void;
   onRemoveClick?: () => void;
+  onItemClickIcon?: IReqoreTagProps['rightIcon'];
 }
 
 export const ReqoreMultiSelectItem = memo(
@@ -44,6 +46,7 @@ export const ReqoreMultiSelectItem = memo(
     onClick,
     selectedItemEffect,
     selectedItemSize,
+    onItemClickIcon,
   }: IReqoreMultiSelectItemProps) => {
     if (!item) {
       return null;
@@ -58,6 +61,7 @@ export const ReqoreMultiSelectItem = memo(
         effect={!item.intent ? item.effect || selectedItemEffect : undefined}
         size={selectedItemSize}
         onClick={onClick}
+        rightIcon={item.rightIcon || item.disabled ? undefined : onItemClickIcon}
       />
     );
   }
@@ -77,6 +81,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
       selectorProps,
       openOnMount,
       enterKeySelects,
+      onItemClickIcon,
       ...rest
     }: IReqoreMultiSelectProps,
     ref
@@ -85,6 +90,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
     const [createdItems, setCreatedItems] = useState<TReqoreMultiSelectItem[]>([]);
     const [query, setQuery] = useState<string>('');
     const popoverData = useRef<IPopoverControls>(undefined);
+    const [focused, setFocused] = useState<boolean>(false);
 
     useUpdateEffect(() => {
       onValueChange?.(_value);
@@ -140,11 +146,11 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
     );
 
     /*
-  This code creates a list of all items that are available
-  for selection in the dropdown. It will include the items
-  that are passed in as props, as well as any items that the
-  user has created.
-  */
+    This code creates a list of all items that are available
+    for selection in the dropdown. It will include the items
+    that are passed in as props, as well as any items that the
+    user has created.
+    */
     const allItems: TReqoreMultiSelectItem[] = useMemo(() => {
       const customItems: TReqoreMultiSelectItem[] = size(createdItems)
         ? [{ divider: true, label: 'Custom Items' }, ...createdItems]
@@ -161,7 +167,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
 
       // Mark selected items as selected
       filteredItems = filteredItems.map((item: TReqoreMultiSelectItem) => ({
-        ...item,
+        ...omit(item, ['actions', 'asBadge', 'rightIcon']),
         selected: _value.includes(item.value),
       }));
 
@@ -205,12 +211,12 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
 
     const handleKeyDown = useCallback(
       (e: KeyboardEvent) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && focused) {
           const item = [...items, ...createdItems].find((item) => item.value === query);
 
           if (item) {
             handleItemSelect(item);
-          } else if (canCreateItems) {
+          } else if (canCreateItems && query) {
             handleItemSelect({
               value: query,
               isNew: true,
@@ -218,7 +224,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
           }
         }
       },
-      [items, createdItems, query, canCreateItems]
+      [items, createdItems, query, canCreateItems, focused]
     );
 
     const getItemByValue = useCallback(
@@ -236,6 +242,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
               <ReqoreMultiSelectItem
                 key={v}
                 item={getItemByValue(v)}
+                onItemClickIcon={onItemClickIcon}
                 onRemoveClick={canRemoveItems ? () => addRemoveItem(getItemByValue(v)) : undefined}
                 onClick={
                   onItemClick
@@ -257,6 +264,8 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
             {...selectorProps}
             multiSelect
             handler='focus'
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             passPopoverData={(data) => (popoverData.current = data)}
             component={ReqoreInput}
             onClearClick={() => setQuery('')}

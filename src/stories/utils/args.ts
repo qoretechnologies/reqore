@@ -57,7 +57,7 @@ export const IconArg = (
   defaultValue?: IReqoreIconName
 ) =>
   argManager<any>().createArg(iconKeyName, {
-    defaultValue: defaultValue || '24HoursFill',
+    defaultValue: defaultValue || (defaultValue === null ? null : '24HoursFill'),
     name: name || 'Icon',
     description: 'The icon name used',
     control: {

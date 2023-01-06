@@ -81,9 +81,9 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   border-radius: ${({ minimal, rounded, _size }) =>
     minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
   border: ${({ minimal, theme, flat }) =>
-    !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.05)}` : 0};
+    !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : 0};
   border-bottom: ${({ minimal, theme, flat }) =>
-    minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.05)}` : undefined};
+    minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.2)}` : undefined};
 
   transition: all 0.2s ease-out;
 
@@ -94,7 +94,7 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
           &:focus,
           &:hover {
             outline: none;
-            border-color: ${({ theme }) => changeLightness(theme.main, 0.1)};
+            border-color: ${({ theme }) => changeLightness(theme.main, 0.25)};
           }
         `
       : undefined}

@@ -62,6 +62,8 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   max-height: ${({ maxHeight = '80vh' }) => maxHeight};
   z-index: 999999;
   border-radius: ${RADIUS_FROM_SIZE.normal}px;
+  border: ${({ flat, isString, ...rest }: any) =>
+    !flat && !isString ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
 
   ${({ transparent }) =>
     !transparent &&
@@ -217,6 +219,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
         isOpaque={!transparent && !minimal}
         intent={intent}
         flat={flat}
+        isString={isString(content)}
         dim={flat && !transparent && !effect && minimal}
         className='reqore-popover-content'
         ref={(el) => {
