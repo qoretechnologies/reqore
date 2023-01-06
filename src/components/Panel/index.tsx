@@ -8,14 +8,14 @@ import {
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   TEXT_FROM_SIZE,
-  TSizes
+  TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
   getMainBackgroundColor,
-  getReadableColor
+  getReadableColor,
 } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -26,7 +26,7 @@ import {
   IWithReqoreCustomTheme,
   IWithReqoreFlat,
   IWithReqoreSize,
-  IWithReqoreTooltip
+  IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
@@ -323,7 +323,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       (actionOrActions: IReqorePanelAction | IReqorePanelAction[], index: number) => {
         if (Array.isArray(actionOrActions)) {
           return (
-            <ReqoreControlGroup stack>{actionOrActions.map(renderActions)}</ReqoreControlGroup>
+            <ReqoreControlGroup key={index} stack>
+              {actionOrActions.map(renderActions)}
+            </ReqoreControlGroup>
           );
         }
 

@@ -81,10 +81,10 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
                 React.cloneElement(child, {
                   _insidePopover,
                   _popoverId,
-                  customTheme: child?.props.customTheme || theme,
+                  customTheme: child.props?.customTheme || theme,
                   wrap: wrapText,
-                  flat: 'flat' in child?.props ? child.props.flat : flat,
-                  minimal: 'minimal' in child?.props ? child.props.minimal : minimal,
+                  flat: 'flat' in (child.props || {}) ? child.props.flat : flat,
+                  minimal: 'minimal' in (child.props || {}) ? child.props.minimal : minimal,
                 })
               : null;
           })}

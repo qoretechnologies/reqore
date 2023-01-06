@@ -164,7 +164,7 @@ const ReqoreTabsList = ({
   intent,
   ...rest
 }: IReqoreTabsListProps) => {
-  const [ref, { width, height }] = useMeasure();
+  const [ref, { width }] = useMeasure();
   const theme = useReqoreTheme('main', customTheme, intent);
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
   const currentTabColor: TReqoreHexColor =
@@ -175,13 +175,7 @@ const ReqoreTabsList = ({
 
   const transformedItems = vertical
     ? tabs
-    : getTransformedItems(
-        tabs,
-        vertical ? height : _testWidth || width,
-        vertical ? 'height' : 'width',
-        activeTab,
-        size
-      );
+    : getTransformedItems(tabs, _testWidth || width, 'width', activeTab, size);
 
   return (
     <ReqoreThemeProvider theme={theme}>

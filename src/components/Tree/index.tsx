@@ -106,9 +106,9 @@ export const ReqoreTree = ({
             <ReqoreControlGroup size={size}>
               <ReqoreButton
                 className='reqore-tree-toggle'
-                icon={isObject ? (isExpandable ? 'ArrowDownSFill' : 'ArrowRightSFill') : undefined}
-                intent={isObject && isExpandable ? 'info' : undefined}
-                onClick={isObject ? () => handleItemClick(stateKey, isExpandable) : undefined}
+                icon={isExpandable ? 'ArrowDownSFill' : 'ArrowRightSFill'}
+                intent={isExpandable ? 'info' : undefined}
+                onClick={() => handleItemClick(stateKey, isExpandable)}
                 flat
               >
                 {displayKey}

@@ -302,8 +302,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
           </StyledTagContentWrapper>
         ) : null}
         {_size(actions)
-          ? actions.map((action) => (
-              <>
+          ? actions.map((action, index) => (
+              <React.Fragment key={index}>
                 <ReqorePopover
                   component={StyledButtonWrapper}
                   componentProps={{
@@ -316,13 +316,13 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                   {...(action.tooltip
                     ? typeof action.tooltip === 'string'
                       ? { tooltip: action.tooltip }
-                      : action.tooltip || {}
+                      : action.tooltip
                     : {})}
                   noWrapper
                 >
                   <ReqoreIcon icon={action.icon} size={size} />
                 </ReqorePopover>
-              </>
+              </React.Fragment>
             ))
           : null}
         {onRemoveClick && !rest.disabled ? (

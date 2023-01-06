@@ -170,7 +170,7 @@ export const ReqoreCollectionItem = ({
         setIsSelected(!isSelected);
       }
 
-      rest?.onClick?.(event);
+      rest.onClick?.(event);
     };
 
     const actualContent: string | React.ReactNode =
@@ -239,5 +239,5 @@ export const ReqoreCollectionItem = ({
     );
   };
 
-  return isSelected ? renderContent() : renderContent();
+  return renderContent();
 };

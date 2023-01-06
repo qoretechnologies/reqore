@@ -188,10 +188,10 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   }, [popperRef]);
 
   useEffect(() => {
-    if (attributes?.popper?.['data-popper-reference-hidden']) {
+    if (attributes.popper?.['data-popper-reference-hidden']) {
       removePopover?.(id);
     }
-  }, [attributes?.popper]);
+  }, [attributes.popper]);
 
   /* Getting the x and y values from the transform property of the popper element. */
   const translateValues = styles.popper.transform

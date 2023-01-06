@@ -121,19 +121,19 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
           isTablet,
           isMobileOrTablet,
           getAndIncreaseZIndex,
-          animations: options?.animations || { buttons: true, dialogs: true },
+          animations: options.animations || { buttons: true, dialogs: true },
           closePopoversOnEscPress:
-            'closePopoversOnEscPress' in options ? options?.closePopoversOnEscPress : true,
+            'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
         }}
       >
         {size(notifications) > 0 ? (
-          <ReqoreNotificationsWrapper position={options?.notificationsPosition}>
+          <ReqoreNotificationsWrapper position={options.notificationsPosition}>
             {notifications.map((notification) => (
               <ReqoreNotification
                 {...notification}
                 key={notification.id}
                 onClick={
-                  notification?.onClick
+                  notification.onClick
                     ? () => void notification.onClick(notification.id)
                     : undefined
                 }
