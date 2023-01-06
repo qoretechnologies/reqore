@@ -8,7 +8,7 @@ import {
   ReqoreMenuItem,
   ReqorePopover,
 } from '../../index';
-import { IntentArg, argManager } from '../utils/args';
+import { argManager, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMenuProps>();
 
@@ -154,7 +154,8 @@ const Template: Story<IReqoreMenuProps> = (args) => {
       </ReqorePopover>
       <ReqoreMenuDivider
         label='Fancy divider'
-        effect={{ textAlign: 'left', gradient: { colors: { 0: '#0d5ba5', 100: '#ff5dfd' } } }}
+        effect={{ gradient: { colors: { 0: '#0d5ba5', 100: '#ff5dfd' } } }}
+        align='left'
       />
       <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' selected>
         I am selected!

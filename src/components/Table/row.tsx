@@ -277,10 +277,10 @@ const ReqoreTableRow = ({
                 onClick: (e: React.MouseEvent<HTMLDivElement>) => {
                   if (onCellClick) {
                     e.stopPropagation();
-                    onCellClick?.(data[index]);
+                    onCellClick(data[index]);
                   } else if (onRowClick) {
                     e.stopPropagation();
-                    onRowClick?.(data[index]);
+                    onRowClick(data[index]);
                   } else if (selectable && data[index]._selectId) {
                     // Otherwise select the row if selectable
                     onSelectClick(data[index]._selectId);

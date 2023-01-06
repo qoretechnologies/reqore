@@ -2,18 +2,23 @@ import React, { memo, useEffect, useMemo, useState } from 'react';
 import { IReqoreComponent } from '../../types/global';
 import ReqoreInput from '../Input';
 import ReqoreMenu from '../Menu';
+import ReqoreMenuDivider from '../Menu/divider';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
 
 export type TDropdownItemOnClick = (item: IReqoreDropdownItem) => void;
 export interface IReqoreDropdownItem
   extends Omit<IReqoreMenuItemProps, 'onClick' | 'rightIcon' | 'onRightIconClick'> {
-  value: any;
-  label?: string;
+  value?: any;
   onClick?: TDropdownItemOnClick;
+  divider?: boolean;
+  dividerAlign?: 'left' | 'center' | 'right';
 }
 
+export type TReqoreDropdownItem = IReqoreDropdownItem;
+export type TReqoreDropdownItems = TReqoreDropdownItem[];
+
 export interface IReqoreDropdownListProps extends IReqoreComponent {
-  items?: IReqoreDropdownItem[];
+  items?: TReqoreDropdownItems;
   multiSelect?: boolean;
   listStyle?: React.CSSProperties;
   width?: string;
@@ -33,20 +38,24 @@ const ReqoreDropdownList = memo(
     height,
     onItemSelect,
   }: IReqoreDropdownListProps) => {
-    const [_items, setItems] = useState<IReqoreDropdownItem[]>(items);
+    const [_items, setItems] = useState<TReqoreDropdownItems>(items);
     const [query, setQuery] = useState<string>('');
 
     useEffect(() => {
       setItems(items);
     }, [items]);
 
-    const filteredItems: IReqoreDropdownItem[] = useMemo(() => {
+    const filteredItems: TReqoreDropdownItems = useMemo(() => {
       if (!filterable || query === '') {
         return _items;
       }
 
       return _items.filter((item) => {
-        const text = item.label || item.value || item.children;
+        if (item.divider) {
+          return false;
+        }
+
+        const text: string | undefined = item.label || item.value || item.children;
 
         if (!text) {
           return false;
@@ -88,15 +97,20 @@ const ReqoreDropdownList = memo(
             />
           </>
         )}
-        {filteredItems.map((item: IReqoreDropdownItem, index: number) => (
-          <ReqoreMenuItem
-            key={index}
-            {...item}
-            label={item.label || item.value}
-            onClick={() => handleItemClick(item)}
-            rightIcon={item.selected ? 'CheckLine' : undefined}
-          />
-        ))}
+        {filteredItems.map(
+          ({ onClick, dividerAlign, divider, ...item }: IReqoreDropdownItem, index: number) =>
+            divider ? (
+              <ReqoreMenuDivider key={index} {...item} align={dividerAlign} />
+            ) : (
+              <ReqoreMenuItem
+                key={index}
+                {...item}
+                label={item.label || item.value}
+                onClick={() => handleItemClick({ ...item, onClick })}
+                rightIcon={item.selected ? 'CheckLine' : undefined}
+              />
+            )
+        )}
       </ReqoreMenu>
     );
   }

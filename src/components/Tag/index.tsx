@@ -265,7 +265,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
           <StyledTagKeyWrapper
             size={size}
             className='reqore-tag-key-content'
-            onClick={onClick}
+            onClick={rest.disabled ? undefined : onClick}
             wrap={wrap}
             hasWidth={!!width}
             hasKey={!!labelKey}
@@ -282,13 +282,13 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
           <StyledTagContentWrapper
             size={size}
             className='reqore-tag-content'
-            onClick={onClick}
+            onClick={rest.disabled ? undefined : onClick}
             wrap={wrap}
             hasWidth={!!width}
             hasKey={!!labelKey}
           >
             {label || label === 0 ? (
-              <StyledTagContent size={size} onClick={onClick} wrap={wrap} hasWidth={!!width}>
+              <StyledTagContent size={size} wrap={wrap} hasWidth={!!width}>
                 {label}
               </StyledTagContent>
             ) : null}
@@ -302,8 +302,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
           </StyledTagContentWrapper>
         ) : null}
         {_size(actions)
-          ? actions.map((action) => (
-              <>
+          ? actions.map((action, index) => (
+              <React.Fragment key={index}>
                 <ReqorePopover
                   component={StyledButtonWrapper}
                   componentProps={{
@@ -316,13 +316,13 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                   {...(action.tooltip
                     ? typeof action.tooltip === 'string'
                       ? { tooltip: action.tooltip }
-                      : action.tooltip || {}
+                      : action.tooltip
                     : {})}
                   noWrapper
                 >
                   <ReqoreIcon icon={action.icon} size={size} />
                 </ReqorePopover>
-              </>
+              </React.Fragment>
             ))
           : null}
         {onRemoveClick && !rest.disabled ? (

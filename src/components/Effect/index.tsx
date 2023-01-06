@@ -1,14 +1,16 @@
-import { reduce } from 'lodash';
-import { mix } from 'polished';
+import { rgba } from 'polished';
 import { HTMLAttributes } from 'react';
 import styled, { css } from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
+  createEffectGradient,
   getColorFromMaybeString,
+  getGradientMix,
   getReadableColorFrom,
 } from '../../helpers/colors';
+import { IWithReqoreMinimal } from '../../types/global';
 
 export type TReqoreEffectColorManipulation = 'darken' | 'lighten';
 export type TReqoreEffectColorManipulationMultiplier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
@@ -53,83 +55,91 @@ export interface IReqoreEffect {
   interactive?: boolean;
 }
 
-export interface IReqoreTextEffectProps extends HTMLAttributes<HTMLSpanElement> {
+export interface IReqoreTextEffectProps
+  extends HTMLAttributes<HTMLSpanElement>,
+    IWithReqoreMinimal {
   children: React.ReactNode;
   effect: IReqoreEffect;
   as?: React.ElementType;
   theme?: IReqoreTheme;
+  active?: boolean;
 }
 
 export const StyledEffect = styled.span`
   transition: all 0.2s ease-in-out;
 
   // If gradient was supplied
-  ${({ effect, theme }: IReqoreTextEffectProps) => {
+  ${({ effect, theme, minimal, active }: IReqoreTextEffectProps) => {
     if (!effect || !effect.gradient) {
       return undefined;
     }
 
     const gradientType: string = effect.gradient.type || 'linear';
-    const gradientColors = reduce(
+    const gradientColors = createEffectGradient(
+      theme,
       effect.gradient.colors,
-      (colorsString, color, percentage) =>
-        `${colorsString}, ${
-          color === 'transparent' || !effect.interactive
-            ? getColorFromMaybeString(theme, color)
-            : changeLightness(getColorFromMaybeString(theme, color), 0.03)
-        } ${percentage}%`,
-      ''
+      0,
+      minimal && !active
     );
-    const gradientColorsActive = reduce(
-      effect.gradient.colors,
-      (colorsString, color, percentage) =>
-        `${colorsString}, ${getColorFromMaybeString(theme, color)} ${percentage}%`,
-      ''
-    );
+    const gradientColorsActive = createEffectGradient(theme, effect.gradient.colors, 0.05);
 
     const gradientDirectionOrShape =
       gradientType === 'linear'
         ? effect.gradient.direction || 'to right'
         : effect.gradient.shape || 'circle';
-    const gradient = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColors})`;
-    const gradientActive = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColorsActive})`;
+    let gradient = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColors}) padding-box`;
+    let gradientActive = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColorsActive}) padding-box`;
 
     // Determine the text color based on the gradient colors
     let color: TReqoreHexColor | undefined;
     // Only works if there are 2 colors not more and color was not provided
     if (!effect.color) {
-      if (Object.keys(effect.gradient.colors).length === 2) {
-        const gradientColor1: TReqoreHexColor = getColorFromMaybeString(
-          theme,
-          Object.values(effect.gradient.colors)[0]
-        );
-        const gradientColor2: TReqoreHexColor = getColorFromMaybeString(
-          theme,
-          Object.values(effect.gradient.colors)[1]
-        );
+      color = getGradientMix(theme, effect.gradient.colors);
+    }
 
-        color = mix(
-          0.5,
-          gradientColor1 === '#00000000' ? theme.main : gradientColor1,
-          gradientColor2 === '#00000000' ? theme.main : gradientColor2
-        ) as TReqoreHexColor;
-      }
+    let borderColor: string;
+    let borderHoverColor: string;
+
+    // The user provided a border color - we will use that
+    if (effect.gradient.borderColor) {
+      borderColor = `${getColorFromMaybeString(theme, effect.gradient.borderColor)}`;
+      borderHoverColor = `${changeLightness(
+        getColorFromMaybeString(theme, effect.gradient.borderColor),
+        0.15
+      )}`;
+    } else {
+      // We will use border-image and create a gradient border
+      borderColor = 'transparent';
+      borderHoverColor = 'transparent';
+
+      const borderGradientColors: string = createEffectGradient(
+        theme,
+        effect.gradient.colors,
+        0.15
+      );
+      const borderGradientColorsActive: string = createEffectGradient(
+        theme,
+        effect.gradient.colors,
+        0.25
+      );
+
+      gradient = `${gradient}, ${gradientType}-gradient(${gradientDirectionOrShape}${borderGradientColors}) border-box`;
+      gradientActive = `${gradientActive}, ${gradientType}-gradient(${gradientDirectionOrShape}${borderGradientColorsActive}) border-box`;
     }
 
     return css`
-      background-image: ${gradient};
-      // Get the first color from the colors object
-      border-color: ${changeLightness(
-        getColorFromMaybeString(
-          theme,
-          effect.gradient.borderColor || Object.values(effect.gradient.colors)[0]
-        ),
-        0.04
-      )} !important;
+      background: ${active ? gradientActive : gradient};
+      border-color: ${borderColor} !important;
 
       ${color &&
       css`
         color: ${getReadableColorFrom(getColorFromMaybeString(theme, color), false)} !important;
+        &::placeholder {
+          color: ${rgba(
+            getReadableColorFrom(getColorFromMaybeString(theme, color), false),
+            0.7
+          )} !important;
+        }
       `}
 
       ${effect.interactive &&
@@ -139,11 +149,8 @@ export const StyledEffect = styled.span`
         &:hover,
         &:focus,
         &:active {
-          background-image: ${gradientActive};
-          border-color: ${getColorFromMaybeString(
-            theme,
-            effect.gradient.borderColor || Object.values(effect.gradient.colors)[0]
-          )} !important;
+          background: ${gradientActive};
+          border-color: ${borderHoverColor} !important;
         }
       `}
     `;
@@ -162,7 +169,7 @@ export const StyledEffect = styled.span`
     }
 
     return css`
-      box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 ${effect.glow.blur || 0}
+      box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 ${effect.glow.blur || 0}px
         ${effect.glow.size || 2}px ${getColorFromMaybeString(theme, effect.glow.color)};
     `;
   }}

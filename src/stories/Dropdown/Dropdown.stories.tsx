@@ -48,6 +48,11 @@ export default {
           icon: 'StopCircleLine',
         },
         {
+          divider: true,
+          label: 'Divider',
+          dividerAlign: 'left',
+        },
+        {
           selected: true,
           value: 'Hello',
           icon: 'SunCloudyLine',
@@ -125,7 +130,7 @@ export default {
 } as Meta<IReqoreDropdownProps>;
 
 const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
-  const [selected, setSelected] = useState<string[]>(['Item 3', 'Item 6']);
+  const [selected, setSelected] = useState<(string | number)[]>(['Item 3', 'Item 6']);
 
   if (args.multiSelect) {
     return (

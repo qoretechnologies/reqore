@@ -32,17 +32,29 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} active tooltip='hello'>
           Active
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} flat={false}>
-          Not Flat
-        </ReqoreButton>
-        <ReqoreButton {...buttonProps} minimal>
-          Minimal
-        </ReqoreButton>
         <ReqoreButton {...buttonProps} minimal flat>
-          Minimal flat
+          Minimal
         </ReqoreButton>
         <ReqoreButton {...buttonProps} readOnly onClick={alert}>
           Read only
+        </ReqoreButton>
+      </ReqoreControlGroup>
+      <br />
+      <ReqoreControlGroup size={buttonProps.size}>
+        <ReqoreButton {...buttonProps} active flat={false} tooltip='hello'>
+          Active Not Flat
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} flat={false}>
+          Not Flat
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} minimal flat={false}>
+          Minimal not flat
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} readOnly onClick={alert} flat={false}>
+          Read only not flat
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} disabled flat={false}>
+          Disabled not flat
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />
@@ -98,10 +110,10 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
       <br />
       <ReqoreControlGroup>
         <ReqoreButton {...buttonProps} readOnly badge={10} onClick={alert}>
-          With Badge
+          Read only with badge
         </ReqoreButton>
         <ReqoreButton {...buttonProps} minimal badge={20} onClick={alert}>
-          With Badge
+          Minimal with badge
         </ReqoreButton>
         <ReqoreButton
           {...buttonProps}

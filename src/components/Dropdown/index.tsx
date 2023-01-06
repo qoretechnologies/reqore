@@ -16,6 +16,7 @@ export interface IReqoreDropdownProps extends Partial<IPopoverOptions> {
   label?: any;
   children?: any;
   listWidth?: string;
+  listHeight?: string;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
   caretPosition?: 'left' | 'right';
@@ -53,6 +54,8 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
   targetElement,
   useTargetWidth,
   listWidth,
+  listHeight,
+  passPopoverData,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -74,6 +77,7 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
         multiSelect={multiSelect}
         listStyle={listStyle}
         width={useTargetWidth ? '100%' : listWidth}
+        height={listHeight}
         items={items}
         filterable={filterable}
         onItemSelect={onItemSelect}
@@ -99,6 +103,7 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
       handler={handler || 'click'}
       openOnMount={isDefaultOpen}
       content={popoverContent}
+      passPopoverData={passPopoverData}
     >
       {children || label}
     </ReqorePopover>

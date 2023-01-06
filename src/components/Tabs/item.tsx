@@ -35,7 +35,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       position: relative;
       align-items: center;
       width: ${vertical ? `100%` : undefined};
-      padding: ${vertical ? `${TABS_PADDING_TO_PX[size!]}px` : `${TABS_PADDING_TO_PX[size!]}px`};
+      padding: ${`${TABS_PADDING_TO_PX[size!]}px`};
       padding-bottom: ${!vertical && 0};
       padding-right: ${vertical && 0};
 

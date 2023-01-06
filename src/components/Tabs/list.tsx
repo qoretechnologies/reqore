@@ -13,9 +13,14 @@ import {
 } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness } from '../../helpers/colors';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getNthGradientColor,
+} from '../../helpers/colors';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { TReqoreHexColor } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
 import { StyledPopover } from '../Popover';
@@ -159,23 +164,18 @@ const ReqoreTabsList = ({
   intent,
   ...rest
 }: IReqoreTabsListProps) => {
-  const [ref, { width, height }] = useMeasure();
+  const [ref, { width }] = useMeasure();
   const theme = useReqoreTheme('main', customTheme, intent);
   const activeTabData = tabs.find((tab) => tab.id === activeTab);
-  const currentTabColor =
+  const currentTabColor: TReqoreHexColor =
     activeTabIntent || activeTabData?.intent
       ? theme.intents[activeTabIntent || activeTabData.intent]
-      : activeTabData?.customTheme?.main || theme.main;
+      : getNthGradientColor(theme, activeTabData?.effect?.gradient?.colors) ||
+        getColorFromMaybeString(theme, activeTabData?.customTheme?.main || theme.main);
 
   const transformedItems = vertical
     ? tabs
-    : getTransformedItems(
-        tabs,
-        vertical ? height : _testWidth || width,
-        vertical ? 'height' : 'width',
-        activeTab,
-        size
-      );
+    : getTransformedItems(tabs, _testWidth || width, 'width', activeTab, size);
 
   return (
     <ReqoreThemeProvider theme={theme}>
