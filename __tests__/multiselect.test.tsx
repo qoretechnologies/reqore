@@ -231,6 +231,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
   // 4 items + 1 button for clearable input
   expect(document.querySelectorAll('.reqore-button').length).toBe(2);
 
+  fireEvent.focus(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item' },
   });
@@ -246,12 +247,55 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
   expect(screen.getAllByText('Existing item')).toBeTruthy();
 
+  fireEvent.focus(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item' },
   });
 
   // 6 again because the item is already created, so the Create button is not there
   expect(document.querySelectorAll('.reqore-button').length).toBe(6);
+
+  fireEvent.focus(document.querySelector('.reqore-input')!);
+  // Does not create new item if the query is empty
+  fireEvent.change(document.querySelector('.reqore-input')!, {
+    target: { value: '' },
+  });
+
+  fireEvent.keyDown(document.querySelector('.reqore-input')!, {
+    key: 'Enter',
+  });
+
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
+});
+
+test('Renders <ReqoreMultiSelect /> and does not create new item on ENTER when not focused', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreMultiSelect items={MultiSelectItems} canCreateItems enterKeySelects />
+      </ReqoreUIProvider>
+    );
+  });
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  fireEvent.focus(document.querySelector('.reqore-input')!);
+  // Add some text
+  fireEvent.change(document.querySelector('.reqore-input')!, {
+    target: { value: 'New item' },
+  });
+
+  // Blur the input
+  fireEvent.blur(document.querySelector('.reqore-input')!);
+
+  jest.advanceTimersByTime(1);
+
+  // Try and create the item by pressing ENTER key
+  fireEvent.keyDown(document.querySelector('.reqore-input')!, {
+    key: 'Enter',
+  });
+
+  expect(screen.getByText('No items selected')).toBeTruthy();
 });
 
 test('Renders <ReqoreMultiSelect /> and deselects an item using the ENTER key', () => {
@@ -272,6 +316,7 @@ test('Renders <ReqoreMultiSelect /> and deselects an item using the ENTER key', 
   expect(screen.getAllByText('Existing item 3')).toBeTruthy();
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
+  fireEvent.focus(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item 3' },
   });
@@ -308,6 +353,7 @@ test('Renders <ReqoreMultiSelect /> and calls onValueChange when value changes',
   expect(screen.getAllByText('Existing item 3')).toBeTruthy();
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
+  fireEvent.focus(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item 3' },
   });

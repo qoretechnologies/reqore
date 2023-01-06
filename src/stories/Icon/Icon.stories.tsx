@@ -15,22 +15,46 @@ export const Icon: Story<IReqoreIconProps> = () => {
         <ReqoreIcon icon='ArrowLeftCircleFill' intent='success' margin='both' />
         <ReqoreIcon icon='HotelFill' size='18px' margin='both' />
         <ReqoreIcon icon='SignalTowerFill' size='20px' color='#ff0000' margin='both' />
-        <ReqoreIcon icon='SignalTowerFill' size='20px' color='#291133' sepia margin='both' />
-        <ReqoreIcon icon='SignalTowerFill' size='20px' color='#0c7052' blur={1} margin='both' />
+        <ReqoreIcon
+          icon='SignalTowerFill'
+          size='20px'
+          color='#291133'
+          effect={{ sepia: true }}
+          margin='both'
+        />
+        <ReqoreIcon
+          icon='SignalTowerFill'
+          size='20px'
+          color='#0c7052'
+          effect={{ blur: 1 }}
+          margin='both'
+        />
         <ReqoreIcon
           icon='SignalTowerFill'
           size='20px'
           color='#700c57'
-          contrast={150}
+          effect={{ contrast: 150 }}
           margin='both'
         />
-        <ReqoreIcon icon='SignalTowerFill' size='20px' color='#d5be0f' grayscale margin='both' />
-        <ReqoreIcon icon='SignalTowerFill' size='20px' color='#0f5bd5' invert margin='both' />
+        <ReqoreIcon
+          icon='SignalTowerFill'
+          size='20px'
+          color='#d5be0f'
+          effect={{ grayscale: true }}
+          margin='both'
+        />
+        <ReqoreIcon
+          icon='SignalTowerFill'
+          size='20px'
+          color='#0f5bd5'
+          effect={{ invert: true }}
+          margin='both'
+        />
         <ReqoreIcon
           icon='SignalTowerFill'
           size='20px'
           color='#ffffff'
-          opacity={0.5}
+          effect={{ opacity: 0.5 }}
           margin='both'
         />
       </ReqorePanel>
@@ -50,37 +74,43 @@ export const Icon: Story<IReqoreIconProps> = () => {
         <ReqoreIcon
           image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
           size='30px'
-          sepia
+          effect={{ sepia: true }}
           margin='both'
         />
         <ReqoreIcon
           image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
           size='40px'
-          blur={3}
+          effect={{ grayscale: true }}
           margin='both'
         />
         <ReqoreIcon
           image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
           size='70px'
-          contrast={150}
+          effect={{ blur: 1 }}
           margin='both'
         />
         <ReqoreIcon
           image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
           size='40px'
-          brightness={150}
+          effect={{ contrast: 150 }}
           margin='both'
         />
         <ReqoreIcon
           image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
           size='40px'
-          opacity={0.5}
+          effect={{ invert: true }}
           margin='both'
         />
         <ReqoreIcon
           image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
           size='40px'
-          invert
+          effect={{ opacity: 0.5 }}
+          margin='both'
+        />
+        <ReqoreIcon
+          image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
+          size='40px'
+          effect={{ saturate: 150 }}
           margin='both'
         />
       </ReqorePanel>

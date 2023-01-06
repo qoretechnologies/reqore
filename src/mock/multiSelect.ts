@@ -16,6 +16,7 @@ export const MultiSelectItems: TReqoreMultiSelectItem[] = [
     value: 'Existing item 3',
     icon: 'DropboxFill',
     intent: 'info',
+    rightIcon: 'SunLine',
   },
   {
     label: 'Existing item 4',
@@ -42,6 +43,13 @@ export const MultiSelectItems: TReqoreMultiSelectItem[] = [
   {
     value: 'itemWithNoLabel',
     icon: 'TakeawayLine',
+    actions: [
+      {
+        icon: 'ArrowLeftUpFill',
+        onClick: () => console.log('clicked'),
+        intent: 'pending',
+      },
+    ],
   },
   {
     label: 'Other Item 1',

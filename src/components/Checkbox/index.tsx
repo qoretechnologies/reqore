@@ -1,27 +1,40 @@
 import { rgba } from 'polished';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
+import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getNthGradientColor,
+  getReadableColor,
+  getReadableColorFrom,
+} from '../../helpers/colors';
+import { getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import { DisabledElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
+  IReqoreIntent,
   IReqoreReadOnly,
+  IWithReqoreCustomTheme,
   IWithReqoreEffect,
   TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { ReqoreTextEffect } from '../Effect';
-import ReqoreIcon from '../Icon';
+import { IReqoreEffect, ReqoreTextEffect, StyledEffect, StyledTextEffect } from '../Effect';
+import ReqoreIcon, { StyledIconWrapper } from '../Icon';
+import { ReqoreSpacer } from '../Spacer';
 
 export interface IReqoreCheckboxProps
   extends React.HTMLAttributes<HTMLDivElement>,
     IReqoreDisabled,
     IReqoreReadOnly,
-    IWithReqoreEffect {
+    IWithReqoreEffect,
+    IReqoreIntent,
+    IWithReqoreCustomTheme {
   label?: string;
   labelDetail?: any;
   labelDetailPosition?: 'left' | 'right';
@@ -35,6 +48,10 @@ export interface IReqoreCheckboxProps
   uncheckedIcon?: IReqoreIconName;
   checkedIcon?: IReqoreIconName;
   image?: string;
+  onText?: string | number;
+  offText?: string | number;
+  switchTextEffect?: IReqoreEffect;
+  labelEffect?: IReqoreEffect;
 }
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
@@ -48,38 +65,65 @@ const StyledSwitchToggle = styled.div`
   align-items: center;
   justify-content: center;
   position: absolute;
-  height: ${({ size }) => SIZE_TO_PX[size] - 13}px;
-  width: ${({ size }) => SIZE_TO_PX[size] - 13}px;
+  height: ${({ size }) => SIZE_TO_PX[size] - 4}px;
+  width: ${({ size, width }) => width || SIZE_TO_PX[size] - 4}px;
   top: 50%;
   transform: translateY(-50%);
-  left: ${({ checked, size }) =>
-    !checked ? '5px' : `${SIZE_TO_PX[size] * 1.8 - (SIZE_TO_PX[size] - 7)}px`};
-  border-radius: 100%;
-  background-color: ${({ theme, checked, transparent }) =>
+  left: ${({ checked, size, width }) =>
+    !checked ? '1px' : `calc(100% - ${width || SIZE_TO_PX[size] - 4}px - 1px)`};
+  border-radius: 50px;
+  background-color: ${({ theme, checked, transparent, parentEffect }) =>
     transparent
       ? 'transparent'
       : !checked
-      ? rgba(getReadableColor(theme, undefined, undefined), 0.2)
-      : getReadableColor(theme, undefined, undefined)};
+      ? parentEffect?.gradient
+        ? changeLightness(getNthGradientColor(theme, parentEffect?.gradient?.colors, 1), 0.2)
+        : theme.main
+      : parentEffect?.gradient
+      ? changeLightness(getNthGradientColor(theme, parentEffect?.gradient?.colors, 2), 0.2)
+      : theme.main};
 `;
 
-const StyledSwitch = styled.div<IReqoreCheckboxStyle>`
+const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   transition: all 0.2s ease-out;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  height: ${({ size }) => SIZE_TO_PX[size] - 5}px;
-  width: ${({ size }) => SIZE_TO_PX[size] * 1.8}px;
+  height: ${({ size }) => SIZE_TO_PX[size]}px;
+  min-width: ${({ size }) => SIZE_TO_PX[size] * 1.8}px;
 
-  border: 1px solid
-    ${({ theme, checked }) =>
-      rgba(getReadableColor(theme, undefined, undefined), checked ? 0.8 : 0.2)};
+  border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.25 : 0.2)};
   border-radius: 50px;
 
   margin-right: ${({ size }) => PADDING_FROM_SIZE[size]}px;
   margin-left: ${({ size }) => PADDING_FROM_SIZE[size]}px;
 
   background-color: ${({ theme, checked }) =>
-    checked ? rgba(getReadableColor(theme, undefined, undefined), 0.1) : 'transparent'};
+    checked ? rgba(changeLightness(theme.main, 0.15), 0.5) : 'transparent'};
+
+  ${StyledIconWrapper} {
+    z-index: 1;
+  }
+`;
+
+const StyledSwitchTextWrapper = styled(StyledTextEffect)`
+  margin: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+`;
+
+const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
+  color: ${({ theme, checked }) =>
+    getReadableColorFrom(!checked ? theme.originalMain : theme.main)};
+`;
+
+const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
+  color: ${({ theme, checked }) =>
+    getReadableColorFrom(!checked ? theme.main : changeLightness(theme.main, 0.1))};
 `;
 
 const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
@@ -106,14 +150,15 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
       ${ReadOnlyElement};
     `}
 
-  color: ${({ theme, checked }) => getReadableColor(theme, undefined, undefined, !checked)};
+  color: ${({ theme, checked }) =>
+    getReadableColor(theme, undefined, undefined, !checked, theme.originalMain)};
 
   &:hover {
-    color: ${({ theme }) => getReadableColor(theme, undefined, undefined, false)};
+    color: ${({ theme }) =>
+      getReadableColor(theme, undefined, undefined, false, theme.originalMain)};
 
     > ${StyledSwitch} {
-      border-color: ${({ theme, checked }) =>
-        rgba(getReadableColor(theme, undefined, undefined, false), checked ? 0.8 : 0.5)};
+      border-color: ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.3 : 0.25)};
     }
   }
 `;
@@ -131,23 +176,45 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       labelPosition = 'right',
       tooltip,
       asSwitch,
-      uncheckedIcon = 'CheckboxBlankCircleLine',
-      checkedIcon = 'CheckboxCircleFill',
+      uncheckedIcon,
+      checkedIcon,
       readOnly,
-      effect,
+      labelEffect,
+      switchTextEffect,
       image,
+      onText,
+      offText,
+      intent,
+      effect,
+      customTheme,
       ...rest
     }: IReqoreCheckboxProps,
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
+    const [offRef, { width: offWidth }] = useMeasure();
+    const [onRef, { width: onWidth }] = useMeasure();
+    const theme = useReqoreTheme('main', customTheme, intent);
 
     useTooltip(targetRef.current, tooltip);
+
+    const width = useMemo(() => {
+      if ((!image && !onText) || !offText) return undefined;
+
+      const selectedWidth = checked ? onWidth : offWidth;
+
+      return selectedWidth + PADDING_FROM_SIZE[size] * 2;
+    }, [checked, offWidth, onWidth, size]);
+
+    const hasText = useMemo(() => {
+      return !!onText || !!offText;
+    }, [onText, offText]);
 
     return (
       <StyledCheckbox
         {...rest}
         ref={targetRef}
+        theme={theme}
         size={size}
         disabled={disabled}
         checked={checked}
@@ -156,9 +223,11 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       >
         {label && labelPosition === 'left' ? (
           <>
+            <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
             {labelDetailPosition === 'left' && labelDetail}
             <ReqoreTextEffect
-              effect={{ ...effect, interactive: !disabled && !readOnly && !checked }}
+              active={checked}
+              effect={{ ...labelEffect, interactive: !disabled && !readOnly && !checked }}
             >
               {label}
             </ReqoreTextEffect>
@@ -166,25 +235,111 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
           </>
         ) : null}
         {asSwitch ? (
-          <StyledSwitch size={size} labelPosition={labelPosition} checked={checked}>
-            <StyledSwitchToggle size={size} checked={checked} transparent={!!image}>
-              {image ? <ReqoreIcon size={size} image={image} grayscale={!checked} /> : null}
+          <StyledSwitch
+            size={size}
+            labelPosition={labelPosition}
+            checked={checked}
+            theme={theme}
+            as='div'
+            effect={effect}
+          >
+            <>
+              {offText || offText === 0 ? (
+                <StyledOffSwitchText
+                  ref={offRef}
+                  size={size}
+                  theme={theme}
+                  checked={checked}
+                  effect={
+                    {
+                      uppercase: true,
+                      textSize: getOneLessSize(size),
+                      weight: 'bold',
+                      ...switchTextEffect,
+                      opacity: checked ? 0.8 : 1,
+                    } as IReqoreEffect
+                  }
+                >
+                  {image || uncheckedIcon ? (
+                    <ReqoreIcon
+                      size={size}
+                      image={image}
+                      icon={uncheckedIcon}
+                      effect={{ grayscale: true }}
+                      margin={offText ? 'right' : undefined}
+                    />
+                  ) : null}
+                  {offText}
+                </StyledOffSwitchText>
+              ) : null}
+              {onText || onText === 0 ? (
+                <StyledOnSwitchText
+                  ref={onRef}
+                  size={size}
+                  theme={theme}
+                  checked={checked}
+                  effect={
+                    {
+                      uppercase: true,
+                      textSize: getOneLessSize(size),
+                      weight: 'thick',
+                      ...switchTextEffect,
+                      opacity: checked ? 1 : 0.5,
+                    } as IReqoreEffect
+                  }
+                >
+                  {image || checkedIcon ? (
+                    <ReqoreIcon
+                      size={size}
+                      image={image}
+                      margin={onText ? 'right' : undefined}
+                      icon={checkedIcon}
+                    />
+                  ) : null}
+                  {onText}
+                </StyledOnSwitchText>
+              ) : null}
+            </>
+            <StyledSwitchToggle
+              size={size}
+              checked={checked}
+              width={width}
+              theme={theme}
+              parentEffect={effect}
+              transparent={(image || checkedIcon) && !hasText}
+            >
+              {!onText && !offText ? (
+                <ReqoreIcon
+                  size={size}
+                  image={image}
+                  icon={checked ? checkedIcon : uncheckedIcon}
+                  effect={{ grayscale: !checked, opacity: checked ? 1 : 0.5 }}
+                />
+              ) : null}
             </StyledSwitchToggle>
           </StyledSwitch>
         ) : (
           <ReqoreIcon
             size={size}
-            icon={!image ? (checked ? checkedIcon : uncheckedIcon) : undefined}
+            icon={
+              !image
+                ? checked
+                  ? checkedIcon || 'CheckboxCircleFill'
+                  : uncheckedIcon || 'CheckboxBlankCircleLine'
+                : undefined
+            }
             image={image}
-            grayscale={image ? !checked : undefined}
+            effect={{ grayscale: image ? !checked : undefined, opacity: checked ? 1 : 0.5 }}
             margin='both'
+            intent={intent}
           />
         )}
         {label && labelPosition === 'right' ? (
           <>
             {labelDetailPosition === 'left' && labelDetail}
             <ReqoreTextEffect
-              effect={{ ...effect, interactive: !disabled && !readOnly && !checked }}
+              active={checked}
+              effect={{ ...labelEffect, interactive: !disabled && !readOnly && !checked }}
             >
               {label}
             </ReqoreTextEffect>

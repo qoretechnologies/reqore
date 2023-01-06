@@ -30,7 +30,18 @@ export type TReqoreEffectColorList = [
   TReqoreEffectColorManipulationMultiplier | undefined
 ];
 
-export interface IReqoreEffect {
+export interface IReqoreEffectFilters {
+  grayscale?: boolean;
+  blur?: number;
+  sepia?: boolean;
+  invert?: boolean;
+  opacity?: number;
+  brightness?: number;
+  contrast?: number;
+  saturate?: number;
+}
+
+export interface IReqoreEffect extends IReqoreEffectFilters {
   gradient?: {
     type?: 'linear' | 'radial';
     shape?: 'circle' | 'ellipse';
@@ -63,13 +74,14 @@ export interface IReqoreTextEffectProps
   as?: React.ElementType;
   theme?: IReqoreTheme;
   active?: boolean;
+  isText?: boolean;
 }
 
 export const StyledEffect = styled.span`
   transition: all 0.2s ease-in-out;
 
   // If gradient was supplied
-  ${({ effect, theme, minimal, active }: IReqoreTextEffectProps) => {
+  ${({ effect, theme, minimal, active, isText }: IReqoreTextEffectProps) => {
     if (!effect || !effect.gradient) {
       return undefined;
     }
@@ -107,7 +119,7 @@ export const StyledEffect = styled.span`
         getColorFromMaybeString(theme, effect.gradient.borderColor),
         0.15
       )}`;
-    } else {
+    } else if (!isText) {
       // We will use border-image and create a gradient border
       borderColor = 'transparent';
       borderHoverColor = 'transparent';
@@ -231,16 +243,65 @@ export const StyledEffect = styled.span`
           text-align: ${effect.textAlign};
         `
       : undefined}
+
+  ${({ effect }) =>
+    effect &&
+    effect.grayscale &&
+    css`
+      filter: grayscale(100%);
+    `};
+  ${({ effect }) =>
+    effect &&
+    effect.blur &&
+    css`
+      filter: blur(${effect.blur}px);
+    `};
+  ${({ effect }) =>
+    effect &&
+    effect.sepia &&
+    css`
+      filter: sepia(100%);
+    `};
+  ${({ effect }) =>
+    effect &&
+    effect.invert &&
+    css`
+      filter: invert(100%);
+    `};
+  ${({ effect }) =>
+    effect && (effect.opacity || effect.opacity === 0)
+      ? css`
+          opacity: ${effect.opacity};
+        `
+      : undefined};
+  ${({ effect }) =>
+    effect &&
+    effect.brightness &&
+    css`
+      filter: brightness(${effect.brightness}%);
+    `};
+  ${({ effect }) =>
+    effect &&
+    effect.contrast &&
+    css`
+      filter: contrast(${effect.contrast}%);
+    `};
+  ${({ effect }) =>
+    effect &&
+    effect.saturate &&
+    css`
+      filter: saturate(${effect.saturate}%);
+    `};
 `;
 
-export const StyledTextEffect = styled(StyledEffect)`
+export const StyledTextEffect = styled(StyledEffect).attrs((props) => ({ ...props, isText: true }))`
   display: inline-block;
 
   ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.gradient
       ? css`
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
         `
       : undefined}
 `;

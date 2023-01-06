@@ -2,7 +2,8 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import { IReqoreMultiSelectProps, ReqoreMultiSelect } from '../../components/MultiSelect';
 import { MultiSelectItems } from '../../mock/multiSelect';
-import { argManager, FlatArg, MinimalArg, SizeArg } from '../utils/args';
+import { IReqoreIconName } from '../../types/icons';
+import { FlatArg, IconArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMultiSelectProps>();
 
@@ -27,6 +28,7 @@ export default {
       name: 'Can remove items',
       type: 'boolean',
     }),
+    ...IconArg('onItemClickIcon', 'Clickable item right icon', null),
   },
 } as Meta<IReqoreMultiSelectProps>;
 
@@ -45,7 +47,6 @@ const Template: Story<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProps)
       {...args}
       onValueChange={setSelected}
       enterKeySelects
-      onItemClick={(item) => console.log('onItemClick', item)}
       selectorProps={{
         listHeight: '600px',
         ...args.selectorProps,
@@ -74,6 +75,12 @@ Flat.args = {
 export const Minimal = Template.bind({});
 Minimal.args = {
   minimal: true,
+};
+
+export const Clickable = Template.bind({});
+Clickable.args = {
+  onItemClick: (item) => console.log('onItemClick', item),
+  onItemClickIcon: 'EditLine' as IReqoreIconName,
 };
 
 export const WithEffect = Template.bind({});

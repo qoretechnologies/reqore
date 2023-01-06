@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup } from '../../index';
-import { argManager, SizeArg } from '../utils/args';
+import { SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
@@ -195,7 +195,7 @@ export const Basic = Template.bind({});
 export const BigGapSize = Template.bind({});
 BigGapSize.args = { gapSize: 'big' };
 export const Badge = Template.bind({});
-Badge.args = { badge: true };
+Badge.args = { asBadge: true };
 
 export const Effect = Template.bind({});
 Effect.args = {

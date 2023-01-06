@@ -53,7 +53,7 @@ export interface IReqoreTagProps
   color?: TReqoreEffectColor;
   actions?: IReqoreTagAction[];
   width?: string;
-  badge?: boolean;
+  asBadge?: boolean;
   intent?: TReqoreIntent;
   wrap?: boolean;
 }
@@ -77,17 +77,18 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  border-radius: ${({ badge, size }) => (badge ? 18 : RADIUS_FROM_SIZE[size])}px;
+  border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
   ${({ wrap, hasWidth }) =>
     wrap || hasWidth
       ? css`
-          min-height: ${({ size, badge }) => (badge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
+          min-height: ${({ size, asBadge }) =>
+            asBadge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size]}px;
         `
       : css`
-          height: ${({ size, badge }) => (badge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
+          height: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
         `}
 
   ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) =>
@@ -220,7 +221,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       size = 'normal',
       onRemoveClick,
       actions,
-      badge,
+      asBadge,
       intent,
       color,
       minimal,
@@ -236,10 +237,15 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     useTooltip(targetRef.current, tooltip);
 
     // If color or intent was specified, set the color
-    let customColor: TReqoreHexColor = intent
-      ? theme.intents[intent]
-      : getColorFromMaybeString(theme, color);
-    customColor = minimal ? `${customColor || '#000000'}40` : customColor;
+    const getCustomColor = (itemIntent?: TReqoreIntent): TReqoreHexColor => {
+      let customColor: TReqoreHexColor = itemIntent
+        ? theme.intents[itemIntent]
+        : getColorFromMaybeString(theme, color);
+
+      customColor = minimal ? `${customColor || '#000000'}40` : customColor;
+
+      return customColor;
+    };
 
     return (
       <StyledTag
@@ -250,11 +256,11 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         }}
         width={width}
         labelKey={labelKey}
-        color={customColor}
+        color={getCustomColor(intent)}
         className={`${className || ''} reqore-tag`}
         size={size}
         ref={targetRef}
-        badge={badge}
+        asBadge={asBadge}
         minimal={minimal}
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
@@ -308,7 +314,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                   component={StyledButtonWrapper}
                   componentProps={{
                     size,
-                    color: customColor,
+                    color: getCustomColor(action.intent),
                     className: 'reqore-tag-action',
                     onClick: action.onClick,
                     effect: rest.effect,
@@ -330,7 +336,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             component={StyledButtonWrapper}
             componentProps={{
               size,
-              color: customColor,
+              color: getCustomColor(intent),
               className: 'reqore-tag-remove',
               onClick: onRemoveClick,
               effect: rest.effect,
