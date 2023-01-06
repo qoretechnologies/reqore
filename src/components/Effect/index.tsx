@@ -91,7 +91,7 @@ export const StyledEffect = styled.span`
       theme,
       effect.gradient.colors,
       0,
-      minimal && !active
+      !isText && minimal && !active
     );
     const gradientColorsActive = createEffectGradient(theme, effect.gradient.colors, 0.05);
 

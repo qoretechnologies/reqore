@@ -8,7 +8,7 @@ import {
   ReqoreMenuItem,
   ReqorePopover,
 } from '../../index';
-import { argManager, IntentArg } from '../utils/args';
+import { IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMenuProps>();
 
@@ -113,6 +113,7 @@ const Template: Story<IReqoreMenuProps> = (args) => {
       <ReqoreMenuDivider label='Divider' />
       <ReqorePopover
         component={ReqoreMenuItem}
+        flat={args.flat}
         componentProps={
           {
             icon: 'EmotionUnhappyLine',

@@ -10,7 +10,7 @@ import {
   ReqorePopover,
   ReqoreSpacer,
 } from '../../index';
-import { argManager, FlatArg } from '../utils/args';
+import { FlatArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePopoverProps>();
 
@@ -178,9 +178,26 @@ const Template: Story<IReqorePopoverProps> = (args: IReqorePopoverProps) => {
         component={ReqoreButton}
         isReqoreComponent
         openOnMount
-        placement='bottom'
+        placement='right'
       >
         Auto open popover
+      </ReqorePopover>
+      <ReqorePopover
+        {...args}
+        component={ReqoreButton}
+        isReqoreComponent
+        openOnMount
+        placement='bottom'
+        content={
+          <ReqorePanel label='This is a test' flat>
+            <ReqoreMessage flat>
+              In to am attended desirous raptures declared diverted confined at. Collected instantly
+              remaining up certainly to necessary as. Over walk dull into
+            </ReqoreMessage>
+          </ReqorePanel>
+        }
+      >
+        With Custom Content
       </ReqorePopover>
     </ReqoreControlGroup>
   );

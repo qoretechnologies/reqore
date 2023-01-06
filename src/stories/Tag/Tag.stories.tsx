@@ -195,7 +195,7 @@ export const Basic = Template.bind({});
 export const BigGapSize = Template.bind({});
 BigGapSize.args = { gapSize: 'big' };
 export const Badge = Template.bind({});
-Badge.args = { asasBadge: true };
+Badge.args = { asBadge: true };
 
 export const Effect = Template.bind({});
 Effect.args = {
