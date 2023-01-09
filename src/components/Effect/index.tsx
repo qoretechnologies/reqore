@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import { HTMLAttributes } from 'react';
-import styled, { css } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
+import { Colors } from '../../constants/colors';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
@@ -23,12 +24,21 @@ export type TReqoreEffectColor =
   | `${TReqoreIntent}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`
   | 'main'
   | `main:${TReqoreEffectColorManipulation}`
-  | `main:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`;
+  | `main:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`
+  | `${TReqoreHexColor}:${TReqoreEffectColorManipulation}`
+  | `${TReqoreHexColor}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`;
 export type TReqoreEffectColorList = [
   'main' | TReqoreIntent | TReqoreColor,
   TReqoreEffectColorManipulation | undefined,
   TReqoreEffectColorManipulationMultiplier | undefined
 ];
+export type TReqoreEffectGradientColors =
+  | 'main'
+  | TReqoreIntent
+  | TReqoreHexColor
+  | TReqoreEffectGradientColorsObject;
+export type TReqoreEffectGradientColorsObject = Record<number, TReqoreEffectColor>;
+export type TReqoreEffectGradientAnimationTrigger = 'always' | 'hover' | 'active' | 'never';
 
 export interface IReqoreEffectFilters {
   grayscale?: boolean;
@@ -45,9 +55,10 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
   gradient?: {
     type?: 'linear' | 'radial';
     shape?: 'circle' | 'ellipse';
-    colors: Record<number, TReqoreEffectColor>;
+    colors: TReqoreEffectGradientColors;
     direction?: string;
     borderColor?: TReqoreEffectColor;
+    animate?: TReqoreEffectGradientAnimationTrigger;
   };
   noWrap?: boolean;
   color?: TReqoreEffectColor;
@@ -61,7 +72,6 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
     color: TReqoreEffectColor;
     inset?: boolean;
     blur?: number;
-    useBorder?: boolean;
   };
   interactive?: boolean;
 }
@@ -76,6 +86,19 @@ export interface IReqoreTextEffectProps
   active?: boolean;
   isText?: boolean;
 }
+
+// Animate the gradient
+const StyledGradientKeyframes = keyframes`
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+`;
 
 export const StyledEffect = styled.span`
   transition: all 0.2s ease-in-out;
@@ -154,6 +177,13 @@ export const StyledEffect = styled.span`
         }
       `}
 
+      ${effect.gradient.animate === 'always' || (effect.gradient.animate === 'active' && active)
+        ? css`
+            background-size: 200% 200%;
+            animation: ${StyledGradientKeyframes} 1.5s linear infinite;
+          `
+        : undefined}
+
       ${effect.interactive &&
       css`
         cursor: pointer;
@@ -163,26 +193,43 @@ export const StyledEffect = styled.span`
         &:active {
           background: ${gradientActive};
           border-color: ${borderHoverColor} !important;
+
+          ${effect.gradient.animate === 'hover' ||
+          (effect.gradient.animate === 'active' && active) ||
+          effect.gradient.animate === 'always'
+            ? css`
+                background-size: 200% 200%;
+                animation: ${StyledGradientKeyframes} 2s linear infinite;
+              `
+            : undefined}
         }
       `}
     `;
   }}
 
-  ${({ effect, theme }: IReqoreTextEffectProps) => {
+  ${({ effect, theme, isText }: IReqoreTextEffectProps) => {
     if (!effect || !effect.glow) {
       return undefined;
     }
 
-    if (effect.glow.useBorder) {
+    if (!isText) {
       return css`
-        border: ${effect.glow.size || 2}px solid
-          ${getColorFromMaybeString(theme, effect.glow.color)} !important;
+        box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 ${effect.glow.blur || 0}px
+          ${effect.glow.size || 2}px ${getColorFromMaybeString(theme, effect.glow.color)};
       `;
     }
 
+    const color = getColorFromMaybeString(
+      theme,
+      effect.glow.color === 'main' ? 'main:lighten:2' : effect.glow.color
+    );
+    const blur = effect.glow.blur || 0;
+
     return css`
-      box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 ${effect.glow.blur || 0}px
-        ${effect.glow.size || 2}px ${getColorFromMaybeString(theme, effect.glow.color)};
+      color: ${Colors.LIGHT};
+      text-shadow: 0 0 ${blur}px ${color}, 0 0 ${blur + 5}px ${color}, 0 0 ${blur + 10}px ${color},
+        0 0 1px ${getReadableColorFrom(color)}, 0 0 2px ${getReadableColorFrom(color)},
+        0 0 3px ${getReadableColorFrom(color)};
     `;
   }}
 

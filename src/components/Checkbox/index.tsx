@@ -250,7 +250,12 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
             checked={checked}
             theme={theme}
             as='div'
-            effect={effect}
+            effect={
+              {
+                interactive: !disabled && !readOnly,
+                ...effect,
+              } as IReqoreEffect
+            }
           >
             <>
               {offText || offText === 0 ? (

@@ -13,6 +13,7 @@ import ReqoreContext from '../../context/ReqoreContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreEffect } from '../../hooks/useReqoreEffect';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import {
@@ -372,7 +373,8 @@ const ReqoreButton = memo(
     ) => {
       const { targetRef } = useCombinedRefs(ref);
       const { animations } = useContext(ReqoreContext);
-      const theme: IReqoreTheme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent);
+      const fixedEffect = useReqoreEffect('buttons', theme, effect);
 
       /* A custom hook that is used to add a tooltip to the button. */
       useTooltip(targetRef.current, tooltip);
@@ -391,7 +393,7 @@ const ReqoreButton = memo(
           {...rest}
           effect={{
             interactive: !readOnly && !rest.disabled,
-            ...effect,
+            ...fixedEffect,
           }}
           as='button'
           theme={theme}

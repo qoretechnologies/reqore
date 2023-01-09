@@ -11,13 +11,14 @@ export interface IReqoreCustomTheme extends Partial<Omit<IReqoreTheme, 'main' | 
     color?: TReqoreEffectColor;
     dim?: boolean;
   };
+  gradient?: boolean;
 }
 
 export const useReqoreTheme = (
   element?: string,
   customTheme: IReqoreCustomTheme = {},
   intent?: TReqoreIntent
-) => {
+): IReqoreTheme => {
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
 
   if (!element) {

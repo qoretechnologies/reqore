@@ -49,13 +49,18 @@ export const argTypes = {
     defaultValue: true,
     type: 'boolean',
   },
+  otherThemeOptions: {
+    table: {
+      disable: true,
+    },
+  },
 };
 
 export const decorators = [
   (Story, context) =>
     context.args.withoutContent ? (
       <ReqoreUIProvider
-        theme={{ main: context.args.mainTheme }}
+        theme={{ main: context.args.mainTheme, ...context.args.otherThemeOptions }}
         options={{
           animations: {
             buttons: context.args.animatedButtons,
@@ -69,7 +74,7 @@ export const decorators = [
       </ReqoreUIProvider>
     ) : (
       <ReqoreUIProvider
-        theme={{ main: context.args.mainTheme }}
+        theme={{ main: context.args.mainTheme, ...context.args.otherThemeOptions }}
         options={{
           animations: {
             buttons: context.args.animatedButtons,

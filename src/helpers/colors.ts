@@ -1,6 +1,12 @@
 import { cloneDeep, merge, reduce } from 'lodash';
 import { darken, getLuminance, lighten, mix, readableColor } from 'polished';
-import { TReqoreEffectColor, TReqoreEffectColorList, TReqoreHexColor } from '../components/Effect';
+import {
+  TReqoreEffectColor,
+  TReqoreEffectColorList,
+  TReqoreEffectGradientColors,
+  TReqoreEffectGradientColorsObject,
+  TReqoreHexColor,
+} from '../components/Effect';
 import { Colors } from '../constants/colors';
 import { DEFAULT_INTENTS, IReqoreTheme, TReqoreIntent } from '../constants/theme';
 
@@ -175,7 +181,7 @@ export const getColorFromMaybeString = (
     _color = theme.intents[providedColor];
   }
 
-  if (isValidSixCharHex(color)) {
+  if (isValidSixCharHex(providedColor)) {
     _color = providedColor as TReqoreHexColor;
   }
 
@@ -192,28 +198,62 @@ export const getColorFromMaybeString = (
 
 export const createEffectGradient = (
   theme: IReqoreTheme,
-  colors: Record<number, TReqoreEffectColor>,
+  colors: TReqoreEffectGradientColors,
   lighten: number = 0,
   minimal?: boolean
 ): string => {
+  let _colors: TReqoreEffectGradientColorsObject;
+  // Check if the colors are valid
+  if (!colors) {
+    throw new Error('You need to provide colors');
+  }
+
+  if (typeof colors === 'string') {
+    _colors = buildGradientColorsFromString(theme, colors);
+  } else {
+    _colors = colors;
+  }
+
   return reduce(
-    colors,
+    _colors,
     (colorsString, color, percentage) => {
       return `${colorsString}, ${
-        minimal ? theme.main : changeLightness(getColorFromMaybeString(theme, color), lighten)
+        minimal
+          ? theme.originalMain
+          : changeLightness(getColorFromMaybeString(theme, color), lighten)
       } ${percentage}%`;
     },
     ''
   );
 };
 
+export const buildGradientColorsFromString = (
+  theme: IReqoreTheme,
+  color: 'main' | TReqoreHexColor | TReqoreIntent
+): TReqoreEffectGradientColorsObject => {
+  if (!color) {
+    throw new Error('You need to provide a color or intent');
+  }
+
+  const colorFrom: TReqoreHexColor = getColorFromMaybeString(theme, `${color}:lighten:1`);
+  const colorTo: TReqoreHexColor = getColorFromMaybeString(theme, `${color}`);
+
+  return {
+    0: colorFrom,
+    100: colorTo,
+  };
+};
+
 export const getNthGradientColor = (
   theme: IReqoreTheme,
-  colors?: Record<number, TReqoreEffectColor>,
+  colors?: TReqoreEffectGradientColors,
   nth: number = 1
 ): TReqoreHexColor | undefined => {
-  if (colors) {
-    return getColorFromMaybeString(theme, Object.values(colors)[nth - 1]);
+  const _colors =
+    typeof colors === 'string' ? buildGradientColorsFromString(theme, colors) : colors;
+
+  if (_colors) {
+    return getColorFromMaybeString(theme, Object.values(_colors)[nth - 1]);
   }
 
   return undefined;
@@ -221,12 +261,15 @@ export const getNthGradientColor = (
 
 export const getGradientMix = (
   theme: IReqoreTheme,
-  colors: Record<number, TReqoreEffectColor>,
+  colors: TReqoreEffectGradientColors,
   fallback?: TReqoreHexColor
 ): TReqoreHexColor | undefined => {
+  const _colors =
+    typeof colors === 'string' ? buildGradientColorsFromString(theme, colors) : colors;
+
   if (colors && Object.keys(colors).length === 2) {
-    const gradientColor1: TReqoreHexColor = getNthGradientColor(theme, colors);
-    const gradientColor2: TReqoreHexColor = getNthGradientColor(theme, colors, 2);
+    const gradientColor1: TReqoreHexColor = getNthGradientColor(theme, _colors);
+    const gradientColor2: TReqoreHexColor = getNthGradientColor(theme, _colors, 2);
 
     return mix(
       0.5,

@@ -1,6 +1,14 @@
 export type TSizes = 'tiny' | 'small' | 'normal' | 'big' | 'huge';
 export type TWeights = 'soft' | 'normal' | 'heavy';
 
+export const ReqoreSizes = {
+  TINY: 'tiny',
+  SMALL: 'small',
+  NORMAL: 'normal',
+  BIG: 'big',
+  HUGE: 'huge',
+};
+
 export const SIZES = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
 export const SIZE_TO_NUMBER = {
