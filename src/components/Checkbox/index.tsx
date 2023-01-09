@@ -52,6 +52,8 @@ export interface IReqoreCheckboxProps
   offText?: string | number;
   switchTextEffect?: IReqoreEffect;
   labelEffect?: IReqoreEffect;
+  margin?: 'left' | 'right' | 'both' | 'none';
+  wrapLabel?: boolean;
 }
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
@@ -90,6 +92,7 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size] * 1.8}px;
@@ -97,11 +100,7 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.25 : 0.2)};
   border-radius: 50px;
 
-  margin-right: ${({ size }) => PADDING_FROM_SIZE[size]}px;
-  margin-left: ${({ size }) => PADDING_FROM_SIZE[size]}px;
-
-  background-color: ${({ theme, checked }) =>
-    checked ? rgba(changeLightness(theme.main, 0.15), 0.5) : 'transparent'};
+  background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.15), 0.5)};
 
   ${StyledIconWrapper} {
     z-index: 1;
@@ -117,12 +116,13 @@ const StyledSwitchTextWrapper = styled(StyledTextEffect)`
 `;
 
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
-  color: ${({ theme, checked }) =>
-    getReadableColorFrom(!checked ? theme.originalMain : theme.main)};
+  color: ${({ theme, checked, parentHasGradient }) =>
+    !parentHasGradient && getReadableColorFrom(!checked ? theme.originalMain : theme.main)};
 `;
 
 const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
-  color: ${({ theme, checked }) =>
+  color: ${({ theme, checked, parentHasGradient }) =>
+    !parentHasGradient &&
     getReadableColorFrom(!checked ? theme.main : changeLightness(theme.main, 0.1))};
 `;
 
@@ -170,6 +170,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       labelDetail,
       labelDetailPosition = 'right',
       size = 'normal',
+      margin = 'left',
       checked,
       disabled,
       className,
@@ -187,6 +188,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       intent,
       effect,
       customTheme,
+      wrapLabel,
       ...rest
     }: IReqoreCheckboxProps,
     ref
@@ -221,17 +223,24 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         readOnly={readOnly}
         className={`${className || ''} reqore-checkbox reqore-control`}
       >
+        {margin === 'left' || margin === 'both' ? (
+          <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
+        ) : null}
         {label && labelPosition === 'left' ? (
           <>
-            <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
             {labelDetailPosition === 'left' && labelDetail}
             <ReqoreTextEffect
               active={checked}
-              effect={{ ...labelEffect, interactive: !disabled && !readOnly && !checked }}
+              effect={{
+                ...labelEffect,
+                interactive: !disabled && !readOnly && !checked,
+                noWrap: !wrapLabel,
+              }}
             >
               {label}
             </ReqoreTextEffect>
             {labelDetailPosition === 'right' && labelDetail}
+            <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
           </>
         ) : null}
         {asSwitch ? (
@@ -250,6 +259,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                   size={size}
                   theme={theme}
                   checked={checked}
+                  parentHasGradient={!!effect?.gradient}
                   effect={
                     {
                       uppercase: true,
@@ -278,13 +288,14 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                   size={size}
                   theme={theme}
                   checked={checked}
+                  parentHasGradient={!!effect?.gradient}
                   effect={
                     {
                       uppercase: true,
                       textSize: getOneLessSize(size),
                       weight: 'thick',
                       ...switchTextEffect,
-                      opacity: checked ? 1 : 0.5,
+                      opacity: checked ? 1 : 0.3,
                     } as IReqoreEffect
                   }
                 >
@@ -330,21 +341,28 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
             }
             image={image}
             effect={{ grayscale: image ? !checked : undefined, opacity: checked ? 1 : 0.5 }}
-            margin='both'
             intent={intent}
           />
         )}
         {label && labelPosition === 'right' ? (
           <>
+            <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
             {labelDetailPosition === 'left' && labelDetail}
             <ReqoreTextEffect
               active={checked}
-              effect={{ ...labelEffect, interactive: !disabled && !readOnly && !checked }}
+              effect={{
+                ...labelEffect,
+                interactive: !disabled && !readOnly && !checked,
+                noWrap: !wrapLabel,
+              }}
             >
               {label}
             </ReqoreTextEffect>
             {labelDetailPosition === 'right' && labelDetail}
           </>
+        ) : null}
+        {margin === 'right' || margin === 'both' ? (
+          <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
         ) : null}
       </StyledCheckbox>
     );

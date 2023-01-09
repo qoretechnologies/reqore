@@ -11,7 +11,7 @@ export interface IReqoreMenuDividerProps
     IWithReqoreEffect,
     IWithReqoreSize {
   label?: string | number;
-  margin?: 'left' | 'right' | 'both';
+  margin?: 'left' | 'right' | 'both' | 'none';
   align?: 'left' | 'center' | 'right';
 }
 
