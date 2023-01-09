@@ -34,7 +34,7 @@ import { StyledCollectionItemContent } from '../Collection/item';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
-import { IReqoreEffect, StyledEffect } from '../Effect';
+import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
 import { ReqoreSpacer } from '../Spacer';
@@ -275,7 +275,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       'main',
       customTheme ||
         (contentEffect?.gradient && minimal
-          ? { main: Object.values(contentEffect.gradient.colors)[0] }
+          ? { main: Object.values(contentEffect.gradient.colors)[0] as TReqoreEffectColor }
           : undefined)
     );
     const { targetRef } = useCombinedRefs(ref);
