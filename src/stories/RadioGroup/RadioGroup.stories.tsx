@@ -37,10 +37,35 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
           offText: 0,
         },
         {
+          divider: true,
+          label: 'Intents',
+        },
+        {
           label: 'Danger option',
           value: 'danger',
           intent: 'danger',
         },
+        {
+          label: 'Success option',
+          value: 'sucess',
+          intent: 'success',
+        },
+        {
+          label: 'Pending option',
+          value: 'pending',
+          intent: 'pending',
+        },
+        {
+          label: 'Info option',
+          value: 'info',
+          intent: 'info',
+        },
+        {
+          label: 'Warning option',
+          value: 'warning',
+          intent: 'warning',
+        },
+
         {
           label: 'Effect option',
           labelPosition: 'left',
@@ -51,6 +76,16 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
                 0: 'info',
                 100: 'success',
               },
+            },
+          },
+        },
+        {
+          label: 'Effect option with main color gradient and hover animation',
+          value: 'effect2',
+          effect: {
+            gradient: {
+              colors: 'main',
+              animate: 'hover',
             },
           },
         },
@@ -97,6 +132,12 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
         {
           label: 'Custom Image Option',
           value: 'customOpt',
+          labelEffect: {
+            glow: {
+              color: 'danger',
+              blur: 2,
+            },
+          },
           image:
             'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
         },
@@ -112,6 +153,12 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
           label: 'Disabled Option',
           value: 'opt5',
           disabled: true,
+          labelEffect: {
+            glow: {
+              color: '#ffffff',
+              blur: 0,
+            },
+          },
         },
       ]}
       onSelectClick={(value) => setSelected(value)}

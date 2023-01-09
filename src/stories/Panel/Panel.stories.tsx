@@ -181,7 +181,7 @@ WithEffect.args = {
       type: 'radial',
       shape: 'ellipse',
       colors: { 0: '#670079', 100: '#180222' },
-      //borderColor: '#fff349',
+      animate: 'hover',
     },
   },
   headerEffect: {

@@ -1,6 +1,7 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { noop } from 'lodash';
 import ReqoreButton from '../../components/Button';
+import { IReqoreTheme } from '../../constants/theme';
 import { ReqoreControlGroup } from '../../index';
 import { IconArg, SizeArg } from '../utils/args';
 
@@ -185,6 +186,7 @@ Effect.args = {
     gradient: {
       direction: 'to right bottom',
       colors: { 0: '#33023c', 100: '#0a487b' },
+      animate: 'active',
     },
     spaced: 2,
     uppercase: true,
@@ -192,3 +194,15 @@ Effect.args = {
     textSize: 'small',
   },
 };
+
+export const GlobalEffect: ComponentStory<
+  typeof ReqoreButton & { otherThemeOptions?: IReqoreTheme }
+> = Template.bind({});
+GlobalEffect.args = {
+  otherThemeOptions: {
+    buttons: {
+      gradient: true,
+      animate: 'active',
+    },
+  },
+} as any;

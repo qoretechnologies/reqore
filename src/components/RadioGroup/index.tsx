@@ -21,6 +21,7 @@ export interface IReqoreRadioGroupProps
   asSwitch?: boolean;
   onText?: string;
   offText?: string;
+  margin?: 'left' | 'right' | 'both' | 'none';
 }
 
 const ReqoreRadioGroup = ({
@@ -33,6 +34,7 @@ const ReqoreRadioGroup = ({
   vertical = true,
   onText,
   offText,
+  margin = 'left',
   ...rest
 }: IReqoreRadioGroupProps) => (
   <ReqoreControlGroup {...rest} vertical={vertical}>
@@ -41,8 +43,8 @@ const ReqoreRadioGroup = ({
         <ReqoreMenuDivider
           {...itemRest}
           size={size || itemRest.size}
-          effect={{ ...itemRest.effect, textAlign: 'left' }}
-          margin='left'
+          effect={{ textAlign: 'left', ...itemRest.effect }}
+          margin={margin}
           label={vertical ? itemRest.label : undefined}
         />
       ) : (
