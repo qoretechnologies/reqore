@@ -37,10 +37,35 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
           offText: 0,
         },
         {
+          divider: true,
+          label: 'Intents',
+        },
+        {
           label: 'Danger option',
           value: 'danger',
           intent: 'danger',
         },
+        {
+          label: 'Success option',
+          value: 'sucess',
+          intent: 'success',
+        },
+        {
+          label: 'Pending option',
+          value: 'pending',
+          intent: 'pending',
+        },
+        {
+          label: 'Info option',
+          value: 'info',
+          intent: 'info',
+        },
+        {
+          label: 'Warning option',
+          value: 'warning',
+          intent: 'warning',
+        },
+
         {
           label: 'Effect option',
           labelPosition: 'left',

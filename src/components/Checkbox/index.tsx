@@ -80,10 +80,10 @@ const StyledSwitchToggle = styled.div`
       : !checked
       ? parentEffect?.gradient
         ? changeLightness(getNthGradientColor(theme, parentEffect?.gradient?.colors, 1), 0.2)
-        : theme.main
+        : changeLightness(theme.main, 0.2)
       : parentEffect?.gradient
       ? changeLightness(getNthGradientColor(theme, parentEffect?.gradient?.colors, 2), 0.2)
-      : theme.main};
+      : changeLightness(theme.main, 0.25)};
 `;
 
 const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
@@ -100,7 +100,7 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.25 : 0.2)};
   border-radius: 50px;
 
-  background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.15), 0.5)};
+  background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.3), 0.1)};
 
   ${StyledIconWrapper} {
     z-index: 1;
@@ -117,13 +117,14 @@ const StyledSwitchTextWrapper = styled(StyledTextEffect)`
 
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
   color: ${({ theme, checked, parentHasGradient }) =>
-    !parentHasGradient && getReadableColorFrom(!checked ? theme.originalMain : theme.main)};
+    !parentHasGradient &&
+    getReadableColorFrom(checked ? changeLightness(theme.main, 0.25) : theme.originalMain)};
 `;
 
 const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
   color: ${({ theme, checked, parentHasGradient }) =>
     !parentHasGradient &&
-    getReadableColorFrom(!checked ? theme.main : changeLightness(theme.main, 0.1))};
+    getReadableColorFrom(checked ? theme.originalMain : changeLightness(theme.main, 0.2))};
 `;
 
 const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
