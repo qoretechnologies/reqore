@@ -17,8 +17,11 @@ const Template: Story<IReqoreSpacerProps> = () => {
         This is a horizontal spacer with <ReqoreHorizontalSpacer width={50} /> width of 50px
         <br />
         <br />
-        This is a horizontal spacer with <ReqoreHorizontalSpacer width={10} size='normal' /> width
-        of 10px and size of normal
+        This is a horizontal spacer with <ReqoreHorizontalSpacer
+          width={10}
+          lineSize='normal'
+        />{' '}
+        width of 10px and lineSize of normal
         <br />
         <br />
         This is a horizontal spacer with <ReqoreHorizontalSpacer width={50} height={100} /> width of
@@ -26,14 +29,14 @@ const Template: Story<IReqoreSpacerProps> = () => {
         <br />
         <br />
         This is a horizontal spacer with{' '}
-        <ReqoreHorizontalSpacer width={50} height={50} size='tiny' intent='info' /> width of 50px
-        and height of 50px and size of tiny and intent info
+        <ReqoreHorizontalSpacer width={50} height={50} lineSize='tiny' intent='info' /> width of
+        50px and height of 50px and lineSize of tiny and intent info
         <br />
         <br />
         This is a horizontal spacer with{' '}
         <ReqoreHorizontalSpacer
           width={50}
-          size='huge'
+          lineSize='huge'
           intent='info'
           effect={{
             gradient: {
@@ -43,15 +46,15 @@ const Template: Story<IReqoreSpacerProps> = () => {
             },
           }}
         />{' '}
-        width of 30px and height of auto and size of huge and an effect & animation
+        width of 30px and height of auto and lineSize of huge and an effect & animation
       </ReqorePanel>
       <ReqoreVerticalSpacer height={10} />
       <ReqorePanel label='Vertical'>
         This is a vertical spacer with <ReqoreVerticalSpacer height={50} /> height of 50px
         <br />
         <br />
-        This is a vertical spacer with <ReqoreVerticalSpacer height={10} size='normal' /> height of
-        10px and size of normal
+        This is a vertical spacer with <ReqoreVerticalSpacer height={10} lineSize='normal' /> height
+        of 10px and lineSize of normal
         <br />
         <br />
         This is a vertical spacer with <ReqoreVerticalSpacer height={50} width={100} /> height of
@@ -59,14 +62,14 @@ const Template: Story<IReqoreSpacerProps> = () => {
         <br />
         <br />
         This is a vertical spacer with{' '}
-        <ReqoreVerticalSpacer width={50} height={50} size='tiny' intent='info' /> width of 50px and
-        height of 50px and size of tiny and intent info
+        <ReqoreVerticalSpacer width={50} height={50} lineSize='tiny' intent='info' /> width of 50px
+        and height of 50px and lineSize of tiny and intent info
         <br />
         <br />
         This is a vertical spacer with{' '}
         <ReqoreVerticalSpacer
           height={50}
-          size='tiny'
+          lineSize='tiny'
           effect={{
             gradient: {
               colors: { 0: 'success:lighten:2', 100: 'success:darken' },
@@ -81,7 +84,7 @@ const Template: Story<IReqoreSpacerProps> = () => {
             },
           }}
         />{' '}
-        height of 50px and width of auto and size of tiny and an effect & animation
+        height of 50px and width of auto and lineSize of tiny and an effect & animation
       </ReqorePanel>
     </>
   );
