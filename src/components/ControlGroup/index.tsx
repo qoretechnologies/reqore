@@ -50,19 +50,20 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
 
             border-radius: ${({ stack }) => (!stack ? undefined : 0)};
 
-            ${({ rounded, size }) =>
-              rounded &&
-              css`
-                &:first-child {
-                  border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-                  border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-                }
+            ${({ rounded, size, stack }) =>
+              rounded && stack
+                ? css`
+                    &:first-child {
+                      border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
+                      border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
+                    }
 
-                &:last-child {
-                  border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-                  border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-                }
-              `}
+                    &:last-child {
+                      border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
+                      border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
+                    }
+                  `
+                : undefined}
           }
 
           > .reqore-control-wrapper:not(:last-child) .reqore-control {
@@ -84,19 +85,20 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
 
             border-radius: ${({ stack }) => (!stack ? undefined : 0)};
 
-            ${({ rounded, size }) =>
-              rounded &&
-              css`
-                &:first-child {
-                  border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-                  border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-                }
+            ${({ rounded, size, stack }) =>
+              rounded && stack
+                ? css`
+                    &:first-child {
+                      border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
+                      border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
+                    }
 
-                &:last-child {
-                  border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-                  border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-                }
-              `}
+                    &:last-child {
+                      border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
+                      border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
+                    }
+                  `
+                : undefined}
           }
         `}
 `;
