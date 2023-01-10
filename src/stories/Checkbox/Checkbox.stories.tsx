@@ -19,7 +19,7 @@ const Template: ComponentStory<typeof Checkbox> = (args) => {
         <ReqoreCheckbox {...args} label='Read Only' labelPosition='left' readOnly />
       </ReqoreControlGroup>
       <ReqoreControlGroup>
-        <ReqoreCheckbox {...args} intent='info' />
+        <ReqoreCheckbox {...args} intent='info' checked />
         <ReqoreCheckbox
           {...args}
           label='Label'

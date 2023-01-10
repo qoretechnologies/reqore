@@ -347,7 +347,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
             }
             image={image}
             effect={{ grayscale: image ? !checked : undefined, opacity: checked ? 1 : 0.5 }}
-            intent={intent}
+            color={intent ? changeLightness(theme.main, 0.2) : undefined}
           />
         )}
         {label && labelPosition === 'right' ? (
