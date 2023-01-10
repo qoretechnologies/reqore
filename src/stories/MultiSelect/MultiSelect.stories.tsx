@@ -8,7 +8,7 @@ import { FlatArg, IconArg, MinimalArg, SizeArg, argManager } from '../utils/args
 const { createArg } = argManager<IReqoreMultiSelectProps>();
 
 export default {
-  title: 'Components/MultiSelect',
+  title: 'Components/Multi Select',
   parameters: {
     chromatic: {
       delay: 500,
@@ -57,6 +57,9 @@ const Template: Story<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProps)
 };
 
 export const Basic = Template.bind({});
+Basic.args = {
+  onItemClickIcon: 'EditLine' as IReqoreIconName,
+};
 export const Empty = Template.bind({});
 Empty.args = {
   value: [],

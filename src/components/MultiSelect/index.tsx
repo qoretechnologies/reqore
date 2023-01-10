@@ -1,6 +1,5 @@
 import { omit, size } from 'lodash';
 import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useUpdateEffect } from 'react-use';
 import { ReqoreDropdown, ReqoreInput } from '../..';
 import { TSizes } from '../../constants/sizes';
 import { IPopoverControls } from '../../hooks/usePopover';
@@ -18,7 +17,7 @@ export type TReqoreMultiSelectItem = Omit<IReqoreDropdownItem, 'color'> &
 export interface IReqoreMultiSelectProps
   extends Omit<IReqoreControlGroupProps, 'children' | 'vertical' | 'stack'> {
   value?: string[];
-  onValueChange?: (value: string[]) => void;
+  onValueChange: (value: string[]) => void;
   items?: TReqoreMultiSelectItem[];
   onItemClick?: (item: IReqoreDropdownItem) => void;
   onItemClickIcon?: IReqoreTagProps['rightIcon'];
@@ -61,7 +60,15 @@ export const ReqoreMultiSelectItem = memo(
         effect={!item.intent ? item.effect || selectedItemEffect : undefined}
         size={selectedItemSize}
         onClick={onClick}
-        rightIcon={item.rightIcon || item.disabled ? undefined : onItemClickIcon}
+        rightIcon={
+          item.disabled
+            ? undefined
+            : item.rightIcon
+            ? item.rightIcon
+            : onClick
+            ? onItemClickIcon
+            : undefined
+        }
       />
     );
   }
@@ -70,7 +77,7 @@ export const ReqoreMultiSelectItem = memo(
 export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectProps>(
   (
     {
-      value,
+      value = [],
       onValueChange,
       onItemClick,
       canRemoveItems,
@@ -86,19 +93,10 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
     }: IReqoreMultiSelectProps,
     ref
   ) => {
-    const [_value, setValue] = useState<string[]>(value || []);
     const [createdItems, setCreatedItems] = useState<TReqoreMultiSelectItem[]>([]);
     const [query, setQuery] = useState<string>('');
     const popoverData = useRef<IPopoverControls>(undefined);
     const [focused, setFocused] = useState<boolean>(false);
-
-    useUpdateEffect(() => {
-      onValueChange?.(_value);
-    }, [_value]);
-
-    useEffect(() => {
-      setValue(value || []);
-    }, [value]);
 
     useEffect(() => {
       if (query && !popoverData.current?.isOpen()) {
@@ -118,13 +116,13 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
 
     const addRemoveItem = useCallback(
       (item: TReqoreMultiSelectItem): void => {
-        if (_value.includes(item.value)) {
-          setValue(_value.filter((v) => v !== item.value));
+        if (value.includes(item.value)) {
+          onValueChange(value.filter((v) => v !== item.value));
         } else {
-          setValue([..._value, item.value]);
+          onValueChange([...value, item.value]);
         }
       },
-      [_value, value]
+      [value]
     );
 
     const handleItemSelect = useCallback(
@@ -142,7 +140,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
 
         setQuery('');
       },
-      [createdItems, _value]
+      [createdItems, value]
     );
 
     /*
@@ -168,7 +166,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
       // Mark selected items as selected
       filteredItems = filteredItems.map((item: TReqoreMultiSelectItem) => ({
         ...omit(item, ['actions', 'asBadge', 'rightIcon']),
-        selected: _value.includes(item.value),
+        selected: value.includes(item.value),
       }));
 
       if (query && !size(filteredItems)) {
@@ -207,7 +205,7 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
       }
 
       return filteredItems;
-    }, [items, createdItems, query, _value]);
+    }, [items, createdItems, query, value]);
 
     const handleKeyDown = useCallback(
       (e: KeyboardEvent) => {
@@ -231,14 +229,14 @@ export const ReqoreMultiSelect = forwardRef<HTMLDivElement, IReqoreMultiSelectPr
       (value: string): TReqoreMultiSelectItem => {
         return [...items, ...createdItems].find((item) => item.value === value);
       },
-      [items, createdItems, _value]
+      [items, createdItems, value]
     );
 
     return (
       <ReqoreControlGroup vertical fluid {...rest} ref={ref}>
         <ReqoreTagGroup minimal={rest.minimal} size={rest.size}>
-          {size(_value) ? (
-            _value.map((v) => (
+          {size(value) ? (
+            value.map((v) => (
               <ReqoreMultiSelectItem
                 key={v}
                 item={getItemByValue(v)}

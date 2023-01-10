@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { ReqoreMultiSelect, ReqoreUIProvider } from '../src';
+import { IReqoreMultiSelectProps } from '../src/components/MultiSelect';
 import { MultiSelectItems } from '../src/mock/multiSelect';
 
 beforeAll(() => {
@@ -8,13 +9,30 @@ beforeAll(() => {
   jest.useFakeTimers();
 });
 
+const MultiSelectItemsTestComponent = ({
+  onValueChange,
+  value,
+  ...rest
+}: Partial<IReqoreMultiSelectProps>) => {
+  const [selected, setSelected] = React.useState<string[] | undefined>(value);
+
+  return (
+    <ReqoreUIProvider>
+      <ReqoreMultiSelect
+        {...rest}
+        value={selected}
+        onValueChange={(value) => {
+          setSelected(value);
+          onValueChange?.(value);
+        }}
+      />
+    </ReqoreUIProvider>
+  );
+};
+
 test('Renders empty <ReqoreMultiSelect />', () => {
   act(() => {
-    render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect items={MultiSelectItems} />
-      </ReqoreUIProvider>
-    );
+    render(<MultiSelectItemsTestComponent items={MultiSelectItems} />);
   });
 
   jest.advanceTimersByTime(1);
@@ -32,12 +50,10 @@ test('Renders empty <ReqoreMultiSelect />', () => {
 test('Renders <ReqoreMultiSelect /> with default value', () => {
   act(() => {
     render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect
-          items={MultiSelectItems}
-          value={['Existing item 1', 'Existing item 2']}
-        />
-      </ReqoreUIProvider>
+      <MultiSelectItemsTestComponent
+        items={MultiSelectItems}
+        value={['Existing item 1', 'Existing item 2']}
+      />
     );
   });
 
@@ -51,13 +67,11 @@ test('Renders <ReqoreMultiSelect /> with default value', () => {
 test('Renders <ReqoreMultiSelect /> with default value, items can be removed', () => {
   act(() => {
     render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect
-          items={MultiSelectItems}
-          value={['Existing item 1', 'Existing item 2']}
-          canRemoveItems
-        />
-      </ReqoreUIProvider>
+      <MultiSelectItemsTestComponent
+        items={MultiSelectItems}
+        value={['Existing item 1', 'Existing item 2']}
+        canRemoveItems
+      />
     );
   });
 
@@ -71,11 +85,7 @@ test('Renders <ReqoreMultiSelect /> with default value, items can be removed', (
 
 test('Renders disabled <ReqoreMultiSelect /> when items are empty and items CANNOT be created', () => {
   act(() => {
-    render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect />
-      </ReqoreUIProvider>
-    );
+    render(<MultiSelectItemsTestComponent />);
   });
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
@@ -86,11 +96,7 @@ test('Renders disabled <ReqoreMultiSelect /> when items are empty and items CANN
 
 test('Renders empty <ReqoreMultiSelect /> when items are empty and items CAN be created', () => {
   act(() => {
-    render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect canCreateItems />
-      </ReqoreUIProvider>
-    );
+    render(<MultiSelectItemsTestComponent canCreateItems />);
   });
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
@@ -104,11 +110,7 @@ test('Renders empty <ReqoreMultiSelect /> when items are empty and items CAN be 
 
 test('Renders <ReqoreMultiSelect /> and selects / deselects items from the list', () => {
   act(() => {
-    render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect items={MultiSelectItems} />
-      </ReqoreUIProvider>
-    );
+    render(<MultiSelectItemsTestComponent items={MultiSelectItems} />);
   });
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
@@ -134,11 +136,7 @@ test('Renders <ReqoreMultiSelect /> and selects / deselects items from the list'
 
 test('Renders <ReqoreMultiSelect /> and items can be searched, opens up the list', () => {
   act(() => {
-    render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect items={MultiSelectItems} />
-      </ReqoreUIProvider>
-    );
+    render(<MultiSelectItemsTestComponent items={MultiSelectItems} />);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
@@ -163,11 +161,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched, opens up the list
 
 test('Renders <ReqoreMultiSelect /> and items can be searched and created, opens up the list', () => {
   act(() => {
-    render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect items={MultiSelectItems} canCreateItems />
-      </ReqoreUIProvider>
-    );
+    render(<MultiSelectItemsTestComponent items={MultiSelectItems} canCreateItems />);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
@@ -213,9 +207,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created, opens
 test('Renders <ReqoreMultiSelect /> and items can be searched and created using the ENTER key, opens up the list', () => {
   act(() => {
     render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect items={MultiSelectItems} canCreateItems enterKeySelects />
-      </ReqoreUIProvider>
+      <MultiSelectItemsTestComponent items={MultiSelectItems} canCreateItems enterKeySelects />
     );
   });
 
@@ -271,9 +263,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
 test('Renders <ReqoreMultiSelect /> and does not create new item on ENTER when not focused', () => {
   act(() => {
     render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect items={MultiSelectItems} canCreateItems enterKeySelects />
-      </ReqoreUIProvider>
+      <MultiSelectItemsTestComponent items={MultiSelectItems} canCreateItems enterKeySelects />
     );
   });
 
@@ -301,14 +291,12 @@ test('Renders <ReqoreMultiSelect /> and does not create new item on ENTER when n
 test('Renders <ReqoreMultiSelect /> and deselects an item using the ENTER key', () => {
   act(() => {
     render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect
-          items={MultiSelectItems}
-          canCreateItems
-          enterKeySelects
-          value={['Existing item 3']}
-        />
-      </ReqoreUIProvider>
+      <MultiSelectItemsTestComponent
+        items={MultiSelectItems}
+        canCreateItems
+        enterKeySelects
+        value={['Existing item 3']}
+      />
     );
   });
 
@@ -337,15 +325,13 @@ test('Renders <ReqoreMultiSelect /> and calls onValueChange when value changes',
 
   act(() => {
     render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect
-          items={MultiSelectItems}
-          canCreateItems
-          enterKeySelects
-          onValueChange={onValueChange}
-          value={['Existing item 3']}
-        />
-      </ReqoreUIProvider>
+      <MultiSelectItemsTestComponent
+        items={MultiSelectItems}
+        canCreateItems
+        enterKeySelects
+        onValueChange={onValueChange}
+        value={['Existing item 3']}
+      />
     );
   });
 
@@ -381,15 +367,13 @@ test('Renders <ReqoreMultiSelect /> and calls onItemClick when an item is clicke
 
   act(() => {
     render(
-      <ReqoreUIProvider>
-        <ReqoreMultiSelect
-          items={MultiSelectItems}
-          canCreateItems
-          enterKeySelects
-          onItemClick={onItemClick}
-          value={['Existing item 3', 'Disabled item']}
-        />
-      </ReqoreUIProvider>
+      <MultiSelectItemsTestComponent
+        items={MultiSelectItems}
+        canCreateItems
+        enterKeySelects
+        onItemClick={onItemClick}
+        value={['Existing item 3', 'Disabled item']}
+      />
     );
   });
 
