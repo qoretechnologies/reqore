@@ -48,6 +48,7 @@ export const ReqoreSpacer = memo(
   ({
     customTheme,
     intent,
+    size = 'none',
     ...rest
   }: IReqoreSpacerProps & { horizontal?: boolean; vertical?: boolean }) => {
     const theme = useReqoreTheme('main', customTheme, intent);
@@ -57,15 +58,15 @@ export const ReqoreSpacer = memo(
     // We will assume that the user wants a spacer based on the width or height
     if (!horizontal && !vertical) {
       if (rest.width) {
-        return <StyledSpacer as='div' horizontal {...rest} theme={theme} />;
+        return <StyledSpacer as='div' horizontal {...rest} theme={theme} size={size} />;
       }
 
       if (rest.height) {
-        return <StyledSpacer as='div' vertical {...rest} theme={theme} />;
+        return <StyledSpacer as='div' vertical {...rest} theme={theme} size={size} />;
       }
     }
 
-    return <StyledSpacer as='div' {...rest} theme={theme} />;
+    return <StyledSpacer as='div' {...rest} theme={theme} size={size} />;
   }
 );
 
