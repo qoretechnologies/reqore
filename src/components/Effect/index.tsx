@@ -59,6 +59,7 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
     direction?: string;
     borderColor?: TReqoreEffectColor;
     animate?: TReqoreEffectGradientAnimationTrigger;
+    animationSpeed?: 1 | 2 | 3 | 4 | 5;
   };
   noWrap?: boolean;
   color?: TReqoreEffectColor;
@@ -180,7 +181,8 @@ export const StyledEffect = styled.span`
       ${effect.gradient.animate === 'always' || (effect.gradient.animate === 'active' && active)
         ? css`
             background-size: 200% 200%;
-            animation: ${StyledGradientKeyframes} 1.5s linear infinite;
+            animation: ${StyledGradientKeyframes} ${effect.gradient.animationSpeed || 2}s linear
+              infinite;
           `
         : undefined}
 
@@ -199,7 +201,8 @@ export const StyledEffect = styled.span`
           effect.gradient.animate === 'always'
             ? css`
                 background-size: 200% 200%;
-                animation: ${StyledGradientKeyframes} 2s linear infinite;
+                animation: ${StyledGradientKeyframes} ${effect.gradient.animationSpeed || 2}s linear
+                  infinite;
               `
             : undefined}
         }
