@@ -136,7 +136,7 @@ const ReqoreControlGroup = forwardRef<HTMLDivElement, IReqoreControlGroupProps>(
                   : minimal,
               size: child.props?.size || size,
               flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
-              fluid,
+              fluid: child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
             })
           : null
       )}
