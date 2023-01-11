@@ -96,7 +96,9 @@ export const ReqoreCollection = ({
 
   const finalItems = filteredItems;
   const finalActions: (IReqorePanelAction[] | IReqorePanelAction)[] = useMemo(() => {
-    let actions: (IReqorePanelAction[] | IReqorePanelAction)[] = [...rest.actions];
+    let actions: (IReqorePanelAction[] | IReqorePanelAction)[] = rest.actions
+      ? [...rest.actions]
+      : [];
 
     if (filterable) {
       actions = [

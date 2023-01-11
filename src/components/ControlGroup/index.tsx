@@ -18,6 +18,7 @@ export interface IReqoreControlGroupProps
    * Whether the contents of the control group should be stacked vertically
    */
   vertical?: boolean;
+  wrap?: boolean;
 }
 
 export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
@@ -30,6 +31,8 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   width: ${({ fluid }) => (fluid ? '100%' : undefined)};
   align-items: ${({ fluid }) => (fluid ? 'stretch' : 'flex-start')};
   flex-flow: ${({ vertical }) => (vertical ? 'column' : 'row')};
+  gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
+  flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};
 
   > .reqore-control-wrapper .reqore-control {
     border-radius: ${({ stack }) => (!stack ? undefined : 0)};
@@ -43,8 +46,6 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
           > .reqore-tag,
           > * {
             &:not(:last-child) {
-              margin-bottom: ${({ stack, gapSize }) =>
-                !stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined};
               border-bottom: ${({ stack }) => (!stack ? undefined : 0)};
             }
 
@@ -67,8 +68,6 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
           }
 
           > .reqore-control-wrapper:not(:last-child) .reqore-control {
-            margin-bottom: ${({ stack, gapSize }) =>
-              !stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined};
             border-bottom: ${({ stack }) => (!stack ? undefined : 0)};
           }
         `
@@ -78,8 +77,6 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
           > .reqore-tag,
           > * {
             &:not(:last-child) {
-              margin-right: ${({ stack, gapSize }) =>
-                !stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined};
               border-right: ${({ stack }) => (!stack ? undefined : 0)};
             }
 
@@ -114,6 +111,7 @@ const ReqoreControlGroup = forwardRef<HTMLDivElement, IReqoreControlGroupProps>(
       fluid,
       flat,
       rounded = true,
+      wrap,
       ...rest
     }: IReqoreControlGroupProps,
     ref
@@ -125,6 +123,7 @@ const ReqoreControlGroup = forwardRef<HTMLDivElement, IReqoreControlGroupProps>(
       ref={ref}
       rounded={rounded}
       fluid={fluid}
+      wrap={wrap}
       className={`${className || ''} reqore-control-group`}
     >
       {React.Children.map(children, (child) =>

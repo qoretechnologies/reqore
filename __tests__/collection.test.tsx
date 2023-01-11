@@ -13,7 +13,7 @@ test('Renders basic <Collection /> properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-collection').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(8);
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(9);
 });
 
 test('<Collection /> items can be filtered', () => {

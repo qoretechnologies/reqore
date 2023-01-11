@@ -94,3 +94,8 @@ export const BigGapSize = Template.bind({});
 BigGapSize.args = {
   gapSize: 'big',
 };
+
+export const Wrap = Template.bind({});
+Wrap.args = {
+  wrap: true,
+};
