@@ -1,8 +1,8 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
 import ReqoreInput from '../../components/Input';
-import { ReqoreButton, ReqoreControlGroup, ReqoreTag } from '../../index';
-import { argManager, GapSizeArg, MinimalArg, SizeArg } from '../utils/args';
+import { ReqoreButton, ReqoreCheckbox, ReqoreControlGroup, ReqoreTag } from '../../index';
+import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
@@ -36,8 +36,9 @@ export default {
 const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProps) => {
   return (
     <ReqoreControlGroup {...args}>
-      <ReqoreButton>Button</ReqoreButton>
+      <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
       <ReqoreButton
+        icon='PictureInPictureLine'
         flat={false}
         effect={{ gradient: { colors: { 0: 'success', 100: 'info:darken:1' } } }}
       >
@@ -45,11 +46,25 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
       </ReqoreButton>
       <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
       <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+      <ReqoreCheckbox
+        asSwitch
+        label='Switchy switch'
+        margin='both'
+        intent='warning'
+        checkedIcon='CheckFill'
+        checked
+        uncheckedIcon='CheckboxBlankLine'
+      />
       <ReqoreInput icon='4KFill' value='Hello' />
       <ReqoreButton disabled fixed>
         Disabled & Fixed
       </ReqoreButton>
+      <ReqoreCheckbox checked margin='both'>
+        Checkbox
+      </ReqoreCheckbox>
+
       <ReqoreButton minimal>Minimal</ReqoreButton>
+      <ReqoreTag label='smol tag' size='small' />
     </ReqoreControlGroup>
   );
 };

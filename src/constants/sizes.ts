@@ -12,6 +12,7 @@ export const ReqoreSizes = {
 export const SIZES = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
 export const SIZE_TO_NUMBER = {
+  none: 0,
   tiny: 1,
   small: 2,
   normal: 3,

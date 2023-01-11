@@ -127,7 +127,7 @@ const Template: Story<IReqorePopoverProps> = (args: IReqorePopoverProps) => {
             Full popover
           </ReqorePopover>
           <ReqoreControlGroup>
-            <ReqoreSpacer width={200} />
+            <ReqoreSpacer width={350} />
             <ReqorePopover
               {...args}
               component={ReqoreButton}
