@@ -325,7 +325,7 @@ export const ButtonBadge = memo((props: IReqoreButtonBadgeProps) => {
           width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size]}
           height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
         />
-        <ReqoreTagGroup hasBottomMargin={false}>
+        <ReqoreTagGroup>
           {props.content.map((badge, index) => renderTag({ ...props, content: badge, key: index }))}
         </ReqoreTagGroup>
       </>

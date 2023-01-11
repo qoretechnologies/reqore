@@ -44,6 +44,7 @@ export interface IPopover
   show?: boolean;
   openOnMount?: boolean;
   noArrow?: boolean;
+  noWrapper?: boolean;
   useTargetWidth?: boolean;
   closeOnOutsideClick?: boolean;
   closeOnAnyClick?: boolean;

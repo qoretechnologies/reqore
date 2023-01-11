@@ -58,7 +58,7 @@ export default {
 
 const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }) => {
   return (
-    <ReqoreTagGroup columns={columns} size={args.size} gapSize={args.gapSize}>
+    <ReqoreTagGroup columns={columns} size={args.size} gapSize={args.gapSize} wrap={args.wrap}>
       <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label={1} />
       <ReqoreTag
         {...args}
@@ -196,6 +196,8 @@ export const BigGapSize = Template.bind({});
 BigGapSize.args = { gapSize: 'big' };
 export const Badge = Template.bind({});
 Badge.args = { asBadge: true };
+export const NoWrap = Template.bind({});
+NoWrap.args = { wrap: false };
 
 export const Effect = Template.bind({});
 Effect.args = {

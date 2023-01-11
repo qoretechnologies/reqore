@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import { IReqoreTextareaProps } from '../../components/Textarea';
 import { ReqoreControlGroup, ReqoreTextarea } from '../../index';
-import { argManager, DisabledArg, MinimalArg, SizeArg } from '../utils/args';
+import { DisabledArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
 
@@ -22,7 +22,7 @@ export default {
       name: 'Fluid',
       description: 'Fluid',
       control: 'boolean',
-      defaultValue: false,
+      defaultValue: undefined,
     }),
     ...createArg('placeholder', {
       name: 'Placeholder',

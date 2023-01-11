@@ -1,5 +1,6 @@
 import { size } from 'lodash';
 import { useMemo, useState } from 'react';
+import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqoreIntents } from '../../constants/theme';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
@@ -12,7 +13,14 @@ import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 export interface IReqoreCollectionProps
   extends Pick<
       IReqorePanelProps,
-      'size' | 'intent' | 'customTheme' | 'actions' | 'bottomActions' | 'label' | 'headerSize'
+      | 'size'
+      | 'intent'
+      | 'customTheme'
+      | 'actions'
+      | 'bottomActions'
+      | 'label'
+      | 'headerSize'
+      | 'badge'
     >,
     IReqoreColumnsProps {
   items?: IReqoreCollectionItemProps[];
@@ -23,6 +31,7 @@ export interface IReqoreCollectionProps
   maxItemHeight?: number;
   filterable?: boolean;
   sortable?: boolean;
+  showAs?: 'list' | 'grid';
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns)`
@@ -49,11 +58,16 @@ export const ReqoreCollection = ({
   filterable,
   sortable,
   headerSize = 2,
+  showAs = 'grid',
   ...rest
 }: IReqoreCollectionProps) => {
-  const [showAs, setShowAs] = useState<'list' | 'grid'>('grid');
+  const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [query, setQuery] = useState<string>('');
+
+  useUpdateEffect(() => {
+    setShowAs(showAs);
+  }, [showAs]);
 
   const sortedItems: IReqoreCollectionItemProps[] = useMemo(
     () => (sortable ? sortTableData(items, { by: 'label', direction: sort }) : items),
@@ -82,7 +96,9 @@ export const ReqoreCollection = ({
 
   const finalItems = filteredItems;
   const finalActions: (IReqorePanelAction[] | IReqorePanelAction)[] = useMemo(() => {
-    let actions: (IReqorePanelAction[] | IReqorePanelAction)[] = [];
+    let actions: (IReqorePanelAction[] | IReqorePanelAction)[] = rest.actions
+      ? [...rest.actions]
+      : [];
 
     if (filterable) {
       actions = [
@@ -131,23 +147,22 @@ export const ReqoreCollection = ({
         {
           icon: 'GridLine',
           onClick: () => setShowAs('grid'),
-          intent: showAs === 'grid' ? ReqoreIntents.INFO : undefined,
-          active: showAs === 'grid',
+          intent: _showAs === 'grid' ? ReqoreIntents.INFO : undefined,
+          active: _showAs === 'grid',
           tooltip: 'Show as grid',
           disabled: !size(finalItems),
         },
         {
           icon: 'ListOrdered',
           onClick: () => setShowAs('list'),
-          intent: showAs === 'list' ? ReqoreIntents.INFO : undefined,
-          active: showAs === 'list',
+          intent: _showAs === 'list' ? ReqoreIntents.INFO : undefined,
+          active: _showAs === 'list',
           tooltip: 'Show as list',
           disabled: !size(finalItems),
         },
       ],
-      ...(rest.actions || []),
     ];
-  }, [filterable, handleQueryChange, query, rest.actions, showAs, sort, sortable, finalItems]);
+  }, [filterable, handleQueryChange, query, rest.actions, _showAs, sort, sortable, finalItems]);
 
   return (
     <ReqorePanel
@@ -168,7 +183,7 @@ export const ReqoreCollection = ({
         </ReqoreMessage>
       ) : (
         <StyledCollectionWrapper
-          columns={showAs === 'grid' ? 'auto-fit' : 1}
+          columns={_showAs === 'grid' ? 'auto-fit' : 1}
           columnsGap={stacked ? '0px' : columnsGap}
           rounded={rounded}
           stacked={stacked}

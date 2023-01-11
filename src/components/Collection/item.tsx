@@ -14,6 +14,7 @@ import {
   IReqorePanelProps,
   ReqorePanel,
 } from '../Panel';
+import { ReqoreP } from '../Paragraph';
 import { ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
@@ -38,6 +39,7 @@ export interface IReqoreCollectionItemProps
   actions?: IReqoreDropdownItem[];
   tags?: IReqoreTagProps[];
   maxContentHeight?: number;
+  showContentFade?: boolean;
 }
 
 export const StyledCollectionItemContent = styled.div`
@@ -78,6 +80,7 @@ export const ReqoreCollectionItem = ({
   expandedContent,
   expandedActions,
   maxContentHeight,
+  showContentFade = true,
   ...rest
 }: IReqoreCollectionItemProps) => {
   const [isSelected, setIsSelected] = useState(false);
@@ -220,10 +223,21 @@ export const ReqoreCollectionItem = ({
             theme={theme}
             opacity={rest.opacity}
             providedHeight={isSelected ? undefined : maxContentHeight}
-            contentOverflows={!isSelected && sizes?.height > maxContentHeight}
+            contentOverflows={
+              !rest.contentEffect &&
+              !isSelected &&
+              sizes?.height > maxContentHeight &&
+              showContentFade
+            }
           >
             <div ref={contentRef}>{actualContent}</div>
           </StyledCollectionItemContent>
+          {showContentFade &&
+          rest.contentEffect &&
+          !isSelected &&
+          sizes?.height > maxContentHeight ? (
+            <ReqoreP>...</ReqoreP>
+          ) : null}
           {size(tags) ? (
             <>
               <ReqoreSpacer height={10} />

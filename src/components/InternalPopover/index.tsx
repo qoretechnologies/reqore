@@ -62,8 +62,8 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   max-height: ${({ maxHeight = '80vh' }) => maxHeight};
   z-index: 999999;
   border-radius: ${RADIUS_FROM_SIZE.normal}px;
-  border: ${({ flat, isString, ...rest }: any) =>
-    !flat && !isString ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
+  border: ${({ flat, noWrapper, ...rest }: any) =>
+    !flat && noWrapper ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
 
   ${({ transparent }) =>
     !transparent &&
@@ -129,7 +129,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-const StyledPopoverContent = styled.div<{ isString?: boolean }>`
+const StyledPopoverContent = styled.div`
   width: 100%;
   height: 100%;
   z-index: 20;
@@ -145,6 +145,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
   id,
   placement,
   noArrow,
+  noWrapper,
   useTargetWidth,
   transparent,
   maxWidth,
@@ -219,7 +220,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
         isOpaque={!transparent && !minimal}
         intent={intent}
         flat={flat}
-        isString={isString(content)}
+        noWrapper={noWrapper}
         dim={flat && !transparent && !effect && minimal}
         className='reqore-popover-content'
         ref={(el) => {
@@ -236,8 +237,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
         {!noArrow && !transparent ? (
           <StyledPopoverArrow ref={setArrowElement} style={styles.arrow} data-popper-arrow />
         ) : null}
-        <StyledPopoverContent isString={isString(content)}>
-          {isString(content) ? (
+        <StyledPopoverContent>
+          {!noWrapper || isString(content) ? (
             <ReqoreMessage
               opaque={!transparent && !minimal}
               className='reqore-popover-text'

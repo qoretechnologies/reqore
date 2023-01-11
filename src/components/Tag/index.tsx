@@ -324,7 +324,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                       ? { tooltip: action.tooltip }
                       : action.tooltip
                     : {})}
-                  noWrapper
+                  isReqoreComponent
                 >
                   <ReqoreIcon icon={action.icon} size={size} />
                 </ReqorePopover>
@@ -341,7 +341,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               onClick: onRemoveClick,
               effect: rest.effect,
             }}
-            noWrapper
+            isReqoreComponent
             content='Remove'
           >
             <ReqoreIcon icon='CloseLine' size={size} />

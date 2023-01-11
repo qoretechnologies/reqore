@@ -148,6 +148,7 @@ const Template: Story<IReqoreMenuProps> = (args) => {
           </ReqoreMenu>
         }
         isReqoreComponent
+        noWrapper
         handler='click'
         placement='right'
       >
