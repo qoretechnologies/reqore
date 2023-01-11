@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react';
 import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Collection';
 import { IReqoreColumnsProps } from '../../components/Columns';
 import items from '../../mock/collectionData';
-import { argManager, IntentArg, SizeArg } from '../utils/args';
+import { IntentArg, SizeArg, argManager } from '../utils/args';
 
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
@@ -72,6 +72,7 @@ const Template: Story<IReqoreCollectionProps> = (args) => {
   return (
     <ReqoreCollection
       {...args}
+      badge={10}
       actions={[{ label: 'Custom action', icon: 'Home7Line' }, { actions: [{ value: 'Test' }] }]}
     />
   );
