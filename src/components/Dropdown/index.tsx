@@ -98,7 +98,7 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
       useTargetWidth={useTargetWidth}
       component={component || ReqoreButton}
       componentProps={componentProps}
-      noWrapper
+      isReqoreComponent
       placement={placement || 'bottom-start'}
       handler={handler || 'click'}
       openOnMount={isDefaultOpen}

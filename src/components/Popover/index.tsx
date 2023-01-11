@@ -8,7 +8,6 @@ export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
   componentProps?: any;
   children?: any;
   isReqoreComponent?: boolean;
-  noWrapper?: boolean;
   wrapperTag?: string;
   wrapperStyle?: React.CSSProperties;
 }
@@ -23,7 +22,6 @@ const Popover = memo(
     componentProps,
     children,
     isReqoreComponent,
-    noWrapper,
     wrapperTag = 'span',
     wrapperStyle = {},
     passPopoverData,
@@ -39,7 +37,7 @@ const Popover = memo(
       passPopoverData?.(popoverData);
     }, [popoverData]);
 
-    if (isReqoreComponent || noWrapper) {
+    if (isReqoreComponent) {
       return (
         <Component
           {...componentProps}
