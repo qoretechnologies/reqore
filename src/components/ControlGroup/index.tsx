@@ -1,4 +1,4 @@
-import React, { forwardRef, memo, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -92,7 +92,21 @@ const ReqoreControlGroup = memo(
       const isStack = stack || isInsideStackGroup;
       const isVertical = vertical || isInsideVerticalGroup;
       const realChildCount = useMemo((): number => {
-        const count = React.Children.toArray(children).filter((child: any) => child).length;
+        let count = 0;
+
+        const countChildren = (children: React.ReactNode) =>
+          React.Children.forEach(children, (child: any) => {
+            if (child && React.isValidElement(child)) {
+              if (child.type === React.Fragment) {
+                // just compare to `React.Fragment`
+                countChildren((child.props as any).children);
+              } else {
+                count++;
+              }
+            }
+          });
+
+        countChildren(children);
 
         return count < 0 ? 0 : count;
       }, [children]);
@@ -205,34 +219,88 @@ const ReqoreControlGroup = memo(
 
       let index = 0;
 
-      const getStuff = (index, child) => {
-        if (isStack) {
-          return {
-            style: {
-              borderTopLeftRadius: getBorderTopLeftRadius(index),
-              borderBottomLeftRadius: getBorderBottomLeftRadius(index),
-              borderTopRightRadius: getBorderTopRightRadius(index),
-              borderBottomRightRadius: getBorderBottomRightRadius(index),
-              ...(child.props?.style || {}),
-            },
-            rounded: !isStack,
-            isInsideStackGroup: isStack,
-            isInsideVerticalGroup: isVertical,
-            isFirst: isChild ? getIsFirst(index) : undefined,
-            isLast: isChild ? getIsLast(index) : undefined,
-            isLastInFirstGroup: getIsLastInFirstGroup(index),
-            isLastInLastGroup: getIsLastInLastGroup(index),
-            isFirstInLastGroup: getIsFirstInLastGroup(index),
-            childrenCount: realChildCount,
-            childId: index + 1,
-            isChild: true,
-            isFirstGroup: isChild ? isFirstGroup : index === 0,
-            isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
-          };
-        }
+      const cloneThroughFragments = useCallback(
+        (children: React.ReactNode): React.ReactNode => {
+          return React.Children.map(children, (child) => {
+            if (child && React.isValidElement(child)) {
+              if (child.type === React.Fragment) {
+                // just compare to `React.Fragment`
+                return cloneThroughFragments(child.props.children);
+              }
 
-        return {};
-      };
+              let newProps = {
+                ...child.props,
+                key: index,
+                minimal:
+                  child.props?.minimal || child.props?.minimal === false
+                    ? child.props.minimal
+                    : minimal,
+                size: child.props?.size || size,
+                flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
+                fluid:
+                  child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
+                stack:
+                  child.props?.stack || child.props?.stack === false ? child.props.stack : isStack,
+                intent: child.props?.intent || intent,
+              };
+
+              if (isStack) {
+                newProps = {
+                  ...newProps,
+                  style: {
+                    borderTopLeftRadius: getBorderTopLeftRadius(index),
+                    borderBottomLeftRadius: getBorderBottomLeftRadius(index),
+                    borderTopRightRadius: getBorderTopRightRadius(index),
+                    borderBottomRightRadius: getBorderBottomRightRadius(index),
+                    ...(child.props?.style || {}),
+                  },
+                  rounded: !isStack,
+                  isInsideStackGroup: isStack,
+                  isInsideVerticalGroup: isVertical,
+                  isFirst: isChild ? getIsFirst(index) : undefined,
+                  isLast: isChild ? getIsLast(index) : undefined,
+                  isLastInFirstGroup: getIsLastInFirstGroup(index),
+                  isLastInLastGroup: getIsLastInLastGroup(index),
+                  isFirstInLastGroup: getIsFirstInLastGroup(index),
+                  childrenCount: realChildCount,
+                  childId: index + 1,
+                  isChild: true,
+                  isFirstGroup: isChild ? isFirstGroup : index === 0,
+                  isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
+                };
+              }
+
+              /*
+               * Because of the way React.Children.map works, we have to
+               * manually decrement the index for every child that is `null`
+               * because react maps through null children and returns them in `Count`
+               * We filter these children out in the `realChildCount` variable,
+               * but the index is still incremented
+               * */
+              index = index + 1;
+
+              return React.cloneElement(child, newProps);
+            }
+
+            return child;
+          });
+        },
+        [
+          children,
+          isStack,
+          isVertical,
+          isChild,
+          isLastGroup,
+          isFirstGroup,
+          realChildCount,
+          index,
+          fluid,
+          flat,
+          minimal,
+          size,
+          intent,
+        ]
+      );
 
       return (
         <StyledReqoreControlGroup
@@ -247,45 +315,7 @@ const ReqoreControlGroup = memo(
           stack={isStack}
           className={`${className || ''} reqore-control-group`}
         >
-          {React.Children.map(children, (child) => {
-            /*
-             * Because of the way React.Children.map works, we have to
-             * manually decrement the index for every child that is `null`
-             * because react maps through null children and returns them in `Count`
-             * We filter these children out in the `realChildCount` variable,
-             * but the index is still incremented
-             * */
-            const result = child
-              ? React.cloneElement(child, {
-                  key: index,
-                  minimal:
-                    child.props?.minimal || child.props?.minimal === false
-                      ? child.props.minimal
-                      : minimal,
-                  size: child.props?.size || size,
-                  flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
-                  fluid:
-                    child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
-                  stack:
-                    child.props?.stack || child.props?.stack === false
-                      ? child.props.stack
-                      : isStack,
-                  intent: child.props?.intent || intent,
-                  ...getStuff(index, child),
-                })
-              : null;
-
-            /*
-             * Because of the way React.Children.map works, we have to
-             * manually decrement the index for every child that is `null`
-             * because react maps through null children and returns them in `Count`
-             * We filter these children out in the `realChildCount` variable,
-             * but the index is still incremented
-             * */
-            index = !child ? index : index + 1;
-
-            return result;
-          })}
+          {cloneThroughFragments(children)}
         </StyledReqoreControlGroup>
       );
     }
