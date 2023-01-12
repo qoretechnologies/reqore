@@ -73,6 +73,7 @@ const Template: Story<IReqoreCollectionProps> = (args) => {
     <ReqoreCollection
       {...args}
       badge={10}
+      selectedIcon='CheckLine'
       actions={[{ label: 'Custom action', icon: 'Home7Line' }, { actions: [{ value: 'Test' }] }]}
     />
   );
@@ -96,4 +97,11 @@ Fill.args = {
   label: 'Collection of items',
   fill: true,
   items,
+};
+
+export const SelectedFirst = Template.bind({});
+SelectedFirst.args = {
+  label: 'Collection of items',
+  items,
+  showSelectedFirst: true,
 };

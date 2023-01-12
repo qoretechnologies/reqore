@@ -67,6 +67,9 @@ export interface IReqoreButtonProps
   description?: string | number;
   maxWidth?: string;
   textAlign?: 'left' | 'center' | 'right';
+  iconColor?: TReqoreEffectColor;
+  leftIconColor?: TReqoreEffectColor;
+  rightIconColor?: TReqoreEffectColor;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -367,6 +370,9 @@ const ReqoreButton = memo(
         maxWidth,
         textAlign = 'left',
         effect,
+        leftIconColor,
+        rightIconColor,
+        iconColor,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -415,7 +421,7 @@ const ReqoreButton = memo(
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {icon && (
               <>
-                <ReqoreIcon icon={icon} size={size} />
+                <ReqoreIcon icon={icon} size={size} color={leftIconColor || iconColor} />
                 {children || badge || rightIcon ? (
                   <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
                 ) : null}
@@ -437,7 +443,12 @@ const ReqoreButton = memo(
             {rightIcon && (
               <>
                 {children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
-                <ReqoreIcon icon={rightIcon} size={size} style={{ marginLeft: 'auto' }} />
+                <ReqoreIcon
+                  icon={rightIcon}
+                  size={size}
+                  style={{ marginLeft: 'auto' }}
+                  color={rightIconColor || iconColor}
+                />
               </>
             )}
           </StyledButtonContent>

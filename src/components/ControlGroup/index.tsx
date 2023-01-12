@@ -1,14 +1,20 @@
-import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
+import React, { forwardRef, memo, useMemo } from 'react';
+import styled from 'styled-components';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { IWithReqoreFlat, IWithReqoreMinimal, IWithReqoreSize } from '../../types/global';
+import {
+  IReqoreIntent,
+  IWithReqoreFlat,
+  IWithReqoreMinimal,
+  IWithReqoreSize,
+} from '../../types/global';
 
 export interface IReqoreControlGroupProps
   extends React.HTMLAttributes<HTMLDivElement>,
     IWithReqoreFlat,
     IWithReqoreSize,
-    IWithReqoreMinimal {
+    IWithReqoreMinimal,
+    IReqoreIntent {
   stack?: boolean;
   children: any;
   fluid?: boolean;
@@ -19,6 +25,13 @@ export interface IReqoreControlGroupProps
    */
   vertical?: boolean;
   wrap?: boolean;
+  isInsideStackGroup?: boolean;
+  isInsideVerticalGroup?: boolean;
+  isFirst?: boolean;
+  isLast?: boolean;
+  isLastInFirstGroup?: boolean;
+  isLastInLastGroup?: boolean;
+  isFirstInLastGroup?: boolean;
 }
 
 export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
@@ -34,112 +47,196 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
   flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};
 
-  > .reqore-control-wrapper .reqore-control {
+  > * {
     border-radius: ${({ stack }) => (!stack ? undefined : 0)};
   }
-
-  ${({ vertical }) =>
-    vertical
-      ? css`
-          > .reqore-control,
-          > .reqore-control-wrapper,
-          > .reqore-tag,
-          > * {
-            &:not(:last-child) {
-              border-bottom: ${({ stack }) => (!stack ? undefined : 0)};
-            }
-
-            border-radius: ${({ stack }) => (!stack ? undefined : 0)};
-
-            ${({ rounded, size, stack }) =>
-              rounded && stack
-                ? css`
-                    &:first-child {
-                      border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-                      border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-                    }
-
-                    &:last-child {
-                      border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-                      border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-                    }
-                  `
-                : undefined}
-          }
-
-          > .reqore-control-wrapper:not(:last-child) .reqore-control {
-            border-bottom: ${({ stack }) => (!stack ? undefined : 0)};
-          }
-        `
-      : css`
-          > .reqore-control,
-          > .reqore-control-wrapper,
-          > .reqore-tag,
-          > * {
-            &:not(:last-child) {
-              border-right: ${({ stack }) => (!stack ? undefined : 0)};
-            }
-
-            border-radius: ${({ stack }) => (!stack ? undefined : 0)};
-
-            ${({ rounded, size, stack }) =>
-              rounded && stack
-                ? css`
-                    &:first-child {
-                      border-top-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-                      border-bottom-left-radius: ${RADIUS_FROM_SIZE[size]}px;
-                    }
-
-                    &:last-child {
-                      border-top-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-                      border-bottom-right-radius: ${RADIUS_FROM_SIZE[size]}px;
-                    }
-                  `
-                : undefined}
-          }
-        `}
 `;
 
-const ReqoreControlGroup = forwardRef<HTMLDivElement, IReqoreControlGroupProps>(
-  (
-    {
-      children,
-      className,
-      minimal,
-      size = 'normal',
-      gapSize = 'normal',
-      fluid,
-      flat,
-      rounded = true,
-      wrap,
-      ...rest
-    }: IReqoreControlGroupProps,
-    ref
-  ) => (
-    <StyledReqoreControlGroup
-      {...rest}
-      size={size}
-      gapSize={gapSize}
-      ref={ref}
-      rounded={rounded}
-      fluid={fluid}
-      wrap={wrap}
-      className={`${className || ''} reqore-control-group`}
-    >
-      {React.Children.map(children, (child) =>
-        child
-          ? React.cloneElement(child, {
-              minimal:
-                child.props?.minimal || child.props?.minimal === false
-                  ? child.props.minimal
-                  : minimal,
-              size: child.props?.size || size,
-              flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
-              fluid: child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
-            })
-          : null
-      )}
-    </StyledReqoreControlGroup>
+const ReqoreControlGroup = memo(
+  forwardRef<HTMLDivElement, IReqoreControlGroupProps>(
+    (
+      {
+        children,
+        className,
+        minimal,
+        size = 'normal',
+        gapSize = 'normal',
+        fluid,
+        flat,
+        rounded = true,
+        wrap,
+        stack,
+        isInsideStackGroup,
+        isInsideVerticalGroup,
+        isFirstInLastGroup,
+        isLastInFirstGroup,
+        isLastInLastGroup,
+        intent,
+        isFirst,
+        isLast,
+        vertical,
+        ...rest
+      }: IReqoreControlGroupProps,
+      ref
+    ) => {
+      const isStack = stack || isInsideStackGroup;
+      const isVertical = vertical || isInsideVerticalGroup;
+      const realChildCount = useMemo((): number => {
+        const count = React.Children.toArray(children).filter((child: any) => child).length;
+
+        return count < 0 ? 0 : count;
+      }, [children]);
+
+      const getIsFirst = (index: number): boolean => {
+        return !isInsideStackGroup ? index === 0 : (isFirst || isFirst !== false) && index === 0;
+      };
+      const getIsLast = (index: number): boolean => {
+        return !isInsideStackGroup
+          ? index === realChildCount - 1
+          : (isLast || isLast !== false) && index === realChildCount - 1;
+      };
+      const getIsLastInFirstGroup = (index: number): boolean => {
+        return !isInsideStackGroup
+          ? index === 0
+          : (isFirst || isFirst !== false) && index === realChildCount - 1;
+      };
+      const getIsFirstInLastGroup = (index: number): boolean => {
+        return !isInsideStackGroup
+          ? index === realChildCount - 1
+          : (isLast || isLast !== false) && index === 0;
+      };
+      const getIsLastInLastGroup = (index: number): boolean => {
+        return !isInsideStackGroup
+          ? index === realChildCount - 1
+          : (isLast || isLast !== false) && index === realChildCount - 1;
+      };
+
+      const getBorderTopLeftRadius = (index: number): number | undefined => {
+        // IF this group does not stack
+        if (!isStack) {
+          return undefined;
+        }
+        // If this is the first item
+        if (getIsFirst(index)) {
+          return RADIUS_FROM_SIZE[size];
+        }
+
+        return undefined;
+      };
+
+      const getBorderTopRightRadius = (index: number): number | undefined => {
+        // IF this group does not stack
+        if (!isStack) {
+          return undefined;
+        }
+
+        // If this group is not vertical we need to style the very last item
+        if (!isVertical) {
+          if (getIsLast(index)) {
+            return RADIUS_FROM_SIZE[size];
+          }
+
+          return undefined;
+        }
+
+        // This border only needs to apply when this group is vertical
+        // AND this item is the last item of the first group
+        if (getIsLastInFirstGroup(index)) {
+          return RADIUS_FROM_SIZE[size];
+        }
+
+        return undefined;
+      };
+
+      const getBorderBottomLeftRadius = (index: number): number | undefined => {
+        // IF this group does not stack
+        if (!isStack) {
+          return undefined;
+        }
+
+        // If this group is not vertical we need to style the very first item
+        if (!isVertical) {
+          if (getIsFirst(index)) {
+            return RADIUS_FROM_SIZE[size];
+          }
+
+          return undefined;
+        }
+
+        // This border only needs to apply when this group is vertical
+        // AND this item is the first item of the last group
+        if (getIsFirstInLastGroup(index)) {
+          return RADIUS_FROM_SIZE[size];
+        }
+
+        return undefined;
+      };
+
+      const getBorderBottomRightRadius = (index: number): number | undefined => {
+        // IF this group does not stack
+        if (!isStack) {
+          return undefined;
+        }
+
+        // If this is the last item
+        if (getIsLast(index)) {
+          return RADIUS_FROM_SIZE[size];
+        }
+
+        return undefined;
+      };
+
+      return (
+        <StyledReqoreControlGroup
+          {...rest}
+          vertical={vertical}
+          size={size}
+          gapSize={gapSize}
+          ref={ref}
+          rounded={rounded}
+          fluid={fluid}
+          wrap={wrap}
+          stack={isStack}
+          className={`${className || ''} reqore-control-group`}
+        >
+          {React.Children.map(children, (child, index) =>
+            child
+              ? React.cloneElement(child, {
+                  key: index,
+                  minimal:
+                    child.props?.minimal || child.props?.minimal === false
+                      ? child.props.minimal
+                      : minimal,
+                  size: child.props?.size || size,
+                  flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
+                  fluid:
+                    child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
+                  stack:
+                    child.props?.stack || child.props?.stack === false
+                      ? child.props.stack
+                      : isStack,
+                  intent: child.props?.intent || intent,
+                  style: {
+                    borderTopLeftRadius: getBorderTopLeftRadius(index),
+                    borderBottomLeftRadius: getBorderBottomLeftRadius(index),
+                    borderTopRightRadius: getBorderTopRightRadius(index),
+                    borderBottomRightRadius: getBorderBottomRightRadius(index),
+                    ...(child.props?.style || {}),
+                  },
+                  rounded: !isStack,
+                  isInsideStackGroup: isStack,
+                  isInsideVerticalGroup: isVertical,
+                  isFirst: getIsFirst(index),
+                  isLast: getIsLast(index),
+                  isLastInFirstGroup: getIsLastInFirstGroup(index),
+                  isLastInLastGroup: getIsLastInLastGroup(index),
+                  isFirstInLastGroup: getIsFirstInLastGroup(index),
+                })
+              : null
+          )}
+        </StyledReqoreControlGroup>
+      );
+    }
   )
 );
 

@@ -1,7 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreTabsProps } from '../../components/Tabs';
 import { ReqoreTabs, ReqoreTabsContent } from '../../index';
-import { argManager, IntentArg, SizeArg } from '../utils/args';
+import { IntentArg, SizeArg, argManager } from '../utils/args';
 
 const tabs = [
   {
@@ -30,6 +30,7 @@ const tabs = [
     id: 3,
     icon: 'FileSettingsLine',
     tooltip: 'Click to go to page 3!',
+    iconColor: 'info:lighten:3',
   },
   {
     id: 'tab4',

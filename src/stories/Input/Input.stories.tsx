@@ -38,6 +38,7 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
         />
         <ReqoreInput
           {...args}
+          iconColor='pending:lighten:2'
           placeholder='Clearable Input'
           onClearClick={handleValueClear}
           onChange={handleValueChange}

@@ -143,8 +143,6 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
 
     useTooltip(targetRef?.current, tooltip);
 
-    console.log(fluid);
-
     return (
       <StyledTextareaWrapper
         className={`${className || ''} reqore-control-wrapper`}

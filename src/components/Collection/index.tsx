@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqoreIntents } from '../../constants/theme';
+import { IReqoreIconName } from '../../types/icons';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreInput from '../Input';
 import ReqoreMessage from '../Message';
@@ -32,6 +33,8 @@ export interface IReqoreCollectionProps
   filterable?: boolean;
   sortable?: boolean;
   showAs?: 'list' | 'grid';
+  showSelectedFirst?: boolean;
+  selectedIcon?: IReqoreIconName;
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns)`
@@ -57,8 +60,10 @@ export const ReqoreCollection = ({
   maxItemHeight,
   filterable,
   sortable,
+  showSelectedFirst,
   headerSize = 2,
   showAs = 'grid',
+  selectedIcon,
   ...rest
 }: IReqoreCollectionProps) => {
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
@@ -69,10 +74,35 @@ export const ReqoreCollection = ({
     setShowAs(showAs);
   }, [showAs]);
 
-  const sortedItems: IReqoreCollectionItemProps[] = useMemo(
-    () => (sortable ? sortTableData(items, { by: 'label', direction: sort }) : items),
-    [items, sort]
-  );
+  const sortedItems: IReqoreCollectionItemProps[] = useMemo(() => {
+    if (!sortable) {
+      return items;
+    }
+
+    if (showSelectedFirst) {
+      // Filter out the selected items
+      const selectedItems = items.filter((item) => item.selected);
+      // Filter out the unselected items
+      const unselectedItems = items.filter((item) => !item.selected);
+      // Sort the selected items
+      const sortedSelectedItems = sortTableData(selectedItems, {
+        by: 'label',
+        direction: sort,
+      });
+      // Sort the unselected items
+      const sortedUnselectedItems = sortTableData(unselectedItems, {
+        by: 'label',
+        direction: sort,
+      });
+
+      return [...sortedSelectedItems, ...sortedUnselectedItems];
+    }
+
+    return sortTableData(items, {
+      by: 'label',
+      direction: sort,
+    });
+  }, [items, sort]);
 
   const filteredItems: IReqoreCollectionItemProps[] = useMemo(() => {
     if (!filterable || query === '') {
@@ -192,6 +222,7 @@ export const ReqoreCollection = ({
           {finalItems?.map((item) => (
             <ReqoreCollectionItem
               {...item}
+              icon={item.icon || (item.selected ? selectedIcon : undefined)}
               key={item.id || item.label.toString()}
               rounded={!stacked}
               maxContentHeight={maxItemHeight}

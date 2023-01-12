@@ -6,14 +6,15 @@ import styled, { css } from 'styled-components';
 import { ReqoreThemeContext } from '../..';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
+import { getColorFromMaybeString } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
 import { IWithReqoreEffect } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { StyledEffect } from '../Effect';
+import { StyledEffect, TReqoreEffectColor } from '../Effect';
 
 export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement>, IWithReqoreEffect {
   icon?: IReqoreIconName;
-  color?: string;
+  color?: TReqoreEffectColor;
   size?: TSizes | string;
   iconProps?: IconBaseProps;
   intent?: TReqoreIntent;
@@ -66,7 +67,9 @@ const ReqoreIcon = memo(
   }: IReqoreIconProps) => {
     const theme = useContext(ReqoreThemeContext);
     const Icon: IconType = RemixIcons[`Ri${icon}`];
-    const finalColor: string | undefined = intent ? theme.intents[intent] : color;
+    const finalColor: string | undefined = intent
+      ? theme.intents[intent]
+      : getColorFromMaybeString(theme, color);
     const finalSize: string = isStringSize(size) ? ICON_FROM_SIZE[size] : size;
 
     if (image) {

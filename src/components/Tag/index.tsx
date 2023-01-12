@@ -21,6 +21,7 @@ import {
 } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useTooltip } from '../../hooks/useTooltip';
+import { ActiveIconScale, InactiveIconScale } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -50,6 +51,9 @@ export interface IReqoreTagProps
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
+  iconColor?: TReqoreEffectColor;
+  leftIconColor?: TReqoreEffectColor;
+  rightIconColor?: TReqoreEffectColor;
   color?: TReqoreEffectColor;
   actions?: IReqoreTagAction[];
   width?: string;
@@ -81,6 +85,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
+  ${InactiveIconScale};
+
   ${({ wrap, hasWidth }) =>
     wrap || hasWidth
       ? css`
@@ -106,16 +112,24 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     `}
 
   ${({ theme, color, interactive, minimal, effect }) =>
-    interactive && !effect?.gradient
+    interactive
       ? css`
           cursor: pointer;
           &:hover {
-            background-color: ${changeLightness(color || theme.main, color ? 0.05 : 0.15)};
-            color: ${minimal
-              ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
-              : color
-              ? getReadableColorFrom(color)
-              : getReadableColor(theme, undefined, undefined)};
+            .reqore-tag-content,
+            .reqore-tag-key-content {
+              ${ActiveIconScale}
+            }
+
+            ${!effect?.gradient &&
+            css`
+              background-color: ${changeLightness(color || theme.main, color ? 0.05 : 0.15)};
+              color: ${minimal
+                ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
+                : color
+                ? getReadableColorFrom(color)
+                : getReadableColor(theme, undefined, undefined)};
+            `}
           }
         `
       : undefined}
@@ -129,8 +143,6 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       cursor: not-allowed;
     `}
 `;
-
-const StyledTagRightIcon = styled(ReqoreIcon)``;
 
 const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
   display: flex;
@@ -227,6 +239,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       minimal,
       wrap = false,
       width,
+      leftIconColor,
+      rightIconColor,
+      iconColor,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -276,7 +291,14 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             hasWidth={!!width}
             hasKey={!!labelKey}
           >
-            {icon && <ReqoreIcon icon={icon} size={size} margin={label ? 'left' : 'both'} />}
+            {icon && (
+              <ReqoreIcon
+                icon={icon}
+                size={size}
+                margin={label ? 'left' : 'both'}
+                color={leftIconColor || iconColor}
+              />
+            )}
             {labelKey && (
               <StyledTagContentKey wrap={wrap} hasWidth={!!width} size={size}>
                 {labelKey}
@@ -299,10 +321,11 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               </StyledTagContent>
             ) : null}
             {rightIcon && (
-              <StyledTagRightIcon
+              <ReqoreIcon
                 icon={rightIcon}
                 size={size}
                 margin={label || icon ? 'right' : 'both'}
+                color={rightIconColor || iconColor}
               />
             )}
           </StyledTagContentWrapper>

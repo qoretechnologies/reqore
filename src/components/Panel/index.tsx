@@ -87,6 +87,7 @@ export interface IReqorePanelProps
   contentEffect?: IReqoreEffect;
   headerEffect?: IReqoreEffect;
   transparent?: boolean;
+  iconColor?: TReqoreEffectColor;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -266,6 +267,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       minimal,
       tooltip,
       badge,
+      iconColor,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -455,6 +457,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   size={`${ICON_FROM_HEADER_SIZE[headerSize]}px`}
                   icon={icon}
                   margin='right'
+                  color={iconColor}
                 />
               )}
               {typeof label === 'string' ? (

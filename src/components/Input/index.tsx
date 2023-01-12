@@ -22,7 +22,7 @@ import {
   IWithReqoreEffect,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { StyledEffect } from '../Effect';
+import { StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 
@@ -48,6 +48,7 @@ export interface IReqoreInputProps
   rounded?: boolean;
   type?: 'text' | 'password' | 'email' | 'number' | 'tel' | 'url';
   wrapperStyle?: React.CSSProperties;
+  iconColor?: TReqoreEffectColor;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -150,6 +151,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       className,
       onClearClick,
       icon,
+      iconColor,
       flat,
       rounded = true,
       minimal,
@@ -185,7 +187,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       >
         {icon && (
           <StyledIconWrapper _size={size}>
-            <ReqoreIcon size={size} icon={icon} />
+            <ReqoreIcon size={size} icon={icon} color={iconColor} />
           </StyledIconWrapper>
         )}
         <StyledInput

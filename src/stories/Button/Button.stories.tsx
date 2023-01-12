@@ -48,7 +48,14 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} flat={false}>
           Not Flat
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} minimal flat={false}>
+        <ReqoreButton
+          {...buttonProps}
+          minimal
+          flat={false}
+          iconColor='#38fdb2'
+          leftIconColor='#33023c:lighten:3'
+          rightIconColor='#0a487b:lighten:3'
+        >
           Minimal not flat
         </ReqoreButton>
         <ReqoreButton {...buttonProps} readOnly onClick={alert} flat={false}>
@@ -69,6 +76,7 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton
           {...buttonProps}
           description='This is a very interesting description for a button, I like it very much'
+          iconColor='#38fdb2'
         >
           With Default Description
         </ReqoreButton>
