@@ -45,8 +45,8 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
               border-right: 0;
             }
             ${StyledButton}:last-child {
-              border-top-right-radius: 0;
-              border-bottom-right-radius: 0;
+              border-top-right-radius: 0 !important;
+              border-bottom-right-radius: 0 !important;
             }
           `
         : css`
@@ -54,10 +54,10 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
               border-bottom: 0;
             }
             ${StyledButton}:first-child {
-              border-bottom-left-radius: 0;
+              border-bottom-left-radius: 0 !important;
             }
             ${StyledButton}:last-child {
-              border-bottom-right-radius: 0;
+              border-bottom-right-radius: 0 !important;
             }
           `}
 

@@ -175,6 +175,7 @@ Minimal.args = {
 
 export const WithEffect: Story<IReqorePanelProps> = Template.bind({});
 WithEffect.args = {
+  iconColor: 'info:lighten:2',
   minimal: true,
   contentEffect: {
     gradient: {

@@ -159,11 +159,21 @@ const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
 
   return (
     <>
-      <ReqoreControlGroup>
+      <ReqoreControlGroup wrap>
         <ReqoreDropdown label='Default Dropdown' {...args} />
         <ReqoreDropdown label='Disabled if empty' {...args} items={[]} />
-        <ReqoreDropdown icon='SunCloudyLine' label='Custom icon' {...args} />
-        <ReqoreDropdown rightIcon='SunCloudyLine' caretPosition='right' {...args}>
+        <ReqoreDropdown
+          icon='SunCloudyLine'
+          label='Custom icon'
+          {...args}
+          leftIconColor='warning:lighten:2'
+        />
+        <ReqoreDropdown
+          rightIcon='SunCloudyLine'
+          caretPosition='right'
+          {...args}
+          iconColor='success:lighten:2'
+        >
           Custom icon with caret on right
         </ReqoreDropdown>
         <ReqoreDropdown

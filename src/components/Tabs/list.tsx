@@ -216,6 +216,7 @@ const ReqoreTabsList = ({
                 }
                 closeOnOutsideClick
                 isReqoreComponent
+                noWrapper
                 handler='hoverStay'
                 content={
                   <ReqoreMenu customTheme={theme}>

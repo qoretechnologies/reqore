@@ -20,7 +20,7 @@ export default {
 const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
   return (
     <>
-      <ReqoreControlGroup size={buttonProps.size}>
+      <ReqoreControlGroup size={buttonProps.size} wrap>
         <ReqoreButton {...buttonProps} icon='BankFill' rightIcon={null} />
         <ReqoreButton {...buttonProps} />
         <ReqoreButton {...buttonProps}>Default</ReqoreButton>
@@ -41,14 +41,21 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup size={buttonProps.size}>
+      <ReqoreControlGroup size={buttonProps.size} wrap>
         <ReqoreButton {...buttonProps} active flat={false} tooltip='hello'>
           Active Not Flat
         </ReqoreButton>
         <ReqoreButton {...buttonProps} flat={false}>
           Not Flat
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} minimal flat={false}>
+        <ReqoreButton
+          {...buttonProps}
+          minimal
+          flat={false}
+          iconColor='#38fdb2'
+          leftIconColor='#33023c:lighten:3'
+          rightIconColor='#0a487b:lighten:3'
+        >
           Minimal not flat
         </ReqoreButton>
         <ReqoreButton {...buttonProps} readOnly onClick={alert} flat={false}>
@@ -59,16 +66,17 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup fluid>
+      <ReqoreControlGroup fluid wrap>
         <ReqoreButton {...buttonProps} fluid>
           Fluid button
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup>
+      <ReqoreControlGroup wrap>
         <ReqoreButton
           {...buttonProps}
           description='This is a very interesting description for a button, I like it very much'
+          iconColor='#38fdb2'
         >
           With Default Description
         </ReqoreButton>
@@ -109,7 +117,7 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         />
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup>
+      <ReqoreControlGroup wrap>
         <ReqoreButton {...buttonProps} readOnly badge={10} onClick={alert}>
           Read only with badge
         </ReqoreButton>

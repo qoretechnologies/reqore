@@ -32,6 +32,8 @@ export default [
     tooltip: 'This is a test item',
     headerSize: 2,
     contentSize: 'huge',
+    selected: true,
+    icon: 'Hashtag',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     tags: [
@@ -89,6 +91,7 @@ export default [
   {
     label: 'Item with custom content when expanded',
     tooltip: 'Expandable item with custom content',
+    selected: true,
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     expandable: true,

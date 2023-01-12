@@ -30,7 +30,7 @@ export interface IReqoreCollectionItemProps
     | 'unMountContentOnCollapse'
     | 'bottomActions'
   > {
-  subHeader?: string;
+  selected?: boolean;
   content?: string | React.ReactNode;
   expandable?: boolean;
   expandedContent?: string | React.ReactNode;

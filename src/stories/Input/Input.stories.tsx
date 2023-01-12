@@ -26,7 +26,7 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
 
   return (
     <>
-      <ReqoreControlGroup>
+      <ReqoreControlGroup wrap>
         <ReqoreInput {...args} placeholder='Reqore Input' onChange={handleValueChange} />
         <ReqoreInput {...args} placeholder='Minimal Input' minimal onChange={handleValueChange} />
         <ReqoreInput
@@ -38,6 +38,7 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
         />
         <ReqoreInput
           {...args}
+          iconColor='pending:lighten:2'
           placeholder='Clearable Input'
           onClearClick={handleValueClear}
           onChange={handleValueChange}
@@ -51,7 +52,7 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
         />
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup>
+      <ReqoreControlGroup wrap>
         <ReqoreInput
           {...args}
           placeholder='Reqore Input'
