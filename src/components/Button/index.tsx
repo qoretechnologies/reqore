@@ -170,6 +170,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       : null}
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
 
   border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
 

@@ -1,10 +1,10 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
-import ReqoreInput from '../../components/Input';
 import {
   ReqoreButton,
   ReqoreCheckbox,
   ReqoreControlGroup,
+  ReqoreInput,
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
@@ -36,6 +36,12 @@ export default {
       description: 'Whether the control group should be fluid',
       control: 'boolean',
     }),
+    ...createArg('wrap', {
+      name: 'wrap',
+      defaultValue: true,
+      description: 'Whether the control group should wrap',
+      control: 'boolean',
+    }),
   },
 } as Meta<IReqoreControlGroupProps>;
 
@@ -51,8 +57,10 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
         >
           Non flat Button
         </ReqoreButton>
-        <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
-        <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+        <ReqoreControlGroup stack>
+          <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+          <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+        </ReqoreControlGroup>
         <ReqoreCheckbox
           asSwitch
           label='Switchy switch'
@@ -63,35 +71,75 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           uncheckedIcon='CheckboxBlankLine'
         />
         <ReqoreInput icon='4KFill' value='Hello' />
-        <ReqoreButton disabled fixed>
-          Disabled & Fixed
-        </ReqoreButton>
-        <ReqoreCheckbox checked margin='both'>
-          Checkbox
-        </ReqoreCheckbox>
+        <ReqoreControlGroup stack>
+          <ReqoreControlGroup>
+            <ReqoreButton customTheme={{ main: '#00e3e8' }}>Level 2 deep</ReqoreButton>
+            <ReqoreControlGroup>
+              <ReqoreButton disabled fixed id='test'>
+                Level 3 deep
+              </ReqoreButton>
+            </ReqoreControlGroup>
+          </ReqoreControlGroup>
+          <ReqoreButton intent='danger'>Level 1 deep</ReqoreButton>
+          <ReqoreCheckbox checked margin='both' label='Level 1 deep' />
+        </ReqoreControlGroup>
 
         <ReqoreButton minimal>Minimal</ReqoreButton>
         <ReqoreTag label='smol tag' size='small' />
       </ReqoreControlGroup>
       <ReqoreVerticalSpacer height={15} />
-      <ReqoreControlGroup {...args} className='root-group'>
-        <ReqoreControlGroup intent='info' className='group-1'>
-          <ReqoreButton icon='PictureInPictureLine'>Group 1</ReqoreButton>
-          <ReqoreTag icon='PictureInPictureLine' label='Group 1' />
-        </ReqoreControlGroup>
-        <ReqoreButton icon='PictureInPictureLine'>Root group</ReqoreButton>
-        <ReqoreControlGroup intent='success' className='group-2'>
-          <ReqoreButton icon='PictureInPictureLine'>Group 2</ReqoreButton>
-          <ReqoreControlGroup intent='danger' className='group-3'>
-            <ReqoreButton icon='PictureInPictureLine'>Group 3</ReqoreButton>
-            <ReqoreButton icon='PictureInPictureLine'>Group 3</ReqoreButton>
+      <ReqoreControlGroup {...args} className='root-group' id='root-group'>
+        <ReqoreControlGroup intent='info' className='group-1' id='group-1-wrapper'>
+          <ReqoreControlGroup intent='info' className='group-1' id='group-1'>
+            <ReqoreButton icon='PictureInPictureLine' id='group-1-button'>
+              Group 1
+            </ReqoreButton>
+            <ReqoreTag icon='PictureInPictureLine' label='Group 1' id='group-1-tag' />
           </ReqoreControlGroup>
-          <ReqoreCheckbox label='Group 2' margin='both' />
+          <ReqoreControlGroup intent='pending' className='group-1-1' id='group-1-1'>
+            <ReqoreButton icon='PictureInPictureLine' id='group-1-1-button'>
+              Group 1-1
+            </ReqoreButton>
+            <ReqoreTag icon='PictureInPictureLine' label='Group 1-1' id='group-1-1-tag' />
+          </ReqoreControlGroup>
         </ReqoreControlGroup>
-        <ReqoreButton icon='PictureInPictureLine'>Root group</ReqoreButton>
-        <ReqoreControlGroup intent='warning' className='group-4'>
-          <ReqoreButton icon='PictureInPictureLine'>Group 4</ReqoreButton>
-          <ReqoreInput icon='PictureInPictureLine' value='Group 4' />
+        <ReqoreButton icon='PictureInPictureLine' id='group-root-button'>
+          Root group
+        </ReqoreButton>
+        <ReqoreControlGroup intent='success' className='group-2' id='group-2'>
+          <ReqoreButton icon='PictureInPictureLine' id='group-2-button' fixed>
+            Group 2
+          </ReqoreButton>
+          <ReqoreControlGroup intent='danger' className='group-3' id='group-3'>
+            <ReqoreButton icon='PictureInPictureLine' id='group-3-button-1'>
+              Group 3
+            </ReqoreButton>
+            <ReqoreButton icon='PictureInPictureLine' id='group-3-button-2'>
+              Group 3
+            </ReqoreButton>
+          </ReqoreControlGroup>
+          <ReqoreCheckbox label='Group 2' margin='both' id='group-2-checkbox' />
+        </ReqoreControlGroup>
+        <ReqoreButton icon='PictureInPictureLine' id='group-root-button-2'>
+          Root group
+        </ReqoreButton>
+        <ReqoreControlGroup intent='warning' className='group-4' id='group-4'>
+          <ReqoreControlGroup id='group-4-1' fluid={false}>
+            <ReqoreTag icon='PictureInPictureLine' label='Group 4' id='group-4-1-tag' />
+            <ReqoreInput icon='PictureInPictureLine' value='Group 4' id='group-4-1-input' />
+          </ReqoreControlGroup>
+          <ReqoreControlGroup id='group-4-3'>
+            <ReqoreTag icon='PictureInPictureLine' label='Group 4' id='group-4-3-tag' />
+            <ReqoreInput icon='PictureInPictureLine' value='Group 4' id='group-4-3-input' />
+            <ReqoreControlGroup id='group-5' intent='muted' fluid={false}>
+              <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-1-tag' />
+              <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-2-tag' />
+              <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-3-tag' />
+              <ReqoreControlGroup id='group 6' intent='success'>
+                <ReqoreButton fixed>Group 6</ReqoreButton>
+              </ReqoreControlGroup>
+            </ReqoreControlGroup>
+          </ReqoreControlGroup>
         </ReqoreControlGroup>
       </ReqoreControlGroup>
     </>
@@ -131,7 +179,7 @@ BigGapSize.args = {
   gapSize: 'big',
 };
 
-export const Wrap = Template.bind({});
-Wrap.args = {
-  wrap: true,
+export const NoWrap = Template.bind({});
+NoWrap.args = {
+  wrap: false,
 };
