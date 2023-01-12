@@ -91,10 +91,12 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
       <ReqoreControlGroup {...args} className='root-group' id='root-group'>
         <ReqoreControlGroup intent='info' className='group-1' id='group-1-wrapper'>
           <ReqoreControlGroup intent='info' className='group-1' id='group-1'>
-            <ReqoreButton icon='PictureInPictureLine' id='group-1-button'>
-              Group 1
-            </ReqoreButton>
-            <ReqoreTag icon='PictureInPictureLine' label='Group 1' id='group-1-tag' />
+            <>
+              <ReqoreButton icon='PictureInPictureLine' id='group-1-button'>
+                Group 1
+              </ReqoreButton>
+              <ReqoreTag icon='PictureInPictureLine' label='Group 1' id='group-1-tag' />
+            </>
           </ReqoreControlGroup>
           <ReqoreControlGroup intent='pending' className='group-1-1' id='group-1-1'>
             <ReqoreButton icon='PictureInPictureLine' id='group-1-1-button'>
@@ -107,17 +109,19 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           Root group
         </ReqoreButton>
         <ReqoreControlGroup intent='success' className='group-2' id='group-2'>
-          <ReqoreButton icon='PictureInPictureLine' id='group-2-button' fixed>
-            Group 2
-          </ReqoreButton>
-          <ReqoreControlGroup intent='danger' className='group-3' id='group-3'>
-            <ReqoreButton icon='PictureInPictureLine' id='group-3-button-1'>
-              Group 3
+          <>
+            <ReqoreButton icon='PictureInPictureLine' id='group-2-button' fixed>
+              Group 2
             </ReqoreButton>
-            <ReqoreButton icon='PictureInPictureLine' id='group-3-button-2'>
-              Group 3
-            </ReqoreButton>
-          </ReqoreControlGroup>
+            <ReqoreControlGroup intent='danger' className='group-3' id='group-3'>
+              <ReqoreButton icon='PictureInPictureLine' id='group-3-button-1'>
+                Group 3
+              </ReqoreButton>
+              <ReqoreButton icon='PictureInPictureLine' id='group-3-button-2'>
+                Group 3
+              </ReqoreButton>
+            </ReqoreControlGroup>
+          </>
           <ReqoreCheckbox label='Group 2' margin='both' id='group-2-checkbox' />
         </ReqoreControlGroup>
         <ReqoreButton icon='PictureInPictureLine' id='group-root-button-2'>
@@ -130,15 +134,17 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           </ReqoreControlGroup>
           <ReqoreControlGroup id='group-4-3'>
             <ReqoreTag icon='PictureInPictureLine' label='Group 4' id='group-4-3-tag' />
-            <ReqoreInput icon='PictureInPictureLine' value='Group 4' id='group-4-3-input' />
-            <ReqoreControlGroup id='group-5' intent='muted' fluid={false}>
-              <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-1-tag' />
-              <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-2-tag' />
-              <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-3-tag' />
-              <ReqoreControlGroup id='group 6' intent='success'>
-                <ReqoreButton fixed>Group 6</ReqoreButton>
+            <>
+              <ReqoreInput icon='PictureInPictureLine' value='Group 4' id='group-4-3-input' />
+              <ReqoreControlGroup id='group-5' intent='muted' fluid={false}>
+                <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-1-tag' />
+                <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-2-tag' />
+                <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-3-tag' />
+                <ReqoreControlGroup id='group 6' intent='success'>
+                  <ReqoreButton fixed>Group 6</ReqoreButton>
+                </ReqoreControlGroup>
               </ReqoreControlGroup>
-            </ReqoreControlGroup>
+            </>
           </ReqoreControlGroup>
         </ReqoreControlGroup>
       </ReqoreControlGroup>
