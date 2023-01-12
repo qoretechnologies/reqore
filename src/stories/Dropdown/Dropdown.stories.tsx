@@ -159,7 +159,7 @@ const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
 
   return (
     <>
-      <ReqoreControlGroup>
+      <ReqoreControlGroup wrap>
         <ReqoreDropdown label='Default Dropdown' {...args} />
         <ReqoreDropdown label='Disabled if empty' {...args} items={[]} />
         <ReqoreDropdown

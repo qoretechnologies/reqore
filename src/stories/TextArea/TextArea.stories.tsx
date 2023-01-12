@@ -55,7 +55,7 @@ const Template: Story<IReqoreTextareaProps> = (args) => {
 
   return (
     <>
-      <ReqoreControlGroup fluid>
+      <ReqoreControlGroup wrap>
         <ReqoreTextarea
           {...args}
           onChange={handleValueChange}

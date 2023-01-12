@@ -1,6 +1,6 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import Checkbox from '../../components/Checkbox';
-import { ReqoreCheckbox, ReqoreControlGroup } from '../../index';
+import { ReqoreCheckbox, ReqoreControlGroup, ReqoreVerticalSpacer } from '../../index';
 
 export default {
   title: 'Components/Checkbox',
@@ -10,7 +10,7 @@ export default {
 const Template: ComponentStory<typeof Checkbox> = (args) => {
   return (
     <ReqoreControlGroup vertical>
-      <ReqoreControlGroup>
+      <ReqoreControlGroup wrap>
         <ReqoreCheckbox {...args} />
         <ReqoreCheckbox {...args} label='Label' labelDetail='Detail' labelDetailPosition='left' />
         <ReqoreCheckbox {...args} checked tooltip='I am checked' />
@@ -18,7 +18,8 @@ const Template: ComponentStory<typeof Checkbox> = (args) => {
         <ReqoreCheckbox {...args} label='Label' labelDetail='Detail' labelPosition='left' />
         <ReqoreCheckbox {...args} label='Read Only' labelPosition='left' readOnly />
       </ReqoreControlGroup>
-      <ReqoreControlGroup>
+      <ReqoreVerticalSpacer height={10} />
+      <ReqoreControlGroup wrap>
         <ReqoreCheckbox {...args} intent='info' checked />
         <ReqoreCheckbox
           {...args}

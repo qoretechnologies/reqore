@@ -91,7 +91,6 @@ const ReqoreControlGroup = memo(
         return !isInsideStackGroup ? index === 0 : (isFirst || isFirst !== false) && index === 0;
       };
       const getIsLast = (index: number): boolean => {
-        console.log(children, index, realChildCount);
         return !isInsideStackGroup
           ? index === realChildCount - 1
           : (isLast || isLast !== false) && index === realChildCount - 1;
