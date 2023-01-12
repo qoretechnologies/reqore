@@ -90,13 +90,19 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
       <ReqoreVerticalSpacer height={15} />
       <ReqoreControlGroup {...args} className='root-group' id='root-group'>
         <ReqoreControlGroup intent='info' className='group-1' id='group-1-wrapper'>
-          <>
-            <ReqoreTag icon='PictureInPictureLine' label='Group 1' id='group-1-tag' />
-          </>
+          <ReqoreControlGroup intent='info' className='group-1' id='group-1'>
+            <>
+              <ReqoreButton icon='PictureInPictureLine' id='group-1-button'>
+                Group 1
+              </ReqoreButton>
+              <ReqoreTag icon='PictureInPictureLine' label='Group 1' id='group-1-tag' />
+            </>
+          </ReqoreControlGroup>
           <ReqoreControlGroup intent='pending' className='group-1-1' id='group-1-1'>
             <ReqoreButton icon='PictureInPictureLine' id='group-1-1-button'>
               Group 1-1
             </ReqoreButton>
+            <ReqoreTag icon='PictureInPictureLine' label='Group 1-1' id='group-1-1-tag' />
           </ReqoreControlGroup>
         </ReqoreControlGroup>
         <ReqoreButton icon='PictureInPictureLine' id='group-root-button'>
@@ -128,18 +134,17 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           </ReqoreControlGroup>
           <ReqoreControlGroup id='group-4-3'>
             <ReqoreTag icon='PictureInPictureLine' label='Group 4' id='group-4-3-tag' />
-            <ReqoreInput icon='PictureInPictureLine' value='Group 4' id='group-4-3-input' />
-            <ReqoreControlGroup id='group-5' intent='muted' fluid={false}>
-              <>
+            <>
+              <ReqoreInput icon='PictureInPictureLine' value='Group 4' id='group-4-3-input' />
+              <ReqoreControlGroup id='group-5' intent='muted' fluid={false}>
                 <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-1-tag' />
                 <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-2-tag' />
                 <ReqoreTag icon='PictureInPictureLine' label='Group 5' id='group-4-3-3-tag' />
-
                 <ReqoreControlGroup id='group 6' intent='success'>
                   <ReqoreButton fixed>Group 6</ReqoreButton>
                 </ReqoreControlGroup>
-              </>
-            </ReqoreControlGroup>
+              </ReqoreControlGroup>
+            </>
           </ReqoreControlGroup>
         </ReqoreControlGroup>
       </ReqoreControlGroup>
