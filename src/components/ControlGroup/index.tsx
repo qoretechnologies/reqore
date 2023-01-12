@@ -32,6 +32,11 @@ export interface IReqoreControlGroupProps
   isLastInFirstGroup?: boolean;
   isLastInLastGroup?: boolean;
   isFirstInLastGroup?: boolean;
+  childrenCount?: number;
+  childId?: number;
+  isChild?: boolean;
+  isFirstGroup?: boolean;
+  isLastGroup?: boolean;
 }
 
 export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
@@ -75,6 +80,11 @@ const ReqoreControlGroup = memo(
         isFirst,
         isLast,
         vertical,
+        childrenCount,
+        childId,
+        isChild,
+        isFirstGroup,
+        isLastGroup,
         ...rest
       }: IReqoreControlGroupProps,
       ref
@@ -98,17 +108,17 @@ const ReqoreControlGroup = memo(
       const getIsLastInFirstGroup = (index: number): boolean => {
         return !isInsideStackGroup
           ? index === 0
-          : (isFirst || isFirst !== false) && index === realChildCount - 1;
+          : isFirstGroup && (isLast || isLast !== false) && index === realChildCount - 1;
       };
       const getIsFirstInLastGroup = (index: number): boolean => {
         return !isInsideStackGroup
           ? index === realChildCount - 1
-          : (isLast || isLast !== false) && index === 0;
+          : isLastGroup && (isFirst || isFirst !== false) && childId === 1 && index === 0;
       };
       const getIsLastInLastGroup = (index: number): boolean => {
         return !isInsideStackGroup
           ? index === realChildCount - 1
-          : (isLast || isLast !== false) && index === realChildCount - 1;
+          : isLastGroup && (isLast || isLast !== false) && index === realChildCount - 1;
       };
 
       const getBorderTopLeftRadius = (index: number): number | undefined => {
@@ -116,8 +126,11 @@ const ReqoreControlGroup = memo(
         if (!isStack) {
           return undefined;
         }
+
+        const _isFirstGroup = isChild ? isFirstGroup : index === 0;
+
         // If this is the first item
-        if (getIsFirst(index)) {
+        if (_isFirstGroup && getIsFirst(index)) {
           return RADIUS_FROM_SIZE[size];
         }
 
@@ -132,7 +145,9 @@ const ReqoreControlGroup = memo(
 
         // If this group is not vertical we need to style the very last item
         if (!isVertical) {
-          if (getIsLast(index)) {
+          const _isLastGroup = isChild ? isLastGroup : index === realChildCount - 1;
+
+          if (_isLastGroup && getIsLast(index)) {
             return RADIUS_FROM_SIZE[size];
           }
 
@@ -156,7 +171,9 @@ const ReqoreControlGroup = memo(
 
         // If this group is not vertical we need to style the very first item
         if (!isVertical) {
-          if (getIsFirst(index)) {
+          const _isFirstGroup = isChild ? isFirstGroup : index === 0;
+
+          if (_isFirstGroup && getIsFirst(index)) {
             return RADIUS_FROM_SIZE[size];
           }
 
@@ -178,8 +195,10 @@ const ReqoreControlGroup = memo(
           return undefined;
         }
 
+        const _isLastGroup = isChild ? isLastGroup : index === realChildCount - 1;
+
         // If this is the last item
-        if (getIsLast(index)) {
+        if (_isLastGroup && getIsLast(index)) {
           return RADIUS_FROM_SIZE[size];
         }
 
@@ -235,11 +254,16 @@ const ReqoreControlGroup = memo(
                   rounded: !isStack,
                   isInsideStackGroup: isStack,
                   isInsideVerticalGroup: isVertical,
-                  isFirst: getIsFirst(index),
-                  isLast: getIsLast(index),
+                  isFirst: isChild ? getIsFirst(index) : undefined,
+                  isLast: isChild ? getIsLast(index) : undefined,
                   isLastInFirstGroup: getIsLastInFirstGroup(index),
                   isLastInLastGroup: getIsLastInLastGroup(index),
                   isFirstInLastGroup: getIsFirstInLastGroup(index),
+                  childrenCount: realChildCount,
+                  childId: index + 1,
+                  isChild: true,
+                  isFirstGroup: isChild ? isFirstGroup : index === 0,
+                  isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
                 })
               : null;
 
