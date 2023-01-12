@@ -22,6 +22,7 @@ export interface IReqoreDropdownProps extends Partial<IPopoverOptions> {
   caretPosition?: 'left' | 'right';
   isDefaultOpen?: boolean;
   onItemSelect?: TDropdownItemOnClick;
+  style?: React.CSSProperties;
 }
 
 function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
@@ -64,7 +65,7 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
         ...rest,
         icon: caretPosition === 'left' ? icon || 'ArrowDownSFill' : rightIcon,
         rightIcon: caretPosition === 'right' ? icon || 'ArrowDownSFill' : rightIcon,
-        style: buttonStyle,
+        style: buttonStyle || rest.style,
         disabled: !size(items),
         className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
       } as T),
