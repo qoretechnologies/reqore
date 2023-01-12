@@ -4,6 +4,7 @@ import {
   ReqoreButton,
   ReqoreCheckbox,
   ReqoreControlGroup,
+  ReqoreDropdown,
   ReqoreInput,
   ReqoreTag,
   ReqoreVerticalSpacer,
@@ -103,6 +104,34 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
               Group 1-1
             </ReqoreButton>
             <ReqoreTag icon='PictureInPictureLine' label='Group 1-1' id='group-1-1-tag' />
+            <ReqoreDropdown
+              items={[
+                {
+                  selected: true,
+                  label: 'Hello',
+                  value: 'hello',
+                  icon: 'SunCloudyLine',
+                },
+                {
+                  label: 'How are ya',
+                  value: 'howareya',
+                  icon: 'BatteryChargeFill',
+                },
+                {
+                  disabled: true,
+                  label: 'i aM diSAblEd',
+                  value: 'disabled',
+                  icon: 'StopCircleLine',
+                },
+                {
+                  label: 'With right button',
+                  value: 'kek',
+                  icon: 'CheckDoubleLine',
+                },
+              ]}
+            >
+              Dropdown
+            </ReqoreDropdown>
           </ReqoreControlGroup>
         </ReqoreControlGroup>
         <ReqoreButton icon='PictureInPictureLine' id='group-root-button'>
