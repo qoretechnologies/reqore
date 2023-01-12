@@ -107,7 +107,7 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           Root group
         </ReqoreButton>
         <ReqoreControlGroup intent='success' className='group-2' id='group-2'>
-          <ReqoreButton icon='PictureInPictureLine' id='group-2-button'>
+          <ReqoreButton icon='PictureInPictureLine' id='group-2-button' fixed>
             Group 2
           </ReqoreButton>
           <ReqoreControlGroup intent='danger' className='group-3' id='group-3'>
