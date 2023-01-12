@@ -91,6 +91,7 @@ const ReqoreControlGroup = memo(
         return !isInsideStackGroup ? index === 0 : (isFirst || isFirst !== false) && index === 0;
       };
       const getIsLast = (index: number): boolean => {
+        console.log(children, index, realChildCount);
         return !isInsideStackGroup
           ? index === realChildCount - 1
           : (isLast || isLast !== false) && index === realChildCount - 1;
@@ -186,6 +187,8 @@ const ReqoreControlGroup = memo(
         return undefined;
       };
 
+      let index = 0;
+
       return (
         <StyledReqoreControlGroup
           {...rest}
@@ -199,8 +202,19 @@ const ReqoreControlGroup = memo(
           stack={isStack}
           className={`${className || ''} reqore-control-group`}
         >
-          {React.Children.map(children, (child, index) =>
-            child
+          {React.Children.map(children, (child) => {
+            /*
+             * Because of the way React.Children.map works, we have to
+             * manually decrement the index for every child that is `null`
+             * because react maps through null children and returns them in `Count`
+             * We filter these children out in the `realChildCount` variable,
+             * but the index is still incremented
+             * */
+            if (!child) {
+              index = index - 1 < 0 ? 0 : index - 1;
+            }
+
+            const result = child
               ? React.cloneElement(child, {
                   key: index,
                   minimal:
@@ -232,8 +246,12 @@ const ReqoreControlGroup = memo(
                   isLastInLastGroup: getIsLastInLastGroup(index),
                   isFirstInLastGroup: getIsFirstInLastGroup(index),
                 })
-              : null
-          )}
+              : null;
+
+            index = index + 1;
+
+            return result;
+          })}
         </StyledReqoreControlGroup>
       );
     }
