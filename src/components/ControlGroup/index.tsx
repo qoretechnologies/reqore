@@ -210,10 +210,6 @@ const ReqoreControlGroup = memo(
              * We filter these children out in the `realChildCount` variable,
              * but the index is still incremented
              * */
-            if (!child) {
-              index = index - 1 < 0 ? 0 : index - 1;
-            }
-
             const result = child
               ? React.cloneElement(child, {
                   key: index,
@@ -248,7 +244,14 @@ const ReqoreControlGroup = memo(
                 })
               : null;
 
-            index = index + 1;
+            /*
+             * Because of the way React.Children.map works, we have to
+             * manually decrement the index for every child that is `null`
+             * because react maps through null children and returns them in `Count`
+             * We filter these children out in the `realChildCount` variable,
+             * but the index is still incremented
+             * */
+            index = !child ? index : index + 1;
 
             return result;
           })}
