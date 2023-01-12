@@ -1,10 +1,10 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
-import ReqoreInput from '../../components/Input';
 import {
   ReqoreButton,
   ReqoreCheckbox,
   ReqoreControlGroup,
+  ReqoreInput,
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
@@ -36,6 +36,12 @@ export default {
       description: 'Whether the control group should be fluid',
       control: 'boolean',
     }),
+    ...createArg('wrap', {
+      name: 'wrap',
+      defaultValue: true,
+      description: 'Whether the control group should wrap',
+      control: 'boolean',
+    }),
   },
 } as Meta<IReqoreControlGroupProps>;
 
@@ -51,8 +57,10 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
         >
           Non flat Button
         </ReqoreButton>
-        <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
-        <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+        <ReqoreControlGroup stack>
+          <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+          <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+        </ReqoreControlGroup>
         <ReqoreCheckbox
           asSwitch
           label='Switchy switch'
@@ -63,12 +71,18 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           uncheckedIcon='CheckboxBlankLine'
         />
         <ReqoreInput icon='4KFill' value='Hello' />
-        <ReqoreButton disabled fixed>
-          Disabled & Fixed
-        </ReqoreButton>
-        <ReqoreCheckbox checked margin='both'>
-          Checkbox
-        </ReqoreCheckbox>
+        <ReqoreControlGroup stack>
+          <ReqoreControlGroup>
+            <ReqoreButton customTheme={{ main: '#00e3e8' }}>Level 2 deep</ReqoreButton>
+            <ReqoreControlGroup>
+              <ReqoreButton disabled fixed id='test'>
+                Level 3 deep
+              </ReqoreButton>
+            </ReqoreControlGroup>
+          </ReqoreControlGroup>
+          <ReqoreButton intent='danger'>Level 1 deep</ReqoreButton>
+          <ReqoreCheckbox checked margin='both' label='Level 1 deep' />
+        </ReqoreControlGroup>
 
         <ReqoreButton minimal>Minimal</ReqoreButton>
         <ReqoreTag label='smol tag' size='small' />
@@ -165,7 +179,7 @@ BigGapSize.args = {
   gapSize: 'big',
 };
 
-export const Wrap = Template.bind({});
-Wrap.args = {
-  wrap: true,
+export const NoWrap = Template.bind({});
+NoWrap.args = {
+  wrap: false,
 };

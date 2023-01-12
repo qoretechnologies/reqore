@@ -98,7 +98,9 @@ const ReqoreControlGroup = memo(
       }, [children]);
 
       const getIsFirst = (index: number): boolean => {
-        return !isInsideStackGroup ? index === 0 : (isFirst || isFirst !== false) && index === 0;
+        return !isInsideStackGroup || childrenCount === 1
+          ? index === 0
+          : (isFirst || isFirst !== false) && index === 0;
       };
       const getIsLast = (index: number): boolean => {
         return !isInsideStackGroup
@@ -122,12 +124,8 @@ const ReqoreControlGroup = memo(
       };
 
       const getBorderTopLeftRadius = (index: number): number | undefined => {
-        // IF this group does not stack
-        if (!isStack) {
-          return undefined;
-        }
-
-        const _isFirstGroup = isChild ? isFirstGroup : index === 0;
+        const _isFirstGroup =
+          !isInsideStackGroup || childrenCount === 1 ? true : isChild ? isFirstGroup : index === 0;
 
         // If this is the first item
         if (_isFirstGroup && getIsFirst(index)) {
@@ -138,14 +136,14 @@ const ReqoreControlGroup = memo(
       };
 
       const getBorderTopRightRadius = (index: number): number | undefined => {
-        // IF this group does not stack
-        if (!isStack) {
-          return undefined;
-        }
-
         // If this group is not vertical we need to style the very last item
-        if (!isVertical) {
-          const _isLastGroup = isChild ? isLastGroup : index === realChildCount - 1;
+        if (!isVertical || !isStack) {
+          const _isLastGroup =
+            !isInsideStackGroup || childrenCount === 1
+              ? true
+              : isChild
+              ? isLastGroup
+              : index === realChildCount - 1;
 
           if (_isLastGroup && getIsLast(index)) {
             return RADIUS_FROM_SIZE[size];
@@ -164,14 +162,14 @@ const ReqoreControlGroup = memo(
       };
 
       const getBorderBottomLeftRadius = (index: number): number | undefined => {
-        // IF this group does not stack
-        if (!isStack) {
-          return undefined;
-        }
-
         // If this group is not vertical we need to style the very first item
-        if (!isVertical) {
-          const _isFirstGroup = isChild ? isFirstGroup : index === 0;
+        if (!isVertical || !isStack) {
+          const _isFirstGroup =
+            !isInsideStackGroup || childrenCount === 1
+              ? true
+              : isChild
+              ? isFirstGroup
+              : index === 0;
 
           if (_isFirstGroup && getIsFirst(index)) {
             return RADIUS_FROM_SIZE[size];
@@ -190,12 +188,12 @@ const ReqoreControlGroup = memo(
       };
 
       const getBorderBottomRightRadius = (index: number): number | undefined => {
-        // IF this group does not stack
-        if (!isStack) {
-          return undefined;
-        }
-
-        const _isLastGroup = isChild ? isLastGroup : index === realChildCount - 1;
+        const _isLastGroup =
+          !isInsideStackGroup || childrenCount === 1
+            ? true
+            : isChild
+            ? isLastGroup
+            : index === realChildCount - 1;
 
         // If this is the last item
         if (_isLastGroup && getIsLast(index)) {
@@ -206,6 +204,35 @@ const ReqoreControlGroup = memo(
       };
 
       let index = 0;
+
+      const getStuff = (index, child) => {
+        if (isStack) {
+          return {
+            style: {
+              borderTopLeftRadius: getBorderTopLeftRadius(index),
+              borderBottomLeftRadius: getBorderBottomLeftRadius(index),
+              borderTopRightRadius: getBorderTopRightRadius(index),
+              borderBottomRightRadius: getBorderBottomRightRadius(index),
+              ...(child.props?.style || {}),
+            },
+            rounded: !isStack,
+            isInsideStackGroup: isStack,
+            isInsideVerticalGroup: isVertical,
+            isFirst: isChild ? getIsFirst(index) : undefined,
+            isLast: isChild ? getIsLast(index) : undefined,
+            isLastInFirstGroup: getIsLastInFirstGroup(index),
+            isLastInLastGroup: getIsLastInLastGroup(index),
+            isFirstInLastGroup: getIsFirstInLastGroup(index),
+            childrenCount: realChildCount,
+            childId: index + 1,
+            isChild: true,
+            isFirstGroup: isChild ? isFirstGroup : index === 0,
+            isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
+          };
+        }
+
+        return {};
+      };
 
       return (
         <StyledReqoreControlGroup
@@ -244,26 +271,7 @@ const ReqoreControlGroup = memo(
                       ? child.props.stack
                       : isStack,
                   intent: child.props?.intent || intent,
-                  style: {
-                    borderTopLeftRadius: getBorderTopLeftRadius(index),
-                    borderBottomLeftRadius: getBorderBottomLeftRadius(index),
-                    borderTopRightRadius: getBorderTopRightRadius(index),
-                    borderBottomRightRadius: getBorderBottomRightRadius(index),
-                    ...(child.props?.style || {}),
-                  },
-                  rounded: !isStack,
-                  isInsideStackGroup: isStack,
-                  isInsideVerticalGroup: isVertical,
-                  isFirst: isChild ? getIsFirst(index) : undefined,
-                  isLast: isChild ? getIsLast(index) : undefined,
-                  isLastInFirstGroup: getIsLastInFirstGroup(index),
-                  isLastInLastGroup: getIsLastInLastGroup(index),
-                  isFirstInLastGroup: getIsFirstInLastGroup(index),
-                  childrenCount: realChildCount,
-                  childId: index + 1,
-                  isChild: true,
-                  isFirstGroup: isChild ? isFirstGroup : index === 0,
-                  isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
+                  ...getStuff(index, child),
                 })
               : null;
 
