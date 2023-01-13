@@ -37,19 +37,19 @@ export const HEADER_SIZE_TO_NUMBER = {
 };
 
 export const SIZE_TO_PX = {
-  tiny: 10,
-  small: 20,
+  tiny: 18,
+  small: 24,
   normal: 30,
   big: 40,
   huge: 50,
 };
 
 export const BADGE_SIZE_TO_PX = {
-  tiny: 10,
-  small: 18,
-  normal: 24,
-  big: 30,
-  huge: 36,
+  tiny: 14,
+  small: 20,
+  normal: 26,
+  big: 32,
+  huge: 38,
 };
 
 export const TABS_SIZE_TO_PX = {
