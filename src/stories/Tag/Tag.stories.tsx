@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup } from '../../index';
-import { SizeArg, argManager } from '../utils/args';
+import { argManager, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
@@ -95,6 +95,17 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
         tooltip='I am wiiiiiiide'
         actions={[
           {
+            icon: 'ErrorWarningLine',
+            onClick: noop,
+            intent: 'info',
+            tooltip: {
+              content: 'IF YOU CAN SEE ME ITS A BUG!!! I HAVE show: false',
+              openOnMount: true,
+              intent: 'danger',
+            },
+            show: false,
+          },
+          {
             icon: '24HoursFill',
             onClick: noop,
             disabled: true,
@@ -105,7 +116,6 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
             icon: 'SpyFill',
             onClick: noop,
             intent: 'success',
-            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
           },
         ]}
       />
