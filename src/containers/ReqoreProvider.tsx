@@ -122,6 +122,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
           isMobileOrTablet,
           getAndIncreaseZIndex,
           animations: options.animations || { buttons: true, dialogs: true },
+          tooltips: options.tooltips || { delay: 0 },
           closePopoversOnEscPress:
             'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
         }}

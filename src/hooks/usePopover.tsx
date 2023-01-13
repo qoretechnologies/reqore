@@ -11,6 +11,7 @@ import {
   IWithReqoreMinimal,
 } from '../types/global';
 import { IReqoreIconName } from '../types/icons';
+import { useReqore } from './useReqore';
 
 const startEvents = {
   hover: 'mouseenter',
@@ -77,6 +78,7 @@ const usePopover = ({
 }: IPopoverOptions): IPopoverControls => {
   const { addPopover, removePopover, updatePopover, popovers, isPopoverOpen } =
     useContext(PopoverContext);
+  const { tooltips } = useReqore();
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
   let { current: timeout }: MutableRefObject<any> = useRef(0);
 
@@ -112,10 +114,10 @@ const usePopover = ({
         _removePopover?.();
       }
     } else if (show) {
-      if (delay) {
+      if (delay || tooltips.delay) {
         timeout = setTimeout(() => {
           openPopover();
-        }, delay);
+        }, delay || tooltips.delay);
       } else {
         openPopover();
       }

@@ -12,6 +12,7 @@ export interface IReqoreContext {
   readonly isMobileOrTablet?: boolean;
   readonly getAndIncreaseZIndex?: () => number;
   readonly animations?: IReqoreOptions['animations'];
+  readonly tooltips?: IReqoreOptions['tooltips'];
   readonly closePopoversOnEscPress?: boolean;
 }
 
