@@ -9,7 +9,7 @@ import {
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
-import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { argManager, GapSizeArg, MinimalArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
@@ -55,6 +55,7 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           icon='PictureInPictureLine'
           flat={false}
           effect={{ gradient: { colors: { 0: 'success', 100: 'info:darken:1' } } }}
+          description="With a description, it's a bit longer than the button itself"
         >
           Non flat Button
         </ReqoreButton>
@@ -217,4 +218,15 @@ BigGapSize.args = {
 export const NoWrap = Template.bind({});
 NoWrap.args = {
   wrap: false,
+};
+
+export const HorizontalAlign = Template.bind({});
+HorizontalAlign.args = {
+  vertical: true,
+  horizontalAlign: 'center',
+};
+
+export const VerticalAlign = Template.bind({});
+VerticalAlign.args = {
+  verticalAlign: 'flex-end',
 };

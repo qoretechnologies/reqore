@@ -7,7 +7,6 @@ import ReqoreContext from '../../context/ReqoreContext';
 import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { StyledBackdrop } from '../Drawer';
-import { IReqoreDropdownItem } from '../Dropdown/list';
 import {
   IReqorePanelAction,
   IReqorePanelBottomAction,
@@ -36,7 +35,7 @@ export interface IReqoreCollectionItemProps
   expandedContent?: string | React.ReactNode;
   expandedActions?: IReqorePanelBottomAction[];
   image?: string;
-  actions?: IReqoreDropdownItem[];
+  actions?: IReqorePanelAction[];
   tags?: IReqoreTagProps[];
   maxContentHeight?: number;
   showContentFade?: boolean;
@@ -44,9 +43,10 @@ export interface IReqoreCollectionItemProps
 
 export const StyledCollectionItemContent = styled.div`
   max-height: ${({ providedHeight }) => (providedHeight ? `${providedHeight}px` : 'auto')};
-  overflow: hidden;
+  overflow: ${({ isSelected }) => (isSelected ? 'auto' : 'hidden')};
   position: relative;
   transition: 0.3s ease-in-out;
+  flex: 1;
 
   ${({ contentOverflows, theme, opacity = 1 }) =>
     contentOverflows &&
@@ -185,7 +185,7 @@ export const ReqoreCollectionItem = ({
           { icon: 'CloseLine', onClick: handleItemClick },
         ] as IReqorePanelAction[])
       : size(actions)
-      ? [{ icon: 'More2Fill', actions, minimal: true, flat: true }]
+      ? actions
       : undefined;
 
     return (
@@ -215,15 +215,23 @@ export const ReqoreCollectionItem = ({
             ...dimensions,
             transformOrigin: 'center',
           }}
+          contentStyle={{
+            ...rest.contentStyle,
+            display: 'flex',
+            flexFlow: 'column',
+            justifyContent: 'space-between',
+          }}
           onClick={(expandable && !isSelected) || rest.onClick ? handleItemClick : undefined}
           actions={actualActions}
           className={`reqore-collection-item ${rest.className || ''}`}
         >
           <StyledCollectionItemContent
             theme={theme}
-            opacity={rest.opacity}
+            opacity={rest.transparent ? 0 : rest.opacity}
             providedHeight={isSelected ? undefined : maxContentHeight}
+            isSelected={isSelected}
             contentOverflows={
+              !rest.transparent &&
               !rest.contentEffect &&
               !isSelected &&
               sizes?.height > maxContentHeight &&
@@ -233,7 +241,7 @@ export const ReqoreCollectionItem = ({
             <div ref={contentRef}>{actualContent}</div>
           </StyledCollectionItemContent>
           {showContentFade &&
-          rest.contentEffect &&
+          (rest.contentEffect || rest.transparent) &&
           !isSelected &&
           sizes?.height > maxContentHeight ? (
             <ReqoreP>...</ReqoreP>

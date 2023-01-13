@@ -1,23 +1,27 @@
-import React, { memo, useContext } from 'react';
+import React, { forwardRef, memo, useContext } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
 import styled, { css } from 'styled-components';
 import { ReqoreThemeContext } from '../..';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { TReqoreIntent } from '../../constants/theme';
 import { getColorFromMaybeString } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
-import { IWithReqoreEffect } from '../../types/global';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useTooltip } from '../../hooks/useTooltip';
+import { IReqoreIntent, IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect, TReqoreEffectColor } from '../Effect';
 
-export interface IReqoreIconProps extends React.HTMLAttributes<HTMLSpanElement>, IWithReqoreEffect {
+export interface IReqoreIconProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    IWithReqoreEffect,
+    IWithReqoreTooltip,
+    IReqoreIntent {
   icon?: IReqoreIconName;
   color?: TReqoreEffectColor;
   size?: TSizes | string;
   iconProps?: IconBaseProps;
-  intent?: TReqoreIntent;
   margin?: 'right' | 'left' | 'both';
   image?: string;
   rounded?: boolean;
@@ -53,73 +57,85 @@ export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left'
 `;
 
 const ReqoreIcon = memo(
-  ({
-    icon,
-    size = 'normal',
-    className,
-    color,
-    margin,
-    style = {},
-    iconProps,
-    intent,
-    image,
-    ...rest
-  }: IReqoreIconProps) => {
-    const theme = useContext(ReqoreThemeContext);
-    const Icon: IconType = RemixIcons[`Ri${icon}`];
-    const finalColor: string | undefined = intent
-      ? theme.intents[intent]
-      : getColorFromMaybeString(theme, color);
-    const finalSize: string = isStringSize(size) ? ICON_FROM_SIZE[size] : size;
+  forwardRef<HTMLSpanElement, IReqoreIconProps>(
+    (
+      {
+        icon,
+        size = 'normal',
+        className,
+        color,
+        margin,
+        style = {},
+        iconProps,
+        intent,
+        image,
+        tooltip,
+        ...rest
+      }: IReqoreIconProps,
+      ref
+    ) => {
+      const { targetRef } = useCombinedRefs(ref);
+      const theme = useContext(ReqoreThemeContext);
+      const Icon: IconType = RemixIcons[`Ri${icon}`];
+      const finalColor: string | undefined = intent
+        ? theme.intents[intent]
+        : getColorFromMaybeString(theme, color);
+      const finalSize: string = isStringSize(size) ? ICON_FROM_SIZE[size] : size;
 
-    if (image) {
+      useTooltip(targetRef.current, tooltip);
+
+      if (image) {
+        return (
+          <StyledIconWrapper
+            {...rest}
+            ref={targetRef}
+            size={size}
+            margin={margin}
+            className={`${className || ''} reqore-icon`}
+            style={{ ...style, width: finalSize, height: finalSize }}
+          >
+            <img src={image} alt='' />
+          </StyledIconWrapper>
+        );
+      }
+
+      if (!Icon) {
+        return (
+          <StyledIconWrapper
+            {...rest}
+            ref={targetRef}
+            size={size}
+            margin={margin}
+            className={`${className || ''} reqore-icon`}
+            style={{ ...style, width: finalSize, height: finalSize }}
+          />
+        );
+      }
+
       return (
         <StyledIconWrapper
           {...rest}
-          size={size}
+          ref={targetRef}
           margin={margin}
-          className={`${className || ''} reqore-icon`}
+          size={size}
           style={{ ...style, width: finalSize, height: finalSize }}
+          className={`${className || ''} reqore-icon`}
         >
-          <img src={image} alt='' />
+          <IconContext.Provider
+            value={{
+              color: finalColor || 'inherit',
+              size: finalSize,
+              style: {
+                verticalAlign: 'super',
+              },
+            }}
+          >
+            <Icon {...iconProps} />
+          </IconContext.Provider>
         </StyledIconWrapper>
       );
     }
-
-    if (!Icon) {
-      return (
-        <StyledIconWrapper
-          {...rest}
-          size={size}
-          margin={margin}
-          className={`${className || ''} reqore-icon`}
-          style={{ ...style, width: finalSize, height: finalSize }}
-        />
-      );
-    }
-
-    return (
-      <StyledIconWrapper
-        {...rest}
-        margin={margin}
-        size={size}
-        style={{ ...style, width: finalSize, height: finalSize }}
-        className={`${className || ''} reqore-icon`}
-      >
-        <IconContext.Provider
-          value={{
-            color: finalColor || 'inherit',
-            size: finalSize,
-            style: {
-              verticalAlign: 'super',
-            },
-          }}
-        >
-          <Icon {...iconProps} />
-        </IconContext.Provider>
-      </StyledIconWrapper>
-    );
-  }
+  )
 );
 
 export default ReqoreIcon;

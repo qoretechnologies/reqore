@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -25,6 +25,7 @@ import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreFlat,
+  IWithReqoreFluid,
   IWithReqoreSize,
   IWithReqoreTooltip,
 } from '../../types/global';
@@ -62,6 +63,7 @@ export interface IReqorePanelProps
     IWithReqoreFlat,
     IReqoreIntent,
     IWithReqoreTooltip,
+    IWithReqoreFluid,
     React.HTMLAttributes<HTMLDivElement> {
   as?: any;
   children?: any;
@@ -99,12 +101,12 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
-  border: ${({ theme, flat, opacity = 1, intent }) =>
+  border: ${({ theme, flat, intent }) =>
     flat && !intent
       ? undefined
-      : `1px solid ${rgba(
-          changeLightness(intent ? theme.intents[intent] : getMainBackgroundColor(theme), 0.2),
-          opacity
+      : `1px solid ${changeLightness(
+          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+          0.2
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
@@ -113,7 +115,8 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   position: relative;
   backdrop-filter: ${({ blur, opacity }) => (blur && opacity < 1 ? `blur(${blur}px)` : undefined)};
   transition: 0.2s ease-in-out;
-  flex: auto;
+  width: ${({ fluid }) => (fluid ? '100%' : undefined)};
+  flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
 
   ${({ interactive, theme, opacity = 1, flat, intent }) =>
     interactive
@@ -125,35 +128,37 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
               transform: scale(${ACTIVE_ICON_SCALE});
             }
 
-            background-color: ${rgba(
-              darken(0.025, rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)),
-              opacity === 0 ? 0.2 : opacity
-            )};
+            background-color: ${opacity === 0 && flat
+              ? undefined
+              : rgba(
+                  darken(0.025, rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)),
+                  opacity
+                )};
 
             border-color: ${flat && !intent
               ? undefined
-              : `${rgba(
-                  changeLightness(
-                    intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-                    0.25
-                  ),
-                  opacity
+              : `${changeLightness(
+                  intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+                  0.25
                 )}`};
 
-            ${StyledCollectionItemContent}:after {
-              background: linear-gradient(
-                to top,
-                ${rgba(
-                    darken(
-                      0.025,
-                      rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
-                    ),
-                    opacity === 0 ? 0.2 : opacity
-                  )}
-                  0%,
-                transparent 100%
-              );
-            }
+            ${opacity !== 0 &&
+            css`
+              ${StyledCollectionItemContent}:after {
+                background: linear-gradient(
+                  to top,
+                  ${rgba(
+                      darken(
+                        0.025,
+                        rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                      ),
+                      opacity
+                    )}
+                    0%,
+                  transparent 100%
+                );
+              }
+            `}
           }
         `
       : undefined}
@@ -215,7 +220,7 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
 `;
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
-  display: ${({ isCollapsed }) => (isCollapsed ? 'none' : undefined)};
+  display: ${({ isCollapsed }) => (isCollapsed ? 'none !important' : undefined)};
   padding: ${({ padded, contentSize, noHorizontalPadding }) =>
     !padded
       ? undefined
@@ -224,9 +229,10 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
       : `${TEXT_FROM_SIZE[contentSize]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
-  padding-top: ${({ minimal, hasLabel, padded }) =>
-    minimal && hasLabel && padded ? '0px' : undefined};
-  padding-bottom: ${({ minimal, padded }) => (minimal && padded ? '10px' : undefined)};
+  padding-top: ${({ minimal, hasLabel, padded, contentSize }) =>
+    minimal && hasLabel && padded ? `${TEXT_FROM_SIZE[contentSize] / 2}px` : undefined};
+  padding-bottom: ${({ minimal, padded, contentSize }) =>
+    minimal && padded ? `${TEXT_FROM_SIZE[contentSize]}px` : undefined};
   flex: 1;
   overflow: auto;
   font-size: ${({ contentSize }) => TEXT_FROM_SIZE[contentSize]}px;
@@ -268,6 +274,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       tooltip,
       badge,
       iconColor,
+      fluid,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -423,6 +430,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }, [intent, theme, contentEffect, interactive]);
 
     const opacity = rest.transparent ? 0 : rest.opacity;
+    const noHorizontalPadding = opacity === 0 && flat && !intent;
 
     return (
       <StyledPanel
@@ -438,6 +446,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         theme={theme}
         effect={transformedContentEffect}
         opacity={opacity}
+        fluid={fluid}
       >
         {hasTitleBar && (
           <StyledPanelTitle
@@ -449,7 +458,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             theme={theme}
             contentSize={contentSize}
             opacity={opacity ?? (minimal ? 0 : 1)}
-            noHorizontalPadding={opacity === 0}
+            noHorizontalPadding={noHorizontalPadding}
           >
             <StyledPanelTitleHeader>
               {icon && (
@@ -518,7 +527,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             padded={padded}
             minimal={minimal}
             contentSize={contentSize}
-            noHorizontalPadding={opacity === 0}
+            noHorizontalPadding={noHorizontalPadding}
           >
             {children}
           </StyledPanelContent>
@@ -529,7 +538,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             className='reqore-panel-bottom-actions'
             theme={theme}
             opacity={opacity ?? (minimal ? 0 : 1)}
-            noHorizontalPadding={opacity === 0}
+            noHorizontalPadding={noHorizontalPadding}
           >
             <ReqoreControlGroup>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
             <ReqoreControlGroup>{rightBottomActions.map(renderActions)}</ReqoreControlGroup>

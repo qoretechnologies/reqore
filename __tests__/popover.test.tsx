@@ -109,9 +109,9 @@ test('Runs callback function', async () => {
   fireEvent.mouseLeave(screen.getByText('Hover me'));
 });
 
-test('Shows the popover after a delay', async () => {
+test('Shows the popover after a local delay, ignoring global delay', async () => {
   render(
-    <ReqoreUIProvider>
+    <ReqoreUIProvider options={{ tooltips: { delay: 1000 } }}>
       <SimpleContent delay={500} />
     </ReqoreUIProvider>
   );
@@ -123,6 +123,28 @@ test('Shows the popover after a delay', async () => {
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
   jest.advanceTimersByTime(400);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+
+  fireEvent.mouseLeave(screen.getByText('Hover me'));
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+});
+
+test('Shows the popover after a global delay', async () => {
+  render(
+    <ReqoreUIProvider options={{ tooltips: { delay: 1000 } }}>
+      <SimpleContent />
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.mouseEnter(screen.getByText('Hover me'));
+
+  jest.advanceTimersByTime(500);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  jest.advanceTimersByTime(500);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 
