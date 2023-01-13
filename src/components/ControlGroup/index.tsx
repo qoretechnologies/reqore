@@ -24,6 +24,8 @@ export interface IReqoreControlGroupProps
    * Whether the contents of the control group should be stacked vertically
    */
   vertical?: boolean;
+  verticalAlign?: 'flex-start' | 'center' | 'flex-end';
+  horizontalAlign?: 'flex-start' | 'center' | 'flex-end';
   wrap?: boolean;
   isInsideStackGroup?: boolean;
   isInsideVerticalGroup?: boolean;
@@ -47,7 +49,10 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
   flex: 0 auto;
   width: ${({ fluid }) => (fluid ? '100%' : undefined)};
-  align-items: ${({ fluid }) => (fluid ? 'stretch' : 'flex-start')};
+  justify-content: ${({ fluid, vertical, horizontalAlign, verticalAlign }) =>
+    vertical ? verticalAlign : fluid ? 'stretch' : horizontalAlign};
+  align-items: ${({ vertical, horizontalAlign, verticalAlign, fluid }) =>
+    vertical ? (fluid ? 'stretch' : horizontalAlign) : verticalAlign};
   flex-flow: ${({ vertical }) => (vertical ? 'column' : 'row')};
   gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
   flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};
@@ -85,6 +90,8 @@ const ReqoreControlGroup = memo(
         isChild,
         isFirstGroup,
         isLastGroup,
+        verticalAlign = 'center',
+        horizontalAlign = 'flex-start',
         ...rest
       }: IReqoreControlGroupProps,
       ref
@@ -313,6 +320,8 @@ const ReqoreControlGroup = memo(
           fluid={fluid}
           wrap={wrap}
           stack={isStack}
+          verticalAlign={verticalAlign}
+          horizontalAlign={horizontalAlign}
           className={`${className || ''} reqore-control-group`}
         >
           {cloneThroughFragments(children)}
