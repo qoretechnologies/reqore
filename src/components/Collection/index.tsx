@@ -22,6 +22,11 @@ export interface IReqoreCollectionProps
       | 'label'
       | 'headerSize'
       | 'badge'
+      | 'icon'
+      | 'flat'
+      | 'minimal'
+      | 'transparent'
+      | 'fluid'
     >,
     IReqoreColumnsProps {
   items?: IReqoreCollectionItemProps[];
@@ -35,6 +40,7 @@ export interface IReqoreCollectionProps
   showAs?: 'list' | 'grid';
   showSelectedFirst?: boolean;
   selectedIcon?: IReqoreIconName;
+  emptyMessage?: string;
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns)`
@@ -64,6 +70,10 @@ export const ReqoreCollection = ({
   headerSize = 2,
   showAs = 'grid',
   selectedIcon,
+  flat = true,
+  minimal,
+  transparent = true,
+  emptyMessage = 'No data in this collection, try changing your search query or filters',
   ...rest
 }: IReqoreCollectionProps) => {
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
@@ -199,17 +209,20 @@ export const ReqoreCollection = ({
       {...rest}
       headerSize={headerSize}
       style={{
+        ...rest.style,
         height: height ?? undefined,
       }}
       fill={fill}
       padded
-      opacity={0}
+      transparent={transparent}
+      minimal={minimal}
+      flat={flat}
       actions={finalActions}
       className={`reqore-collection ${rest.className || ''}`}
     >
       {!size(finalItems) ? (
         <ReqoreMessage intent='muted' flat title='No items found'>
-          No data in this collection, try changing your search query or filters
+          {emptyMessage}
         </ReqoreMessage>
       ) : (
         <StyledCollectionWrapper

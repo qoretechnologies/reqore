@@ -1,8 +1,10 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
+import { ReqoreColumns } from '../../components/Columns';
+import { ReqoreColumn } from '../../components/Columns/column';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelProps, ReqorePanel } from '../../components/Panel';
-import { FlatArg, IconArg, IntentArg, argManager } from '../utils/args';
+import { argManager, FlatArg, IconArg, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -64,6 +66,23 @@ export default {
 } as Meta<IReqorePanelProps>;
 
 const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
+  if (args.fluid) {
+    return (
+      <ReqoreColumns columnsGap='10px'>
+        <ReqoreColumn>
+          <ReqorePanel {...args} badge='Fluid'>
+            This is a fluid panel
+          </ReqorePanel>
+        </ReqoreColumn>
+        <ReqoreColumn>
+          <ReqorePanel {...args} fluid={false} badge='Not Fluid'>
+            This is not a fluid panel
+          </ReqorePanel>
+        </ReqoreColumn>
+      </ReqoreColumns>
+    );
+  }
+
   return (
     <ReqorePanel
       {...args}
@@ -167,10 +186,29 @@ Transparent.args = {
   transparent: true,
 };
 
+export const Intent: Story<IReqorePanelProps> = Template.bind({});
+Intent.args = {
+  intent: 'success',
+  iconColor: 'success:lighten:2',
+  transparent: true,
+  flat: true,
+};
+
 export const Minimal: Story<IReqorePanelProps> = Template.bind({});
 Minimal.args = {
   minimal: true,
   flat: true,
+};
+
+export const TransparentFlat: Story<IReqorePanelProps> = Template.bind({});
+TransparentFlat.args = {
+  transparent: true,
+  flat: true,
+};
+
+export const Fluid: Story<IReqorePanelProps> = Template.bind({});
+Fluid.args = {
+  fluid: true,
 };
 
 export const WithEffect: Story<IReqorePanelProps> = Template.bind({});

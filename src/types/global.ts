@@ -126,6 +126,20 @@ export interface IWithReqoreFlat {
   flat?: boolean;
 }
 
+export interface IWithReqoreFluid {
+  /**
+   * If true, the component will fill the parent container horizontally
+   * @default false
+   * @type boolean
+   * @example
+   * <ReqoreInput fluid />
+   * <ReqoreInput fluid={true} />
+   * <ReqoreInput fluid={false} />
+   *
+   */
+  fluid?: boolean;
+}
+
 export interface IWithReqoreMinimal {
   /**
    * If true, the component will be minimal

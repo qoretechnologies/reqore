@@ -104,6 +104,22 @@ export default [
       weight: 'thin',
       spaced: 2,
     },
+    expandedActions: [
+      {
+        label: 'Action 1',
+        id: 'action1',
+        icon: 'CapsuleFill',
+        onClick: () => alert('Action 1 clicked'),
+        position: 'left',
+      },
+      {
+        label: 'Action 2',
+        id: 'action2',
+        icon: 'CapsuleFill',
+        onClick: () => alert('Action 2 clicked'),
+        position: 'right',
+      },
+    ],
     expandedContent: (
       <>
         <ReqoreMessage intent='info'>Hello I am a custom content</ReqoreMessage>
@@ -191,6 +207,9 @@ export default [
   },
   {
     label: 'I have intent!',
+    transparent: true,
+    minimal: false,
+    flat: false,
     content: (
       <ReqoreP>
         'Well would you look at that. Lorem ipsum dolor{' '}
@@ -242,13 +261,14 @@ export default [
   {
     label: 'I have actions',
     content:
-      'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+      'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     actions: [
       {
         label: 'Action 1',
         id: 'action1',
         icon: 'CapsuleFill',
         onClick: () => alert('Action 1 clicked'),
+        show: false,
       },
       {
         label: 'Action 2',
