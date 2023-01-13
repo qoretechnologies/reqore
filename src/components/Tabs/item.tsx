@@ -18,6 +18,7 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqor
   wrapTabNames?: boolean;
   fill?: boolean;
   className?: string;
+  padded?: boolean;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
@@ -27,7 +28,7 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ disabled, vertical, size, fill }: IReqoreTabListItemStyle) => {
+  ${({ disabled, vertical, size, fill, padded }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       flex-shrink: 0;
@@ -48,6 +49,16 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
               border-top-right-radius: 0 !important;
               border-bottom-right-radius: 0 !important;
             }
+
+            ${padded === false &&
+            css`
+              &:first-child {
+                padding-top: 0;
+              }
+              &:last-child {
+                padding-bottom: 0;
+              }
+            `}
           `
         : css`
             ${StyledButton} {
@@ -59,6 +70,16 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
             ${StyledButton}:last-child {
               border-bottom-right-radius: 0 !important;
             }
+
+            ${padded === false &&
+            css`
+              &:first-child {
+                padding-left: 0;
+              }
+              &:last-child {
+                padding-right: 0;
+              }
+            `}
           `}
 
       ${fill &&
@@ -109,6 +130,7 @@ const ReqoreTabsListItem = memo(
         flat = true,
         wrapTabNames,
         id,
+        padded,
         ...rest
       }: IReqoreTabListItemProps,
       ref
@@ -129,6 +151,7 @@ const ReqoreTabsListItem = memo(
           vertical={vertical}
           theme={theme}
           fill={fill}
+          padded={padded}
         >
           {label || icon ? (
             <ReqoreControlGroup stack size={size} fluid={fill || vertical}>

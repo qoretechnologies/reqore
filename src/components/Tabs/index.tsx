@@ -4,6 +4,7 @@ import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
+import { TReqoreTabsContentPadding } from './content';
 import ReqoreTabsList from './list';
 
 export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
@@ -26,6 +27,8 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   fillParent?: boolean;
   vertical?: boolean;
   activeTabIntent?: TReqoreIntent;
+  padded?: boolean;
+  tabsPadding?: TReqoreTabsContentPadding;
   wrapTabNames?: boolean;
   flat?: boolean;
   size?: TSizes;
@@ -61,6 +64,8 @@ const ReqoreTabs = ({
   wrapTabNames,
   customTheme,
   intent,
+  padded,
+  tabsPadding,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
@@ -84,6 +89,7 @@ const ReqoreTabs = ({
     >
       <ReqoreTabsList
         tabs={tabs}
+        padded={padded}
         flat={flat}
         fill={fill}
         size={size}
@@ -104,7 +110,11 @@ const ReqoreTabs = ({
         }}
       />
       {React.Children.map(children, (child) =>
-        child && child.props?.tabId === _activeTab ? child : null
+        child && child.props?.tabId === _activeTab
+          ? React.cloneElement(child, {
+              padded: child.props?.padded || tabsPadding,
+            })
+          : null
       )}
     </StyledTabs>
   );

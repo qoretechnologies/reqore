@@ -162,6 +162,7 @@ const ReqoreTabsList = ({
   flat,
   size,
   intent,
+  padded,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width }] = useMeasure();
@@ -211,6 +212,7 @@ const ReqoreTabsList = ({
                     vertical,
                     flat,
                     size,
+                    padded,
                     className: 'reqore-tabs-list-item-menu',
                   } as IReqoreTabListItemProps
                 }
@@ -279,6 +281,7 @@ const ReqoreTabsList = ({
                 fill={fill}
                 size={size}
                 flat={flat}
+                padded={padded}
                 activeIntent={activeTabIntent}
                 wrapTabNames={wrapTabNames}
                 {...item}
