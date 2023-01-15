@@ -1,10 +1,14 @@
-import React, { forwardRef, memo, useCallback, useMemo } from 'react';
-import styled from 'styled-components';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMount } from 'react-use';
+import styled, { css } from 'styled-components';
+import { ReqoreButton } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import {
   IReqoreIntent,
   IWithReqoreFlat,
+  IWithReqoreFluid,
   IWithReqoreMinimal,
   IWithReqoreSize,
 } from '../../types/global';
@@ -14,10 +18,11 @@ export interface IReqoreControlGroupProps
     IWithReqoreFlat,
     IWithReqoreSize,
     IWithReqoreMinimal,
-    IReqoreIntent {
+    IReqoreIntent,
+    IWithReqoreFluid {
   stack?: boolean;
   children: any;
-  fluid?: boolean;
+  fixed?: boolean;
   rounded?: boolean;
   gapSize?: TSizes;
   /*
@@ -48,14 +53,36 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
   flex: 0 auto;
-  width: ${({ fluid }) => (fluid ? '100%' : undefined)};
-  justify-content: ${({ fluid, vertical, horizontalAlign, verticalAlign }) =>
-    vertical ? verticalAlign : fluid ? 'stretch' : horizontalAlign};
-  align-items: ${({ vertical, horizontalAlign, verticalAlign, fluid }) =>
-    vertical ? (fluid ? 'stretch' : horizontalAlign) : verticalAlign};
+  width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
+  justify-content: ${({ fluid, vertical }) => (vertical && fluid ? 'stretch' : undefined)};
+  align-items: ${({ vertical, fluid }) => (vertical && fluid ? 'stretch' : undefined)};
   flex-flow: ${({ vertical }) => (vertical ? 'column' : 'row')};
   gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
   flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};
+
+  > * {
+    margin-top: ${({ verticalAlign }) =>
+      verticalAlign === 'flex-end' || verticalAlign === 'center' ? 'auto' : undefined};
+    margin-bottom: ${({ verticalAlign }) =>
+      verticalAlign === 'flex-start' || verticalAlign === 'center' ? 'auto' : undefined};
+    margin-right: ${({ horizontalAlign }) => (horizontalAlign === 'center' ? 'auto' : undefined)};
+
+    ${({ vertical }) =>
+      vertical &&
+      css`
+        margin-left: ${({ horizontalAlign }) =>
+          horizontalAlign === 'flex-end' || horizontalAlign === 'center' ? 'auto' : undefined};
+      `}
+  }
+
+  ${({ vertical }) =>
+    !vertical &&
+    css`
+      > *:first-child {
+        margin-left: ${({ horizontalAlign }) =>
+          horizontalAlign === 'flex-end' || horizontalAlign === 'center' ? 'auto' : undefined};
+      }
+    `}
 
   > * {
     border-radius: ${({ stack }) => (!stack ? undefined : 0)};
@@ -73,6 +100,7 @@ const ReqoreControlGroup = memo(
         gapSize = 'normal',
         fluid,
         flat,
+        fixed,
         rounded = true,
         wrap,
         stack,
@@ -96,8 +124,14 @@ const ReqoreControlGroup = memo(
       }: IReqoreControlGroupProps,
       ref
     ) => {
+      const { targetRef } = useCombinedRefs(ref);
       const isStack = stack || isInsideStackGroup;
       const isVertical = vertical || isInsideVerticalGroup;
+      const [overflowingChildren, setOverflowingChildren] = useState<number | undefined>(0);
+      const [lastReSize, setLastReSize] = useState<number>(0);
+      const [visibility, setVisibility] = useState<'hidden' | 'visible'>('visible');
+      const observer = useRef<ResizeObserver | null>(null);
+
       const realChildCount = useMemo((): number => {
         let count = 0;
 
@@ -117,6 +151,58 @@ const ReqoreControlGroup = memo(
 
         return count < 0 ? 0 : count;
       }, [children]);
+
+      const checkIfOverflowing = () => {
+        return (
+          !isChild &&
+          targetRef.current &&
+          targetRef.current.scrollWidth > targetRef.current.clientWidth
+        );
+      };
+
+      // useEffect(() => {
+      //   if (isResizing) {
+      //     if (checkIfOverflowing()) {
+      //       setOverflowingChildren(0);
+      //     } else {
+      //       setIsResizing(false);
+      //     }
+      //   }
+      // }, [isResizing]);
+
+      useMount(() => {
+        if (!isChild && !vertical) {
+          if ('ResizeObserver' in window) {
+            observer.current = new ResizeObserver(() => {
+              if (targetRef && targetRef.current) {
+                setOverflowingChildren(0);
+                setLastReSize(targetRef.current.clientWidth);
+                // console.log(targetRef.current.scrollWidth, targetRef.current.clientWidth);
+                // if (checkIfOverflowing()) {
+                //   setOverflowingChildren((cur) =>
+                //     cur === React.Children.count(children) - 1 ? cur : cur + 1
+                //   );
+                // } else {
+                //   console.log('not overflowing');
+                //   setOverflowingChildren((cur) => (cur === 0 ? cur : cur - 1));
+                // }
+              }
+            });
+
+            observer.current.observe(targetRef.current);
+          }
+        }
+      });
+
+      useEffect(() => {
+        // Is the control group still overflowing?
+        if ((overflowingChildren || overflowingChildren === 0) && checkIfOverflowing()) {
+          setVisibility('hidden');
+          setOverflowingChildren(overflowingChildren + 1);
+        } else {
+          setVisibility('visible');
+        }
+      }, [overflowingChildren, lastReSize]);
 
       const getIsFirst = (index: number): boolean => {
         return !isInsideStackGroup || childrenCount === 1
@@ -246,9 +332,12 @@ const ReqoreControlGroup = memo(
                 flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
                 fluid:
                   child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
+                fixed:
+                  child.props?.fixed || child.props?.fixed === false ? child.props.fixed : fixed,
                 stack:
                   child.props?.stack || child.props?.stack === false ? child.props.stack : isStack,
                 intent: child.props?.intent || intent,
+                isChild: true,
               };
 
               if (isStack) {
@@ -271,7 +360,7 @@ const ReqoreControlGroup = memo(
                   isFirstInLastGroup: getIsFirstInLastGroup(index),
                   childrenCount: realChildCount,
                   childId: index + 1,
-                  isChild: true,
+
                   isFirstGroup: isChild ? isFirstGroup : index === 0,
                   isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
                 };
@@ -309,22 +398,43 @@ const ReqoreControlGroup = memo(
         ]
       );
 
+      // Remove the overflowing children count from the end of the children array
+      const _children = overflowingChildren
+        ? [
+            ...React.Children.toArray(children).slice(
+              0,
+              React.Children.toArray(children).length - overflowingChildren
+            ),
+          ]
+        : children;
+
       return (
         <StyledReqoreControlGroup
           {...rest}
           vertical={vertical}
+          style={{
+            overflowX: !isChild && React.Children.count(_children) !== 1 ? 'auto' : undefined,
+            visibility,
+            ...rest.style,
+          }}
           size={size}
           gapSize={gapSize}
-          ref={ref}
+          ref={targetRef}
           rounded={rounded}
           fluid={fluid}
+          fixed={fixed}
           wrap={wrap}
           stack={isStack}
           verticalAlign={verticalAlign}
           horizontalAlign={horizontalAlign}
           className={`${className || ''} reqore-control-group`}
         >
-          {cloneThroughFragments(children)}
+          {cloneThroughFragments(_children)}
+          {!isChild && overflowingChildren ? (
+            <ReqoreButton icon='More2Line' fixed minimal flat>
+              ({overflowingChildren})
+            </ReqoreButton>
+          ) : null}
         </StyledReqoreControlGroup>
       );
     }

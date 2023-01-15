@@ -8,14 +8,14 @@ import {
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   TEXT_FROM_SIZE,
-  TSizes,
+  TSizes
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
   getMainBackgroundColor,
-  getReadableColor,
+  getReadableColor
 } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -27,7 +27,7 @@ import {
   IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreSize,
-  IWithReqoreTooltip,
+  IWithReqoreTooltip
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
@@ -240,10 +240,12 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
 
 export const StyledPanelTitleHeader = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  overflow: hidden;
   padding-right: 5px;
+  flex: 1 1 auto;
+  width: 100%;
+  overflow: hidden;
 `;
 
 export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
@@ -332,7 +334,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       (actionOrActions: IReqorePanelAction | IReqorePanelAction[], index: number) => {
         if (Array.isArray(actionOrActions)) {
           return (
-            <ReqoreControlGroup key={index} stack>
+            <ReqoreControlGroup key={index} stack fixed>
               {actionOrActions.map(renderActions)}
             </ReqoreControlGroup>
           );
@@ -358,6 +360,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             <ReqoreDropdown<IReqoreButtonProps>
               {...rest}
               key={index}
+              fixed
               label={label}
               items={actions}
               intent={intent}
@@ -372,6 +375,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         if (CustomElement) {
           return (
             <CustomElement
+              fixed
               {...props}
               key={index}
               customTheme={theme}
@@ -387,6 +391,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           <ReqoreButton
             {...rest}
             id={id}
+            fixed
             key={index}
             className={className}
             customTheme={theme}
@@ -494,7 +499,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 </>
               ) : null}
             </StyledPanelTitleHeader>
-            <ReqoreControlGroup>
+            <ReqoreControlGroup fluid horizontalAlign='flex-end'>
               {actions.map(renderActions)}
               {collapsible && (
                 <ReqoreButton
@@ -502,10 +507,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
                   onClick={handleCollapseClick}
                   tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
+                  fixed
                 />
               )}
               {onClose && (
                 <ReqoreButton
+                  fixed
                   customTheme={theme}
                   icon='CloseLine'
                   onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
@@ -540,8 +547,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             opacity={opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={noHorizontalPadding}
           >
-            <ReqoreControlGroup>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
-            <ReqoreControlGroup>{rightBottomActions.map(renderActions)}</ReqoreControlGroup>
+            <ReqoreControlGroup fluid>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
+            <ReqoreControlGroup fluid horizontalAlign='flex-end'>
+              {rightBottomActions.map(renderActions)}
+            </ReqoreControlGroup>
           </StyledPanelBottomActions>
         ) : null}
       </StyledPanel>

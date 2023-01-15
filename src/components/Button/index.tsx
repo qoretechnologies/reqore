@@ -161,6 +161,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
+  width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
   ${({ wrap, description }) =>
     !wrap && !description

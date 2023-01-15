@@ -51,6 +51,9 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
     <>
       <ReqoreControlGroup {...args}>
         <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
+        <ReqoreButton icon='PictureInPictureLine' fluid>
+          Fluid Button
+        </ReqoreButton>
         <ReqoreButton
           icon='PictureInPictureLine'
           flat={false}
@@ -72,13 +75,13 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           checked
           uncheckedIcon='CheckboxBlankLine'
         />
-        <ReqoreInput icon='4KFill' value='Hello' />
+        <ReqoreInput icon='4KFill' value='Hello I am fluid' fluid />
         <ReqoreControlGroup stack>
           <ReqoreControlGroup>
             <ReqoreButton customTheme={{ main: '#00e3e8' }}>Level 2 deep</ReqoreButton>
-            <ReqoreControlGroup>
+            <ReqoreControlGroup fixed>
               <ReqoreButton disabled fixed id='test'>
-                Level 3 deep
+                Level 3 deep and fixed
               </ReqoreButton>
             </ReqoreControlGroup>
           </ReqoreControlGroup>
@@ -188,6 +191,11 @@ Minimal.args = {
   minimal: true,
 };
 
+export const Fluid = Template.bind({});
+Fluid.args = {
+  fluid: true,
+};
+
 export const NotFlat = Template.bind({});
 NotFlat.args = {
   flat: false,
@@ -198,8 +206,14 @@ Vertical.args = {
   vertical: true,
 };
 
-export const VerticalStacked = Template.bind({});
-VerticalStacked.args = {
+export const VerticalFluid = Template.bind({});
+VerticalFluid.args = {
+  vertical: true,
+  fluid: true,
+};
+
+export const VerticalStackedFluid = Template.bind({});
+VerticalStackedFluid.args = {
   vertical: true,
   stack: true,
   fluid: true,
