@@ -1,12 +1,13 @@
-import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useMount } from 'react-use';
+import { debounce } from 'lodash';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMount, useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqoreButton } from '../..';
+import { ReqoreButton, ReqoreModal } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import {
   IReqoreIntent,
+  IWithReqoreCustomTheme,
   IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreMinimal,
@@ -19,11 +20,13 @@ export interface IReqoreControlGroupProps
     IWithReqoreSize,
     IWithReqoreMinimal,
     IReqoreIntent,
-    IWithReqoreFluid {
+    IWithReqoreFluid,
+    IWithReqoreCustomTheme {
   stack?: boolean;
   children: any;
   fixed?: boolean;
   rounded?: boolean;
+  responsive?: boolean;
   gapSize?: TSizes;
   /*
    * Whether the contents of the control group should be stacked vertically
@@ -90,211 +93,173 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
 `;
 
 const ReqoreControlGroup = memo(
-  forwardRef<HTMLDivElement, IReqoreControlGroupProps>(
-    (
-      {
-        children,
-        className,
-        minimal,
-        size = 'normal',
-        gapSize = 'normal',
-        fluid,
-        flat,
-        fixed,
-        rounded = true,
-        wrap,
-        stack,
-        isInsideStackGroup,
-        isInsideVerticalGroup,
-        isFirstInLastGroup,
-        isLastInFirstGroup,
-        isLastInLastGroup,
-        intent,
-        isFirst,
-        isLast,
-        vertical,
-        childrenCount,
-        childId,
-        isChild,
-        isFirstGroup,
-        isLastGroup,
-        verticalAlign = 'center',
-        horizontalAlign = 'flex-start',
-        ...rest
-      }: IReqoreControlGroupProps,
-      ref
-    ) => {
-      const { targetRef } = useCombinedRefs(ref);
-      const isStack = stack || isInsideStackGroup;
-      const isVertical = vertical || isInsideVerticalGroup;
-      const [overflowingChildren, setOverflowingChildren] = useState<number | undefined>(0);
-      const [lastReSize, setLastReSize] = useState<number>(0);
-      const [visibility, setVisibility] = useState<'hidden' | 'visible'>('visible');
-      const observer = useRef<ResizeObserver | null>(null);
+  ({
+    children,
+    className,
+    minimal,
+    size = 'normal',
+    gapSize = 'normal',
+    fluid,
+    flat,
+    fixed,
+    rounded = true,
+    wrap,
+    stack,
+    isInsideStackGroup,
+    isInsideVerticalGroup,
+    isFirstInLastGroup,
+    isLastInFirstGroup,
+    isLastInLastGroup,
+    intent,
+    customTheme,
+    isFirst,
+    isLast,
+    vertical,
+    childrenCount,
+    childId,
+    isChild,
+    isFirstGroup,
+    isLastGroup,
+    verticalAlign = 'center',
+    horizontalAlign = 'flex-start',
+    responsive,
+    ...rest
+  }: IReqoreControlGroupProps) => {
+    const isStack = stack || isInsideStackGroup;
+    const isVertical = vertical || isInsideVerticalGroup;
 
-      const realChildCount = useMemo((): number => {
-        let count = 0;
+    const [overflowingChildren, setOverflowingChildren] = useState<number | undefined>(0);
+    const [lastReSize, setLastReSize] = useState<number>(0);
+    const [isResizing, setIsResizing] = useState<boolean>(false);
+    const [isOverflownDialogOpen, setIsOverflownDialogOpen] = useState<boolean>(false);
+    const observer = useRef<ResizeObserver | null>(null);
+    const ref = useRef<HTMLDivElement>(null);
+    const resizeTimerObserver = useRef<ResizeObserver | null>(null);
+    const resizingTimer = useRef<any>(null);
 
-        const countChildren = (children: React.ReactNode) =>
-          React.Children.forEach(children, (child: any) => {
-            if (child && React.isValidElement(child)) {
-              if (child.type === React.Fragment) {
-                // just compare to `React.Fragment`
-                countChildren((child.props as any).children);
-              } else {
-                count++;
+    const realChildCount = useMemo((): number => {
+      let count = 0;
+
+      const countChildren = (children: React.ReactNode) =>
+        React.Children.forEach(children, (child: any) => {
+          if (child && React.isValidElement(child)) {
+            if (child.type === React.Fragment) {
+              // just compare to `React.Fragment`
+              countChildren((child.props as any).children);
+            } else {
+              count++;
+            }
+          }
+        });
+
+      countChildren(children);
+
+      return count < 0 ? 0 : count;
+    }, [children]);
+
+    const checkIfOverflowing = useCallback(() => {
+      return (
+        ref.current.clientWidth > 40 &&
+        !vertical &&
+        responsive &&
+        ref.current &&
+        ref.current.scrollWidth > ref.current.clientWidth
+      );
+    }, [vertical, responsive, ref, children]);
+
+    useMount(() => {
+      if (!vertical && responsive) {
+        if ('ResizeObserver' in window) {
+          observer.current = new ResizeObserver(
+            debounce(() => {
+              if (ref && ref.current) {
+                setOverflowingChildren(0);
+                setLastReSize(ref.current.clientWidth);
               }
+            }, 200)
+          );
+
+          resizeTimerObserver.current = new ResizeObserver(() => {
+            if (ref && ref.current) {
+              setIsResizing(true);
+              clearTimeout(resizingTimer.current);
+              resizingTimer.current = setTimeout(() => {
+                setIsResizing(false);
+              }, 500);
             }
           });
 
-        countChildren(children);
-
-        return count < 0 ? 0 : count;
-      }, [children]);
-
-      const checkIfOverflowing = () => {
-        return (
-          !isChild &&
-          targetRef.current &&
-          targetRef.current.scrollWidth > targetRef.current.clientWidth
-        );
-      };
-
-      // useEffect(() => {
-      //   if (isResizing) {
-      //     if (checkIfOverflowing()) {
-      //       setOverflowingChildren(0);
-      //     } else {
-      //       setIsResizing(false);
-      //     }
-      //   }
-      // }, [isResizing]);
-
-      useMount(() => {
-        if (!isChild && !vertical) {
-          if ('ResizeObserver' in window) {
-            observer.current = new ResizeObserver(() => {
-              if (targetRef && targetRef.current) {
-                setOverflowingChildren(0);
-                setLastReSize(targetRef.current.clientWidth);
-                // console.log(targetRef.current.scrollWidth, targetRef.current.clientWidth);
-                // if (checkIfOverflowing()) {
-                //   setOverflowingChildren((cur) =>
-                //     cur === React.Children.count(children) - 1 ? cur : cur + 1
-                //   );
-                // } else {
-                //   console.log('not overflowing');
-                //   setOverflowingChildren((cur) => (cur === 0 ? cur : cur - 1));
-                // }
-              }
-            });
-
-            observer.current.observe(targetRef.current);
-          }
+          observer.current.observe(ref.current);
+          resizeTimerObserver.current.observe(ref.current);
         }
-      });
+      }
+    });
 
-      useEffect(() => {
-        // Is the control group still overflowing?
-        if ((overflowingChildren || overflowingChildren === 0) && checkIfOverflowing()) {
-          setVisibility('hidden');
-          setOverflowingChildren(overflowingChildren + 1);
-        } else {
-          setVisibility('visible');
-        }
-      }, [overflowingChildren, lastReSize]);
+    useUnmount(() => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
 
-      const getIsFirst = (index: number): boolean => {
-        return !isInsideStackGroup || childrenCount === 1
-          ? index === 0
-          : (isFirst || isFirst !== false) && index === 0;
-      };
-      const getIsLast = (index: number): boolean => {
-        return !isInsideStackGroup
-          ? index === realChildCount - 1
-          : (isLast || isLast !== false) && index === realChildCount - 1;
-      };
-      const getIsLastInFirstGroup = (index: number): boolean => {
-        return !isInsideStackGroup
-          ? index === 0
-          : isFirstGroup && (isLast || isLast !== false) && index === realChildCount - 1;
-      };
-      const getIsFirstInLastGroup = (index: number): boolean => {
-        return !isInsideStackGroup
-          ? index === realChildCount - 1
-          : isLastGroup && (isFirst || isFirst !== false) && childId === 1 && index === 0;
-      };
-      const getIsLastInLastGroup = (index: number): boolean => {
-        return !isInsideStackGroup
-          ? index === realChildCount - 1
-          : isLastGroup && (isLast || isLast !== false) && index === realChildCount - 1;
-      };
+      if (resizeTimerObserver.current) {
+        resizeTimerObserver.current.disconnect();
+      }
 
-      const getBorderTopLeftRadius = (index: number): number | undefined => {
-        const _isFirstGroup =
-          !isInsideStackGroup || childrenCount === 1 ? true : isChild ? isFirstGroup : index === 0;
+      clearTimeout(resizingTimer.current);
+    });
 
-        // If this is the first item
-        if (_isFirstGroup && getIsFirst(index)) {
-          return RADIUS_FROM_SIZE[size];
-        }
+    useEffect(() => {
+      // Is the control group still overflowing?
+      if ((overflowingChildren || overflowingChildren === 0) && checkIfOverflowing()) {
+        setOverflowingChildren(overflowingChildren + 1);
+      }
 
-        return undefined;
-      };
+      // Hide the dialog if the group was resized and the dialog was open
+      if (overflowingChildren === 0) {
+        setIsOverflownDialogOpen(false);
+      }
+    }, [overflowingChildren, lastReSize]);
 
-      const getBorderTopRightRadius = (index: number): number | undefined => {
-        // If this group is not vertical we need to style the very last item
-        if (!isVertical || !isStack) {
-          const _isLastGroup =
-            !isInsideStackGroup || childrenCount === 1
-              ? true
-              : isChild
-              ? isLastGroup
-              : index === realChildCount - 1;
+    const getIsFirst = (index: number): boolean => {
+      return !isInsideStackGroup || childrenCount === 1
+        ? index === 0
+        : (isFirst || isFirst !== false) && index === 0;
+    };
+    const getIsLast = (index: number): boolean => {
+      return !isInsideStackGroup
+        ? index === realChildCount - 1
+        : (isLast || isLast !== false) && index === realChildCount - 1;
+    };
+    const getIsLastInFirstGroup = (index: number): boolean => {
+      return !isInsideStackGroup
+        ? index === 0
+        : isFirstGroup && (isLast || isLast !== false) && index === realChildCount - 1;
+    };
+    const getIsFirstInLastGroup = (index: number): boolean => {
+      return !isInsideStackGroup
+        ? index === realChildCount - 1
+        : isLastGroup && (isFirst || isFirst !== false) && childId === 1 && index === 0;
+    };
+    const getIsLastInLastGroup = (index: number): boolean => {
+      return !isInsideStackGroup
+        ? index === realChildCount - 1
+        : isLastGroup && (isLast || isLast !== false) && index === realChildCount - 1;
+    };
 
-          if (_isLastGroup && getIsLast(index)) {
-            return RADIUS_FROM_SIZE[size];
-          }
+    const getBorderTopLeftRadius = (index: number): number | undefined => {
+      const _isFirstGroup =
+        !isInsideStackGroup || childrenCount === 1 ? true : isChild ? isFirstGroup : index === 0;
 
-          return undefined;
-        }
+      // If this is the first item
+      if (_isFirstGroup && getIsFirst(index)) {
+        return RADIUS_FROM_SIZE[size];
+      }
 
-        // This border only needs to apply when this group is vertical
-        // AND this item is the last item of the first group
-        if (getIsLastInFirstGroup(index)) {
-          return RADIUS_FROM_SIZE[size];
-        }
+      return undefined;
+    };
 
-        return undefined;
-      };
-
-      const getBorderBottomLeftRadius = (index: number): number | undefined => {
-        // If this group is not vertical we need to style the very first item
-        if (!isVertical || !isStack) {
-          const _isFirstGroup =
-            !isInsideStackGroup || childrenCount === 1
-              ? true
-              : isChild
-              ? isFirstGroup
-              : index === 0;
-
-          if (_isFirstGroup && getIsFirst(index)) {
-            return RADIUS_FROM_SIZE[size];
-          }
-
-          return undefined;
-        }
-
-        // This border only needs to apply when this group is vertical
-        // AND this item is the first item of the last group
-        if (getIsFirstInLastGroup(index)) {
-          return RADIUS_FROM_SIZE[size];
-        }
-
-        return undefined;
-      };
-
-      const getBorderBottomRightRadius = (index: number): number | undefined => {
+    const getBorderTopRightRadius = (index: number): number | undefined => {
+      // If this group is not vertical we need to style the very last item
+      if (!isVertical || !isStack) {
         const _isLastGroup =
           !isInsideStackGroup || childrenCount === 1
             ? true
@@ -302,124 +267,207 @@ const ReqoreControlGroup = memo(
             ? isLastGroup
             : index === realChildCount - 1;
 
-        // If this is the last item
         if (_isLastGroup && getIsLast(index)) {
           return RADIUS_FROM_SIZE[size];
         }
 
         return undefined;
-      };
+      }
 
-      let index = 0;
+      // This border only needs to apply when this group is vertical
+      // AND this item is the last item of the first group
+      if (getIsLastInFirstGroup(index)) {
+        return RADIUS_FROM_SIZE[size];
+      }
 
-      const cloneThroughFragments = useCallback(
-        (children: React.ReactNode): React.ReactNode => {
-          return React.Children.map(children, (child) => {
-            if (child && React.isValidElement(child)) {
-              if (child.type === React.Fragment) {
-                // just compare to `React.Fragment`
-                return cloneThroughFragments(child.props.children);
-              }
+      return undefined;
+    };
 
-              let newProps = {
-                ...child.props,
-                key: index,
-                minimal:
-                  child.props?.minimal || child.props?.minimal === false
-                    ? child.props.minimal
-                    : minimal,
-                size: child.props?.size || size,
-                flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
-                fluid:
-                  child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
-                fixed:
-                  child.props?.fixed || child.props?.fixed === false ? child.props.fixed : fixed,
-                stack:
-                  child.props?.stack || child.props?.stack === false ? child.props.stack : isStack,
-                intent: child.props?.intent || intent,
-                isChild: true,
-              };
+    const getBorderBottomLeftRadius = (index: number): number | undefined => {
+      // If this group is not vertical we need to style the very first item
+      if (!isVertical || !isStack) {
+        const _isFirstGroup =
+          !isInsideStackGroup || childrenCount === 1 ? true : isChild ? isFirstGroup : index === 0;
 
-              if (isStack) {
-                newProps = {
-                  ...newProps,
-                  style: {
-                    borderTopLeftRadius: getBorderTopLeftRadius(index),
-                    borderBottomLeftRadius: getBorderBottomLeftRadius(index),
-                    borderTopRightRadius: getBorderTopRightRadius(index),
-                    borderBottomRightRadius: getBorderBottomRightRadius(index),
-                    ...(child.props?.style || {}),
-                  },
-                  rounded: !isStack,
-                  isInsideStackGroup: isStack,
-                  isInsideVerticalGroup: isVertical,
-                  isFirst: isChild ? getIsFirst(index) : undefined,
-                  isLast: isChild ? getIsLast(index) : undefined,
-                  isLastInFirstGroup: getIsLastInFirstGroup(index),
-                  isLastInLastGroup: getIsLastInLastGroup(index),
-                  isFirstInLastGroup: getIsFirstInLastGroup(index),
-                  childrenCount: realChildCount,
-                  childId: index + 1,
+        if (_isFirstGroup && getIsFirst(index)) {
+          return RADIUS_FROM_SIZE[size];
+        }
 
-                  isFirstGroup: isChild ? isFirstGroup : index === 0,
-                  isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
-                };
-              }
+        return undefined;
+      }
 
-              /*
-               * Because of the way React.Children.map works, we have to
-               * manually decrement the index for every child that is `null`
-               * because react maps through null children and returns them in `Count`
-               * We filter these children out in the `realChildCount` variable,
-               * but the index is still incremented
-               * */
-              index = index + 1;
+      // This border only needs to apply when this group is vertical
+      // AND this item is the first item of the last group
+      if (getIsFirstInLastGroup(index)) {
+        return RADIUS_FROM_SIZE[size];
+      }
 
-              return React.cloneElement(child, newProps);
+      return undefined;
+    };
+
+    const getBorderBottomRightRadius = (index: number): number | undefined => {
+      const _isLastGroup =
+        !isInsideStackGroup || childrenCount === 1
+          ? true
+          : isChild
+          ? isLastGroup
+          : index === realChildCount - 1;
+
+      // If this is the last item
+      if (_isLastGroup && getIsLast(index)) {
+        return RADIUS_FROM_SIZE[size];
+      }
+
+      return undefined;
+    };
+
+    let index = 0;
+
+    const cloneThroughFragments = useCallback(
+      (children: React.ReactNode): React.ReactNode => {
+        return React.Children.map(children, (child) => {
+          if (child && React.isValidElement(child)) {
+            if (child.type === React.Fragment) {
+              // just compare to `React.Fragment`
+              return cloneThroughFragments(child.props.children);
             }
 
-            return child;
-          });
-        },
-        [
-          children,
-          isStack,
-          isVertical,
-          isChild,
-          isLastGroup,
-          isFirstGroup,
-          realChildCount,
-          index,
-          fluid,
-          flat,
-          minimal,
-          size,
-          intent,
-        ]
-      );
+            let newProps = {
+              ...child.props,
+              key: index,
+              minimal:
+                child.props?.minimal || child.props?.minimal === false
+                  ? child.props.minimal
+                  : minimal,
+              size: child.props?.size || size,
+              flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
+              fluid: child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
+              fixed: child.props?.fixed || child.props?.fixed === false ? child.props.fixed : fixed,
+              stack:
+                child.props?.stack || child.props?.stack === false ? child.props.stack : isStack,
+              intent: child.props?.intent || intent,
+              customTheme: child.props?.customTheme || customTheme,
+            };
 
-      // Remove the overflowing children count from the end of the children array
-      const _children = overflowingChildren
-        ? [
-            ...React.Children.toArray(children).slice(
-              0,
-              React.Children.toArray(children).length - overflowingChildren
-            ),
-          ]
-        : children;
+            if (isStack) {
+              newProps = {
+                ...newProps,
+                style: {
+                  borderTopLeftRadius: getBorderTopLeftRadius(index),
+                  borderBottomLeftRadius: getBorderBottomLeftRadius(index),
+                  borderTopRightRadius: getBorderTopRightRadius(index),
+                  borderBottomRightRadius: getBorderBottomRightRadius(index),
+                  ...(child.props?.style || {}),
+                },
+                isChild: true,
+                rounded: !isStack,
+                isInsideStackGroup: isStack,
+                isInsideVerticalGroup: isVertical,
+                isFirst: isChild ? getIsFirst(index) : undefined,
+                isLast: isChild ? getIsLast(index) : undefined,
+                isLastInFirstGroup: getIsLastInFirstGroup(index),
+                isLastInLastGroup: getIsLastInLastGroup(index),
+                isFirstInLastGroup: getIsFirstInLastGroup(index),
+                childrenCount: realChildCount,
+                childId: index + 1,
 
-      return (
+                isFirstGroup: isChild ? isFirstGroup : index === 0,
+                isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
+              };
+            }
+
+            /*
+             * Because of the way React.Children.map works, we have to
+             * manually decrement the index for every child that is `null`
+             * because react maps through null children and returns them in `Count`
+             * We filter these children out in the `realChildCount` variable,
+             * but the index is still incremented
+             * */
+            index = index + 1;
+
+            return React.cloneElement(child, newProps);
+          }
+
+          return child;
+        });
+      },
+      [
+        children,
+        isStack,
+        isVertical,
+        isChild,
+        isLastGroup,
+        isFirstGroup,
+        realChildCount,
+        index,
+        fluid,
+        flat,
+        minimal,
+        size,
+        intent,
+      ]
+    );
+
+    // Get the overflown children
+    const overflownChildren = useMemo(
+      () =>
+        overflowingChildren ? React.Children.toArray(children).slice(0, overflowingChildren) : [],
+      [children, overflowingChildren]
+    );
+
+    // Remove the overflowing children count from the start of the children array
+    const _children = useMemo(
+      () =>
+        overflowingChildren && responsive
+          ? [
+              children.slice(overflowingChildren),
+              <ReqoreButton
+                icon='MenuLine'
+                customTheme={customTheme}
+                tooltip={{
+                  content: `Show ${React.Children.count(overflownChildren)} hidden items`,
+                  closeOnAnyClick: true,
+                }}
+                fixed
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.stopPropagation();
+                  setIsOverflownDialogOpen(true);
+                }}
+                flat
+              />,
+            ]
+          : children,
+      [children, overflowingChildren, responsive, overflownChildren]
+    );
+
+    return (
+      <>
+        {isOverflownDialogOpen ? (
+          <ReqoreModal
+            isOpen
+            onClose={() => setIsOverflownDialogOpen(false)}
+            flat
+            minimal
+            hasBackdrop={false}
+            intent='info'
+            label='Hidden items'
+          >
+            <ReqoreControlGroup fluid wrap>
+              {overflownChildren}
+            </ReqoreControlGroup>
+          </ReqoreModal>
+        ) : null}
         <StyledReqoreControlGroup
           {...rest}
           vertical={vertical}
           style={{
-            overflowX: !isChild && React.Children.count(_children) !== 1 ? 'auto' : undefined,
-            visibility,
+            overflowX: responsive ? 'auto' : undefined,
+            visibility: isResizing ? 'hidden' : undefined,
             ...rest.style,
           }}
           size={size}
           gapSize={gapSize}
-          ref={targetRef}
+          ref={ref}
           rounded={rounded}
           fluid={fluid}
           fixed={fixed}
@@ -430,15 +478,10 @@ const ReqoreControlGroup = memo(
           className={`${className || ''} reqore-control-group`}
         >
           {cloneThroughFragments(_children)}
-          {!isChild && overflowingChildren ? (
-            <ReqoreButton icon='More2Line' fixed minimal flat>
-              ({overflowingChildren})
-            </ReqoreButton>
-          ) : null}
         </StyledReqoreControlGroup>
-      );
-    }
-  )
+      </>
+    );
+  }
 );
 
 export default ReqoreControlGroup;

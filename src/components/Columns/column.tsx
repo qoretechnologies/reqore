@@ -22,5 +22,6 @@ export const ReqoreColumn = styled.div<IReqoreColumnProps>`
     flex: ${flex};
     flex-grow: ${flexGrow};
     flex-shrink: ${flexShrink};
+    overflow-x: hidden;
   `}
 `;

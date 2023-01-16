@@ -47,6 +47,37 @@ export default {
 } as Meta<IReqoreControlGroupProps>;
 
 const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProps) => {
+  if (args.responsive) {
+    return (
+      <div style={{ width: 600 }}>
+        <ReqoreControlGroup {...args} wrap={false}>
+          <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
+          <ReqoreControlGroup stack>
+            <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+          </ReqoreControlGroup>
+          <ReqoreControlGroup stack>
+            <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+            <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+          </ReqoreControlGroup>
+          <ReqoreControlGroup stack>
+            <ReqoreControlGroup>
+              <ReqoreButton customTheme={{ main: '#00e3e8' }}>Level 2 deep</ReqoreButton>
+              <ReqoreControlGroup fixed>
+                <ReqoreButton disabled fixed id='test'>
+                  Level 3 deep and fixed
+                </ReqoreButton>
+              </ReqoreControlGroup>
+            </ReqoreControlGroup>
+            <ReqoreButton intent='danger'>Level 1 deep</ReqoreButton>
+            <ReqoreCheckbox checked margin='both' label='Level 1 deep' />
+          </ReqoreControlGroup>
+          <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
+          <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+        </ReqoreControlGroup>
+      </div>
+    );
+  }
+
   return (
     <>
       <ReqoreControlGroup {...args}>
@@ -243,4 +274,9 @@ HorizontalAlign.args = {
 export const VerticalAlign = Template.bind({});
 VerticalAlign.args = {
   verticalAlign: 'flex-end',
+};
+
+export const Responsive = Template.bind({});
+Responsive.args = {
+  responsive: true,
 };

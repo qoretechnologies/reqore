@@ -181,7 +181,7 @@ export const ReqoreTree = ({
   return (
     <StyledTreeWrapper className='reqore-tree'>
       {showControls && (
-        <ReqoreControlGroup stack size={size}>
+        <ReqoreControlGroup stack size={size} responsive>
           {isDeep() && !allExpanded ? (
             <ReqoreButton
               flat

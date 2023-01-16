@@ -64,7 +64,7 @@ test('<Collection /> can be sorted', () => {
   // Expect the title of the first item to be "Expandable item"
   expect(firstItem?.querySelector('h3')?.textContent).toBe('Expandable item');
 
-  fireEvent.click(document.querySelectorAll('.reqore-button')[1]);
+  fireEvent.click(document.querySelectorAll('.reqore-button')[0]);
 
   const firstNewItem = document.querySelector('.reqore-collection-item');
 

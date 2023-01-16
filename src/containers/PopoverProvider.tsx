@@ -66,21 +66,21 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
   };
 
   useEffect(() => {
-    document.addEventListener('click', handleClick);
+    document.addEventListener('mousedown', handleClick);
 
     if (closePopoversOnEscPress) {
       document.addEventListener('keydown', handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('click', handleClick);
+      document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [popovers]);
 
   useEffect(() => {
     if (!size(popovers)) {
-      document.removeEventListener('click', handleClick);
+      document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleKeyDown);
     }
   }, [popovers]);

@@ -2,7 +2,6 @@ import { size } from 'lodash';
 import { useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqoreIntents } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreInput from '../Input';
@@ -160,47 +159,25 @@ export const ReqoreCollection = ({
     if (sortable) {
       actions = [
         ...actions,
-        [
-          {
-            icon: 'SortAsc',
-            intent: sort === 'asc' ? ReqoreIntents.INFO : undefined,
-            onClick: () => setSort('asc'),
-            active: sort === 'asc',
-            tooltip: 'Sort ascending',
-            disabled: !size(finalItems),
-          },
-          {
-            icon: 'SortDesc',
-            intent: sort === 'desc' ? ReqoreIntents.INFO : undefined,
-            onClick: () => setSort('desc'),
-            active: sort === 'desc',
-            tooltip: 'Sort descending',
-            disabled: !size(finalItems),
-          },
-        ],
+        {
+          icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
+          onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
+          tooltip: sort === 'desc' ? 'Sort ascending' : 'Sort descending',
+          disabled: !size(finalItems),
+          responsive: false,
+        },
       ];
     }
 
     return [
       ...actions,
-      [
-        {
-          icon: 'GridLine',
-          onClick: () => setShowAs('grid'),
-          intent: _showAs === 'grid' ? ReqoreIntents.INFO : undefined,
-          active: _showAs === 'grid',
-          tooltip: 'Show as grid',
-          disabled: !size(finalItems),
-        },
-        {
-          icon: 'ListOrdered',
-          onClick: () => setShowAs('list'),
-          intent: _showAs === 'list' ? ReqoreIntents.INFO : undefined,
-          active: _showAs === 'list',
-          tooltip: 'Show as list',
-          disabled: !size(finalItems),
-        },
-      ],
+      {
+        icon: _showAs === 'grid' ? 'ListOrdered' : 'GridLine',
+        onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
+        tooltip: _showAs === 'grid' ? 'Show as list' : 'Show as grid',
+        disabled: !size(finalItems),
+        responsive: false,
+      },
     ];
   }, [filterable, handleQueryChange, query, rest.actions, _showAs, sort, sortable, finalItems]);
 

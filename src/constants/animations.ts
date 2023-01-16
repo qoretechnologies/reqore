@@ -1,5 +1,5 @@
 export const SPRING_CONFIG = {
-  tension: 120,
+  tension: 180,
   friction: 20,
 };
 
