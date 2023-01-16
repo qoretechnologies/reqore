@@ -8,9 +8,9 @@ import {
   ReqoreMessage,
   ReqorePanel,
   ReqorePopover,
-  ReqoreSpacer,
+  ReqoreSpacer
 } from '../../index';
-import { FlatArg, argManager } from '../utils/args';
+import { argManager, FlatArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePopoverProps>();
 
@@ -56,7 +56,7 @@ export default {
 
 const HoverButton = (args: any) => {
   return (
-    <ReqorePopover component={ReqoreButton} isReqoreComponent {...args}>
+    <ReqorePopover component={ReqoreButton} isReqoreComponent {...args} fixed>
       Hover popover
     </ReqorePopover>
   );
@@ -107,7 +107,7 @@ const HoverStayButton = (args: any) => {
 const Template: Story<IReqorePopoverProps> = (args: IReqorePopoverProps) => {
   return (
     <>
-      <ReqoreControlGroup vertical gapSize='huge'>
+      <ReqoreControlGroup vertical gapSize='huge' horizontalAlign='flex-start'>
         <HoverButton {...args} />
         <ClickButton {...args} />
         <DelayButton {...args} />
@@ -128,7 +128,7 @@ const Template: Story<IReqorePopoverProps> = (args: IReqorePopoverProps) => {
               Full popover
             </ReqorePopover>
             <ReqoreControlGroup>
-              <ReqoreSpacer width={350} />
+              <ReqoreSpacer width={190} />
               <ReqorePopover
                 {...args}
                 component={ReqoreButton}
