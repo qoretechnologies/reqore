@@ -100,30 +100,28 @@ test('Renders <Panel /> with actions', () => {
   const fn = jest.fn();
 
   render(
-    <div style={{ width: '1000px' }}>
-      <ReqoreUIProvider>
-        <ReqoreLayoutContent>
-          <ReqorePanel
-            label='Test'
-            onClose={fn}
-            actions={[
-              { label: 'Test' },
-              { actions: [{ label: 'Deep', value: 'deep' }] },
-              { as: ReqoreInput },
-              { label: 'hidden', show: false },
-            ]}
-            bottomActions={[
-              { label: 'Test', position: 'left' },
-              { actions: [{ label: 'Deep', value: 'deep' }], position: 'right' },
-              { label: 'hidden', show: false },
-            ]}
-          >
-            {' '}
-            Panel{' '}
-          </ReqorePanel>
-        </ReqoreLayoutContent>
-      </ReqoreUIProvider>
-    </div>
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqorePanel
+          label='Test'
+          onClose={fn}
+          actions={[
+            { label: 'Test' },
+            { actions: [{ label: 'Deep', value: 'deep' }] },
+            { as: ReqoreInput },
+            { label: 'hidden', show: false },
+          ]}
+          bottomActions={[
+            { label: 'Test', position: 'left' },
+            { actions: [{ label: 'Deep', value: 'deep' }], position: 'right' },
+            { label: 'hidden', show: false },
+          ]}
+        >
+          {' '}
+          Panel{' '}
+        </ReqorePanel>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
   );
 
   expect(document.querySelectorAll('.reqore-button').length).toBe(5);

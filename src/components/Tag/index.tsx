@@ -26,6 +26,7 @@ import {
   IReqoreDisabled,
   IReqoreIntent,
   IWithReqoreEffect,
+  IWithReqoreFluid,
   IWithReqoreMinimal,
   IWithReqoreTooltip,
 } from '../../types/global';
@@ -44,7 +45,8 @@ export interface IReqoreTagProps
     IWithReqoreTooltip,
     IReqoreDisabled,
     IWithReqoreEffect,
-    IWithReqoreMinimal {
+    IWithReqoreMinimal,
+    IWithReqoreFluid {
   size?: TSizes;
   label?: string | number;
   labelKey?: string | number;
@@ -82,6 +84,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
+  width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;

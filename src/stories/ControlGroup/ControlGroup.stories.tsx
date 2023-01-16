@@ -47,10 +47,44 @@ export default {
 } as Meta<IReqoreControlGroupProps>;
 
 const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProps) => {
+  if (args.responsive) {
+    return (
+      <div style={{ width: 600 }}>
+        <ReqoreControlGroup {...args} wrap={false}>
+          <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
+          <ReqoreControlGroup stack>
+            <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+          </ReqoreControlGroup>
+          <ReqoreControlGroup stack>
+            <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+            <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+          </ReqoreControlGroup>
+          <ReqoreControlGroup stack>
+            <ReqoreControlGroup>
+              <ReqoreButton customTheme={{ main: '#00e3e8' }}>Level 2 deep</ReqoreButton>
+              <ReqoreControlGroup fixed>
+                <ReqoreButton disabled fixed id='test'>
+                  Level 3 deep and fixed
+                </ReqoreButton>
+              </ReqoreControlGroup>
+            </ReqoreControlGroup>
+            <ReqoreButton intent='danger'>Level 1 deep</ReqoreButton>
+            <ReqoreCheckbox checked margin='both' label='Level 1 deep' />
+          </ReqoreControlGroup>
+          <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
+          <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+        </ReqoreControlGroup>
+      </div>
+    );
+  }
+
   return (
     <>
       <ReqoreControlGroup {...args}>
         <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
+        <ReqoreButton icon='PictureInPictureLine' fluid>
+          Fluid Button
+        </ReqoreButton>
         <ReqoreButton
           icon='PictureInPictureLine'
           flat={false}
@@ -72,13 +106,13 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           checked
           uncheckedIcon='CheckboxBlankLine'
         />
-        <ReqoreInput icon='4KFill' value='Hello' />
+        <ReqoreInput icon='4KFill' value='Hello I am fluid' fluid />
         <ReqoreControlGroup stack>
           <ReqoreControlGroup>
             <ReqoreButton customTheme={{ main: '#00e3e8' }}>Level 2 deep</ReqoreButton>
-            <ReqoreControlGroup>
+            <ReqoreControlGroup fixed>
               <ReqoreButton disabled fixed id='test'>
-                Level 3 deep
+                Level 3 deep and fixed
               </ReqoreButton>
             </ReqoreControlGroup>
           </ReqoreControlGroup>
@@ -188,6 +222,11 @@ Minimal.args = {
   minimal: true,
 };
 
+export const Fluid = Template.bind({});
+Fluid.args = {
+  fluid: true,
+};
+
 export const NotFlat = Template.bind({});
 NotFlat.args = {
   flat: false,
@@ -198,8 +237,14 @@ Vertical.args = {
   vertical: true,
 };
 
-export const VerticalStacked = Template.bind({});
-VerticalStacked.args = {
+export const VerticalFluid = Template.bind({});
+VerticalFluid.args = {
+  vertical: true,
+  fluid: true,
+};
+
+export const VerticalStackedFluid = Template.bind({});
+VerticalStackedFluid.args = {
   vertical: true,
   stack: true,
   fluid: true,
@@ -229,4 +274,9 @@ HorizontalAlign.args = {
 export const VerticalAlign = Template.bind({});
 VerticalAlign.args = {
   verticalAlign: 'flex-end',
+};
+
+export const Responsive = Template.bind({});
+Responsive.args = {
+  responsive: true,
 };

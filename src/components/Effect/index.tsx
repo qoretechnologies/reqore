@@ -269,6 +269,7 @@ export const StyledEffect = styled.span`
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
+          min-width: 30px;
         `
       : undefined}
 

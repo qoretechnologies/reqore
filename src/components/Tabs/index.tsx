@@ -1,4 +1,5 @@
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useState } from 'react';
+import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
@@ -70,7 +71,7 @@ const ReqoreTabs = ({
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
 
-  useEffect(() => {
+  useUpdateEffect(() => {
     if (activeTab || activeTab === 0) {
       setActiveTab(activeTab);
 

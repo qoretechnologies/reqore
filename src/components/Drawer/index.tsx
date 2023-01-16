@@ -205,6 +205,7 @@ export const ReqoreDrawer = ({
     /* Adding a hide/show button to the drawer. */
     if (hidable) {
       actions.push({
+        responsive: false,
         icon: getHideShowIcon(position, _isHidden),
         onClick: () => {
           setIsHidden(!_isHidden);
@@ -219,6 +220,7 @@ export const ReqoreDrawer = ({
     /* Adding a close button to the drawer. */
     if (onClose) {
       actions.push({
+        responsive: false,
         icon: 'CloseLine',
         onClick: onClose,
         className: 'reqore-drawer-close-button',
@@ -269,21 +271,21 @@ export const ReqoreDrawer = ({
             }
             minHeight={
               layout === 'center'
-                ? '140px'
+                ? '40px'
                 : layout === 'horizontal'
                 ? _isHidden
                   ? 0
-                  : minSize || '140px'
+                  : minSize || '40px'
                 : undefined
             }
             maxWidth={layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined}
             minWidth={
               layout === 'center'
-                ? '140px'
+                ? '40px'
                 : layout === 'vertical'
                 ? _isHidden
                   ? 0
-                  : minSize || '140px'
+                  : minSize || '40px'
                 : undefined
             }
             as={StyledDrawerResizable}

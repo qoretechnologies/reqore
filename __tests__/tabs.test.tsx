@@ -163,6 +163,38 @@ test('Does not change tab and run callback when disabled', () => {
   expect(document.querySelectorAll('.reqore-tabs-list-item-active').length).toBe(1);
 });
 
+test('Does not change tab when mounted and active tab is set', () => {
+  const cb = jest.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs
+            tabs={[
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3', disabled: true },
+              { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
+            ]}
+            activeTab={'tab4'}
+            onTabChange={cb}
+          >
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  expect(cb).not.toHaveBeenCalled();
+});
+
 test('Changes tab programatically and runs callback', () => {
   const cb = jest.fn();
 

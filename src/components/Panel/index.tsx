@@ -1,9 +1,10 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
+  GAP_FROM_SIZE,
   ICON_FROM_HEADER_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
@@ -38,7 +39,7 @@ import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
-import { ReqoreSpacer } from '../Spacer';
+import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
@@ -46,9 +47,11 @@ export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreToolt
   actions?: Omit<IReqoreDropdownItem[], 'value'>;
   // Custom react element
   as?: React.ElementType;
-  props?: any;
+  props?: { [key: string | number]: any } | undefined;
   // Hide the action if the condition is false
   show?: boolean;
+  // Hide the action if the group is too small
+  responsive?: boolean;
 }
 
 export interface IReqorePanelBottomAction extends IReqorePanelAction {
@@ -116,6 +119,7 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   backdrop-filter: ${({ blur, opacity }) => (blur && opacity < 1 ? `blur(${blur}px)` : undefined)};
   transition: 0.2s ease-in-out;
   width: ${({ fluid }) => (fluid ? '100%' : undefined)};
+  max-width: 100%;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
 
   ${({ interactive, theme, opacity = 1, flat, intent }) =>
@@ -240,10 +244,13 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
 
 export const StyledPanelTitleHeader = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  overflow: hidden;
   padding-right: 5px;
+  flex: 1 1 auto;
+  width: 100%;
+  overflow: hidden;
+  min-width: 100px;
 `;
 
 export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
@@ -328,17 +335,56 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [leftBottomActions, rightBottomActions]
     );
 
-    const renderActions = useCallback(
+    const renderResponsiveActions = useCallback(
       (actionOrActions: IReqorePanelAction | IReqorePanelAction[], index: number) => {
-        if (Array.isArray(actionOrActions)) {
-          return (
-            <ReqoreControlGroup key={index} stack>
-              {actionOrActions.map(renderActions)}
-            </ReqoreControlGroup>
-          );
-        }
+        return renderActions(actionOrActions, index, true);
+      },
+      [actions]
+    );
 
-        if (actionOrActions.show === false) {
+    const hasNonResponsiveActions = useCallback(
+      (data: (IReqorePanelAction[] | IReqorePanelAction)[]) =>
+        data.some((action) => !Array.isArray(action) && action.responsive === false),
+      [actions, bottomActions]
+    );
+
+    const hasResponsiveActions = useCallback(
+      (data: (IReqorePanelAction[] | IReqorePanelAction)[]) =>
+        data.some((action) => Array.isArray(action) || action.responsive !== false),
+      [actions, bottomActions]
+    );
+
+    const renderNonResponsiveActions = useCallback(
+      (actionOrActions: IReqorePanelAction | IReqorePanelAction[], index: number) => {
+        return renderActions(actionOrActions, index, false);
+      },
+      [actions]
+    );
+
+    const renderActions = useCallback(
+      (
+        actionOrActions: IReqorePanelAction | IReqorePanelAction[],
+        index: number,
+        includeResponsive
+      ) => {
+        const action: IReqorePanelAction = Array.isArray(actionOrActions)
+          ? {
+              show: true,
+              responsive: true,
+              as: ReqoreControlGroup,
+              props: {
+                stack: true,
+                fluid: true,
+                children: actionOrActions.map(renderActions),
+              },
+            }
+          : actionOrActions;
+
+        if (
+          action.show === false ||
+          (includeResponsive && action.responsive === false) ||
+          (!includeResponsive && (action.responsive === true || !('responsive' in action)))
+        ) {
           return null;
         }
 
@@ -349,20 +395,21 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           intent,
           className,
           as: CustomElement,
-          props,
+          props = {},
           ...rest
-        }: IReqorePanelAction = actionOrActions;
+        }: IReqorePanelAction = action;
 
         if (size(actions)) {
           return (
             <ReqoreDropdown<IReqoreButtonProps>
               {...rest}
               key={index}
+              fixed
               label={label}
               items={actions}
               intent={intent}
               className={className}
-              customTheme={theme}
+              customTheme={rest.customTheme || theme}
               onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
               id={id}
             />
@@ -372,9 +419,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         if (CustomElement) {
           return (
             <CustomElement
+              fixed
               {...props}
               key={index}
-              customTheme={theme}
+              customTheme={props.customTheme || theme}
               onClick={(e: React.MouseEvent<any>) => {
                 e.stopPropagation();
                 props?.onClick?.(e);
@@ -387,9 +435,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           <ReqoreButton
             {...rest}
             id={id}
+            fixed
             key={index}
             className={className}
-            customTheme={theme}
+            customTheme={rest.customTheme || theme}
             intent={intent}
             onClick={
               rest.onClick
@@ -494,27 +543,39 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 </>
               ) : null}
             </StyledPanelTitleHeader>
-            <ReqoreControlGroup>
-              {actions.map(renderActions)}
-              {collapsible && (
-                <ReqoreButton
-                  customTheme={theme}
-                  icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
-                  onClick={handleCollapseClick}
-                  tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
-                />
-              )}
-              {onClose && (
-                <ReqoreButton
-                  customTheme={theme}
-                  icon='CloseLine'
-                  onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                    e.stopPropagation();
-                    onClose?.();
-                  }}
-                />
-              )}
-            </ReqoreControlGroup>
+            {hasResponsiveActions(actions) && (
+              <ReqoreControlGroup responsive fluid horizontalAlign='flex-end' customTheme={theme}>
+                {actions.map(renderResponsiveActions)}
+              </ReqoreControlGroup>
+            )}
+            {collapsible || onClose || hasNonResponsiveActions(actions) ? (
+              <>
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
+                <ReqoreControlGroup fixed horizontalAlign='flex-end'>
+                  {actions.map(renderNonResponsiveActions)}
+                  {collapsible && (
+                    <ReqoreButton
+                      customTheme={theme}
+                      icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
+                      onClick={handleCollapseClick}
+                      tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
+                      fixed
+                    />
+                  )}
+                  {onClose && (
+                    <ReqoreButton
+                      fixed
+                      customTheme={theme}
+                      icon='CloseLine'
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.stopPropagation();
+                        onClose?.();
+                      }}
+                    />
+                  )}
+                </ReqoreControlGroup>
+              </>
+            ) : null}
           </StyledPanelTitle>
         )}
         {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
@@ -540,8 +601,32 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             opacity={opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={noHorizontalPadding}
           >
-            <ReqoreControlGroup>{leftBottomActions.map(renderActions)}</ReqoreControlGroup>
-            <ReqoreControlGroup>{rightBottomActions.map(renderActions)}</ReqoreControlGroup>
+            {hasNonResponsiveActions(leftBottomActions) ? (
+              <>
+                <ReqoreControlGroup>
+                  {leftBottomActions.map(renderNonResponsiveActions)}
+                </ReqoreControlGroup>
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
+              </>
+            ) : null}
+            {hasResponsiveActions(leftBottomActions) && (
+              <ReqoreControlGroup fluid responsive customTheme={theme}>
+                {leftBottomActions.map(renderResponsiveActions)}
+              </ReqoreControlGroup>
+            )}
+            {hasResponsiveActions(rightBottomActions) && (
+              <ReqoreControlGroup fluid horizontalAlign='flex-end' responsive customTheme={theme}>
+                {rightBottomActions.map(renderResponsiveActions)}
+              </ReqoreControlGroup>
+            )}
+            {hasNonResponsiveActions(rightBottomActions) ? (
+              <>
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
+                <ReqoreControlGroup horizontalAlign='flex-end'>
+                  {rightBottomActions.map(renderNonResponsiveActions)}
+                </ReqoreControlGroup>
+              </>
+            ) : null}
           </StyledPanelBottomActions>
         ) : null}
       </StyledPanel>

@@ -1,10 +1,9 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
-import { ReqoreColumns } from '../../components/Columns';
-import { ReqoreColumn } from '../../components/Columns/column';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
-import { IReqorePanelProps, ReqorePanel } from '../../components/Panel';
-import { argManager, FlatArg, IconArg, IntentArg } from '../utils/args';
+import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
+import { ReqoreVerticalSpacer } from '../../components/Spacer';
+import { FlatArg, IconArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -67,19 +66,58 @@ export default {
 
 const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
   if (args.fluid) {
+    const actions: IReqorePanelAction[] = [
+      {
+        icon: 'GiftFill',
+        label: 'Visible',
+        responsive: false,
+      },
+      {
+        label: 'Hidden when small',
+        icon: 'EyeCloseLine',
+      },
+      {
+        label: 'Hidden when small',
+        icon: 'EyeCloseLine',
+      },
+      {
+        label: 'Hidden when small',
+        icon: 'EyeCloseLine',
+      },
+      {
+        label: 'Hidden when small',
+        icon: 'EyeCloseLine',
+      },
+    ];
+
     return (
-      <ReqoreColumns columnsGap='10px'>
-        <ReqoreColumn>
-          <ReqorePanel {...args} badge='Fluid'>
-            This is a fluid panel
-          </ReqorePanel>
-        </ReqoreColumn>
-        <ReqoreColumn>
-          <ReqorePanel {...args} fluid={false} badge='Not Fluid'>
-            This is not a fluid panel
-          </ReqorePanel>
-        </ReqoreColumn>
-      </ReqoreColumns>
+      <>
+        <ReqorePanel
+          {...args}
+          badge='Fluid'
+          actions={actions}
+          bottomActions={[
+            ...actions,
+            ...actions.map((action) => ({ ...action, position: 'right' })),
+          ]}
+        >
+          This is a fluid panel
+        </ReqorePanel>
+        <ReqoreVerticalSpacer height={10} />
+        <ReqorePanel
+          {...args}
+          style={{ width: 400 }}
+          fluid={false}
+          badge='Not Fluid'
+          actions={actions}
+          bottomActions={[
+            ...actions,
+            ...actions.map((action) => ({ ...action, position: 'right' })),
+          ]}
+        >
+          This is not a fluid panel
+        </ReqorePanel>
+      </>
     );
   }
 
@@ -104,7 +142,12 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
         },
       ]}
       actions={[
-        { label: 'Test', icon: '24HoursFill', intent: 'info' },
+        {
+          label: 'Non responsive',
+          icon: '24HoursFill',
+          customTheme: { main: '#eb0e8c' },
+          responsive: false,
+        },
         [
           { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
           { icon: 'CopperCoinFill', intent: 'danger' },

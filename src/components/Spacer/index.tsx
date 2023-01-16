@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { SIZE_TO_NUMBER, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { changeLightness } from '../../helpers/colors';
@@ -6,32 +6,68 @@ import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreEffect } from '../../types/global';
 import { StyledEffect } from '../Effect';
 
-export const StyledSpacer = styled(StyledEffect)`
-  ${({ horizontal, vertical, width, height, lineSize }) => {
+export const StyledSpacer = styled.div`
+  display: ${({ horizontal }) => (horizontal ? 'inline-flex' : 'flex')};
+  vertical-align: middle;
+
+  ${({ horizontal, vertical }) => {
     if (horizontal) {
       return css`
-        margin-left: ${width / 2}px;
-        margin-right: ${width / 2}px;
-        width: ${lineSize === 'none' ? 1 : SIZE_TO_NUMBER[lineSize]}px;
-        height: ${height ? `${height}px` : `${TEXT_FROM_SIZE.normal}px`};
-        vertical-align: middle;
-        display: inline-block;
+        flex-flow: row;
       `;
     }
 
     if (vertical) {
       return css`
-        margin-top: ${height / 2}px;
-        margin-bottom: ${height / 2}px;
-        height: ${lineSize === 'none' ? 1 : SIZE_TO_NUMBER[lineSize]}px;
-        width: ${width ? `${width}px` : '100%'};
+        flex-flow: column;
       `;
     }
   }}
 
+  flex-shrink: 0;
+`;
+
+export const StyledSpace = styled.div`
+  display: inline-block;
+  flex: 0 0 auto;
+
+  ${({ horizontal, vertical, width, height, lineSize }) => {
+    if (horizontal) {
+      return css`
+        width: ${width / 2 - lineSize / 2}px;
+        height: ${height ? `${height}px` : `${TEXT_FROM_SIZE.normal}px`};
+      `;
+    }
+
+    if (vertical) {
+      return css`
+        width: ${width ? `${width}px` : '100%'};
+        height: ${height / 2 - lineSize / 2}px;
+      `;
+    }
+  }}
+`;
+
+export const StyledLine = styled(StyledEffect)`
+  flex-shrink: 0;
   background-color: ${({ theme, lineSize }) =>
     lineSize === 'none' ? 'transparent' : changeLightness(theme.main, 0.2)};
-  flex-shrink: 0;
+
+  ${({ horizontal, vertical, width, height, lineSize }) => {
+    if (horizontal) {
+      return css`
+        width: ${lineSize}px;
+        height: ${height ? `${height}px` : `${TEXT_FROM_SIZE.normal}px`};
+      `;
+    }
+
+    if (vertical) {
+      return css`
+        width: ${width ? `${width}px` : '100%'};
+        height: ${lineSize}px;
+      `;
+    }
+  }}
 `;
 
 export interface IReqoreSpacerProps
@@ -66,16 +102,29 @@ export const ReqoreSpacer = memo(
       }
     }
 
+    const _lineSize = useMemo(
+      () => (lineSize === 'none' ? 0 : SIZE_TO_NUMBER[lineSize]),
+      [lineSize]
+    );
+
     return (
       <StyledSpacer
         as='div'
         {...rest}
-        theme={theme}
-        lineSize={lineSize}
         horizontal={horizontal}
         vertical={vertical}
         className='reqore-spacer'
-      />
+      >
+        <StyledSpace {...rest} horizontal={horizontal} vertical={vertical} lineSize={_lineSize} />
+        <StyledLine
+          {...rest}
+          horizontal={horizontal}
+          vertical={vertical}
+          theme={theme}
+          lineSize={_lineSize}
+        />
+        <StyledSpace {...rest} horizontal={horizontal} vertical={vertical} lineSize={_lineSize} />
+      </StyledSpacer>
     );
   }
 );
