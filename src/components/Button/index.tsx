@@ -201,7 +201,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             transition: all 0.2s ease-out;
 
             &:active {
-              transform: translateY(2px);
+              transform: scale(0.97);
             }
 
             &:hover,
