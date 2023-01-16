@@ -20,6 +20,7 @@ export const parameters = {
     expanded: true,
   },
   chromatic: {
+    delay: 500,
     pauseAnimationAtEnd: true,
     viewports: [600, 1440],
   },
