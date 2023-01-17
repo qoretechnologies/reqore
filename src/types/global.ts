@@ -140,6 +140,20 @@ export interface IWithReqoreFluid {
   fluid?: boolean;
 }
 
+export interface IWithReqoreFixed {
+  /**
+   * If true, the component will be fixed in fluid containers
+   * @default false
+   * @type boolean
+   * @example
+   * <ReqoreInput fixed />
+   * <ReqoreInput fixed={true} />
+   * <ReqoreInput fixed={false} />
+   *
+   */
+  fixed?: boolean;
+}
+
 export interface IWithReqoreMinimal {
   /**
    * If true, the component will be minimal

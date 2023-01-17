@@ -19,6 +19,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
+import { isActionShown } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -45,6 +46,7 @@ import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
   onClick?: () => void;
+  group?: IReqorePanelAction[];
   actions?: Omit<IReqoreDropdownItem[], 'value'>;
   // Custom react element
   as?: React.ElementType;
@@ -60,6 +62,8 @@ export interface IReqorePanelBottomAction extends IReqorePanelAction {
 }
 
 export interface IReqorePanelContent {}
+export type TReqorePanelActions = IReqorePanelAction[];
+export type TReqorePanelBottomActions = IReqorePanelBottomAction[];
 
 export interface IReqorePanelProps
   extends IWithReqoreSize,
@@ -78,8 +82,8 @@ export interface IReqorePanelProps
   isCollapsed?: boolean;
   onClose?: () => void;
   rounded?: boolean;
-  actions?: (IReqorePanelAction | IReqorePanelAction[])[];
-  bottomActions?: IReqorePanelBottomAction[];
+  actions?: TReqorePanelActions;
+  bottomActions?: TReqorePanelBottomActions;
   unMountContentOnCollapse?: boolean;
   onCollapseChange?: (isCollapsed?: boolean) => void;
   fill?: boolean;
@@ -305,7 +309,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     // Return true if the card has a title bar, otherwise return false.
     const hasTitleBar: boolean = useMemo(
-      () => !!label || collapsible || !!onClose || !!size(actions) || !!badge,
+      () =>
+        !!label ||
+        collapsible ||
+        !!onClose ||
+        !!size(actions.filter(isActionShown)) ||
+        !!badge ||
+        !!icon,
       [label, collapsible, onClose, actions, badge]
     );
 
@@ -332,60 +342,42 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     // Calculates whether or not the bottom actions should be displayed.
     const hasBottomActions: boolean = useMemo(
-      () => !!(size(leftBottomActions) || size(rightBottomActions)),
+      () =>
+        !!(
+          size(leftBottomActions.filter(isActionShown)) ||
+          size(rightBottomActions.filter(isActionShown))
+        ),
       [leftBottomActions, rightBottomActions]
     );
 
     const renderResponsiveActions = useCallback(
-      (actionOrActions: IReqorePanelAction | IReqorePanelAction[], index: number) => {
-        return renderActions(actionOrActions, index, true);
+      (action: IReqorePanelAction, index: number) => {
+        return renderActions(action, index, true);
       },
       [actions]
     );
 
     const hasNonResponsiveActions = useCallback(
-      (data: (IReqorePanelAction[] | IReqorePanelAction)[]) =>
-        data.some(
-          (action) => !Array.isArray(action) && action.responsive === false && action.show !== false
-        ),
+      (data: TReqorePanelActions) =>
+        data.some((action) => action.responsive === false && action.show !== false),
       [actions, bottomActions]
     );
 
     const hasResponsiveActions = useCallback(
-      (data: (IReqorePanelAction[] | IReqorePanelAction)[]) =>
-        data.some(
-          (action) =>
-            Array.isArray(action) || (action.responsive !== false && action.show !== false)
-        ),
+      (data: TReqorePanelActions) =>
+        data.some((action) => action.responsive !== false && action.show !== false),
       [actions, bottomActions]
     );
 
     const renderNonResponsiveActions = useCallback(
-      (actionOrActions: IReqorePanelAction | IReqorePanelAction[], index: number) => {
-        return renderActions(actionOrActions, index, false);
+      (action: IReqorePanelAction, index: number) => {
+        return renderActions(action, index, false);
       },
       [actions]
     );
 
     const renderActions = useCallback(
-      (
-        actionOrActions: IReqorePanelAction | IReqorePanelAction[],
-        index: number,
-        includeResponsive
-      ) => {
-        const action: IReqorePanelAction = Array.isArray(actionOrActions)
-          ? {
-              show: true,
-              responsive: true,
-              as: ReqoreControlGroup,
-              props: {
-                stack: true,
-                fluid: true,
-                children: actionOrActions.map(renderActions),
-              },
-            }
-          : actionOrActions;
-
+      (action: IReqorePanelAction, index: number, includeResponsive) => {
         if (
           action.show === false ||
           (includeResponsive && action.responsive === false) ||
@@ -402,8 +394,25 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           className,
           as: CustomElement,
           props = {},
+          group,
           ...rest
         }: IReqorePanelAction = action;
+
+        if (size(group)) {
+          return (
+            <ReqoreControlGroup
+              intent={intent}
+              stack
+              customTheme={rest.customTheme || theme}
+              size={rest.size}
+              fixed
+              fluid={rest.fluid}
+              key={index}
+            >
+              {group.map((action, index) => renderActions(action, index, true))}
+            </ReqoreControlGroup>
+          );
+        }
 
         if (size(actions)) {
           return (

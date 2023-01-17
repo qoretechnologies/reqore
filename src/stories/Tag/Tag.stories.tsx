@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup } from '../../index';
-import { argManager, SizeArg } from '../utils/args';
+import { SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
@@ -85,7 +85,7 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
       />
       <ReqoreTag labelKey='Tag with' label='Label Key' icon='AlarmWarningLine' {...args} />
       <ReqoreTag labelKey='Key' label='value' {...args} />
-      <ReqoreTag icon='QuestionAnswerLine' {...args} />
+      <ReqoreTag icon='QuestionAnswerLine' {...args} fixed />
       <ReqoreTag label='Disabled Tag' disabled icon='AlarmWarningLine' {...args} />
       <ReqoreTag
         label='300px Tag'

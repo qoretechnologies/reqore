@@ -35,6 +35,8 @@ const Template: ComponentStory<typeof Checkbox> = (args) => {
           effect={{ gradient: { colors: { 0: '#00fafd', 100: '#ff00d0' } } }}
         />
         <ReqoreCheckbox {...args} disabled onText='yes' offText='no' />
+        <ReqoreCheckbox {...args} onText='yes' offText='no' />
+        <ReqoreCheckbox {...args} onText='yes' offText='no' checked />
         <ReqoreCheckbox
           {...args}
           label='Label'

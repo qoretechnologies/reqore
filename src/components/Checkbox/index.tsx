@@ -272,7 +272,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                       textSize: getOneLessSize(size),
                       weight: 'bold',
                       ...switchTextEffect,
-                      opacity: checked ? 0.8 : 1,
+                      opacity: checked ? 0.3 : 1,
                     } as IReqoreEffect
                   }
                 >

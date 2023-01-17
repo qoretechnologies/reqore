@@ -131,12 +131,9 @@ const ReqoreControlGroup = memo(
 
     const [overflowingChildren, setOverflowingChildren] = useState<number | undefined>(0);
     const [lastReSize, setLastReSize] = useState<number>(0);
-    const [isResizing, setIsResizing] = useState<boolean>(false);
     const [isOverflownDialogOpen, setIsOverflownDialogOpen] = useState<boolean>(false);
     const observer = useRef<ResizeObserver | null>(null);
     const ref = useRef<HTMLDivElement>(null);
-    const resizeTimerObserver = useRef<ResizeObserver | null>(null);
-    const resizingTimer = useRef<any>(null);
 
     const realChildCount = useMemo((): number => {
       let count = 0;
@@ -180,18 +177,7 @@ const ReqoreControlGroup = memo(
             }, 200)
           );
 
-          resizeTimerObserver.current = new ResizeObserver(() => {
-            if (ref && ref.current) {
-              setIsResizing(true);
-              clearTimeout(resizingTimer.current);
-              resizingTimer.current = setTimeout(() => {
-                setIsResizing(false);
-              }, 500);
-            }
-          });
-
           observer.current.observe(ref.current);
-          resizeTimerObserver.current.observe(ref.current);
         }
       }
     });
@@ -200,12 +186,6 @@ const ReqoreControlGroup = memo(
       if (observer.current) {
         observer.current.disconnect();
       }
-
-      if (resizeTimerObserver.current) {
-        resizeTimerObserver.current.disconnect();
-      }
-
-      clearTimeout(resizingTimer.current);
     });
 
     useEffect(() => {
@@ -429,9 +409,10 @@ const ReqoreControlGroup = memo(
                   content: `Show ${React.Children.count(overflownChildren)} hidden items`,
                 }}
                 fixed
+                active={isOverflownDialogOpen}
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation();
-                  setIsOverflownDialogOpen(true);
+                  setIsOverflownDialogOpen(!isOverflownDialogOpen);
                 }}
                 flat
               />,
@@ -465,7 +446,6 @@ const ReqoreControlGroup = memo(
           vertical={vertical}
           style={{
             overflowX: responsive ? 'auto' : undefined,
-            visibility: isResizing ? 'hidden' : undefined,
             ...rest.style,
           }}
           size={size}

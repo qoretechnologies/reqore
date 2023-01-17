@@ -124,7 +124,6 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
 
   return (
     <ReqorePanel
-      {...args}
       badge={[
         10,
         0,
@@ -144,15 +143,25 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
       ]}
       actions={[
         {
-          label: 'Non responsive',
-          icon: '24HoursFill',
-          customTheme: { main: '#eb0e8c' },
           responsive: false,
+          group: [
+            {
+              label: 'Non responsive',
+              icon: '24HoursFill',
+              customTheme: { main: '#eb0e8c' },
+            },
+            {
+              icon: 'FullscreenExitLine',
+              customTheme: { main: '#a40a62' },
+            },
+          ],
         },
-        [
-          { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
-          { icon: 'CopperCoinFill', intent: 'danger' },
-        ],
+        {
+          group: [
+            { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
+            { icon: 'CopperCoinFill', intent: 'danger' },
+          ],
+        },
         {
           as: ReqoreInput,
           props: {
@@ -171,7 +180,14 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
         },
       ]}
       bottomActions={[
-        { label: 'Test', icon: '24HoursFill', position: 'left' },
+        {
+          position: 'left',
+          intent: 'success',
+          group: [
+            { label: 'Test 1', icon: '24HoursFill' },
+            { label: 'Test 2', icon: '24HoursFill' },
+          ],
+        },
         {
           label: 'More actions',
           position: 'right',
@@ -181,6 +197,7 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
           ],
         },
       ]}
+      {...args}
     >
       Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system
       of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant.
@@ -220,9 +237,33 @@ export const Flat = Template.bind({});
 Flat.args = {
   flat: true,
 };
-export const NoLabel: Story<IReqorePanelProps> = Template.bind({});
-NoLabel.args = {
+export const NoBars: Story<IReqorePanelProps> = Template.bind({});
+NoBars.args = {
   label: undefined,
+  badge: undefined,
+  icon: undefined,
+  actions: [
+    { label: 'test', show: false },
+    {
+      show: false,
+      group: [
+        { label: 'test 2', show: true },
+        { label: 'test 3', show: true },
+      ],
+    },
+  ],
+  bottomActions: [
+    { label: 'test', show: false, position: 'left' },
+    {
+      position: 'right',
+      show: false,
+      group: [
+        { label: 'test 2', show: true },
+        { label: 'test 3', show: true },
+      ],
+    },
+  ],
+  collapsible: false,
 };
 
 export const Transparent: Story<IReqorePanelProps> = Template.bind({});
