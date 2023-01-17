@@ -1,3 +1,9 @@
+<div align="center">
+  <br><br><br>
+  <img src="./public/qoreLogo.png" alt="Unstated Logo" width="500">
+  <br><br><br>
+</div>
+
 # Code of Conduct
 
 Qore Technologies use [Contributor Covenant v2.0](https://contributor-covenant.org/version/2/0/code_of_conduct) as their code of conduct. The full text is included [below](#contributor-covenant-code-of-conduct-v20) in English, and [translations](https://www.contributor-covenant.org/translations) are available on the Contributor Covenant website.

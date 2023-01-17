@@ -1,6 +1,6 @@
 <div align="center">
   <br><br><br>
-  <img src="./public/qoreLogo.png" alt="Unstated Logo" width="400">
+  <img src="./public/qoreLogo.png" alt="Unstated Logo" width="500">
   <br><br><br>
 </div>
 
@@ -66,7 +66,8 @@ We _love_ thorough bug reports so that we can act fast on them.
 ## Community
 
 - [GitHub Organization](https://github.com/qoretechnologies) for Official open-source projects
-- [Discord]() for support, discussion, news and latest release updates
+- [Discord](https://discord.gg/MWUwDKRR) for support, discussion, news and latest release updates
+- [Qore Technologies Website](https://www.qoretechnologies.com)
 
 ## License
 
