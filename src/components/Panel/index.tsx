@@ -181,12 +181,10 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
-  height: 40px;
+  min-height: 40px;
   align-items: center;
-  padding: ${({ noHorizontalPadding, contentSize }: IStyledPanel) =>
-    `0 ${noHorizontalPadding ? 0 : '5px'} 0 ${
-      noHorizontalPadding ? 0 : `${TEXT_FROM_SIZE[contentSize]}px`
-    }`};
+  padding: ${({ noHorizontalPadding, size }: IStyledPanel) =>
+    `${PADDING_FROM_SIZE[size]}px ${noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`}`};
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat
       ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
@@ -215,7 +213,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  padding: ${({ noHorizontalPadding }: IStyledPanel) => `0 ${noHorizontalPadding ? 0 : '5px'}`};
+  padding: ${({ noHorizontalPadding, size }: IStyledPanel) =>
+    `${PADDING_FROM_SIZE[size]}px ${noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`}`};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
@@ -225,21 +224,21 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none !important' : undefined)};
-  padding: ${({ padded, contentSize, noHorizontalPadding }) =>
+  padding: ${({ padded, size, noHorizontalPadding }) =>
     !padded
       ? undefined
       : noHorizontalPadding
-      ? `${TEXT_FROM_SIZE[contentSize]}px 0`
-      : `${TEXT_FROM_SIZE[contentSize]}px`};
+      ? `${PADDING_FROM_SIZE[size]}px 0`
+      : `${PADDING_FROM_SIZE[size]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
-  padding-top: ${({ minimal, hasLabel, padded, contentSize }) =>
-    minimal && hasLabel && padded ? `${TEXT_FROM_SIZE[contentSize] / 2}px` : undefined};
-  padding-bottom: ${({ minimal, padded, contentSize }) =>
-    minimal && padded ? `${TEXT_FROM_SIZE[contentSize]}px` : undefined};
+  padding-top: ${({ minimal, hasLabel, padded, size }) =>
+    minimal && hasLabel && padded ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
+  padding-bottom: ${({ minimal, padded, size }) =>
+    minimal && padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   flex: 1;
   overflow: auto;
-  font-size: ${({ contentSize }) => TEXT_FROM_SIZE[contentSize]}px;
+  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 `;
 
 export const StyledPanelTitleHeader = styled.div`
@@ -276,12 +275,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       contentEffect,
       headerEffect = {},
       headerSize = 4,
-      contentSize = 'normal',
+      contentSize,
       minimal,
       tooltip,
       badge,
       iconColor,
       fluid,
+      size: panelSize = 'normal',
       ...rest
     }: IReqorePanelProps,
     ref
@@ -344,13 +344,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     const hasNonResponsiveActions = useCallback(
       (data: (IReqorePanelAction[] | IReqorePanelAction)[]) =>
-        data.some((action) => !Array.isArray(action) && action.responsive === false),
+        data.some(
+          (action) => !Array.isArray(action) && action.responsive === false && action.show !== false
+        ),
       [actions, bottomActions]
     );
 
     const hasResponsiveActions = useCallback(
       (data: (IReqorePanelAction[] | IReqorePanelAction)[]) =>
-        data.some((action) => Array.isArray(action) || action.responsive !== false),
+        data.some(
+          (action) =>
+            Array.isArray(action) || (action.responsive !== false && action.show !== false)
+        ),
       [actions, bottomActions]
     );
 
@@ -505,7 +510,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             className='reqore-panel-title'
             onClick={handleCollapseClick}
             theme={theme}
-            contentSize={contentSize}
+            size={contentSize || panelSize}
             opacity={opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={noHorizontalPadding}
           >
@@ -536,22 +541,28 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 <>
                   <ButtonBadge
                     color={changeLightness(theme.main, 0.18)}
-                    size='big'
+                    size={panelSize}
                     content={badge}
                   />
-                  <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[panelSize]} />
                 </>
               ) : null}
             </StyledPanelTitleHeader>
             {hasResponsiveActions(actions) && (
-              <ReqoreControlGroup responsive fluid horizontalAlign='flex-end' customTheme={theme}>
+              <ReqoreControlGroup
+                responsive
+                fluid
+                horizontalAlign='flex-end'
+                customTheme={theme}
+                size={panelSize}
+              >
                 {actions.map(renderResponsiveActions)}
               </ReqoreControlGroup>
             )}
             {collapsible || onClose || hasNonResponsiveActions(actions) ? (
               <>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
-                <ReqoreControlGroup fixed horizontalAlign='flex-end'>
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE[panelSize]} />
+                <ReqoreControlGroup fixed horizontalAlign='flex-end' size={panelSize}>
                   {actions.map(renderNonResponsiveActions)}
                   {collapsible && (
                     <ReqoreButton
@@ -587,7 +598,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             style={contentStyle}
             padded={padded}
             minimal={minimal}
-            contentSize={contentSize}
+            size={contentSize || panelSize}
             noHorizontalPadding={noHorizontalPadding}
           >
             {children}
@@ -599,30 +610,37 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             className='reqore-panel-bottom-actions'
             theme={theme}
             opacity={opacity ?? (minimal ? 0 : 1)}
+            size={contentSize || panelSize}
             noHorizontalPadding={noHorizontalPadding}
           >
             {hasNonResponsiveActions(leftBottomActions) ? (
               <>
-                <ReqoreControlGroup>
+                <ReqoreControlGroup size={panelSize}>
                   {leftBottomActions.map(renderNonResponsiveActions)}
                 </ReqoreControlGroup>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE[panelSize]} />
               </>
             ) : null}
             {hasResponsiveActions(leftBottomActions) && (
-              <ReqoreControlGroup fluid responsive customTheme={theme}>
+              <ReqoreControlGroup fluid responsive customTheme={theme} size={panelSize}>
                 {leftBottomActions.map(renderResponsiveActions)}
               </ReqoreControlGroup>
             )}
             {hasResponsiveActions(rightBottomActions) && (
-              <ReqoreControlGroup fluid horizontalAlign='flex-end' responsive customTheme={theme}>
+              <ReqoreControlGroup
+                fluid
+                horizontalAlign='flex-end'
+                responsive
+                customTheme={theme}
+                size={panelSize}
+              >
                 {rightBottomActions.map(renderResponsiveActions)}
               </ReqoreControlGroup>
             )}
             {hasNonResponsiveActions(rightBottomActions) ? (
               <>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
-                <ReqoreControlGroup horizontalAlign='flex-end'>
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE[panelSize]} />
+                <ReqoreControlGroup horizontalAlign='flex-end' size={panelSize}>
                   {rightBottomActions.map(renderNonResponsiveActions)}
                 </ReqoreControlGroup>
               </>

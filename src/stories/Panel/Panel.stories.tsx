@@ -254,6 +254,16 @@ Fluid.args = {
   fluid: true,
 };
 
+export const Size: Story<IReqorePanelProps> = Template.bind({});
+Size.args = {
+  size: 'small',
+};
+
+export const ContentSize: Story<IReqorePanelProps> = Template.bind({});
+ContentSize.args = {
+  contentSize: 'big',
+};
+
 export const WithEffect: Story<IReqorePanelProps> = Template.bind({});
 WithEffect.args = {
   iconColor: 'info:lighten:2',
