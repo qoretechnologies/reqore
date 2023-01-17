@@ -160,10 +160,10 @@ const ReqoreControlGroup = memo(
 
     const checkIfOverflowing = useCallback(() => {
       return (
+        ref.current &&
         ref.current.clientWidth > 40 &&
         !vertical &&
         responsive &&
-        ref.current &&
         ref.current.scrollWidth > ref.current.clientWidth
       );
     }, [vertical, responsive, ref, children]);
