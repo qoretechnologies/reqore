@@ -6,7 +6,7 @@ import { IReqoreIconName } from '../../types/icons';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreInput from '../Input';
 import ReqoreMessage from '../Message';
-import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../Panel';
+import { IReqorePanelAction, IReqorePanelProps, ReqorePanel, TReqorePanelActions } from '../Panel';
 import { sortTableData } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 
@@ -134,10 +134,29 @@ export const ReqoreCollection = ({
   };
 
   const finalItems = filteredItems;
-  const finalActions: (IReqorePanelAction[] | IReqorePanelAction)[] = useMemo(() => {
-    let actions: (IReqorePanelAction[] | IReqorePanelAction)[] = rest.actions
-      ? [...rest.actions]
-      : [];
+  const finalActions: TReqorePanelActions = useMemo(() => {
+    let actions: TReqorePanelActions = rest.actions ? [...rest.actions] : [];
+
+    const toolbarGroup: IReqorePanelAction = {
+      responsive: false,
+      group: [
+        {
+          icon: _showAs === 'grid' ? 'ListOrdered' : 'GridLine',
+          onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
+          tooltip: _showAs === 'grid' ? 'Show as list' : 'Show as grid',
+          disabled: !size(finalItems),
+        },
+      ],
+    };
+
+    if (sortable) {
+      toolbarGroup.group.push({
+        icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
+        onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
+        tooltip: sort === 'desc' ? 'Sort ascending' : 'Sort descending',
+        disabled: !size(finalItems),
+      });
+    }
 
     if (filterable) {
       actions = [
@@ -156,29 +175,7 @@ export const ReqoreCollection = ({
       ];
     }
 
-    if (sortable) {
-      actions = [
-        ...actions,
-        {
-          icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
-          onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
-          tooltip: sort === 'desc' ? 'Sort ascending' : 'Sort descending',
-          disabled: !size(finalItems),
-          responsive: false,
-        },
-      ];
-    }
-
-    return [
-      ...actions,
-      {
-        icon: _showAs === 'grid' ? 'ListOrdered' : 'GridLine',
-        onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
-        tooltip: _showAs === 'grid' ? 'Show as list' : 'Show as grid',
-        disabled: !size(finalItems),
-        responsive: false,
-      },
-    ];
+    return [...actions, toolbarGroup];
   }, [filterable, handleQueryChange, query, rest.actions, _showAs, sort, sortable, finalItems]);
 
   return (

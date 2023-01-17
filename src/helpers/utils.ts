@@ -8,6 +8,7 @@ import {
   isString,
   isUndefined,
 } from 'lodash';
+import { IReqorePanelAction } from '../components/Panel';
 import { NUMBER_TO_SIZE, SIZES, SIZE_TO_NUMBER, TSizes } from '../constants/sizes';
 
 export const sleep = async (ms: number) => await new Promise((r) => setTimeout(r, ms));
@@ -88,3 +89,5 @@ export const getOneLessSize = (size: TSizes): TSizes => {
   // Get the size name from the number
   return NUMBER_TO_SIZE[oneLessSizeNumber];
 };
+
+export const isActionShown = (action: IReqorePanelAction) => action.show !== false;

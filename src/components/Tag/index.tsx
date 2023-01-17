@@ -26,6 +26,7 @@ import {
   IReqoreDisabled,
   IReqoreIntent,
   IWithReqoreEffect,
+  IWithReqoreFixed,
   IWithReqoreFluid,
   IWithReqoreMinimal,
   IWithReqoreTooltip,
@@ -46,7 +47,8 @@ export interface IReqoreTagProps
     IReqoreDisabled,
     IWithReqoreEffect,
     IWithReqoreMinimal,
-    IWithReqoreFluid {
+    IWithReqoreFluid,
+    IWithReqoreFixed {
   size?: TSizes;
   label?: string | number;
   labelKey?: string | number;
