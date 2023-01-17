@@ -14,6 +14,7 @@ export interface IReqoreContext {
   readonly animations?: IReqoreOptions['animations'];
   readonly tooltips?: IReqoreOptions['tooltips'];
   readonly closePopoversOnEscPress?: boolean;
+  readonly latestZIndex?: number;
 }
 
 export default createContext<IReqoreContext>({
