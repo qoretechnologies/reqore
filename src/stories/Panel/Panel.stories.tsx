@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
-import { FlatArg, IconArg, IntentArg, argManager } from '../utils/args';
+import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -12,6 +12,7 @@ export default {
   argTypes: {
     ...IntentArg,
     ...FlatArg,
+    ...SizeArg,
     ...createArg('padded', {
       type: 'boolean',
       defaultValue: true,
@@ -49,8 +50,8 @@ export default {
       description: 'The opacity of the panel',
     }),
     ...createArg('headerSize', {
-      type: 'number',
-      defaultValue: 4,
+      type: 'string',
+      defaultValue: undefined,
       name: 'Header Size',
       description: 'The size of the header',
     }),

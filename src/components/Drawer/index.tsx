@@ -27,7 +27,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size'> {
   onClose?: () => void;
   onHideToggle?: (isHidden: boolean) => void;
   hasBackdrop?: boolean;
-  size?: string;
+  size?: string | 'auto';
   maxSize?: string;
   minSize?: string;
   opacity?: number;

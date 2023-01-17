@@ -5,6 +5,7 @@ import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
   GAP_FROM_SIZE,
+  HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
@@ -181,7 +182,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
-  min-height: 40px;
+  min-height: 20px;
   align-items: center;
   padding: ${({ noHorizontalPadding, size }: IStyledPanel) =>
     `${PADDING_FROM_SIZE[size]}px ${noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`}`};
@@ -274,7 +275,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       contentStyle,
       contentEffect,
       headerEffect = {},
-      headerSize = 4,
+      headerSize,
       contentSize,
       minimal,
       tooltip,
@@ -517,7 +518,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             <StyledPanelTitleHeader>
               {icon && (
                 <ReqoreIcon
-                  size={`${ICON_FROM_HEADER_SIZE[headerSize]}px`}
+                  size={`${
+                    ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                  }px`}
                   icon={icon}
                   margin='right'
                   color={iconColor}
@@ -525,7 +528,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               )}
               {typeof label === 'string' ? (
                 <ReqoreHeading
-                  size={headerSize}
+                  size={headerSize || panelSize}
                   customTheme={theme}
                   effect={{
                     noWrap: true,
@@ -544,7 +547,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     size={panelSize}
                     content={badge}
                   />
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[panelSize]} />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
                 </>
               ) : null}
             </StyledPanelTitleHeader>
@@ -561,7 +564,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             )}
             {collapsible || onClose || hasNonResponsiveActions(actions) ? (
               <>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE[panelSize]} />
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
                 <ReqoreControlGroup fixed horizontalAlign='flex-end' size={panelSize}>
                   {actions.map(renderNonResponsiveActions)}
                   {collapsible && (
@@ -618,7 +621,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 <ReqoreControlGroup size={panelSize}>
                   {leftBottomActions.map(renderNonResponsiveActions)}
                 </ReqoreControlGroup>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE[panelSize]} />
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
               </>
             ) : null}
             {hasResponsiveActions(leftBottomActions) && (
@@ -639,7 +642,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             )}
             {hasNonResponsiveActions(rightBottomActions) ? (
               <>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE[panelSize]} />
+                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
                 <ReqoreControlGroup horizontalAlign='flex-end' size={panelSize}>
                   {rightBottomActions.map(renderNonResponsiveActions)}
                 </ReqoreControlGroup>

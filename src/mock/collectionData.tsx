@@ -53,8 +53,9 @@ export default [
   },
   {
     icon: 'TextWrap',
-    label: 'Item that is not minimal',
+    label: 'Small item that is not minimal',
     tooltip: 'This is a test item',
+    size: 'small',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     minimal: false,
