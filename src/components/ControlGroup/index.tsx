@@ -465,7 +465,6 @@ const ReqoreControlGroup = memo(
           vertical={vertical}
           style={{
             overflowX: responsive ? 'auto' : undefined,
-            visibility: isResizing ? 'hidden' : undefined,
             ...rest.style,
           }}
           size={size}
