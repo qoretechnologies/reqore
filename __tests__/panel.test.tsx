@@ -128,3 +128,30 @@ test('Renders <Panel /> with actions', () => {
   expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(2);
   expect(document.querySelectorAll('.reqore-input').length).toBe(1);
 });
+
+test('Renders <Panel /> without actions group if all actins are not shown', () => {
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqorePanel
+          label='Test'
+          actions={[
+            { label: 'Test', show: false },
+            { actions: [{ label: 'Deep', value: 'deep' }], show: false },
+            { as: ReqoreInput, show: false },
+            { label: 'hidden', show: false },
+          ]}
+        >
+          Panel
+        </ReqorePanel>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-control-group').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-input').length).toBe(0);
+});

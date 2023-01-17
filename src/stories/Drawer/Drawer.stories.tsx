@@ -9,7 +9,7 @@ import {
   ReqoreTabs,
   ReqoreTabsContent,
 } from '../../index';
-import { argManager, FlatArg, IntentArg } from '../utils/args';
+import { FlatArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreDrawerProps>();
 
@@ -46,7 +46,7 @@ export default {
       options: ['left', 'right', 'top', 'bottom'],
     }),
     ...createArg('size', {
-      defaultValue: '450px',
+      defaultValue: 'auto',
       name: 'Size',
       type: 'string',
     }),
@@ -178,4 +178,8 @@ Floating.args = {
 export const Transparent = Template.bind({});
 Transparent.args = {
   opacity: 0.5,
+};
+export const WithSize = Template.bind({});
+WithSize.args = {
+  size: '350px',
 };

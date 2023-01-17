@@ -109,9 +109,9 @@ export const PADDING_FROM_SIZE = {
 };
 
 export const RADIUS_FROM_SIZE = {
-  tiny: 1,
-  small: 3,
-  normal: 5,
+  tiny: 4,
+  small: 5,
+  normal: 5.5,
   big: 7,
   huge: 9,
 };

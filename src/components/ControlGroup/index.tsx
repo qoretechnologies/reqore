@@ -2,7 +2,7 @@ import { debounce } from 'lodash';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqoreButton, ReqoreModal } from '../..';
+import { ReqoreButton, ReqoreDrawer } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
@@ -160,10 +160,10 @@ const ReqoreControlGroup = memo(
 
     const checkIfOverflowing = useCallback(() => {
       return (
+        ref.current &&
         ref.current.clientWidth > 40 &&
         !vertical &&
         responsive &&
-        ref.current &&
         ref.current.scrollWidth > ref.current.clientWidth
       );
     }, [vertical, responsive, ref, children]);
@@ -427,7 +427,6 @@ const ReqoreControlGroup = memo(
                 customTheme={customTheme}
                 tooltip={{
                   content: `Show ${React.Children.count(overflownChildren)} hidden items`,
-                  closeOnAnyClick: true,
                 }}
                 fixed
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
@@ -444,19 +443,22 @@ const ReqoreControlGroup = memo(
     return (
       <>
         {isOverflownDialogOpen ? (
-          <ReqoreModal
+          <ReqoreDrawer
             isOpen
             onClose={() => setIsOverflownDialogOpen(false)}
             flat
+            floating
             minimal
+            position='bottom'
             hasBackdrop={false}
-            intent='info'
             label='Hidden items'
+            minSize='100px'
+            size='auto'
           >
             <ReqoreControlGroup fluid wrap>
               {overflownChildren}
             </ReqoreControlGroup>
-          </ReqoreModal>
+          </ReqoreDrawer>
         ) : null}
         <StyledReqoreControlGroup
           {...rest}

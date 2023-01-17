@@ -35,6 +35,49 @@ test('Renders full <Tabs /> properly', () => {
 });
 
 test('Renders shortened <Tabs /> properly', () => {
+  const fn = jest.fn();
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs
+            _testWidth={300}
+            onTabChange={fn}
+            tabs={[
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+              { label: 'Tab 3', icon: 'Home3Line', id: 'tab3' },
+              { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+              { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
+            ]}
+          >
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab3'>Tab 3 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab4'>Tab 4 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab5'>Tab 5 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-tabs-list-item-menu').length).toBe(1);
+
+  fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-menu').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(4);
+
+  fireEvent.click(document.querySelectorAll('.reqore-menu-item')[0]);
+
+  expect(fn).toBeCalledTimes(1);
+  expect(fn).toBeCalledWith('tab2');
+});
+
+test('Can select hidden <Tabs /> when shortened', () => {
   act(() => {
     render(
       <ReqoreUIProvider>

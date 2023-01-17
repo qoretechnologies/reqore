@@ -74,7 +74,13 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
 
     return (
       <ReqoreThemeProvider theme={theme}>
-        <StyledReqoreMenu {...rest} position={position} ref={ref} theme={theme}>
+        <StyledReqoreMenu
+          {...rest}
+          position={position}
+          ref={ref}
+          theme={theme}
+          className={`${rest.className || ''} reqore-menu`}
+        >
           {React.Children.map(children, (child) => {
             return child
               ? // @ts-ignore
