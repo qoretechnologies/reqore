@@ -472,7 +472,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const transformedContentEffect: IReqoreEffect = useMemo(() => {
       const newContentEffect: IReqoreEffect = { ...contentEffect };
 
-      if (newContentEffect?.gradient) {
+      if (newContentEffect.gradient) {
         newContentEffect.gradient.borderColor = intent
           ? theme.intents[intent]
           : newContentEffect.gradient.borderColor;

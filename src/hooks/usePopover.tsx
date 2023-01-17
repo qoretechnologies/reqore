@@ -102,7 +102,7 @@ const usePopover = ({
       ...rest,
     });
 
-    if (rest?.blur > 0) {
+    if (rest.blur > 0) {
       targetElement.style.position = 'relative';
       targetElement.style.zIndex = '999999';
     }
@@ -111,7 +111,7 @@ const usePopover = ({
   const _addPopover = () => {
     if (currentPopover) {
       if (handler !== 'hoverStay' && handler !== 'focus') {
-        _removePopover?.();
+        _removePopover();
       }
     } else if (show) {
       if (delay || tooltips.delay) {
