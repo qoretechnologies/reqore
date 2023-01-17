@@ -237,11 +237,33 @@ export const Flat = Template.bind({});
 Flat.args = {
   flat: true,
 };
-export const NoTitle: Story<IReqorePanelProps> = Template.bind({});
-NoTitle.args = {
+export const NoBars: Story<IReqorePanelProps> = Template.bind({});
+NoBars.args = {
   label: undefined,
   badge: undefined,
-  actions: [{ label: 'test', show: false }],
+  icon: undefined,
+  actions: [
+    { label: 'test', show: false },
+    {
+      show: false,
+      group: [
+        { label: 'test 2', show: true },
+        { label: 'test 3', show: true },
+      ],
+    },
+  ],
+  bottomActions: [
+    { label: 'test', show: false, position: 'left' },
+    {
+      position: 'right',
+      show: false,
+      group: [
+        { label: 'test 2', show: true },
+        { label: 'test 3', show: true },
+      ],
+    },
+  ],
+  collapsible: false,
 };
 
 export const Transparent: Story<IReqorePanelProps> = Template.bind({});

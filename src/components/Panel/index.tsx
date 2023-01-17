@@ -309,7 +309,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     // Return true if the card has a title bar, otherwise return false.
     const hasTitleBar: boolean = useMemo(
-      () => !!label || collapsible || !!onClose || !!size(actions.filter(isActionShown)) || !!badge,
+      () =>
+        !!label ||
+        collapsible ||
+        !!onClose ||
+        !!size(actions.filter(isActionShown)) ||
+        !!badge ||
+        !!icon,
       [label, collapsible, onClose, actions, badge]
     );
 
