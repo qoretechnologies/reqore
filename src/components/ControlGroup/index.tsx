@@ -427,7 +427,6 @@ const ReqoreControlGroup = memo(
                 customTheme={customTheme}
                 tooltip={{
                   content: `Show ${React.Children.count(overflownChildren)} hidden items`,
-                  closeOnAnyClick: true,
                 }}
                 fixed
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) => {

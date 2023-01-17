@@ -98,7 +98,7 @@ const usePopover = ({
       noArrow,
       useTargetWidth,
       closeOnOutsideClick,
-      closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
+      closeOnAnyClick: handler === 'hover',
       ...rest,
     });
 
@@ -144,7 +144,7 @@ const usePopover = ({
         noArrow,
         useTargetWidth,
         closeOnOutsideClick,
-        closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
+        closeOnAnyClick: handler === 'hover',
         ...rest,
       });
     }

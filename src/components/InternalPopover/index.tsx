@@ -1,4 +1,4 @@
-import { isString } from 'lodash';
+import { cloneDeep, isString } from 'lodash';
 import { rgba } from 'polished';
 import React, { MutableRefObject, memo, useContext, useEffect, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
@@ -187,7 +187,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
 
     useEffect(() => {
       if (popperRef.current) {
-        updatePopover?.(id, { popperRef });
+        updatePopover?.(id, { popperRef: cloneDeep(popperRef) });
       }
     }, [popperRef]);
 
