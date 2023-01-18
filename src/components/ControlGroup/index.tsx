@@ -69,7 +69,7 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   // we need to make sure that the children are vertically stretched
   // kind of like 'fluid' but vertically
   // ! Only works when the group is horizontal & wrap is false
-  ${({ fill, vertical, wrap }) => {
+  ${({ fill, vertical }) => {
     if (fill && !vertical) {
       return css`
         > * {
