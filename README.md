@@ -13,7 +13,7 @@ Reqore is a UI library based on React which can be used with any React project t
 ## Installation
 
 Before installing, [download and install Node.js](https://nodejs.org/en/download/).
-Node.js 19.0 or higher is required.
+ Latest stable Node.js is required.
 
 Install the library using
 
