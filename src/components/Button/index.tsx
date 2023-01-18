@@ -11,7 +11,7 @@ import {
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import ReqoreContext from '../../context/ReqoreContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
-import { getOneLessSize } from '../../helpers/utils';
+import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreEffect } from '../../hooks/useReqoreEffect';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -92,10 +92,10 @@ const getButtonMainColor = (theme: IReqoreTheme, color?: TReqoreHexColor) => {
 export const StyledAnimatedTextWrapper = styled.span`
   overflow: hidden;
   position: relative;
-  text-align: left;
+  text-align: ${({ textAlign }) => textAlign};
   display: flex;
   flex-flow: column;
-  align-items: flex-start;
+  align-items: ${({ textAlign }) => alignToFlexAlign(textAlign)};
 `;
 
 export const StyledActiveContent = styled(StyledTextEffect)`

@@ -77,12 +77,22 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton
           {...buttonProps}
           textAlign='center'
-          maxWidth='200px'
-          badge="I'm a badge"
+          maxWidth='250px'
+          badge='10'
           wrap
           description='I am a button with a center aligned text and description'
         >
-          Center text
+          Center
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          textAlign='center'
+          maxWidth='200px'
+          badge="I'm a badge, baby"
+          wrap
+          description='I am a button with a center aligned text and description'
+        >
+          Center text with a longer text
         </ReqoreButton>
         <ReqoreButton
           {...buttonProps}
