@@ -204,10 +204,10 @@ const ReqoreTabsList = ({
                     label: getMoreLabel(item, activeTab),
                     active: !!isTabHidden(item, activeTab),
                     activeIntent: activeTabIntent,
+                    intent: !!isTabHidden(item, activeTab) ? activeTabData?.intent : undefined,
+                    effect: !!isTabHidden(item, activeTab) ? activeTabData?.effect : undefined,
                     customTheme: !!isTabHidden(item, activeTab)
-                      ? {
-                          main: currentTabColor,
-                        }
+                      ? activeTabData?.customTheme
                       : theme,
                     vertical,
                     flat,

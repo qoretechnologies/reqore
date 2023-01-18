@@ -93,6 +93,7 @@ export const StyledAnimatedTextWrapper = styled.span`
   overflow: hidden;
   position: relative;
   text-align: left;
+  display: grid;
 `;
 
 export const StyledActiveContent = styled(StyledTextEffect)`
@@ -243,24 +244,32 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
         `
       : undefined}
 
-  ${({ active, flat, theme, color }: IReqoreButtonStyle) =>
-    active &&
-    css`
-      cursor: pointer;
-      background-color: ${changeLightness(getButtonMainColor(theme, color), 0.1)};
-      color: ${getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
-      border-color: ${flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.175)};
-
-      &:hover,
-      &:active,
-      &:focus {
+  ${({ active, flat, theme, color }: IReqoreButtonStyle) => {
+    if (active) {
+      return css`
+        cursor: pointer;
+        background-color: ${changeLightness(getButtonMainColor(theme, color), 0.1)};
+        color: ${getReadableColor(
+          { main: changeLightness(getButtonMainColor(theme, color), 0.1) },
+          undefined,
+          undefined
+        )};
         border-color: ${flat
           ? undefined
-          : changeLightness(getButtonMainColor(theme, color), 0.275)};
-      }
+          : changeLightness(getButtonMainColor(theme, color), 0.175)};
 
-      ${ActiveIconScale}
-    `}
+        &:hover,
+        &:active,
+        &:focus {
+          border-color: ${flat
+            ? undefined
+            : changeLightness(getButtonMainColor(theme, color), 0.275)};
+        }
+
+        ${ActiveIconScale}
+      `;
+    }
+  }}
 
   &:disabled {
     ${DisabledElement};
@@ -402,10 +411,14 @@ const ReqoreButton = memo(
       return (
         <StyledButton
           {...rest}
-          effect={{
-            interactive: !readOnly && !rest.disabled,
-            ...fixedEffect,
-          }}
+          effect={
+            intent
+              ? undefined
+              : {
+                  interactive: !readOnly && !rest.disabled,
+                  ...fixedEffect,
+                }
+          }
           as='button'
           theme={theme}
           ref={targetRef}

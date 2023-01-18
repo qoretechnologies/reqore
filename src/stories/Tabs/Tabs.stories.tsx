@@ -238,6 +238,7 @@ Fill.args = {
 export const CustomActiveIntent = Template.bind({});
 CustomActiveIntent.args = {
   activeTabIntent: 'warning',
+  activeTab: 'tab8',
 };
 
 export const NotFlat = Template.bind({});
