@@ -86,6 +86,20 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
             Remove
           </ReqoreButton>
         </ReqoreControlGroup>
+        <ReqoreVerticalSpacer height={10} />
+        <ReqoreControlGroup {...args} stack fluid>
+          <ReqoreButton
+            icon='PictureInPictureLine'
+            description='Here is a really weird and long description that needs to stretch the button a little bit so we can get some idea on how the other buttons are going to react.'
+          >
+            Please select
+          </ReqoreButton>
+          <ReqoreButton icon='AddLine' intent='info' fixed />
+          <ReqoreButton fixed>Edit</ReqoreButton>
+          <ReqoreButton icon='DeleteBinLine' intent='danger' fixed>
+            Remove
+          </ReqoreButton>
+        </ReqoreControlGroup>
       </>
     );
   }
