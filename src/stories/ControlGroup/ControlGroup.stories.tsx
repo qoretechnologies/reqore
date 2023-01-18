@@ -9,7 +9,7 @@ import {
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
-import { argManager, GapSizeArg, MinimalArg, SizeArg } from '../utils/args';
+import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
@@ -47,6 +47,34 @@ export default {
 } as Meta<IReqoreControlGroupProps>;
 
 const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProps) => {
+  if (args.fill) {
+    return (
+      <ReqoreControlGroup {...args} stack>
+        <ReqoreButton icon='PictureInPictureLine' description='I will be a bit larger'>
+          Button
+        </ReqoreButton>
+        <ReqoreControlGroup stack>
+          <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+          <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+        </ReqoreControlGroup>
+        <ReqoreControlGroup stack>
+          <ReqoreControlGroup>
+            <ReqoreInput customTheme={{ main: '#00e3e8' }} placeholder='Level 2 deep' />
+            <ReqoreControlGroup fixed>
+              <ReqoreButton disabled fixed id='test'>
+                Level 3 deep and fixed
+              </ReqoreButton>
+            </ReqoreControlGroup>
+          </ReqoreControlGroup>
+          <ReqoreButton intent='danger'>Level 1 deep</ReqoreButton>
+          <ReqoreCheckbox checked margin='both' label='Level 1 deep' />
+        </ReqoreControlGroup>
+        <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
+        <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+      </ReqoreControlGroup>
+    );
+  }
+
   if (args.responsive) {
     return (
       <div style={{ width: 600 }}>
@@ -225,6 +253,11 @@ Minimal.args = {
 export const Fluid = Template.bind({});
 Fluid.args = {
   fluid: true,
+};
+
+export const Fill = Template.bind({});
+Fill.args = {
+  fill: true,
 };
 
 export const NotFlat = Template.bind({});
