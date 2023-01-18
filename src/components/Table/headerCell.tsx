@@ -4,9 +4,9 @@ import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { alignToFlexAlign } from '../../helpers/utils';
 import { useTooltip } from '../../hooks/useTooltip';
 import ReqoreIcon from '../Icon';
-import { alignToFlex } from './row';
 
 export interface IReqoreTableHeaderCellProps
   extends React.HTMLAttributes<HTMLDivElement>,
@@ -32,7 +32,7 @@ export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
 
   ${({ align, theme }) => css`
     background-color: ${changeLightness(theme.main, 0.03)};
-    justify-content: ${align ? alignToFlex[align] : 'flex-start'};
+    justify-content: ${align ? alignToFlexAlign(align) : 'flex-start'};
   `}
 
   ${({ interactive, theme }) =>
