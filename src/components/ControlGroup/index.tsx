@@ -56,11 +56,11 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 
 export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
-  flex: 0 auto;
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   justify-content: ${({ fluid, vertical }) => (vertical && fluid ? 'stretch' : undefined)};
-  align-items: ${({ vertical, fluid, horizontalAlign }) =>
-    vertical ? (fluid ? 'stretch' : horizontalAlign) : undefined};
+  align-items: ${({ vertical, fluid }) =>
+    vertical ? (fluid ? 'stretch' : undefined) : undefined};
   flex-flow: ${({ vertical }) => (vertical ? 'column' : 'row')};
   gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
   flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};

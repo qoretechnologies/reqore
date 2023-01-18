@@ -133,8 +133,9 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           flat={false}
           effect={{ gradient: { colors: { 0: 'success', 100: 'info:darken:1' } } }}
           description="With a description, it's a bit longer than the button itself"
+          fixed
         >
-          Non flat Button
+          Non flat fixed Button
         </ReqoreButton>
         <ReqoreControlGroup stack>
           <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
