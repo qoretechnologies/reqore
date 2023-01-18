@@ -96,6 +96,9 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
     newTheme.main = '#333333';
   }
 
+  // Add the original theme main color to the theme
+  newTheme.originalMain = newTheme.main;
+
   if (!newTheme.notifications?.info) {
     newTheme.notifications.info = newTheme.intents.info || DEFAULT_INTENTS.info;
   }
@@ -200,7 +203,8 @@ export const createEffectGradient = (
   theme: IReqoreTheme,
   colors: TReqoreEffectGradientColors,
   lighten: number = 0,
-  minimal?: boolean
+  minimal?: boolean,
+  active?: boolean
 ): string => {
   let _colors: TReqoreEffectGradientColorsObject;
   // Check if the colors are valid
@@ -219,7 +223,9 @@ export const createEffectGradient = (
     (colorsString, color, percentage) => {
       return `${colorsString}, ${
         minimal
-          ? theme.originalMain
+          ? active
+            ? theme.originalMain
+            : changeLightness(theme.originalMain, lighten)
           : changeLightness(getColorFromMaybeString(theme, color), lighten)
       } ${percentage}%`;
     },

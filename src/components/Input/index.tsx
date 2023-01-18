@@ -60,10 +60,11 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
 
 export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   height: ${({ _size }) => SIZE_TO_PX[_size]}px;
-  width: ${({ width, fluid, fixed }) => (width ? `${width}px` : fluid && !fixed ? '100%' : 'auto')};
+  width: ${({ width }) => (width ? `${width}px` : 'auto')};
   max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   min-width: 60px;
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 1 auto')};
+  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   position: relative;
   overflow: hidden;

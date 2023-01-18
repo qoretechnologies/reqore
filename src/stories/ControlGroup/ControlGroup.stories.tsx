@@ -9,7 +9,7 @@ import {
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
-import { argManager, GapSizeArg, MinimalArg, SizeArg } from '../utils/args';
+import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
@@ -47,6 +47,63 @@ export default {
 } as Meta<IReqoreControlGroupProps>;
 
 const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProps) => {
+  if (args.fill) {
+    return (
+      <>
+        <ReqoreControlGroup {...args} stack>
+          <ReqoreButton icon='PictureInPictureLine' description='I will be a bit larger'>
+            Button
+          </ReqoreButton>
+          <ReqoreControlGroup stack>
+            <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
+            <ReqoreTag label='A wild tag appears!' color='main:lighten:2' />
+          </ReqoreControlGroup>
+          <ReqoreControlGroup stack>
+            <ReqoreControlGroup>
+              <ReqoreInput customTheme={{ main: '#00e3e8' }} placeholder='Level 2 deep' />
+              <ReqoreControlGroup fixed>
+                <ReqoreButton disabled fixed id='test'>
+                  Level 3 deep and fixed
+                </ReqoreButton>
+              </ReqoreControlGroup>
+            </ReqoreControlGroup>
+            <ReqoreCheckbox checked margin='both' label='Level 1 deep' />
+            <ReqoreButton intent='danger'>Level 1 deep</ReqoreButton>
+          </ReqoreControlGroup>
+        </ReqoreControlGroup>
+        <ReqoreVerticalSpacer height={10} />
+        <ReqoreControlGroup {...args} stack>
+          <ReqoreButton
+            icon='PictureInPictureLine'
+            description='Here is a really weird and long description that needs to stretch the button a little bit so we can get some idea on how the other buttons are going to react.'
+            maxWidth='400px'
+          >
+            Please select
+          </ReqoreButton>
+          <ReqoreButton icon='AddLine' intent='info' />
+          <ReqoreButton>Edit</ReqoreButton>
+          <ReqoreButton icon='DeleteBinLine' intent='danger'>
+            Remove
+          </ReqoreButton>
+        </ReqoreControlGroup>
+        <ReqoreVerticalSpacer height={10} />
+        <ReqoreControlGroup {...args} stack fluid>
+          <ReqoreButton
+            icon='PictureInPictureLine'
+            description='Here is a really weird and long description that needs to stretch the button a little bit so we can get some idea on how the other buttons are going to react.'
+          >
+            Please select
+          </ReqoreButton>
+          <ReqoreButton icon='AddLine' intent='info' fixed />
+          <ReqoreButton fixed>Edit</ReqoreButton>
+          <ReqoreButton icon='DeleteBinLine' intent='danger' fixed>
+            Remove
+          </ReqoreButton>
+        </ReqoreControlGroup>
+      </>
+    );
+  }
+
   if (args.responsive) {
     return (
       <div style={{ width: 600 }}>
@@ -90,8 +147,9 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
           flat={false}
           effect={{ gradient: { colors: { 0: 'success', 100: 'info:darken:1' } } }}
           description="With a description, it's a bit longer than the button itself"
+          fixed
         >
-          Non flat Button
+          Non flat fixed Button
         </ReqoreButton>
         <ReqoreControlGroup stack>
           <ReqoreButton maxWidth='300px'>Button with max width</ReqoreButton>
@@ -225,6 +283,11 @@ Minimal.args = {
 export const Fluid = Template.bind({});
 Fluid.args = {
   fluid: true,
+};
+
+export const Fill = Template.bind({});
+Fill.args = {
+  fill: true,
 };
 
 export const NotFlat = Template.bind({});

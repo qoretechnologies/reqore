@@ -114,10 +114,16 @@ export const StyledEffect = styled.span`
     const gradientColors = createEffectGradient(
       theme,
       effect.gradient.colors,
-      0,
+      minimal ? 0.05 : 0,
       !isText && minimal && !active
     );
-    const gradientColorsActive = createEffectGradient(theme, effect.gradient.colors, 0.05);
+    const gradientColorsActive = createEffectGradient(
+      theme,
+      effect.gradient.colors,
+      0.05,
+      minimal,
+      true
+    );
 
     const gradientDirectionOrShape =
       gradientType === 'linear'
@@ -167,16 +173,17 @@ export const StyledEffect = styled.span`
       background: ${active ? gradientActive : gradient};
       border-color: ${borderColor} !important;
 
-      ${color &&
-      css`
-        color: ${getReadableColorFrom(getColorFromMaybeString(theme, color), false)} !important;
-        &::placeholder {
-          color: ${rgba(
-            getReadableColorFrom(getColorFromMaybeString(theme, color), false),
-            0.7
-          )} !important;
-        }
-      `}
+      ${color && !minimal
+        ? css`
+            color: ${getReadableColorFrom(getColorFromMaybeString(theme, color), false)} !important;
+            &::placeholder {
+              color: ${rgba(
+                getReadableColorFrom(getColorFromMaybeString(theme, color), false),
+                0.7
+              )} !important;
+            }
+          `
+        : undefined}
 
       ${effect.gradient.animate === 'always' || (effect.gradient.animate === 'active' && active)
         ? css`
@@ -365,9 +372,9 @@ export const ReqoreEffect = ({ children, ...rest }: IReqoreTextEffectProps) => {
   );
 };
 
-export const ReqoreTextEffect = ({ children, ...rest }: IReqoreTextEffectProps) => {
+export const ReqoreTextEffect = ({ children, className, ...rest }: IReqoreTextEffectProps) => {
   return (
-    <StyledTextEffect className='reqore-text-effect' {...rest}>
+    <StyledTextEffect className={`${className || ''} reqore-text-effect`} {...rest}>
       {children}
     </StyledTextEffect>
   );

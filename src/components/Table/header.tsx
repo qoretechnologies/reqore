@@ -2,9 +2,9 @@ import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
+import { alignToFlexAlign } from '../../helpers/utils';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTableHeaderCell, { StyledTableHeader } from './headerCell';
-import { alignToFlex } from './row';
 
 export interface IReqoreTableSectionProps {
   columns: IReqoreTableColumn[];
@@ -46,7 +46,7 @@ export interface IReqoreTableHeaderStyle {
 export const StyledColumnGroupHeader = styled.div<IReqoreTableHeaderStyle>`
   ${({ align, theme }) => css`
     background-color: ${changeLightness(theme.main, 0.035)};
-    justify-content: ${align ? alignToFlex[align] : 'flex-start'};
+    justify-content: ${align ? alignToFlexAlign(align) : 'flex-start'};
   `}
 `;
 

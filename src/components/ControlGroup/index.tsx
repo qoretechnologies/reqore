@@ -47,6 +47,7 @@ export interface IReqoreControlGroupProps
   isChild?: boolean;
   isFirstGroup?: boolean;
   isLastGroup?: boolean;
+  fill?: boolean;
 }
 
 export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
@@ -55,7 +56,7 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 
 export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
-  flex: 0 auto;
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   justify-content: ${({ fluid, vertical }) => (vertical && fluid ? 'stretch' : undefined)};
   align-items: ${({ vertical, fluid, horizontalAlign }) =>
@@ -64,11 +65,29 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
   flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};
 
+  // If the group has the fill prop,
+  // we need to make sure that the children are vertically stretched
+  // kind of like 'fluid' but vertically
+  // ! Only works when the group is horizontal & wrap is false
+  ${({ fill, vertical }) => {
+    if (fill && !vertical) {
+      return css`
+        > * {
+          max-height: 100%;
+          height: unset !important;
+          align-self: stretch;
+        }
+      `;
+    }
+
+    return undefined;
+  }}
+
   > * {
-    margin-top: ${({ verticalAlign }) =>
-      verticalAlign === 'flex-end' || verticalAlign === 'center' ? 'auto' : undefined};
-    margin-bottom: ${({ verticalAlign }) =>
-      verticalAlign === 'flex-start' || verticalAlign === 'center' ? 'auto' : undefined};
+    margin-top: ${({ fill, verticalAlign }) =>
+      !fill && (verticalAlign === 'flex-end' || verticalAlign === 'center') ? 'auto' : undefined};
+    margin-bottom: ${({ fill, verticalAlign }) =>
+      !fill && (verticalAlign === 'flex-start' || verticalAlign === 'center') ? 'auto' : undefined};
     margin-right: ${({ horizontalAlign }) => (horizontalAlign === 'center' ? 'auto' : undefined)};
 
     ${({ vertical }) =>
@@ -103,6 +122,7 @@ const ReqoreControlGroup = memo(
     fluid,
     flat,
     fixed,
+    fill,
     rounded = true,
     wrap,
     stack,
@@ -324,6 +344,7 @@ const ReqoreControlGroup = memo(
               flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
               fluid: child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
               fixed: child.props?.fixed || child.props?.fixed === false ? child.props.fixed : fixed,
+              fill,
               stack:
                 child.props?.stack || child.props?.stack === false ? child.props.stack : isStack,
               intent: child.props?.intent || intent,
@@ -454,6 +475,7 @@ const ReqoreControlGroup = memo(
           rounded={rounded}
           fluid={fluid}
           fixed={fixed}
+          fill={fill}
           wrap={wrap}
           stack={isStack}
           verticalAlign={verticalAlign}
