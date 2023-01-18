@@ -96,6 +96,9 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
     newTheme.main = '#333333';
   }
 
+  // Add the original theme main color to the theme
+  newTheme.originalMain = newTheme.main;
+
   if (!newTheme.notifications?.info) {
     newTheme.notifications.info = newTheme.intents.info || DEFAULT_INTENTS.info;
   }

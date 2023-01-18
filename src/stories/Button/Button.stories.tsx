@@ -119,13 +119,21 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
         <ReqoreButton
           {...buttonProps}
+          minimal
           description='This is a very interesting description for a button, I like it very much'
           maxWidth='200px'
           labelEffect={{
             gradient: { colors: { 0: '#00fafd', 130: '#eb0e8c' }, direction: 'to right bottom' },
           }}
           descriptionEffect={{
-            gradient: { colors: { 0: '#ffe69c', 90: '#ea6ac8' }, type: 'radial' },
+            gradient: { colors: { 0: '#fd7600', 90: '#c997ff' }, type: 'radial' },
+          }}
+          effect={{
+            gradient: {
+              colors: { 0: '#be00fd', 130: '#e70eeb' },
+              direction: 'to left bottom',
+              animate: 'hover',
+            },
           }}
           badge={{
             effect: {

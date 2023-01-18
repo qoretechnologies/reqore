@@ -274,6 +274,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         {...rest}
         effect={{
           ...rest.effect,
+          gradient: intent ? undefined : rest.effect?.gradient,
           interactive: !!onClick && !rest.disabled,
         }}
         width={width}
