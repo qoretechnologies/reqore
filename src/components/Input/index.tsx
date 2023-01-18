@@ -64,7 +64,7 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   min-width: 60px;
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 1 auto')};
-  align-self: ${({ fixed }) => (fixed ? 'flex-start' : undefined)};
+  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   position: relative;
   overflow: hidden;

@@ -73,16 +73,13 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
       </ReqoreControlGroup>
       <br />
       <ReqoreControlGroup fluid wrap>
-        <ReqoreButton
-          {...buttonProps}
-          description='I am a button with a left aligned text and description'
-        >
-          Left text
-        </ReqoreButton>
+        <ReqoreButton {...buttonProps}>Left text</ReqoreButton>
         <ReqoreButton
           {...buttonProps}
           textAlign='center'
           maxWidth='200px'
+          badge="I'm a badge"
+          wrap
           description='I am a button with a center aligned text and description'
         >
           Center text
@@ -90,6 +87,7 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton
           {...buttonProps}
           textAlign='right'
+          badge="I'm a badge"
           description='I am a button with a right aligned text and description'
         >
           Right text

@@ -93,7 +93,9 @@ export const StyledAnimatedTextWrapper = styled.span`
   overflow: hidden;
   position: relative;
   text-align: left;
-  display: grid;
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
 `;
 
 export const StyledActiveContent = styled(StyledTextEffect)`
@@ -174,7 +176,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       : null}
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  align-self: ${({ fixed }) => (fixed ? 'flex-start' : undefined)};
+  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
   border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
 
