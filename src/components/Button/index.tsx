@@ -33,6 +33,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import {
+  IReqoreEffect,
   ReqoreTextEffect,
   StyledEffect,
   StyledTextEffect,
@@ -70,6 +71,8 @@ export interface IReqoreButtonProps
   iconColor?: TReqoreEffectColor;
   leftIconColor?: TReqoreEffectColor;
   rightIconColor?: TReqoreEffectColor;
+  labelEffect?: IReqoreEffect;
+  descriptionEffect?: IReqoreEffect;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -92,7 +95,7 @@ export const StyledAnimatedTextWrapper = styled.span`
   text-align: left;
 `;
 
-export const StyledActiveContent = styled.span`
+export const StyledActiveContent = styled(StyledTextEffect)`
   position: absolute;
   transform: translateY(-150%);
   opacity: 0;
@@ -112,7 +115,7 @@ export const StyledActiveContent = styled.span`
         `}
 `;
 
-export const StyledInActiveContent = styled.span`
+export const StyledInActiveContent = styled(StyledTextEffect)`
   position: absolute;
   transform: translateY(0);
   transition: all 0.2s ease-out;
@@ -130,7 +133,7 @@ export const StyledInActiveContent = styled.span`
         `}
 `;
 
-export const StyledInvisibleContent = styled.span`
+export const StyledInvisibleContent = styled(StyledTextEffect)`
   visibility: hidden;
   position: relative;
   overflow: hidden;
@@ -161,7 +164,6 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
   ${({ wrap, description }) =>
     !wrap && !description
@@ -274,7 +276,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.4)};
   }
 
-  ${StyledTextEffect} {
+  .reqore-button-description {
     padding-bottom: ${({ size }) => PADDING_FROM_SIZE[getOneLessSize(size)]}px;
   }
 `;
@@ -371,6 +373,8 @@ const ReqoreButton = memo(
         maxWidth,
         textAlign = 'left',
         effect,
+        labelEffect,
+        descriptionEffect,
         leftIconColor,
         rightIconColor,
         iconColor,
@@ -422,7 +426,12 @@ const ReqoreButton = memo(
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {icon && (
               <>
-                <ReqoreIcon icon={icon} size={size} color={leftIconColor || iconColor} />
+                <ReqoreIcon
+                  icon={icon}
+                  size={size}
+                  color={leftIconColor || iconColor}
+                  style={textAlign !== 'left' ? { marginRight: 'auto' } : undefined}
+                />
                 {children || badge || rightIcon ? (
                   <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
                 ) : null}
@@ -430,9 +439,15 @@ const ReqoreButton = memo(
             )}
             {children && (
               <StyledAnimatedTextWrapper textAlign={textAlign}>
-                <StyledActiveContent wrap={wrap}>{children}</StyledActiveContent>
-                <StyledInActiveContent wrap={wrap}>{children}</StyledInActiveContent>
-                <StyledInvisibleContent wrap={wrap}>{children}</StyledInvisibleContent>
+                <StyledActiveContent wrap={wrap} effect={labelEffect}>
+                  {children}
+                </StyledActiveContent>
+                <StyledInActiveContent wrap={wrap} effect={labelEffect}>
+                  {children}
+                </StyledInActiveContent>
+                <StyledInvisibleContent wrap={wrap} effect={labelEffect}>
+                  {children}
+                </StyledInvisibleContent>
                 {(badge || badge === 0) && wrap ? (
                   <ButtonBadge content={badge} size={size} color={color} wrap />
                 ) : null}
@@ -447,7 +462,7 @@ const ReqoreButton = memo(
                 <ReqoreIcon
                   icon={rightIcon}
                   size={size}
-                  style={{ marginLeft: 'auto' }}
+                  style={textAlign !== 'right' ? { marginLeft: 'auto' } : undefined}
                   color={rightIconColor || iconColor}
                 />
               </>
@@ -456,11 +471,13 @@ const ReqoreButton = memo(
 
           {description && (
             <ReqoreTextEffect
+              className='reqore-button-description'
               effect={{
                 textSize: getOneLessSize(size),
                 weight: 'light',
                 color: `${color}90`,
                 textAlign,
+                ...descriptionEffect,
               }}
             >
               {description}

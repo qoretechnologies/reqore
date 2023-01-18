@@ -72,6 +72,30 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />
+      <ReqoreControlGroup fluid wrap>
+        <ReqoreButton
+          {...buttonProps}
+          description='I am a button with a left aligned text and description'
+        >
+          Left text
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          textAlign='center'
+          maxWidth='200px'
+          description='I am a button with a center aligned text and description'
+        >
+          Center text
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          textAlign='right'
+          description='I am a button with a right aligned text and description'
+        >
+          Right text
+        </ReqoreButton>
+      </ReqoreControlGroup>
+      <br />
       <ReqoreControlGroup wrap>
         <ReqoreButton
           {...buttonProps}
@@ -97,6 +121,12 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
           {...buttonProps}
           description='This is a very interesting description for a button, I like it very much'
           maxWidth='200px'
+          labelEffect={{
+            gradient: { colors: { 0: '#00fafd', 130: '#eb0e8c' }, direction: 'to right bottom' },
+          }}
+          descriptionEffect={{
+            gradient: { colors: { 0: '#ffe69c', 90: '#ea6ac8' }, type: 'radial' },
+          }}
           badge={{
             effect: {
               gradient: { colors: { 0: '#00fafd', 130: '#eb0e8c' }, direction: 'to right bottom' },
@@ -121,7 +151,18 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} readOnly badge={10} onClick={alert}>
           Read only with badge
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} minimal badge={20} onClick={alert}>
+        <ReqoreButton
+          {...buttonProps}
+          minimal
+          badge={20}
+          onClick={alert}
+          effect={{
+            gradient: { colors: { 90: '#ffe69c', 0: '#ff7818' }, type: 'radial' },
+          }}
+          labelEffect={{
+            gradient: { colors: { 0: '#ffe69c', 90: '#ff7818' }, type: 'radial' },
+          }}
+        >
           Minimal with badge
         </ReqoreButton>
         <ReqoreButton
