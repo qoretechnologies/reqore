@@ -11,7 +11,6 @@ import {
   IWithReqoreMinimal,
 } from '../types/global';
 import { IReqoreIconName } from '../types/icons';
-import { useReqore } from './useReqore';
 
 const startEvents = {
   hover: 'mouseenter',
@@ -45,7 +44,6 @@ export interface IPopover
   show?: boolean;
   openOnMount?: boolean;
   noArrow?: boolean;
-  noWrapper?: boolean;
   useTargetWidth?: boolean;
   closeOnOutsideClick?: boolean;
   closeOnAnyClick?: boolean;
@@ -78,7 +76,6 @@ const usePopover = ({
 }: IPopoverOptions): IPopoverControls => {
   const { addPopover, removePopover, updatePopover, popovers, isPopoverOpen } =
     useContext(PopoverContext);
-  const { tooltips } = useReqore();
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
   let { current: timeout }: MutableRefObject<any> = useRef(0);
 
@@ -98,11 +95,11 @@ const usePopover = ({
       noArrow,
       useTargetWidth,
       closeOnOutsideClick,
-      closeOnAnyClick: handler === 'hover',
+      closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
       ...rest,
     });
 
-    if (rest.blur > 0) {
+    if (rest?.blur > 0) {
       targetElement.style.position = 'relative';
       targetElement.style.zIndex = '999999';
     }
@@ -111,13 +108,13 @@ const usePopover = ({
   const _addPopover = () => {
     if (currentPopover) {
       if (handler !== 'hoverStay' && handler !== 'focus') {
-        _removePopover();
+        _removePopover?.();
       }
     } else if (show) {
-      if (delay || tooltips.delay) {
+      if (delay) {
         timeout = setTimeout(() => {
           openPopover();
-        }, delay || tooltips.delay);
+        }, delay);
       } else {
         openPopover();
       }
@@ -144,7 +141,7 @@ const usePopover = ({
         noArrow,
         useTargetWidth,
         closeOnOutsideClick,
-        closeOnAnyClick: handler === 'hover',
+        closeOnAnyClick: handler === 'hover' || handler === 'hoverStay',
         ...rest,
       });
     }

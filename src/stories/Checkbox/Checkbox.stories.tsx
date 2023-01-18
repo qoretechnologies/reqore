@@ -1,6 +1,6 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import Checkbox from '../../components/Checkbox';
-import { ReqoreCheckbox, ReqoreControlGroup, ReqoreVerticalSpacer } from '../../index';
+import { ReqoreCheckbox, ReqoreControlGroup } from '../../index';
 
 export default {
   title: 'Components/Checkbox',
@@ -10,7 +10,7 @@ export default {
 const Template: ComponentStory<typeof Checkbox> = (args) => {
   return (
     <ReqoreControlGroup vertical>
-      <ReqoreControlGroup wrap>
+      <ReqoreControlGroup>
         <ReqoreCheckbox {...args} />
         <ReqoreCheckbox {...args} label='Label' labelDetail='Detail' labelDetailPosition='left' />
         <ReqoreCheckbox {...args} checked tooltip='I am checked' />
@@ -18,8 +18,7 @@ const Template: ComponentStory<typeof Checkbox> = (args) => {
         <ReqoreCheckbox {...args} label='Label' labelDetail='Detail' labelPosition='left' />
         <ReqoreCheckbox {...args} label='Read Only' labelPosition='left' readOnly />
       </ReqoreControlGroup>
-      <ReqoreVerticalSpacer height={10} />
-      <ReqoreControlGroup wrap>
+      <ReqoreControlGroup>
         <ReqoreCheckbox {...args} intent='info' checked />
         <ReqoreCheckbox
           {...args}
@@ -35,8 +34,6 @@ const Template: ComponentStory<typeof Checkbox> = (args) => {
           effect={{ gradient: { colors: { 0: '#00fafd', 100: '#ff00d0' } } }}
         />
         <ReqoreCheckbox {...args} disabled onText='yes' offText='no' />
-        <ReqoreCheckbox {...args} onText='yes' offText='no' />
-        <ReqoreCheckbox {...args} onText='yes' offText='no' checked />
         <ReqoreCheckbox
           {...args}
           label='Label'

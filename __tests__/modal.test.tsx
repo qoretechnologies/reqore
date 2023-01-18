@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import {
   ReqoreButton,
   ReqoreContent,
@@ -7,7 +7,6 @@ import {
   ReqoreLayoutContent,
   ReqoreModal,
   ReqoreUIProvider,
-  useReqore,
 } from '../src';
 
 test('Renders basic <Modal /> properly', () => {
@@ -95,52 +94,13 @@ const ConfirmButton = ({ confirmFn, cancelFn }) => {
   );
 };
 
-const ConfirmButtonFromModal = ({ confirmFn, cancelFn }) => {
-  const { confirmAction } = useReqore();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  return (
-    <>
-      <ReqoreButton
-        id='dialog'
-        onClick={() => {
-          setIsDialogOpen(true);
-        }}
-      >
-        Open Dialog
-      </ReqoreButton>
-      {isDialogOpen && (
-        <ReqoreModal
-          isOpen
-          id='confirm'
-          actions={[
-            {
-              label: 'Open Confirm',
-              id: 'open-confirm',
-              onClick: () => {
-                confirmAction({
-                  description: 'Do you really wanna do this?',
-                  onConfirm: () => confirmFn(),
-                  onCancel: () => cancelFn(),
-                });
-              },
-            },
-          ]}
-        >
-          Modal
-        </ReqoreModal>
-      )}
-    </>
-  );
-};
-
 test('Renders confirmation <Modal /> ', () => {
   const confirmFn = jest.fn();
   const cancelFn = jest.fn();
 
   act(() => {
     render(
-      <ReqoreUIProvider options={{ animations: { dialogs: false } }}>
+      <ReqoreUIProvider>
         <ReqoreLayoutContent>
           <ReqoreContent>
             <ConfirmButton confirmFn={confirmFn} cancelFn={cancelFn} />
@@ -169,36 +129,4 @@ test('Renders confirmation <Modal /> ', () => {
   fireEvent.click(screen.getAllByText('Cancel')[0]);
 
   expect(cancelFn).toHaveBeenCalledTimes(2);
-});
-
-test('Always renders confirmation <Modal /> properly above a normal modal', () => {
-  const confirmFn = jest.fn();
-  const cancelFn = jest.fn();
-
-  act(() => {
-    render(
-      <ReqoreUIProvider options={{ animations: { dialogs: false } }}>
-        <ReqoreLayoutContent>
-          <ReqoreContent>
-            <ConfirmButtonFromModal confirmFn={confirmFn} cancelFn={cancelFn} />
-          </ReqoreContent>
-        </ReqoreLayoutContent>
-      </ReqoreUIProvider>
-    );
-  });
-
-  fireEvent.click(document.getElementById('dialog')!);
-  expect(document.querySelectorAll('.reqore-modal').length).toBe(1);
-
-  fireEvent.click(screen.getAllByText('Open Confirm')[0]);
-  expect(document.querySelectorAll('.reqore-modal').length).toBe(2);
-  expect(document.querySelectorAll('.reqore-confirmation-modal').length).toBe(1);
-
-  // @ts-ignore
-  const zIndex = document.querySelectorAll('.reqore-modal')[0].style.zIndex;
-  // @ts-ignore
-  const zIndexConfirmation = document.querySelectorAll('.reqore-confirmation-modal')[0].style
-    .zIndex;
-
-  expect(parseInt(zIndexConfirmation)).toBeGreaterThan(parseInt(zIndex));
 });

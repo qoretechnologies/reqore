@@ -37,19 +37,19 @@ export const HEADER_SIZE_TO_NUMBER = {
 };
 
 export const SIZE_TO_PX = {
-  tiny: 18,
-  small: 24,
+  tiny: 10,
+  small: 20,
   normal: 30,
   big: 40,
   huge: 50,
 };
 
 export const BADGE_SIZE_TO_PX = {
-  tiny: 14,
-  small: 20,
-  normal: 26,
-  big: 32,
-  huge: 38,
+  tiny: 10,
+  small: 18,
+  normal: 24,
+  big: 30,
+  huge: 36,
 };
 
 export const TABS_SIZE_TO_PX = {
@@ -109,9 +109,9 @@ export const PADDING_FROM_SIZE = {
 };
 
 export const RADIUS_FROM_SIZE = {
-  tiny: 4,
-  small: 5,
-  normal: 5.5,
+  tiny: 1,
+  small: 3,
+  normal: 5,
   big: 7,
   huge: 9,
 };

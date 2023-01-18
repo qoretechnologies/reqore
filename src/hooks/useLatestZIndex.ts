@@ -2,8 +2,8 @@ import { useContext, useMemo } from 'react';
 import { ReqoreContext } from '..';
 
 const useLatestZIndex = (): number => {
-  const { getAndIncreaseZIndex, latestZIndex } = useContext(ReqoreContext);
-  const zIndex = useMemo(() => getAndIncreaseZIndex(), [latestZIndex]);
+  const { getAndIncreaseZIndex } = useContext(ReqoreContext);
+  const zIndex = useMemo(() => getAndIncreaseZIndex(), []);
 
   return zIndex;
 };

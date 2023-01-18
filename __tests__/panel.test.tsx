@@ -100,105 +100,33 @@ test('Renders <Panel /> with actions', () => {
   const fn = jest.fn();
 
   render(
-    <ReqoreUIProvider>
-      <ReqoreLayoutContent>
-        <ReqorePanel
-          label='Test'
-          onClose={fn}
-          actions={[
-            { label: 'Test' },
-            { actions: [{ label: 'Deep', value: 'deep' }] },
-            { as: ReqoreInput },
-            { label: 'hidden', show: false },
-          ]}
-          bottomActions={[
-            { label: 'Test', position: 'left' },
-            { actions: [{ label: 'Deep', value: 'deep' }], position: 'right' },
-            { label: 'hidden', show: false },
-          ]}
-        >
-          {' '}
-          Panel{' '}
-        </ReqorePanel>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
+    <div style={{ width: '1000px' }}>
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Test'
+            onClose={fn}
+            actions={[
+              { label: 'Test' },
+              { actions: [{ label: 'Deep', value: 'deep' }] },
+              { as: ReqoreInput },
+              { label: 'hidden', show: false },
+            ]}
+            bottomActions={[
+              { label: 'Test', position: 'left' },
+              { actions: [{ label: 'Deep', value: 'deep' }], position: 'right' },
+              { label: 'hidden', show: false },
+            ]}
+          >
+            {' '}
+            Panel{' '}
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
   );
 
   expect(document.querySelectorAll('.reqore-button').length).toBe(5);
   expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(2);
   expect(document.querySelectorAll('.reqore-input').length).toBe(1);
-});
-
-test('Renders <Panel /> without actions group if all actins are not shown', () => {
-  const fn = jest.fn();
-
-  render(
-    <ReqoreUIProvider>
-      <ReqoreLayoutContent>
-        <ReqorePanel
-          label='Test'
-          actions={[
-            { label: 'Test', show: false },
-            { actions: [{ label: 'Deep', value: 'deep' }], show: false },
-            { as: ReqoreInput, show: false },
-            { label: 'hidden', show: false },
-          ]}
-        >
-          Panel
-        </ReqorePanel>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  );
-
-  expect(document.querySelectorAll('.reqore-control-group').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-button').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-input').length).toBe(0);
-});
-
-test('Renders <Panel /> without title & bottom actions if all actions are not shown, there is no icon, title & is not collapsible', () => {
-  render(
-    <ReqoreUIProvider>
-      <ReqoreLayoutContent>
-        <ReqorePanel
-          actions={[
-            { label: 'Test', show: false },
-            { actions: [{ label: 'Deep', value: 'deep' }], show: false },
-            { as: ReqoreInput, show: false },
-            { label: 'hidden', show: false },
-            {
-              group: [
-                { label: 'Test 2', show: true },
-                { label: 'Test 3', show: true },
-              ],
-              show: false,
-            },
-          ]}
-          bottomActions={[
-            { label: 'Test', show: false },
-            { actions: [{ label: 'Deep', value: 'deep' }], show: false },
-            { as: ReqoreInput, position: 'right', show: false },
-            { label: 'hidden', show: false },
-            {
-              position: 'right',
-              group: [
-                { label: 'Test 2', show: true },
-                { label: 'Test 3', show: true },
-              ],
-              show: false,
-            },
-          ]}
-        >
-          Panel
-        </ReqorePanel>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  );
-
-  expect(document.querySelectorAll('.reqore-control-group').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-button').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-input').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-panel-title').length).toBe(0);
-  expect(document.querySelectorAll('.reqore-panel-bottom-actions').length).toBe(0);
 });

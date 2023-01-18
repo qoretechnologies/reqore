@@ -2,16 +2,14 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
 import { useContext } from 'react';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
-import { IReqoreInputProps } from '../../components/Input';
 import {
   ReqoreButton,
   ReqoreContext,
-  ReqoreInput,
   ReqorePanel,
   ReqoreTabs,
   ReqoreTabsContent,
 } from '../../index';
-import { FlatArg, IntentArg, argManager } from '../utils/args';
+import { argManager, FlatArg, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreDrawerProps>();
 
@@ -48,7 +46,7 @@ export default {
       options: ['left', 'right', 'top', 'bottom'],
     }),
     ...createArg('size', {
-      defaultValue: 'auto',
+      defaultValue: '450px',
       name: 'Size',
       type: 'string',
     }),
@@ -126,68 +124,7 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
         attacks inhabit pursuit our but. Lasted hunted enough an up seeing in lively letter. Had
         judgment out opinions property the supplied.
       </ReqorePanel>
-      <ReqoreDrawer
-        {...args}
-        label='This is a test'
-        icon='EmphasisCn'
-        onClose={noop}
-        actions={[
-          {
-            responsive: false,
-            group: [
-              {
-                label: 'Non responsive',
-                icon: '24HoursFill',
-                customTheme: { main: '#eb0e8c' },
-              },
-              {
-                icon: 'FullscreenExitLine',
-                customTheme: { main: '#a40a62' },
-              },
-            ],
-          },
-          {
-            group: [
-              { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
-              { icon: 'CopperCoinFill', intent: 'danger' },
-            ],
-          },
-          {
-            as: ReqoreInput,
-            props: {
-              placeholder: 'Custom action!',
-              icon: 'Search2Line',
-              minimal: false,
-            } as IReqoreInputProps,
-          },
-          {
-            label: 'More actions',
-            actions: [
-              { value: 'Sub Test', icon: 'FileDownloadLine' },
-              { value: 'Sub Test 2', icon: 'FileDownloadLine', intent: 'success' },
-            ],
-            intent: 'info',
-          },
-        ]}
-        bottomActions={[
-          {
-            position: 'left',
-            intent: 'success',
-            group: [
-              { label: 'Test 1', icon: '24HoursFill' },
-              { label: 'Test 2', icon: '24HoursFill' },
-            ],
-          },
-          {
-            label: 'More actions',
-            position: 'right',
-            actions: [
-              { value: 'Sub Test', icon: 'FileDownloadLine', intent: 'success' },
-              { value: 'Sub Test 2', icon: 'FileDownloadLine' },
-            ],
-          },
-        ]}
-      >
+      <ReqoreDrawer {...args} label='This is a test' icon='EmphasisCn' onClose={noop}>
         <ReqoreTabs
           flat
           intent={args.intent}
@@ -241,8 +178,4 @@ Floating.args = {
 export const Transparent = Template.bind({});
 Transparent.args = {
   opacity: 0.5,
-};
-export const WithSize = Template.bind({});
-WithSize.args = {
-  size: '500px',
 };

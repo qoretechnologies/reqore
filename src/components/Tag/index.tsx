@@ -21,13 +21,10 @@ import {
 } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useTooltip } from '../../hooks/useTooltip';
-import { ActiveIconScale, InactiveIconScale } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
   IWithReqoreEffect,
-  IWithReqoreFixed,
-  IWithReqoreFluid,
   IWithReqoreMinimal,
   IWithReqoreTooltip,
 } from '../../types/global';
@@ -37,7 +34,6 @@ import ReqoreIcon from '../Icon';
 
 export interface IReqoreTagAction extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent {
   icon: IReqoreIconName;
-  show?: boolean;
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -46,9 +42,7 @@ export interface IReqoreTagProps
     IWithReqoreTooltip,
     IReqoreDisabled,
     IWithReqoreEffect,
-    IWithReqoreMinimal,
-    IWithReqoreFluid,
-    IWithReqoreFixed {
+    IWithReqoreMinimal {
   size?: TSizes;
   label?: string | number;
   labelKey?: string | number;
@@ -56,9 +50,6 @@ export interface IReqoreTagProps
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
-  iconColor?: TReqoreEffectColor;
-  leftIconColor?: TReqoreEffectColor;
-  rightIconColor?: TReqoreEffectColor;
   color?: TReqoreEffectColor;
   actions?: IReqoreTagAction[];
   width?: string;
@@ -86,14 +77,9 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
-
-  ${InactiveIconScale};
 
   ${({ wrap, hasWidth }) =>
     wrap || hasWidth
@@ -120,24 +106,16 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     `}
 
   ${({ theme, color, interactive, minimal, effect }) =>
-    interactive
+    interactive && !effect?.gradient
       ? css`
           cursor: pointer;
           &:hover {
-            .reqore-tag-content,
-            .reqore-tag-key-content {
-              ${ActiveIconScale}
-            }
-
-            ${!effect?.gradient &&
-            css`
-              background-color: ${changeLightness(color || theme.main, color ? 0.05 : 0.15)};
-              color: ${minimal
-                ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
-                : color
-                ? getReadableColorFrom(color)
-                : getReadableColor(theme, undefined, undefined)};
-            `}
+            background-color: ${changeLightness(color || theme.main, color ? 0.05 : 0.15)};
+            color: ${minimal
+              ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
+              : color
+              ? getReadableColorFrom(color)
+              : getReadableColor(theme, undefined, undefined)};
           }
         `
       : undefined}
@@ -151,6 +129,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       cursor: not-allowed;
     `}
 `;
+
+const StyledTagRightIcon = styled(ReqoreIcon)``;
 
 const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
   display: flex;
@@ -247,9 +227,6 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       minimal,
       wrap = false,
       width,
-      leftIconColor,
-      rightIconColor,
-      iconColor,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -275,7 +252,6 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         {...rest}
         effect={{
           ...rest.effect,
-          gradient: intent ? undefined : rest.effect?.gradient,
           interactive: !!onClick && !rest.disabled,
         }}
         width={width}
@@ -300,14 +276,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             hasWidth={!!width}
             hasKey={!!labelKey}
           >
-            {icon && (
-              <ReqoreIcon
-                icon={icon}
-                size={size}
-                margin={label ? 'left' : 'both'}
-                color={leftIconColor || iconColor}
-              />
-            )}
+            {icon && <ReqoreIcon icon={icon} size={size} margin={label ? 'left' : 'both'} />}
             {labelKey && (
               <StyledTagContentKey wrap={wrap} hasWidth={!!width} size={size}>
                 {labelKey}
@@ -330,40 +299,37 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               </StyledTagContent>
             ) : null}
             {rightIcon && (
-              <ReqoreIcon
+              <StyledTagRightIcon
                 icon={rightIcon}
                 size={size}
                 margin={label || icon ? 'right' : 'both'}
-                color={rightIconColor || iconColor}
               />
             )}
           </StyledTagContentWrapper>
         ) : null}
         {_size(actions)
-          ? actions
-              .filter((action) => action.show !== false)
-              .map((action, index) => (
-                <React.Fragment key={index}>
-                  <ReqorePopover
-                    component={StyledButtonWrapper}
-                    componentProps={{
-                      size,
-                      color: getCustomColor(action.intent),
-                      className: 'reqore-tag-action',
-                      onClick: action.onClick,
-                      effect: rest.effect,
-                    }}
-                    {...(action.tooltip
-                      ? typeof action.tooltip === 'string'
-                        ? { tooltip: action.tooltip }
-                        : action.tooltip
-                      : {})}
-                    isReqoreComponent
-                  >
-                    <ReqoreIcon icon={action.icon} size={size} />
-                  </ReqorePopover>
-                </React.Fragment>
-              ))
+          ? actions.map((action, index) => (
+              <React.Fragment key={index}>
+                <ReqorePopover
+                  component={StyledButtonWrapper}
+                  componentProps={{
+                    size,
+                    color: getCustomColor(action.intent),
+                    className: 'reqore-tag-action',
+                    onClick: action.onClick,
+                    effect: rest.effect,
+                  }}
+                  {...(action.tooltip
+                    ? typeof action.tooltip === 'string'
+                      ? { tooltip: action.tooltip }
+                      : action.tooltip
+                    : {})}
+                  noWrapper
+                >
+                  <ReqoreIcon icon={action.icon} size={size} />
+                </ReqorePopover>
+              </React.Fragment>
+            ))
           : null}
         {onRemoveClick && !rest.disabled ? (
           <ReqorePopover
@@ -375,7 +341,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               onClick: onRemoveClick,
               effect: rest.effect,
             }}
-            isReqoreComponent
+            noWrapper
             content='Remove'
           >
             <ReqoreIcon icon='CloseLine' size={size} />

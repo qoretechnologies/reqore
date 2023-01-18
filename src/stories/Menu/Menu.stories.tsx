@@ -118,7 +118,6 @@ const Template: Story<IReqoreMenuProps> = (args) => {
           {
             icon: 'EmotionUnhappyLine',
             rightIcon: 'Scissors2Fill',
-            leftIconColor: 'danger:lighten',
             wrap: args.wrapText,
             flat: args.flat,
           } as IReqoreMenuItemProps
@@ -149,7 +148,6 @@ const Template: Story<IReqoreMenuProps> = (args) => {
           </ReqoreMenu>
         }
         isReqoreComponent
-        noWrapper
         handler='click'
         placement='right'
       >

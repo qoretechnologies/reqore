@@ -52,13 +52,6 @@ Minimal.args = {
   intent: 'danger',
 };
 
-export const WithIconColor: Story<IReqoreMessageProps> = Template.bind({});
-WithIconColor.args = {
-  minimal: true,
-  intent: 'success',
-  iconColor: '#00fd9f',
-};
-
 export const Opaque: Story<IReqoreMessageProps> = Template.bind({});
 Opaque.args = {
   opaque: true,

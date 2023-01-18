@@ -1,6 +1,6 @@
-import { cloneDeep, isString } from 'lodash';
+import { isString } from 'lodash';
 import { rgba } from 'polished';
-import React, { MutableRefObject, memo, useContext, useEffect, useRef, useState } from 'react';
+import React, { MutableRefObject, useContext, useEffect, useRef, useState } from 'react';
 import { usePopper } from 'react-popper';
 import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
@@ -62,8 +62,8 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   max-height: ${({ maxHeight = '80vh' }) => maxHeight};
   z-index: 999999;
   border-radius: ${RADIUS_FROM_SIZE.normal}px;
-  border: ${({ flat, noWrapper, ...rest }: any) =>
-    !flat && noWrapper ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
+  border: ${({ flat, isString, ...rest }: any) =>
+    !flat && !isString ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
 
   ${({ transparent }) =>
     !transparent &&
@@ -129,7 +129,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-const StyledPopoverContent = styled.div`
+const StyledPopoverContent = styled.div<{ isString?: boolean }>`
   width: 100%;
   height: 100%;
   z-index: 20;
@@ -139,138 +139,133 @@ const StyledPopoverContent = styled.div`
 
 export interface IReqoreInternalPopoverProps extends IPopoverData {}
 
-const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
-  ({
-    targetElement,
-    content,
-    id,
+const InternalPopover: React.FC<IReqoreInternalPopoverProps> = ({
+  targetElement,
+  content,
+  id,
+  placement,
+  noArrow,
+  useTargetWidth,
+  transparent,
+  maxWidth,
+  maxHeight,
+  blur,
+  intent,
+  title,
+  icon,
+  minimal,
+  flat = true,
+  effect,
+}) => {
+  const { removePopover, updatePopover, uiScale } = useContext(PopoverContext);
+  const [popperElement, setPopperElement] = useState(null);
+  const [arrowElement, setArrowElement] = useState(null);
+  const popperRef: MutableRefObject<any> = useRef(null);
+  const { styles, attributes } = usePopper(targetElement, popperElement, {
     placement,
-    noArrow,
-    noWrapper,
-    useTargetWidth,
-    transparent,
-    maxWidth,
-    maxHeight,
-    blur,
-    intent,
-    title,
-    icon,
-    minimal,
-    flat = true,
-    effect,
-  }) => {
-    const { removePopover, updatePopover, uiScale } = useContext(PopoverContext);
-    const [popperElement, setPopperElement] = useState(null);
-    const [arrowElement, setArrowElement] = useState(null);
-    const popperRef: MutableRefObject<any> = useRef(null);
-    const { styles, attributes } = usePopper(targetElement, popperElement, {
-      placement,
-      modifiers: [
-        {
-          name: 'offset',
-          options: {
-            offset: [0, noArrow ? 5 : 10],
-          },
+    modifiers: [
+      {
+        name: 'offset',
+        options: {
+          offset: [0, noArrow ? 5 : 10],
         },
-        {
-          name: 'arrow',
-          options: {
-            element: arrowElement,
-          },
+      },
+      {
+        name: 'arrow',
+        options: {
+          element: arrowElement,
         },
-        {
-          name: 'hide',
-          enabled: true,
-        },
-      ],
+      },
+      {
+        name: 'hide',
+        enabled: true,
+      },
+    ],
+  });
+
+  useEffect(() => {
+    if (popperRef.current) {
+      updatePopover?.(id, { popperRef });
+    }
+  }, [popperRef]);
+
+  useEffect(() => {
+    if (attributes.popper?.['data-popper-reference-hidden']) {
+      removePopover?.(id);
+    }
+  }, [attributes.popper]);
+
+  /* Getting the x and y values from the transform property of the popper element. */
+  const translateValues = styles.popper.transform
+    ?.replace('translate3d(', '')
+    .replace('translate(', '')
+    .replace(')', '')
+    .split(',')
+    .map((axis) => {
+      if (uiScale || uiScale === 0) {
+        return parseInt(axis, 10) < 0 ? parseInt(axis, 10) * uiScale : parseInt(axis, 10) / uiScale;
+      }
+      return parseInt(axis, 10);
     });
 
-    useEffect(() => {
-      if (popperRef.current) {
-        updatePopover?.(id, { popperRef: cloneDeep(popperRef) });
-      }
-    }, [popperRef]);
-
-    useEffect(() => {
-      if (attributes.popper?.['data-popper-reference-hidden']) {
-        removePopover?.(id);
-      }
-    }, [attributes.popper]);
-
-    /* Getting the x and y values from the transform property of the popper element. */
-    const translateValues = styles.popper.transform
-      ?.replace('translate3d(', '')
-      .replace('translate(', '')
-      .replace(')', '')
-      .split(',')
-      .map((axis) => {
-        if (uiScale || uiScale === 0) {
-          return parseInt(axis, 10) < 0
-            ? parseInt(axis, 10) * uiScale
-            : parseInt(axis, 10) / uiScale;
-        }
-        return parseInt(axis, 10);
-      });
-
-    return (
-      <ReqoreThemeProvider>
-        {blur > 0 ? <StyledBackdrop zIndex={999998} blur={blur} closable /> : null}
-        <StyledPopoverWrapper
-          maxWidth={maxWidth}
-          maxHeight={maxHeight}
-          transparent={transparent}
-          effect={effect}
-          isOpaque={!transparent && !minimal}
-          intent={intent}
-          flat={flat}
-          noWrapper={noWrapper}
-          dim={flat && !transparent && !effect && minimal}
-          className='reqore-popover-content'
-          ref={(el) => {
-            setPopperElement(el);
-            popperRef.current = el;
-          }}
-          style={{
-            ...styles.popper,
-            transform: `translate(${translateValues?.[0] || 0}px, ${translateValues?.[1] || 0}px)`,
-            width: useTargetWidth && (targetElement?.getBoundingClientRect()?.width || undefined),
-          }}
-          {...attributes.popper}
-        >
-          {!noArrow && !transparent ? (
-            <StyledPopoverArrow ref={setArrowElement} style={styles.arrow} data-popper-arrow />
-          ) : null}
-          <StyledPopoverContent>
-            {!noWrapper || isString(content) ? (
-              <ReqoreMessage
-                opaque={!transparent && !minimal}
-                className='reqore-popover-text'
-                intent={intent}
-                title={title}
-                icon={icon}
-                minimal={transparent}
-                flat={flat || transparent}
-                effect={effect}
-              >
-                {content}
-              </ReqoreMessage>
-            ) : (
-              <>
-                {React.Children.map(content, (child) =>
-                  child
-                    ? React.cloneElement(child, {
-                        _insidePopover: true,
-                        _popoverId: id,
-                      })
-                    : null
-                )}
-              </>
-            )}
-          </StyledPopoverContent>
-        </StyledPopoverWrapper>
-      </ReqoreThemeProvider>
-    );
-  }
-);
+  return (
+    <ReqoreThemeProvider>
+      {blur > 0 ? <StyledBackdrop zIndex={999998} blur={blur} closable /> : null}
+      <StyledPopoverWrapper
+        maxWidth={maxWidth}
+        maxHeight={maxHeight}
+        transparent={transparent}
+        effect={effect}
+        isOpaque={!transparent && !minimal}
+        intent={intent}
+        flat={flat}
+        isString={isString(content)}
+        dim={flat && !transparent && !effect && minimal}
+        className='reqore-popover-content'
+        ref={(el) => {
+          setPopperElement(el);
+          popperRef.current = el;
+        }}
+        style={{
+          ...styles.popper,
+          transform: `translate(${translateValues?.[0] || 0}px, ${translateValues?.[1] || 0}px)`,
+          width: useTargetWidth && (targetElement?.getBoundingClientRect()?.width || undefined),
+        }}
+        {...attributes.popper}
+      >
+        {!noArrow && !transparent ? (
+          <StyledPopoverArrow ref={setArrowElement} style={styles.arrow} data-popper-arrow />
+        ) : null}
+        <StyledPopoverContent isString={isString(content)}>
+          {isString(content) ? (
+            <ReqoreMessage
+              opaque={!transparent && !minimal}
+              className='reqore-popover-text'
+              intent={intent}
+              title={title}
+              icon={icon}
+              minimal={transparent}
+              flat={flat || transparent}
+              effect={effect}
+            >
+              {content}
+            </ReqoreMessage>
+          ) : (
+            <>
+              {React.Children.map(content, (child) =>
+                child
+                  ? React.cloneElement(child, {
+                      _insidePopover: true,
+                      _popoverId: id,
+                    })
+                  : null
+              )}
+            </>
+          )}
+        </StyledPopoverContent>
+      </StyledPopoverWrapper>
+    </ReqoreThemeProvider>
+  );
+};
 
 export default InternalPopover;

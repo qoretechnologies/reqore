@@ -58,7 +58,7 @@ export default {
 
 const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }) => {
   return (
-    <ReqoreTagGroup columns={columns} size={args.size} gapSize={args.gapSize} wrap={args.wrap}>
+    <ReqoreTagGroup columns={columns} size={args.size} gapSize={args.gapSize}>
       <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label={1} />
       <ReqoreTag
         {...args}
@@ -77,15 +77,9 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
         label={2}
       />
       <ReqoreTag label='With Icon' icon='AlarmWarningLine' {...args} />
-      <ReqoreTag
-        label='With Icon Colors'
-        icon='AlarmWarningLine'
-        {...args}
-        iconColor='warning:lighten:2'
-      />
       <ReqoreTag labelKey='Tag with' label='Label Key' icon='AlarmWarningLine' {...args} />
       <ReqoreTag labelKey='Key' label='value' {...args} />
-      <ReqoreTag icon='QuestionAnswerLine' {...args} fixed />
+      <ReqoreTag icon='QuestionAnswerLine' {...args} />
       <ReqoreTag label='Disabled Tag' disabled icon='AlarmWarningLine' {...args} />
       <ReqoreTag
         label='300px Tag'
@@ -94,17 +88,6 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
         {...args}
         tooltip='I am wiiiiiiide'
         actions={[
-          {
-            icon: 'ErrorWarningLine',
-            onClick: noop,
-            intent: 'info',
-            tooltip: {
-              content: 'IF YOU CAN SEE ME ITS A BUG!!! I HAVE show: false',
-              openOnMount: true,
-              intent: 'danger',
-            },
-            show: false,
-          },
           {
             icon: '24HoursFill',
             onClick: noop,
@@ -116,6 +99,7 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
             icon: 'SpyFill',
             onClick: noop,
             intent: 'success',
+            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
           },
         ]}
       />
@@ -185,8 +169,6 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
         label='Wrapped tag with some long text and NO width specified, AND wrap specified'
         icon='ShareForward2Fill'
         rightIcon={args.rightIcon}
-        leftIconColor='#00fafd'
-        rightIconColor='#eb0e8c'
         wrap
         onRemoveClick={null}
         actions={[
@@ -214,8 +196,6 @@ export const BigGapSize = Template.bind({});
 BigGapSize.args = { gapSize: 'big' };
 export const Badge = Template.bind({});
 Badge.args = { asBadge: true };
-export const NoWrap = Template.bind({});
-NoWrap.args = { wrap: false };
 
 export const Effect = Template.bind({});
 Effect.args = {

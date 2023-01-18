@@ -21,7 +21,6 @@ export const Icon: Story<IReqoreIconProps> = () => {
           color='#291133'
           effect={{ sepia: true }}
           margin='both'
-          tooltip={{ content: 'I have a tooltip', openOnMount: true }}
         />
         <ReqoreIcon
           icon='SignalTowerFill'
