@@ -1,8 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreTabsProps } from '../../components/Tabs';
-import { TReqoreTabsContentPadding } from '../../components/Tabs/content';
-import { ReqoreH3, ReqoreTabs, ReqoreTabsContent } from '../../index';
-import { IntentArg, SizeArg, argManager } from '../utils/args';
+import { ReqoreTabs, ReqoreTabsContent } from '../../index';
+import { argManager, IntentArg, SizeArg } from '../utils/args';
 
 const tabs = [
   {
@@ -31,7 +30,6 @@ const tabs = [
     id: 3,
     icon: 'FileSettingsLine',
     tooltip: 'Click to go to page 3!',
-    iconColor: 'info:lighten:3',
   },
   {
     id: 'tab4',
@@ -100,7 +98,7 @@ const tabs = [
   },
 ] as IReqoreTabsProps['tabs'];
 
-const { createArg } = argManager<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding }>();
+const { createArg } = argManager<IReqoreTabsProps>();
 
 export default {
   title: 'Components/Tabs',
@@ -138,25 +136,25 @@ export default {
       description: 'If the tabs should be vertical',
     }),
   },
-} as Meta<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding }>;
+} as Meta<IReqoreTabsProps>;
 
-const Template: Story<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding }> = (args) => {
+const Template: Story<IReqoreTabsProps> = (args) => {
   return (
     <ReqoreTabs {...args} tabs={tabs}>
       <ReqoreTabsContent tabId='tab1'>
-        <ReqoreH3>Tab 1</ReqoreH3>
+        <h3>Tab 1</h3>
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab2'>
-        <ReqoreH3>Tab 2</ReqoreH3>
+        <h3>Tab 2</h3>
       </ReqoreTabsContent>
-      <ReqoreTabsContent tabId={3} padded='vertical'>
-        <ReqoreH3>Tab 3</ReqoreH3>
+      <ReqoreTabsContent tabId={3}>
+        <h3>Tab 3</h3>
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab4'>
-        <ReqoreH3>Tab 4</ReqoreH3>
+        <h3>Tab 4</h3>
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab5'>
-        <ReqoreH3>Tab 5</ReqoreH3>
+        <h3>Tab 5</h3>
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab6'>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vitae nisi ligula. Proin
@@ -217,13 +215,13 @@ const Template: Story<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding
         Praesent vitae bibendum mauris, eu blandit dui.
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab7'>
-        <ReqoreH3>Tab 7</ReqoreH3>
+        <h3>Tab 7</h3>
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab8'>
-        <ReqoreH3>Tab 8</ReqoreH3>
+        <h3>Tab 8</h3>
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab9'>
-        <ReqoreH3>Tab 9</ReqoreH3>
+        <h3>Tab 9</h3>
       </ReqoreTabsContent>
     </ReqoreTabs>
   );
@@ -238,7 +236,6 @@ Fill.args = {
 export const CustomActiveIntent = Template.bind({});
 CustomActiveIntent.args = {
   activeTabIntent: 'warning',
-  activeTab: 'tab8',
 };
 
 export const NotFlat = Template.bind({});
@@ -246,21 +243,10 @@ NotFlat.args = {
   flat: false,
 };
 
-export const NoTabsPadding = Template.bind({});
-NoTabsPadding.args = {
-  padded: false,
-};
-
 export const Vertical = Template.bind({});
 Vertical.args = {
   vertical: true,
   fillParent: true,
-};
-
-export const VerticalNoTabsPadding = Template.bind({});
-VerticalNoTabsPadding.args = {
-  padded: false,
-  vertical: true,
 };
 
 export const VerticalWithWrapping = Template.bind({});
@@ -273,11 +259,7 @@ VerticalWithWrapping.args = {
 export const VerticalCustomWidth = Template.bind({});
 VerticalCustomWidth.args = {
   vertical: true,
+  fill: true,
   fillParent: true,
   width: '300px',
-};
-
-export const CustomTabsPadding = Template.bind({});
-CustomTabsPadding.args = {
-  tabsPadding: 'none',
 };

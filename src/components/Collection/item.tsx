@@ -7,13 +7,13 @@ import ReqoreContext from '../../context/ReqoreContext';
 import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { StyledBackdrop } from '../Drawer';
+import { IReqoreDropdownItem } from '../Dropdown/list';
 import {
   IReqorePanelAction,
   IReqorePanelBottomAction,
   IReqorePanelProps,
   ReqorePanel,
 } from '../Panel';
-import { ReqoreP } from '../Paragraph';
 import { ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
@@ -29,24 +29,22 @@ export interface IReqoreCollectionItemProps
     | 'unMountContentOnCollapse'
     | 'bottomActions'
   > {
-  selected?: boolean;
+  subHeader?: string;
   content?: string | React.ReactNode;
   expandable?: boolean;
   expandedContent?: string | React.ReactNode;
   expandedActions?: IReqorePanelBottomAction[];
   image?: string;
-  actions?: IReqorePanelAction[];
+  actions?: IReqoreDropdownItem[];
   tags?: IReqoreTagProps[];
   maxContentHeight?: number;
-  showContentFade?: boolean;
 }
 
 export const StyledCollectionItemContent = styled.div`
   max-height: ${({ providedHeight }) => (providedHeight ? `${providedHeight}px` : 'auto')};
-  overflow: ${({ isSelected }) => (isSelected ? 'auto' : 'hidden')};
+  overflow: hidden;
   position: relative;
   transition: 0.3s ease-in-out;
-  flex: 1;
 
   ${({ contentOverflows, theme, opacity = 1 }) =>
     contentOverflows &&
@@ -71,6 +69,7 @@ export const StyledCollectionItemContent = styled.div`
 export const ReqoreCollectionItem = ({
   flat = true,
   minimal = true,
+  headerSize = 3,
   style,
   content,
   actions,
@@ -79,7 +78,6 @@ export const ReqoreCollectionItem = ({
   expandedContent,
   expandedActions,
   maxContentHeight,
-  showContentFade = true,
   ...rest
 }: IReqoreCollectionItemProps) => {
   const [isSelected, setIsSelected] = useState(false);
@@ -184,7 +182,7 @@ export const ReqoreCollectionItem = ({
           { icon: 'CloseLine', onClick: handleItemClick },
         ] as IReqorePanelAction[])
       : size(actions)
-      ? actions
+      ? [{ icon: 'More2Fill', actions, minimal: true, flat: true }]
       : undefined;
 
     return (
@@ -202,6 +200,7 @@ export const ReqoreCollectionItem = ({
         )}
         <ReqorePanel
           flat={flat}
+          headerSize={headerSize}
           ref={ref}
           minimal={minimal}
           {...rest}
@@ -213,37 +212,18 @@ export const ReqoreCollectionItem = ({
             ...dimensions,
             transformOrigin: 'center',
           }}
-          contentStyle={{
-            ...rest.contentStyle,
-            display: 'flex',
-            flexFlow: 'column',
-            justifyContent: 'space-between',
-          }}
           onClick={(expandable && !isSelected) || rest.onClick ? handleItemClick : undefined}
           actions={actualActions}
           className={`reqore-collection-item ${rest.className || ''}`}
         >
           <StyledCollectionItemContent
             theme={theme}
-            opacity={rest.transparent ? 0 : rest.opacity}
+            opacity={rest.opacity}
             providedHeight={isSelected ? undefined : maxContentHeight}
-            isSelected={isSelected}
-            contentOverflows={
-              !rest.transparent &&
-              !rest.contentEffect &&
-              !isSelected &&
-              sizes?.height > maxContentHeight &&
-              showContentFade
-            }
+            contentOverflows={!isSelected && sizes?.height > maxContentHeight}
           >
             <div ref={contentRef}>{actualContent}</div>
           </StyledCollectionItemContent>
-          {showContentFade &&
-          (rest.contentEffect || rest.transparent) &&
-          !isSelected &&
-          sizes?.height > maxContentHeight ? (
-            <ReqoreP>...</ReqoreP>
-          ) : null}
           {size(tags) ? (
             <>
               <ReqoreSpacer height={10} />

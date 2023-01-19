@@ -114,16 +114,10 @@ export const StyledEffect = styled.span`
     const gradientColors = createEffectGradient(
       theme,
       effect.gradient.colors,
-      minimal ? 0.05 : 0,
+      0,
       !isText && minimal && !active
     );
-    const gradientColorsActive = createEffectGradient(
-      theme,
-      effect.gradient.colors,
-      0.05,
-      minimal,
-      true
-    );
+    const gradientColorsActive = createEffectGradient(theme, effect.gradient.colors, 0.05);
 
     const gradientDirectionOrShape =
       gradientType === 'linear'
@@ -173,17 +167,16 @@ export const StyledEffect = styled.span`
       background: ${active ? gradientActive : gradient};
       border-color: ${borderColor} !important;
 
-      ${color && !minimal
-        ? css`
-            color: ${getReadableColorFrom(getColorFromMaybeString(theme, color), false)} !important;
-            &::placeholder {
-              color: ${rgba(
-                getReadableColorFrom(getColorFromMaybeString(theme, color), false),
-                0.7
-              )} !important;
-            }
-          `
-        : undefined}
+      ${color &&
+      css`
+        color: ${getReadableColorFrom(getColorFromMaybeString(theme, color), false)} !important;
+        &::placeholder {
+          color: ${rgba(
+            getReadableColorFrom(getColorFromMaybeString(theme, color), false),
+            0.7
+          )} !important;
+        }
+      `}
 
       ${effect.gradient.animate === 'always' || (effect.gradient.animate === 'active' && active)
         ? css`
@@ -276,7 +269,6 @@ export const StyledEffect = styled.span`
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
-          min-width: 30px;
         `
       : undefined}
 
@@ -372,9 +364,9 @@ export const ReqoreEffect = ({ children, ...rest }: IReqoreTextEffectProps) => {
   );
 };
 
-export const ReqoreTextEffect = ({ children, className, ...rest }: IReqoreTextEffectProps) => {
+export const ReqoreTextEffect = ({ children, ...rest }: IReqoreTextEffectProps) => {
   return (
-    <StyledTextEffect className={`${className || ''} reqore-text-effect`} {...rest}>
+    <StyledTextEffect className='reqore-text-effect' {...rest}>
       {children}
     </StyledTextEffect>
   );

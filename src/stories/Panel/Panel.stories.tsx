@@ -1,9 +1,8 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
-import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
-import { ReqoreVerticalSpacer } from '../../components/Spacer';
-import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { IReqorePanelProps, ReqorePanel } from '../../components/Panel';
+import { FlatArg, IconArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -12,7 +11,6 @@ export default {
   argTypes: {
     ...IntentArg,
     ...FlatArg,
-    ...SizeArg,
     ...createArg('padded', {
       type: 'boolean',
       defaultValue: true,
@@ -50,8 +48,8 @@ export default {
       description: 'The opacity of the panel',
     }),
     ...createArg('headerSize', {
-      type: 'string',
-      defaultValue: undefined,
+      type: 'number',
+      defaultValue: 4,
       name: 'Header Size',
       description: 'The size of the header',
     }),
@@ -66,64 +64,9 @@ export default {
 } as Meta<IReqorePanelProps>;
 
 const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
-  if (args.fluid) {
-    const actions: IReqorePanelAction[] = [
-      {
-        icon: 'GiftFill',
-        label: 'Visible',
-        responsive: false,
-      },
-      {
-        label: 'Hidden when small',
-        icon: 'EyeCloseLine',
-      },
-      {
-        label: 'Hidden when small',
-        icon: 'EyeCloseLine',
-      },
-      {
-        label: 'Hidden when small',
-        icon: 'EyeCloseLine',
-      },
-      {
-        label: 'Hidden when small',
-        icon: 'EyeCloseLine',
-      },
-    ];
-
-    return (
-      <>
-        <ReqorePanel
-          {...args}
-          badge='Fluid'
-          actions={actions}
-          bottomActions={[
-            ...actions,
-            ...actions.map((action) => ({ ...action, position: 'right' })),
-          ]}
-        >
-          This is a fluid panel
-        </ReqorePanel>
-        <ReqoreVerticalSpacer height={10} />
-        <ReqorePanel
-          {...args}
-          style={{ width: 400 }}
-          fluid={false}
-          badge='Not Fluid'
-          actions={actions}
-          bottomActions={[
-            ...actions,
-            ...actions.map((action) => ({ ...action, position: 'right' })),
-          ]}
-        >
-          This is not a fluid panel
-        </ReqorePanel>
-      </>
-    );
-  }
-
   return (
     <ReqorePanel
+      {...args}
       badge={[
         10,
         0,
@@ -142,26 +85,11 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
         },
       ]}
       actions={[
-        {
-          responsive: false,
-          group: [
-            {
-              label: 'Non responsive',
-              icon: '24HoursFill',
-              customTheme: { main: '#eb0e8c' },
-            },
-            {
-              icon: 'FullscreenExitLine',
-              customTheme: { main: '#a40a62' },
-            },
-          ],
-        },
-        {
-          group: [
-            { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
-            { icon: 'CopperCoinFill', intent: 'danger' },
-          ],
-        },
+        { label: 'Test', icon: '24HoursFill', intent: 'info' },
+        [
+          { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
+          { icon: 'CopperCoinFill', intent: 'danger' },
+        ],
         {
           as: ReqoreInput,
           props: {
@@ -180,14 +108,7 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
         },
       ]}
       bottomActions={[
-        {
-          position: 'left',
-          intent: 'success',
-          group: [
-            { label: 'Test 1', icon: '24HoursFill' },
-            { label: 'Test 2', icon: '24HoursFill' },
-          ],
-        },
+        { label: 'Test', icon: '24HoursFill', position: 'left' },
         {
           label: 'More actions',
           position: 'right',
@@ -197,7 +118,6 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
           ],
         },
       ]}
-      {...args}
     >
       Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system
       of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant.
@@ -237,46 +157,14 @@ export const Flat = Template.bind({});
 Flat.args = {
   flat: true,
 };
-export const NoBars: Story<IReqorePanelProps> = Template.bind({});
-NoBars.args = {
+export const NoLabel: Story<IReqorePanelProps> = Template.bind({});
+NoLabel.args = {
   label: undefined,
-  badge: undefined,
-  icon: undefined,
-  actions: [
-    { label: 'test', show: false },
-    {
-      show: false,
-      group: [
-        { label: 'test 2', show: true },
-        { label: 'test 3', show: true },
-      ],
-    },
-  ],
-  bottomActions: [
-    { label: 'test', show: false, position: 'left' },
-    {
-      position: 'right',
-      show: false,
-      group: [
-        { label: 'test 2', show: true },
-        { label: 'test 3', show: true },
-      ],
-    },
-  ],
-  collapsible: false,
 };
 
 export const Transparent: Story<IReqorePanelProps> = Template.bind({});
 Transparent.args = {
   transparent: true,
-};
-
-export const Intent: Story<IReqorePanelProps> = Template.bind({});
-Intent.args = {
-  intent: 'success',
-  iconColor: 'success:lighten:2',
-  transparent: true,
-  flat: true,
 };
 
 export const Minimal: Story<IReqorePanelProps> = Template.bind({});
@@ -285,30 +173,8 @@ Minimal.args = {
   flat: true,
 };
 
-export const TransparentFlat: Story<IReqorePanelProps> = Template.bind({});
-TransparentFlat.args = {
-  transparent: true,
-  flat: true,
-};
-
-export const Fluid: Story<IReqorePanelProps> = Template.bind({});
-Fluid.args = {
-  fluid: true,
-};
-
-export const Size: Story<IReqorePanelProps> = Template.bind({});
-Size.args = {
-  size: 'small',
-};
-
-export const ContentSize: Story<IReqorePanelProps> = Template.bind({});
-ContentSize.args = {
-  contentSize: 'big',
-};
-
 export const WithEffect: Story<IReqorePanelProps> = Template.bind({});
 WithEffect.args = {
-  iconColor: 'info:lighten:2',
   minimal: true,
   contentEffect: {
     gradient: {

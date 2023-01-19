@@ -20,7 +20,7 @@ export default {
 const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
   return (
     <>
-      <ReqoreControlGroup size={buttonProps.size} wrap>
+      <ReqoreControlGroup size={buttonProps.size}>
         <ReqoreButton {...buttonProps} icon='BankFill' rightIcon={null} />
         <ReqoreButton {...buttonProps} />
         <ReqoreButton {...buttonProps}>Default</ReqoreButton>
@@ -41,21 +41,14 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup size={buttonProps.size} wrap>
+      <ReqoreControlGroup size={buttonProps.size}>
         <ReqoreButton {...buttonProps} active flat={false} tooltip='hello'>
           Active Not Flat
         </ReqoreButton>
         <ReqoreButton {...buttonProps} flat={false}>
           Not Flat
         </ReqoreButton>
-        <ReqoreButton
-          {...buttonProps}
-          minimal
-          flat={false}
-          iconColor='#38fdb2'
-          leftIconColor='#33023c:lighten:3'
-          rightIconColor='#0a487b:lighten:3'
-        >
+        <ReqoreButton {...buttonProps} minimal flat={false}>
           Minimal not flat
         </ReqoreButton>
         <ReqoreButton {...buttonProps} readOnly onClick={alert} flat={false}>
@@ -66,49 +59,16 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup fluid wrap>
+      <ReqoreControlGroup fluid>
         <ReqoreButton {...buttonProps} fluid>
           Fluid button
         </ReqoreButton>
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup fluid wrap>
-        <ReqoreButton {...buttonProps}>Left text</ReqoreButton>
-        <ReqoreButton
-          {...buttonProps}
-          textAlign='center'
-          maxWidth='250px'
-          badge='10'
-          wrap
-          description='I am a button with a center aligned text and description'
-        >
-          Center
-        </ReqoreButton>
-        <ReqoreButton
-          {...buttonProps}
-          textAlign='center'
-          maxWidth='200px'
-          badge="I'm a badge, baby"
-          wrap
-          description='I am a button with a center aligned text and description'
-        >
-          Center text with a longer text
-        </ReqoreButton>
-        <ReqoreButton
-          {...buttonProps}
-          textAlign='right'
-          badge="I'm a badge"
-          description='I am a button with a right aligned text and description'
-        >
-          Right text
-        </ReqoreButton>
-      </ReqoreControlGroup>
-      <br />
-      <ReqoreControlGroup wrap>
+      <ReqoreControlGroup>
         <ReqoreButton
           {...buttonProps}
           description='This is a very interesting description for a button, I like it very much'
-          iconColor='#38fdb2'
         >
           With Default Description
         </ReqoreButton>
@@ -127,22 +87,8 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
         <ReqoreButton
           {...buttonProps}
-          minimal
           description='This is a very interesting description for a button, I like it very much'
           maxWidth='200px'
-          labelEffect={{
-            gradient: { colors: { 0: '#00fafd', 130: '#eb0e8c' }, direction: 'to right bottom' },
-          }}
-          descriptionEffect={{
-            gradient: { colors: { 0: '#fd7600', 90: '#c997ff' }, type: 'radial' },
-          }}
-          effect={{
-            gradient: {
-              colors: { 0: '#be00fd', 130: '#e70eeb' },
-              direction: 'to left bottom',
-              animate: 'hover',
-            },
-          }}
           badge={{
             effect: {
               gradient: { colors: { 0: '#00fafd', 130: '#eb0e8c' }, direction: 'to right bottom' },
@@ -163,22 +109,11 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         />
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup wrap>
+      <ReqoreControlGroup>
         <ReqoreButton {...buttonProps} readOnly badge={10} onClick={alert}>
           Read only with badge
         </ReqoreButton>
-        <ReqoreButton
-          {...buttonProps}
-          minimal
-          badge={20}
-          onClick={alert}
-          effect={{
-            gradient: { colors: { 90: '#ffe69c', 0: '#ff7818' }, type: 'radial' },
-          }}
-          labelEffect={{
-            gradient: { colors: { 0: '#ffe69c', 90: '#ff7818' }, type: 'radial' },
-          }}
-        >
+        <ReqoreButton {...buttonProps} minimal badge={20} onClick={alert}>
           Minimal with badge
         </ReqoreButton>
         <ReqoreButton

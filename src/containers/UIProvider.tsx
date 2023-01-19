@@ -18,13 +18,6 @@ export interface IReqoreOptions {
     buttons?: boolean;
     dialogs?: boolean;
   };
-  tooltips?: {
-    /**
-     * Delay in ms before showing the tooltip
-     * @default 0
-     * */
-    delay?: number;
-  };
   closePopoversOnEscPress?: boolean;
 }
 export interface IReqoreUIProviderProps {

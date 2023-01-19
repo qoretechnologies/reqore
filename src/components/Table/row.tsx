@@ -13,7 +13,6 @@ import { ReqorePopover } from '../..';
 import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
-import { alignToFlexAlign } from '../../helpers/utils';
 import { TReqoreColor, TReqoreHexColor } from '../Effect';
 import { ReqoreH4 } from '../Header';
 import ReqoreIcon from '../Icon';
@@ -76,6 +75,12 @@ export interface IReqoreTableCellStyle {
   striped?: boolean;
 }
 
+export const alignToFlex = {
+  center: 'center',
+  left: 'flex-start',
+  right: 'flex-end',
+};
+
 export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
   ${({ width, grow }) =>
     css`
@@ -132,7 +137,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     return css`
       display: flex;
       align-items: center;
-      justify-content: ${align ? alignToFlexAlign(align) : 'flex-start'};
+      justify-content: ${align ? alignToFlex[align] : 'flex-start'};
       flex-shrink: 0;
       border-bottom: ${!flat ? '1px solid ' : undefined};
 

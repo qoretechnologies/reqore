@@ -22,15 +22,12 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
   const handleClick = useCallback(
     (event: MouseEvent) => {
       popovers.forEach(({ popperRef, closeOnAnyClick, closeOnOutsideClick, id, targetElement }) => {
-        if (closeOnAnyClick) {
-          removePopover(id);
-          return;
-        }
-
         if (
-          closeOnOutsideClick &&
-          !(popperRef?.current && popperRef.current.contains(event.target)) &&
-          !targetElement?.contains(event.target as Node)
+          closeOnAnyClick ||
+          (closeOnOutsideClick &&
+            popperRef?.current &&
+            !popperRef.current.contains(event.target) &&
+            !targetElement?.contains(event.target as Node))
         ) {
           removePopover(id);
         }
@@ -69,21 +66,21 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
   };
 
   useEffect(() => {
-    document.addEventListener('click', handleClick, true);
+    document.addEventListener('click', handleClick);
 
     if (closePopoversOnEscPress) {
       document.addEventListener('keydown', handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener('click', handleClick);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [popovers]);
 
   useEffect(() => {
     if (!size(popovers)) {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener('click', handleClick);
       document.removeEventListener('keydown', handleKeyDown);
     }
   }, [popovers]);

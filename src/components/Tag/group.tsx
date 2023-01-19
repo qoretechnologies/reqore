@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { StyledTag } from '.';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IWithReqoreMinimal, IWithReqoreSize } from '../../types/global';
 
@@ -10,14 +11,19 @@ export interface IReqoreTagGroup
   children: any;
   gapSize?: TSizes;
   columns?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
-  wrap?: boolean;
+  hasBottomMargin?: boolean;
 }
 
 const StyledTagGroup = styled.div`
   flex-shrink: 0;
-  display: flex;
-  flex-wrap: ${({ wrap }: IReqoreTagGroup) => (wrap ? 'wrap' : 'nowrap')};
-  gap: ${({ gapSize }: IReqoreTagGroup) => GAP_FROM_SIZE[gapSize]}px;
+
+  ${StyledTag} {
+    &:not(:last-child) {
+      margin-right: ${({ gapSize }: IReqoreTagGroup) => `${GAP_FROM_SIZE[gapSize]}px`};
+    }
+
+    margin-bottom: ${({ hasBottomMargin }) => (hasBottomMargin ? '5px' : '0px')};
+  }
 `;
 
 const ReqoreTagGroup = ({
@@ -27,13 +33,13 @@ const ReqoreTagGroup = ({
   minimal,
   className,
   columns,
-  wrap = true,
+  hasBottomMargin = true,
   ...rest
 }: IReqoreTagGroup) => (
   <StyledTagGroup
     {...rest}
     gapSize={gapSize}
-    wrap={wrap}
+    hasBottomMargin={hasBottomMargin}
     className={`${className || ''} reqore-tag-group`}
   >
     {React.Children.map(children, (child) =>

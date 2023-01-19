@@ -1,31 +1,18 @@
 import { size } from 'lodash';
 import { useMemo, useState } from 'react';
-import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { IReqoreIconName } from '../../types/icons';
+import { ReqoreIntents } from '../../constants/theme';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreInput from '../Input';
 import ReqoreMessage from '../Message';
-import { IReqorePanelAction, IReqorePanelProps, ReqorePanel, TReqorePanelActions } from '../Panel';
+import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../Panel';
 import { sortTableData } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 
 export interface IReqoreCollectionProps
   extends Pick<
       IReqorePanelProps,
-      | 'size'
-      | 'intent'
-      | 'customTheme'
-      | 'actions'
-      | 'bottomActions'
-      | 'label'
-      | 'headerSize'
-      | 'badge'
-      | 'icon'
-      | 'flat'
-      | 'minimal'
-      | 'transparent'
-      | 'fluid'
+      'size' | 'intent' | 'customTheme' | 'actions' | 'bottomActions' | 'label' | 'headerSize'
     >,
     IReqoreColumnsProps {
   items?: IReqoreCollectionItemProps[];
@@ -36,10 +23,6 @@ export interface IReqoreCollectionProps
   maxItemHeight?: number;
   filterable?: boolean;
   sortable?: boolean;
-  showAs?: 'list' | 'grid';
-  showSelectedFirst?: boolean;
-  selectedIcon?: IReqoreIconName;
-  emptyMessage?: string;
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns)`
@@ -65,53 +48,17 @@ export const ReqoreCollection = ({
   maxItemHeight,
   filterable,
   sortable,
-  showSelectedFirst,
   headerSize = 2,
-  showAs = 'grid',
-  selectedIcon,
-  flat = true,
-  minimal,
-  transparent = true,
-  emptyMessage = 'No data in this collection, try changing your search query or filters',
   ...rest
 }: IReqoreCollectionProps) => {
-  const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
+  const [showAs, setShowAs] = useState<'list' | 'grid'>('grid');
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [query, setQuery] = useState<string>('');
 
-  useUpdateEffect(() => {
-    setShowAs(showAs);
-  }, [showAs]);
-
-  const sortedItems: IReqoreCollectionItemProps[] = useMemo(() => {
-    if (!sortable) {
-      return items;
-    }
-
-    if (showSelectedFirst) {
-      // Filter out the selected items
-      const selectedItems = items.filter((item) => item.selected);
-      // Filter out the unselected items
-      const unselectedItems = items.filter((item) => !item.selected);
-      // Sort the selected items
-      const sortedSelectedItems = sortTableData(selectedItems, {
-        by: 'label',
-        direction: sort,
-      });
-      // Sort the unselected items
-      const sortedUnselectedItems = sortTableData(unselectedItems, {
-        by: 'label',
-        direction: sort,
-      });
-
-      return [...sortedSelectedItems, ...sortedUnselectedItems];
-    }
-
-    return sortTableData(items, {
-      by: 'label',
-      direction: sort,
-    });
-  }, [items, sort]);
+  const sortedItems: IReqoreCollectionItemProps[] = useMemo(
+    () => (sortable ? sortTableData(items, { by: 'label', direction: sort }) : items),
+    [items, sort]
+  );
 
   const filteredItems: IReqoreCollectionItemProps[] = useMemo(() => {
     if (!filterable || query === '') {
@@ -134,29 +81,8 @@ export const ReqoreCollection = ({
   };
 
   const finalItems = filteredItems;
-  const finalActions: TReqorePanelActions = useMemo(() => {
-    let actions: TReqorePanelActions = rest.actions ? [...rest.actions] : [];
-
-    const toolbarGroup: IReqorePanelAction = {
-      responsive: false,
-      group: [
-        {
-          icon: _showAs === 'grid' ? 'ListOrdered' : 'GridLine',
-          onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
-          tooltip: _showAs === 'grid' ? 'Show as list' : 'Show as grid',
-          disabled: !size(finalItems),
-        },
-      ],
-    };
-
-    if (sortable) {
-      toolbarGroup.group.push({
-        icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
-        onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
-        tooltip: sort === 'desc' ? 'Sort ascending' : 'Sort descending',
-        disabled: !size(finalItems),
-      });
-    }
+  const finalActions: (IReqorePanelAction[] | IReqorePanelAction)[] = useMemo(() => {
+    let actions: (IReqorePanelAction[] | IReqorePanelAction)[] = [];
 
     if (filterable) {
       actions = [
@@ -175,32 +101,74 @@ export const ReqoreCollection = ({
       ];
     }
 
-    return [...actions, toolbarGroup];
-  }, [filterable, handleQueryChange, query, rest.actions, _showAs, sort, sortable, finalItems]);
+    if (sortable) {
+      actions = [
+        ...actions,
+        [
+          {
+            icon: 'SortAsc',
+            intent: sort === 'asc' ? ReqoreIntents.INFO : undefined,
+            onClick: () => setSort('asc'),
+            active: sort === 'asc',
+            tooltip: 'Sort ascending',
+            disabled: !size(finalItems),
+          },
+          {
+            icon: 'SortDesc',
+            intent: sort === 'desc' ? ReqoreIntents.INFO : undefined,
+            onClick: () => setSort('desc'),
+            active: sort === 'desc',
+            tooltip: 'Sort descending',
+            disabled: !size(finalItems),
+          },
+        ],
+      ];
+    }
+
+    return [
+      ...actions,
+      [
+        {
+          icon: 'GridLine',
+          onClick: () => setShowAs('grid'),
+          intent: showAs === 'grid' ? ReqoreIntents.INFO : undefined,
+          active: showAs === 'grid',
+          tooltip: 'Show as grid',
+          disabled: !size(finalItems),
+        },
+        {
+          icon: 'ListOrdered',
+          onClick: () => setShowAs('list'),
+          intent: showAs === 'list' ? ReqoreIntents.INFO : undefined,
+          active: showAs === 'list',
+          tooltip: 'Show as list',
+          disabled: !size(finalItems),
+        },
+      ],
+      ...(rest.actions || []),
+    ];
+  }, [filterable, handleQueryChange, query, rest.actions, showAs, sort, sortable, finalItems]);
 
   return (
     <ReqorePanel
       {...rest}
       headerSize={headerSize}
       style={{
-        ...rest.style,
         height: height ?? undefined,
       }}
       fill={fill}
       padded
-      transparent={transparent}
-      minimal={minimal}
-      flat={flat}
+      opacity={0}
       actions={finalActions}
       className={`reqore-collection ${rest.className || ''}`}
     >
       {!size(finalItems) ? (
         <ReqoreMessage intent='muted' flat title='No items found'>
-          {emptyMessage}
+          No data in this collection, try changing your search query or filters
         </ReqoreMessage>
       ) : (
         <StyledCollectionWrapper
-          columns={_showAs === 'grid' ? 'auto-fit' : 1}
+          columns={showAs === 'grid' ? 'auto-fit' : 1}
           columnsGap={stacked ? '0px' : columnsGap}
           rounded={rounded}
           stacked={stacked}
@@ -209,7 +177,6 @@ export const ReqoreCollection = ({
           {finalItems?.map((item) => (
             <ReqoreCollectionItem
               {...item}
-              icon={item.icon || (item.selected ? selectedIcon : undefined)}
               key={item.id || item.label.toString()}
               rounded={!stacked}
               maxContentHeight={maxItemHeight}

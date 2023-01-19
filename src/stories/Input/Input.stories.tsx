@@ -2,14 +2,13 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { ReqoreControlGroup } from '../../index';
-import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
+import { FlatArg, IconArg, MinimalArg } from '../utils/args';
 
 export default {
   title: 'Components/Input',
   argTypes: {
     ...MinimalArg,
     ...FlatArg,
-    ...SizeArg,
     ...IconArg('icon', 'Icon', 'SearchLine'),
   },
 } as Meta<IReqoreInputProps>;
@@ -27,7 +26,7 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
 
   return (
     <>
-      <ReqoreControlGroup wrap>
+      <ReqoreControlGroup>
         <ReqoreInput {...args} placeholder='Reqore Input' onChange={handleValueChange} />
         <ReqoreInput {...args} placeholder='Minimal Input' minimal onChange={handleValueChange} />
         <ReqoreInput
@@ -39,7 +38,6 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
         />
         <ReqoreInput
           {...args}
-          iconColor='pending:lighten:2'
           placeholder='Clearable Input'
           onClearClick={handleValueClear}
           onChange={handleValueChange}
@@ -53,7 +51,7 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
         />
       </ReqoreControlGroup>
       <br />
-      <ReqoreControlGroup wrap>
+      <ReqoreControlGroup>
         <ReqoreInput
           {...args}
           placeholder='Reqore Input'

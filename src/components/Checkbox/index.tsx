@@ -137,8 +137,7 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
-  max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1' : '0 0 auto')};
 
   ${({ disabled }) =>
     disabled &&
@@ -273,7 +272,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                       textSize: getOneLessSize(size),
                       weight: 'bold',
                       ...switchTextEffect,
-                      opacity: checked ? 0.3 : 1,
+                      opacity: checked ? 0.8 : 1,
                     } as IReqoreEffect
                   }
                 >

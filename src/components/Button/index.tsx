@@ -11,7 +11,7 @@ import {
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import ReqoreContext from '../../context/ReqoreContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
-import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
+import { getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreEffect } from '../../hooks/useReqoreEffect';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -33,7 +33,6 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import {
-  IReqoreEffect,
   ReqoreTextEffect,
   StyledEffect,
   StyledTextEffect,
@@ -68,11 +67,6 @@ export interface IReqoreButtonProps
   description?: string | number;
   maxWidth?: string;
   textAlign?: 'left' | 'center' | 'right';
-  iconColor?: TReqoreEffectColor;
-  leftIconColor?: TReqoreEffectColor;
-  rightIconColor?: TReqoreEffectColor;
-  labelEffect?: IReqoreEffect;
-  descriptionEffect?: IReqoreEffect;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -92,13 +86,10 @@ const getButtonMainColor = (theme: IReqoreTheme, color?: TReqoreHexColor) => {
 export const StyledAnimatedTextWrapper = styled.span`
   overflow: hidden;
   position: relative;
-  text-align: ${({ textAlign }) => textAlign};
-  display: flex;
-  flex-flow: column;
-  align-items: ${({ textAlign }) => alignToFlexAlign(textAlign)};
+  text-align: left;
 `;
 
-export const StyledActiveContent = styled(StyledTextEffect)`
+export const StyledActiveContent = styled.span`
   position: absolute;
   transform: translateY(-150%);
   opacity: 0;
@@ -118,7 +109,7 @@ export const StyledActiveContent = styled(StyledTextEffect)`
         `}
 `;
 
-export const StyledInActiveContent = styled(StyledTextEffect)`
+export const StyledInActiveContent = styled.span`
   position: absolute;
   transform: translateY(0);
   transition: all 0.2s ease-out;
@@ -136,7 +127,7 @@ export const StyledInActiveContent = styled(StyledTextEffect)`
         `}
 `;
 
-export const StyledInvisibleContent = styled(StyledTextEffect)`
+export const StyledInvisibleContent = styled.span`
   visibility: hidden;
   position: relative;
   overflow: hidden;
@@ -167,7 +158,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
+  max-width: ${({ maxWidth }) => maxWidth || undefined};
   ${({ wrap, description }) =>
     !wrap && !description
       ? css`
@@ -176,7 +167,6 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       : null}
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
   border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
 
@@ -207,7 +197,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             transition: all 0.2s ease-out;
 
             &:active {
-              transform: scale(0.97);
+              transform: translateY(2px);
             }
 
             &:hover,
@@ -247,32 +237,24 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
         `
       : undefined}
 
-  ${({ active, flat, theme, color }: IReqoreButtonStyle) => {
-    if (active) {
-      return css`
-        cursor: pointer;
-        background-color: ${changeLightness(getButtonMainColor(theme, color), 0.1)};
-        color: ${getReadableColor(
-          { main: changeLightness(getButtonMainColor(theme, color), 0.1) },
-          undefined,
-          undefined
-        )};
+  ${({ active, flat, theme, color }: IReqoreButtonStyle) =>
+    active &&
+    css`
+      cursor: pointer;
+      background-color: ${changeLightness(getButtonMainColor(theme, color), 0.1)};
+      color: ${getReadableColor({ main: getButtonMainColor(theme, color) }, undefined, undefined)};
+      border-color: ${flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.175)};
+
+      &:hover,
+      &:active,
+      &:focus {
         border-color: ${flat
           ? undefined
-          : changeLightness(getButtonMainColor(theme, color), 0.175)};
+          : changeLightness(getButtonMainColor(theme, color), 0.275)};
+      }
 
-        &:hover,
-        &:active,
-        &:focus {
-          border-color: ${flat
-            ? undefined
-            : changeLightness(getButtonMainColor(theme, color), 0.275)};
-        }
-
-        ${ActiveIconScale}
-      `;
-    }
-  }}
+      ${ActiveIconScale}
+    `}
 
   &:disabled {
     ${DisabledElement};
@@ -288,7 +270,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.4)};
   }
 
-  .reqore-button-description {
+  ${StyledTextEffect} {
     padding-bottom: ${({ size }) => PADDING_FROM_SIZE[getOneLessSize(size)]}px;
   }
 `;
@@ -343,7 +325,7 @@ export const ButtonBadge = memo((props: IReqoreButtonBadgeProps) => {
           width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size]}
           height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
         />
-        <ReqoreTagGroup>
+        <ReqoreTagGroup hasBottomMargin={false}>
           {props.content.map((badge, index) => renderTag({ ...props, content: badge, key: index }))}
         </ReqoreTagGroup>
       </>
@@ -385,11 +367,6 @@ const ReqoreButton = memo(
         maxWidth,
         textAlign = 'left',
         effect,
-        labelEffect,
-        descriptionEffect,
-        leftIconColor,
-        rightIconColor,
-        iconColor,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -414,14 +391,10 @@ const ReqoreButton = memo(
       return (
         <StyledButton
           {...rest}
-          effect={
-            intent
-              ? undefined
-              : {
-                  interactive: !readOnly && !rest.disabled,
-                  ...fixedEffect,
-                }
-          }
+          effect={{
+            interactive: !readOnly && !rest.disabled,
+            ...fixedEffect,
+          }}
           as='button'
           theme={theme}
           ref={targetRef}
@@ -442,12 +415,7 @@ const ReqoreButton = memo(
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {icon && (
               <>
-                <ReqoreIcon
-                  icon={icon}
-                  size={size}
-                  color={leftIconColor || iconColor}
-                  style={textAlign !== 'left' ? { marginRight: 'auto' } : undefined}
-                />
+                <ReqoreIcon icon={icon} size={size} />
                 {children || badge || rightIcon ? (
                   <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
                 ) : null}
@@ -455,15 +423,9 @@ const ReqoreButton = memo(
             )}
             {children && (
               <StyledAnimatedTextWrapper textAlign={textAlign}>
-                <StyledActiveContent wrap={wrap} effect={labelEffect}>
-                  {children}
-                </StyledActiveContent>
-                <StyledInActiveContent wrap={wrap} effect={labelEffect}>
-                  {children}
-                </StyledInActiveContent>
-                <StyledInvisibleContent wrap={wrap} effect={labelEffect}>
-                  {children}
-                </StyledInvisibleContent>
+                <StyledActiveContent wrap={wrap}>{children}</StyledActiveContent>
+                <StyledInActiveContent wrap={wrap}>{children}</StyledInActiveContent>
+                <StyledInvisibleContent wrap={wrap}>{children}</StyledInvisibleContent>
                 {(badge || badge === 0) && wrap ? (
                   <ButtonBadge content={badge} size={size} color={color} wrap />
                 ) : null}
@@ -475,25 +437,18 @@ const ReqoreButton = memo(
             {rightIcon && (
               <>
                 {children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
-                <ReqoreIcon
-                  icon={rightIcon}
-                  size={size}
-                  style={textAlign !== 'right' ? { marginLeft: 'auto' } : undefined}
-                  color={rightIconColor || iconColor}
-                />
+                <ReqoreIcon icon={rightIcon} size={size} style={{ marginLeft: 'auto' }} />
               </>
             )}
           </StyledButtonContent>
 
           {description && (
             <ReqoreTextEffect
-              className='reqore-button-description'
               effect={{
                 textSize: getOneLessSize(size),
                 weight: 'light',
                 color: `${color}90`,
                 textAlign,
-                ...descriptionEffect,
               }}
             >
               {description}

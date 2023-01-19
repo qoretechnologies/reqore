@@ -89,7 +89,6 @@ export interface IReqoreTableStyle {
 
 export interface IReqoreTableSort {
   by?: string;
-  thenBy?: string;
   direction?: 'asc' | 'desc';
 }
 

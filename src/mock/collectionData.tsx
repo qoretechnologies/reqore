@@ -32,8 +32,6 @@ export default [
     tooltip: 'This is a test item',
     headerSize: 2,
     contentSize: 'huge',
-    selected: true,
-    icon: 'Hashtag',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     tags: [
@@ -53,20 +51,12 @@ export default [
   },
   {
     icon: 'TextWrap',
-    label: 'Small item that is not minimal',
+    label: 'Item that is not minimal',
     tooltip: 'This is a test item',
-    size: 'small',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     minimal: false,
     badge: 0,
-  },
-  {
-    icon: 'ZcoolLine',
-    label: 'Item without fade',
-    content:
-      'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long Hello I am a test item content and I am very long so will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long Hello I am a test item content and I am very long so will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
-    showContentFade: false,
   },
   {
     icon: 'FolderWarningFill',
@@ -92,7 +82,6 @@ export default [
   {
     label: 'Item with custom content when expanded',
     tooltip: 'Expandable item with custom content',
-    selected: true,
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     expandable: true,
@@ -105,22 +94,6 @@ export default [
       weight: 'thin',
       spaced: 2,
     },
-    expandedActions: [
-      {
-        label: 'Action 1',
-        id: 'action1',
-        icon: 'CapsuleFill',
-        onClick: () => alert('Action 1 clicked'),
-        position: 'left',
-      },
-      {
-        label: 'Action 2',
-        id: 'action2',
-        icon: 'CapsuleFill',
-        onClick: () => alert('Action 2 clicked'),
-        position: 'right',
-      },
-    ],
     expandedContent: (
       <>
         <ReqoreMessage intent='info'>Hello I am a custom content</ReqoreMessage>
@@ -208,9 +181,6 @@ export default [
   },
   {
     label: 'I have intent!',
-    transparent: true,
-    minimal: false,
-    flat: false,
     content: (
       <ReqoreP>
         'Well would you look at that. Lorem ipsum dolor{' '}
@@ -262,14 +232,13 @@ export default [
   {
     label: 'I have actions',
     content:
-      'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+      'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     actions: [
       {
         label: 'Action 1',
         id: 'action1',
         icon: 'CapsuleFill',
         onClick: () => alert('Action 1 clicked'),
-        show: false,
       },
       {
         label: 'Action 2',

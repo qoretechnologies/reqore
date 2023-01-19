@@ -14,7 +14,6 @@ import {
   IWithReqoreSize,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon from '../Icon';
 import {
@@ -36,7 +35,6 @@ export interface IReqoreMessageProps
   title?: string;
   children: any;
   icon?: IReqoreIconName;
-  iconColor?: TReqoreEffectColor;
   onClose?: () => any;
   onClick?: () => any;
   duration?: number;
@@ -66,7 +64,6 @@ const ReqoreMessage = forwardRef<HTMLDivElement, IReqoreMessageProps>(
       minimal,
       size = 'normal',
       customTheme,
-      iconColor,
       ...rest
     },
     ref: any
@@ -131,12 +128,7 @@ const ReqoreMessage = forwardRef<HTMLDivElement, IReqoreMessageProps>(
         >
           {leftIcon ? (
             <StyledIconWrapper intent={intent} size={size} theme={theme}>
-              <ReqoreIcon
-                icon={leftIcon}
-                margin={flat && minimal ? 'right' : 'both'}
-                size={size}
-                color={iconColor}
-              />
+              <ReqoreIcon icon={leftIcon} margin={flat && minimal ? 'right' : 'both'} size={size} />
             </StyledIconWrapper>
           ) : null}
           <StyledNotificationContentWrapper size={size} theme={theme}>

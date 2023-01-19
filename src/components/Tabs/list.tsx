@@ -162,7 +162,6 @@ const ReqoreTabsList = ({
   flat,
   size,
   intent,
-  padded,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width }] = useMeasure();
@@ -204,21 +203,19 @@ const ReqoreTabsList = ({
                     label: getMoreLabel(item, activeTab),
                     active: !!isTabHidden(item, activeTab),
                     activeIntent: activeTabIntent,
-                    intent: !!isTabHidden(item, activeTab) ? activeTabData?.intent : undefined,
-                    effect: !!isTabHidden(item, activeTab) ? activeTabData?.effect : undefined,
                     customTheme: !!isTabHidden(item, activeTab)
-                      ? activeTabData?.customTheme
+                      ? {
+                          main: currentTabColor,
+                        }
                       : theme,
                     vertical,
                     flat,
                     size,
-                    padded,
                     className: 'reqore-tabs-list-item-menu',
                   } as IReqoreTabListItemProps
                 }
                 closeOnOutsideClick
                 isReqoreComponent
-                noWrapper
                 handler='hoverStay'
                 content={
                   <ReqoreMenu customTheme={theme}>
@@ -281,7 +278,6 @@ const ReqoreTabsList = ({
                 fill={fill}
                 size={size}
                 flat={flat}
-                padded={padded}
                 activeIntent={activeTabIntent}
                 wrapTabNames={wrapTabNames}
                 {...item}

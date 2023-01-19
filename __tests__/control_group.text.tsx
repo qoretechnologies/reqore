@@ -9,18 +9,16 @@ import {
   ReqoreUIProvider,
 } from '../src';
 
-test('Renders <ControlGroup /> properly', () => {
+test('Renders <Input /> properly', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreControlGroup>
+          <ReqoreControlGroup minimal>
             <ReqoreInput minimal />
             <ReqoreButton>Hello</ReqoreButton>
             <ReqoreInput disabled />
             <ReqoreInput size='big' />
-            <ReqoreButton>Hello</ReqoreButton>
-            <ReqoreButton>Hello</ReqoreButton>
           </ReqoreControlGroup>
         </ReqoreContent>
       </ReqoreLayoutContent>

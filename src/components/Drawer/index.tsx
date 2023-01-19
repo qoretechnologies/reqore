@@ -27,7 +27,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size'> {
   onClose?: () => void;
   onHideToggle?: (isHidden: boolean) => void;
   hasBackdrop?: boolean;
-  size?: string | 'auto';
+  size?: string;
   maxSize?: string;
   minSize?: string;
   opacity?: number;
@@ -170,7 +170,6 @@ export const ReqoreDrawer = ({
   _isModal,
   width,
   height,
-  actions = [],
   ...rest
 }: IReqoreDrawerProps) => {
   const { animations } = useContext(ReqoreContext);
@@ -200,13 +199,12 @@ export const ReqoreDrawer = ({
 
   const zIndex = useLatestZIndex();
   const wrapperZIndex = useLatestZIndex();
-  const _actions: IReqorePanelAction[] = useMemo(() => {
-    const builtActions: IReqorePanelAction[] = [...actions];
+  const actions: IReqorePanelAction[] = useMemo(() => {
+    const actions: IReqorePanelAction[] = [];
 
     /* Adding a hide/show button to the drawer. */
     if (hidable) {
-      builtActions.push({
-        responsive: false,
+      actions.push({
         icon: getHideShowIcon(position, _isHidden),
         onClick: () => {
           setIsHidden(!_isHidden);
@@ -220,15 +218,14 @@ export const ReqoreDrawer = ({
 
     /* Adding a close button to the drawer. */
     if (onClose) {
-      builtActions.push({
-        responsive: false,
+      actions.push({
         icon: 'CloseLine',
         onClick: onClose,
         className: 'reqore-drawer-close-button',
       });
     }
 
-    return builtActions;
+    return actions;
   }, [hidable, position, onClose]);
 
   const positions = useMemo(() => {
@@ -266,27 +263,27 @@ export const ReqoreDrawer = ({
             />
           ) : null}
           <Resizable
-            className={`${className || ''} reqore-drawer-resizable`}
+            className='reqore-drawer-resizable'
             maxHeight={
               layout === 'horizontal' || layout === 'center' ? maxSize || '90vh' : undefined
             }
             minHeight={
               layout === 'center'
-                ? '40px'
+                ? '140px'
                 : layout === 'horizontal'
                 ? _isHidden
                   ? 0
-                  : minSize || '40px'
+                  : minSize || '140px'
                 : undefined
             }
             maxWidth={layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined}
             minWidth={
               layout === 'center'
-                ? '40px'
+                ? '140px'
                 : layout === 'vertical'
                 ? _isHidden
                   ? 0
-                  : minSize || '40px'
+                  : minSize || '140px'
                 : undefined
             }
             as={StyledDrawerResizable}
@@ -345,19 +342,21 @@ export const ReqoreDrawer = ({
               <StyledCloseWrapper
                 className='reqore-drawer-controls'
                 position={position}
-                w={layout === 'vertical' ? 0 : _size.width}
-                h={layout === 'horizontal' ? 0 : _size.height}
+                w={layout === 'vertical' && _isHidden ? 0 : _size.width}
+                h={layout === 'horizontal' && _isHidden ? 0 : _size.height}
               >
-                <ReqoreButton
-                  flat
-                  customTheme={theme}
-                  className='reqore-drawer-control reqore-drawer-hide-button'
-                  icon={getHideShowIcon(position, _isHidden)}
-                  onClick={() => {
-                    setIsHidden(!_isHidden);
-                    onHideToggle && onHideToggle(!_isHidden);
-                  }}
-                />
+                {hidable && (
+                  <ReqoreButton
+                    flat
+                    customTheme={theme}
+                    className='reqore-drawer-control reqore-drawer-hide-button'
+                    icon={getHideShowIcon(position, _isHidden)}
+                    onClick={() => {
+                      setIsHidden(!_isHidden);
+                      onHideToggle && onHideToggle(!_isHidden);
+                    }}
+                  />
+                )}
               </StyledCloseWrapper>
             ) : null}
             {!_isHidden && (
@@ -365,12 +364,12 @@ export const ReqoreDrawer = ({
                 {...rest}
                 opacity={opacity}
                 blur={hasBackdrop ? 0 : blur}
-                actions={_actions}
+                actions={actions}
                 customTheme={customTheme}
                 intent={intent}
                 rounded={floating || _isModal ? true : false}
                 flat={flat}
-                className={`reqore-drawer`}
+                className={`${className || ''} reqore-drawer`}
                 style={{
                   width: '100%',
                   maxHeight: '100%',

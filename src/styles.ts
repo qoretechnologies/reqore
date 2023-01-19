@@ -31,12 +31,6 @@ export const ActiveIconScale = css`
   }
 `;
 
-export const ChildActiveIconScale = css`
-  > ${StyledIconWrapper} {
-    transform: scale(${ACTIVE_ICON_SCALE});
-  }
-`;
-
 export const ScaleIconOnHover = css`
   &:hover,
   &:focus {
