@@ -86,7 +86,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
+  max-width: ${({ fixed }) => (!fixed ? '100%' : undefined)};
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
