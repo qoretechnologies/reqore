@@ -56,7 +56,7 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 
 export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
-  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? 'undefined' : '0 0 auto')};
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   justify-content: ${({ fluid, vertical }) => (vertical && fluid ? 'stretch' : undefined)};
   align-items: ${({ vertical, fluid, horizontalAlign }) =>
