@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -98,6 +98,7 @@ export interface IReqorePanelProps
   headerEffect?: IReqoreEffect;
   transparent?: boolean;
   iconColor?: TReqoreEffectColor;
+  responsiveActions?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -286,6 +287,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       badge,
       iconColor,
       fluid,
+      responsiveActions = true,
       size: panelSize = 'normal',
       ...rest
     }: IReqorePanelProps,
@@ -562,7 +564,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             </StyledPanelTitleHeader>
             {hasResponsiveActions(actions) && (
               <ReqoreControlGroup
-                responsive
+                responsive={responsiveActions}
                 fluid
                 horizontalAlign='flex-end'
                 customTheme={theme}
@@ -634,7 +636,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               </>
             ) : null}
             {hasResponsiveActions(leftBottomActions) && (
-              <ReqoreControlGroup fluid responsive customTheme={theme} size={panelSize}>
+              <ReqoreControlGroup
+                fluid
+                responsive={responsiveActions}
+                customTheme={theme}
+                size={panelSize}
+              >
                 {leftBottomActions.map(renderResponsiveActions)}
               </ReqoreControlGroup>
             )}
@@ -642,7 +649,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               <ReqoreControlGroup
                 fluid
                 horizontalAlign='flex-end'
-                responsive
+                responsive={responsiveActions}
                 customTheme={theme}
                 size={panelSize}
               >

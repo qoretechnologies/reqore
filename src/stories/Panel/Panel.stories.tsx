@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
-import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { argManager, FlatArg, IconArg, IntentArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -117,6 +117,21 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
           ]}
         >
           This is not a fluid panel
+        </ReqorePanel>
+        <ReqoreVerticalSpacer height={10} />
+        <ReqorePanel
+          {...args}
+          style={{ width: 1000 }}
+          fluid={false}
+          badge='Non Responsive'
+          actions={actions}
+          responsiveActions={false}
+          bottomActions={[
+            ...actions,
+            ...actions.map((action) => ({ ...action, position: 'right' })),
+          ]}
+        >
+          This panel has non-responsive actions
         </ReqorePanel>
       </>
     );
