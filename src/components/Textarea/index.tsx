@@ -165,14 +165,14 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
           ref={targetRef}
           theme={theme}
           rounded={rounded}
-          rows={scaleWithContent ? (rest?.value?.split(/\r\n|\r|\n/).length || 1) + 1 : rest.rows}
+          rows={scaleWithContent ? rest?.value?.split(/\r\n|\r|\n/).length || 1 : rest.rows}
         />
         {!rest.readOnly && (
           <ReqoreInputClearButton
             enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
             show={rest?.value && rest.value !== ''}
             onClick={onClearClick}
-            size='big'
+            size={size}
           />
         )}
       </StyledTextareaWrapper>
