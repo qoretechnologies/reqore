@@ -573,7 +573,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             {hasResponsiveActions(actions) && (
               <ReqoreControlGroup
                 responsive={responsiveActions}
-                fluid
+                fluid={responsiveActions}
                 horizontalAlign='flex-end'
                 customTheme={theme}
                 size={panelSize}
@@ -645,7 +645,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             ) : null}
             {hasResponsiveActions(leftBottomActions) && (
               <ReqoreControlGroup
-                fluid
+                fluid={responsiveActions}
                 responsive={responsiveActions}
                 customTheme={theme}
                 size={panelSize}
@@ -655,7 +655,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             )}
             {hasResponsiveActions(rightBottomActions) && (
               <ReqoreControlGroup
-                fluid
+                fluid={responsiveActions}
                 horizontalAlign='flex-end'
                 responsive={responsiveActions}
                 customTheme={theme}

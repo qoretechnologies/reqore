@@ -300,6 +300,36 @@ Minimal.args = {
   flat: true,
 };
 
+export const NonResponsiveActions: Story<IReqorePanelProps> = Template.bind({});
+NonResponsiveActions.args = {
+  responsiveActions: false,
+  label:
+    'This is a really long title that should stretch all the way to the right of the panel, all the way to the end and not end in the middle',
+  badge: undefined,
+  actions: [
+    {
+      responsive: false,
+      group: [
+        {
+          label: 'Non responsive',
+          icon: '24HoursFill',
+          customTheme: { main: '#eb0e8c' },
+        },
+        {
+          icon: 'FullscreenExitLine',
+          customTheme: { main: '#a40a62' },
+        },
+      ],
+    },
+    {
+      group: [
+        { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
+        { icon: 'CopperCoinFill', intent: 'danger' },
+      ],
+    },
+  ],
+};
+
 export const TransparentFlat: Story<IReqorePanelProps> = Template.bind({});
 TransparentFlat.args = {
   transparent: true,
