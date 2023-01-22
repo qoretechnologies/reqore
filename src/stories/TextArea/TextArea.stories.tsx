@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import { IReqoreTextareaProps } from '../../components/Textarea';
 import { ReqoreControlGroup, ReqoreTextarea } from '../../index';
-import { DisabledArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { argManager, DisabledArg, MinimalArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
 
@@ -55,6 +55,39 @@ const Template: Story<IReqoreTextareaProps> = (args) => {
 
   return (
     <>
+      <ReqoreControlGroup wrap>
+        <ReqoreTextarea {...args} onChange={handleValueChange} onClearClick={handleValueClear} />
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          tooltip={{
+            placement: 'right-start',
+            content: 'I am a tooltip',
+          }}
+          minimal
+        />
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          tooltip="I'm a tooltip"
+          flat
+        />
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          disabled
+        />
+        <ReqoreTextarea
+          {...args}
+          onChange={handleValueChange}
+          onClearClick={handleValueClear}
+          readOnly
+        />
+      </ReqoreControlGroup>
+      <br />
       <ReqoreControlGroup wrap>
         <ReqoreTextarea
           {...args}

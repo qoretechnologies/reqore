@@ -172,6 +172,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
             enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
             show={rest?.value && rest.value !== ''}
             onClick={onClearClick}
+            size={size}
           />
         )}
       </StyledTextareaWrapper>
