@@ -1,6 +1,7 @@
 import { cloneDeep, isString } from 'lodash';
 import { rgba } from 'polished';
-import React, { MutableRefObject, memo, useContext, useEffect, useRef, useState } from 'react';
+import React, { memo, MutableRefObject, useContext, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePopper } from 'react-popper';
 import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
@@ -14,7 +15,6 @@ import {
   getColorFromMaybeString,
   getNotificationIntent,
 } from '../../helpers/colors';
-import { StyledBackdrop } from '../Drawer';
 import ReqoreMessage from '../Message';
 
 const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
@@ -212,9 +212,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         return parseInt(axis, 10);
       });
 
-    return (
+    return createPortal(
       <ReqoreThemeProvider>
-        {blur > 0 ? <StyledBackdrop zIndex={999998} blur={blur} closable /> : null}
         <StyledPopoverWrapper
           maxWidth={maxWidth}
           maxHeight={maxHeight}
@@ -268,7 +267,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
             )}
           </StyledPopoverContent>
         </StyledPopoverWrapper>
-      </ReqoreThemeProvider>
+      </ReqoreThemeProvider>,
+      document.querySelector('#reqore-portal')!
     );
   }
 );

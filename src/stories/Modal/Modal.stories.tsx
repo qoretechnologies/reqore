@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import { useContext } from 'react';
 import { useMount } from 'react-use';
 import { IReqoreModalProps } from '../../components/Modal';
-import { ReqoreContext, ReqoreModal, ReqorePanel } from '../../index';
+import { ReqoreButton, ReqoreContext, ReqoreModal, ReqorePanel } from '../../index';
 import { argManager, FlatArg, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreModalProps>();
@@ -117,6 +117,14 @@ const Template: Story<IReqoreModalProps & { confirm?: boolean }> = (args) => {
           { label: 'Cancel', intent: 'danger', position: 'left' },
         ]}
       >
+        <ReqoreButton
+          intent='info'
+          minimal
+          description='I have a cool tooltip with blur'
+          tooltip={{ content: 'See? Told you', blur: 3, handler: 'hoverStay' }}
+        >
+          Hover me for something cool
+        </ReqoreButton>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
         labore et dolore magna aliqua. Sit amet purus gravida quis blandit turpis cursus in hac.
         Ultricies lacus sed turpis tincidunt. Ac tincidunt vitae semper quis lectus nulla at.

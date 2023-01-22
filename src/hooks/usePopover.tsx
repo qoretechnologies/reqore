@@ -103,8 +103,18 @@ const usePopover = ({
     });
 
     if (rest.blur > 0) {
-      targetElement.style.position = 'relative';
-      targetElement.style.zIndex = '999999';
+      // Create a div and prepend before the targetElement
+      const blurDiv = document.createElement('div');
+
+      blurDiv.id = `reqore-blur-${current}`;
+      blurDiv.classList.add('reqore-blur-wrapper');
+      blurDiv.style['-webkit-backdrop-filter'] = `blur(${rest.blur}px)`;
+
+      // Add the blur div before the target element
+      targetElement.before(blurDiv);
+
+      // Add the highest z-index to the target element
+      targetElement.classList.add('reqore-blur-z-index');
     }
   };
 

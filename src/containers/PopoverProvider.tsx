@@ -60,8 +60,10 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
     if (popover) {
       // Remove the blur
       if (popover.blur > 0) {
-        popover.targetElement.style.position = 'initial';
-        popover.targetElement.style.zIndex = 'initial';
+        // Remove the blur
+        document.getElementById(`reqore-blur-${id}`)?.remove();
+        // Remove the z index class
+        popover.targetElement.classList.remove('reqore-blur-z-index');
       }
       // Remove the popover
       setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== id));
