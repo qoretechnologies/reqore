@@ -1,3 +1,4 @@
+import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useContext } from 'react';
 import styled, { css } from 'styled-components';
 import {
@@ -214,7 +215,9 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             &:active,
             &:focus {
               background-color: ${({ theme, color, minimal }: IReqoreButtonStyle) =>
-                minimal ? `#00000030` : changeLightness(getButtonMainColor(theme, color), 0.05)};
+                minimal
+                  ? rgba(changeLightness(getButtonMainColor(theme, color), 0.05), 0.2)
+                  : changeLightness(getButtonMainColor(theme, color), 0.05)};
               color: ${({ theme, color, minimal }) =>
                 getReadableColor(
                   { main: minimal ? theme.originalMain : getButtonMainColor(theme, color) },

@@ -1,6 +1,14 @@
 import { Meta, Story } from '@storybook/react';
 import { IReqoreColumnsProps } from '../../components/Columns';
-import { ReqoreColumn, ReqoreColumns } from '../../index';
+import {
+  ReqoreButton,
+  ReqoreColumn,
+  ReqoreColumns,
+  ReqoreControlGroup,
+  ReqoreH2,
+  ReqoreInput,
+  ReqoreVerticalSpacer,
+} from '../../index';
 import { argManager } from '../utils/args';
 
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
@@ -43,20 +51,74 @@ export default {
 
 const Template: Story<IColumnsStoryArgs> = (args) => {
   return (
-    <ReqoreColumns {...args}>
-      <ReqoreColumn {...args} style={{ border: '1px solid white', padding: '10px' }}>
-        1st column
+    <ReqoreColumns {...args} columnsGap='10px'>
+      <ReqoreColumn
+        {...args}
+        style={{ border: '1px solid white', padding: '10px' }}
+        flexFlow='column'
+      >
+        <ReqoreH2>Left Column</ReqoreH2>
+        <ReqoreVerticalSpacer height={20} lineSize='tiny' />
+        <ReqoreControlGroup fluid>
+          <ReqoreInput placeholder='Filter' />
+        </ReqoreControlGroup>
+        <ReqoreVerticalSpacer height={10} />
+        <ReqoreControlGroup vertical fluid>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+        </ReqoreControlGroup>
       </ReqoreColumn>
-      <ReqoreColumn {...args} style={{ border: '1px solid white', padding: '10px' }}>
-        2nd column
+      <ReqoreColumn
+        {...args}
+        style={{ border: '1px solid white', padding: '10px' }}
+        flexFlow='column'
+      >
+        <ReqoreH2>Right Column</ReqoreH2>
+        <ReqoreVerticalSpacer height={20} lineSize='tiny' />
+        <ReqoreControlGroup fluid>
+          <ReqoreInput placeholder='Filter' />
+        </ReqoreControlGroup>
+        <ReqoreVerticalSpacer height={10} />
+        <ReqoreControlGroup vertical fluid>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+          <ReqoreButton description='This is a button'>Button</ReqoreButton>
+        </ReqoreControlGroup>
       </ReqoreColumn>
       {args.multipleColumns && (
         <>
-          <ReqoreColumn {...args} style={{ border: '1px solid white', padding: '10px' }}>
-            4th column
+          <ReqoreColumn
+            {...args}
+            style={{ border: '1px solid white', padding: '10px' }}
+            flexFlow='column'
+          >
+            <ReqoreH2>3rd Column</ReqoreH2>
+            <ReqoreVerticalSpacer height={20} lineSize='tiny' />
+            <ReqoreControlGroup fluid>
+              <ReqoreInput placeholder='Filter' />
+            </ReqoreControlGroup>
+            <ReqoreVerticalSpacer height={10} />
+            <ReqoreControlGroup vertical fluid>
+              <ReqoreButton description='This is a button'>Button</ReqoreButton>
+              <ReqoreButton description='This is a button'>Button</ReqoreButton>
+              <ReqoreButton description='This is a button'>Button</ReqoreButton>
+              <ReqoreButton description='This is a button'>Button</ReqoreButton>
+            </ReqoreControlGroup>
           </ReqoreColumn>
-          <ReqoreColumn {...args} style={{ border: '1px solid white', padding: '10px' }}>
-            3rd column
+          <ReqoreColumn
+            {...args}
+            style={{ border: '1px solid white', padding: '10px' }}
+            flexFlow='column'
+          >
+            <ReqoreH2>4th Column</ReqoreH2>
+            <ReqoreVerticalSpacer height={20} lineSize='tiny' />
+            <ReqoreControlGroup fluid>
+              <ReqoreInput placeholder='Filter' />
+            </ReqoreControlGroup>
           </ReqoreColumn>
         </>
       )}
@@ -68,4 +130,15 @@ export const Basic = Template.bind({});
 export const MultipleColumns = Template.bind({});
 MultipleColumns.args = {
   multipleColumns: true,
+};
+export const CustomAlignment = Template.bind({});
+CustomAlignment.args = {
+  multipleColumns: true,
+  alignItems: 'center',
+};
+
+export const WithMinimumWidth = Template.bind({});
+WithMinimumWidth.args = {
+  multipleColumns: true,
+  minColumnWidth: '500px',
 };

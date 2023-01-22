@@ -84,7 +84,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
 
       ${fill &&
       css`
-        flex: 1;
+        flex: 1 0 auto;
       `}
 
       ${disabled &&

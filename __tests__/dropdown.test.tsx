@@ -58,7 +58,7 @@ test('Renders <Dropdown /> properly', () => {
   expect(document.querySelectorAll('.reqore-menu-item').length).toBe(3);
 });
 
-test('Renders disabled <Dropdown /> when children are empty', () => {
+test('Renders disabled <Dropdown /> when items are empty', () => {
   jest.useFakeTimers();
   act(() => {
     render(
@@ -73,6 +73,45 @@ test('Renders disabled <Dropdown /> when children are empty', () => {
   });
 
   fireEvent.click(document.querySelector('.reqore-button')!);
+
+  expect(document.querySelector('.reqore-button')?.getAttribute('disabled')).toBe('');
+});
+
+test('Renders disabled <Dropdown /> when items are not empty & disabled prop is true', () => {
+  jest.useFakeTimers();
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDropdown
+              label='Disabled with items'
+              items={[
+                {
+                  selected: true,
+                  label: 'Hello',
+                  value: 'hello',
+                  icon: 'SunCloudyLine',
+                },
+                {
+                  label: 'How are ya',
+                  value: 'howareya',
+                  icon: 'BatteryChargeFill',
+                },
+                {
+                  disabled: true,
+                  label: 'i aM diSAblEd',
+                  value: 'disabled',
+                  icon: 'StopCircleLine',
+                },
+              ]}
+              disabled
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
 
   expect(document.querySelector('.reqore-button')?.getAttribute('disabled')).toBe('');
 });

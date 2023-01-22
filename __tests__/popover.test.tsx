@@ -9,6 +9,7 @@ const SimpleContent = (props: any) => {
       content={props.content || 'Tooltip content'}
       handler={props.type}
       delay={props.delay}
+      blur={props.blur}
       isReqoreComponent
     >
       Hover me
@@ -151,6 +152,28 @@ test('Shows the popover after a global delay', async () => {
   fireEvent.mouseLeave(screen.getByText('Hover me'));
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+});
+
+test('Shows the popover with blur', async () => {
+  render(
+    <ReqoreUIProvider>
+      <SimpleContent blur={3} />
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.mouseEnter(screen.getByText('Hover me'));
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-blur-wrapper').length).toBe(1);
+  expect(document.querySelectorAll('p')[0].classList).toContain('reqore-blur-z-index');
+
+  fireEvent.mouseLeave(screen.getByText('Hover me'));
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-blur-wrapper').length).toBe(0);
+  expect(document.querySelectorAll('p')[0].classList).not.toContain('reqore-blur-z-index');
 });
 
 test('Does not show the popover with delay if time not reached', async () => {

@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -98,6 +98,7 @@ export interface IReqorePanelProps
   headerEffect?: IReqoreEffect;
   transparent?: boolean;
   iconColor?: TReqoreEffectColor;
+  responsiveActions?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -286,6 +287,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       badge,
       iconColor,
       fluid,
+      responsiveActions = true,
       size: panelSize = 'normal',
       ...rest
     }: IReqorePanelProps,
@@ -316,7 +318,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         !!size(actions.filter(isActionShown)) ||
         !!badge ||
         !!icon,
-      [label, collapsible, onClose, actions, badge]
+      [label, collapsible, onClose, actions, badge, icon]
+    );
+
+    // Return true if the card has a title bar, otherwise return false.
+    const hasTitleHeader: boolean = useMemo(
+      () => !!label || !!badge || !!icon,
+      [label, icon, badge]
     );
 
     // If collapsible is true, toggle the isCollapsed state
@@ -524,45 +532,47 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             opacity={opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={noHorizontalPadding}
           >
-            <StyledPanelTitleHeader>
-              {icon && (
-                <ReqoreIcon
-                  size={`${
-                    ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
-                  }px`}
-                  icon={icon}
-                  margin='right'
-                  color={iconColor}
-                />
-              )}
-              {typeof label === 'string' ? (
-                <ReqoreHeading
-                  size={headerSize || panelSize}
-                  customTheme={theme}
-                  effect={{
-                    noWrap: true,
-                    ...headerEffect,
-                  }}
-                >
-                  {label}
-                </ReqoreHeading>
-              ) : (
-                label
-              )}
-              {badge || badge === 0 ? (
-                <>
-                  <ButtonBadge
-                    color={changeLightness(theme.main, 0.18)}
-                    size={panelSize}
-                    content={badge}
+            {hasTitleHeader && (
+              <StyledPanelTitleHeader>
+                {icon && (
+                  <ReqoreIcon
+                    size={`${
+                      ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                    }px`}
+                    icon={icon}
+                    margin='right'
+                    color={iconColor}
                   />
-                  <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
-                </>
-              ) : null}
-            </StyledPanelTitleHeader>
+                )}
+                {typeof label === 'string' ? (
+                  <ReqoreHeading
+                    size={headerSize || panelSize}
+                    customTheme={theme}
+                    effect={{
+                      noWrap: true,
+                      ...headerEffect,
+                    }}
+                  >
+                    {label}
+                  </ReqoreHeading>
+                ) : (
+                  label
+                )}
+                {badge || badge === 0 ? (
+                  <>
+                    <ButtonBadge
+                      color={changeLightness(theme.main, 0.18)}
+                      size={panelSize}
+                      content={badge}
+                    />
+                    <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
+                  </>
+                ) : null}
+              </StyledPanelTitleHeader>
+            )}
             {hasResponsiveActions(actions) && (
               <ReqoreControlGroup
-                responsive
+                responsive={responsiveActions}
                 fluid
                 horizontalAlign='flex-end'
                 customTheme={theme}
@@ -634,7 +644,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               </>
             ) : null}
             {hasResponsiveActions(leftBottomActions) && (
-              <ReqoreControlGroup fluid responsive customTheme={theme} size={panelSize}>
+              <ReqoreControlGroup
+                fluid
+                responsive={responsiveActions}
+                customTheme={theme}
+                size={panelSize}
+              >
                 {leftBottomActions.map(renderResponsiveActions)}
               </ReqoreControlGroup>
             )}
@@ -642,7 +657,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               <ReqoreControlGroup
                 fluid
                 horizontalAlign='flex-end'
-                responsive
+                responsive={responsiveActions}
                 customTheme={theme}
                 size={panelSize}
               >
