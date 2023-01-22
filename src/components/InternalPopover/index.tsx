@@ -151,7 +151,6 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     transparent,
     maxWidth,
     maxHeight,
-    blur,
     intent,
     title,
     icon,
