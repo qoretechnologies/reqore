@@ -46,6 +46,7 @@ const GlobalStyle = createGlobalStyle`
     z-index: 999998;
     cursor: pointer;
     background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.3)};
+    backdrop-filter: blur(3px);
   }
 
   .reqore-blur-z-index {

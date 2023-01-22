@@ -25,10 +25,10 @@ export default {
       type: 'boolean',
     }),
     ...createArg('blur', {
-      defaultValue: 0,
+      defaultValue: false,
       name: 'Blur',
       description: 'Makes the popover blurred',
-      type: 'number',
+      type: 'boolean',
     }),
     ...createArg('maxHeight', {
       defaultValue: undefined,
@@ -115,7 +115,12 @@ const Template: Story<IReqorePopoverProps & { insideModal?: boolean }> = (
           intent='info'
           minimal
           description='I have a cool tooltip with blur'
-          tooltip={{ content: 'See? Told you', blur: 3, handler: 'hoverStay', openOnMount: true }}
+          tooltip={{
+            content: 'See? Told you',
+            blur: true,
+            handler: 'hoverStay',
+            openOnMount: true,
+          }}
         >
           Hover me for something cool
         </ReqoreButton>
@@ -311,7 +316,7 @@ const Template: Story<IReqorePopoverProps & { insideModal?: boolean }> = (
               <ReqorePanel label='This is a test' flat>
                 <ReqoreMessage
                   flat
-                  tooltip={{ content: 'I am a popover inside a popover with blur', blur: 3 }}
+                  tooltip={{ content: 'I am a popover inside a popover with blur', blur: true }}
                 >
                   In to am attended desirous raptures declared diverted confined at. Collected
                   instantly remaining up certainly to necessary as. Over walk dull into

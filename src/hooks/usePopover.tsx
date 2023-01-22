@@ -50,7 +50,7 @@ export interface IPopover
   closeOnOutsideClick?: boolean;
   closeOnAnyClick?: boolean;
   delay?: number;
-  blur?: number;
+  blur?: boolean;
   transparent?: boolean;
   maxWidth?: string;
   maxHeight?: string;
@@ -102,13 +102,12 @@ const usePopover = ({
       ...rest,
     });
 
-    if (rest.blur > 0) {
+    if (rest.blur) {
       // Create a div and prepend before the targetElement
       const blurDiv = document.createElement('div');
 
       blurDiv.id = `reqore-blur-${current}`;
       blurDiv.classList.add('reqore-blur-wrapper');
-      blurDiv.style['-webkit-backdrop-filter'] = `blur(${rest.blur}px)`;
 
       // Add the blur div before the target element
       targetElement.before(blurDiv);
