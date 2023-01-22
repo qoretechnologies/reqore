@@ -318,7 +318,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         !!size(actions.filter(isActionShown)) ||
         !!badge ||
         !!icon,
-      [label, collapsible, onClose, actions, badge]
+      [label, collapsible, onClose, actions, badge, icon]
+    );
+
+    // Return true if the card has a title bar, otherwise return false.
+    const hasTitleHeader: boolean = useMemo(
+      () => !!label || !!badge || !!icon,
+      [label, icon, badge]
     );
 
     // If collapsible is true, toggle the isCollapsed state
@@ -526,42 +532,44 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             opacity={opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={noHorizontalPadding}
           >
-            <StyledPanelTitleHeader>
-              {icon && (
-                <ReqoreIcon
-                  size={`${
-                    ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
-                  }px`}
-                  icon={icon}
-                  margin='right'
-                  color={iconColor}
-                />
-              )}
-              {typeof label === 'string' ? (
-                <ReqoreHeading
-                  size={headerSize || panelSize}
-                  customTheme={theme}
-                  effect={{
-                    noWrap: true,
-                    ...headerEffect,
-                  }}
-                >
-                  {label}
-                </ReqoreHeading>
-              ) : (
-                label
-              )}
-              {badge || badge === 0 ? (
-                <>
-                  <ButtonBadge
-                    color={changeLightness(theme.main, 0.18)}
-                    size={panelSize}
-                    content={badge}
+            {hasTitleHeader && (
+              <StyledPanelTitleHeader>
+                {icon && (
+                  <ReqoreIcon
+                    size={`${
+                      ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                    }px`}
+                    icon={icon}
+                    margin='right'
+                    color={iconColor}
                   />
-                  <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
-                </>
-              ) : null}
-            </StyledPanelTitleHeader>
+                )}
+                {typeof label === 'string' ? (
+                  <ReqoreHeading
+                    size={headerSize || panelSize}
+                    customTheme={theme}
+                    effect={{
+                      noWrap: true,
+                      ...headerEffect,
+                    }}
+                  >
+                    {label}
+                  </ReqoreHeading>
+                ) : (
+                  label
+                )}
+                {badge || badge === 0 ? (
+                  <>
+                    <ButtonBadge
+                      color={changeLightness(theme.main, 0.18)}
+                      size={panelSize}
+                      content={badge}
+                    />
+                    <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
+                  </>
+                ) : null}
+              </StyledPanelTitleHeader>
+            )}
             {hasResponsiveActions(actions) && (
               <ReqoreControlGroup
                 responsive={responsiveActions}
