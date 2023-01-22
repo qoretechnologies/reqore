@@ -66,7 +66,7 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
         icon: caretPosition === 'left' ? icon || 'ArrowDownSFill' : rightIcon,
         rightIcon: caretPosition === 'right' ? icon || 'ArrowDownSFill' : rightIcon,
         style: buttonStyle || rest.style,
-        disabled: !size(items),
+        disabled: !size(items) || (rest as any).disabled,
         className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
       } as T),
     [items, icon, rightIcon, buttonStyle, caretPosition, rest]

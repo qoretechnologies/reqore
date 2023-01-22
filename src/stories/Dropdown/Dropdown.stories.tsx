@@ -202,6 +202,7 @@ const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
             },
           ]}
         />
+        <ReqoreDropdown label='Disabled with items' {...args} disabled />
       </ReqoreControlGroup>
       <br />
       <ReqoreControlGroup fluid>
