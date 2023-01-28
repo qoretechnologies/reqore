@@ -195,6 +195,7 @@ export const StyledNotificationContent = styled.div`
   padding: 0;
   flex: 1;
   font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
+  overflow-wrap: anywhere;
 
   ${({ hasTitle, size = 'normal' }) =>
     hasTitle &&

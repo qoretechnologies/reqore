@@ -116,7 +116,7 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
             ...actions.map((action) => ({ ...action, position: 'right' })),
           ]}
         >
-          This is not a fluid panel
+          Thisisnotafluidpanelbutapanelthathasalongstringwithoutspacesthatneedstobewrapperotherwiseitwilladdahorizontalscrollbar
         </ReqorePanel>
         <ReqoreVerticalSpacer height={10} />
         <ReqorePanel

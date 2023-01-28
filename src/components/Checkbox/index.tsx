@@ -8,7 +8,7 @@ import {
   changeLightness,
   getNthGradientColor,
   getReadableColor,
-  getReadableColorFrom,
+  getReadableColorFrom
 } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -21,7 +21,7 @@ import {
   IReqoreReadOnly,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
-  TReqoreTooltipProp,
+  TReqoreTooltipProp
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreEffect, ReqoreTextEffect, StyledEffect, StyledTextEffect } from '../Effect';
@@ -97,7 +97,7 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size] * 1.8}px;
 
-  border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.25 : 0.2)};
+  border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.35 : 0.2)};
   border-radius: 50px;
 
   background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.3), 0.1)};
@@ -160,7 +160,7 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
       getReadableColor(theme, undefined, undefined, false, theme.originalMain)};
 
     > ${StyledSwitch} {
-      border-color: ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.3 : 0.25)};
+      border-color: ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.4 : 0.35)};
     }
   }
 `;

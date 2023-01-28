@@ -90,6 +90,15 @@ export const getOneLessSize = (size: TSizes): TSizes => {
   return NUMBER_TO_SIZE[oneLessSizeNumber];
 };
 
+export const getOneHigherSize = (size: TSizes): TSizes => {
+  // Get the initial sizes number
+  const initialSizeNumber: number = SIZE_TO_NUMBER[size];
+  // Reduce the size number by one
+  const oneHigherSizeNumber: number = initialSizeNumber + 1 === 6 ? 5 : initialSizeNumber + 1;
+  // Get the size name from the number
+  return NUMBER_TO_SIZE[oneHigherSizeNumber];
+};
+
 export const isActionShown = (action: IReqorePanelAction) => action.show !== false;
 
 export const alignToFlexAlign = (

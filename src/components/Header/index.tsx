@@ -23,6 +23,25 @@ export const StyledHeader = styled(StyledTextEffect)`
   margin: 0;
   padding: 0;
   color: ${({ theme, intent }) => (intent ? theme.intents[intent] : 'inherit')};
+
+  font-size: ${({ _size }) => {
+    switch (_size) {
+      case 1:
+        return '30px';
+      case 2:
+        return '24px';
+      case 3:
+        return '19px';
+      case 4:
+        return '14px';
+      case 5:
+        return '11px';
+      case 6:
+        return '8px';
+      default:
+        return 'inherit';
+    }
+  }};
 `;
 
 export const ReqoreHeading = memo(
@@ -34,7 +53,7 @@ export const ReqoreHeading = memo(
     }, [_size]);
 
     return (
-      <StyledHeader as={HTMLheaderElement} theme={theme} intent={intent} {...props}>
+      <StyledHeader as={HTMLheaderElement} theme={theme} intent={intent} {...props} _size={_size}>
         {children}
       </StyledHeader>
     );

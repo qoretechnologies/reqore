@@ -105,7 +105,7 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
           &:focus,
           &:hover {
             outline: none;
-            border-color: ${({ theme }) => changeLightness(theme.main, 0.25)};
+            border-color: ${({ theme }) => changeLightness(theme.main, 0.35)};
           }
         `
       : undefined}

@@ -76,6 +76,8 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps}>Left text</ReqoreButton>
         <ReqoreButton
           {...buttonProps}
+          icon={undefined}
+          rightIcon={undefined}
           textAlign='center'
           maxWidth='250px'
           badge='10'

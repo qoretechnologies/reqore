@@ -7,7 +7,9 @@ export const MultiSelectItems: TReqoreMultiSelectItem[] = [
     icon: 'SunCloudyLine',
   },
   {
-    label: 'Existing item 2',
+    label:
+      'Existing item 2 this is a really long item that needs to wrap and if it does not wrap then its bugged because we supplied the wrap prop so it should wrap',
+    wrap: true,
     value: 'Existing item 2',
     icon: 'BatteryChargeFill',
   },

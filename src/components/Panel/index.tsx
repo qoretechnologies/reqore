@@ -19,7 +19,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { isActionShown } from '../../helpers/utils';
+import { getOneHigherSize, isActionShown } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -244,6 +244,7 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     minimal && padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   flex: 1;
   overflow: auto;
+  overflow-wrap: anywhere;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 `;
 
@@ -562,7 +563,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   <>
                     <ButtonBadge
                       color={changeLightness(theme.main, 0.18)}
-                      size={panelSize}
+                      size={getOneHigherSize(panelSize)}
                       content={badge}
                     />
                     <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
