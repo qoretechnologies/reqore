@@ -88,7 +88,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
                   _insidePopover,
                   _popoverId,
                   customTheme: child.props?.customTheme || theme,
-                  wrap: wrapText,
+                  wrap: 'wrap' in (child.props || {}) ? child.props.wrap : wrapText,
                   flat: 'flat' in (child.props || {}) ? child.props.flat : flat,
                   minimal: 'minimal' in (child.props || {}) ? child.props.minimal : minimal,
                 })

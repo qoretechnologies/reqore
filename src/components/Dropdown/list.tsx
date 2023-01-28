@@ -79,6 +79,8 @@ const ReqoreDropdownList = memo(
       }
     };
 
+    console.log('Filtered Items', filteredItems);
+
     return (
       <ReqoreMenu
         _insidePopover={!multiSelect}
