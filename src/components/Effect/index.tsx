@@ -102,8 +102,6 @@ const StyledGradientKeyframes = keyframes`
 `;
 
 export const StyledEffect = styled.span`
-  transition: all 0.2s ease-in-out;
-
   // If gradient was supplied
   ${({ effect, theme, minimal, active, isText }: IReqoreTextEffectProps) => {
     if (!effect || !effect.gradient) {

@@ -1,10 +1,11 @@
 import { rgba } from 'polished';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import useAutosizeTextArea from '../../hooks/useTextareaAutoSize';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import { DisabledElement, ReadOnlyElement } from '../../styles';
@@ -58,19 +59,15 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
 `;
 
 export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
-  height: 100%;
   width: 100%;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   margin: 0;
   padding: 5px 7px;
-  resize: none;
 
   background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
     minimal ? 'transparent' : rgba(theme.main, 0.1)};
   color: ${({ theme }: IReqoreInputStyle) =>
     getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
-
-  transition: all 0.2s ease-out;
 
   &:active,
   &:focus {
@@ -85,8 +82,6 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   border-bottom: ${({ minimal, theme, flat }) =>
     minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.2)}` : undefined};
 
-  transition: all 0.2s ease-out;
-
   ${({ disabled, readOnly }) =>
     !disabled && !readOnly
       ? css`
@@ -100,7 +95,6 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
       : undefined}
 
   &::placeholder {
-    transition: all 0.2s ease-out;
     color: ${({ theme }) =>
       rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)};
   }
@@ -134,14 +128,22 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
       intent,
       rounded = true,
       wrapperStyle,
+      value,
+      onChange,
       ...rest
     }: IReqoreTextareaProps,
-    ref: any
+    ref
   ) => {
-    const { targetRef } = useCombinedRefs(ref);
+    const { targetRef }: any = useCombinedRefs(ref);
     const theme = useReqoreTheme('main', customTheme, intent);
+    const [_value, setValue] = useState(value || '');
+
+    useEffect(() => {
+      setValue(value || '');
+    }, [value]);
 
     useTooltip(targetRef?.current, tooltip);
+    useAutosizeTextArea(targetRef?.current, _value, scaleWithContent);
 
     return (
       <StyledTextareaWrapper
@@ -159,18 +161,23 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
             interactive: !rest?.disabled && !rest.readOnly,
             ...rest?.effect,
           }}
+          onChange={(e) => {
+            setValue(e.target.value);
+            onChange?.(e);
+          }}
           as='textarea'
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
           ref={targetRef}
           theme={theme}
           rounded={rounded}
-          rows={scaleWithContent ? rest?.value?.split(/\r\n|\r|\n/).length || 1 : rest.rows}
+          rows={1}
+          value={_value}
         />
         {!rest.readOnly && (
           <ReqoreInputClearButton
-            enabled={!rest?.disabled && !!(onClearClick && rest?.onChange)}
-            show={rest?.value && rest.value !== ''}
+            enabled={!rest?.disabled && !!(onClearClick && onChange)}
+            show={_value && _value !== ''}
             onClick={onClearClick}
             size={size}
           />
