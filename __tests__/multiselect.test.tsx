@@ -52,7 +52,7 @@ test('Renders <ReqoreMultiSelect /> with default value', () => {
     render(
       <MultiSelectItemsTestComponent
         items={MultiSelectItems}
-        value={['Existing item 1', 'Existing item 2']}
+        value={['Existing item 1', 'Existing item 3']}
       />
     );
   });
@@ -61,7 +61,7 @@ test('Renders <ReqoreMultiSelect /> with default value', () => {
 
   expect(document.querySelectorAll('.reqore-tag').length).toBe(2);
   expect(screen.getByText('Existing item 1')).toBeTruthy();
-  expect(screen.getByText('Existing item 2')).toBeTruthy();
+  expect(screen.getByText('Existing item 3')).toBeTruthy();
 });
 
 test('Renders <ReqoreMultiSelect /> with default value, items can be removed', () => {
@@ -69,7 +69,7 @@ test('Renders <ReqoreMultiSelect /> with default value, items can be removed', (
     render(
       <MultiSelectItemsTestComponent
         items={MultiSelectItems}
-        value={['Existing item 1', 'Existing item 2']}
+        value={['Existing item 1', 'Existing item 3']}
         canRemoveItems
       />
     );
@@ -80,7 +80,7 @@ test('Renders <ReqoreMultiSelect /> with default value, items can be removed', (
   fireEvent.click(document.querySelectorAll('.reqore-tag-remove')[0]!);
 
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
-  expect(screen.getByText('Existing item 2')).toBeTruthy();
+  expect(screen.getByText('Existing item 3')).toBeTruthy();
 });
 
 test('Renders disabled <ReqoreMultiSelect /> when items are empty and items CANNOT be created', () => {
