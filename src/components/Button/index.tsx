@@ -42,7 +42,7 @@ import {
   TReqoreHexColor,
 } from '../Effect';
 import ReqoreIcon from '../Icon';
-import { ReqoreSpacer } from '../Spacer';
+import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
 
@@ -292,7 +292,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   }
 
   .reqore-button-description {
-    padding-bottom: ${({ size }) => PADDING_FROM_SIZE[getOneLessSize(size)]}px;
+    padding-bottom: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
   }
 `;
 
@@ -443,7 +443,7 @@ const ReqoreButton = memo(
           className={`${className || ''} reqore-control reqore-button`}
         >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
-            {icon && (
+            {icon ? (
               <>
                 <ReqoreIcon
                   icon={icon}
@@ -455,9 +455,17 @@ const ReqoreButton = memo(
                   <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
                 ) : null}
               </>
+            ) : (
+              <ReqoreHorizontalSpacer
+                width={1}
+                style={textAlign !== 'left' ? { marginRight: 'auto' } : undefined}
+              />
             )}
             {children && (
-              <StyledAnimatedTextWrapper textAlign={textAlign}>
+              <StyledAnimatedTextWrapper
+                textAlign={textAlign}
+                style={textAlign === 'center' ? { margin: 'auto' } : undefined}
+              >
                 <StyledActiveContent wrap={wrap} effect={labelEffect}>
                   {children}
                 </StyledActiveContent>
@@ -475,7 +483,12 @@ const ReqoreButton = memo(
             {(badge || badge === 0) && !wrap ? (
               <ButtonBadge content={badge} size={size} color={color} />
             ) : null}
-            {rightIcon && (
+            {!rightIcon ? (
+              <ReqoreHorizontalSpacer
+                width={1}
+                style={textAlign !== 'right' ? { marginLeft: 'auto' } : undefined}
+              />
+            ) : (
               <>
                 {children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
                 <ReqoreIcon
