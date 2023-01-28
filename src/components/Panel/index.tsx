@@ -244,6 +244,7 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     minimal && padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   flex: 1;
   overflow: auto;
+  overflow-wrap: anywhere;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 `;
 
