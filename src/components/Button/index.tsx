@@ -225,7 +225,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                   undefined
                 )};
               border-color: ${({ flat, theme, color }) =>
-                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
+                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.35)};
 
               ${animate &&
               css`
