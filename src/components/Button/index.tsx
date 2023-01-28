@@ -455,12 +455,12 @@ const ReqoreButton = memo(
                   <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
                 ) : null}
               </>
-            ) : (
+            ) : children ? (
               <ReqoreHorizontalSpacer
                 width={1}
                 style={textAlign !== 'left' ? { marginRight: 'auto' } : undefined}
               />
-            )}
+            ) : null}
             {children && (
               <StyledAnimatedTextWrapper
                 textAlign={textAlign}
@@ -484,10 +484,12 @@ const ReqoreButton = memo(
               <ButtonBadge content={badge} size={size} color={color} />
             ) : null}
             {!rightIcon ? (
-              <ReqoreHorizontalSpacer
-                width={1}
-                style={textAlign !== 'right' ? { marginLeft: 'auto' } : undefined}
-              />
+              children ? (
+                <ReqoreHorizontalSpacer
+                  width={1}
+                  style={textAlign !== 'right' ? { marginLeft: 'auto' } : undefined}
+                />
+              ) : null
             ) : (
               <>
                 {children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
