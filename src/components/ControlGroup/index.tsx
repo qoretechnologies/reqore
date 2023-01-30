@@ -344,7 +344,7 @@ const ReqoreControlGroup = memo(
               flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
               fluid: child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
               fixed: child.props?.fixed || child.props?.fixed === false ? child.props.fixed : fixed,
-              fill,
+              fill: child.props?.fill || child.props?.fill === false ? child.props.fixed : fill,
               stack:
                 child.props?.stack || child.props?.stack === false ? child.props.stack : isStack,
               intent: child.props?.intent || intent,
