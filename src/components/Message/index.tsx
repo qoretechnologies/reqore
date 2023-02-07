@@ -11,6 +11,8 @@ import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
+  IWithReqoreFixed,
+  IWithReqoreFluid,
   IWithReqoreMinimal,
   IWithReqoreOpaque,
   IWithReqoreSize,
@@ -36,6 +38,8 @@ export interface IReqoreMessageProps
     IWithReqoreMinimal,
     IWithReqoreOpaque,
     IWithReqoreTooltip,
+    IWithReqoreFixed,
+    IWithReqoreFluid,
     React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   children: any;
@@ -73,6 +77,8 @@ const ReqoreMessage = memo(
         customTheme,
         iconColor,
         tooltip,
+        fixed,
+        fluid,
         ...rest
       },
       ref
@@ -132,7 +138,8 @@ const ReqoreMessage = memo(
             flat={flat}
             minimal={minimal}
             asMessage
-            fluid
+            fluid={fluid}
+            fixed={fixed}
             className={`${rest?.className || ''} reqore-message`}
             ref={targetRef}
             size={size}

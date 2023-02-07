@@ -35,6 +35,7 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       {...args}
       type='success'
       title='Simple notification'
+      opaque
       content={
         <ReqoreTag
           label='Custom content in notification'
@@ -85,6 +86,7 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       onClick={noop}
       onClose={noop}
       flat
+      opaque
       intent='info'
       size='big'
     />

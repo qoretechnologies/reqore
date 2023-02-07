@@ -389,3 +389,72 @@ test('Renders <ReqoreMultiSelect /> and calls onItemClick when an item is clicke
 
   expect(onItemClick).toHaveBeenCalledTimes(1);
 });
+
+test('Renders <ReqoreMultiSelect /> and calls onItemAdded when an item is added', () => {
+  const onItemAdd = jest.fn();
+
+  act(() => {
+    render(
+      <MultiSelectItemsTestComponent
+        items={MultiSelectItems}
+        canCreateItems
+        enterKeySelects
+        onItemAdded={onItemAdd}
+      />
+    );
+  });
+
+  const item = MultiSelectItems.find((item) => item.value === 'Existing item 3');
+
+  fireEvent.focus(document.querySelector('.reqore-input')!);
+  fireEvent.change(document.querySelector('.reqore-input')!, {
+    target: { value: 'Existing item 3' },
+  });
+
+  jest.advanceTimersByTime(1);
+
+  // Select the item by pressing ENTER key
+  fireEvent.keyDown(document.querySelector('.reqore-input')!, {
+    key: 'Enter',
+  });
+
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
+  expect(onItemAdd).toHaveBeenNthCalledWith(1, item!.value);
+
+  // Add completely new item
+  fireEvent.focus(document.querySelector('.reqore-input')!);
+  fireEvent.change(document.querySelector('.reqore-input')!, {
+    target: { value: 'Some new item' },
+  });
+
+  jest.advanceTimersByTime(1);
+
+  // Create the item by clicking
+  fireEvent.click(screen.getAllByText('Create new "Some new item"')[1]);
+
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(2);
+  expect(onItemAdd).toHaveBeenNthCalledWith(2, 'Some new item');
+});
+
+test('Renders <ReqoreMultiSelect /> and calls onItemRemoved when an item is removed', () => {
+  const onItemRemove = jest.fn();
+
+  act(() => {
+    render(
+      <MultiSelectItemsTestComponent
+        items={MultiSelectItems}
+        canCreateItems
+        enterKeySelects
+        canRemoveItems
+        onItemRemoved={onItemRemove}
+        value={['Existing item 3']}
+      />
+    );
+  });
+
+  const item = MultiSelectItems.find((item) => item.value === 'Existing item 3');
+
+  fireEvent.click(document.querySelectorAll('.reqore-tag-remove')[0]!);
+
+  expect(onItemRemove).toHaveBeenNthCalledWith(1, item!.value);
+});

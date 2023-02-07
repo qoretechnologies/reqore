@@ -32,7 +32,13 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { StyledEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
+import {
+  IReqoreEffect,
+  StyledEffect,
+  StyledTextEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+} from '../Effect';
 import ReqoreIcon from '../Icon';
 
 export interface IReqoreTagAction extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent {
@@ -45,10 +51,10 @@ export interface IReqoreTagProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'>,
     IWithReqoreTooltip,
     IReqoreDisabled,
-    IWithReqoreEffect,
     IWithReqoreMinimal,
     IWithReqoreFluid,
-    IWithReqoreFixed {
+    IWithReqoreFixed,
+    IWithReqoreEffect {
   size?: TSizes;
   label?: string | number;
   labelKey?: string | number;
@@ -65,6 +71,8 @@ export interface IReqoreTagProps
   asBadge?: boolean;
   intent?: TReqoreIntent;
   wrap?: boolean;
+  labelEffect?: IReqoreEffect;
+  labelKeyEffect?: IReqoreEffect;
 }
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
@@ -170,7 +178,7 @@ const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
   min-height: 100%;
 `;
 
-const StyledTagContent = styled.span<{ size: TSizes }>`
+const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
   padding: 4px ${({ size }) => PADDING_FROM_SIZE[size]}px;
   min-height: 100%;
   display: flex;
@@ -190,7 +198,6 @@ const StyledTagContent = styled.span<{ size: TSizes }>`
 `;
 
 const StyledTagContentKey = styled(StyledTagContent)`
-  font-weight: 800;
   flex: 1;
 
   ${({ wrap, hasWidth }) =>
@@ -250,6 +257,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       leftIconColor,
       rightIconColor,
       iconColor,
+      labelEffect,
+      labelKeyEffect,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -309,7 +318,17 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               />
             )}
             {labelKey && (
-              <StyledTagContentKey wrap={wrap} hasWidth={!!width} size={size}>
+              <StyledTagContentKey
+                wrap={wrap}
+                hasWidth={!!width}
+                size={size}
+                effect={
+                  {
+                    weight: 'thick',
+                    ...labelKeyEffect,
+                  } as IReqoreEffect
+                }
+              >
                 {labelKey}
               </StyledTagContentKey>
             )}
@@ -325,7 +344,14 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             hasKey={!!labelKey}
           >
             {label || label === 0 ? (
-              <StyledTagContent size={size} wrap={wrap} hasWidth={!!width}>
+              <StyledTagContent
+                size={size}
+                wrap={wrap}
+                hasWidth={!!width}
+                effect={{
+                  ...labelEffect,
+                }}
+              >
                 {label}
               </StyledTagContent>
             ) : null}
