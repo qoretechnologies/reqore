@@ -21,13 +21,6 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   showControls?: boolean;
 }
 
-const StyledTreeWrapper = styled.div`
-  display: flex;
-  flex-flow: column;
-  max-height: 100%;
-  overflow: hidden;
-`;
-
 export interface ITreeStyle {
   interactive?: boolean;
   theme: IReqoreTheme;
