@@ -21,6 +21,8 @@ export interface IReqoreMultiSelectProps
   items?: TReqoreMultiSelectItem[];
   onItemClick?: (item: IReqoreDropdownItem) => void;
   onItemClickIcon?: IReqoreTagProps['rightIcon'];
+  onItemAdded?: (item: TReqoreMultiSelectItem) => void;
+  onItemRemoved?: (item: TReqoreMultiSelectItem) => void;
   canRemoveItems?: boolean;
   canCreateItems?: boolean;
   selectedItemEffect?: IReqoreEffect;
@@ -87,6 +89,8 @@ export const ReqoreMultiSelect = ({
   openOnMount,
   enterKeySelects,
   onItemClickIcon,
+  onItemAdded,
+  onItemRemoved,
   ...rest
 }: IReqoreMultiSelectProps) => {
   const [createdItems, setCreatedItems] = useState<TReqoreMultiSelectItem[]>([]);
@@ -114,8 +118,10 @@ export const ReqoreMultiSelect = ({
     (item: TReqoreMultiSelectItem): void => {
       if (value.includes(item.value)) {
         onValueChange(value.filter((v) => v !== item.value));
+        onItemRemoved?.(item.value);
       } else {
         onValueChange([...value, item.value]);
+        onItemAdded?.(item.value);
       }
     },
     [value]

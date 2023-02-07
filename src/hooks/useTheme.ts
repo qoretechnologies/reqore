@@ -17,7 +17,8 @@ export interface IReqoreCustomTheme extends Partial<Omit<IReqoreTheme, 'main' | 
 export const useReqoreTheme = (
   element?: string,
   customTheme: IReqoreCustomTheme = {},
-  intent?: TReqoreIntent
+  intent?: TReqoreIntent,
+  intentsKey: 'intents' | 'notifications' = 'intents'
 ): IReqoreTheme => {
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
 
@@ -36,7 +37,7 @@ export const useReqoreTheme = (
   }
 
   if (element === 'main' && intent) {
-    _customTheme.main = theme.intents[intent];
+    _customTheme.main = theme[intentsKey][intent];
   }
 
   return mergeThemes(element, theme, _customTheme) as IReqoreTheme;

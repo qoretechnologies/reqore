@@ -1,16 +1,17 @@
 import { cloneDeep, size as lodashSize } from 'lodash';
 import { useContext, useState } from 'react';
 import styled from 'styled-components';
-import { ReqoreMessage, ReqoreTextarea } from '../..';
+import { ReqoreMessage, ReqorePanel, ReqoreTextarea } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreContext from '../../context/ReqoreContext';
 import { getLineCount, getTypeFromValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import { IReqorePanelProps } from '../Panel';
 import ReqoreTag from '../Tag';
 
-export interface IReqoreTreeProps extends IWithReqoreSize {
+export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   data: Object | Array<any>;
   mode?: 'tree' | 'copy';
   expanded?: boolean;
@@ -23,6 +24,8 @@ export interface IReqoreTreeProps extends IWithReqoreSize {
 const StyledTreeWrapper = styled.div`
   display: flex;
   flex-flow: column;
+  max-height: 100%;
+  overflow: hidden;
 `;
 
 export interface ITreeStyle {
@@ -43,6 +46,7 @@ export const ReqoreTree = ({
   onItemClick,
   withLabelCopy,
   showControls = true,
+  ...rest
 }: IReqoreTreeProps) => {
   const [_mode, setMode] = useState<'tree' | 'copy'>(mode);
   const [items, setItems] = useState({});
@@ -179,74 +183,62 @@ export const ReqoreTree = ({
   const lineCount: number = getLineCount(textData);
 
   return (
-    <StyledTreeWrapper className='reqore-tree'>
-      {showControls && (
-        <ReqoreControlGroup stack size={size} responsive>
-          {isDeep() && !allExpanded ? (
-            <ReqoreButton
-              flat
-              className='reqore-tree-expand-all'
-              icon='ArrowDownFill'
-              onClick={handleExpandClick}
-              key='expand-button'
-            >
-              Expand all
-            </ReqoreButton>
-          ) : null}
-          {isDeep() &&
-            (allExpanded || lodashSize(items) > 0 ? (
-              <ReqoreButton
-                flat
-                className='reqore-tree-collapse-all'
-                icon='ArrowUpFill'
-                onClick={handleCollapseClick}
-                key='collapse-button'
-              >
-                {' '}
-                Collapse all{' '}
-              </ReqoreButton>
-            ) : null)}
-          <ReqoreButton
-            flat
-            className='reqore-tree-show-types'
-            icon='CodeBoxFill'
-            active={_showTypes}
-            onClick={handleTypesClick}
-          >
-            Show types
-          </ReqoreButton>
-          <ReqoreButton
-            flat
-            className='reqore-tree-as-tree'
-            active={_mode === 'tree'}
-            onClick={handleTreeClick}
-            icon='Menu2Fill'
-          >
-            Tree View
-          </ReqoreButton>
-          <ReqoreButton
-            flat
-            className='reqore-tree-as-text'
-            onClick={handleCopyClick}
-            active={_mode === 'copy'}
-            icon='ClipboardFill'
-          >
-            Text View
-          </ReqoreButton>
-        </ReqoreControlGroup>
-      )}
+    <ReqorePanel
+      className='reqore-tree'
+      minimal
+      flat
+      transparent
+      size={size}
+      {...rest}
+      actions={
+        showControls
+          ? [
+              {
+                className: 'reqore-tree-expand-all',
+                icon: 'ArrowDownFill',
+                onClick: handleExpandClick,
+                show: !!(isDeep() && !allExpanded),
+                label: 'Expand all',
+              },
+              {
+                show: !!(isDeep() && (allExpanded || lodashSize(items) > 0)),
+                className: 'reqore-tree-collapse-all',
+                icon: 'ArrowUpFill',
+                onClick: handleCollapseClick,
 
-      {_mode === 'tree' && <div>{renderTree(data, true)}</div>}
+                label: 'Collapse all',
+              },
+              {
+                className: 'reqore-tree-show-types',
+                icon: 'CodeBoxFill',
+                active: _showTypes,
+                onClick: handleTypesClick,
+                label: 'Show types',
+              },
+              {
+                className: _mode === 'tree' ? 'reqore-tree-as-text' : 'reqore-tree-as-tree',
+                onClick: _mode === 'tree' ? handleCopyClick : handleTreeClick,
+                icon: _mode === 'tree' ? 'Menu2Fill' : 'ClipboardFill',
+                label: _mode === 'tree' ? 'Text View' : 'Tree View',
+              },
+            ]
+          : undefined
+      }
+    >
+      {_mode === 'tree' && renderTree(data, true)}
 
       {_mode === 'copy' && (
         <ReqoreTextarea
           className='reqore-tree-textarea'
           id='tree-content'
           defaultValue={textData}
+          scaleWithContent
           size={size}
+          fluid
+          readOnly
           rows={lineCount > 20 ? 20 : lineCount}
         />
       )}
-    </StyledTreeWrapper>
+    </ReqorePanel>
   );
 };

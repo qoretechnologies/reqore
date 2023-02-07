@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup } from '../../index';
-import { argManager, SizeArg } from '../utils/args';
+import { SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
@@ -160,6 +160,34 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
         color='#38fdb2'
         {...args}
         tooltip={{ content: 'Hm, another tooltip', openOnMount: true }}
+      />
+      <ReqoreTag
+        label='Custom Effect Tag'
+        effect={{
+          gradient: {
+            colors: '#ff47a3',
+          },
+        }}
+        labelKeyEffect={{
+          gradient: {
+            colors: '#b8f58a',
+          },
+          weight: 'thin',
+          spaced: 2,
+          uppercase: true,
+        }}
+        labelEffect={{
+          gradient: {
+            colors: {
+              0: '#00e3e8',
+              100: '#143a40',
+            },
+          },
+          weight: 'bold',
+        }}
+        labelKey='Effect'
+        icon='Css3Fill'
+        {...args}
       />
       <ReqoreTag
         {...args}

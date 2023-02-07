@@ -15,7 +15,13 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
 import { changeLightness, getNotificationIntent, getReadableColor } from '../../helpers/colors';
-import { IWithReqoreEffect, IWithReqoreMinimal, IWithReqoreOpaque } from '../../types/global';
+import { useReqoreTheme } from '../../hooks/useTheme';
+import {
+  IWithReqoreCustomTheme,
+  IWithReqoreEffect,
+  IWithReqoreMinimal,
+  IWithReqoreOpaque,
+} from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect } from '../Effect';
 import { ReqoreHeading } from '../Header';
@@ -26,7 +32,8 @@ export type IReqoreNotificationType = TReqoreIntent;
 export interface IReqoreNotificationProps
   extends IWithReqoreEffect,
     IWithReqoreMinimal,
-    IWithReqoreOpaque {
+    IWithReqoreOpaque,
+    IWithReqoreCustomTheme {
   type?: IReqoreNotificationType;
   intent?: TReqoreIntent;
   title?: string;
@@ -65,13 +72,14 @@ const timeoutAnimation = keyframes`
 `;
 
 export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotificationStyle>`
-  min-width: ${({ fluid }) => (!fluid ? '200px' : undefined)};
-  max-width: ${({ fluid }) => (!fluid ? '450px' : undefined)};
+  min-width: ${({ fluid }) => (!fluid ? '30px' : undefined)};
+  max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
   border-radius: 5px;
   min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
   display: flex;
-  flex: 0 0 auto;
-  overflow: auto;
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
+  overflow: hidden;
   position: relative;
   transition: all 0.2s ease-out;
 
@@ -229,10 +237,14 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       minimal,
       opaque,
       size = 'normal',
+      customTheme,
     },
     ref: any
   ) => {
     const [internalTimeout, setInternalTimeout] = useState(null);
+    const theme = useReqoreTheme('main', customTheme, type || intent, 'notifications');
+
+    console.log(theme, customTheme, intent);
 
     const transitions = useTransition(true, {
       from: { opacity: 0, transform: 'scale(0.9)' },
@@ -284,15 +296,17 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             style={styles}
             size={size}
             opaque={opaque}
+            theme={theme}
+            maxWidth='450px'
           >
             {type || intent || icon ? (
               <StyledIconWrapper type={type || intent} size={size}>
                 <ReqoreIcon icon={icon || typeToIcon[type || intent]} margin={'both'} size={size} />
               </StyledIconWrapper>
             ) : null}
-            <StyledNotificationContentWrapper size={size}>
+            <StyledNotificationContentWrapper size={size} theme={theme}>
               {title && <ReqoreHeading size={size}>{title}</ReqoreHeading>}
-              <StyledNotificationContent hasTitle={!!title} size={size}>
+              <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
                 {content}
               </StyledNotificationContent>
             </StyledNotificationContentWrapper>

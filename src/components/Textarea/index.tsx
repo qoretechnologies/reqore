@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import React, { forwardRef, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -41,6 +41,7 @@ export interface IReqoreTextareaProps
   cols?: number;
   rounded?: boolean;
   flat?: boolean;
+  fixed?: boolean;
   onClearClick?: () => any;
   wrapperStyle?: React.CSSProperties;
 }
@@ -52,17 +53,23 @@ export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
 
 export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   height: ${({ height }) => (height ? `${height}px` : undefined)};
+  min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  max-height: 100%;
   width: ${({ width, fluid }) => (fluid ? '100%' : width ? `${width}px` : 'auto')};
-  flex: ${({ fluid }) => (fluid ? '1' : undefined)};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   position: relative;
   overflow: hidden;
 `;
 
 export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   width: 100%;
+  max-width: 100%;
+  max-height: 100%;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   margin: 0;
   padding: 5px 7px;
+  min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
 
   background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
     minimal ? 'transparent' : rgba(theme.main, 0.1)};
@@ -130,6 +137,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
       wrapperStyle,
       value,
       onChange,
+      fixed,
       ...rest
     }: IReqoreTextareaProps,
     ref
@@ -151,6 +159,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
         width={width}
         height={height}
         fluid={fluid}
+        fixed={fixed}
         _size={size}
         theme={theme}
         style={wrapperStyle}
