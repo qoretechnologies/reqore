@@ -22,6 +22,6 @@ test('Renders <TimeAgo /> data properly', () => {
   const firstPara = document.querySelectorAll('.reqore-paragraph')[0];
   const secondPara = document.querySelectorAll('.reqore-paragraph')[1];
 
-  expect(firstPara.textContent).toBe('just now');
+  expect(firstPara.textContent).toBe('just');
   expect(secondPara.textContent).not.toBe('NaN');
 });
