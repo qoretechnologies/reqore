@@ -19,12 +19,24 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Get current time
+        uses: josStorer/get-current-time@v2.0.2
+        id: current_time
         with:
+          format: YYYYMMDD-HH
+          utcOffset: '+01:00'
+      # Checkout the repo
+      - uses: actions/checkout@v3
+        with: 
           fetch-depth: 0
-      - uses: actions/setup-node@v1
+          ref: ${{ github.event.pull_request.head.sha }}
+      # Get commit message
+      - name: Print head git commit message
+        id: get_head_commit_message
+        run: echo "::set-output name=HEAD_COMMIT_MESSAGE::$(git show -s --format=%s)"
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14.16.0
+          node-version: 16
       - name: Preparing environment
         id: setup_environment
         run: npm install -g yarn
@@ -47,12 +59,21 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           exitZeroOnChanges: true
-      - name: Slack notification
-        uses: Foxhoundn/slack@v1.2.94
-        with:
-          status: ${{ job.status }}
-          steps: ${{ toJson(steps) }}
-        if: always()
+      - name: Discord notification
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_USERNAME: ReQore Tests
+          DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK}}
+          DISCORD_EMBEDS: '[{"author": {"icon_url": "https://avatars.githubusercontent.com/${{ github.actor }}", "name": "${{ github.actor }}", "url": "https://github.com/${{github.actor}}"}, "url": "https://github.com/${{github.repository}}/commit/${{github.sha}}", "fields": [{ "name": "Commit Message", "value": "${{ steps.get_head_commit_message.outputs.HEAD_COMMIT_MESSAGE }}"},{"name": "Repository","value": "[${{github.event.repository.name}}](${{github.event.repository.clone_url}})","inline": true},{"name": "Branch","value": "[${{github.ref_name}}](https://github.com/${{github.repository}}/pull/${{github.ref_name}})","inline": true},{ "name": "Event", "value": "${{github.event_name}}", "inline": true },{"name": "Author","value": "[${{github.actor}}](https://github.com/${{github.actor}})","inline": true},{ "name": "Job", "value": "${{github.job}}", "inline": true },{"name": "","value": "🤖 [Github Action](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}}) 📙 [Documentation](${{ steps.chromatic_publish.outputs.storybookUrl }}) 🎨 [Chromatic Tests](${{ steps.chromatic_publish.outputs.buildUrl }})"}],"color": 65280,"footer": { "text": "Published at ${{steps.current_time.outputs.readableTime}}" }}]'
+          DISCORD_AVATAR: 'https://github.com/qoretechnologies/reqore/blob/ae8ce24b7f0984340bf4e6835025d203d1741b3a/public/q-symbol-small.png?raw=true'
+        uses: Ilshidur/action-discord@0.3.2
+        with:
+          args: ':white_check_mark: Tests action run #${{ github.run_number }} for [PR](${{ github.event.pull_request.html_url }}) triggered by ${{ github.triggering_actor }} success'
+        if: success()
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK}}
+          DISCORD_EMBEDS: '[{"author": {"icon_url": "https://avatars.githubusercontent.com/${{ github.actor }}", "name": "${{ github.actor }}", "url": "https://github.com/${{github.actor}}"}, "url": "https://github.com/${{github.repository}}/commit/${{github.sha}}", "fields": [{ "name": "Commit Message", "value": "${{ steps.get_head_commit_message.outputs.HEAD_COMMIT_MESSAGE }}"},{"name": "Repository","value": "[${{github.event.repository.name}}](${{github.event.repository.clone_url}})","inline": true},{"name": "Branch","value": "[${{github.ref_name}}](https://github.com/${{github.repository}}/pull/${{github.ref_name}})","inline": true},{ "name": "Event", "value": "${{github.event_name}}", "inline": true },{"name": "Author","value": "[${{github.actor}}](https://github.com/${{github.actor}})","inline": true},{ "name": "Job", "value": "${{github.job}}", "inline": true },{"name": "","value": "🤖 [Github Action](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}})"}],"color": 16711680,"footer": { "text": "Triggered at ${{steps.current_time.outputs.readableTime}}" }}]'
+          DISCORD_AVATAR: 'https://github.com/qoretechnologies/reqore/blob/ae8ce24b7f0984340bf4e6835025d203d1741b3a/public/q-symbol-small.png?raw=true'
+        uses: Ilshidur/action-discord@0.3.2
+        with:
+          args: ':exclamation: Tests action run #${{ github.run_number }} for [PR](${{ github.event.pull_request.html_url }}) triggered by ${{ github.triggering_actor }} failed!'
+        if: failure()

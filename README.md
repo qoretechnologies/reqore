@@ -38,7 +38,7 @@ See the [Contributing Guide](CONTRIBUTING.MD) for more technical details on cont
 
 ### Security Issues
 
-If you discover a security vulnerability in Qorus-Toolkit, please see [Security Policies and Procedures](SECURITY.md).
+If you discover a security vulnerability in this library, please see [Security Policies and Procedures](SECURITY.md).
 
 ## License
 
