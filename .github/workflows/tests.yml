@@ -75,5 +75,5 @@ jobs:
           DISCORD_AVATAR: 'https://github.com/qoretechnologies/reqore/blob/ae8ce24b7f0984340bf4e6835025d203d1741b3a/public/q-symbol-small.png?raw=true'
         uses: Ilshidur/action-discord@0.3.2
         with:
-          args: ':exclamation: Tests action run #${{ github.run_number }} for [PR](${{ github.event.pull_request.html_url }}) triggered by ${{ github.triggering_actor }} failed!'
+          args: ':exclamation: Tests action run #${{ github.run_number }} for [PR](${{ github.event.pull_request.html_url }}) triggered by ${{ github.triggering_actor }} failed!, ${{toJson(steps.chromatic_publish)}}'
         if: failure()
