@@ -59,6 +59,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           exitZeroOnChanges: true
+      - name: Save release version to outputs
+        id: save_release_version
+        run: echo ::set-output name=version::$(node -pe "require('./package.json').version")
       - name: Discord notification
         env:
           DISCORD_WEBHOOK: ${{secrets.DISCORD_WEBHOOK}}
