@@ -29,6 +29,7 @@ import {
   StyledReqoreNotification,
   typeToIcon,
 } from '../Notifications/notification';
+import { ReqoreSpinner } from '../Spinner';
 
 export interface IReqoreMessageProps
   extends IWithReqoreCustomTheme,
@@ -147,12 +148,21 @@ const ReqoreMessage = memo(
           >
             {leftIcon ? (
               <StyledIconWrapper intent={intent} size={size} theme={theme}>
-                <ReqoreIcon
-                  icon={leftIcon}
-                  margin={flat && minimal ? 'right' : 'both'}
-                  size={size}
-                  color={iconColor}
-                />
+                {intent === 'pending' ? (
+                  <ReqoreSpinner
+                    size={size}
+                    iconColor={iconColor}
+                    type={5}
+                    iconMargin={flat && minimal ? 'right' : 'both'}
+                  />
+                ) : (
+                  <ReqoreIcon
+                    icon={leftIcon}
+                    margin={flat && minimal ? 'right' : 'both'}
+                    size={size}
+                    color={iconColor}
+                  />
+                )}
               </StyledIconWrapper>
             ) : null}
             <StyledNotificationContentWrapper size={size} theme={theme}>

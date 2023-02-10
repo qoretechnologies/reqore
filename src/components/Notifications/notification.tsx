@@ -26,6 +26,7 @@ import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon from '../Icon';
+import { ReqoreSpinner } from '../Spinner';
 
 export type IReqoreNotificationType = TReqoreIntent;
 
@@ -244,8 +245,6 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     const [internalTimeout, setInternalTimeout] = useState(null);
     const theme = useReqoreTheme('main', customTheme, type || intent, 'notifications');
 
-    console.log(theme, customTheme, intent);
-
     const transitions = useTransition(true, {
       from: { opacity: 0, transform: 'scale(0.9)' },
       enter: { opacity: 1, transform: 'scale(1)' },
@@ -301,7 +300,15 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
           >
             {type || intent || icon ? (
               <StyledIconWrapper type={type || intent} size={size}>
-                <ReqoreIcon icon={icon || typeToIcon[type || intent]} margin={'both'} size={size} />
+                {intent === 'pending' || type === 'pending' ? (
+                  <ReqoreSpinner size={size} type={5} iconMargin={'both'} />
+                ) : (
+                  <ReqoreIcon
+                    icon={icon || typeToIcon[type || intent]}
+                    margin={'both'}
+                    size={size}
+                  />
+                )}
               </StyledIconWrapper>
             ) : null}
             <StyledNotificationContentWrapper size={size} theme={theme}>

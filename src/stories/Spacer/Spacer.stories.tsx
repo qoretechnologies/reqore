@@ -76,7 +76,6 @@ const Template: Story<IReqoreSpacerProps> = () => {
               animate: 'always',
               animationSpeed: 5,
               type: 'radial',
-              direction: 'to right',
             },
             glow: {
               color: 'success',

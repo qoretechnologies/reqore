@@ -1,25 +1,41 @@
-import styled, { css } from 'styled-components';
-import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import { memo } from 'react';
+import styled from 'styled-components';
+import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { isStringSize } from '../../helpers/utils';
+import { useReqoreTheme } from '../../hooks/useTheme';
+import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreEffect } from '../../types/global';
+import { StyledTextEffect } from '../Effect';
 
-export interface IReqoreParagraphStyle extends React.HTMLAttributes<HTMLHeadingElement> {
-  theme: IReqoreTheme;
-  intent?: TReqoreIntent;
+export interface IReqoreParagraphProps
+  extends React.HTMLAttributes<HTMLParagraphElement>,
+    IWithReqoreCustomTheme,
+    IWithReqoreEffect,
+    IReqoreIntent {
+  size?: TSizes | string;
 }
 
-const style = ({ theme, intent }: IReqoreParagraphStyle) => css`
+export const StyledParagraph = styled(StyledTextEffect)`
   margin: 0;
   padding: 0;
-  color: ${intent ? theme.intents[intent] : getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ theme, intent }) => (intent ? theme.intents[intent] : 'inherit')};
+  font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
 `;
 
-export const ReqoreP: React.FC<Omit<IReqoreParagraphStyle, 'theme'>> = styled.p.attrs(
-  ({ className, ...rest }: IReqoreParagraphStyle) => ({
-    ...(rest || {}),
-    className: `${className} ${
-      rest?.intent ? `reqore-paragraph-${rest.intent} ` : ``
-    } reqore-paragraph`,
-  })
-)<IReqoreParagraphStyle>`
-  ${(props: IReqoreParagraphStyle) => style(props)};
-`;
+export const ReqoreP = memo(
+  ({ size, children, customTheme, intent, className, ...props }: IReqoreParagraphProps) => {
+    const theme = useReqoreTheme('main', customTheme, intent);
+
+    return (
+      <StyledParagraph
+        as='p'
+        theme={theme}
+        intent={intent}
+        {...props}
+        _size={size}
+        className={`${className || ''} reqore-paragraph`}
+      >
+        {children}
+      </StyledParagraph>
+    );
+  }
+);

@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
-import { argManager, FlatArg, IconArg, IntentArg, SizeArg } from '../utils/args';
+import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -359,6 +359,7 @@ WithEffect.args = {
     gradient: {
       type: 'radial',
       shape: 'ellipse',
+      direction: 'at bottom center',
       colors: { 0: '#670079', 100: '#180222' },
       animate: 'hover',
     },

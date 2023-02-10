@@ -11,6 +11,7 @@ import {
   getGradientMix,
   getReadableColorFrom,
 } from '../../helpers/colors';
+import { isStringSize } from '../../helpers/utils';
 import { IWithReqoreMinimal } from '../../types/global';
 
 export type TReqoreEffectColorManipulation = 'darken' | 'lighten';
@@ -66,7 +67,7 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
   spaced?: number;
   weight?: number | 'thin' | 'light' | 'normal' | 'bold' | 'thick';
   uppercase?: boolean;
-  textSize?: TSizes;
+  textSize?: TSizes | string;
   textAlign?: 'left' | 'center' | 'right';
   glow?: {
     size?: number;
@@ -126,7 +127,7 @@ export const StyledEffect = styled.span`
     const gradientDirectionOrShape =
       gradientType === 'linear'
         ? effect.gradient.direction || 'to right'
-        : effect.gradient.shape || 'circle';
+        : `${effect.gradient.shape || 'circle'} ${effect.gradient.direction || 'at center'}`;
     let gradient = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColors}) padding-box`;
     let gradientActive = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColorsActive}) padding-box`;
 
@@ -288,7 +289,9 @@ export const StyledEffect = styled.span`
   ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.textSize
       ? css`
-          font-size: ${TEXT_FROM_SIZE[effect.textSize]}px !important;
+          font-size: ${isStringSize(effect.textSize)
+            ? `${TEXT_FROM_SIZE[effect.textSize]}px`
+            : effect.textSize} !important;
         `
       : undefined}
 

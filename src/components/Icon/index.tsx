@@ -2,7 +2,7 @@ import React, { forwardRef, memo, useContext } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
-import styled, { css } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { ReqoreThemeContext } from '../..';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getColorFromMaybeString } from '../../helpers/colors';
@@ -25,7 +25,17 @@ export interface IReqoreIconProps
   margin?: 'right' | 'left' | 'both';
   image?: string;
   rounded?: boolean;
+  animation?: 'spin' | 'heartbeat';
 }
+
+const SpinKeyframes = keyframes`
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+`;
 
 export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-block;
@@ -54,6 +64,12 @@ export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left'
   img {
     width: 100%;
   }
+
+  ${({ animation }) =>
+    animation === 'spin' &&
+    css`
+      animation: ${SpinKeyframes} 1s linear infinite;
+    `}
 `;
 
 const ReqoreIcon = memo(
