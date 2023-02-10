@@ -133,7 +133,9 @@ export const ReqoreCollection = ({
     }
 
     return sortedItems.filter((item) => {
-      const text = `${item.label}${item.content?.toString()}${item.expandedContent?.toString()}${item.searchString || ''}`;
+      const text = `${item.label}${item.content?.toString()}${item.expandedContent?.toString()}${
+        item.searchString || ''
+      }`;
 
       if (!text) {
         return false;
@@ -157,7 +159,7 @@ export const ReqoreCollection = ({
         {
           icon: _showAs === 'grid' ? 'ListOrdered' : 'GridLine',
           onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
-          tooltip:  displayButtonTooltip(_showAs),
+          tooltip: displayButtonTooltip(_showAs),
           disabled: !size(finalItems),
           ...displayButtonProps,
         },
@@ -170,7 +172,7 @@ export const ReqoreCollection = ({
         onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
         tooltip: sortButtonTooltip(sort),
         disabled: !size(finalItems),
-        ...sortButtonProps
+        ...sortButtonProps,
       });
     }
 
@@ -212,7 +214,7 @@ export const ReqoreCollection = ({
       className={`reqore-collection ${rest.className || ''}`}
     >
       {!size(finalItems) ? (
-        <ReqoreMessage intent='muted' flat title='No items found'>
+        <ReqoreMessage flat icon='Search2Line'>
           {emptyMessage}
         </ReqoreMessage>
       ) : (
