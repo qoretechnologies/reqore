@@ -27,6 +27,7 @@ export const ReqoreP = memo(
 
     return (
       <StyledParagraph
+        as='p'
         theme={theme}
         intent={intent}
         {...props}
