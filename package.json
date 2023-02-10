@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.30.20",
+  "version": "0.31.0",
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,8 +18,16 @@
     "type": "git",
     "url": "git+https://github.com/qoretechnologies/reqore.git"
   },
-  "keywords": ["library", "ui", "qorus", "react"],
-  "pre-push": ["build:test", "test"],
+  "keywords": [
+    "library",
+    "ui",
+    "qorus",
+    "react"
+  ],
+  "pre-push": [
+    "build:test",
+    "test"
+  ],
   "author": "Qore Technologies",
   "license": "ISC",
   "bugs": {

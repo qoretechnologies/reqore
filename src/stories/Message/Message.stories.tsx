@@ -65,6 +65,12 @@ Opaque.args = {
   intent: 'info',
 };
 
+export const Pending: Story<IReqoreMessageProps> = Template.bind({});
+Pending.args = {
+  opaque: true,
+  intent: 'pending',
+};
+
 export const CustomTheme: Story<IReqoreMessageProps> = Template.bind({});
 CustomTheme.args = {
   customTheme: {

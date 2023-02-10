@@ -45,7 +45,7 @@ export const StyledHeader = styled(StyledTextEffect)`
 `;
 
 export const ReqoreHeading = memo(
-  ({ size, children, customTheme, intent, ...props }: IReqoreHeadingProps) => {
+  ({ size, children, customTheme, intent, className, ...rest }: IReqoreHeadingProps) => {
     const theme = useReqoreTheme('main', customTheme, intent);
     const _size: number = isStringSize(size) ? HEADER_SIZE_TO_NUMBER[size] : size;
     const HTMLheaderElement = useMemo(() => {
@@ -53,7 +53,14 @@ export const ReqoreHeading = memo(
     }, [_size]);
 
     return (
-      <StyledHeader as={HTMLheaderElement} theme={theme} intent={intent} {...props} _size={_size}>
+      <StyledHeader
+        as={HTMLheaderElement}
+        theme={theme}
+        intent={intent}
+        {...rest}
+        _size={_size}
+        className={`${className || ''} reqore-heading`}
+      >
         {children}
       </StyledHeader>
     );

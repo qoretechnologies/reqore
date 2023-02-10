@@ -1,41 +1,37 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import { IReqoreHeadingProps } from '../../components/Header';
-import { ReqoreHeading, ReqoreVerticalSpacer } from '../../index';
+import { IReqoreParagraphProps } from '../../components/Paragraph';
+import { ReqoreParagraph, ReqoreVerticalSpacer } from '../../index';
 import { IntentArg } from '../utils/args';
 
 export default {
-  title: 'Components/Heading',
+  title: 'Components/Paragraph',
   argTypes: {
     ...IntentArg,
   },
 } as Meta;
 
-const Template: Story<IReqoreHeadingProps> = (args) => {
+const Template: Story<IReqoreParagraphProps> = (args) => {
   return (
     <>
-      <ReqoreHeading size={1} {...args}>
-        This is a heading
-      </ReqoreHeading>
+      <ReqoreParagraph size='tiny' {...args}>
+        This is a paragraph of some text
+      </ReqoreParagraph>
       <ReqoreVerticalSpacer height={10} />
-      <ReqoreHeading size={2} {...args}>
-        This is a heading
-      </ReqoreHeading>
+      <ReqoreParagraph size='small' {...args}>
+        This is a paragraph of some text
+      </ReqoreParagraph>
       <ReqoreVerticalSpacer height={10} />
-      <ReqoreHeading size={3} {...args}>
-        This is a heading
-      </ReqoreHeading>
+      <ReqoreParagraph size='normal' {...args}>
+        This is a paragraph of some text
+      </ReqoreParagraph>
       <ReqoreVerticalSpacer height={10} />
-      <ReqoreHeading size={4} {...args}>
-        This is a heading
-      </ReqoreHeading>
+      <ReqoreParagraph size='big' {...args}>
+        This is a paragraph of some text
+      </ReqoreParagraph>
       <ReqoreVerticalSpacer height={10} />
-      <ReqoreHeading size={5} {...args}>
-        This is a heading
-      </ReqoreHeading>
-      <ReqoreVerticalSpacer height={10} />
-      <ReqoreHeading size={6} {...args}>
-        This is a heading
-      </ReqoreHeading>
+      <ReqoreParagraph size='huge' {...args}>
+        This is a paragraph of some text
+      </ReqoreParagraph>
     </>
   );
 };
@@ -72,5 +68,6 @@ Effect.args = {
     spaced: 4,
     weight: 'bold',
     uppercase: true,
+    textSize: '40px',
   },
 };
