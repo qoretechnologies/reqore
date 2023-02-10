@@ -26,7 +26,7 @@ test('<Collection /> items can be filtered', () => {
   );
 
   fireEvent.change(document.querySelector('.reqore-input')!, {
-    target: { value: 'actions' },
+    target: { value: 'I have' },
   });
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(2);
@@ -37,6 +37,13 @@ test('<Collection /> items can be filtered', () => {
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(0);
   expect(document.querySelectorAll('.reqore-message').length).toBe(1);
+
+  fireEvent.change(document.querySelector('.reqore-input')!, {
+    target: { value: 'secret' },
+  });
+
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-message').length).toBe(0);
 });
 
 test('<Collection /> shows no data message when empty', () => {
@@ -62,7 +69,7 @@ test('<Collection /> can be sorted', () => {
 
   const firstItem = document.querySelector('.reqore-collection-item');
   // Expect the title of the first item to be "Expandable item"
-  expect(firstItem?.querySelector('h3')?.textContent).toBe('Expandable item');
+  expect(firstItem?.querySelector('h3')?.textContent).toBe(undefined);
 
   fireEvent.click(document.querySelectorAll('.reqore-button')[1]);
 

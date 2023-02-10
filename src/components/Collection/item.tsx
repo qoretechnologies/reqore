@@ -39,6 +39,7 @@ export interface IReqoreCollectionItemProps
   tags?: IReqoreTagProps[];
   maxContentHeight?: number;
   showContentFade?: boolean;
+  searchString?: string;
 }
 
 export const StyledCollectionItemContent = styled.div`

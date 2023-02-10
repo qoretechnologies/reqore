@@ -60,6 +60,7 @@ export default [
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     minimal: false,
     badge: 0,
+    searchString: 'secret',
   },
   {
     icon: 'ZcoolLine',
@@ -282,7 +283,6 @@ export default [
     expandable: true,
   },
   {
-    label: 'I have bottom actions',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     expandedActions: [

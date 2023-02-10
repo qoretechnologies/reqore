@@ -4,7 +4,7 @@ import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
-import ReqoreInput from '../Input';
+import ReqoreInput, { IReqoreInputProps } from '../Input';
 import ReqoreMessage from '../Message';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel, TReqorePanelActions } from '../Panel';
 import { sortTableData } from '../Table/helpers';
@@ -29,6 +29,9 @@ export interface IReqoreCollectionProps
     >,
     IReqoreColumnsProps {
   items?: IReqoreCollectionItemProps[];
+  inputProps?: IReqoreInputProps;
+  sortButtonProps?: IReqorePanelAction;
+  displayButtonProps?: IReqorePanelAction;
   stacked?: boolean;
   rounded?: boolean;
   height?: string;
@@ -39,7 +42,11 @@ export interface IReqoreCollectionProps
   showAs?: 'list' | 'grid';
   showSelectedFirst?: boolean;
   selectedIcon?: IReqoreIconName;
+
   emptyMessage?: string;
+  sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
+  displayButtonTooltip?: (display?: 'list' | 'grid') => string;
+  inputPlaceholder?: (items?: IReqoreCollectionItemProps[]) => string;
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns)`
@@ -66,13 +73,20 @@ export const ReqoreCollection = ({
   filterable,
   sortable,
   showSelectedFirst,
+  inputProps,
+  sortButtonProps,
+  displayButtonProps,
   headerSize = 2,
   showAs = 'grid',
   selectedIcon,
   flat = true,
   minimal,
   transparent = true,
+
   emptyMessage = 'No data in this collection, try changing your search query or filters',
+  sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
+  displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
+  inputPlaceholder = (items) => `Filter ${size(items)} items`,
   ...rest
 }: IReqoreCollectionProps) => {
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
@@ -119,7 +133,9 @@ export const ReqoreCollection = ({
     }
 
     return sortedItems.filter((item) => {
-      const text = `${item.label}${item.content?.toString()}${item.expandedContent?.toString()}`;
+      const text = `${item.label}${item.content?.toString()}${item.expandedContent?.toString()}${
+        item.searchString || ''
+      }`;
 
       if (!text) {
         return false;
@@ -143,8 +159,9 @@ export const ReqoreCollection = ({
         {
           icon: _showAs === 'grid' ? 'ListOrdered' : 'GridLine',
           onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
-          tooltip: _showAs === 'grid' ? 'Show as list' : 'Show as grid',
+          tooltip: displayButtonTooltip(_showAs),
           disabled: !size(finalItems),
+          ...displayButtonProps,
         },
       ],
     };
@@ -153,8 +170,9 @@ export const ReqoreCollection = ({
       toolbarGroup.group.push({
         icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
         onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
-        tooltip: sort === 'desc' ? 'Sort ascending' : 'Sort descending',
+        tooltip: sortButtonTooltip(sort),
         disabled: !size(finalItems),
+        ...sortButtonProps,
       });
     }
 
@@ -164,12 +182,13 @@ export const ReqoreCollection = ({
         {
           as: ReqoreInput,
           props: {
-            placeholder: `Filter ${size(items)} items`,
+            placeholder: inputPlaceholder(finalItems),
             onClearClick: () => setQuery(''),
             onChange: handleQueryChange,
             value: query,
             icon: 'Search2Line',
             minimal: false,
+            ...inputProps,
           },
         },
       ];
@@ -195,7 +214,7 @@ export const ReqoreCollection = ({
       className={`reqore-collection ${rest.className || ''}`}
     >
       {!size(finalItems) ? (
-        <ReqoreMessage intent='muted' flat title='No items found'>
+        <ReqoreMessage flat icon='Search2Line'>
           {emptyMessage}
         </ReqoreMessage>
       ) : (
@@ -206,11 +225,11 @@ export const ReqoreCollection = ({
           stacked={stacked}
           {...rest}
         >
-          {finalItems?.map((item) => (
+          {finalItems?.map((item, index) => (
             <ReqoreCollectionItem
               {...item}
               icon={item.icon || (item.selected ? selectedIcon : undefined)}
-              key={item.id || item.label.toString()}
+              key={index}
               rounded={!stacked}
               maxContentHeight={maxItemHeight}
             />
