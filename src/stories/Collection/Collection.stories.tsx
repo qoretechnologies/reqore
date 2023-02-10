@@ -112,3 +112,18 @@ SelectedFirst.args = {
   items,
   showSelectedFirst: true,
 };
+
+export const CustomPropsAndTexts = Template.bind({});
+CustomPropsAndTexts.args = {
+  label: 'Collection of items',
+  items,
+  inputProps: {
+    effect: {
+      gradient: { colors: 'warning' },
+    },
+    minimal: true,
+  },
+  inputPlaceholder: (items) => `Search in ${items.length} crazy items`,
+  sortButtonTooltip: (sort) => `Seradit ${sort === 'asc' ? 'vzestupne' : 'sestupne'}`,
+  displayButtonTooltip: (display) => `Zobrazit ${display === 'list' ? 'v liste' : 'v mriezke'}`,
+};
