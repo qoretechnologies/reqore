@@ -94,6 +94,7 @@ export default [
     label: 'Item with custom content when expanded',
     tooltip: 'Expandable item with custom content',
     selected: true,
+    badge: '2km',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     expandable: true,

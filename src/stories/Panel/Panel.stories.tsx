@@ -346,6 +346,23 @@ Size.args = {
   size: 'small',
 };
 
+export const NoActions: Story<IReqorePanelProps> = Template.bind({});
+NoActions.args = {
+  collapsible: false,
+  actions: [],
+  label:
+    'This is a really long title that should stretch all the way to the right of the panel, all the way to the end and not end in the middle',
+};
+
+export const ImageAsIcon: Story<IReqorePanelProps> = Template.bind({});
+ImageAsIcon.args = {
+  iconImage:
+    'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
+  iconProps: {
+    size: '30px',
+  },
+};
+
 export const ContentSize: Story<IReqorePanelProps> = Template.bind({});
 ContentSize.args = {
   contentSize: 'big',

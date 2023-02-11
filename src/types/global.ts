@@ -140,6 +140,18 @@ export interface IWithReqoreFluid {
   fluid?: boolean;
 }
 
+export interface IWithReqoreIconImage {
+  /**
+   * Use image as the icon for this component
+   * @default undefined
+   * @type string
+   * @example
+   * <ReqoreInput iconImage="...your image URL" />
+   *
+   */
+  iconImage?: string;
+}
+
 export interface IWithReqoreFixed {
   /**
    * If true, the component will be fixed in fluid containers

@@ -1,4 +1,5 @@
 import { Meta, Story } from '@storybook/react';
+import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Collection';
 import { IReqoreColumnsProps } from '../../components/Columns';
 import items from '../../mock/collectionData';
@@ -126,4 +127,33 @@ CustomPropsAndTexts.args = {
   inputPlaceholder: (items) => `Search in ${items.length} crazy items`,
   sortButtonTooltip: (sort) => `Seradit ${sort === 'asc' ? 'vzestupne' : 'sestupne'}`,
   displayButtonTooltip: (display) => `Zobrazit ${display === 'list' ? 'v liste' : 'v mriezke'}`,
+};
+
+export const ChildrenBeforeAndAfter = Template.bind({});
+ChildrenBeforeAndAfter.args = {
+  label: 'Collection of items',
+  items,
+  childrenBefore: (
+    <ReqoreControlGroup horizontalAlign='center' fluid>
+      <ReqoreButton fluid> I could be a filter of some kind</ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+  childrenAfter: (
+    <ReqoreControlGroup horizontalAlign='center' fluid>
+      <ReqoreControlGroup fluid={false} fixed>
+        <ReqoreButton fixed textAlign='center'>
+          1
+        </ReqoreButton>
+        <ReqoreButton fixed textAlign='center'>
+          2
+        </ReqoreButton>
+        <ReqoreButton fixed textAlign='center'>
+          3
+        </ReqoreButton>
+        <ReqoreButton fixed textAlign='center'>
+          4
+        </ReqoreButton>
+      </ReqoreControlGroup>
+    </ReqoreControlGroup>
+  ),
 };

@@ -2,11 +2,13 @@ import { size } from 'lodash';
 import { useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
+import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import ReqoreMessage from '../Message';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel, TReqorePanelActions } from '../Panel';
+import { ReqoreVerticalSpacer } from '../Spacer';
 import { sortTableData } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 
@@ -43,6 +45,9 @@ export interface IReqoreCollectionProps
   showSelectedFirst?: boolean;
   selectedIcon?: IReqoreIconName;
 
+  childrenBefore?: React.ReactNode;
+  childrenAfter?: React.ReactNode;
+
   emptyMessage?: string;
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
   displayButtonTooltip?: (display?: 'list' | 'grid') => string;
@@ -50,7 +55,7 @@ export interface IReqoreCollectionProps
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns)`
-  height: ${({ height }) => (height ? `${height}px` : 'auto')};
+  height: ${({ height }) => (height ? `${height}` : 'auto')};
 
   ${({ rounded, stacked }: IReqoreCollectionProps) =>
     (!rounded || stacked) &&
@@ -58,7 +63,7 @@ export const StyledCollectionWrapper = styled(StyledColumns)`
       border-radius: ${stacked && rounded ? '10px' : undefined};
     `}
 
-  overflow: hidden;
+  overflow: auto;
   position: relative;
 `;
 
@@ -68,7 +73,6 @@ export const ReqoreCollection = ({
   stacked,
   rounded = true,
   fill,
-  height,
   maxItemHeight,
   filterable,
   sortable,
@@ -82,7 +86,8 @@ export const ReqoreCollection = ({
   flat = true,
   minimal,
   transparent = true,
-
+  childrenBefore,
+  childrenAfter,
   emptyMessage = 'No data in this collection, try changing your search query or filters',
   sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
   displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
@@ -203,7 +208,6 @@ export const ReqoreCollection = ({
       headerSize={headerSize}
       style={{
         ...rest.style,
-        height: height ?? undefined,
       }}
       fill={fill}
       padded
@@ -213,6 +217,12 @@ export const ReqoreCollection = ({
       actions={finalActions}
       className={`reqore-collection ${rest.className || ''}`}
     >
+      {childrenBefore ? (
+        <>
+          {childrenBefore}
+          <ReqoreVerticalSpacer height={PADDING_FROM_SIZE[rest.size || 'normal']} />
+        </>
+      ) : null}
       {!size(finalItems) ? (
         <ReqoreMessage flat icon='Search2Line'>
           {emptyMessage}
@@ -227,6 +237,7 @@ export const ReqoreCollection = ({
         >
           {finalItems?.map((item, index) => (
             <ReqoreCollectionItem
+              size={rest.size}
               {...item}
               icon={item.icon || (item.selected ? selectedIcon : undefined)}
               key={index}
@@ -236,6 +247,12 @@ export const ReqoreCollection = ({
           ))}
         </StyledCollectionWrapper>
       )}
+      {childrenAfter ? (
+        <>
+          <ReqoreVerticalSpacer height={PADDING_FROM_SIZE[rest.size || 'normal']} />
+          {childrenAfter}
+        </>
+      ) : null}
     </ReqorePanel>
   );
 };
