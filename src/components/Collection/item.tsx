@@ -206,6 +206,7 @@ export const ReqoreCollectionItem = ({
           ref={ref}
           minimal={minimal}
           {...rest}
+          responsiveActions={false}
           bottomActions={isSelected ? expandedActions : undefined}
           style={{
             ...style,

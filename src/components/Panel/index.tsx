@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -29,6 +29,7 @@ import {
   IWithReqoreCustomTheme,
   IWithReqoreFlat,
   IWithReqoreFluid,
+  IWithReqoreIconImage,
   IWithReqoreSize,
   IWithReqoreTooltip,
 } from '../../types/global';
@@ -40,8 +41,7 @@ import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
-import ReqoreIcon, { StyledIconWrapper } from '../Icon';
-import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
+import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
 
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
@@ -72,10 +72,12 @@ export interface IReqorePanelProps
     IReqoreIntent,
     IWithReqoreTooltip,
     IWithReqoreFluid,
+    IWithReqoreIconImage,
     React.HTMLAttributes<HTMLDivElement> {
   as?: any;
   children?: any;
   icon?: IReqoreIconName;
+  iconProps?: IReqoreIconProps;
   label?: string | ReactElement<any>;
   badge?: TReqoreBadge | TReqoreBadge[];
   collapsible?: boolean;
@@ -198,6 +200,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   transition: background-color 0.2s ease-out;
   overflow: hidden;
   flex: 0 0 auto;
+  gap: ${GAP_FROM_SIZE.normal}px;
 
   > div > ${StyledIconWrapper} {
     transform: scale(${INACTIVE_ICON_SCALE});
@@ -252,7 +255,6 @@ export const StyledPanelTitleHeader = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  padding-right: 5px;
   flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
@@ -272,6 +274,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       isCollapsed,
       customTheme,
       icon,
+      iconImage,
       intent,
       className,
       flat,
@@ -287,6 +290,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       tooltip,
       badge,
       iconColor,
+      iconProps = {},
       fluid,
       responsiveActions = true,
       size: panelSize = 'normal',
@@ -535,16 +539,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           >
             {hasTitleHeader && (
               <StyledPanelTitleHeader>
-                {icon && (
+                {icon || iconImage ? (
                   <ReqoreIcon
                     size={`${
                       ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
                     }px`}
                     icon={icon}
+                    image={iconImage}
                     margin='right'
                     color={iconColor}
+                    {...iconProps}
                   />
-                )}
+                ) : null}
                 {typeof label === 'string' ? (
                   <ReqoreHeading
                     size={headerSize || panelSize}
@@ -566,7 +572,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       size={getOneHigherSize(panelSize)}
                       content={badge}
                     />
-                    <ReqoreSpacer width={PADDING_FROM_SIZE.normal} />
                   </>
                 ) : null}
               </StyledPanelTitleHeader>
@@ -584,7 +589,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             )}
             {collapsible || onClose || hasNonResponsiveActions(actions) ? (
               <>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
                 <ReqoreControlGroup fixed horizontalAlign='flex-end' size={panelSize}>
                   {actions.map(renderNonResponsiveActions)}
                   {collapsible && (
@@ -637,12 +641,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             noHorizontalPadding={noHorizontalPadding}
           >
             {hasNonResponsiveActions(leftBottomActions) ? (
-              <>
-                <ReqoreControlGroup size={panelSize}>
-                  {leftBottomActions.map(renderNonResponsiveActions)}
-                </ReqoreControlGroup>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
-              </>
+              <ReqoreControlGroup size={panelSize}>
+                {leftBottomActions.map(renderNonResponsiveActions)}
+              </ReqoreControlGroup>
             ) : null}
             {hasResponsiveActions(leftBottomActions) && (
               <ReqoreControlGroup
@@ -666,12 +667,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               </ReqoreControlGroup>
             )}
             {hasNonResponsiveActions(rightBottomActions) ? (
-              <>
-                <ReqoreHorizontalSpacer width={GAP_FROM_SIZE.normal} />
-                <ReqoreControlGroup horizontalAlign='flex-end' size={panelSize}>
-                  {rightBottomActions.map(renderNonResponsiveActions)}
-                </ReqoreControlGroup>
-              </>
+              <ReqoreControlGroup horizontalAlign='flex-end' size={panelSize}>
+                {rightBottomActions.map(renderNonResponsiveActions)}
+              </ReqoreControlGroup>
             ) : null}
           </StyledPanelBottomActions>
         ) : null}
