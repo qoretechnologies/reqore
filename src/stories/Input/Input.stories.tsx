@@ -29,7 +29,13 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
     <>
       <ReqoreControlGroup wrap>
         <ReqoreInput {...args} placeholder='Reqore Input' onChange={handleValueChange} />
-        <ReqoreInput {...args} placeholder='Minimal Input' minimal onChange={handleValueChange} />
+        <ReqoreInput
+          {...args}
+          placeholder='Minimal Input'
+          minimal
+          onChange={handleValueChange}
+          rightIcon='ClipboardLine'
+        />
         <ReqoreInput
           {...args}
           placeholder='Flat Input'
@@ -44,11 +50,22 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
           onClearClick={handleValueClear}
           onChange={handleValueChange}
         />
+        <ReqoreInput
+          {...args}
+          iconColor='pending:lighten:2'
+          placeholder='Clearable Input w/ icon'
+          onClearClick={handleValueClear}
+          onChange={handleValueChange}
+          rightIcon='EraserFill'
+          rightIconColor='#8727b7'
+        />
         <ReqoreInput {...args} placeholder='Disabled Input' disabled onChange={handleValueChange} />
         <ReqoreInput
           {...args}
           placeholder='Read Only Input'
           readOnly
+          rightIcon='Bus2Fill'
+          rightIconColor='info'
           onChange={handleValueChange}
         />
       </ReqoreControlGroup>
@@ -73,6 +90,8 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
           flat
           tooltip="I'm a tooltip"
           onChange={handleValueChange}
+          rightIcon='DragMoveLine'
+          rightIconColor='#eb0e8c'
           value={value}
         />
         <ReqoreInput
@@ -84,18 +103,21 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
         />
         <ReqoreInput
           {...args}
+          placeholder='Clearable Input w/ icon'
+          onClearClick={handleValueClear}
+          value={value}
+          rightIcon='FilePptFill'
+          rightIconColor='#508a90'
+          onChange={handleValueChange}
+        />
+        <ReqoreInput
+          {...args}
           placeholder='Disabled Input'
           disabled
           onChange={handleValueChange}
           value={value}
         />
-        <ReqoreInput
-          {...args}
-          placeholder='Read Only Input'
-          readOnly
-          onChange={handleValueChange}
-          value={value}
-        />
+        <ReqoreInput {...args} placeholder='Read Only Input' readOnly value={value} />
       </ReqoreControlGroup>
       <br />
       <ReqoreControlGroup fluid>
@@ -104,6 +126,7 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
           placeholder='Fluid Input'
           onChange={handleValueChange}
           value={value}
+          focusRules={{ type: 'keypress', shortcut: 'k' }}
         />
       </ReqoreControlGroup>
     </>

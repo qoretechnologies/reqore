@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
-import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { argManager, FlatArg, IconArg, IntentArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -168,6 +168,7 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
             {
               icon: 'FullscreenExitLine',
               customTheme: { main: '#a40a62' },
+              fixed: true,
             },
           ],
         },
@@ -199,7 +200,7 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
           position: 'left',
           intent: 'success',
           group: [
-            { label: 'Test 1', icon: '24HoursFill' },
+            { label: 'Test 1', icon: '24HoursFill', fixed: true },
             { label: 'Test 2', icon: '24HoursFill' },
           ],
         },

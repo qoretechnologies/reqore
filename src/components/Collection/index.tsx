@@ -28,6 +28,8 @@ export interface IReqoreCollectionProps
       | 'minimal'
       | 'transparent'
       | 'fluid'
+      | 'responsiveActions'
+      | 'padded'
     >,
     IReqoreColumnsProps {
   items?: IReqoreCollectionItemProps[];
@@ -47,6 +49,8 @@ export interface IReqoreCollectionProps
 
   childrenBefore?: React.ReactNode;
   childrenAfter?: React.ReactNode;
+
+  onQueryChange?: (query: string) => void;
 
   emptyMessage?: string;
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
@@ -86,12 +90,13 @@ export const ReqoreCollection = ({
   flat = true,
   minimal,
   transparent = true,
+  onQueryChange,
   childrenBefore,
   childrenAfter,
   emptyMessage = 'No data in this collection, try changing your search query or filters',
   sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
   displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
-  inputPlaceholder = (items) => `Filter ${size(items)} items`,
+  inputPlaceholder = (items) => `Search in ${size(items)} items`,
   ...rest
 }: IReqoreCollectionProps) => {
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
@@ -101,6 +106,10 @@ export const ReqoreCollection = ({
   useUpdateEffect(() => {
     setShowAs(showAs);
   }, [showAs]);
+
+  useUpdateEffect(() => {
+    onQueryChange?.(query);
+  }, [query]);
 
   const sortedItems: IReqoreCollectionItemProps[] = useMemo(() => {
     if (!sortable) {
@@ -187,6 +196,7 @@ export const ReqoreCollection = ({
         {
           as: ReqoreInput,
           props: {
+            fixed: false,
             placeholder: inputPlaceholder(finalItems),
             onClearClick: () => setQuery(''),
             onChange: handleQueryChange,
@@ -210,7 +220,6 @@ export const ReqoreCollection = ({
         ...rest.style,
       }}
       fill={fill}
-      padded
       transparent={transparent}
       minimal={minimal}
       flat={flat}

@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
@@ -10,6 +10,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -44,11 +45,14 @@ export interface IReqoreInputProps
   onClearClick?: () => void;
   maxLength?: number;
   icon?: IReqoreIconName;
+  rightIcon?: IReqoreIconName;
   flat?: boolean;
   rounded?: boolean;
   type?: 'text' | 'password' | 'email' | 'number' | 'tel' | 'url';
   wrapperStyle?: React.CSSProperties;
   iconColor?: TReqoreEffectColor;
+  rightIconColor?: TReqoreEffectColor;
+  focusRules?: IReqoreAutoFocusRules;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -76,6 +80,8 @@ const StyledIconWrapper = styled.div<IReqoreInputStyle>`
   position: absolute;
   height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   width: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  right: ${({ position }) => (position === 'right' ? 0 : undefined)};
+  top: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -87,7 +93,18 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   flex: 1;
   margin: 0;
   padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px 7px;
-  padding-right: ${({ clearable, _size }) => (clearable ? SIZE_TO_PX[_size] : 7)}px;
+  padding-right: ${({ clearable, hasRightIcon, _size }) => {
+    let padding = 7;
+
+    if (clearable || hasRightIcon) {
+      padding = 0;
+      padding += clearable ? SIZE_TO_PX[_size] : 0;
+      padding += hasRightIcon ? SIZE_TO_PX[_size] : 0;
+    }
+
+    return padding;
+  }}px;
+
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   transition: all 0.2s ease-out;
@@ -154,7 +171,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       className,
       onClearClick,
       icon,
+      rightIcon,
       iconColor,
+      rightIconColor,
       flat,
       rounded = true,
       minimal,
@@ -163,14 +182,21 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       customTheme,
       intent,
       wrapperStyle,
+      focusRules,
       ...rest
     }: IReqoreInputProps,
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
+    const inputRef = useRef<HTMLInputElement>(null);
     const theme = useReqoreTheme('main', customTheme, intent);
 
     useTooltip(targetRef.current, tooltip);
+    useAutoFocus(
+      inputRef.current,
+      readOnly || rest.disabled ? undefined : focusRules,
+      rest.onChange
+    );
 
     return (
       <StyledInputWrapper
@@ -199,23 +225,32 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             interactive: !rest?.disabled && !readOnly,
             ...rest?.effect,
           }}
+          onChange={!readOnly && !rest?.disabled ? rest?.onChange : undefined}
           as='input'
+          ref={inputRef}
           theme={theme}
           _size={size}
           minimal={minimal}
           flat={flat}
           rounded={rounded}
           hasIcon={!!icon}
-          clearable={!rest?.disabled && !!(onClearClick && rest?.onChange)}
+          hasRightIcon={!!rightIcon}
+          clearable={!rest?.disabled && !readOnly && !!(onClearClick && rest?.onChange)}
           className={`${className || ''} reqore-control reqore-input`}
           readOnly={readOnly}
         />
         <ReqoreInputClearButton
           enabled={!readOnly && !rest?.disabled && !!(onClearClick && rest?.onChange)}
           onClick={onClearClick}
+          hasRightIcon={!!rightIcon}
           size={size}
           show={rest?.value && rest.value !== '' ? true : false}
         />
+        {rightIcon && (
+          <StyledIconWrapper _size={size} position='right'>
+            <ReqoreIcon size={size} icon={rightIcon} color={rightIconColor} />
+          </StyledIconWrapper>
+        )}
       </StyledInputWrapper>
     );
   }
