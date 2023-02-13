@@ -40,8 +40,6 @@ test('Renders empty <ReqoreMultiSelect />', () => {
   expect(screen.getByText('No items selected')).toBeTruthy();
   expect(document.querySelectorAll('.reqore-input')?.length).toBe(1);
   expect(document.querySelector('.reqore-input')?.getAttribute('disabled')).toBe(null);
-  // Because input is clearable
-  expect(document.querySelectorAll('.reqore-button').length).toBe(1);
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
   // No items tag
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
@@ -149,13 +147,13 @@ test('Renders <ReqoreMultiSelect /> and items can be searched, opens up the list
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   // 4 items + 1 button for clearable input
-  expect(document.querySelectorAll('.reqore-button').length).toBe(5);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(4);
 
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Nothing' },
   });
 
-  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(1);
   expect(screen.getAllByText('No existing items found')).toBeTruthy();
 });
 
@@ -174,13 +172,13 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created, opens
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   // 4 items + 1 button for clearable input
-  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(1);
 
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item' },
   });
 
-  expect(document.querySelectorAll('.reqore-button').length).toBe(6);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(5);
   expect(screen.getAllByText('Create new "Existing item"')).toBeTruthy();
 
   // This has to fail because we do not allow creating items with ENTER key
@@ -201,7 +199,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created, opens
   });
 
   // 6 again because the item is already created, so the Create button is not there
-  expect(document.querySelectorAll('.reqore-button').length).toBe(6);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(5);
 });
 
 test('Renders <ReqoreMultiSelect /> and items can be searched and created using the ENTER key, opens up the list', () => {
@@ -221,14 +219,14 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   // 4 items + 1 button for clearable input
-  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(1);
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'Existing item' },
   });
 
-  expect(document.querySelectorAll('.reqore-button').length).toBe(6);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(5);
   expect(screen.getAllByText('Create new "Existing item"')).toBeTruthy();
 
   // Create the item by pressing ENTER key
@@ -245,7 +243,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
   });
 
   // 6 again because the item is already created, so the Create button is not there
-  expect(document.querySelectorAll('.reqore-button').length).toBe(6);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(5);
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
   // Does not create new item if the query is empty
