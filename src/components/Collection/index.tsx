@@ -196,6 +196,7 @@ export const ReqoreCollection = ({
         {
           as: ReqoreInput,
           props: {
+            key: 'search',
             fixed: false,
             placeholder: inputPlaceholder(finalItems),
             onClearClick: () => setQuery(''),

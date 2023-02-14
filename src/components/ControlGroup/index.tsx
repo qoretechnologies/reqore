@@ -1,12 +1,5 @@
 import { debounce } from 'lodash';
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
@@ -63,16 +56,13 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 
 export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
-  flex: ${({ fluid, fixed }) =>
-    fixed ? '0 0 auto' : fluid ? undefined : '0 0 auto'};
+  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? undefined : '0 0 auto')};
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
-  justify-content: ${({ fluid, vertical }) =>
-    vertical && fluid ? 'stretch' : undefined};
+  justify-content: ${({ fluid, vertical }) => (vertical && fluid ? 'stretch' : undefined)};
   align-items: ${({ vertical, fluid, horizontalAlign }) =>
     vertical ? (fluid ? 'stretch' : horizontalAlign) : undefined};
   flex-flow: ${({ vertical }) => (vertical ? 'column' : 'row')};
-  gap: ${({ gapSize, stack }) =>
-    !stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined};
+  gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
   flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};
 
   // If the group has the fill prop,
@@ -95,23 +85,16 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
 
   > * {
     margin-top: ${({ fill, verticalAlign }) =>
-      !fill && (verticalAlign === 'flex-end' || verticalAlign === 'center')
-        ? 'auto'
-        : undefined};
+      !fill && (verticalAlign === 'flex-end' || verticalAlign === 'center') ? 'auto' : undefined};
     margin-bottom: ${({ fill, verticalAlign }) =>
-      !fill && (verticalAlign === 'flex-start' || verticalAlign === 'center')
-        ? 'auto'
-        : undefined};
-    margin-right: ${({ horizontalAlign }) =>
-      horizontalAlign === 'center' ? 'auto' : undefined};
+      !fill && (verticalAlign === 'flex-start' || verticalAlign === 'center') ? 'auto' : undefined};
+    margin-right: ${({ horizontalAlign }) => (horizontalAlign === 'center' ? 'auto' : undefined)};
 
     ${({ vertical }) =>
       vertical &&
       css`
         margin-left: ${({ horizontalAlign }) =>
-          horizontalAlign === 'flex-end' || horizontalAlign === 'center'
-            ? 'auto'
-            : undefined};
+          horizontalAlign === 'flex-end' || horizontalAlign === 'center' ? 'auto' : undefined};
       `}
   }
 
@@ -120,9 +103,7 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
     css`
       > *:first-child {
         margin-left: ${({ horizontalAlign }) =>
-          horizontalAlign === 'flex-end' || horizontalAlign === 'center'
-            ? 'auto'
-            : undefined};
+          horizontalAlign === 'flex-end' || horizontalAlign === 'center' ? 'auto' : undefined};
       }
     `}
 
@@ -168,12 +149,9 @@ const ReqoreControlGroup = memo(
     const isStack = stack || isInsideStackGroup;
     const isVertical = vertical || isInsideVerticalGroup;
 
-    const [overflowingChildren, setOverflowingChildren] = useState<
-      number | undefined
-    >(0);
+    const [overflowingChildren, setOverflowingChildren] = useState<number | undefined>(0);
     const [lastReSize, setLastReSize] = useState<number>(0);
-    const [isOverflownDialogOpen, setIsOverflownDialogOpen] =
-      useState<boolean>(false);
+    const [isOverflownDialogOpen, setIsOverflownDialogOpen] = useState<boolean>(false);
     const observer = useRef<ResizeObserver | null>(null);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -232,10 +210,7 @@ const ReqoreControlGroup = memo(
 
     useEffect(() => {
       // Is the control group still overflowing?
-      if (
-        (overflowingChildren || overflowingChildren === 0) &&
-        checkIfOverflowing()
-      ) {
+      if ((overflowingChildren || overflowingChildren === 0) && checkIfOverflowing()) {
         setOverflowingChildren(overflowingChildren + 1);
       }
 
@@ -258,33 +233,22 @@ const ReqoreControlGroup = memo(
     const getIsLastInFirstGroup = (index: number): boolean => {
       return !isInsideStackGroup
         ? index === 0
-        : isFirstGroup &&
-            (isLast || isLast !== false) &&
-            index === realChildCount - 1;
+        : isFirstGroup && (isLast || isLast !== false) && index === realChildCount - 1;
     };
     const getIsFirstInLastGroup = (index: number): boolean => {
       return !isInsideStackGroup
         ? index === realChildCount - 1
-        : isLastGroup &&
-            (isFirst || isFirst !== false) &&
-            childId === 1 &&
-            index === 0;
+        : isLastGroup && (isFirst || isFirst !== false) && childId === 1 && index === 0;
     };
     const getIsLastInLastGroup = (index: number): boolean => {
       return !isInsideStackGroup
         ? index === realChildCount - 1
-        : isLastGroup &&
-            (isLast || isLast !== false) &&
-            index === realChildCount - 1;
+        : isLastGroup && (isLast || isLast !== false) && index === realChildCount - 1;
     };
 
     const getBorderTopLeftRadius = (index: number): number | undefined => {
       const _isFirstGroup =
-        !isInsideStackGroup || childrenCount === 1
-          ? true
-          : isChild
-          ? isFirstGroup
-          : index === 0;
+        !isInsideStackGroup || childrenCount === 1 ? true : isChild ? isFirstGroup : index === 0;
 
       // If this is the first item
       if (_isFirstGroup && getIsFirst(index)) {
@@ -324,11 +288,7 @@ const ReqoreControlGroup = memo(
       // If this group is not vertical we need to style the very first item
       if (!isVertical || !isStack) {
         const _isFirstGroup =
-          !isInsideStackGroup || childrenCount === 1
-            ? true
-            : isChild
-            ? isFirstGroup
-            : index === 0;
+          !isInsideStackGroup || childrenCount === 1 ? true : isChild ? isFirstGroup : index === 0;
 
         if (_isFirstGroup && getIsFirst(index)) {
           return RADIUS_FROM_SIZE[size];
@@ -369,7 +329,6 @@ const ReqoreControlGroup = memo(
         return React.Children.map(children, (child) => {
           if (child && React.isValidElement(child)) {
             if (child.type === React.Fragment) {
-              // just compare to `React.Fragment`
               return cloneThroughFragments(child.props.children);
             }
 
@@ -381,26 +340,12 @@ const ReqoreControlGroup = memo(
                   ? child.props.minimal
                   : minimal,
               size: child.props?.size || size,
-              flat:
-                child.props?.flat || child.props?.flat === false
-                  ? child.props.flat
-                  : flat,
-              fluid:
-                child.props?.fluid || child.props?.fluid === false
-                  ? child.props.fluid
-                  : fluid,
-              fixed:
-                child.props?.fixed || child.props?.fixed === false
-                  ? child.props.fixed
-                  : fixed,
-              fill:
-                child.props?.fill || child.props?.fill === false
-                  ? child.props.fill
-                  : fill,
+              flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
+              fluid: child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
+              fixed: child.props?.fixed || child.props?.fixed === false ? child.props.fixed : fixed,
+              fill: child.props?.fill || child.props?.fill === false ? child.props.fill : fill,
               stack:
-                child.props?.stack || child.props?.stack === false
-                  ? child.props.stack
-                  : isStack,
+                child.props?.stack || child.props?.stack === false ? child.props.stack : isStack,
               intent: child.props?.intent || intent,
               customTheme: child.props?.customTheme || customTheme,
             };
@@ -428,9 +373,7 @@ const ReqoreControlGroup = memo(
                 childId: index + 1,
 
                 isFirstGroup: isChild ? isFirstGroup : index === 0,
-                isLastGroup: isChild
-                  ? isLastGroup
-                  : index === realChildCount - 1,
+                isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
               };
             }
 
@@ -469,9 +412,7 @@ const ReqoreControlGroup = memo(
     // Get the overflown children
     const overflownChildren = useMemo(
       () =>
-        overflowingChildren
-          ? React.Children.toArray(children).slice(0, overflowingChildren)
-          : [],
+        overflowingChildren ? React.Children.toArray(children).slice(0, overflowingChildren) : [],
       [children, overflowingChildren]
     );
 
@@ -485,9 +426,7 @@ const ReqoreControlGroup = memo(
                 icon='MenuLine'
                 customTheme={customTheme}
                 tooltip={{
-                  content: `Show ${React.Children.count(
-                    overflownChildren
-                  )} hidden items`,
+                  content: `Show ${React.Children.count(overflownChildren)} hidden items`,
                 }}
                 fixed
                 active={isOverflownDialogOpen}

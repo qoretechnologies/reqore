@@ -421,8 +421,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               stack
               customTheme={rest.customTheme || theme}
               size={rest.size}
-              fixed={rest.fixed}
-              fluid={rest.fluid}
+              fixed={rest.fixed ? true : false}
+              fluid={rest.fluid ? true : false}
               key={index}
             >
               {group.map((action, index) => renderActions(action, index, true))}
@@ -433,9 +433,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         if (size(actions)) {
           return (
             <ReqoreDropdown<IReqoreButtonProps>
+              fixed
               {...rest}
               key={index}
-              fixed
               label={label}
               items={actions}
               intent={intent}
@@ -452,7 +452,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             <CustomElement
               fixed
               {...props}
-              key={index}
+              key={props.key || index}
+              reactKey={props.key || index}
               customTheme={props.customTheme || theme}
               onClick={(e: React.MouseEvent<any>) => {
                 e.stopPropagation();
@@ -464,6 +465,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
         return (
           <ReqoreButton
+            fixed
             {...rest}
             id={id}
             key={index}
