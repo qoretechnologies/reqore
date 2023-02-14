@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -21,6 +21,7 @@ import {
 } from '../../helpers/colors';
 import { getOneHigherSize, isActionShown } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqore } from '../../hooks/useReqore';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import { ACTIVE_ICON_SCALE, INACTIVE_ICON_SCALE } from '../../styles';
@@ -186,6 +187,7 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
 
 export const StyledPanelTitle = styled.div<IStyledPanel>`
   display: flex;
+  flex-flow: ${({ isMobile }) => (isMobile ? 'column' : 'row')};
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
@@ -306,6 +308,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           ? { main: Object.values(contentEffect.gradient.colors)[0] as TReqoreEffectColor }
           : undefined)
     );
+    const { isMobile } = useReqore();
     const { targetRef } = useCombinedRefs(ref);
 
     useTooltip(targetRef.current, tooltip);
@@ -418,8 +421,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               stack
               customTheme={rest.customTheme || theme}
               size={rest.size}
-              fixed
-              fluid={rest.fluid}
+              fixed={rest.fixed ? true : false}
+              fluid={rest.fluid ? true : false}
               key={index}
             >
               {group.map((action, index) => renderActions(action, index, true))}
@@ -430,9 +433,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         if (size(actions)) {
           return (
             <ReqoreDropdown<IReqoreButtonProps>
+              fixed
               {...rest}
               key={index}
-              fixed
               label={label}
               items={actions}
               intent={intent}
@@ -449,7 +452,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             <CustomElement
               fixed
               {...props}
-              key={index}
+              key={props.key || index}
+              reactKey={props.key || index}
               customTheme={props.customTheme || theme}
               onClick={(e: React.MouseEvent<any>) => {
                 e.stopPropagation();
@@ -461,9 +465,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
         return (
           <ReqoreButton
+            fixed
             {...rest}
             id={id}
-            fixed
             key={index}
             className={className}
             customTheme={rest.customTheme || theme}
@@ -536,6 +540,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             size={contentSize || panelSize}
             opacity={opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={noHorizontalPadding}
+            isMobile={isMobile}
           >
             {hasTitleHeader && (
               <StyledPanelTitleHeader>
@@ -579,7 +584,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             {hasResponsiveActions(actions) && (
               <ReqoreControlGroup
                 responsive={responsiveActions}
-                fluid={responsiveActions}
+                fluid={responsiveActions || isMobile}
                 horizontalAlign='flex-end'
                 customTheme={theme}
                 size={panelSize}
@@ -589,7 +594,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             )}
             {collapsible || onClose || hasNonResponsiveActions(actions) ? (
               <>
-                <ReqoreControlGroup fixed horizontalAlign='flex-end' size={panelSize}>
+                <ReqoreControlGroup
+                  fixed={!isMobile}
+                  fluid={isMobile}
+                  horizontalAlign='flex-end'
+                  size={panelSize}
+                >
                   {actions.map(renderNonResponsiveActions)}
                   {collapsible && (
                     <ReqoreButton

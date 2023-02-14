@@ -21,6 +21,8 @@ export interface IReqoreIconProps
   icon?: IReqoreIconName;
   color?: TReqoreEffectColor;
   size?: TSizes | string;
+  wrapperSize?: TSizes | string;
+  wrapperElement?: any;
   iconProps?: IconBaseProps;
   margin?: 'right' | 'left' | 'both';
   image?: string;
@@ -38,8 +40,10 @@ const SpinKeyframes = keyframes`
 `;
 
 export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left' | 'both' }>`
-  display: inline-block;
+  display: inline-flex;
   flex: 0 0 auto;
+  justify-content: center;
+  align-items: center;
   vertical-align: text-bottom;
   transition: all 0.2s ease-out;
   overflow: hidden;
@@ -78,6 +82,8 @@ const ReqoreIcon = memo(
       {
         icon,
         size = 'normal',
+        wrapperSize,
+        wrapperElement,
         className,
         color,
         margin,
@@ -97,6 +103,11 @@ const ReqoreIcon = memo(
         ? theme.intents[intent]
         : getColorFromMaybeString(theme, color);
       const finalSize: string = isStringSize(size) ? ICON_FROM_SIZE[size] : size;
+      const finalWrapperSize: string = wrapperSize
+        ? isStringSize(wrapperSize)
+          ? ICON_FROM_SIZE[wrapperSize]
+          : wrapperSize
+        : finalSize;
 
       useTooltip(targetRef.current, tooltip);
 
@@ -104,11 +115,12 @@ const ReqoreIcon = memo(
         return (
           <StyledIconWrapper
             {...rest}
+            as={wrapperElement}
             ref={targetRef}
             size={size}
             margin={margin}
             className={`${className || ''} reqore-icon`}
-            style={{ ...style, width: finalSize, height: finalSize }}
+            style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
           >
             <img src={image} alt='' />
           </StyledIconWrapper>
@@ -119,11 +131,12 @@ const ReqoreIcon = memo(
         return (
           <StyledIconWrapper
             {...rest}
+            as={wrapperElement}
             ref={targetRef}
             size={size}
             margin={margin}
             className={`${className || ''} reqore-icon`}
-            style={{ ...style, width: finalSize, height: finalSize }}
+            style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
           />
         );
       }
@@ -131,10 +144,11 @@ const ReqoreIcon = memo(
       return (
         <StyledIconWrapper
           {...rest}
+          as={wrapperElement}
           ref={targetRef}
           margin={margin}
           size={size}
-          style={{ ...style, width: finalSize, height: finalSize }}
+          style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
           className={`${className || ''} reqore-icon`}
         >
           <IconContext.Provider

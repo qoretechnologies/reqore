@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom/extend-expect';
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import { ReqoreCollection, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
@@ -17,10 +18,12 @@ test('Renders basic <Collection /> properly', () => {
 });
 
 test('<Collection /> items can be filtered', () => {
+  const fn = jest.fn();
+
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
-        <ReqoreCollection items={items} filterable />
+        <ReqoreCollection items={items} filterable onQueryChange={fn} />
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
@@ -29,6 +32,7 @@ test('<Collection /> items can be filtered', () => {
     target: { value: 'I have' },
   });
 
+  expect(fn).toHaveBeenCalledWith('I have');
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(2);
 
   fireEvent.change(document.querySelector('.reqore-input')!, {

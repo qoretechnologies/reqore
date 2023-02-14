@@ -51,6 +51,5 @@ export const DisabledElement = css`
 `;
 
 export const ReadOnlyElement = css`
-  pointer-events: none;
   cursor: not-allowed;
 `;

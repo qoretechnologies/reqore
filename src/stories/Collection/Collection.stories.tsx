@@ -3,7 +3,8 @@ import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Collection';
 import { IReqoreColumnsProps } from '../../components/Columns';
 import items from '../../mock/collectionData';
-import { IntentArg, SizeArg, argManager } from '../utils/args';
+import data from '../../mock/data.json';
+import { argManager, IntentArg, SizeArg } from '../utils/args';
 
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
@@ -58,7 +59,7 @@ export default {
       description: 'If true, the collection will fill the parent',
     }),
     ...createArg('label', {
-      defaultValue: 'Collection of items',
+      defaultValue: undefined,
       type: 'string',
       name: 'Label',
       description: 'Label of the collection',
@@ -70,20 +71,17 @@ export default {
 } as Meta<IReqoreCollectionProps>;
 
 const Template: Story<IReqoreCollectionProps> = (args) => {
-  return (
-    <ReqoreCollection
-      {...args}
-      badge={10}
-      selectedIcon='CheckLine'
-      actions={[{ label: 'Custom action', icon: 'Home7Line' }, { actions: [{ value: 'Test' }] }]}
-    />
-  );
+  return <ReqoreCollection {...args} selectedIcon='CheckLine' />;
 };
 
 export const Basic = Template.bind({});
 Basic.args = {
   label: 'Config Items',
   items,
+  actions: [
+    { label: 'Custom action', icon: 'Home7Line', fixed: true },
+    { actions: [{ value: 'Test' }] },
+  ],
 };
 
 export const WithHeight = Template.bind({});
@@ -91,6 +89,10 @@ WithHeight.args = {
   label: 'Collection of items',
   height: '600px',
   items,
+  actions: [
+    { label: 'Custom action', icon: 'Home7Line', fixed: true },
+    { actions: [{ value: 'Test' }] },
+  ],
 };
 
 export const Stacked = Template.bind({});
@@ -98,6 +100,10 @@ Stacked.args = {
   label: 'Collection of items',
   stacked: true,
   items,
+  actions: [
+    { label: 'Custom action', icon: 'Home7Line', fixed: true },
+    { actions: [{ value: 'Test' }] },
+  ],
 };
 
 export const Fill = Template.bind({});
@@ -105,6 +111,10 @@ Fill.args = {
   label: 'Collection of items',
   fill: true,
   items,
+  actions: [
+    { label: 'Custom action', icon: 'Home7Line', fixed: true },
+    { actions: [{ value: 'Test' }] },
+  ],
 };
 
 export const SelectedFirst = Template.bind({});
@@ -157,3 +167,37 @@ ChildrenBeforeAndAfter.args = {
     </ReqoreControlGroup>
   ),
 };
+
+export const FilteringSearchingPaging = Template.bind({});
+FilteringSearchingPaging.args = {
+  inputProps: {
+    focusRules: {
+      type: 'keypress',
+      shortcut: 'letters',
+      clearOnFocus: true,
+    },
+  },
+  inputPlaceholder(items) {
+    return `Start typing to search in ${items.length} items`;
+  },
+  size: 'big',
+  padded: false,
+  fill: true,
+  items: data.slice(0, 100).map((datum) => ({
+    label: `${datum.firstName} ${datum.lastName}`,
+    badge: datum.id,
+    size: 'small',
+    expandable: true,
+    content: datum.address,
+    tags: [
+      {
+        labelKey: 'Age',
+        label: datum.age,
+      },
+      {
+        labelKey: 'Occupation',
+        label: datum.occupation,
+      },
+    ],
+  })),
+} as IReqoreCollectionProps;

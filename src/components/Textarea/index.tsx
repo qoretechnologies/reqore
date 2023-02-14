@@ -4,6 +4,7 @@ import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import useAutosizeTextArea from '../../hooks/useTextareaAutoSize';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -44,6 +45,7 @@ export interface IReqoreTextareaProps
   fixed?: boolean;
   onClearClick?: () => any;
   wrapperStyle?: React.CSSProperties;
+  focusRules?: IReqoreAutoFocusRules;
 }
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
@@ -138,6 +140,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
       value,
       onChange,
       fixed,
+      focusRules,
       ...rest
     }: IReqoreTextareaProps,
     ref
@@ -152,6 +155,11 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
 
     useTooltip(targetRef?.current, tooltip);
     useAutosizeTextArea(targetRef?.current, _value, scaleWithContent);
+    useAutoFocus(
+      targetRef.current,
+      rest.readOnly || rest.disabled ? undefined : focusRules,
+      onChange
+    );
 
     return (
       <StyledTextareaWrapper
@@ -182,15 +190,14 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
           rounded={rounded}
           rows={1}
           value={_value}
+          readonly={rest?.readOnly}
         />
-        {!rest.readOnly && (
-          <ReqoreInputClearButton
-            enabled={!rest?.disabled && !!(onClearClick && onChange)}
-            show={_value && _value !== ''}
-            onClick={onClearClick}
-            size={size}
-          />
-        )}
+        <ReqoreInputClearButton
+          enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
+          show={_value && _value !== ''}
+          onClick={onClearClick}
+          size={size}
+        />
       </StyledTextareaWrapper>
     );
   }

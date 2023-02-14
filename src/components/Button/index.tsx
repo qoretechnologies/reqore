@@ -425,6 +425,7 @@ const ReqoreButton = memo(
                   ...fixedEffect,
                 }
           }
+          tabindex={rest.disabled ? -1 : 0}
           as='button'
           theme={theme}
           ref={targetRef}
