@@ -1,9 +1,8 @@
 import { cloneDeep, size as lodashSize } from 'lodash';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
-import { ReqoreMessage, ReqorePanel, ReqoreTextarea } from '../..';
+import { ReqoreMessage, ReqorePanel, ReqoreTextarea, useReqoreProperty } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import ReqoreContext from '../../context/ReqoreContext';
 import { getLineCount, getTypeFromValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton from '../Button';
@@ -45,7 +44,7 @@ export const ReqoreTree = ({
   const [items, setItems] = useState({});
   const [allExpanded, setAllExpanded] = useState(expanded || !showControls);
   const [_showTypes, setShowTypes] = useState(showTypes);
-  const { addNotification } = useContext(ReqoreContext);
+  const addNotification = useReqoreProperty('addNotification');
 
   const handleCopyClick = () => {
     setMode('copy');

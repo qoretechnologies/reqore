@@ -1,18 +1,18 @@
-import { useContext, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   IReqoreEffect,
   TReqoreEffectGradientAnimationTrigger,
   TReqoreHexColor,
 } from '../components/Effect';
 import { IReqoreTheme } from '../constants/theme';
-import ThemeContext from '../context/ThemeContext';
+import { useReqoreTheme } from './useTheme';
 
 export const useReqoreEffect = (
   component: 'buttons',
   theme: IReqoreTheme,
   effect?: IReqoreEffect
 ): IReqoreEffect => {
-  let _theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
+  let _theme: IReqoreTheme = useReqoreTheme();
 
   // Return the effect if the component is not defined in the theme
   if (!theme[component]) {

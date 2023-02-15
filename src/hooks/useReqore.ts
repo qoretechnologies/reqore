@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext } from 'use-context-selector';
 import ReqoreContext, { IReqoreContext } from '../context/ReqoreContext';
 
 export const useReqore = (): IReqoreContext => {

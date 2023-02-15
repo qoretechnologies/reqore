@@ -1,4 +1,5 @@
-import React, { forwardRef, useContext } from 'react';
+import React, { forwardRef } from 'react';
+import { useContext } from 'use-context-selector';
 import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';

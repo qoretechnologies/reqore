@@ -1,15 +1,14 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
-import { useContext } from 'react';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import { IReqoreInputProps } from '../../components/Input';
 import {
   ReqoreButton,
-  ReqoreContext,
   ReqoreInput,
   ReqorePanel,
   ReqoreTabs,
   ReqoreTabsContent,
+  useReqoreProperty,
 } from '../../index';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 
@@ -82,7 +81,8 @@ export default {
 } as Meta;
 
 const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
-  const { confirmAction } = useContext(ReqoreContext);
+  const confirmAction = useReqoreProperty('confirmAction');
+
   return (
     <>
       <ReqorePanel label='Just some background text' padded>

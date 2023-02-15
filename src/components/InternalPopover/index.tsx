@@ -1,9 +1,10 @@
 import { cloneDeep, isString } from 'lodash';
 import { rgba } from 'polished';
-import React, { memo, MutableRefObject, useContext, useEffect, useRef, useState } from 'react';
+import React, { MutableRefObject, memo, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePopper } from 'react-popper';
 import styled, { css } from 'styled-components';
+import { useContext } from 'use-context-selector';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { IPopoverData } from '../../containers/PopoverProvider';

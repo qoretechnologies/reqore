@@ -1,14 +1,14 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ReqoreButton,
   ReqoreContent,
-  ReqoreContext,
   ReqoreLayoutContent,
   ReqoreModal,
   ReqoreUIProvider,
   useReqore,
 } from '../src';
+import { useReqoreProperty } from '../src/hooks/useReqoreContext';
 
 test('Renders basic <Modal /> properly', () => {
   render(
@@ -55,7 +55,7 @@ test('Renders <Modal /> with custom dimensions', () => {
 });
 
 const ConfirmButton = ({ confirmFn, cancelFn }) => {
-  const reqoreContext = useContext(ReqoreContext);
+  const reqoreContext = useReqore();
 
   return (
     <>
@@ -96,7 +96,7 @@ const ConfirmButton = ({ confirmFn, cancelFn }) => {
 };
 
 const ConfirmButtonFromModal = ({ confirmFn, cancelFn }) => {
-  const { confirmAction } = useReqore();
+  const confirmAction = useReqoreProperty('confirmAction');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (

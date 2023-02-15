@@ -4,7 +4,7 @@ import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Colle
 import { IReqoreColumnsProps } from '../../components/Columns';
 import items from '../../mock/collectionData';
 import data from '../../mock/data.json';
-import { argManager, IntentArg, SizeArg } from '../utils/args';
+import { IntentArg, SizeArg, argManager } from '../utils/args';
 
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
@@ -177,8 +177,11 @@ FilteringSearchingPaging.args = {
       clearOnFocus: true,
     },
   },
-  inputPlaceholder(items) {
-    return `Start typing to search in ${items.length} items`;
+  displayButtonProps: {
+    fixed: false,
+  },
+  sortButtonProps: {
+    fixed: false,
   },
   size: 'big',
   padded: false,

@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import React, { forwardRef, memo, useCallback, useContext } from 'react';
+import React, { forwardRef, memo, useCallback } from 'react';
 import styled, { css } from 'styled-components';
 import {
   ICON_FROM_SIZE,
@@ -10,10 +10,10 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
-import ReqoreContext from '../../context/ReqoreContext';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreEffect } from '../../hooks/useReqoreEffect';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -398,7 +398,7 @@ const ReqoreButton = memo(
       ref
     ) => {
       const { targetRef } = useCombinedRefs(ref);
-      const { animations } = useContext(ReqoreContext);
+      const animations = useReqoreProperty('animations');
       const theme = useReqoreTheme('main', customTheme, intent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
 
@@ -450,7 +450,14 @@ const ReqoreButton = memo(
                   icon={icon}
                   size={size}
                   color={leftIconColor || iconColor}
-                  style={textAlign !== 'left' ? { marginRight: 'auto' } : undefined}
+                  style={
+                    textAlign !== 'left'
+                      ? {
+                          marginRight: 'auto',
+                          marginLeft: textAlign === 'center' ? 'auto' : undefined,
+                        }
+                      : undefined
+                  }
                 />
                 {children || badge || rightIcon ? (
                   <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
@@ -497,7 +504,14 @@ const ReqoreButton = memo(
                 <ReqoreIcon
                   icon={rightIcon}
                   size={size}
-                  style={textAlign !== 'right' ? { marginLeft: 'auto' } : undefined}
+                  style={
+                    textAlign !== 'right'
+                      ? {
+                          marginLeft: 'auto',
+                          marginRight: textAlign === 'center' ? 'auto' : undefined,
+                        }
+                      : undefined
+                  }
                   color={rightIconColor || iconColor}
                 />
               </>

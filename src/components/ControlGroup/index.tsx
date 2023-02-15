@@ -334,7 +334,7 @@ const ReqoreControlGroup = memo(
 
             let newProps = {
               ...child.props,
-              key: index,
+              key: child.props.reactKey || child.props.key || index,
               minimal:
                 child.props?.minimal || child.props?.minimal === false
                   ? child.props.minimal

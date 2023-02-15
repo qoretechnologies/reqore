@@ -1,4 +1,5 @@
-import { createContext } from 'react';
+import { createContext } from 'use-context-selector';
+import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import { IReqoreConfirmationModal, IReqoreNotificationData } from '../containers/ReqoreProvider';
 import { IReqoreOptions } from '../containers/UIProvider';
 
@@ -15,6 +16,7 @@ export interface IReqoreContext {
   readonly tooltips?: IReqoreOptions['tooltips'];
   readonly closePopoversOnEscPress?: boolean;
   readonly latestZIndex?: number;
+  theme: IReqoreTheme;
 }
 
 export default createContext<IReqoreContext>({
@@ -27,4 +29,5 @@ export default createContext<IReqoreContext>({
     dialogs: true,
   },
   closePopoversOnEscPress: true,
+  theme: DEFAULT_THEME,
 });

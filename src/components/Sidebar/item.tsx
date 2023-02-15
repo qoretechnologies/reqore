@@ -1,11 +1,9 @@
 import classnames from 'classnames';
 import map from 'lodash/map';
-import { useContext } from 'react';
 import { useMount } from 'react-use';
 import { IQorusSidebarItem } from '.';
-import { ReqorePopover } from '../..';
+import { ReqorePopover, useReqoreTheme } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import ThemeContext from '../../context/ThemeContext';
 import { getMainColor, getReadableColor } from '../../helpers/colors';
 import { isActiveMulti } from '../../helpers/sidebar';
 import ReqoreIcon from '../Icon';
@@ -202,7 +200,7 @@ const SidebarItemWrapper = ({
   useNativeTitle,
   onClick,
 }: SidebarItemProps) => {
-  const theme: IReqoreTheme = useContext(ThemeContext);
+  const theme: IReqoreTheme = useReqoreTheme();
 
   useMount(() => {
     if (

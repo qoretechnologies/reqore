@@ -23,6 +23,13 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
       <ReqoreControlGroup size={buttonProps.size} wrap>
         <ReqoreButton {...buttonProps} icon='BankFill' rightIcon={null} />
         <ReqoreButton {...buttonProps} />
+        <ReqoreButton
+          {...buttonProps}
+          icon='BankFill'
+          rightIcon={null}
+          textAlign='center'
+          style={{ width: '100px' }}
+        />
         <ReqoreButton {...buttonProps}>Default</ReqoreButton>
         <ReqoreButton {...buttonProps} wrap maxWidth='150px'>
           Default wrapped button with long text

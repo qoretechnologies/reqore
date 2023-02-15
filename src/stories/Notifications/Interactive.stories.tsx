@@ -1,10 +1,9 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import { useContext } from 'react';
 import ReqoreNotification, {
   IReqoreNotificationProps,
 } from '../../components/Notifications/notification';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
-import { ReqoreContext, ReqoreUIProvider } from '../../index';
+import { ReqoreUIProvider, useReqoreProperty } from '../../index';
 
 export default {
   title: 'Components/Notifications/Interactive',
@@ -12,7 +11,7 @@ export default {
 } as Meta;
 
 const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
-  const { addNotification } = useContext(ReqoreContext);
+  const addNotification = useReqoreProperty('addNotification');
 
   return (
     <button
@@ -35,7 +34,7 @@ const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
 };
 
 const UpdatingButton = ({ id }) => {
-  const { addNotification } = useContext(ReqoreContext);
+  const addNotification = useReqoreProperty('addNotification');
 
   return (
     <button

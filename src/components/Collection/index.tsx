@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { useMemo, useState } from 'react';
-import { useUpdateEffect } from 'react-use';
+import { useDebounce, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreIconName } from '../../types/icons';
@@ -46,6 +46,7 @@ export interface IReqoreCollectionProps
   showAs?: 'list' | 'grid';
   showSelectedFirst?: boolean;
   selectedIcon?: IReqoreIconName;
+  searchDelay?: number;
 
   childrenBefore?: React.ReactNode;
   childrenAfter?: React.ReactNode;
@@ -93,6 +94,7 @@ export const ReqoreCollection = ({
   onQueryChange,
   childrenBefore,
   childrenAfter,
+  searchDelay = 300,
   emptyMessage = 'No data in this collection, try changing your search query or filters',
   sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
   displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
@@ -102,6 +104,7 @@ export const ReqoreCollection = ({
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [query, setQuery] = useState<string>('');
+  const [preQuery, setPreQuery] = useState<string>('');
 
   useUpdateEffect(() => {
     setShowAs(showAs);
@@ -110,6 +113,14 @@ export const ReqoreCollection = ({
   useUpdateEffect(() => {
     onQueryChange?.(query);
   }, [query]);
+
+  useDebounce(
+    () => {
+      setQuery(preQuery);
+    },
+    searchDelay,
+    [preQuery]
+  );
 
   const sortedItems: IReqoreCollectionItemProps[] = useMemo(() => {
     if (!sortable) {
@@ -141,7 +152,7 @@ export const ReqoreCollection = ({
     });
   }, [items, sort]);
 
-  const filteredItems: IReqoreCollectionItemProps[] = useMemo(() => {
+  const finalItems: IReqoreCollectionItemProps[] = useMemo(() => {
     if (!filterable || query === '') {
       return sortedItems;
     }
@@ -159,11 +170,10 @@ export const ReqoreCollection = ({
     });
   }, [items, query, sortedItems]);
 
-  const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.target.value);
+  const handlePreQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPreQuery(event.target.value);
   };
 
-  const finalItems = filteredItems;
   const finalActions: TReqorePanelActions = useMemo(() => {
     let actions: TReqorePanelActions = rest.actions ? [...rest.actions] : [];
 
@@ -171,10 +181,11 @@ export const ReqoreCollection = ({
       responsive: false,
       group: [
         {
-          icon: _showAs === 'grid' ? 'ListOrdered' : 'GridLine',
+          icon: _showAs === 'grid' ? 'ListUnordered' : 'GridLine',
           onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
           tooltip: displayButtonTooltip(_showAs),
           disabled: !size(finalItems),
+          textAlign: 'center',
           ...displayButtonProps,
         },
       ],
@@ -186,6 +197,7 @@ export const ReqoreCollection = ({
         onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
         tooltip: sortButtonTooltip(sort),
         disabled: !size(finalItems),
+        textAlign: 'center',
         ...sortButtonProps,
       });
     }
@@ -200,8 +212,8 @@ export const ReqoreCollection = ({
             fixed: false,
             placeholder: inputPlaceholder(finalItems),
             onClearClick: () => setQuery(''),
-            onChange: handleQueryChange,
-            value: query,
+            onChange: handlePreQueryChange,
+            value: preQuery,
             icon: 'Search2Line',
             minimal: false,
             ...inputProps,
@@ -211,7 +223,7 @@ export const ReqoreCollection = ({
     }
 
     return [...actions, toolbarGroup];
-  }, [filterable, handleQueryChange, query, rest.actions, _showAs, sort, sortable, finalItems]);
+  }, [filterable, preQuery, query, rest.actions, _showAs, sort, sortable, finalItems]);
 
   return (
     <ReqorePanel

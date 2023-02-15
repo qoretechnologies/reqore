@@ -1,9 +1,9 @@
 import { size } from 'lodash';
 import React, { MutableRefObject, useCallback, useEffect, useState } from 'react';
+import { useReqoreProperty } from '..';
 import Popover from '../components/InternalPopover';
 import PopoverContext from '../context/PopoverContext';
 import { IPopoverOptions } from '../hooks/usePopover';
-import { useReqore } from '../hooks/useReqore';
 
 export interface IReqorePopoverProviderProps {
   children: any;
@@ -17,7 +17,7 @@ export interface IPopoverData extends IPopoverOptions {
 
 const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiScale }) => {
   const [popovers, setPopovers] = useState<IPopoverData[]>([]);
-  const { closePopoversOnEscPress } = useReqore();
+  const closePopoversOnEscPress = useReqoreProperty('closePopoversOnEscPress');
 
   const handleClick = useCallback(
     (event: MouseEvent) => {

@@ -1,8 +1,8 @@
 import _size from 'lodash/size';
 import { rgba } from 'polished';
-import React, { forwardRef, useContext } from 'react';
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
-import { ReqorePopover } from '../..';
+import { ReqorePopover, useReqoreTheme } from '../..';
 import {
   BADGE_SIZE_TO_PX,
   PADDING_FROM_SIZE,
@@ -12,7 +12,6 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import ThemeContext from '../../context/ThemeContext';
 import {
   changeLightness,
   getColorFromMaybeString,
@@ -264,7 +263,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
-    const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
+    const theme: IReqoreTheme = useReqoreTheme();
 
     useTooltip(targetRef.current, tooltip);
 
