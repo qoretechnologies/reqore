@@ -3,10 +3,12 @@ import { ReqoreIcon, ReqoreP } from '../..';
 import { TSizes } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
 import { IWithReqoreEffect } from '../../types/global';
-import ReqoreControlGroup from '../ControlGroup';
+import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 
-export interface IReqoreSpinnerProps extends IWithReqoreEffect {
+export interface IReqoreSpinnerProps
+  extends Omit<IReqoreControlGroupProps, 'children' | 'size'>,
+    IWithReqoreEffect {
   size?: TSizes | string;
   intent?: TReqoreIntent;
   children?: any;
@@ -27,6 +29,7 @@ export const ReqoreSpinner = ({
   effect,
   iconMargin,
   centered,
+  ...rest
 }: IReqoreSpinnerProps) => {
   const renderContent = useCallback(() => {
     return (
@@ -44,7 +47,12 @@ export const ReqoreSpinner = ({
 
   if (children) {
     return (
-      <ReqoreControlGroup vertical={centered} horizontalAlign={centered ? 'center' : undefined}>
+      <ReqoreControlGroup
+        {...rest}
+        vertical={centered}
+        horizontalAlign={centered ? 'center' : undefined}
+        verticalAlign='center'
+      >
         {renderContent()}
         <ReqoreP
           size={size}

@@ -43,6 +43,7 @@ export { default as ReqorePopover } from './components/Popover';
 export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export { default as ReqoreSidebar } from './components/Sidebar';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
+export { ReqoreSpinner } from './components/Spinner';
 export { default as ReqoreTable } from './components/Table';
 export { default as ReqoreTabs } from './components/Tabs';
 export { default as ReqoreTabsContent } from './components/Tabs/content';

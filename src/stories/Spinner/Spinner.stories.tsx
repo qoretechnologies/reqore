@@ -35,8 +35,13 @@ const Template: Story<IReqoreSpinnerProps> = (args) => {
         {...args}
         type={4}
         iconColor='#f21616'
-        labelEffect={{ gradient: { colors: 'warning' } }}
-        size='big'
+        labelEffect={{
+          gradient: { colors: 'warning' },
+          uppercase: true,
+          spaced: 2,
+          textSize: 'small',
+        }}
+        size='huge'
       >
         {args.children}
       </ReqoreSpinner>

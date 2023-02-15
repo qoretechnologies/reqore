@@ -15,7 +15,6 @@ export interface IReqoreParagraphProps
 }
 
 export const StyledParagraph = styled(StyledTextEffect)`
-  margin: 0;
   padding: 0;
   color: ${({ theme, intent }) => (intent ? theme.intents[intent] : 'inherit')};
   font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
