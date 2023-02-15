@@ -3,7 +3,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { ReqoreMessage, ReqorePanel, ReqoreTextarea, useReqoreProperty } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { getLineCount, getTypeFromValue } from '../../helpers/utils';
+import { getTypeFromValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -172,7 +172,6 @@ export const ReqoreTree = ({
   }
 
   const textData: string = renderText(data);
-  const lineCount: number = getLineCount(textData);
 
   return (
     <ReqorePanel
