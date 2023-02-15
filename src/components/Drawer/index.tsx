@@ -147,7 +147,7 @@ const getSpringConfig = (isModal?: boolean, position?: TPosition, floating?: boo
         leave: { opacity: 0, [position]: '-80px' },
       };
 
-export const ReqoreDrawer = ({
+export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
   children,
   isOpen,
   isHidden,

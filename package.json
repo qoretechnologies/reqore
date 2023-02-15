@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.32.1",
+  "version": "0.32.2",
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,6 +10,7 @@
     "test:ci": "./node_modules/.bin/jest --silent --json --outputFile=tests.json",
     "build": "./node_modules/typescript/bin/tsc --project tsconfig.prod.json",
     "build:test": "./node_modules/typescript/bin/tsc --noEmit",
+    "build:test:prod": "./node_modules/typescript/bin/tsc --project tsconfig.prod.json --noEmit",
     "storybook": "start-storybook -p 6007 --no-dll",
     "init-storybook": "yarn test:ci && yarn storybook",
     "build-storybook": "build-storybook"
