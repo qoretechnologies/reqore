@@ -13,6 +13,8 @@ import {
   IWithReqoreMinimal,
   IWithReqoreSize,
 } from '../../types/global';
+import { StyledHeader } from '../Header';
+import { StyledParagraph } from '../Paragraph';
 
 export interface IReqoreControlGroupProps
   extends React.HTMLAttributes<HTMLDivElement>,
@@ -83,7 +85,7 @@ export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
     return undefined;
   }}
 
-  > * {
+  > *, > ${StyledParagraph}, > ${StyledHeader} {
     margin-top: ${({ fill, verticalAlign }) =>
       !fill && (verticalAlign === 'flex-end' || verticalAlign === 'center') ? 'auto' : undefined};
     margin-bottom: ${({ fill, verticalAlign }) =>
