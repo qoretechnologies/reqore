@@ -173,6 +173,7 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
           ],
         },
         {
+          fixed: true,
           group: [
             { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
             { icon: 'CopperCoinFill', intent: 'danger' },

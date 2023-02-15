@@ -462,3 +462,21 @@ test('<Input /> is cleared when focused', () => {
   expect(fn).toHaveBeenNthCalledWith(1, { target: { value: '' } });
   expect(document.querySelectorAll('.reqore-input')[0]).toHaveFocus();
 });
+
+test('Tooltip on <Input /> works', () => {
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreInput value='this is a test' tooltip='test' />
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  fireEvent.mouseEnter(document.querySelectorAll('.reqore-input')[0]);
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});

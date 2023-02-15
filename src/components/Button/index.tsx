@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import React, { forwardRef, memo, useCallback } from 'react';
+import React, { forwardRef, memo, useCallback, useState } from 'react';
 import styled, { css } from 'styled-components';
 import {
   ICON_FROM_SIZE,
@@ -398,12 +398,13 @@ const ReqoreButton = memo(
       ref
     ) => {
       const { targetRef } = useCombinedRefs(ref);
+      const [buttonRef, setButtonRef] = useState<HTMLButtonElement>(undefined);
       const animations = useReqoreProperty('animations');
       const theme = useReqoreTheme('main', customTheme, intent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
 
       /* A custom hook that is used to add a tooltip to the button. */
-      useTooltip(targetRef.current, tooltip);
+      useTooltip(buttonRef, tooltip);
 
       // If color or intent was specified, set the color
       const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
@@ -428,7 +429,10 @@ const ReqoreButton = memo(
           tabindex={rest.disabled ? -1 : 0}
           as='button'
           theme={theme}
-          ref={targetRef}
+          ref={(ref) => {
+            targetRef.current = ref;
+            setButtonRef(ref);
+          }}
           fluid={fluid}
           fixed={fixed}
           maxWidth={maxWidth}

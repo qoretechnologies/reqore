@@ -1,6 +1,6 @@
 import _size from 'lodash/size';
 import { rgba } from 'polished';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
 import {
@@ -264,8 +264,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
   ) => {
     const { targetRef } = useCombinedRefs(ref);
     const theme: IReqoreTheme = useReqoreTheme();
+    const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
 
-    useTooltip(targetRef.current, tooltip);
+    useTooltip(itemRef, tooltip);
 
     // If color or intent was specified, set the color
     const getCustomColor = (itemIntent?: TReqoreIntent): TReqoreHexColor => {
@@ -291,7 +292,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         color={getCustomColor(intent)}
         className={`${className || ''} reqore-tag`}
         size={size}
-        ref={targetRef}
+        ref={(ref) => {
+          targetRef.current = ref;
+          setItemRef(ref);
+        }}
         asBadge={asBadge}
         minimal={minimal}
         removable={!!onRemoveClick}

@@ -147,6 +147,7 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
             ],
           },
           {
+            fixed: true,
             group: [
               { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
               { icon: 'CopperCoinFill', intent: 'danger' },

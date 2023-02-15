@@ -154,7 +154,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
       setValue(value || '');
     }, [value]);
 
-    useTooltip(targetRef?.current, tooltip);
+    useTooltip(inputRef, tooltip);
     useAutosizeTextArea(inputRef, _value, scaleWithContent);
     useAutoFocus(inputRef, rest.readOnly || rest.disabled ? undefined : focusRules, onChange);
 

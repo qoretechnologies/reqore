@@ -97,6 +97,7 @@ const ReqoreIcon = memo(
       ref
     ) => {
       const { targetRef } = useCombinedRefs(ref);
+      const [iconRef, setIconRef] = React.useState<HTMLSpanElement>(undefined);
       const theme = useReqoreTheme();
       const Icon: IconType = RemixIcons[`Ri${icon}`];
       const finalColor: string | undefined = intent
@@ -109,7 +110,7 @@ const ReqoreIcon = memo(
           : wrapperSize
         : finalSize;
 
-      useTooltip(targetRef.current, tooltip);
+      useTooltip(iconRef, tooltip);
 
       if (image) {
         return (
@@ -145,7 +146,10 @@ const ReqoreIcon = memo(
         <StyledIconWrapper
           {...rest}
           as={wrapperElement}
-          ref={targetRef}
+          ref={(ref) => {
+            targetRef.current = ref;
+            setIconRef(ref);
+          }}
           margin={margin}
           size={size}
           style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}

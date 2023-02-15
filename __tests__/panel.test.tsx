@@ -156,7 +156,7 @@ test('Renders <Panel /> without actions group if all actins are not shown', () =
   expect(document.querySelectorAll('.reqore-input').length).toBe(0);
 });
 
-test('Renders <Panel /> without title & bottom actions if all actions are not shown, there is no icon, title & is not collapsible', () => {
+test('Renders <Panel /> without title & bottom actions if all actions are not shown, there is no icon, & title is not collapsible', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -201,4 +201,22 @@ test('Renders <Panel /> without title & bottom actions if all actions are not sh
   expect(document.querySelectorAll('.reqore-input').length).toBe(0);
   expect(document.querySelectorAll('.reqore-panel-title').length).toBe(0);
   expect(document.querySelectorAll('.reqore-panel-bottom-actions').length).toBe(0);
+});
+
+test('Tooltip on <Panel /> works', () => {
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqorePanel tooltip='Hello'>Hello</ReqorePanel>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  fireEvent.mouseEnter(document.querySelectorAll('.reqore-panel')[0]);
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

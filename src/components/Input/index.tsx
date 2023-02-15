@@ -191,7 +191,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const theme = useReqoreTheme('main', customTheme, intent);
 
-    useTooltip(targetRef.current, tooltip);
+    useTooltip(inputRef, tooltip);
     useAutoFocus(inputRef, readOnly || rest.disabled ? undefined : focusRules, rest.onChange);
 
     return (

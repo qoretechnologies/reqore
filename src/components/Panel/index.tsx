@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -312,8 +312,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
     const isMobile = useReqoreProperty('isMobile');
     const { targetRef } = useCombinedRefs(ref);
+    const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
 
-    useTooltip(targetRef.current, tooltip);
+    useTooltip(itemRef, tooltip);
 
     useUpdateEffect(() => {
       setIsCollapsed(!!isCollapsed);
@@ -519,7 +520,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       <StyledPanel
         {...rest}
         as={rest.as || 'div'}
-        ref={targetRef}
+        ref={(ref) => {
+          targetRef.current = ref;
+          setItemRef(ref);
+        }}
         isCollapsed={_isCollapsed}
         rounded={rounded}
         flat={flat}

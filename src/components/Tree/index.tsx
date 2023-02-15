@@ -223,12 +223,11 @@ export const ReqoreTree = ({
         <ReqoreTextarea
           className='reqore-tree-textarea'
           id='tree-content'
-          defaultValue={textData}
+          value={textData}
           scaleWithContent
           size={size}
           fluid
           readOnly
-          rows={lineCount > 20 ? 20 : lineCount}
         />
       )}
     </ReqorePanel>
