@@ -51,7 +51,9 @@ jobs:
         run: yarn test:ci
       - name: Build test
         id: build_test
-        run: yarn build:test
+        run: |
+           yarn build
+           rm -rf dist
       - name: Publish to Chromatic
         id: chromatic_publish
         uses: chromaui/action@v1

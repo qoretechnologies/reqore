@@ -2,3 +2,4 @@ node_modules
 dist
 output.json
 tests.json
+coverage
