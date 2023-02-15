@@ -61,3 +61,19 @@ test('Runs onClose when closed', async () => {
 
   expect(fn).toHaveBeenCalledWith();
 });
+
+test('Tooltip on <Message /> works', async () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreMessage tooltip='Hello'>Hello</ReqoreMessage>
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.mouseEnter(document.querySelectorAll('.reqore-message')[0]);
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});

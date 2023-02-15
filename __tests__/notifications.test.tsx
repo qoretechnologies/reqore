@@ -1,15 +1,15 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React, { useContext } from 'react';
-import { ReqoreContext, ReqoreUIProvider } from '../src/index';
+import React from 'react';
+import { ReqoreUIProvider, useReqoreProperty } from '../src/index';
 
 const AddButton = (props: any) => {
-  const { addNotification } = useContext(ReqoreContext);
+  const addNotification = useReqoreProperty('addNotification');
 
   return (
     <button
       id='add-notification'
       onClick={() =>
-        addNotification({
+        addNotification?.({
           title: 'Test Notification',
           content: 'I am a notification in tests',
           duration: 3000,
@@ -24,13 +24,13 @@ const AddButton = (props: any) => {
 };
 
 const UpdateButton = (props: any) => {
-  const { addNotification } = useContext(ReqoreContext);
+  const addNotification = useReqoreProperty('addNotification');
 
   return (
     <button
       id='update-notification'
       onClick={() =>
-        addNotification({
+        addNotification?.({
           title: 'Updated Notification',
           content: 'I am an updated notification in tests',
           duration: 5000,

@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import React, { forwardRef, useRef } from 'react';
+import React, { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
@@ -188,15 +188,11 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const theme = useReqoreTheme('main', customTheme, intent);
 
-    useTooltip(targetRef.current, tooltip);
-    useAutoFocus(
-      inputRef.current,
-      readOnly || rest.disabled ? undefined : focusRules,
-      rest.onChange
-    );
+    useTooltip(inputRef, tooltip);
+    useAutoFocus(inputRef, readOnly || rest.disabled ? undefined : focusRules, rest.onChange);
 
     return (
       <StyledInputWrapper
@@ -227,7 +223,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           }}
           onChange={!readOnly && !rest?.disabled ? rest?.onChange : undefined}
           as='input'
-          ref={inputRef}
+          ref={(ref) => setInputRef(ref)}
           theme={theme}
           _size={size}
           minimal={minimal}

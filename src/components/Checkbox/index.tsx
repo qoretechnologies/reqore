@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo, useState } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
@@ -8,7 +8,7 @@ import {
   changeLightness,
   getNthGradientColor,
   getReadableColor,
-  getReadableColorFrom
+  getReadableColorFrom,
 } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -21,7 +21,7 @@ import {
   IReqoreReadOnly,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
-  TReqoreTooltipProp
+  TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreEffect, ReqoreTextEffect, StyledEffect, StyledTextEffect } from '../Effect';
@@ -196,11 +196,12 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
+    const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
     const [offRef, { width: offWidth }] = useMeasure();
     const [onRef, { width: onWidth }] = useMeasure();
     const theme = useReqoreTheme('main', customTheme, intent);
 
-    useTooltip(targetRef.current, tooltip);
+    useTooltip(itemRef, tooltip);
 
     const width = useMemo(() => {
       if ((!image && !onText) || !offText) return undefined;
@@ -217,7 +218,10 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     return (
       <StyledCheckbox
         {...rest}
-        ref={targetRef}
+        ref={(ref) => {
+          targetRef.current = ref;
+          setItemRef(ref);
+        }}
         theme={theme}
         size={size}
         disabled={disabled}

@@ -1,10 +1,9 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
-import { useContext } from 'react';
 import { useMount } from 'react-use';
 import { IReqoreModalProps } from '../../components/Modal';
-import { ReqoreContext, ReqoreModal, ReqorePanel } from '../../index';
-import { argManager, FlatArg, IntentArg } from '../utils/args';
+import { ReqoreModal, ReqorePanel, useReqoreProperty } from '../../index';
+import { FlatArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreModalProps>();
 
@@ -53,7 +52,7 @@ export default {
 } as Meta<IReqoreModalProps>;
 
 const Template: Story<IReqoreModalProps & { confirm?: boolean }> = (args) => {
-  const { confirmAction } = useContext(ReqoreContext);
+  const confirmAction = useReqoreProperty('confirmAction');
 
   useMount(() => {
     if (args.confirm) {

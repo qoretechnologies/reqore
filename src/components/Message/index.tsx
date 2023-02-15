@@ -87,8 +87,9 @@ const ReqoreMessage = memo(
       const [internalTimeout, setInternalTimeout] = useState<NodeJS.Timeout | null>(null);
       const theme = useReqoreTheme('main', customTheme, intent);
       const { targetRef } = useCombinedRefs(ref);
+      const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
 
-      useTooltip(targetRef.current, tooltip);
+      useTooltip(itemRef, tooltip);
 
       useMount(() => {
         if (duration) {
@@ -142,7 +143,10 @@ const ReqoreMessage = memo(
             fluid={fluid}
             fixed={fixed}
             className={`${rest?.className || ''} reqore-message`}
-            ref={targetRef}
+            ref={(ref) => {
+              targetRef.current = ref;
+              setItemRef(ref);
+            }}
             size={size}
             theme={theme}
           >

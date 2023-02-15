@@ -1,10 +1,9 @@
 import { cloneDeep, size as lodashSize } from 'lodash';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
-import { ReqoreMessage, ReqorePanel, ReqoreTextarea } from '../..';
+import { ReqoreMessage, ReqorePanel, ReqoreTextarea, useReqoreProperty } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import ReqoreContext from '../../context/ReqoreContext';
-import { getLineCount, getTypeFromValue } from '../../helpers/utils';
+import { getTypeFromValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -45,7 +44,7 @@ export const ReqoreTree = ({
   const [items, setItems] = useState({});
   const [allExpanded, setAllExpanded] = useState(expanded || !showControls);
   const [_showTypes, setShowTypes] = useState(showTypes);
-  const { addNotification } = useContext(ReqoreContext);
+  const addNotification = useReqoreProperty('addNotification');
 
   const handleCopyClick = () => {
     setMode('copy');
@@ -173,7 +172,6 @@ export const ReqoreTree = ({
   }
 
   const textData: string = renderText(data);
-  const lineCount: number = getLineCount(textData);
 
   return (
     <ReqorePanel
@@ -224,12 +222,11 @@ export const ReqoreTree = ({
         <ReqoreTextarea
           className='reqore-tree-textarea'
           id='tree-content'
-          defaultValue={textData}
+          value={textData}
           scaleWithContent
           size={size}
           fluid
           readOnly
-          rows={lineCount > 20 ? 20 : lineCount}
         />
       )}
     </ReqorePanel>

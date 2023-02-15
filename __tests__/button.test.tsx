@@ -169,3 +169,21 @@ test('Renders <Button /> with a Tag props badge', () => {
 
   expect(document.querySelectorAll('.reqore-button-badge').length).toBe(1);
 });
+
+test('Tooltip on <Button /> works', () => {
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreButton tooltip='test'>Click</ReqoreButton>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  fireEvent.mouseEnter(document.querySelectorAll('.reqore-button')[0]);
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});

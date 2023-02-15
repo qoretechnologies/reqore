@@ -146,6 +146,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
     ref
   ) => {
     const { targetRef }: any = useCombinedRefs(ref);
+    const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
     const theme = useReqoreTheme('main', customTheme, intent);
     const [_value, setValue] = useState(value || '');
 
@@ -153,13 +154,9 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
       setValue(value || '');
     }, [value]);
 
-    useTooltip(targetRef?.current, tooltip);
-    useAutosizeTextArea(targetRef?.current, _value, scaleWithContent);
-    useAutoFocus(
-      targetRef.current,
-      rest.readOnly || rest.disabled ? undefined : focusRules,
-      onChange
-    );
+    useTooltip(inputRef, tooltip);
+    useAutosizeTextArea(inputRef, _value, scaleWithContent);
+    useAutoFocus(inputRef, rest.readOnly || rest.disabled ? undefined : focusRules, onChange);
 
     return (
       <StyledTextareaWrapper
@@ -171,6 +168,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
         _size={size}
         theme={theme}
         style={wrapperStyle}
+        ref={targetRef}
       >
         <StyledTextarea
           {...rest}
@@ -185,7 +183,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
           as='textarea'
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
-          ref={targetRef}
+          ref={(ref) => setInputRef(ref)}
           theme={theme}
           rounded={rounded}
           rows={1}

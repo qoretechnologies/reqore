@@ -1,7 +1,9 @@
 import { Placement } from '@popperjs/core';
-import { MutableRefObject, useContext, useEffect, useMemo, useRef } from 'react';
+import { MutableRefObject, useEffect, useMemo, useRef } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import shortid from 'shortid';
+import { useContext } from 'use-context-selector';
+import { useReqoreProperty } from '..';
 import { IPopoverData } from '../containers/PopoverProvider';
 import PopoverContext from '../context/PopoverContext';
 import {
@@ -11,7 +13,6 @@ import {
   IWithReqoreMinimal,
 } from '../types/global';
 import { IReqoreIconName } from '../types/icons';
-import { useReqore } from './useReqore';
 
 const startEvents = {
   hover: 'mouseenter',
@@ -78,7 +79,7 @@ const usePopover = ({
 }: IPopoverOptions): IPopoverControls => {
   const { addPopover, removePopover, updatePopover, popovers, isPopoverOpen } =
     useContext(PopoverContext);
-  const { tooltips } = useReqore();
+  const tooltips = useReqoreProperty('tooltips');
   const { current }: MutableRefObject<string> = useRef(shortid.generate());
   let { current: timeout }: MutableRefObject<any> = useRef(0);
 

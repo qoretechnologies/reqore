@@ -1,9 +1,8 @@
-import React, { forwardRef, useContext } from 'react';
+import React, { forwardRef } from 'react';
+import { useContext } from 'use-context-selector';
 import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { useTooltip } from '../../hooks/useTooltip';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 
@@ -33,7 +32,7 @@ export interface IReqoreMenuItemRightIconStyle {
   intent?: TReqoreIntent;
 }
 
-const ReqoreMenuItem = forwardRef<HTMLDivElement, IReqoreMenuItemProps>(
+const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
   (
     {
       children,
@@ -53,10 +52,9 @@ const ReqoreMenuItem = forwardRef<HTMLDivElement, IReqoreMenuItemProps>(
       flat = true,
       ...rest
     }: IReqoreMenuItemProps,
-    ref: any
+    ref
   ) => {
     const { removePopover } = useContext(PopoverContext);
-    const { targetRef } = useCombinedRefs(ref);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       event.persist();
@@ -81,8 +79,6 @@ const ReqoreMenuItem = forwardRef<HTMLDivElement, IReqoreMenuItemProps>(
       }
     };
 
-    useTooltip(targetRef.current, tooltip);
-
     return (
       <ReqoreControlGroup stack={!!onRightIconClick} fluid>
         <ReqoreButton
@@ -94,11 +90,12 @@ const ReqoreMenuItem = forwardRef<HTMLDivElement, IReqoreMenuItemProps>(
           fluid
           onClick={handleClick}
           active={selected}
-          ref={targetRef}
+          ref={ref}
           disabled={disabled}
           intent={intent}
           icon={icon}
           rightIcon={onRightIconClick ? undefined : rightIcon}
+          tooltip={tooltip}
         >
           {label || children}
         </ReqoreButton>

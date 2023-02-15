@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreBreadcrumbItem } from '.';
 import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
@@ -124,13 +124,17 @@ const ReqoreBreadcrumbsItem = forwardRef<HTMLDivElement, IReqoreBreadcrumbItemPr
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
+    const [itemRef, setItemRef] = useState(undefined);
     const theme = useReqoreTheme('breadcrumbs', customTheme);
 
-    useTooltip(targetRef?.current, tooltip);
+    useTooltip(itemRef, tooltip);
 
     return (
       <StyledBreadcrumbItem
-        ref={targetRef}
+        ref={(ref) => {
+          targetRef.current = ref;
+          setItemRef(ref);
+        }}
         active={active}
         interactive={interactive || !!props?.onClick}
         className='reqore-breadcrumbs-item'

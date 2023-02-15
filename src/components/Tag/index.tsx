@@ -1,8 +1,8 @@
 import _size from 'lodash/size';
 import { rgba } from 'polished';
-import React, { forwardRef, useContext } from 'react';
+import React, { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
-import { ReqorePopover } from '../..';
+import { ReqorePopover, useReqoreTheme } from '../..';
 import {
   BADGE_SIZE_TO_PX,
   PADDING_FROM_SIZE,
@@ -12,7 +12,6 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import ThemeContext from '../../context/ThemeContext';
 import {
   changeLightness,
   getColorFromMaybeString,
@@ -264,9 +263,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
-    const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
+    const theme: IReqoreTheme = useReqoreTheme();
+    const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
 
-    useTooltip(targetRef.current, tooltip);
+    useTooltip(itemRef, tooltip);
 
     // If color or intent was specified, set the color
     const getCustomColor = (itemIntent?: TReqoreIntent): TReqoreHexColor => {
@@ -292,7 +292,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         color={getCustomColor(intent)}
         className={`${className || ''} reqore-tag`}
         size={size}
-        ref={targetRef}
+        ref={(ref) => {
+          targetRef.current = ref;
+          setItemRef(ref);
+        }}
         asBadge={asBadge}
         minimal={minimal}
         removable={!!onRemoveClick}

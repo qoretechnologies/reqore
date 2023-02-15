@@ -1,9 +1,9 @@
-import React, { forwardRef, memo, useContext } from 'react';
+import React, { forwardRef, memo } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
 import styled, { css, keyframes } from 'styled-components';
-import { ReqoreThemeContext } from '../..';
+import { useReqoreTheme } from '../..';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getColorFromMaybeString } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
@@ -97,7 +97,8 @@ const ReqoreIcon = memo(
       ref
     ) => {
       const { targetRef } = useCombinedRefs(ref);
-      const theme = useContext(ReqoreThemeContext);
+      const [iconRef, setIconRef] = React.useState<HTMLSpanElement>(undefined);
+      const theme = useReqoreTheme();
       const Icon: IconType = RemixIcons[`Ri${icon}`];
       const finalColor: string | undefined = intent
         ? theme.intents[intent]
@@ -109,7 +110,7 @@ const ReqoreIcon = memo(
           : wrapperSize
         : finalSize;
 
-      useTooltip(targetRef.current, tooltip);
+      useTooltip(iconRef, tooltip);
 
       if (image) {
         return (
@@ -145,7 +146,10 @@ const ReqoreIcon = memo(
         <StyledIconWrapper
           {...rest}
           as={wrapperElement}
-          ref={targetRef}
+          ref={(ref) => {
+            targetRef.current = ref;
+            setIconRef(ref);
+          }}
           margin={margin}
           size={size}
           style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}

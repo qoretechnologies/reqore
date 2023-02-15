@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext } from 'use-context-selector';
 import { IPopoverData } from '../containers/PopoverProvider';
 
 export default createContext<{

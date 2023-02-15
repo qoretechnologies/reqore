@@ -62,4 +62,5 @@ export { default as ReqoreContext } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';
 export { default as useLatestZIndex } from './hooks/useLatestZIndex';
 export { useReqore } from './hooks/useReqore';
+export { useReqoreProperty } from './hooks/useReqoreContext';
 export { useReqoreTheme } from './hooks/useTheme';

@@ -448,3 +448,21 @@ test('<Textarea /> is cleared when focused', () => {
   expect(fn).toHaveBeenNthCalledWith(1, { target: { value: '' } });
   expect(document.querySelectorAll('.reqore-textarea')[0]).toHaveFocus();
 });
+
+test('Tooltip on <Textarea /> works', () => {
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreTextarea tooltip='this is a test' value='this is a test' />
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  fireEvent.mouseEnter(document.querySelectorAll('.reqore-textarea')[0]);
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});

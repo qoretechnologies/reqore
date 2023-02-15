@@ -19,6 +19,7 @@ test('Renders basic <Collection /> properly', () => {
 
 test('<Collection /> items can be filtered', () => {
   const fn = jest.fn();
+  jest.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -32,6 +33,10 @@ test('<Collection /> items can be filtered', () => {
     target: { value: 'I have' },
   });
 
+  expect(fn).not.toHaveBeenCalled();
+
+  jest.runAllTimers();
+
   expect(fn).toHaveBeenCalledWith('I have');
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(2);
 
@@ -39,12 +44,16 @@ test('<Collection /> items can be filtered', () => {
     target: { value: 'asg' },
   });
 
+  jest.runAllTimers();
+
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(0);
   expect(document.querySelectorAll('.reqore-message').length).toBe(1);
 
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'secret' },
   });
+
+  jest.runAllTimers();
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(1);
   expect(document.querySelectorAll('.reqore-message').length).toBe(0);

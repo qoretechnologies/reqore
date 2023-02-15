@@ -1,10 +1,10 @@
 import { map, size } from 'lodash';
 import { rgba } from 'polished';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDebounce, useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
-import ReqoreContext from '../../context/ReqoreContext';
 import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { StyledBackdrop } from '../Drawer';
 import {
@@ -84,7 +84,7 @@ export const ReqoreCollectionItem = ({
   ...rest
 }: IReqoreCollectionItemProps) => {
   const [isSelected, setIsSelected] = useState(false);
-  const { getAndIncreaseZIndex } = useContext(ReqoreContext);
+  const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
   const ref = useRef<HTMLDivElement>(null);
   const [contentRef, sizes] = useMeasure();
   const originalDimensions = useRef(null);

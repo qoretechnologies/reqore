@@ -21,7 +21,7 @@ import {
 } from '../../helpers/colors';
 import { getOneHigherSize, isActionShown } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { useReqore } from '../../hooks/useReqore';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import { ACTIVE_ICON_SCALE, INACTIVE_ICON_SCALE } from '../../styles';
@@ -102,6 +102,7 @@ export interface IReqorePanelProps
   transparent?: boolean;
   iconColor?: TReqoreEffectColor;
   responsiveActions?: boolean;
+  responsiveTitle?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -187,7 +188,7 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
 
 export const StyledPanelTitle = styled.div<IStyledPanel>`
   display: flex;
-  flex-flow: ${({ isMobile }) => (isMobile ? 'column' : 'row')};
+  flex-flow: ${({ responsive, isMobile }) => (responsive ? (isMobile ? 'column' : 'row') : 'row')};
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
@@ -295,6 +296,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       iconProps = {},
       fluid,
       responsiveActions = true,
+      responsiveTitle = true,
       size: panelSize = 'normal',
       ...rest
     }: IReqorePanelProps,
@@ -308,10 +310,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           ? { main: Object.values(contentEffect.gradient.colors)[0] as TReqoreEffectColor }
           : undefined)
     );
-    const { isMobile } = useReqore();
+    const isMobile = useReqoreProperty('isMobile');
     const { targetRef } = useCombinedRefs(ref);
+    const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
 
-    useTooltip(targetRef.current, tooltip);
+    useTooltip(itemRef, tooltip);
 
     useUpdateEffect(() => {
       setIsCollapsed(!!isCollapsed);
@@ -421,8 +424,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               stack
               customTheme={rest.customTheme || theme}
               size={rest.size}
-              fixed={rest.fixed ? true : false}
-              fluid={rest.fluid ? true : false}
+              fixed={rest.fixed}
+              fluid={rest.fluid}
               key={index}
             >
               {group.map((action, index) => renderActions(action, index, true))}
@@ -517,7 +520,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       <StyledPanel
         {...rest}
         as={rest.as || 'div'}
-        ref={targetRef}
+        ref={(ref) => {
+          targetRef.current = ref;
+          setItemRef(ref);
+        }}
         isCollapsed={_isCollapsed}
         rounded={rounded}
         flat={flat}
@@ -540,6 +546,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             size={contentSize || panelSize}
             opacity={opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={noHorizontalPadding}
+            responsive={responsiveTitle}
             isMobile={isMobile}
           >
             {hasTitleHeader && (

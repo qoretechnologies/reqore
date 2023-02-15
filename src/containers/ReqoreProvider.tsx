@@ -2,14 +2,16 @@ import { size } from 'lodash';
 import React, { useRef, useState } from 'react';
 import { useMedia } from 'react-use';
 import shortid from 'shortid';
+import { useContext } from 'use-context-selector';
 import { ReqoreModal, ReqoreTextEffect } from '..';
 import ReqoreNotificationsWrapper from '../components/Notifications';
 import ReqoreNotification, {
   IReqoreNotificationType,
 } from '../components/Notifications/notification';
 import { TSizes } from '../constants/sizes';
-import { TReqoreIntent } from '../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import ReqoreContext from '../context/ReqoreContext';
+import ThemeContext from '../context/ThemeContext';
 import { IReqoreIconName } from '../types/icons';
 import { IReqoreOptions } from './UIProvider';
 
@@ -50,6 +52,7 @@ export interface IReqoreConfirmationModal {
 const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {} }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
   const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>({});
+  const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
   const latestZIndex = useRef<number>(9000);
 
   const isMobile = process.env.NODE_ENV === 'test' ? false : useMedia('(max-width: 480px)');
@@ -114,6 +117,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
       <ReqoreContext.Provider
         value={{
           notifications,
+          theme,
           addNotification,
           removeNotification,
           confirmAction,
