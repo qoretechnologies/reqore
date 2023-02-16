@@ -5,7 +5,7 @@ import * as RemixIcons from 'react-icons/ri';
 import styled, { css, keyframes } from 'styled-components';
 import { useReqoreTheme } from '../..';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
+import { getColorFromMaybeString } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -102,9 +102,7 @@ const ReqoreIcon = memo(
       const Icon: IconType = RemixIcons[`Ri${icon}`];
       const finalColor: string | undefined = intent
         ? theme.intents[intent]
-        : color
-        ? getColorFromMaybeString(theme, color)
-        : getReadableColor(theme);
+        : getColorFromMaybeString(theme, color);
       const finalSize: string = isStringSize(size) ? ICON_FROM_SIZE[size] : size;
       const finalWrapperSize: string = wrapperSize
         ? isStringSize(wrapperSize)
