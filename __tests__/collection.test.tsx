@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/extend-expect';
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import { ReqoreCollection, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import items from '../src/mock/collectionData';
@@ -35,7 +35,9 @@ test('<Collection /> items can be filtered', () => {
 
   expect(fn).not.toHaveBeenCalled();
 
-  jest.advanceTimersByTime(500);
+  act(() => {
+    jest.advanceTimersByTime(500);
+  });
 
   expect(fn).toHaveBeenCalledWith('I have');
 
@@ -45,7 +47,9 @@ test('<Collection /> items can be filtered', () => {
     target: { value: 'asg' },
   });
 
-  jest.runAllTimers();
+  act(() => {
+    jest.runAllTimers();
+  });
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(0);
   expect(document.querySelectorAll('.reqore-message').length).toBe(1);
@@ -54,7 +58,9 @@ test('<Collection /> items can be filtered', () => {
     target: { value: 'secret' },
   });
 
-  jest.runAllTimers();
+  act(() => {
+    jest.runAllTimers();
+  });
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(1);
   expect(document.querySelectorAll('.reqore-message').length).toBe(0);
