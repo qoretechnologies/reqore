@@ -1,6 +1,7 @@
 import { IReqoreTableColumn } from '../components/Table';
 import data from './data.json';
 
+export const tableData = data;
 export default {
   columns: [
     {

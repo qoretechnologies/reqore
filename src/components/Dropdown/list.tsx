@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useMemo, useState } from 'react';
 import { IReqoreComponent } from '../../types/global';
-import ReqoreInput from '../Input';
+import ReqoreInput, { IReqoreInputProps } from '../Input';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuDivider from '../Menu/divider';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
@@ -25,6 +25,8 @@ export interface IReqoreDropdownListProps extends IReqoreComponent {
   height?: string;
   filterable?: boolean;
   onItemSelect?: TDropdownItemOnClick;
+  inputProps?: IReqoreInputProps;
+  scrollToSelected?: boolean;
 }
 
 const ReqoreDropdownList = memo(
@@ -37,6 +39,8 @@ const ReqoreDropdownList = memo(
     width,
     height,
     onItemSelect,
+    inputProps,
+    scrollToSelected,
   }: IReqoreDropdownListProps) => {
     const [_items, setItems] = useState<TReqoreDropdownItems>(items);
     const [query, setQuery] = useState<string>('');
@@ -94,6 +98,7 @@ const ReqoreDropdownList = memo(
               onChange={handleQueryChange}
               placeholder='Filter'
               onClearClick={() => setQuery('')}
+              {...inputProps}
             />
           </>
         )}
@@ -108,6 +113,7 @@ const ReqoreDropdownList = memo(
                 label={item.label || item.value}
                 onClick={() => handleItemClick({ ...item, onClick })}
                 rightIcon={item.selected ? 'CheckLine' : undefined}
+                scrollIntoView={scrollToSelected && item.selected && !multiSelect}
               />
             )
         )}

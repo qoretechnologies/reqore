@@ -4,9 +4,10 @@ import { ReqorePopover } from '../..';
 import { IPopoverOptions } from '../../hooks/usePopover';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
+import { IReqoreInputProps } from '../Input';
 import ReqoreDropdownList, { IReqoreDropdownItem, TDropdownItemOnClick } from './list';
 
-export interface IReqoreDropdownProps extends Partial<IPopoverOptions> {
+export interface IReqoreDropdownProps extends Partial<Omit<IPopoverOptions, 'openOnMount'>> {
   items?: IReqoreDropdownItem[];
   multiSelect?: boolean;
   buttonStyle?: React.CSSProperties;
@@ -23,6 +24,8 @@ export interface IReqoreDropdownProps extends Partial<IPopoverOptions> {
   isDefaultOpen?: boolean;
   onItemSelect?: TDropdownItemOnClick;
   style?: React.CSSProperties;
+  inputProps?: IReqoreInputProps;
+  scrollToSelected?: boolean;
 }
 
 function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
@@ -50,13 +53,14 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
   maxWidth,
   noArrow = true,
   transparent,
-  openOnMount,
   show,
   targetElement,
   useTargetWidth,
   listWidth,
   listHeight,
   passPopoverData,
+  inputProps,
+  scrollToSelected,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -82,6 +86,8 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
         items={items}
         filterable={filterable}
         onItemSelect={onItemSelect}
+        inputProps={inputProps}
+        scrollToSelected={scrollToSelected}
       />
     ) : undefined;
   }, [items]);

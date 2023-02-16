@@ -132,6 +132,25 @@ export default {
 const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
   const [selected, setSelected] = useState<(string | number)[]>(['Item 3', 'Item 6']);
 
+  if (args.scrollToSelected) {
+    return (
+      <ReqoreControlGroup>
+        <ReqoreDropdown
+          label='Scrolling to selected'
+          isDefaultOpen
+          scrollToSelected
+          items={Array(130)
+            .fill(null)
+            .map((_, i) => ({
+              label: `Item ${i}`,
+              value: `item-${i}`,
+              selected: i === 55,
+            }))}
+        />
+      </ReqoreControlGroup>
+    );
+  }
+
   if (args.multiSelect) {
     return (
       <>
@@ -225,6 +244,10 @@ export const CustomComponent = Template.bind({});
 CustomComponent.args = {
   component: ReqoreInput,
   placeholder: 'Custom component',
+};
+export const ScrollToSelectedItem = Template.bind({});
+ScrollToSelectedItem.args = {
+  scrollToSelected: true,
 };
 export const MultiSelect = Template.bind({});
 MultiSelect.args = {

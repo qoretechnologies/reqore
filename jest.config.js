@@ -8,7 +8,7 @@ module.exports = {
   // Jest transformations -- this adds support for TypeScript
   // using ts-jest
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.tsx?$': ['ts-jest', { diagnostics: false }],
   },
 
   // Module file extensions for importing
@@ -18,13 +18,9 @@ module.exports = {
     '\\.(css|less)$': '<rootDir>/src/mock/styleMock.js',
   },
 
-  notify: true,
-  notifyMode: 'always',
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js'],
+
   silent: false,
   verbose: false,
-  globals: {
-    'ts-jest': {
-      diagnostics: false,
-    },
-  },
+  testEnvironment: 'jest-environment-jsdom',
 };

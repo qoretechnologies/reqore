@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useMedia } from 'react-use';
 import shortid from 'shortid';
 import { useContext } from 'use-context-selector';
@@ -62,11 +62,11 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
       : useMedia('(min-width: 480px) and (max-width: 1200px)');
   const isMobileOrTablet = isMobile || isTablet;
 
-  const getAndIncreaseZIndex = (): number => {
+  const getAndIncreaseZIndex = useCallback((): number => {
     latestZIndex.current += 1;
 
     return latestZIndex.current;
-  };
+  }, [latestZIndex.current]);
 
   const confirmAction = (data: IReqoreConfirmationModal): void => {
     setConfirmationModal({
