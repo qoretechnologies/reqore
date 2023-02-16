@@ -4,7 +4,7 @@ import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Colle
 import { IReqoreColumnsProps } from '../../components/Columns';
 import items from '../../mock/collectionData';
 import data from '../../mock/data.json';
-import { IntentArg, SizeArg, argManager } from '../utils/args';
+import { argManager, IntentArg, SizeArg } from '../utils/args';
 
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
@@ -171,6 +171,7 @@ ChildrenBeforeAndAfter.args = {
 export const FilteringSearchingPaging = Template.bind({});
 FilteringSearchingPaging.args = {
   inputProps: {
+    fluid: true,
     focusRules: {
       type: 'keypress',
       shortcut: 'letters',

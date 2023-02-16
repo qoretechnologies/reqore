@@ -35,9 +35,10 @@ test('<Collection /> items can be filtered', () => {
 
   expect(fn).not.toHaveBeenCalled();
 
-  jest.runAllTimers();
+  jest.advanceTimersByTime(500);
 
   expect(fn).toHaveBeenCalledWith('I have');
+
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(2);
 
   fireEvent.change(document.querySelector('.reqore-input')!, {

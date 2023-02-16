@@ -197,6 +197,8 @@ test('Does not show the popover with delay if time not reached', async () => {
 });
 
 test('Shows the hoverStay popover after a delay and stays, ', async () => {
+  jest.useFakeTimers();
+
   render(
     <ReqoreUIProvider>
       <SimpleContent delay={500} type='hoverStay' />

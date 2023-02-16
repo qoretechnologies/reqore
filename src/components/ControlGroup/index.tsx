@@ -11,7 +11,7 @@ import {
   IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreMinimal,
-  IWithReqoreSize,
+  IWithReqoreSize
 } from '../../types/global';
 import { StyledHeader } from '../Header';
 import { StyledParagraph } from '../Paragraph';
@@ -59,7 +59,7 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
 export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
   display: flex;
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? undefined : '0 0 auto')};
-  max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
+  width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   justify-content: ${({ fluid, vertical }) => (vertical && fluid ? 'stretch' : undefined)};
   align-items: ${({ vertical, fluid, horizontalAlign }) =>
     vertical ? (fluid ? 'stretch' : horizontalAlign) : undefined};
