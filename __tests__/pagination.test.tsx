@@ -16,11 +16,13 @@ import { tableData as data } from '../src/mock/tableData';
 const Component = ({
   pagingOptions = { items: data },
   componentOptions,
+  items,
 }: {
   pagingOptions?: Partial<IReqorePagingOptions<any>>;
   componentOptions?: Partial<IReqorePaginationProps<any>>;
+  items?: any[];
 }) => {
-  const paging = useReqorePaging<any>({ ...pagingOptions, items: data });
+  const paging = useReqorePaging<any>({ ...pagingOptions, items: items || data });
 
   return (
     <ReqoreControlGroup vertical fluid>
@@ -43,6 +45,7 @@ test('Renders default <Pagination />', () => {
     </ReqoreUIProvider>
   );
 
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
   expect(document.querySelectorAll('.reqore-button')[0]?.getAttribute('disabled')).toBe('');
   expect(document.querySelectorAll('.reqore-button').length).toBe(102);
 
@@ -63,6 +66,36 @@ test('Renders <Pagination /> with only 5 page buttons', () => {
   );
 
   expect(document.querySelectorAll('.reqore-button').length).toBe(8);
+});
+
+test('Renders no <Pagination /> if only one page exists', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <Component pagingOptions={{ pagesToShow: 5 }} items={data.slice(0, 5)} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(0);
+});
+
+test('Renders no <Pagination /> if no items exist', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <Component pagingOptions={{ pagesToShow: 5 }} items={[]} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(0);
 });
 
 test('Renders <Pagination /> without control buttons', () => {

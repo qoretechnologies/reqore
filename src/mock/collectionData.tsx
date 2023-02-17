@@ -5,6 +5,25 @@ import ReqoreMessage from '../components/Message';
 import { ReqoreP } from '../components/Paragraph';
 import { ReqoreSpacer } from '../components/Spacer';
 import ReqoreTag from '../components/Tag';
+import data from './data.json';
+
+export const bigCollection = data.slice(0, 100).map((datum) => ({
+  label: `${datum.firstName} ${datum.lastName}`,
+  badge: datum.id,
+  size: 'small',
+  expandable: true,
+  content: datum.address,
+  tags: [
+    {
+      labelKey: 'Age',
+      label: datum.age,
+    },
+    {
+      labelKey: 'Occupation',
+      label: datum.occupation,
+    },
+  ],
+})) as IReqoreCollectionItemProps[];
 
 export default [
   {

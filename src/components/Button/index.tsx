@@ -7,7 +7,7 @@ import {
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
   TEXT_FROM_SIZE,
-  TSizes
+  TSizes,
 } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
@@ -22,7 +22,7 @@ import {
   DisabledElement,
   InactiveIconScale,
   ReadOnlyElement,
-  ScaleIconOnHover
+  ScaleIconOnHover,
 } from '../../styles';
 import {
   IReqoreDisabled,
@@ -30,7 +30,7 @@ import {
   IReqoreReadOnly,
   IWithReqoreEffect,
   IWithReqoreSize,
-  TReqoreTooltipProp
+  TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import {
@@ -39,7 +39,7 @@ import {
   StyledEffect,
   StyledTextEffect,
   TReqoreEffectColor,
-  TReqoreHexColor
+  TReqoreHexColor,
 } from '../Effect';
 import ReqoreIcon from '../Icon';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
@@ -468,9 +468,7 @@ const ReqoreButton = memo(
                       : undefined
                   }
                 />
-                {children || badge || rightIcon ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
-                ) : null}
+                {children || rightIcon ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
               </>
             ) : children ? (
               <ReqoreHorizontalSpacer

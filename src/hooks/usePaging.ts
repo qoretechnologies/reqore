@@ -9,6 +9,7 @@ export interface IReqorePagingOptions<T> {
   pagesToShow?: number;
   itemsPerPage?: number;
   infinite?: boolean;
+  enabled?: boolean;
 }
 
 export interface IReqorePagingResult<T>
@@ -37,11 +38,14 @@ export const defaultPagingOptions: IReqorePagingOptions<any> = {
 export const useReqorePaging = <T>(
   options: IReqorePagingOptions<T> = defaultPagingOptions
 ): IReqorePagingResult<T> => {
-  const { items, itemsPerPage, infinite, pagesToShow, startPage }: IReqorePagingOptions<T> = merge(
-    {},
-    defaultPagingOptions,
-    options
-  );
+  const {
+    items,
+    itemsPerPage,
+    infinite,
+    pagesToShow,
+    startPage,
+    enabled = true,
+  }: IReqorePagingOptions<T> = merge({}, defaultPagingOptions, options);
   const allPageCount = useMemo(() => Math.ceil(size(items) / itemsPerPage), [items, itemsPerPage]);
   const { pagelist, currentPage, setPage, setTotalPage, goNext, goBefore } = usePagination({
     numOfPage: allPageCount,
@@ -90,7 +94,7 @@ export const useReqorePaging = <T>(
     pages,
     allPages: pagelist,
     pageCount: allPageCount,
-    items: slicedItems,
+    items: enabled ? slicedItems : items,
     itemsPerPage,
     itemsLeft: items.length - slicedItems.length,
     infinite,

@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom/extend-expect';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
+import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { ReqoreCollection, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
-import items from '../src/mock/collectionData';
+import items, { bigCollection } from '../src/mock/collectionData';
 
 test('Renders basic <Collection /> properly', () => {
   render(
@@ -66,6 +67,41 @@ test('<Collection /> items can be filtered', () => {
   expect(document.querySelectorAll('.reqore-message').length).toBe(0);
 });
 
+test('<Collection /> filter is properly removed by the clear button', () => {
+  const fn = jest.fn();
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection items={items} filterable onQueryChange={fn} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(9);
+
+  fireEvent.change(document.querySelector('.reqore-input')!, {
+    target: { value: 'I have' },
+  });
+
+  expect(fn).not.toHaveBeenCalled();
+
+  act(() => {
+    jest.advanceTimersByTime(500);
+  });
+
+  expect(fn).toHaveBeenCalledWith('I have');
+
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(2);
+
+  fireEvent.click(document.querySelector('.reqore-clear-input-button')!);
+
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(9);
+  // Expect the input value to be empty
+  expect(document.querySelector('.reqore-input')?.getAttribute('value')).toBe('');
+});
+
 test('<Collection /> shows no data message when empty', () => {
   render(
     <ReqoreUIProvider>
@@ -96,4 +132,79 @@ test('<Collection /> can be sorted', () => {
   const firstNewItem = document.querySelector('.reqore-collection-item');
 
   expect(firstNewItem?.querySelector('h3')?.textContent).toBe('This item is not flat');
+});
+
+test('<Collection /> has default paging', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection items={bigCollection} paging />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
+});
+
+test('<Collection /> has list paging', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection items={bigCollection} paging='list' />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(1);
+  expect(screen.getAllByText('1 / 10')).toBeTruthy();
+});
+
+test('<Collection /> has infinite paging', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection items={bigCollection} paging='infinite' />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+  expect(screen.getAllByText('90')).toBeTruthy();
+
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(10);
+
+  fireEvent.click(document.querySelectorAll('.reqore-button')[1]);
+
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(20);
+});
+
+test('<Collection /> has custom paging', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection
+          items={bigCollection}
+          paging={{
+            itemsPerPage: 50,
+            infinite: true,
+            autoLoadMore: true,
+            showLabels: true,
+            loadMoreLabel: 'Scroll to load more',
+          }}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(50);
+  expect(screen.getAllByText('Scroll to load more')).toBeTruthy();
+  expect(screen.getAllByText('50')).toBeTruthy();
+
+  mockAllIsIntersecting(true);
+
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(100);
 });

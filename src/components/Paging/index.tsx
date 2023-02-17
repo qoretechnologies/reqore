@@ -8,9 +8,8 @@ import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
 
-export interface IReqorePaginationProps<T>
-  extends IReqorePagingResult<T>,
-    Omit<IReqoreControlGroupProps, 'children'> {
+export interface IReqorePaginationComponentProps
+  extends Omit<IReqoreControlGroupProps, 'children'> {
   pageButtonProps?: IReqoreButtonProps;
   activePageButtonProps?: IReqoreButtonProps;
   listPageButtonProps?: IReqoreDropdownProps;
@@ -29,6 +28,9 @@ export interface IReqorePaginationProps<T>
   scrollOnLoadMore?: boolean;
   autoLoadMore?: boolean;
 }
+export interface IReqorePaginationProps<T>
+  extends Omit<IReqorePagingResult<T>, 'items'>,
+    IReqorePaginationComponentProps {}
 
 export const StyledPagesWrapper = styled(ReqoreControlGroup)`
   width: unset;
@@ -49,7 +51,6 @@ function Pagination<T>({
   isFirstPage,
   pageCount,
   pages,
-  items,
   last,
   next,
   setPage,
@@ -72,6 +73,7 @@ function Pagination<T>({
   showControls = true,
   scrollOnLoadMore,
   autoLoadMore,
+  itemsPerPage,
   ...rest
 }: IReqorePaginationProps<T>) {
   const [loadMoreRef, setLoadMoreRef] = useState<HTMLButtonElement>(undefined);
@@ -111,8 +113,14 @@ function Pagination<T>({
     observer.current?.disconnect();
   });
 
+  if (pageCount === 1 || pageCount === 0) return null;
+
   return (
-    <ReqoreControlGroup {...rest} style={{ justifyContent: 'center' }}>
+    <ReqoreControlGroup
+      {...rest}
+      className={`${rest.className || ''} reqore-pagination-wrapper`}
+      style={{ justifyContent: 'center' }}
+    >
       {infinite && !isLastPage ? (
         <ReqoreControlGroup vertical>
           <div className='reqore-auto-scroll-target' ref={setScrollTargetRef} />

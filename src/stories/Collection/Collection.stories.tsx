@@ -1,9 +1,10 @@
 import { Meta, Story } from '@storybook/react';
-import { ReqoreButton, ReqoreControlGroup } from '../..';
+import { ReqoreButton, ReqoreControlGroup, ReqoreVerticalSpacer } from '../..';
 import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Collection';
 import { IReqoreColumnsProps } from '../../components/Columns';
-import items from '../../mock/collectionData';
-import data from '../../mock/data.json';
+import { PADDING_FROM_SIZE } from '../../constants/sizes';
+import items, { bigCollection } from '../../mock/collectionData';
+
 import { argManager, IntentArg, SizeArg } from '../utils/args';
 
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
@@ -143,28 +144,31 @@ export const ChildrenBeforeAndAfter = Template.bind({});
 ChildrenBeforeAndAfter.args = {
   label: 'Collection of items',
   items,
-  childrenBefore: (
-    <ReqoreControlGroup horizontalAlign='center' fluid>
-      <ReqoreButton fluid> I could be a filter of some kind</ReqoreButton>
-    </ReqoreControlGroup>
-  ),
-  childrenAfter: (
-    <ReqoreControlGroup horizontalAlign='center' fluid>
-      <ReqoreControlGroup fluid={false} fixed>
-        <ReqoreButton fixed textAlign='center'>
-          1
-        </ReqoreButton>
-        <ReqoreButton fixed textAlign='center'>
-          2
-        </ReqoreButton>
-        <ReqoreButton fixed textAlign='center'>
-          3
-        </ReqoreButton>
-        <ReqoreButton fixed textAlign='center'>
-          4
-        </ReqoreButton>
+  contentRenderer: (children) => (
+    <>
+      <ReqoreControlGroup horizontalAlign='center' fluid>
+        <ReqoreButton fluid> I could be a filter of some kind</ReqoreButton>
       </ReqoreControlGroup>
-    </ReqoreControlGroup>
+      <ReqoreVerticalSpacer height={PADDING_FROM_SIZE.normal} />
+      {children}
+      <ReqoreVerticalSpacer height={PADDING_FROM_SIZE.normal} />
+      <ReqoreControlGroup horizontalAlign='center' fluid>
+        <ReqoreControlGroup fluid={false} fixed>
+          <ReqoreButton fixed textAlign='center'>
+            1
+          </ReqoreButton>
+          <ReqoreButton fixed textAlign='center'>
+            2
+          </ReqoreButton>
+          <ReqoreButton fixed textAlign='center'>
+            3
+          </ReqoreButton>
+          <ReqoreButton fixed textAlign='center'>
+            4
+          </ReqoreButton>
+        </ReqoreControlGroup>
+      </ReqoreControlGroup>
+    </>
   ),
 };
 
@@ -184,24 +188,9 @@ FilteringSearchingPaging.args = {
   sortButtonProps: {
     fixed: false,
   },
+  paging: true,
   size: 'big',
   padded: false,
   fill: true,
-  items: data.slice(0, 100).map((datum) => ({
-    label: `${datum.firstName} ${datum.lastName}`,
-    badge: datum.id,
-    size: 'small',
-    expandable: true,
-    content: datum.address,
-    tags: [
-      {
-        labelKey: 'Age',
-        label: datum.age,
-      },
-      {
-        labelKey: 'Occupation',
-        label: datum.occupation,
-      },
-    ],
-  })),
+  items: bigCollection,
 } as IReqoreCollectionProps;
