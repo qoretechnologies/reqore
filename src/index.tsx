@@ -58,6 +58,7 @@ export { ReqoreTree } from './components/Tree';
 export { Colors as ReqoreColors } from './constants/colors';
 export { ReqoreSizes } from './constants/sizes';
 export { ReqoreIntents } from './constants/theme';
+export { ReqorePaginationContainer } from './containers/Paging';
 export { default as ReqoreNotifications } from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';

@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -103,6 +103,7 @@ export interface IReqorePanelProps
   iconColor?: TReqoreEffectColor;
   responsiveActions?: boolean;
   responsiveTitle?: boolean;
+  getContentRef?: (ref: HTMLDivElement) => any;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -298,6 +299,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       responsiveActions = true,
       responsiveTitle = true,
       size: panelSize = 'normal',
+      getContentRef,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -643,6 +645,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             padded={padded}
             minimal={minimal}
             size={contentSize || panelSize}
+            ref={getContentRef}
             noHorizontalPadding={noHorizontalPadding}
           >
             {children}

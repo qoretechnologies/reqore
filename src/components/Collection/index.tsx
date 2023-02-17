@@ -2,24 +2,15 @@ import { size } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { useDebounce, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { getPaginationOptionsFromType, TReqorePaginationType } from '../../constants/paging';
-import { PADDING_FROM_SIZE } from '../../constants/sizes';
-import { IReqorePagingOptions, useReqorePaging } from '../../hooks/usePaging';
+import { TReqorePaginationType } from '../../constants/paging';
+import { ReqorePaginationContainer } from '../../containers/Paging';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import ReqoreMessage from '../Message';
-import { IReqorePaginationComponentProps, ReqorePagination } from '../Paging';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel, TReqorePanelActions } from '../Panel';
-import { ReqoreVerticalSpacer } from '../Spacer';
 import { sortTableData } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
-
-export interface IReqoreCollectionPagingOptions
-  extends Omit<IReqorePagingOptions<IReqoreCollectionItemProps>, 'items'>,
-    IReqorePaginationComponentProps {
-  pageControlsPosition?: 'top' | 'bottom' | 'both';
-}
 
 export interface IReqoreCollectionProps
   extends Pick<
@@ -69,7 +60,7 @@ export interface IReqoreCollectionProps
   displayButtonTooltip?: (display?: 'list' | 'grid') => string;
   inputPlaceholder?: (items?: IReqoreCollectionItemProps[]) => string;
 
-  paging?: TReqorePaginationType;
+  paging?: TReqorePaginationType<IReqoreCollectionItemProps>;
 }
 
 export const StyledCollectionWrapper = styled(StyledColumns)`
@@ -118,6 +109,7 @@ export const ReqoreCollection = ({
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [query, setQuery] = useState<string>('');
   const [preQuery, setPreQuery] = useState<string>('');
+  const [contentRef, setContentRef] = useState<HTMLDivElement>(undefined);
 
   useUpdateEffect(() => {
     setShowAs(showAs);
@@ -183,18 +175,6 @@ export const ReqoreCollection = ({
     });
   }, [items, query, sortedItems]);
 
-  const {
-    pagingOptions = {},
-    componentOptions = {},
-    pageControlsPosition,
-  } = useMemo(() => getPaginationOptionsFromType(paging), [paging]);
-
-  const { items: finalItems, ...pagingData } = useReqorePaging({
-    items: filteredItems,
-    ...pagingOptions,
-    enabled: !!paging,
-  });
-
   const handlePreQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPreQuery(event.target.value);
   };
@@ -209,7 +189,7 @@ export const ReqoreCollection = ({
           icon: _showAs === 'grid' ? 'ListUnordered' : 'GridLine',
           onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
           tooltip: displayButtonTooltip(_showAs),
-          disabled: !size(finalItems),
+          disabled: !size(filteredItems),
           textAlign: 'center',
           ...displayButtonProps,
         },
@@ -221,7 +201,7 @@ export const ReqoreCollection = ({
         icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
         onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
         tooltip: sortButtonTooltip(sort),
-        disabled: !size(finalItems),
+        disabled: !size(filteredItems),
         textAlign: 'center',
         ...sortButtonProps,
       });
@@ -251,56 +231,53 @@ export const ReqoreCollection = ({
     }
 
     return [...actions, toolbarGroup];
-  }, [filterable, preQuery, query, rest.actions, _showAs, sort, sortable, finalItems]);
+  }, [filterable, preQuery, query, rest.actions, _showAs, sort, sortable, filteredItems]);
 
   const renderContent = useCallback(() => {
     return contentRenderer(
       <>
-        {!!paging && (pageControlsPosition === 'top' || pageControlsPosition === 'both') ? (
-          <>
-            <ReqorePagination size={rest.size} {...pagingData} {...componentOptions} />
-            <ReqoreVerticalSpacer height={PADDING_FROM_SIZE[rest.size || 'normal']} />
-          </>
-        ) : null}
-        {!size(finalItems) ? (
-          <ReqoreMessage flat icon='Search2Line'>
-            {emptyMessage}
-          </ReqoreMessage>
-        ) : (
-          <StyledCollectionWrapper
-            columns={_showAs === 'grid' ? 'auto-fit' : 1}
-            columnsGap={stacked ? '0px' : columnsGap}
-            rounded={rounded}
-            stacked={stacked}
-            {...rest}
-          >
-            {finalItems?.map((item, index) => (
-              <ReqoreCollectionItem
-                size={rest.size}
-                {...item}
-                icon={item.icon || (item.selected ? selectedIcon : undefined)}
-                key={index}
-                rounded={!stacked}
-                maxContentHeight={maxItemHeight}
-              />
-            ))}
-          </StyledCollectionWrapper>
-        )}
-        {!!paging &&
-        (!pageControlsPosition ||
-          pageControlsPosition === 'bottom' ||
-          pageControlsPosition === 'both') ? (
-          <>
-            <ReqoreVerticalSpacer height={PADDING_FROM_SIZE[rest.size || 'normal']} />
-            <ReqorePagination size={rest.size} {...pagingData} {...componentOptions} />
-          </>
-        ) : null}
+        <ReqorePaginationContainer
+          items={filteredItems}
+          type={paging}
+          size={rest.size}
+          scrollContainer={contentRef}
+        >
+          {(finalItems) => (
+            <>
+              {!size(finalItems) ? (
+                <ReqoreMessage flat icon='Search2Line'>
+                  {emptyMessage}
+                </ReqoreMessage>
+              ) : (
+                <StyledCollectionWrapper
+                  columns={_showAs === 'grid' ? 'auto-fit' : 1}
+                  columnsGap={stacked ? '0px' : columnsGap}
+                  rounded={rounded}
+                  stacked={stacked}
+                  ref={setContentRef}
+                  {...rest}
+                >
+                  {finalItems?.map((item, index) => (
+                    <ReqoreCollectionItem
+                      size={rest.size}
+                      {...item}
+                      icon={item.icon || (item.selected ? selectedIcon : undefined)}
+                      key={index}
+                      rounded={!stacked}
+                      maxContentHeight={maxItemHeight}
+                    />
+                  ))}
+                </StyledCollectionWrapper>
+              )}
+            </>
+          )}
+        </ReqorePaginationContainer>
       </>,
-      finalItems
+      filteredItems
     );
   }, [
     contentRenderer,
-    finalItems,
+    filteredItems,
     _showAs,
     columnsGap,
     emptyMessage,

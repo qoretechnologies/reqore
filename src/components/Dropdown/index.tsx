@@ -1,10 +1,12 @@
 import { size } from 'lodash';
 import React, { memo, useMemo } from 'react';
-import { ReqorePopover } from '../..';
+import { ReqorePanel, ReqorePopover } from '../..';
+import { TReqorePaginationType } from '../../constants/paging';
 import { IPopoverOptions } from '../../hooks/usePopover';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreInputProps } from '../Input';
+import { IReqorePanelProps } from '../Panel';
 import ReqoreDropdownList, { IReqoreDropdownItem, TDropdownItemOnClick } from './list';
 
 export interface IReqoreDropdownProps extends Partial<Omit<IPopoverOptions, 'openOnMount'>> {
@@ -25,7 +27,9 @@ export interface IReqoreDropdownProps extends Partial<Omit<IPopoverOptions, 'ope
   onItemSelect?: TDropdownItemOnClick;
   style?: React.CSSProperties;
   inputProps?: IReqoreInputProps;
+  wrapperProps?: IReqorePanelProps;
   scrollToSelected?: boolean;
+  paging?: TReqorePaginationType<IReqoreDropdownItem>;
 }
 
 function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
@@ -61,6 +65,8 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
   passPopoverData,
   inputProps,
   scrollToSelected,
+  wrapperProps,
+  paging,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -78,17 +84,20 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
 
   const popoverContent = useMemo(() => {
     return size(items) ? (
-      <ReqoreDropdownList
-        multiSelect={multiSelect}
-        listStyle={listStyle}
-        width={useTargetWidth ? '100%' : listWidth}
-        height={listHeight}
-        items={items}
-        filterable={filterable}
-        onItemSelect={onItemSelect}
-        inputProps={inputProps}
-        scrollToSelected={scrollToSelected}
-      />
+      <ReqorePanel flat size='small' {...wrapperProps}>
+        <ReqoreDropdownList
+          multiSelect={multiSelect}
+          listStyle={listStyle}
+          width={useTargetWidth ? '100%' : listWidth}
+          height={listHeight}
+          items={items}
+          filterable={filterable}
+          onItemSelect={onItemSelect}
+          inputProps={inputProps}
+          scrollToSelected={scrollToSelected}
+          paging={paging}
+        />
+      </ReqorePanel>
     ) : undefined;
   }, [items]);
 

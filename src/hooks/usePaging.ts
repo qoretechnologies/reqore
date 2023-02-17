@@ -27,6 +27,7 @@ export interface IReqorePagingResult<T>
   last: () => void;
   pageCount: number;
   infinite: boolean;
+  renderControls: boolean;
 }
 
 export const defaultPagingOptions: IReqorePagingOptions<any> = {
@@ -102,6 +103,9 @@ export const useReqorePaging = <T>(
     currentPage,
     next: goNext,
     back: goBefore,
+    renderControls:
+      enabled &&
+      !(allPageCount === 1 || allPageCount === 0 || (infinite && currentPage === allPageCount)),
     isLastPage: currentPage === allPageCount,
     isFirstPage: currentPage === 1,
     first: () => setPage(1),

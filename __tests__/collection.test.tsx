@@ -138,7 +138,7 @@ test('<Collection /> has default paging', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
-        <ReqoreCollection items={bigCollection} paging />
+        <ReqoreCollection items={bigCollection} paging='buttons' />
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
@@ -207,4 +207,25 @@ test('<Collection /> has custom paging', () => {
   mockAllIsIntersecting(true);
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(100);
+});
+
+test('<Collection /> has 2 paging controls', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection
+          items={bigCollection}
+          paging={{
+            itemsPerPage: 10,
+            showPagesAs: 'list',
+            pageControlsPosition: 'both',
+          }}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(11);
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(10);
 });

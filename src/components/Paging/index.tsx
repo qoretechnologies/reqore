@@ -27,6 +27,8 @@ export interface IReqorePaginationComponentProps
   showLabels?: boolean;
   scrollOnLoadMore?: boolean;
   autoLoadMore?: boolean;
+  scrollContainer?: HTMLElement;
+  scrollToTopOnPageChange?: boolean;
 }
 export interface IReqorePaginationProps<T>
   extends Omit<IReqorePagingResult<T>, 'items'>,
@@ -34,7 +36,7 @@ export interface IReqorePaginationProps<T>
 
 export const StyledPagesWrapper = styled(ReqoreControlGroup)`
   width: unset;
-  max-width: 100%;
+  flex: 0 auto;
   justify-content: center;
 
   & > ${StyledButton} {
@@ -74,6 +76,9 @@ function Pagination<T>({
   scrollOnLoadMore,
   autoLoadMore,
   itemsPerPage,
+  renderControls,
+  scrollContainer,
+  scrollToTopOnPageChange = true,
   ...rest
 }: IReqorePaginationProps<T>) {
   const [loadMoreRef, setLoadMoreRef] = useState<HTMLButtonElement>(undefined);
@@ -89,6 +94,26 @@ function Pagination<T>({
       });
     }
   }, [currentPage, scrollTargetRef, scrollOnLoadMore, isLastPage, isFirstPage]);
+
+  // Scroll to bottom on load more
+  useEffect(() => {
+    if (scrollContainer && scrollOnLoadMore && !isFirstPage) {
+      scrollContainer.scrollBy?.({
+        top: scrollContainer.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [currentPage, scrollContainer, scrollOnLoadMore, isFirstPage]);
+
+  // Scroll to top on page change
+  useEffect(() => {
+    if (scrollContainer && scrollToTopOnPageChange && !infinite) {
+      scrollContainer.scrollTo?.({
+        top: 0,
+        behavior: 'smooth',
+      });
+    }
+  }, [currentPage, scrollContainer, scrollToTopOnPageChange, infinite]);
 
   useUpdateEffect(() => {
     if (loadMoreRef && autoLoadMore) {
@@ -113,7 +138,9 @@ function Pagination<T>({
     observer.current?.disconnect();
   });
 
-  if (pageCount === 1 || pageCount === 0) return null;
+  if (!renderControls) {
+    return null;
+  }
 
   return (
     <ReqoreControlGroup
@@ -138,7 +165,8 @@ function Pagination<T>({
             {showLabels && loadMoreLabel}
           </ReqoreButton>
         </ReqoreControlGroup>
-      ) : (
+      ) : null}
+      {!infinite ? (
         <>
           {showPagesAs === 'list' || (showControls && !showPages) ? (
             <ReqoreButton
@@ -224,7 +252,7 @@ function Pagination<T>({
             </ReqoreButton>
           ) : null}
         </>
-      )}
+      ) : null}
     </ReqoreControlGroup>
   );
 }
