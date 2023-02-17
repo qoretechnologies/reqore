@@ -17,6 +17,7 @@ test('useReqorePaging returns all pages', () => {
 
   expect(result.current.pages.length).toEqual(100);
   expect(result.current.pageCount).toEqual(100);
+  expect(result.current.renderControls).toEqual(true);
 });
 
 test('useReqorePaging with default start page', () => {
@@ -82,6 +83,7 @@ test('useReqorePaging returns 1 page when items are empty', () => {
   );
 
   expect(result.current.pages.length).toEqual(1);
+  expect(result.current.renderControls).toEqual(false);
 });
 
 test('useReqorePaging returns correct number of rounded pages', () => {
@@ -241,6 +243,7 @@ test('useReqorePaging returns correct number of items with infinite loading', ()
 
   expect(result.current.items.length).toEqual(50);
   expect(result.current.itemsLeft).toEqual(950);
+  expect(result.current.renderControls).toEqual(true);
 
   act(() => {
     result.current.last();
@@ -248,4 +251,5 @@ test('useReqorePaging returns correct number of items with infinite loading', ()
 
   expect(result.current.items.length).toEqual(1000);
   expect(result.current.itemsLeft).toEqual(0);
+  expect(result.current.renderControls).toEqual(false);
 });

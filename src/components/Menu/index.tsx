@@ -21,6 +21,7 @@ export interface IReqoreMenuProps
   wrapText?: boolean;
   flat?: boolean;
   rounded?: boolean;
+  padded?: boolean;
 }
 
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
@@ -30,7 +31,7 @@ export interface IReqoreMenuStyle extends IReqoreMenuProps {
 const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   width: ${({ width }) => width || undefined};
   min-width: ${({ width }) => (width ? undefined : '160px')};
-  padding: 5px;
+  padding: ${({ padded = true }) => (padded ? '5px' : undefined)};
   max-height: ${({ maxHeight }) => maxHeight || undefined};
   overflow-y: auto;
   overflow-x: hidden;
@@ -68,7 +69,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       minimal,
       ...rest
     }: IReqoreMenuProps,
-    ref: any
+    ref
   ) => {
     const theme = useReqoreTheme('main', customTheme, intent);
 

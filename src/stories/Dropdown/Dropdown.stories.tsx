@@ -1,8 +1,7 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
-import { useState } from 'react';
 import ReqoreButton from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
-import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput, ReqoreTag } from '../../index';
+import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput } from '../../index';
 import { argManager } from '../utils/args';
 
 const { createArg, disableArg } = argManager<IReqoreDropdownProps>();
@@ -130,15 +129,16 @@ export default {
 } as Meta<IReqoreDropdownProps>;
 
 const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
-  const [selected, setSelected] = useState<(string | number)[]>(['Item 3', 'Item 6']);
-
-  if (args.scrollToSelected) {
+  if (args.scrollToSelected || args.paging) {
     return (
       <ReqoreControlGroup>
         <ReqoreDropdown
-          label='Scrolling to selected'
+          {...args}
+          label={args.label}
           isDefaultOpen
-          scrollToSelected
+          filterable
+          scrollToSelected={args.scrollToSelected}
+          paging={args.paging}
           items={Array(130)
             .fill(null)
             .map((_, i) => ({
@@ -148,31 +148,6 @@ const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
             }))}
         />
       </ReqoreControlGroup>
-    );
-  }
-
-  if (args.multiSelect) {
-    return (
-      <>
-        <ReqoreControlGroup>
-          <ReqoreDropdown
-            label='Multi Select'
-            multiSelect
-            isDefaultOpen
-            onItemSelect={({ label }) => setSelected([...selected, label])}
-            items={Array(13)
-              .fill(null)
-              .map((_, i) => ({
-                label: `Item ${i}`,
-                value: `item-${i}`,
-                selected: selected.includes(`Item ${i}`),
-              }))}
-          />
-          {selected.map((item, index) => (
-            <ReqoreTag label={item} key={index} />
-          ))}
-        </ReqoreControlGroup>
-      </>
     );
   }
 
@@ -248,8 +223,52 @@ CustomComponent.args = {
 export const ScrollToSelectedItem = Template.bind({});
 ScrollToSelectedItem.args = {
   scrollToSelected: true,
+  label: 'Dropdown that scrolls to selected item',
 };
-export const MultiSelect = Template.bind({});
-MultiSelect.args = {
-  multiSelect: true,
+export const WithPaging: Story<IReqoreDropdownProps> = Template.bind({});
+WithPaging.args = {
+  paging: {
+    itemsPerPage: 50,
+  },
+  label: 'Dropdown with paging',
 };
+
+export const WithLoadMore: Story<IReqoreDropdownProps> = Template.bind({});
+WithLoadMore.args = {
+  paging: {
+    fluid: true,
+    infinite: true,
+    scrollOnLoadMore: true,
+    loadMoreLabel: 'Load additional items...',
+    showLabels: true,
+    includeBottomControls: false,
+  },
+  label: 'Dropdown with load more',
+};
+
+export const WithCustomPaging: Story<IReqoreDropdownProps> = Template.bind({});
+WithCustomPaging.args = {
+  paging: {
+    fluid: true,
+    infinite: true,
+    scrollOnLoadMore: true,
+    pageControlsPosition: 'both',
+    loadMoreLabel: 'Load additional items...',
+    showLabels: true,
+    loadMoreButtonProps: {
+      textAlign: 'center',
+      effect: {
+        gradient: {
+          colors: 'info',
+          animate: 'hover',
+        },
+        textSize: 'small',
+        uppercase: true,
+        spaced: 3,
+      },
+    },
+  },
+  label: 'Dropdown with custom paging',
+};
+
+WithCustomPaging.play = () => {};

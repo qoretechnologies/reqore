@@ -1,9 +1,14 @@
+import { size } from 'lodash';
 import React, { memo, useEffect, useMemo, useState } from 'react';
+import { TReqorePaginationType } from '../../constants/paging';
+import { PADDING_FROM_SIZE } from '../../constants/sizes';
+import { ReqorePaginationContainer } from '../../containers/Paging';
 import { IReqoreComponent } from '../../types/global';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuDivider from '../Menu/divider';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
+import { ReqoreVerticalSpacer } from '../Spacer';
 
 export type TDropdownItemOnClick = (item: IReqoreDropdownItem) => void;
 export interface IReqoreDropdownItem
@@ -27,6 +32,7 @@ export interface IReqoreDropdownListProps extends IReqoreComponent {
   onItemSelect?: TDropdownItemOnClick;
   inputProps?: IReqoreInputProps;
   scrollToSelected?: boolean;
+  paging?: TReqorePaginationType<TReqoreDropdownItem>;
 }
 
 const ReqoreDropdownList = memo(
@@ -41,9 +47,11 @@ const ReqoreDropdownList = memo(
     onItemSelect,
     inputProps,
     scrollToSelected,
+    paging,
   }: IReqoreDropdownListProps) => {
     const [_items, setItems] = useState<TReqoreDropdownItems>(items);
     const [query, setQuery] = useState<string>('');
+    const [menuRef, setMenuRef] = useState<HTMLDivElement>(undefined);
 
     useEffect(() => {
       setItems(items);
@@ -84,40 +92,51 @@ const ReqoreDropdownList = memo(
     };
 
     return (
-      <ReqoreMenu
-        _insidePopover={!multiSelect}
-        _popoverId={_popoverId}
-        style={listStyle}
-        width={width}
-        maxHeight={height || '300px'}
-      >
+      <>
         {filterable && (
           <>
             <ReqoreInput
               value={query}
+              icon='SearchLine'
               onChange={handleQueryChange}
-              placeholder='Filter'
+              placeholder={`Search ${size(_items)} items...`}
               onClearClick={() => setQuery('')}
               {...inputProps}
             />
+            <ReqoreVerticalSpacer height={PADDING_FROM_SIZE.normal} />
           </>
         )}
-        {filteredItems.map(
-          ({ onClick, dividerAlign, divider, ...item }: IReqoreDropdownItem, index: number) =>
-            divider ? (
-              <ReqoreMenuDivider key={index} {...item} align={dividerAlign} />
-            ) : (
-              <ReqoreMenuItem
-                key={index}
-                {...item}
-                label={item.label || item.value}
-                onClick={() => handleItemClick({ ...item, onClick })}
-                rightIcon={item.selected ? 'CheckLine' : undefined}
-                scrollIntoView={scrollToSelected && item.selected && !multiSelect}
-              />
-            )
-        )}
-      </ReqoreMenu>
+        <ReqorePaginationContainer type={paging} items={filteredItems} scrollContainer={menuRef}>
+          {(finalItems, Controls, { includeBottomControls }) => (
+            <ReqoreMenu
+              _insidePopover={!multiSelect}
+              _popoverId={_popoverId}
+              style={listStyle}
+              width={width}
+              maxHeight={height || '300px'}
+              padded={false}
+              ref={setMenuRef}
+            >
+              {finalItems.map(
+                ({ onClick, dividerAlign, divider, ...item }: IReqoreDropdownItem, index: number) =>
+                  divider ? (
+                    <ReqoreMenuDivider key={index} {...item} align={dividerAlign} />
+                  ) : (
+                    <ReqoreMenuItem
+                      key={index}
+                      {...item}
+                      label={item.label || item.value}
+                      onClick={() => handleItemClick({ ...item, onClick })}
+                      rightIcon={item.selected ? 'CheckLine' : undefined}
+                      scrollIntoView={scrollToSelected && item.selected && !multiSelect}
+                    />
+                  )
+              )}
+              {!includeBottomControls && <Controls />}
+            </ReqoreMenu>
+          )}
+        </ReqorePaginationContainer>
+      </>
     );
   }
 );

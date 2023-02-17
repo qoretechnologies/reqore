@@ -192,6 +192,10 @@ export const Minimal = Template.bind({});
 Minimal.args = {
   minimal: true,
 };
+export const NoPadding = Template.bind({});
+NoPadding.args = {
+  padded: false,
+};
 export const NotFlat = Template.bind({});
 NotFlat.args = {
   flat: false,

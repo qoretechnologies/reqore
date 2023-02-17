@@ -1,4 +1,6 @@
 import { Story, StoryObj } from '@storybook/react/types-6-0';
+import { useState } from 'react';
+import { useMount } from 'react-use';
 import { IReqorePaginationProps, ReqorePagination } from '../../components/Paging';
 import { IReqorePagingOptions } from '../../hooks/usePaging';
 import { ReqoreControlGroup, ReqoreTag, useReqorePaging } from '../../index';
@@ -10,14 +12,19 @@ export default {
 
 const Template: Story<IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }> =
   (args) => {
+    const [scrollContainer, setScrollContainer] = useState<any>(undefined);
     const paging = useReqorePaging<any>({ items: tableData, ...args.pagingOptions });
+
+    useMount(() => {
+      setScrollContainer(document.querySelector('.reqore-content')!);
+    });
 
     return (
       <ReqoreControlGroup vertical fluid>
         {paging.items.map((item) => (
           <ReqoreTag fixed='key' labelKey={item.id} label={`${item.firstName} ${item.lastName}`} />
         ))}
-        <ReqorePagination<any> {...paging} {...args} />
+        <ReqorePagination<any> {...paging} {...args} scrollContainer={scrollContainer} />
       </ReqoreControlGroup>
     );
   };
@@ -128,6 +135,17 @@ WithLabels.args = {
   },
   pagingOptions: {
     pagesToShow: 15,
+  } as IReqorePagingOptions<any>,
+};
+
+export const ScrollToTop: Story<
+  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
+> = Template.bind({});
+ScrollToTop.args = {
+  scrollToTopOnPageChange: true,
+  pagingOptions: {
+    pagesToShow: 5,
+    itemsPerPage: 100,
   } as IReqorePagingOptions<any>,
 };
 

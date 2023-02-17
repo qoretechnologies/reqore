@@ -274,6 +274,8 @@ test('Renders <Pagination /> with load more button', () => {
   jest.advanceTimersByTime(1);
   // 21 because of the badge on the button
   expect(document.querySelectorAll('.reqore-tag').length).toBe(21);
+  // Pagination should still be there
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
 });
 
 test('Renders <Pagination /> with load more button and auto load', () => {
@@ -298,4 +300,6 @@ test('Renders <Pagination /> with load more button and auto load', () => {
 
   // 21 because of the badge on the button
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1000);
+  // Pagination should be removed
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(0);
 });

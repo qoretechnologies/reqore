@@ -188,9 +188,28 @@ FilteringSearchingPaging.args = {
   sortButtonProps: {
     fixed: false,
   },
-  paging: true,
+  paging: 'buttons',
   size: 'big',
   padded: false,
   fill: true,
+  items: bigCollection,
+} as IReqoreCollectionProps;
+
+export const CustomFilteringSearchingPaging = Template.bind({});
+CustomFilteringSearchingPaging.args = {
+  inputProps: {
+    fluid: true,
+    focusRules: {
+      type: 'auto',
+      clearOnFocus: true,
+    },
+  },
+  paging: {
+    itemsPerPage: 25,
+    scrollToTopOnPageChange: true,
+  },
+  size: 'small',
+  padded: false,
+  height: '300px',
   items: bigCollection,
 } as IReqoreCollectionProps;
