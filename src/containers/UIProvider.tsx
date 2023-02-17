@@ -1,13 +1,13 @@
 import { cloneDeep } from 'lodash';
 import merge from 'lodash/merge';
 import { rgba } from 'polished';
-import React, { useState } from 'react';
-import styled, { createGlobalStyle } from 'styled-components';
+import React, { forwardRef, useState } from 'react';
+import styled, { createGlobalStyle, css } from 'styled-components';
 import ReqoreLayoutWrapper from '../components/Layout';
 import { IReqoreNotificationsPosition } from '../components/Notifications';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import ThemeContext from '../context/ThemeContext';
-import { buildTheme, getMainBackgroundColor } from '../helpers/colors';
+import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
 import PopoverProvider from './PopoverProvider';
 import ReqoreProvider from './ReqoreProvider';
 import ReqoreThemeProvider from './ThemeProvider';
@@ -56,10 +56,23 @@ const GlobalStyle = createGlobalStyle`
 
 const StyledPortal = styled.div`
   z-index: 9999;
+
   * {
     box-sizing: border-box;
   }
+
+  ${({ theme }) => css`
+    color: ${getReadableColor(theme, undefined, undefined, true)};
+  `}
 `;
+
+const ReqorePortal = forwardRef<HTMLDivElement, {}>((_props, ref) => {
+  return (
+    <ReqoreThemeProvider>
+      <StyledPortal id='reqore-portal' ref={ref} />
+    </ReqoreThemeProvider>
+  );
+});
 
 const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({ children, theme, options }) => {
   const [modalPortal, setModalPortal] = useState<any>(false);
@@ -81,8 +94,8 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({ children, theme, o
             </ReqoreProvider>
           ) : null}
         </ReqoreLayoutWrapper>
+        <ReqorePortal ref={setModalPortal} />
       </ThemeContext.Provider>
-      <StyledPortal id='reqore-portal' ref={setModalPortal} />
     </>
   );
 };

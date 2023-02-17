@@ -16,6 +16,7 @@ test('useReqorePaging returns all pages', () => {
   );
 
   expect(result.current.pages.length).toEqual(100);
+  expect(result.current.pageCount).toEqual(100);
 });
 
 test('useReqorePaging with default start page', () => {
@@ -30,10 +31,13 @@ test('useReqorePaging with default start page', () => {
     { wrapper, initialProps: { items: data } }
   );
 
+  expect(result.current.pageCount).toEqual(100);
   expect(result.current.currentPage).toEqual(11);
-  expect(result.current.pages.length).toEqual(5);
-  expect(result.current.pages[0]).toEqual(9);
-  expect(result.current.pages[4]).toEqual(13);
+  expect(result.current.pages.length).toEqual(7);
+  expect(result.current.pages[0]).toEqual(1);
+  expect(result.current.pages[1]).toEqual(9);
+  expect(result.current.pages[5]).toEqual(13);
+  expect(result.current.pages[6]).toEqual(100);
 });
 
 test('useReqorePaging specified number of pages', () => {
@@ -48,7 +52,7 @@ test('useReqorePaging specified number of pages', () => {
   );
 
   expect(result.current.allPages.length).toEqual(100);
-  expect(result.current.pages!.length).toEqual(5);
+  expect(result.current.pages!.length).toEqual(6);
   expect(result.current.pages![0]).toEqual(1);
   expect(result.current.pages![4]).toEqual(5);
 
@@ -56,15 +60,15 @@ test('useReqorePaging specified number of pages', () => {
     result.current.setPage(8);
   });
 
-  expect(result.current.pages![0]).toEqual(6);
-  expect(result.current.pages![4]).toEqual(10);
+  expect(result.current.pages![1]).toEqual(6);
+  expect(result.current.pages![5]).toEqual(10);
 
   act(() => {
     result.current.last();
   });
 
-  expect(result.current.pages![0]).toEqual(96);
-  expect(result.current.pages![4]).toEqual(100);
+  expect(result.current.pages![1]).toEqual(96);
+  expect(result.current.pages![5]).toEqual(100);
 });
 
 test('useReqorePaging returns 1 page when items are empty', () => {
@@ -236,10 +240,12 @@ test('useReqorePaging returns correct number of items with infinite loading', ()
   });
 
   expect(result.current.items.length).toEqual(50);
+  expect(result.current.itemsLeft).toEqual(950);
 
   act(() => {
     result.current.last();
   });
 
   expect(result.current.items.length).toEqual(1000);
+  expect(result.current.itemsLeft).toEqual(0);
 });

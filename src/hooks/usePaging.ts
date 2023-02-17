@@ -16,12 +16,16 @@ export interface IReqorePagingResult<T>
   pages: number[];
   allPages: number[];
   items: T[];
+  itemsPerPage: number;
+  itemsLeft: number;
   isLastPage: boolean;
   isFirstPage: boolean;
   next: usePaginationReturn['goNext'];
   back: usePaginationReturn['goBefore'];
   first: () => void;
   last: () => void;
+  pageCount: number;
+  infinite: boolean;
 }
 
 export const defaultPagingOptions: IReqorePagingOptions<any> = {
@@ -61,7 +65,6 @@ export const useReqorePaging = <T>(
     if (!pagesToShow || pagesToShow >= allPageCount) {
       return pagelist;
     }
-
     // Get the middle of the desired page count
     const middle = Math.ceil(pagesToShow / 2);
     // Get the start number of the pages to show
@@ -72,13 +75,25 @@ export const useReqorePaging = <T>(
     // If the start number is 0, we need to add the number of pages to show to the total number of pages
     const end = Math.min(start + pagesToShow, allPageCount);
 
-    return pagelist.slice(start, end);
+    let newPages = pagelist.slice(start, end);
+    // Always remove the first page
+    newPages = newPages.filter((page) => page !== 1);
+    // Always remove the last page
+    newPages = newPages.filter((page) => page !== allPageCount);
+    // Add the first and last page
+    newPages = [1, ...newPages, allPageCount];
+
+    return newPages;
   }, [pagesToShow, allPageCount, currentPage, pagelist]);
 
   return {
     pages,
     allPages: pagelist,
+    pageCount: allPageCount,
     items: slicedItems,
+    itemsPerPage,
+    itemsLeft: items.length - slicedItems.length,
+    infinite,
     setPage,
     currentPage,
     next: goNext,

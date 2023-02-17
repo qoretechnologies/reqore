@@ -11,7 +11,7 @@ export default {
   title: 'Components/Dropdown',
   parameters: {
     chromatic: {
-      delay: 500,
+      delay: 1500,
     },
   },
   argTypes: {

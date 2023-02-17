@@ -47,11 +47,6 @@ AsList.args = {
   } as IReqorePagingOptions<any>,
 };
 
-export const ShowAllPages = Template.bind({});
-ShowAllPages.args = {
-  showPagesAs: 'list',
-};
-
 export const WithStyling: Story<
   IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
 > = Template.bind({});
@@ -133,5 +128,57 @@ WithLabels.args = {
   },
   pagingOptions: {
     pagesToShow: 15,
+  } as IReqorePagingOptions<any>,
+};
+
+export const Infinite: Story<
+  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
+> = Template.bind({});
+Infinite.args = {
+  showLabels: true,
+  fluid: true,
+  loadMoreButtonProps: {
+    textAlign: 'center',
+  },
+  loadMoreLabel: 'Load 10 more',
+  pagingOptions: {
+    infinite: true,
+  } as IReqorePagingOptions<any>,
+};
+
+export const InfiniteWithAutoScroll: Story<
+  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
+> = Template.bind({});
+InfiniteWithAutoScroll.args = {
+  showLabels: true,
+  fluid: true,
+  scrollOnLoadMore: true,
+  loadMoreButtonProps: {
+    textAlign: 'center',
+    size: 'big',
+  },
+  loadMoreLabel: 'Load 100 more',
+  pagingOptions: {
+    infinite: true,
+    itemsPerPage: 100,
+  } as IReqorePagingOptions<any>,
+};
+
+export const InfiniteWithAutoLoad: Story<
+  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
+> = Template.bind({});
+InfiniteWithAutoLoad.args = {
+  showLabels: true,
+  fluid: true,
+  autoLoadMore: true,
+  scrollOnLoadMore: true,
+  loadMoreButtonProps: {
+    textAlign: 'center',
+    icon: 'Loader5Line',
+  },
+  loadMoreLabel: 'Scroll to load 20 more',
+  pagingOptions: {
+    infinite: true,
+    itemsPerPage: 20,
   } as IReqorePagingOptions<any>,
 };

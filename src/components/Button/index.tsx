@@ -7,7 +7,7 @@ import {
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
   TEXT_FROM_SIZE,
-  TSizes,
+  TSizes
 } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
@@ -22,7 +22,7 @@ import {
   DisabledElement,
   InactiveIconScale,
   ReadOnlyElement,
-  ScaleIconOnHover,
+  ScaleIconOnHover
 } from '../../styles';
 import {
   IReqoreDisabled,
@@ -30,7 +30,7 @@ import {
   IReqoreReadOnly,
   IWithReqoreEffect,
   IWithReqoreSize,
-  TReqoreTooltipProp,
+  TReqoreTooltipProp
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import {
@@ -39,7 +39,7 @@ import {
   StyledEffect,
   StyledTextEffect,
   TReqoreEffectColor,
-  TReqoreHexColor,
+  TReqoreHexColor
 } from '../Effect';
 import ReqoreIcon from '../Icon';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
@@ -69,6 +69,7 @@ export interface IReqoreButtonProps
   description?: string | number;
   maxWidth?: string;
   textAlign?: 'left' | 'center' | 'right';
+  iconsAlign?: 'center' | 'sides';
   iconColor?: TReqoreEffectColor;
   leftIconColor?: TReqoreEffectColor;
   rightIconColor?: TReqoreEffectColor;
@@ -393,6 +394,7 @@ const ReqoreButton = memo(
         leftIconColor,
         rightIconColor,
         iconColor,
+        iconsAlign,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -455,10 +457,13 @@ const ReqoreButton = memo(
                   size={size}
                   color={leftIconColor || iconColor}
                   style={
-                    textAlign !== 'left'
+                    textAlign !== 'left' || iconsAlign === 'center'
                       ? {
-                          marginRight: 'auto',
-                          marginLeft: textAlign === 'center' ? 'auto' : undefined,
+                          marginRight: iconsAlign !== 'center' || !children ? 'auto' : undefined,
+                          marginLeft:
+                            iconsAlign === 'center' || (textAlign === 'center' && !children)
+                              ? 'auto'
+                              : undefined,
                         }
                       : undefined
                   }
@@ -476,7 +481,9 @@ const ReqoreButton = memo(
             {children && (
               <StyledAnimatedTextWrapper
                 textAlign={textAlign}
-                style={textAlign === 'center' ? { margin: 'auto' } : undefined}
+                style={
+                  textAlign === 'center' && iconsAlign !== 'center' ? { margin: 'auto' } : undefined
+                }
               >
                 <StyledActiveContent wrap={wrap} effect={labelEffect}>
                   {children}
@@ -509,10 +516,13 @@ const ReqoreButton = memo(
                   icon={rightIcon}
                   size={size}
                   style={
-                    textAlign !== 'right'
+                    textAlign !== 'right' || iconsAlign === 'center'
                       ? {
-                          marginLeft: 'auto',
-                          marginRight: textAlign === 'center' ? 'auto' : undefined,
+                          marginLeft: iconsAlign !== 'center' || !children ? 'auto' : undefined,
+                          marginRight:
+                            iconsAlign === 'center' || (textAlign === 'center' && !children)
+                              ? 'auto'
+                              : undefined,
                         }
                       : undefined
                   }
