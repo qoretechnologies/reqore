@@ -119,11 +119,15 @@ test('Shows the popover after a local delay, ignoring global delay', async () =>
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 
-  jest.advanceTimersByTime(100);
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
-  jest.advanceTimersByTime(400);
+  act(() => {
+    jest.advanceTimersByTime(400);
+  });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 
@@ -141,11 +145,15 @@ test('Shows the popover after a global delay', async () => {
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 
-  jest.advanceTimersByTime(500);
+  act(() => {
+    jest.advanceTimersByTime(500);
+  });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
-  jest.advanceTimersByTime(500);
+  act(() => {
+    jest.advanceTimersByTime(500);
+  });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 
@@ -197,6 +205,8 @@ test('Does not show the popover with delay if time not reached', async () => {
 });
 
 test('Shows the hoverStay popover after a delay and stays, ', async () => {
+  jest.useFakeTimers();
+
   render(
     <ReqoreUIProvider>
       <SimpleContent delay={500} type='hoverStay' />
@@ -205,11 +215,15 @@ test('Shows the hoverStay popover after a delay and stays, ', async () => {
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 
-  jest.advanceTimersByTime(100);
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
-  jest.advanceTimersByTime(400);
+  act(() => {
+    jest.advanceTimersByTime(400);
+  });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 

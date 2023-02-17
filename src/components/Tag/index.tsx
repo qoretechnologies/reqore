@@ -25,7 +25,6 @@ import {
   IReqoreDisabled,
   IReqoreIntent,
   IWithReqoreEffect,
-  IWithReqoreFixed,
   IWithReqoreFluid,
   IWithReqoreMinimal,
   IWithReqoreTooltip,
@@ -52,8 +51,8 @@ export interface IReqoreTagProps
     IReqoreDisabled,
     IWithReqoreMinimal,
     IWithReqoreFluid,
-    IWithReqoreFixed,
     IWithReqoreEffect {
+  fixed?: boolean | 'key' | 'label';
   size?: TSizes;
   label?: string | number;
   labelKey?: string | number;
@@ -93,9 +92,10 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  max-width: ${({ fixed }) => (!fixed ? '100%' : undefined)};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
+  max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
+  flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  align-self: ${({ fixed, fluid }) =>
+    fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
@@ -163,7 +163,7 @@ const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: ${({ hasKey }) => (hasKey ? 1 : undefined)};
+  flex: ${({ hasKey, fixed }) => (hasKey ? (fixed === 'key' ? '0 0 auto' : 1) : undefined)};
   flex-shrink: 0;
   min-height: 100%;
 `;
@@ -172,7 +172,7 @@ const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  flex: ${({ fixed }) => (fixed === 'label' ? '0 0 auto' : 1)};
   flex-shrink: 0;
   min-height: 100%;
 `;
@@ -311,6 +311,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             wrap={wrap}
             hasWidth={!!width}
             hasKey={!!labelKey}
+            fixed={rest.fixed}
           >
             {icon && (
               <ReqoreIcon
@@ -345,6 +346,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             wrap={wrap}
             hasWidth={!!width}
             hasKey={!!labelKey}
+            fixed={rest.fixed}
           >
             {label || label === 0 ? (
               <StyledTagContent

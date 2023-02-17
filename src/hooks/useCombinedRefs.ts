@@ -6,9 +6,9 @@ import React from 'react';
  * @param refs - An array of refs to combine.
  * @returns A ref object.
  */
-export function useCombinedRefs(...refs) {
+export function useCombinedRefs<T = any>(...refs) {
   const [_innerRef, setInnerRef] = React.useState(null);
-  const targetRef = React.useRef();
+  const targetRef = React.useRef<T>();
 
   React.useEffect(() => {
     [...refs, setInnerRef].forEach((ref) => {

@@ -1,8 +1,9 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import { useContext } from 'use-context-selector';
 import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import PopoverContext from '../../context/PopoverContext';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 
@@ -17,6 +18,7 @@ export interface IReqoreMenuItemProps
   itemId?: string;
   onRightIconClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
   onClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
+  scrollIntoView?: boolean;
 }
 
 export interface IReqoreMenuItemStyle {
@@ -50,11 +52,14 @@ const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
       tooltip,
       intent,
       flat = true,
+      scrollIntoView,
       ...rest
     }: IReqoreMenuItemProps,
     ref
   ) => {
     const { removePopover } = useContext(PopoverContext);
+    const { targetRef } = useCombinedRefs<HTMLButtonElement>(ref);
+    const [itemRef, setItemRef] = useState<HTMLButtonElement>(undefined);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       event.persist();
@@ -79,6 +84,12 @@ const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
       }
     };
 
+    useEffect(() => {
+      if (scrollIntoView && itemRef) {
+        itemRef.scrollIntoView?.({ behavior: 'smooth', block: 'center', inline: 'center' });
+      }
+    }, [itemRef, scrollIntoView]);
+
     return (
       <ReqoreControlGroup stack={!!onRightIconClick} fluid>
         <ReqoreButton
@@ -90,7 +101,10 @@ const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
           fluid
           onClick={handleClick}
           active={selected}
-          ref={ref}
+          ref={(ref) => {
+            targetRef.current = ref;
+            setItemRef(ref);
+          }}
           disabled={disabled}
           intent={intent}
           icon={icon}

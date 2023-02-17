@@ -3,6 +3,7 @@ import {
   TReqoreEffectGradientAnimationTrigger,
   TReqoreHexColor,
 } from '../components/Effect';
+import { Colors } from './colors';
 
 export interface IReqoreSidebarTheme {
   main?: TReqoreHexColor;
@@ -94,16 +95,16 @@ export interface IReqoreIntents {
 export type TReqoreIntent = 'info' | 'success' | 'pending' | 'warning' | 'danger' | 'muted';
 
 export const DEFAULT_INTENTS: IReqoreIntents = {
-  info: '#0E5A8A',
-  success: '#0A6640',
-  pending: '#d1a036',
-  warning: '#A66321',
-  danger: '#A82A2A',
-  muted: '#444444',
+  info: Colors.BLUE,
+  success: Colors.GREEN,
+  pending: Colors.YELLOW,
+  warning: Colors.ORANGE,
+  danger: Colors.RED,
+  muted: Colors.GRAY,
 };
 
 export const DEFAULT_THEME: IReqoreTheme = {
-  main: '#333333',
+  main: Colors.DARK_THEME,
   text: {
     dim: true,
   },

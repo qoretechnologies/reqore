@@ -31,7 +31,6 @@ test('Shows textarea for <Tree /> properly', () => {
   fireEvent.click(document.querySelector('.reqore-tree-as-text'));
 
   expect(document.querySelectorAll('.reqore-textarea').length).toBe(1);
-  console.log(document.querySelectorAll('.reqore-textarea')[0].textContent);
   expect(document.querySelectorAll('.reqore-textarea')[0].textContent).toContain('test: true');
 });
 

@@ -11,7 +11,7 @@ import {
   IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreMinimal,
-  IWithReqoreSize,
+  IWithReqoreSize
 } from '../../types/global';
 import { StyledHeader } from '../Header';
 import { StyledParagraph } from '../Paragraph';

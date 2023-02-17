@@ -19,7 +19,7 @@ export default {
 
 const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
   return (
-    <>
+    <ReqoreControlGroup vertical gapSize='big'>
       <ReqoreControlGroup size={buttonProps.size} wrap>
         <ReqoreButton {...buttonProps} icon='BankFill' rightIcon={null} />
         <ReqoreButton {...buttonProps} />
@@ -27,7 +27,7 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
           {...buttonProps}
           icon='BankFill'
           rightIcon={null}
-          textAlign='center'
+          iconsAlign='center'
           style={{ width: '100px' }}
         />
         <ReqoreButton {...buttonProps}>Default</ReqoreButton>
@@ -47,7 +47,6 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
           Read only
         </ReqoreButton>
       </ReqoreControlGroup>
-      <br />
       <ReqoreControlGroup size={buttonProps.size} wrap>
         <ReqoreButton {...buttonProps} active flat={false} tooltip='hello'>
           Active Not Flat
@@ -72,13 +71,33 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
           Disabled not flat
         </ReqoreButton>
       </ReqoreControlGroup>
-      <br />
       <ReqoreControlGroup fluid wrap>
         <ReqoreButton {...buttonProps} fluid>
           Fluid button
         </ReqoreButton>
       </ReqoreControlGroup>
-      <br />
+      <ReqoreControlGroup fluid wrap>
+        <ReqoreButton {...buttonProps} fluid textAlign='center'>
+          Fluid button with centered text
+        </ReqoreButton>
+      </ReqoreControlGroup>
+      <ReqoreControlGroup fluid wrap>
+        <ReqoreButton {...buttonProps} fluid textAlign='center' iconsAlign='center'>
+          Fluid button with centered text & icons
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          rightIcon={null}
+          fluid
+          textAlign='center'
+          iconsAlign='center'
+        >
+          Fluid button with centered text & icons
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} icon={null} fluid textAlign='center' iconsAlign='center'>
+          Fluid button with centered text & icons
+        </ReqoreButton>
+      </ReqoreControlGroup>
       <ReqoreControlGroup fluid wrap>
         <ReqoreButton {...buttonProps}>Left text</ReqoreButton>
         <ReqoreButton
@@ -112,7 +131,6 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
           Right text
         </ReqoreButton>
       </ReqoreControlGroup>
-      <br />
       <ReqoreControlGroup wrap>
         <ReqoreButton
           {...buttonProps}
@@ -171,7 +189,6 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
           wrap
         />
       </ReqoreControlGroup>
-      <br />
       <ReqoreControlGroup wrap>
         <ReqoreButton {...buttonProps} readOnly badge={10} onClick={alert}>
           Read only with badge
@@ -225,7 +242,7 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
           With modified Badge
         </ReqoreButton>
       </ReqoreControlGroup>
-    </>
+    </ReqoreControlGroup>
   );
 };
 

@@ -267,6 +267,56 @@ const Template: Story<IReqoreTagGroup & IReqoreTagProps> = ({ columns, ...args }
           },
         ]}
       />
+      <ReqoreTag
+        {...args}
+        labelKey='Fixed'
+        fixed='key'
+        label='Wrapped tag with some long text and NO width specified, AND wrap specified, with fixed key'
+        icon='DriveLine'
+        rightIcon={args.rightIcon}
+        wrap
+        onRemoveClick={null}
+        actions={[
+          {
+            icon: '24HoursFill',
+            onClick: noop,
+            disabled: true,
+            intent: 'info',
+            tooltip: { content: 'I am a tooltip' },
+          },
+          {
+            icon: 'SpyFill',
+            onClick: noop,
+            intent: 'success',
+            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
+          },
+        ]}
+      />
+      <ReqoreTag
+        {...args}
+        labelKey='Wrapped tag with some long text and NO width specified, AND wrap specified, with fixed label, Wrapped tag with some long text and NO width specified, AND wrap specified, with fixed label'
+        fixed='label'
+        label='Fixed'
+        icon='DriveLine'
+        rightIcon={args.rightIcon}
+        wrap
+        onRemoveClick={null}
+        actions={[
+          {
+            icon: '24HoursFill',
+            onClick: noop,
+            disabled: true,
+            intent: 'info',
+            tooltip: { content: 'I am a tooltip' },
+          },
+          {
+            icon: 'SpyFill',
+            onClick: noop,
+            intent: 'success',
+            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
+          },
+        ]}
+      />
     </ReqoreTagGroup>
   );
 };

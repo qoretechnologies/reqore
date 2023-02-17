@@ -69,6 +69,7 @@ export interface IReqoreButtonProps
   description?: string | number;
   maxWidth?: string;
   textAlign?: 'left' | 'center' | 'right';
+  iconsAlign?: 'center' | 'sides';
   iconColor?: TReqoreEffectColor;
   leftIconColor?: TReqoreEffectColor;
   rightIconColor?: TReqoreEffectColor;
@@ -393,6 +394,7 @@ const ReqoreButton = memo(
         leftIconColor,
         rightIconColor,
         iconColor,
+        iconsAlign,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -455,17 +457,18 @@ const ReqoreButton = memo(
                   size={size}
                   color={leftIconColor || iconColor}
                   style={
-                    textAlign !== 'left'
+                    textAlign !== 'left' || iconsAlign === 'center'
                       ? {
-                          marginRight: 'auto',
-                          marginLeft: textAlign === 'center' ? 'auto' : undefined,
+                          marginRight: iconsAlign !== 'center' || !children ? 'auto' : undefined,
+                          marginLeft:
+                            iconsAlign === 'center' || (textAlign === 'center' && !children)
+                              ? 'auto'
+                              : undefined,
                         }
                       : undefined
                   }
                 />
-                {children || badge || rightIcon ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
-                ) : null}
+                {children || rightIcon ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
               </>
             ) : children ? (
               <ReqoreHorizontalSpacer
@@ -476,7 +479,9 @@ const ReqoreButton = memo(
             {children && (
               <StyledAnimatedTextWrapper
                 textAlign={textAlign}
-                style={textAlign === 'center' ? { margin: 'auto' } : undefined}
+                style={
+                  textAlign === 'center' && iconsAlign !== 'center' ? { margin: 'auto' } : undefined
+                }
               >
                 <StyledActiveContent wrap={wrap} effect={labelEffect}>
                   {children}
@@ -509,10 +514,13 @@ const ReqoreButton = memo(
                   icon={rightIcon}
                   size={size}
                   style={
-                    textAlign !== 'right'
+                    textAlign !== 'right' || iconsAlign === 'center'
                       ? {
-                          marginLeft: 'auto',
-                          marginRight: textAlign === 'center' ? 'auto' : undefined,
+                          marginLeft: iconsAlign !== 'center' || !children ? 'auto' : undefined,
+                          marginRight:
+                            iconsAlign === 'center' || (textAlign === 'center' && !children)
+                              ? 'auto'
+                              : undefined,
                         }
                       : undefined
                   }

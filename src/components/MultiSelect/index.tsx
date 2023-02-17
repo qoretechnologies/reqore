@@ -28,7 +28,7 @@ export interface IReqoreMultiSelectProps
   selectedItemEffect?: IReqoreEffect;
   selectedItemSize?: TSizes;
   selectorProps?: Omit<IReqoreInputProps, 'value' | 'onValueChange'> & IReqoreDropdownProps;
-  openOnMount?: IReqoreDropdownProps['openOnMount'];
+  openOnMount?: IReqoreDropdownProps['isDefaultOpen'];
   enterKeySelects?: boolean;
 }
 
