@@ -125,6 +125,16 @@ SelectedFirst.args = {
   showSelectedFirst: true,
 };
 
+export const CustomColumnsData = Template.bind({});
+CustomColumnsData.args = {
+  columns: 2,
+  columnsGap: '50px',
+  minColumnWidth: '100px',
+  maxColumnWidth: '200px',
+  items,
+  label: '2 columns of max 200px width with 50px gap',
+};
+
 export const CustomPropsAndTexts = Template.bind({});
 CustomPropsAndTexts.args = {
   label: 'Collection of items',

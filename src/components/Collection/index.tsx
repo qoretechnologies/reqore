@@ -67,7 +67,6 @@ export const StyledCollectionWrapper = styled(StyledColumns)`
 
 export const ReqoreCollection = ({
   items,
-  columnsGap = '10px',
   stacked,
   rounded = true,
   fill,
@@ -100,6 +99,14 @@ export const ReqoreCollection = ({
   inputPlaceholder = (items) => `Search in ${size(items)} items`,
   paging,
   height,
+
+  // Columns props
+  minColumnWidth,
+  maxColumnWidth,
+  columns,
+  alignItems,
+  columnsGap = '10px',
+
   ...rest
 }: IReqoreCollectionProps) => {
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
@@ -251,13 +258,17 @@ export const ReqoreCollection = ({
                 </ReqoreMessage>
               ) : (
                 <StyledCollectionWrapper
-                  columns={_showAs === 'grid' ? 'auto-fit' : 1}
+                  columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
                   columnsGap={stacked ? '0px' : columnsGap}
                   rounded={rounded}
                   stacked={stacked}
                   fill={fill}
                   ref={setContentRef}
                   height={height}
+                  alignItems={alignItems}
+                  minColumnWidth={minColumnWidth}
+                  maxColumnWidth={maxColumnWidth}
+                  className='reqore-collection-content'
                 >
                   {finalItems?.map((item, index) => (
                     <ReqoreCollectionItem
