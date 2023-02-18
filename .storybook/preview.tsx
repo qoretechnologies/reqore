@@ -3,7 +3,6 @@ import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import results from '../tests.json';
 
 export const parameters = {
-  actions: { argTypesRegex: '^on[A-Z].*' },
   layout: 'fullscreen',
   options: {
     panelPosition: 'right',

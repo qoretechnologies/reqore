@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
-import { argManager, FlatArg, IconArg, IntentArg, SizeArg } from '../utils/args';
+import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -354,6 +354,23 @@ NoActions.args = {
   actions: [],
   label:
     'This is a really long title that should stretch all the way to the right of the panel, all the way to the end and not end in the middle',
+};
+
+export const NoLabel: Story<IReqorePanelProps> = Template.bind({});
+NoLabel.args = {
+  collapsible: false,
+  actions: [
+    {
+      responsive: false,
+      group: [
+        { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
+        { icon: 'CopperCoinFill', intent: 'danger' },
+      ],
+    },
+  ],
+  label: undefined,
+  icon: undefined,
+  badge: undefined,
 };
 
 export const ImageAsIcon: Story<IReqorePanelProps> = Template.bind({});

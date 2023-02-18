@@ -143,6 +143,7 @@ CustomPropsAndTexts.args = {
 export const ChildrenBeforeAndAfter = Template.bind({});
 ChildrenBeforeAndAfter.args = {
   label: 'Collection of items',
+  padded: false,
   items,
   contentRenderer: (children) => (
     <>
@@ -191,7 +192,6 @@ FilteringSearchingPaging.args = {
   paging: 'buttons',
   size: 'big',
   padded: false,
-  fill: true,
   items: bigCollection,
 } as IReqoreCollectionProps;
 
@@ -205,11 +205,13 @@ CustomFilteringSearchingPaging.args = {
     },
   },
   paging: {
-    itemsPerPage: 25,
+    itemsPerPage: 55,
     scrollToTopOnPageChange: true,
   },
+  inputInTitle: false,
+  responsiveTitle: true,
   size: 'small',
   padded: false,
-  height: '300px',
-  items: bigCollection,
+  fill: true,
+  items: [...bigCollection, ...bigCollection, ...bigCollection, ...bigCollection, ...bigCollection],
 } as IReqoreCollectionProps;
