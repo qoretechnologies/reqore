@@ -84,7 +84,7 @@ test('Renders default <PaginationContainer /> with both control wrappers, one in
                 {items.map((item) => (
                   <ReqoreTag label={`${item.firstName} ${item.lastName}`} />
                 ))}
-                {!includeBottomControls && <Controls />}
+                {!includeBottomControls && Controls}
               </ReqoreControlGroup>
             )}
           </ReqorePaginationContainer>
