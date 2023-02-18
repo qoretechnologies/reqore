@@ -372,9 +372,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
 
     const renderResponsiveActions = useCallback(
-      (action: IReqorePanelAction, index: number) => {
-        return renderActions(action, index, true);
-      },
+      (align: 'flex-start' | 'center' | 'flex-end' = 'flex-end') =>
+        (action: IReqorePanelAction, index: number) => {
+          return renderActions(action, index, true, align);
+        },
       [actions]
     );
 
@@ -391,14 +392,20 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
 
     const renderNonResponsiveActions = useCallback(
-      (action: IReqorePanelAction, index: number) => {
-        return renderActions(action, index, false);
-      },
+      (align: 'flex-start' | 'center' | 'flex-end' = 'flex-end') =>
+        (action: IReqorePanelAction, index: number) => {
+          return renderActions(action, index, false, align);
+        },
       [actions]
     );
 
     const renderActions = useCallback(
-      (action: IReqorePanelAction, index: number, includeResponsive) => {
+      (
+        action: IReqorePanelAction,
+        index: number,
+        includeResponsive,
+        align: 'flex-start' | 'center' | 'flex-end' = 'flex-end'
+      ) => {
         if (
           action.show === false ||
           (includeResponsive && action.responsive === false) ||
@@ -429,6 +436,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               fixed={rest.fixed}
               fluid={rest.fluid}
               key={index}
+              horizontalAlign={align}
             >
               {group.map((action, index) => renderActions(action, index, true))}
             </ReqoreControlGroup>
@@ -598,18 +606,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 customTheme={theme}
                 size={panelSize}
               >
-                {actions.map(renderResponsiveActions)}
+                {actions.map(renderResponsiveActions())}
               </ReqoreControlGroup>
             )}
             {collapsible || onClose || hasNonResponsiveActions(actions) ? (
               <>
                 <ReqoreControlGroup
-                  fixed={!isMobile}
-                  fluid={isMobile}
+                  fixed={isMobile ? false : hasResponsiveActions(actions)}
+                  fluid={isMobile ? true : !hasResponsiveActions(actions)}
                   horizontalAlign='flex-end'
                   size={panelSize}
                 >
-                  {actions.map(renderNonResponsiveActions)}
+                  {actions.map(renderNonResponsiveActions())}
                   {collapsible && (
                     <ReqoreButton
                       customTheme={theme}
@@ -662,7 +670,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           >
             {hasNonResponsiveActions(leftBottomActions) ? (
               <ReqoreControlGroup size={panelSize}>
-                {leftBottomActions.map(renderNonResponsiveActions)}
+                {leftBottomActions.map(renderNonResponsiveActions('flex-start'))}
               </ReqoreControlGroup>
             ) : null}
             {hasResponsiveActions(leftBottomActions) && (
@@ -672,7 +680,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 customTheme={theme}
                 size={panelSize}
               >
-                {leftBottomActions.map(renderResponsiveActions)}
+                {leftBottomActions.map(renderResponsiveActions('flex-start'))}
               </ReqoreControlGroup>
             )}
             {hasResponsiveActions(rightBottomActions) && (
@@ -683,12 +691,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 customTheme={theme}
                 size={panelSize}
               >
-                {rightBottomActions.map(renderResponsiveActions)}
+                {rightBottomActions.map(renderResponsiveActions())}
               </ReqoreControlGroup>
             )}
             {hasNonResponsiveActions(rightBottomActions) ? (
               <ReqoreControlGroup horizontalAlign='flex-end' size={panelSize}>
-                {rightBottomActions.map(renderNonResponsiveActions)}
+                {rightBottomActions.map(renderNonResponsiveActions())}
               </ReqoreControlGroup>
             ) : null}
           </StyledPanelBottomActions>
