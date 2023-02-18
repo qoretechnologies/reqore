@@ -20,11 +20,15 @@ const Template: Story<IReqorePaginationProps<any> & { pagingOptions?: IReqorePag
     });
 
     return (
-      <ReqoreControlGroup vertical fluid>
+      <ReqoreControlGroup vertical fluid key='paging-wrapper'>
         {paging.items.map((item) => (
           <ReqoreTag fixed='key' labelKey={item.id} label={`${item.firstName} ${item.lastName}`} />
         ))}
-        <ReqorePagination<any> {...paging} {...args} scrollContainer={scrollContainer} />
+        <ReqorePagination<any>
+          {...paging}
+          {...args}
+          scrollContainer={args.scrollToTopOnPageChange ? scrollContainer : undefined}
+        />
       </ReqoreControlGroup>
     );
   };

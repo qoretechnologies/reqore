@@ -132,7 +132,7 @@ const ReqoreDropdownList = memo(
                     />
                   )
               )}
-              {!includeBottomControls && <Controls />}
+              {!includeBottomControls && Controls}
             </ReqoreMenu>
           )}
         </ReqorePaginationContainer>

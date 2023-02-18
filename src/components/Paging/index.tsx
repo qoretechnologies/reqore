@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import styled from 'styled-components';
 import { ReqoreDropdown } from '../..';
@@ -85,18 +85,22 @@ function Pagination<T>({
   const [scrollTargetRef, setScrollTargetRef] = useState<HTMLDivElement>(undefined);
   const observer = useRef<IntersectionObserver>(null);
 
-  useEffect(() => {
-    if (scrollTargetRef && scrollOnLoadMore && !isLastPage && !isFirstPage) {
+  useUpdateEffect(() => {
+    // If scroll container is defined, do not scroll to load more button
+    // because it will be scrolled to the bottom of the container
+    // resulting in infinite scroll
+    if (!scrollContainer && scrollTargetRef && scrollOnLoadMore && !isLastPage && !isFirstPage) {
       scrollTargetRef.scrollIntoView({
         behavior: 'smooth',
         block: 'end',
-        inline: 'nearest',
+        inline: 'start',
       });
     }
-  }, [currentPage, scrollTargetRef, scrollOnLoadMore, isLastPage, isFirstPage]);
+  }, [currentPage, scrollTargetRef, scrollContainer, scrollOnLoadMore, isLastPage, isFirstPage]);
 
   // Scroll to bottom on load more
-  useEffect(() => {
+  // Scroll container has power over scroll target
+  useUpdateEffect(() => {
     if (scrollContainer && scrollOnLoadMore && !isFirstPage) {
       scrollContainer.scrollBy?.({
         top: scrollContainer.scrollHeight,
@@ -106,7 +110,7 @@ function Pagination<T>({
   }, [currentPage, scrollContainer, scrollOnLoadMore, isFirstPage]);
 
   // Scroll to top on page change
-  useEffect(() => {
+  useUpdateEffect(() => {
     if (scrollContainer && scrollToTopOnPageChange && !infinite) {
       scrollContainer.scrollTo?.({
         top: 0,

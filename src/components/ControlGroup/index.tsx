@@ -11,7 +11,7 @@ import {
   IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreMinimal,
-  IWithReqoreSize
+  IWithReqoreSize,
 } from '../../types/global';
 import { StyledHeader } from '../Header';
 import { StyledParagraph } from '../Paragraph';
@@ -336,7 +336,6 @@ const ReqoreControlGroup = memo(
 
             let newProps = {
               ...child.props,
-              key: child.props.reactKey || child.props.key || index,
               minimal:
                 child.props?.minimal || child.props?.minimal === false
                   ? child.props.minimal
