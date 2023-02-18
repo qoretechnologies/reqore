@@ -99,6 +99,7 @@ export const ReqoreCollection = ({
   displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
   inputPlaceholder = (items) => `Search in ${size(items)} items`,
   paging,
+  height,
   ...rest
 }: IReqoreCollectionProps) => {
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
@@ -256,6 +257,7 @@ export const ReqoreCollection = ({
                   stacked={stacked}
                   fill={fill}
                   ref={setContentRef}
+                  height={height}
                 >
                   {finalItems?.map((item, index) => (
                     <ReqoreCollectionItem
