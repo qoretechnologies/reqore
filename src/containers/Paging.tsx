@@ -7,7 +7,7 @@ import {
   getPaginationOptionsFromType,
 } from '../constants/paging';
 import { PADDING_FROM_SIZE, TSizes } from '../constants/sizes';
-import { useReqorePaging } from '../hooks/usePaging';
+import { IReqorePagingResult, useReqorePaging } from '../hooks/usePaging';
 
 export interface IReqorePagingContainerProps<T> {
   type?: TReqorePaginationType<T>;
@@ -15,10 +15,44 @@ export interface IReqorePagingContainerProps<T> {
   scrollContainer?: HTMLElement;
   children: (
     items: T[],
-    Controls: React.FC<Partial<IReqorePaginationProps<T>>>,
+    Controls: JSX.Element,
     options: TReqorePaginationTypeResult<T>
   ) => React.ReactNode;
   size?: TSizes;
+}
+
+function PagingControls<T>({
+  withSpacer,
+  position,
+  pagingData,
+  componentOptions,
+  scrollContainer,
+  size,
+  ...pagingProps
+}: Partial<IReqorePaginationProps<T>> &
+  Partial<TReqorePaginationTypeResult<T>> & {
+    withSpacer?: boolean;
+    position?: 'top' | 'bottom';
+    pagingData: Omit<IReqorePagingResult<T>, 'items'>;
+  }) {
+  return pagingData.renderControls ? (
+    <>
+      {withSpacer && position === 'bottom' ? (
+        <ReqoreVerticalSpacer height={PADDING_FROM_SIZE[size]} />
+      ) : null}
+      <ReqorePagination
+        key={`reqore-pagination-${position}`}
+        size={size}
+        {...pagingData}
+        {...componentOptions}
+        scrollContainer={scrollContainer}
+        {...pagingProps}
+      />
+      {withSpacer && position === 'top' ? (
+        <ReqoreVerticalSpacer height={PADDING_FROM_SIZE[size]} />
+      ) : null}
+    </>
+  ) : null;
 }
 
 function PagingContainer<T>({
@@ -42,46 +76,54 @@ function PagingContainer<T>({
     enabled: !!type,
   });
 
-  const Controls = ({
-    withSpacer,
-    position,
-    ...pagingProps
-  }: Partial<IReqorePaginationProps<T>> & { withSpacer?: boolean; position?: 'top' | 'bottom' }) =>
-    pagingData.renderControls ? (
-      <>
-        {withSpacer && position === 'bottom' ? (
-          <ReqoreVerticalSpacer height={PADDING_FROM_SIZE[size]} />
-        ) : null}
-        <ReqorePagination
-          size={size}
-          {...pagingData}
-          {...componentOptions}
-          scrollContainer={scrollContainer}
-          {...pagingProps}
-        />
-        {withSpacer && position === 'top' ? (
-          <ReqoreVerticalSpacer height={PADDING_FROM_SIZE[size]} />
-        ) : null}
-      </>
-    ) : null;
-
   return (
     <>
       {includeTopControls && (pageControlsPosition === 'top' || pageControlsPosition === 'both') ? (
-        <Controls autoLoadMore={false} scrollOnLoadMore={false} position='top' withSpacer />
+        <PagingControls<T>
+          key='top-paging'
+          position='top'
+          withSpacer
+          scrollContainer={scrollContainer}
+          size={size}
+          pagingData={pagingData}
+          pagingOptions={pagingOptions}
+          componentOptions={componentOptions}
+          autoLoadMore={false}
+          scrollOnLoadMore={false}
+        />
       ) : null}
 
-      {children(finalItems, Controls, {
-        pagingOptions,
-        componentOptions,
-        pageControlsPosition,
-        includeTopControls,
-        includeBottomControls,
-      })}
+      {children(
+        finalItems,
+        <PagingControls
+          key='custom-paging'
+          scrollContainer={scrollContainer}
+          size={size}
+          pagingData={pagingData}
+          pagingOptions={pagingOptions}
+          componentOptions={componentOptions}
+        />,
+        {
+          pagingOptions,
+          componentOptions,
+          pageControlsPosition,
+          includeTopControls,
+          includeBottomControls,
+        }
+      )}
 
       {includeBottomControls &&
       (pageControlsPosition === 'bottom' || pageControlsPosition === 'both') ? (
-        <Controls position='bottom' withSpacer />
+        <PagingControls<T>
+          key='bottom-paging'
+          position='bottom'
+          withSpacer
+          scrollContainer={scrollContainer}
+          size={size}
+          pagingData={pagingData}
+          pagingOptions={pagingOptions}
+          componentOptions={componentOptions}
+        />
       ) : null}
     </>
   );

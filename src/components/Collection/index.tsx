@@ -245,6 +245,7 @@ export const ReqoreCollection = ({
     return contentRenderer(
       <>
         <ReqorePaginationContainer
+          key='paging-container'
           items={filteredItems}
           type={paging}
           size={rest.size}
@@ -320,8 +321,6 @@ export const ReqoreCollection = ({
     size,
     stacked,
   ]);
-
-  console.log(rest);
 
   return (
     <ReqorePanel
