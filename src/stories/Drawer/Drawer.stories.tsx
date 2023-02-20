@@ -18,7 +18,7 @@ export default {
   title: 'Components/Drawer',
   parameters: {
     chromatic: {
-      viewports: [370, 600, 1440],
+      viewports: [450, 600, 1440],
     },
   },
   argTypes: {

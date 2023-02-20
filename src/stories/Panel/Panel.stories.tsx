@@ -11,7 +11,7 @@ export default {
   title: 'Components/Panel',
   parameters: {
     chromatic: {
-      viewports: [370, 600, 1440],
+      viewports: [450, 600, 1440],
     },
   },
   argTypes: {
