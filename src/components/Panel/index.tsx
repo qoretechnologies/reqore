@@ -125,6 +125,7 @@ export const StyledPanelTitleHeader = styled.div`
   flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
+  min-width: 50px;
 `;
 
 export const StyledPanelTitleHeaderContent = styled.div`
@@ -133,7 +134,6 @@ export const StyledPanelTitleHeaderContent = styled.div`
   align-items: center;
   flex: 0 1 auto;
   overflow: hidden;
-  min-width: 100px;
 `;
 
 export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
