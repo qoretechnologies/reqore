@@ -7,6 +7,7 @@ import {
   GAP_FROM_SIZE,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
+  ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   TEXT_FROM_SIZE,
@@ -134,6 +135,7 @@ export const StyledPanelTitleHeaderContent = styled.div`
   align-items: center;
   flex: 0 1 auto;
   overflow: hidden;
+  min-width: ${({ size }) => ICON_FROM_SIZE[size]}px;
 `;
 
 export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
@@ -580,7 +582,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             {hasTitleHeader && (
               <StyledPanelTitleHeader>
                 {icon || iconImage || label ? (
-                  <StyledPanelTitleHeaderContent {...headerProps}>
+                  <StyledPanelTitleHeaderContent size={panelSize} {...headerProps}>
                     {icon || iconImage ? (
                       <ReqoreIcon
                         size={`${
