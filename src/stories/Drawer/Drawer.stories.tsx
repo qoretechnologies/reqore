@@ -16,8 +16,10 @@ const { createArg } = argManager<IReqoreDrawerProps>();
 
 export default {
   title: 'Components/Drawer',
-  chromatic: {
-    viewports: [320, 600, 1440],
+  parameters: {
+    chromatic: {
+      viewports: [320, 600, 1440],
+    },
   },
   argTypes: {
     ...FlatArg,

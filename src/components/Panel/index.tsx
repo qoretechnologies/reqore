@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -118,6 +118,24 @@ export interface IStyledPanel extends IReqorePanelProps {
   noHorizontalPadding?: boolean;
 }
 
+export const StyledPanelTitleHeader = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 1 1 auto;
+  width: 100%;
+  overflow: hidden;
+`;
+
+export const StyledPanelTitleHeaderContent = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 0 1 auto;
+  overflow: hidden;
+  min-width: 100px;
+`;
+
 export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
@@ -146,7 +164,7 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
           cursor: pointer;
 
           &:hover {
-            ${StyledPanelTitle} > div > ${StyledIconWrapper} {
+            ${StyledPanelTitle} ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
               transform: scale(${ACTIVE_ICON_SCALE});
             }
 
@@ -213,7 +231,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   flex: 0 0 auto;
   gap: ${GAP_FROM_SIZE.normal}px;
 
-  > div > ${StyledIconWrapper} {
+  ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
     transform: scale(${INACTIVE_ICON_SCALE});
   }
 
@@ -222,7 +240,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     css`
       cursor: pointer;
       &:hover {
-        > div > ${StyledIconWrapper} {
+        ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
           transform: scale(${ACTIVE_ICON_SCALE});
         }
 
@@ -260,24 +278,6 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   overflow: auto;
   overflow-wrap: anywhere;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
-`;
-
-export const StyledPanelTitleHeader = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex: 1 1 auto;
-  width: 100%;
-  overflow: hidden;
-`;
-
-export const StyledPanelTitleHeaderContent = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex: 0 1 auto;
-  overflow: hidden;
-  min-width: 100px;
 `;
 
 export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(

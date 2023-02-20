@@ -3,14 +3,16 @@ import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
-import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { argManager, FlatArg, IconArg, IntentArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
 export default {
   title: 'Components/Panel',
-  chromatic: {
-    viewports: [320, 600, 1440],
+  parameters: {
+    chromatic: {
+      viewports: [320, 600, 1440],
+    },
   },
   argTypes: {
     ...IntentArg,
