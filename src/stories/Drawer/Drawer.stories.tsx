@@ -10,12 +10,15 @@ import {
   ReqoreTabsContent,
   useReqoreProperty,
 } from '../../index';
-import { FlatArg, IntentArg, argManager } from '../utils/args';
+import { argManager, FlatArg, IntentArg } from '../utils/args';
 
 const { createArg } = argManager<IReqoreDrawerProps>();
 
 export default {
   title: 'Components/Drawer',
+  chromatic: {
+    viewports: [320, 600, 1440],
+  },
   argTypes: {
     ...FlatArg,
     ...createArg('floating', {

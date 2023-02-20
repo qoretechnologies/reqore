@@ -27,7 +27,9 @@ const Template: Story<IReqorePaginationProps<any> & { pagingOptions?: IReqorePag
         <ReqorePagination<any>
           {...paging}
           {...args}
-          scrollContainer={args.scrollToTopOnPageChange ? scrollContainer : undefined}
+          scrollContainer={
+            args.scrollToTopOnPageChange || !!args.changePageOnScroll ? scrollContainer : undefined
+          }
         />
       </ReqoreControlGroup>
     );
@@ -140,6 +142,20 @@ WithLabels.args = {
   pagingOptions: {
     pagesToShow: 15,
   } as IReqorePagingOptions<any>,
+};
+
+export const NextPageOnVerticalScroll: Story<
+  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
+> = Template.bind({});
+NextPageOnVerticalScroll.args = {
+  changePageOnScroll: 'vertical',
+};
+
+export const NextPageOnHorizontalScroll: Story<
+  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
+> = Template.bind({});
+NextPageOnHorizontalScroll.args = {
+  changePageOnScroll: 'horizontal',
 };
 
 export const ScrollToTop: Story<

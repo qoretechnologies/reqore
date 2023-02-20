@@ -9,6 +9,9 @@ const { createArg } = argManager<IReqorePanelProps>();
 
 export default {
   title: 'Components/Panel',
+  chromatic: {
+    viewports: [320, 600, 1440],
+  },
   argTypes: {
     ...IntentArg,
     ...FlatArg,
@@ -373,13 +376,18 @@ NoLabel.args = {
   badge: undefined,
 };
 
-export const ImageAsIcon: Story<IReqorePanelProps> = Template.bind({});
-ImageAsIcon.args = {
+export const ImageAsIconLinkAsHeader: Story<IReqorePanelProps> = Template.bind({});
+ImageAsIconLinkAsHeader.args = {
   iconImage:
     'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
   iconProps: {
     size: '30px',
   },
+  headerProps: {
+    as: 'a',
+    href: 'https://qoretechnologies.com',
+    target: '_blank',
+  } as React.HTMLAttributes<HTMLAnchorElement>,
 };
 
 export const ContentSize: Story<IReqorePanelProps> = Template.bind({});

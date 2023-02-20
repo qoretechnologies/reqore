@@ -218,16 +218,6 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
       });
     }
 
-    /* Adding a close button to the drawer. */
-    if (onClose) {
-      builtActions.push({
-        responsive: false,
-        icon: 'CloseLine',
-        onClick: onClose,
-        className: 'reqore-drawer-close-button',
-      });
-    }
-
     return builtActions;
   }, [hidable, position, onClose]);
 
@@ -370,6 +360,10 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
                 intent={intent}
                 rounded={floating || _isModal ? true : false}
                 flat={flat}
+                onClose={onClose}
+                closeButtonProps={{
+                  className: 'reqore-drawer-close-button',
+                }}
                 className={`reqore-drawer`}
                 style={{
                   width: '100%',

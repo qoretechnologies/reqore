@@ -14,7 +14,7 @@ export interface IReqoreTagGroup
 }
 
 const StyledTagGroup = styled.div`
-  flex-shrink: 0;
+  flex-shrink: ${({ wrap }: IReqoreTagGroup) => (wrap ? 1 : 0)};
   display: flex;
   flex-wrap: ${({ wrap }: IReqoreTagGroup) => (wrap ? 'wrap' : 'nowrap')};
   gap: ${({ gapSize }: IReqoreTagGroup) => GAP_FROM_SIZE[gapSize]}px;

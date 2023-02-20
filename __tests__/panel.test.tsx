@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { ReqoreInput, ReqoreLayoutContent, ReqorePanel, ReqoreUIProvider } from '../src';
 
@@ -219,4 +219,25 @@ test('Tooltip on <Panel /> works', () => {
   jest.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});
+
+test('Custom control props on <Panel />', () => {
+  jest.useFakeTimers();
+  const onClose = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqorePanel
+        onClose={onClose}
+        collapsible
+        closeButtonProps={{ label: 'Close me' }}
+        collapseButtonProps={{ label: 'Collapse me' }}
+      >
+        Hello
+      </ReqorePanel>
+    </ReqoreUIProvider>
+  );
+
+  expect(screen.getAllByText('Close me')).toBeTruthy();
+  expect(screen.getAllByText('Collapse me')).toBeTruthy();
 });

@@ -43,6 +43,7 @@ import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
+import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
@@ -83,7 +84,11 @@ export interface IReqorePanelProps
   badge?: TReqoreBadge | TReqoreBadge[];
   collapsible?: boolean;
   isCollapsed?: boolean;
+  collapseButtonProps?: IReqoreButtonProps;
+
   onClose?: () => void;
+  closeButtonProps?: IReqoreButtonProps;
+
   rounded?: boolean;
   actions?: TReqorePanelActions;
   bottomActions?: TReqorePanelBottomActions;
@@ -104,6 +109,8 @@ export interface IReqorePanelProps
   responsiveActions?: boolean;
   responsiveTitle?: boolean;
   getContentRef?: (ref: HTMLDivElement) => any;
+
+  headerProps?: React.HTMLAttributes<unknown>;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -262,6 +269,14 @@ export const StyledPanelTitleHeader = styled.div`
   flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
+`;
+
+export const StyledPanelTitleHeaderContent = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex: 0 1 auto;
+  overflow: hidden;
   min-width: 100px;
 `;
 
@@ -270,8 +285,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     {
       children,
       label,
+      collapseButtonProps = {},
       collapsible,
       onClose,
+      closeButtonProps = {},
       rounded = true,
       actions = [],
       bottomActions = [],
@@ -300,6 +317,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       responsiveTitle = true,
       size: panelSize = 'normal',
       getContentRef,
+      headerProps = {},
       ...rest
     }: IReqorePanelProps,
     ref
@@ -561,41 +579,58 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           >
             {hasTitleHeader && (
               <StyledPanelTitleHeader>
-                {icon || iconImage ? (
-                  <ReqoreIcon
-                    size={`${
-                      ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
-                    }px`}
-                    icon={icon}
-                    image={iconImage}
-                    margin='right'
-                    color={iconColor}
-                    {...iconProps}
+                {icon || iconImage || label ? (
+                  <StyledPanelTitleHeaderContent {...headerProps}>
+                    {icon || iconImage ? (
+                      <ReqoreIcon
+                        size={`${
+                          ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                        }px`}
+                        icon={icon}
+                        image={iconImage}
+                        margin='right'
+                        color={iconColor}
+                        {...iconProps}
+                      />
+                    ) : null}
+                    {typeof label === 'string' ? (
+                      <ReqoreHeading
+                        size={headerSize || panelSize}
+                        customTheme={theme}
+                        effect={{
+                          noWrap: true,
+                          ...headerEffect,
+                        }}
+                      >
+                        {label}
+                      </ReqoreHeading>
+                    ) : (
+                      label
+                    )}
+                  </StyledPanelTitleHeaderContent>
+                ) : null}
+                {badge || badge === 0 ? (
+                  <ButtonBadge
+                    color={changeLightness(theme.main, 0.18)}
+                    size={getOneHigherSize(panelSize)}
+                    content={badge}
+                    wrapGroup={isMobile}
                   />
                 ) : null}
-                {typeof label === 'string' ? (
-                  <ReqoreHeading
-                    size={headerSize || panelSize}
-                    customTheme={theme}
-                    effect={{
-                      noWrap: true,
-                      ...headerEffect,
-                    }}
-                  >
-                    {label}
-                  </ReqoreHeading>
-                ) : (
-                  label
-                )}
-                {badge || badge === 0 ? (
-                  <>
-                    <ButtonBadge
-                      color={changeLightness(theme.main, 0.18)}
-                      size={getOneHigherSize(panelSize)}
-                      content={badge}
-                    />
-                  </>
-                ) : null}
+                <ReqorePanelNonResponsiveActions
+                  show={isMobile}
+                  showControlButtons
+                  size={panelSize}
+                  hasResponsiveActions={hasResponsiveActions(actions)}
+                  customTheme={theme}
+                  isCollapsed={_isCollapsed}
+                  onCollapseClick={collapsible ? handleCollapseClick : undefined}
+                  onCloseClick={onClose}
+                  closeButtonProps={closeButtonProps}
+                  collapseButtonProps={collapseButtonProps}
+                  fluid={false}
+                  style={{ marginLeft: 'auto' }}
+                />
               </StyledPanelTitleHeader>
             )}
             {hasResponsiveActions(actions) && (
@@ -611,34 +646,20 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             )}
             {collapsible || onClose || hasNonResponsiveActions(actions) ? (
               <>
-                <ReqoreControlGroup
-                  fixed={isMobile ? false : hasResponsiveActions(actions)}
-                  fluid={isMobile ? true : !hasResponsiveActions(actions)}
-                  horizontalAlign='flex-end'
+                <ReqorePanelNonResponsiveActions
+                  show
+                  showControlButtons={!isMobile}
                   size={panelSize}
+                  hasResponsiveActions={hasResponsiveActions(actions)}
+                  customTheme={theme}
+                  isCollapsed={_isCollapsed}
+                  onCollapseClick={collapsible ? handleCollapseClick : undefined}
+                  onCloseClick={onClose}
+                  closeButtonProps={closeButtonProps}
+                  collapseButtonProps={collapseButtonProps}
                 >
                   {actions.map(renderNonResponsiveActions())}
-                  {collapsible && (
-                    <ReqoreButton
-                      customTheme={theme}
-                      icon={_isCollapsed ? 'ArrowDownSLine' : 'ArrowUpSLine'}
-                      onClick={handleCollapseClick}
-                      tooltip={_isCollapsed ? 'Expand' : 'Collapse'}
-                      fixed
-                    />
-                  )}
-                  {onClose && (
-                    <ReqoreButton
-                      fixed
-                      customTheme={theme}
-                      icon='CloseLine'
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                        e.stopPropagation();
-                        onClose?.();
-                      }}
-                    />
-                  )}
-                </ReqoreControlGroup>
+                </ReqorePanelNonResponsiveActions>
               </>
             ) : null}
           </StyledPanelTitle>

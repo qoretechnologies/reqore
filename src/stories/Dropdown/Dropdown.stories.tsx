@@ -229,6 +229,7 @@ export const WithPaging: Story<IReqoreDropdownProps> = Template.bind({});
 WithPaging.args = {
   paging: {
     itemsPerPage: 50,
+    changePageOnScroll: 'horizontal',
   },
   label: 'Dropdown with paging',
 };
