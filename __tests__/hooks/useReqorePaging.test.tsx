@@ -6,11 +6,13 @@ import { IReqorePagingOptions } from '../../src/hooks/usePaging';
 import { tableData as data } from '../../src/mock/tableData';
 
 test('useReqorePaging returns all pages', () => {
+  const fn = jest.fn();
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const { result } = renderHook(
     ({ items }) =>
       useReqorePaging({
         items,
+        onPageChange: fn,
       }),
     { wrapper, initialProps: { items: data } }
   );
@@ -18,9 +20,11 @@ test('useReqorePaging returns all pages', () => {
   expect(result.current.pages.length).toEqual(100);
   expect(result.current.pageCount).toEqual(100);
   expect(result.current.renderControls).toEqual(true);
+  expect(fn).not.toHaveBeenCalled();
 });
 
 test('useReqorePaging with default start page', () => {
+  const fn = jest.fn();
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const { result } = renderHook(
     ({ items }) =>
@@ -28,6 +32,7 @@ test('useReqorePaging with default start page', () => {
         items,
         startPage: 11,
         pagesToShow: 5,
+        onPageChange: fn,
       }),
     { wrapper, initialProps: { items: data } }
   );
@@ -39,6 +44,7 @@ test('useReqorePaging with default start page', () => {
   expect(result.current.pages[1]).toEqual(9);
   expect(result.current.pages[5]).toEqual(13);
   expect(result.current.pages[6]).toEqual(100);
+  expect(fn).toHaveBeenCalledWith(11, { isFirst: false, isLast: false });
 });
 
 test('useReqorePaging specified number of pages', () => {
@@ -116,12 +122,14 @@ test('useReqorePaging returns items per page', () => {
 });
 
 test('useReqorePaging returns new items and pages when size of data change, current page is set to 1', () => {
+  const fn = jest.fn();
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const { result, rerender } = renderHook(
     ({ itemsPerPage, items }) =>
       useReqorePaging({
         items,
         itemsPerPage,
+        onPageChange: fn,
       }),
     { wrapper, initialProps: { itemsPerPage: 10, items: data } }
   );
@@ -140,6 +148,7 @@ test('useReqorePaging returns new items and pages when size of data change, curr
   expect(result.current.pages.length).toEqual(2);
   expect(result.current.items.length).toEqual(15);
   expect(result.current.currentPage).toEqual(1);
+  expect(fn).toHaveBeenCalledWith(1, { isFirst: true, isLast: false });
 });
 
 test('useReqorePaging does not return new items and pages when data change', () => {
@@ -168,6 +177,7 @@ test('useReqorePaging does not return new items and pages when data change', () 
 });
 
 test('useReqorePaging page navigation works correctly', () => {
+  const fn = jest.fn();
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const { result } = renderHook(
     ({ itemsPerPage, items }: IReqorePagingOptions<any>) =>
@@ -175,6 +185,7 @@ test('useReqorePaging page navigation works correctly', () => {
         items,
         itemsPerPage,
         infinite: true,
+        onPageChange: fn,
       }),
     { wrapper, initialProps: { itemsPerPage: 10, items: data } as IReqorePagingOptions<any> }
   );
@@ -187,12 +198,14 @@ test('useReqorePaging page navigation works correctly', () => {
   });
 
   expect(result.current.currentPage).toEqual(2);
+  expect(fn).toHaveBeenLastCalledWith(2, { isFirst: false, isLast: false });
 
   act(() => {
     result.current.next();
   });
 
   expect(result.current.currentPage).toEqual(3);
+  expect(fn).toHaveBeenLastCalledWith(3, { isFirst: false, isLast: false });
 
   act(() => {
     result.current.last();
@@ -200,12 +213,14 @@ test('useReqorePaging page navigation works correctly', () => {
 
   expect(result.current.isLastPage).toEqual(true);
   expect(result.current.currentPage).toEqual(100);
+  expect(fn).toHaveBeenLastCalledWith(100, { isFirst: false, isLast: true });
 
   act(() => {
     result.current.back();
   });
 
   expect(result.current.currentPage).toEqual(99);
+  expect(fn).toHaveBeenLastCalledWith(99, { isFirst: false, isLast: false });
 
   act(() => {
     result.current.first();
@@ -213,6 +228,7 @@ test('useReqorePaging page navigation works correctly', () => {
 
   expect(result.current.isFirstPage).toEqual(true);
   expect(result.current.currentPage).toEqual(1);
+  expect(fn).toHaveBeenLastCalledWith(1, { isFirst: true, isLast: false });
 });
 
 test('useReqorePaging returns correct number of items with infinite loading', () => {

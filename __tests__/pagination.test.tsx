@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import React, { useState } from 'react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
+import { useMount } from 'react-use';
 import {
   ReqoreContent,
   ReqoreControlGroup,
@@ -23,13 +24,18 @@ const Component = ({
   items?: any[];
 }) => {
   const paging = useReqorePaging<any>({ ...pagingOptions, items: items || data });
+  const [scrollContainer, setScrollContainer] = useState<any>(undefined);
+
+  useMount(() => {
+    setScrollContainer(document.querySelector('.reqore-content')!);
+  });
 
   return (
     <ReqoreControlGroup vertical fluid>
       {paging.items.map((item) => (
         <ReqoreTag fixed='key' labelKey={item.id} label={`${item.firstName} ${item.lastName}`} />
       ))}
-      <ReqorePagination {...componentOptions} {...paging} />
+      <ReqorePagination {...componentOptions} {...paging} scrollContainer={scrollContainer} />
     </ReqoreControlGroup>
   );
 };
@@ -302,4 +308,99 @@ test('Renders <Pagination /> with load more button and auto load', () => {
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1000);
   // Pagination should be removed
   expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(0);
+});
+
+test('Renders <Pagination /> and changes pages with vertical scroll', () => {
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <Component componentOptions={{ changePageOnScroll: 'vertical' }} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
+
+  fireEvent.wheel(document.querySelector('.reqore-content')!, {
+    deltaY: 1,
+  });
+
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
+
+  expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
+
+  fireEvent.wheel(document.querySelector('.reqore-content')!, {
+    deltaY: 21,
+  });
+
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
+
+  expect(screen.getAllByText('Claudian Klosterman')).toBeTruthy();
+
+  fireEvent.wheel(document.querySelector('.reqore-content')!, {
+    deltaY: -21,
+  });
+
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
+
+  expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
+});
+
+test('Renders <Pagination /> and changes pages with horizontal scroll', () => {
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <Component componentOptions={{ changePageOnScroll: 'horizontal' }} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
+
+  fireEvent.wheel(document.querySelector('.reqore-content')!, {
+    shiftKey: true,
+    deltaX: 1,
+  });
+
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
+
+  expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
+
+  fireEvent.wheel(document.querySelector('.reqore-content')!, {
+    shiftKey: true,
+    deltaX: 21,
+  });
+
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
+
+  expect(screen.getAllByText('Claudian Klosterman')).toBeTruthy();
+
+  fireEvent.wheel(document.querySelector('.reqore-content')!, {
+    shiftKey: true,
+    deltaX: -21,
+  });
+
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
+
+  expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
 });

@@ -3,6 +3,11 @@ import { useEffect, useMemo } from 'react';
 import { useUpdateEffect } from 'react-use';
 import usePagination, { usePaginationReturn } from 'react-use-pagination-hook';
 
+export interface IReqorePageChangeData {
+  isFirst?: boolean;
+  isLast?: boolean;
+}
+
 export interface IReqorePagingOptions<T> {
   items: T[];
   startPage?: number;
@@ -10,6 +15,7 @@ export interface IReqorePagingOptions<T> {
   itemsPerPage?: number;
   infinite?: boolean;
   enabled?: boolean;
+  onPageChange?: (page: number, info: IReqorePageChangeData) => void;
 }
 
 export interface IReqorePagingResult<T>
@@ -46,6 +52,7 @@ export const useReqorePaging = <T>(
     pagesToShow,
     startPage,
     enabled = true,
+    onPageChange,
   }: IReqorePagingOptions<T> = merge({}, defaultPagingOptions, options);
   const allPageCount = useMemo(() => Math.ceil(size(items) / itemsPerPage), [items, itemsPerPage]);
   const { pagelist, currentPage, setPage, setTotalPage, goNext, goBefore } = usePagination({
@@ -56,6 +63,13 @@ export const useReqorePaging = <T>(
   useEffect(() => {
     setPage(startPage || 1);
   }, [startPage]);
+
+  useUpdateEffect(() => {
+    onPageChange?.(currentPage, {
+      isFirst: currentPage === 1,
+      isLast: currentPage === allPageCount,
+    });
+  }, [currentPage]);
 
   useUpdateEffect(() => {
     setPage(1);

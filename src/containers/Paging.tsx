@@ -1,10 +1,14 @@
 import { memo, useMemo } from 'react';
-import { IReqorePaginationProps, ReqorePagination } from '../components/Paging';
+import {
+  IReqorePaginationComponentProps,
+  IReqorePaginationProps,
+  ReqorePagination,
+} from '../components/Paging';
 import { ReqoreVerticalSpacer } from '../components/Spacer';
 import {
+  getPaginationOptionsFromType,
   TReqorePaginationType,
   TReqorePaginationTypeResult,
-  getPaginationOptionsFromType,
 } from '../constants/paging';
 import { PADDING_FROM_SIZE, TSizes } from '../constants/sizes';
 import { IReqorePagingResult, useReqorePaging } from '../hooks/usePaging';
@@ -12,7 +16,7 @@ import { IReqorePagingResult, useReqorePaging } from '../hooks/usePaging';
 export interface IReqorePagingContainerProps<T> {
   type?: TReqorePaginationType<T>;
   items: T[];
-  scrollContainer?: HTMLElement;
+  scrollContainer?: IReqorePaginationComponentProps['scrollContainer'];
   children: (
     items: T[],
     Controls: JSX.Element,

@@ -1,6 +1,6 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreHeadingProps } from '../../components/Header';
-import { ReqoreHeading, ReqoreVerticalSpacer } from '../../index';
+import { ReqoreControlGroup, ReqoreHeading } from '../../index';
 import { IntentArg } from '../utils/args';
 
 export default {
@@ -12,31 +12,29 @@ export default {
 
 const Template: Story<IReqoreHeadingProps> = (args) => {
   return (
-    <>
+    <ReqoreControlGroup gapSize='big' vertical>
       <ReqoreHeading size={1} {...args}>
         This is a heading
       </ReqoreHeading>
-      <ReqoreVerticalSpacer height={10} />
       <ReqoreHeading size={2} {...args}>
         This is a heading
       </ReqoreHeading>
-      <ReqoreVerticalSpacer height={10} />
       <ReqoreHeading size={3} {...args}>
         This is a heading
       </ReqoreHeading>
-      <ReqoreVerticalSpacer height={10} />
       <ReqoreHeading size={4} {...args}>
         This is a heading
       </ReqoreHeading>
-      <ReqoreVerticalSpacer height={10} />
       <ReqoreHeading size={5} {...args}>
         This is a heading
       </ReqoreHeading>
-      <ReqoreVerticalSpacer height={10} />
       <ReqoreHeading size={6} {...args}>
         This is a heading
       </ReqoreHeading>
-    </>
+      <ReqoreHeading size={1} {...args} tooltip={{ content: 'Nice tooltip', openOnMount: true }}>
+        This is a heading with tooltip
+      </ReqoreHeading>
+    </ReqoreControlGroup>
   );
 };
 

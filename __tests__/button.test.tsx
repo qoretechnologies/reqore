@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
@@ -16,6 +16,20 @@ test('Renders <Button /> properly', () => {
 
   expect(document.querySelectorAll('.reqore-icon').length).toBe(1);
   expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+});
+
+test('Renders <Button /> using `label`', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton label='Button label' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(screen.getAllByText('Button label')).toBeTruthy();
 });
 
 test('Renders <Button /> with size properly', () => {
@@ -168,6 +182,21 @@ test('Renders <Button /> with a Tag props badge', () => {
   );
 
   expect(document.querySelectorAll('.reqore-button-badge').length).toBe(1);
+});
+
+test('Renders <Button /> with multiple badges', () => {
+  const onClick = jest.fn();
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton badge={[0, 'test', { label: 0 }]}>Click</ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-button-badge').length).toBe(3);
 });
 
 test('Tooltip on <Button /> works', () => {

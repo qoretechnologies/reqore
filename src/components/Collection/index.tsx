@@ -274,6 +274,7 @@ export const ReqoreCollection = ({
                   {finalItems?.map((item, index) => (
                     <ReqoreCollectionItem
                       size={rest.size}
+                      responsiveTitle={false}
                       {...item}
                       icon={item.icon || (item.selected ? selectedIcon : undefined)}
                       key={index}

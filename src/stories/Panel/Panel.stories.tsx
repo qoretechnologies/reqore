@@ -3,12 +3,17 @@ import { noop } from 'lodash';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
-import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { argManager, FlatArg, IconArg, IntentArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
 export default {
   title: 'Components/Panel',
+  parameters: {
+    chromatic: {
+      viewports: [450, 600, 1440],
+    },
+  },
   argTypes: {
     ...IntentArg,
     ...FlatArg,
@@ -373,13 +378,18 @@ NoLabel.args = {
   badge: undefined,
 };
 
-export const ImageAsIcon: Story<IReqorePanelProps> = Template.bind({});
-ImageAsIcon.args = {
+export const ImageAsIconLinkAsHeader: Story<IReqorePanelProps> = Template.bind({});
+ImageAsIconLinkAsHeader.args = {
   iconImage:
     'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
   iconProps: {
     size: '30px',
   },
+  headerProps: {
+    as: 'a',
+    href: 'https://qoretechnologies.com',
+    target: '_blank',
+  } as React.HTMLAttributes<HTMLAnchorElement>,
 };
 
 export const ContentSize: Story<IReqorePanelProps> = Template.bind({});

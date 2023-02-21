@@ -1,4 +1,5 @@
-import { memo, useRef, useState } from 'react';
+import { debounce } from 'lodash';
+import { memo, useEffect, useRef, useState } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import styled from 'styled-components';
 import { ReqoreDropdown } from '../..';
@@ -27,6 +28,7 @@ export interface IReqorePaginationComponentProps
   showLabels?: boolean;
   scrollOnLoadMore?: boolean;
   autoLoadMore?: boolean;
+  changePageOnScroll?: 'vertical' | 'horizontal';
   scrollContainer?: HTMLElement;
   scrollToTopOnPageChange?: boolean;
 }
@@ -79,6 +81,7 @@ function Pagination<T>({
   renderControls,
   scrollContainer,
   scrollToTopOnPageChange = true,
+  changePageOnScroll,
   ...rest
 }: IReqorePaginationProps<T>) {
   const [loadMoreRef, setLoadMoreRef] = useState<HTMLButtonElement>(undefined);
@@ -118,6 +121,39 @@ function Pagination<T>({
       });
     }
   }, [currentPage, scrollContainer, scrollToTopOnPageChange, infinite]);
+
+  // Switch pages when user scrolls and holds the Shift key
+  useEffect(() => {
+    const handleScroll = debounce((e: WheelEvent) => {
+      const deltaKey = changePageOnScroll === 'vertical' ? 'deltaY' : 'deltaX';
+      // Only change pages when user holds the shift key
+      // aka horizontal scroll
+      if (
+        changePageOnScroll === 'vertical' ||
+        (changePageOnScroll === 'horizontal' && e.shiftKey)
+      ) {
+        // Do not horizontal scroll
+        e.preventDefault();
+        // If the user scrolls to the right, go to the next page
+        if (e[deltaKey] > 20) {
+          next();
+          // If the user scrolls to the left, go to the previous page
+        } else if (e[deltaKey] < -20) {
+          back();
+        }
+      }
+    }, 30);
+
+    if (scrollContainer && changePageOnScroll) {
+      scrollContainer.addEventListener('wheel', handleScroll);
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('wheel', handleScroll);
+      }
+    };
+  }, [currentPage, scrollContainer, changePageOnScroll]);
 
   useUpdateEffect(() => {
     if (loadMoreRef && autoLoadMore) {
