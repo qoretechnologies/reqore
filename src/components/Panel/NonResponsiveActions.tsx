@@ -1,3 +1,4 @@
+import { size } from 'lodash';
 import { memo } from 'react';
 import { IReqorePanelProps } from '.';
 import { ReqoreButton } from '../..';
@@ -34,7 +35,7 @@ export const ReqorePanelNonResponsiveActions = memo(
     isSmall,
     ...rest
   }: IReqorePanelNonResponsiveActionsProps) => {
-    if (!show) {
+    if (!show || (!size(children) && !showControlButtons)) {
       return null;
     }
 
