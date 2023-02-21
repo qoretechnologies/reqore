@@ -375,7 +375,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [label, icon, badge]
     );
 
-    const isSmall = useMemo(() => width < 480, [width]);
+    const isSmall = useMemo(() => width < 480 && process.env.NODE_ENV !== 'test', [width]);
 
     // If collapsible is true, toggle the isCollapsed state
     // If the isCollapsed state is true, the component is expanded

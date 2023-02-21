@@ -66,7 +66,7 @@ test('Renders closable <Drawer /> properly', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
-        <ReqoreContent>
+        <ReqoreContent style={{ width: 800 }}>
           <ReqoreDrawer isOpen onClose={fn}>
             Hello
           </ReqoreDrawer>

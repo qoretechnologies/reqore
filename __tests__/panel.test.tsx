@@ -129,7 +129,7 @@ test('Renders <Panel /> with actions', () => {
   expect(document.querySelectorAll('.reqore-input').length).toBe(1);
 });
 
-test('Renders <Panel /> without actions group if all actins are not shown', () => {
+test('Renders <Panel /> without actions group if all actions are not shown', () => {
   const fn = jest.fn();
 
   render(
