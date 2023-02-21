@@ -429,13 +429,13 @@ const ReqoreControlGroup = memo(
                 tooltip={{
                   content: `Show ${React.Children.count(overflownChildren)} hidden items`,
                 }}
-                fixed
                 active={isOverflownDialogOpen}
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation();
                   setIsOverflownDialogOpen(!isOverflownDialogOpen);
                 }}
                 flat
+                fixed
               />,
             ]
           : children,

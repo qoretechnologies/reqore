@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { IReqorePanelProps } from '.';
-import { ReqoreButton, useReqoreProperty } from '../..';
+import { ReqoreButton } from '../..';
 import { IWithReqoreCustomTheme } from '../../types/global';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 
@@ -16,6 +16,7 @@ export interface IReqorePanelNonResponsiveActionsProps
   children?: IReqoreControlGroupProps['children'] | undefined;
   closeButtonProps?: IReqorePanelProps['closeButtonProps'];
   collapseButtonProps?: IReqorePanelProps['collapseButtonProps'];
+  isSmall: boolean;
 }
 
 export const ReqorePanelNonResponsiveActions = memo(
@@ -30,18 +31,17 @@ export const ReqorePanelNonResponsiveActions = memo(
     show,
     collapseButtonProps,
     closeButtonProps,
+    isSmall,
     ...rest
   }: IReqorePanelNonResponsiveActionsProps) => {
-    const isMobile = useReqoreProperty('isMobile');
-
     if (!show) {
       return null;
     }
 
     return (
       <ReqoreControlGroup
-        fixed={isMobile ? false : hasResponsiveActions}
-        fluid={isMobile ? true : !hasResponsiveActions}
+        fixed={isSmall ? false : hasResponsiveActions}
+        fluid={isSmall ? true : !hasResponsiveActions}
         horizontalAlign='flex-end'
         {...rest}
       >

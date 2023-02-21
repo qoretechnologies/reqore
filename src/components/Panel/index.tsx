@@ -1,13 +1,12 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
 import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
-import { useUpdateEffect } from 'react-use';
+import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
   GAP_FROM_SIZE,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
-  ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   TEXT_FROM_SIZE,
@@ -42,7 +41,7 @@ import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
-import { ReqoreHeading } from '../Header';
+import { ReqoreHeading, StyledHeader } from '../Header';
 import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
@@ -126,7 +125,6 @@ export const StyledPanelTitleHeader = styled.div`
   flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
-  min-width: 50px;
 `;
 
 export const StyledPanelTitleHeaderContent = styled.div`
@@ -135,7 +133,23 @@ export const StyledPanelTitleHeaderContent = styled.div`
   align-items: center;
   flex: 0 1 auto;
   overflow: hidden;
-  min-width: ${({ size }) => ICON_FROM_SIZE[size]}px;
+  min-width: ${({ iconSize, hasLabel, hasIcon }) => {
+    let width = 0;
+
+    if (hasIcon) {
+      width += iconSize;
+    }
+
+    if (hasLabel) {
+      width += 50;
+    }
+
+    return width;
+  }}px;
+
+  ${StyledHeader} {
+    min-width: 50px;
+  }
 `;
 
 export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
@@ -335,6 +349,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const isMobile = useReqoreProperty('isMobile');
     const { targetRef } = useCombinedRefs(ref);
     const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
+    const [measureRef, { width }] = useMeasure();
 
     useTooltip(itemRef, tooltip);
 
@@ -359,6 +374,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       () => !!label || !!badge || !!icon,
       [label, icon, badge]
     );
+
+    const isSmall = useMemo(() => width < 480, [width]);
 
     // If collapsible is true, toggle the isCollapsed state
     // If the isCollapsed state is true, the component is expanded
@@ -577,12 +594,19 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             opacity={opacity ?? (minimal ? 0 : 1)}
             noHorizontalPadding={noHorizontalPadding}
             responsive={responsiveTitle}
-            isMobile={isMobile}
+            isMobile={isMobile || isSmall}
+            ref={measureRef}
           >
             {hasTitleHeader && (
               <StyledPanelTitleHeader>
                 {icon || iconImage || label ? (
-                  <StyledPanelTitleHeaderContent size={panelSize} {...headerProps}>
+                  <StyledPanelTitleHeaderContent
+                    size={panelSize}
+                    {...headerProps}
+                    hasLabel={!!label}
+                    hasIcon={!!icon || !!iconImage}
+                    iconSize={ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]}
+                  >
                     {icon || iconImage ? (
                       <ReqoreIcon
                         size={`${
@@ -592,6 +616,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         image={iconImage}
                         margin='right'
                         color={iconColor}
+                        tooltip={{
+                          content: label,
+                        }}
                         {...iconProps}
                       />
                     ) : null}
@@ -603,6 +630,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                           noWrap: true,
                           ...headerEffect,
                         }}
+                        tooltip={label}
                       >
                         {label}
                       </ReqoreHeading>
@@ -616,11 +644,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     color={changeLightness(theme.main, 0.18)}
                     size={getOneHigherSize(panelSize)}
                     content={badge}
-                    wrapGroup={isMobile}
+                    wrapGroup={isSmall}
                   />
                 ) : null}
                 <ReqorePanelNonResponsiveActions
-                  show={isMobile}
+                  show={isSmall}
+                  isSmall={isSmall}
                   showControlButtons
                   size={panelSize}
                   hasResponsiveActions={hasResponsiveActions(actions)}
@@ -638,7 +667,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             {hasResponsiveActions(actions) && (
               <ReqoreControlGroup
                 responsive={responsiveActions}
-                fluid={responsiveActions || isMobile}
+                fluid={responsiveActions || isSmall}
                 horizontalAlign='flex-end'
                 customTheme={theme}
                 size={panelSize}
@@ -650,7 +679,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               <>
                 <ReqorePanelNonResponsiveActions
                   show
-                  showControlButtons={!isMobile}
+                  isSmall={isSmall}
+                  showControlButtons={!isSmall}
                   size={panelSize}
                   hasResponsiveActions={hasResponsiveActions(actions)}
                   customTheme={theme}
