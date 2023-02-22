@@ -211,7 +211,7 @@ test('Renders <Dropdown /> is opened by default', () => {
   expect(document.querySelectorAll('.reqore-menu-item').length).toBe(3);
 });
 
-test('Renders <Dropdown /> and calls a function on item click', () => {
+test('Renders <Dropdown /> and calls a function on item click, closes the dropdown', () => {
   jest.useFakeTimers();
   const onClick = jest.fn();
 
@@ -251,6 +251,7 @@ test('Renders <Dropdown /> and calls a function on item click', () => {
     onClick,
   });
 });
+expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
 test('Renders filterable <Dropdown /> and filters items correctly', () => {
   jest.useFakeTimers();
@@ -347,7 +348,7 @@ const MultiSelectDropdown = ({ onChange }) => {
   );
 };
 
-test('Renders <Dropdown /> and updates its items when state changes', () => {
+test('Renders <Dropdown /> and updates its items when state changes, does not close dropdown', () => {
   const fn = jest.fn();
 
   act(() => {
@@ -373,4 +374,6 @@ test('Renders <Dropdown /> and updates its items when state changes', () => {
 
   fireEvent.click(document.querySelectorAll('.reqore-menu-item')[1]);
   expect(fn).toHaveBeenNthCalledWith(3, ['item-1', 'item-2']);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

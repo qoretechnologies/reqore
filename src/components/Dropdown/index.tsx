@@ -7,7 +7,11 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreInputProps } from '../Input';
 import { IReqorePanelProps } from '../Panel';
-import ReqoreDropdownList, { IReqoreDropdownItem, TDropdownItemOnClick } from './list';
+import ReqoreDropdownList, {
+  IReqoreDropdownItem,
+  IReqoreDropdownListProps,
+  TDropdownItemOnClick,
+} from './list';
 
 export interface IReqoreDropdownProps extends Partial<Omit<IPopoverOptions, 'openOnMount'>> {
   items?: IReqoreDropdownItem[];
@@ -31,6 +35,17 @@ export interface IReqoreDropdownProps extends Partial<Omit<IPopoverOptions, 'ope
   scrollToSelected?: boolean;
   paging?: TReqorePaginationType<IReqoreDropdownItem>;
 }
+
+const ReqoreDropdownListWrapper = ({
+  wrapperProps,
+  ...rest
+}: IReqoreDropdownListProps & { wrapperProps?: IReqoreDropdownProps['wrapperProps'] }) => {
+  return (
+    <ReqorePanel flat size='small' {...wrapperProps}>
+      <ReqoreDropdownList {...rest} />
+    </ReqorePanel>
+  );
+};
 
 function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
   items,
@@ -84,20 +99,18 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
 
   const popoverContent = useMemo(() => {
     return size(items) ? (
-      <ReqorePanel flat size='small' {...wrapperProps}>
-        <ReqoreDropdownList
-          multiSelect={multiSelect}
-          listStyle={listStyle}
-          width={useTargetWidth ? '100%' : listWidth}
-          height={listHeight}
-          items={items}
-          filterable={filterable}
-          onItemSelect={onItemSelect}
-          inputProps={inputProps}
-          scrollToSelected={scrollToSelected}
-          paging={paging}
-        />
-      </ReqorePanel>
+      <ReqoreDropdownListWrapper
+        multiSelect={multiSelect}
+        listStyle={listStyle}
+        width={useTargetWidth ? '100%' : listWidth}
+        height={listHeight}
+        items={items}
+        filterable={filterable}
+        onItemSelect={onItemSelect}
+        inputProps={inputProps}
+        scrollToSelected={scrollToSelected}
+        paging={paging}
+      />
     ) : undefined;
   }, [items]);
 

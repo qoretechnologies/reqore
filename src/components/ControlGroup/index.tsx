@@ -328,7 +328,7 @@ const ReqoreControlGroup = memo(
 
     const cloneThroughFragments = useCallback(
       (children: React.ReactNode): React.ReactNode => {
-        return React.Children.map(children, (child) => {
+        return React.Children.map(children, (child, _index) => {
           if (child && React.isValidElement(child)) {
             if (child.type === React.Fragment) {
               return cloneThroughFragments(child.props.children);
@@ -336,6 +336,7 @@ const ReqoreControlGroup = memo(
 
             let newProps = {
               ...child.props,
+              key: child.props.reactKey || child.props.key || child.key || _index,
               minimal:
                 child.props?.minimal || child.props?.minimal === false
                   ? child.props.minimal
