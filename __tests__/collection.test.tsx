@@ -102,6 +102,36 @@ test('<Collection /> filter is properly removed by the clear button', () => {
   expect(document.querySelector('.reqore-input')?.getAttribute('value')).toBe('');
 });
 
+test('<Collection /> filter is focused when a shortcut is pressed', () => {
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection
+          items={items}
+          filterable
+          onQueryChange={fn}
+          inputProps={{ focusRules: { type: 'keypress', shortcut: 'letters' } }}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-input')).not.toHaveFocus();
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(9);
+
+  fireEvent.keyDown(document, {
+    key: 'f',
+    code: 102,
+    charCode: 102,
+  });
+
+  expect(fn).not.toHaveBeenCalled();
+
+  expect(document.querySelector('.reqore-input')).toHaveFocus();
+});
+
 test('<Collection /> shows no data message when empty', () => {
   render(
     <ReqoreUIProvider>

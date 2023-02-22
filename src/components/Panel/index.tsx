@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -502,8 +502,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             <CustomElement
               fixed
               {...props}
-              key={props.key || index}
-              reactKey={props.key || index}
+              // key={props.key || index}
+              // reactKey={props.key || index}
               customTheme={props.customTheme || theme}
               onClick={(e: React.MouseEvent<any>) => {
                 e.stopPropagation();
