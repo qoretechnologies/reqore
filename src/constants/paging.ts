@@ -35,13 +35,17 @@ export function getPaginationOptionsFromType<T>(
       itemsPerPage,
       pagesToShow,
       startPage,
+      enabled,
+      onPageChange,
       pageControlsPosition = 'bottom',
       includeBottomControls,
       includeTopControls,
+
       ...componentOptions
     } = type;
+
     return {
-      pagingOptions: { infinite, itemsPerPage, pagesToShow, startPage },
+      pagingOptions: { infinite, itemsPerPage, pagesToShow, startPage, enabled, onPageChange },
       pageControlsPosition,
       componentOptions,
       includeBottomControls,

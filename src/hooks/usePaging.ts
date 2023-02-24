@@ -74,7 +74,7 @@ export const useReqorePaging = <T>(
   useUpdateEffect(() => {
     setPage(1);
     setTotalPage(Math.ceil(size(items) / itemsPerPage));
-  }, [size(items), itemsPerPage]);
+  }, [size(items)]);
 
   const slicedItems: T[] = useMemo(() => {
     return items.slice(infinite ? 0 : (currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
