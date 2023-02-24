@@ -211,6 +211,7 @@ test('<Collection /> has infinite paging', () => {
 });
 
 test('<Collection /> has custom paging', () => {
+  const onPageChange = jest.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -222,6 +223,7 @@ test('<Collection /> has custom paging', () => {
             autoLoadMore: true,
             showLabels: true,
             loadMoreLabel: 'Scroll to load more',
+            onPageChange,
           }}
         />
       </ReqoreLayoutContent>
@@ -236,6 +238,7 @@ test('<Collection /> has custom paging', () => {
 
   mockAllIsIntersecting(true);
 
+  expect(onPageChange).toHaveBeenCalledWith(2, { isFirst: false, isLast: true });
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(100);
 });
 

@@ -104,3 +104,35 @@ test('Renders default <PaginationContainer /> with both control wrappers, one in
   expect(document.querySelectorAll('.reqore-button')[101]?.getAttribute('disabled')).toBe('');
   expect(document.querySelectorAll('.reqore-button')[203]?.getAttribute('disabled')).toBe('');
 });
+
+test('Renders default <PaginationContainer /> with onPageChange callback', () => {
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqorePaginationContainer<any>
+            items={data}
+            type={{ onPageChange: fn, infinite: true }}
+          >
+            {(items) => (
+              <ReqoreControlGroup vertical>
+                {items.map((item) => (
+                  <ReqoreTag label={`${item.firstName} ${item.lastName}`} />
+                ))}
+              </ReqoreControlGroup>
+            )}
+          </ReqorePaginationContainer>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
+
+  fireEvent.click(document.querySelectorAll('.reqore-button')[0]);
+
+  expect(fn).toBeCalledTimes(1);
+  expect(fn).toBeCalledWith(2, { isFirst: false, isLast: false });
+});
