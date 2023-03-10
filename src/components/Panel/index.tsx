@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -375,7 +375,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [label, icon, badge]
     );
 
-    const isSmall = useMemo(() => width < 480 && process.env.NODE_ENV !== 'test', [width]);
+    const isSmall = useMemo(
+      () => responsiveTitle && width < 480 && process.env.NODE_ENV !== 'test',
+      [width]
+    );
 
     // If collapsible is true, toggle the isCollapsed state
     // If the isCollapsed state is true, the component is expanded
@@ -418,14 +421,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     const hasNonResponsiveActions = useCallback(
       (data: TReqorePanelActions) =>
+        !responsiveActions ||
         data.some((action) => action.responsive === false && action.show !== false),
       [actions, bottomActions]
     );
 
     const hasResponsiveActions = useCallback(
       (data: TReqorePanelActions) =>
+        responsiveActions &&
         data.some((action) => action.responsive !== false && action.show !== false),
-      [actions, bottomActions]
+      [actions, bottomActions, responsiveActions]
     );
 
     const renderNonResponsiveActions = useCallback(
@@ -689,7 +694,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   onCloseClick={onClose}
                   closeButtonProps={closeButtonProps}
                   collapseButtonProps={collapseButtonProps}
+                  fluid={!hasTitleHeader || isSmall}
                 >
+                  {!responsiveActions && actions.map(renderResponsiveActions())}
                   {actions.map(renderNonResponsiveActions())}
                 </ReqorePanelNonResponsiveActions>
               </>
