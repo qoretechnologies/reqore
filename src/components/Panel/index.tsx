@@ -421,7 +421,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     const hasNonResponsiveActions = useCallback(
       (data: TReqorePanelActions) =>
-        !responsiveActions ||
+        (!responsiveActions && size(actions)) ||
         data.some((action) => action.responsive === false && action.show !== false),
       [actions, bottomActions]
     );
@@ -653,7 +653,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   />
                 ) : null}
                 <ReqorePanelNonResponsiveActions
-                  show={isSmall}
+                  show={isSmall && (!!onClose || collapsible)}
                   isSmall={isSmall}
                   showControlButtons
                   size={panelSize}
