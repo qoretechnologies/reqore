@@ -377,7 +377,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     const isSmall = useMemo(
       () => responsiveTitle && width < 480 && process.env.NODE_ENV !== 'test',
-      [width]
+      [width, responsiveTitle]
     );
 
     // If collapsible is true, toggle the isCollapsed state
@@ -421,9 +421,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     const hasNonResponsiveActions = useCallback(
       (data: TReqorePanelActions) =>
-        (!responsiveActions && size(actions)) ||
+        (!responsiveActions && size(data)) ||
         data.some((action) => action.responsive === false && action.show !== false),
-      [actions, bottomActions]
+      [actions, bottomActions, responsiveActions]
     );
 
     const hasResponsiveActions = useCallback(
@@ -438,7 +438,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         (action: IReqorePanelAction, index: number) => {
           return renderActions(action, index, false, align);
         },
-      [actions]
+      [actions, bottomActions, responsiveActions]
     );
 
     const renderActions = useCallback(
@@ -451,7 +451,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         if (
           action.show === false ||
           (includeResponsive && action.responsive === false) ||
-          (!includeResponsive && (action.responsive === true || !('responsive' in action)))
+          (!includeResponsive &&
+            responsiveActions &&
+            (action.responsive === true || !('responsive' in action)))
         ) {
           return null;
         }
@@ -568,6 +570,26 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const opacity = rest.transparent ? 0 : rest.opacity;
     const noHorizontalPadding = opacity === 0 && flat && !intent;
 
+    const showNonResponsiveGroup = useCallback((): boolean => {
+      let show: boolean = false;
+
+      // SHOULD THIS GROUP SHOW CONTROL BUTTONS?
+      // This group should only show control buttons
+      // if the panel is not small
+      if (!isSmall && (onClose || collapsible)) {
+        show = true;
+      }
+
+      // OTHERWISE, ARE THERE ANY NON RESPONSIVE ACTIONS TO BE SHOWN?
+      // This either means actions where user specified responsive: false
+      // or user passed responsiveActions: false
+      if (hasNonResponsiveActions(actions)) {
+        show = true;
+      }
+
+      return show;
+    }, [isSmall, collapsible, actions, hasNonResponsiveActions]);
+
     return (
       <StyledPanel
         {...rest}
@@ -680,27 +702,22 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 {actions.map(renderResponsiveActions())}
               </ReqoreControlGroup>
             )}
-            {collapsible || onClose || hasNonResponsiveActions(actions) ? (
-              <>
-                <ReqorePanelNonResponsiveActions
-                  show
-                  isSmall={isSmall}
-                  showControlButtons={!isSmall}
-                  size={panelSize}
-                  hasResponsiveActions={hasResponsiveActions(actions)}
-                  customTheme={theme}
-                  isCollapsed={_isCollapsed}
-                  onCollapseClick={collapsible ? handleCollapseClick : undefined}
-                  onCloseClick={onClose}
-                  closeButtonProps={closeButtonProps}
-                  collapseButtonProps={collapseButtonProps}
-                  fluid={!hasTitleHeader || isSmall}
-                >
-                  {!responsiveActions && actions.map(renderResponsiveActions())}
-                  {actions.map(renderNonResponsiveActions())}
-                </ReqorePanelNonResponsiveActions>
-              </>
-            ) : null}
+            <ReqorePanelNonResponsiveActions
+              show={showNonResponsiveGroup()}
+              isSmall={isSmall}
+              showControlButtons={!isSmall}
+              size={panelSize}
+              hasResponsiveActions={hasResponsiveActions(actions)}
+              customTheme={theme}
+              isCollapsed={_isCollapsed}
+              onCollapseClick={collapsible ? handleCollapseClick : undefined}
+              onCloseClick={onClose}
+              closeButtonProps={closeButtonProps}
+              collapseButtonProps={collapseButtonProps}
+              fluid={!hasTitleHeader || isSmall}
+            >
+              {actions.map(renderNonResponsiveActions())}
+            </ReqorePanelNonResponsiveActions>
           </StyledPanelTitle>
         )}
         {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (

@@ -350,6 +350,7 @@ NonResponsiveActions.args = {
   badge: undefined,
   actions: [
     {
+      fluid: false,
       responsive: false,
       group: [
         {
@@ -364,6 +365,7 @@ NonResponsiveActions.args = {
       ],
     },
     {
+      fluid: false,
       group: [
         { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
         { icon: 'CopperCoinFill', intent: 'danger' },
