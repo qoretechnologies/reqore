@@ -42,7 +42,7 @@ export const ReqorePanelNonResponsiveActions = memo(
     return (
       <ReqoreControlGroup
         fixed={isSmall ? false : hasResponsiveActions}
-        fluid={isSmall ? true : !hasResponsiveActions}
+        fluid={isSmall}
         horizontalAlign='flex-end'
         {...rest}
       >

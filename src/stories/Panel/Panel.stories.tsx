@@ -1,8 +1,11 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
+import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
+import ReqoreTag from '../../components/Tag';
+import { IReqoreIconName } from '../../types/icons';
 import { argManager, FlatArg, IconArg, IntentArg, SizeArg } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
@@ -110,19 +113,51 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
           This is a fluid panel
         </ReqorePanel>
         <ReqoreVerticalSpacer height={10} />
-        <ReqorePanel
-          {...args}
-          style={{ width: 400 }}
-          fluid={false}
-          badge='Not Fluid'
-          actions={actions}
-          bottomActions={[
-            ...actions,
-            ...actions.map((action) => ({ ...action, position: 'right' })),
-          ]}
-        >
-          Thisisnotafluidpanelbutapanelthathasalongstringwithoutspacesthatneedstobewrapperotherwiseitwilladdahorizontalscrollbar
-        </ReqorePanel>
+        <ReqoreControlGroup>
+          <ReqorePanel
+            {...args}
+            style={{ width: 400 }}
+            fluid={false}
+            badge='Not Fluid'
+            actions={actions}
+            bottomActions={[
+              ...actions,
+              ...actions.map((action) => ({ ...action, position: 'right' })),
+            ]}
+          >
+            Thisisnotafluidpanelbutapanelthathasalongstringwithoutspacesthatneedstobewrapperotherwiseitwilladdahorizontalscrollbar
+          </ReqorePanel>
+          <ReqorePanel
+            {...args}
+            style={{ width: 400 }}
+            fluid={false}
+            label='This is a simple test to establish the proper balance of your loud speakers'
+            responsiveActions={false}
+            responsiveTitle={false}
+            collapsible={false}
+            actions={[
+              {
+                as: ReqoreTag,
+                props: {
+                  icon: 'AlarmLine' as IReqoreIconName,
+                  intent: 'danger',
+                },
+              },
+              {
+                group: [
+                  {
+                    icon: 'EditLine',
+                  },
+                  {
+                    icon: 'DeleteBinLine',
+                  },
+                ],
+              },
+            ]}
+          >
+            Thisisnotafluidpanelbutapanelthathasalongstringwithoutspacesthatneedstobewrapperotherwiseitwilladdahorizontalscrollbar
+          </ReqorePanel>
+        </ReqoreControlGroup>
         <ReqoreVerticalSpacer height={10} />
         <ReqorePanel
           {...args}
@@ -315,6 +350,7 @@ NonResponsiveActions.args = {
   badge: undefined,
   actions: [
     {
+      fluid: false,
       responsive: false,
       group: [
         {
@@ -329,6 +365,7 @@ NonResponsiveActions.args = {
       ],
     },
     {
+      fluid: false,
       group: [
         { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
         { icon: 'CopperCoinFill', intent: 'danger' },
