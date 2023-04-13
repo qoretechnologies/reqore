@@ -6,7 +6,7 @@ import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../compon
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
 import ReqoreTag from '../../components/Tag';
 import { IReqoreIconName } from '../../types/icons';
-import { argManager, FlatArg, IconArg, IntentArg, SizeArg } from '../utils/args';
+import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -340,6 +340,11 @@ export const Minimal: Story<IReqorePanelProps> = Template.bind({});
 Minimal.args = {
   minimal: true,
   flat: true,
+};
+
+export const Disabled: Story<IReqorePanelProps> = Template.bind({});
+Disabled.args = {
+  disabled: true,
 };
 
 export const NonResponsiveActions: Story<IReqorePanelProps> = Template.bind({});

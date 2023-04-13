@@ -101,6 +101,16 @@ const Template: Story<IReqoreMenuProps> = (args) => {
         Delete
       </ReqoreMenuItem>
 
+      <ReqoreMenuItem
+        icon='BluetoothConnectLine'
+        rightIcon='EditLine'
+        onRightIconClick={() => alert('Icon clicked')}
+        description='Button with right icon and description'
+        intent='info'
+      >
+        Some button
+      </ReqoreMenuItem>
+
       <ReqoreMenuItem icon='Lock2Fill' description='I also have a description'>
         This is a really long item that should wrap
       </ReqoreMenuItem>

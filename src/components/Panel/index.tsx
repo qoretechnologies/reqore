@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
-import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -24,7 +24,7 @@ import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
-import { ACTIVE_ICON_SCALE, INACTIVE_ICON_SCALE } from '../../styles';
+import { ACTIVE_ICON_SCALE, DisabledElement, INACTIVE_ICON_SCALE } from '../../styles';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -85,6 +85,7 @@ export interface IReqorePanelProps
   collapsible?: boolean;
   isCollapsed?: boolean;
   collapseButtonProps?: IReqoreButtonProps;
+  disabled?: boolean;
 
   onClose?: () => void;
   closeButtonProps?: IReqoreButtonProps;
@@ -226,6 +227,8 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
           flex: 1;
         `
       : undefined}
+
+  ${({ disabled }) => disabled && DisabledElement}
 `;
 
 export const StyledPanelTitle = styled.div<IStyledPanel>`
@@ -334,6 +337,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       size: panelSize = 'normal',
       getContentRef,
       headerProps = {},
+      disabled,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -608,6 +612,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         effect={transformedContentEffect}
         opacity={opacity}
         fluid={fluid}
+        disabled={disabled}
       >
         {hasTitleBar && (
           <StyledPanelTitle
