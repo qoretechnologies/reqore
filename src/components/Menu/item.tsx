@@ -91,7 +91,7 @@ const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
     }, [itemRef, scrollIntoView]);
 
     return (
-      <ReqoreControlGroup stack={!!onRightIconClick} fluid>
+      <ReqoreControlGroup stack={!!onRightIconClick} fluid fill>
         <ReqoreButton
           //@ts-ignore
           as={as}
