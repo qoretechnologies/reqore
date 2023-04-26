@@ -20,6 +20,7 @@ const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
           title: 'Created notification',
           content: 'Yo, wassup?',
           icon: 'FileChartLine',
+          opaque: true,
           duration: 5000,
           id: id || Date.now(),
           onClick,
