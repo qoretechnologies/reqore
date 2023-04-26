@@ -6,29 +6,20 @@ import { useContext } from 'use-context-selector';
 import { ReqoreModal, ReqoreTextEffect } from '..';
 import ReqoreNotificationsWrapper from '../components/Notifications';
 import ReqoreNotification, {
-  IReqoreNotificationType,
+  IReqoreNotificationProps,
 } from '../components/Notifications/notification';
-import { TSizes } from '../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import ReqoreContext from '../context/ReqoreContext';
 import ThemeContext from '../context/ThemeContext';
 import { IReqoreIconName } from '../types/icons';
 import { IReqoreOptions } from './UIProvider';
 
-export interface IReqoreNotificationData {
-  title?: string;
-  content: string;
+export interface IReqoreNotificationData extends IReqoreNotificationProps {
   duration?: number;
-  icon?: IReqoreIconName;
   onClick?: (id?: string) => any;
   onClose?: (id?: string) => any;
   onFinish?: (id?: string) => any;
   id?: string;
-  type?: IReqoreNotificationType;
-  intent?: TReqoreIntent;
-  flat?: boolean;
-  minimal?: boolean;
-  size?: TSizes;
 }
 
 export interface IReqoreNotifications {
