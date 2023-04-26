@@ -97,7 +97,7 @@ const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
           as={as}
           {...rest}
           flat={flat}
-          className='reqore-menu-item'
+          className={`${rest.className || ''} reqore-menu-item`}
           fluid
           onClick={handleClick}
           active={selected}
