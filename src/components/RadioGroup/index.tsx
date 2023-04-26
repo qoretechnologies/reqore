@@ -52,6 +52,7 @@ const ReqoreRadioGroup = ({
           asSwitch={asSwitch}
           onText={onText}
           offText={offText}
+          margin={margin}
           {...itemRest}
           key={value}
           checked={value === selected}

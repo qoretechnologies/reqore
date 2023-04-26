@@ -46,9 +46,10 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
           intent: 'danger',
         },
         {
-          label: 'Success option',
+          label: 'Success option with left margin',
           value: 'sucess',
           intent: 'success',
+          margin: 'left',
         },
         {
           label: 'Pending option',
@@ -177,6 +178,10 @@ Switch.args = {
   asSwitch: true,
 };
 
+export const WithoutMargin = Template.bind({});
+WithoutMargin.args = {
+  margin: 'none',
+};
 export const WithTexts = Template.bind({});
 WithTexts.args = {
   asSwitch: true,
