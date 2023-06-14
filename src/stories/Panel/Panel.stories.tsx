@@ -379,6 +379,26 @@ NonResponsiveActions.args = {
   ],
 };
 
+export const ActionsShownOnHover: Story<IReqorePanelProps> = Template.bind({});
+ActionsShownOnHover.args = {
+  label: undefined,
+  collapsible: false,
+  icon: undefined,
+  badge: undefined,
+  actions: [{ label: 'test', show: 'hover' }],
+  bottomActions: [
+    {
+      position: 'right',
+      show: 'hover',
+      fluid: false,
+      group: [
+        { label: 'test 2', show: true },
+        { label: 'test 3', show: true },
+      ],
+    },
+  ],
+};
+
 export const TransparentFlat: Story<IReqorePanelProps> = Template.bind({});
 TransparentFlat.args = {
   transparent: true,

@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { size } from 'lodash';
 import { darken, rgba } from 'polished';
 import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
@@ -9,6 +10,7 @@ import {
   ICON_FROM_HEADER_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -54,7 +56,7 @@ export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreToolt
   as?: React.ElementType;
   props?: { [key: string | number]: any } | undefined;
   // Hide the action if the condition is false
-  show?: boolean;
+  show?: boolean | 'hover';
   // Hide the action if the group is too small
   responsive?: boolean;
 }
@@ -175,6 +177,12 @@ export const StyledPanel = styled(StyledEffect)<IStyledPanel>`
   max-width: 100%;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
 
+  &:not(:hover) {
+    .reqore-panel-action-hidden {
+      display: none;
+    }
+  }
+
   ${({ interactive, theme, opacity = 1, flat, intent }) =>
     interactive
       ? css`
@@ -237,7 +245,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
-  min-height: 20px;
+  // 2 is border that has to be added to the size + the button size + padding
+  min-height: ${({ size }) => 2 + (SIZE_TO_PX[size] + PADDING_FROM_SIZE[size] * 2)}px;
   align-items: center;
   padding: ${({ noHorizontalPadding, size }: IStyledPanel) =>
     `${PADDING_FROM_SIZE[size]}px ${noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`}`};
@@ -462,7 +471,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           return null;
         }
 
-        const {
+        let {
           id,
           actions,
           label,
@@ -471,8 +480,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           as: CustomElement,
           props = {},
           group,
+          show,
           ...rest
         }: IReqorePanelAction = action;
+
+        // If the show prop is 'hover', add the hidden class to the action
+        className = classNames(className, show === 'hover' ? 'reqore-panel-action-hidden' : '');
 
         if (size(group)) {
           return (
@@ -484,6 +497,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               fixed={rest.fixed}
               fluid={rest.fluid}
               key={index}
+              className={className}
               horizontalAlign={align}
             >
               {group.map((action, index) => renderActions(action, index, true))}
@@ -512,6 +526,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           return (
             <CustomElement
               fixed
+              className={className}
               {...props}
               // key={props.key || index}
               // reactKey={props.key || index}
