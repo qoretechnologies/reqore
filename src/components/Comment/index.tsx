@@ -96,7 +96,7 @@ export const ReqoreComment = ({
             {size(actions) ? (
               <ReqoreColumn justifyContent='flex-end'>
                 <ReqoreControlGroup minimal size='small'>
-                  {actions.map(({ label, actions, ...rest }) =>
+                  {actions.map(({ label, actions, show, ...rest }) =>
                     size(actions) ? (
                       <ReqoreDropdown
                         {...rest}
