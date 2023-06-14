@@ -96,6 +96,12 @@ export default [
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     expandable: true,
     badge: 10,
+    actions: [
+      {
+        label: 'Action 1',
+        show: 'hover',
+      },
+    ],
     tags: [
       {
         label: 23,
