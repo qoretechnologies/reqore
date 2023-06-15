@@ -219,7 +219,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
     }
 
     return builtActions;
-  }, [hidable, position, onClose]);
+  }, [hidable, position, onClose, actions]);
 
   const positions = useMemo(() => {
     /* Centering the modal. */
