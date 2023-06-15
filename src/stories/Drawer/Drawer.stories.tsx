@@ -10,7 +10,7 @@ import {
   ReqoreTabsContent,
   useReqoreProperty,
 } from '../../index';
-import { argManager, FlatArg, IntentArg } from '../utils/args';
+import { FlatArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreDrawerProps>();
 
@@ -136,6 +136,7 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
         label='This is a test'
         icon='EmphasisCn'
         onClose={noop}
+        onHideToggle={(isHidden) => console.log(isHidden)}
         actions={[
           {
             responsive: false,

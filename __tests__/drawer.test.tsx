@@ -1,6 +1,12 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
-import { ReqoreContent, ReqoreDrawer, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+import {
+  ReqoreButton,
+  ReqoreContent,
+  ReqoreDrawer,
+  ReqoreLayoutContent,
+  ReqoreUIProvider,
+} from '../src';
 
 test('Does not render <Drawer /> if not open', () => {
   render(
@@ -105,4 +111,30 @@ test('Renders <Drawer /> with interactive backdrop', () => {
   fireEvent.click(document.querySelector('.reqore-drawer-backdrop')!);
 
   expect(fn).toHaveBeenCalled();
+});
+
+const CustomDrawer = () => {
+  const [count, setCount] = React.useState(0);
+
+  return (
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreDrawer isOpen hasBackdrop actions={[{ label: `Count is ${count}` }]}>
+            <ReqoreButton onClick={() => setCount(count + 1)}>Click me</ReqoreButton>
+          </ReqoreDrawer>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+};
+
+test('<Drawer /> actions are changed properly', () => {
+  const { getAllByText } = render(<CustomDrawer />);
+
+  expect(getAllByText('Count is 0')[0]).toBeTruthy();
+
+  fireEvent.click(getAllByText('Click me')[0]);
+
+  expect(getAllByText('Count is 1')[0]).toBeTruthy();
 });

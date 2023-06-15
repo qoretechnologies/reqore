@@ -210,8 +210,9 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
         icon: getHideShowIcon(position, _isHidden),
         onClick: () => {
           setIsHidden(!_isHidden);
+
           if (onHideToggle) {
-            onHideToggle(_isHidden);
+            onHideToggle(!_isHidden);
           }
         },
         className: 'reqore-drawer-hide-button',
@@ -219,7 +220,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
     }
 
     return builtActions;
-  }, [hidable, position, onClose]);
+  }, [hidable, position, onClose, actions, _isHidden]);
 
   const positions = useMemo(() => {
     /* Centering the modal. */
@@ -345,7 +346,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
                   icon={getHideShowIcon(position, _isHidden)}
                   onClick={() => {
                     setIsHidden(!_isHidden);
-                    onHideToggle && onHideToggle(!_isHidden);
+                    onHideToggle?.(!_isHidden);
                   }}
                 />
               </StyledCloseWrapper>
