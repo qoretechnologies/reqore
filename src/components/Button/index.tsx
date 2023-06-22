@@ -76,7 +76,7 @@ export interface IReqoreButtonProps
   labelEffect?: IReqoreEffect;
   descriptionEffect?: IReqoreEffect;
   label?: React.HTMLAttributes<HTMLButtonElement>['children'];
-  as?: string;
+  as?: string | React.ElementType;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
