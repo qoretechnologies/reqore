@@ -3,6 +3,7 @@ import { IReqoreBreadcrumbItem, IReqoreBreadcrumbsProps } from '../../components
 import { ReqoreBreadcrumbs } from '../../index';
 import breadcrumbs, { breadcrumbsTabs } from '../../mock/breadcrumbs';
 import { buildTemplate } from '../utils';
+import { SizeArg } from '../utils/args';
 
 export default {
   title: 'Components/Breadcrumbs',
@@ -13,6 +14,7 @@ export default {
       description: 'Whether tabs should be shown alongside the breadcrumbs',
       control: 'boolean',
     },
+    ...SizeArg,
   },
   parameters: {
     jest: ['breadcrumbs.test.tsx'],
@@ -36,3 +38,4 @@ const Template: ComponentStory<typeof ReqoreBreadcrumbs & { withTabs?: boolean }
 
 export const Default = buildTemplate(Template);
 export const WithTabs = buildTemplate(Template, { withTabs: true });
+export const Flat = buildTemplate(Template, { flat: true });

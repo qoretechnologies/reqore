@@ -7,16 +7,18 @@ export default [
     label: 'Dashboard',
     icon: Icons.Dashboard,
     tooltip: 'Dashboard',
+    description: 'Some item description',
     active: true,
   },
   {
     label: 'Workflows',
-    icon: Icons.Workflow,
     tooltip: 'Opens in a new window',
     as: 'a',
     props: {
       href: 'https://google.com',
     },
+    flat: false,
+    intent: 'info',
   },
   {
     label: 'Services',
@@ -30,6 +32,9 @@ export default [
     label: 'Jobs',
     icon: Icons.Jobs,
     customTheme: '#a9a9a9',
+    badge: 10,
+    intent: 'warning',
+    minimal: false,
   },
   {
     tooltip: 'Connections',

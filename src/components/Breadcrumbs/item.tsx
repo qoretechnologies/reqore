@@ -1,20 +1,12 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreBreadcrumbItem } from '.';
 import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import { ActiveIconScale, InactiveIconScale } from '../../styles';
-import {
-  StyledActiveContent,
-  StyledAnimatedTextWrapper,
-  StyledInActiveContent,
-  StyledInvisibleContent,
-} from '../Button';
-import ReqoreIcon from '../Icon';
+import ReqoreButton, { StyledActiveContent, StyledInActiveContent } from '../Button';
 
 export interface IReqoreBreadcrumbItemProps extends IReqoreBreadcrumbItem {
   interactive?: boolean;
@@ -108,48 +100,24 @@ const StyledBreadcrumbItem = styled.div<IReqoreBreadcrumbItemStyle>`
   }
 `;
 
-const ReqoreBreadcrumbsItem = forwardRef<HTMLDivElement, IReqoreBreadcrumbItemProps>(
-  (
-    {
-      tooltip,
-      label,
-      props,
-      icon,
-      active,
-      as,
-      interactive,
-      customTheme,
-      size = 'normal',
-    }: IReqoreBreadcrumbItemProps,
-    ref
-  ) => {
-    const { targetRef } = useCombinedRefs(ref);
-    const [itemRef, setItemRef] = useState(undefined);
+const ReqoreBreadcrumbsItem = forwardRef<HTMLButtonElement, IReqoreBreadcrumbItemProps>(
+  ({ label, props, as, customTheme, ...rest }: IReqoreBreadcrumbItemProps, ref) => {
     const theme = useReqoreTheme('breadcrumbs', customTheme);
 
-    useTooltip(itemRef, tooltip);
-
     return (
-      <StyledBreadcrumbItem
-        ref={(ref) => {
-          targetRef.current = ref;
-          setItemRef(ref);
-        }}
-        active={active}
-        interactive={interactive || !!props?.onClick}
+      <ReqoreButton
+        // @ts-ignore
+        as={as}
+        ref={ref}
         className='reqore-breadcrumbs-item'
-        theme={theme}
-        size={size}
+        customTheme={theme}
+        minimal
+        flat
+        {...rest}
+        {...props}
       >
-        {icon && <ReqoreIcon icon={icon} size={size} margin={label ? 'right' : undefined} />}
-        {label && (
-          <StyledAnimatedTextWrapper as={as || 'span'} {...props}>
-            <StyledActiveContent>{label}</StyledActiveContent>
-            <StyledInActiveContent>{label}</StyledInActiveContent>
-            <StyledInvisibleContent>{label}</StyledInvisibleContent>
-          </StyledAnimatedTextWrapper>
-        )}
-      </StyledBreadcrumbItem>
+        {label}
+      </ReqoreButton>
     );
   }
 );
