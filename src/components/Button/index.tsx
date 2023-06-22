@@ -76,6 +76,7 @@ export interface IReqoreButtonProps
   labelEffect?: IReqoreEffect;
   descriptionEffect?: IReqoreEffect;
   label?: React.HTMLAttributes<HTMLButtonElement>['children'];
+  as?: string | React.ElementType;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -398,6 +399,7 @@ const ReqoreButton = memo(
         iconColor,
         iconsAlign,
         label,
+        as,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -434,7 +436,7 @@ const ReqoreButton = memo(
                 }
           }
           tabindex={rest.disabled ? -1 : 0}
-          as='button'
+          as={as || 'button'}
           theme={theme}
           ref={(ref) => {
             targetRef.current = ref;

@@ -1,5 +1,6 @@
 import { noop } from 'lodash';
 import { IReqoreBreadcrumbItem, IReqoreBreadcrumbItemTabs } from '../components/Breadcrumbs';
+import { ReqoreH3 } from '../components/Header';
 import { Icons } from './icons';
 
 export default [
@@ -10,18 +11,21 @@ export default [
     active: true,
   },
   {
-    label: 'Workflows',
-    icon: Icons.Workflow,
+    label: 'Workflows as Link',
     tooltip: 'Opens in a new window',
     as: 'a',
     props: {
       href: 'https://google.com',
     },
+    icon: Icons.Workflows,
+    flat: false,
+    intent: 'info',
   },
   {
-    label: 'Services',
     icon: Icons.Services,
-    tooltip: 'Services',
+    tooltip: 'Services as H3',
+    as: ReqoreH3,
+    label: 'Services as H3',
     props: {
       onClick: noop,
     },
@@ -30,6 +34,10 @@ export default [
     label: 'Jobs',
     icon: Icons.Jobs,
     customTheme: '#a9a9a9',
+    badge: 10,
+    description: 'Some item description',
+    intent: 'warning',
+    minimal: false,
   },
   {
     tooltip: 'Connections',

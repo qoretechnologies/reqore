@@ -15,8 +15,7 @@ import { IReqoreBreadcrumbsTheme, IReqoreTheme, TReqoreIntent } from '../../cons
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { TReqoreTooltipProp } from '../../types/global';
-import { IReqoreIconName } from '../../types/icons';
+import { IReqoreButtonProps } from '../Button';
 import ReqoreIcon from '../Icon';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
@@ -32,15 +31,11 @@ export interface IReqoreBreadcrumbItemTabs {
   activeTabIntent?: TReqoreIntent;
 }
 
-export interface IReqoreBreadcrumbItem {
-  tooltip?: TReqoreTooltipProp;
+export interface IReqoreBreadcrumbItem extends IReqoreButtonProps {
   label?: string;
-  icon?: IReqoreIconName;
-  active?: boolean;
   as?: any;
   props?: React.HTMLAttributes<any>;
   withTabs?: IReqoreBreadcrumbItemTabs;
-  customTheme?: IReqoreBreadcrumbsTheme;
 }
 
 export interface IReqoreBreadcrumbsProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -58,14 +53,14 @@ interface IStyledBreadcrumbs extends Omit<IReqoreBreadcrumbsProps, 'items'> {
 }
 
 const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
-  ${({ theme, size }: IStyledBreadcrumbs) => css`
+  ${({ theme, size, flat }: IStyledBreadcrumbs) => css`
     width: 100%;
-    height: ${TABS_SIZE_TO_PX[size!]}px;
+    min-height: ${TABS_SIZE_TO_PX[size!]}px;
     margin: ${MARGIN_FROM_SIZE[size!]}px 0;
     display: flex;
     padding: 0 ${PADDING_FROM_SIZE[size!]}px;
     justify-content: space-between;
-    border-bottom: 1px solid ${changeLightness(theme.main, 0.05)};
+    border-bottom: ${flat ? undefined : `1px solid ${changeLightness(theme.main, 0.05)}`};
     background-color: ${({ theme }: { theme: IReqoreTheme }) =>
       theme.breadcrumbs?.main || 'transparent'};
 
@@ -104,7 +99,6 @@ const StyledBreadcrumbsTabsWrapper = styled.div`
   width: 100%;
 `;
 
-const itemPadding = 27;
 const arrowSize = 50;
 
 const getBreadcrumbsLength = (
@@ -119,7 +113,7 @@ const getBreadcrumbsLength = (
     if (item.withTabs) {
       return (
         len +
-        itemPadding +
+        PADDING_FROM_SIZE[size] +
         arrowSize +
         getTabsLength(item.withTabs.tabs, 'width', item.withTabs.activeTab, size)
       );
@@ -127,7 +121,7 @@ const getBreadcrumbsLength = (
 
     return (
       len +
-      itemPadding +
+      PADDING_FROM_SIZE[size] +
       ICON_FROM_SIZE[size] +
       arrowSize +
       calculateStringSizeInPixels(item.label || '', TEXT_FROM_SIZE[size])
