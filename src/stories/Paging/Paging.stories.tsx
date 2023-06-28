@@ -174,7 +174,7 @@ export const Infinite: Story<
 > = Template.bind({});
 Infinite.args = {
   showLabels: true,
-  fluid: true,
+  fluid: false,
   loadMoreButtonProps: {
     textAlign: 'center',
   },
@@ -192,6 +192,10 @@ InfiniteWithAutoScroll.args = {
   fluid: true,
   scrollOnLoadMore: true,
   loadMoreButtonProps: {
+    textAlign: 'center',
+    size: 'big',
+  },
+  loadAllButtonProps: {
     textAlign: 'center',
     size: 'big',
   },

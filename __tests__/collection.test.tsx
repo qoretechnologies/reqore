@@ -200,7 +200,7 @@ test('<Collection /> has infinite paging', () => {
   );
 
   expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(3);
   expect(screen.getAllByText('90')).toBeTruthy();
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(10);
@@ -231,7 +231,7 @@ test('<Collection /> has custom paging', () => {
   );
 
   expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(3);
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(50);
   expect(screen.getAllByText('Scroll to load more')).toBeTruthy();
   expect(screen.getAllByText('50')).toBeTruthy();
