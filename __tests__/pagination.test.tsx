@@ -256,14 +256,17 @@ test('Renders <Pagination /> as a list', () => {
   expect(document.querySelectorAll('.reqore-button').length).toBe(105);
 });
 
-test('Renders <Pagination /> with load more button', () => {
+test('Renders <Pagination /> with load more button and no load all button', () => {
   jest.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <Component pagingOptions={{ infinite: true }} />
+          <Component
+            pagingOptions={{ infinite: true }}
+            componentOptions={{ showLoadAllButton: false }}
+          />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -284,6 +287,34 @@ test('Renders <Pagination /> with load more button', () => {
   expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
 });
 
+test('Renders <Pagination /> with load all button', () => {
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <Component pagingOptions={{ infinite: true }} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  mockAllIsIntersecting(true);
+
+  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
+  // 12 because of the badge on the buttons
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(12);
+
+  fireEvent.click(document.querySelectorAll('.reqore-button')[1]!);
+
+  jest.advanceTimersByTime(1);
+  // 21 because of the badge on the button
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(1000);
+  // Pagination should still be there
+  expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(0);
+});
+
 test('Renders <Pagination /> with load more button and auto load', () => {
   render(
     <ReqoreUIProvider>
@@ -298,9 +329,9 @@ test('Renders <Pagination /> with load more button and auto load', () => {
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll('.reqore-button').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(2);
   // 11 because of the badge on the button
-  expect(document.querySelectorAll('.reqore-tag').length).toBe(501);
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(502);
 
   mockAllIsIntersecting(true);
 

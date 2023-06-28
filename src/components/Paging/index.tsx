@@ -16,14 +16,17 @@ export interface IReqorePaginationComponentProps
   listPageButtonProps?: IReqoreDropdownProps;
   controlPageButtonProps?: IReqoreButtonProps;
   loadMoreButtonProps?: IReqoreButtonProps;
+  loadAllButtonProps?: IReqoreButtonProps;
   firstPageLabel?: string;
   lastPageLabel?: string;
   nextPageLabel?: string;
   previousPageLabel?: string;
   pageLabel?: string;
   loadMoreLabel?: string;
+  loadAllLabel?: string;
   showPages?: boolean;
   showControls?: boolean;
+  showLoadAllButton?: boolean;
   showPagesAs?: 'buttons' | 'list';
   showLabels?: boolean;
   scrollOnLoadMore?: boolean;
@@ -66,15 +69,18 @@ function Pagination<T>({
   listPageButtonProps = {},
   controlPageButtonProps = {},
   loadMoreButtonProps = {},
+  loadAllButtonProps = {},
   firstPageLabel = 'First',
   lastPageLabel = 'Last',
   nextPageLabel = 'Next',
   previousPageLabel = 'Back',
   pageLabel = 'Page',
   loadMoreLabel = 'Load more',
+  loadAllLabel = 'Load all',
   showLabels,
   showPages = true,
   showControls = true,
+  showLoadAllButton = true,
   scrollOnLoadMore,
   autoLoadMore,
   itemsPerPage,
@@ -191,19 +197,35 @@ function Pagination<T>({
       {infinite && !isLastPage ? (
         <ReqoreControlGroup vertical>
           <div className='reqore-auto-scroll-target' ref={setScrollTargetRef} />
-          <ReqoreButton
-            icon='ArrowDropDownLine'
-            badge={itemsLeft}
-            iconsAlign='center'
-            {...loadMoreButtonProps}
-            onClick={next}
-            ref={setLoadMoreRef}
-            style={{
-              scrollMarginTop: '200px',
-            }}
-          >
-            {showLabels && loadMoreLabel}
-          </ReqoreButton>
+          <ReqoreControlGroup stack>
+            <ReqoreButton
+              icon='ArrowDropDownLine'
+              badge={itemsPerPage}
+              iconsAlign='center'
+              {...loadMoreButtonProps}
+              onClick={next}
+              ref={setLoadMoreRef}
+              style={{
+                scrollMarginTop: '200px',
+              }}
+            >
+              {showLabels && loadMoreLabel}
+            </ReqoreButton>
+            {showLoadAllButton && (
+              <ReqoreButton
+                icon='ArrowDropDownLine'
+                badge={itemsLeft}
+                iconsAlign='center'
+                {...loadAllButtonProps}
+                onClick={last}
+                style={{
+                  scrollMarginTop: '200px',
+                }}
+              >
+                {showLabels && loadAllLabel}
+              </ReqoreButton>
+            )}
+          </ReqoreControlGroup>
         </ReqoreControlGroup>
       ) : null}
       {!infinite ? (
