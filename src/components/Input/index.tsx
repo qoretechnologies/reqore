@@ -73,7 +73,7 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   position: relative;
   overflow: hidden;
   border-radius: ${({ minimal, rounded, _size }) =>
-    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
+    minimal || rounded === false ? 0 : RADIUS_FROM_SIZE[_size]}px;
 `;
 
 const StyledIconWrapper = styled.div<IReqoreInputStyle>`
@@ -109,7 +109,7 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
   transition: all 0.2s ease-out;
   border-radius: ${({ minimal, rounded, _size }) =>
-    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
+    minimal || rounded === false ? 0 : RADIUS_FROM_SIZE[_size]}px;
   border: ${({ minimal, theme, flat }) =>
     !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : 0};
   border-bottom: ${({ minimal, theme, flat }) =>
@@ -175,7 +175,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       iconColor,
       rightIconColor,
       flat,
-      rounded = true,
+      rounded,
       minimal,
       children,
       readOnly,
@@ -187,6 +187,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     }: IReqoreInputProps,
     ref
   ) => {
+    console.log(rounded);
+
     const { targetRef } = useCombinedRefs(ref);
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const theme = useReqoreTheme('main', customTheme, intent);
