@@ -96,7 +96,7 @@ const getButtonMainColor = (theme: IReqoreTheme, color?: TReqoreHexColor) => {
 };
 
 export const StyledAnimatedTextWrapper = styled.span`
-  min-width: 15px;
+  min-width: 5px;
   overflow: hidden;
   position: relative;
   text-align: ${({ textAlign }) => textAlign};
