@@ -1,18 +1,17 @@
 /* @flow */
-import React, { useState } from 'react';
-import styled, { css } from 'styled-components';
+import { rgba } from 'polished';
+import { Resizable } from 're-resizable';
+import styled from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
+import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { alignToFlexAlign } from '../../helpers/utils';
-import { useTooltip } from '../../hooks/useTooltip';
-import ReqoreIcon from '../Icon';
+import { getReadableColor } from '../../helpers/colors';
+import { IReqoreButtonProps } from '../Button';
 
-export interface IReqoreTableHeaderCellProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    IReqoreTableColumn {
+export interface IReqoreTableHeaderCellProps extends IReqoreTableColumn, IReqoreButtonProps {
   onSortChange?: (sort: string) => void;
   sortData: IReqoreTableSort;
+  setColumnWidth?: (id: string, width: number | string) => void;
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -23,39 +22,22 @@ export interface IReqoreTableHeaderStyle {
   interactive?: boolean;
 }
 
-export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
-  ${({ width, grow }) =>
-    css`
-      width: ${!width || width < 80 ? 80 : width}px;
-      flex-grow: ${grow || (width ? undefined : 1)};
-    `};
-
-  ${({ align, theme }) => css`
-    background-color: ${changeLightness(theme.main, 0.03)};
-    justify-content: ${align ? alignToFlexAlign(align) : 'flex-start'};
-  `}
-
-  ${({ interactive, theme }) =>
-    interactive &&
-    css`
-      cursor: pointer;
-      transition: background-color 0.2s ease-out;
-
-      &:hover {
-        color: ${getReadableColor(theme, undefined, undefined)};
-        background-color: ${changeLightness(theme.main, 0.06)};
-      }
-    `};
-`;
-
-const StyledTableHeaderLabel = styled.span`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+export const StyledTableHeaderResize = styled.div`
+  &:before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    width: 1px;
+    height: 70%;
+    border-left: 1px dashed ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+  }
 `;
 
 const ReqoreTableHeaderCell = ({
   width,
+  resizedWidth,
   grow,
   align,
   header,
@@ -63,54 +45,60 @@ const ReqoreTableHeaderCell = ({
   dataId,
   sortable,
   sortData,
-  onClick,
   className,
-  icon,
-  iconSize,
-  tooltip,
-  ...props
+  onClick,
+  setColumnWidth,
+  resizable = true,
+  ...rest
 }: IReqoreTableHeaderCellProps) => {
-  const [ref, setRef] = useState(null);
-
-  useTooltip(ref, { content: tooltip || header, delay: 300 });
-
   return (
-    <StyledTableHeader
-      {...props}
-      className={`${className || ''} reqore-table-header-cell`}
-      ref={setRef}
-      width={width}
-      grow={grow}
-      align={align}
-      interactive={sortable || !!onClick}
-      onClick={(event: React.MouseEvent<HTMLDivElement>) => {
-        if (sortable) {
-          onSortChange(dataId);
-        }
-        if (onClick) {
-          onClick(event);
-        }
+    <Resizable
+      minWidth={!width || width < 120 ? 120 : width}
+      onResize={(_event, _direction, _component) => {
+        setColumnWidth(dataId, _component.style.width);
+      }}
+      handleComponent={{
+        right: <StyledTableHeaderResize />,
+      }}
+      style={{
+        overflow: 'hidden',
+      }}
+      size={{
+        width: resizedWidth || width,
+        height: undefined,
+      }}
+      enable={{
+        right: resizable && !!setColumnWidth,
       }}
     >
-      {icon && (
-        <ReqoreIcon icon={icon} size={iconSize || '13px'} margin={header ? 'right' : undefined} />
-      )}
-      <StyledTableHeaderLabel>{header}</StyledTableHeaderLabel>
-      {sortable && (
-        <ReqoreIcon
-          icon={
-            `Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
-              | 'ArrowDownFill'
-              | 'ArrowUpFill'
+      <ReqoreControlGroup fluid stack rounded={false} fill style={{ height: '100%' }}>
+        <ReqoreButton
+          {...rest}
+          readOnly={!sortable && !onClick}
+          className={`${className || ''} reqore-table-header-cell`}
+          grow={grow}
+          rounded={false}
+          textAlign={align}
+          rightIcon={
+            sortable && sortData.by === dataId
+              ? (`Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
+                  | 'ArrowDownFill'
+                  | 'ArrowUpFill')
+              : undefined
           }
-          size={iconSize || '13px'}
-          margin='left'
-          style={{
-            opacity: sortData.by === dataId ? 1 : 0.2,
+          onClick={(e) => {
+            if (sortable) {
+              onSortChange(dataId);
+            }
+
+            onClick?.(e);
           }}
-        />
-      )}
-    </StyledTableHeader>
+        >
+          {header}
+        </ReqoreButton>
+        <ReqoreButton icon='MoreLine' fixed rounded={false} />
+      </ReqoreControlGroup>
+    </Resizable>
   );
 };
 

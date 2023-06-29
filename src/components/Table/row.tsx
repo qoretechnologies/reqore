@@ -79,7 +79,7 @@ export interface IReqoreTableCellStyle {
 export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
   ${({ width, grow }) =>
     css`
-      width: ${!width || width < 80 ? 80 : width}px;
+      width: ${!width || width < 120 ? 120 : width}px;
       flex-grow: ${grow || (width ? undefined : 1)};
     `}
 
@@ -245,7 +245,18 @@ const ReqoreTableRow = ({
 
   const renderCells = (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
     columns.map(
-      ({ width, grow, dataId, content, columns, align, onCellClick, cellTooltip, intent }) =>
+      ({
+        width,
+        resizedWidth,
+        grow,
+        dataId,
+        content,
+        columns,
+        align,
+        onCellClick,
+        cellTooltip,
+        intent,
+      }) =>
         columns ? (
           renderCells(columns, data)
         ) : (
@@ -255,7 +266,7 @@ const ReqoreTableRow = ({
             isReqoreComponent
             componentProps={
               {
-                width,
+                width: resizedWidth || width,
                 grow,
                 align,
                 size,

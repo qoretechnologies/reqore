@@ -356,14 +356,17 @@ const ReqoreControlGroup = memo(
               newProps = {
                 ...newProps,
                 style: {
-                  borderTopLeftRadius: getBorderTopLeftRadius(index),
-                  borderBottomLeftRadius: getBorderBottomLeftRadius(index),
-                  borderTopRightRadius: getBorderTopRightRadius(index),
-                  borderBottomRightRadius: getBorderBottomRightRadius(index),
+                  borderTopLeftRadius: rounded ? getBorderTopLeftRadius(index) : undefined,
+                  borderBottomLeftRadius: rounded ? getBorderBottomLeftRadius(index) : undefined,
+                  borderTopRightRadius: rounded ? getBorderTopRightRadius(index) : undefined,
+                  borderBottomRightRadius: rounded ? getBorderBottomRightRadius(index) : undefined,
                   ...(child.props?.style || {}),
                 },
                 isChild: true,
-                rounded: !isStack,
+                rounded:
+                  child.props?.rounded || child.props?.rounded === false
+                    ? child.props.rounded
+                    : !isStack,
                 isInsideStackGroup: isStack,
                 isInsideVerticalGroup: isVertical,
                 isFirst: isChild ? getIsFirst(index) : undefined,

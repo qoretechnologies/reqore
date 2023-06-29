@@ -2,7 +2,7 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { IReqoreTableColumn, IReqoreTableProps } from '../../components/Table';
 import { ReqoreTable } from '../../index';
 import tableData from '../../mock/tableData';
-import { argManager, CustomIntentArg, FlatArg, IntentArg, SizeArg } from '../utils/args';
+import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTableProps>();
 
@@ -63,15 +63,18 @@ export default {
         {
           dataId: 'address',
           header: 'Address',
+          description: 'This is the address',
           width: 300,
           grow: 2,
+          resizable: false,
           onClick: () => alert('clicked address'),
         },
         {
           icon: 'User4Line',
           dataId: 'age',
           header: 'Really long age header',
-          width: 50,
+          tooltip: 'Custom age tooltip',
+          width: 100,
           align: 'center',
           sortable: true,
           intent: 'danger',
@@ -90,6 +93,8 @@ export default {
           dataId: 'date',
           header: 'Date',
           sortable: true,
+          grow: 2,
+          width: 150,
           content: 'time-ago',
         },
       ] as IReqoreTableColumn[],

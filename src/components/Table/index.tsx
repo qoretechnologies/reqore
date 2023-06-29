@@ -9,11 +9,11 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreFlat } from '../../types/global';
-import { IReqoreIconName } from '../../types/icons';
+import { IReqoreButtonProps } from '../Button';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader, { StyledColumnGroupHeader } from './header';
-import { IReqoreTableHeaderStyle, StyledTableHeader } from './headerCell';
-import { fixSort, flipSortDirection, sortTableData } from './helpers';
+import { IReqoreTableHeaderStyle } from './headerCell';
+import { fixSort, flipSortDirection, sortTableData, updateColumnData } from './helpers';
 
 export type TReqoreTableColumnContent =
   | React.FC<{ [key: string]: any; _selectId?: string | number }>
@@ -31,14 +31,18 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   header?: string | JSX.Element;
   grow?: 1 | 2 | 3 | 4;
   width?: number;
+  resizedWidth?: number;
+
   content?: TReqoreTableColumnContent;
-  props?: React.HTMLAttributes<HTMLDivElement>;
+
+  props?: IReqoreButtonProps;
   align?: 'center' | 'left' | 'right';
   columns?: IReqoreTableColumn[];
+
+  resizable?: boolean;
   sortable?: boolean;
-  icon?: IReqoreIconName;
   iconSize?: string;
-  tooltip?: string;
+
   cellTooltip?: (data: { [key: string]: any; _selectId?: string | number }) => string | JSX.Element;
   onCellClick?: (data: { [key: string]: any; _selectId?: string | number }) => void;
 }
@@ -113,7 +117,7 @@ const StyledTableWrapper = styled.div<IReqoreTableStyle>`
 
     ${!flat &&
     css`
-      ${StyledTableHeader}, ${StyledColumnGroupHeader} {
+      ${StyledColumnGroupHeader} {
         ${({ theme }: IReqoreTableHeaderStyle) => css`
           border-bottom: 1px solid ${changeLightness(theme.main, 0.07)};
         `}
@@ -149,6 +153,7 @@ const ReqoreTable = ({
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
   const [_selected, setSelected] = useState<(string | number)[]>([]);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
+  const [internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
   const [wrapperRef, sizes] = useMeasure();
   const theme = useReqoreTheme('main', customTheme, intent);
 
@@ -157,6 +162,10 @@ const ReqoreTable = ({
       onSortChange(_sort);
     }
   }, [_sort]);
+
+  useUpdateEffect(() => {
+    setColumns(columns);
+  }, [columns]);
 
   useUpdateEffect(() => {
     setData(data);
@@ -242,7 +251,7 @@ const ReqoreTable = ({
         ref={wrapperRef}
       >
         <ReqoreTableHeader
-          columns={columns}
+          columns={internalColumns}
           leftScroll={leftScroll}
           onSortChange={handleSortChange}
           sortData={_sort}
@@ -251,10 +260,20 @@ const ReqoreTable = ({
           onToggleSelectClick={handleToggleSelectClick}
           hasVerticalScroll={count(_data) * TABLE_SIZE_TO_PX[size] > height}
           selectToggleTooltip={selectToggleTooltip}
+          setColumnWidth={(id: string, width: string) => {
+            const newColumns = updateColumnData(
+              internalColumns,
+              id,
+              'resizedWidth',
+              parseInt(width)
+            );
+
+            setColumns(newColumns);
+          }}
         />
         <ReqoreTableBody
           data={_sort ? sortTableData(_data, _sort) : _data}
-          columns={columns}
+          columns={internalColumns}
           setLeftScroll={setLeftScroll}
           height={fill ? sizes.height : height}
           selectable={selectable}

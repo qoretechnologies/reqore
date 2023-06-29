@@ -1,10 +1,11 @@
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
+import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IReqoreIconName } from '../../types/icons';
-import ReqoreTableHeaderCell, { StyledTableHeader } from './headerCell';
+import ReqoreTableHeaderCell from './headerCell';
 
 export interface IReqoreTableSectionProps {
   columns: IReqoreTableColumn[];
@@ -16,6 +17,7 @@ export interface IReqoreTableSectionProps {
   onToggleSelectClick: () => void;
   hasVerticalScroll: boolean;
   selectToggleTooltip?: string;
+  setColumnWidth: (id: string, width: number | string) => void;
 }
 
 export interface IReqoreTableSectionStyle {
@@ -70,11 +72,7 @@ const StyledTableHeaderRow = styled.div<{ theme: IReqoreTheme }>`
   display: flex;
   flex: 1;
 
-  ${({ leftScroll }) => css`
-    transform: translate3d(${-leftScroll}px, 0, 0);
-  `}
-
-  ${StyledTableHeader}, ${StyledColumnGroupHeader} {
+  ${StyledColumnGroupHeader} {
     font-size: 13px;
     font-weight: 600;
     padding: 5px 10px;
@@ -95,24 +93,29 @@ const ReqoreTableHeader = ({
   onToggleSelectClick,
   selectToggleTooltip,
   hasVerticalScroll,
+  setColumnWidth,
 }: IReqoreTableSectionProps) => {
   const renderColumns = (columns: IReqoreTableColumn[]) =>
     columns.map(
       ({ grow, header, props = {}, columns: cols, align, content, onCellClick, ...rest }, index) =>
         cols ? (
           <StyledColumnGroup
-            width={cols.reduce((wid, col) => wid + (col.width || 80), 0)}
             grow={grow}
             key={index}
             className='reqore-table-column-group'
+            width={cols.reduce((wid, col) => wid + (col.resizedWidth || col.width || 80), 0)}
           >
-            <StyledColumnGroupHeader
-              align={align}
-              {...props}
-              className='reqore-table-column-group-header'
-            >
-              {header}
-            </StyledColumnGroupHeader>
+            <ReqoreControlGroup fluid rounded={false}>
+              <ReqoreButton
+                {...props}
+                readOnly={!props.onClick}
+                rounded={false}
+                textAlign={align}
+                className='reqore-table-column-group-header'
+              >
+                {header}
+              </ReqoreButton>
+            </ReqoreControlGroup>
             <StyledColumnGroupHeaders className='reqore-table-headers'>
               {renderColumns(cols)}
             </StyledColumnGroupHeaders>
@@ -127,6 +130,7 @@ const ReqoreTableHeader = ({
             align={align}
             header={header}
             onSortChange={onSortChange}
+            setColumnWidth={setColumnWidth}
           />
         )
     );
@@ -147,7 +151,11 @@ const ReqoreTableHeader = ({
       className='reqore-table-header-wrapper'
       hasVerticalScroll={hasVerticalScroll}
     >
-      <StyledTableHeaderRow leftScroll={leftScroll}>
+      <StyledTableHeaderRow
+        style={{
+          transform: `translate3d(${leftScroll ? -leftScroll : 0}px, 0, 0)`,
+        }}
+      >
         {selectable && (
           <ReqoreTableHeaderCell
             dataId='selectbox'
