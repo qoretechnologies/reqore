@@ -13,7 +13,7 @@ import { IntentArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreMenuProps>();
 
 export default {
-  title: 'Components/Menu',
+  title: 'Navigation/Menu/Stories',
   argTypes: {
     ...createArg('width', {
       type: 'string',

@@ -7,7 +7,7 @@ import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../uti
 const { createArg } = argManager<IReqoreTableProps>();
 
 export default {
-  title: 'Components/Table',
+  title: 'Collections/Table/Stories',
   argTypes: {
     ...createArg('rounded', {
       type: 'boolean',
@@ -140,7 +140,7 @@ export default {
 } as Meta<IReqoreTableProps>;
 
 const Template: Story<IReqoreTableProps> = (args) => {
-  return <ReqoreTable {...args} sort={{ by: 'age', direction: 'desc' }} />;
+  return <ReqoreTable label='Table' {...args} sort={{ by: 'age', direction: 'desc' }} />;
 };
 
 export const Basic = Template.bind({});

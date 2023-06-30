@@ -103,7 +103,7 @@ const tabs = [
 const { createArg } = argManager<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding }>();
 
 export default {
-  title: 'Components/Tabs',
+  title: 'Navigation/Tabs/Stories',
   argTypes: {
     ...SizeArg,
     ...IntentArg,

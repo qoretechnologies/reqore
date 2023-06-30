@@ -3,12 +3,12 @@ import { noop } from 'lodash';
 import { IQorusSidebarProps } from '../../components/Sidebar';
 import { ReqorePanel, ReqoreSidebar } from '../../index';
 import { qorusSidebarItems } from '../../mock/menu';
-import { argManager, FlatArg, NoContentArg } from '../utils/args';
+import { FlatArg, NoContentArg, argManager } from '../utils/args';
 
 const { disableArg, createArg } = argManager<IQorusSidebarProps>();
 
 export default {
-  title: 'Components/Sidebar',
+  title: 'Navigation/Sidebar/Stories',
   argTypes: {
     ...disableArg('items'),
     ...FlatArg,

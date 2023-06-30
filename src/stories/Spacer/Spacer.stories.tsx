@@ -7,7 +7,7 @@ import {
 import { ReqorePanel } from '../../index';
 
 export default {
-  title: 'Components/Spacer',
+  title: 'Utilities/Spacer/Stories',
 } as Meta;
 
 const Template: Story<IReqoreSpacerProps> = () => {

@@ -6,7 +6,7 @@ import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreUIProvider, useReqoreProperty } from '../../index';
 
 export default {
-  title: 'Components/Notifications/Interactive',
+  title: 'Other/Notifications/Interactive/Stories',
   component: ReqoreNotification,
 } as Meta;
 

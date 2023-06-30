@@ -2,12 +2,12 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { useState } from 'react';
 import { IReqoreTextareaProps } from '../../components/Textarea';
 import { ReqoreControlGroup, ReqoreTextarea } from '../../index';
-import { argManager, DisabledArg, MinimalArg, SizeArg } from '../utils/args';
+import { DisabledArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
 
 export default {
-  title: 'Components/TextArea',
+  title: 'Form/TextArea/Stories',
   argTypes: {
     ...MinimalArg(),
     ...DisabledArg,

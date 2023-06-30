@@ -7,7 +7,7 @@ import { argManager } from '../utils/args';
 const { createArg, disableArg } = argManager<IReqoreDropdownProps>();
 
 export default {
-  title: 'Components/Dropdown',
+  title: 'Form/Dropdown/Stories',
   parameters: {
     chromatic: {
       delay: 1500,

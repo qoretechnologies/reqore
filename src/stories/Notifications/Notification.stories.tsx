@@ -9,7 +9,7 @@ import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreTag, ReqoreUIProvider } from '../../index';
 
 export default {
-  title: 'Components/Notifications/Item',
+  title: 'Other/Notifications/Item/Stories',
   component: ReqoreNotification,
 } as Meta;
 

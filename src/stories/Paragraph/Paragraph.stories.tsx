@@ -4,7 +4,7 @@ import { ReqoreParagraph, ReqoreVerticalSpacer } from '../../index';
 import { IntentArg } from '../utils/args';
 
 export default {
-  title: 'Components/Paragraph',
+  title: 'Other/Paragraph/Stories',
   argTypes: {
     ...IntentArg,
   },

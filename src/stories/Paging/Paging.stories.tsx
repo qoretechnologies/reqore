@@ -7,7 +7,7 @@ import { ReqoreControlGroup, ReqoreTag, useReqorePaging } from '../../index';
 import { tableData } from '../../mock/tableData';
 
 export default {
-  title: 'Components/Paging',
+  title: 'Collections/Paging/Stories',
 } as StoryObj<typeof ReqorePagination>;
 
 const Template: Story<IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }> =

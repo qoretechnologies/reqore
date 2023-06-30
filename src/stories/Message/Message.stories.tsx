@@ -6,7 +6,7 @@ import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreMessageProps>();
 
 export default {
-  title: 'Components/Message',
+  title: 'Other/Message/Stories',
   argTypes: {
     ...SizeArg,
     ...FlatArg,

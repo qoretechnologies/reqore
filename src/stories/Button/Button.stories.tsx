@@ -6,7 +6,7 @@ import { ReqoreControlGroup } from '../../index';
 import { IconArg, SizeArg } from '../utils/args';
 
 export default {
-  title: 'Components/Button',
+  title: 'Form/Button/Stories',
   parameters: {
     jest: ['button.test.tsx'],
   },

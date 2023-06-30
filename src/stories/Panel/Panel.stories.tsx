@@ -11,7 +11,7 @@ import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args'
 const { createArg } = argManager<IReqorePanelProps>();
 
 export default {
-  title: 'Components/Panel',
+  title: 'Layout/Panel/Stories',
   parameters: {
     chromatic: {
       viewports: [450, 600, 1440],

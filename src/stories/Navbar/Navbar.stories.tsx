@@ -17,7 +17,7 @@ import {
 import { FlatArg, NoContentArg } from '../utils/args';
 
 export default {
-  title: 'Components/Header - Footer Navbar',
+  title: 'Layout/Header & Footer/Stories',
   argTypes: {
     ...FlatArg,
     ...NoContentArg,

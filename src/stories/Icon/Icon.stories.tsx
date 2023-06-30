@@ -3,7 +3,7 @@ import { IReqoreIconProps } from '../../components/Icon';
 import { ReqoreIcon, ReqorePanel } from '../../index';
 
 export default {
-  title: 'Components/Icon',
+  title: 'Other/Icon/Stories',
 } as Meta;
 
 export const Icon: Story<IReqoreIconProps> = () => {

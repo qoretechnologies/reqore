@@ -6,7 +6,7 @@ import { buildTemplate } from '../utils';
 import { SizeArg } from '../utils/args';
 
 export default {
-  title: 'Components/Breadcrumbs',
+  title: 'Navigation/Breadcrumbs/Stories',
   argTypes: {
     withTabs: {
       name: 'With tabs',

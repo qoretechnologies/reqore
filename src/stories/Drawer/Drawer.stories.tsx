@@ -15,7 +15,7 @@ import { FlatArg, IntentArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreDrawerProps>();
 
 export default {
-  title: 'Components/Drawer',
+  title: 'Dialogs/Drawer/Stories',
   parameters: {
     chromatic: {
       viewports: [450, 600, 1440],

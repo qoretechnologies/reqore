@@ -18,7 +18,7 @@ export interface IColumnsStoryArgs extends IReqoreColumnsProps {
 const { createArg, disableArgs } = argManager<IColumnsStoryArgs>();
 
 export default {
-  title: 'Components/Columns',
+  title: 'Layout/Columns/Stories',
   component: ReqoreColumns,
   argTypes: {
     ...createArg('multipleColumns', {

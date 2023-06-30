@@ -4,7 +4,7 @@ import { ReqoreControlGroup, ReqoreHeading } from '../../index';
 import { IntentArg } from '../utils/args';
 
 export default {
-  title: 'Components/Heading',
+  title: 'Other/Heading/Stories',
   argTypes: {
     ...IntentArg,
   },

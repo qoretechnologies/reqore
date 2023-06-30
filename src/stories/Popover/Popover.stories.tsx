@@ -11,12 +11,12 @@ import {
   ReqorePopover,
   ReqoreSpacer,
 } from '../../index';
-import { argManager, FlatArg } from '../utils/args';
+import { FlatArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePopoverProps>();
 
 export default {
-  title: 'Components/Popover',
+  title: 'Other/Popover/Stories',
   argTypes: {
     ...createArg('transparent', {
       defaultValue: false,
