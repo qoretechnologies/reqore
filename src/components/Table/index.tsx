@@ -220,6 +220,7 @@ const ReqoreTable = ({
   return (
     <ReqorePanel
       {...rest}
+      actions={tableActions}
       fill={fill}
       className={`${className || ''} reqore-table`}
       rounded={rounded}
