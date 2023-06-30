@@ -1,18 +1,15 @@
 /* @flow */
 import { size as count } from 'lodash';
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
-import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { ReqorePanel } from '../..';
+import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { useReqoreTheme } from '../../hooks/useTheme';
-import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreFlat } from '../../types/global';
+import { IReqoreIntent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
+import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import ReqoreTableBody from './body';
-import ReqoreTableHeader, { StyledColumnGroupHeader } from './header';
-import { IReqoreTableHeaderStyle } from './headerCell';
+import ReqoreTableHeader from './header';
 import { fixSort, flipSortDirection, sortTableData, updateColumnData } from './helpers';
 
 export type TReqoreTableColumnContent =
@@ -57,28 +54,24 @@ export interface IReqoreTableRowData {
 export type IReqoreTableRowClick = (data: IReqoreTableRowData) => void;
 export type IReqoreTableData = IReqoreTableRowData[];
 
-export interface IReqoreTableProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    IReqoreIntent,
-    IWithReqoreFlat,
-    IWithReqoreCustomTheme {
+export interface IReqoreTableProps extends IReqorePanelProps {
   columns: IReqoreTableColumn[];
   data?: IReqoreTableData;
-  className?: string;
   width?: number;
   height?: number;
+
   sort?: IReqoreTableSort;
+  filterable?: boolean;
+  zoomable?: boolean;
   striped?: boolean;
   selectable?: boolean;
+
   selected?: string[];
   selectedRowIntent?: TReqoreIntent;
   onSortChange?: (sort?: IReqoreTableSort) => void;
   onSelectedChange?: (selected?: any[]) => void;
   selectToggleTooltip?: string;
   onRowClick?: IReqoreTableRowClick;
-  rounded?: boolean;
-  size?: TSizes;
-  fill?: boolean;
 }
 
 export interface IReqoreTableStyle {
@@ -96,35 +89,6 @@ export interface IReqoreTableSort {
   thenBy?: string;
   direction?: 'asc' | 'desc';
 }
-
-const StyledTableWrapper = styled.div<IReqoreTableStyle>`
-  ${({ theme, width, rounded, flat, fill }: IReqoreTableStyle) => css`
-    width: ${width ? `${width}px` : '100%'};
-    height: ${fill ? '100%' : 'auto'};
-
-    position: relative;
-    clear: both;
-    overflow: hidden;
-    z-index: 1;
-
-    display: flex;
-    flex-flow: column;
-
-    border-radius: ${rounded ? '10px' : undefined};
-
-    background-color: ${theme.main};
-    color: ${getReadableColor(theme, undefined, undefined, true)};
-
-    ${!flat &&
-    css`
-      ${StyledColumnGroupHeader} {
-        ${({ theme }: IReqoreTableHeaderStyle) => css`
-          border-bottom: 1px solid ${changeLightness(theme.main, 0.07)};
-        `}
-      }
-    `}
-  `}
-`;
 
 const ReqoreTable = ({
   className,
@@ -146,6 +110,7 @@ const ReqoreTable = ({
   size,
   intent,
   fill,
+  filterable,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -155,7 +120,6 @@ const ReqoreTable = ({
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
   const [internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
   const [wrapperRef, sizes] = useMeasure();
-  const theme = useReqoreTheme('main', customTheme, intent);
 
   useUpdateEffect(() => {
     if (onSortChange) {
@@ -240,53 +204,58 @@ const ReqoreTable = ({
     }
   };
 
-  return (
-    <ReqoreThemeProvider theme={theme}>
-      <StyledTableWrapper
-        {...rest}
-        fill={fill}
-        className={`${className || ''} reqore-table`}
-        rounded={rounded}
-        width={width}
-        ref={wrapperRef}
-      >
-        <ReqoreTableHeader
-          columns={internalColumns}
-          leftScroll={leftScroll}
-          onSortChange={handleSortChange}
-          sortData={_sort}
-          selectable={selectable}
-          selectedQuant={_selectedQuant}
-          onToggleSelectClick={handleToggleSelectClick}
-          hasVerticalScroll={count(_data) * TABLE_SIZE_TO_PX[size] > height}
-          selectToggleTooltip={selectToggleTooltip}
-          setColumnWidth={(id: string, width: string) => {
-            const newColumns = updateColumnData(
-              internalColumns,
-              id,
-              'resizedWidth',
-              parseInt(width)
-            );
+  const handleSetColumnWidth = useCallback(
+    (id: string, width: string) => {
+      setColumns(updateColumnData(internalColumns, id, 'resizedWidth', parseInt(width)));
+    },
+    [internalColumns]
+  );
 
-            setColumns(newColumns);
-          }}
-        />
-        <ReqoreTableBody
-          data={_sort ? sortTableData(_data, _sort) : _data}
-          columns={internalColumns}
-          setLeftScroll={setLeftScroll}
-          height={fill ? sizes.height : height}
-          selectable={selectable}
-          onSelectClick={handleSelectClick}
-          onRowClick={onRowClick}
-          selected={_selected}
-          selectedRowIntent={selectedRowIntent}
-          size={size}
-          striped={striped}
-          flat={rest.flat}
-        />
-      </StyledTableWrapper>
-    </ReqoreThemeProvider>
+  const tableActions = useMemo<IReqorePanelAction[]>(() => {
+    const actions: IReqorePanelAction[] = [];
+
+    return actions;
+  }, []);
+
+  return (
+    <ReqorePanel
+      {...rest}
+      fill={fill}
+      className={`${className || ''} reqore-table`}
+      rounded={rounded}
+      style={{ width }}
+      padded={false}
+      contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
+      getContentRef={wrapperRef}
+    >
+      <ReqoreTableHeader
+        size={size}
+        columns={internalColumns}
+        leftScroll={leftScroll}
+        onSortChange={handleSortChange}
+        sortData={_sort}
+        selectable={selectable}
+        selectedQuant={_selectedQuant}
+        onToggleSelectClick={handleToggleSelectClick}
+        hasVerticalScroll={count(_data) * TABLE_SIZE_TO_PX[size] > height}
+        selectToggleTooltip={selectToggleTooltip}
+        setColumnWidth={handleSetColumnWidth}
+      />
+      <ReqoreTableBody
+        data={_sort ? sortTableData(_data, _sort) : _data}
+        columns={internalColumns}
+        setLeftScroll={setLeftScroll}
+        height={fill ? sizes.height : height}
+        selectable={selectable}
+        onSelectClick={handleSelectClick}
+        onRowClick={onRowClick}
+        selected={_selected}
+        selectedRowIntent={selectedRowIntent}
+        size={size}
+        striped={striped}
+        flat={rest.flat}
+      />
+    </ReqorePanel>
   );
 };
 

@@ -4,10 +4,11 @@ import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
+import { IWithReqoreSize } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreTableHeaderCell from './headerCell';
 
-export interface IReqoreTableSectionProps {
+export interface IReqoreTableSectionProps extends IWithReqoreSize {
   columns: IReqoreTableColumn[];
   leftScroll: number;
   onSortChange?: (sort: string) => void;
@@ -94,6 +95,7 @@ const ReqoreTableHeader = ({
   selectToggleTooltip,
   hasVerticalScroll,
   setColumnWidth,
+  size,
 }: IReqoreTableSectionProps) => {
   const renderColumns = (columns: IReqoreTableColumn[]) =>
     columns.map(
@@ -108,6 +110,7 @@ const ReqoreTableHeader = ({
             <ReqoreControlGroup fluid rounded={false}>
               <ReqoreButton
                 {...props}
+                size={size}
                 readOnly={!props.onClick}
                 rounded={false}
                 textAlign={align}
@@ -124,6 +127,7 @@ const ReqoreTableHeader = ({
           <ReqoreTableHeaderCell
             {...props}
             {...rest}
+            size={size}
             key={index}
             sortData={sortData}
             grow={grow}
@@ -162,9 +166,9 @@ const ReqoreTableHeader = ({
             key='selectbox'
             sortData={sortData}
             align='center'
+            size={size}
             onSortChange={onSortChange}
             icon={getSelectedIcon()}
-            iconSize='15px'
             width={60}
             tooltip={selectToggleTooltip || 'Toggle selection on all data'}
             onClick={() => {
