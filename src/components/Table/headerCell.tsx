@@ -62,6 +62,7 @@ const ReqoreTableHeaderCell = ({
       }}
       style={{
         overflow: 'hidden',
+        flexGrow: grow,
       }}
       size={{
         width: resizedWidth || width,
@@ -76,7 +77,6 @@ const ReqoreTableHeaderCell = ({
           {...rest}
           readOnly={!sortable && !onClick}
           className={`${className || ''} reqore-table-header-cell`}
-          grow={grow}
           rounded={false}
           textAlign={align}
           rightIcon={

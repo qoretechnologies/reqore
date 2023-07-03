@@ -187,8 +187,6 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     }: IReqoreInputProps,
     ref
   ) => {
-    console.log(rounded);
-
     const { targetRef } = useCombinedRefs(ref);
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const theme = useReqoreTheme('main', customTheme, intent);

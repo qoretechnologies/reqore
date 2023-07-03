@@ -1,16 +1,26 @@
 /* @flow */
-import { size as count } from 'lodash';
+import { size as count, isArray } from 'lodash';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import { ReqorePanel } from '../..';
-import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
+import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent } from '../../types/global';
-import { IReqoreButtonProps } from '../Button';
+import { IReqoreButtonProps, TReqoreBadge } from '../Button';
+import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader from './header';
-import { fixSort, flipSortDirection, sortTableData, updateColumnData } from './helpers';
+import {
+  fixSort,
+  flipSortDirection,
+  getZoomActions,
+  sizeToZoom,
+  sortTableData,
+  updateColumnData,
+  zoomToSize,
+} from './helpers';
 
 export type TReqoreTableColumnContent =
   | React.FC<{ [key: string]: any; _selectId?: string | number }>
@@ -59,12 +69,20 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   data?: IReqoreTableData;
   width?: number;
   height?: number;
+  wrapperSize?: TSizes;
 
   sort?: IReqoreTableSort;
   filterable?: boolean;
+
   zoomable?: boolean;
+  defaultZoom?: number;
+
   striped?: boolean;
   selectable?: boolean;
+
+  defaultQuery?: string;
+  onQueryChange?: (query: string) => void;
+  filterProps?: (data: IReqoreTableData) => IReqoreInputProps;
 
   selected?: string[];
   selectedRowIntent?: TReqoreIntent;
@@ -103,14 +121,19 @@ const ReqoreTable = ({
   onSelectedChange,
   selectToggleTooltip,
   customTheme,
-  rounded,
   onRowClick,
   striped,
   selectedRowIntent,
-  size,
+  size = 'normal',
+  wrapperSize = 'normal',
   intent,
   fill,
   filterable,
+  zoomable,
+  defaultQuery,
+  actions = [],
+  onQueryChange,
+  filterProps,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -119,7 +142,23 @@ const ReqoreTable = ({
   const [_selected, setSelected] = useState<(string | number)[]>([]);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
   const [internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
+  const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
+
   const [wrapperRef, sizes] = useMeasure();
+
+  const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
+    defaultQuery,
+    300,
+    onQueryChange
+  );
+
+  const transformedData = useMemo(() => {
+    const filteredData = _data.filter((datum) =>
+      JSON.stringify(datum).toLowerCase().includes(query.toLowerCase())
+    );
+
+    return _sort ? sortTableData(filteredData, _sort) : filteredData;
+  }, [_data, _sort, query]);
 
   useUpdateEffect(() => {
     if (onSortChange) {
@@ -146,7 +185,9 @@ const ReqoreTable = ({
       onSelectedChange(_selected);
     }
 
-    const selectableData: IReqoreTableData = _data.filter((datum) => datum._selectId ?? false);
+    const selectableData: IReqoreTableData = transformedData.filter(
+      (datum) => datum._selectId ?? false
+    );
 
     if (count(_selected)) {
       if (count(_selected) === count(selectableData)) {
@@ -190,7 +231,7 @@ const ReqoreTable = ({
     switch (_selectedQuant) {
       case 'none':
       case 'some': {
-        const selectableData: (string | number)[] = _data
+        const selectableData: (string | number)[] = transformedData
           .filter((datum) => datum._selectId ?? false)
           .map((datum) => datum._selectId);
 
@@ -211,26 +252,75 @@ const ReqoreTable = ({
     [internalColumns]
   );
 
-  const tableActions = useMemo<IReqorePanelAction[]>(() => {
-    const actions: IReqorePanelAction[] = [];
+  const handlePreQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(event.target.value);
+    setPreQuery(event.target.value);
+  };
 
-    return actions;
-  }, []);
+  const tableActions = useMemo<IReqorePanelAction[]>(() => {
+    const finalActions: IReqorePanelAction[] = [...actions];
+
+    if (filterable) {
+      finalActions.push({
+        as: ReqoreInput,
+        props: {
+          key: 'search',
+          fixed: false,
+          placeholder: `Search in ${count(transformedData)} items...`,
+          onClearClick: () => {
+            setQuery('');
+            setPreQuery('');
+          },
+          onChange: handlePreQueryChange,
+          value: preQuery,
+          icon: 'Search2Line',
+          minimal: false,
+          ...filterProps?.(transformedData),
+        },
+      });
+    }
+
+    if (zoomable) {
+      finalActions.push({
+        fluid: false,
+        group: getZoomActions('reqore-table', zoom, setZoom),
+      });
+    }
+
+    return finalActions;
+  }, [preQuery, transformedData, actions, filterable, filterProps]);
+
+  const badge = useMemo(() => {
+    const badgeList: TReqoreBadge[] = rest.label ? [count(transformedData)] : undefined;
+
+    if (rest.badge) {
+      if (isArray(rest.badge)) {
+        badgeList.push(...rest.badge);
+      } else {
+        badgeList.push(rest.badge);
+      }
+    }
+
+    return badgeList;
+  }, [transformedData, rest.badge]);
 
   return (
     <ReqorePanel
+      transparent
+      flat
+      padded={false}
+      contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
       {...rest}
+      size={wrapperSize}
       actions={tableActions}
       fill={fill}
       className={`${className || ''} reqore-table`}
-      rounded={rounded}
-      style={{ width }}
-      padded={false}
-      contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
+      style={{ width, ...(rest.style || {}) }}
       getContentRef={wrapperRef}
+      badge={badge}
     >
       <ReqoreTableHeader
-        size={size}
+        size={zoomToSize[zoom]}
         columns={internalColumns}
         leftScroll={leftScroll}
         onSortChange={handleSortChange}
@@ -238,12 +328,12 @@ const ReqoreTable = ({
         selectable={selectable}
         selectedQuant={_selectedQuant}
         onToggleSelectClick={handleToggleSelectClick}
-        hasVerticalScroll={count(_data) * TABLE_SIZE_TO_PX[size] > height}
+        hasVerticalScroll={count(transformedData) * TABLE_SIZE_TO_PX[size] > height}
         selectToggleTooltip={selectToggleTooltip}
         setColumnWidth={handleSetColumnWidth}
       />
       <ReqoreTableBody
-        data={_sort ? sortTableData(_data, _sort) : _data}
+        data={transformedData}
         columns={internalColumns}
         setLeftScroll={setLeftScroll}
         height={fill ? sizes.height : height}
@@ -252,7 +342,7 @@ const ReqoreTable = ({
         onRowClick={onRowClick}
         selected={_selected}
         selectedRowIntent={selectedRowIntent}
-        size={size}
+        size={zoomToSize[zoom]}
         striped={striped}
         flat={rest.flat}
       />

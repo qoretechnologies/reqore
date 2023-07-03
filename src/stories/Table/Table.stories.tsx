@@ -101,7 +101,7 @@ export default {
     }),
     ...createArg('width', {
       type: 'number',
-      defaultValue: 800,
+      defaultValue: undefined,
       name: 'Width',
       description: 'The width of the table',
     }),
@@ -140,28 +140,55 @@ export default {
 } as Meta<IReqoreTableProps>;
 
 const Template: Story<IReqoreTableProps> = (args) => {
-  return <ReqoreTable label='Table' {...args} sort={{ by: 'age', direction: 'desc' }} />;
+  return <ReqoreTable label='Table' {...args} sort={{ by: 'lastName', direction: 'desc' }} />;
 };
 
 export const Basic = Template.bind({});
-export const Flat = Template.bind({});
-Flat.args = {
-  flat: true,
+export const NoLabel = Template.bind({});
+NoLabel.args = {
+  label: undefined,
+};
+
+export const CustomWidth = Template.bind({});
+CustomWidth.args = {
+  width: 400,
+};
+
+export const NotFlat = Template.bind({});
+NotFlat.args = {
+  flat: false,
 };
 export const Striped = Template.bind({});
 Striped.args = {
   striped: true,
 };
-export const Rounded = Template.bind({});
-Rounded.args = {
-  rounded: true,
+export const Filterable = Template.bind({});
+Filterable.args = {
+  filterable: true,
+};
+export const DefaultFilter = Template.bind({});
+DefaultFilter.args = {
+  filterable: true,
+  defaultQuery: 'Village',
 };
 export const Selectable = Template.bind({});
 Selectable.args = {
   selectable: true,
 };
 
+export const Zoomable = Template.bind({});
+Zoomable.args = {
+  zoomable: true,
+};
+
 export const FillParent = Template.bind({});
 FillParent.args = {
   fill: true,
+};
+
+export const Sizes = Template.bind({});
+Sizes.args = {
+  size: 'small',
+  filterable: true,
+  wrapperSize: 'big',
 };
