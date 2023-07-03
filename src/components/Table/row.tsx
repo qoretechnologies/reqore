@@ -14,12 +14,14 @@ import { SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
+import { IReqoreTooltip } from '../../types/global';
 import { TReqoreColor, TReqoreHexColor } from '../Effect';
 import { ReqoreH4 } from '../Header';
 import ReqoreIcon from '../Icon';
 import { ReqoreP } from '../Paragraph';
 import ReqoreTag from '../Tag';
 import { TimeAgo } from '../TimeAgo';
+import { getOnlyShownColumns } from './helpers';
 
 export interface IReqoreTableRowOptions {
   columns: IReqoreTableColumn[];
@@ -244,22 +246,22 @@ const ReqoreTableRow = ({
   };
 
   const renderCells = (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
-    columns.map(
-      ({
-        width,
-        resizedWidth,
-        grow,
-        dataId,
-        content,
-        columns,
-        align,
-        onCellClick,
-        cellTooltip,
-        intent,
-      }) =>
-        columns ? (
-          renderCells(columns, data)
-        ) : (
+    getOnlyShownColumns(columns).map(
+      ({ width, resizedWidth, grow, dataId, cell, header, align, intent }) => {
+        if (header.columns) {
+          return renderCells(header.columns, data);
+        }
+
+        // Build the tooltip
+        const tooltip: IReqoreTooltip = cell?.tooltip
+          ? typeof cell?.tooltip(data[index][dataId]) !== 'object'
+            ? {
+                content: cell.tooltip(data[index][dataId]) as string,
+              }
+            : (cell.tooltip(data[index][dataId]) as IReqoreTooltip)
+          : {};
+
+        return (
           <ReqorePopover
             key={dataId}
             component={StyledTableCell}
@@ -276,14 +278,14 @@ const ReqoreTableRow = ({
                 selectedIntent: selectedRowIntent,
                 flat,
                 even: index % 2 === 0 ? true : false,
-                intent: intent || data[index]._intent,
+                intent: cell?.intent || data[index]._intent || intent,
                 hovered: isHovered,
-                interactive: !!onCellClick || !!onRowClick,
-                interactiveCell: !!onCellClick,
+                interactive: !!cell?.onClick || !!onRowClick,
+                interactiveCell: !!cell?.onClick,
                 onClick: (e: React.MouseEvent<HTMLDivElement>) => {
-                  if (onCellClick) {
+                  if (cell?.onClick) {
                     e.stopPropagation();
-                    onCellClick(data[index]);
+                    cell.onClick(data[index]);
                   } else if (onRowClick) {
                     e.stopPropagation();
                     onRowClick(data[index]);
@@ -295,11 +297,12 @@ const ReqoreTableRow = ({
                 className: 'reqore-table-cell',
               } as IReqoreTableCellStyle
             }
-            content={cellTooltip ? cellTooltip(data[index]) : undefined}
+            {...tooltip}
           >
-            {renderContent(content, data[index], dataId)}
+            {renderContent(cell?.content, data[index], dataId)}
           </ReqorePopover>
-        )
+        );
+      }
     );
 
   return (

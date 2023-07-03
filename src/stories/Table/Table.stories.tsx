@@ -6,6 +6,188 @@ import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../uti
 
 const { createArg } = argManager<IReqoreTableProps>();
 
+const defaultColumns: IReqoreTableColumn[] = [
+  {
+    dataId: 'id',
+    header: {
+      label: 'ID',
+      tooltip: 'Custom ID tooltip nice',
+    },
+    cell: {
+      content: 'tag',
+    },
+    width: 50,
+    align: 'center',
+    sortable: true,
+  },
+  {
+    header: {
+      label: 'Name',
+      columns: [
+        {
+          dataId: 'firstName',
+          header: {
+            icon: 'SlideshowLine',
+            label: 'First Name',
+            effect: {
+              gradient: {
+                colors: {
+                  0: 'success',
+                  100: 'info',
+                },
+              },
+            },
+          },
+          width: 150,
+          grow: 2,
+        },
+        {
+          dataId: 'lastName',
+          header: {
+            icon: 'SlideshowLine',
+            label: 'Last Name',
+          },
+          width: 150,
+          grow: 1,
+          sortable: true,
+          cell: {
+            onClick: ({ lastName }) => alert(`Clicked last name cell ${lastName}`),
+            content: 'title:info',
+          },
+        },
+      ],
+    },
+    dataId: 'name',
+    grow: 3,
+  },
+  {
+    dataId: 'address',
+    header: {
+      label: 'Address',
+      description: 'This is the address',
+      onClick: () => alert('clicked address'),
+    },
+    width: 300,
+    grow: 2,
+    resizable: false,
+  },
+  {
+    dataId: 'age',
+    header: {
+      label: 'Really long age header',
+      icon: 'User4Line',
+      tooltip: 'Custom age tooltip',
+    },
+    width: 100,
+    align: 'center',
+    sortable: true,
+
+    cell: {
+      intent: 'danger',
+      content: 'tag:#000000',
+      tooltip: (value) => `Age is ${value}`,
+      onClick: ({ age }) => alert(`Clicked age cell ${age}`),
+    },
+  },
+  {
+    header: {
+      label: 'Data',
+      columns: [
+        {
+          dataId: 'occupation',
+          header: { label: 'Ocuppation' },
+          width: 200,
+          cell: { content: 'text:warning' },
+          filterable: true,
+          filterPlaceholder: 'Search occupation',
+        },
+        {
+          dataId: 'group',
+          header: { label: 'Group' },
+          width: 150,
+          cell: { intent: 'muted' },
+          filterable: true,
+        },
+      ],
+    },
+    dataId: 'data',
+  },
+  {
+    dataId: 'date',
+    header: { label: 'Date' },
+    sortable: true,
+    grow: 2,
+    width: 150,
+    cell: {
+      content: 'time-ago',
+      tooltip: () => ({
+        title: 'Custom tooltip',
+        content: 'This is a custom tooltip',
+        effect: {
+          gradient: {
+            colors: {
+              0: 'warning',
+              100: 'info',
+            },
+          },
+        },
+      }),
+    },
+  },
+];
+
+const defaultColumnsWithFilters = defaultColumns.map((column, index) => {
+  if (index === 4) {
+    return {
+      ...column,
+      header: {
+        ...column.header,
+        columns: column.header.columns.map((subColumn, subIndex) =>
+          subIndex === 0
+            ? {
+                ...subColumn,
+                filter: 'Advisor',
+              }
+            : {
+                ...subColumn,
+                filter: 'net',
+              }
+        ),
+      },
+    };
+  }
+
+  return column;
+});
+
+const defaultColumnsWithHiddenColumns = defaultColumns.map((column, index) => {
+  if (index === 4) {
+    return {
+      ...column,
+      header: {
+        ...column.header,
+        columns: column.header.columns.map((subColumn, subIndex) =>
+          subIndex === 0
+            ? {
+                ...subColumn,
+                show: false,
+              }
+            : subColumn
+        ),
+      },
+    };
+  }
+
+  if (index === 2) {
+    return {
+      ...column,
+      show: false,
+    };
+  }
+
+  return column;
+});
+
 export default {
   title: 'Collections/Table/Stories',
   argTypes: {
@@ -26,78 +208,7 @@ export default {
     }),
     ...createArg('columns', {
       name: 'Columns',
-      defaultValue: [
-        {
-          dataId: 'id',
-          header: 'ID',
-          width: 50,
-          align: 'center',
-          sortable: true,
-          tooltip: 'Custom ID tooltip nice',
-          content: 'tag',
-        },
-        {
-          header: 'Name',
-          dataId: 'name',
-          grow: 3,
-          columns: [
-            {
-              icon: 'SlideshowLine',
-              dataId: 'firstName',
-              header: 'First Name',
-              width: 150,
-              grow: 2,
-            },
-            {
-              icon: 'SlideshowLine',
-              dataId: 'lastName',
-              header: 'Last Name',
-              width: 150,
-              grow: 1,
-              sortable: true,
-              onCellClick: ({ lastName }) => alert(`Clicked last name cell ${lastName}`),
-              content: 'title:info',
-            },
-          ],
-        },
-        {
-          dataId: 'address',
-          header: 'Address',
-          description: 'This is the address',
-          width: 300,
-          grow: 2,
-          resizable: false,
-          onClick: () => alert('clicked address'),
-        },
-        {
-          icon: 'User4Line',
-          dataId: 'age',
-          header: 'Really long age header',
-          tooltip: 'Custom age tooltip',
-          width: 100,
-          align: 'center',
-          sortable: true,
-          intent: 'danger',
-          content: 'tag:#000000',
-          onCellClick: ({ age }) => alert(`Clicked age cell ${age}`),
-        },
-        {
-          header: 'Data',
-          dataId: 'data',
-          columns: [
-            { dataId: 'occupation', header: 'Ocuppation', width: 200, content: 'text:warning' },
-            { dataId: 'group', header: 'Group', width: 150, intent: 'muted' },
-          ],
-        },
-        {
-          dataId: 'date',
-          header: 'Date',
-          sortable: true,
-          grow: 2,
-          width: 150,
-          content: 'time-ago',
-        },
-      ] as IReqoreTableColumn[],
+      defaultValue: defaultColumns,
     }),
     ...createArg('width', {
       type: 'number',
@@ -169,8 +280,32 @@ Filterable.args = {
 export const DefaultFilter = Template.bind({});
 DefaultFilter.args = {
   filterable: true,
-  defaultQuery: 'Village',
+  filter: 'Village',
 };
+
+export const NoDataMessage = Template.bind({});
+NoDataMessage.args = {
+  filterable: true,
+  filter: 'asjkghakshgjkashg',
+};
+
+export const FilterableColumns = Template.bind({});
+FilterableColumns.args = {
+  columns: defaultColumnsWithFilters,
+};
+
+export const AllFiltersActive = Template.bind({});
+AllFiltersActive.args = {
+  filterable: true,
+  filter: 'Road',
+  columns: defaultColumnsWithFilters,
+};
+
+export const HiddenColumns = Template.bind({});
+HiddenColumns.args = {
+  columns: defaultColumnsWithHiddenColumns,
+};
+
 export const Selectable = Template.bind({});
 Selectable.args = {
   selectable: true,

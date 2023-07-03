@@ -2,20 +2,23 @@
 import { size as count, isArray } from 'lodash';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
-import { ReqorePanel } from '../..';
+import { ReqoreMessage, ReqorePanel, ReqoreVerticalSpacer } from '../..';
 import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
-import { IReqoreIntent } from '../../types/global';
+import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
-import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
+import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader from './header';
 import {
   fixSort,
   flipSortDirection,
+  getColumnsCount,
+  getOnlyShownColumns,
   getZoomActions,
+  hasHiddenColumns,
   sizeToZoom,
   sortTableData,
   updateColumnData,
@@ -35,23 +38,30 @@ export type TReqoreTableColumnContent =
 
 export interface IReqoreTableColumn extends IReqoreIntent {
   dataId: string;
-  header?: string | JSX.Element;
+  show?: boolean;
   grow?: 1 | 2 | 3 | 4;
   width?: number;
   resizedWidth?: number;
-
-  content?: TReqoreTableColumnContent;
-
-  props?: IReqoreButtonProps;
   align?: 'center' | 'left' | 'right';
-  columns?: IReqoreTableColumn[];
 
   resizable?: boolean;
   sortable?: boolean;
-  iconSize?: string;
+  hideable?: boolean;
 
-  cellTooltip?: (data: { [key: string]: any; _selectId?: string | number }) => string | JSX.Element;
-  onCellClick?: (data: { [key: string]: any; _selectId?: string | number }) => void;
+  filterable?: boolean;
+  filterPlaceholder?: string;
+  filter?: string | number;
+
+  header?: {
+    columns?: IReqoreTableColumn[];
+  } & IReqoreButtonProps;
+
+  cell?: {
+    onClick?: (cellValue: any) => void;
+    tooltip?: (cellValue: any) => string | IReqoreTooltip;
+    content?: TReqoreTableColumnContent;
+    intent?: TReqoreIntent;
+  };
 }
 
 export interface IReqoreTableRowData {
@@ -67,28 +77,31 @@ export type IReqoreTableData = IReqoreTableRowData[];
 export interface IReqoreTableProps extends IReqorePanelProps {
   columns: IReqoreTableColumn[];
   data?: IReqoreTableData;
+
   width?: number;
   height?: number;
   wrapperSize?: TSizes;
 
   sort?: IReqoreTableSort;
+  onSortChange?: (sort?: IReqoreTableSort) => void;
+
   filterable?: boolean;
+  filterProps?: (data: IReqoreTableData) => IReqoreInputProps;
+  filter?: string;
+  onFilterChange?: (query: string) => void;
 
   zoomable?: boolean;
   defaultZoom?: number;
 
-  striped?: boolean;
   selectable?: boolean;
-
-  defaultQuery?: string;
-  onQueryChange?: (query: string) => void;
-  filterProps?: (data: IReqoreTableData) => IReqoreInputProps;
-
   selected?: string[];
   selectedRowIntent?: TReqoreIntent;
-  onSortChange?: (sort?: IReqoreTableSort) => void;
   onSelectedChange?: (selected?: any[]) => void;
   selectToggleTooltip?: string;
+
+  striped?: boolean;
+  emptyMessage?: string;
+
   onRowClick?: IReqoreTableRowClick;
 }
 
@@ -130,10 +143,11 @@ const ReqoreTable = ({
   fill,
   filterable,
   zoomable,
-  defaultQuery,
+  filter,
   actions = [],
-  onQueryChange,
+  onFilterChange,
   filterProps,
+  emptyMessage = 'No data in this table, try changing your search query or filters',
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -145,20 +159,49 @@ const ReqoreTable = ({
   const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
 
   const [wrapperRef, sizes] = useMeasure();
+  const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(filter, 300, onFilterChange);
 
-  const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
-    defaultQuery,
-    300,
-    onQueryChange
-  );
+  const filters: { [key: string]: string } = useMemo(() => {
+    const getFilters = (columnsToTransform: IReqoreTableColumn[]) =>
+      columnsToTransform.reduce((filterObject, column) => {
+        if (column.header?.columns) {
+          return {
+            ...filterObject,
+            ...getFilters(column.header.columns),
+          };
+        }
+
+        if (column.filter) {
+          return {
+            ...filterObject,
+            [column.dataId]: column.filter,
+          };
+        }
+
+        return filterObject;
+      }, {});
+
+    return getFilters(internalColumns);
+  }, [internalColumns]);
 
   const transformedData = useMemo(() => {
-    const filteredData = _data.filter((datum) =>
+    // Filter by global query
+    let filteredData = _data.filter((datum) =>
       JSON.stringify(datum).toLowerCase().includes(query.toLowerCase())
     );
 
+    // Filter by column filters
+    filteredData = filteredData.filter((datum) => {
+      return Object.keys(filters).every((filterKey) => {
+        const filterValue = filters[filterKey];
+        const datumValue = datum[filterKey];
+
+        return datumValue?.toString().toLowerCase().includes(filterValue.toString().toLowerCase());
+      });
+    });
+
     return _sort ? sortTableData(filteredData, _sort) : filteredData;
-  }, [_data, _sort, query]);
+  }, [_data, _sort, query, filters]);
 
   useUpdateEffect(() => {
     if (onSortChange) {
@@ -245,20 +288,60 @@ const ReqoreTable = ({
     }
   };
 
-  const handleSetColumnWidth = useCallback(
-    (id: string, width: string) => {
-      setColumns(updateColumnData(internalColumns, id, 'resizedWidth', parseInt(width)));
+  const handleColumnsUpdate = useCallback(
+    <T extends keyof IReqoreTableColumn>(id: string, key: T, value: IReqoreTableColumn[T]) => {
+      setColumns(updateColumnData(internalColumns, id, key, value));
     },
     [internalColumns]
   );
 
-  const handlePreQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(event.target.value);
+  const handlePreQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setPreQuery(event.target.value);
-  };
+  }, []);
+
+  const columnsList = useMemo(() => {
+    const _columnsList: IReqorePanelSubAction[] = [
+      {
+        divider: true,
+        label: 'Show / hide columns',
+      },
+    ];
+
+    const addColumn = (column: IReqoreTableColumn) => {
+      _columnsList.push({
+        label: typeof column.header.label === 'string' ? column.header.label : column.dataId,
+        selected: column.show !== false,
+        onClick: () =>
+          handleColumnsUpdate(column.dataId, 'show', column.show !== false ? false : true),
+        intent: column.show !== false ? 'info' : undefined,
+      });
+    };
+
+    internalColumns.forEach((column) => {
+      if (column.header?.columns) {
+        column.header?.columns.forEach((subColumn) => {
+          addColumn(subColumn);
+        });
+      } else {
+        addColumn(column);
+      }
+    });
+
+    return _columnsList;
+  }, [internalColumns]);
 
   const tableActions = useMemo<IReqorePanelAction[]>(() => {
     const finalActions: IReqorePanelAction[] = [...actions];
+
+    finalActions.push({
+      label: 'Columns',
+      icon: 'LayoutColumnLine',
+      className: 'reqore-table-columns-options',
+      badge: getColumnsCount(getOnlyShownColumns(internalColumns)),
+      intent: hasHiddenColumns(internalColumns) ? 'info' : undefined,
+      multiSelect: true,
+      actions: columnsList,
+    });
 
     if (filterable) {
       finalActions.push({
@@ -274,6 +357,7 @@ const ReqoreTable = ({
           onChange: handlePreQueryChange,
           value: preQuery,
           icon: 'Search2Line',
+          disabled: !query && !count(transformedData),
           minimal: false,
           ...filterProps?.(transformedData),
         },
@@ -288,7 +372,17 @@ const ReqoreTable = ({
     }
 
     return finalActions;
-  }, [preQuery, transformedData, actions, filterable, filterProps]);
+  }, [
+    preQuery,
+    transformedData,
+    actions,
+    filterable,
+    filterProps,
+    internalColumns,
+    zoomable,
+    zoom,
+    columnsList,
+  ]);
 
   const badge = useMemo(() => {
     const badgeList: TReqoreBadge[] = rest.label ? [count(transformedData)] : undefined;
@@ -330,22 +424,34 @@ const ReqoreTable = ({
         onToggleSelectClick={handleToggleSelectClick}
         hasVerticalScroll={count(transformedData) * TABLE_SIZE_TO_PX[size] > height}
         selectToggleTooltip={selectToggleTooltip}
-        setColumnWidth={handleSetColumnWidth}
+        onColumnsUpdate={handleColumnsUpdate}
+        onFilterChange={(dataId: string, value: any) => {
+          handleColumnsUpdate(dataId, 'filter', value);
+        }}
       />
-      <ReqoreTableBody
-        data={transformedData}
-        columns={internalColumns}
-        setLeftScroll={setLeftScroll}
-        height={fill ? sizes.height : height}
-        selectable={selectable}
-        onSelectClick={handleSelectClick}
-        onRowClick={onRowClick}
-        selected={_selected}
-        selectedRowIntent={selectedRowIntent}
-        size={zoomToSize[zoom]}
-        striped={striped}
-        flat={rest.flat}
-      />
+      {count(transformedData) === 0 ? (
+        <>
+          <ReqoreVerticalSpacer height={10} />
+          <ReqoreMessage flat size={size} icon='Search2Line'>
+            {emptyMessage}
+          </ReqoreMessage>
+        </>
+      ) : (
+        <ReqoreTableBody
+          data={transformedData}
+          columns={internalColumns}
+          setLeftScroll={setLeftScroll}
+          height={fill ? sizes.height : height}
+          selectable={selectable}
+          onSelectClick={handleSelectClick}
+          onRowClick={onRowClick}
+          selected={_selected}
+          selectedRowIntent={selectedRowIntent}
+          size={zoomToSize[zoom]}
+          striped={striped}
+          flat={rest.flat}
+        />
+      )}
     </ReqorePanel>
   );
 };

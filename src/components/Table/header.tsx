@@ -1,3 +1,4 @@
+import { omit } from 'lodash';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreButton, ReqoreControlGroup } from '../..';
@@ -6,7 +7,14 @@ import { changeLightness } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import ReqoreTableHeaderCell from './headerCell';
+import { ReqoreTableHeaderCell } from './headerCell';
+import { getOnlyShownColumns } from './helpers';
+
+export type TColumnsUpdater = <T extends keyof IReqoreTableColumn>(
+  id: string,
+  key: T,
+  value: IReqoreTableColumn[T]
+) => void;
 
 export interface IReqoreTableSectionProps extends IWithReqoreSize {
   columns: IReqoreTableColumn[];
@@ -18,7 +26,8 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
   onToggleSelectClick: () => void;
   hasVerticalScroll: boolean;
   selectToggleTooltip?: string;
-  setColumnWidth: (id: string, width: number | string) => void;
+  onColumnsUpdate: TColumnsUpdater;
+  onFilterChange?: (dataId: string, value: any) => void;
 }
 
 export interface IReqoreTableSectionStyle {
@@ -94,47 +103,51 @@ const ReqoreTableHeader = ({
   onToggleSelectClick,
   selectToggleTooltip,
   hasVerticalScroll,
-  setColumnWidth,
+  onColumnsUpdate,
+  onFilterChange,
   size,
 }: IReqoreTableSectionProps) => {
   const renderColumns = (columns: IReqoreTableColumn[]) =>
-    columns.map(
-      ({ grow, header, props = {}, columns: cols, align, content, onCellClick, ...rest }, index) =>
-        cols ? (
+    getOnlyShownColumns(columns).map(
+      ({ grow, align, dataId, header: { columns, onClick, ...rest }, ...colRest }, index) =>
+        columns ? (
           <StyledColumnGroup
             grow={grow}
             key={index}
             className='reqore-table-column-group'
-            width={cols.reduce((wid, col) => wid + (col.resizedWidth || col.width || 80), 0)}
+            width={getOnlyShownColumns(columns).reduce(
+              (wid, col) => wid + (col.resizedWidth || col.width || 80),
+              0
+            )}
           >
             <ReqoreControlGroup fluid rounded={false}>
               <ReqoreButton
-                {...props}
+                {...rest}
+                {...colRest}
                 size={size}
-                readOnly={!props.onClick}
+                readOnly={!onClick}
                 rounded={false}
                 textAlign={align}
                 className='reqore-table-column-group-header'
-              >
-                {header}
-              </ReqoreButton>
+              />
             </ReqoreControlGroup>
             <StyledColumnGroupHeaders className='reqore-table-headers'>
-              {renderColumns(cols)}
+              {renderColumns(columns)}
             </StyledColumnGroupHeaders>
           </StyledColumnGroup>
         ) : (
           <ReqoreTableHeaderCell
-            {...props}
             {...rest}
+            {...omit(colRest, ['cell'])}
+            dataId={dataId}
             size={size}
             key={index}
             sortData={sortData}
             grow={grow}
             align={align}
-            header={header}
             onSortChange={onSortChange}
-            setColumnWidth={setColumnWidth}
+            onColumnsUpdate={onColumnsUpdate}
+            onFilterChange={onFilterChange}
           />
         )
     );
@@ -170,6 +183,8 @@ const ReqoreTableHeader = ({
             onSortChange={onSortChange}
             icon={getSelectedIcon()}
             width={60}
+            resizable={false}
+            hideable={false}
             tooltip={selectToggleTooltip || 'Toggle selection on all data'}
             onClick={() => {
               onToggleSelectClick();

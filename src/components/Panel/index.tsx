@@ -47,11 +47,13 @@ import { ReqoreHeading, StyledHeader } from '../Header';
 import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
+export interface IReqorePanelSubAction extends Omit<IReqoreDropdownItem, 'value'> {}
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
   onClick?: () => void;
   group?: IReqorePanelAction[];
-  actions?: Omit<IReqoreDropdownItem[], 'value'>;
+  actions?: IReqorePanelSubAction[];
+  multiSelect?: boolean;
   // Custom react element
   as?: React.ElementType;
   props?: { [key: string | number]: any } | undefined;

@@ -1,7 +1,12 @@
-import { updateColumnData } from '../../src/components/Table/helpers';
+import {
+  getColumnsCount,
+  getOnlyShownColumns,
+  hasHiddenColumns,
+  updateColumnData,
+} from '../../src/components/Table/helpers';
 import { testColumns } from '../../src/mock/tableData';
 
-test.only('Updates top level column width', () => {
+test('Updates top level column width', () => {
   const columns = [...testColumns];
 
   expect(columns[0].width).toBe(50);
@@ -12,13 +17,31 @@ test.only('Updates top level column width', () => {
   expect(newColumns[0].resizedWidth).toBe(100);
 });
 
-test.only('Updates group level column width', () => {
+test('Updates group level column width', () => {
   const columns = [...testColumns];
 
-  expect(columns[1].columns![0].width).toBe(150);
+  expect(columns[1].header!.columns![0].width).toBe(150);
 
   const newColumns = updateColumnData(columns, 'firstName', 'resizedWidth', 250);
 
-  expect(newColumns[1].columns![0].width).toBe(150);
-  expect(newColumns[1].columns![0].resizedWidth).toBe(250);
+  expect(newColumns[1].header!.columns![0].width).toBe(150);
+  expect(newColumns[1].header!.columns![0].resizedWidth).toBe(250);
+});
+
+test('Filters out hidden columns', () => {
+  const columns = [...testColumns];
+
+  expect(getColumnsCount(columns)).toBe(8);
+
+  columns[1].header!.columns![0].show = false;
+  columns[1].header!.columns![1].show = false;
+  columns[3].show = false;
+  columns[4].header!.columns![1].show = false;
+
+  const newColumns = getOnlyShownColumns(columns);
+
+  expect(getColumnsCount(newColumns)).toBe(4);
+  expect(hasHiddenColumns(columns)).toBe(true);
+  expect(hasHiddenColumns(newColumns)).toBe(false);
+  expect(newColumns[1].dataId).toBe('address');
 });

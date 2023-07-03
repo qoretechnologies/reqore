@@ -1,18 +1,23 @@
 /* @flow */
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
+import { useMemo } from 'react';
 import styled from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreButton, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
 import { IReqoreButtonProps } from '../Button';
+import { IReqoreDropdownItem } from '../Dropdown/list';
+import { TColumnsUpdater } from './header';
 
-export interface IReqoreTableHeaderCellProps extends IReqoreTableColumn, IReqoreButtonProps {
+export interface IReqoreTableHeaderCellProps
+  extends Omit<IReqoreTableColumn, 'cell'>,
+    IReqoreButtonProps {
   onSortChange?: (sort: string) => void;
   sortData: IReqoreTableSort;
-  setColumnWidth?: (id: string, width: number | string) => void;
-  filterPlaceholder?: string;
+  onColumnsUpdate?: TColumnsUpdater;
+  onFilterChange?: (dataId: string, filter: string) => void;
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -36,28 +41,65 @@ export const StyledTableHeaderResize = styled.div`
   }
 `;
 
-const ReqoreTableHeaderCell = ({
+export const ReqoreTableHeaderCell = ({
   width,
   resizedWidth,
   grow,
   align,
-  header,
   onSortChange,
   dataId,
   sortable,
   sortData,
   className,
   onClick,
-  setColumnWidth,
+  onColumnsUpdate,
   resizable = true,
   filterPlaceholder,
+  filterable,
+  hideable = true,
+  filter,
+  onFilterChange,
   ...rest
 }: IReqoreTableHeaderCellProps) => {
+  const items = useMemo(() => {
+    const _items: IReqoreDropdownItem[] = [];
+
+    if (resizable || hideable) {
+      _items.push({
+        divider: true,
+        label: 'Options',
+      });
+
+      if (resizable) {
+        _items.push({
+          label: 'Reset size',
+          icon: 'HistoryLine',
+          disabled: !resizedWidth || width === resizedWidth,
+          onClick: () => {
+            onColumnsUpdate?.(dataId, 'resizedWidth', width);
+          },
+        });
+      }
+
+      if (hideable) {
+        _items.push({
+          label: 'Hide column',
+          icon: 'EyeCloseLine',
+          onClick: () => {
+            onColumnsUpdate?.(dataId, 'show', false);
+          },
+        });
+      }
+    }
+
+    return _items;
+  }, [resizable, hideable, width, resizedWidth, onColumnsUpdate, dataId]);
+
   return (
     <Resizable
       minWidth={!width || width < 120 ? 120 : width}
       onResize={(_event, _direction, _component) => {
-        setColumnWidth(dataId, _component.style.width);
+        onColumnsUpdate(dataId, 'resizedWidth', parseInt(_component.style.width));
       }}
       handleComponent={{
         right: <StyledTableHeaderResize />,
@@ -71,7 +113,7 @@ const ReqoreTableHeaderCell = ({
         height: undefined,
       }}
       enable={{
-        right: resizable && !!setColumnWidth,
+        right: resizable,
       }}
     >
       <ReqoreControlGroup fluid stack rounded={false} fill style={{ height: '100%' }}>
@@ -95,33 +137,24 @@ const ReqoreTableHeaderCell = ({
 
             onClick?.(e);
           }}
-        >
-          {header}
-        </ReqoreButton>
-        <ReqoreDropdown<IReqoreButtonProps>
-          icon='MoreLine'
-          fixed
-          rounded={false}
-          filterable
-          filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
-          items={[
-            {
-              divider: true,
-              label: 'Options',
-            },
-            {
-              label: 'Reset size',
-              icon: 'HistoryLine',
-              disabled: !resizedWidth || width === resizedWidth,
-              onClick: () => {
-                setColumnWidth?.(dataId, width);
-              },
-            },
-          ]}
         />
+        {filterable || hideable || resizable ? (
+          <ReqoreDropdown<IReqoreButtonProps>
+            icon='MoreLine'
+            className="reqore-table-header-cell-options"
+            fixed
+            rounded={false}
+            intent={filter ? 'info' : undefined}
+            filterable={filterable}
+            filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
+            filter={filter}
+            onFilterChange={(value) => {
+              onFilterChange(dataId, value);
+            }}
+            items={items}
+          />
+        ) : null}
       </ReqoreControlGroup>
     </Resizable>
   );
 };
-
-export default ReqoreTableHeaderCell;

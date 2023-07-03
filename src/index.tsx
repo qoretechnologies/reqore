@@ -46,6 +46,7 @@ export { default as ReqoreSidebar } from './components/Sidebar';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
 export { ReqoreSpinner } from './components/Spinner';
 export { default as ReqoreTable } from './components/Table';
+export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTabs } from './components/Tabs';
 export { default as ReqoreTabsContent } from './components/Tabs/content';
 export { default as ReqoreTabsListItem } from './components/Tabs/item';

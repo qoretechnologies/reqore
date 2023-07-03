@@ -1,3 +1,4 @@
+import { size } from 'lodash';
 import { firstBy } from 'thenby';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { IReqorePanelAction } from '../Panel';
@@ -28,7 +29,7 @@ export const sortTableData = (data: any[], sort: IReqoreTableSort) => {
 export const updateColumnData = (
   columns: IReqoreTableColumn[],
   columnId: string,
-  key: string,
+  key: keyof IReqoreTableColumn,
   value: any
 ): IReqoreTableColumn[] => {
   const newColumns: IReqoreTableColumn[] = columns.map((column): IReqoreTableColumn => {
@@ -36,10 +37,13 @@ export const updateColumnData = (
       return { ...column, [key]: value };
     }
 
-    if (column.columns) {
+    if (column.header?.columns) {
       return {
         ...column,
-        columns: updateColumnData(column.columns, columnId, key, value),
+        header: {
+          ...column.header,
+          columns: updateColumnData(column.header.columns, columnId, key, value),
+        },
       };
     }
 
@@ -116,3 +120,67 @@ export const getZoomActions = (
     },
   },
 ];
+
+export const getColumnsCount = (columns: IReqoreTableColumn[]): number => {
+  let count = 0;
+
+  columns.forEach((column) => {
+    if (column.header.columns) {
+      count += getColumnsCount(column.header.columns);
+    } else {
+      count += 1;
+    }
+  });
+
+  return count;
+};
+
+export const hasHiddenColumns = (columns: IReqoreTableColumn[]): boolean => {
+  return columns.some((column) => {
+    if (column.header.columns) {
+      return column.header.columns.some((subColumn) => subColumn.show === false);
+    }
+
+    return column.show === false;
+  });
+};
+
+export const getOnlyShownColumns = (columns: IReqoreTableColumn[]): IReqoreTableColumn[] => {
+  return columns.reduce((newColumns, column) => {
+    if (column.header.columns) {
+      const subColumns = getOnlyShownColumns(column.header.columns);
+
+      if (size(subColumns)) {
+        return [
+          ...newColumns,
+          {
+            ...column,
+            header: { ...column.header, columns: getOnlyShownColumns(column.header.columns) },
+          },
+        ];
+      }
+
+      return newColumns;
+    }
+
+    if (column.show !== false) {
+      return [...newColumns, column];
+    }
+
+    return newColumns;
+  }, []);
+};
+
+export const calculateMinimumCellWidth = (column: IReqoreTableColumn): number => {
+  let width = 50;
+
+  if (column.header.icon) {
+    width += 30;
+  }
+
+  if (column.filterable || column.hideable || column.resizable) {
+    width += 30;
+  }
+
+  return width;
+};
