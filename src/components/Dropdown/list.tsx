@@ -28,7 +28,12 @@ export interface IReqoreDropdownListProps extends IReqoreComponent {
   listStyle?: React.CSSProperties;
   width?: string;
   height?: string;
+
   filterable?: boolean;
+  onFilterChange?: (query: string) => void;
+  filter?: string | number;
+  filterPlaceholder?: string;
+
   onItemSelect?: TDropdownItemOnClick;
   inputProps?: IReqoreInputProps;
   scrollToSelected?: boolean;
@@ -48,9 +53,12 @@ const ReqoreDropdownList = memo(
     inputProps,
     scrollToSelected,
     paging,
+    onFilterChange,
+    filterPlaceholder,
+    filter,
   }: IReqoreDropdownListProps) => {
     const [_items, setItems] = useState<TReqoreDropdownItems>(items);
-    const [query, setQuery] = useState<string>('');
+    const [query, setQuery] = useState<string | number>(onFilterChange ? '' : filter || '');
     const [menuRef, setMenuRef] = useState<HTMLDivElement>(undefined);
 
     useEffect(() => {
@@ -73,12 +81,16 @@ const ReqoreDropdownList = memo(
           return false;
         }
 
-        return text.toString().toLowerCase().indexOf(query.toLowerCase()) !== -1;
+        return text.toString().toLowerCase().indexOf(query.toString().toLowerCase()) !== -1;
       });
     }, [items, query, _items]);
 
     const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      setQuery(event.target.value);
+      if (onFilterChange) {
+        onFilterChange(event.target.value);
+      } else {
+        setQuery(event.target.value);
+      }
     };
 
     const handleItemClick = (item: IReqoreDropdownItem): void => {
@@ -96,11 +108,11 @@ const ReqoreDropdownList = memo(
         {filterable && (
           <>
             <ReqoreInput
-              value={query}
+              value={onFilterChange ? filter : query}
               icon='SearchLine'
               onChange={handleQueryChange}
-              placeholder={`Search ${size(_items)} items...`}
-              onClearClick={() => setQuery('')}
+              placeholder={filterPlaceholder || `Search ${size(_items)} items...`}
+              onClearClick={() => (onFilterChange ? onFilterChange('') : setQuery(''))}
               {...inputProps}
             />
             <ReqoreVerticalSpacer height={PADDING_FROM_SIZE.normal} />

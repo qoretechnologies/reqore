@@ -20,6 +20,9 @@ export interface IReqoreDropdownProps extends Partial<Omit<IPopoverOptions, 'ope
   listStyle?: React.CSSProperties;
   component?: any;
   filterable?: boolean;
+  onFilterChange?: (query: string) => void;
+  filter?: string | number;
+  filterPlaceholder?: string;
   label?: any;
   children?: any;
   listWidth?: string;
@@ -58,6 +61,9 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
   handler,
   placement,
   filterable,
+  onFilterChange,
+  filterPlaceholder,
+  filter,
   icon,
   rightIcon,
   caretPosition = 'left',
@@ -110,6 +116,9 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
         inputProps={inputProps}
         scrollToSelected={scrollToSelected}
         paging={paging}
+        onFilterChange={onFilterChange}
+        filterPlaceholder={filterPlaceholder}
+        filter={filter}
       />
     ) : undefined;
   }, [items]);

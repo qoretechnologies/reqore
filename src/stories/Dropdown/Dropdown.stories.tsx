@@ -225,6 +225,16 @@ ScrollToSelectedItem.args = {
   scrollToSelected: true,
   label: 'Dropdown that scrolls to selected item',
 };
+
+export const WithCustomFilter: Story<IReqoreDropdownProps> = Template.bind({});
+WithCustomFilter.args = {
+  label: 'Dropdown with custom filter',
+  filterPlaceholder: 'Custom filter placeholder',
+  filter: 'something',
+  onFilterChange: (value) => {
+    console.log(value);
+  },
+};
 export const WithPaging: Story<IReqoreDropdownProps> = Template.bind({});
 WithPaging.args = {
   paging: {

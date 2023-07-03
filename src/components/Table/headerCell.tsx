@@ -3,7 +3,7 @@ import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import styled from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
-import { ReqoreButton, ReqoreControlGroup } from '../..';
+import { ReqoreButton, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
 import { IReqoreButtonProps } from '../Button';
@@ -12,6 +12,7 @@ export interface IReqoreTableHeaderCellProps extends IReqoreTableColumn, IReqore
   onSortChange?: (sort: string) => void;
   sortData: IReqoreTableSort;
   setColumnWidth?: (id: string, width: number | string) => void;
+  filterPlaceholder?: string;
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -49,6 +50,7 @@ const ReqoreTableHeaderCell = ({
   onClick,
   setColumnWidth,
   resizable = true,
+  filterPlaceholder,
   ...rest
 }: IReqoreTableHeaderCellProps) => {
   return (
@@ -96,7 +98,27 @@ const ReqoreTableHeaderCell = ({
         >
           {header}
         </ReqoreButton>
-        <ReqoreButton icon='MoreLine' fixed rounded={false} />
+        <ReqoreDropdown<IReqoreButtonProps>
+          icon='MoreLine'
+          fixed
+          rounded={false}
+          filterable
+          filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
+          items={[
+            {
+              divider: true,
+              label: 'Options',
+            },
+            {
+              label: 'Reset size',
+              icon: 'HistoryLine',
+              disabled: !resizedWidth || width === resizedWidth,
+              onClick: () => {
+                setColumnWidth?.(dataId, width);
+              },
+            },
+          ]}
+        />
       </ReqoreControlGroup>
     </Resizable>
   );
