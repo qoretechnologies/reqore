@@ -81,7 +81,7 @@ export const FlatArg = {
   ...argManager<any>().createArg('flat', {
     description: 'Whether the component should be flat',
     name: 'Flat',
-    defaultValue: false,
+    defaultValue: undefined,
     control: {
       type: 'boolean',
     },

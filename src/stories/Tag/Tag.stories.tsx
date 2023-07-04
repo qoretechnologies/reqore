@@ -8,7 +8,7 @@ import { SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
 export default {
-  title: 'Components/Tag',
+  title: 'Form/Tag/Stories',
   argTypes: {
     ...SizeArg,
     ...createArg('columns', {

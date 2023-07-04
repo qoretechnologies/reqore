@@ -1,18 +1,23 @@
 /* @flow */
-import React, { useState } from 'react';
-import styled, { css } from 'styled-components';
+import { rgba } from 'polished';
+import { Resizable } from 're-resizable';
+import { useMemo } from 'react';
+import styled from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
+import { ReqoreButton, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { alignToFlexAlign } from '../../helpers/utils';
-import { useTooltip } from '../../hooks/useTooltip';
-import ReqoreIcon from '../Icon';
+import { getReadableColor } from '../../helpers/colors';
+import { IReqoreButtonProps } from '../Button';
+import { IReqoreDropdownItem } from '../Dropdown/list';
+import { TColumnsUpdater } from './header';
 
 export interface IReqoreTableHeaderCellProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    IReqoreTableColumn {
+  extends Omit<IReqoreTableColumn, 'cell'>,
+    IReqoreButtonProps {
   onSortChange?: (sort: string) => void;
-  sortData: IReqoreTableSort;
+  sortData?: IReqoreTableSort;
+  onColumnsUpdate?: TColumnsUpdater;
+  onFilterChange?: (dataId: string, filter: string) => void;
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -23,95 +28,133 @@ export interface IReqoreTableHeaderStyle {
   interactive?: boolean;
 }
 
-export const StyledTableHeader = styled.div<IReqoreTableHeaderStyle>`
-  ${({ width, grow }) =>
-    css`
-      width: ${!width || width < 80 ? 80 : width}px;
-      flex-grow: ${grow || (width ? undefined : 1)};
-    `};
-
-  ${({ align, theme }) => css`
-    background-color: ${changeLightness(theme.main, 0.03)};
-    justify-content: ${align ? alignToFlexAlign(align) : 'flex-start'};
-  `}
-
-  ${({ interactive, theme }) =>
-    interactive &&
-    css`
-      cursor: pointer;
-      transition: background-color 0.2s ease-out;
-
-      &:hover {
-        color: ${getReadableColor(theme, undefined, undefined)};
-        background-color: ${changeLightness(theme.main, 0.06)};
-      }
-    `};
+export const StyledTableHeaderResize = styled.div`
+  &:before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    width: 1px;
+    height: 70%;
+    border-left: 1px dashed ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+  }
 `;
 
-const StyledTableHeaderLabel = styled.span`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const ReqoreTableHeaderCell = ({
+export const ReqoreTableHeaderCell = ({
   width,
+  resizedWidth,
   grow,
   align,
-  header,
   onSortChange,
   dataId,
   sortable,
   sortData,
-  onClick,
   className,
-  icon,
-  iconSize,
-  tooltip,
-  ...props
+  onClick,
+  onColumnsUpdate,
+  resizable = true,
+  filterPlaceholder,
+  filterable,
+  hideable = true,
+  filter,
+  onFilterChange,
+  ...rest
 }: IReqoreTableHeaderCellProps) => {
-  const [ref, setRef] = useState(null);
+  const items = useMemo(() => {
+    const _items: IReqoreDropdownItem[] = [];
 
-  useTooltip(ref, { content: tooltip || header, delay: 300 });
+    if (resizable || hideable) {
+      _items.push({
+        divider: true,
+        label: 'Options',
+      });
+
+      if (resizable) {
+        _items.push({
+          label: 'Reset size',
+          icon: 'HistoryLine',
+          disabled: !resizedWidth || width === resizedWidth,
+          onClick: () => {
+            onColumnsUpdate?.(dataId, 'resizedWidth', width);
+          },
+        });
+      }
+
+      if (hideable) {
+        _items.push({
+          label: 'Hide column',
+          icon: 'EyeCloseLine',
+          onClick: () => {
+            onColumnsUpdate?.(dataId, 'show', false);
+          },
+        });
+      }
+    }
+
+    return _items;
+  }, [resizable, hideable, width, resizedWidth, onColumnsUpdate, dataId]);
 
   return (
-    <StyledTableHeader
-      {...props}
-      className={`${className || ''} reqore-table-header-cell`}
-      ref={setRef}
-      width={width}
-      grow={grow}
-      align={align}
-      interactive={sortable || !!onClick}
-      onClick={(event: React.MouseEvent<HTMLDivElement>) => {
-        if (sortable) {
-          onSortChange(dataId);
-        }
-        if (onClick) {
-          onClick(event);
-        }
+    <Resizable
+      minWidth={width}
+      onResize={(_event, _direction, _component) => {
+        onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
+      }}
+      handleComponent={{
+        right: <StyledTableHeaderResize />,
+      }}
+      style={{
+        overflow: 'hidden',
+        flexGrow: grow,
+      }}
+      size={{
+        width: resizedWidth || width,
+        height: undefined,
+      }}
+      enable={{
+        right: resizable,
       }}
     >
-      {icon && (
-        <ReqoreIcon icon={icon} size={iconSize || '13px'} margin={header ? 'right' : undefined} />
-      )}
-      <StyledTableHeaderLabel>{header}</StyledTableHeaderLabel>
-      {sortable && (
-        <ReqoreIcon
-          icon={
-            `Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
-              | 'ArrowDownFill'
-              | 'ArrowUpFill'
+      <ReqoreControlGroup fluid stack rounded={false} fill style={{ height: '100%' }}>
+        <ReqoreButton
+          {...rest}
+          readOnly={!sortable && !onClick}
+          className={`${className || ''} reqore-table-header-cell`}
+          rounded={false}
+          textAlign={align}
+          rightIcon={
+            sortable && sortData.by === dataId
+              ? (`Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
+                  | 'ArrowDownFill'
+                  | 'ArrowUpFill')
+              : rest.rightIcon
           }
-          size={iconSize || '13px'}
-          margin='left'
-          style={{
-            opacity: sortData.by === dataId ? 1 : 0.2,
+          onClick={(e) => {
+            if (sortable) {
+              onSortChange?.(dataId);
+            }
+
+            onClick?.(e);
           }}
         />
-      )}
-    </StyledTableHeader>
+        {filterable || hideable || resizable ? (
+          <ReqoreDropdown<IReqoreButtonProps>
+            icon='MoreLine'
+            className='reqore-table-header-cell-options'
+            fixed
+            rounded={false}
+            intent={filter ? 'info' : undefined}
+            filterable={filterable}
+            filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
+            filter={filter}
+            onFilterChange={(value) => {
+              onFilterChange?.(dataId, value);
+            }}
+            items={items}
+          />
+        ) : null}
+      </ReqoreControlGroup>
+    </Resizable>
   );
 };
-
-export default ReqoreTableHeaderCell;

@@ -1,13 +1,199 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
+import { StyledEffect } from '../../components/Effect';
 import { IReqoreTableColumn, IReqoreTableProps } from '../../components/Table';
-import { ReqoreTable } from '../../index';
+import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
+import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
+import { ReqoreH3, ReqoreH4, ReqoreIcon, ReqoreP, ReqoreTable, ReqoreTag } from '../../index';
 import tableData from '../../mock/tableData';
-import { argManager, CustomIntentArg, FlatArg, IntentArg, SizeArg } from '../utils/args';
+import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTableProps>();
 
+const defaultColumns: IReqoreTableColumn[] = [
+  {
+    dataId: 'id',
+    header: {
+      label: 'ID',
+      tooltip: 'Custom ID tooltip nice',
+    },
+    cell: {
+      content: 'tag',
+    },
+    width: 80,
+    align: 'center',
+    sortable: true,
+  },
+  {
+    header: {
+      label: 'Name',
+      columns: [
+        {
+          dataId: 'firstName',
+          header: {
+            icon: 'SlideshowLine',
+            label: 'First Name',
+            effect: {
+              gradient: {
+                colors: {
+                  0: 'success',
+                  100: 'info',
+                },
+              },
+            },
+          },
+          width: 150,
+          grow: 2,
+        },
+        {
+          dataId: 'lastName',
+          header: {
+            icon: 'SlideshowLine',
+            label: 'Last Name',
+          },
+          width: 150,
+          grow: 1,
+          sortable: true,
+          cell: {
+            onClick: ({ lastName }) => alert(`Clicked last name cell ${lastName}`),
+            content: 'title:info',
+          },
+        },
+      ],
+    },
+    dataId: 'name',
+    grow: 3,
+  },
+  {
+    dataId: 'address',
+    header: {
+      label: 'Address',
+      description: 'This is the address',
+      onClick: () => alert('clicked address'),
+    },
+    width: 300,
+    grow: 2,
+    resizable: false,
+  },
+  {
+    dataId: 'age',
+    header: {
+      label: 'Really long age header',
+      icon: 'User4Line',
+      tooltip: 'Custom age tooltip',
+    },
+    width: 100,
+    align: 'center',
+    sortable: true,
+
+    cell: {
+      intent: 'danger',
+      content: 'tag:#000000',
+      tooltip: (value) => `Age is ${value}`,
+      onClick: ({ age }) => alert(`Clicked age cell ${age}`),
+    },
+  },
+  {
+    header: {
+      label: 'Data',
+      columns: [
+        {
+          dataId: 'occupation',
+          header: { label: 'Ocuppation' },
+          width: 200,
+          cell: { content: 'text:warning' },
+          filterable: true,
+          filterPlaceholder: 'Search occupation',
+        },
+        {
+          dataId: 'group',
+          align: 'right',
+          header: { label: <ReqoreTag label='Group' icon='Group2Line' size='small' /> },
+          width: 150,
+          cell: { intent: 'muted' },
+          filterable: true,
+        },
+      ],
+    },
+    dataId: 'data',
+  },
+  {
+    dataId: 'date',
+    header: { label: 'Date' },
+    sortable: true,
+    grow: 2,
+    width: 150,
+    cell: {
+      content: 'time-ago',
+      tooltip: () => ({
+        title: 'Custom tooltip',
+        content: 'This is a custom tooltip',
+        effect: {
+          gradient: {
+            colors: {
+              0: 'warning',
+              100: 'info',
+            },
+          },
+        },
+      }),
+    },
+  },
+];
+
+const defaultColumnsWithFilters = defaultColumns.map((column, index) => {
+  if (index === 4) {
+    return {
+      ...column,
+      header: {
+        ...column.header,
+        columns: column.header.columns.map((subColumn, subIndex) =>
+          subIndex === 0
+            ? {
+                ...subColumn,
+                filter: 'Advisor',
+              }
+            : {
+                ...subColumn,
+                filter: 'net',
+              }
+        ),
+      },
+    };
+  }
+
+  return column;
+});
+
+const defaultColumnsWithHiddenColumns = defaultColumns.map((column, index) => {
+  if (index === 4) {
+    return {
+      ...column,
+      header: {
+        ...column.header,
+        columns: column.header.columns.map((subColumn, subIndex) =>
+          subIndex === 0
+            ? {
+                ...subColumn,
+                show: false,
+              }
+            : subColumn
+        ),
+      },
+    };
+  }
+
+  if (index === 2) {
+    return {
+      ...column,
+      show: false,
+    };
+  }
+
+  return column;
+});
+
 export default {
-  title: 'Components/Table',
+  title: 'Collections/Table/Stories',
   argTypes: {
     ...createArg('rounded', {
       type: 'boolean',
@@ -26,77 +212,11 @@ export default {
     }),
     ...createArg('columns', {
       name: 'Columns',
-      defaultValue: [
-        {
-          dataId: 'id',
-          header: 'ID',
-          width: 50,
-          align: 'center',
-          sortable: true,
-          tooltip: 'Custom ID tooltip nice',
-          content: 'tag',
-        },
-        {
-          header: 'Name',
-          dataId: 'name',
-          grow: 3,
-          columns: [
-            {
-              icon: 'SlideshowLine',
-              dataId: 'firstName',
-              header: 'First Name',
-              width: 150,
-              grow: 2,
-            },
-            {
-              icon: 'SlideshowLine',
-              dataId: 'lastName',
-              header: 'Last Name',
-              width: 150,
-              grow: 1,
-              sortable: true,
-              onCellClick: ({ lastName }) => alert(`Clicked last name cell ${lastName}`),
-              content: 'title:info',
-            },
-          ],
-        },
-        {
-          dataId: 'address',
-          header: 'Address',
-          width: 300,
-          grow: 2,
-          onClick: () => alert('clicked address'),
-        },
-        {
-          icon: 'User4Line',
-          dataId: 'age',
-          header: 'Really long age header',
-          width: 50,
-          align: 'center',
-          sortable: true,
-          intent: 'danger',
-          content: 'tag:#000000',
-          onCellClick: ({ age }) => alert(`Clicked age cell ${age}`),
-        },
-        {
-          header: 'Data',
-          dataId: 'data',
-          columns: [
-            { dataId: 'occupation', header: 'Ocuppation', width: 200, content: 'text:warning' },
-            { dataId: 'group', header: 'Group', width: 150, intent: 'muted' },
-          ],
-        },
-        {
-          dataId: 'date',
-          header: 'Date',
-          sortable: true,
-          content: 'time-ago',
-        },
-      ] as IReqoreTableColumn[],
+      defaultValue: defaultColumns,
     }),
     ...createArg('width', {
       type: 'number',
-      defaultValue: 800,
+      defaultValue: undefined,
       name: 'Width',
       description: 'The width of the table',
     }),
@@ -135,28 +255,107 @@ export default {
 } as Meta<IReqoreTableProps>;
 
 const Template: Story<IReqoreTableProps> = (args) => {
-  return <ReqoreTable {...args} sort={{ by: 'age', direction: 'desc' }} />;
+  return <ReqoreTable label='Table' {...args} sort={{ by: 'lastName', direction: 'desc' }} />;
 };
 
 export const Basic = Template.bind({});
-export const Flat = Template.bind({});
-Flat.args = {
-  flat: true,
+export const NoLabel = Template.bind({});
+NoLabel.args = {
+  label: undefined,
+};
+
+export const CustomWidth = Template.bind({});
+CustomWidth.args = {
+  width: 400,
+};
+
+export const NotFlat = Template.bind({});
+NotFlat.args = {
+  flat: false,
 };
 export const Striped = Template.bind({});
 Striped.args = {
   striped: true,
 };
-export const Rounded = Template.bind({});
-Rounded.args = {
-  rounded: true,
+export const Filterable = Template.bind({});
+Filterable.args = {
+  filterable: true,
 };
+export const DefaultFilter = Template.bind({});
+DefaultFilter.args = {
+  filterable: true,
+  filter: 'Village',
+};
+
+export const NoDataMessage = Template.bind({});
+NoDataMessage.args = {
+  filterable: true,
+  filter: 'asjkghakshgjkashg',
+};
+
+export const FilterableColumns = Template.bind({});
+FilterableColumns.args = {
+  columns: defaultColumnsWithFilters,
+};
+
+export const AllFiltersActive = Template.bind({});
+AllFiltersActive.args = {
+  filterable: true,
+  filter: 'Road',
+  columns: defaultColumnsWithFilters,
+};
+
+export const HiddenColumns = Template.bind({});
+HiddenColumns.args = {
+  columns: defaultColumnsWithHiddenColumns,
+};
+
 export const Selectable = Template.bind({});
 Selectable.args = {
   selectable: true,
 };
 
+export const Zoomable = Template.bind({});
+Zoomable.args = {
+  zoomable: true,
+};
+
 export const FillParent = Template.bind({});
 FillParent.args = {
   fill: true,
+};
+
+export const Sizes = Template.bind({});
+Sizes.args = {
+  size: 'small',
+  filterable: true,
+  wrapperSize: 'big',
+};
+
+const CustomHeaderCell = (props: IReqoreCustomHeaderCellProps) => {
+  if (props.hasColumns) {
+    return <ReqoreH3 intent='success'>{props.label}</ReqoreH3>;
+  }
+
+  return (
+    <ReqoreH4 style={{ width: props.width, flexGrow: props.grow }}>
+      <ReqoreIcon icon={props.icon} />
+      {props.label}
+    </ReqoreH4>
+  );
+};
+
+const CustomCell = (props: IReqoreCustomTableBodyCellProps) => {
+  return <ReqoreP style={{ width: props.width, flexGrow: props.grow }}>{props.children}</ReqoreP>;
+};
+
+const CustomRow = (props: IReqoreCustomTableBodyCellProps) => {
+  return <StyledEffect style={props.style}>{props.children}</StyledEffect>;
+};
+
+export const CustomCellsAndRows = Template.bind({});
+CustomCellsAndRows.args = {
+  headerCellComponent: CustomHeaderCell,
+  bodyCellComponent: CustomCell,
+  rowComponent: CustomRow,
 };

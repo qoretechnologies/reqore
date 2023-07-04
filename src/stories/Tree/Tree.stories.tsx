@@ -2,12 +2,12 @@ import { Meta, Story } from '@storybook/react/types-6-0';
 import { noop } from 'lodash';
 import { IReqoreTreeProps, ReqoreTree } from '../../components/Tree';
 import MockObject from '../../mock/object.json';
-import { argManager, SizeArg } from '../utils/args';
+import { SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTreeProps>();
 
 export default {
-  title: 'Components/Tree',
+  title: 'Collections/Tree/Stories',
   argTypes: {
     ...createArg('withLabelCopy', {
       name: 'With label copy',

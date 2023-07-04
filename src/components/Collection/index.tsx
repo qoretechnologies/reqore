@@ -1,11 +1,12 @@
 import { size } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
-import { useDebounce, useUpdateEffect } from 'react-use';
+import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { ReqorePaginationContainer } from '../../containers/Paging';
+import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreControlGroup from '../ControlGroup';
@@ -29,6 +30,7 @@ export interface IReqoreCollectionProps extends IReqorePanelProps, IReqoreColumn
   fill?: boolean;
   maxItemHeight?: number;
   filterable?: boolean;
+  defaultQuery?: string;
   sortable?: boolean;
   showAs?: 'list' | 'grid';
   showSelectedFirst?: boolean;
@@ -84,6 +86,7 @@ export const ReqoreCollection = ({
   flat = true,
   minimal,
   transparent = true,
+  defaultQuery,
   onQueryChange,
   contentRenderer = (children, _items, searchInput) => (
     <>
@@ -111,26 +114,17 @@ export const ReqoreCollection = ({
 }: IReqoreCollectionProps) => {
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
-  const [query, setQuery] = useState<string>('');
-  const [preQuery, setPreQuery] = useState<string>('');
   const [contentRef, setContentRef] = useState<HTMLDivElement>(undefined);
   const isMobile = useReqoreProperty('isMobile');
+  const { query, setQuery, preQuery, setPreQuery } = useQueryWithDelay(
+    defaultQuery,
+    searchDelay,
+    onQueryChange
+  );
 
   useUpdateEffect(() => {
     setShowAs(showAs);
   }, [showAs]);
-
-  useUpdateEffect(() => {
-    onQueryChange?.(query);
-  }, [query]);
-
-  useDebounce(
-    () => {
-      setQuery(preQuery);
-    },
-    searchDelay,
-    [preQuery]
-  );
 
   const sortedItems: IReqoreCollectionItemProps[] = useMemo(() => {
     if (!sortable) {

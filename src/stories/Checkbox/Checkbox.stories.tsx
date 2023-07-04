@@ -3,7 +3,7 @@ import Checkbox from '../../components/Checkbox';
 import { ReqoreCheckbox, ReqoreControlGroup, ReqoreVerticalSpacer } from '../../index';
 
 export default {
-  title: 'Components/Checkbox',
+  title: 'Form/Checkbox/Stories',
   parameters: ['checkbox.test.tsx'],
 } as ComponentMeta<typeof Checkbox>;
 

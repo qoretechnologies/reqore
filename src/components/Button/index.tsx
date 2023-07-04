@@ -77,6 +77,8 @@ export interface IReqoreButtonProps
   descriptionEffect?: IReqoreEffect;
   label?: React.HTMLAttributes<HTMLButtonElement>['children'];
   as?: string | React.ElementType;
+  grow?: 1 | 2 | 3 | 4;
+  rounded?: boolean;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -94,6 +96,7 @@ const getButtonMainColor = (theme: IReqoreTheme, color?: TReqoreHexColor) => {
 };
 
 export const StyledAnimatedTextWrapper = styled.span`
+  min-width: 5px;
   overflow: hidden;
   position: relative;
   text-align: ${({ textAlign }) => textAlign};
@@ -180,9 +183,11 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       : null}
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  flex-grow: ${({ grow }) => grow};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
-  border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px;
+  border-radius: ${({ size, rounded }) =>
+    rounded === false ? undefined : RADIUS_FROM_SIZE[size]}px;
 
   background-color: ${({ minimal, color }) => {
     if (minimal) {

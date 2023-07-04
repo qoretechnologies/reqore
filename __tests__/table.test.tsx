@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import { ReqoreLayoutContent, ReqoreTable, ReqoreUIProvider } from '../src';
-import { IReqoreTableColumn, IReqoreTableSort } from '../src/components/Table';
+import { IReqoreTableProps } from '../src/components/Table';
 import tableData from '../src/mock/tableData';
 
 test('Renders basic <Table /> properly', () => {
@@ -13,39 +13,44 @@ test('Renders basic <Table /> properly', () => {
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(8);
+  expect(document.querySelectorAll('.reqore-table-column-group-header').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(10);
   expect(document.querySelectorAll('.reqore-table-row').length).toBe(10);
 });
 
 test('Renders <Table /> with grouped columns properly', () => {
-  const data = {
+  const data: IReqoreTableProps = {
     ...tableData,
     columns: [
       {
         dataId: 'id',
-        header: 'ID',
+        header: {
+          label: 'ID',
+        },
         width: 50,
         align: 'center',
       },
       {
-        header: 'Name',
+        header: {
+          label: 'Name',
+          columns: [
+            { dataId: 'firstName', header: { label: 'First Name' }, width: 150, grow: 2 },
+            { dataId: 'lastName', header: { label: 'Last Name' }, width: 150, grow: 1 },
+          ],
+        },
         dataId: 'name',
         grow: 3,
-        columns: [
-          { dataId: 'firstName', header: 'First Name', width: 150, grow: 2 },
-          { dataId: 'lastName', header: 'Last Name', width: 150, grow: 1 },
-        ],
       },
-      { dataId: 'address', header: 'Address', width: 300, grow: 2 },
+      { dataId: 'address', header: { label: 'Address' }, width: 300, grow: 2 },
       {
         dataId: 'age',
-        header: 'Really long age header',
+        header: { label: 'Really long age header' },
         width: 50,
         align: 'center',
       },
-      { dataId: 'occupation', header: 'Ocuppation', width: 200 },
-      { dataId: 'group', header: 'Group', width: 150 },
-    ] as IReqoreTableColumn[],
+      { dataId: 'occupation', header: { label: 'Ocuppation' }, width: 200 },
+      { dataId: 'group', header: { label: 'Group' }, width: 150 },
+    ],
   };
 
   render(
@@ -57,39 +62,43 @@ test('Renders <Table /> with grouped columns properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-table-column-group').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(7);
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(8);
 });
 
 test('Renders <Table /> with custom content', () => {
-  const data = {
+  const data: IReqoreTableProps = {
     ...tableData,
     columns: [
       {
         dataId: 'id',
-        header: 'ID',
+        header: { label: 'ID' },
         width: 50,
         align: 'center',
-        content: ({ id }) => <span>ID {id}</span>,
+        cell: {
+          content: ({ id }) => <span>ID {id}</span>,
+        },
       },
       {
-        header: 'Name',
+        header: {
+          label: 'Name',
+          columns: [
+            { dataId: 'firstName', header: { label: 'First Name' }, width: 150, grow: 2 },
+            { dataId: 'lastName', header: { label: 'Last Name' }, width: 150, grow: 1 },
+          ],
+        },
         dataId: 'name',
         grow: 3,
-        columns: [
-          { dataId: 'firstName', header: 'First Name', width: 150, grow: 2 },
-          { dataId: 'lastName', header: 'Last Name', width: 150, grow: 1 },
-        ],
       },
-      { dataId: 'address', header: 'Address', width: 300, grow: 2 },
+      { dataId: 'address', header: { label: 'Address' }, width: 300, grow: 2 },
       {
         dataId: 'age',
-        header: 'Really long age header',
+        header: { label: 'Really long age header' },
         width: 50,
         align: 'center',
       },
-      { dataId: 'occupation', header: 'Ocuppation', width: 200 },
-      { dataId: 'group', header: 'Group', width: 150 },
-    ] as IReqoreTableColumn[],
+      { dataId: 'occupation', header: { label: 'Ocuppation' }, width: 200 },
+      { dataId: 'group', header: { label: 'Group' }, width: 150 },
+    ],
   };
 
   render(
@@ -101,54 +110,68 @@ test('Renders <Table /> with custom content', () => {
   );
 
   const firstRow = document.querySelector('.reqore-table-row');
-  const idCell = firstRow.querySelector('.reqore-table-cell');
+  const idCell = firstRow!.querySelector('.reqore-table-cell');
 
-  expect(idCell.textContent).toBe('ID 1');
+  expect(idCell!.textContent).toBe('ID 1');
 });
 
 test('Renders <Table /> with predefined content', () => {
-  const data = {
+  const data: IReqoreTableProps = {
     ...tableData,
     columns: [
       {
         dataId: 'id',
-        header: 'ID',
+        header: { label: 'ID' },
         width: 50,
         align: 'center',
-        content: 'tag:info',
+        cell: {
+          content: 'tag:info',
+        },
       },
       {
-        header: 'Name',
+        header: {
+          label: 'Name',
+          columns: [
+            {
+              dataId: 'firstName',
+              header: { label: 'First Name' },
+              width: 150,
+              grow: 2,
+              cell: {
+                content: 'tag:#000000',
+              },
+            },
+            {
+              dataId: 'lastName',
+              header: { label: 'Last Name' },
+              width: 150,
+              grow: 1,
+              cell: {
+                content: 'title:success',
+              },
+            },
+          ],
+        },
         dataId: 'name',
         grow: 3,
-        columns: [
-          {
-            dataId: 'firstName',
-            header: 'First Name',
-            width: 150,
-            grow: 2,
-            content: 'tag:#000000',
-          },
-          {
-            dataId: 'lastName',
-            header: 'Last Name',
-            width: 150,
-            grow: 1,
-            content: 'title:success',
-          },
-        ],
       },
-      { dataId: 'address', header: 'Address', width: 300, grow: 2, content: 'text:warning' },
+      {
+        dataId: 'address',
+        header: { label: 'Address' },
+        width: 300,
+        grow: 2,
+        cell: { content: 'text:warning' },
+      },
       {
         dataId: 'age',
-        header: 'Really long age header',
+        header: { label: 'Really long age header' },
         width: 50,
         align: 'center',
       },
-      { dataId: 'occupation', header: 'Ocuppation', width: 200 },
-      { dataId: 'group', header: 'Group', width: 150 },
-      { dataId: 'date', header: 'Date', content: 'time-ago' },
-    ] as IReqoreTableColumn[],
+      { dataId: 'occupation', header: { label: 'Ocuppation' }, width: 200 },
+      { dataId: 'group', header: { label: 'Group' }, width: 150 },
+      { dataId: 'date', header: { label: 'Date' }, cell: { content: 'time-ago' } },
+    ],
   };
 
   render(
@@ -161,11 +184,11 @@ test('Renders <Table /> with predefined content', () => {
 
   const firstRow = document.querySelector('.reqore-table-row');
 
-  const idCell = firstRow.querySelectorAll('.reqore-table-cell')[0];
-  const firstNameCell = firstRow.querySelectorAll('.reqore-table-cell')[1];
-  const lastNameCell = firstRow.querySelectorAll('.reqore-table-cell')[2];
-  const addressCell = firstRow.querySelectorAll('.reqore-table-cell')[3];
-  const dateCell = firstRow.querySelectorAll('.reqore-table-cell')[7];
+  const idCell = firstRow!.querySelectorAll('.reqore-table-cell')[0];
+  const firstNameCell = firstRow!.querySelectorAll('.reqore-table-cell')[1];
+  const lastNameCell = firstRow!.querySelectorAll('.reqore-table-cell')[2];
+  const addressCell = firstRow!.querySelectorAll('.reqore-table-cell')[3];
+  const dateCell = firstRow!.querySelectorAll('.reqore-table-cell')[7];
 
   expect(idCell.querySelector('.reqore-tag')).toBeTruthy();
   expect(firstNameCell.querySelector('.reqore-tag')).toBeTruthy();
@@ -175,33 +198,33 @@ test('Renders <Table /> with predefined content', () => {
 });
 
 test('Sorting on <Table /> works properly', () => {
-  const data = {
+  const data: IReqoreTableProps = {
     ...tableData,
     columns: [
       {
         dataId: 'id',
-        header: 'ID',
+        header: { label: 'ID' },
         width: 50,
         align: 'center',
         sortable: true,
       },
-      { dataId: 'firstName', header: 'First Name', width: 150 },
-      { dataId: 'lastName', header: 'Last Name', width: 150, sortable: true },
-      { dataId: 'address', header: 'Address', width: 300, grow: 2 },
+      { dataId: 'firstName', header: { label: 'First Name' }, width: 150 },
+      { dataId: 'lastName', header: { label: 'Last Name' }, width: 150, sortable: true },
+      { dataId: 'address', header: { label: 'Address' }, width: 300, grow: 2 },
       {
         dataId: 'age',
-        header: 'Really long age header',
+        header: { label: 'Really long age header' },
         width: 50,
         align: 'center',
         sortable: true,
       },
-      { dataId: 'occupation', header: 'Ocuppation', width: 200 },
-      { dataId: 'group', header: 'Group', width: 150 },
-    ] as IReqoreTableColumn[],
+      { dataId: 'occupation', header: { label: 'Ocuppation' }, width: 200 },
+      { dataId: 'group', header: { label: 'Group' }, width: 150 },
+    ],
     sort: {
       by: 'id',
       direction: 'desc',
-    } as IReqoreTableSort,
+    },
   };
 
   const fn = jest.fn();
@@ -215,16 +238,16 @@ test('Sorting on <Table /> works properly', () => {
   );
 
   const firstRow = document.querySelector('.reqore-table-row');
-  const idCell = firstRow.querySelector('.reqore-table-cell');
+  const idCell = firstRow!.querySelector('.reqore-table-cell');
 
-  expect(idCell.textContent).toBe('1000');
+  expect(idCell!.textContent).toBe('1000');
 
   const lastNameHeaderCell = document.querySelectorAll('.reqore-table-header-cell')[2];
 
   fireEvent.click(lastNameHeaderCell);
   expect(fn).toHaveBeenCalledWith({ by: 'lastName', direction: 'desc' });
 
-  const lastNameCell = firstRow.querySelectorAll('.reqore-table-cell')[2];
+  const lastNameCell = firstRow!.querySelectorAll('.reqore-table-cell')[2];
 
   expect(lastNameCell.textContent).toBe('Zold');
 
@@ -232,7 +255,7 @@ test('Sorting on <Table /> works properly', () => {
 
   expect(fn).toHaveBeenLastCalledWith({ by: 'lastName', direction: 'asc' });
   expect(lastNameCell.textContent).toBe('Abbess');
-  expect(idCell.textContent).toBe('543');
+  expect(idCell!.textContent).toBe('543');
 });
 
 test('Rows on <Table /> can be selected', () => {
@@ -252,16 +275,16 @@ test('Rows on <Table /> can be selected', () => {
   );
 
   const firstRow = document.querySelector('.reqore-table-row');
-  const firstCheckCell = firstRow.querySelector('.reqore-table-cell');
+  const firstCheckCell = firstRow!.querySelector('.reqore-table-cell');
 
-  fireEvent.click(firstCheckCell);
+  fireEvent.click(firstCheckCell!);
 
   expect(fn).toHaveBeenCalledWith([1]);
 
   const secondRow = document.querySelectorAll('.reqore-table-row')[1];
   const secondCheckCell = secondRow.querySelector('.reqore-table-cell');
 
-  fireEvent.click(secondCheckCell);
+  fireEvent.click(secondCheckCell!);
 
   expect(fn).toHaveBeenLastCalledWith([1, 2]);
 });
@@ -285,18 +308,18 @@ test('Rows on <Table /> cannot be selected if _selectId is missing', () => {
   const thirdRow = document.querySelectorAll('.reqore-table-row')[2];
   const thirdCheckCell = thirdRow.querySelector('.reqore-table-cell');
 
-  fireEvent.click(thirdCheckCell);
+  fireEvent.click(thirdCheckCell!);
 
   const fourthRow = document.querySelectorAll('.reqore-table-row')[3];
   const fourthCheckCell = fourthRow.querySelector('.reqore-table-cell');
 
-  fireEvent.click(fourthCheckCell);
+  fireEvent.click(fourthCheckCell!);
 
   expect(fn).toHaveBeenCalledTimes(1);
 });
 
 test('Rows on <Table /> are all selected/deselected when clicking on header', () => {
-  const data = {
+  const data: IReqoreTableProps = {
     ...tableData,
     selectable: true,
   };
@@ -312,91 +335,103 @@ test('Rows on <Table /> are all selected/deselected when clicking on header', ()
   );
 
   const header = document.querySelector('.reqore-table-header-wrapper');
-  const firstHeaderCell = header.querySelector('.reqore-table-header-cell');
+  const firstHeaderCell = header!.querySelector('.reqore-table-header-cell');
 
-  fireEvent.click(firstHeaderCell);
+  fireEvent.click(firstHeaderCell!);
 
-  const selectableData: number[] = tableData.data
+  const selectableData = tableData.data
     .filter((datum) => datum._selectId ?? false)
     .map((datum) => datum._selectId);
 
   expect(fn).toHaveBeenCalledWith(selectableData);
 
-  fireEvent.click(firstHeaderCell);
+  fireEvent.click(firstHeaderCell!);
 
   expect(fn).toHaveBeenLastCalledWith([]);
 
   const firstRow = document.querySelector('.reqore-table-row');
-  const firstCheckCell = firstRow.querySelector('.reqore-table-cell');
+  const firstCheckCell = firstRow!.querySelector('.reqore-table-cell');
 
-  fireEvent.click(firstCheckCell);
-  fireEvent.click(firstHeaderCell);
+  fireEvent.click(firstCheckCell!);
+  fireEvent.click(firstHeaderCell!);
 
   expect(fn).toHaveBeenLastCalledWith(selectableData);
 });
 
 test('Cells on <Table /> are interactive', () => {
   const fn = jest.fn();
-  const data = {
+  const data: IReqoreTableProps = {
     ...tableData,
     columns: [
       {
         dataId: 'id',
-        header: 'ID',
+        header: { label: 'ID', tooltip: 'Custom ID tooltip nice' },
         width: 50,
         align: 'center',
         sortable: true,
-        tooltip: 'Custom ID tooltip nice',
-        onCellClick: ({ id }) => {
-          fn(id);
+        cell: {
+          onClick: ({ id }) => {
+            fn(id);
+          },
         },
       },
       {
-        header: 'Name',
+        header: {
+          label: 'Name',
+          columns: [
+            {
+              dataId: 'firstName',
+              header: {
+                label: 'First Name',
+                icon: 'SlideshowLine',
+                effect: {
+                  gradient: {
+                    colors: {
+                      0: 'success',
+                      100: 'info',
+                    },
+                  },
+                },
+              },
+              width: 150,
+              grow: 2,
+            },
+            {
+              dataId: 'lastName',
+              header: { label: 'Last Name', icon: 'SlideshowLine' },
+              width: 150,
+              grow: 1,
+              sortable: true,
+            },
+          ],
+        },
         dataId: 'name',
         grow: 3,
-        columns: [
-          {
-            icon: 'SlideshowLine',
-            dataId: 'firstName',
-            header: 'First Name',
-            width: 150,
-            grow: 2,
-          },
-          {
-            icon: 'SlideshowLine',
-            dataId: 'lastName',
-            header: 'Last Name',
-            width: 150,
-            grow: 1,
-            sortable: true,
-          },
-        ],
       },
       {
         dataId: 'address',
-        header: 'Address',
+        header: { label: 'Address', onClick: () => alert('clicked address') },
         width: 300,
         grow: 2,
-        onClick: () => alert('clicked address'),
       },
       {
-        icon: 'User4Line',
         dataId: 'age',
-        header: 'Really long age header',
+        header: { label: 'Really long age header', icon: 'User4Line' },
         width: 50,
         align: 'center',
         sortable: true,
       },
       {
-        header: 'Data',
+        header: {
+          label: 'Data',
+          columns: [
+            { dataId: 'occupation', header: { label: 'Ocuppation' }, width: 200 },
+            { dataId: 'group', header: { label: 'Groups' }, width: 150 },
+          ],
+        },
         dataId: 'data',
-        columns: [
-          { dataId: 'occupation', header: 'Ocuppation', width: 200 },
-          { dataId: 'group', header: 'Groups', width: 150 },
-        ],
       },
-    ] as IReqoreTableColumn[],
+    ],
   };
 
   render(
@@ -408,9 +443,9 @@ test('Cells on <Table /> are interactive', () => {
   );
 
   const firstRow = document.querySelector('.reqore-table-row');
-  const firstCheckCell = firstRow.querySelector('.reqore-table-cell');
+  const firstCheckCell = firstRow!.querySelector('.reqore-table-cell');
 
-  fireEvent.click(firstCheckCell);
+  fireEvent.click(firstCheckCell!);
 
   expect(fn).toHaveBeenCalledWith(1);
 });

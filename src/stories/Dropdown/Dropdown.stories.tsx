@@ -7,7 +7,7 @@ import { argManager } from '../utils/args';
 const { createArg, disableArg } = argManager<IReqoreDropdownProps>();
 
 export default {
-  title: 'Components/Dropdown',
+  title: 'Form/Dropdown/Stories',
   parameters: {
     chromatic: {
       delay: 1500,
@@ -224,6 +224,16 @@ export const ScrollToSelectedItem = Template.bind({});
 ScrollToSelectedItem.args = {
   scrollToSelected: true,
   label: 'Dropdown that scrolls to selected item',
+};
+
+export const WithCustomFilter: Story<IReqoreDropdownProps> = Template.bind({});
+WithCustomFilter.args = {
+  label: 'Dropdown with custom filter',
+  filterPlaceholder: 'Custom filter placeholder',
+  filter: 'something',
+  onFilterChange: (value) => {
+    console.log(value);
+  },
 };
 export const WithPaging: Story<IReqoreDropdownProps> = Template.bind({});
 WithPaging.args = {

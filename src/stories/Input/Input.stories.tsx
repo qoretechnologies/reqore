@@ -5,7 +5,7 @@ import { ReqoreControlGroup } from '../../index';
 import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
 
 export default {
-  title: 'Components/Input',
+  title: 'Form/Input/Stories',
   argTypes: {
     ...MinimalArg,
     ...FlatArg,

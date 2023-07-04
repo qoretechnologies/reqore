@@ -6,7 +6,7 @@ import { argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreCommentFeedProps>();
 
 export default {
-  title: 'Components/Comments',
+  title: 'Other/Comments/Stories',
   argTypes: {
     ...createArg('gapSize', {
       defaultValue: '0',

@@ -8,7 +8,7 @@ import { FlatArg, IconArg, MinimalArg, SizeArg, argManager } from '../utils/args
 const { createArg } = argManager<IReqoreMultiSelectProps>();
 
 export default {
-  title: 'Components/Multi Select',
+  title: 'Form/Multi Select/Stories',
   parameters: {
     chromatic: {
       delay: 500,

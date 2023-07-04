@@ -8,7 +8,7 @@ import { FlatArg, IntentArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreModalProps>();
 
 export default {
-  title: 'Components/Modal',
+  title: 'Dialogs/Modal/Stories',
   argTypes: {
     ...IntentArg,
     ...FlatArg,

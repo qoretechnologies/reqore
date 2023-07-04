@@ -14,7 +14,7 @@ export interface IColumnsStoryArgs extends IReqoreColumnsProps {
 const { createArg, disableArgs } = argManager<IReqoreCollectionProps>();
 
 export default {
-  title: 'Components/Collection',
+  title: 'Collections/Collection/Stories',
   component: ReqoreCollection,
   argTypes: {
     ...createArg('stacked', {
@@ -214,6 +214,24 @@ CustomFilteringSearchingPaging.args = {
       clearOnFocus: true,
     },
   },
+  paging: {
+    itemsPerPage: 55,
+    scrollToTopOnPageChange: true,
+  },
+  inputInTitle: false,
+  responsiveTitle: true,
+  size: 'small',
+  padded: false,
+  fill: true,
+  items: [...bigCollection, ...bigCollection, ...bigCollection, ...bigCollection, ...bigCollection],
+} as IReqoreCollectionProps;
+
+export const DefaultFilter = Template.bind({});
+DefaultFilter.args = {
+  inputProps: {
+    fluid: true,
+  },
+  defaultQuery: 'Med',
   paging: {
     itemsPerPage: 55,
     scrollToTopOnPageChange: true,

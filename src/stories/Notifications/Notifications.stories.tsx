@@ -10,7 +10,7 @@ import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreUIProvider } from '../../index';
 
 export default {
-  title: 'Components/Notifications/Wrapper',
+  title: 'Other/Notifications/Wrapper/Stories',
   component: ReqoreNotification,
 } as Meta;
 

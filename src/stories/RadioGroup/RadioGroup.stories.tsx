@@ -6,7 +6,7 @@ import { DisabledArg, SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreRadioGroupProps>();
 
 export default {
-  title: 'Components/Radio Group',
+  title: 'Form/Radio Group/Stories',
   argTypes: {
     ...createArg('asSwitch', {
       type: 'boolean',

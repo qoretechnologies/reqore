@@ -13,6 +13,7 @@ import {
   IWithReqoreMinimal,
   IWithReqoreSize,
 } from '../../types/global';
+import { StyledEffect } from '../Effect';
 import { StyledHeader } from '../Header';
 import { StyledParagraph } from '../Paragraph';
 
@@ -56,7 +57,7 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
   theme: IReqoreTheme;
 }
 
-export const StyledReqoreControlGroup = styled.div<IReqoreControlGroupStyle>`
+export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroupStyle>`
   display: flex;
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? undefined : '0 0 auto')};
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
@@ -356,10 +357,14 @@ const ReqoreControlGroup = memo(
               newProps = {
                 ...newProps,
                 style: {
-                  borderTopLeftRadius: getBorderTopLeftRadius(index),
-                  borderBottomLeftRadius: getBorderBottomLeftRadius(index),
-                  borderTopRightRadius: getBorderTopRightRadius(index),
-                  borderBottomRightRadius: getBorderBottomRightRadius(index),
+                  borderTopLeftRadius:
+                    child.props?.rounded === false ? undefined : getBorderTopLeftRadius(index),
+                  borderBottomLeftRadius:
+                    child.props?.rounded === false ? undefined : getBorderBottomLeftRadius(index),
+                  borderTopRightRadius:
+                    child.props?.rounded === false ? undefined : getBorderTopRightRadius(index),
+                  borderBottomRightRadius:
+                    child.props?.rounded === false ? undefined : getBorderBottomRightRadius(index),
                   ...(child.props?.style || {}),
                 },
                 isChild: true,

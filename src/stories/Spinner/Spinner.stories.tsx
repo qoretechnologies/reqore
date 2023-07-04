@@ -3,7 +3,7 @@ import { IReqoreSpinnerProps, ReqoreSpinner } from '../../components/Spinner';
 import { ReqoreControlGroup } from '../../index';
 
 export default {
-  title: 'Components/Spinner',
+  title: 'Utilities/Spinner/Stories',
 } as Meta;
 
 const Template: Story<IReqoreSpinnerProps> = (args) => {
