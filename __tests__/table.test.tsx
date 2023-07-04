@@ -13,7 +13,8 @@ test('Renders basic <Table /> properly', () => {
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(8);
+  expect(document.querySelectorAll('.reqore-table-column-group-header').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(10);
   expect(document.querySelectorAll('.reqore-table-row').length).toBe(10);
 });
 
@@ -61,7 +62,7 @@ test('Renders <Table /> with grouped columns properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-table-column-group').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(7);
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(8);
 });
 
 test('Renders <Table /> with custom content', () => {

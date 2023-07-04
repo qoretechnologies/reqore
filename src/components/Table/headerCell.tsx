@@ -15,7 +15,7 @@ export interface IReqoreTableHeaderCellProps
   extends Omit<IReqoreTableColumn, 'cell'>,
     IReqoreButtonProps {
   onSortChange?: (sort: string) => void;
-  sortData: IReqoreTableSort;
+  sortData?: IReqoreTableSort;
   onColumnsUpdate?: TColumnsUpdater;
   onFilterChange?: (dataId: string, filter: string) => void;
 }
@@ -97,9 +97,9 @@ export const ReqoreTableHeaderCell = ({
 
   return (
     <Resizable
-      minWidth={!width || width < 120 ? 120 : width}
+      minWidth={width}
       onResize={(_event, _direction, _component) => {
-        onColumnsUpdate(dataId, 'resizedWidth', parseInt(_component.style.width));
+        onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
       }}
       handleComponent={{
         right: <StyledTableHeaderResize />,
@@ -128,11 +128,11 @@ export const ReqoreTableHeaderCell = ({
               ? (`Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
                   | 'ArrowDownFill'
                   | 'ArrowUpFill')
-              : undefined
+              : rest.rightIcon
           }
           onClick={(e) => {
             if (sortable) {
-              onSortChange(dataId);
+              onSortChange?.(dataId);
             }
 
             onClick?.(e);
@@ -141,7 +141,7 @@ export const ReqoreTableHeaderCell = ({
         {filterable || hideable || resizable ? (
           <ReqoreDropdown<IReqoreButtonProps>
             icon='MoreLine'
-            className="reqore-table-header-cell-options"
+            className='reqore-table-header-cell-options'
             fixed
             rounded={false}
             intent={filter ? 'info' : undefined}
@@ -149,7 +149,7 @@ export const ReqoreTableHeaderCell = ({
             filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
             filter={filter}
             onFilterChange={(value) => {
-              onFilterChange(dataId, value);
+              onFilterChange?.(dataId, value);
             }}
             items={items}
           />

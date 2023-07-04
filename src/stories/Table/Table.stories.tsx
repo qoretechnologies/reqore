@@ -1,6 +1,9 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
+import { StyledEffect } from '../../components/Effect';
 import { IReqoreTableColumn, IReqoreTableProps } from '../../components/Table';
-import { ReqoreTable } from '../../index';
+import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
+import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
+import { ReqoreH3, ReqoreH4, ReqoreIcon, ReqoreP, ReqoreTable, ReqoreTag } from '../../index';
 import tableData from '../../mock/tableData';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
@@ -16,7 +19,7 @@ const defaultColumns: IReqoreTableColumn[] = [
     cell: {
       content: 'tag',
     },
-    width: 50,
+    width: 80,
     align: 'center',
     sortable: true,
   },
@@ -103,7 +106,8 @@ const defaultColumns: IReqoreTableColumn[] = [
         },
         {
           dataId: 'group',
-          header: { label: 'Group' },
+          align: 'right',
+          header: { label: <ReqoreTag label='Group' icon='Group2Line' size='small' /> },
           width: 150,
           cell: { intent: 'muted' },
           filterable: true,
@@ -326,4 +330,32 @@ Sizes.args = {
   size: 'small',
   filterable: true,
   wrapperSize: 'big',
+};
+
+const CustomHeaderCell = (props: IReqoreCustomHeaderCellProps) => {
+  if (props.hasColumns) {
+    return <ReqoreH3 intent='success'>{props.label}</ReqoreH3>;
+  }
+
+  return (
+    <ReqoreH4 style={{ width: props.width, flexGrow: props.grow }}>
+      <ReqoreIcon icon={props.icon} />
+      {props.label}
+    </ReqoreH4>
+  );
+};
+
+const CustomCell = (props: IReqoreCustomTableBodyCellProps) => {
+  return <ReqoreP style={{ width: props.width, flexGrow: props.grow }}>{props.children}</ReqoreP>;
+};
+
+const CustomRow = (props: IReqoreCustomTableBodyCellProps) => {
+  return <StyledEffect style={props.style}>{props.children}</StyledEffect>;
+};
+
+export const CustomCellsAndRows = Template.bind({});
+CustomCellsAndRows.args = {
+  headerCellComponent: CustomHeaderCell,
+  bodyCellComponent: CustomCell,
+  rowComponent: CustomRow,
 };

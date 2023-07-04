@@ -11,7 +11,8 @@ import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
 import ReqoreTableBody from './body';
-import ReqoreTableHeader from './header';
+import ReqoreTableHeader, { IReqoreCustomHeaderCellComponent } from './header';
+import { IReqoreTableHeaderCellProps } from './headerCell';
 import {
   fixSort,
   flipSortDirection,
@@ -19,11 +20,13 @@ import {
   getOnlyShownColumns,
   getZoomActions,
   hasHiddenColumns,
+  prepareColumns,
   sizeToZoom,
   sortTableData,
   updateColumnData,
   zoomToSize,
 } from './helpers';
+import { IReqoreTableRowOptions } from './row';
 
 export type TReqoreTableColumnContent =
   | React.FC<{ [key: string]: any; _selectId?: string | number }>
@@ -54,6 +57,7 @@ export interface IReqoreTableColumn extends IReqoreIntent {
 
   header?: {
     columns?: IReqoreTableColumn[];
+    component?: React.FC<IReqoreTableHeaderCellProps>;
   } & IReqoreButtonProps;
 
   cell?: {
@@ -103,6 +107,9 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   emptyMessage?: string;
 
   onRowClick?: IReqoreTableRowClick;
+  headerCellComponent?: IReqoreCustomHeaderCellComponent;
+  rowComponent?: IReqoreTableRowOptions['rowComponent'];
+  bodyCellComponent?: IReqoreTableRowOptions['cellComponent'];
 }
 
 export interface IReqoreTableStyle {
@@ -148,6 +155,9 @@ const ReqoreTable = ({
   onFilterChange,
   filterProps,
   emptyMessage = 'No data in this table, try changing your search query or filters',
+  headerCellComponent,
+  rowComponent,
+  bodyCellComponent,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -155,7 +165,7 @@ const ReqoreTable = ({
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
   const [_selected, setSelected] = useState<(string | number)[]>([]);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
-  const [internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
+  const [internalColumns, setColumns] = useState<IReqoreTableColumn[]>(prepareColumns(columns));
   const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
 
   const [wrapperRef, sizes] = useMeasure();
@@ -210,7 +220,7 @@ const ReqoreTable = ({
   }, [_sort]);
 
   useUpdateEffect(() => {
-    setColumns(columns);
+    setColumns(prepareColumns(columns));
   }, [columns]);
 
   useUpdateEffect(() => {
@@ -428,6 +438,7 @@ const ReqoreTable = ({
         onFilterChange={(dataId: string, value: any) => {
           handleColumnsUpdate(dataId, 'filter', value);
         }}
+        component={headerCellComponent}
       />
       {count(transformedData) === 0 ? (
         <>
@@ -450,6 +461,8 @@ const ReqoreTable = ({
           size={zoomToSize[zoom]}
           striped={striped}
           flat={rest.flat}
+          rowComponent={rowComponent}
+          cellComponent={bodyCellComponent}
         />
       )}
     </ReqorePanel>

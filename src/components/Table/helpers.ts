@@ -1,6 +1,8 @@
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
+import { ICON_FROM_SIZE, SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelAction } from '../Panel';
 
 export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
@@ -171,15 +173,57 @@ export const getOnlyShownColumns = (columns: IReqoreTableColumn[]): IReqoreTable
   }, []);
 };
 
-export const calculateMinimumCellWidth = (column: IReqoreTableColumn): number => {
-  let width = 50;
+export const prepareColumns = (
+  columns: IReqoreTableColumn[],
+  size: TSizes = 'normal'
+): IReqoreTableColumn[] => {
+  // We need to set the width of each column
+  return columns.map((column) => {
+    if (column.header.columns) {
+      return {
+        ...column,
+        header: { ...column.header, columns: prepareColumns(column.header.columns) },
+      };
+    }
 
-  if (column.header.icon) {
-    width += 30;
+    let newWidth = calculateMinimumCellWidth(
+      column.width || 50,
+      size,
+      column.header.icon,
+      column.sortable,
+      column.filterable,
+      column.hideable,
+      column.resizable
+    );
+
+    return {
+      ...column,
+      width: newWidth,
+    };
+  });
+};
+
+export const calculateMinimumCellWidth = (
+  currentWidth: number = 50,
+  size?: TSizes,
+  icon?: IReqoreIconName,
+  sortable?: boolean,
+  filterable?: boolean,
+  hideable?: boolean,
+  resizable?: boolean
+): number => {
+  let width = currentWidth;
+
+  if (icon) {
+    width += ICON_FROM_SIZE[size];
   }
 
-  if (column.filterable || column.hideable || column.resizable) {
-    width += 30;
+  if (sortable) {
+    width += ICON_FROM_SIZE[size];
+  }
+
+  if (filterable || hideable || resizable) {
+    width += SIZE_TO_PX[size];
   }
 
   return width;
