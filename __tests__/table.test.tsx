@@ -1,8 +1,13 @@
 import { fireEvent, render } from '@testing-library/react';
-import React from 'react';
+import React, { useState } from 'react';
+import { act } from 'react-dom/test-utils';
 import { ReqoreLayoutContent, ReqoreTable, ReqoreUIProvider } from '../src';
-import { IReqoreTableProps } from '../src/components/Table';
+import { IReqoreTableColumn, IReqoreTableProps } from '../src/components/Table';
 import tableData from '../src/mock/tableData';
+
+beforeAll(() => {
+  jest.setTimeout(30000);
+});
 
 test('Renders basic <Table /> properly', () => {
   render(
@@ -289,6 +294,37 @@ test('Rows on <Table /> can be selected', () => {
   expect(fn).toHaveBeenLastCalledWith([1, 2]);
 });
 
+test('Rows on <Table /> can be selected, does not keep internal state', () => {
+  const data = {
+    ...tableData,
+    selectable: true,
+  };
+
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} onSelectClick={fn} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const firstRow = document.querySelector('.reqore-table-row');
+  const firstCheckCell = firstRow!.querySelector('.reqore-table-cell');
+
+  fireEvent.click(firstCheckCell!);
+
+  expect(fn).toHaveBeenCalledWith(1);
+
+  const secondRow = document.querySelectorAll('.reqore-table-row')[1];
+  const secondCheckCell = secondRow.querySelector('.reqore-table-cell');
+
+  fireEvent.click(secondCheckCell!);
+
+  expect(fn).toHaveBeenLastCalledWith(2);
+});
+
 test('Rows on <Table /> cannot be selected if _selectId is missing', () => {
   const data = {
     ...tableData,
@@ -448,4 +484,165 @@ test('Cells on <Table /> are interactive', () => {
   fireEvent.click(firstCheckCell!);
 
   expect(fn).toHaveBeenCalledWith(1);
+});
+
+const TestingTableWithState = () => {
+  const [columns, setColumns] = useState<IReqoreTableColumn[]>([
+    {
+      dataId: 'id',
+      header: { label: 'ID', tooltip: 'Custom ID tooltip nice' },
+      width: 50,
+      align: 'center',
+      sortable: true,
+    },
+    {
+      header: {
+        label: 'Name',
+        columns: [
+          {
+            dataId: 'firstName',
+            header: {
+              label: 'First Name',
+              icon: 'SlideshowLine',
+              effect: {
+                gradient: {
+                  colors: {
+                    0: 'success',
+                    100: 'info',
+                  },
+                },
+              },
+            },
+            width: 150,
+            grow: 2,
+          },
+          {
+            dataId: 'lastName',
+            header: { label: 'Last Name', icon: 'SlideshowLine' },
+            width: 150,
+            grow: 1,
+            sortable: true,
+          },
+        ],
+      },
+      dataId: 'name',
+      grow: 3,
+    },
+    {
+      dataId: 'address',
+      header: { label: 'Address', onClick: () => alert('clicked address') },
+      width: 300,
+      grow: 2,
+    },
+    {
+      dataId: 'age',
+      header: { label: 'Really long age header', icon: 'User4Line' },
+      width: 50,
+      align: 'center',
+      sortable: true,
+    },
+    {
+      header: {
+        label: 'Data',
+        columns: [
+          { dataId: 'occupation', header: { label: 'Ocuppation' }, width: 200 },
+          { dataId: 'group', header: { label: 'Groups' }, width: 150 },
+        ],
+      },
+      dataId: 'data',
+    },
+  ]);
+
+  return (
+    <ReqoreTable
+      {...tableData}
+      columns={columns}
+      actions={[
+        {
+          className: 'reqore-test-action',
+          label: 'Test Action',
+          onClick: () => {
+            setColumns((prev) => {
+              return prev.map((column) => {
+                if (column.dataId === 'id') {
+                  return {
+                    ...column,
+                    header: {
+                      ...column.header,
+                      label: 'New ID',
+                    },
+                  };
+                }
+                return column;
+              });
+            });
+          },
+        },
+      ]}
+    />
+  );
+};
+
+test('Data on <Table /> headers are not reset when columns are updated', () => {
+  jest.useFakeTimers();
+  jest.setTimeout(30000);
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <TestingTableWithState />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(9);
+
+  fireEvent.click(document.querySelector('.reqore-table-header-cell-options')!);
+
+  jest.advanceTimersByTime(1);
+
+  fireEvent.click(document.querySelector('.reqore-table-header-hide')!);
+
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(8);
+
+  fireEvent.click(document.querySelector('.reqore-test-action')!);
+
+  // The column is still hidden even after columns data have changed
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(8);
+});
+
+test('<Table /> is reset to default', () => {
+  jest.useFakeTimers();
+  jest.setTimeout(30000);
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <TestingTableWithState />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(9);
+
+  fireEvent.click(document.querySelector('.reqore-table-header-cell-options')!);
+
+  jest.advanceTimersByTime(1);
+
+  fireEvent.click(document.querySelector('.reqore-table-header-hide')!);
+
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(8);
+
+  fireEvent.click(document.querySelector('.reqore-table-more')!);
+
+  jest.advanceTimersByTime(1);
+
+  fireEvent.click(document.querySelector('.reqore-table-reset')!);
+
+  // The column is still hidden even after columns data have changed
+  expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(9);
 });

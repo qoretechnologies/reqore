@@ -175,6 +175,7 @@ export const getOnlyShownColumns = (columns: IReqoreTableColumn[]): IReqoreTable
 
 export const prepareColumns = (
   columns: IReqoreTableColumn[],
+  columnModifiers: { [key: string]: { [key: string]: any } },
   size: TSizes = 'normal'
 ): IReqoreTableColumn[] => {
   // We need to set the width of each column
@@ -182,7 +183,10 @@ export const prepareColumns = (
     if (column.header.columns) {
       return {
         ...column,
-        header: { ...column.header, columns: prepareColumns(column.header.columns) },
+        header: {
+          ...column.header,
+          columns: prepareColumns(column.header.columns, columnModifiers, size),
+        },
       };
     }
 
@@ -199,6 +203,7 @@ export const prepareColumns = (
     return {
       ...column,
       width: newWidth,
+      ...(columnModifiers?.[column.dataId] || {}),
     };
   });
 };

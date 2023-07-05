@@ -18,6 +18,7 @@ export interface IReqoreTableHeaderCellProps
   sortData?: IReqoreTableSort;
   onColumnsUpdate?: TColumnsUpdater;
   onFilterChange?: (dataId: string, filter: string) => void;
+  actions?: IReqoreTableColumn['header']['actions'];
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -58,11 +59,13 @@ export const ReqoreTableHeaderCell = ({
   filterable,
   hideable = true,
   filter,
+  size,
   onFilterChange,
+  actions,
   ...rest
 }: IReqoreTableHeaderCellProps) => {
   const items = useMemo(() => {
-    const _items: IReqoreDropdownItem[] = [];
+    let _items: IReqoreDropdownItem[] = [];
 
     if (resizable || hideable) {
       _items.push({
@@ -85,11 +88,16 @@ export const ReqoreTableHeaderCell = ({
         _items.push({
           label: 'Hide column',
           icon: 'EyeCloseLine',
+          className: 'reqore-table-header-hide',
           onClick: () => {
             onColumnsUpdate?.(dataId, 'show', false);
           },
         });
       }
+    }
+
+    if (actions) {
+      _items = [..._items, { divider: true, label: 'Other' }, ...actions];
     }
 
     return _items;
@@ -119,6 +127,7 @@ export const ReqoreTableHeaderCell = ({
       <ReqoreControlGroup fluid stack rounded={false} fill style={{ height: '100%' }}>
         <ReqoreButton
           {...rest}
+          size={size}
           readOnly={!sortable && !onClick}
           className={`${className || ''} reqore-table-header-cell`}
           rounded={false}
@@ -143,6 +152,7 @@ export const ReqoreTableHeaderCell = ({
             icon='MoreLine'
             className='reqore-table-header-cell-options'
             fixed
+            size={size}
             rounded={false}
             intent={filter ? 'info' : undefined}
             filterable={filterable}
