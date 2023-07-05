@@ -8,6 +8,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
+import { IReqoreDropdownItem } from '../Dropdown/list';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
 import ReqoreTableBody from './body';
@@ -23,13 +24,12 @@ import {
   prepareColumns,
   sizeToZoom,
   sortTableData,
-  updateColumnData,
   zoomToSize,
 } from './helpers';
 import { IReqoreTableRowOptions } from './row';
 
 export type TReqoreTableColumnContent =
-  | React.FC<{ [key: string]: any; _selectId?: string | number }>
+  | React.FC<{ [key: string]: any; _selectId?: string | number; _size: TSizes; _dataId: string }>
   | 'time-ago'
   | 'tag'
   | `tag:${TReqoreIntent}`
@@ -58,6 +58,7 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   header?: {
     columns?: IReqoreTableColumn[];
     component?: React.FC<IReqoreTableHeaderCellProps>;
+    actions?: IReqoreDropdownItem[];
   } & IReqoreButtonProps;
 
   cell?: {
@@ -65,6 +66,7 @@ export interface IReqoreTableColumn extends IReqoreIntent {
     tooltip?: (cellValue: any) => string | IReqoreTooltip;
     content?: TReqoreTableColumnContent;
     intent?: TReqoreIntent;
+    padded?: 'both' | 'horizontal' | 'vertical' | 'none';
   };
 }
 
@@ -101,6 +103,7 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   selected?: string[];
   selectedRowIntent?: TReqoreIntent;
   onSelectedChange?: (selected?: any[]) => void;
+  onSelectClick?: (dataId: string | number) => void;
   selectToggleTooltip?: string;
 
   striped?: boolean;
@@ -158,6 +161,7 @@ const ReqoreTable = ({
   headerCellComponent,
   rowComponent,
   bodyCellComponent,
+  onSelectClick,
   ...rest
 }: IReqoreTableProps) => {
   const [leftScroll, setLeftScroll] = useState<number>(0);
@@ -165,11 +169,19 @@ const ReqoreTable = ({
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
   const [_selected, setSelected] = useState<(string | number)[]>([]);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
-  const [internalColumns, setColumns] = useState<IReqoreTableColumn[]>(prepareColumns(columns));
+  const [columnModifiers, setColumnModifiers] = useState<{
+    [key: string]: { [dataId: string]: any };
+  }>({});
+  const [_internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
   const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
 
   const [wrapperRef, sizes] = useMeasure();
   const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(filter, 300, onFilterChange);
+
+  const finalColumns = useMemo(
+    () => prepareColumns(_internalColumns, columnModifiers, size),
+    [_internalColumns, columnModifiers]
+  );
 
   const filters: { [key: string]: string } = useMemo(() => {
     const getFilters = (columnsToTransform: IReqoreTableColumn[]) =>
@@ -191,8 +203,8 @@ const ReqoreTable = ({
         return filterObject;
       }, {});
 
-    return getFilters(internalColumns);
-  }, [internalColumns]);
+    return getFilters(finalColumns);
+  }, [finalColumns]);
 
   const transformedData = useMemo(() => {
     // Filter by global query
@@ -220,7 +232,7 @@ const ReqoreTable = ({
   }, [_sort]);
 
   useUpdateEffect(() => {
-    setColumns(prepareColumns(columns));
+    setColumns(columns);
   }, [columns]);
 
   useUpdateEffect(() => {
@@ -266,6 +278,11 @@ const ReqoreTable = ({
   };
 
   const handleSelectClick = (selectId: string | number) => {
+    if (onSelectClick) {
+      onSelectClick(selectId);
+      return;
+    }
+
     setSelected((current) => {
       let newSelected = [...current];
       const isSelected = newSelected.find((selected) => selectId === selected);
@@ -300,9 +317,17 @@ const ReqoreTable = ({
 
   const handleColumnsUpdate = useCallback(
     <T extends keyof IReqoreTableColumn>(id: string, key: T, value: IReqoreTableColumn[T]) => {
-      setColumns(updateColumnData(internalColumns, id, key, value));
+      setColumnModifiers((current) => {
+        return {
+          ...current,
+          [id]: {
+            ...current[id],
+            [key]: value,
+          },
+        };
+      });
     },
-    [internalColumns]
+    [columnModifiers]
   );
 
   const handlePreQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -327,7 +352,7 @@ const ReqoreTable = ({
       });
     };
 
-    internalColumns.forEach((column) => {
+    finalColumns.forEach((column) => {
       if (column.header?.columns) {
         column.header?.columns.forEach((subColumn) => {
           addColumn(subColumn);
@@ -338,7 +363,7 @@ const ReqoreTable = ({
     });
 
     return _columnsList;
-  }, [internalColumns]);
+  }, [finalColumns]);
 
   const tableActions = useMemo<IReqorePanelAction[]>(() => {
     const finalActions: IReqorePanelAction[] = [...actions];
@@ -347,8 +372,8 @@ const ReqoreTable = ({
       label: 'Columns',
       icon: 'LayoutColumnLine',
       className: 'reqore-table-columns-options',
-      badge: getColumnsCount(getOnlyShownColumns(internalColumns)),
-      intent: hasHiddenColumns(internalColumns) ? 'info' : undefined,
+      badge: getColumnsCount(getOnlyShownColumns(finalColumns)),
+      intent: hasHiddenColumns(finalColumns) ? 'info' : undefined,
       multiSelect: true,
       actions: columnsList,
     });
@@ -381,6 +406,26 @@ const ReqoreTable = ({
       });
     }
 
+    if (count(columnModifiers) || zoomable || filterable) {
+      finalActions.push({
+        icon: 'MoreLine',
+        className: 'reqore-table-more',
+        actions: [
+          {
+            label: 'Reset table',
+            icon: 'RestartLine',
+            className: 'reqore-table-reset',
+            onClick: () => {
+              setZoom(1);
+              setPreQuery('');
+              setQuery('');
+              setColumnModifiers({});
+            },
+          },
+        ],
+      });
+    }
+
     return finalActions;
   }, [
     preQuery,
@@ -388,7 +433,7 @@ const ReqoreTable = ({
     actions,
     filterable,
     filterProps,
-    internalColumns,
+    finalColumns,
     zoomable,
     zoom,
     columnsList,
@@ -425,7 +470,7 @@ const ReqoreTable = ({
     >
       <ReqoreTableHeader
         size={zoomToSize[zoom]}
-        columns={internalColumns}
+        columns={finalColumns}
         leftScroll={leftScroll}
         onSortChange={handleSortChange}
         sortData={_sort}
@@ -450,7 +495,7 @@ const ReqoreTable = ({
       ) : (
         <ReqoreTableBody
           data={transformedData}
-          columns={internalColumns}
+          columns={finalColumns}
           setLeftScroll={setLeftScroll}
           height={fill ? sizes.height : height}
           selectable={selectable}

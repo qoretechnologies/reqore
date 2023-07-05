@@ -3,7 +3,15 @@ import { StyledEffect } from '../../components/Effect';
 import { IReqoreTableColumn, IReqoreTableProps } from '../../components/Table';
 import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
-import { ReqoreH3, ReqoreH4, ReqoreIcon, ReqoreP, ReqoreTable, ReqoreTag } from '../../index';
+import {
+  ReqoreH3,
+  ReqoreH4,
+  ReqoreIcon,
+  ReqoreInput,
+  ReqoreP,
+  ReqoreTable,
+  ReqoreTag,
+} from '../../index';
 import tableData from '../../mock/tableData';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
@@ -40,6 +48,12 @@ const defaultColumns: IReqoreTableColumn[] = [
                 },
               },
             },
+          },
+          cell: {
+            padded: 'none',
+            content: ({ _size, firstName }) => (
+              <ReqoreInput icon='PriceTag2Fill' size={_size} value={firstName} />
+            ),
           },
           width: 150,
           grow: 2,
@@ -80,6 +94,12 @@ const defaultColumns: IReqoreTableColumn[] = [
       label: 'Really long age header',
       icon: 'User4Line',
       tooltip: 'Custom age tooltip',
+      actions: [
+        {
+          label: 'Do something',
+          icon: 'EBike2Fill',
+        },
+      ],
     },
     width: 100,
     align: 'center',

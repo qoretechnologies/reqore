@@ -62,8 +62,8 @@ export const StyledTableRow = styled.div<IReqoreTableRowStyle>`
 
 export interface IReqoreTableCellStyle {
   width?: number;
-  grow?: number;
   theme?: IReqoreTheme;
+  grow: 1 | 2 | 3 | 4;
   align?: 'center' | 'left' | 'right';
   intent?: TReqoreIntent;
   interactive?: boolean;
@@ -76,6 +76,7 @@ export interface IReqoreTableCellStyle {
   selectedIntent?: TReqoreIntent;
   even?: boolean;
   striped?: boolean;
+  padded?: IReqoreTableColumn['cell']['padded'];
 }
 
 const ReqoreTableRow = ({
@@ -110,7 +111,7 @@ const ReqoreTableRow = ({
     if (isFunction(content)) {
       const Content = content;
 
-      return <Content {...data} />;
+      return <Content {...data} _size={size} _dataId={dataId} />;
     }
 
     if (isString(content)) {
@@ -181,6 +182,7 @@ const ReqoreTableRow = ({
                 align,
                 size,
                 striped,
+                padded: cell?.padded,
                 disabled: data[index]._disabled,
                 selected: !!isSelected,
                 selectedIntent: selectedRowIntent,

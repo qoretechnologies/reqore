@@ -13,6 +13,7 @@ export interface IReqoreTableBodyCellProps
   extends Partial<IReqoreTableColumn>,
     React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
+  padded?: IReqoreTableColumn['cell']['padded'];
 }
 
 export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
@@ -36,6 +37,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     selectedIntent,
     disabled,
     hovered,
+    padded,
   }: IReqoreTableCellStyle) => {
     const getBackgroundColor = (): TReqoreColor => {
       let color = theme.main;
@@ -76,7 +78,8 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       border-bottom: ${!flat ? '1px solid ' : undefined};
 
       height: 100%;
-      padding: 0 10px;
+      padding: ${!padded || padded === 'both' || padded === 'vertical' ? 0 : undefined}
+        ${!padded || padded === 'both' || padded === 'horizontal' ? '10px' : undefined};
       font-size: ${TEXT_FROM_SIZE[size]}px;
       background-color: ${backgroundColor === 'transparent'
         ? 'transparent'
