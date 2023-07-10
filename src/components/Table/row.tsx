@@ -2,13 +2,8 @@
 import { isFunction, isString } from 'lodash';
 import React, { ReactElement, useState } from 'react';
 import styled, { css } from 'styled-components';
-import {
-  IReqoreTableColumn,
-  IReqoreTableData,
-  IReqoreTableRowClick,
-  TReqoreTableColumnContent,
-} from '.';
-import { ReqorePopover } from '../..';
+import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
+import { ReqoreButton, ReqoreControlGroup, ReqorePopover } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreTooltip } from '../../types/global';
@@ -104,10 +99,22 @@ const ReqoreTableRow = ({
   const RowComponent = rowComponent || StyledTableRow;
 
   const renderContent = (
-    content: TReqoreTableColumnContent,
+    cell: IReqoreTableColumn['cell'],
     data: any,
     dataId: string
   ): ReactElement<any, any> => {
+    if (cell?.actions) {
+      return (
+        <ReqoreControlGroup size={size} stack fill fluid style={{ height: '100%' }} rounded={false}>
+          {cell.actions.map((action, index) => (
+            <ReqoreButton key={index} {...action} rounded={false} />
+          ))}
+        </ReqoreControlGroup>
+      );
+    }
+
+    const content = cell?.content;
+
     if (isFunction(content)) {
       const Content = content;
 
@@ -156,7 +163,7 @@ const ReqoreTableRow = ({
 
   const renderCells = (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
     getOnlyShownColumns(columns).map(
-      ({ width, resizedWidth, grow, dataId, cell, header, align, intent }) => {
+      ({ width, minWidth, maxWidth, resizedWidth, grow, dataId, cell, header, align, intent }) => {
         if (header.columns) {
           return renderCells(header.columns, data);
         }
@@ -178,6 +185,8 @@ const ReqoreTableRow = ({
             componentProps={
               {
                 width: resizedWidth || width,
+                minWidth,
+                maxWidth,
                 grow,
                 align,
                 size,
@@ -209,7 +218,7 @@ const ReqoreTableRow = ({
             }
             {...tooltip}
           >
-            {renderContent(cell?.content, data[index], dataId)}
+            {renderContent(cell, data[index], dataId)}
           </ReqorePopover>
         );
       }

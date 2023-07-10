@@ -1,46 +1,92 @@
-import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
-import { useScroll } from 'react-use';
+import { forwardRef } from 'react';
+import { useMount } from 'react-use';
 import { FixedSizeList as List } from 'react-window';
+import styled from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 
 export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
-  setLeftScroll: Dispatch<SetStateAction<number>>;
   rowHeight?: number;
   height: number;
+  refs: {
+    left: React.RefObject<HTMLDivElement>;
+    right: React.RefObject<HTMLDivElement>;
+    main: React.RefObject<HTMLDivElement>;
+    header: React.RefObject<HTMLDivElement>;
+  };
+  type?: 'left' | 'right' | 'main';
+  onScrollChange?: (isScrolled: boolean) => void;
 }
 
-const ReqoreTableBody = ({
-  data,
-  setLeftScroll,
-  height,
-  rowHeight,
-  size = 'normal',
-  ...rest
-}: IReqoreTableSectionBodyProps) => {
-  const ref = useRef(null);
-  const { x }: { x: number } = useScroll(ref);
+const StyledList = styled(List)`
+  ::-webkit-scrollbar {
+    display: none;
+  }
+`;
 
-  useEffect(() => {
-    setLeftScroll(x);
-  }, [x]);
+const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>(
+  (
+    {
+      data,
+      height,
+      rowHeight,
+      size = 'normal',
+      refs,
+      type,
+      onScrollChange,
+      ...rest
+    }: IReqoreTableSectionBodyProps,
+    ref
+  ) => {
+    const { targetRef } = useCombinedRefs(ref);
 
-  return (
-    <List
-      outerRef={ref}
-      itemCount={data.length}
-      height={height}
-      className='reqore-table-body'
-      itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
-      itemData={{
-        data,
-        size,
-        ...rest,
-      }}
-    >
-      {ReqoreTableRow}
-    </List>
-  );
-};
+    useMount(() => {
+      targetRef.current?.addEventListener('wheel', (e) => {
+        if (e.deltaY) {
+          e.preventDefault();
+
+          const currentScroll = refs[type].current?.scrollTop + e.deltaY;
+
+          onScrollChange?.(currentScroll > 0);
+
+          refs[type].current?.scrollTo({ top: currentScroll });
+
+          if (type === 'left') {
+            refs.main.current?.scrollTo({ top: refs.main.current?.scrollTop + e.deltaY });
+            refs.right.current?.scrollTo({ top: refs.right.current?.scrollTop + e.deltaY });
+          } else if (type === 'main') {
+            refs.left.current?.scrollTo({ top: refs.left.current?.scrollTop + e.deltaY });
+            refs.right.current?.scrollTo({ top: refs.right.current?.scrollTop + e.deltaY });
+          } else if (type === 'right') {
+            refs.main.current?.scrollTo({ top: refs.main.current?.scrollTop + e.deltaY });
+            refs.left.current?.scrollTo({ top: refs.left.current?.scrollTop + e.deltaY });
+          }
+        }
+
+        if (e.deltaX && type === 'main') {
+          refs.header.current?.scrollTo({ left: refs.main.current?.scrollLeft + e.deltaX });
+        }
+      });
+    });
+
+    return (
+      <StyledList
+        outerRef={targetRef}
+        itemCount={data.length}
+        height={height}
+        className='reqore-table-body'
+        itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
+        itemData={{
+          data,
+          size,
+          ...rest,
+        }}
+      >
+        {ReqoreTableRow}
+      </StyledList>
+    );
+  }
+);
 
 export default ReqoreTableBody;

@@ -11,6 +11,23 @@ export const ReqoreSizes = {
 
 export const SIZES = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
+export const SIZE_TO_MODIFIER = {
+  tiny: 0.6,
+  small: 0.8,
+  normal: 1,
+  big: 1.2,
+  huge: 1.4,
+};
+
+export const LINE_SIZE_TO_NUMBER = {
+  none: 0,
+  tiny: 0.5,
+  small: 1,
+  normal: 1.5,
+  big: 2,
+  huge: 3,
+};
+
 export const SIZE_TO_NUMBER = {
   none: 0,
   tiny: 1,

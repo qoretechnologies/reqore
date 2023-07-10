@@ -469,6 +469,7 @@ const ReqoreControlGroup = memo(
           </ReqoreDrawer>
         ) : null}
         <StyledReqoreControlGroup
+          as='div'
           {...rest}
           vertical={vertical}
           style={{

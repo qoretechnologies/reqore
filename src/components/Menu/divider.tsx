@@ -5,6 +5,7 @@ import { getReadableColor } from '../../helpers/colors';
 import { getOneLessSize, isStringSize } from '../../helpers/utils';
 import { IWithReqoreEffect, IWithReqoreSize } from '../../types/global';
 import { IReqoreEffect, StyledTextEffect } from '../Effect';
+import { ReqoreVerticalSpacer } from '../Spacer';
 
 export interface IReqoreMenuDividerProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'>,
@@ -13,6 +14,7 @@ export interface IReqoreMenuDividerProps
   label?: string | number;
   margin?: 'left' | 'right' | 'both' | 'none';
   align?: 'left' | 'center' | 'right';
+  line?: boolean;
 }
 
 export const StyledMenuDivider = styled(StyledTextEffect)`
@@ -46,30 +48,38 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
       effect,
       size = 'normal',
       align = 'center',
+      line,
       ...rest
     }: IReqoreMenuDividerProps,
     ref: any
-  ) => (
-    <StyledMenuDivider
-      as='div'
-      {...rest}
-      size={size}
-      className={`${className || ''} reqore-menu-divider`}
-      ref={ref}
-      effect={
-        {
-          uppercase: true,
-          spaced: 2,
-          textAlign: align,
-          textSize: getOneLessSize(size),
-          weight: 'bold',
-          ...effect,
-        } as IReqoreEffect
-      }
-    >
-      {label}
-    </StyledMenuDivider>
-  )
+  ) =>
+    line ? (
+      <ReqoreVerticalSpacer
+        className={`${className || ''} reqore-menu-divider`}
+        height={PADDING_FROM_SIZE[size]}
+        lineSize={size}
+      />
+    ) : (
+      <StyledMenuDivider
+        as='div'
+        {...rest}
+        size={size}
+        className={`${className || ''} reqore-menu-divider`}
+        ref={ref}
+        effect={
+          {
+            uppercase: true,
+            spaced: 2,
+            textAlign: align,
+            textSize: getOneLessSize(size),
+            weight: 'bold',
+            ...effect,
+          } as IReqoreEffect
+        }
+      >
+        {label}
+      </StyledMenuDivider>
+    )
 );
 
 export default ReqoreMenuDivider;

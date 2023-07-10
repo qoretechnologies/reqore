@@ -1,7 +1,7 @@
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
-import { ICON_FROM_SIZE, SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { ICON_FROM_SIZE, SIZE_TO_MODIFIER, SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelAction } from '../Panel';
 
@@ -137,6 +137,12 @@ export const getColumnsCount = (columns: IReqoreTableColumn[]): number => {
   return count;
 };
 
+export const hasGroupedColumns = (columns: IReqoreTableColumn[]): boolean => {
+  return columns.some((column) => {
+    return !!column.header?.columns;
+  });
+};
+
 export const hasHiddenColumns = (columns: IReqoreTableColumn[]): boolean => {
   return columns.some((column) => {
     if (column.header.columns) {
@@ -145,6 +151,40 @@ export const hasHiddenColumns = (columns: IReqoreTableColumn[]): boolean => {
 
     return column.show === false;
   });
+};
+
+export const getColumnsByPinType = (
+  columns: IReqoreTableColumn[],
+  type: 'left' | 'right' | 'main'
+): IReqoreTableColumn[] => {
+  return columns.reduce((newColumns, column) => {
+    if (column.header.columns) {
+      const subColumns: IReqoreTableColumn[] = getColumnsByPinType(column.header.columns, type);
+
+      if (!size(subColumns)) {
+        return newColumns;
+      }
+
+      const columnsResult = [
+        ...newColumns,
+        {
+          ...column,
+          header: {
+            ...column.header,
+            columns: subColumns,
+          },
+        },
+      ];
+
+      return columnsResult;
+    }
+
+    if ((type === 'main' && !column.pin) || column.pin === type) {
+      return [...newColumns, column];
+    }
+
+    return newColumns;
+  }, []);
 };
 
 export const getOnlyShownColumns = (columns: IReqoreTableColumn[]): IReqoreTableColumn[] => {
@@ -202,7 +242,7 @@ export const prepareColumns = (
 
     return {
       ...column,
-      width: newWidth,
+      width: newWidth * SIZE_TO_MODIFIER[size],
       ...(columnModifiers?.[column.dataId] || {}),
     };
   });

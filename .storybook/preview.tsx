@@ -1,7 +1,4 @@
-import { withTests } from '@storybook/addon-jest';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
-import results from '../tests.json';
-
 export const parameters = {
   layout: 'fullscreen',
   options: {
@@ -90,7 +87,4 @@ export const decorators = [
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     ),
-  withTests({
-    results,
-  }),
 ];

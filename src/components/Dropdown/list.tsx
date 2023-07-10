@@ -17,6 +17,7 @@ export interface IReqoreDropdownItem
   onClick?: TDropdownItemOnClick;
   divider?: boolean;
   dividerAlign?: 'left' | 'center' | 'right';
+  line?: boolean;
 }
 
 export type TReqoreDropdownItem = IReqoreDropdownItem;

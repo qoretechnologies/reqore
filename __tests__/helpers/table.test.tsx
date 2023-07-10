@@ -1,4 +1,5 @@
 import {
+  getColumnsByPinType,
   getColumnsCount,
   getOnlyShownColumns,
   hasHiddenColumns,
@@ -44,4 +45,23 @@ test('Filters out hidden columns', () => {
   expect(hasHiddenColumns(columns)).toBe(true);
   expect(hasHiddenColumns(newColumns)).toBe(false);
   expect(newColumns[1].dataId).toBe('address');
+});
+
+test('Returns pinned columns', () => {
+  const columns = [...testColumns];
+
+  expect(getColumnsCount(columns)).toBe(8);
+
+  columns[1].header!.columns![1].pin = 'left';
+  columns[0].pin = 'left';
+  columns[4].header!.columns![0].pin = 'right';
+  columns[4].header!.columns![1].pin = 'right';
+
+  const leftPinColumns = getColumnsByPinType(columns, 'left');
+  const rightPinColumns = getColumnsByPinType(columns, 'right');
+  const mainColumns = getColumnsByPinType(columns, 'main');
+
+  expect(getColumnsCount(leftPinColumns)).toBe(2);
+  expect(getColumnsCount(rightPinColumns)).toBe(2);
+  expect(getColumnsCount(mainColumns)).toBe(4);
 });
