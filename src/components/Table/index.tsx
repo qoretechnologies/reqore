@@ -527,6 +527,10 @@ const ReqoreTable = ({
     const tableColumns = columnsByType[type];
     const isPinned = type === 'left' || type === 'right';
 
+    if (count(tableColumns) === 0) {
+      return null;
+    }
+
     return (
       <StyledTableWrapper isPinned={isPinned}>
         <ReqoreTableHeader

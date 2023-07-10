@@ -66,6 +66,7 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
       display: none;
     }
 
+    flex-shrink: 0;
     flex-flow: column;
     height: ${heightAsGroup ? `${SIZE_TO_PX[size] * 2}px` : undefined};
 
