@@ -9,10 +9,9 @@ import { changeLightness } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IWithReqoreSize } from '../../types/global';
-import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
 import { IReqoreTableHeaderCellProps, ReqoreTableHeaderCell } from './headerCell';
-import { calculateMinimumCellWidth, getOnlyShownColumns } from './helpers';
+import { getOnlyShownColumns } from './helpers';
 
 export type TColumnsUpdater = <T extends keyof IReqoreTableColumn>(
   id: string,
@@ -130,10 +129,6 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       columns,
       onSortChange,
       sortData,
-      selectable,
-      selectedQuant,
-      onToggleSelectClick,
-      selectToggleTooltip,
       hasVerticalScroll,
       onColumnsUpdate,
       onFilterChange,
@@ -202,6 +197,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
                 dataId,
                 size,
                 readOnly: !onClick,
+                onClick,
                 rounded: false,
                 textAlign: align,
                 className: 'reqore-table-column-group-header',
@@ -217,6 +213,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
             renderHeaderCell(headerComponent, {
               ...rest,
               ...omit(colRest, ['cell']),
+              onClick,
               dataId,
               size,
               sortData,
@@ -229,17 +226,6 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
           )
       );
 
-    const getSelectedIcon = (): IReqoreIconName => {
-      switch (selectedQuant) {
-        case 'all':
-          return 'CheckboxCircleLine';
-        case 'some':
-          return 'IndeterminateCircleLine';
-        default:
-          return 'CheckboxBlankCircleLine';
-      }
-    };
-
     return (
       <StyledTableHeaderWrapper
         className='reqore-table-header-wrapper'
@@ -248,25 +234,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         size={size}
         ref={targetRef}
       >
-        <StyledTableHeaderRow>
-          {selectable &&
-            renderHeaderCell(component, {
-              dataId: 'selectbox',
-              sortData,
-              align: 'center',
-              size,
-              onSortChange,
-              icon: getSelectedIcon(),
-              width: calculateMinimumCellWidth(50, size),
-              resizable: false,
-              hideable: false,
-              tooltip: selectToggleTooltip || 'Toggle selection on all data',
-              onClick: () => {
-                onToggleSelectClick();
-              },
-            })}
-          {renderColumns(columns)}
-        </StyledTableHeaderRow>
+        <StyledTableHeaderRow>{renderColumns(columns)}</StyledTableHeaderRow>
       </StyledTableHeaderWrapper>
     );
   }

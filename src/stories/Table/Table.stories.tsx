@@ -172,7 +172,7 @@ const defaultColumns: IReqoreTableColumn[] = [
 
     cell: {
       padded: 'none',
-      actions: [
+      actions: ({ _selectId }) => [
         {
           icon: 'AddLine',
           intent: 'info',
@@ -404,6 +404,12 @@ PinnedColumns.args = {
 
 export const Selectable = Template.bind({});
 Selectable.args = {
+  selectable: true,
+};
+
+export const PreselectedRows = Template.bind({});
+PreselectedRows.args = {
+  selected: [274, 280],
   selectable: true,
 };
 

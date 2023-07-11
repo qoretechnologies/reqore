@@ -56,6 +56,7 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   resizable?: boolean;
   sortable?: boolean;
   hideable?: boolean;
+  pinnable?: boolean;
 
   filterable?: boolean;
   filterPlaceholder?: string;
@@ -71,7 +72,7 @@ export interface IReqoreTableColumn extends IReqoreIntent {
     onClick?: (cellValue: any) => void;
     tooltip?: (cellValue: any) => string | IReqoreTooltip;
     content?: TReqoreTableColumnContent;
-    actions?: IReqoreButtonProps[];
+    actions?: (data: IReqoreTableRowData) => IReqoreButtonProps[];
     intent?: TReqoreIntent;
     padded?: 'both' | 'horizontal' | 'vertical' | 'none';
   };
@@ -154,6 +155,12 @@ const StyledTableWrapper = styled.div`
         `};
 `;
 
+const StyledTablesWrapper = styled.div`
+  display: flex;
+  flex-flow: row;
+  overflow: hidden;
+`;
+
 const ReqoreTable = ({
   className,
   height = 300,
@@ -169,7 +176,7 @@ const ReqoreTable = ({
   customTheme,
   onRowClick,
   striped,
-  selectedRowIntent,
+  selectedRowIntent = 'info',
   size = 'normal',
   wrapperSize = 'normal',
   intent,
@@ -195,7 +202,7 @@ const ReqoreTable = ({
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
-  const [_selected, setSelected] = useState<(string | number)[]>([]);
+  const [_selected, setSelected] = useState<(string | number)[]>(selected || []);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
   const [columnModifiers, setColumnModifiers] = useState<{
     [dataId: string]: { [modifier: string]: any };
@@ -206,10 +213,74 @@ const ReqoreTable = ({
   const [wrapperRef, sizes] = useMeasure();
   const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(filter, 300, onFilterChange);
 
-  const finalColumns = useMemo(
-    () => prepareColumns(_internalColumns, columnModifiers, zoomToSize[zoom]),
-    [_internalColumns, columnModifiers, zoom]
-  );
+  const selectedIcon = useMemo(() => {
+    switch (_selectedQuant) {
+      case 'all':
+        return 'CheckboxCircleLine';
+      case 'some':
+        return 'IndeterminateCircleLine';
+      default:
+        return 'CheckboxBlankCircleLine';
+    }
+  }, [_selectedQuant]);
+
+  const finalColumns = useMemo(() => {
+    let fullColumns = [..._internalColumns];
+
+    if (selectable) {
+      fullColumns.unshift({
+        dataId: 'selectbox',
+        width: 50,
+        sortable: false,
+        hideable: false,
+        filterable: false,
+        resizable: false,
+        pin: 'left',
+        pinnable: false,
+        align: 'center',
+
+        header: {
+          icon: selectedIcon,
+          tooltip: 'Toggle selection on all data',
+          onClick: () => {
+            handleToggleSelectClick();
+          },
+        },
+
+        cell: {
+          padded: 'none',
+          actions: ({ _selectId }) => [
+            {
+              tooltip: selectToggleTooltip,
+              icon: !_selectId
+                ? 'Forbid2Line'
+                : _selected?.find((s) => s === _selectId)
+                ? 'CheckboxCircleLine'
+                : 'CheckboxBlankCircleLine',
+              intent: !_selectId
+                ? 'muted'
+                : _selected?.find((s) => s === _selectId)
+                ? selectedRowIntent
+                : undefined,
+              onClick: () => handleSelectClick(_selectId),
+            },
+          ],
+        },
+      });
+    }
+
+    return prepareColumns(fullColumns, columnModifiers, zoomToSize[zoom]);
+  }, [
+    _internalColumns,
+    columnModifiers,
+    zoom,
+    selectable,
+    _selectedQuant,
+    selectedIcon,
+    selectToggleTooltip,
+    _selected,
+    selectedRowIntent,
+  ]);
 
   const filters: { [key: string]: string } = useMemo(() => {
     const getFilters = (columnsToTransform: IReqoreTableColumn[]) =>
@@ -381,6 +452,10 @@ const ReqoreTable = ({
     };
 
     finalColumns.forEach((column) => {
+      if (column.hideable === false) {
+        return;
+      }
+
       if (column.header?.columns) {
         column.header?.columns.forEach((subColumn) => {
           addColumn(subColumn);
@@ -441,20 +516,20 @@ const ReqoreTable = ({
         className: 'reqore-table-columns-scroll-top',
         responsive: true,
         onClick: () => {
-          setIsScrolled(false);
+          mainTableRef.current?.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+          });
+          leftTableRef.current?.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+          });
+          rightTableRef.current?.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+          });
 
-          mainTableRef.current.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          });
-          leftTableRef.current.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          });
-          rightTableRef.current.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          });
+          setIsScrolled(false);
         },
       });
     }
@@ -583,7 +658,7 @@ const ReqoreTable = ({
       transparent
       flat
       padded={false}
-      contentStyle={{ display: 'flex', flexFlow: 'row', overflow: 'hidden' }}
+      contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
       responsiveActions={false}
       {...rest}
       size={wrapperSize}
@@ -594,9 +669,11 @@ const ReqoreTable = ({
       getContentRef={wrapperRef}
       badge={badge}
     >
-      {renderTable('left')}
-      {renderTable()}
-      {renderTable('right')}
+      <StyledTablesWrapper className='reqore-table-wrapper'>
+        {renderTable('left')}
+        {renderTable()}
+        {renderTable('right')}
+      </StyledTablesWrapper>
       {count(transformedData) === 0 ? (
         <>
           <ReqoreVerticalSpacer height={10} />

@@ -21,7 +21,7 @@ export const SIZE_TO_MODIFIER = {
 
 export const LINE_SIZE_TO_NUMBER = {
   none: 0,
-  tiny: 0.5,
+  tiny: 1,
   small: 1,
   normal: 1.5,
   big: 2,

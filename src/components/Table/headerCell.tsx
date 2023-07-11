@@ -61,6 +61,7 @@ export const ReqoreTableHeaderCell = ({
   filterPlaceholder,
   filterable,
   hideable = true,
+  pinnable = true,
   filter,
   size,
   onFilterChange,
@@ -80,32 +81,35 @@ export const ReqoreTableHeaderCell = ({
             onColumnsUpdate?.(dataId, 'resizedWidth', width);
           },
         });
-
-        _items.push({ divider: true, size: 'small', line: true });
       }
 
-      _items.push({
-        label: 'Pin left',
-        icon: 'SkipBackLine',
-        active: pin === 'left',
-        intent: pin === 'left' ? 'info' : undefined,
-        onClick: () => {
-          onColumnsUpdate?.(dataId, 'pin', pin !== 'left' ? 'left' : undefined);
-        },
-      });
+      if (pinnable) {
+        _items.push({ divider: true, size: 'small', line: true });
 
-      _items.push({
-        label: 'Pin Right',
-        icon: 'SkipForwardLine',
-        active: pin === 'right',
-        intent: pin === 'right' ? 'info' : undefined,
-        onClick: () => {
-          onColumnsUpdate?.(dataId, 'pin', pin !== 'right' ? 'right' : undefined);
-        },
-      });
+        _items.push({
+          label: 'Pin left',
+          icon: 'SkipBackLine',
+          active: pin === 'left',
+          intent: pin === 'left' ? 'info' : undefined,
+          onClick: () => {
+            onColumnsUpdate?.(dataId, 'pin', pin !== 'left' ? 'left' : undefined);
+          },
+        });
+
+        _items.push({
+          label: 'Pin Right',
+          icon: 'SkipForwardLine',
+          active: pin === 'right',
+          intent: pin === 'right' ? 'info' : undefined,
+          onClick: () => {
+            onColumnsUpdate?.(dataId, 'pin', pin !== 'right' ? 'right' : undefined);
+          },
+        });
+      }
 
       if (hideable) {
         _items.push({ divider: true, size: 'small', line: true });
+
         _items.push({
           label: 'Hide column',
           icon: 'EyeCloseLine',
