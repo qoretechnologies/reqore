@@ -16,9 +16,6 @@ export default {
     },
     ...SizeArg,
   },
-  parameters: {
-    jest: ['breadcrumbs.test.tsx'],
-  },
 } as ComponentMeta<typeof ReqoreBreadcrumbs & { withTabs?: boolean }>;
 
 const Template: ComponentStory<typeof ReqoreBreadcrumbs & { withTabs?: boolean }> = (

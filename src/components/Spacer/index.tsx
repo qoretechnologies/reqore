@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import { SIZE_TO_NUMBER, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { LINE_SIZE_TO_NUMBER, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { changeLightness } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreEffect } from '../../types/global';
@@ -103,7 +103,7 @@ export const ReqoreSpacer = memo(
     }
 
     const _lineSize = useMemo(
-      () => (lineSize === 'none' ? 0 : SIZE_TO_NUMBER[lineSize]),
+      () => (lineSize === 'none' ? 0 : LINE_SIZE_TO_NUMBER[lineSize]),
       [lineSize]
     );
 

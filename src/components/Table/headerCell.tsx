@@ -13,7 +13,7 @@ import { TColumnsUpdater } from './header';
 
 export interface IReqoreTableHeaderCellProps
   extends Omit<IReqoreTableColumn, 'cell'>,
-    IReqoreButtonProps {
+    Omit<IReqoreButtonProps, 'maxWidth'> {
   onSortChange?: (sort: string) => void;
   sortData?: IReqoreTableSort;
   onColumnsUpdate?: TColumnsUpdater;
@@ -44,9 +44,12 @@ export const StyledTableHeaderResize = styled.div`
 
 export const ReqoreTableHeaderCell = ({
   width,
+  maxWidth,
+  minWidth,
   resizedWidth,
   grow,
   align,
+  pin,
   onSortChange,
   dataId,
   sortable,
@@ -58,6 +61,7 @@ export const ReqoreTableHeaderCell = ({
   filterPlaceholder,
   filterable,
   hideable = true,
+  pinnable = true,
   filter,
   size,
   onFilterChange,
@@ -68,11 +72,6 @@ export const ReqoreTableHeaderCell = ({
     let _items: IReqoreDropdownItem[] = [];
 
     if (resizable || hideable) {
-      _items.push({
-        divider: true,
-        label: 'Options',
-      });
-
       if (resizable) {
         _items.push({
           label: 'Reset size',
@@ -84,7 +83,33 @@ export const ReqoreTableHeaderCell = ({
         });
       }
 
+      if (pinnable) {
+        _items.push({ divider: true, size: 'small', line: true });
+
+        _items.push({
+          label: 'Pin left',
+          icon: 'SkipBackLine',
+          active: pin === 'left',
+          intent: pin === 'left' ? 'info' : undefined,
+          onClick: () => {
+            onColumnsUpdate?.(dataId, 'pin', pin !== 'left' ? 'left' : undefined);
+          },
+        });
+
+        _items.push({
+          label: 'Pin Right',
+          icon: 'SkipForwardLine',
+          active: pin === 'right',
+          intent: pin === 'right' ? 'info' : undefined,
+          onClick: () => {
+            onColumnsUpdate?.(dataId, 'pin', pin !== 'right' ? 'right' : undefined);
+          },
+        });
+      }
+
       if (hideable) {
+        _items.push({ divider: true, size: 'small', line: true });
+
         _items.push({
           label: 'Hide column',
           icon: 'EyeCloseLine',
@@ -105,7 +130,8 @@ export const ReqoreTableHeaderCell = ({
 
   return (
     <Resizable
-      minWidth={width}
+      minWidth={minWidth || width}
+      maxWidth={maxWidth}
       onResize={(_event, _direction, _component) => {
         onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
       }}
@@ -154,7 +180,7 @@ export const ReqoreTableHeaderCell = ({
             fixed
             size={size}
             rounded={false}
-            intent={filter ? 'info' : undefined}
+            intent={filter ? 'info' : rest.intent}
             filterable={filterable}
             filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
             filter={filter}

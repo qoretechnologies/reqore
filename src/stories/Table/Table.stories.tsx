@@ -20,6 +20,7 @@ const { createArg } = argManager<IReqoreTableProps>();
 const defaultColumns: IReqoreTableColumn[] = [
   {
     dataId: 'id',
+    intent: 'info',
     header: {
       label: 'ID',
       tooltip: 'Custom ID tooltip nice',
@@ -37,6 +38,8 @@ const defaultColumns: IReqoreTableColumn[] = [
       columns: [
         {
           dataId: 'firstName',
+          minWidth: 50,
+          maxWidth: 500,
           header: {
             icon: 'SlideshowLine',
             label: 'First Name',
@@ -158,6 +161,33 @@ const defaultColumns: IReqoreTableColumn[] = [
       }),
     },
   },
+  {
+    dataId: 'actions',
+    header: {
+      icon: 'SettingsLine',
+    },
+    width: 100,
+    align: 'center',
+    pin: 'right',
+
+    cell: {
+      padded: 'none',
+      actions: () => [
+        {
+          icon: 'AddLine',
+          intent: 'info',
+        },
+        {
+          icon: 'EditLine',
+          intent: 'warning',
+        },
+        {
+          icon: 'DeleteBinLine',
+          intent: 'danger',
+        },
+      ],
+    },
+  },
 ];
 
 const defaultColumnsWithFilters = defaultColumns.map((column, index) => {
@@ -206,6 +236,41 @@ const defaultColumnsWithHiddenColumns = defaultColumns.map((column, index) => {
     return {
       ...column,
       show: false,
+    };
+  }
+
+  return column;
+});
+
+const defaultColumnsWithPinnedColumns = defaultColumns.map((column, index) => {
+  if (index === 0) {
+    return {
+      ...column,
+      pin: 'left',
+    };
+  }
+
+  if (index === 1) {
+    return {
+      ...column,
+      header: {
+        ...column.header,
+        columns: column.header.columns.map((subColumn, subIndex) =>
+          subIndex === 1
+            ? {
+                ...subColumn,
+                pin: 'left',
+              }
+            : subColumn
+        ),
+      },
+    };
+  }
+
+  if (index === 3) {
+    return {
+      ...column,
+      pin: 'right',
     };
   }
 
@@ -330,8 +395,21 @@ HiddenColumns.args = {
   columns: defaultColumnsWithHiddenColumns,
 };
 
+export const PinnedColumns = Template.bind({});
+PinnedColumns.args = {
+  columns: defaultColumnsWithPinnedColumns,
+  zoomable: true,
+  filterable: true,
+};
+
 export const Selectable = Template.bind({});
 Selectable.args = {
+  selectable: true,
+};
+
+export const PreselectedRows = Template.bind({});
+PreselectedRows.args = {
+  selected: [274, 280],
   selectable: true,
 };
 

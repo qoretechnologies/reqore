@@ -2,24 +2,18 @@
 import { isFunction, isString } from 'lodash';
 import React, { ReactElement, useState } from 'react';
 import styled, { css } from 'styled-components';
-import {
-  IReqoreTableColumn,
-  IReqoreTableData,
-  IReqoreTableRowClick,
-  TReqoreTableColumnContent,
-} from '.';
-import { ReqorePopover } from '../..';
+import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
+import { ReqoreButton, ReqoreControlGroup, ReqorePopover } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreTooltip } from '../../types/global';
 import { TReqoreHexColor } from '../Effect';
 import { ReqoreH4 } from '../Header';
-import ReqoreIcon from '../Icon';
 import { ReqoreP } from '../Paragraph';
 import ReqoreTag from '../Tag';
 import { TimeAgo } from '../TimeAgo';
 import { IReqoreCustomTableBodyCell, ReqoreTableBodyCell } from './cell';
-import { calculateMinimumCellWidth, getOnlyShownColumns } from './helpers';
+import { getOnlyShownColumns } from './helpers';
 
 export interface IReqoreTableRowOptions {
   columns: IReqoreTableColumn[];
@@ -89,7 +83,7 @@ const ReqoreTableRow = ({
     onRowClick,
     striped,
     size,
-    selectedRowIntent = 'info',
+    selectedRowIntent,
     flat,
     cellComponent,
     rowComponent,
@@ -104,10 +98,34 @@ const ReqoreTableRow = ({
   const RowComponent = rowComponent || StyledTableRow;
 
   const renderContent = (
-    content: TReqoreTableColumnContent,
+    cell: IReqoreTableColumn['cell'],
     data: any,
-    dataId: string
+    dataId: string,
+    align?: 'center' | 'left' | 'right'
   ): ReactElement<any, any> => {
+    if (cell?.actions) {
+      return (
+        <ReqoreControlGroup size={size} stack fill fluid style={{ height: '100%' }} rounded={false}>
+          {cell.actions(data).map((action, index) => (
+            <ReqoreButton
+              key={index}
+              rounded={false}
+              iconsAlign={align === 'center' ? 'center' : 'sides'}
+              textAlign={align}
+              {...action}
+              onClick={(e) => {
+                e.stopPropagation();
+
+                action.onClick?.(e);
+              }}
+            />
+          ))}
+        </ReqoreControlGroup>
+      );
+    }
+
+    const content = cell?.content;
+
     if (isFunction(content)) {
       const Content = content;
 
@@ -156,7 +174,7 @@ const ReqoreTableRow = ({
 
   const renderCells = (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
     getOnlyShownColumns(columns).map(
-      ({ width, resizedWidth, grow, dataId, cell, header, align, intent }) => {
+      ({ width, minWidth, maxWidth, resizedWidth, grow, dataId, cell, header, align, intent }) => {
         if (header.columns) {
           return renderCells(header.columns, data);
         }
@@ -178,6 +196,8 @@ const ReqoreTableRow = ({
             componentProps={
               {
                 width: resizedWidth || width,
+                minWidth,
+                maxWidth,
                 grow,
                 align,
                 size,
@@ -209,7 +229,7 @@ const ReqoreTableRow = ({
             }
             {...tooltip}
           >
-            {renderContent(cell?.content, data[index], dataId)}
+            {renderContent(cell, data[index], dataId, align)}
           </ReqorePopover>
         );
       }
@@ -230,45 +250,6 @@ const ReqoreTableRow = ({
         setIsHovered(false);
       }}
     >
-      {selectable && (
-        <CellComponent
-          align='center'
-          width={calculateMinimumCellWidth(50, size)}
-          className='reqore-table-cell'
-          {...{
-            size,
-            striped,
-            disabled: data[index]._disabled,
-            selected: !!isSelected,
-            selectedIntent: selectedRowIntent,
-            flat,
-            even: index % 2 === 0 ? true : false,
-            intent: data[index]._intent,
-            hovered: isHovered,
-            interactiveCell: data[index]._selectId,
-          }}
-          onClick={
-            data[index]._selectId
-              ? (e: React.MouseEvent<HTMLDivElement>) => {
-                  e.stopPropagation();
-                  onSelectClick(data[index]._selectId);
-                }
-              : undefined
-          }
-        >
-          <ReqoreIcon
-            icon={
-              !data[index]._selectId
-                ? 'Forbid2Line'
-                : isSelected
-                ? 'CheckboxCircleLine'
-                : 'CheckboxBlankCircleLine'
-            }
-            size={size}
-            style={{ opacity: !data[index]._selectId || !isSelected ? 0.4 : 1 }}
-          />
-        </CellComponent>
-      )}
       {renderCells(columns, data)}
     </RowComponent>
   );

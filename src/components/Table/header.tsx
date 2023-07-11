@@ -1,14 +1,17 @@
 import { omit } from 'lodash';
+import { forwardRef, useCallback } from 'react';
+import { useMount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
+import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IWithReqoreSize } from '../../types/global';
-import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
 import { IReqoreTableHeaderCellProps, ReqoreTableHeaderCell } from './headerCell';
-import { calculateMinimumCellWidth, getOnlyShownColumns } from './helpers';
+import { getOnlyShownColumns } from './helpers';
 
 export type TColumnsUpdater = <T extends keyof IReqoreTableColumn>(
   id: string,
@@ -22,37 +25,45 @@ export interface IReqoreCustomHeaderCellProps
       'sortData' | 'onSortChange' | 'onColumnsUpdate' | 'onFilterChange'
     >,
     Omit<IReqoreTableColumn, 'cell' | 'header'>,
-    IReqoreButtonProps {
+    Omit<IReqoreButtonProps, 'maxWidth'> {
   hasColumns?: boolean;
 }
 export interface IReqoreCustomHeaderCellComponent extends React.FC<IReqoreCustomHeaderCellProps> {}
 
 export interface IReqoreTableSectionProps extends IWithReqoreSize {
   columns: IReqoreTableColumn[];
-  leftScroll: number;
   onSortChange?: (sort: string) => void;
   sortData: IReqoreTableSort;
-  selectable?: boolean;
-  selectedQuant: 'none' | 'all' | 'some';
-  onToggleSelectClick: () => void;
   hasVerticalScroll: boolean;
-  selectToggleTooltip?: string;
   onColumnsUpdate: TColumnsUpdater;
   onFilterChange?: (dataId: string, value: any) => void;
   component?: IReqoreCustomHeaderCellComponent;
+  heightAsGroup?: boolean;
+  scrollable?: boolean;
+  bodyRef: React.RefObject<HTMLDivElement>;
 }
 
 export interface IReqoreTableSectionStyle {
   leftScroll: number;
   hasVerticalScroll: boolean;
   theme: IReqoreTheme;
+  heightAsGroup?: boolean;
+  size?: TSizes;
 }
 
 const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
-  ${({ leftScroll }) => css`
+  ${({ heightAsGroup, size }) => css`
     display: flex;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    flex-shrink: 0;
     flex-flow: column;
-    transform: translate3d(${-leftScroll}px, 0, 0);
+    height: ${heightAsGroup ? `${SIZE_TO_PX[size] * 2}px` : undefined};
 
     ${({ theme }) => css`
       background-color: ${theme.main};
@@ -77,7 +88,10 @@ export const StyledColumnGroupHeader = styled.div<IReqoreTableHeaderStyle>`
 const StyledColumnGroup = styled.div<IReqoreTableHeaderStyle>`
   display: flex;
   flex-flow: column;
+  flex-shrink: 0;
   width: ${({ width }) => width}px;
+  max-width: ${({ maxWidth = 9999 }) => maxWidth}px;
+  min-width: ${({ minWidth, width }) => minWidth || width}px;
 
   ${({ grow }) =>
     grow &&
@@ -105,126 +119,121 @@ const StyledTableHeaderRow = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-const ReqoreTableHeader = ({
-  columns,
-  leftScroll,
-  onSortChange,
-  sortData,
-  selectable,
-  selectedQuant,
-  onToggleSelectClick,
-  selectToggleTooltip,
-  hasVerticalScroll,
-  onColumnsUpdate,
-  onFilterChange,
-  size,
-  component,
-}: IReqoreTableSectionProps) => {
-  const renderHeaderCell = (
-    headerCellComponent: IReqoreCustomHeaderCellComponent,
-    props: IReqoreCustomHeaderCellProps
+const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
+  (
+    {
+      columns,
+      onSortChange,
+      sortData,
+      hasVerticalScroll,
+      onColumnsUpdate,
+      onFilterChange,
+      size,
+      component,
+      heightAsGroup,
+      scrollable,
+      bodyRef,
+    }: IReqoreTableSectionProps,
+    ref
   ) => {
-    const HeaderCell = headerCellComponent || component || ReqoreTableHeaderCell;
+    const { targetRef } = useCombinedRefs(ref);
 
-    return <HeaderCell key={props.dataId} {...props} />;
-  };
+    useMount(() => {
+      if (scrollable) {
+        targetRef.current?.addEventListener('wheel', (e) => {
+          if (e.deltaX) {
+            e.preventDefault();
 
-  const renderColumns = (columns: IReqoreTableColumn[]) =>
-    getOnlyShownColumns(columns).map(
+            targetRef.current?.scrollTo({ left: targetRef.current?.scrollLeft + e.deltaX });
+            bodyRef.current?.scrollTo({ left: bodyRef.current?.scrollLeft + e.deltaX });
+          }
+        });
+      }
+    });
+
+    const renderHeaderCell = useCallback(
       (
-        {
-          grow,
-          align,
-          dataId,
-          header: { columns, onClick, component: headerComponent, ...rest },
-          ...colRest
-        },
-        index
-      ) =>
-        columns ? (
-          <StyledColumnGroup
-            grow={grow}
-            key={index}
-            className='reqore-table-column-group'
-            width={getOnlyShownColumns(columns).reduce(
-              (wid, col) => wid + (col.resizedWidth || col.width || 80),
-              0
-            )}
-          >
-            {renderHeaderCell(headerComponent, {
-              ...rest,
-              ...omit(colRest, ['cell']),
-              dataId,
-              size,
-              readOnly: !onClick,
-              rounded: false,
-              textAlign: align,
-              className: 'reqore-table-column-group-header',
-              resizable: false,
-              hideable: false,
-              hasColumns: true,
-            })}
-            <StyledColumnGroupHeaders className='reqore-table-headers'>
-              {renderColumns(columns)}
-            </StyledColumnGroupHeaders>
-          </StyledColumnGroup>
-        ) : (
-          renderHeaderCell(headerComponent, {
-            ...rest,
-            ...omit(colRest, ['cell']),
-            dataId,
-            size,
-            sortData,
-            grow,
-            align,
-            onSortChange,
-            onColumnsUpdate,
-            onFilterChange,
-          })
-        )
+        headerCellComponent: IReqoreCustomHeaderCellComponent,
+        props: IReqoreCustomHeaderCellProps
+      ) => {
+        const HeaderCell = headerCellComponent || component || ReqoreTableHeaderCell;
+
+        return <HeaderCell key={props.dataId} {...props} />;
+      },
+      [component]
     );
 
-  const getSelectedIcon = (): IReqoreIconName => {
-    switch (selectedQuant) {
-      case 'all':
-        return 'CheckboxCircleLine';
-      case 'some':
-        return 'IndeterminateCircleLine';
-      default:
-        return 'CheckboxBlankCircleLine';
-    }
-  };
+    const renderColumns = (columns: IReqoreTableColumn[]) =>
+      getOnlyShownColumns(columns).map(
+        (
+          {
+            grow,
+            align,
+            dataId,
+            header: { columns, onClick, component: headerComponent, ...rest },
+            ...colRest
+          },
+          index
+        ) =>
+          columns ? (
+            <StyledColumnGroup
+              grow={getOnlyShownColumns(columns).reduce((gr, col) => gr + col.grow, 0)}
+              key={index}
+              className='reqore-table-column-group'
+              width={getOnlyShownColumns(columns).reduce(
+                (wid, col) => wid + (col.resizedWidth || col.width || 80),
+                0
+              )}
+              maxWidth={getOnlyShownColumns(columns).reduce((wid, col) => wid + col.maxWidth, 0)}
+              minWidth={getOnlyShownColumns(columns).reduce((wid, col) => wid + col.minWidth, 0)}
+            >
+              {renderHeaderCell(headerComponent, {
+                ...rest,
+                ...omit(colRest, ['cell']),
+                dataId,
+                size,
+                readOnly: !onClick,
+                onClick,
+                rounded: false,
+                textAlign: align,
+                className: 'reqore-table-column-group-header',
+                resizable: false,
+                hideable: false,
+                hasColumns: true,
+              })}
+              <StyledColumnGroupHeaders className='reqore-table-headers'>
+                {renderColumns(columns)}
+              </StyledColumnGroupHeaders>
+            </StyledColumnGroup>
+          ) : (
+            renderHeaderCell(headerComponent, {
+              ...rest,
+              ...omit(colRest, ['cell']),
+              onClick,
+              dataId,
+              size,
+              sortData,
+              grow,
+              align,
+              onSortChange,
+              onColumnsUpdate,
+              onFilterChange,
+            })
+          )
+      );
 
-  return (
-    <StyledTableHeaderWrapper
-      className='reqore-table-header-wrapper'
-      hasVerticalScroll={hasVerticalScroll}
-    >
-      <StyledTableHeaderRow
-        style={{
-          transform: `translate3d(${leftScroll ? -leftScroll : 0}px, 0, 0)`,
-        }}
+    return (
+      <StyledTableHeaderWrapper
+        className='reqore-table-header-wrapper'
+        hasVerticalScroll={hasVerticalScroll}
+        heightAsGroup={heightAsGroup}
+        size={size}
+        ref={targetRef}
       >
-        {selectable &&
-          renderHeaderCell(component, {
-            dataId: 'selectbox',
-            sortData,
-            align: 'center',
-            size,
-            onSortChange,
-            icon: getSelectedIcon(),
-            width: calculateMinimumCellWidth(50, size),
-            resizable: false,
-            hideable: false,
-            tooltip: selectToggleTooltip || 'Toggle selection on all data',
-            onClick: () => {
-              onToggleSelectClick();
-            },
-          })}
-        {renderColumns(columns)}
-      </StyledTableHeaderRow>
-    </StyledTableHeaderWrapper>
-  );
-};
+        <StyledTableHeaderRow>{renderColumns(columns)}</StyledTableHeaderRow>
+      </StyledTableHeaderWrapper>
+    );
+  }
+);
 
 export default ReqoreTableHeader;

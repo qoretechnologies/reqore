@@ -17,9 +17,12 @@ export interface IReqoreTableBodyCellProps
 }
 
 export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
-  ${({ width, grow }) =>
+  ${({ width, minWidth, maxWidth, grow }) =>
     css`
       width: ${width}px;
+      min-width: ${minWidth}px;
+      max-width: ${maxWidth}px;
+
       flex-grow: ${grow || (width ? undefined : 1)};
     `}
 
