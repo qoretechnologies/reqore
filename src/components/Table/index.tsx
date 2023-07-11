@@ -617,11 +617,7 @@ const ReqoreTable = ({
           onSortChange={handleSortChange}
           heightAsGroup={hasGroupedColumns(finalColumns)}
           sortData={_sort}
-          selectable={selectable}
-          selectedQuant={_selectedQuant}
-          onToggleSelectClick={handleToggleSelectClick}
           hasVerticalScroll={count(transformedData) * TABLE_SIZE_TO_PX[size] > height}
-          selectToggleTooltip={selectToggleTooltip}
           onColumnsUpdate={handleColumnsUpdate}
           onFilterChange={(dataId: string, value: any) => {
             handleColumnsUpdate(dataId, 'filter', value);

@@ -34,11 +34,7 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
   columns: IReqoreTableColumn[];
   onSortChange?: (sort: string) => void;
   sortData: IReqoreTableSort;
-  selectable?: boolean;
-  selectedQuant: 'none' | 'all' | 'some';
-  onToggleSelectClick: () => void;
   hasVerticalScroll: boolean;
-  selectToggleTooltip?: string;
   onColumnsUpdate: TColumnsUpdater;
   onFilterChange?: (dataId: string, value: any) => void;
   component?: IReqoreCustomHeaderCellComponent;

@@ -172,7 +172,7 @@ const defaultColumns: IReqoreTableColumn[] = [
 
     cell: {
       padded: 'none',
-      actions: ({ _selectId }) => [
+      actions: () => [
         {
           icon: 'AddLine',
           intent: 'info',
