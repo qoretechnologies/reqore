@@ -8,6 +8,7 @@ import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqorePanelProps } from '../Panel';
+import { getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
 import ReqoreTag from '../Tag';
 
 export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
@@ -18,6 +19,8 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   onItemClick?: (value: any, path?: string[]) => void;
   withLabelCopy?: boolean;
   showControls?: boolean;
+  zoomable?: boolean;
+  defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
 }
 
 export interface ITreeStyle {
@@ -38,6 +41,8 @@ export const ReqoreTree = ({
   onItemClick,
   withLabelCopy,
   showControls = true,
+  zoomable,
+  defaultZoom,
   ...rest
 }: IReqoreTreeProps) => {
   const [_mode, setMode] = useState<'tree' | 'copy'>(mode);
@@ -45,6 +50,7 @@ export const ReqoreTree = ({
   const [allExpanded, setAllExpanded] = useState(expanded || !showControls);
   const [_showTypes, setShowTypes] = useState(showTypes);
   const addNotification = useReqoreProperty('addNotification');
+  const [zoom, setZoom] = useState(defaultZoom || sizeToZoom[size]);
 
   const handleCopyClick = () => {
     setMode('copy');
@@ -99,7 +105,7 @@ export const ReqoreTree = ({
       return (
         <div key={index} style={{ margin: level === 1 ? '15px 0' : `15px` }}>
           {isObject ? (
-            <ReqoreControlGroup size={size}>
+            <ReqoreControlGroup size={zoomToSize[zoom]}>
               <ReqoreButton
                 className='reqore-tree-toggle'
                 icon={isExpandable ? 'ArrowDownSFill' : 'ArrowRightSFill'}
@@ -112,7 +118,7 @@ export const ReqoreTree = ({
               {_showTypes ? <ReqoreTag label={dataType} className='reqore-tree-type' /> : null}
             </ReqoreControlGroup>
           ) : (
-            <ReqoreControlGroup size={size}>
+            <ReqoreControlGroup size={zoomToSize[zoom]}>
               <ReqoreTag
                 label={displayKey}
                 actions={
@@ -184,6 +190,11 @@ export const ReqoreTree = ({
       actions={
         showControls
           ? [
+              {
+                fluid: false,
+                group: getZoomActions('reqore-tree', zoom, setZoom),
+                show: !!zoomable,
+              },
               {
                 className: 'reqore-tree-expand-all',
                 icon: 'ArrowDownFill',

@@ -47,3 +47,16 @@ export const NoControls = Template.bind({});
 NoControls.args = {
   showControls: false,
 };
+
+export const Zoomable = Template.bind({});
+Zoomable.args = {
+  zoomable: true,
+};
+
+export const WithDefaultZoom = Template.bind({});
+WithDefaultZoom.args = {
+  label: 'Collection of items',
+  zoomable: true,
+  size: 'tiny',
+  defaultZoom: 2,
+};
