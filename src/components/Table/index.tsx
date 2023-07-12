@@ -3,7 +3,8 @@ import { size as count, isArray } from 'lodash';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqoreMessage, ReqorePanel, ReqoreVerticalSpacer } from '../..';
+import { ReqoreMessage, ReqorePaginationContainer, ReqorePanel, ReqoreVerticalSpacer } from '../..';
+import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
 import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
@@ -96,6 +97,8 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   height?: number;
   wrapperSize?: TSizes;
 
+  paging?: TReqorePaginationType<IReqoreTableRowData>;
+
   sort?: IReqoreTableSort;
   onSortChange?: (sort?: IReqoreTableSort) => void;
 
@@ -141,16 +144,18 @@ export interface IReqoreTableSort {
 
 const StyledTableWrapper = styled.div`
   overflow: hidden;
+  display: flex;
+  flex-flow: column;
 
   ${({ isPinned }) =>
     isPinned
       ? css`
           flex-shrink: 0;
+          z-index: 1;
+          box-shadow: 1px -1px 20px -2px rgba(0, 0, 0, 0.8);
         `
       : css`
           width: 100%;
-          display: flex;
-          flex-flow: column;
           flex: 1;
         `};
 `;
@@ -192,6 +197,7 @@ const ReqoreTable = ({
   rowComponent,
   bodyCellComponent,
   onSelectClick,
+  paging,
   ...rest
 }: IReqoreTableProps) => {
   const leftTableRef = useRef<HTMLDivElement>(undefined);
@@ -468,6 +474,23 @@ const ReqoreTable = ({
     return _columnsList;
   }, [finalColumns]);
 
+  const handleScrollToTop = () => {
+    mainTableRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+    leftTableRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+    rightTableRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+
+    setIsScrolled(false);
+  };
+
   const tableActions = useMemo<IReqorePanelAction[]>(() => {
     const finalActions: IReqorePanelAction[] = [...actions];
 
@@ -515,22 +538,7 @@ const ReqoreTable = ({
         tooltip: 'Scroll to top',
         className: 'reqore-table-columns-scroll-top',
         responsive: true,
-        onClick: () => {
-          mainTableRef.current?.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          });
-          leftTableRef.current?.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          });
-          rightTableRef.current?.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-          });
-
-          setIsScrolled(false);
-        },
+        onClick: handleScrollToTop,
       });
     }
 
@@ -598,7 +606,7 @@ const ReqoreTable = ({
     [finalColumns]
   );
 
-  const renderTable = (type: 'left' | 'main' | 'right' = 'main') => {
+  const renderTable = (type: 'left' | 'main' | 'right' = 'main', items: IReqoreTableRowData[]) => {
     const tableColumns = columnsByType[type];
     const isPinned = type === 'left' || type === 'right';
 
@@ -617,19 +625,19 @@ const ReqoreTable = ({
           onSortChange={handleSortChange}
           heightAsGroup={hasGroupedColumns(finalColumns)}
           sortData={_sort}
-          hasVerticalScroll={count(transformedData) * TABLE_SIZE_TO_PX[size] > height}
+          hasVerticalScroll={count(items) * TABLE_SIZE_TO_PX[size] > height}
           onColumnsUpdate={handleColumnsUpdate}
           onFilterChange={(dataId: string, value: any) => {
             handleColumnsUpdate(dataId, 'filter', value);
           }}
           component={headerCellComponent}
         />
-        {count(transformedData) === 0 ? null : (
+        {count(items) === 0 ? null : (
           <ReqoreTableBody
             ref={refs[type]}
             refs={refs}
             type={type}
-            data={transformedData}
+            data={items}
             columns={tableColumns}
             height={fill ? sizes.height : height}
             selectable={selectable}
@@ -649,6 +657,8 @@ const ReqoreTable = ({
     );
   };
 
+  const pagingOptions = useMemo(() => getPagingObjectFromType(paging), [paging]);
+
   return (
     <ReqorePanel
       transparent
@@ -665,19 +675,39 @@ const ReqoreTable = ({
       getContentRef={wrapperRef}
       badge={badge}
     >
-      <StyledTablesWrapper className='reqore-table-wrapper'>
-        {renderTable('left')}
-        {renderTable()}
-        {renderTable('right')}
-      </StyledTablesWrapper>
-      {count(transformedData) === 0 ? (
-        <>
-          <ReqoreVerticalSpacer height={10} />
-          <ReqoreMessage flat size={size} icon='Search2Line'>
-            {emptyMessage}
-          </ReqoreMessage>
-        </>
-      ) : null}
+      <ReqorePaginationContainer<IReqoreTableRowData>
+        items={transformedData}
+        type={
+          paging
+            ? {
+                ...pagingOptions,
+                onPageChange: () => {
+                  if (!pagingOptions.infinite) {
+                    handleScrollToTop();
+                  }
+                },
+              }
+            : undefined
+        }
+      >
+        {(pagedData) => (
+          <>
+            <StyledTablesWrapper className='reqore-table-wrapper'>
+              {renderTable('left', pagedData)}
+              {renderTable('main', pagedData)}
+              {renderTable('right', pagedData)}
+            </StyledTablesWrapper>
+            {count(pagedData) === 0 ? (
+              <>
+                <ReqoreVerticalSpacer height={10} />
+                <ReqoreMessage flat size={size} icon='Search2Line'>
+                  {emptyMessage}
+                </ReqoreMessage>
+              </>
+            ) : null}
+          </>
+        )}
+      </ReqorePaginationContainer>
     </ReqorePanel>
   );
 };
