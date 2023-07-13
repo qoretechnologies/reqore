@@ -1,7 +1,11 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
+import ReqoreIcon from '../../components/Icon';
 import { IReqoreKeyValueTableProps, ReqoreKeyValueTable } from '../../components/KeyValueTable';
-import { IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
-import ReqoreTag from '../../components/Tag';
+import {
+  IReqoreTableProps,
+  IReqoreTableRowData,
+  TReqoreTableColumnContent,
+} from '../../components/Table';
 import { TReqorePaginationType } from '../../constants/paging';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
@@ -159,6 +163,12 @@ CustomKeyIntent.args = {
   keyColumnIntent: 'success',
 };
 
+export const CustomAlign = Template.bind({});
+CustomAlign.args = {
+  keyAlign: 'right',
+  valueAlign: 'center',
+};
+
 export const CustomPaging = Template.bind({});
 CustomPaging.args = {
   paging: {
@@ -172,6 +182,18 @@ CustomPaging.args = {
 
 export const CustomValueRenderer = Template.bind({});
 CustomValueRenderer.args = {
-  valueRenderer: ({ value }) =>
-    value === 'Human' ? <ReqoreTag intent='success' label={value} icon='User3Line' /> : undefined,
+  valueRenderer: ({ value, tableKey }, Component): TReqoreTableColumnContent | JSX.Element => {
+    switch (tableKey) {
+      case 'race':
+        return 'tag:success';
+      case 'sex':
+        return <ReqoreIcon icon={value === 'Male' ? 'User6Line' : 'User6Fill'} />;
+      case 'height':
+        return <>{value} cm</>;
+      case 'weight':
+        return <Component value={value} />;
+      default:
+        return undefined;
+    }
+  },
 };

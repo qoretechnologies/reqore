@@ -3,7 +3,12 @@ import { useMemo } from 'react';
 import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelProps } from '../Panel';
-import ReqoreTable, { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../Table';
+import ReqoreTable, {
+  IReqoreTableColumn,
+  IReqoreTableProps,
+  IReqoreTableRowData,
+  TReqoreTableColumnContent,
+} from '../Table';
 import { IReqoreTableValueProps, ReqoreTableValue } from '../Table/value';
 
 export type TReqoreKeyValueTablePrimitiveValue = string | number | boolean | null | undefined;
@@ -20,16 +25,20 @@ export interface IReqoreKeyValueTableProps
   keyLabel?: string;
   keyIcon?: IReqoreIconName;
   keyColumnIntent?: TReqoreIntent;
+  keyAlign?: IReqoreTableColumn['align'];
   maxKeyWidth?: number;
 
   valueLabel?: string;
   valueIcon?: IReqoreIconName;
+  valueAlign?: IReqoreTableColumn['align'];
   minValueWidth?: number;
   defaultValueFilter?: string | number;
 
   valueRenderer?: (
     data: IReqoreTableRowData,
-    defaultComponent?: ({ value }: IReqoreTableValueProps) => JSX.Element
+    defaultComponent?: ({
+      value,
+    }: IReqoreTableValueProps) => TReqoreTableColumnContent | JSX.Element
   ) => JSX.Element;
 }
 
@@ -43,19 +52,22 @@ export const ReqoreKeyValueTable = ({
   keyColumnIntent = 'muted',
   minValueWidth = 100,
   maxKeyWidth = 200,
+  keyAlign = 'left',
+  valueAlign = 'left',
   defaultValueFilter,
   ...rest
 }: IReqoreKeyValueTableProps) => {
   const { columns, items } = useMemo(() => {
     let columns: IReqoreTableColumn[] = [
       {
-        dataId: 'key',
+        dataId: 'tableKey',
         grow: 1,
         width: maxKeyWidth < 150 ? maxKeyWidth : 150,
         pin: 'left',
         hideable: false,
         intent: keyColumnIntent,
         maxWidth: maxKeyWidth,
+        align: keyAlign,
 
         header: {
           icon: keyIcon,
@@ -74,6 +86,7 @@ export const ReqoreKeyValueTable = ({
         pinnable: false,
         minWidth: minValueWidth,
         filter: defaultValueFilter,
+        align: valueAlign,
 
         header: {
           icon: valueIcon,
@@ -82,11 +95,7 @@ export const ReqoreKeyValueTable = ({
 
         cell: {
           content: (data) =>
-            valueRenderer && !!valueRenderer(data, ReqoreTableValue) ? (
-              valueRenderer(data, ReqoreTableValue)
-            ) : (
-              <ReqoreTableValue value={data.value} />
-            ),
+            valueRenderer?.(data, ReqoreTableValue) || <ReqoreTableValue value={data.value} />,
         },
       },
     ];
@@ -95,7 +104,7 @@ export const ReqoreKeyValueTable = ({
 
     keys(data).map((key) => {
       items.push({
-        key,
+        tableKey: key,
         value: data[key],
       });
     });
