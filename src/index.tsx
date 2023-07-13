@@ -24,6 +24,7 @@ export {
 } from './components/Header';
 export { default as ReqoreIcon } from './components/Icon';
 export { default as ReqoreInput } from './components/Input';
+export { IReqoreKeyValueTableProps, ReqoreKeyValueTable } from './components/KeyValueTable';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
 export { default as ReqoreMenu } from './components/Menu';
 export { default as ReqoreMenuDivider } from './components/Menu/divider';
@@ -49,6 +50,7 @@ export { default as ReqoreTable } from './components/Table';
 export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTableRow } from './components/Table/row';
+export { ReqoreTableValue } from './components/Table/value';
 export { default as ReqoreTabs } from './components/Tabs';
 export { default as ReqoreTabsContent } from './components/Tabs/content';
 export { default as ReqoreTabsListItem } from './components/Tabs/item';
