@@ -125,6 +125,22 @@ SelectedFirst.args = {
   showSelectedFirst: true,
 };
 
+export const Zoomable = Template.bind({});
+Zoomable.args = {
+  label: 'Collection of items',
+  items,
+  zoomable: true,
+};
+
+export const WithDefaultZoom = Template.bind({});
+WithDefaultZoom.args = {
+  label: 'Collection of items',
+  items,
+  zoomable: true,
+  size: 'tiny',
+  defaultZoom: 2,
+};
+
 export const CustomColumnsData = Template.bind({});
 CustomColumnsData.args = {
   columns: 2,

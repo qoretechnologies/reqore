@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useMemo } from 'react';
 import { useMount } from 'react-use';
 import { FixedSizeList as List } from 'react-window';
 import styled from 'styled-components';
@@ -7,7 +7,6 @@ import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 
 export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
-  rowHeight?: number;
   height: number;
   refs: {
     left: React.RefObject<HTMLDivElement>;
@@ -30,7 +29,6 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     {
       data,
       height,
-      rowHeight,
       size = 'normal',
       refs,
       type,
@@ -70,11 +68,18 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       });
     });
 
+    const rowHeight = useMemo(
+      () => (rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1),
+      [size, rest.flat]
+    );
+
     return (
       <StyledList
         outerRef={targetRef}
         itemCount={data.length}
-        height={height}
+        // If the defined height is less than the count of items' height
+        // use that height instead
+        height={height > data.length * rowHeight ? data.length * rowHeight : height}
         className='reqore-table-body'
         itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
         itemData={{

@@ -1,8 +1,9 @@
 import { Meta, Story } from '@storybook/react/types-6-0';
 import { StyledEffect } from '../../components/Effect';
-import { IReqoreTableColumn, IReqoreTableProps } from '../../components/Table';
+import { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
 import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
+import { TReqorePaginationType } from '../../constants/paging';
 import {
   ReqoreH3,
   ReqoreH4,
@@ -428,6 +429,22 @@ Sizes.args = {
   size: 'small',
   filterable: true,
   wrapperSize: 'big',
+};
+
+export const DefaultPaging = Template.bind({});
+DefaultPaging.args = {
+  paging: 'buttons',
+};
+
+export const CustomPaging = Template.bind({});
+CustomPaging.args = {
+  paging: {
+    fluid: true,
+    loadMoreLabel: 'Load more rows...',
+    showLabels: true,
+    infinite: true,
+    itemsPerPage: 100,
+  } as TReqorePaginationType<IReqoreTableRowData>,
 };
 
 const CustomHeaderCell = (props: IReqoreCustomHeaderCellProps) => {

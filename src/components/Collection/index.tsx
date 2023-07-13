@@ -14,7 +14,7 @@ import ReqoreInput, { IReqoreInputProps } from '../Input';
 import ReqoreMessage from '../Message';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel, TReqorePanelActions } from '../Panel';
 import { ReqoreVerticalSpacer } from '../Spacer';
-import { sortTableData } from '../Table/helpers';
+import { getZoomActions, sizeToZoom, sortTableData, zoomToSize } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 
 export interface IReqoreCollectionProps extends IReqorePanelProps, IReqoreColumnsProps {
@@ -29,9 +29,14 @@ export interface IReqoreCollectionProps extends IReqorePanelProps, IReqoreColumn
   height?: string;
   fill?: boolean;
   maxItemHeight?: number;
-  filterable?: boolean;
+
   defaultQuery?: string;
+  defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
+
+  filterable?: boolean;
   sortable?: boolean;
+  zoomable?: boolean;
+
   showAs?: 'list' | 'grid';
   showSelectedFirst?: boolean;
   selectedIcon?: IReqoreIconName;
@@ -67,6 +72,14 @@ export const StyledCollectionWrapper = styled(StyledColumns)`
   position: relative;
 `;
 
+export const zoomToWidth = {
+  0: '200px',
+  0.5: '300px',
+  1: '400px',
+  1.5: '500px',
+  2: '600px',
+};
+
 export const ReqoreCollection = ({
   items,
   stacked,
@@ -76,6 +89,8 @@ export const ReqoreCollection = ({
   filterable,
   inputInTitle = true,
   sortable,
+  zoomable,
+  defaultZoom,
   showSelectedFirst,
   inputProps,
   sortButtonProps,
@@ -116,6 +131,7 @@ export const ReqoreCollection = ({
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [contentRef, setContentRef] = useState<HTMLDivElement>(undefined);
   const isMobile = useReqoreProperty('isMobile');
+  const [zoom, setZoom] = useState<number>(defaultZoom || sizeToZoom.normal);
   const { query, setQuery, preQuery, setPreQuery } = useQueryWithDelay(
     defaultQuery,
     searchDelay,
@@ -197,6 +213,13 @@ export const ReqoreCollection = ({
       ],
     };
 
+    if (zoomable) {
+      actions.push({
+        fluid: false,
+        group: getZoomActions('reqore-collection', zoom, setZoom),
+      });
+    }
+
     if (sortable) {
       toolbarGroup.group.push({
         icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
@@ -233,7 +256,19 @@ export const ReqoreCollection = ({
     }
 
     return [...actions, toolbarGroup];
-  }, [filterable, preQuery, query, rest.actions, _showAs, sort, sortable, filteredItems, isMobile]);
+  }, [
+    filterable,
+    preQuery,
+    query,
+    rest.actions,
+    _showAs,
+    sort,
+    sortable,
+    filteredItems,
+    isMobile,
+    zoom,
+    zoomable,
+  ]);
 
   const renderContent = useCallback(() => {
     return contentRenderer(
@@ -261,13 +296,13 @@ export const ReqoreCollection = ({
                   ref={setContentRef}
                   height={height}
                   alignItems={alignItems}
-                  minColumnWidth={minColumnWidth}
+                  minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
                   maxColumnWidth={maxColumnWidth}
                   className='reqore-collection-content'
                 >
                   {finalItems?.map((item, index) => (
                     <ReqoreCollectionItem
-                      size={rest.size}
+                      size={zoomToSize[zoom]}
                       responsiveTitle={false}
                       {...item}
                       icon={item.icon || (item.selected ? selectedIcon : undefined)}
@@ -313,8 +348,8 @@ export const ReqoreCollection = ({
     rest,
     rounded,
     selectedIcon,
-    size,
     stacked,
+    zoom,
   ]);
 
   return (

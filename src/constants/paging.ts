@@ -24,6 +24,28 @@ export type TReqorePaginationTypeResult<T> = {
   includeBottomControls?: boolean;
 };
 
+export function getPagingObjectFromType<T>(
+  type: TReqorePaginationType<T>
+): IReqoreComponentPagingOptions<T> {
+  if (typeof type === 'object') {
+    return type;
+  }
+
+  switch (type) {
+    case 'buttons':
+      return {};
+    case 'list':
+      return {
+        showPagesAs: 'list',
+      };
+    case 'infinite':
+    case 'auto-load':
+      return { infinite: true };
+    default:
+      return {};
+  }
+}
+
 export function getPaginationOptionsFromType<T>(
   type: TReqorePaginationType<T>
 ): TReqorePaginationTypeResult<T> {
