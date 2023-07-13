@@ -124,12 +124,18 @@ const ReqoreTableRow = ({
       );
     }
 
-    const content = cell?.content;
+    let content = cell?.content;
 
     if (isFunction(content)) {
-      const Content = content;
+      // Check what type does the content function return
+      if (React.isValidElement(content(data))) {
+        const Content = content;
+        // If it's a react element, return it
+        return <Content {...data} _size={size} _dataId={dataId} />;
+      }
 
-      return <Content {...data} _size={size} _dataId={dataId} />;
+      // If it's a function, call it and return the result
+      content = content(data) as any;
     }
 
     if (isString(content)) {

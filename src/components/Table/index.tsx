@@ -314,7 +314,7 @@ const ReqoreTable = ({
   const transformedData = useMemo(() => {
     // Filter by global query
     let filteredData = _data.filter((datum) =>
-      JSON.stringify(datum).toLowerCase().includes(query.toLowerCase())
+      JSON.stringify(datum).toLowerCase().includes(query.toString().toLowerCase())
     );
 
     // Filter by column filters
@@ -440,12 +440,7 @@ const ReqoreTable = ({
   }, []);
 
   const columnsList = useMemo(() => {
-    const _columnsList: IReqorePanelSubAction[] = [
-      {
-        divider: true,
-        label: 'Show / hide columns',
-      },
-    ];
+    const _columnsList: IReqorePanelSubAction[] = [];
 
     const addColumn = (column: IReqoreTableColumn) => {
       _columnsList.push({
@@ -471,6 +466,13 @@ const ReqoreTable = ({
       }
     });
 
+    if (count(_columnsList)) {
+      _columnsList.unshift({
+        divider: true,
+        label: 'Show / hide columns',
+      });
+    }
+
     return _columnsList;
   }, [finalColumns]);
 
@@ -494,15 +496,17 @@ const ReqoreTable = ({
   const tableActions = useMemo<IReqorePanelAction[]>(() => {
     const finalActions: IReqorePanelAction[] = [...actions];
 
-    finalActions.push({
-      label: 'Columns',
-      icon: 'LayoutColumnLine',
-      className: 'reqore-table-columns-options',
-      badge: getColumnsCount(getOnlyShownColumns(finalColumns)),
-      intent: hasHiddenColumns(finalColumns) ? 'info' : undefined,
-      multiSelect: true,
-      actions: columnsList,
-    });
+    if (count(columnsList)) {
+      finalActions.push({
+        label: 'Columns',
+        icon: 'LayoutColumnLine',
+        className: 'reqore-table-columns-options',
+        badge: getColumnsCount(getOnlyShownColumns(finalColumns)),
+        intent: hasHiddenColumns(finalColumns) ? 'info' : undefined,
+        multiSelect: true,
+        actions: columnsList,
+      });
+    }
 
     if (filterable) {
       finalActions.push({
