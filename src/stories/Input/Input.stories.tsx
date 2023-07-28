@@ -1,20 +1,28 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { ReqoreControlGroup } from '../../index';
+import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
 
-export default {
+const meta = {
   title: 'Form/Input/Stories',
+  component: ReqoreInput,
   argTypes: {
     ...MinimalArg,
     ...FlatArg,
     ...SizeArg,
-    ...IconArg('icon', 'Icon', 'SearchLine'),
+    ...IconArg('icon', 'Icon'),
   },
-} as Meta<IReqoreInputProps>;
+  args: {
+    icon: 'SearchLine',
+  },
+} as StoryMeta<typeof ReqoreInput>;
 
-const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
   const [value, setValue] = useState('Input value');
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,39 +141,68 @@ const Template: Story<IReqoreInputProps> = (args: IReqoreInputProps) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const Info = Template.bind({});
-Info.args = {
-  intent: 'info',
-};
-export const Success = Template.bind({});
-Success.args = {
-  intent: 'success',
-};
-export const Warning = Template.bind({});
-Warning.args = {
-  intent: 'warning',
-};
-export const Danger = Template.bind({});
-Danger.args = {
-  intent: 'danger',
-};
-export const Pending = Template.bind({});
-Pending.args = {
-  intent: 'pending',
-};
-export const Muted = Template.bind({});
-Muted.args = {
-  intent: 'muted',
+export const Basic: Story = {
+  render: Template,
 };
 
-export const Effect = Template.bind({});
-Effect.args = {
-  effect: {
-    gradient: {
-      colors: {
-        0: '#56345e',
-        100: 'transparent',
+export const Info: Story = {
+  render: Template,
+
+  args: {
+    intent: 'info',
+  },
+};
+
+export const Success: Story = {
+  render: Template,
+
+  args: {
+    intent: 'success',
+  },
+};
+
+export const Warning: Story = {
+  render: Template,
+
+  args: {
+    intent: 'warning',
+  },
+};
+
+export const Danger: Story = {
+  render: Template,
+
+  args: {
+    intent: 'danger',
+  },
+};
+
+export const Pending: Story = {
+  render: Template,
+
+  args: {
+    intent: 'pending',
+  },
+};
+
+export const Muted: Story = {
+  render: Template,
+
+  args: {
+    intent: 'muted',
+  },
+};
+
+export const Effect: Story = {
+  render: Template,
+
+  args: {
+    effect: {
+      gradient: {
+        colors: {
+          0: '#56345e',
+          100: 'transparent',
+        },
       },
     },
   },

@@ -1,12 +1,14 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import ReqoreRadioGroup, { IReqoreRadioGroupProps } from '../../components/RadioGroup';
+import { StoryMeta } from '../utils';
 import { DisabledArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreRadioGroupProps>();
 
-export default {
+const meta = {
   title: 'Form/Radio Group/Stories',
+  component: ReqoreRadioGroup,
   argTypes: {
     ...createArg('asSwitch', {
       type: 'boolean',
@@ -17,9 +19,12 @@ export default {
     ...SizeArg,
     ...DisabledArg,
   },
-} as Meta<IReqoreRadioGroupProps>;
+} as StoryMeta<typeof ReqoreRadioGroup>;
 
-const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) => {
   const [selected, setSelected] = useState(null);
 
   return (
@@ -168,23 +173,40 @@ const Template: Story<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) =
   );
 };
 
-export const Basic = Template.bind({});
-export const Horizontal = Template.bind({});
-Horizontal.args = {
-  vertical: false,
-};
-export const Switch = Template.bind({});
-Switch.args = {
-  asSwitch: true,
+export const Basic: Story = {
+  render: Template,
 };
 
-export const WithoutMargin = Template.bind({});
-WithoutMargin.args = {
-  margin: 'none',
+export const Horizontal: Story = {
+  render: Template,
+
+  args: {
+    vertical: false,
+  },
 };
-export const WithTexts = Template.bind({});
-WithTexts.args = {
-  asSwitch: true,
-  onText: 'True',
-  offText: 'False and wrong',
+
+export const Switch: Story = {
+  render: Template,
+
+  args: {
+    asSwitch: true,
+  },
+};
+
+export const WithoutMargin: Story = {
+  render: Template,
+
+  args: {
+    margin: 'none',
+  },
+};
+
+export const WithTexts: Story = {
+  render: Template,
+
+  args: {
+    asSwitch: true,
+    onText: 'True',
+    offText: 'False and wrong',
+  },
 };

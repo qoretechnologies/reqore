@@ -28,9 +28,10 @@ export interface IReqoreCollectionItemProps
     | 'isCollapsed'
     | 'unMountContentOnCollapse'
     | 'bottomActions'
+    | 'content'
   > {
   selected?: boolean;
-  content?: string | React.ReactNode;
+  content?: string | number | React.ReactNode;
   expandable?: boolean;
   expandedContent?: string | React.ReactNode;
   expandedActions?: IReqorePanelBottomAction[];

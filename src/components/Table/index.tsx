@@ -104,7 +104,7 @@ export interface IReqoreTableProps extends IReqorePanelProps {
 
   filterable?: boolean;
   filterProps?: (data: IReqoreTableData) => IReqoreInputProps;
-  filter?: string;
+  filter?: string | number;
   onFilterChange?: (query: string) => void;
 
   zoomable?: boolean;
@@ -188,7 +188,7 @@ const ReqoreTable = ({
   fill,
   filterable,
   zoomable,
-  filter,
+  filter = '',
   actions = [],
   onFilterChange,
   filterProps,
@@ -217,7 +217,11 @@ const ReqoreTable = ({
   const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
 
   const [wrapperRef, sizes] = useMeasure();
-  const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(filter, 300, onFilterChange);
+  const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
+    filter.toString(),
+    300,
+    onFilterChange
+  );
 
   const selectedIcon = useMemo(() => {
     switch (_selectedQuant) {

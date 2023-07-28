@@ -1,16 +1,22 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import {
   IReqoreSpacerProps,
   ReqoreHorizontalSpacer,
+  ReqoreSpacer,
   ReqoreVerticalSpacer,
 } from '../../components/Spacer';
 import { ReqorePanel } from '../../index';
+import { StoryMeta } from '../utils';
 
-export default {
+const meta = {
   title: 'Utilities/Spacer/Stories',
-} as Meta;
+  component: ReqoreSpacer,
+} as StoryMeta<typeof ReqoreSpacer>;
 
-const Template: Story<IReqoreSpacerProps> = () => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreSpacerProps> = () => {
   return (
     <>
       <ReqorePanel label='Horizontal'>
@@ -89,4 +95,6 @@ const Template: Story<IReqoreSpacerProps> = () => {
   );
 };
 
-export const Basic = Template.bind({});
+export const Basic: Story = {
+  render: Template,
+};

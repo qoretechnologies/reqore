@@ -1,13 +1,20 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { IReqoreTextareaProps } from '../../components/Textarea';
 import { ReqoreControlGroup, ReqoreTextarea } from '../../index';
+import { StoryMeta } from '../utils';
 import { DisabledArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
 
-export default {
+const meta = {
   title: 'Form/TextArea/Stories',
+  component: ReqoreTextarea,
+  args: {
+    scaleWithContent: true,
+    fluid: undefined,
+    placeholder: 'Placeholder',
+  },
   argTypes: {
     ...MinimalArg(),
     ...DisabledArg,
@@ -31,7 +38,10 @@ export default {
       defaultValue: 'Placeholder',
     }),
   },
-} as Meta<IReqoreTextareaProps>;
+} as StoryMeta<typeof ReqoreTextarea>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const str =
   '✔ Checking your system\n' +
@@ -42,7 +52,7 @@ const str =
   '✔ Compiling Preload Scripts\n' +
   '✔ Launching Application\n';
 
-const Template: Story<IReqoreTextareaProps> = (args) => {
+const Template: StoryFn<IReqoreTextareaProps> = (args) => {
   const [value, setValue] = useState(str);
 
   const handleValueChange = (e) => {
@@ -144,53 +154,85 @@ const Template: Story<IReqoreTextareaProps> = (args) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const Info = Template.bind({});
-Info.args = {
-  intent: 'info',
-};
-export const Success = Template.bind({});
-Success.args = {
-  intent: 'success',
-};
-export const Warning = Template.bind({});
-Warning.args = {
-  intent: 'warning',
-};
-export const Danger = Template.bind({});
-Danger.args = {
-  intent: 'danger',
-};
-export const Pending = Template.bind({});
-Pending.args = {
-  intent: 'pending',
-};
-export const Muted = Template.bind({});
-Muted.args = {
-  intent: 'muted',
+export const Basic: Story = {
+  render: Template,
 };
 
-export const Custom = Template.bind({});
-Custom.args = {
-  customTheme: {
-    main: '#38fdb2',
+export const Info: Story = {
+  render: Template,
+
+  args: {
+    intent: 'info',
   },
 };
 
-export const Effect = Template.bind({});
-Effect.args = {
-  effect: {
-    gradient: {
-      type: 'radial',
-      colors: {
-        0: '#361554',
-        50: '#160013',
-      },
+export const Success: Story = {
+  render: Template,
+
+  args: {
+    intent: 'success',
+  },
+};
+
+export const Warning: Story = {
+  render: Template,
+
+  args: {
+    intent: 'warning',
+  },
+};
+
+export const Danger: Story = {
+  render: Template,
+
+  args: {
+    intent: 'danger',
+  },
+};
+
+export const Pending: Story = {
+  render: Template,
+
+  args: {
+    intent: 'pending',
+  },
+};
+
+export const Muted: Story = {
+  render: Template,
+
+  args: {
+    intent: 'muted',
+  },
+};
+
+export const Custom: Story = {
+  render: Template,
+
+  args: {
+    customTheme: {
+      main: '#38fdb2',
     },
-    spaced: 2,
-    color: '#ffffff',
-    uppercase: true,
-    textSize: 'small',
-    weight: 'bold',
+  },
+};
+
+export const Effect: Story = {
+  render: Template,
+
+  args: {
+    effect: {
+      gradient: {
+        type: 'radial',
+        colors: {
+          0: '#361554',
+          50: '#160013',
+        },
+      },
+      spaced: 2,
+      color: '#ffffff',
+      uppercase: true,
+      textSize: 'small',
+      weight: 'bold',
+    },
   },
 };

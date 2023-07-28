@@ -29,7 +29,10 @@ export interface IReqoreTableRowOptions {
   cellComponent?: IReqoreCustomTableBodyCell;
   rowComponent?: IReqoreCustomTableRow;
 }
-export interface IReqoreCustomTableRowProps extends IReqoreTableRowOptions {}
+export interface IReqoreCustomTableRowProps extends IReqoreTableRowOptions {
+  style?: React.CSSProperties;
+  children?: ReactElement;
+}
 export interface IReqoreCustomTableRow extends React.FC<IReqoreCustomTableRowProps> {}
 export interface IReqoreTableRowProps extends React.HTMLAttributes<HTMLDivElement> {
   data: IReqoreTableRowOptions;

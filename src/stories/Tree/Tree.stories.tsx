@@ -1,13 +1,22 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { IReqoreTreeProps, ReqoreTree } from '../../components/Tree';
 import MockObject from '../../mock/object.json';
+import { StoryMeta } from '../utils';
 import { SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTreeProps>();
 
-export default {
+const meta: StoryMeta<typeof ReqoreTree> = {
   title: 'Collections/Tree/Stories',
+  component: ReqoreTree,
+  args: {
+    withLabelCopy: true,
+    showTypes: true,
+    expanded: false,
+    onItemClick: noop,
+    data: MockObject,
+  },
   argTypes: {
     ...createArg('withLabelCopy', {
       name: 'With label copy',
@@ -29,34 +38,36 @@ export default {
     }),
     ...SizeArg,
   },
-} as Meta<IReqoreTreeProps>;
-
-const data = MockObject;
-
-const Template: Story<IReqoreTreeProps> = (args: IReqoreTreeProps) => {
-  return <ReqoreTree data={data} onItemClick={noop} {...args} />;
 };
 
-export const Basic = Template.bind({});
-export const TextView = Template.bind({});
-TextView.args = {
-  mode: 'copy',
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Basic: Story = {};
+
+export const TextView: Story = {
+  args: {
+    mode: 'copy',
+  },
 };
 
-export const NoControls = Template.bind({});
-NoControls.args = {
-  showControls: false,
+export const NoControls: Story = {
+  args: {
+    showControls: false,
+  },
 };
 
-export const Zoomable = Template.bind({});
-Zoomable.args = {
-  zoomable: true,
+export const Zoomable: Story = {
+  args: {
+    zoomable: true,
+  },
 };
 
-export const WithDefaultZoom = Template.bind({});
-WithDefaultZoom.args = {
-  label: 'Collection of items',
-  zoomable: true,
-  size: 'tiny',
-  defaultZoom: 2,
+export const WithDefaultZoom: Story = {
+  args: {
+    label: 'Collection of items',
+    zoomable: true,
+    size: 'tiny',
+    defaultZoom: 2,
+  },
 };

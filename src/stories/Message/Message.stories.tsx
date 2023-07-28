@@ -1,12 +1,14 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import ReqoreMessage, { IReqoreMessageProps } from '../../components/Message';
+import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMessageProps>();
 
-export default {
+const meta = {
   title: 'Other/Message/Stories',
+  component: ReqoreMessage,
   argTypes: {
     ...SizeArg,
     ...FlatArg,
@@ -24,9 +26,16 @@ export default {
       type: 'boolean',
     }),
   },
-} as Meta<IReqoreMessageProps>;
+  args: {
+    title: 'This is a test',
+    minimal: false,
+  },
+} as StoryMeta<typeof ReqoreMessage>;
 
-const Template: Story<IReqoreMessageProps> = (args: IReqoreMessageProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreMessageProps> = (args: IReqoreMessageProps) => {
   return (
     <>
       <ReqoreMessage {...args} onClick={noop}>
@@ -40,51 +49,76 @@ const Template: Story<IReqoreMessageProps> = (args: IReqoreMessageProps) => {
   );
 };
 
-export const Basic: Story<IReqoreMessageProps> = Template.bind({});
-export const Flat: Story<IReqoreMessageProps> = Template.bind({});
-Flat.args = {
-  flat: true,
-  intent: 'success',
-};
-export const Minimal: Story<IReqoreMessageProps> = Template.bind({});
-Minimal.args = {
-  minimal: true,
-  intent: 'danger',
+export const Basic: Story = {
+  render: Template,
 };
 
-export const WithIconColor: Story<IReqoreMessageProps> = Template.bind({});
-WithIconColor.args = {
-  minimal: true,
-  intent: 'success',
-  iconColor: '#00fd9f',
-};
+export const Flat: Story = {
+  render: Template,
 
-export const Opaque: Story<IReqoreMessageProps> = Template.bind({});
-Opaque.args = {
-  opaque: true,
-  intent: 'info',
-};
-
-export const Pending: Story<IReqoreMessageProps> = Template.bind({});
-Pending.args = {
-  opaque: true,
-  intent: 'pending',
-};
-
-export const CustomTheme: Story<IReqoreMessageProps> = Template.bind({});
-CustomTheme.args = {
-  customTheme: {
-    main: '#6e1295',
+  args: {
+    flat: true,
+    intent: 'success',
   },
 };
 
-export const Effect: Story<IReqoreMessageProps> = Template.bind({});
-Effect.args = {
-  effect: {
-    gradient: {
-      colors: {
-        0: '#eb0e8c',
-        100: 'danger:darken:2',
+export const Minimal: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+    intent: 'danger',
+  },
+};
+
+export const WithIconColor: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+    intent: 'success',
+    iconColor: '#00fd9f',
+  },
+};
+
+export const Opaque: Story = {
+  render: Template,
+
+  args: {
+    opaque: true,
+    intent: 'info',
+  },
+};
+
+export const Pending: Story = {
+  render: Template,
+
+  args: {
+    opaque: true,
+    intent: 'pending',
+  },
+};
+
+export const CustomTheme: Story = {
+  render: Template,
+
+  args: {
+    customTheme: {
+      main: '#6e1295',
+    },
+  },
+};
+
+export const Effect: Story = {
+  render: Template,
+
+  args: {
+    effect: {
+      gradient: {
+        colors: {
+          0: '#eb0e8c',
+          100: 'danger:darken:2',
+        },
       },
     },
   },

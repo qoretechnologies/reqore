@@ -1,7 +1,7 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { IReqoreTabsProps } from '../../components/Tabs';
-import { TReqoreTabsContentPadding } from '../../components/Tabs/content';
 import { ReqoreH3, ReqoreTabs, ReqoreTabsContent } from '../../index';
+import { StoryMeta } from '../utils';
 import { IntentArg, SizeArg, argManager } from '../utils/args';
 
 const tabs = [
@@ -100,47 +100,53 @@ const tabs = [
   },
 ] as IReqoreTabsProps['tabs'];
 
-const { createArg } = argManager<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding }>();
+const { createArg } = argManager<IReqoreTabsProps>();
 
-export default {
+const meta = {
   title: 'Navigation/Tabs/Stories',
+  component: ReqoreTabs,
+  args: {
+    flat: true,
+    fill: false,
+    fillParent: false,
+    wrapTabNames: false,
+    vertical: false,
+  },
   argTypes: {
     ...SizeArg,
     ...IntentArg,
     ...createArg('flat', {
       type: 'boolean',
-      defaultValue: true,
       name: 'Flat',
       description: 'Whether the tabs should be flat or not',
     }),
     ...createArg('fill', {
       type: 'boolean',
-      defaultValue: false,
       name: 'Fill',
       description: 'If the tabs should fill the container',
     }),
     ...createArg('fillParent', {
       type: 'boolean',
-      defaultValue: false,
       name: 'Fill Parent',
       description: 'If the tabs should fill the parent container',
     }),
     ...createArg('wrapTabNames', {
       type: 'boolean',
-      defaultValue: false,
       name: 'Wrap Tab Names',
       description: 'If the tab names should wrap',
     }),
     ...createArg('vertical', {
       type: 'boolean',
-      defaultValue: false,
       name: 'Vertical',
       description: 'If the tabs should be vertical',
     }),
   },
-} as Meta<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding }>;
+} as StoryMeta<typeof ReqoreTabs>;
 
-const Template: Story<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding }> = (args) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreTabsProps> = (args) => {
   return (
     <ReqoreTabs {...args} tabs={tabs}>
       <ReqoreTabsContent tabId='tab1'>
@@ -229,55 +235,85 @@ const Template: Story<IReqoreTabsProps & { tabPadding: TReqoreTabsContentPadding
   );
 };
 
-export const Basic = Template.bind({});
-export const Fill = Template.bind({});
-Fill.args = {
-  fill: true,
+export const Basic: Story = {
+  render: Template,
 };
 
-export const CustomActiveIntent = Template.bind({});
-CustomActiveIntent.args = {
-  activeTabIntent: 'warning',
-  activeTab: 'tab8',
+export const Fill: Story = {
+  render: Template,
+
+  args: {
+    fill: true,
+  },
 };
 
-export const NotFlat = Template.bind({});
-NotFlat.args = {
-  flat: false,
+export const CustomActiveIntent: Story = {
+  render: Template,
+
+  args: {
+    activeTabIntent: 'warning',
+    activeTab: 'tab8',
+  },
 };
 
-export const NoTabsPadding = Template.bind({});
-NoTabsPadding.args = {
-  padded: false,
+export const NotFlat: Story = {
+  render: Template,
+
+  args: {
+    flat: false,
+  },
 };
 
-export const Vertical = Template.bind({});
-Vertical.args = {
-  vertical: true,
-  fillParent: true,
+export const NoTabsPadding: Story = {
+  render: Template,
+
+  args: {
+    padded: false,
+  },
 };
 
-export const VerticalNoTabsPadding = Template.bind({});
-VerticalNoTabsPadding.args = {
-  padded: false,
-  vertical: true,
+export const Vertical: Story = {
+  render: Template,
+
+  args: {
+    vertical: true,
+    fillParent: true,
+  },
 };
 
-export const VerticalWithWrapping = Template.bind({});
-VerticalWithWrapping.args = {
-  vertical: true,
-  fillParent: true,
-  wrapTabNames: true,
+export const VerticalNoTabsPadding: Story = {
+  render: Template,
+
+  args: {
+    padded: false,
+    vertical: true,
+  },
 };
 
-export const VerticalCustomWidth = Template.bind({});
-VerticalCustomWidth.args = {
-  vertical: true,
-  fillParent: true,
-  width: '300px',
+export const VerticalWithWrapping: Story = {
+  render: Template,
+
+  args: {
+    vertical: true,
+    fillParent: true,
+    wrapTabNames: true,
+  },
 };
 
-export const CustomTabsPadding = Template.bind({});
-CustomTabsPadding.args = {
-  tabsPadding: 'none',
+export const VerticalCustomWidth: Story = {
+  render: Template,
+
+  args: {
+    vertical: true,
+    fillParent: true,
+    width: '300px',
+  },
+};
+
+export const CustomTabsPadding: Story = {
+  render: Template,
+
+  args: {
+    tabsPadding: 'none',
+  },
 };

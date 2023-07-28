@@ -1,4 +1,4 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
 import {
   ReqoreButton,
@@ -9,12 +9,14 @@ import {
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
+import { StoryMeta } from '../utils';
 import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
-export default {
+const meta = {
   title: 'Form/Control Group/Stories',
+  component: ReqoreControlGroup,
   argTypes: {
     ...SizeArg,
     ...GapSizeArg,
@@ -44,9 +46,19 @@ export default {
       control: 'boolean',
     }),
   },
-} as Meta<IReqoreControlGroupProps>;
+  args: {
+    wrap: true,
+    vertical: false,
+    stack: false,
+    fluid: false,
+    minimal: false,
+  },
+} as StoryMeta<typeof ReqoreControlGroup>;
 
-const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<typeof ReqoreControlGroup> = (args) => {
   if (args.fill) {
     return (
       <>
@@ -274,72 +286,114 @@ const Template: Story<IReqoreControlGroupProps> = (args: IReqoreControlGroupProp
   );
 };
 
-export const Basic = Template.bind({});
-export const Minimal = Template.bind({});
-Minimal.args = {
-  minimal: true,
+export const Basic: Story = {
+  render: Template,
 };
 
-export const Fluid = Template.bind({});
-Fluid.args = {
-  fluid: true,
+export const Minimal: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+  },
 };
 
-export const Fill = Template.bind({});
-Fill.args = {
-  fill: true,
+export const Fluid: Story = {
+  render: Template,
+
+  args: {
+    fluid: true,
+  },
 };
 
-export const NotFlat = Template.bind({});
-NotFlat.args = {
-  flat: false,
+export const Fill: Story = {
+  render: Template,
+
+  args: {
+    fill: true,
+  },
 };
 
-export const Vertical = Template.bind({});
-Vertical.args = {
-  vertical: true,
+export const NotFlat: Story = {
+  render: Template,
+
+  args: {
+    flat: false,
+  },
 };
 
-export const VerticalFluid = Template.bind({});
-VerticalFluid.args = {
-  vertical: true,
-  fluid: true,
+export const Vertical: Story = {
+  render: Template,
+
+  args: {
+    vertical: true,
+  },
 };
 
-export const VerticalStackedFluid = Template.bind({});
-VerticalStackedFluid.args = {
-  vertical: true,
-  stack: true,
-  fluid: true,
+export const VerticalFluid: Story = {
+  render: Template,
+
+  args: {
+    vertical: true,
+    fluid: true,
+  },
 };
 
-export const Stacked = Template.bind({});
-Stacked.args = {
-  stack: true,
+export const VerticalStackedFluid: Story = {
+  render: Template,
+
+  args: {
+    vertical: true,
+    stack: true,
+    fluid: true,
+  },
 };
 
-export const BigGapSize = Template.bind({});
-BigGapSize.args = {
-  gapSize: 'big',
+export const Stacked: Story = {
+  render: Template,
+
+  args: {
+    stack: true,
+  },
 };
 
-export const NoWrap = Template.bind({});
-NoWrap.args = {
-  wrap: false,
+export const BigGapSize: Story = {
+  render: Template,
+
+  args: {
+    gapSize: 'big',
+  },
 };
 
-export const HorizontalAlign = Template.bind({});
-HorizontalAlign.args = {
-  vertical: true,
-  horizontalAlign: 'center',
+export const NoWrap: Story = {
+  render: Template,
+
+  args: {
+    wrap: false,
+  },
 };
 
-export const VerticalAlign = Template.bind({});
-VerticalAlign.args = {
-  verticalAlign: 'flex-end',
+export const HorizontalAlign: Story = {
+  render: Template,
+
+  args: {
+    vertical: true,
+    horizontalAlign: 'center',
+  },
 };
 
-export const Responsive = Template.bind({});
-Responsive.args = {
-  responsive: true,
+export const VerticalAlign: Story = {
+  render: Template,
+
+  args: {
+    verticalAlign: 'flex-end',
+  },
+};
+
+export const Responsive: Story = {
+  render: Template,
+
+  args: {
+    responsive: true,
+  },
 };

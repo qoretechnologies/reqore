@@ -1,21 +1,28 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj } from '@storybook/react';
 import { IReqoreCommentFeedProps } from '../../components/CommentFeed';
 import { ReqoreComment, ReqoreCommentFeed } from '../../index';
+import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreCommentFeedProps>();
 
-export default {
+const meta = {
   title: 'Other/Comments/Stories',
+  component: ReqoreCommentFeed,
   argTypes: {
     ...createArg('gapSize', {
-      defaultValue: '0',
       type: 'string',
     }),
   },
-} as ComponentMeta<typeof ReqoreCommentFeed>;
+  args: {
+    gapSize: '0',
+  },
+} as StoryMeta<typeof ReqoreCommentFeed>;
 
-const Template: ComponentStory<typeof ReqoreCommentFeed> = (args) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template = (args) => {
   return (
     <ReqoreCommentFeed {...args}>
       <ReqoreComment title='Test comment' detail='2 hours ago' icon='UserFill'>
@@ -124,4 +131,6 @@ const Template: ComponentStory<typeof ReqoreCommentFeed> = (args) => {
   );
 };
 
-export const Basic = Template.bind({});
+export const Basic: Story = {
+  render: Template,
+};

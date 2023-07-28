@@ -1,35 +1,33 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import ReqoreNotificationsWrapper, {
   IReqoreNotificationsWrapperProps,
 } from '../../components/Notifications';
-import ReqoreNotification, {
-  IReqoreNotificationProps,
-} from '../../components/Notifications/notification';
+import ReqoreNotification from '../../components/Notifications/notification';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreUIProvider } from '../../index';
+import { StoryMeta } from '../utils';
 
-export default {
+const meta: StoryMeta<typeof ReqoreNotificationsWrapper> = {
   title: 'Other/Notifications/Wrapper/Stories',
-  component: ReqoreNotification,
-} as Meta;
+  component: ReqoreNotificationsWrapper,
+};
 
-const Template: Story<
-  IReqoreNotificationProps & IReqoreUIProviderProps & IReqoreNotificationsWrapperProps
-> = ({
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreUIProviderProps & IReqoreNotificationsWrapperProps> = ({
   theme,
   ...args
-}: IReqoreNotificationProps & IReqoreUIProviderProps & IReqoreNotificationsWrapperProps) => (
+}) => (
   <ReqoreUIProvider theme={theme}>
     <ReqoreNotificationsWrapper position={args.position}>
       <ReqoreNotification
-        {...args}
         type='info'
         content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
         onClick={noop}
       />
       <ReqoreNotification
-        {...args}
         type='info'
         content="Hello, I am a very simple notification. Look at me, look at me? Isn't this great?"
         onClick={noop}
@@ -38,28 +36,46 @@ const Template: Story<
   </ReqoreUIProvider>
 );
 
-export const Top = Template.bind({});
-export const Bottom = Template.bind({});
-Bottom.args = {
-  position: 'BOTTOM',
+export const Top: Story = {
+  render: Template,
 };
 
-export const TopLeft = Template.bind({});
-TopLeft.args = {
-  position: 'TOP LEFT',
+export const Bottom: Story = {
+  render: Template,
+
+  args: {
+    position: 'BOTTOM',
+  },
 };
 
-export const TopRight = Template.bind({});
-TopRight.args = {
-  position: 'TOP RIGHT',
+export const TopLeft: Story = {
+  render: Template,
+
+  args: {
+    position: 'TOP LEFT',
+  },
 };
 
-export const BottomLeft = Template.bind({});
-BottomLeft.args = {
-  position: 'BOTTOM LEFT',
+export const TopRight: Story = {
+  render: Template,
+
+  args: {
+    position: 'TOP RIGHT',
+  },
 };
 
-export const BottomRight = Template.bind({});
-BottomRight.args = {
-  position: 'BOTTOM RIGHT',
+export const BottomLeft: Story = {
+  render: Template,
+
+  args: {
+    position: 'BOTTOM LEFT',
+  },
+};
+
+export const BottomRight: Story = {
+  render: Template,
+
+  args: {
+    position: 'BOTTOM RIGHT',
+  },
 };

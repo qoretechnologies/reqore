@@ -1,6 +1,18 @@
 import { IReqoreTableProps } from '../components/Table';
 import data from './data.json';
 
+export type TestTableItem = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  address: string;
+  age: number;
+  occupation: string;
+  group: string;
+  _selectId: number;
+  _disabled: boolean;
+};
+
 export const tableData = data;
 export const testColumns: IReqoreTableProps['columns'] = [
   {

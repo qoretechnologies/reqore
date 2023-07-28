@@ -287,7 +287,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             hasShadow
             timeout={duration}
             clickable={!!onClick}
-            onClick={onClick}
+            onClick={() => onClick?.()}
             flat={flat}
             minimal={minimal}
             className='reqore-notification'

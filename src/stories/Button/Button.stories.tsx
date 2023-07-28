@@ -1,23 +1,28 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import ReqoreButton from '../../components/Button';
-import { IReqoreTheme } from '../../constants/theme';
 import { ReqoreControlGroup } from '../../index';
+import { StoryMeta } from '../utils';
 import { IconArg, SizeArg } from '../utils/args';
 
-export default {
+const meta = {
   title: 'Form/Button/Stories',
-  parameters: {
-    jest: ['button.test.tsx'],
-  },
+  component: ReqoreButton,
   argTypes: {
     ...IconArg('icon', 'Icon'),
     ...IconArg('rightIcon', 'Right Icon'),
     ...SizeArg,
   },
-} as ComponentMeta<typeof ReqoreButton>;
+  args: {
+    icon: '24HoursFill',
+    rightIcon: '24HoursFill',
+  },
+} as StoryMeta<typeof ReqoreButton>;
 
-const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
   return (
     <ReqoreControlGroup vertical gapSize='big'>
       <ReqoreControlGroup size={buttonProps.size} wrap>
@@ -246,54 +251,85 @@ const Template: ComponentStory<typeof ReqoreButton> = (buttonProps) => {
   );
 };
 
-export const Default = Template.bind({});
-export const Info = Template.bind({});
-Info.args = {
-  intent: 'info',
+export const Default: Story = {
+  render: Template,
 };
-export const Success = Template.bind({});
-Success.args = {
-  intent: 'success',
-};
-export const Warning = Template.bind({});
-Warning.args = {
-  intent: 'warning',
-};
-export const Pending = Template.bind({});
-Pending.args = {
-  intent: 'pending',
-};
-export const Danger = Template.bind({});
-Danger.args = {
-  intent: 'danger',
-};
-export const Muted = Template.bind({});
-Muted.args = {
-  intent: 'muted',
-};
-export const Effect: ComponentStory<typeof ReqoreButton> = Template.bind({});
-Effect.args = {
-  effect: {
-    gradient: {
-      direction: 'to right bottom',
-      colors: { 0: '#33023c', 100: '#0a487b' },
-      animate: 'active',
-    },
-    spaced: 2,
-    uppercase: true,
-    weight: 'thick',
-    textSize: 'small',
+
+export const Info: Story = {
+  render: Template,
+
+  args: {
+    intent: 'info',
   },
 };
 
-export const GlobalEffect: ComponentStory<
-  typeof ReqoreButton & { otherThemeOptions?: IReqoreTheme }
-> = Template.bind({});
-GlobalEffect.args = {
-  otherThemeOptions: {
-    buttons: {
-      gradient: true,
-      animate: 'active',
+export const Success: Story = {
+  render: Template,
+
+  args: {
+    intent: 'success',
+  },
+};
+
+export const Warning: Story = {
+  render: Template,
+
+  args: {
+    intent: 'warning',
+  },
+};
+
+export const Pending: Story = {
+  render: Template,
+
+  args: {
+    intent: 'pending',
+  },
+};
+
+export const Danger: Story = {
+  render: Template,
+
+  args: {
+    intent: 'danger',
+  },
+};
+
+export const Muted: Story = {
+  render: Template,
+
+  args: {
+    intent: 'muted',
+  },
+};
+
+export const Effect: Story = {
+  render: Template,
+
+  args: {
+    effect: {
+      gradient: {
+        direction: 'to right bottom',
+        colors: { 0: '#33023c', 100: '#0a487b' },
+        animate: 'active',
+      },
+      spaced: 2,
+      uppercase: true,
+      weight: 'thick',
+      textSize: 'small',
     },
   },
-} as any;
+};
+
+export const GlobalEffect: Story = {
+  render: Template,
+
+  args: {
+    otherThemeOptions: {
+      buttons: {
+        gradient: true,
+        animate: 'active',
+      },
+    },
+  },
+};
