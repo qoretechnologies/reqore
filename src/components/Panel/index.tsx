@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { size } from 'lodash';
+import { isArray, size } from 'lodash';
 import { darken, rgba } from 'polished';
 import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
@@ -379,7 +379,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         collapsible ||
         !!onClose ||
         !!size(actions.filter(isActionShown)) ||
-        !!badge ||
+        !!(isArray(badge) ? size(badge) : badge) ||
         !!icon,
       [label, collapsible, onClose, actions, badge, icon]
     );
