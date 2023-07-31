@@ -26,6 +26,7 @@ const meta = {
     minimal: false,
     label: 'Reqore panel component',
     onClick: noop,
+    icon: '24HoursFill',
   },
   argTypes: {
     ...IntentArg,

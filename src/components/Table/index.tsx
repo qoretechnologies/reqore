@@ -264,12 +264,12 @@ const ReqoreTable = ({
               tooltip: selectToggleTooltip,
               icon: !_selectId
                 ? 'Forbid2Line'
-                : _selected?.find((s) => s === _selectId)
+                : _selected?.find((s) => s.toString() === _selectId.toString())
                 ? 'CheckboxCircleLine'
                 : 'CheckboxBlankCircleLine',
               intent: !_selectId
                 ? 'muted'
-                : _selected?.find((s) => s === _selectId)
+                : _selected?.find((s) => s.toString() === _selectId.toString())
                 ? selectedRowIntent
                 : undefined,
               onClick: () => handleSelectClick(_selectId),

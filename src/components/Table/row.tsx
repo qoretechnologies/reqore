@@ -95,7 +95,9 @@ const ReqoreTableRow = ({
   index,
 }: IReqoreTableRowProps) => {
   const [isHovered, setIsHovered] = useState<boolean>(false);
-  const isSelected = selected.find((selectId) => selectId === data[index]._selectId);
+  const isSelected = selected.find(
+    (selectId) => selectId.toString() === data[index]._selectId.toString()
+  );
 
   const CellComponent = cellComponent || ReqoreTableBodyCell;
   const RowComponent = rowComponent || StyledTableRow;
