@@ -8,8 +8,8 @@ import { IReqorePanelAction } from '../Panel';
 export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
   direction === 'asc' ? 'desc' : 'asc';
 
-export const fixSort = (sort?: IReqoreTableSort) => {
-  return { ...(sort || {}), direction: sort?.direction || 'desc' };
+export const fixSort = (sort: IReqoreTableSort) => {
+  return { ...sort, direction: sort?.direction || 'desc' };
 };
 
 export const sortTableData = (data: any[], sort: IReqoreTableSort) => {
@@ -127,7 +127,7 @@ export const getColumnsCount = (columns: IReqoreTableColumn[]): number => {
   let count = 0;
 
   columns.forEach((column) => {
-    if (column.header.columns) {
+    if (column.header?.columns) {
       count += getColumnsCount(column.header.columns);
     } else {
       count += 1;
@@ -145,7 +145,7 @@ export const hasGroupedColumns = (columns: IReqoreTableColumn[]): boolean => {
 
 export const hasHiddenColumns = (columns: IReqoreTableColumn[]): boolean => {
   return columns.some((column) => {
-    if (column.header.columns) {
+    if (column.header?.columns) {
       return column.header.columns.some((subColumn) => subColumn.show === false);
     }
 
@@ -157,8 +157,8 @@ export const getColumnsByPinType = (
   columns: IReqoreTableColumn[],
   type: 'left' | 'right' | 'main'
 ): IReqoreTableColumn[] => {
-  return columns.reduce((newColumns, column) => {
-    if (column.header.columns) {
+  return columns.reduce((newColumns: IReqoreTableColumn[], column): IReqoreTableColumn[] => {
+    if (column.header?.columns) {
       const subColumns: IReqoreTableColumn[] = getColumnsByPinType(column.header.columns, type);
 
       if (!size(subColumns)) {
@@ -188,8 +188,8 @@ export const getColumnsByPinType = (
 };
 
 export const getOnlyShownColumns = (columns: IReqoreTableColumn[]): IReqoreTableColumn[] => {
-  return columns.reduce((newColumns, column) => {
-    if (column.header.columns) {
+  return columns.reduce((newColumns: IReqoreTableColumn[], column) => {
+    if (column.header?.columns) {
       const subColumns = getOnlyShownColumns(column.header.columns);
 
       if (size(subColumns)) {
@@ -220,7 +220,7 @@ export const prepareColumns = (
 ): IReqoreTableColumn[] => {
   // We need to set the width of each column
   return columns.map((column) => {
-    if (column.header.columns) {
+    if (column.header?.columns) {
       return {
         ...column,
         header: {
@@ -233,7 +233,7 @@ export const prepareColumns = (
     let newWidth = calculateMinimumCellWidth(
       column.width || 50,
       size,
-      column.header.icon,
+      column.header?.icon,
       column.sortable,
       column.filterable,
       column.hideable,
@@ -250,7 +250,7 @@ export const prepareColumns = (
 
 export const calculateMinimumCellWidth = (
   currentWidth: number = 50,
-  size?: TSizes,
+  size: TSizes,
   icon?: IReqoreIconName,
   sortable?: boolean,
   filterable?: boolean,

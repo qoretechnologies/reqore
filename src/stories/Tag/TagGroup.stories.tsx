@@ -1,12 +1,11 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
-import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup } from '../../index';
 import { StoryMeta } from '../utils';
 import { SizeArg, argManager } from '../utils/args';
 
-const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
+const { createArg } = argManager<IReqoreTagGroup>();
 
 const meta = {
   title: 'Form/Tag Group/Stories',
@@ -43,30 +42,13 @@ const meta = {
         disable: true,
       },
     }),
-    ...createArg('onRemoveClick', {
-      defaultValue: noop,
-      table: {
-        disable: true,
-      },
-    }),
-    ...createArg('rightIcon', {
-      defaultValue: 'EBike2Line',
-      name: 'Right Icon',
-      description: 'Right icon',
-      control: 'text',
-    }),
-    ...createArg('actions', {
-      table: {
-        disable: true,
-      },
-    }),
   },
 } as StoryMeta<typeof ReqoreTagGroup>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
+const Template: StoryFn<IReqoreTagGroup> = (args) => {
   return (
     <ReqoreTagGroup {...args}>
       <ReqoreTag actions={null} onRemoveClick={null} rightIcon={null} label={1} />
@@ -148,7 +130,7 @@ const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
           },
         ]}
       />
-      <ReqoreTag label='Danger Tag' icon='AlarmWarningLine' intent='danger' {...args} />
+      <ReqoreTag label='Danger Tag' icon='AlarmWarningLine' intent='danger' />
       <ReqoreTag
         label='Custom Color Tag'
         icon='AlarmWarningLine'
@@ -186,7 +168,6 @@ const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
         label='No Buttons Tag'
         icon='CarLine'
         color='#0b4578'
-        rightIcon={args.rightIcon}
         actions={null}
         onRemoveClick={null}
       />
@@ -194,7 +175,6 @@ const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
         label='Minimal Tag'
         minimal
         icon='ShareForward2Fill'
-        rightIcon={args.rightIcon}
         actions={null}
         onRemoveClick={null}
       />
@@ -203,7 +183,6 @@ const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
         minimal
         intent='warning'
         icon='ShareForward2Fill'
-        rightIcon={args.rightIcon}
         actions={null}
         onRemoveClick={null}
       />
@@ -211,7 +190,6 @@ const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
         labelKey='This is the key for a wrapped tag'
         label='Wrapped tag with some long text and width specified, no wrap specified'
         icon='ShareForward2Fill'
-        rightIcon={args.rightIcon}
         width='400px'
         onRemoveClick={null}
         actions={[
@@ -234,7 +212,6 @@ const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
         labelKey='This is the key for a wrapped tag'
         label='Wrapped tag with some long text and NO width specified, AND wrap specified'
         icon='ShareForward2Fill'
-        rightIcon={args.rightIcon}
         leftIconColor='#00fafd'
         rightIconColor='#eb0e8c'
         wrap
@@ -260,7 +237,6 @@ const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
         fixed='key'
         label='Wrapped tag with some long text and NO width specified, AND wrap specified, with fixed key'
         icon='DriveLine'
-        rightIcon={args.rightIcon}
         wrap
         onRemoveClick={null}
         actions={[
@@ -284,7 +260,6 @@ const Template: StoryFn<IReqoreTagGroup & IReqoreTagProps> = (args) => {
         fixed='label'
         label='Fixed'
         icon='DriveLine'
-        rightIcon={args.rightIcon}
         wrap
         onRemoveClick={null}
         actions={[

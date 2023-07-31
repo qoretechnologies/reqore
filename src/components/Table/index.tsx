@@ -105,7 +105,7 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   filterable?: boolean;
   filterProps?: (data: IReqoreTableData) => IReqoreInputProps;
   filter?: string | number;
-  onFilterChange?: (query: string) => void;
+  onFilterChange?: (query: string | number) => void;
 
   zoomable?: boolean;
   defaultZoom?: number;
@@ -137,7 +137,7 @@ export interface IReqoreTableStyle {
 }
 
 export interface IReqoreTableSort {
-  by?: string;
+  by: string;
   thenBy?: string;
   direction?: 'asc' | 'desc';
 }
@@ -200,14 +200,14 @@ const ReqoreTable = ({
   paging,
   ...rest
 }: IReqoreTableProps) => {
-  const leftTableRef = useRef<HTMLDivElement>(undefined);
-  const rightTableRef = useRef<HTMLDivElement>(undefined);
-  const mainTableRef = useRef<HTMLDivElement>(undefined);
-  const mainHeaderRef = useRef<HTMLDivElement>(undefined);
+  const leftTableRef = useRef<HTMLDivElement>(null);
+  const rightTableRef = useRef<HTMLDivElement>(null);
+  const mainTableRef = useRef<HTMLDivElement>(null);
+  const mainHeaderRef = useRef<HTMLDivElement>(null);
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
-  const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
+  const [_sort, setSort] = useState<IReqoreTableSort | undefined>(sort ? fixSort(sort) : undefined);
   const [_selected, setSelected] = useState<(string | number)[]>(selected || []);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
   const [columnModifiers, setColumnModifiers] = useState<{
@@ -272,7 +272,7 @@ const ReqoreTable = ({
                 : _selected?.find((s) => s.toString() === _selectId.toString())
                 ? selectedRowIntent
                 : undefined,
-              onClick: () => handleSelectClick(_selectId),
+              onClick: _selectId ? () => handleSelectClick(_selectId) : undefined,
             },
           ],
         },
@@ -349,7 +349,7 @@ const ReqoreTable = ({
   }, [data]);
 
   useUpdateEffect(() => {
-    if (selectable) {
+    if (selectable && selected) {
       setSelected(selected);
     }
   }, [selected]);
@@ -374,7 +374,7 @@ const ReqoreTable = ({
     }
   }, [_selected]);
 
-  const handleSortChange = (by?: string) => {
+  const handleSortChange = (by: string) => {
     setSort((currentSort: IReqoreTableSort) => {
       const newSort: IReqoreTableSort = { ...currentSort };
 
@@ -448,7 +448,7 @@ const ReqoreTable = ({
 
     const addColumn = (column: IReqoreTableColumn) => {
       _columnsList.push({
-        label: typeof column.header.label === 'string' ? column.header.label : column.dataId,
+        label: typeof column.header?.label === 'string' ? column.header.label : column.dataId,
         selected: column.show !== false,
         onClick: () =>
           handleColumnsUpdate(column.dataId, 'show', column.show !== false ? false : true),
@@ -585,7 +585,7 @@ const ReqoreTable = ({
   ]);
 
   const badge = useMemo(() => {
-    const badgeList: TReqoreBadge[] = rest.label ? [count(transformedData)] : undefined;
+    const badgeList: TReqoreBadge[] = rest.label ? [count(transformedData)] : [];
 
     if (rest.badge) {
       if (isArray(rest.badge)) {
@@ -665,7 +665,10 @@ const ReqoreTable = ({
     );
   };
 
-  const pagingOptions = useMemo(() => getPagingObjectFromType(paging), [paging]);
+  const pagingOptions = useMemo(
+    () => (paging ? getPagingObjectFromType(paging) : undefined),
+    [paging]
+  );
 
   return (
     <ReqorePanel
@@ -686,7 +689,7 @@ const ReqoreTable = ({
       <ReqorePaginationContainer<IReqoreTableRowData>
         items={transformedData}
         type={
-          paging
+          pagingOptions
             ? {
                 ...pagingOptions,
                 onPageChange: () => {

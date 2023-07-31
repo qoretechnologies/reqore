@@ -17,10 +17,10 @@ import { getOnlyShownColumns } from './helpers';
 
 export interface IReqoreTableRowOptions {
   columns: IReqoreTableColumn[];
-  data?: IReqoreTableData;
+  data: IReqoreTableData;
   selectable?: boolean;
-  onSelectClick?: (selectId: string | number) => void;
-  selected?: (string | number)[];
+  onSelectClick: (selectId: string | number) => void;
+  selected: (string | number)[];
   onRowClick?: IReqoreTableRowClick;
   striped?: boolean;
   selectedRowIntent?: TReqoreIntent;
@@ -95,9 +95,9 @@ const ReqoreTableRow = ({
   index,
 }: IReqoreTableRowProps) => {
   const [isHovered, setIsHovered] = useState<boolean>(false);
-  const isSelected = selected.find(
-    (selectId) => selectId.toString() === data[index]._selectId.toString()
-  );
+  const isSelected =
+    data[index]._selectId &&
+    selected.find((selectId) => selectId.toString() === data[index]._selectId.toString());
 
   const CellComponent = cellComponent || ReqoreTableBodyCell;
   const RowComponent = rowComponent || StyledTableRow;
@@ -186,7 +186,7 @@ const ReqoreTableRow = ({
   const renderCells = (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
     getOnlyShownColumns(columns).map(
       ({ width, minWidth, maxWidth, resizedWidth, grow, dataId, cell, header, align, intent }) => {
-        if (header.columns) {
+        if (header?.columns) {
           return renderCells(header.columns, data);
         }
 
@@ -232,7 +232,7 @@ const ReqoreTableRow = ({
                     onRowClick(data[index]);
                   } else if (selectable && data[index]._selectId) {
                     // Otherwise select the row if selectable
-                    onSelectClick(data[index]._selectId);
+                    onSelectClick(data[index]._selectId!);
                   }
                 },
                 className: 'reqore-table-cell',

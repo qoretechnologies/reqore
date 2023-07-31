@@ -15,7 +15,7 @@ export interface IReqoreAutoFocusRules {
 export const useAutoFocus = (
   element: HTMLInputElement | HTMLTextAreaElement,
   rules?: IReqoreAutoFocusRules,
-  onChange?: (e: unknown) => void
+  onChange?: (event: any) => void
 ) => {
   const isInViewport = useRef<boolean>(false);
   const observer = useRef<IntersectionObserver>(null);

@@ -17,7 +17,7 @@ export interface IReqoreMenuItemProps
   selected?: boolean;
   itemId?: string;
   onRightIconClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
-  onClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
+  onClick?: (event: React.MouseEvent<HTMLElement>, itemId?: string) => void;
   scrollIntoView?: boolean;
 }
 
@@ -59,12 +59,12 @@ const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
   ) => {
     const { removePopover } = useContext(PopoverContext);
     const { targetRef } = useCombinedRefs<HTMLButtonElement>(ref);
-    const [itemRef, setItemRef] = useState<HTMLButtonElement>(undefined);
+    const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       event.persist();
 
-      onClick?.(itemId, event);
+      onClick?.(event, itemId);
 
       if (_insidePopover && _popoverId) {
         removePopover!(_popoverId);
@@ -102,7 +102,7 @@ const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
           onClick={handleClick}
           active={selected}
           ref={(ref) => {
-            targetRef.current = ref;
+            targetRef.current = ref || undefined;
             setItemRef(ref);
           }}
           disabled={disabled}

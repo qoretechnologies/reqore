@@ -1,3 +1,4 @@
+import count from 'lodash/size';
 import { forwardRef, useMemo } from 'react';
 import { useMount } from 'react-use';
 import { FixedSizeList as List } from 'react-window';
@@ -14,7 +15,7 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
     main: React.RefObject<HTMLDivElement>;
     header: React.RefObject<HTMLDivElement>;
   };
-  type?: 'left' | 'right' | 'main';
+  type: 'left' | 'right' | 'main';
   onScrollChange?: (isScrolled: boolean) => void;
 }
 
@@ -73,13 +74,15 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       [size, rest.flat]
     );
 
+    const itemCount = useMemo(() => count(data), [data]);
+
     return (
       <StyledList
         outerRef={targetRef}
-        itemCount={data.length}
+        itemCount={itemCount}
         // If the defined height is less than the count of items' height
         // use that height instead
-        height={height > data.length * rowHeight ? data.length * rowHeight : height}
+        height={height > itemCount * rowHeight ? itemCount * rowHeight : height}
         className='reqore-table-body'
         itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
         itemData={{

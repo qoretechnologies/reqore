@@ -45,9 +45,9 @@ export const getTypeFromValue: Function = (item: any): string => {
   return 'null';
 };
 
-export const getLineCount = (value: string): number => {
+export const getLineCount = (value: string | null): number => {
   try {
-    return value.match(/[^\n]*\n[^\n]*/gi).length;
+    return value?.match(/[^\n]*\n[^\n]*/gi)?.length ?? 0;
   } catch (e) {
     return 0;
   }

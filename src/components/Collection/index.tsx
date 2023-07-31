@@ -48,7 +48,7 @@ export interface IReqoreCollectionProps extends IReqorePanelProps, IReqoreColumn
     searchInput?: React.ReactNode
   ) => React.ReactNode;
 
-  onQueryChange?: (query: string) => void;
+  onQueryChange?: (query: string | number) => void;
 
   emptyMessage?: string;
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
