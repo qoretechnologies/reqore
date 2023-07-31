@@ -207,7 +207,7 @@ const ReqoreTable = ({
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
-  const [_sort, setSort] = useState<IReqoreTableSort | undefined>(sort ? fixSort(sort) : undefined);
+  const [_sort, setSort] = useState<IReqoreTableSort | undefined>(fixSort(sort));
   const [_selected, setSelected] = useState<(string | number)[]>(selected || []);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
   const [columnModifiers, setColumnModifiers] = useState<{
