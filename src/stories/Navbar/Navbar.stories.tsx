@@ -20,6 +20,9 @@ import { FlatArg, NoContentArg } from '../utils/args';
 const meta = {
   title: 'Layout/Header & Footer/Stories',
   component: ReqoreHeader,
+  args: {
+    withoutContent: true,
+  },
   argTypes: {
     ...FlatArg,
     ...NoContentArg,
