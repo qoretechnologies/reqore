@@ -1,4 +1,4 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import { IReqoreInputProps } from '../../components/Input';
@@ -10,12 +10,14 @@ import {
   ReqoreTabsContent,
   useReqoreProperty,
 } from '../../index';
+import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreDrawerProps>();
 
-export default {
+const meta = {
   title: 'Dialogs/Drawer/Stories',
+  component: ReqoreDrawer,
   parameters: {
     chromatic: {
       viewports: [450, 600, 1440],
@@ -83,9 +85,24 @@ export default {
     }),
     ...IntentArg,
   },
-} as Meta;
+  args: {
+    isOpen: true,
+    position: 'right',
+    resizable: true,
+    hidable: true,
+    size: 'auto',
+    minSize: '150px',
+    maxSize: '90vw',
+    blur: 3,
+    opacity: 1,
+    hasBackdrop: true,
+  },
+} as StoryMeta<typeof ReqoreDrawer>;
 
-const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<typeof ReqoreDrawer> = (args) => {
   const confirmAction = useReqoreProperty('confirmAction');
 
   return (
@@ -236,20 +253,38 @@ const Template: Story<IReqoreDrawerProps> = (args: IReqoreDrawerProps) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const Flat = Template.bind({});
-Flat.args = {
-  flat: true,
+export const Basic: Story = {
+  render: Template,
 };
-export const Floating = Template.bind({});
-Floating.args = {
-  floating: true,
+
+export const Flat: Story = {
+  render: Template,
+
+  args: {
+    flat: true,
+  },
 };
-export const Transparent = Template.bind({});
-Transparent.args = {
-  opacity: 0.5,
+
+export const Floating: Story = {
+  render: Template,
+
+  args: {
+    floating: true,
+  },
 };
-export const WithSize = Template.bind({});
-WithSize.args = {
-  size: '500px',
+
+export const Transparent: Story = {
+  render: Template,
+
+  args: {
+    opacity: 0.5,
+  },
+};
+
+export const WithSize: Story = {
+  render: Template,
+
+  args: {
+    size: '500px',
+  },
 };

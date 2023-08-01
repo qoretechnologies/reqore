@@ -1,16 +1,15 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
-import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup } from '../../index';
 import { StoryMeta } from '../utils';
 import { SizeArg, argManager } from '../utils/args';
 
-const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
+const { createArg } = argManager<IReqoreTagGroup>();
 
 const meta = {
-  title: 'Form/Tag/Stories',
-  component: ReqoreTag,
+  title: 'Form/Tag Group/Stories',
+  component: ReqoreTagGroup,
   args: {
     onClick: noop,
     onRemoveClick: noop,
@@ -43,66 +42,35 @@ const meta = {
         disable: true,
       },
     }),
-    ...createArg('onRemoveClick', {
-      defaultValue: noop,
-      table: {
-        disable: true,
-      },
-    }),
-    ...createArg('rightIcon', {
-      defaultValue: 'EBike2Line',
-      name: 'Right Icon',
-      description: 'Right icon',
-      control: 'text',
-    }),
-    ...createArg('actions', {
-      table: {
-        disable: true,
-      },
-    }),
   },
-} as StoryMeta<typeof ReqoreTag>;
+} as StoryMeta<typeof ReqoreTagGroup>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const Template: StoryFn<IReqoreTagProps> = (args) => {
+const Template: StoryFn<IReqoreTagGroup> = (args) => {
   return (
-    <ReqoreTagGroup>
-      <ReqoreTag {...args} actions={null} onRemoveClick={null} rightIcon={null} label={1} />
+    <ReqoreTagGroup {...args}>
+      <ReqoreTag actions={null} onRemoveClick={null} rightIcon={null} label={1} />
       <ReqoreTag
-        {...args}
         actions={null}
         onRemoveClick={null}
         rightIcon={null}
         label='Basic Tag'
         onClick={() => console.log('Tag clicked')}
       />
-      <ReqoreTag
-        {...args}
-        actions={null}
-        onRemoveClick={null}
-        rightIcon={null}
-        labelKey='Number'
-        label={2}
-      />
-      <ReqoreTag label='With Icon' icon='AlarmWarningLine' {...args} />
-      <ReqoreTag
-        label='With Icon Colors'
-        icon='AlarmWarningLine'
-        {...args}
-        iconColor='warning:lighten:2'
-      />
-      <ReqoreTag labelKey='Tag with' label='Label Key' icon='AlarmWarningLine' {...args} />
-      <ReqoreTag labelKey='Key' label='value' {...args} />
-      <ReqoreTag icon='QuestionAnswerLine' {...args} fixed />
-      <ReqoreTag label='Disabled Tag' disabled icon='AlarmWarningLine' {...args} />
+      <ReqoreTag actions={null} onRemoveClick={null} rightIcon={null} labelKey='Number' label={2} />
+      <ReqoreTag label='With Icon' icon='AlarmWarningLine' />
+      <ReqoreTag label='With Icon Colors' icon='AlarmWarningLine' iconColor='warning:lighten:2' />
+      <ReqoreTag labelKey='Tag with' label='Label Key' icon='AlarmWarningLine' />
+      <ReqoreTag labelKey='Key' label='value' />
+      <ReqoreTag icon='QuestionAnswerLine' fixed />
+      <ReqoreTag label='Disabled Tag' disabled icon='AlarmWarningLine' />
       <ReqoreTag
         label='300px Tag'
         width='300px'
         fixed
         icon='AlarmWarningLine'
-        {...args}
         tooltip='I am wiiiiiiide'
         actions={[
           {
@@ -135,7 +103,6 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
         width='300px'
         fixed
         icon='AlarmWarningLine'
-        {...args}
         tooltip='I am wiiiiiiide'
         actions={[
           {
@@ -163,12 +130,11 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
           },
         ]}
       />
-      <ReqoreTag label='Danger Tag' icon='AlarmWarningLine' intent='danger' {...args} />
+      <ReqoreTag label='Danger Tag' icon='AlarmWarningLine' intent='danger' />
       <ReqoreTag
         label='Custom Color Tag'
         icon='AlarmWarningLine'
         color='#38fdb2'
-        {...args}
         tooltip={{ content: 'Hm, another tooltip', openOnMount: true }}
       />
       <ReqoreTag
@@ -197,42 +163,33 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
         }}
         labelKey='Effect'
         icon='Css3Fill'
-        {...args}
       />
       <ReqoreTag
-        {...args}
         label='No Buttons Tag'
         icon='CarLine'
         color='#0b4578'
-        rightIcon={args.rightIcon}
         actions={null}
         onRemoveClick={null}
       />
       <ReqoreTag
-        {...args}
         label='Minimal Tag'
         minimal
         icon='ShareForward2Fill'
-        rightIcon={args.rightIcon}
         actions={null}
         onRemoveClick={null}
       />
       <ReqoreTag
-        {...args}
         label='Minimal Tag with Intent'
         minimal
         intent='warning'
         icon='ShareForward2Fill'
-        rightIcon={args.rightIcon}
         actions={null}
         onRemoveClick={null}
       />
       <ReqoreTag
-        {...args}
         labelKey='This is the key for a wrapped tag'
         label='Wrapped tag with some long text and width specified, no wrap specified'
         icon='ShareForward2Fill'
-        rightIcon={args.rightIcon}
         width='400px'
         onRemoveClick={null}
         actions={[
@@ -252,11 +209,9 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
         ]}
       />
       <ReqoreTag
-        {...args}
         labelKey='This is the key for a wrapped tag'
         label='Wrapped tag with some long text and NO width specified, AND wrap specified'
         icon='ShareForward2Fill'
-        rightIcon={args.rightIcon}
         leftIconColor='#00fafd'
         rightIconColor='#eb0e8c'
         wrap
@@ -278,12 +233,10 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
         ]}
       />
       <ReqoreTag
-        {...args}
         labelKey='Fixed'
         fixed='key'
         label='Wrapped tag with some long text and NO width specified, AND wrap specified, with fixed key'
         icon='DriveLine'
-        rightIcon={args.rightIcon}
         wrap
         onRemoveClick={null}
         actions={[
@@ -303,12 +256,10 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
         ]}
       />
       <ReqoreTag
-        {...args}
         labelKey='Wrapped tag with some long text and NO width specified, AND wrap specified, with fixed label, Wrapped tag with some long text and NO width specified, AND wrap specified, with fixed label'
         fixed='label'
         label='Fixed'
         icon='DriveLine'
-        rightIcon={args.rightIcon}
         wrap
         onRemoveClick={null}
         actions={[
@@ -335,30 +286,12 @@ export const Basic: Story = {
   render: Template,
 };
 
-export const Badge: Story = {
+export const BigGapSize: Story = {
   render: Template,
-  args: { asBadge: true },
+  args: { gapSize: 'big' },
 };
 
-export const Wrap: Story = {
+export const NoWrap: Story = {
   render: Template,
-  args: { wrap: true },
-};
-
-export const Effect = {
-  render: Template,
-
-  args: {
-    effect: {
-      gradient: {
-        direction: 'to right bottom',
-        colors: { 0: '#33023c', 100: '#0a487b' },
-      },
-      color: '#ffffff',
-      spaced: 2,
-      uppercase: true,
-      weight: 'thick',
-      textSize: 'small',
-    },
-  },
+  args: { wrap: false },
 };

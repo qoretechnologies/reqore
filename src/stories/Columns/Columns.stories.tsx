@@ -1,4 +1,4 @@
-import { Meta, Story } from '@storybook/react';
+import { StoryObj } from '@storybook/react';
 import { IReqoreColumnsProps } from '../../components/Columns';
 import {
   ReqoreButton,
@@ -9,6 +9,7 @@ import {
   ReqoreInput,
   ReqoreVerticalSpacer,
 } from '../../index';
+import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
 
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
@@ -17,23 +18,15 @@ export interface IColumnsStoryArgs extends IReqoreColumnsProps {
 
 const { createArg, disableArgs } = argManager<IColumnsStoryArgs>();
 
-export default {
+const meta = {
   title: 'Layout/Columns/Stories',
   component: ReqoreColumns,
   argTypes: {
-    ...createArg('multipleColumns', {
-      defaultValue: false,
-      control: 'boolean',
-      name: 'Multiple Columns',
-    }),
     ...createArg('minColumnWidth', {
       defaultValue: '200px',
     }),
     ...createArg('maxColumnWidth', {
       defaultValue: '300px',
-    }),
-    ...createArg('alignItems', {
-      defaultValue: 'normal',
     }),
     ...createArg('alignItems', {
       defaultValue: 'normal',
@@ -47,9 +40,17 @@ export default {
     }),
     ...disableArgs(['className', 'multipleColumns']),
   },
-} as Meta<IColumnsStoryArgs>;
+  args: {
+    minColumnWidth: '200px',
+    maxColumnWidth: '300px',
+    alignItems: 'normal',
+  },
+} as StoryMeta<typeof ReqoreColumns>;
 
-const Template: Story<IColumnsStoryArgs> = (args) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template = (args) => {
   return (
     <ReqoreColumns {...args} columnsGap='10px'>
       <ReqoreColumn
@@ -126,19 +127,32 @@ const Template: Story<IColumnsStoryArgs> = (args) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const MultipleColumns = Template.bind({});
-MultipleColumns.args = {
-  multipleColumns: true,
-};
-export const CustomAlignment = Template.bind({});
-CustomAlignment.args = {
-  multipleColumns: true,
-  alignItems: 'center',
+export const Basic: Story = {
+  render: Template,
 };
 
-export const WithMinimumWidth = Template.bind({});
-WithMinimumWidth.args = {
-  multipleColumns: true,
-  minColumnWidth: '500px',
+export const MultipleColumns: Story = {
+  render: Template,
+
+  args: {
+    multipleColumns: true,
+  },
+};
+
+export const CustomAlignment: Story = {
+  render: Template,
+
+  args: {
+    multipleColumns: true,
+    alignItems: 'center',
+  },
+};
+
+export const WithMinimumWidth = {
+  render: Template,
+
+  args: {
+    multipleColumns: true,
+    minColumnWidth: '500px',
+  },
 };

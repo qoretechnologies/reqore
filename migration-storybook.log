@@ -1,0 +1,88 @@
+🔎 checking possible migrations..
+
+⚠️  failed to check fix new-frameworks
+
+Error: ❌ Your project should be upgraded to use the framework package @storybook/react-webpack5, but we detected that you are using Vite 2.9.15, which is unsupported in Storybook 7.0. Please upgrade Vite to 3.0.0 or higher and rerun this migration.
+    at Object.check (/home/gitpod/.npm/_npx/bc7e1e37fcb46ffc/node_modules/@storybook/cli/dist/generate.js:205:8731)
+    at async runFixes (/home/gitpod/.npm/_npx/bc7e1e37fcb46ffc/node_modules/@storybook/cli/dist/generate.js:388:1239)
+    at async automigrate (/home/gitpod/.npm/_npx/bc7e1e37fcb46ffc/node_modules/@storybook/cli/dist/generate.js:385:676)
+    at async doUpgrade (/home/gitpod/.npm/_npx/bc7e1e37fcb46ffc/node_modules/@storybook/cli/dist/generate.js:417:3419)
+    at async withTelemetry (/home/gitpod/.npm/_npx/bc7e1e37fcb46ffc/node_modules/@storybook/core-server/dist/index.js:113:3725)
+    at async upgrade (/home/gitpod/.npm/_npx/bc7e1e37fcb46ffc/node_modules/@storybook/cli/dist/generate.js:417:3865)
+
+🔎 found a 'storybook-binary' migration:
+╭ Automigration detected ─────────────────────────────────────╮
+│                                                             │
+│   We've detected you are using Storybook 7.1.1 without      │
+│   Storybook's storybook binary. Starting in Storybook       │
+│   7.0, it has to be installed.                              │
+│                                                             │
+│                                                             │
+│   More info: https://github.com/storybookjs/storybook/blo   │
+│   b/next/MIGRATION.md#start-storybook--build-storybook-bi   │
+│   naries-removed                                            │
+│                                                             │
+╰─────────────────────────────────────────────────────────────╯
+? Do you want to run the 'storybook-binary' migration on your project? › (Y/n)✔ Do you want to run the 'storybook-binary' migration on your project? … yes
+
+✅ Adding 'storybook' as dev dependency
+
+✅ ran storybook-binary migration
+
+🔎 found a 'sb-scripts' migration:
+╭ Automigration detected ─────────────────────────────────────╮
+│                                                             │
+│   We've detected you are using Storybook 7.1.1 with         │
+│   scripts from previous versions of Storybook.              │
+│   Starting in Storybook 7, the start-storybook and          │
+│   build-storybook binaries have changed to storybook dev    │
+│   and storybook build respectively.                         │
+│   In order to work with Storybook 7.1.1, your storybook     │
+│   scripts have to be adjusted to use the binary. We can     │
+│   adjust them for you:                                      │
+│                                                             │
+│   storybook                                                 │
+│   from:                                                     │
+│   start-storybook -p 6007 --no-dll                          │
+│   to:                                                       │
+│   storybook dev -p 6007 --no-dll                            │
+│                                                             │
+│   build-storybook                                           │
+│   from:                                                     │
+│   build-storybook                                           │
+│   to:                                                       │
+│   storybook build                                           │
+│                                                             │
+│   In case this migration did not cover all of your          │
+│   scripts, or you'd like more info: https://github.com/st   │
+│   orybookjs/storybook/blob/next/MIGRATION.md#start-storyb   │
+│   ook--build-storybook-binaries-removed                     │
+│                                                             │
+╰─────────────────────────────────────────────────────────────╯
+? Do you want to run the 'sb-scripts' migration on your project? › (Y/n)✔ Do you want to run the 'sb-scripts' migration on your project? … yes
+✅ Updating scripts in package.json
+
+
+✅ ran sb-scripts migration
+
+🔎 found a 'autodocsTrue' migration:
+╭ Automigration detected ─────────────────────────────────────╮
+│                                                             │
+│   We've changed the configuration of autodocs (previous     │
+│   docsPage), so now the value:                              │
+│   - docs.autodocs: true -- means automatically create       │
+│   docs for every CSF file                                   │
+│   - docs.autodocs: 'tag' -- means only create autodocs      │
+│   for CSF files with the 'autodocs' tag                     │
+│   - docs.autodocs: false -- means never create autodocs     │
+│                                                             │
+│   Based on your prior configuration,  we can set the        │
+│   `docs.autodocs` to keep your old behaviour:               │
+│                                                             │
+│   docs: { autodocs: true }                                  │
+│                                                             │
+│   More info: https://github.com/storybookjs/storybook/blo   │
+│   b/next/MIGRATION.md#autodocs-changes                      │
+│                                                             │
+╰─────────────────────────────────────────────────────────────╯
+? Do you want to run the 'autodocsTrue' migration on your project? › (Y/n)✔ Do you want to run the 'autodocsTrue' migration on your project? … no

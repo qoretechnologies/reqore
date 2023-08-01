@@ -1,4 +1,4 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
@@ -6,16 +6,27 @@ import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../compon
 import { ReqoreVerticalSpacer } from '../../components/Spacer';
 import ReqoreTag from '../../components/Tag';
 import { IReqoreIconName } from '../../types/icons';
+import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
-export default {
+const meta = {
   title: 'Layout/Panel/Stories',
+  component: ReqorePanel,
   parameters: {
     chromatic: {
       viewports: [450, 600, 1440],
     },
+  },
+  args: {
+    padded: true,
+    rounded: true,
+    collapsible: true,
+    minimal: false,
+    label: 'Reqore panel component',
+    onClick: noop,
+    icon: '24HoursFill',
   },
   argTypes: {
     ...IntentArg,
@@ -71,9 +82,12 @@ export default {
     }),
     ...IconArg(),
   },
-} as Meta<IReqorePanelProps>;
+} as StoryMeta<typeof ReqorePanel>;
 
-const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqorePanelProps> = (args: IReqorePanelProps) => {
   if (args.fluid) {
     const actions: IReqorePanelAction[] = [
       {
@@ -285,202 +299,258 @@ const Template: Story<IReqorePanelProps> = (args: IReqorePanelProps) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const NoPadding = Template.bind({});
-NoPadding.args = {
-  padded: false,
-};
-export const Flat = Template.bind({});
-Flat.args = {
-  flat: true,
-};
-export const NoBars: Story<IReqorePanelProps> = Template.bind({});
-NoBars.args = {
-  label: undefined,
-  badge: undefined,
-  icon: undefined,
-  actions: [
-    { label: 'test', show: false },
-    {
-      show: false,
-      group: [
-        { label: 'test 2', show: true },
-        { label: 'test 3', show: true },
-      ],
-    },
-  ],
-  bottomActions: [
-    { label: 'test', show: false, position: 'left' },
-    {
-      position: 'right',
-      show: false,
-      group: [
-        { label: 'test 2', show: true },
-        { label: 'test 3', show: true },
-      ],
-    },
-  ],
-  collapsible: false,
+export const Basic: Story = {
+  render: Template,
 };
 
-export const Transparent: Story<IReqorePanelProps> = Template.bind({});
-Transparent.args = {
-  transparent: true,
-};
+export const NoPadding: Story = {
+  render: Template,
 
-export const Intent: Story<IReqorePanelProps> = Template.bind({});
-Intent.args = {
-  intent: 'success',
-  iconColor: 'success:lighten:2',
-  transparent: true,
-  flat: true,
-};
-
-export const Minimal: Story<IReqorePanelProps> = Template.bind({});
-Minimal.args = {
-  minimal: true,
-  flat: true,
-};
-
-export const Disabled: Story<IReqorePanelProps> = Template.bind({});
-Disabled.args = {
-  disabled: true,
-};
-
-export const NonResponsiveActions: Story<IReqorePanelProps> = Template.bind({});
-NonResponsiveActions.args = {
-  responsiveActions: false,
-  label:
-    'This is a really long title that should stretch all the way to the right of the panel, all the way to the end and not end in the middle',
-  badge: undefined,
-  actions: [
-    {
-      fluid: false,
-      responsive: false,
-      group: [
-        {
-          label: 'Non responsive',
-          icon: '24HoursFill',
-          customTheme: { main: '#eb0e8c' },
-        },
-        {
-          icon: 'FullscreenExitLine',
-          customTheme: { main: '#a40a62' },
-        },
-      ],
-    },
-    {
-      fluid: false,
-      group: [
-        { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
-        { icon: 'CopperCoinFill', intent: 'danger' },
-      ],
-    },
-  ],
-};
-
-export const ActionsShownOnHover: Story<IReqorePanelProps> = Template.bind({});
-ActionsShownOnHover.args = {
-  label: undefined,
-  collapsible: false,
-  icon: undefined,
-  badge: undefined,
-  actions: [{ label: 'test', show: 'hover' }],
-  bottomActions: [
-    {
-      position: 'right',
-      show: 'hover',
-      fluid: false,
-      group: [
-        { label: 'test 2', show: true },
-        { label: 'test 3', show: true },
-      ],
-    },
-  ],
-};
-
-export const TransparentFlat: Story<IReqorePanelProps> = Template.bind({});
-TransparentFlat.args = {
-  transparent: true,
-  flat: true,
-};
-
-export const Fluid: Story<IReqorePanelProps> = Template.bind({});
-Fluid.args = {
-  fluid: true,
-};
-
-export const Size: Story<IReqorePanelProps> = Template.bind({});
-Size.args = {
-  size: 'small',
-};
-
-export const NoActions: Story<IReqorePanelProps> = Template.bind({});
-NoActions.args = {
-  collapsible: false,
-  actions: [],
-  label:
-    'This is a really long title that should stretch all the way to the right of the panel, all the way to the end and not end in the middle',
-};
-
-export const NoLabel: Story<IReqorePanelProps> = Template.bind({});
-NoLabel.args = {
-  collapsible: false,
-  actions: [
-    {
-      responsive: false,
-      group: [
-        { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
-        { icon: 'CopperCoinFill', intent: 'danger' },
-      ],
-    },
-  ],
-  label: undefined,
-  icon: undefined,
-  badge: undefined,
-};
-
-export const ImageAsIconLinkAsHeader: Story<IReqorePanelProps> = Template.bind({});
-ImageAsIconLinkAsHeader.args = {
-  iconImage:
-    'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
-  iconProps: {
-    size: '30px',
+  args: {
+    padded: false,
   },
-  headerProps: {
-    as: 'a',
-    href: 'https://qoretechnologies.com',
-    target: '_blank',
-  } as React.HTMLAttributes<HTMLAnchorElement>,
 };
 
-export const ContentSize: Story<IReqorePanelProps> = Template.bind({});
-ContentSize.args = {
-  contentSize: 'big',
+export const Flat: Story = {
+  render: Template,
+
+  args: {
+    flat: true,
+  },
 };
 
-export const WithEffect: Story<IReqorePanelProps> = Template.bind({});
-WithEffect.args = {
-  iconColor: 'info:lighten:2',
-  minimal: true,
-  contentEffect: {
-    gradient: {
-      type: 'radial',
-      shape: 'ellipse',
-      direction: 'at bottom center',
-      colors: { 0: '#670079', 100: '#180222' },
-      animate: 'hover',
-    },
+export const NoBars: Story = {
+  render: Template,
+
+  args: {
+    label: undefined,
+    badge: undefined,
+    icon: undefined,
+    actions: [
+      { label: 'test', show: false },
+      {
+        show: false,
+        group: [
+          { label: 'test 2', show: true },
+          { label: 'test 3', show: true },
+        ],
+      },
+    ],
+    bottomActions: [
+      { label: 'test', show: false, position: 'left' },
+      {
+        position: 'right',
+        show: false,
+        group: [
+          { label: 'test 2', show: true },
+          { label: 'test 3', show: true },
+        ],
+      },
+    ],
+    collapsible: false,
   },
-  headerEffect: {
-    gradient: {
-      type: 'linear',
-      colors: { 0: '#3b065e', 100: '#00d3c8' },
-      direction: 'to right bottom',
-    },
-    uppercase: true,
-    weight: 'normal',
-    spaced: 2,
+};
+
+export const Transparent: Story = {
+  render: Template,
+
+  args: {
+    transparent: true,
   },
-  headerSize: 2,
+};
+
+export const Intent: Story = {
+  render: Template,
+
+  args: {
+    intent: 'success',
+    iconColor: 'success:lighten:2',
+    transparent: true,
+    flat: true,
+  },
+};
+
+export const Minimal: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+    flat: true,
+  },
+};
+
+export const Disabled: Story = {
+  render: Template,
+
+  args: {
+    disabled: true,
+  },
+};
+
+export const NonResponsiveActions: Story = {
+  render: Template,
+
+  args: {
+    responsiveActions: false,
+    label:
+      'This is a really long title that should stretch all the way to the right of the panel, all the way to the end and not end in the middle',
+    badge: undefined,
+    actions: [
+      {
+        fluid: false,
+        responsive: false,
+        group: [
+          {
+            label: 'Non responsive',
+            icon: '24HoursFill',
+            customTheme: { main: '#eb0e8c' },
+          },
+          {
+            icon: 'FullscreenExitLine',
+            customTheme: { main: '#a40a62' },
+          },
+        ],
+      },
+      {
+        fluid: false,
+        group: [
+          { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
+          { icon: 'CopperCoinFill', intent: 'danger' },
+        ],
+      },
+    ],
+  },
+};
+
+export const ActionsShownOnHover: Story = {
+  render: Template,
+
+  args: {
+    label: undefined,
+    collapsible: false,
+    icon: undefined,
+    badge: undefined,
+    actions: [{ label: 'test', show: 'hover' }],
+    bottomActions: [
+      {
+        position: 'right',
+        show: 'hover',
+        fluid: false,
+        group: [
+          { label: 'test 2', show: true },
+          { label: 'test 3', show: true },
+        ],
+      },
+    ],
+  },
+};
+
+export const TransparentFlat: Story = {
+  render: Template,
+
+  args: {
+    transparent: true,
+    flat: true,
+  },
+};
+
+export const Fluid: Story = {
+  render: Template,
+
+  args: {
+    fluid: true,
+  },
+};
+
+export const Size: Story = {
+  render: Template,
+
+  args: {
+    size: 'small',
+  },
+};
+
+export const NoActions: Story = {
+  render: Template,
+
+  args: {
+    collapsible: false,
+    actions: [],
+    label:
+      'This is a really long title that should stretch all the way to the right of the panel, all the way to the end and not end in the middle',
+  },
+};
+
+export const NoLabel: Story = {
+  render: Template,
+
+  args: {
+    collapsible: false,
+    actions: [
+      {
+        responsive: false,
+        group: [
+          { label: 'Stacked Action 1', icon: 'BallPenLine', intent: 'warning' },
+          { icon: 'CopperCoinFill', intent: 'danger' },
+        ],
+      },
+    ],
+    label: undefined,
+    icon: undefined,
+    badge: undefined,
+  },
+};
+
+export const ImageAsIconLinkAsHeader: Story = {
+  render: Template,
+
+  args: {
+    iconImage:
+      'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
+    iconProps: {
+      size: '30px',
+    },
+    headerProps: {
+      as: 'a',
+      href: 'https://qoretechnologies.com',
+      target: '_blank',
+    } as React.HTMLAttributes<HTMLAnchorElement>,
+  },
+};
+
+export const ContentSize: Story = {
+  render: Template,
+
+  args: {
+    contentSize: 'big',
+  },
+};
+
+export const WithEffect: Story = {
+  render: Template,
+
+  args: {
+    iconColor: 'info:lighten:2',
+    minimal: true,
+    contentEffect: {
+      gradient: {
+        type: 'radial',
+        shape: 'ellipse',
+        direction: 'at bottom center',
+        colors: { 0: '#670079', 100: '#180222' },
+        animate: 'hover',
+      },
+    },
+    headerEffect: {
+      gradient: {
+        type: 'linear',
+        colors: { 0: '#3b065e', 100: '#00d3c8' },
+        direction: 'to right bottom',
+      },
+      uppercase: true,
+      weight: 'normal',
+      spaced: 2,
+    },
+    headerSize: 2,
+  },
 };

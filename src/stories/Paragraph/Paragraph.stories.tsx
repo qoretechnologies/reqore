@@ -1,16 +1,21 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { IReqoreParagraphProps } from '../../components/Paragraph';
 import { ReqoreParagraph, ReqoreVerticalSpacer } from '../../index';
+import { StoryMeta } from '../utils';
 import { IntentArg } from '../utils/args';
 
-export default {
+const meta = {
   title: 'Other/Paragraph/Stories',
+  component: ReqoreParagraph,
   argTypes: {
     ...IntentArg,
   },
-} as Meta;
+} as StoryMeta<typeof ReqoreParagraph>;
 
-const Template: Story<IReqoreParagraphProps> = (args) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreParagraphProps> = (args) => {
   return (
     <>
       <ReqoreParagraph size='tiny' {...args}>
@@ -36,38 +41,68 @@ const Template: Story<IReqoreParagraphProps> = (args) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const Success = Template.bind({});
-Success.args = {
-  intent: 'success',
+export const Basic: Story = {
+  render: Template,
 };
-export const Danger = Template.bind({});
-Danger.args = {
-  intent: 'danger',
+
+export const Success: Story = {
+  render: Template,
+
+  args: {
+    intent: 'success',
+  },
 };
-export const Warning = Template.bind({});
-Warning.args = {
-  intent: 'warning',
+
+export const Danger: Story = {
+  render: Template,
+
+  args: {
+    intent: 'danger',
+  },
 };
-export const Info = Template.bind({});
-Info.args = {
-  intent: 'info',
+
+export const Warning: Story = {
+  render: Template,
+
+  args: {
+    intent: 'warning',
+  },
 };
-export const Pending = Template.bind({});
-Pending.args = {
-  intent: 'pending',
+
+export const Info: Story = {
+  render: Template,
+
+  args: {
+    intent: 'info',
+  },
 };
-export const Muted = Template.bind({});
-Muted.args = {
-  intent: 'muted',
+
+export const Pending: Story = {
+  render: Template,
+
+  args: {
+    intent: 'pending',
+  },
 };
-export const Effect = Template.bind({});
-Effect.args = {
-  effect: {
-    gradient: { colors: { 0: '#5e0acc', 100: '#c008c0' } },
-    spaced: 4,
-    weight: 'bold',
-    uppercase: true,
-    textSize: '40px',
+
+export const Muted: Story = {
+  render: Template,
+
+  args: {
+    intent: 'muted',
+  },
+};
+
+export const Effect: Story = {
+  render: Template,
+
+  args: {
+    effect: {
+      gradient: { colors: { 0: '#5e0acc', 100: '#c008c0' } },
+      spaced: 4,
+      weight: 'bold',
+      uppercase: true,
+      textSize: '40px',
+    },
   },
 };

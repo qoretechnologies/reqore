@@ -1,9 +1,12 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryObj } from '@storybook/react';
+import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { StyledEffect } from '../../components/Effect';
 import { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
 import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
+import { IReqoreCustomTableRowProps } from '../../components/Table/row';
 import { TReqorePaginationType } from '../../constants/paging';
+import { sleep } from '../../helpers/utils';
 import {
   ReqoreH3,
   ReqoreH4,
@@ -14,6 +17,7 @@ import {
   ReqoreTag,
 } from '../../index';
 import tableData from '../../mock/tableData';
+import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTableProps>();
@@ -191,7 +195,7 @@ const defaultColumns: IReqoreTableColumn[] = [
   },
 ];
 
-const defaultColumnsWithFilters = defaultColumns.map((column, index) => {
+const defaultColumnsWithFilters: IReqoreTableColumn[] = defaultColumns.map((column, index) => {
   if (index === 4) {
     return {
       ...column,
@@ -215,71 +219,85 @@ const defaultColumnsWithFilters = defaultColumns.map((column, index) => {
   return column;
 });
 
-const defaultColumnsWithHiddenColumns = defaultColumns.map((column, index) => {
-  if (index === 4) {
-    return {
-      ...column,
-      header: {
-        ...column.header,
-        columns: column.header.columns.map((subColumn, subIndex) =>
-          subIndex === 0
-            ? {
-                ...subColumn,
-                show: false,
-              }
-            : subColumn
-        ),
-      },
-    };
+const defaultColumnsWithHiddenColumns: IReqoreTableColumn[] = defaultColumns.map(
+  (column, index) => {
+    if (index === 4) {
+      return {
+        ...column,
+        header: {
+          ...column.header,
+          columns: column.header.columns.map((subColumn, subIndex) =>
+            subIndex === 0
+              ? {
+                  ...subColumn,
+                  show: false,
+                }
+              : subColumn
+          ),
+        },
+      };
+    }
+
+    if (index === 2) {
+      return {
+        ...column,
+        show: false,
+      };
+    }
+
+    return column;
   }
+);
 
-  if (index === 2) {
-    return {
-      ...column,
-      show: false,
-    };
+const defaultColumnsWithPinnedColumns: IReqoreTableColumn[] = defaultColumns.map(
+  (column, index) => {
+    if (index === 0) {
+      return {
+        ...column,
+        pin: 'left',
+      };
+    }
+
+    if (index === 1) {
+      return {
+        ...column,
+        header: {
+          ...column.header,
+          columns: column.header.columns.map((subColumn, subIndex) =>
+            subIndex === 1
+              ? {
+                  ...subColumn,
+                  pin: 'left',
+                }
+              : subColumn
+          ),
+        },
+      };
+    }
+
+    if (index === 3) {
+      return {
+        ...column,
+        pin: 'right',
+      };
+    }
+
+    return column;
   }
+);
 
-  return column;
-});
-
-const defaultColumnsWithPinnedColumns = defaultColumns.map((column, index) => {
-  if (index === 0) {
-    return {
-      ...column,
-      pin: 'left',
-    };
-  }
-
-  if (index === 1) {
-    return {
-      ...column,
-      header: {
-        ...column.header,
-        columns: column.header.columns.map((subColumn, subIndex) =>
-          subIndex === 1
-            ? {
-                ...subColumn,
-                pin: 'left',
-              }
-            : subColumn
-        ),
-      },
-    };
-  }
-
-  if (index === 3) {
-    return {
-      ...column,
-      pin: 'right',
-    };
-  }
-
-  return column;
-});
-
-export default {
+const meta = {
   title: 'Collections/Table/Stories',
+  component: ReqoreTable,
+  args: {
+    columns: defaultColumns,
+    data: tableData.data,
+    height: 600,
+    selectToggleTooltip: 'Select this row',
+    fill: false,
+    sort: { by: 'lastName', direction: 'desc' },
+    label: 'Table',
+  },
   argTypes: {
     ...createArg('rounded', {
       type: 'boolean',
@@ -298,23 +316,19 @@ export default {
     }),
     ...createArg('columns', {
       name: 'Columns',
-      defaultValue: defaultColumns,
     }),
     ...createArg('width', {
       type: 'number',
-      defaultValue: undefined,
       name: 'Width',
       description: 'The width of the table',
     }),
     ...createArg('height', {
       type: 'number',
-      defaultValue: 600,
       name: 'Height',
       description: 'The height of the table',
     }),
     ...createArg('data', {
       type: 'array',
-      defaultValue: tableData.data as any,
       name: 'Data',
       description: 'The data to be displayed in the table',
       table: {
@@ -323,13 +337,11 @@ export default {
     }),
     ...createArg('selectToggleTooltip', {
       type: 'string',
-      defaultValue: 'Select This Row',
       name: 'Select Toggle Tooltip',
       description: 'The tooltip of the select toggle',
     }),
     ...createArg('fill', {
       type: 'boolean',
-      defaultValue: false,
       name: 'Fill',
       description: 'Whether the table should fill the parent',
     }),
@@ -338,113 +350,156 @@ export default {
     ...IntentArg,
     ...CustomIntentArg('selectedRowIntent'),
   },
-} as Meta<IReqoreTableProps>;
+} as StoryMeta<typeof ReqoreTable>;
 
-const Template: Story<IReqoreTableProps> = (args) => {
-  return <ReqoreTable label='Table' {...args} sort={{ by: 'lastName', direction: 'desc' }} />;
-};
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-export const Basic = Template.bind({});
-export const NoLabel = Template.bind({});
-NoLabel.args = {
-  label: undefined,
-};
+export const Basic: Story = {};
 
-export const CustomWidth = Template.bind({});
-CustomWidth.args = {
-  width: 400,
+export const NoLabel: Story = {
+  args: {
+    label: undefined,
+  },
 };
 
-export const NotFlat = Template.bind({});
-NotFlat.args = {
-  flat: false,
-};
-export const Striped = Template.bind({});
-Striped.args = {
-  striped: true,
-};
-export const Filterable = Template.bind({});
-Filterable.args = {
-  filterable: true,
-};
-export const DefaultFilter = Template.bind({});
-DefaultFilter.args = {
-  filterable: true,
-  filter: 'Village',
+export const CustomWidth: Story = {
+  args: {
+    width: 400,
+  },
 };
 
-export const NoDataMessage = Template.bind({});
-NoDataMessage.args = {
-  filterable: true,
-  filter: 'asjkghakshgjkashg',
+export const NotFlat: Story = {
+  args: {
+    flat: false,
+  },
 };
 
-export const FilterableColumns = Template.bind({});
-FilterableColumns.args = {
-  columns: defaultColumnsWithFilters,
+export const Striped: Story = {
+  args: {
+    striped: true,
+  },
 };
 
-export const AllFiltersActive = Template.bind({});
-AllFiltersActive.args = {
-  filterable: true,
-  filter: 'Road',
-  columns: defaultColumnsWithFilters,
+export const Filterable: Story = {
+  args: {
+    filterable: true,
+  },
 };
 
-export const HiddenColumns = Template.bind({});
-HiddenColumns.args = {
-  columns: defaultColumnsWithHiddenColumns,
+export const DefaultFilter: Story = {
+  args: {
+    filterable: true,
+    filter: 'Village',
+  },
 };
 
-export const PinnedColumns = Template.bind({});
-PinnedColumns.args = {
-  columns: defaultColumnsWithPinnedColumns,
-  zoomable: true,
-  filterable: true,
+export const NoDataMessage: Story = {
+  args: {
+    filterable: true,
+    filter: 'asjkghakshgjkashg',
+  },
 };
 
-export const Selectable = Template.bind({});
-Selectable.args = {
-  selectable: true,
+export const FilterableColumns: Story = {
+  args: {
+    columns: defaultColumnsWithFilters,
+  },
 };
 
-export const PreselectedRows = Template.bind({});
-PreselectedRows.args = {
-  selected: [274, 280],
-  selectable: true,
+export const AllFiltersActive: Story = {
+  args: {
+    filterable: true,
+    filter: 'Road',
+    columns: defaultColumnsWithFilters,
+  },
 };
 
-export const Zoomable = Template.bind({});
-Zoomable.args = {
-  zoomable: true,
+export const HiddenColumns: Story = {
+  args: {
+    columns: defaultColumnsWithHiddenColumns,
+  },
 };
 
-export const FillParent = Template.bind({});
-FillParent.args = {
-  fill: true,
+export const PinnedColumns: Story = {
+  args: {
+    columns: defaultColumnsWithPinnedColumns,
+    zoomable: true,
+    filterable: true,
+  },
 };
 
-export const Sizes = Template.bind({});
-Sizes.args = {
-  size: 'small',
-  filterable: true,
-  wrapperSize: 'big',
+export const Selectable: Story = {
+  args: {
+    selectable: true,
+  },
 };
 
-export const DefaultPaging = Template.bind({});
-DefaultPaging.args = {
-  paging: 'buttons',
+export const PreselectedRows: Story = {
+  args: {
+    selected: ['274', '280'],
+    selectable: true,
+  },
 };
 
-export const CustomPaging = Template.bind({});
-CustomPaging.args = {
-  paging: {
-    fluid: true,
-    loadMoreLabel: 'Load more rows...',
-    showLabels: true,
-    infinite: true,
-    itemsPerPage: 100,
-  } as TReqorePaginationType<IReqoreTableRowData>,
+export const Zoomable: Story = {
+  args: {
+    zoomable: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(1000);
+    await fireEvent.click(document.querySelector('.reqore-table-more'));
+    await waitFor(() => canvas.findAllByText('Zoom in'), { timeout: 5000 });
+  },
+};
+
+export const Exportable: Story = {
+  args: {
+    exportable: true,
+    filterable: true,
+    paging: 'buttons',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(1000);
+    await fireEvent.click(document.querySelector('.reqore-table-more'));
+    await waitFor(() => canvas.findAllByText('Export current view'), { timeout: 5000 });
+  },
+};
+
+export const FillParent: Story = {
+  args: {
+    fill: true,
+  },
+};
+
+export const Sizes: Story = {
+  args: {
+    size: 'small',
+    filterable: true,
+    wrapperSize: 'big',
+  },
+};
+
+export const DefaultPaging: Story = {
+  args: {
+    paging: 'buttons',
+  },
+};
+
+export const CustomPaging: Story = {
+  args: {
+    paging: {
+      fluid: true,
+      loadMoreLabel: 'Load more rows...',
+      showLabels: true,
+      infinite: true,
+      itemsPerPage: 100,
+    } as TReqorePaginationType<IReqoreTableRowData>,
+  },
 };
 
 const CustomHeaderCell = (props: IReqoreCustomHeaderCellProps) => {
@@ -464,13 +519,14 @@ const CustomCell = (props: IReqoreCustomTableBodyCellProps) => {
   return <ReqoreP style={{ width: props.width, flexGrow: props.grow }}>{props.children}</ReqoreP>;
 };
 
-const CustomRow = (props: IReqoreCustomTableBodyCellProps) => {
+const CustomRow = (props: IReqoreCustomTableRowProps) => {
   return <StyledEffect style={props.style}>{props.children}</StyledEffect>;
 };
 
-export const CustomCellsAndRows = Template.bind({});
-CustomCellsAndRows.args = {
-  headerCellComponent: CustomHeaderCell,
-  bodyCellComponent: CustomCell,
-  rowComponent: CustomRow,
+export const CustomCellsAndRows: Story = {
+  args: {
+    headerCellComponent: CustomHeaderCell,
+    bodyCellComponent: CustomCell,
+    rowComponent: CustomRow,
+  },
 };

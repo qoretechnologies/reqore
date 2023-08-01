@@ -1,38 +1,26 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
-import { IReqoreBreadcrumbItem, IReqoreBreadcrumbsProps } from '../../components/Breadcrumbs';
+import { StoryObj } from '@storybook/react';
 import { ReqoreBreadcrumbs } from '../../index';
 import breadcrumbs, { breadcrumbsTabs } from '../../mock/breadcrumbs';
-import { buildTemplate } from '../utils';
+import { StoryMeta } from '../utils';
 import { SizeArg } from '../utils/args';
 
-export default {
+const meta = {
   title: 'Navigation/Breadcrumbs/Stories',
+  component: ReqoreBreadcrumbs,
   argTypes: {
     withTabs: {
       name: 'With tabs',
-      defaultValue: false,
       description: 'Whether tabs should be shown alongside the breadcrumbs',
       control: 'boolean',
     },
     ...SizeArg,
   },
-} as ComponentMeta<typeof ReqoreBreadcrumbs & { withTabs?: boolean }>;
+  args: { items: breadcrumbs },
+} as StoryMeta<typeof ReqoreBreadcrumbs>;
 
-const Template: ComponentStory<typeof ReqoreBreadcrumbs & { withTabs?: boolean }> = (
-  args: IReqoreBreadcrumbsProps & { withTabs?: boolean }
-) => {
-  const items = args.withTabs ? [...breadcrumbs, breadcrumbsTabs] : breadcrumbs;
-  const customTheme = args.customTheme ? { main: args.customTheme } : undefined;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-  return (
-    <ReqoreBreadcrumbs
-      {...args}
-      items={items as IReqoreBreadcrumbItem[]}
-      customTheme={customTheme as any}
-    />
-  );
-};
-
-export const Default = buildTemplate(Template);
-export const WithTabs = buildTemplate(Template, { withTabs: true });
-export const Flat = buildTemplate(Template, { flat: true });
+export const Default: Story = {};
+export const WithTabs: Story = { args: { items: [...breadcrumbs, breadcrumbsTabs] } };
+export const Flat: Story = { args: { flat: true } };

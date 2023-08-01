@@ -1,226 +1,255 @@
-import { Story, StoryObj } from '@storybook/react/types-6-0';
+import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { useMount } from 'react-use';
-import { IReqorePaginationProps, ReqorePagination } from '../../components/Paging';
-import { IReqorePagingOptions } from '../../hooks/usePaging';
+import { ReqorePagination } from '../../components/Paging';
 import { ReqoreControlGroup, ReqoreTag, useReqorePaging } from '../../index';
-import { tableData } from '../../mock/tableData';
+import { TestTableItem, tableData } from '../../mock/tableData';
+import { StoryMeta, StoryRenderer } from '../utils';
 
-export default {
+const meta = {
   title: 'Collections/Paging/Stories',
-} as StoryObj<typeof ReqorePagination>;
+  component: ReqorePagination,
+} as StoryMeta<typeof ReqorePagination<TestTableItem>>;
 
-const Template: Story<IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }> =
-  (args) => {
-    const [scrollContainer, setScrollContainer] = useState<any>(undefined);
-    const paging = useReqorePaging<any>({ items: tableData, ...args.pagingOptions });
+export default meta;
+type Story = StoryObj<typeof meta>;
+type StoryType = typeof ReqorePagination<TestTableItem> & any;
 
-    useMount(() => {
-      setScrollContainer(document.querySelector('.reqore-content')!);
-    });
+const Template: StoryRenderer<StoryType> = (args) => {
+  const [scrollContainer, setScrollContainer] = useState<any>(undefined);
+  const paging = useReqorePaging<any>({ items: tableData, ...args.pagingOptions });
 
-    return (
-      <ReqoreControlGroup vertical fluid key='paging-wrapper'>
-        {paging.items.map((item) => (
-          <ReqoreTag fixed='key' labelKey={item.id} label={`${item.firstName} ${item.lastName}`} />
-        ))}
-        <ReqorePagination<any>
-          {...paging}
-          {...args}
-          scrollContainer={
-            args.scrollToTopOnPageChange || !!args.changePageOnScroll ? scrollContainer : undefined
-          }
-        />
-      </ReqoreControlGroup>
-    );
-  };
+  useMount(() => {
+    setScrollContainer(document.querySelector('.reqore-content')!);
+  });
 
-export const Basic = Template.bind({});
-export const NoPageButtons = Template.bind({});
-NoPageButtons.args = {
-  showPages: false,
+  return (
+    <ReqoreControlGroup vertical fluid key='paging-wrapper'>
+      {paging.items.map((item) => (
+        <ReqoreTag fixed='key' labelKey={item.id} label={`${item.firstName} ${item.lastName}`} />
+      ))}
+      <ReqorePagination<any>
+        {...paging}
+        {...args}
+        scrollContainer={
+          args.scrollToTopOnPageChange || !!args.changePageOnScroll ? scrollContainer : undefined
+        }
+      />
+    </ReqoreControlGroup>
+  );
 };
 
-export const NoControlButtons = Template.bind({});
-NoControlButtons.args = {
-  showControls: false,
+export const Basic: Story = {
+  render: Template,
 };
 
-export const ShowSomePages = Template.bind({});
-ShowSomePages.args = {
-  pagingOptions: {
-    pagesToShow: 4,
-  } as IReqorePagingOptions<any>,
-};
-export const AsList = Template.bind({});
-AsList.args = {
-  showPagesAs: 'list',
-  pagingOptions: {
-    pagesToShow: 5,
-  } as IReqorePagingOptions<any>,
+export const NoPageButtons: Story = {
+  render: Template,
+
+  args: {
+    showPages: false,
+  },
 };
 
-export const WithStyling: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-WithStyling.args = {
-  showPagesAs: 'buttons',
-  activePageButtonProps: {
-    effect: {
-      gradient: {
-        colors: 'info',
-      },
+export const NoControlButtons: Story = {
+  render: Template,
+
+  args: {
+    showControls: false,
+  },
+};
+
+export const ShowSomePages: Story = {
+  render: Template,
+
+  args: {
+    pagingOptions: {
+      pagesToShow: 4,
     },
   },
-  pageButtonProps: {
-    effect: {
-      gradient: {
-        colors: 'warning',
-      },
+};
+
+export const AsList: Story = {
+  render: Template,
+
+  args: {
+    showPagesAs: 'list',
+    pagingOptions: {
+      pagesToShow: 5,
     },
   },
-  controlPageButtonProps: {
-    effect: {
-      gradient: {
-        colors: 'success',
+};
+
+export const WithStyling: Story = {
+  render: Template,
+
+  args: {
+    showPagesAs: 'buttons',
+    activePageButtonProps: {
+      effect: {
+        gradient: {
+          colors: 'info',
+        },
       },
     },
-  },
-  pagingOptions: {
-    pagesToShow: 15,
-  } as IReqorePagingOptions<any>,
-};
-
-export const ListWithStyling: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-ListWithStyling.args = {
-  showPagesAs: 'list',
-  activePageButtonProps: {
-    effect: {
-      gradient: {
-        colors: 'info',
+    pageButtonProps: {
+      effect: {
+        gradient: {
+          colors: 'warning',
+        },
       },
     },
-  },
-  pageButtonProps: {
-    effect: {
-      gradient: {
-        colors: 'warning',
+    controlPageButtonProps: {
+      effect: {
+        gradient: {
+          colors: 'success',
+        },
       },
     },
-  },
-  listPageButtonProps: {
-    isDefaultOpen: true,
-    effect: {
-      gradient: {
-        colors: 'info',
-      },
+    pagingOptions: {
+      pagesToShow: 15,
     },
   },
-  controlPageButtonProps: {
-    effect: {
-      gradient: {
-        colors: 'success',
+};
+
+export const ListWithStyling: Story = {
+  render: Template,
+
+  args: {
+    showPagesAs: 'list',
+    activePageButtonProps: {
+      effect: {
+        gradient: {
+          colors: 'info',
+        },
       },
     },
+    pageButtonProps: {
+      effect: {
+        gradient: {
+          colors: 'warning',
+        },
+      },
+    },
+    listPageButtonProps: {
+      isDefaultOpen: true,
+      effect: {
+        gradient: {
+          colors: 'info',
+        },
+      },
+    },
+    controlPageButtonProps: {
+      effect: {
+        gradient: {
+          colors: 'success',
+        },
+      },
+    },
+    pagingOptions: {
+      pagesToShow: 15,
+    },
   },
-  pagingOptions: {
-    pagesToShow: 15,
-  } as IReqorePagingOptions<any>,
 };
 
-export const WithLabels: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-WithLabels.args = {
-  showPagesAs: 'list',
-  showLabels: true,
-  listPageButtonProps: {
-    isDefaultOpen: true,
+export const WithLabels: Story = {
+  render: Template,
+
+  args: {
+    showPagesAs: 'list',
+    showLabels: true,
+    listPageButtonProps: {
+      isDefaultOpen: true,
+    },
+    pagingOptions: {
+      pagesToShow: 15,
+    },
   },
-  pagingOptions: {
-    pagesToShow: 15,
-  } as IReqorePagingOptions<any>,
 };
 
-export const NextPageOnVerticalScroll: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-NextPageOnVerticalScroll.args = {
-  changePageOnScroll: 'vertical',
-};
+export const NextPageOnVerticalScroll: Story = {
+  render: Template,
 
-export const NextPageOnHorizontalScroll: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-NextPageOnHorizontalScroll.args = {
-  changePageOnScroll: 'horizontal',
-};
-
-export const ScrollToTop: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-ScrollToTop.args = {
-  scrollToTopOnPageChange: true,
-  pagingOptions: {
-    pagesToShow: 5,
-    itemsPerPage: 100,
-  } as IReqorePagingOptions<any>,
-};
-
-export const Infinite: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-Infinite.args = {
-  showLabels: true,
-  fluid: false,
-  loadMoreButtonProps: {
-    textAlign: 'center',
+  args: {
+    changePageOnScroll: 'vertical',
   },
-  loadMoreLabel: 'Load 10 more',
-  pagingOptions: {
-    infinite: true,
-  } as IReqorePagingOptions<any>,
 };
 
-export const InfiniteWithAutoScroll: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-InfiniteWithAutoScroll.args = {
-  showLabels: true,
-  fluid: true,
-  scrollOnLoadMore: true,
-  loadMoreButtonProps: {
-    textAlign: 'center',
-    size: 'big',
+export const NextPageOnHorizontalScroll: Story = {
+  render: Template,
+
+  args: {
+    changePageOnScroll: 'horizontal',
   },
-  loadAllButtonProps: {
-    textAlign: 'center',
-    size: 'big',
-  },
-  loadMoreLabel: 'Load 100 more',
-  pagingOptions: {
-    infinite: true,
-    itemsPerPage: 100,
-  } as IReqorePagingOptions<any>,
 };
 
-export const InfiniteWithAutoLoad: Story<
-  IReqorePaginationProps<any> & { pagingOptions?: IReqorePagingOptions<any> }
-> = Template.bind({});
-InfiniteWithAutoLoad.args = {
-  showLabels: true,
-  fluid: true,
-  autoLoadMore: true,
-  scrollOnLoadMore: true,
-  loadMoreButtonProps: {
-    textAlign: 'center',
-    icon: 'Loader5Line',
+export const ScrollToTop: Story = {
+  render: Template,
+
+  args: {
+    scrollToTopOnPageChange: true,
+    pagingOptions: {
+      pagesToShow: 5,
+      itemsPerPage: 100,
+    },
   },
-  loadMoreLabel: 'Scroll to load 20 more',
-  pagingOptions: {
-    infinite: true,
-    itemsPerPage: 20,
-  } as IReqorePagingOptions<any>,
+};
+
+export const Infinite: Story = {
+  render: Template,
+
+  args: {
+    showLabels: true,
+    fluid: false,
+    loadMoreButtonProps: {
+      textAlign: 'center',
+    },
+    loadMoreLabel: 'Load 10 more',
+    pagingOptions: {
+      infinite: true,
+    },
+  },
+};
+
+export const InfiniteWithAutoScroll: Story = {
+  render: Template,
+
+  args: {
+    showLabels: true,
+    fluid: true,
+    scrollOnLoadMore: true,
+    loadMoreButtonProps: {
+      textAlign: 'center',
+      size: 'big',
+    },
+    loadAllButtonProps: {
+      textAlign: 'center',
+      size: 'big',
+    },
+    loadMoreLabel: 'Load 100 more',
+    pagingOptions: {
+      infinite: true,
+      itemsPerPage: 100,
+    },
+  },
+};
+
+export const InfiniteWithAutoLoad: Story = {
+  render: Template,
+
+  args: {
+    showLabels: true,
+    fluid: true,
+    autoLoadMore: true,
+    scrollOnLoadMore: true,
+    loadMoreButtonProps: {
+      textAlign: 'center',
+      icon: 'Loader5Line',
+    },
+    loadMoreLabel: 'Scroll to load 20 more',
+    pagingOptions: {
+      infinite: true,
+      itemsPerPage: 20,
+    },
+  },
 };

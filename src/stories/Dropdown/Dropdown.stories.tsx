@@ -1,13 +1,15 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
-import ReqoreButton from '../../components/Button';
+import { StoryFn, StoryObj } from '@storybook/react';
+import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput } from '../../index';
+import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
 
 const { createArg, disableArg } = argManager<IReqoreDropdownProps>();
 
-export default {
+const meta = {
   title: 'Form/Dropdown/Stories',
+  component: ReqoreDropdown,
   parameters: {
     chromatic: {
       delay: 1500,
@@ -30,105 +32,112 @@ export default {
       table: {
         disable: true,
       },
-
-      defaultValue: [
-        {
-          selected: true,
-          value: 'Hello',
-          icon: 'SunCloudyLine',
-        },
-        {
-          value: 'How are ya, I am super long item and I am not going to fit in the dropdown',
-          icon: 'BatteryChargeFill',
-        },
-        {
-          disabled: true,
-          value: 'i aM diSAblEd',
-          icon: 'StopCircleLine',
-        },
-        {
-          divider: true,
-          label: 'Divider',
-          dividerAlign: 'left',
-        },
-        {
-          selected: true,
-          value: 'Hello',
-          icon: 'SunCloudyLine',
-        },
-        {
-          value: 'How are ya',
-          icon: 'BatteryChargeFill',
-          description:
-            "Yep, and the description is now also available and possible, isn't that great?",
-        },
-        {
-          disabled: true,
-          value: 'i aM diSAblEd',
-          icon: 'StopCircleLine',
-        },
-        {
-          selected: true,
-          value: 'Hello',
-          icon: 'SunCloudyLine',
-        },
-        {
-          value: 'How are ya',
-          icon: 'BatteryChargeFill',
-        },
-        {
-          disabled: true,
-          value: 'i aM diSAblEd',
-          icon: 'StopCircleLine',
-        },
-        {
-          selected: true,
-          value: 'Hello',
-          icon: 'SunCloudyLine',
-        },
-        {
-          value: 'How are ya',
-          icon: 'BatteryChargeFill',
-        },
-        {
-          disabled: true,
-          value: 'i aM diSAblEd',
-          icon: 'StopCircleLine',
-        },
-        {
-          selected: true,
-          value: 'Hello',
-          icon: 'SunCloudyLine',
-        },
-        {
-          value: 'How are ya',
-          icon: 'BatteryChargeFill',
-        },
-        {
-          disabled: true,
-          value: 'i aM diSAblEd',
-          icon: 'StopCircleLine',
-        },
-        {
-          selected: true,
-          value: 'Hello',
-          icon: 'SunCloudyLine',
-        },
-        {
-          value: 'How are ya',
-          icon: 'BatteryChargeFill',
-        },
-        {
-          disabled: true,
-          value: 'i aM diSAblEd',
-          icon: 'StopCircleLine',
-        },
-      ],
     }),
   },
-} as Meta<IReqoreDropdownProps>;
+  args: {
+    component: ReqoreButton,
+    filterable: true,
+    items: [
+      {
+        selected: true,
+        value: 'Hello',
+        icon: 'SunCloudyLine',
+      },
+      {
+        value: 'How are ya, I am super long item and I am not going to fit in the dropdown',
+        icon: 'BatteryChargeFill',
+      },
+      {
+        disabled: true,
+        value: 'i aM diSAblEd',
+        icon: 'StopCircleLine',
+      },
+      {
+        divider: true,
+        label: 'Divider',
+        dividerAlign: 'left',
+      },
+      {
+        selected: true,
+        value: 'Hello',
+        icon: 'SunCloudyLine',
+      },
+      {
+        value: 'How are ya',
+        icon: 'BatteryChargeFill',
+        description:
+          "Yep, and the description is now also available and possible, isn't that great?",
+      },
+      {
+        disabled: true,
+        value: 'i aM diSAblEd',
+        icon: 'StopCircleLine',
+      },
+      {
+        selected: true,
+        value: 'Hello',
+        icon: 'SunCloudyLine',
+      },
+      {
+        value: 'How are ya',
+        icon: 'BatteryChargeFill',
+      },
+      {
+        disabled: true,
+        value: 'i aM diSAblEd',
+        icon: 'StopCircleLine',
+      },
+      {
+        selected: true,
+        value: 'Hello',
+        icon: 'SunCloudyLine',
+      },
+      {
+        value: 'How are ya',
+        icon: 'BatteryChargeFill',
+      },
+      {
+        disabled: true,
+        value: 'i aM diSAblEd',
+        icon: 'StopCircleLine',
+      },
+      {
+        selected: true,
+        value: 'Hello',
+        icon: 'SunCloudyLine',
+      },
+      {
+        value: 'How are ya',
+        icon: 'BatteryChargeFill',
+      },
+      {
+        disabled: true,
+        value: 'i aM diSAblEd',
+        icon: 'StopCircleLine',
+      },
+      {
+        selected: true,
+        value: 'Hello',
+        icon: 'SunCloudyLine',
+      },
+      {
+        value: 'How are ya',
+        icon: 'BatteryChargeFill',
+      },
+      {
+        disabled: true,
+        value: 'i aM diSAblEd',
+        icon: 'StopCircleLine',
+      },
+    ],
+  },
+} as StoryMeta<typeof ReqoreDropdown<IReqoreButtonProps>>;
 
-const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<typeof ReqoreDropdown<IReqoreButtonProps>> = (args) => {
   if (args.scrollToSelected || args.paging) {
     return (
       <ReqoreControlGroup>
@@ -214,72 +223,95 @@ const Template: Story<IReqoreDropdownProps> = (args: IReqoreDropdownProps) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const CustomComponent = Template.bind({});
-CustomComponent.args = {
-  component: ReqoreInput,
-  placeholder: 'Custom component',
-};
-export const ScrollToSelectedItem = Template.bind({});
-ScrollToSelectedItem.args = {
-  scrollToSelected: true,
-  label: 'Dropdown that scrolls to selected item',
+export const Basic: Story = {
+  render: Template,
 };
 
-export const WithCustomFilter: Story<IReqoreDropdownProps> = Template.bind({});
-WithCustomFilter.args = {
-  label: 'Dropdown with custom filter',
-  filterPlaceholder: 'Custom filter placeholder',
-  filter: 'something',
-  onFilterChange: (value) => {
-    console.log(value);
+export const CustomComponent: Story = {
+  render: Template,
+
+  args: {
+    component: ReqoreInput,
+    placeholder: 'Custom component',
   },
-};
-export const WithPaging: Story<IReqoreDropdownProps> = Template.bind({});
-WithPaging.args = {
-  paging: {
-    itemsPerPage: 50,
-    changePageOnScroll: 'horizontal',
-  },
-  label: 'Dropdown with paging',
 };
 
-export const WithLoadMore: Story<IReqoreDropdownProps> = Template.bind({});
-WithLoadMore.args = {
-  paging: {
-    fluid: true,
-    infinite: true,
-    scrollOnLoadMore: true,
-    loadMoreLabel: 'Load additional items...',
-    showLabels: true,
-    includeBottomControls: false,
+export const ScrollToSelectedItem: Story = {
+  render: Template,
+
+  args: {
+    scrollToSelected: true,
+    label: 'Dropdown that scrolls to selected item',
   },
-  label: 'Dropdown with load more',
 };
 
-export const WithCustomPaging: Story<IReqoreDropdownProps> = Template.bind({});
-WithCustomPaging.args = {
-  paging: {
-    fluid: true,
-    infinite: true,
-    scrollOnLoadMore: true,
-    pageControlsPosition: 'both',
-    loadMoreLabel: 'Load additional items...',
-    showLabels: true,
-    loadMoreButtonProps: {
-      textAlign: 'center',
-      effect: {
-        gradient: {
-          colors: 'info',
-          animate: 'hover',
-        },
-        textSize: 'small',
-        uppercase: true,
-        spaced: 3,
-      },
+export const WithCustomFilter: Story = {
+  render: Template,
+
+  args: {
+    label: 'Dropdown with custom filter',
+    filterPlaceholder: 'Custom filter placeholder',
+    filter: 'something',
+    onFilterChange: (value) => {
+      console.log(value);
     },
   },
-  label: 'Dropdown with custom paging',
 };
 
-WithCustomPaging.play = () => {};
+export const WithPaging: Story = {
+  render: Template,
+
+  args: {
+    paging: {
+      itemsPerPage: 50,
+      changePageOnScroll: 'horizontal',
+    },
+    label: 'Dropdown with paging',
+  },
+};
+
+export const WithLoadMore: Story = {
+  render: Template,
+
+  args: {
+    paging: {
+      fluid: true,
+      infinite: true,
+      scrollOnLoadMore: true,
+      loadMoreLabel: 'Load additional items...',
+      showLabels: true,
+      includeBottomControls: false,
+    },
+    label: 'Dropdown with load more',
+  },
+};
+
+export const WithCustomPaging: Story = {
+  render: Template,
+
+  args: {
+    paging: {
+      fluid: true,
+      infinite: true,
+      scrollOnLoadMore: true,
+      pageControlsPosition: 'both',
+      loadMoreLabel: 'Load additional items...',
+      showLabels: true,
+      loadMoreButtonProps: {
+        textAlign: 'center',
+        effect: {
+          gradient: {
+            colors: 'info',
+            animate: 'hover',
+          },
+          textSize: 'small',
+          uppercase: true,
+          spaced: 3,
+        },
+      },
+    },
+    label: 'Dropdown with custom paging',
+  },
+
+  play: () => {},
+};

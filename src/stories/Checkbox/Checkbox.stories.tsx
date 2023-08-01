@@ -1,13 +1,17 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryFn, StoryObj } from '@storybook/react';
 import Checkbox from '../../components/Checkbox';
 import { ReqoreCheckbox, ReqoreControlGroup, ReqoreVerticalSpacer } from '../../index';
+import { StoryMeta } from '../utils';
 
-export default {
+const meta = {
   title: 'Form/Checkbox/Stories',
-  parameters: ['checkbox.test.tsx'],
-} as ComponentMeta<typeof Checkbox>;
+  component: ReqoreCheckbox,
+} as StoryMeta<typeof ReqoreCheckbox>;
 
-const Template: ComponentStory<typeof Checkbox> = (args) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<typeof Checkbox> = (args) => {
   return (
     <ReqoreControlGroup vertical>
       <ReqoreControlGroup wrap>
@@ -58,8 +62,14 @@ const Template: ComponentStory<typeof Checkbox> = (args) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const Switch = Template.bind({});
-Switch.args = {
-  asSwitch: true,
+export const Basic: Story = {
+  render: Template,
+};
+
+export const Switch: Story = {
+  render: Template,
+
+  args: {
+    asSwitch: true,
+  },
 };

@@ -1,18 +1,24 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { IReqoreMultiSelectProps, ReqoreMultiSelect } from '../../components/MultiSelect';
 import { MultiSelectItems } from '../../mock/multiSelect';
 import { IReqoreIconName } from '../../types/icons';
+import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMultiSelectProps>();
 
-export default {
+const meta = {
   title: 'Form/Multi Select/Stories',
+  component: ReqoreMultiSelect,
   parameters: {
     chromatic: {
       delay: 500,
     },
+  },
+  args: {
+    canCreateItems: true,
+    canRemoveItems: true,
   },
   argTypes: {
     ...FlatArg,
@@ -30,9 +36,12 @@ export default {
     }),
     ...IconArg('onItemClickIcon', 'Clickable item right icon', null),
   },
-} as Meta<IReqoreMultiSelectProps>;
+} as StoryMeta<typeof ReqoreMultiSelect>;
 
-const Template: Story<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProps) => {
   const [selected, setSelected] = useState<string[]>([
     'Existing item 1',
     'Existing item 3',
@@ -56,52 +65,74 @@ const Template: Story<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProps)
   );
 };
 
-export const Basic = Template.bind({});
-Basic.args = {
-  onItemClickIcon: 'EditLine' as IReqoreIconName,
-};
-export const Empty = Template.bind({});
-Empty.args = {
-  value: [],
-};
+export const Basic: Story = {
+  render: Template,
 
-export const AutoOpen = Template.bind({});
-AutoOpen.args = {
-  openOnMount: true,
-};
-
-export const Flat = Template.bind({});
-Flat.args = {
-  flat: true,
-};
-
-export const Minimal = Template.bind({});
-Minimal.args = {
-  minimal: true,
-};
-
-export const Clickable = Template.bind({});
-Clickable.args = {
-  onItemClick: (item) => console.log('onItemClick', item),
-  onItemClickIcon: 'EditLine' as IReqoreIconName,
-};
-
-export const WithEffect = Template.bind({});
-WithEffect.args = {
-  selectedItemEffect: {
-    gradient: {
-      colors: {
-        0: '#7f60ea',
-        100: '#00fd67',
-      },
-    },
+  args: {
+    onItemClickIcon: 'EditLine',
   },
-  selectorProps: {
-    effect: {
+};
+
+export const Empty: Story = {
+  render: Template,
+
+  args: {
+    value: [],
+  },
+};
+
+export const AutoOpen: Story = {
+  render: Template,
+
+  args: {
+    openOnMount: true,
+  },
+};
+
+export const Flat: Story = {
+  render: Template,
+
+  args: {
+    flat: true,
+  },
+};
+
+export const Minimal: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+  },
+};
+
+export const Clickable: Story = {
+  render: Template,
+
+  args: {
+    onItemClick: (item) => console.log('onItemClick', item),
+    onItemClickIcon: 'EditLine' as IReqoreIconName,
+  },
+};
+
+export const WithEffect: Story = {
+  render: Template,
+
+  args: {
+    selectedItemEffect: {
       gradient: {
         colors: {
           0: '#7f60ea',
           100: '#00fd67',
+        },
+      },
+    },
+    selectorProps: {
+      effect: {
+        gradient: {
+          colors: {
+            0: '#7f60ea',
+            100: '#00fd67',
+          },
         },
       },
     },

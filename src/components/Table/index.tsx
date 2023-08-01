@@ -11,6 +11,7 @@ import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
+import { ReqoreExportModal } from '../ExportModal';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
 import ReqoreTableBody from './body';
@@ -21,11 +22,13 @@ import {
   flipSortDirection,
   getColumnsByPinType,
   getColumnsCount,
+  getExportActions,
   getOnlyShownColumns,
   getZoomActions,
   hasGroupedColumns,
   hasHiddenColumns,
   prepareColumns,
+  removeInternalData,
   sizeToZoom,
   sortTableData,
   zoomToSize,
@@ -104,8 +107,10 @@ export interface IReqoreTableProps extends IReqorePanelProps {
 
   filterable?: boolean;
   filterProps?: (data: IReqoreTableData) => IReqoreInputProps;
-  filter?: string;
-  onFilterChange?: (query: string) => void;
+  filter?: string | number;
+  onFilterChange?: (query: string | number) => void;
+
+  exportable?: boolean;
 
   zoomable?: boolean;
   defaultZoom?: number;
@@ -137,7 +142,7 @@ export interface IReqoreTableStyle {
 }
 
 export interface IReqoreTableSort {
-  by?: string;
+  by: string;
   thenBy?: string;
   direction?: 'asc' | 'desc';
 }
@@ -188,7 +193,7 @@ const ReqoreTable = ({
   fill,
   filterable,
   zoomable,
-  filter,
+  filter = '',
   actions = [],
   onFilterChange,
   filterProps,
@@ -198,16 +203,17 @@ const ReqoreTable = ({
   bodyCellComponent,
   onSelectClick,
   paging,
+  exportable,
   ...rest
 }: IReqoreTableProps) => {
-  const leftTableRef = useRef<HTMLDivElement>(undefined);
-  const rightTableRef = useRef<HTMLDivElement>(undefined);
-  const mainTableRef = useRef<HTMLDivElement>(undefined);
-  const mainHeaderRef = useRef<HTMLDivElement>(undefined);
+  const leftTableRef = useRef<HTMLDivElement>(null);
+  const rightTableRef = useRef<HTMLDivElement>(null);
+  const mainTableRef = useRef<HTMLDivElement>(null);
+  const mainHeaderRef = useRef<HTMLDivElement>(null);
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
-  const [_sort, setSort] = useState<IReqoreTableSort>(fixSort(sort));
+  const [_sort, setSort] = useState<IReqoreTableSort | undefined>(fixSort(sort));
   const [_selected, setSelected] = useState<(string | number)[]>(selected || []);
   const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
   const [columnModifiers, setColumnModifiers] = useState<{
@@ -215,9 +221,14 @@ const ReqoreTable = ({
   }>({});
   const [_internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
   const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
+  const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
 
   const [wrapperRef, sizes] = useMeasure();
-  const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(filter, 300, onFilterChange);
+  const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
+    filter.toString(),
+    300,
+    onFilterChange
+  );
 
   const selectedIcon = useMemo(() => {
     switch (_selectedQuant) {
@@ -260,15 +271,15 @@ const ReqoreTable = ({
               tooltip: selectToggleTooltip,
               icon: !_selectId
                 ? 'Forbid2Line'
-                : _selected?.find((s) => s === _selectId)
+                : _selected?.find((s) => s.toString() === _selectId.toString())
                 ? 'CheckboxCircleLine'
                 : 'CheckboxBlankCircleLine',
               intent: !_selectId
                 ? 'muted'
-                : _selected?.find((s) => s === _selectId)
+                : _selected?.find((s) => s.toString() === _selectId.toString())
                 ? selectedRowIntent
                 : undefined,
-              onClick: () => handleSelectClick(_selectId),
+              onClick: _selectId ? () => handleSelectClick(_selectId) : undefined,
             },
           ],
         },
@@ -345,7 +356,7 @@ const ReqoreTable = ({
   }, [data]);
 
   useUpdateEffect(() => {
-    if (selectable) {
+    if (selectable && selected) {
       setSelected(selected);
     }
   }, [selected]);
@@ -370,7 +381,7 @@ const ReqoreTable = ({
     }
   }, [_selected]);
 
-  const handleSortChange = (by?: string) => {
+  const handleSortChange = (by: string) => {
     setSort((currentSort: IReqoreTableSort) => {
       const newSort: IReqoreTableSort = { ...currentSort };
 
@@ -444,7 +455,7 @@ const ReqoreTable = ({
 
     const addColumn = (column: IReqoreTableColumn) => {
       _columnsList.push({
-        label: typeof column.header.label === 'string' ? column.header.label : column.dataId,
+        label: typeof column.header?.label === 'string' ? column.header.label : column.dataId,
         selected: column.show !== false,
         onClick: () =>
           handleColumnsUpdate(column.dataId, 'show', column.show !== false ? false : true),
@@ -498,7 +509,6 @@ const ReqoreTable = ({
 
     if (count(columnsList)) {
       finalActions.push({
-        label: 'Columns',
         icon: 'LayoutColumnLine',
         className: 'reqore-table-columns-options',
         badge: getColumnsCount(getOnlyShownColumns(finalColumns)),
@@ -529,13 +539,6 @@ const ReqoreTable = ({
       });
     }
 
-    if (zoomable) {
-      finalActions.push({
-        fluid: false,
-        group: getZoomActions('reqore-table', zoom, setZoom),
-      });
-    }
-
     if (isScrolled) {
       finalActions.push({
         icon: 'ArrowUpSFill',
@@ -546,11 +549,28 @@ const ReqoreTable = ({
       });
     }
 
-    if (count(columnModifiers) || zoomable || filterable) {
+    if (count(columnModifiers) || zoomable || filterable || exportable) {
+      let moreActions: IReqorePanelSubAction[] = [];
+
+      if (exportable) {
+        moreActions = [
+          ...getExportActions((type) => setShowExportModal(type)),
+          { divider: true, line: true },
+        ];
+      }
+
+      if (zoomable) {
+        moreActions = [
+          ...getZoomActions('reqore-table', zoom, setZoom, true),
+          { divider: true, line: true },
+        ];
+      }
+
       finalActions.push({
         icon: 'MoreLine',
         className: 'reqore-table-more',
         actions: [
+          ...moreActions,
           {
             label: 'Reset table',
             icon: 'RestartLine',
@@ -581,7 +601,7 @@ const ReqoreTable = ({
   ]);
 
   const badge = useMemo(() => {
-    const badgeList: TReqoreBadge[] = rest.label ? [count(transformedData)] : undefined;
+    const badgeList: TReqoreBadge[] = rest.label ? [count(transformedData)] : [];
 
     if (rest.badge) {
       if (isArray(rest.badge)) {
@@ -661,58 +681,71 @@ const ReqoreTable = ({
     );
   };
 
-  const pagingOptions = useMemo(() => getPagingObjectFromType(paging), [paging]);
+  const pagingOptions = useMemo(
+    () => (paging ? getPagingObjectFromType(paging) : undefined),
+    [paging]
+  );
 
   return (
-    <ReqorePanel
-      transparent
-      flat
-      padded={false}
-      contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
-      responsiveActions={false}
-      {...rest}
-      size={wrapperSize}
-      actions={tableActions}
-      fill={fill}
-      className={`${className || ''} reqore-table`}
-      style={{ width, ...(rest.style || {}) }}
-      getContentRef={wrapperRef}
-      badge={badge}
-    >
-      <ReqorePaginationContainer<IReqoreTableRowData>
-        items={transformedData}
-        type={
-          paging
-            ? {
-                ...pagingOptions,
-                onPageChange: () => {
-                  if (!pagingOptions.infinite) {
-                    handleScrollToTop();
-                  }
-                },
-              }
-            : undefined
-        }
+    <>
+      <ReqorePanel
+        transparent
+        flat
+        padded={false}
+        contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
+        responsiveActions={false}
+        {...rest}
+        size={wrapperSize}
+        actions={tableActions}
+        fill={fill}
+        className={`${className || ''} reqore-table`}
+        style={{ width, ...(rest.style || {}) }}
+        getContentRef={wrapperRef}
+        badge={badge}
       >
-        {(pagedData) => (
-          <>
-            <StyledTablesWrapper className='reqore-table-wrapper'>
-              {renderTable('left', pagedData)}
-              {renderTable('main', pagedData)}
-              {renderTable('right', pagedData)}
-            </StyledTablesWrapper>
-            {count(pagedData) === 0 ? (
-              <>
-                <ReqoreVerticalSpacer height={10} />
-                <ReqoreMessage flat size={size} icon='Search2Line'>
-                  {emptyMessage}
-                </ReqoreMessage>
-              </>
-            ) : null}
-          </>
-        )}
-      </ReqorePaginationContainer>
-    </ReqorePanel>
+        <ReqorePaginationContainer<IReqoreTableRowData>
+          items={transformedData}
+          type={
+            pagingOptions
+              ? {
+                  ...pagingOptions,
+                  onPageChange: () => {
+                    if (!pagingOptions.infinite) {
+                      handleScrollToTop();
+                    }
+                  },
+                }
+              : undefined
+          }
+        >
+          {(pagedData) => (
+            <>
+              {showExportModal && (
+                <ReqoreExportModal
+                  data={removeInternalData(
+                    showExportModal === 'current' ? pagedData : transformedData
+                  )}
+                  onClose={() => setShowExportModal(undefined)}
+                />
+              )}
+              <StyledTablesWrapper className='reqore-table-wrapper'>
+                {renderTable('left', pagedData)}
+                {renderTable('main', pagedData)}
+                {renderTable('right', pagedData)}
+              </StyledTablesWrapper>
+              {count(pagedData) === 0 ? (
+                <>
+                  <ReqoreVerticalSpacer height={10} />
+                  <ReqoreMessage flat size={size} icon='Search2Line'>
+                    {emptyMessage}
+                  </ReqoreMessage>
+                </>
+              ) : null}
+            </>
+          )}
+        </ReqorePaginationContainer>
+      </ReqorePanel>
+    </>
   );
 };
 

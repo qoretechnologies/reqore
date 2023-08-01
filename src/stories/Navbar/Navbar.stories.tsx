@@ -1,4 +1,4 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import ReqoreContent from '../../components/Content';
 import ReqoreIcon from '../../components/Icon';
@@ -14,17 +14,25 @@ import {
   ReqoreNavbarItem,
   ReqorePopover,
 } from '../../index';
+import { StoryMeta } from '../utils';
 import { FlatArg, NoContentArg } from '../utils/args';
 
-export default {
+const meta = {
   title: 'Layout/Header & Footer/Stories',
+  component: ReqoreHeader,
+  args: {
+    withoutContent: true,
+  },
   argTypes: {
     ...FlatArg,
     ...NoContentArg,
   },
-} as Meta<IReqoreNavbarProps>;
+} as StoryMeta<typeof ReqoreHeader>;
 
-const Template: Story<IReqoreNavbarProps> = (args: IReqoreNavbarProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreNavbarProps> = (args: IReqoreNavbarProps) => {
   return (
     <>
       <ReqoreHeader {...args}>
@@ -106,4 +114,6 @@ const Template: Story<IReqoreNavbarProps> = (args: IReqoreNavbarProps) => {
   );
 };
 
-export const Basic = Template.bind({});
+export const Basic: Story = {
+  render: Template,
+};

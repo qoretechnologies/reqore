@@ -1,14 +1,15 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
-import ReqoreNotification, {
-  IReqoreNotificationProps,
-} from '../../components/Notifications/notification';
-import { IReqoreUIProviderProps } from '../../containers/UIProvider';
+import { StoryObj } from '@storybook/react';
+import ReqoreNotification from '../../components/Notifications/notification';
 import { ReqoreUIProvider, useReqoreProperty } from '../../index';
+import { StoryMeta, StoryRenderer } from '../utils';
 
-export default {
+const meta = {
   title: 'Other/Notifications/Interactive/Stories',
   component: ReqoreNotification,
-} as Meta;
+} as StoryMeta<typeof ReqoreNotification>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
   const addNotification = useReqoreProperty('addNotification');
@@ -54,10 +55,7 @@ const UpdatingButton = ({ id }) => {
   );
 };
 
-const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
-  theme,
-  ...args
-}: IReqoreNotificationProps & IReqoreUIProviderProps & { id?: string | number }) => (
+const Template: StoryRenderer<typeof meta> = ({ theme, ...args }) => (
   <ReqoreUIProvider theme={theme}>
     <div
       style={{
@@ -71,35 +69,49 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
     >
       <h4>Hello, I am a notification testing page</h4>
       <AddingButton {...args} />
-      {args.id && <UpdatingButton id={args.id} />}
+      {args.notificationId && <UpdatingButton id={args.id} />}
     </div>
   </ReqoreUIProvider>
 );
 
-export const Adding = Template.bind({});
-
-export const Updating = Template.bind({});
-Updating.args = {
-  id: 'test',
+export const Adding: Story = {
+  render: Template,
 };
 
-export const Clickable = Template.bind({});
-Clickable.args = {
-  onClick: (id) => {
-    alert(`Notification ${id} clicked`);
+export const Updating: Story = {
+  render: Template,
+
+  args: {
+    notificationId: 'test',
   },
 };
 
-export const CloseCallback = Template.bind({});
-CloseCallback.args = {
-  onClose: (id) => {
-    alert(`Notification ${id} closed`);
+export const Clickable: Story = {
+  render: Template,
+
+  args: {
+    onClick: () => {
+      alert(`Notification clicked`);
+    },
   },
 };
 
-export const FinishCallback = Template.bind({});
-FinishCallback.args = {
-  onFinish: (id) => {
-    alert(`Notification ${id} finished`);
+export const CloseCallback: Story = {
+  render: Template,
+
+  args: {
+    onClose: () => {
+      alert(`Notification closed`);
+    },
+  },
+};
+
+export const FinishCallback: Story = {
+  render: Template,
+
+  args: {
+    onFinish: () => {
+      alert(`Notification finished`);
+    },
   },
 };

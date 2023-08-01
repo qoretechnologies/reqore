@@ -1,4 +1,7 @@
-import { ComponentStory } from '@storybook/react';
+import { ComponentStory, Meta, StoryFn } from '@storybook/react';
+import { IReqoreUIProviderProps } from '../containers/UIProvider';
+import { IReqorePagingOptions } from '../hooks/usePaging';
+import { TestTableItem } from '../mock/tableData';
 
 /**
  * It takes a template function and an object of properties, and returns a new function that has the
@@ -15,3 +18,21 @@ export const buildTemplate = <T, C>(
   result.args = props as any;
   return result;
 };
+
+export type AdditionalStorybookArgs = IReqoreUIProviderProps & {
+  otherThemeOptions?: IReqoreUIProviderProps['theme'];
+  multipleColumns?: boolean;
+  confirm?: boolean;
+  notificationId?: string;
+  pagingOptions?: Partial<IReqorePagingOptions<TestTableItem>>;
+  insideModal?: boolean;
+  animatedButtons?: IReqoreUIProviderProps['options']['animations']['buttons'];
+  animatedDialogs?: IReqoreUIProviderProps['options']['animations']['dialogs'];
+};
+
+export type StoryMeta<
+  Component extends keyof JSX.IntrinsicElements | React.JSXElementConstructor<any>,
+  AdditionalArgs = {}
+> = Meta<React.ComponentProps<Component> & AdditionalArgs & AdditionalStorybookArgs>;
+
+export type StoryRenderer<T> = StoryFn<T & AdditionalStorybookArgs>;

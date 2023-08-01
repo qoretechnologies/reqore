@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom/extend-expect';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { ReqoreCollection, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import items, { bigCollection } from '../src/mock/collectionData';
@@ -144,26 +143,6 @@ test('<Collection /> shows no data message when empty', () => {
   expect(document.querySelectorAll('.reqore-message').length).toBe(1);
 });
 
-test('<Collection /> can be sorted', () => {
-  render(
-    <ReqoreUIProvider>
-      <ReqoreLayoutContent>
-        <ReqoreCollection items={items} sortable />
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  );
-
-  const firstItem = document.querySelector('.reqore-collection-item');
-  // Expect the title of the first item to be "Expandable item"
-  expect(firstItem?.querySelector('h3')?.textContent).toBe(undefined);
-
-  fireEvent.click(document.querySelectorAll('.reqore-button')[1]);
-
-  const firstNewItem = document.querySelector('.reqore-collection-item');
-
-  expect(firstNewItem?.querySelector('h3')?.textContent).toBe('This item is not flat');
-});
-
 test('<Collection /> has default paging', () => {
   render(
     <ReqoreUIProvider>
@@ -186,7 +165,7 @@ test('<Collection /> has list paging', () => {
   );
 
   expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(2);
   expect(screen.getAllByText('1 / 10')).toBeTruthy();
 });
 

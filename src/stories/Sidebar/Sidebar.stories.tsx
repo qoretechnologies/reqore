@@ -1,14 +1,24 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { IQorusSidebarProps } from '../../components/Sidebar';
 import { ReqorePanel, ReqoreSidebar } from '../../index';
 import { qorusSidebarItems } from '../../mock/menu';
+import { StoryMeta } from '../utils';
 import { FlatArg, NoContentArg, argManager } from '../utils/args';
 
 const { disableArg, createArg } = argManager<IQorusSidebarProps>();
 
-export default {
+const meta = {
   title: 'Navigation/Sidebar/Stories',
+  component: ReqoreSidebar,
+  args: {
+    path: '/',
+    floating: false,
+    bordered: false,
+    isOpen: false,
+    position: 'left',
+    withoutContent: true,
+  },
   argTypes: {
     ...disableArg('items'),
     ...FlatArg,
@@ -45,9 +55,12 @@ export default {
     }),
     ...NoContentArg,
   },
-} as Meta;
+} as StoryMeta<typeof ReqoreSidebar>;
 
-const Template: Story<IQorusSidebarProps> = (args: IQorusSidebarProps) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IQorusSidebarProps> = (args: IQorusSidebarProps) => {
   return (
     <ReqoreSidebar
       {...args}
@@ -69,10 +82,16 @@ const Template: Story<IQorusSidebarProps> = (args: IQorusSidebarProps) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const Floating = Template.bind({});
-Floating.args = {
-  floating: true,
-  isOpen: true,
-  hasFloatingBackground: true,
+export const Basic: Story = {
+  render: Template,
+};
+
+export const Floating: Story = {
+  render: Template,
+
+  args: {
+    floating: true,
+    isOpen: true,
+    hasFloatingBackdrop: true,
+  },
 };

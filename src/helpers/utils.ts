@@ -45,12 +45,20 @@ export const getTypeFromValue: Function = (item: any): string => {
   return 'null';
 };
 
-export const getLineCount = (value: string): number => {
+export const getLineCount = (value: string | null): number => {
   try {
-    return value.match(/[^\n]*\n[^\n]*/gi).length;
+    return value?.match(/[^\n]*\n[^\n]*/gi)?.length ?? 0;
   } catch (e) {
     return 0;
   }
+};
+
+// A function that takes list of objects and transforms it
+// to a CSV string
+export const convertToCSV = (objArray: any[]): string => {
+  const header = Object.keys(objArray[0]).join(',');
+  const rows = objArray.map((obj) => Object.values(obj).join(','));
+  return [header, ...rows].join('\n');
 };
 
 export const calculateStringSizeInPixels = (value: string = '', fontSize: number): number => {

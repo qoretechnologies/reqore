@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { act } from 'react-dom/test-utils';
 import { ReqoreLayoutContent, ReqoreTable, ReqoreUIProvider } from '../src';
 import { IReqoreTableColumn, IReqoreTableProps } from '../src/components/Table';

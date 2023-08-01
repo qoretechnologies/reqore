@@ -199,7 +199,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
                     {...props}
                     icon={icon}
                     as={as}
-                    onClick={(_itemId, event) => {
+                    onClick={(event) => {
                       props?.onClick?.(event);
                     }}
                     tooltip={tooltip}

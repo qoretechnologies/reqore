@@ -252,7 +252,7 @@ const ReqoreTabsList = ({
                                   }
                                 : undefined,
                             selected: activeTab === id,
-                            onClick: (_id, event: React.MouseEvent<any>) => {
+                            onClick: (event: React.MouseEvent<any>) => {
                               if (!disabled) {
                                 onTabChange?.(id);
 

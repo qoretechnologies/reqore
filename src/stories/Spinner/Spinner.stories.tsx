@@ -1,12 +1,17 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { IReqoreSpinnerProps, ReqoreSpinner } from '../../components/Spinner';
 import { ReqoreControlGroup } from '../../index';
+import { StoryMeta } from '../utils';
 
-export default {
+const meta = {
   title: 'Utilities/Spinner/Stories',
-} as Meta;
+  component: ReqoreSpinner,
+} as StoryMeta<typeof ReqoreSpinner>;
 
-const Template: Story<IReqoreSpinnerProps> = (args) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreSpinnerProps> = (args) => {
   return (
     <ReqoreControlGroup vertical gapSize='huge'>
       <ReqoreSpinner {...args}>{args.children}</ReqoreSpinner>
@@ -55,14 +60,23 @@ const Template: Story<IReqoreSpinnerProps> = (args) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const WithLabel = Template.bind({});
-WithLabel.args = {
-  children: 'Loading...',
+export const Basic: Story = {
+  render: Template,
 };
 
-export const Centered = Template.bind({});
-Centered.args = {
-  children: 'Loading...',
-  centered: true,
+export const WithLabel: Story = {
+  render: Template,
+
+  args: {
+    children: 'Loading...',
+  },
+};
+
+export const Centered: Story = {
+  render: Template,
+
+  args: {
+    children: 'Loading...',
+    centered: true,
+  },
 };

@@ -1,4 +1,4 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useState } from 'react';
 import { useMount } from 'react-use';
@@ -7,13 +7,17 @@ import ReqoreNotification, {
 } from '../../components/Notifications/notification';
 import { IReqoreUIProviderProps } from '../../containers/UIProvider';
 import { ReqoreTag, ReqoreUIProvider } from '../../index';
+import { StoryMeta } from '../utils';
 
-export default {
+const meta: StoryMeta<typeof ReqoreNotification> = {
   title: 'Other/Notifications/Item/Stories',
   component: ReqoreNotification,
-} as Meta;
+};
 
-const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
   theme,
   ...args
 }: IReqoreNotificationProps & IReqoreUIProviderProps) => (
@@ -119,7 +123,7 @@ const Template: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
   </ReqoreUIProvider>
 );
 
-const SingleTemplate: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
+const SingleTemplate: StoryFn<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
   theme,
   ...args
 }: IReqoreNotificationProps & IReqoreUIProviderProps) => (
@@ -128,46 +132,54 @@ const SingleTemplate: Story<IReqoreNotificationProps & IReqoreUIProviderProps> =
   </ReqoreUIProvider>
 );
 
-export const Default = Template.bind({});
-
-export const CustomColors = Template.bind({});
-
-CustomColors.args = {
-  theme: {
-    notifications: {
-      info: '#6c2d80',
-      success: '#81a194',
-      pending: '#b8d8f5',
-      warning: '#382d31',
-      danger: '#786714',
-    },
-  },
-} as IReqoreUIProviderProps;
-
-export const CustomColors2 = Template.bind({});
-
-CustomColors2.args = {
-  theme: {
-    notifications: {
-      info: '#d6bac0',
-      success: '#2aeb37',
-      pending: '#181d7d',
-      warning: '#96714e',
-      danger: '#b87cd6',
-    },
-  },
-} as IReqoreUIProviderProps;
-
-export const WithTimeout = SingleTemplate.bind({});
-
-WithTimeout.args = {
-  type: 'info',
-  content: 'I am a notification with a 10s timeout',
-  onClick: noop,
-  duration: 10000,
+export const Default: Story = {
+  render: Template,
 };
 
-const UpdateTemplate: Story<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
+export const CustomColors: Story = {
+  render: Template,
+
+  args: {
+    theme: {
+      notifications: {
+        info: '#6c2d80',
+        success: '#81a194',
+        pending: '#b8d8f5',
+        warning: '#382d31',
+        danger: '#786714',
+      },
+    },
+  },
+};
+
+export const CustomColors2: Story = {
+  render: Template,
+
+  args: {
+    theme: {
+      notifications: {
+        info: '#d6bac0',
+        success: '#2aeb37',
+        pending: '#181d7d',
+        warning: '#96714e',
+        danger: '#b87cd6',
+      },
+    },
+  },
+};
+
+export const WithTimeout: Story = {
+  render: SingleTemplate,
+
+  args: {
+    type: 'info',
+    content: 'I am a notification with a 10s timeout',
+    onClick: noop,
+    duration: 10000,
+  },
+};
+
+const UpdateTemplate: StoryFn<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
   theme,
   ...args
 }: IReqoreNotificationProps & IReqoreUIProviderProps) => {
@@ -192,11 +204,13 @@ const UpdateTemplate: Story<IReqoreNotificationProps & IReqoreUIProviderProps> =
   );
 };
 
-export const WithUpdate = UpdateTemplate.bind({});
+export const WithUpdate: Story = {
+  render: UpdateTemplate,
 
-WithUpdate.args = {
-  type: 'pending',
-  content: 'I am a notification with a 10s timeout thats gonna update',
-  onClick: noop,
-  duration: 10000,
+  args: {
+    type: 'pending',
+    content: 'I am a notification with a 10s timeout thats gonna update',
+    onClick: noop,
+    duration: 10000,
+  },
 };

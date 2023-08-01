@@ -1,4 +1,4 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { IReqoreMenuProps } from '../../components/Menu';
 import { IReqoreMenuItemProps } from '../../components/Menu/item';
 import {
@@ -8,12 +8,23 @@ import {
   ReqoreMenuItem,
   ReqorePopover,
 } from '../../index';
+import { StoryMeta } from '../utils';
 import { IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreMenuProps>();
 
-export default {
+const meta = {
   title: 'Navigation/Menu/Stories',
+  component: ReqoreMenu,
+  args: {
+    width: '210px',
+    maxHeight: undefined,
+    wrapText: false,
+    minimal: false,
+    flat: true,
+    rounded: true,
+    transparent: false,
+  },
   argTypes: {
     ...createArg('width', {
       type: 'string',
@@ -75,9 +86,12 @@ export default {
     }),
     ...IntentArg,
   },
-} as Meta<IReqoreMenuProps>;
+} as StoryMeta<typeof ReqoreMenu>;
 
-const Template: Story<IReqoreMenuProps> = (args) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreMenuProps> = (args) => {
   return (
     <ReqoreMenu {...args}>
       <ReqoreInput placeholder='Custom component' icon='Search2Fill' flat={false} />
@@ -193,24 +207,46 @@ const Template: Story<IReqoreMenuProps> = (args) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const WrappedText = Template.bind({});
-WrappedText.args = {
-  wrapText: true,
+export const Basic: Story = {
+  render: Template,
 };
-export const Minimal = Template.bind({});
-Minimal.args = {
-  minimal: true,
+
+export const WrappedText: Story = {
+  render: Template,
+
+  args: {
+    wrapText: true,
+  },
 };
-export const NoPadding = Template.bind({});
-NoPadding.args = {
-  padded: false,
+
+export const Minimal: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+  },
 };
-export const NotFlat = Template.bind({});
-NotFlat.args = {
-  flat: false,
+
+export const NoPadding: Story = {
+  render: Template,
+
+  args: {
+    padded: false,
+  },
 };
-export const Transparent = Template.bind({});
-Transparent.args = {
-  transparent: true,
+
+export const NotFlat: Story = {
+  render: Template,
+
+  args: {
+    flat: false,
+  },
+};
+
+export const Transparent: Story = {
+  render: Template,
+
+  args: {
+    transparent: true,
+  },
 };

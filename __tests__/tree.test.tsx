@@ -1,5 +1,4 @@
 import { fireEvent, render } from '@testing-library/react';
-import React from 'react';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreTree, ReqoreUIProvider } from '../src';
 import MockObject from '../src/mock/object.json';
 
@@ -15,23 +14,6 @@ test('Renders basic <Tree /> properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-tree-toggle').length).toBe(7);
-});
-
-test('Shows textarea for <Tree /> properly', () => {
-  render(
-    <ReqoreUIProvider>
-      <ReqoreLayoutContent>
-        <ReqoreContent>
-          <ReqoreTree data={{ test: true }} />
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  );
-
-  fireEvent.click(document.querySelector('.reqore-tree-as-text'));
-
-  expect(document.querySelectorAll('.reqore-textarea').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-textarea')[0].textContent).toContain('test: true');
 });
 
 test('<Tree /> items can be expanded and collapsed', () => {

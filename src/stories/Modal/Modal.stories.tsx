@@ -1,14 +1,25 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useMount } from 'react-use';
 import { IReqoreModalProps } from '../../components/Modal';
 import { ReqoreModal, ReqorePanel, useReqoreProperty } from '../../index';
+import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreModalProps>();
 
-export default {
+const meta = {
   title: 'Dialogs/Modal/Stories',
+  component: ReqoreModal,
+  args: {
+    isOpen: true,
+    label: 'This is a test',
+    blur: 3,
+    opacity: 1,
+    hasBackdrop: true,
+    width: '80vw',
+    height: '50vh',
+  },
   argTypes: {
     ...IntentArg,
     ...FlatArg,
@@ -49,9 +60,12 @@ export default {
       type: 'string',
     }),
   },
-} as Meta<IReqoreModalProps>;
+} as StoryMeta<typeof ReqoreModal>;
 
-const Template: Story<IReqoreModalProps & { confirm?: boolean }> = (args) => {
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const Template: StoryFn<IReqoreModalProps & { confirm?: boolean }> = (args) => {
   const confirmAction = useReqoreProperty('confirmAction');
 
   useMount(() => {
@@ -218,8 +232,14 @@ const Template: Story<IReqoreModalProps & { confirm?: boolean }> = (args) => {
   );
 };
 
-export const Basic = Template.bind({});
-export const ConfirmationModal = Template.bind({});
-ConfirmationModal.args = {
-  confirm: true,
+export const Basic: Story = {
+  render: Template,
+};
+
+export const ConfirmationModal: Story = {
+  render: Template,
+
+  args: {
+    confirm: true,
+  },
 };

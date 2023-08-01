@@ -1,4 +1,4 @@
-import { Meta, Story } from '@storybook/react/types-6-0';
+import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { IReqorePopoverProps } from '../../components/Popover';
 import usePopover from '../../hooks/usePopover';
@@ -11,12 +11,18 @@ import {
   ReqorePopover,
   ReqoreSpacer,
 } from '../../index';
+import { StoryMeta } from '../utils';
 import { FlatArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePopoverProps>();
 
-export default {
+const meta = {
   title: 'Other/Popover/Stories',
+  component: ReqorePopover,
+  args: {
+    content: 'This is a popover',
+    flat: true,
+  },
   argTypes: {
     ...createArg('transparent', {
       defaultValue: false,
@@ -50,10 +56,10 @@ export default {
     }),
     ...FlatArg,
   },
-  args: {
-    flat: true,
-  },
-} as Meta<IReqorePopoverProps>;
+} as StoryMeta<typeof ReqorePopover>;
+
+type Story = StoryObj<typeof meta>;
+export default meta;
 
 const HoverButton = (args: any) => {
   return (
@@ -105,7 +111,7 @@ const HoverStayButton = (args: any) => {
   );
 };
 
-const Template: Story<IReqorePopoverProps & { insideModal?: boolean }> = (
+const Template: StoryFn<IReqorePopoverProps & { insideModal?: boolean }> = (
   args: IReqorePopoverProps & { insideModal?: boolean }
 ) => {
   if (args.insideModal) {
@@ -332,42 +338,58 @@ const Template: Story<IReqorePopoverProps & { insideModal?: boolean }> = (
   );
 };
 
-export const Basic = Template.bind({});
-export const NotFlat = Template.bind({});
-NotFlat.args = {
-  flat: false,
-};
-export const CustomContent = Template.bind({});
-CustomContent.args = {
-  noWrapper: true,
-  content: (
-    <ReqorePanel label='This is a test' flat>
-      <ReqoreMessage flat>
-        In to am attended desirous raptures declared diverted confined at. Collected instantly
-        remaining up certainly to necessary as. Over walk dull into
-      </ReqoreMessage>
-    </ReqorePanel>
-  ),
+export const Basic: Story = {
+  render: Template,
 };
 
-export const Blurred = Template.bind({});
-Blurred.args = {
-  blur: 4,
-  noWrapper: true,
-  content: (
-    <ReqorePanel label='This is a test' flat>
-      <ReqoreMessage flat>
-        In to am attended desirous raptures declared diverted confined at. Collected instantly
-        remaining up certainly to necessary as. Over walk dull into
-      </ReqoreMessage>
-    </ReqorePanel>
-  ),
+export const NotFlat: Story = {
+  render: Template,
+
+  args: {
+    flat: false,
+  },
 };
 
-export const BlurredInsideModal = Template.bind({});
-BlurredInsideModal.args = {
-  blur: 2,
-  noWrapper: true,
-  insideModal: true,
-  animatedDialogs: false,
+export const CustomContent: Story = {
+  render: Template,
+
+  args: {
+    noWrapper: true,
+    content: (
+      <ReqorePanel label='This is a test' flat>
+        <ReqoreMessage flat>
+          In to am attended desirous raptures declared diverted confined at. Collected instantly
+          remaining up certainly to necessary as. Over walk dull into
+        </ReqoreMessage>
+      </ReqorePanel>
+    ),
+  },
+};
+
+export const Blurred: Story = {
+  render: Template,
+
+  args: {
+    blur: true,
+    noWrapper: true,
+    content: (
+      <ReqorePanel label='This is a test' flat>
+        <ReqoreMessage flat>
+          In to am attended desirous raptures declared diverted confined at. Collected instantly
+          remaining up certainly to necessary as. Over walk dull into
+        </ReqoreMessage>
+      </ReqorePanel>
+    ),
+  },
+};
+
+export const BlurredInsideModal: Story = {
+  render: Template,
+
+  args: {
+    blur: true,
+    noWrapper: true,
+    insideModal: true,
+    animatedDialogs: false,
+  },
 };

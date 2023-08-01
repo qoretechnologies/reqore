@@ -66,7 +66,7 @@ export const decorators = [
           },
         }}
       >
-        <ReqoreLayoutContent>
+        <ReqoreLayoutContent style={{ height: '100%' }}>
           <Story />
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -81,7 +81,7 @@ export const decorators = [
         }}
       >
         <ReqoreLayoutContent>
-          <ReqoreContent style={{ padding: '20px' }}>
+          <ReqoreContent style={{ padding: '20px', height: '100%' }}>
             <Story />
           </ReqoreContent>
         </ReqoreLayoutContent>
