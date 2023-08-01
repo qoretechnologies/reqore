@@ -236,7 +236,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       onFinish,
       flat,
       minimal,
-      opaque,
+      opaque = true,
       size = 'normal',
       customTheme,
     },

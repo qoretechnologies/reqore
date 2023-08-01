@@ -1,9 +1,9 @@
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
-import { IReqoreTableColumn, IReqoreTableSort } from '.';
+import { IReqoreTableColumn, IReqoreTableData, IReqoreTableSort } from '.';
 import { ICON_FROM_SIZE, SIZE_TO_MODIFIER, SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreIconName } from '../../types/icons';
-import { IReqorePanelAction } from '../Panel';
+import { IReqorePanelSubAction } from '../Panel';
 
 export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
   direction === 'asc' ? 'desc' : 'asc';
@@ -81,20 +81,38 @@ export const zoomToWidth = {
 
 // This code converts a zoom level to a label.
 export const zoomToLabel = {
-  0: '0.6x',
-  0.5: '0.8x',
-  1: '1x',
-  1.5: '1.2x',
-  2: '1.4x',
+  0: '30%',
+  0.5: '60%',
+  1: '100%',
+  1.5: '130%',
+  2: '160%',
 };
+
+export const getExportActions = (
+  onClick: (type: 'current' | 'full') => void,
+  withLabels: boolean = true
+): IReqorePanelSubAction[] => [
+  {
+    label: withLabels ? 'Export current view' : undefined,
+    icon: 'Download2Line',
+    onClick: () => onClick('current'),
+  },
+  {
+    label: withLabels ? 'Export full data' : undefined,
+    icon: 'DownloadLine',
+    onClick: () => onClick('full'),
+  },
+];
 
 export const getZoomActions = (
   type: string,
   zoom: number,
-  setter: (zoom: number) => void
-): IReqorePanelAction[] => [
+  setter: (zoom: number) => void,
+  withLabels?: boolean
+): IReqorePanelSubAction[] => [
   {
     icon: 'ZoomInLine',
+    label: withLabels ? 'Zoom in' : undefined,
     tooltip: 'Zoom in',
     disabled: zoom === 2,
     className: `${type}-zoom-in`,
@@ -104,7 +122,7 @@ export const getZoomActions = (
   },
   {
     icon: 'RestartLine',
-    label: zoomToLabel[zoom],
+    label: `${zoomToLabel[zoom]}${withLabels ? ' (reset)' : ''}`,
     tooltip: 'Reset zoom',
     disabled: zoom === 1,
     className: `${type}-zoom-reset`,
@@ -115,6 +133,7 @@ export const getZoomActions = (
   {
     icon: 'ZoomOutLine',
     tooltip: 'Zoom out',
+    label: withLabels ? 'Zoom out' : undefined,
     disabled: zoom === 0,
     className: `${type}-zoom-out`,
     onClick: () => {
@@ -272,4 +291,16 @@ export const calculateMinimumCellWidth = (
   }
 
   return width;
+};
+
+export const removeInternalData = (data: IReqoreTableData): any[] => {
+  return data.map((item) => {
+    const newItem = { ...item };
+
+    delete newItem._selectId;
+    delete newItem._disabled;
+    delete newItem._intent;
+
+    return newItem;
+  });
 };

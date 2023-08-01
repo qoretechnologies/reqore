@@ -88,8 +88,10 @@ export const ReqoreCollection = ({
   maxItemHeight,
   filterable,
   inputInTitle = true,
+
   sortable,
   zoomable,
+
   defaultZoom,
   showSelectedFirst,
   inputProps,
@@ -132,6 +134,7 @@ export const ReqoreCollection = ({
   const [contentRef, setContentRef] = useState<HTMLDivElement>(undefined);
   const isMobile = useReqoreProperty('isMobile');
   const [zoom, setZoom] = useState<number>(defaultZoom || sizeToZoom.normal);
+
   const { query, setQuery, preQuery, setPreQuery } = useQueryWithDelay(
     defaultQuery,
     searchDelay,
@@ -199,37 +202,37 @@ export const ReqoreCollection = ({
 
     const toolbarGroup: IReqorePanelAction = {
       responsive: false,
-      fluid: isMobile,
-      group: [
+      icon: 'MoreLine',
+      className: 'reqore-collection-more',
+      actions: [
         {
           icon: _showAs === 'grid' ? 'ListUnordered' : 'GridLine',
           onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
           tooltip: displayButtonTooltip(_showAs),
+          label: displayButtonTooltip(_showAs),
           disabled: !size(filteredItems),
-          textAlign: 'center',
-          fixed: !isMobile,
           ...displayButtonProps,
         },
       ],
     };
 
-    if (zoomable) {
-      actions.push({
-        fluid: false,
-        group: getZoomActions('reqore-collection', zoom, setZoom),
-      });
-    }
-
     if (sortable) {
-      toolbarGroup.group.push({
+      toolbarGroup.actions.push({
         icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
         onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
         tooltip: sortButtonTooltip(sort),
+        label: sortButtonTooltip(sort),
         disabled: !size(filteredItems),
-        textAlign: 'center',
-        fixed: !isMobile,
         ...sortButtonProps,
       });
+    }
+
+    if (zoomable) {
+      toolbarGroup.actions = [
+        ...toolbarGroup.actions,
+        { divider: true, line: true },
+        ...getZoomActions('reqore-collection', zoom, setZoom, true),
+      ];
     }
 
     if (filterable && inputInTitle) {

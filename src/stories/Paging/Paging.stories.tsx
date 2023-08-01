@@ -13,8 +13,9 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+type StoryType = typeof ReqorePagination<TestTableItem> & any;
 
-const Template: StoryRenderer<typeof ReqorePagination<TestTableItem> & any> = (args) => {
+const Template: StoryRenderer<StoryType> = (args) => {
   const [scrollContainer, setScrollContainer] = useState<any>(undefined);
   const paging = useReqorePaging<any>({ items: tableData, ...args.pagingOptions });
 

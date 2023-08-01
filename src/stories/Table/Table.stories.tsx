@@ -1,10 +1,12 @@
 import { StoryObj } from '@storybook/react';
+import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { StyledEffect } from '../../components/Effect';
 import { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
 import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
 import { IReqoreCustomTableRowProps } from '../../components/Table/row';
 import { TReqorePaginationType } from '../../constants/paging';
+import { sleep } from '../../helpers/utils';
 import {
   ReqoreH3,
   ReqoreH4,
@@ -443,6 +445,28 @@ export const PreselectedRows: Story = {
 export const Zoomable: Story = {
   args: {
     zoomable: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(1000);
+    await fireEvent.click(document.querySelector('.reqore-table-more'));
+    await waitFor(() => canvas.findAllByText('Zoom in'), { timeout: 5000 });
+  },
+};
+
+export const Exportable: Story = {
+  args: {
+    exportable: true,
+    filterable: true,
+    paging: 'buttons',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(1000);
+    await fireEvent.click(document.querySelector('.reqore-table-more'));
+    await waitFor(() => canvas.findAllByText('Export current view'), { timeout: 5000 });
   },
 };
 

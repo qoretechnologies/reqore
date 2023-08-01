@@ -19,8 +19,15 @@
     "resolveJsonModule": true,
     "jsx": "react-jsx",
     "types": ["node", "react", "react-dom", "jest"],
-    "outDir": "dist"
+    "outDir": "dist",
+    "allowJs": true
   },
   "exclude": ["node_modules"],
-  "include": ["./src/**/*.ts", "./src/**/*.tsx", ".storybook/**/*.tsx"]
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    ".storybook/**/*.tsx",
+    "./__tests__/**/*.ts",
+    "./__tests__/**/*.tsx"
+  ]
 }

@@ -11,6 +11,7 @@ import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
+import { ReqoreExportModal } from '../ExportModal';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
 import ReqoreTableBody from './body';
@@ -21,11 +22,13 @@ import {
   flipSortDirection,
   getColumnsByPinType,
   getColumnsCount,
+  getExportActions,
   getOnlyShownColumns,
   getZoomActions,
   hasGroupedColumns,
   hasHiddenColumns,
   prepareColumns,
+  removeInternalData,
   sizeToZoom,
   sortTableData,
   zoomToSize,
@@ -106,6 +109,8 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   filterProps?: (data: IReqoreTableData) => IReqoreInputProps;
   filter?: string | number;
   onFilterChange?: (query: string | number) => void;
+
+  exportable?: boolean;
 
   zoomable?: boolean;
   defaultZoom?: number;
@@ -198,6 +203,7 @@ const ReqoreTable = ({
   bodyCellComponent,
   onSelectClick,
   paging,
+  exportable,
   ...rest
 }: IReqoreTableProps) => {
   const leftTableRef = useRef<HTMLDivElement>(null);
@@ -215,6 +221,7 @@ const ReqoreTable = ({
   }>({});
   const [_internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
   const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
+  const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
 
   const [wrapperRef, sizes] = useMeasure();
   const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
@@ -502,7 +509,6 @@ const ReqoreTable = ({
 
     if (count(columnsList)) {
       finalActions.push({
-        label: 'Columns',
         icon: 'LayoutColumnLine',
         className: 'reqore-table-columns-options',
         badge: getColumnsCount(getOnlyShownColumns(finalColumns)),
@@ -533,13 +539,6 @@ const ReqoreTable = ({
       });
     }
 
-    if (zoomable) {
-      finalActions.push({
-        fluid: false,
-        group: getZoomActions('reqore-table', zoom, setZoom),
-      });
-    }
-
     if (isScrolled) {
       finalActions.push({
         icon: 'ArrowUpSFill',
@@ -550,11 +549,28 @@ const ReqoreTable = ({
       });
     }
 
-    if (count(columnModifiers) || zoomable || filterable) {
+    if (count(columnModifiers) || zoomable || filterable || exportable) {
+      let moreActions: IReqorePanelSubAction[] = [];
+
+      if (exportable) {
+        moreActions = [
+          ...getExportActions((type) => setShowExportModal(type)),
+          { divider: true, line: true },
+        ];
+      }
+
+      if (zoomable) {
+        moreActions = [
+          ...getZoomActions('reqore-table', zoom, setZoom, true),
+          { divider: true, line: true },
+        ];
+      }
+
       finalActions.push({
         icon: 'MoreLine',
         className: 'reqore-table-more',
         actions: [
+          ...moreActions,
           {
             label: 'Reset table',
             icon: 'RestartLine',
@@ -671,55 +687,65 @@ const ReqoreTable = ({
   );
 
   return (
-    <ReqorePanel
-      transparent
-      flat
-      padded={false}
-      contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
-      responsiveActions={false}
-      {...rest}
-      size={wrapperSize}
-      actions={tableActions}
-      fill={fill}
-      className={`${className || ''} reqore-table`}
-      style={{ width, ...(rest.style || {}) }}
-      getContentRef={wrapperRef}
-      badge={badge}
-    >
-      <ReqorePaginationContainer<IReqoreTableRowData>
-        items={transformedData}
-        type={
-          pagingOptions
-            ? {
-                ...pagingOptions,
-                onPageChange: () => {
-                  if (!pagingOptions.infinite) {
-                    handleScrollToTop();
-                  }
-                },
-              }
-            : undefined
-        }
+    <>
+      <ReqorePanel
+        transparent
+        flat
+        padded={false}
+        contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
+        responsiveActions={false}
+        {...rest}
+        size={wrapperSize}
+        actions={tableActions}
+        fill={fill}
+        className={`${className || ''} reqore-table`}
+        style={{ width, ...(rest.style || {}) }}
+        getContentRef={wrapperRef}
+        badge={badge}
       >
-        {(pagedData) => (
-          <>
-            <StyledTablesWrapper className='reqore-table-wrapper'>
-              {renderTable('left', pagedData)}
-              {renderTable('main', pagedData)}
-              {renderTable('right', pagedData)}
-            </StyledTablesWrapper>
-            {count(pagedData) === 0 ? (
-              <>
-                <ReqoreVerticalSpacer height={10} />
-                <ReqoreMessage flat size={size} icon='Search2Line'>
-                  {emptyMessage}
-                </ReqoreMessage>
-              </>
-            ) : null}
-          </>
-        )}
-      </ReqorePaginationContainer>
-    </ReqorePanel>
+        <ReqorePaginationContainer<IReqoreTableRowData>
+          items={transformedData}
+          type={
+            pagingOptions
+              ? {
+                  ...pagingOptions,
+                  onPageChange: () => {
+                    if (!pagingOptions.infinite) {
+                      handleScrollToTop();
+                    }
+                  },
+                }
+              : undefined
+          }
+        >
+          {(pagedData) => (
+            <>
+              {showExportModal && (
+                <ReqoreExportModal
+                  data={removeInternalData(
+                    showExportModal === 'current' ? pagedData : transformedData
+                  )}
+                  onClose={() => setShowExportModal(undefined)}
+                />
+              )}
+              <StyledTablesWrapper className='reqore-table-wrapper'>
+                {renderTable('left', pagedData)}
+                {renderTable('main', pagedData)}
+                {renderTable('right', pagedData)}
+              </StyledTablesWrapper>
+              {count(pagedData) === 0 ? (
+                <>
+                  <ReqoreVerticalSpacer height={10} />
+                  <ReqoreMessage flat size={size} icon='Search2Line'>
+                    {emptyMessage}
+                  </ReqoreMessage>
+                </>
+              ) : null}
+            </>
+          )}
+        </ReqorePaginationContainer>
+      </ReqorePanel>
+    </>
   );
 };
 

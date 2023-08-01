@@ -53,6 +53,14 @@ export const getLineCount = (value: string | null): number => {
   }
 };
 
+// A function that takes list of objects and transforms it
+// to a CSV string
+export const convertToCSV = (objArray: any[]): string => {
+  const header = Object.keys(objArray[0]).join(',');
+  const rows = objArray.map((obj) => Object.values(obj).join(','));
+  return [header, ...rows].join('\n');
+};
+
 export const calculateStringSizeInPixels = (value: string = '', fontSize: number): number => {
   const widths = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

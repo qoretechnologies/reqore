@@ -1,14 +1,15 @@
 import { cloneDeep, size as lodashSize } from 'lodash';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { ReqoreMessage, ReqorePanel, ReqoreTextarea, useReqoreProperty } from '../..';
+import { ReqoreMessage, ReqorePanel, useReqoreProperty } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { getTypeFromValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqorePanelProps } from '../Panel';
-import { getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
+import { ReqoreExportModal } from '../ExportModal';
+import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
+import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
 import ReqoreTag from '../Tag';
 
 export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
@@ -20,6 +21,7 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   withLabelCopy?: boolean;
   showControls?: boolean;
   zoomable?: boolean;
+  exportable?: boolean;
   defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
 }
 
@@ -41,27 +43,21 @@ export const ReqoreTree = ({
   onItemClick,
   withLabelCopy,
   showControls = true,
+
+  exportable,
   zoomable,
   defaultZoom,
   ...rest
 }: IReqoreTreeProps) => {
-  const [_mode, setMode] = useState<'tree' | 'copy'>(mode);
   const [items, setItems] = useState({});
   const [allExpanded, setAllExpanded] = useState(expanded || !showControls);
   const [_showTypes, setShowTypes] = useState(showTypes);
   const addNotification = useReqoreProperty('addNotification');
   const [zoom, setZoom] = useState(defaultZoom || sizeToZoom[size]);
-
-  const handleCopyClick = () => {
-    setMode('copy');
-  };
+  const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
 
   const handleTypesClick = () => {
     setShowTypes(!_showTypes);
-  };
-
-  const handleTreeClick = () => {
-    setMode('tree');
   };
 
   const handleExpandClick = () => {
@@ -173,73 +169,84 @@ export const ReqoreTree = ({
     return text;
   };
 
+  const actions = useMemo(() => {
+    let _actions: IReqorePanelAction[] = [];
+
+    if (showControls) {
+      _actions = [
+        {
+          className: 'reqore-tree-expand-all',
+          icon: 'ArrowDownFill',
+          onClick: handleExpandClick,
+          show: !!(isDeep() && !allExpanded),
+          label: 'Expand all',
+        },
+        {
+          show: !!(isDeep() && (allExpanded || lodashSize(items) > 0)),
+          className: 'reqore-tree-collapse-all',
+          icon: 'ArrowUpFill',
+          onClick: handleCollapseClick,
+
+          label: 'Collapse all',
+        },
+        {
+          className: 'reqore-tree-show-types',
+          icon: 'CodeBoxFill',
+          active: _showTypes,
+          onClick: handleTypesClick,
+          label: 'Show types',
+        },
+      ];
+    }
+
+    if (zoomable || exportable) {
+      const moreActions: IReqorePanelAction = {
+        className: 'reqore-tree-more',
+        icon: 'MoreLine',
+        actions: [],
+      };
+
+      if (zoomable) {
+        moreActions.actions = [
+          ...moreActions.actions,
+          ...getZoomActions('reqore-tree', zoom, setZoom, true),
+        ];
+      }
+
+      if (exportable) {
+        moreActions.actions = [
+          ...moreActions.actions,
+          { divider: true, line: true },
+          ...getExportActions((type) => setShowExportModal(type)),
+        ];
+      }
+
+      _actions = [..._actions, moreActions];
+    }
+
+    return _actions;
+  }, [allExpanded, items, showControls, _showTypes, isDeep(), zoom]);
+
   if (!data || !Object.keys(data).length) {
     return <p>No data</p>;
   }
 
-  const textData: string = renderText(data);
-
   return (
-    <ReqorePanel
-      className='reqore-tree'
-      minimal
-      flat
-      transparent
-      size={size}
-      {...rest}
-      actions={
-        showControls
-          ? [
-              {
-                fluid: false,
-                group: getZoomActions('reqore-tree', zoom, setZoom),
-                show: !!zoomable,
-              },
-              {
-                className: 'reqore-tree-expand-all',
-                icon: 'ArrowDownFill',
-                onClick: handleExpandClick,
-                show: !!(isDeep() && !allExpanded),
-                label: 'Expand all',
-              },
-              {
-                show: !!(isDeep() && (allExpanded || lodashSize(items) > 0)),
-                className: 'reqore-tree-collapse-all',
-                icon: 'ArrowUpFill',
-                onClick: handleCollapseClick,
-
-                label: 'Collapse all',
-              },
-              {
-                className: 'reqore-tree-show-types',
-                icon: 'CodeBoxFill',
-                active: _showTypes,
-                onClick: handleTypesClick,
-                label: 'Show types',
-              },
-              {
-                className: _mode === 'tree' ? 'reqore-tree-as-text' : 'reqore-tree-as-tree',
-                onClick: _mode === 'tree' ? handleCopyClick : handleTreeClick,
-                icon: _mode === 'tree' ? 'Menu2Fill' : 'ClipboardFill',
-                label: _mode === 'tree' ? 'Text View' : 'Tree View',
-              },
-            ]
-          : undefined
-      }
-    >
-      {_mode === 'tree' && renderTree(data, true)}
-
-      {_mode === 'copy' && (
-        <ReqoreTextarea
-          className='reqore-tree-textarea'
-          id='tree-content'
-          value={textData}
-          scaleWithContent
-          size={size}
-          fluid
-          readOnly
-        />
+    <>
+      {showExportModal && (
+        <ReqoreExportModal data={data} onClose={() => setShowExportModal(undefined)} />
       )}
-    </ReqorePanel>
+      <ReqorePanel
+        className='reqore-tree'
+        minimal
+        flat
+        transparent
+        size={size}
+        {...rest}
+        actions={actions}
+      >
+        {renderTree(data, true)}
+      </ReqorePanel>
+    </>
   );
 };
