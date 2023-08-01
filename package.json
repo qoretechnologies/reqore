@@ -26,7 +26,7 @@
     "react"
   ],
   "pre-push": [
-    "build:test",
+    "build:test:prod",
     "test"
   ],
   "author": "Qore Technologies",
