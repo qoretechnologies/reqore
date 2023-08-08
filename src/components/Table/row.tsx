@@ -3,7 +3,7 @@ import { isFunction, isString } from 'lodash';
 import React, { ReactElement, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
-import { ReqoreButton, ReqoreControlGroup, ReqorePopover } from '../..';
+import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreTooltip } from '../../types/global';
@@ -200,48 +200,44 @@ const ReqoreTableRow = ({
           : {};
 
         return (
-          <ReqorePopover
+          <CellComponent
             key={dataId}
-            component={CellComponent}
-            isReqoreComponent
-            componentProps={
-              {
-                width: resizedWidth || width,
-                minWidth,
-                maxWidth,
-                grow,
-                align,
-                size,
-                striped,
-                padded: cell?.padded,
-                disabled: data[index]._disabled,
-                selected: !!isSelected,
-                selectedIntent: selectedRowIntent,
-                flat,
-                even: index % 2 === 0 ? true : false,
-                intent: cell?.intent || data[index]._intent || intent,
-                hovered: isHovered,
-                interactive: !!cell?.onClick || !!onRowClick,
-                interactiveCell: !!cell?.onClick,
-                onClick: (e: React.MouseEvent<HTMLDivElement>) => {
-                  if (cell?.onClick) {
-                    e.stopPropagation();
-                    cell.onClick(data[index]);
-                  } else if (onRowClick) {
-                    e.stopPropagation();
-                    onRowClick(data[index]);
-                  } else if (selectable && data[index]._selectId) {
-                    // Otherwise select the row if selectable
-                    onSelectClick(data[index]._selectId!);
-                  }
-                },
-                className: 'reqore-table-cell',
-              } as IReqoreTableCellStyle
-            }
-            {...tooltip}
+            {...({
+              width: resizedWidth || width,
+              minWidth,
+              maxWidth,
+              grow,
+              align,
+              size,
+              striped,
+              tooltip,
+              padded: cell?.padded,
+              disabled: data[index]._disabled,
+              selected: !!isSelected,
+              selectedIntent: selectedRowIntent,
+              flat,
+              even: index % 2 === 0 ? true : false,
+              intent: cell?.intent || data[index]._intent || intent,
+              hovered: isHovered,
+              interactive: !!cell?.onClick || !!onRowClick,
+              interactiveCell: !!cell?.onClick,
+              onClick: (e: React.MouseEvent<HTMLDivElement>) => {
+                if (cell?.onClick) {
+                  e.stopPropagation();
+                  cell.onClick(data[index]);
+                } else if (onRowClick) {
+                  e.stopPropagation();
+                  onRowClick(data[index]);
+                } else if (selectable && data[index]._selectId) {
+                  // Otherwise select the row if selectable
+                  onSelectClick(data[index]._selectId!);
+                }
+              },
+              className: 'reqore-table-cell',
+            } as IReqoreTableCellStyle)}
           >
             {renderContent(cell, data[index], dataId, align)}
-          </ReqorePopover>
+          </CellComponent>
         );
       }
     );

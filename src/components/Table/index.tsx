@@ -3,10 +3,17 @@ import { size as count, isArray } from 'lodash';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqoreMessage, ReqorePaginationContainer, ReqorePanel, ReqoreVerticalSpacer } from '../..';
+import {
+  ReqoreMessage,
+  ReqorePaginationContainer,
+  ReqorePanel,
+  ReqoreVerticalSpacer,
+  useReqoreTheme,
+} from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
 import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
@@ -183,7 +190,6 @@ const ReqoreTable = ({
   selected,
   onSelectedChange,
   selectToggleTooltip,
-  customTheme,
   onRowClick,
   striped,
   selectedRowIntent = 'info',
@@ -222,6 +228,7 @@ const ReqoreTable = ({
   const [_internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
   const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
   const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
+  const theme = useReqoreTheme('main', rest.customTheme, intent);
 
   const [wrapperRef, sizes] = useMeasure();
   const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
@@ -554,6 +561,7 @@ const ReqoreTable = ({
 
       if (exportable) {
         moreActions = [
+          ...moreActions,
           ...getExportActions((type) => setShowExportModal(type)),
           { divider: true, line: true },
         ];
@@ -561,6 +569,7 @@ const ReqoreTable = ({
 
       if (zoomable) {
         moreActions = [
+          ...moreActions,
           ...getZoomActions('reqore-table', zoom, setZoom, true),
           { divider: true, line: true },
         ];
@@ -703,47 +712,49 @@ const ReqoreTable = ({
         getContentRef={wrapperRef}
         badge={badge}
       >
-        <ReqorePaginationContainer<IReqoreTableRowData>
-          items={transformedData}
-          type={
-            pagingOptions
-              ? {
-                  ...pagingOptions,
-                  onPageChange: () => {
-                    if (!pagingOptions.infinite) {
-                      handleScrollToTop();
-                    }
-                  },
-                }
-              : undefined
-          }
-        >
-          {(pagedData) => (
-            <>
-              {showExportModal && (
-                <ReqoreExportModal
-                  data={removeInternalData(
-                    showExportModal === 'current' ? pagedData : transformedData
-                  )}
-                  onClose={() => setShowExportModal(undefined)}
-                />
-              )}
-              <StyledTablesWrapper className='reqore-table-wrapper'>
-                {renderTable('left', pagedData)}
-                {renderTable('main', pagedData)}
-                {renderTable('right', pagedData)}
-              </StyledTablesWrapper>
-              {count(pagedData) === 0 ? (
-                <>
-                  <ReqoreVerticalSpacer height={10} />
-                  <ReqoreMessage flat size={size} icon='Search2Line'>
-                    {emptyMessage}
-                  </ReqoreMessage>
-                </>
-              ) : null}
-            </>
-          )}
-        </ReqorePaginationContainer>
+        <ReqoreThemeProvider theme={theme}>
+          <ReqorePaginationContainer<IReqoreTableRowData>
+            items={transformedData}
+            type={
+              pagingOptions
+                ? {
+                    ...pagingOptions,
+                    onPageChange: () => {
+                      if (!pagingOptions.infinite) {
+                        handleScrollToTop();
+                      }
+                    },
+                  }
+                : undefined
+            }
+          >
+            {(pagedData) => (
+              <>
+                {showExportModal && (
+                  <ReqoreExportModal
+                    data={removeInternalData(
+                      showExportModal === 'current' ? pagedData : transformedData
+                    )}
+                    onClose={() => setShowExportModal(undefined)}
+                  />
+                )}
+                <StyledTablesWrapper className='reqore-table-wrapper'>
+                  {renderTable('left', pagedData)}
+                  {renderTable('main', pagedData)}
+                  {renderTable('right', pagedData)}
+                </StyledTablesWrapper>
+                {count(pagedData) === 0 ? (
+                  <>
+                    <ReqoreVerticalSpacer height={10} />
+                    <ReqoreMessage flat size={size} icon='Search2Line'>
+                      {emptyMessage}
+                    </ReqoreMessage>
+                  </>
+                ) : null}
+              </>
+            )}
+          </ReqorePaginationContainer>
+        </ReqoreThemeProvider>
       </ReqorePanel>
     </>
   );

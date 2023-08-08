@@ -1,9 +1,13 @@
 import { lighten, rgba } from 'polished';
+import { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
 import { TEXT_FROM_SIZE } from '../../constants/sizes';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useTooltip } from '../../hooks/useTooltip';
+import { IWithReqoreTooltip } from '../../types/global';
 import { TReqoreColor } from '../Effect';
 import { IReqoreTableCellStyle } from './row';
 
@@ -11,7 +15,8 @@ export interface IReqoreCustomTableBodyCellProps extends IReqoreTableBodyCellPro
 export interface IReqoreCustomTableBodyCell extends React.FC<IReqoreCustomTableBodyCellProps> {}
 export interface IReqoreTableBodyCellProps
   extends Partial<IReqoreTableColumn>,
-    React.HTMLAttributes<HTMLDivElement> {
+    React.HTMLAttributes<HTMLDivElement>,
+    IWithReqoreTooltip {
   children?: React.ReactNode;
   padded?: IReqoreTableColumn['cell']['padded'];
 }
@@ -118,6 +123,12 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
   }}
 `;
 
-export const ReqoreTableBodyCell = (props: IReqoreTableBodyCellProps) => {
-  return <StyledTableCell {...props} />;
-};
+export const ReqoreTableBodyCell = forwardRef<HTMLButtonElement, IReqoreTableBodyCellProps>(
+  (props: IReqoreTableBodyCellProps, ref) => {
+    const { targetRef } = useCombinedRefs(ref);
+
+    useTooltip(targetRef.current, props.tooltip);
+
+    return <StyledTableCell {...props} ref={targetRef} />;
+  }
+);

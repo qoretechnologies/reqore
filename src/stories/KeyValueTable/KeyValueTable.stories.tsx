@@ -112,6 +112,19 @@ export const Striped: Story = {
   },
 };
 
+export const Exportable: Story = {
+  args: {
+    exportable: true,
+    zoomable: true,
+  },
+};
+
+export const Sortable: Story = {
+  args: {
+    sortable: true,
+  },
+};
+
 export const Filterable: Story = {
   args: {
     filterable: true,
@@ -136,6 +149,29 @@ export const AllFiltersActive: Story = {
     filterable: true,
     filter: 1,
     defaultValueFilter: 80,
+  },
+};
+
+export const WithActions: Story = {
+  args: {
+    rowActions: (key, value) => [
+      {
+        icon: 'EditLine',
+      },
+      {
+        icon: 'DeleteBinLine',
+        intent: 'danger',
+      },
+    ],
+    zoomable: true,
+  },
+};
+
+export const CustomTheme: Story = {
+  args: {
+    customTheme: { main: '#ff0000' },
+    flat: false,
+    transparent: false,
   },
 };
 

@@ -31,6 +31,8 @@ const Popover = memo(
   }: IReqorePopoverProps) => {
     const [ref, setRef] = useState(undefined);
 
+    console.log(rest);
+
     const popoverData: IPopoverControls = usePopover({ targetElement: ref, ...rest });
 
     useEffect(() => {
@@ -38,6 +40,7 @@ const Popover = memo(
     }, [popoverData]);
 
     if (isReqoreComponent) {
+      console.log(Component);
       return (
         <Component
           {...componentProps}

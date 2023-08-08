@@ -42,29 +42,32 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
 
     useMount(() => {
       targetRef.current?.addEventListener('wheel', (e) => {
-        if (e.deltaY) {
-          e.preventDefault();
+        // Only scroll if the element is scrollable
+        if (refs[type].current?.scrollHeight > refs[type].current?.clientHeight) {
+          if (e.deltaY) {
+            e.preventDefault();
 
-          const currentScroll = refs[type].current?.scrollTop + e.deltaY;
+            const currentScroll = refs[type].current?.scrollTop + e.deltaY;
 
-          onScrollChange?.(currentScroll > 0);
+            onScrollChange?.(currentScroll > 0);
 
-          refs[type].current?.scrollTo({ top: currentScroll });
+            refs[type].current?.scrollTo({ top: currentScroll });
 
-          if (type === 'left') {
-            refs.main.current?.scrollTo({ top: refs.main.current?.scrollTop + e.deltaY });
-            refs.right.current?.scrollTo({ top: refs.right.current?.scrollTop + e.deltaY });
-          } else if (type === 'main') {
-            refs.left.current?.scrollTo({ top: refs.left.current?.scrollTop + e.deltaY });
-            refs.right.current?.scrollTo({ top: refs.right.current?.scrollTop + e.deltaY });
-          } else if (type === 'right') {
-            refs.main.current?.scrollTo({ top: refs.main.current?.scrollTop + e.deltaY });
-            refs.left.current?.scrollTo({ top: refs.left.current?.scrollTop + e.deltaY });
+            if (type === 'left') {
+              refs.main.current?.scrollTo({ top: refs.main.current?.scrollTop + e.deltaY });
+              refs.right.current?.scrollTo({ top: refs.right.current?.scrollTop + e.deltaY });
+            } else if (type === 'main') {
+              refs.left.current?.scrollTo({ top: refs.left.current?.scrollTop + e.deltaY });
+              refs.right.current?.scrollTo({ top: refs.right.current?.scrollTop + e.deltaY });
+            } else if (type === 'right') {
+              refs.main.current?.scrollTo({ top: refs.main.current?.scrollTop + e.deltaY });
+              refs.left.current?.scrollTo({ top: refs.left.current?.scrollTop + e.deltaY });
+            }
           }
-        }
 
-        if (e.deltaX && type === 'main') {
-          refs.header.current?.scrollTo({ left: refs.main.current?.scrollLeft + e.deltaX });
+          if (e.deltaX && type === 'main') {
+            refs.header.current?.scrollTo({ left: refs.main.current?.scrollLeft + e.deltaX });
+          }
         }
       });
     });

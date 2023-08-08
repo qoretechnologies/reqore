@@ -59,8 +59,8 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
 
 const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   animation: 0.2s ${fadeIn} ease-out;
-  max-width: ${({ maxWidth = '80vw' }) => maxWidth};
-  max-height: ${({ maxHeight = '80vh' }) => maxHeight};
+  max-width: ${({ maxWidth }) => maxWidth};
+  max-height: ${({ maxHeight }) => maxHeight};
   z-index: 999999;
   border-radius: ${RADIUS_FROM_SIZE.normal}px;
   border: ${({ flat, noWrapper, ...rest }: any) =>

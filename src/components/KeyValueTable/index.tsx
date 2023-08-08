@@ -1,7 +1,9 @@
 import { keys } from 'lodash';
 import { useMemo } from 'react';
+import { SIZE_TO_PX } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
+import { IReqoreButtonProps } from '../Button';
 import { IReqorePanelProps } from '../Panel';
 import ReqoreTable, { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../Table';
 import { IReqoreTableValueProps, ReqoreTableValue } from '../Table/value';
@@ -21,6 +23,7 @@ export interface IReqoreKeyValueTableProps
       | 'height'
       | 'fill'
       | 'filterable'
+      | 'exportable'
       | 'filter'
       | 'onFilterChange'
       | 'filterProps'
@@ -35,6 +38,10 @@ export interface IReqoreKeyValueTableProps
   keyColumnIntent?: TReqoreIntent;
   keyAlign?: IReqoreTableColumn['align'];
   maxKeyWidth?: number;
+
+  sortable?: boolean;
+
+  rowActions?: (key: string, value: TReqoreKeyValueTableValue) => IReqoreButtonProps[];
 
   valueLabel?: string;
   valueIcon?: IReqoreIconName;
@@ -61,6 +68,8 @@ export const ReqoreKeyValueTable = ({
   keyAlign = 'left',
   valueAlign = 'left',
   defaultValueFilter,
+  sortable,
+  rowActions,
   ...rest
 }: IReqoreKeyValueTableProps) => {
   const { columns, items } = useMemo(() => {
@@ -68,6 +77,7 @@ export const ReqoreKeyValueTable = ({
       {
         dataId: 'tableKey',
         grow: 1,
+        sortable,
         width: maxKeyWidth < 150 ? maxKeyWidth : 150,
         pin: 'left',
         hideable: false,
@@ -87,6 +97,7 @@ export const ReqoreKeyValueTable = ({
       {
         dataId: 'value',
         grow: 3,
+        sortable,
         hideable: false,
         filterable: true,
         pinnable: false,
@@ -100,11 +111,33 @@ export const ReqoreKeyValueTable = ({
         },
 
         cell: {
+          tooltip: (value) => ({
+            content: JSON.stringify(value),
+            noArrow: true,
+            useTargetWidth: true,
+          }),
           content: (data) =>
             valueRenderer?.(data, ReqoreTableValue) || <ReqoreTableValue value={data.value} />,
         },
       },
     ];
+
+    if (rowActions) {
+      columns.push({
+        dataId: 'actions',
+        hideable: false,
+        pin: 'right',
+        header: {
+          icon: 'SettingsLine',
+        },
+        width: SIZE_TO_PX[rest.size || 'normal'] * 2,
+        align: 'center',
+        cell: {
+          padded: 'none',
+          actions: (data) => rowActions(data.tableKey, data.value),
+        },
+      });
+    }
 
     let items: IReqoreTableRowData[] = [];
 
@@ -123,6 +156,15 @@ export const ReqoreKeyValueTable = ({
       columns={columns}
       data={items}
       {...rest}
+      sort={
+        sortable
+          ? {
+              by: 'tableKey',
+              thenBy: 'value',
+              direction: 'asc',
+            }
+          : undefined
+      }
       className={`${rest.className || ''} reqore-key-value-table`}
     />
   );
