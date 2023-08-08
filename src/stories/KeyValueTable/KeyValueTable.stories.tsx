@@ -3,6 +3,7 @@ import ReqoreIcon from '../../components/Icon';
 import { IReqoreKeyValueTableProps, ReqoreKeyValueTable } from '../../components/KeyValueTable';
 import { IReqoreTableRowData, TReqoreTableColumnContent } from '../../components/Table';
 import { TReqorePaginationType } from '../../constants/paging';
+import { Exportable as ExportableTable } from '../Table/Table.stories';
 import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
@@ -117,6 +118,10 @@ export const Exportable: Story = {
     exportable: true,
     zoomable: true,
   },
+  play: async ({ canvasElement, ...rest }) => {
+    // @ts-ignore
+    await ExportableTable.play({ canvasElement, ...rest });
+  },
 };
 
 export const Sortable: Story = {
@@ -154,7 +159,7 @@ export const AllFiltersActive: Story = {
 
 export const WithActions: Story = {
   args: {
-    rowActions: (key, value) => [
+    rowActions: () => [
       {
         icon: 'EditLine',
       },
