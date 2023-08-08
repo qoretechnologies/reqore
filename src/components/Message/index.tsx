@@ -52,6 +52,7 @@ export interface IReqoreMessageProps
   onFinish?: () => any;
   flat?: boolean;
   hasShadow?: boolean;
+  margin?: 'top' | 'bottom' | 'both' | 'none';
 }
 
 export interface IReqoreNotificationStyle extends IReqoreMessageProps {

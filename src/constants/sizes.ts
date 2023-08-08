@@ -110,11 +110,11 @@ export const TEXT_FROM_SIZE = {
 };
 
 export const ICON_FROM_SIZE = {
-  tiny: 11,
-  small: 14,
-  normal: 17,
-  big: 20,
-  huge: 23,
+  tiny: 13,
+  small: 17,
+  normal: 20,
+  big: 26,
+  huge: 33,
 };
 
 export const PADDING_FROM_SIZE = {

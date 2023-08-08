@@ -3,6 +3,7 @@ import ReqoreIcon from '../../components/Icon';
 import { IReqoreKeyValueTableProps, ReqoreKeyValueTable } from '../../components/KeyValueTable';
 import { IReqoreTableRowData, TReqoreTableColumnContent } from '../../components/Table';
 import { TReqorePaginationType } from '../../constants/paging';
+import { Exportable as ExportableTable } from '../Table/Table.stories';
 import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 
@@ -112,6 +113,23 @@ export const Striped: Story = {
   },
 };
 
+export const Exportable: Story = {
+  args: {
+    exportable: true,
+    zoomable: true,
+  },
+  play: async ({ canvasElement, ...rest }) => {
+    // @ts-ignore
+    await ExportableTable.play({ canvasElement, ...rest });
+  },
+};
+
+export const Sortable: Story = {
+  args: {
+    sortable: true,
+  },
+};
+
 export const Filterable: Story = {
   args: {
     filterable: true,
@@ -136,6 +154,29 @@ export const AllFiltersActive: Story = {
     filterable: true,
     filter: 1,
     defaultValueFilter: 80,
+  },
+};
+
+export const WithActions: Story = {
+  args: {
+    rowActions: () => [
+      {
+        icon: 'EditLine',
+      },
+      {
+        icon: 'DeleteBinLine',
+        intent: 'danger',
+      },
+    ],
+    zoomable: true,
+  },
+};
+
+export const CustomTheme: Story = {
+  args: {
+    customTheme: { main: '#ff0000' },
+    flat: false,
+    transparent: false,
   },
 };
 

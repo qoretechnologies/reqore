@@ -61,6 +61,7 @@ export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   minimal?: boolean;
   size?: TSizes;
   asMessage?: boolean;
+  margin?: 'top' | 'bottom' | 'both' | 'none';
 }
 
 const timeoutAnimation = keyframes`
@@ -84,6 +85,15 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
   position: relative;
   transition: all 0.2s ease-out;
 
+  ${({ margin, size = 'normal' }) => css`
+    margin-top: ${margin === 'top' || margin === 'both'
+      ? `${PADDING_FROM_SIZE[size]}px`
+      : undefined};
+    margin-bottom: ${margin === 'bottom' || margin === 'both'
+      ? `${PADDING_FROM_SIZE[size]}px`
+      : undefined};
+  `};
+
   // Do not fade in the component if it's a message
   ${({ asMessage }) => {
     if (asMessage) {
@@ -95,7 +105,8 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
   }}
 
   &:not(:first-child) {
-    margin-top: ${({ asMessage }) => (asMessage ? undefined : `10px`)};
+    margin-top: ${({ asMessage, size }) =>
+      asMessage ? undefined : `${PADDING_FROM_SIZE[size]}px`};
   }
 
   ${({

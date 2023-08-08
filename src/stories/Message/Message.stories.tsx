@@ -109,6 +109,31 @@ export const CustomTheme: Story = {
   },
 };
 
+export const WithMargin: Story = {
+  render: () => (
+    <>
+      <ReqoreMessage margin='both' title='Bottom & top margin'>
+        In to am attended desirous raptures declared diverted confined at. Collected instantly
+        remaining up certainly to necessary as. Over walk dull into son boy door went new. At or
+        happiness commanded daughters as.
+      </ReqoreMessage>
+      <ReqoreMessage margin='top' title='Top margin'>
+        In to am attended desirous raptures declared diverted confined at.
+      </ReqoreMessage>
+      <ReqoreMessage margin='bottom' size='big' title='Bottom margin'>
+        In to am attended desirous raptures declared diverted confined at. Collected instantly
+        remaining up certainly to necessary as. Over walk dull into son boy door went new. At or
+        happiness commanded daughters as.
+      </ReqoreMessage>
+      <ReqoreMessage margin='bottom' size='small' title='Bottom small margin'>
+        In to am attended desirous raptures declared diverted confined at. Collected instantly
+        remaining up certainly to necessary as. Over walk dull into son boy door went new. At or
+        happiness commanded daughters as.
+      </ReqoreMessage>
+    </>
+  ),
+};
+
 export const Effect: Story = {
   render: Template,
 
