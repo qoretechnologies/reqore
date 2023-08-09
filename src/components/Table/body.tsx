@@ -81,8 +81,6 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
 
     const itemCount = useMemo(() => count(data), [data]);
 
-    console.log(height);
-
     return (
       <StyledList
         outerRef={targetRef}
