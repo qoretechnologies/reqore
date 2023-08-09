@@ -131,9 +131,6 @@ const ReqoreControlGroup = memo(
     stack,
     isInsideStackGroup,
     isInsideVerticalGroup,
-    isFirstInLastGroup,
-    isLastInFirstGroup,
-    isLastInLastGroup,
     intent,
     customTheme,
     isFirst,
@@ -430,6 +427,7 @@ const ReqoreControlGroup = memo(
           ? [
               children.slice(overflowingChildren),
               <ReqoreButton
+                key='control-group-menu'
                 icon='MenuLine'
                 customTheme={customTheme}
                 tooltip={{

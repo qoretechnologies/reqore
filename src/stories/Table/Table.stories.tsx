@@ -1,5 +1,6 @@
 import { StoryObj } from '@storybook/react';
-import { fireEvent, waitFor, within } from '@storybook/testing-library';
+import { fireEvent, userEvent, waitFor, within } from '@storybook/testing-library';
+import { noop, slice } from 'lodash';
 import { StyledEffect } from '../../components/Effect';
 import { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
 import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
@@ -372,6 +373,22 @@ export const CustomWidth: Story = {
 export const NotFlat: Story = {
   args: {
     flat: false,
+  },
+};
+
+export const NoHeight: Story = {
+  args: {
+    height: undefined,
+    data: slice(tableData.data, 0, 150),
+  },
+};
+
+export const InteractiveRows: Story = {
+  args: {
+    onRowClick: noop,
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(canvasElement.querySelectorAll('.reqore-table-row')[2]);
   },
 };
 

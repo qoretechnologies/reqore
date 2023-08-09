@@ -18,8 +18,8 @@ export interface SidebarItemProps {
   tooltip?: string;
   children?: any;
   expandedSection?: string;
-  onFavoriteClick?: Function;
-  onUnfavoriteClick?: Function;
+  onFavoriteClick?: (id: string) => void;
+  onUnfavoriteClick?: (id: string) => void;
   favoriteItems?: any;
   formatItemName?: (itemName: string) => string;
   currentPath?: string;
@@ -34,14 +34,14 @@ export interface ISidebarTooltipProps {
   isCollapsed?: boolean;
   children: any;
   itemData: IQorusSidebarItem;
-  isActive: boolean;
-  isSubcategory: boolean;
-  isSubitem: boolean;
-  onClick: any;
+  isActive?: boolean;
+  isSubcategory?: boolean;
+  isSubitem?: boolean;
+  onClick?: any;
   useNativeTitle?: boolean;
 }
 
-const SidebarItemTooltip: Function = ({
+const SidebarItemTooltip = ({
   isCollapsed,
   children,
   itemData,
@@ -55,7 +55,6 @@ const SidebarItemTooltip: Function = ({
 
   if (useNativeTitle) {
     return (
-      //@ts-ignore
       <Element
         {...itemData.props}
         onClick={(e) => {
@@ -75,7 +74,6 @@ const SidebarItemTooltip: Function = ({
   }
 
   return (
-    //@ts-ignore
     <ReqorePopover
       component={Element}
       componentProps={{
@@ -215,7 +213,6 @@ const SidebarItemWrapper = ({
     const { element: Element } = itemData;
 
     return (
-      //@ts-ignore
       <Element
         isCollapsed={isCollapsed}
         backgroundColor={theme.sidebar?.main || theme.main}

@@ -38,10 +38,11 @@ const ReqoreRadioGroup = ({
   ...rest
 }: IReqoreRadioGroupProps) => (
   <ReqoreControlGroup {...rest} vertical={vertical}>
-    {items.map(({ value, divider, ...itemRest }) =>
+    {items.map(({ value, divider, ...itemRest }, index) =>
       divider ? (
         <ReqoreMenuDivider
           {...itemRest}
+          key={index}
           size={size || itemRest.size}
           effect={{ textAlign: 'left', ...itemRest.effect }}
           margin={margin}

@@ -194,13 +194,7 @@ const usePopover = ({
         }
       }
     };
-  }, [
-    targetElement?.toString(),
-    //@ts-ignore
-    content,
-    current,
-    currentPopover,
-  ]);
+  }, [targetElement?.toString(), content, current, currentPopover]);
 
   useUnmount(() => {
     cancelTimeout();

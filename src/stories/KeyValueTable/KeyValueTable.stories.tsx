@@ -1,4 +1,6 @@
 import { StoryObj } from '@storybook/react';
+import { userEvent } from '@storybook/testing-library';
+import { noop } from 'lodash';
 import ReqoreIcon from '../../components/Icon';
 import { IReqoreKeyValueTableProps, ReqoreKeyValueTable } from '../../components/KeyValueTable';
 import { IReqoreTableRowData, TReqoreTableColumnContent } from '../../components/Table';
@@ -92,6 +94,16 @@ export const Basic: Story = {};
 export const NoLabel: Story = {
   args: {
     label: undefined,
+    onRowClick: noop,
+  },
+};
+
+export const InteractiveRows: Story = {
+  args: {
+    onRowClick: noop,
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(canvasElement.querySelectorAll('.reqore-table-row')[2]);
   },
 };
 
@@ -104,6 +116,12 @@ export const CustomWidth: Story = {
 export const NotFlat: Story = {
   args: {
     flat: false,
+  },
+};
+
+export const NoHeight: Story = {
+  args: {
+    height: undefined,
   },
 };
 

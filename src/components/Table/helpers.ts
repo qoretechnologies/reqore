@@ -249,7 +249,7 @@ export const prepareColumns = (
       };
     }
 
-    let newWidth = calculateMinimumCellWidth(
+    const newWidth = calculateMinimumCellWidth(
       column.width || 50,
       size,
       column.header?.icon,

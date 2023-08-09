@@ -1,3 +1,4 @@
+import { omit } from 'lodash';
 import { rgba } from 'polished';
 import React, { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
@@ -177,7 +178,6 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       flat,
       rounded,
       minimal,
-      children,
       readOnly,
       customTheme,
       intent,
@@ -216,7 +216,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           </StyledIconWrapper>
         )}
         <StyledInput
-          {...rest}
+          {...omit(rest, ['children'])}
           effect={{
             interactive: !rest?.disabled && !readOnly,
             ...rest?.effect,

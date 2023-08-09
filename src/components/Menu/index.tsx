@@ -84,8 +84,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
         >
           {React.Children.map(children, (child) => {
             return child
-              ? // @ts-ignore
-                React.cloneElement(child, {
+              ? React.cloneElement(child, {
                   _insidePopover,
                   _popoverId,
                   customTheme: child.props?.customTheme || theme,

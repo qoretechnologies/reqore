@@ -9,6 +9,7 @@ import ReqoreMenu from '../Menu';
 import ReqoreMenuDivider from '../Menu/divider';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
 import { ReqoreVerticalSpacer } from '../Spacer';
+import { IReqoreDropdownDividerProps } from './item';
 
 export type TDropdownItemOnClick = (item: IReqoreDropdownItem) => void;
 export interface IReqoreDropdownItem
@@ -133,7 +134,11 @@ const ReqoreDropdownList = memo(
               {finalItems.map(
                 ({ onClick, dividerAlign, divider, ...item }: IReqoreDropdownItem, index: number) =>
                   divider ? (
-                    <ReqoreMenuDivider key={index} {...item} align={dividerAlign} />
+                    <ReqoreMenuDivider
+                      key={index}
+                      {...(item as unknown as IReqoreDropdownDividerProps)}
+                      align={dividerAlign}
+                    />
                   ) : (
                     <ReqoreMenuItem
                       key={index}
