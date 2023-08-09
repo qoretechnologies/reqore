@@ -30,6 +30,7 @@ export interface IReqoreKeyValueTableProps
       | 'zoomable'
       | 'wrapperSize'
       | 'paging'
+      | 'onRowClick'
     > {
   data: { [key: string | number]: TReqoreKeyValueTableValue };
 
@@ -115,6 +116,7 @@ export const ReqoreKeyValueTable = ({
             content: JSON.stringify(value),
             noArrow: true,
             useTargetWidth: true,
+            delay: 400,
           }),
           content: (data) =>
             valueRenderer?.(data, ReqoreTableValue) || <ReqoreTableValue value={data.value} />,

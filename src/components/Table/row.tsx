@@ -1,6 +1,6 @@
 /* @flow */
 import { isFunction, isString } from 'lodash';
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
 import { ReqoreButton, ReqoreControlGroup } from '../..';
@@ -28,6 +28,8 @@ export interface IReqoreTableRowOptions {
   flat?: boolean;
   cellComponent?: IReqoreCustomTableBodyCell;
   rowComponent?: IReqoreCustomTableRow;
+  setHoveredRow?: (index: number) => void;
+  hoveredRow?: number;
 }
 export interface IReqoreCustomTableRowProps extends IReqoreTableRowOptions {
   style?: React.CSSProperties;
@@ -90,11 +92,12 @@ const ReqoreTableRow = ({
     flat,
     cellComponent,
     rowComponent,
+    setHoveredRow,
+    hoveredRow,
   },
   style,
   index,
 }: IReqoreTableRowProps) => {
-  const [isHovered, setIsHovered] = useState<boolean>(false);
   const isSelected =
     data[index]._selectId &&
     selected.find((selectId) => selectId.toString() === data[index]._selectId.toString());
@@ -218,7 +221,7 @@ const ReqoreTableRow = ({
               flat,
               even: index % 2 === 0 ? true : false,
               intent: cell?.intent || data[index]._intent || intent,
-              hovered: isHovered,
+              hovered: hoveredRow === index,
               interactive: !!cell?.onClick || !!onRowClick,
               interactiveCell: !!cell?.onClick,
               onClick: (e: React.MouseEvent<HTMLDivElement>) => {
@@ -246,15 +249,15 @@ const ReqoreTableRow = ({
     <RowComponent
       style={style}
       className='reqore-table-row'
-      interactive={!!onRowClick}
+      interactive={!!onRowClick && !data[index]._disabled}
       onMouseEnter={() => {
         // Set hovered is this row is interactive
         if (onRowClick || (selectable && data[index]._selectId && !data[index]._disabled)) {
-          setIsHovered(true);
+          setHoveredRow(index);
         }
       }}
       onMouseLeave={() => {
-        setIsHovered(false);
+        setHoveredRow(undefined);
       }}
     >
       {renderCells(columns, data)}

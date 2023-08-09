@@ -180,7 +180,7 @@ const StyledTablesWrapper = styled.div`
 
 const ReqoreTable = ({
   className,
-  height = 300,
+  height,
   width,
   columns,
   data = [],
@@ -217,6 +217,7 @@ const ReqoreTable = ({
   const mainTableRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
 
+  const [hoveredRow, setHoveredRow] = useState<number>();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort | undefined>(fixSort(sort));
@@ -669,6 +670,8 @@ const ReqoreTable = ({
           <ReqoreTableBody
             ref={refs[type]}
             refs={refs}
+            hoveredRow={hoveredRow}
+            setHoveredRow={setHoveredRow}
             type={type}
             data={items}
             columns={tableColumns}

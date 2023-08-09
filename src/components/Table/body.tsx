@@ -17,6 +17,8 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
   };
   type: 'left' | 'right' | 'main';
   onScrollChange?: (isScrolled: boolean) => void;
+  setHoveredRow?: (index: number) => void;
+  hoveredRow?: number;
 }
 
 const StyledList = styled(List)`
@@ -85,7 +87,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
         itemCount={itemCount}
         // If the defined height is less than the count of items' height
         // use that height instead
-        height={height > itemCount * rowHeight ? itemCount * rowHeight : height}
+        height={!height || height > itemCount * rowHeight ? itemCount * rowHeight : height}
         className='reqore-table-body'
         itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
         itemData={{
