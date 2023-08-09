@@ -51,9 +51,7 @@ const Popover = memo(
     }
 
     return (
-      // @ts-ignore
       <StyledPopover
-        // @ts-ignore
         as={wrapperTag}
         className='reqore-popover-wrapper'
         ref={setRef}

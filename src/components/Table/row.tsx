@@ -148,12 +148,12 @@ const ReqoreTableRow = ({
 
     if (isString(content)) {
       // Separate the content string by colon
-      let [type, intentOrColor] = content.split(':');
+      const [type, intentOrColor] = content.split(':');
       // Check if the intent starts with hash for tags
-      let intent: TReqoreIntent = intentOrColor?.startsWith('#')
+      const intent: TReqoreIntent = intentOrColor?.startsWith('#')
         ? undefined
         : (intentOrColor as TReqoreIntent);
-      let color: TReqoreHexColor =
+      const color: TReqoreHexColor =
         intentOrColor?.startsWith('#') && type === 'tag'
           ? (intentOrColor as TReqoreHexColor)
           : undefined;

@@ -1,47 +1,42 @@
-import { reduce, size } from "lodash";
-import {
-  IQorusSidebarCustomItem,
-  IQorusSidebarItems,
-} from "../components/Sidebar";
+import { reduce, size } from 'lodash';
+import { IQorusSidebarCustomItem, IQorusSidebarItems } from '../components/Sidebar';
 
-export const transformMenu: Function = (
+export const transformMenu = (
   menu: IQorusSidebarItems,
   bookmarks: string[],
   customItems?: IQorusSidebarCustomItem[]
-): Object => {
+) => {
   let newMenu: IQorusSidebarItems = { ...menu };
   let _qorusCustomElements;
   let _qorusBookmarks;
 
   if (size(bookmarks)) {
     _qorusBookmarks = {
-      title: "Bookmarks",
+      title: 'Bookmarks',
       items: [],
     };
 
     newMenu = reduce(
       newMenu,
       (cur, menuSection, name: string) => {
-        let newSection = { ...menuSection };
+        const newSection = { ...menuSection };
 
         newSection.items = [...newSection.items]
           .map((newSectionItem) => {
             const copySectionItem = { ...newSectionItem };
 
             if (copySectionItem.submenu) {
-              copySectionItem.submenu = copySectionItem.submenu.filter(
-                (submenuItem) => {
-                  const isItemInSubmenu = bookmarks.find(
-                    (favoriteItem) => favoriteItem === submenuItem.id
-                  );
+              copySectionItem.submenu = copySectionItem.submenu.filter((submenuItem) => {
+                const isItemInSubmenu = bookmarks.find(
+                  (favoriteItem) => favoriteItem === submenuItem.id
+                );
 
-                  if (isItemInSubmenu) {
-                    _qorusBookmarks.items.push(submenuItem);
-                  }
-
-                  return !isItemInSubmenu;
+                if (isItemInSubmenu) {
+                  _qorusBookmarks.items.push(submenuItem);
                 }
-              );
+
+                return !isItemInSubmenu;
+              });
 
               if (size(copySectionItem.submenu)) {
                 return copySectionItem;
@@ -49,11 +44,7 @@ export const transformMenu: Function = (
                 return undefined;
               }
             } else {
-              if (
-                !bookmarks.find(
-                  (favoriteItem) => favoriteItem === copySectionItem.id
-                )
-              ) {
+              if (!bookmarks.find((favoriteItem) => favoriteItem === copySectionItem.id)) {
                 return copySectionItem;
               } else {
                 _qorusBookmarks.items.push(copySectionItem);
@@ -82,17 +73,10 @@ export const transformMenu: Function = (
   return newMenu;
 };
 
-export const isActive = (
-  to: string,
-  currentPath: string,
-  exact?: boolean
-): boolean => (exact ? currentPath === to : currentPath.startsWith(to));
+export const isActive = (to: string, currentPath: string, exact?: boolean): boolean =>
+  exact ? currentPath === to : currentPath.startsWith(to);
 
-export const isActiveMulti: Function = (
-  to: string[],
-  currentPath: string,
-  exact?: boolean
-): boolean => {
+export const isActiveMulti = (to: string[], currentPath: string, exact?: boolean): boolean => {
   let active: boolean = false;
 
   to.forEach((path: string) => {

@@ -7,13 +7,8 @@ import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 
-// @ts-ignore
-export interface IReqoreMenuItemProps
-  extends IReqoreComponent,
-    React.HTMLAttributes<HTMLElement>,
-    IReqoreButtonProps {
+export interface IReqoreMenuItemProps extends IReqoreComponent, IReqoreButtonProps {
   label?: string | number;
-  as?: JSX.Element | React.ElementType | never;
   selected?: boolean;
   itemId?: string;
   onRightIconClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
@@ -93,7 +88,6 @@ const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
     return (
       <ReqoreControlGroup stack={!!onRightIconClick} fluid fill>
         <ReqoreButton
-          //@ts-ignore
           as={as}
           {...rest}
           flat={flat}

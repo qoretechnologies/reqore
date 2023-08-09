@@ -27,7 +27,7 @@ export const useReqoreTheme = (
       return theme;
     }
 
-    let _customTheme: IReqoreCustomTheme = cloneDeep(customTheme);
+    const _customTheme: IReqoreCustomTheme = cloneDeep(customTheme);
 
     if (_customTheme.main) {
       _customTheme.main = getColorFromMaybeString(theme, customTheme.main);

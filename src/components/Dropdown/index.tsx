@@ -13,7 +13,10 @@ import ReqoreDropdownList, {
   TDropdownItemOnClick,
 } from './list';
 
-export interface IReqoreDropdownProps extends Partial<Omit<IPopoverOptions, 'openOnMount'>> {
+export interface IReqoreDropdownProps
+  extends Partial<
+    Omit<IPopoverOptions, 'openOnMount' | 'show' | 'targetElement' | 'wrapperProps'>
+  > {
   items?: IReqoreDropdownItem[];
   multiSelect?: boolean;
   buttonStyle?: React.CSSProperties;
@@ -50,7 +53,7 @@ const ReqoreDropdownListWrapper = ({
   );
 };
 
-function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
+function ReqoreDropdown<T = IReqoreButtonProps>({
   items,
   component,
   label,
@@ -72,21 +75,17 @@ function ReqoreDropdown<T extends unknown = IReqoreButtonProps>({
   closeOnOutsideClick,
   blur,
   closeOnAnyClick,
-  content,
   delay,
   maxHeight,
   maxWidth,
   noArrow = true,
   transparent,
-  show,
-  targetElement,
   useTargetWidth,
   listWidth,
   listHeight,
   passPopoverData,
   inputProps,
   scrollToSelected,
-  wrapperProps,
   paging,
   ...rest
 }: IReqoreDropdownProps & T) {

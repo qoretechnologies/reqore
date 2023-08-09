@@ -13,7 +13,7 @@ import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Tab
 import ReqoreTag from '../Tag';
 
 export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
-  data: Object | Array<any>;
+  data: Record<string, unknown> | Array<any>;
   mode?: 'tree' | 'copy';
   expanded?: boolean;
   showTypes?: boolean;
@@ -36,7 +36,6 @@ export const StyledTreeLabel = styled(ReqoreMessage)`
 
 export const ReqoreTree = ({
   data,
-  mode = 'tree',
   size = 'normal',
   expanded,
   showTypes,
@@ -152,21 +151,6 @@ export const ReqoreTree = ({
         </div>
       );
     });
-  };
-
-  const renderText = (data, tabs = '') => {
-    let text = '';
-
-    Object.keys(data).forEach((key) => {
-      if (typeof data[key] !== 'object' || !data[key]) {
-        text += `${tabs}${key}: ${data[key]}\r\n`;
-      } else {
-        text += `${tabs}${key}:\r\n`;
-        text += renderText(data[key], `${tabs}\t`);
-      }
-    });
-
-    return text;
   };
 
   const actions = useMemo(() => {

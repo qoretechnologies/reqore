@@ -177,7 +177,6 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       flat,
       rounded,
       minimal,
-      children,
       readOnly,
       customTheme,
       intent,

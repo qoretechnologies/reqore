@@ -34,10 +34,10 @@ export interface IQorusSidebarItem {
   activePaths?: string[];
   submenu?: IQorusSidebarItem[];
   id: string;
-  as?: JSX.Element | string;
+  as?: React.ElementType | string;
   icon?: IReqoreIconName;
   exact?: boolean;
-  element?: JSX.Element;
+  element?: React.ElementType;
 }
 
 export interface IQorusSidebarProps {

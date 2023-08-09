@@ -20,7 +20,6 @@ const ReqoreBreadcrumbsItem = forwardRef<HTMLButtonElement, IReqoreBreadcrumbIte
 
     return (
       <ReqoreButton
-        // @ts-ignore
         as={as}
         ref={ref}
         className='reqore-breadcrumbs-item'

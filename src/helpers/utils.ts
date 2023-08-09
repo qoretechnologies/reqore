@@ -13,7 +13,7 @@ import { NUMBER_TO_SIZE, SIZES, SIZE_TO_NUMBER, TSizes } from '../constants/size
 
 export const sleep = async (ms: number) => await new Promise((r) => setTimeout(r, ms));
 
-export const getTypeFromValue: Function = (item: any): string => {
+export const getTypeFromValue = (item: any): string => {
   if (isBoolean(item)) {
     return 'boolean';
   }

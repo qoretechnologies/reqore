@@ -81,13 +81,19 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
 
     const itemCount = useMemo(() => count(data), [data]);
 
+    console.log(height);
+
     return (
       <StyledList
         outerRef={targetRef}
         itemCount={itemCount}
         // If the defined height is less than the count of items' height
         // use that height instead
-        height={!height || height > itemCount * rowHeight ? itemCount * rowHeight : height}
+        height={
+          (!height && height !== 0) || height > itemCount * rowHeight
+            ? itemCount * rowHeight
+            : height
+        }
         className='reqore-table-body'
         itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
         itemData={{

@@ -50,7 +50,6 @@ export const StyledPagesWrapper = styled(ReqoreControlGroup)`
 `;
 
 function Pagination<T>({
-  allPages,
   back,
   first,
   currentPage,

@@ -74,7 +74,7 @@ export const ReqoreKeyValueTable = ({
   ...rest
 }: IReqoreKeyValueTableProps) => {
   const { columns, items } = useMemo(() => {
-    let columns: IReqoreTableColumn[] = [
+    const columns: IReqoreTableColumn[] = [
       {
         dataId: 'tableKey',
         grow: 1,
@@ -141,7 +141,7 @@ export const ReqoreKeyValueTable = ({
       });
     }
 
-    let items: IReqoreTableRowData[] = [];
+    const items: IReqoreTableRowData[] = [];
 
     keys(data).map((key) => {
       items.push({

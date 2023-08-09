@@ -66,7 +66,7 @@ const StyledPortal = styled.div`
   `}
 `;
 
-const ReqorePortal = forwardRef<HTMLDivElement, {}>((_props, ref) => {
+const ReqorePortal = forwardRef<HTMLDivElement, object>((_props, ref) => {
   return (
     <ReqoreThemeProvider>
       <StyledPortal id='reqore-portal' ref={ref} />

@@ -23,7 +23,7 @@ export function useWhyDidYouUpdate(name, props) {
       });
       // If changesObj not empty then output to console
       if (Object.keys(changesObj).length) {
-        console.log('[why-did-you-update]', name, changesObj);
+        console.warn('[why-did-you-update]', name, changesObj);
       }
     }
     // Finally update previousProps with current props for next hook call

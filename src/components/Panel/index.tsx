@@ -473,18 +473,19 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           return null;
         }
 
-        let {
+        const {
           id,
           actions,
           label,
           intent,
-          className,
           as: CustomElement,
           props = {},
           group,
           show,
           ...rest
         }: IReqorePanelAction = action;
+
+        let { className }: IReqorePanelAction = action;
 
         // If the show prop is 'hover', add the hidden class to the action
         className = classNames(className, show === 'hover' ? 'reqore-panel-action-hidden' : '');

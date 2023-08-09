@@ -1,4 +1,4 @@
-import { size } from 'lodash';
+import { omit, size } from 'lodash';
 import styled from 'styled-components';
 import { ReqoreButton, ReqoreColumn, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { TReqoreIntent } from '../../constants/theme';
@@ -96,10 +96,11 @@ export const ReqoreComment = ({
             {size(actions) ? (
               <ReqoreColumn justifyContent='flex-end'>
                 <ReqoreControlGroup minimal size='small'>
-                  {actions.map(({ label, actions, show, ...rest }) =>
+                  {actions.map(({ label, actions, ...rest }, index) =>
                     size(actions) ? (
                       <ReqoreDropdown
-                        {...rest}
+                        {...omit(rest, ['show'])}
+                        key={index}
                         label={label}
                         componentProps={{
                           minimal: true,
@@ -111,7 +112,8 @@ export const ReqoreComment = ({
                       />
                     ) : (
                       <ReqoreButton
-                        {...rest}
+                        {...omit(rest, ['show'])}
+                        key={index}
                         onClick={
                           rest.onClick
                             ? (e: React.MouseEvent<HTMLButtonElement>) => {

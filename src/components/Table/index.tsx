@@ -250,7 +250,7 @@ const ReqoreTable = ({
   }, [_selectedQuant]);
 
   const finalColumns = useMemo(() => {
-    let fullColumns = [..._internalColumns];
+    const fullColumns = [..._internalColumns];
 
     if (selectable) {
       fullColumns.unshift({

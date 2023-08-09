@@ -1,3 +1,4 @@
+import { omit } from 'lodash';
 import { forwardRef, memo } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
@@ -129,7 +130,6 @@ const ReqoreTabsListItem = memo(
         className,
         flat = true,
         wrapTabNames,
-        id,
         padded,
         ...rest
       }: IReqoreTabListItemProps,
@@ -168,7 +168,7 @@ const ReqoreTabsListItem = memo(
                 tooltip={tooltip}
                 customTheme={theme}
                 className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
-                {...rest}
+                {...omit(rest, ['id'])}
               >
                 {label}
               </ReqoreButton>
