@@ -18,8 +18,9 @@ import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
-import { ReqoreExportModal } from '../ExportModal';
+import { IReqoreExportModalProps, ReqoreExportModal } from '../ExportModal';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
+import { TReqoreKeyValueTableExportMapper } from '../KeyValueTable';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader, { IReqoreCustomHeaderCellComponent } from './header';
@@ -43,7 +44,7 @@ import {
 import { IReqoreTableRowOptions } from './row';
 
 export type TReqoreTableColumnContent =
-  | React.FC<{ [key: string]: any; _selectId?: string | number; _size: TSizes; _dataId: string }>
+  | ((data: IReqoreTableRowData) => any)
   | 'time-ago'
   | 'tag'
   | `tag:${TReqoreIntent}`
@@ -51,7 +52,9 @@ export type TReqoreTableColumnContent =
   | 'title'
   | `title:${TReqoreIntent}`
   | 'text'
-  | `text:${TReqoreIntent}`;
+  | `text:${TReqoreIntent}`
+  | string
+  | number;
 
 export interface IReqoreTableColumn extends IReqoreIntent {
   dataId: string;
@@ -136,6 +139,10 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
   rowComponent?: IReqoreTableRowOptions['rowComponent'];
   bodyCellComponent?: IReqoreTableRowOptions['cellComponent'];
+
+  exportMapper?:
+    | TReqoreKeyValueTableExportMapper
+    | ((data: unknown[]) => IReqoreExportModalProps['data']);
 }
 
 export interface IReqoreTableStyle {
@@ -178,6 +185,26 @@ const StyledTablesWrapper = styled.div`
   overflow: hidden;
 `;
 
+export interface IReqoreTableExportModalProps {
+  data: unknown;
+  onClose: () => void;
+  exportMapper?: IReqoreTableProps['exportMapper'];
+}
+
+const ReqoreTableExportModal = ({ data, onClose, exportMapper }) => {
+  const fixedData = useMemo(() => {
+    let _fixedData = removeInternalData(data);
+
+    if (exportMapper) {
+      _fixedData = exportMapper(_fixedData);
+    }
+
+    return _fixedData;
+  }, [data, exportMapper]);
+
+  return <ReqoreExportModal data={fixedData} onClose={onClose} />;
+};
+
 const ReqoreTable = ({
   className,
   height,
@@ -210,6 +237,7 @@ const ReqoreTable = ({
   onSelectClick,
   paging,
   exportable,
+  exportMapper,
   ...rest
 }: IReqoreTableProps) => {
   const leftTableRef = useRef<HTMLDivElement>(null);
@@ -734,11 +762,10 @@ const ReqoreTable = ({
             {(pagedData) => (
               <>
                 {showExportModal && (
-                  <ReqoreExportModal
-                    data={removeInternalData(
-                      showExportModal === 'current' ? pagedData : transformedData
-                    )}
+                  <ReqoreTableExportModal
+                    data={showExportModal === 'current' ? pagedData : transformedData}
                     onClose={() => setShowExportModal(undefined)}
+                    exportMapper={exportMapper}
                   />
                 )}
                 <StyledTablesWrapper className='reqore-table-wrapper'>

@@ -57,7 +57,12 @@ export const getLineCount = (value: string | null): number => {
 // to a CSV string
 export const convertToCSV = (objArray: any[]): string => {
   const header = Object.keys(objArray[0]).join(',');
-  const rows = objArray.map((obj) => Object.values(obj).join(','));
+  const rows = objArray.map((obj) =>
+    Object.values(obj)
+      .map((value) => JSON.stringify(value))
+      .join(',')
+  );
+
   return [header, ...rows].join('\n');
 };
 

@@ -7,7 +7,7 @@ import ReqoreTabs, { IReqoreTabsProps } from '../Tabs';
 import ReqoreTabsContent from '../Tabs/content';
 
 export interface IReqoreExportModalProps extends IReqoreModalProps {
-  data: { [key: string]: any } | any[];
+  data: { [key: string]: unknown } | unknown[];
   sendNotificationOnCopy?: boolean;
   tabsOptions?: Omit<IReqoreTabsProps, 'tabs'>;
 }
