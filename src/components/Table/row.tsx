@@ -179,7 +179,7 @@ const ReqoreTableRow = ({
             </ReqoreP>
           );
         default:
-          return <ReqoreP className='reqore-table-text'>{data[dataId]}</ReqoreP>;
+          return <ReqoreP className='reqore-table-text'>{content}</ReqoreP>;
       }
     }
 

@@ -1,5 +1,5 @@
 import { StoryObj } from '@storybook/react';
-import { userEvent } from '@storybook/testing-library';
+import { fireEvent, userEvent, waitFor, within } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import ReqoreIcon from '../../components/Icon';
 import { IReqoreKeyValueTableProps, ReqoreKeyValueTable } from '../../components/KeyValueTable';
@@ -263,6 +263,12 @@ export const CustomPaging: Story = {
   },
 };
 
+export const CustomKeyRenderer: Story = {
+  args: {
+    keyRenderer: (label) => `${label}_custom`,
+  },
+};
+
 export const CustomValueRenderer: Story = {
   args: {
     valueRenderer: ({ value, tableKey }, Component): TReqoreTableColumnContent | JSX.Element => {
@@ -279,5 +285,27 @@ export const CustomValueRenderer: Story = {
           return undefined;
       }
     },
+  },
+};
+
+export const CustomExportMapper: Story = {
+  args: {
+    exportable: true,
+    exportMapper: (data) => {
+      return data.reduce(
+        (acc, row) => ({
+          ...acc,
+          [row.tableKey.toString()]: row.value,
+        }),
+        {}
+      );
+    },
+  },
+  play: async ({ canvasElement, ...rest }) => {
+    const canvas = within(canvasElement);
+    // @ts-expect-error
+    await ExportableTable.play({ canvasElement, ...rest });
+    await fireEvent.click(canvas.getAllByText('Export full data')[0]);
+    await waitFor(() => canvas.findAllByText('Export data'), { timeout: 5000 });
   },
 };

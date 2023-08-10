@@ -4,8 +4,14 @@ import { SIZE_TO_PX } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
+import { IReqoreExportModalProps } from '../ExportModal';
 import { IReqorePanelProps } from '../Panel';
-import ReqoreTable, { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../Table';
+import ReqoreTable, {
+  IReqoreTableColumn,
+  IReqoreTableProps,
+  IReqoreTableRowData,
+  TReqoreTableColumnContent,
+} from '../Table';
 import { IReqoreTableValueProps, ReqoreTableValue } from '../Table/value';
 
 export type TReqoreKeyValueTablePrimitiveValue = string | number | boolean | null | undefined;
@@ -13,6 +19,9 @@ export type TReqoreKeyValueTableValue =
   | TReqoreKeyValueTablePrimitiveValue
   | TReqoreKeyValueTablePrimitiveValue[]
   | { [key: string]: TReqoreKeyValueTableValue };
+export type TReqoreKeyValueTableExportMapper = (
+  data: { tableKey: TReqoreTableColumnContent; value: TReqoreTableColumnContent }[]
+) => IReqoreExportModalProps['data'];
 
 export interface IReqoreKeyValueTableProps
   extends IReqorePanelProps,
@@ -50,20 +59,25 @@ export interface IReqoreKeyValueTableProps
   minValueWidth?: number;
   defaultValueFilter?: string | number;
 
+  keyRenderer?: (keyLabel: string | number) => string | number;
+
   valueRenderer?: (
     data: IReqoreTableRowData,
     defaultComponent?: ({ value }: IReqoreTableValueProps) => any
   ) => any;
+
+  exportMapper?: TReqoreKeyValueTableExportMapper;
 }
 
 export const ReqoreKeyValueTable = ({
   data,
   keyLabel,
   keyIcon,
+  keyRenderer,
   valueLabel,
   valueIcon,
   valueRenderer,
-  keyColumnIntent = 'muted',
+  keyColumnIntent,
   minValueWidth = 100,
   maxKeyWidth = 200,
   keyAlign = 'left',
@@ -92,7 +106,7 @@ export const ReqoreKeyValueTable = ({
         },
 
         cell: {
-          content: 'title',
+          content: keyRenderer ? ({ tableKey }) => keyRenderer(tableKey) : 'title',
         },
       },
       {
