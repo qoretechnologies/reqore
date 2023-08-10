@@ -44,7 +44,7 @@ import {
 import { IReqoreTableRowOptions } from './row';
 
 export type TReqoreTableColumnContent =
-  | React.FC<{ [key: string]: any; _selectId?: string | number; _size: TSizes; _dataId: string }>
+  | ((data: IReqoreTableRowData) => any)
   | 'time-ago'
   | 'tag'
   | `tag:${TReqoreIntent}`
@@ -52,7 +52,9 @@ export type TReqoreTableColumnContent =
   | 'title'
   | `title:${TReqoreIntent}`
   | 'text'
-  | `text:${TReqoreIntent}`;
+  | `text:${TReqoreIntent}`
+  | string
+  | number;
 
 export interface IReqoreTableColumn extends IReqoreIntent {
   dataId: string;
