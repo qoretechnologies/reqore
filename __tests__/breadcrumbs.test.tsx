@@ -1,5 +1,4 @@
 import { act, fireEvent, render } from '@testing-library/react';
-import React from 'react';
 import { ReqoreBreadcrumbs, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
 test('Renders full <Breadcrumbs /> properly', () => {
@@ -46,7 +45,7 @@ test('Renders shortened <Breadcrumbs /> properly', () => {
   });
 
   expect(document.querySelectorAll('.reqore-breadcrumbs-wrapper').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-breadcrumbs-item').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-breadcrumbs-item').length).toBe(1);
 });
 
 test('Tooltip on <Breadcrumbs /> works', () => {

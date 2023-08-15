@@ -37,6 +37,7 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import ReqoreBreadcrumbs, { IReqoreBreadcrumbsProps } from '../Breadcrumbs';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { StyledCollectionItemContent } from '../Collection/item';
 import ReqoreControlGroup from '../ControlGroup';
@@ -90,6 +91,8 @@ export interface IReqorePanelProps
   isCollapsed?: boolean;
   collapseButtonProps?: IReqoreButtonProps;
   disabled?: boolean;
+
+  breadcrumbs?: IReqoreBreadcrumbsProps;
 
   onClose?: () => void;
   closeButtonProps?: IReqoreButtonProps;
@@ -349,6 +352,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       getContentRef,
       headerProps = {},
       disabled,
+      breadcrumbs,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -376,6 +380,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const hasTitleBar: boolean = useMemo(
       () =>
         !!label ||
+        !!breadcrumbs ||
         collapsible ||
         !!onClose ||
         !!size(actions.filter(isActionShown)) ||
@@ -386,8 +391,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     // Return true if the card has a title bar, otherwise return false.
     const hasTitleHeader: boolean = useMemo(
-      () => !!label || !!badge || !!icon,
-      [label, icon, badge]
+      () => !!label || !!badge || !!icon || !!breadcrumbs,
+      [label, icon, badge, breadcrumbs]
     );
 
     const isSmall = useMemo(
@@ -649,7 +654,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           >
             {hasTitleHeader && (
               <StyledPanelTitleHeader>
-                {icon || iconImage || label ? (
+                {breadcrumbs ? (
+                  <ReqoreBreadcrumbs
+                    {...breadcrumbs}
+                    padded={false}
+                    margin='none'
+                    flat
+                    responsive={false}
+                  />
+                ) : icon || iconImage || label ? (
                   <StyledPanelTitleHeaderContent
                     size={panelSize}
                     {...headerProps}
