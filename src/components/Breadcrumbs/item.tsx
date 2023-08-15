@@ -28,6 +28,12 @@ const ReqoreBreadcrumbsItem = forwardRef<HTMLButtonElement, IReqoreBreadcrumbIte
         flat
         {...rest}
         {...props}
+        onClick={(e) => {
+          e.persist();
+          e.stopPropagation();
+
+          rest.onClick?.(e);
+        }}
       >
         {label}
       </ReqoreButton>

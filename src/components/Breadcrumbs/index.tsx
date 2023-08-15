@@ -2,12 +2,11 @@ import { isArray } from 'lodash';
 import React, { useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqorePopover } from '../..';
+import { ReqoreDropdown } from '../..';
 import {
   ICON_FROM_SIZE,
   MARGIN_FROM_SIZE,
   PADDING_FROM_SIZE,
-  TABS_SIZE_TO_PX,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -16,13 +15,12 @@ import { changeLightness, getReadableColor, getReadableColorFrom } from '../../h
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreButtonProps } from '../Button';
+import { IReqoreDropdownItem } from '../Dropdown/list';
 import ReqoreIcon from '../Icon';
-import ReqoreMenu from '../Menu';
-import ReqoreMenuItem from '../Menu/item';
 import { IReqoreTabsListItem } from '../Tabs';
 import { StyledTabListItem } from '../Tabs/item';
 import ReqoreTabsList, { StyledReqoreTabsList, getTabsLength } from '../Tabs/list';
-import ReqoreBreadcrumbsItem, { IReqoreBreadcrumbItemProps } from './item';
+import ReqoreBreadcrumbsItem from './item';
 
 export interface IReqoreBreadcrumbItemTabs {
   tabs: IReqoreTabsListItem[];
@@ -46,6 +44,11 @@ export interface IReqoreBreadcrumbsProps extends React.HTMLAttributes<HTMLDivEle
   customTheme?: IReqoreBreadcrumbsTheme;
   size?: TSizes;
   flat?: boolean;
+
+  responsive?: boolean;
+
+  padded?: boolean;
+  margin?: 'top' | 'bottom' | 'both' | 'none';
 }
 
 interface IStyledBreadcrumbs extends Omit<IReqoreBreadcrumbsProps, 'items'> {
@@ -53,12 +56,12 @@ interface IStyledBreadcrumbs extends Omit<IReqoreBreadcrumbsProps, 'items'> {
 }
 
 const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
-  ${({ theme, size, flat }: IStyledBreadcrumbs) => css`
-    width: 100%;
-    min-height: ${TABS_SIZE_TO_PX[size!]}px;
-    margin: ${MARGIN_FROM_SIZE[size!]}px 0;
+  ${({ theme, size, flat, padded = true, margin = 'both', responsive }: IStyledBreadcrumbs) => css`
+    width: ${responsive ? '100%' : undefined};
+    margin-top: ${margin === 'both' || margin === 'top' ? MARGIN_FROM_SIZE[size!] : 0}px;
+    margin-bottom: $ ${margin === 'both' || margin === 'bottom' ? MARGIN_FROM_SIZE[size!] : 0}px;
     display: flex;
-    padding: 0 ${PADDING_FROM_SIZE[size!]}px;
+    padding: 0 ${padded ? PADDING_FROM_SIZE[size!] : 0}px;
     justify-content: space-between;
     border-bottom: ${flat ? undefined : `1px solid ${changeLightness(theme.main, 0.05)}`};
     background-color: ${({ theme }: { theme: IReqoreTheme }) =>
@@ -166,13 +169,14 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   customTheme,
   flat,
   size = 'normal',
+  responsive = true,
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
   const theme = useReqoreTheme('breadcrumbs', customTheme);
   const transformedItems = useMemo(
-    () => getTransformedItems(items, _testWidth || width, size),
-    [items, width, _testWidth]
+    () => (responsive ? getTransformedItems(items, _testWidth || width, size) : items),
+    [items, width, _testWidth, size]
   );
 
   const renderItem = (item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[], index: number) => {
@@ -180,36 +184,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       return (
         <React.Fragment key={index}>
           <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
-          <ReqorePopover
-            key={index}
-            component={ReqoreBreadcrumbsItem}
-            isReqoreComponent
-            componentProps={
-              {
-                icon: 'MoreFill',
-                interactive: true,
-              } as IReqoreBreadcrumbItemProps
-            }
+          <ReqoreDropdown
+            key={`dropdown-${index}`}
+            icon='MoreFill'
             handler='hoverStay'
             delay={500}
-            content={
-              <ReqoreMenu>
-                {item.map(({ icon, label, as, tooltip, props }) => (
-                  <ReqoreMenuItem
-                    {...props}
-                    icon={icon}
-                    as={as}
-                    onClick={(event) => {
-                      props?.onClick?.(event);
-                    }}
-                    tooltip={tooltip}
-                    key={index + (label || icon || '')}
-                  >
-                    {label}
-                  </ReqoreMenuItem>
-                ))}
-              </ReqoreMenu>
-            }
+            items={item as IReqoreDropdownItem[]}
           />
         </React.Fragment>
       );
@@ -250,6 +230,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       flat={flat}
       theme={theme}
       size={size}
+      responsive={responsive}
     >
       <div key='reqore-breadcrumbs-left-wrapper'>
         {transformedItems.map(

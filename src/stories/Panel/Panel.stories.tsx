@@ -526,6 +526,61 @@ export const ContentSize: Story = {
   },
 };
 
+export const WithBreadcrumbs: Story = {
+  render: Template,
+
+  args: {
+    breadcrumbs: {
+      items: [
+        {
+          label: 'Home',
+          icon: 'HomeLine',
+        },
+        {
+          label: 'Panel Item',
+          icon: 'GitRepositoryCommitsLine',
+        },
+      ],
+    },
+  },
+};
+
+export const WithBreadcrumbsAndTabs: Story = {
+  render: Template,
+
+  args: {
+    breadcrumbs: {
+      items: [
+        {
+          label: 'Home',
+          icon: 'HomeLine',
+        },
+        {
+          label: 'Panel Item',
+          icon: 'GitRepositoryCommitsLine',
+        },
+        {
+          withTabs: {
+            activeTab: 'tab1',
+            onTabChange: noop,
+            tabs: [
+              {
+                label: 'Tab 1',
+                active: true,
+                id: 'tab1',
+              },
+              {
+                label: 'Tab 2',
+                id: 'tab2',
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+};
+
 export const WithEffect: Story = {
   render: Template,
 
