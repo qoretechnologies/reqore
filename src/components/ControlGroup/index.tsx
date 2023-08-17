@@ -379,7 +379,7 @@ const ReqoreControlGroup = memo(
                   ...(child.props?.style || {}),
                 },
                 isChild: true,
-                rounded: !isStack,
+                rounded: isMasterGroupRounded === false ? false : child.props?.rounded || !isStack,
                 isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
                 isInsideStackGroup: isStack,
                 isInsideVerticalGroup: isVertical,
