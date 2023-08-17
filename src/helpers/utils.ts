@@ -142,7 +142,7 @@ export function decycle(obj, stack = []) {
 }
 
 export const stringifyAndDecycleObject = (obj: any): string => {
-  return JSON.stringify(decycle(obj), (key, value) => {
+  return JSON.stringify(decycle(obj), (_key, value) => {
     if (typeof value === 'function') {
       return value.toString();
     }
