@@ -334,7 +334,7 @@ const ReqoreControlGroup = memo(
 
             let newProps = {
               ...child.props,
-              key: child.props.reactKey || child.props.key || child.key || _index,
+              key: child.props.reactKey || _index,
               minimal:
                 child.props?.minimal || child.props?.minimal === false
                   ? child.props.minimal
@@ -350,22 +350,22 @@ const ReqoreControlGroup = memo(
               customTheme: child.props?.customTheme || customTheme,
             };
 
+            const isRounded = (isChild && child.props?.rounded === false) || rounded === false;
+
             if (isStack) {
               newProps = {
                 ...newProps,
                 style: {
-                  borderTopLeftRadius:
-                    child.props?.rounded === false ? undefined : getBorderTopLeftRadius(index),
-                  borderBottomLeftRadius:
-                    child.props?.rounded === false ? undefined : getBorderBottomLeftRadius(index),
-                  borderTopRightRadius:
-                    child.props?.rounded === false ? undefined : getBorderTopRightRadius(index),
-                  borderBottomRightRadius:
-                    child.props?.rounded === false ? undefined : getBorderBottomRightRadius(index),
+                  borderTopLeftRadius: isRounded ? undefined : getBorderTopLeftRadius(index),
+                  borderBottomLeftRadius: isRounded ? undefined : getBorderBottomLeftRadius(index),
+                  borderTopRightRadius: isRounded ? undefined : getBorderTopRightRadius(index),
+                  borderBottomRightRadius: isRounded
+                    ? undefined
+                    : getBorderBottomRightRadius(index),
                   ...(child.props?.style || {}),
                 },
                 isChild: true,
-                rounded: !isStack,
+                rounded: isChild ? !isStack : rounded,
                 isInsideStackGroup: isStack,
                 isInsideVerticalGroup: isVertical,
                 isFirst: isChild ? getIsFirst(index) : undefined,
@@ -410,6 +410,7 @@ const ReqoreControlGroup = memo(
         minimal,
         size,
         intent,
+        rounded,
       ]
     );
 
@@ -431,13 +432,14 @@ const ReqoreControlGroup = memo(
                 icon='MenuLine'
                 customTheme={customTheme}
                 tooltip={{
-                  content: `Show ${React.Children.count(overflownChildren)} hidden items`,
+                  handler: 'click',
+                  content: (
+                    <ReqoreControlGroup fluid wrap>
+                      {overflownChildren}
+                    </ReqoreControlGroup>
+                  ),
                 }}
                 active={isOverflownDialogOpen}
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.stopPropagation();
-                  setIsOverflownDialogOpen(!isOverflownDialogOpen);
-                }}
                 flat
                 fixed
               />,
@@ -460,11 +462,7 @@ const ReqoreControlGroup = memo(
             label='Hidden items'
             minSize='100px'
             size='auto'
-          >
-            <ReqoreControlGroup fluid wrap>
-              {overflownChildren}
-            </ReqoreControlGroup>
-          </ReqoreDrawer>
+          ></ReqoreDrawer>
         ) : null}
         <StyledReqoreControlGroup
           as='div'

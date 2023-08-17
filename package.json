@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.36.5",
+  "version": "0.36.6",
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -96,6 +96,7 @@
     "@react-spring/web": "^9.6.1",
     "classnames": "^2.2.6",
     "epoch-timeago": "^1.1.9",
+    "fast-json-stable-stringify": "^2.1.0",
     "lodash": "^4.17.21",
     "polished": "^4.2.2",
     "re-resizable": "^6.9.0",

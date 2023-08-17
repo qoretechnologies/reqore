@@ -59,7 +59,7 @@ export type TReqoreTableColumnContent =
 export interface IReqoreTableColumn extends IReqoreIntent {
   dataId: string;
   show?: boolean;
-  grow?: 1 | 2 | 3 | 4;
+  grow?: 0 | 1 | 2 | 3 | 4;
   width?: number;
   minWidth?: number;
   maxWidth?: number;
@@ -79,8 +79,10 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   header?: {
     columns?: IReqoreTableColumn[];
     component?: React.FC<IReqoreTableHeaderCellProps>;
+    // Content is the same as react children
+    content?: React.ReactNode;
     actions?: IReqoreDropdownItem[];
-  } & Omit<IReqoreButtonProps, 'maxWidth'>;
+  } & Omit<IReqoreButtonProps, 'maxWidth' | 'content'>;
 
   cell?: {
     onClick?: (cellValue: any) => void;

@@ -25,7 +25,7 @@ export interface IReqoreCustomHeaderCellProps
       'sortData' | 'onSortChange' | 'onColumnsUpdate' | 'onFilterChange'
     >,
     Omit<IReqoreTableColumn, 'cell' | 'header'>,
-    Omit<IReqoreButtonProps, 'maxWidth'> {
+    Omit<IReqoreButtonProps, 'maxWidth' | 'content'> {
   hasColumns?: boolean;
 }
 export interface IReqoreCustomHeaderCellComponent extends React.FC<IReqoreCustomHeaderCellProps> {}
@@ -165,20 +165,17 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
 
     const renderColumns = (columns: IReqoreTableColumn[]) =>
       getOnlyShownColumns(columns).map(
-        (
-          {
-            grow,
-            align,
-            dataId,
-            header: { columns, onClick, component: headerComponent, ...rest },
-            ...colRest
-          },
-          index
-        ) =>
+        ({
+          grow,
+          align,
+          dataId,
+          header: { columns, onClick, component: headerComponent, ...rest },
+          ...colRest
+        }) =>
           columns ? (
             <StyledColumnGroup
               grow={getOnlyShownColumns(columns).reduce((gr, col) => gr + col.grow, 0)}
-              key={index}
+              key={dataId}
               className='reqore-table-column-group'
               width={getOnlyShownColumns(columns).reduce(
                 (wid, col) => wid + (col.resizedWidth || col.width || 80),

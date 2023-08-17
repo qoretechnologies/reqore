@@ -22,6 +22,7 @@ import {
   IReqoreReadOnly,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
+  IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect, TReqoreEffectColor } from '../Effect';
@@ -34,9 +35,10 @@ export interface IReqoreInputProps
     IReqoreReadOnly,
     IReqoreIntent,
     IWithReqoreCustomTheme,
-    IWithReqoreEffect {
+    IWithReqoreEffect,
+    IWithReqoreTooltip {
   autoFocus?: boolean;
-  tooltip?: string;
+
   width?: number;
   size?: TSizes;
   minimal?: boolean;
