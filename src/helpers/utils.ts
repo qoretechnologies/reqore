@@ -134,7 +134,7 @@ export function decycle(obj, stack = []) {
 
   if (stack.includes(obj)) return null;
 
-  let s = stack.concat([obj]);
+  const s = stack.concat([obj]);
 
   return Array.isArray(obj)
     ? obj.map((x) => decycle(x, s))
