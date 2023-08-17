@@ -133,7 +133,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       : null}
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  flex-shrink: ${({ shrink = 1 }) => shrink};
+  flex-shrink: ${({ shrink }) => shrink};
   flex-grow: ${({ grow }) => grow};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 

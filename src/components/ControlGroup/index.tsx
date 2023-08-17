@@ -248,8 +248,11 @@ const ReqoreControlGroup = memo(
         : isLastGroup && (isLast || isLast !== false) && index === realChildCount - 1;
     };
 
-    const getBorderTopLeftRadius = (index: number): number | undefined => {
-      if (isMasterGroupRounded === false) {
+    const getBorderTopLeftRadius = (
+      index: number,
+      isChildRounded?: boolean
+    ): number | undefined => {
+      if (isMasterGroupRounded === false || isChildRounded === false) {
         return undefined;
       }
 
@@ -264,8 +267,11 @@ const ReqoreControlGroup = memo(
       return undefined;
     };
 
-    const getBorderTopRightRadius = (index: number): number | undefined => {
-      if (isMasterGroupRounded === false) {
+    const getBorderTopRightRadius = (
+      index: number,
+      isChildRounded?: boolean
+    ): number | undefined => {
+      if (isMasterGroupRounded === false || isChildRounded === false) {
         return undefined;
       }
 
@@ -294,8 +300,11 @@ const ReqoreControlGroup = memo(
       return undefined;
     };
 
-    const getBorderBottomLeftRadius = (index: number): number | undefined => {
-      if (isMasterGroupRounded === false) {
+    const getBorderBottomLeftRadius = (
+      index: number,
+      isChildRounded?: boolean
+    ): number | undefined => {
+      if (isMasterGroupRounded === false || isChildRounded === false) {
         return undefined;
       }
 
@@ -320,8 +329,11 @@ const ReqoreControlGroup = memo(
       return undefined;
     };
 
-    const getBorderBottomRightRadius = (index: number): number | undefined => {
-      if (isMasterGroupRounded === false) {
+    const getBorderBottomRightRadius = (
+      index: number,
+      isChildRounded?: boolean
+    ): number | undefined => {
+      if (isMasterGroupRounded === false || isChildRounded === false) {
         return undefined;
       }
 
@@ -372,14 +384,19 @@ const ReqoreControlGroup = memo(
               newProps = {
                 ...newProps,
                 style: {
-                  borderTopLeftRadius: getBorderTopLeftRadius(index),
-                  borderBottomLeftRadius: getBorderBottomLeftRadius(index),
-                  borderTopRightRadius: getBorderTopRightRadius(index),
-                  borderBottomRightRadius: getBorderBottomRightRadius(index),
+                  borderTopLeftRadius: getBorderTopLeftRadius(index, child.props?.rounded),
+                  borderBottomLeftRadius: getBorderBottomLeftRadius(index, child.props?.rounded),
+                  borderTopRightRadius: getBorderTopRightRadius(index, child.props?.rounded),
+                  borderBottomRightRadius: getBorderBottomRightRadius(index, child.props?.rounded),
                   ...(child.props?.style || {}),
                 },
                 isChild: true,
-                rounded: isMasterGroupRounded === false ? false : child.props?.rounded || !isStack,
+                rounded:
+                  isMasterGroupRounded === false
+                    ? false
+                    : child.props?.rounded || child.props?.rounded === false
+                    ? child.props.rounded
+                    : !isStack,
                 isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
                 isInsideStackGroup: isStack,
                 isInsideVerticalGroup: isVertical,

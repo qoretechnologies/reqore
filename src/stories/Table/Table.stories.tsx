@@ -294,7 +294,7 @@ const defaultColumnsWithCustomContentHeaders: IReqoreTableColumn[] = defaultColu
         ...column,
         header: {
           ...column.header,
-          content: <ReqoreInput icon='PriceTag2Fill' value='Custom input value' />,
+          content: <ReqoreInput icon='PriceTag2Fill' value='Custom input value' rounded={false} />,
         },
       };
     }
