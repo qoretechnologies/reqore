@@ -45,6 +45,7 @@ export interface IReqoreControlGroupProps
   isLastInFirstGroup?: boolean;
   isLastInLastGroup?: boolean;
   isFirstInLastGroup?: boolean;
+  isMasterGroupRounded?: boolean;
   childrenCount?: number;
   childId?: number;
   isChild?: boolean;
@@ -131,6 +132,7 @@ const ReqoreControlGroup = memo(
     stack,
     isInsideStackGroup,
     isInsideVerticalGroup,
+    isMasterGroupRounded,
     intent,
     customTheme,
     isFirst,
@@ -247,6 +249,10 @@ const ReqoreControlGroup = memo(
     };
 
     const getBorderTopLeftRadius = (index: number): number | undefined => {
+      if (isMasterGroupRounded === false) {
+        return undefined;
+      }
+
       const _isFirstGroup =
         !isInsideStackGroup || childrenCount === 1 ? true : isChild ? isFirstGroup : index === 0;
 
@@ -259,6 +265,10 @@ const ReqoreControlGroup = memo(
     };
 
     const getBorderTopRightRadius = (index: number): number | undefined => {
+      if (isMasterGroupRounded === false) {
+        return undefined;
+      }
+
       // If this group is not vertical we need to style the very last item
       if (!isVertical || !isStack) {
         const _isLastGroup =
@@ -285,6 +295,10 @@ const ReqoreControlGroup = memo(
     };
 
     const getBorderBottomLeftRadius = (index: number): number | undefined => {
+      if (isMasterGroupRounded === false) {
+        return undefined;
+      }
+
       // If this group is not vertical we need to style the very first item
       if (!isVertical || !isStack) {
         const _isFirstGroup =
@@ -307,6 +321,10 @@ const ReqoreControlGroup = memo(
     };
 
     const getBorderBottomRightRadius = (index: number): number | undefined => {
+      if (isMasterGroupRounded === false) {
+        return undefined;
+      }
+
       const _isLastGroup =
         !isInsideStackGroup || childrenCount === 1
           ? true
@@ -350,22 +368,19 @@ const ReqoreControlGroup = memo(
               customTheme: child.props?.customTheme || customTheme,
             };
 
-            const isRounded = (isChild && child.props?.rounded === false) || rounded === false;
-
             if (isStack) {
               newProps = {
                 ...newProps,
                 style: {
-                  borderTopLeftRadius: isRounded ? undefined : getBorderTopLeftRadius(index),
-                  borderBottomLeftRadius: isRounded ? undefined : getBorderBottomLeftRadius(index),
-                  borderTopRightRadius: isRounded ? undefined : getBorderTopRightRadius(index),
-                  borderBottomRightRadius: isRounded
-                    ? undefined
-                    : getBorderBottomRightRadius(index),
+                  borderTopLeftRadius: getBorderTopLeftRadius(index),
+                  borderBottomLeftRadius: getBorderBottomLeftRadius(index),
+                  borderTopRightRadius: getBorderTopRightRadius(index),
+                  borderBottomRightRadius: getBorderBottomRightRadius(index),
                   ...(child.props?.style || {}),
                 },
                 isChild: true,
-                rounded: isChild ? !isStack : rounded,
+                rounded: !isStack,
+                isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
                 isInsideStackGroup: isStack,
                 isInsideVerticalGroup: isVertical,
                 isFirst: isChild ? getIsFirst(index) : undefined,

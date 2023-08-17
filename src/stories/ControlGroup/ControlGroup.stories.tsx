@@ -151,7 +151,7 @@ const Template: StoryFn<typeof ReqoreControlGroup> = (args) => {
     <>
       <ReqoreControlGroup {...args}>
         <ReqoreButton icon='PictureInPictureLine'>Button</ReqoreButton>
-        <ReqoreButton icon='PictureInPictureLine' fluid>
+        <ReqoreButton icon='PictureInPictureLine' fluid shrink={0}>
           Fluid Button
         </ReqoreButton>
         <ReqoreButton

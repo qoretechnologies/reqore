@@ -158,7 +158,6 @@ export const ReqoreTableHeaderCell = memo(
           ) : (
             <ReqoreButton
               {...rest}
-              shrink={1}
               size={size}
               readOnly={!sortable && !onClick}
               className={`${className || ''} reqore-table-header-cell`}
