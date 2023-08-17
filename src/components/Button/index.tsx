@@ -79,7 +79,8 @@ export interface IReqoreButtonProps
   descriptionEffect?: IReqoreEffect;
   label?: React.HTMLAttributes<HTMLButtonElement>['children'];
   as?: string | React.ElementType;
-  grow?: 1 | 2 | 3 | 4;
+  grow?: 0 | 1 | 2 | 3 | 4;
+  shrink?: 0 | 1 | 2 | 3 | 4;
   rounded?: boolean;
 }
 
@@ -132,6 +133,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       : null}
 
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  flex-shrink: ${({ shrink }) => shrink};
   flex-grow: ${({ grow }) => grow};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 

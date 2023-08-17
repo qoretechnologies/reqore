@@ -128,3 +128,25 @@ export const alignToFlexAlign = (
       return 'flex-start';
   }
 };
+
+export function decycle(obj, stack = []) {
+  if (!obj || typeof obj !== 'object') return obj;
+
+  if (stack.includes(obj)) return null;
+
+  const s = stack.concat([obj]);
+
+  return Array.isArray(obj)
+    ? obj.map((x) => decycle(x, s))
+    : Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, decycle(v, s)]));
+}
+
+export const stringifyAndDecycleObject = (obj: any): string => {
+  return JSON.stringify(decycle(obj), (_key, value) => {
+    if (typeof value === 'function') {
+      return value.toString();
+    }
+
+    return value;
+  });
+};

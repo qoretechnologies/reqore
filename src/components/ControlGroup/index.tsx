@@ -45,6 +45,7 @@ export interface IReqoreControlGroupProps
   isLastInFirstGroup?: boolean;
   isLastInLastGroup?: boolean;
   isFirstInLastGroup?: boolean;
+  isMasterGroupRounded?: boolean;
   childrenCount?: number;
   childId?: number;
   isChild?: boolean;
@@ -131,6 +132,7 @@ const ReqoreControlGroup = memo(
     stack,
     isInsideStackGroup,
     isInsideVerticalGroup,
+    isMasterGroupRounded,
     intent,
     customTheme,
     isFirst,
@@ -246,7 +248,14 @@ const ReqoreControlGroup = memo(
         : isLastGroup && (isLast || isLast !== false) && index === realChildCount - 1;
     };
 
-    const getBorderTopLeftRadius = (index: number): number | undefined => {
+    const getBorderTopLeftRadius = (
+      index: number,
+      isChildRounded?: boolean
+    ): number | undefined => {
+      if (isMasterGroupRounded === false || isChildRounded === false) {
+        return undefined;
+      }
+
       const _isFirstGroup =
         !isInsideStackGroup || childrenCount === 1 ? true : isChild ? isFirstGroup : index === 0;
 
@@ -258,7 +267,14 @@ const ReqoreControlGroup = memo(
       return undefined;
     };
 
-    const getBorderTopRightRadius = (index: number): number | undefined => {
+    const getBorderTopRightRadius = (
+      index: number,
+      isChildRounded?: boolean
+    ): number | undefined => {
+      if (isMasterGroupRounded === false || isChildRounded === false) {
+        return undefined;
+      }
+
       // If this group is not vertical we need to style the very last item
       if (!isVertical || !isStack) {
         const _isLastGroup =
@@ -284,7 +300,14 @@ const ReqoreControlGroup = memo(
       return undefined;
     };
 
-    const getBorderBottomLeftRadius = (index: number): number | undefined => {
+    const getBorderBottomLeftRadius = (
+      index: number,
+      isChildRounded?: boolean
+    ): number | undefined => {
+      if (isMasterGroupRounded === false || isChildRounded === false) {
+        return undefined;
+      }
+
       // If this group is not vertical we need to style the very first item
       if (!isVertical || !isStack) {
         const _isFirstGroup =
@@ -306,7 +329,14 @@ const ReqoreControlGroup = memo(
       return undefined;
     };
 
-    const getBorderBottomRightRadius = (index: number): number | undefined => {
+    const getBorderBottomRightRadius = (
+      index: number,
+      isChildRounded?: boolean
+    ): number | undefined => {
+      if (isMasterGroupRounded === false || isChildRounded === false) {
+        return undefined;
+      }
+
       const _isLastGroup =
         !isInsideStackGroup || childrenCount === 1
           ? true
@@ -334,7 +364,7 @@ const ReqoreControlGroup = memo(
 
             let newProps = {
               ...child.props,
-              key: child.props.reactKey || child.props.key || child.key || _index,
+              key: child.props.reactKey || _index,
               minimal:
                 child.props?.minimal || child.props?.minimal === false
                   ? child.props.minimal
@@ -354,18 +384,20 @@ const ReqoreControlGroup = memo(
               newProps = {
                 ...newProps,
                 style: {
-                  borderTopLeftRadius:
-                    child.props?.rounded === false ? undefined : getBorderTopLeftRadius(index),
-                  borderBottomLeftRadius:
-                    child.props?.rounded === false ? undefined : getBorderBottomLeftRadius(index),
-                  borderTopRightRadius:
-                    child.props?.rounded === false ? undefined : getBorderTopRightRadius(index),
-                  borderBottomRightRadius:
-                    child.props?.rounded === false ? undefined : getBorderBottomRightRadius(index),
+                  borderTopLeftRadius: getBorderTopLeftRadius(index, child.props?.rounded),
+                  borderBottomLeftRadius: getBorderBottomLeftRadius(index, child.props?.rounded),
+                  borderTopRightRadius: getBorderTopRightRadius(index, child.props?.rounded),
+                  borderBottomRightRadius: getBorderBottomRightRadius(index, child.props?.rounded),
                   ...(child.props?.style || {}),
                 },
                 isChild: true,
-                rounded: !isStack,
+                rounded:
+                  isMasterGroupRounded === false
+                    ? false
+                    : child.props?.rounded || child.props?.rounded === false
+                    ? child.props.rounded
+                    : !isStack,
+                isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
                 isInsideStackGroup: isStack,
                 isInsideVerticalGroup: isVertical,
                 isFirst: isChild ? getIsFirst(index) : undefined,
@@ -410,6 +442,7 @@ const ReqoreControlGroup = memo(
         minimal,
         size,
         intent,
+        rounded,
       ]
     );
 
@@ -431,13 +464,14 @@ const ReqoreControlGroup = memo(
                 icon='MenuLine'
                 customTheme={customTheme}
                 tooltip={{
-                  content: `Show ${React.Children.count(overflownChildren)} hidden items`,
+                  handler: 'click',
+                  content: (
+                    <ReqoreControlGroup fluid wrap>
+                      {overflownChildren}
+                    </ReqoreControlGroup>
+                  ),
                 }}
                 active={isOverflownDialogOpen}
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                  e.stopPropagation();
-                  setIsOverflownDialogOpen(!isOverflownDialogOpen);
-                }}
                 flat
                 fixed
               />,
@@ -460,11 +494,7 @@ const ReqoreControlGroup = memo(
             label='Hidden items'
             minSize='100px'
             size='auto'
-          >
-            <ReqoreControlGroup fluid wrap>
-              {overflownChildren}
-            </ReqoreControlGroup>
-          </ReqoreDrawer>
+          ></ReqoreDrawer>
         ) : null}
         <StyledReqoreControlGroup
           as='div'

@@ -57,6 +57,7 @@ export interface IPopover
   maxHeight?: string;
   icon?: IReqoreIconName;
   title?: string;
+  updater?: string | number;
 }
 
 export interface IPopoverOptions extends IPopover {
@@ -164,7 +165,7 @@ const usePopover = ({
     if (openOnMount && targetElement) {
       _addPopover();
     }
-  }, [targetElement?.toString()]);
+  }, [targetElement?.outerHTML]);
 
   useEffect(() => {
     if (targetElement && content) {

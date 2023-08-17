@@ -172,7 +172,7 @@ const defaultColumns: IReqoreTableColumn[] = [
     header: {
       icon: 'SettingsLine',
     },
-    width: 100,
+    width: 120,
     align: 'center',
     pin: 'right',
 
@@ -280,6 +280,22 @@ const defaultColumnsWithPinnedColumns: IReqoreTableColumn[] = defaultColumns.map
       return {
         ...column,
         pin: 'right',
+      };
+    }
+
+    return column;
+  }
+);
+
+const defaultColumnsWithCustomContentHeaders: IReqoreTableColumn[] = defaultColumns.map(
+  (column, index) => {
+    if (index === 4) {
+      return {
+        ...column,
+        header: {
+          ...column.header,
+          content: <ReqoreInput icon='PriceTag2Fill' value='Custom input value' rounded={false} />,
+        },
       };
     }
 
@@ -516,6 +532,12 @@ export const CustomPaging: Story = {
       infinite: true,
       itemsPerPage: 100,
     } as TReqorePaginationType<IReqoreTableRowData>,
+  },
+};
+
+export const CustomHeaderContent: Story = {
+  args: {
+    columns: defaultColumnsWithCustomContentHeaders,
   },
 };
 
