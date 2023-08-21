@@ -98,8 +98,11 @@ export interface IReqorePanelProps
   closeButtonProps?: IReqoreButtonProps;
 
   rounded?: boolean;
+
   actions?: TReqorePanelActions;
   bottomActions?: TReqorePanelBottomActions;
+  showActionsWhenCollapsed?: boolean;
+
   unMountContentOnCollapse?: boolean;
   onCollapseChange?: (isCollapsed?: boolean) => void;
   fill?: boolean;
@@ -353,6 +356,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       headerProps = {},
       disabled,
       breadcrumbs,
+      showActionsWhenCollapsed = true,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -436,21 +440,21 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         (action: IReqorePanelAction, index: number) => {
           return renderActions(action, index, true, align);
         },
-      [actions]
+      [actions, showActionsWhenCollapsed, _isCollapsed]
     );
 
     const hasNonResponsiveActions = useCallback(
       (data: TReqorePanelActions) =>
         (!responsiveActions && size(data)) ||
         data.some((action) => action.responsive === false && action.show !== false),
-      [actions, bottomActions, responsiveActions]
+      [actions, bottomActions, responsiveActions, showActionsWhenCollapsed, _isCollapsed]
     );
 
     const hasResponsiveActions = useCallback(
       (data: TReqorePanelActions) =>
         responsiveActions &&
         data.some((action) => action.responsive !== false && action.show !== false),
-      [actions, bottomActions, responsiveActions]
+      [actions, bottomActions, responsiveActions, showActionsWhenCollapsed, _isCollapsed]
     );
 
     const renderNonResponsiveActions = useCallback(
@@ -458,7 +462,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         (action: IReqorePanelAction, index: number) => {
           return renderActions(action, index, false, align);
         },
-      [actions, bottomActions, responsiveActions]
+      [actions, bottomActions, responsiveActions, showActionsWhenCollapsed, _isCollapsed]
     );
 
     const renderActions = useCallback(
@@ -468,8 +472,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         includeResponsive,
         align: 'flex-start' | 'center' | 'flex-end' = 'flex-end'
       ) => {
+        console.log(showActionsWhenCollapsed, _isCollapsed);
         if (
           action.show === false ||
+          (showActionsWhenCollapsed === false && _isCollapsed === true) ||
           (includeResponsive && action.responsive === false) ||
           (!includeResponsive &&
             responsiveActions &&
@@ -569,7 +575,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           </ReqoreButton>
         );
       },
-      [actions, theme]
+      [actions, theme, showActionsWhenCollapsed, _isCollapsed]
     );
 
     const interactive: boolean = !!(

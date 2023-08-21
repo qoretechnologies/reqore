@@ -1,5 +1,5 @@
 import { omit } from 'lodash';
-import { forwardRef, useCallback } from 'react';
+import { forwardRef, memo, useCallback } from 'react';
 import { useMount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
@@ -233,4 +233,4 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
   }
 );
 
-export default ReqoreTableHeader;
+export default memo(ReqoreTableHeader);
