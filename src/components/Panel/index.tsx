@@ -472,7 +472,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         includeResponsive,
         align: 'flex-start' | 'center' | 'flex-end' = 'flex-end'
       ) => {
-        console.log(showActionsWhenCollapsed, _isCollapsed);
         if (
           action.show === false ||
           (showActionsWhenCollapsed === false && _isCollapsed === true) ||
