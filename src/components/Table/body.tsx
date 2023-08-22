@@ -1,5 +1,5 @@
 import count from 'lodash/size';
-import { forwardRef, useMemo } from 'react';
+import { forwardRef, memo, useMemo } from 'react';
 import { useMount } from 'react-use';
 import { FixedSizeList as List } from 'react-window';
 import styled from 'styled-components';
@@ -106,4 +106,4 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
   }
 );
 
-export default ReqoreTableBody;
+export default memo(ReqoreTableBody);

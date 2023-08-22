@@ -445,6 +445,32 @@ export const ActionsShownOnHover: Story = {
   },
 };
 
+export const ActionsShownOnlyWhenExpanded: Story = {
+  render: (args) => (
+    <ReqoreControlGroup verticalAlign='flex-start'>
+      <ReqorePanel {...args} isCollapsed fluid />
+      <ReqorePanel {...args} fluid />
+    </ReqoreControlGroup>
+  ),
+
+  args: {
+    collapsible: true,
+    showActionsWhenCollapsed: false,
+    actions: [{ label: 'test' }],
+    children: 'This is a panel',
+    bottomActions: [
+      {
+        position: 'right',
+        fluid: false,
+        group: [
+          { label: 'test 2', show: true },
+          { label: 'test 3', show: true },
+        ],
+      },
+    ],
+  },
+};
+
 export const TransparentFlat: Story = {
   render: Template,
 

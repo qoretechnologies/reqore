@@ -1,5 +1,5 @@
 import { lighten, rgba } from 'polished';
-import { forwardRef } from 'react';
+import { forwardRef, memo } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
 import { TEXT_FROM_SIZE } from '../../constants/sizes';
@@ -123,12 +123,14 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
   }}
 `;
 
-export const ReqoreTableBodyCell = forwardRef<HTMLButtonElement, IReqoreTableBodyCellProps>(
-  (props: IReqoreTableBodyCellProps, ref) => {
-    const { targetRef } = useCombinedRefs(ref);
+export const ReqoreTableBodyCell = memo(
+  forwardRef<HTMLButtonElement, IReqoreTableBodyCellProps>(
+    (props: IReqoreTableBodyCellProps, ref) => {
+      const { targetRef } = useCombinedRefs(ref);
 
-    useTooltip(targetRef.current, props.tooltip);
+      useTooltip(targetRef.current, props.tooltip);
 
-    return <StyledTableCell {...props} ref={targetRef} />;
-  }
+      return <StyledTableCell {...props} ref={targetRef} />;
+    }
+  )
 );

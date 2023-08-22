@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import ReqoreIcon from '../Icon';
 import { ReqoreP } from '../Paragraph';
 
@@ -5,7 +6,7 @@ export interface IReqoreTableValueProps {
   value?: string | number | boolean | any[] | { [key: string]: any };
 }
 
-export const ReqoreTableValue = ({ value }: IReqoreTableValueProps) => {
+export const ReqoreTableValue = memo(({ value }: IReqoreTableValueProps) => {
   if (value === undefined || value === null) {
     return <>-</>;
   }
@@ -24,4 +25,4 @@ export const ReqoreTableValue = ({ value }: IReqoreTableValueProps) => {
     default:
       return <ReqoreP className='reqore-table-text'>{JSON.stringify(value)}</ReqoreP>;
   }
-};
+});
