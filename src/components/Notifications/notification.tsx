@@ -14,7 +14,12 @@ import {
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
-import { changeLightness, getNotificationIntent, getReadableColor } from '../../helpers/colors';
+import {
+  changeDarkness,
+  changeLightness,
+  getNotificationIntent,
+  getReadableColor,
+} from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IWithReqoreCustomTheme,
@@ -118,7 +123,7 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     hasShadow,
     flat,
     minimal,
-    opaque,
+    opaque = true,
   }: IReqoreNotificationStyle) => css`
     background-color: ${minimal
       ? 'transparent'
@@ -147,16 +152,17 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
       }
     `}
 
-    color: ${getReadableColor(theme, null, null, true, !opaque ? theme.originalMain : undefined)};
+    color: ${getReadableColor(theme, null, null, true, minimal ? theme.originalMain : undefined)};
 
     ${clickable &&
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${rgba(
-          getNotificationIntent(theme, intent || type),
-          minimal ? 0.2 : 0.5
-        )};
+        background-color: ${minimal
+          ? 'transparent'
+          : opaque
+          ? changeDarkness(theme.main, 0.002)
+          : rgba(getNotificationIntent(theme, intent || type), 0.4)};
         border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.25)};
       }
     `}

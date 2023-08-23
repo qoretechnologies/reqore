@@ -81,11 +81,11 @@ export const WithIconColor: Story = {
   },
 };
 
-export const Opaque: Story = {
+export const NonOpaque: Story = {
   render: Template,
 
   args: {
-    opaque: true,
+    opaque: false,
     intent: 'info',
   },
 };
