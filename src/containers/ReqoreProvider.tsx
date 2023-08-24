@@ -1,9 +1,10 @@
-import { size } from 'lodash';
+import { map, size } from 'lodash';
 import React, { useCallback, useRef, useState } from 'react';
 import { useMedia } from 'react-use';
 import shortid from 'shortid';
 import { useContext } from 'use-context-selector';
 import { ReqoreModal, ReqoreTextEffect } from '..';
+import { IReqoreModalProps } from '../components/Modal';
 import ReqoreNotificationsWrapper from '../components/Notifications';
 import ReqoreNotification, {
   IReqoreNotificationProps,
@@ -27,6 +28,13 @@ export interface IReqoreNotifications {
   options?: IReqoreOptions;
 }
 
+export interface IReqoreModals {
+  [id: string]: IReqoreModalFromProps | TReqoreCustomModal;
+}
+
+export interface IReqoreModalFromProps extends IReqoreModalProps {}
+export type TReqoreCustomModal = React.ReactElement<IReqoreModalProps>;
+
 export interface IReqoreConfirmationModal {
   title?: string;
   description?: string;
@@ -42,6 +50,7 @@ export interface IReqoreConfirmationModal {
 
 const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {} }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
+  const [modals, setModals] = useState<IReqoreModals>({});
   const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>({});
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
   const latestZIndex = useRef<number>(9000);
@@ -73,6 +82,31 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
       isOpen: false,
     }));
   };
+
+  const addModal = useCallback(
+    (modal: IReqoreModalFromProps | TReqoreCustomModal, id?: string): string => {
+      let _id = id || shortid.generate();
+
+      setModals((cur) => {
+        return {
+          ...cur,
+          [_id]: modal,
+        };
+      });
+
+      return _id;
+    },
+    []
+  );
+
+  const removeModal = useCallback((id: string): void => {
+    setModals((cur) => {
+      const newModals = { ...cur };
+      delete newModals[id];
+
+      return newModals;
+    });
+  }, []);
 
   const addNotification = (data: IReqoreNotificationData) => {
     setNotifications((cur) => {
@@ -111,6 +145,8 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
           theme,
           addNotification,
           removeNotification,
+          addModal,
+          removeModal,
           confirmAction,
           isMobile,
           isTablet,
@@ -193,6 +229,28 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
               {confirmationModal.description || 'Are you sure you want to proceed?'}
             </ReqoreTextEffect>
           </ReqoreModal>
+        )}
+        {map(modals, (modal, key) =>
+          React.isValidElement(modal) ? (
+            React.cloneElement(modal, {
+              key,
+              isOpen: true,
+              onClose: () => {
+                removeModal(key);
+                modal.props.onClose?.();
+              },
+            })
+          ) : (
+            <ReqoreModal
+              {...modal}
+              key={key}
+              isOpen
+              onClose={() => {
+                removeModal(key);
+                modal.onClose?.();
+              }}
+            />
+          )
         )}
       </ReqoreContext.Provider>
     </>
