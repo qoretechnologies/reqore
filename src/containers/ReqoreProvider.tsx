@@ -85,7 +85,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
 
   const addModal = useCallback(
     (modal: IReqoreModalFromProps | TReqoreCustomModal, id?: string): string => {
-      let _id = id || shortid.generate();
+      const _id = id || shortid.generate();
 
       setModals((cur) => {
         return {
