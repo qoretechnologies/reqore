@@ -1,12 +1,19 @@
 import { createContext } from 'use-context-selector';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
-import { IReqoreConfirmationModal, IReqoreNotificationData } from '../containers/ReqoreProvider';
+import {
+  IReqoreConfirmationModal,
+  IReqoreModalFromProps,
+  IReqoreNotificationData,
+  TReqoreCustomModal,
+} from '../containers/ReqoreProvider';
 import { IReqoreOptions } from '../containers/UIProvider';
 
 export interface IReqoreContext {
   readonly confirmAction: (data: IReqoreConfirmationModal) => void;
   readonly notifications?: IReqoreNotificationData[] | null;
   readonly addNotification?: (data: IReqoreNotificationData) => any;
+  readonly addModal?: (modal: IReqoreModalFromProps | TReqoreCustomModal, id?: string) => string;
+  readonly removeModal?: (id: string) => void;
   readonly removeNotification?: (id: string) => any;
   readonly isMobile?: boolean;
   readonly isTablet?: boolean;
@@ -24,6 +31,8 @@ export default createContext<IReqoreContext>({
   notifications: null,
   addNotification: null,
   removeNotification: null,
+  addModal: null,
+  removeModal: null,
   animations: {
     buttons: true,
     dialogs: true,
