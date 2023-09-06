@@ -1,5 +1,4 @@
 import { animated, useTransition } from '@react-spring/web';
-import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -8,12 +7,12 @@ import { useReqoreProperty } from '../..';
 import { SPRING_CONFIG, SPRING_CONFIG_NO_ANIMATIONS } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { getMainBackgroundColor } from '../../helpers/colors';
 import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../Panel';
+import { ReqoreBackdrop } from './backdrop';
 
 export type TPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -96,20 +95,6 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
 `;
 
 export const StyledDrawerResizable = styled(animated.div)``;
-
-export const StyledBackdrop = styled(animated.div)<
-  IReqoreDrawerStyle & { closable: boolean; zIndex?: number }
->`
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  left: 0;
-  backdrop-filter: ${({ blur }) => (blur ? `blur(${blur}px)` : undefined)};
-  z-index: ${({ zIndex }) => zIndex};
-  background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.3)};
-  cursor: ${({ closable }) => (closable ? 'pointer' : 'initial')};
-`;
 
 /**
  * It returns an icon name based on the position and whether the panel is hidden or not
@@ -245,15 +230,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
       item ? (
         <ReqoreThemeProvider theme={theme}>
           {hasBackdrop && !_isHidden ? (
-            <StyledBackdrop
-              className='reqore-drawer-backdrop'
-              onClick={() => onClose && onClose()}
-              closable={!!onClose}
+            <ReqoreBackdrop
+              onClose={onClose}
               zIndex={zIndex}
               blur={blur}
-              style={{
-                opacity: styles.opacity,
-              }}
+              opacity={styles.opacity}
             />
           ) : null}
           <Resizable

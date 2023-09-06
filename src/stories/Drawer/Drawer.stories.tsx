@@ -4,6 +4,7 @@ import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import { IReqoreInputProps } from '../../components/Input';
 import {
   ReqoreButton,
+  ReqoreCollection,
   ReqoreInput,
   ReqorePanel,
   ReqoreTabs,
@@ -246,7 +247,10 @@ const Template: StoryFn<typeof ReqoreDrawer> = (args) => {
               Hello I am a super long button that opens a modal on click
             </ReqoreButton>
           </ReqoreTabsContent>
-          <ReqoreTabsContent tabId='tab2'>Tab 2 here</ReqoreTabsContent>
+          <ReqoreTabsContent tabId='tab2'>
+            Tab 2 here
+            <ReqoreCollection items={[{ label: 'Item 1' }, { label: 'Item 2' }]} />
+          </ReqoreTabsContent>
         </ReqoreTabs>
       </ReqoreDrawer>
     </>
