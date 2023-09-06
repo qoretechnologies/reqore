@@ -13,7 +13,7 @@ import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ActiveIconScale, InactiveIconScale, ScaleIconOnHover } from '../../styles';
 import { IReqoreIconName } from '../../types/icons';
-import { StyledBackdrop } from '../Drawer';
+import { ReqoreBackdrop } from '../Drawer/backdrop';
 import ReqoreIcon from '../Icon';
 import SidebarItem from './item';
 
@@ -423,10 +423,9 @@ const ReqoreSidebar: React.FC<IQorusSidebarProps> = ({
   return (
     <>
       {floating && hasFloatingBackdrop && isOpen ? (
-        <StyledBackdrop
+        <ReqoreBackdrop
           className='reqore-sidebar-backdrop'
-          onClick={() => onCloseClick?.()}
-          closable
+          onClose={() => onCloseClick?.()}
           zIndex={zIndex}
         />
       ) : null}

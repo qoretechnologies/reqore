@@ -6,7 +6,7 @@ import styled, { css } from 'styled-components';
 import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { StyledBackdrop } from '../Drawer';
+import { ReqoreBackdrop } from '../Drawer/backdrop';
 import {
   IReqorePanelAction,
   IReqorePanelBottomAction,
@@ -150,7 +150,7 @@ export const ReqoreCollectionItem = ({
   );
 
   const renderContent = () => {
-    const handleItemClick = (event) => {
+    const handleItemClick = (event?: any) => {
       if (expandable) {
         if (isSelected) {
           setDimensions(originalDimensions.current);
@@ -194,11 +194,10 @@ export const ReqoreCollectionItem = ({
         {position && (
           <>
             <div style={{ ...originalDimensions.current }} />
-            <StyledBackdrop
+            <ReqoreBackdrop
               zIndex={getAndIncreaseZIndex()}
               blur={5}
-              closable
-              onClick={handleItemClick}
+              onClose={() => handleItemClick()}
             />
           </>
         )}

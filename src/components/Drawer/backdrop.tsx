@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { IReqoreDrawerStyle } from '.';
 import { getMainBackgroundColor } from '../../helpers/colors';
 
-export interface IReqoreBackdropProps {
+export interface IReqoreBackdropProps extends React.HTMLAttributes<HTMLDivElement> {
   zIndex?: number;
   blur?: number;
   onClose?: () => void;
@@ -26,15 +26,18 @@ export const StyledBackdrop = styled(animated.div)<
   cursor: ${({ closable }) => (closable ? 'pointer' : 'initial')};
 `;
 
-export const ReqoreBackdrop = memo(({ onClose, zIndex, blur, opacity }: IReqoreBackdropProps) => (
-  <StyledBackdrop
-    className='reqore-drawer-backdrop'
-    onClick={() => onClose?.()}
-    closable={!!onClose}
-    zIndex={zIndex}
-    blur={blur}
-    style={{
-      opacity,
-    }}
-  />
-));
+export const ReqoreBackdrop = memo(
+  ({ onClose, zIndex, blur, opacity, ...rest }: IReqoreBackdropProps) => (
+    <StyledBackdrop
+      {...rest}
+      className={`${rest.className || ''} reqore-drawer-backdrop`}
+      onClick={() => onClose?.()}
+      closable={!!onClose}
+      zIndex={zIndex}
+      blur={blur}
+      style={{
+        opacity,
+      }}
+    />
+  )
+);
