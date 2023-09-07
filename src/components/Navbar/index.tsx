@@ -20,6 +20,7 @@ export interface IReqoreNavbarStyle extends IReqoreNavbarProps {
 export const StyledNavbar = styled.div<IReqoreNavbarStyle>`
   ${({ theme, type }: IReqoreNavbarStyle) => css`
     height: 50px;
+    flex-shrink: 0;
     width: 100%;
     padding: 0 10px;
     color: ${theme[type]?.color ||

@@ -3,8 +3,10 @@ import { StoryObj } from '@storybook/react';
 import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { useEffect, useState } from 'react';
+import { ReqoreBackdrop } from '../../components/Drawer/backdrop';
 import {
   ReqoreButton,
+  ReqoreCollection,
   ReqoreControlGroup,
   ReqoreInput,
   ReqoreModal,
@@ -86,11 +88,15 @@ const ModalWithState = (props) => {
           intent={props.intent}
           onChange={(e: any) => setText(e.target.value)}
         />
-        <ReqoreButton onClick={() => addModal(<ModalWithState label='Another modal' />)}>
+        <ReqoreButton
+          onClick={() => addModal(<ModalWithState label='Another modal' />)}
+          tooltip='Open sesame'
+        >
           Open another modal
         </ReqoreButton>
         <ReqoreButton onClick={() => removeModal('modal')}>Remove modal</ReqoreButton>
       </ReqoreControlGroup>
+      <ReqoreCollection items={[{ label: 'Item 1' }, { label: 'Item 2' }]} />
     </ReqoreModal>
   );
 };
@@ -98,6 +104,25 @@ const ModalWithState = (props) => {
 export const FromElement: Story = {
   args: {
     data: (<ModalWithState label='Test modal' />) as any,
+  },
+  play: async ({ canvasElement, ...rest }) => {
+    await FromObject.play({ canvasElement, ...rest });
+  },
+};
+
+export const FromCustomElement: Story = {
+  args: {
+    data: (
+      <>
+        <ReqoreBackdrop />
+        <div
+          className='custom-modal reqore-modal'
+          style={{ position: 'absolute', left: '50%', top: '50%' }}
+        >
+          This is a custom modal
+        </div>
+      </>
+    ),
   },
   play: async ({ canvasElement, ...rest }) => {
     await FromObject.play({ canvasElement, ...rest });

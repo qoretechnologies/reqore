@@ -8,7 +8,6 @@ import { IReqoreNotificationsPosition } from '../components/Notifications';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import ThemeContext from '../context/ThemeContext';
 import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
-import PopoverProvider from './PopoverProvider';
 import ReqoreProvider from './ReqoreProvider';
 import ReqoreThemeProvider from './ThemeProvider';
 
@@ -88,11 +87,7 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({ children, theme, o
           <GlobalStyle />
         </ReqoreThemeProvider>
         <ReqoreLayoutWrapper withSidebar={options?.withSidebar}>
-          {modalPortal ? (
-            <ReqoreProvider options={options}>
-              <PopoverProvider uiScale={options?.uiScale}>{children}</PopoverProvider>
-            </ReqoreProvider>
-          ) : null}
+          {modalPortal ? <ReqoreProvider options={options}>{children}</ReqoreProvider> : null}
         </ReqoreLayoutWrapper>
         <ReqorePortal ref={setModalPortal} />
       </ThemeContext.Provider>
