@@ -29,7 +29,7 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ disabled, vertical, size, fill, padded }: IReqoreTabListItemStyle) => {
+  ${({ disabled, vertical, fill, padded }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       flex-shrink: 0;
