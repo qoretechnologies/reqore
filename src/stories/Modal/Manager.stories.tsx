@@ -117,7 +117,7 @@ export const FromCustomElement: Story = {
         <ReqoreBackdrop />
         <div
           className='custom-modal reqore-modal'
-          style={{ position: 'absolute', left: '50%', top: '50%' }}
+          style={{ position: 'fixed', left: '50%', top: '50%' }}
         >
           This is a custom modal
         </div>

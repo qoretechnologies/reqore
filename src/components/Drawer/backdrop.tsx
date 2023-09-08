@@ -31,7 +31,12 @@ export const ReqoreBackdrop = memo(
     <StyledBackdrop
       {...rest}
       className={`${rest.className || ''} reqore-drawer-backdrop`}
-      onClick={() => onClose?.()}
+      onClick={(event) => {
+        // Only close if the click is on the backdrop itself
+        if (event.target === event.currentTarget) {
+          onClose?.();
+        }
+      }}
       closable={!!onClose}
       zIndex={zIndex}
       blur={blur}

@@ -10,6 +10,7 @@ export { ReqoreCommentFeed } from './components/CommentFeed';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreControlGroup } from './components/ControlGroup';
 export { ReqoreDrawer } from './components/Drawer';
+export { ReqoreBackdrop } from './components/Drawer/backdrop';
 export { default as ReqoreDropdown } from './components/Dropdown';
 export { ReqoreDropdownDivider, ReqoreDropdownItem } from './components/Dropdown/item';
 export { ReqoreEffect, ReqoreTextEffect } from './components/Effect';

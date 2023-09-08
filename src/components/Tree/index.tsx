@@ -108,7 +108,7 @@ export const ReqoreTree = ({
       }
 
       return (
-        <StyledTreeWrapper key={index} size={size} level={level}>
+        <StyledTreeWrapper key={index} size={zoomToSize[size]} level={level}>
           {isObject ? (
             <ReqoreControlGroup size={zoomToSize[zoom]}>
               <ReqoreButton
