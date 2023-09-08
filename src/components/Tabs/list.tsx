@@ -1,13 +1,13 @@
-import { isArray } from 'lodash';
+import { isArray, isObject } from 'lodash';
 import React from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
 import {
+  GAP_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
-  TABS_PADDING_TO_PX,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -18,12 +18,14 @@ import {
   getColorFromMaybeString,
   getNthGradientColor,
 } from '../../helpers/colors';
-import { calculateStringSizeInPixels } from '../../helpers/utils';
+import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { IReqoreButtonProps } from '../Button';
 import { TReqoreHexColor } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
 import { StyledPopover } from '../Popover';
+import { IReqoreTagProps } from '../Tag';
 import ReqoreTabsListItem, { IReqoreTabListItemProps, StyledTabListItem } from './item';
 
 export interface IReqoreTabsListProps
@@ -39,20 +41,30 @@ export interface IReqoreTabsListStyle extends Omit<IReqoreTabsListProps, 'tabs'>
 }
 
 export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
-  ${({ fill, vertical, currentTabColor, width }) => css`
+  ${({ fill, vertical, size, padded, flat, currentTabColor, width }) => css`
     height: ${vertical ? '100%' : undefined};
     width: ${vertical ? width || '200px' : '100%'};
     flex-flow: ${vertical ? 'column' : 'row'};
     display: flex;
     align-items: center;
-    border-${vertical ? 'right' : 'bottom'}: 1px solid ${changeLightness(currentTabColor, 0.175)};
 
-    ${
-      fill &&
-      css`
-        justify-content: space-around;
-      `
-    }
+    gap: ${GAP_FROM_SIZE[size]}px;
+
+    ${padded &&
+    css`
+      padding: 0 ${PADDING_FROM_SIZE[size]}px;
+    `}
+
+    ${!flat &&
+    css`
+    border-${vertical ? 'right' : 'bottom'}: 1px solid ${changeLightness(currentTabColor, 0.175)};
+    `}
+
+
+    ${fill &&
+    css`
+      justify-content: space-around;
+    `}
 
     ${StyledPopover} {
       > ${StyledTabListItem} {
@@ -73,8 +85,27 @@ const getMoreLabel = (items: IReqoreTabsListItem[], activeTab?: string | number)
   return 'More';
 };
 
-const getLabel = (
-  item: IReqoreTabsListItem | IReqoreTabsListItem[],
+const getBadgeLength = (badge: IReqoreButtonProps['badge'], tabsSize: TSizes = 'normal') => {
+  if (!badge) {
+    return 0;
+  }
+
+  if (isArray(badge)) {
+    return badge.reduce((len, b) => len + getBadgeLength(b), 0);
+  }
+
+  if (isObject(badge)) {
+    return getLabelLength(badge, undefined, getOneLessSize(tabsSize)) + PADDING_FROM_SIZE[tabsSize];
+  }
+
+  return (
+    calculateStringSizeInPixels(badge.toString(), TEXT_FROM_SIZE[getOneLessSize(tabsSize)]) +
+    PADDING_FROM_SIZE[tabsSize]
+  );
+};
+
+const getLabelLength = (
+  item: IReqoreTabsListItem | IReqoreTabsListItem[] | IReqoreTagProps,
   activeTab?: string | number,
   tabsSize: TSizes = 'normal'
 ) => {
@@ -82,11 +113,29 @@ const getLabel = (
     return 0;
   }
 
-  const label: string = isArray(item) ? getMoreLabel(item, activeTab) : item.label;
-  const icon: number = isArray(item) || item.icon ? ICON_FROM_SIZE[tabsSize] : 0;
-  const closeIconSize = isArray(item) || !item.onCloseClick ? 0 : ICON_FROM_SIZE[tabsSize] * 2;
+  const label: string | number = isArray(item) ? getMoreLabel(item, activeTab) : item.label;
+  const icon: number =
+    isArray(item) || item.icon ? ICON_FROM_SIZE[tabsSize] + PADDING_FROM_SIZE[tabsSize] : 0;
+  const rightIcon = (item as IReqoreTagProps).rightIcon
+    ? ICON_FROM_SIZE[tabsSize] + PADDING_FROM_SIZE[tabsSize]
+    : 0;
+  const closeIconSize =
+    isArray(item) ||
+    !(item as IReqoreTabsListItem).onCloseClick ||
+    !(item as IReqoreTagProps).onRemoveClick
+      ? 0
+      : ICON_FROM_SIZE[tabsSize] * 2;
+  const badgeLength = isArray(item)
+    ? 0
+    : getBadgeLength((item as IReqoreTabsListItem).badge, tabsSize);
 
-  return calculateStringSizeInPixels(label, TEXT_FROM_SIZE[tabsSize]) + icon + closeIconSize;
+  return (
+    calculateStringSizeInPixels(label?.toString(), TEXT_FROM_SIZE[tabsSize]) +
+    icon +
+    closeIconSize +
+    badgeLength +
+    rightIcon
+  );
 };
 
 /**
@@ -105,15 +154,15 @@ export const getTabsLength = (
 ): number =>
   items.reduce((len, item) => {
     if (type === 'height') {
-      const rows = getLabel(item, activeTab, tabsSize) / 4 || 1;
+      const rows = getLabelLength(item, activeTab, tabsSize) / 4 || 1;
 
       return len + rows * 15 + 10;
     }
 
     const labelLength: number =
-      PADDING_FROM_SIZE[tabsSize] * 3 +
-      TABS_PADDING_TO_PX[tabsSize] * 2 +
-      getLabel(item, activeTab, tabsSize);
+      PADDING_FROM_SIZE[tabsSize] * 2 +
+      GAP_FROM_SIZE[tabsSize] * 2 +
+      getLabelLength(item, activeTab, tabsSize);
 
     return len + labelLength;
   }, 0);
@@ -264,7 +313,7 @@ const ReqoreTabsList = ({
                           } as IReqoreMenuItemProps)}
                           tooltip={tooltip}
                           {...rest}
-                          key={index + label}
+                          key={index + label?.toString()}
                         >
                           {label}
                         </ReqoreMenuItem>

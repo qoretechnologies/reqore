@@ -2,7 +2,7 @@ import { omit } from 'lodash';
 import { forwardRef, memo } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
-import { TABS_PADDING_TO_PX, TSizes } from '../../constants/sizes';
+import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -37,9 +37,6 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       position: relative;
       align-items: center;
       width: ${vertical ? `100%` : undefined};
-      padding: ${`${TABS_PADDING_TO_PX[size!]}px`};
-      padding-bottom: ${!vertical && 0};
-      padding-right: ${vertical && 0};
 
       ${vertical
         ? css`

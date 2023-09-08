@@ -55,6 +55,7 @@ const GlobalStyle = createGlobalStyle`
 
 const StyledPortal = styled.div`
   z-index: 9999;
+  position: relative;
 
   * {
     box-sizing: border-box;
