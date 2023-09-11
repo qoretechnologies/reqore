@@ -88,6 +88,12 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
       />
       <ReqoreTag label='With Icon' icon='AlarmWarningLine' {...args} />
       <ReqoreTag
+        {...args}
+        labelKey='Without label'
+        icon='AlarmWarningLine'
+        rightIcon='24HoursFill'
+      />
+      <ReqoreTag
         label='With Icon Colors'
         icon='AlarmWarningLine'
         {...args}

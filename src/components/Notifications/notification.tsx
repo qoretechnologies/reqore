@@ -152,7 +152,9 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
       }
     `}
 
-    color: ${getReadableColor(theme, null, null, true, minimal ? theme.originalMain : undefined)};
+    color: ${minimal || !opaque
+      ? 'inherit'
+      : getReadableColor(theme, null, null, true, minimal ? theme.originalMain : undefined)};
 
     ${clickable &&
     css`

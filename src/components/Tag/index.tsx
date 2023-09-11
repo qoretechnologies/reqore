@@ -24,6 +24,7 @@ import { ActiveIconScale, InactiveIconScale } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
+  IWithReqoreCustomTheme,
   IWithReqoreEffect,
   IWithReqoreFluid,
   IWithReqoreMinimal,
@@ -51,7 +52,8 @@ export interface IReqoreTagProps
     IReqoreDisabled,
     IWithReqoreMinimal,
     IWithReqoreFluid,
-    IWithReqoreEffect {
+    IWithReqoreEffect,
+    IWithReqoreCustomTheme {
   fixed?: boolean | 'key' | 'label';
   size?: TSizes;
   label?: string | number;
@@ -116,10 +118,10 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     css`
       background-color: ${color || changeLightness(theme.main, 0.1)};
       color: ${minimal
-        ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
+        ? getReadableColor(theme, undefined, undefined, true)
         : color
         ? getReadableColorFrom(color)
-        : getReadableColor(theme, undefined, undefined)};
+        : getReadableColorFrom(changeLightness(theme.main, 0.1))};
 
       ${StyledTagKeyWrapper} {
         background-color: ${labelKey ? rgba('#000000', 0.2) : undefined};
@@ -251,6 +253,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       intent,
       color,
       minimal,
+      customTheme,
       wrap = false,
       width,
       leftIconColor,
@@ -263,7 +266,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
-    const theme: IReqoreTheme = useReqoreTheme();
+    const theme: IReqoreTheme = useReqoreTheme('main', customTheme);
     const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
 
     useTooltip(itemRef, tooltip);
@@ -282,6 +285,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     return (
       <StyledTag
         {...rest}
+        theme={theme}
         effect={{
           ...rest.effect,
           gradient: intent ? undefined : rest.effect?.gradient,
@@ -317,7 +321,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               <ReqoreIcon
                 icon={icon}
                 size={size}
-                margin={label ? 'left' : 'both'}
+                margin={label || labelKey ? 'left' : 'both'}
                 color={leftIconColor || iconColor}
               />
             )}
@@ -364,7 +368,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               <ReqoreIcon
                 icon={rightIcon}
                 size={size}
-                margin={label || icon ? 'right' : 'both'}
+                margin={label || (icon && !labelKey) ? 'right' : 'both'}
                 color={rightIconColor || iconColor}
               />
             )}
