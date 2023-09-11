@@ -275,6 +275,7 @@ export const StyledButtonContent = styled.div`
 
 export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
   color?: TReqoreEffectColor;
+  theme?: IReqoreTheme;
   content?: TReqoreBadge | TReqoreBadge[];
   wrap?: boolean;
   wrapGroup?: boolean;
@@ -282,12 +283,13 @@ export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
 
 export const ButtonBadge = memo(({ wrapGroup, ...props }: IReqoreButtonBadgeProps) => {
   const renderTag = useCallback(
-    ({ size, color, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
+    ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
       <ReqoreTag
         key={key}
         size={getOneLessSize(size)}
         asBadge
         color={color}
+        customTheme={theme}
         className='reqore-button-badge'
         minimal={!(content as IReqoreTagProps)?.effect?.gradient}
         {...(typeof content === 'string' || typeof content === 'number'
@@ -456,12 +458,12 @@ const ReqoreButton = memo(
                   {_children}
                 </StyledInvisibleContent>
                 {(badge || badge === 0) && wrap ? (
-                  <ButtonBadge content={badge} size={size} color={color} wrap />
+                  <ButtonBadge content={badge} size={size} theme={theme} wrap />
                 ) : null}
               </StyledAnimatedTextWrapper>
             )}
             {(badge || badge === 0) && !wrap ? (
-              <ButtonBadge content={badge} size={size} color={color} />
+              <ButtonBadge content={badge} size={size} theme={theme} />
             ) : null}
             {!rightIcon ? (
               _children ? (
