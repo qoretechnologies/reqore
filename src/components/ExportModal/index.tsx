@@ -83,6 +83,7 @@ export const ReqoreExportModal = ({
         activeTabIntent='info'
         activeTab={isArray ? 'csv' : 'json'}
         padded={false}
+        flat={false}
         {...tabsOptions}
         onTabChange={(tabId) => setTab(tabId.toString())}
         tabs={tabs}

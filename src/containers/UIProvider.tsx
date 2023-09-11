@@ -42,19 +42,20 @@ const GlobalStyle = createGlobalStyle`
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 999998;
+    z-index: 8998;
     cursor: pointer;
     background-color: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.3)};
     backdrop-filter: blur(3px);
   }
 
   .reqore-blur-z-index {
-    z-index: 999999;
+    z-index: 8999;
   }
 `;
 
 const StyledPortal = styled.div`
   z-index: 9999;
+  position: relative;
 
   * {
     box-sizing: border-box;

@@ -9,7 +9,7 @@ import { TReqoreTabsContentPadding } from './content';
 import ReqoreTabsList from './list';
 
 export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
-  label: string;
+  label: string | number;
   as?: any;
   id: string | number;
   props?: React.HTMLAttributes<any>;

@@ -2,6 +2,7 @@ import { cloneDeep, size as lodashSize } from 'lodash';
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { ReqoreMessage, ReqorePanel, useReqoreProperty } from '../..';
+import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { getTypeFromValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
@@ -28,10 +29,19 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
 export interface ITreeStyle {
   interactive?: boolean;
   theme: IReqoreTheme;
+  level?: number;
+  size?: TSizes;
 }
 
 export const StyledTreeLabel = styled(ReqoreMessage)`
   flex-shrink: 1;
+`;
+
+export const StyledTreeWrapper = styled.div<ITreeStyle>`
+  display: flex;
+  flex-flow: column;
+  gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
+  margin-left: ${({ level, size }) => (level ? level * GAP_FROM_SIZE[size] : 0)}px;
 `;
 
 export const ReqoreTree = ({
@@ -98,7 +108,7 @@ export const ReqoreTree = ({
       }
 
       return (
-        <div key={index} style={{ margin: level === 1 ? '15px 0' : `15px` }}>
+        <StyledTreeWrapper key={index} size={zoomToSize[zoom]} level={level}>
           {isObject ? (
             <ReqoreControlGroup size={zoomToSize[zoom]}>
               <ReqoreButton
@@ -113,7 +123,7 @@ export const ReqoreTree = ({
               {_showTypes ? <ReqoreTag label={dataType} className='reqore-tree-type' /> : null}
             </ReqoreControlGroup>
           ) : (
-            <ReqoreControlGroup size={zoomToSize[zoom]}>
+            <ReqoreControlGroup size={zoomToSize[zoom]} verticalAlign='flex-start'>
               <ReqoreTag
                 label={displayKey}
                 actions={
@@ -148,7 +158,7 @@ export const ReqoreTree = ({
           {isExpandable && isObject
             ? renderTree(data[key], stateKey, level + 1, [...path, key])
             : null}
-        </div>
+        </StyledTreeWrapper>
       );
     });
   };
@@ -226,6 +236,11 @@ export const ReqoreTree = ({
         flat
         transparent
         size={size}
+        contentStyle={{
+          display: 'flex',
+          flexFlow: 'column',
+          gap: `${GAP_FROM_SIZE[size]}px`,
+        }}
         {...rest}
         actions={actions}
       >

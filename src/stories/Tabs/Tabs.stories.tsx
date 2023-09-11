@@ -264,11 +264,11 @@ export const NotFlat: Story = {
   },
 };
 
-export const NoTabsPadding: Story = {
+export const WithPadding: Story = {
   render: Template,
 
   args: {
-    padded: false,
+    padded: true,
   },
 };
 
