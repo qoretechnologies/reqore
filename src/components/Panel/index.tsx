@@ -122,6 +122,7 @@ export interface IReqorePanelProps
   getContentRef?: (ref: HTMLDivElement) => any;
 
   headerProps?: React.HTMLAttributes<unknown>;
+  showHeaderTooltip?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -357,6 +358,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       disabled,
       breadcrumbs,
       showActionsWhenCollapsed = true,
+      showHeaderTooltip,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -698,7 +700,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                           noWrap: true,
                           ...headerEffect,
                         }}
-                        tooltip={label}
+                        tooltip={showHeaderTooltip ? label : undefined}
                       >
                         {label}
                       </ReqoreHeading>
@@ -787,7 +789,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             noHorizontalPadding={noHorizontalPadding}
           >
             {hasNonResponsiveActions(leftBottomActions) ? (
-              <ReqoreControlGroup size={panelSize}>
+              <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
                 {leftBottomActions.map(renderNonResponsiveActions('flex-start'))}
               </ReqoreControlGroup>
             ) : null}
@@ -797,6 +799,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 responsive={responsiveActions}
                 customTheme={theme}
                 size={panelSize}
+                style={{ marginRight: 'auto' }}
               >
                 {leftBottomActions.map(renderResponsiveActions('flex-start'))}
               </ReqoreControlGroup>
@@ -807,13 +810,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 horizontalAlign='flex-end'
                 responsive={responsiveActions}
                 customTheme={theme}
+                style={{ marginLeft: 'auto' }}
                 size={panelSize}
               >
                 {rightBottomActions.map(renderResponsiveActions())}
               </ReqoreControlGroup>
             )}
             {hasNonResponsiveActions(rightBottomActions) ? (
-              <ReqoreControlGroup horizontalAlign='flex-end' size={panelSize}>
+              <ReqoreControlGroup
+                horizontalAlign='flex-end'
+                size={panelSize}
+                style={{ marginLeft: 'auto' }}
+              >
                 {rightBottomActions.map(renderNonResponsiveActions())}
               </ReqoreControlGroup>
             ) : null}

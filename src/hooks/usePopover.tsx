@@ -5,6 +5,7 @@ import shortid from 'shortid';
 import { useContext } from 'use-context-selector';
 import { useReqoreProperty } from '..';
 import { IPopoverData } from '../containers/PopoverProvider';
+import { IReqoreOptions } from '../containers/UIProvider';
 import PopoverContext from '../context/PopoverContext';
 import {
   IReqoreIntent,
@@ -58,6 +59,7 @@ export interface IPopover
   icon?: IReqoreIconName;
   title?: string;
   updater?: string | number;
+  uiScale?: IReqoreOptions['uiScale'];
 }
 
 export interface IPopoverOptions extends IPopover {

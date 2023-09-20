@@ -2,6 +2,7 @@ import { keys } from 'lodash';
 import { useMemo } from 'react';
 import { SIZE_TO_PX } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
+import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
 import { IReqoreExportModalProps } from '../ExportModal';
@@ -45,6 +46,7 @@ export interface IReqoreKeyValueTableProps
 
   keyLabel?: string;
   keyIcon?: IReqoreIconName;
+  keyTooltip?: (key: string | number) => string | IReqoreTooltip;
   keyColumnIntent?: TReqoreIntent;
   keyAlign?: IReqoreTableColumn['align'];
   maxKeyWidth?: number;
@@ -55,6 +57,7 @@ export interface IReqoreKeyValueTableProps
 
   valueLabel?: string;
   valueIcon?: IReqoreIconName;
+  valueTooltip?: (value: TReqoreKeyValueTableValue) => string | IReqoreTooltip;
   valueAlign?: IReqoreTableColumn['align'];
   minValueWidth?: number;
   defaultValueFilter?: string | number;
@@ -74,8 +77,10 @@ export const ReqoreKeyValueTable = ({
   keyLabel,
   keyIcon,
   keyRenderer,
+  keyTooltip,
   valueLabel,
   valueIcon,
+  valueTooltip,
   valueRenderer,
   keyColumnIntent,
   minValueWidth = 100,
@@ -106,6 +111,7 @@ export const ReqoreKeyValueTable = ({
         },
 
         cell: {
+          tooltip: keyTooltip ? (cellValue) => keyTooltip(cellValue) : undefined,
           content: keyRenderer ? ({ tableKey }) => keyRenderer(tableKey) : 'title',
         },
       },
@@ -126,12 +132,7 @@ export const ReqoreKeyValueTable = ({
         },
 
         cell: {
-          tooltip: (value) => ({
-            content: JSON.stringify(value),
-            noArrow: true,
-            useTargetWidth: true,
-            delay: 400,
-          }),
+          tooltip: valueTooltip ? (cellValue) => valueTooltip(cellValue) : undefined,
           content: (data) =>
             valueRenderer?.(data, ReqoreTableValue) || <ReqoreTableValue value={data.value} />,
         },

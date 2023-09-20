@@ -64,6 +64,7 @@ export const decorators = [
             buttons: context.args.animatedButtons,
             dialogs: context.args.animatedDialogs,
           },
+          uiScale: context.args.globalUiScale,
         }}
       >
         <ReqoreLayoutContent style={{ height: '100%' }}>
@@ -78,10 +79,17 @@ export const decorators = [
             buttons: context.args.animatedButtons,
             dialogs: context.args.animatedDialogs,
           },
+          uiScale: context.args.globalUiScale,
         }}
       >
         <ReqoreLayoutContent>
-          <ReqoreContent style={{ padding: '20px', height: '100%' }}>
+          <ReqoreContent
+            style={{
+              padding: '20px',
+              height: '100%',
+              transform: `scale(${context.args.globalUiScale || 1})`,
+            }}
+          >
             <Story />
           </ReqoreContent>
         </ReqoreLayoutContent>
