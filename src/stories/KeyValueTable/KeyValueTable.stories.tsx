@@ -178,18 +178,21 @@ export const AllFiltersActive: Story = {
 
 export const WithActions: Story = {
   args: {
-    rowActions: () => [
-      {
-        icon: 'InformationLine',
-      },
-      {
-        icon: 'EditLine',
-      },
-      {
-        icon: 'DeleteBinLine',
-        intent: 'danger',
-      },
-    ],
+    rowActions: {
+      width: 120,
+      actions: () => [
+        {
+          icon: 'InformationLine',
+        },
+        {
+          icon: 'EditLine',
+        },
+        {
+          icon: 'DeleteBinLine',
+          intent: 'danger',
+        },
+      ],
+    },
     zoomable: true,
   },
 };

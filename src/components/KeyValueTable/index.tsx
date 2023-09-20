@@ -1,6 +1,5 @@
-import { keys, size } from 'lodash';
+import { keys, omit } from 'lodash';
 import { useMemo } from 'react';
-import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -53,10 +52,12 @@ export interface IReqoreKeyValueTableProps
 
   sortable?: boolean;
 
-  rowActions?: (
-    key: string,
-    value: TReqoreKeyValueTableValue
-  ) => Omit<IReqoreButtonProps, 'rightIcon' | 'label' | 'children'>[];
+  rowActions?: Partial<Omit<IReqoreTableColumn, 'cell'>> & {
+    actions: (
+      key: string,
+      value: TReqoreKeyValueTableValue
+    ) => Omit<IReqoreButtonProps, 'rightIcon' | 'label' | 'children'>[];
+  };
 
   valueLabel?: string;
   valueIcon?: IReqoreIconName;
@@ -150,11 +151,11 @@ export const ReqoreKeyValueTable = ({
         header: {
           icon: 'SettingsLine',
         },
-        width: size(rowActions('noop', 'noop')) * TABLE_SIZE_TO_PX[rest.size || 'normal'],
         align: 'center',
+        ...omit(rowActions, ['actions']),
         cell: {
           padded: 'none',
-          actions: (data) => rowActions(data.tableKey, data.value),
+          actions: (data) => rowActions.actions(data.tableKey, data.value),
         },
       });
     }
