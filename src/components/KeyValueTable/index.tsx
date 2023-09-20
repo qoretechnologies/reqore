@@ -1,6 +1,6 @@
 import { keys, size } from 'lodash';
 import { useMemo } from 'react';
-import { SIZE_TO_PX, TABLE_SIZE_TO_PX } from '../../constants/sizes';
+import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -143,7 +143,6 @@ export const ReqoreKeyValueTable = ({
     ];
 
     if (rowActions) {
-      console.log(size(rowActions('noop', 'noop')), SIZE_TO_PX[rest.size || 'normal']);
       columns.push({
         dataId: 'actions',
         hideable: false,
