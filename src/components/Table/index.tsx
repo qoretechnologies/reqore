@@ -88,7 +88,9 @@ export interface IReqoreTableColumn extends IReqoreIntent {
     onClick?: (cellValue: any) => void;
     tooltip?: (cellValue: any) => string | IReqoreTooltip;
     content?: TReqoreTableColumnContent;
-    actions?: (data: IReqoreTableRowData) => IReqoreButtonProps[];
+    actions?: (
+      data: IReqoreTableRowData
+    ) => Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'>[];
     intent?: TReqoreIntent;
     padded?: 'both' | 'horizontal' | 'vertical' | 'none';
   };
