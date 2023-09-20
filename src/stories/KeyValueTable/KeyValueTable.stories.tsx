@@ -180,6 +180,9 @@ export const WithActions: Story = {
   args: {
     rowActions: () => [
       {
+        icon: 'InformationLine',
+      },
+      {
         icon: 'EditLine',
       },
       {

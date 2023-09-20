@@ -1,6 +1,6 @@
-import { keys } from 'lodash';
+import { keys, size } from 'lodash';
 import { useMemo } from 'react';
-import { SIZE_TO_PX } from '../../constants/sizes';
+import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -53,7 +53,10 @@ export interface IReqoreKeyValueTableProps
 
   sortable?: boolean;
 
-  rowActions?: (key: string, value: TReqoreKeyValueTableValue) => IReqoreButtonProps[];
+  rowActions?: (
+    key: string,
+    value: TReqoreKeyValueTableValue
+  ) => Omit<IReqoreButtonProps, 'rightIcon' | 'label' | 'children'>[];
 
   valueLabel?: string;
   valueIcon?: IReqoreIconName;
@@ -147,7 +150,7 @@ export const ReqoreKeyValueTable = ({
         header: {
           icon: 'SettingsLine',
         },
-        width: SIZE_TO_PX[rest.size || 'normal'] * 2,
+        width: size(rowActions('noop', 'noop')) * TABLE_SIZE_TO_PX[rest.size || 'normal'],
         align: 'center',
         cell: {
           padded: 'none',
