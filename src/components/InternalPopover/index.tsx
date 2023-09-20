@@ -157,9 +157,10 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     icon,
     minimal,
     flat = true,
+    uiScale,
     effect,
   }) => {
-    const { removePopover, updatePopover, uiScale } = useContext(PopoverContext);
+    const { removePopover, updatePopover, uiScale: globalUiScale } = useContext(PopoverContext);
     const [popperElement, setPopperElement] = useState(null);
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
@@ -204,12 +205,15 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
       .replace(')', '')
       .split(',')
       .map((axis) => {
-        if (uiScale || uiScale === 0) {
-          return parseInt(axis, 10) < 0
-            ? parseInt(axis, 10) * uiScale
-            : parseInt(axis, 10) / uiScale;
+        const scale = uiScale || globalUiScale;
+        let modifiedAxis = parseInt(axis, 10);
+
+        if (scale || scale === 0) {
+          modifiedAxis =
+            parseInt(axis, 10) < 0 ? parseInt(axis, 10) * scale : parseInt(axis, 10) / scale;
         }
-        return parseInt(axis, 10);
+
+        return modifiedAxis;
       });
 
     return createPortal(

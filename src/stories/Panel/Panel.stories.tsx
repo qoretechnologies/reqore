@@ -11,6 +11,9 @@ import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args'
 
 const { createArg } = argManager<IReqorePanelProps>();
 
+const message =
+  'Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant. This system works for main characters who have started late, for alts, for players who have switched Covenants and are starting over, and for players who have simply missed weekly quests for earning Renown due to being away from the game. I am a message a very long message - Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant. This system works for main characters who have started late, for alts, for players who have switched Covenants and are starting over, and for players who have simply missed weekly quests for earning Renown due to being away from the game. I am a message a very long message - Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant. This system works for main characters who have started late, for alts, for players who have switched Covenants and are starting over, and for players who have simply missed weekly quests for earning Renown due to being away from the game. I am a message a very long message - Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant. This system works for main characters who have started late, for alts, for players who have switched Covenants and are starting over, and for players who have simply missed weekly quests for earning Renown due to being away from the game. I am a message a very long message - Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant. This system works for main characters who have started late, for alts, for players who have switched Covenants and are starting over, and for players who have simply missed weekly quests for earning Renown due to being away from the game. I am a message a very long message - Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant. This system works for main characters who have started late, for alts, for players who have switched Covenants and are starting over, and for players who have simply missed weekly quests for earning Renown due to being away from the game.';
+
 const meta = {
   title: 'Layout/Panel/Stories',
   component: ReqorePanel,
@@ -270,31 +273,7 @@ const Template: StoryFn<IReqorePanelProps> = (args: IReqorePanelProps) => {
       ]}
       {...args}
     >
-      Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system
-      of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant.
-      This system works for main characters who have started late, for alts, for players who have
-      switched Covenants and are starting over, and for players who have simply missed weekly quests
-      for earning Renown due to being away from the game. I am a message a very long message -
-      Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system
-      of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant.
-      This system works for main characters who have started late, for alts, for players who have
-      switched Covenants and are starting over, and for players who have simply missed weekly quests
-      for earning Renown due to being away from the game. I am a message a very long message -
-      Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system
-      of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant.
-      This system works for main characters who have started late, for alts, for players who have
-      switched Covenants and are starting over, and for players who have simply missed weekly quests
-      for earning Renown due to being away from the game. I am a message a very long message -
-      Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system
-      of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant.
-      This system works for main characters who have started late, for alts, for players who have
-      switched Covenants and are starting over, and for players who have simply missed weekly quests
-      for earning Renown due to being away from the game. I am a message a very long message -
-      Shadowlands has mechanisms put in place for allowing players to catch up on Renown, the system
-      of gaining favor and unlocking rewards, Campaign chapters, and soulbinds within your Covenant.
-      This system works for main characters who have started late, for alts, for players who have
-      switched Covenants and are starting over, and for players who have simply missed weekly quests
-      for earning Renown due to being away from the game.
+      {args.children || message}
     </ReqorePanel>
   );
 };
@@ -426,11 +405,12 @@ export const ActionsShownOnHover: Story = {
   render: Template,
 
   args: {
-    label: undefined,
+    style: { minWidth: 400, maxWidth: 600 },
+    label: 'This is a simple test to',
     collapsible: false,
-    icon: undefined,
-    badge: undefined,
+    responsiveActions: false,
     actions: [{ label: 'test', show: 'hover' }],
+    children: 'This is a panel',
     bottomActions: [
       {
         position: 'right',

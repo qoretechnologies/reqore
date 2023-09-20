@@ -28,6 +28,7 @@ export type AdditionalStorybookArgs = IReqoreUIProviderProps & {
   insideModal?: boolean;
   animatedButtons?: IReqoreUIProviderProps['options']['animations']['buttons'];
   animatedDialogs?: IReqoreUIProviderProps['options']['animations']['dialogs'];
+  globalUiScale?: IReqoreUIProviderProps['options']['uiScale'];
 };
 
 export type StoryMeta<

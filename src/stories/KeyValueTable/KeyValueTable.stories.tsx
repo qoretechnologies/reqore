@@ -5,6 +5,7 @@ import ReqoreIcon from '../../components/Icon';
 import { IReqoreKeyValueTableProps, ReqoreKeyValueTable } from '../../components/KeyValueTable';
 import { IReqoreTableRowData, TReqoreTableColumnContent } from '../../components/Table';
 import { TReqorePaginationType } from '../../constants/paging';
+import { sleep } from '../../helpers/utils';
 import { Exportable as ExportableTable } from '../Table/Table.stories';
 import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
@@ -228,6 +229,34 @@ export const Sizes: Story = {
 export const DefaultPaging: Story = {
   args: {
     paging: 'buttons',
+  },
+};
+
+export const KeyTooltip: Story = {
+  args: {
+    keyTooltip: (key) => `Tooltip for ${key}`,
+  },
+  play: async () => {
+    await sleep(500);
+
+    await fireEvent.mouseEnter(document.querySelector('.reqore-table-cell'));
+  },
+};
+
+export const ValueTooltip: Story = {
+  args: {
+    valueTooltip: (value) => ({
+      content: `${JSON.stringify(value || 'No value')}`,
+      noArrow: true,
+      blur: true,
+      flat: false,
+      placement: 'top',
+    }),
+  },
+  play: async () => {
+    await sleep(500);
+
+    await fireEvent.mouseEnter(document.querySelectorAll('.reqore-table-cell')[23]);
   },
 };
 
