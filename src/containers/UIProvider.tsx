@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 import merge from 'lodash/merge';
 import { rgba } from 'polished';
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, memo, useMemo, useState } from 'react';
 import styled, { createGlobalStyle, css } from 'styled-components';
 import ReqoreLayoutWrapper from '../components/Layout';
 import { IReqoreNotificationsPosition } from '../components/Notifications';
@@ -54,9 +54,6 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const StyledPortal = styled.div`
-  z-index: 9999;
-  position: relative;
-
   * {
     box-sizing: border-box;
   }
@@ -66,20 +63,25 @@ const StyledPortal = styled.div`
   `}
 `;
 
-const ReqorePortal = forwardRef<HTMLDivElement, object>((_props, ref) => {
-  return (
-    <ReqoreThemeProvider>
-      <StyledPortal id='reqore-portal' ref={ref} />
-    </ReqoreThemeProvider>
-  );
-});
+const ReqorePortal = memo(
+  forwardRef<HTMLDivElement, object>((_props, ref) => {
+    return (
+      <ReqoreThemeProvider>
+        <StyledPortal id='reqore-portal' ref={ref} />
+      </ReqoreThemeProvider>
+    );
+  })
+);
 
-const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({ children, theme, options }) => {
+const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(({ children, theme, options }) => {
   const [modalPortal, setModalPortal] = useState<any>(false);
 
-  const _theme: Partial<IReqoreTheme> = cloneDeep(theme || {});
-  const _defaultTheme: IReqoreTheme = cloneDeep(DEFAULT_THEME);
-  const rebuiltTheme: IReqoreTheme = buildTheme(merge(_defaultTheme, _theme));
+  const _theme: Partial<IReqoreTheme> = useMemo(() => cloneDeep(theme || {}), [theme]);
+  const _defaultTheme: IReqoreTheme = useMemo(() => cloneDeep(DEFAULT_THEME), [DEFAULT_THEME]);
+  const rebuiltTheme: IReqoreTheme = useMemo(
+    () => buildTheme(merge(_defaultTheme, _theme)),
+    [_defaultTheme, _theme]
+  );
 
   return (
     <>
@@ -94,6 +96,6 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = ({ children, theme, o
       </ThemeContext.Provider>
     </>
   );
-};
+});
 
 export default ReqoreUIProvider;
