@@ -3,6 +3,7 @@ import { rgba } from 'polished';
 import { memo } from 'react';
 import styled from 'styled-components';
 import { IReqoreDrawerStyle } from '.';
+import { useReqoreProperty } from '../..';
 import { getMainBackgroundColor } from '../../helpers/colors';
 
 export interface IReqoreBackdropProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -27,22 +28,26 @@ export const StyledBackdrop = styled(animated.div)<
 `;
 
 export const ReqoreBackdrop = memo(
-  ({ onClose, zIndex, blur, opacity, ...rest }: IReqoreBackdropProps) => (
-    <StyledBackdrop
-      {...rest}
-      className={`${rest.className || ''} reqore-drawer-backdrop`}
-      onClick={(event) => {
-        // Only close if the click is on the backdrop itself
-        if (event.target === event.currentTarget) {
-          onClose?.();
-        }
-      }}
-      closable={!!onClose}
-      zIndex={zIndex}
-      blur={blur}
-      style={{
-        opacity,
-      }}
-    />
-  )
+  ({ onClose, zIndex, blur, opacity, ...rest }: IReqoreBackdropProps) => {
+    const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
+
+    return (
+      <StyledBackdrop
+        {...rest}
+        className={`${rest.className || ''} reqore-drawer-backdrop`}
+        onClick={(event) => {
+          // Only close if the click is on the backdrop itself
+          if (event.target === event.currentTarget) {
+            onClose?.();
+          }
+        }}
+        closable={!!onClose}
+        zIndex={zIndex || getAndIncreaseZIndex()}
+        blur={blur}
+        style={{
+          opacity,
+        }}
+      />
+    );
+  }
 );
