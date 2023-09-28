@@ -5,6 +5,7 @@ import { TReqoreIntent } from '../../constants/theme';
 import { IWithReqoreEffect } from '../../types/global';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
+import { IReqoreIconProps } from '../Icon';
 
 export interface IReqoreSpinnerProps
   extends Omit<IReqoreControlGroupProps, 'children' | 'size'>,
@@ -17,6 +18,7 @@ export interface IReqoreSpinnerProps
   labelEffect?: IReqoreEffect;
   iconMargin?: 'right' | 'left' | 'both';
   centered?: boolean;
+  iconProps?: IReqoreIconProps;
 }
 
 export const ReqoreSpinner = ({
@@ -29,6 +31,7 @@ export const ReqoreSpinner = ({
   effect,
   iconMargin,
   centered,
+  iconProps,
   ...rest
 }: IReqoreSpinnerProps) => {
   const renderContent = useCallback(() => {
@@ -41,6 +44,7 @@ export const ReqoreSpinner = ({
         animation='spin'
         className='reqore-spinner'
         margin={iconMargin || (children ? 'right' : undefined)}
+        {...iconProps}
       />
     );
   }, [size, intent, type, children, iconColor]);

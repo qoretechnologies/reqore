@@ -27,15 +27,16 @@ export interface IReqoreIconProps
   margin?: 'right' | 'left' | 'both';
   image?: string;
   rounded?: boolean;
+  rotation?: number;
   animation?: 'spin' | 'heartbeat';
 }
 
 const SpinKeyframes = keyframes`
   0% {
-    transform: rotate(0deg);
+    rotate: 0deg;
   }
   100% {
-    transform: rotate(360deg);
+    rotate: 360deg;
   }
 `;
 
@@ -49,6 +50,7 @@ export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left'
   overflow: hidden;
 
   border-radius: ${({ rounded }) => (rounded ? '50%' : undefined)};
+  rotate: ${({ rotation }) => (rotation ? `${rotation}deg` : undefined)};
 
   ${({ margin, size }) =>
     margin &&

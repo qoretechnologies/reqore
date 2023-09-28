@@ -38,7 +38,7 @@ import {
   TReqoreEffectColor,
   TReqoreHexColor,
 } from '../Effect';
-import ReqoreIcon from '../Icon';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 
 export interface IReqoreTagAction extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent {
   icon: IReqoreIconName;
@@ -61,10 +61,12 @@ export interface IReqoreTagProps
   onRemoveClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   icon?: IReqoreIconName;
+  leftIconProps?: IReqoreIconProps;
   rightIcon?: IReqoreIconName;
   iconColor?: TReqoreEffectColor;
   leftIconColor?: TReqoreEffectColor;
   rightIconColor?: TReqoreEffectColor;
+  rightIconProps?: IReqoreIconProps;
   color?: TReqoreEffectColor;
   actions?: IReqoreTagAction[];
   width?: string;
@@ -261,6 +263,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       iconColor,
       labelEffect,
       labelKeyEffect,
+      leftIconProps,
+      rightIconProps,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -323,6 +327,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 margin={label || labelKey ? 'left' : 'both'}
                 color={leftIconColor || iconColor}
+                {...leftIconProps}
               />
             )}
             {labelKey && (
@@ -370,6 +375,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 margin={label || (icon && !labelKey) ? 'right' : 'both'}
                 color={rightIconColor || iconColor}
+                {...rightIconProps}
               />
             )}
           </StyledTagContentWrapper>

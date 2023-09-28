@@ -139,6 +139,8 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
       <ReqoreControlGroup wrap>
         <ReqoreButton
           {...buttonProps}
+          leftIconProps={{ rotation: 180 }}
+          rightIconProps={{ rotation: 270 }}
           description='This is a very interesting description for a button, I like it very much'
           iconColor='#38fdb2'
         >
