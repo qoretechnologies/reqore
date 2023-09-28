@@ -63,6 +63,13 @@ export const Basic: Story = {
             effect={{ opacity: 0.5 }}
             margin='both'
           />
+          <ReqoreIcon
+            icon='SignalTowerFill'
+            size='20px'
+            color='#8d2a5c'
+            rotation={90}
+            margin='both'
+          />
         </ReqorePanel>
         <br />
         <ReqorePanel label='Image' flat minimal>
@@ -117,6 +124,12 @@ export const Basic: Story = {
             image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
             size='40px'
             effect={{ saturate: 150 }}
+            margin='both'
+          />
+          <ReqoreIcon
+            image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
+            size='40px'
+            rotation={180}
             margin='both'
           />
         </ReqorePanel>

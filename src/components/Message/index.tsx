@@ -21,7 +21,7 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import { TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
-import ReqoreIcon from '../Icon';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import {
   StyledIconWrapper,
   StyledNotificationContent,
@@ -46,6 +46,7 @@ export interface IReqoreMessageProps
   children: any;
   icon?: IReqoreIconName;
   iconColor?: TReqoreEffectColor;
+  iconProps?: IReqoreIconProps;
   onClose?: () => any;
   onClick?: () => any;
   duration?: number;
@@ -81,6 +82,7 @@ const ReqoreMessage = memo(
         tooltip,
         fixed,
         fluid,
+        iconProps,
         ...rest
       },
       ref
@@ -159,6 +161,7 @@ const ReqoreMessage = memo(
                     iconColor={iconColor}
                     type={5}
                     iconMargin={flat && minimal ? 'right' : 'both'}
+                    iconProps={iconProps}
                   />
                 ) : (
                   <ReqoreIcon
@@ -166,6 +169,7 @@ const ReqoreMessage = memo(
                     margin={flat && minimal ? 'right' : 'both'}
                     size={size}
                     color={iconColor}
+                    {...iconProps}
                   />
                 )}
               </StyledIconWrapper>

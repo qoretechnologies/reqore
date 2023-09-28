@@ -74,6 +74,7 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
     color: TReqoreEffectColor;
     inset?: boolean;
     blur?: number;
+    opacity?: number;
   };
   interactive?: boolean;
 }
@@ -233,12 +234,15 @@ export const StyledEffect = styled.span`
       effect.glow.color === 'main' ? 'main:lighten:2' : effect.glow.color
     );
     const blur = effect.glow.blur || 0;
+    const opacity = effect.glow.opacity || 1;
 
     return css`
       color: ${Colors.LIGHT};
-      text-shadow: 0 0 ${blur}px ${color}, 0 0 ${blur + 5}px ${color}, 0 0 ${blur + 10}px ${color},
-        0 0 1px ${getReadableColorFrom(color)}, 0 0 2px ${getReadableColorFrom(color)},
-        0 0 3px ${getReadableColorFrom(color)};
+      text-shadow: 0 0 ${blur}px ${rgba(color, opacity)}, 0 0 ${blur + 5}px ${rgba(color, opacity)},
+        0 0 ${blur + 10}px ${rgba(color, opacity)},
+        0 0 1px ${rgba(getReadableColorFrom(color), opacity)},
+        0 0 2px ${rgba(getReadableColorFrom(color), opacity)},
+        0 0 3px ${rgba(getReadableColorFrom(color), opacity)};
     `;
   }}
 

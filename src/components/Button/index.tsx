@@ -43,7 +43,7 @@ import {
   TReqoreEffectColor,
   TReqoreHexColor,
 } from '../Effect';
-import ReqoreIcon from '../Icon';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
@@ -75,6 +75,8 @@ export interface IReqoreButtonProps
   iconColor?: TReqoreEffectColor;
   leftIconColor?: TReqoreEffectColor;
   rightIconColor?: TReqoreEffectColor;
+  leftIconProps?: IReqoreIconProps;
+  rightIconProps?: IReqoreIconProps;
   labelEffect?: IReqoreEffect;
   descriptionEffect?: IReqoreEffect;
   label?: React.HTMLAttributes<HTMLButtonElement>['children'];
@@ -356,6 +358,8 @@ const ReqoreButton = memo(
         rightIconColor,
         iconColor,
         iconsAlign,
+        leftIconProps,
+        rightIconProps,
         label,
         as,
         ...rest
@@ -421,6 +425,7 @@ const ReqoreButton = memo(
                   icon={icon}
                   size={size}
                   color={leftIconColor || iconColor}
+                  {...leftIconProps}
                   style={
                     textAlign !== 'left' || iconsAlign === 'center'
                       ? {
@@ -478,6 +483,8 @@ const ReqoreButton = memo(
                 <ReqoreIcon
                   icon={rightIcon}
                   size={size}
+                  color={rightIconColor || iconColor}
+                  {...rightIconProps}
                   style={
                     textAlign !== 'right' || iconsAlign === 'center'
                       ? {
@@ -489,7 +496,6 @@ const ReqoreButton = memo(
                         }
                       : undefined
                   }
-                  color={rightIconColor || iconColor}
                 />
               </>
             )}
