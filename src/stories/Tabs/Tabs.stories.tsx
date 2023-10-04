@@ -98,7 +98,7 @@ const tabs = [
       textSize: 'small',
     },
   },
-] as IReqoreTabsProps['tabs'];
+] satisfies IReqoreTabsProps['tabs'];
 
 const { createArg } = argManager<IReqoreTabsProps>();
 

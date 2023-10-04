@@ -1,25 +1,18 @@
-import { isArray } from 'lodash';
+import { size as count, isArray, last } from 'lodash';
 import React, { useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqoreDropdown } from '../..';
-import {
-  ICON_FROM_SIZE,
-  MARGIN_FROM_SIZE,
-  PADDING_FROM_SIZE,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { ICON_FROM_SIZE, MARGIN_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
-import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import ReqoreIcon from '../Icon';
 import { IReqoreTabsListItem } from '../Tabs';
 import { StyledTabListItem } from '../Tabs/item';
-import ReqoreTabsList, { StyledReqoreTabsList, getTabsLength } from '../Tabs/list';
+import ReqoreTabsList, { StyledReqoreTabsList, getLabelLength, getTabsLength } from '../Tabs/list';
 import ReqoreBreadcrumbsItem from './item';
 
 export interface IReqoreBreadcrumbItemTabs {
@@ -32,7 +25,7 @@ export interface IReqoreBreadcrumbItemTabs {
 export interface IReqoreBreadcrumbItem extends IReqoreButtonProps {
   label?: string;
   as?: any;
-  props?: React.HTMLAttributes<any>;
+  props?: Record<string, any>;
   withTabs?: IReqoreBreadcrumbItemTabs;
 }
 
@@ -110,7 +103,7 @@ const getBreadcrumbsLength = (
 ): number =>
   items.reduce((len, item) => {
     if (isArray(item)) {
-      return len + 70;
+      return len + 120;
     }
 
     if (item.withTabs) {
@@ -124,10 +117,9 @@ const getBreadcrumbsLength = (
 
     return (
       len +
-      PADDING_FROM_SIZE[size] +
+      PADDING_FROM_SIZE[size] * 2 +
       ICON_FROM_SIZE[size] +
-      arrowSize +
-      calculateStringSizeInPixels(item.label || '', TEXT_FROM_SIZE[size])
+      getLabelLength(item, undefined, size)
     );
   }, 0);
 
@@ -144,17 +136,17 @@ const getTransformedItems = (
   let newItems = [...items];
 
   while (getBreadcrumbsLength(newItems, size) > width && !stop) {
-    if (isArray(newItems[1])) {
-      newItems[1].push(newItems[2] as IReqoreBreadcrumbItem);
-      newItems[2] = undefined!;
+    if (isArray(newItems[0])) {
+      newItems[0].push(newItems[1] as IReqoreBreadcrumbItem);
+      newItems[1] = undefined!;
     } else {
-      const secondItem = newItems[1];
-      newItems[1] = [secondItem];
+      const secondItem = newItems[0];
+      newItems[0] = [secondItem];
     }
 
     newItems = newItems.filter((i) => i);
 
-    if (!newItems[2] || (newItems[2] as IReqoreBreadcrumbItem).withTabs) {
+    if (!newItems[1] || (newItems[1] as IReqoreBreadcrumbItem).withTabs) {
       stop = true;
     }
   }
@@ -183,14 +175,16 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     if (isArray(item)) {
       return (
         <React.Fragment key={index}>
-          <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
           <ReqoreDropdown
             key={`dropdown-${index}`}
-            icon='MoreFill'
+            icon={last(item)?.icon}
             handler='hoverStay'
             delay={500}
+            badge={count(item)}
             items={item as IReqoreDropdownItem[]}
-          />
+          >
+            <ReqoreIcon icon='MoreLine' />
+          </ReqoreDropdown>
         </React.Fragment>
       );
     }

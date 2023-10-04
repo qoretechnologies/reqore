@@ -20,6 +20,7 @@ import {
 } from '../../helpers/colors';
 import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { IReqoreBreadcrumbItem } from '../Breadcrumbs';
 import { IReqoreButtonProps } from '../Button';
 import { TReqoreHexColor } from '../Effect';
 import ReqoreMenu from '../Menu';
@@ -104,8 +105,8 @@ const getBadgeLength = (badge: IReqoreButtonProps['badge'], tabsSize: TSizes = '
   );
 };
 
-const getLabelLength = (
-  item: IReqoreTabsListItem | IReqoreTabsListItem[] | IReqoreTagProps,
+export const getLabelLength = (
+  item: IReqoreBreadcrumbItem | IReqoreTabsListItem | IReqoreTabsListItem[] | IReqoreTagProps,
   activeTab?: string | number,
   tabsSize: TSizes = 'normal'
 ) => {
@@ -128,14 +129,21 @@ const getLabelLength = (
   const badgeLength = isArray(item)
     ? 0
     : getBadgeLength((item as IReqoreTabsListItem).badge, tabsSize);
+  const descriptionLength = isArray(item)
+    ? 0
+    : calculateStringSizeInPixels(
+        (item as IReqoreBreadcrumbItem | IReqoreTabsListItem)?.description?.toString(),
+        TEXT_FROM_SIZE[getOneLessSize(tabsSize)]
+      );
 
-  return (
+  const topLabelLength =
     calculateStringSizeInPixels(label?.toString(), TEXT_FROM_SIZE[tabsSize]) +
     icon +
+    rightIcon +
     closeIconSize +
-    badgeLength +
-    rightIcon
-  );
+    badgeLength;
+
+  return Math.max(topLabelLength, descriptionLength);
 };
 
 /**
