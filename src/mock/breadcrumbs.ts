@@ -33,7 +33,7 @@ export default [
   {
     label: 'Jobs',
     icon: Icons.Jobs,
-    customTheme: '#a9a9a9',
+    customTheme: { main: '#a9a9a9' },
     badge: 10,
     description: 'Some item description',
     intent: 'warning',
@@ -42,9 +42,9 @@ export default [
   {
     tooltip: 'Connections',
     icon: Icons.Connections,
-    customTheme: '#a9a9a9',
+    customTheme: { main: 'danger:darken' },
   },
-] as IReqoreBreadcrumbItem[];
+] satisfies IReqoreBreadcrumbItem[];
 
 export const breadcrumbsTabs = {
   withTabs: {

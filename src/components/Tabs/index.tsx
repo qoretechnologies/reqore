@@ -9,10 +9,10 @@ import { TReqoreTabsContentPadding } from './content';
 import ReqoreTabsList from './list';
 
 export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
-  label: string | number;
+  label?: string | number;
   as?: any;
   id: string | number;
-  props?: React.HTMLAttributes<any>;
+  props?: Record<string, any>;
   onClick?: (event: any) => any;
   onCloseClick?: (id: string | number) => any;
   activeIntent?: TReqoreIntent;

@@ -667,7 +667,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     padded={false}
                     margin='none'
                     flat
-                    responsive={false}
+                    responsive
                   />
                 ) : icon || iconImage || label ? (
                   <StyledPanelTitleHeaderContent
