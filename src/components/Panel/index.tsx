@@ -309,14 +309,14 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
   padding-bottom: ${({ minimal, padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : 0};
+    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : minimal ? 0 : undefined};
   padding-top: ${({ minimal, size }: IStyledPanel) =>
     minimal ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   padding-top: ${({ minimal, padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : 0};
+    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : minimal ? 0 : undefined};
   padding-bottom: ${({ minimal, size }: IStyledPanel) =>
     minimal ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
   border-bottom: 0;
