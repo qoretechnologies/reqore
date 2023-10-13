@@ -678,7 +678,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       <StyledPanel
         {...omit(rest, ['onResize'])}
         {..._resizable}
-        as={rest.as || Resizable}
+        as={rest.as || !!resizable ? Resizable : 'div'}
         ref={(ref) => {
           let _ref = ref;
 

@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import { IReqoreHeadingProps, ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
@@ -15,6 +15,10 @@ export const LabelEditor = memo(
   ({ label, onSubmit, inputProps, iconProps, ...rest }: IReqoreLabelEditorProps) => {
     const [name, setName] = useState<string | number>(label);
     const [isEditing, setIsEditing] = useState(false);
+
+    useEffect(() => {
+      setName(label);
+    }, [label]);
 
     useUpdateEffect(() => {
       if (!isEditing) {

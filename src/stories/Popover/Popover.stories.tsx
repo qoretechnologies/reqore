@@ -1,6 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { fireEvent } from '@storybook/testing-library';
-import { act } from '@testing-library/react';
 import { useState } from 'react';
 import { IReqorePopoverProps } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
@@ -425,7 +424,7 @@ export const ChangingElement: Story = {
   play: async ({ canvasElement }) => {
     const textarea = canvasElement.querySelector('textarea');
     await sleep(1000);
-    act(() => fireEvent.focusIn(textarea));
+    fireEvent.focusIn(textarea);
     await sleep(1000);
     fireEvent.change(textarea, {
       target: {
