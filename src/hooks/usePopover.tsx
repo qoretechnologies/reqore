@@ -171,7 +171,6 @@ const usePopover = ({
 
   useEffect(() => {
     if (targetElement && content) {
-      console.log(targetElement);
       targetElement.addEventListener(startEvent, _addPopover);
 
       if (endEvent) {
