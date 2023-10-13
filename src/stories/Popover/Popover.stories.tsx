@@ -1,15 +1,20 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { fireEvent } from '@storybook/testing-library';
 import { useState } from 'react';
 import { IReqorePopoverProps } from '../../components/Popover';
+import { sleep } from '../../helpers/utils';
 import usePopover from '../../hooks/usePopover';
 import {
   ReqoreButton,
   ReqoreControlGroup,
+  ReqoreMenu,
+  ReqoreMenuItem,
   ReqoreMessage,
   ReqoreModal,
   ReqorePanel,
   ReqorePopover,
   ReqoreSpacer,
+  ReqoreTextarea,
 } from '../../index';
 import { StoryMeta } from '../utils';
 import { FlatArg, argManager } from '../utils/args';
@@ -391,5 +396,41 @@ export const BlurredInsideModal: Story = {
     noWrapper: true,
     insideModal: true,
     animatedDialogs: false,
+  },
+};
+
+export const ChangingElement: Story = {
+  render: (args) => {
+    return <ReqoreTextarea scaleWithContent tooltip={args} />;
+  },
+
+  args: {
+    content: (
+      <ReqoreMenu>
+        <ReqoreMenuItem label='Item 1' />
+        <ReqoreMenuItem label='Item 2' />
+        <ReqoreMenuItem label='Item 3' />
+        <ReqoreMenuItem label='Item 4' />
+        <ReqoreMenuItem label='Item 5' />
+        <ReqoreMenuItem label='Item 6' />
+      </ReqoreMenu>
+    ),
+    handler: 'focus',
+    noArrow: true,
+    noWrapper: true,
+    useTargetWidth: true,
+  },
+
+  play: async ({ canvasElement }) => {
+    const textarea = canvasElement.querySelector('textarea');
+    await sleep(1000);
+    fireEvent.focusIn(textarea);
+    await sleep(1000);
+    fireEvent.change(textarea, {
+      target: {
+        value:
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl.',
+      },
+    });
   },
 };

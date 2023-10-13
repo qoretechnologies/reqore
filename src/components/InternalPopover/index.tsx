@@ -3,6 +3,7 @@ import { rgba } from 'polished';
 import React, { MutableRefObject, memo, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePopper } from 'react-popper';
+import { useUnmount, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { useContext } from 'use-context-selector';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
@@ -164,7 +165,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     const [popperElement, setPopperElement] = useState(null);
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
-    const { styles, attributes } = usePopper(targetElement, popperElement, {
+    const mutationObserber: MutableRefObject<any> = useRef(null);
+    const { styles, attributes, forceUpdate, state } = usePopper(targetElement, popperElement, {
       placement,
       modifiers: [
         {
@@ -184,6 +186,27 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           enabled: true,
         },
       ],
+    });
+
+    useUpdateEffect(() => {
+      if (!mutationObserber.current && targetElement && state) {
+        // Watch for changes in the target element
+        const observer = new MutationObserver(() => {
+          forceUpdate();
+        });
+
+        observer.observe(document, {
+          attributes: true,
+          childList: true,
+          subtree: true,
+        });
+
+        mutationObserber.current = observer;
+      }
+    }, [styles, attributes, state]);
+
+    useUnmount(() => {
+      mutationObserber.current?.disconnect();
     });
 
     useEffect(() => {

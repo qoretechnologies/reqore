@@ -474,6 +474,7 @@ const ReqoreControlGroup = memo(
                 active={isOverflownDialogOpen}
                 flat
                 fixed
+                onClick={(e) => e.stopPropagation()}
               />,
             ]
           : children,

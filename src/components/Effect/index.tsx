@@ -75,6 +75,7 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
     inset?: boolean;
     blur?: number;
     opacity?: number;
+    when?: 'always' | 'hover' | 'focus' | 'active';
   };
   interactive?: boolean;
 }
@@ -222,28 +223,58 @@ export const StyledEffect = styled.span`
       return undefined;
     }
 
+    let glow;
+
     if (!isText) {
-      return css`
+      glow = css`
         box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 ${effect.glow.blur || 0}px
           ${effect.glow.size || 2}px ${getColorFromMaybeString(theme, effect.glow.color)};
       `;
+    } else {
+      const color = getColorFromMaybeString(
+        theme,
+        effect.glow.color === 'main' ? 'main:lighten:2' : effect.glow.color
+      );
+      const blur = effect.glow.blur || 0;
+      const opacity = effect.glow.opacity || 1;
+
+      glow = css`
+        color: ${Colors.LIGHT};
+        text-shadow: 0 0 ${blur}px ${rgba(color, opacity)},
+          0 0 ${blur + 5}px ${rgba(color, opacity)}, 0 0 ${blur + 10}px ${rgba(color, opacity)},
+          0 0 1px ${rgba(getReadableColorFrom(color), opacity)},
+          0 0 2px ${rgba(getReadableColorFrom(color), opacity)},
+          0 0 3px ${rgba(getReadableColorFrom(color), opacity)};
+      `;
     }
 
-    const color = getColorFromMaybeString(
-      theme,
-      effect.glow.color === 'main' ? 'main:lighten:2' : effect.glow.color
-    );
-    const blur = effect.glow.blur || 0;
-    const opacity = effect.glow.opacity || 1;
+    if (effect.glow.when === 'always' || !effect.glow.when) {
+      return glow;
+    }
 
-    return css`
-      color: ${Colors.LIGHT};
-      text-shadow: 0 0 ${blur}px ${rgba(color, opacity)}, 0 0 ${blur + 5}px ${rgba(color, opacity)},
-        0 0 ${blur + 10}px ${rgba(color, opacity)},
-        0 0 1px ${rgba(getReadableColorFrom(color), opacity)},
-        0 0 2px ${rgba(getReadableColorFrom(color), opacity)},
-        0 0 3px ${rgba(getReadableColorFrom(color), opacity)};
-    `;
+    if (effect.glow.when === 'hover') {
+      return css`
+        &:hover {
+          ${glow}
+        }
+      `;
+    }
+
+    if (effect.glow.when === 'focus') {
+      return css`
+        &:focus {
+          ${glow}
+        }
+      `;
+    }
+
+    if (effect.glow.when === 'active') {
+      return css`
+        &:active {
+          ${glow}
+        }
+      `;
+    }
   }}
 
   ${({ effect }: IReqoreTextEffectProps) =>

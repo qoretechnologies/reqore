@@ -1,4 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { fireEvent } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
@@ -358,6 +359,17 @@ export const Minimal: Story = {
   },
 };
 
+export const MinimalWithIntent: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+    flat: true,
+    intent: 'info',
+    transparent: true,
+  },
+};
+
 export const Disabled: Story = {
   render: Template,
 
@@ -613,5 +625,30 @@ export const WithEffect: Story = {
       spaced: 2,
     },
     headerSize: 2,
+  },
+};
+
+export const Resizable: Story = {
+  render: Template,
+
+  args: {
+    resizable: {
+      minWidth: 400,
+      maxWidth: 600,
+      defaultSize: { width: 400, height: '100%' },
+      enable: { right: true },
+    },
+  },
+};
+
+export const EditableLabel: Story = {
+  render: Template,
+
+  args: {
+    onLabelEdit: (label) => console.log(label),
+    badge: undefined,
+  },
+  play: async ({ canvasElement }) => {
+    await fireEvent.click(canvasElement.querySelector('.reqore-label-editor'));
   },
 };

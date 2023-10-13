@@ -17,9 +17,20 @@ export default [
     props: {
       href: 'https://google.com',
     },
-    icon: Icons.Workflows,
+    leftIconProps: {
+      image:
+        'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
+    },
     flat: false,
     intent: 'info',
+    effect: {
+      glow: {
+        color: 'info',
+        size: 1,
+        blur: 10,
+        when: 'hover',
+      },
+    },
   },
   {
     icon: Icons.Services,
