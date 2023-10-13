@@ -393,8 +393,8 @@ const ReqoreButton = memo(
           {...rest}
           effect={{
             interactive: !readOnly && !rest.disabled,
-            gradient: intent ? undefined : fixedEffect?.gradient,
             ...fixedEffect,
+            gradient: intent ? undefined : fixedEffect?.gradient,
           }}
           tabindex={rest.disabled ? -1 : 0}
           as={as || 'button'}

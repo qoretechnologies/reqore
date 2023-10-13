@@ -273,8 +273,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     2 +
     (SIZE_TO_PX[size] + ((transparent && flat) || minimal ? 0 : PADDING_FROM_SIZE[size]) * 2)}px;
   align-items: center;
-  padding: ${({ noHorizontalPadding, size, transparent, flat, minimal }: IStyledPanel) =>
-    `${transparent && flat ? 0 : PADDING_FROM_SIZE[size]}px ${
+  padding: ${({ noHorizontalPadding, size, transparent, flat, minimal, intent }: IStyledPanel) =>
+    `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
       noHorizontalPadding
         ? 0
         : `${minimal ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]}px`
@@ -308,13 +308,15 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
-  padding-bottom: ${({ minimal }: IStyledPanel) => (minimal ? 0 : undefined)};
+  padding-bottom: ${({ minimal, padded, size }: IStyledPanel) =>
+    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : 0};
   padding-top: ${({ minimal, size }: IStyledPanel) =>
     minimal ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  padding-top: ${({ minimal }: IStyledPanel) => (minimal ? 0 : undefined)};
+  padding-top: ${({ minimal, padded, size }: IStyledPanel) =>
+    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : 0};
   padding-bottom: ${({ minimal, size }: IStyledPanel) =>
     minimal ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
   border-bottom: 0;
@@ -716,7 +718,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             responsive={responsiveTitle}
             isMobile={isMobile || isSmall}
             ref={measureRef}
+            padded={padded}
             transparent={rest.transparent}
+            intent={intent}
           >
             {hasTitleHeader && (
               <StyledPanelTitleHeader>
@@ -843,6 +847,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             flat={flat}
             className='reqore-panel-bottom-actions'
             theme={theme}
+            padded={padded}
+            intent={intent}
             minimal={minimal}
             transparent={rest.transparent}
             opacity={opacity ?? (minimal ? 0 : 1)}

@@ -248,7 +248,7 @@ export const StyledEffect = styled.span`
       `;
     }
 
-    if (effect.glow.when === 'always') {
+    if (effect.glow.when === 'always' || !effect.glow.when) {
       return glow;
     }
 

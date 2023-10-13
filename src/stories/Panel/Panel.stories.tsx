@@ -359,6 +359,17 @@ export const Minimal: Story = {
   },
 };
 
+export const MinimalWithIntent: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+    flat: true,
+    intent: 'info',
+    transparent: true,
+  },
+};
+
 export const Disabled: Story = {
   render: Template,
 
