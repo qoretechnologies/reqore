@@ -171,23 +171,37 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     [items, width, _testWidth, size]
   );
 
-  const renderItem = (item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[], index: number) => {
-    if (isArray(item)) {
+  const renderItem = (
+    itemOrItems: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[],
+    index: number
+  ) => {
+    if (isArray(itemOrItems) && count(itemOrItems) > 1) {
       return (
         <React.Fragment key={index}>
           <ReqoreDropdown
             key={`dropdown-${index}`}
-            icon={last(item)?.icon}
+            icon={last(itemOrItems)?.icon}
+            leftIconProps={last(itemOrItems)?.leftIconProps}
             handler='hoverStay'
             delay={500}
-            badge={count(item)}
-            items={item as IReqoreDropdownItem[]}
+            size={size}
+            badge={count(itemOrItems)}
+            items={itemOrItems as IReqoreDropdownItem[]}
           >
             <ReqoreIcon icon='MoreLine' />
           </ReqoreDropdown>
         </React.Fragment>
       );
     }
+
+    const item: IReqoreBreadcrumbItem = (
+      isArray(itemOrItems) && count(itemOrItems) === 1
+        ? {
+            ...itemOrItems[0],
+            label: <ReqoreIcon icon='MoreLine' />,
+          }
+        : itemOrItems
+    ) as IReqoreBreadcrumbItem;
 
     if (item.withTabs) {
       return (

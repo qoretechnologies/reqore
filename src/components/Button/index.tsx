@@ -385,18 +385,17 @@ const ReqoreButton = memo(
         : getReadableColor(theme, undefined, undefined, true);
 
       const _children = useMemo(() => label || children, [label, children]);
+      const hasLeftIcon = icon || leftIconProps?.image;
+      const hasRightIcon = rightIcon || rightIconProps?.image;
 
       return (
         <StyledButton
           {...rest}
-          effect={
-            intent
-              ? undefined
-              : {
-                  interactive: !readOnly && !rest.disabled,
-                  ...fixedEffect,
-                }
-          }
+          effect={{
+            interactive: !readOnly && !rest.disabled,
+            gradient: intent ? undefined : fixedEffect?.gradient,
+            ...fixedEffect,
+          }}
           tabindex={rest.disabled ? -1 : 0}
           as={as || 'button'}
           theme={theme}
@@ -419,7 +418,7 @@ const ReqoreButton = memo(
           className={`${className || ''} reqore-control reqore-button`}
         >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
-            {icon ? (
+            {hasLeftIcon ? (
               <>
                 <ReqoreIcon
                   icon={icon}
@@ -438,7 +437,9 @@ const ReqoreButton = memo(
                       : undefined
                   }
                 />
-                {_children || rightIcon ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
+                {_children || hasRightIcon ? (
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
+                ) : null}
               </>
             ) : _children ? (
               <ReqoreHorizontalSpacer
@@ -470,7 +471,7 @@ const ReqoreButton = memo(
             {(badge || badge === 0) && !wrap ? (
               <ButtonBadge content={badge} size={size} theme={theme} />
             ) : null}
-            {!rightIcon ? (
+            {!hasRightIcon ? (
               _children ? (
                 <ReqoreHorizontalSpacer
                   width={1}

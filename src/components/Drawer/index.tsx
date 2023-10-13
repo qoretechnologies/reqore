@@ -16,7 +16,7 @@ import { ReqoreBackdrop } from './backdrop';
 
 export type TPosition = 'top' | 'bottom' | 'left' | 'right';
 
-export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size'> {
+export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 'resizable'> {
   children?: any;
   isOpen?: boolean;
   isHidden?: boolean;
