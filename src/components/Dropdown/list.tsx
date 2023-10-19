@@ -149,7 +149,7 @@ const ReqoreDropdownList = memo(
       <>
         {filterable || _onBackClick ? (
           <>
-            <ReqoreControlGroup>
+            <ReqoreControlGroup fluid>
               {_onBackClick && (
                 <ReqoreButton
                   icon='ArrowLeftSLine'
