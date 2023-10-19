@@ -124,7 +124,7 @@ export const ReqoreMultiSelect = ({
         onItemAdded?.(item.value);
       }
     },
-    [value]
+    [value, onValueChange, onItemAdded, onItemRemoved]
   );
 
   const handleItemSelect = useCallback(
@@ -142,7 +142,7 @@ export const ReqoreMultiSelect = ({
 
       setQuery('');
     },
-    [createdItems, value]
+    [createdItems, value, items, addRemoveItem]
   );
 
   /*

@@ -275,9 +275,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   align-items: center;
   padding: ${({ noHorizontalPadding, size, transparent, flat, minimal, intent }: IStyledPanel) =>
     `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
-      noHorizontalPadding
-        ? 0
-        : `${minimal ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]}px`
+      noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`
     }`};
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat
@@ -309,16 +307,16 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
   padding-bottom: ${({ minimal, padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : minimal ? 0 : undefined};
+    !padded ? `${PADDING_FROM_SIZE[size]}px` : minimal ? 0 : undefined};
   padding-top: ${({ minimal, size }: IStyledPanel) =>
-    minimal ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
+    minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   padding-top: ${({ minimal, padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : minimal ? 0 : undefined};
+    !padded ? `${PADDING_FROM_SIZE[size]}px` : minimal ? 0 : undefined};
   padding-bottom: ${({ minimal, size }: IStyledPanel) =>
-    minimal ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
+    minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
@@ -333,7 +331,7 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
       ? undefined
       : noHorizontalPadding
       ? `${PADDING_FROM_SIZE[size]}px 0`
-      : `${minimal ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]}px`};
+      : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel, padded, size }) =>

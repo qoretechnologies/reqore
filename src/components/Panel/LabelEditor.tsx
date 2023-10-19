@@ -33,6 +33,7 @@ export const LabelEditor = memo(
           onClick={(e) => e.stopPropagation()}
           value={name}
           minimal
+          fluid
           onChange={(e: any) => setName(e.target.value)}
           onKeyUp={(e) => {
             if (e.key === 'Enter') {

@@ -1,6 +1,9 @@
+import { expect } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
+import { fireEvent } from '@storybook/testing-library';
 import { useState } from 'react';
 import { IReqoreTextareaProps } from '../../components/Textarea';
+import { sleep } from '../../helpers/utils';
 import { ReqoreControlGroup, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { DisabledArg, MinimalArg, SizeArg, argManager } from '../utils/args';
@@ -234,5 +237,51 @@ export const Effect: Story = {
       textSize: 'small',
       weight: 'bold',
     },
+  },
+};
+
+export const WithTemplates: Story = {
+  render: (args) => <ReqoreTextarea {...args} />,
+
+  args: {
+    templates: {
+      handler: 'focus',
+      useTargetWidth: true,
+      noWrapper: true,
+      items: [
+        {
+          label: 'New message in discord',
+          icon: 'DiscordLine',
+          description: 'When a new message in discord is received',
+          items: [
+            {
+              divider: true,
+              label: 'Discord',
+            },
+            {
+              label: 'Author',
+              description: 'Author of the message',
+              value: '$state:{1.field.author}',
+            },
+            {
+              label: 'Content',
+              description: 'Content of the message',
+              value: '$state:{1.field.content}',
+            },
+          ],
+        },
+        {
+          label: 'New event in Google Calendar',
+          icon: 'Calendar2Fill',
+          description: 'When a new event is created in Google Calendar',
+        },
+      ],
+    },
+  },
+
+  play: async () => {
+    await sleep(200);
+    await fireEvent.focusIn(document.querySelector('textarea'));
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
   },
 };

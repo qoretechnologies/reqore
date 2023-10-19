@@ -43,12 +43,12 @@ type Story = StoryObj<typeof meta>;
 
 const Template: StoryFn<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProps) => {
   const [selected, setSelected] = useState<string[]>([
-    'Existing item 1',
     'Existing item 3',
     'Disabled item',
-    'Minimal item with border',
     'itemWithNoLabel',
   ]);
+
+  console.log({ selected });
 
   return (
     <ReqoreMultiSelect

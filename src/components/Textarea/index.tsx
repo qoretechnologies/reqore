@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
+import { ReqoreDropdown } from '../..';
 import { RADIUS_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
@@ -18,9 +19,12 @@ import {
   IWithReqoreEffect,
   IWithReqoreTooltip,
 } from '../../types/global';
+import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
 import { IReqoreInputStyle } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
+
+export interface IReqoreFormTemplates extends IReqoreDropdownProps {}
 
 export interface IReqoreTextareaProps
   extends React.HTMLAttributes<HTMLTextAreaElement>,
@@ -46,6 +50,7 @@ export interface IReqoreTextareaProps
   onClearClick?: () => any;
   wrapperStyle?: React.CSSProperties;
   focusRules?: IReqoreAutoFocusRules;
+  templates?: IReqoreFormTemplates;
 }
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
@@ -141,6 +146,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
       onChange,
       fixed,
       focusRules,
+      templates,
       ...rest
     }: IReqoreTextareaProps,
     ref
@@ -158,6 +164,75 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
     useAutosizeTextArea(inputRef, _value, scaleWithContent);
     useAutoFocus(inputRef, rest.readOnly || rest.disabled ? undefined : focusRules, onChange);
 
+    const handleItemSelect = useCallback(
+      (item) => {
+        if (!inputRef || !item || !item.value) {
+          return;
+        }
+        // Add the value of the selected item to the current value at the cursor position
+        const value = `${_value.slice(0, inputRef.selectionStart)}${item.value}${_value.slice(
+          inputRef.selectionEnd
+        )}`;
+
+        setValue(value);
+      },
+      [inputRef, _value]
+    );
+
+    const renderChildren = () => {
+      return (
+        <>
+          <StyledTextarea
+            {...rest}
+            effect={{
+              interactive: !rest?.disabled && !rest.readOnly,
+              ...rest?.effect,
+            }}
+            onChange={(e) => {
+              setValue(e.target.value);
+              onChange?.(e);
+            }}
+            as='textarea'
+            className={`${className || ''} reqore-control reqore-textarea`}
+            _size={size}
+            ref={(ref) => setInputRef(ref)}
+            theme={theme}
+            rounded={rounded}
+            rows={1}
+            value={_value}
+            readonly={rest?.readOnly}
+          />
+          <ReqoreInputClearButton
+            enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
+            show={_value && _value !== ''}
+            onClick={onClearClick}
+            size={size}
+          />
+        </>
+      );
+    };
+
+    if (templates) {
+      return (
+        <ReqoreDropdown<Omit<IReqoreTextareaStyle & { ref: any }, 'content'>>
+          component={StyledTextareaWrapper}
+          className={`${className || ''} reqore-control-wrapper`}
+          width={width}
+          height={height}
+          fluid={fluid}
+          fixed={fixed}
+          _size={size}
+          theme={theme}
+          style={wrapperStyle}
+          ref={targetRef}
+          onItemSelect={handleItemSelect}
+          {...templates}
+        >
+          {renderChildren()}
+        </ReqoreDropdown>
+      );
+    }
+
     return (
       <StyledTextareaWrapper
         className={`${className || ''} reqore-control-wrapper`}
@@ -170,32 +245,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
         style={wrapperStyle}
         ref={targetRef}
       >
-        <StyledTextarea
-          {...rest}
-          effect={{
-            interactive: !rest?.disabled && !rest.readOnly,
-            ...rest?.effect,
-          }}
-          onChange={(e) => {
-            setValue(e.target.value);
-            onChange?.(e);
-          }}
-          as='textarea'
-          className={`${className || ''} reqore-control reqore-textarea`}
-          _size={size}
-          ref={(ref) => setInputRef(ref)}
-          theme={theme}
-          rounded={rounded}
-          rows={1}
-          value={_value}
-          readonly={rest?.readOnly}
-        />
-        <ReqoreInputClearButton
-          enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
-          show={_value && _value !== ''}
-          onClick={onClearClick}
-          size={size}
-        />
+        {renderChildren()}
       </StyledTextareaWrapper>
     );
   }

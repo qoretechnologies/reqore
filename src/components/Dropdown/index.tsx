@@ -14,9 +14,7 @@ import ReqoreDropdownList, {
 } from './list';
 
 export interface IReqoreDropdownProps
-  extends Partial<
-    Omit<IPopoverOptions, 'openOnMount' | 'show' | 'targetElement' | 'wrapperProps'>
-  > {
+  extends Partial<Omit<IPopoverOptions, 'openOnMount' | 'targetElement' | 'wrapperProps'>> {
   items?: IReqoreDropdownItem[];
   multiSelect?: boolean;
   buttonStyle?: React.CSSProperties;
@@ -42,16 +40,18 @@ export interface IReqoreDropdownProps
   paging?: TReqorePaginationType<IReqoreDropdownItem>;
 }
 
-const ReqoreDropdownListWrapper = ({
-  wrapperProps,
-  ...rest
-}: IReqoreDropdownListProps & { wrapperProps?: IReqoreDropdownProps['wrapperProps'] }) => {
-  return (
-    <ReqorePanel flat size='small' {...wrapperProps}>
-      <ReqoreDropdownList {...rest} />
-    </ReqorePanel>
-  );
-};
+const ReqoreDropdownListWrapper = memo(
+  ({
+    wrapperProps,
+    ...rest
+  }: IReqoreDropdownListProps & { wrapperProps?: IReqoreDropdownProps['wrapperProps'] }) => {
+    return (
+      <ReqorePanel flat size='small' {...wrapperProps}>
+        <ReqoreDropdownList {...rest} />
+      </ReqorePanel>
+    );
+  }
+);
 
 function ReqoreDropdown<T = IReqoreButtonProps>({
   items,
@@ -87,6 +87,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   inputProps,
   scrollToSelected,
   paging,
+  show,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -120,7 +121,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         filter={filter}
       />
     ) : undefined;
-  }, [items]);
+  }, [items, onItemSelect]);
 
   return (
     <ReqorePopover
@@ -142,6 +143,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       openOnMount={isDefaultOpen}
       content={popoverContent}
       passPopoverData={passPopoverData}
+      show={show}
     >
       {children || label}
     </ReqorePopover>

@@ -4,13 +4,7 @@ import React, { forwardRef, useEffect, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css, keyframes } from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
-import {
-  ICON_WRAPPER_FROM_HEADER_SIZE,
-  PADDING_FROM_SIZE,
-  TABS_SIZE_TO_PX,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
@@ -82,7 +76,6 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
   min-width: ${({ fluid }) => (!fluid ? '30px' : undefined)};
   max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
   border-radius: 5px;
-  min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
   display: flex;
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
@@ -172,15 +165,12 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
 `;
 
 export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
-  height: ${({ size = 'normal' }: IReqoreNotificationStyle) =>
-    ICON_WRAPPER_FROM_HEADER_SIZE[size]}px;
   flex: 0 1 auto;
   flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: all 0.2s ease-out;
-  margin-top: ${({ size = 'normal' }: IReqoreNotificationStyle) => `${PADDING_FROM_SIZE[size]}px`};
 
   ${({ clickable, theme, intent, type }) =>
     clickable &&
@@ -202,11 +192,20 @@ export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
     `}
 `;
 
-export const StyledNotificationContentWrapper = styled.div<IReqoreNotificationStyle>`
+export const StyledNotificationInnerContent = styled.div<IReqoreNotificationStyle>`
   flex: 1;
-  min-height: ${({ size = 'normal' }: IReqoreNotificationStyle) => TABS_SIZE_TO_PX[size]}px;
   display: flex;
   flex-flow: column;
+  justify-content: center;
+
+  .reqore-heading {
+    line-height: 1;
+  }
+`;
+
+export const StyledNotificationContentWrapper = styled.div<IReqoreNotificationStyle>`
+  flex: 1;
+  display: flex;
   justify-content: center;
   padding: ${({ size = 'normal' }: IReqoreNotificationStyle) => `${PADDING_FROM_SIZE[size]}px`};
 `;
@@ -224,6 +223,9 @@ export const StyledNotificationContent = styled.div`
   flex: 1;
   font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
   overflow-wrap: anywhere;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
 
   ${({ hasTitle, size = 'normal' }) =>
     hasTitle &&
@@ -317,24 +319,26 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             theme={theme}
             maxWidth='450px'
           >
-            {type || intent || icon ? (
-              <StyledIconWrapper type={type || intent} size={size}>
-                {intent === 'pending' || type === 'pending' ? (
-                  <ReqoreSpinner size={size} type={5} iconMargin={'both'} />
-                ) : (
-                  <ReqoreIcon
-                    icon={icon || typeToIcon[type || intent]}
-                    margin={'both'}
-                    size={size}
-                  />
-                )}
-              </StyledIconWrapper>
-            ) : null}
             <StyledNotificationContentWrapper size={size} theme={theme}>
-              {title && <ReqoreHeading size={size}>{title}</ReqoreHeading>}
-              <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
-                {content}
-              </StyledNotificationContent>
+              {type || intent || icon ? (
+                <>
+                  {intent === 'pending' || type === 'pending' ? (
+                    <ReqoreSpinner size={size} type={5} iconMargin={'right'} />
+                  ) : (
+                    <ReqoreIcon
+                      icon={icon || typeToIcon[type || intent]}
+                      margin={'right'}
+                      size={size}
+                    />
+                  )}
+                </>
+              ) : null}
+              <StyledNotificationInnerContent>
+                {title && <ReqoreHeading size={size}>{title}</ReqoreHeading>}
+                <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
+                  {content}
+                </StyledNotificationContent>
+              </StyledNotificationInnerContent>
             </StyledNotificationContentWrapper>
             <StyledIconWrapper
               type={type || intent}
