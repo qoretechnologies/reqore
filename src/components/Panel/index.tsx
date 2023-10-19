@@ -273,11 +273,9 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     2 +
     (SIZE_TO_PX[size] + ((transparent && flat) || minimal ? 0 : PADDING_FROM_SIZE[size]) * 2)}px;
   align-items: center;
-  padding: ${({ noHorizontalPadding, size, transparent, flat, minimal, intent }: IStyledPanel) =>
+  padding: ${({ noHorizontalPadding, size, transparent, flat, intent }: IStyledPanel) =>
     `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
-      noHorizontalPadding
-        ? 0
-        : `${minimal ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]}px`
+      noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`
     }`};
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat
@@ -308,17 +306,17 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
-  padding-bottom: ${({ minimal, padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : minimal ? 0 : undefined};
+  padding-bottom: ${({ minimal, padded, size, transparent }: IStyledPanel) =>
+    !padded ? `${PADDING_FROM_SIZE[size]}px` : minimal || transparent ? 0 : undefined};
   padding-top: ${({ minimal, size }: IStyledPanel) =>
-    minimal ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
+    minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  padding-top: ${({ minimal, padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px` : minimal ? 0 : undefined};
+  padding-top: ${({ minimal, padded, size, transparent }: IStyledPanel) =>
+    !padded ? `${PADDING_FROM_SIZE[size]}px` : minimal || transparent ? 0 : undefined};
   padding-bottom: ${({ minimal, size }: IStyledPanel) =>
-    minimal ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
+    minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
@@ -333,13 +331,21 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
       ? undefined
       : noHorizontalPadding
       ? `${PADDING_FROM_SIZE[size]}px 0`
-      : `${minimal ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]}px`};
+      : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel, padded, size }) =>
-    minimal && hasLabel && padded ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
-  padding-bottom: ${({ minimal, padded, size }) =>
-    minimal && padded ? `${PADDING_FROM_SIZE[size] / 2}px` : undefined};
+    minimal && hasLabel && padded
+      ? `${PADDING_FROM_SIZE[size] / 2}px`
+      : padded
+      ? `${PADDING_FROM_SIZE[size]}px`
+      : undefined};
+  padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
+    minimal && hasBottomActions && padded
+      ? `${PADDING_FROM_SIZE[size] / 2}px`
+      : padded
+      ? `${PADDING_FROM_SIZE[size]}px`
+      : undefined};
   flex: 1;
   overflow: auto;
   overflow-wrap: anywhere;
@@ -719,7 +725,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             isMobile={isMobile || isSmall}
             ref={measureRef}
             padded={padded}
-            transparent={rest.transparent}
+            transparent={rest.transparent || opacity === 0}
             intent={intent}
           >
             {hasTitleHeader && (
@@ -830,7 +836,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           <StyledPanelContent
             as={'div'}
             className='reqore-panel-content'
-            hasLabel={!!label}
+            hasLabel={!!hasTitleBar}
+            hasBottomActions={hasBottomActions}
             isCollapsed={_isCollapsed}
             style={contentStyle}
             padded={padded}
@@ -850,7 +857,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             padded={padded}
             intent={intent}
             minimal={minimal}
-            transparent={rest.transparent}
+            transparent={rest.transparent || opacity === 0}
             opacity={opacity ?? (minimal ? 0 : 1)}
             size={contentSize || panelSize}
             noHorizontalPadding={noHorizontalPadding}

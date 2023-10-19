@@ -39,11 +39,8 @@ const Template: StoryFn<IReqoreMessageProps> = (args: IReqoreMessageProps) => {
   return (
     <>
       <ReqoreMessage {...args} onClick={noop}>
-        In to am attended desirous raptures declared diverted confined at. Collected instantly
-        remaining up certainly to necessary as. Over walk dull into son boy door went new. At or
-        happiness commanded daughters as. Is handsome an declared at received in extended vicinity
-        subjects. Into miss on he over been late pain an. Only week bore boy what fat case left use.
-        Match round scale now sex style far times. Your me past an much.
+        {args.children ||
+          'In to am attended desirous raptures declared diverted confined at. Collected instantly remaining up certainly to necessary as. Over walk dull into son boy door went new. At or happiness commanded daughters as. Is handsome an declared at received in extended vicinity subjects. Into miss on he over been late pain an. Only week bore boy what fat case left use. Match round scale now sex style far times. Your me past an much.'}
       </ReqoreMessage>
     </>
   );
@@ -51,6 +48,16 @@ const Template: StoryFn<IReqoreMessageProps> = (args: IReqoreMessageProps) => {
 
 export const Basic: Story = {
   render: Template,
+};
+
+export const NoTitle: Story = {
+  render: Template,
+  args: {
+    icon: 'InformationFill',
+    flat: true,
+    title: undefined,
+    children: 'This is a test',
+  },
 };
 
 export const Flat: Story = {
@@ -68,6 +75,7 @@ export const Minimal: Story = {
   args: {
     minimal: true,
     intent: 'danger',
+    size: 'small',
   },
 };
 

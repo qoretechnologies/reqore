@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useState } from 'react';
 import { useContext } from 'use-context-selector';
 import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -29,101 +29,109 @@ export interface IReqoreMenuItemRightIconStyle {
   intent?: TReqoreIntent;
 }
 
-const ReqoreMenuItem = forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
-  (
-    {
-      children,
-      label,
-      icon,
-      rightIcon,
-      as,
-      selected,
-      onClick,
-      onRightIconClick,
-      disabled,
-      itemId,
-      _insidePopover,
-      _popoverId,
-      tooltip,
-      intent,
-      flat = true,
-      scrollIntoView,
-      ...rest
-    }: IReqoreMenuItemProps,
-    ref
-  ) => {
-    const { removePopover } = useContext(PopoverContext);
-    const { targetRef } = useCombinedRefs<HTMLButtonElement>(ref);
-    const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
+const ReqoreMenuItem = memo(
+  forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
+    (
+      {
+        children,
+        label,
+        icon,
+        rightIcon,
+        as,
+        selected,
+        onClick,
+        onRightIconClick,
+        disabled,
+        itemId,
+        _insidePopover,
+        _popoverId,
+        tooltip,
+        intent,
+        flat = true,
+        scrollIntoView,
+        ...rest
+      }: IReqoreMenuItemProps,
+      ref
+    ) => {
+      const { removePopover } = useContext(PopoverContext);
+      const { targetRef } = useCombinedRefs<HTMLButtonElement>(ref);
+      const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
 
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-      event.persist();
+      const handleClick = useCallback(
+        (event: React.MouseEvent<HTMLButtonElement>) => {
+          event.persist();
 
-      onClick?.(event, itemId);
+          onClick?.(event, itemId);
 
-      if (_insidePopover && _popoverId) {
-        removePopover!(_popoverId);
-      }
-    };
+          if (_insidePopover && _popoverId) {
+            removePopover!(_popoverId);
+          }
+        },
+        [itemId, _insidePopover, _popoverId, onClick]
+      );
 
-    const handleRightIconClick = (event: React.MouseEvent<HTMLSpanElement>) => {
-      event.persist();
-      event.stopPropagation();
+      const handleRightIconClick = useCallback(
+        (event: React.MouseEvent<HTMLSpanElement>) => {
+          event.persist();
+          event.stopPropagation();
 
-      if (onRightIconClick) {
-        onRightIconClick(itemId, event);
+          if (onRightIconClick) {
+            onRightIconClick(itemId, event);
 
-        if (_insidePopover && _popoverId) {
-          removePopover!(_popoverId);
+            if (_insidePopover && _popoverId) {
+              removePopover!(_popoverId);
+            }
+          }
+        },
+        [itemId, _insidePopover, _popoverId, onRightIconClick]
+      );
+
+      useEffect(() => {
+        if (scrollIntoView && itemRef) {
+          itemRef.scrollIntoView?.({ behavior: 'smooth', block: 'center', inline: 'center' });
         }
-      }
-    };
+      }, [itemRef, scrollIntoView]);
 
-    useEffect(() => {
-      if (scrollIntoView && itemRef) {
-        itemRef.scrollIntoView?.({ behavior: 'smooth', block: 'center', inline: 'center' });
-      }
-    }, [itemRef, scrollIntoView]);
-
-    return (
-      <ReqoreControlGroup stack={!!onRightIconClick} fluid fill>
-        <ReqoreButton
-          as={as}
-          {...rest}
-          flat={flat}
-          className={`${rest.className || ''} reqore-menu-item`}
-          fluid
-          onClick={handleClick}
-          active={selected}
-          ref={(ref) => {
-            targetRef.current = ref || undefined;
-            setItemRef(ref);
-          }}
-          disabled={disabled}
-          intent={intent}
-          icon={icon}
-          rightIcon={onRightIconClick ? undefined : rightIcon}
-          tooltip={tooltip}
-        >
-          {label || children}
-        </ReqoreButton>
-        {rightIcon && onRightIconClick ? (
+      return (
+        <ReqoreControlGroup stack={!!onRightIconClick} fluid fill>
           <ReqoreButton
-            icon={rightIcon}
+            as={as}
+            {...rest}
             flat={flat}
-            fixed
-            minimal={!onRightIconClick}
-            customTheme={rest.customTheme}
-            className='reqore-menu-item-right-icon'
-            onClick={handleRightIconClick}
-            readOnly={!onRightIconClick}
+            className={`${rest.className || ''} reqore-menu-item`}
+            fluid
+            onClick={handleClick}
+            active={selected}
+            ref={(ref) => {
+              targetRef.current = ref || undefined;
+              setItemRef(ref);
+            }}
+            disabled={disabled}
             intent={intent}
-            active={selected && !!onRightIconClick}
-          />
-        ) : null}
-      </ReqoreControlGroup>
-    );
-  }
+            icon={icon}
+            rightIcon={onRightIconClick ? undefined : rightIcon}
+            tooltip={tooltip}
+          >
+            {label || children}
+          </ReqoreButton>
+          {rightIcon && onRightIconClick ? (
+            <ReqoreButton
+              icon={rightIcon}
+              flat={flat}
+              fixed
+              minimal={!onRightIconClick}
+              customTheme={rest.customTheme}
+              className='reqore-menu-item-right-icon'
+              onClick={handleRightIconClick}
+              readOnly={!onRightIconClick}
+              intent={intent}
+              active={selected && !!onRightIconClick}
+            />
+          ) : null}
+        </ReqoreControlGroup>
+      );
+    }
+  )
 );
 
 export default ReqoreMenuItem;

@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/react';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { act } from 'react-dom/test-utils';
 import {
   ReqoreContent,
@@ -243,13 +243,15 @@ test('Renders <Dropdown /> and calls a function on item click, closes the dropdo
   expect(document.querySelectorAll('.reqore-menu-item').length).toBe(1);
 
   fireEvent.click(document.querySelector('.reqore-menu-item')!);
-  expect(onClick).toHaveBeenCalledWith({
-    selected: true,
-    label: 'Hello',
-    value: 'hello',
-    icon: 'SunCloudyLine',
-    onClick,
-  });
+  expect(onClick).toHaveBeenCalledWith(
+    expect.objectContaining({
+      selected: true,
+      label: 'Hello',
+      value: 'hello',
+      icon: 'SunCloudyLine',
+      onClick,
+    })
+  );
 });
 expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 

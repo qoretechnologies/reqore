@@ -1,6 +1,8 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { fireEvent, within } from '@storybook/testing-library';
 import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
+import { sleep } from '../../helpers/utils';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput } from '../../index';
 import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
@@ -314,4 +316,60 @@ export const WithCustomPaging: Story = {
   },
 
   play: () => {},
+};
+
+export const WithChildItems: Story = {
+  render: (args) => <ReqoreDropdown {...args} />,
+  args: {
+    label: 'Dropdown with child items',
+    items: [
+      {
+        label: 'Test',
+        description: 'I have children',
+        rightIcon: 'MenuLine',
+        rightIconColor: 'info:lighten:2',
+        items: [
+          {
+            label: 'Test child 1',
+          },
+          {
+            label: 'Test child 2',
+          },
+          {
+            label: 'Test child 3',
+            description: 'I have children too',
+            items: [
+              {
+                label: 'Test deep child 1',
+              },
+              {
+                label: 'Test deep child 2',
+              },
+              {
+                label: 'Test deep child 3',
+              },
+            ],
+          },
+          {
+            label: 'Test child 4',
+          },
+        ],
+      },
+      {
+        label: 'Normal item',
+        description: 'I have no children',
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    await fireEvent.click(canvas.getAllByText('Dropdown with child items')[0]);
+
+    await sleep(200);
+
+    await fireEvent.click(canvas.getAllByText('Test')[0]);
+  },
 };

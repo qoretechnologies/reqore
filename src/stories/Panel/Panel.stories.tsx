@@ -359,6 +359,84 @@ export const Minimal: Story = {
   },
 };
 
+export const MinimalOnlyContent: Story = {
+  render: Template,
+
+  args: {
+    label: undefined,
+    badge: undefined,
+    icon: undefined,
+    minimal: true,
+    actions: [
+      { label: 'test', show: false },
+      {
+        show: false,
+        group: [
+          { label: 'test 2', show: true },
+          { label: 'test 3', show: true },
+        ],
+      },
+    ],
+    bottomActions: [
+      { label: 'test', show: false, position: 'left' },
+      {
+        position: 'right',
+        show: false,
+        group: [
+          { label: 'test 2', show: true },
+          { label: 'test 3', show: true },
+        ],
+      },
+    ],
+    collapsible: false,
+  },
+};
+
+export const MinimalOnlyTopBar: Story = {
+  render: Template,
+
+  args: {
+    label: undefined,
+    badge: undefined,
+    icon: undefined,
+    minimal: true,
+    bottomActions: [
+      { label: 'test', show: false, position: 'left' },
+      {
+        position: 'right',
+        show: false,
+        group: [
+          { label: 'test 2', show: true },
+          { label: 'test 3', show: true },
+        ],
+      },
+    ],
+    collapsible: false,
+  },
+};
+
+export const MinimalOnlyBottomBar: Story = {
+  render: Template,
+
+  args: {
+    label: undefined,
+    badge: undefined,
+    icon: undefined,
+    minimal: true,
+    actions: [
+      { label: 'test', show: false },
+      {
+        show: false,
+        group: [
+          { label: 'test 2', show: true },
+          { label: 'test 3', show: true },
+        ],
+      },
+    ],
+    collapsible: false,
+  },
+};
+
 export const MinimalWithIntent: Story = {
   render: Template,
 
@@ -367,6 +445,14 @@ export const MinimalWithIntent: Story = {
     flat: true,
     intent: 'info',
     transparent: true,
+  },
+};
+
+export const WithOpacity: Story = {
+  render: Template,
+
+  args: {
+    opacity: 0.5,
   },
 };
 

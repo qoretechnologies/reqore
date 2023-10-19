@@ -26,6 +26,7 @@ import {
   StyledIconWrapper,
   StyledNotificationContent,
   StyledNotificationContentWrapper,
+  StyledNotificationInnerContent,
   StyledReqoreNotification,
   typeToIcon,
 } from '../Notifications/notification';
@@ -153,43 +154,46 @@ const ReqoreMessage = memo(
             size={size}
             theme={theme}
           >
-            {leftIcon ? (
-              <StyledIconWrapper intent={intent} size={size} theme={theme}>
-                {intent === 'pending' ? (
-                  <ReqoreSpinner
-                    size={size}
-                    iconColor={iconColor}
-                    type={5}
-                    iconMargin={flat && minimal ? 'right' : 'both'}
-                    iconProps={iconProps}
-                  />
-                ) : (
-                  <ReqoreIcon
-                    icon={leftIcon}
-                    margin={flat && minimal ? 'right' : 'both'}
-                    size={size}
-                    color={iconColor}
-                    {...iconProps}
-                  />
-                )}
-              </StyledIconWrapper>
-            ) : null}
             <StyledNotificationContentWrapper size={size} theme={theme}>
-              {title && (
-                <ReqoreHeading
-                  size={size}
-                  customTheme={
-                    rest.effect?.color
-                      ? { text: { color: getColorFromMaybeString(theme, rest.effect.color) } }
-                      : undefined
-                  }
-                >
-                  {title}
-                </ReqoreHeading>
-              )}
-              <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
-                {children}
-              </StyledNotificationContent>
+              {leftIcon ? (
+                <>
+                  {intent === 'pending' ? (
+                    <ReqoreSpinner
+                      size={size}
+                      iconColor={iconColor}
+                      type={5}
+                      iconMargin={'right'}
+                      iconProps={iconProps}
+                    />
+                  ) : (
+                    <ReqoreIcon
+                      icon={leftIcon}
+                      margin={'right'}
+                      size={size}
+                      color={iconColor}
+                      {...iconProps}
+                    />
+                  )}
+                </>
+              ) : null}
+              <StyledNotificationInnerContent>
+                {title && (
+                  <ReqoreHeading
+                    size={size}
+                    customTheme={
+                      rest.effect?.color
+                        ? { text: { color: getColorFromMaybeString(theme, rest.effect.color) } }
+                        : undefined
+                    }
+                  >
+                    {title}
+                  </ReqoreHeading>
+                )}
+
+                <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
+                  {children}
+                </StyledNotificationContent>
+              </StyledNotificationInnerContent>
             </StyledNotificationContentWrapper>
             {onClose && (
               <StyledIconWrapper

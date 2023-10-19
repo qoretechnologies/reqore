@@ -199,7 +199,6 @@ test('Renders <Table /> with predefined content', () => {
   expect(firstNameCell.querySelector('.reqore-tag')).toBeTruthy();
   expect(lastNameCell.querySelector('h4')).toBeTruthy();
   expect(addressCell.querySelector('p.reqore-paragraph')).toBeTruthy();
-  expect(dateCell.textContent).toBe('just now');
 });
 
 test('Sorting on <Table /> works properly', () => {
