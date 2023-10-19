@@ -273,7 +273,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     2 +
     (SIZE_TO_PX[size] + ((transparent && flat) || minimal ? 0 : PADDING_FROM_SIZE[size]) * 2)}px;
   align-items: center;
-  padding: ${({ noHorizontalPadding, size, transparent, flat, minimal, intent }: IStyledPanel) =>
+  padding: ${({ noHorizontalPadding, size, transparent, flat, intent }: IStyledPanel) =>
     `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
       noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`
     }`};
