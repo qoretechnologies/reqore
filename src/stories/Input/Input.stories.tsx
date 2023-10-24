@@ -107,6 +107,7 @@ const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
           placeholder='Clearable Input'
           onClearClick={handleValueClear}
           value={value}
+          focusRules={{ type: 'auto' }}
           onChange={handleValueChange}
         />
         <ReqoreInput

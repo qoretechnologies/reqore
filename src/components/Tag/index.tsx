@@ -5,10 +5,10 @@ import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
 import {
   BADGE_SIZE_TO_PX,
+  CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -93,7 +93,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-weight: 600;
   overflow: hidden;
   vertical-align: middle;
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
 
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
@@ -213,7 +213,7 @@ const StyledTagContentKey = styled(StyledTagContent)`
 
 const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   flex-shrink: 0;
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
   width: ${({ size }) => SIZE_TO_PX[size]}px;
   display: flex;
   justify-content: center;

@@ -2,7 +2,13 @@ import { rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqoreDropdown } from '../..';
-import { RADIUS_FROM_SIZE, SIZE_TO_PX, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  CONTROL_TEXT_FROM_SIZE,
+  PADDING_FROM_SIZE,
+  RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
@@ -67,16 +73,23 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   position: relative;
   overflow: hidden;
+
+  &:focus-within {
+    .reqore-clear-input-button {
+      display: flex;
+    }
+  }
 `;
 
 export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   margin: 0;
-  padding: 5px 7px;
+  padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px;
   min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  line-height: ${({ _size }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
 
   background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
     minimal ? 'transparent' : rgba(theme.main, 0.1)};
@@ -201,6 +214,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
             rows={1}
             value={_value}
             readonly={rest?.readOnly}
+            tabIndex={rest?.disabled ? -1 : 0}
           />
           <ReqoreInputClearButton
             enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}

@@ -67,7 +67,7 @@ const ReqoreMenuItem = memo(
             removePopover!(_popoverId);
           }
         },
-        [itemId, _insidePopover, _popoverId, onClick]
+        [itemId, _insidePopover, _popoverId, onClick, removePopover]
       );
 
       const handleRightIconClick = useCallback(
@@ -83,7 +83,7 @@ const ReqoreMenuItem = memo(
             }
           }
         },
-        [itemId, _insidePopover, _popoverId, onRightIconClick]
+        [itemId, _insidePopover, _popoverId, onRightIconClick, removePopover]
       );
 
       useEffect(() => {

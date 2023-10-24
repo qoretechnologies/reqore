@@ -18,7 +18,7 @@ export const ReqoreDropdownItem = memo(
     return (
       <ReqoreMenuItem
         {...rest}
-        _insidePopover={size(rest.items) ? false : undefined}
+        _insidePopover={size(rest.items) ? false : rest._insidePopover}
         label={rest.label || rest.value}
         onClick={handleItemClick}
         rightIcon={rest.selected ? 'CheckLine' : rest.rightIcon}
