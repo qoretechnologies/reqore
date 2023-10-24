@@ -2,11 +2,11 @@ import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import styled, { css } from 'styled-components';
 import {
+  CONTROL_TEXT_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
@@ -64,6 +64,7 @@ export interface IReqoreButtonProps
   fixed?: boolean;
   active?: boolean;
   flat?: boolean;
+  compact?: boolean;
   rightIcon?: IReqoreIconName;
   customTheme?: IReqoreCustomTheme;
   wrap?: boolean;
@@ -121,8 +122,9 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   vertical-align: middle;
   border: ${({ theme, color, flat }) =>
     !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.2)}` : 0};
-  padding: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  padding: 0
+    ${({ size, compact }) => (compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size])}px;
+  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;

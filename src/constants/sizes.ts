@@ -109,6 +109,14 @@ export const TEXT_FROM_SIZE = {
   huge: 21,
 };
 
+export const CONTROL_TEXT_FROM_SIZE = {
+  tiny: 7,
+  small: 10,
+  normal: 13,
+  big: 16,
+  huge: 19,
+};
+
 export const ICON_FROM_SIZE = {
   tiny: 13,
   small: 17,

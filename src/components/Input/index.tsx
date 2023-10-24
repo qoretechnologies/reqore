@@ -3,10 +3,10 @@ import { rgba } from 'polished';
 import React, { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import {
+  CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -72,11 +72,17 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   min-width: 60px;
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 1 auto')};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
-  font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   position: relative;
   overflow: hidden;
   border-radius: ${({ minimal, rounded, _size }) =>
     minimal || rounded === false ? 0 : RADIUS_FROM_SIZE[_size]}px;
+
+  &:focus-within {
+    .reqore-clear-input-button {
+      display: flex;
+    }
+  }
 `;
 
 const StyledIconWrapper = styled.div<IReqoreInputStyle>`
@@ -109,7 +115,7 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   }}px;
 
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
-  font-size: ${({ _size }) => TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   transition: all 0.2s ease-out;
   border-radius: ${({ minimal, rounded, _size }) =>
     minimal || rounded === false ? 0 : RADIUS_FROM_SIZE[_size]}px;

@@ -5,10 +5,10 @@ import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
 import {
+  CONTROL_TEXT_FROM_SIZE,
   GAP_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
@@ -100,8 +100,10 @@ const getBadgeLength = (badge: IReqoreButtonProps['badge'], tabsSize: TSizes = '
   }
 
   return (
-    calculateStringSizeInPixels(badge.toString(), TEXT_FROM_SIZE[getOneLessSize(tabsSize)]) +
-    PADDING_FROM_SIZE[tabsSize]
+    calculateStringSizeInPixels(
+      badge.toString(),
+      CONTROL_TEXT_FROM_SIZE[getOneLessSize(tabsSize)]
+    ) + PADDING_FROM_SIZE[tabsSize]
   );
 };
 
@@ -133,11 +135,11 @@ export const getLabelLength = (
     ? 0
     : calculateStringSizeInPixels(
         (item as IReqoreBreadcrumbItem | IReqoreTabsListItem)?.description?.toString(),
-        TEXT_FROM_SIZE[getOneLessSize(tabsSize)]
+        CONTROL_TEXT_FROM_SIZE[getOneLessSize(tabsSize)]
       );
 
   const topLabelLength =
-    calculateStringSizeInPixels(label?.toString(), TEXT_FROM_SIZE[tabsSize]) +
+    calculateStringSizeInPixels(label?.toString(), CONTROL_TEXT_FROM_SIZE[tabsSize]) +
     icon +
     rightIcon +
     closeIconSize +

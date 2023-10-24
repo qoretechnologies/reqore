@@ -150,7 +150,7 @@ const Template: StoryFn<IReqoreTextareaProps> = (args) => {
           onClearClick={handleValueClear}
           value={value}
           fluid
-          focusRules={{ type: 'keypress', shortcut: 'letters', clearOnFocus: true }}
+          focusRules={{ type: 'auto' }}
         />
       </ReqoreControlGroup>
     </>

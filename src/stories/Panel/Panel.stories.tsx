@@ -359,6 +359,16 @@ export const Minimal: Story = {
   },
 };
 
+export const MinimalCollapsed: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+    flat: true,
+    isCollapsed: true,
+  },
+};
+
 export const MinimalOnlyContent: Story = {
   render: Template,
 
