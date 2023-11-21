@@ -247,6 +247,33 @@ export const Fill: Story = {
   },
 };
 
+export const FillWithFixedItem: Story = {
+  render: () => {
+    return (
+      <ReqoreTabs
+        fill
+        tabs={[
+          { id: 'tab1', label: 'Non fixed tab that should be very long', icon: 'FunctionLine' },
+          { id: 'tab2', fixed: true, label: 'Fixed tab', icon: 'DirectionFill' },
+          { id: 'tab3', label: 'Non fixed tab that should be very long', icon: 'FunctionLine' },
+          { id: 'tab4', fixed: true, label: 'Fixed tab', icon: 'DirectionFill' },
+        ]}
+      >
+        <ReqoreTabsContent tabId='tab1'>
+          <ReqoreH3>Tab 1</ReqoreH3>
+        </ReqoreTabsContent>
+        <ReqoreTabsContent tabId='tab2'>
+          <ReqoreH3>Tab 2</ReqoreH3>
+        </ReqoreTabsContent>
+      </ReqoreTabs>
+    );
+  },
+
+  args: {
+    fill: true,
+  },
+};
+
 export const CustomActiveIntent: Story = {
   render: Template,
 

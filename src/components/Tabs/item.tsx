@@ -29,7 +29,7 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ disabled, vertical, fill, padded }: IReqoreTabListItemStyle) => {
+  ${({ disabled, vertical, fill, fixed, padded }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       flex-shrink: 0;
@@ -80,10 +80,11 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
             `}
           `}
 
-      ${fill &&
-      css`
-        flex: 1 0 auto;
-      `}
+      ${fill && !fixed
+        ? css`
+            flex: 1 0 auto;
+          `
+        : undefined}
 
       ${disabled &&
       css`
@@ -148,6 +149,7 @@ const ReqoreTabsListItem = memo(
           vertical={vertical}
           theme={theme}
           fill={fill}
+          fixed={rest.fixed}
           padded={padded}
         >
           {label || icon ? (
