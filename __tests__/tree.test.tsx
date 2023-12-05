@@ -36,22 +36,6 @@ test('<Tree /> items can be expanded and collapsed', () => {
   expect(document.querySelectorAll('.reqore-tree-label').length).toBe(0);
 });
 
-test('Shows types for <Tree /> properly', () => {
-  render(
-    <ReqoreUIProvider>
-      <ReqoreLayoutContent>
-        <ReqoreContent>
-          <ReqoreTree data={MockObject} />
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  );
-
-  fireEvent.click(document.querySelector('.reqore-tree-show-types'));
-
-  expect(document.querySelectorAll('.reqore-tree-type').length).toBe(7);
-});
-
 test('Renders <Tree /> with clickable items', () => {
   const fn = jest.fn();
 

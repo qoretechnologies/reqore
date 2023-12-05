@@ -4,7 +4,7 @@ export const Colors: Record<string, TReqoreHexColor> = {
   DARK: '#000000',
   DARK_THEME: '#333333',
   LIGHT: '#ffffff',
-  BLUE: '#0E5A8A',
+  BLUE: '#0776CB',
   GREEN: '#0A6640',
   YELLOW: '#d1a036',
   ORANGE: '#A66321',

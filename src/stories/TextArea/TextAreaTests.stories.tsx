@@ -1,4 +1,4 @@
-import { expect } from '@storybook/jest';
+import { expect, jest } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { IReqoreTextareaProps } from '../../components/Textarea';
@@ -16,6 +16,7 @@ const meta = {
     scaleWithContent: true,
     fluid: undefined,
     placeholder: 'Placeholder',
+    onChange: jest.fn(),
   },
   argTypes: {
     ...MinimalArg(),
@@ -77,12 +78,13 @@ export const ItemCanBeSelected: Story = {
           label: 'New event in Google Calendar',
           icon: 'Calendar2Fill',
           description: 'When a new event is created in Google Calendar',
+          items: [],
         },
       ],
     },
   },
 
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
     await sleep(200);
@@ -99,5 +101,8 @@ export const ItemCanBeSelected: Story = {
     await fireEvent.click(canvas.getAllByText('Author')[0]);
 
     await expect(canvas.getAllByText('$state:{1.field.author}')[0]).toBeTruthy();
+    await expect(args.onChange).toHaveBeenCalledWith({
+      target: { value: '$state:{1.field.author}' },
+    });
   },
 };
