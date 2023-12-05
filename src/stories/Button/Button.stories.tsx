@@ -53,6 +53,13 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
         <ReqoreButton {...buttonProps} rightIcon={undefined} compact />
         <ReqoreButton {...buttonProps} compact />
+        <ReqoreButton
+          {...buttonProps}
+          compact
+          icon='AirplayLine'
+          rightIcon='Building3Fill'
+          label='Compact'
+        />
         <ReqoreButton {...buttonProps} readOnly onClick={alert}>
           Read only
         </ReqoreButton>

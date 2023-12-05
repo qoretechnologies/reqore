@@ -1,17 +1,16 @@
 import { cloneDeep, size as lodashSize } from 'lodash';
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { ReqoreMessage, ReqorePanel, useReqoreProperty } from '../..';
+import { ReqoreHorizontalSpacer, ReqoreIcon, ReqoreP, ReqorePanel, useReqoreProperty } from '../..';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getTypeFromValue } from '../../helpers/utils';
+import { getOneLessSize, getTypeFromValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
-import ReqoreButton from '../Button';
+import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { ReqoreExportModal } from '../ExportModal';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
-import ReqoreTag from '../Tag';
 
 export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   data: Record<string, unknown> | Array<any>;
@@ -33,8 +32,10 @@ export interface ITreeStyle {
   size?: TSizes;
 }
 
-export const StyledTreeLabel = styled(ReqoreMessage)`
+export const StyledTreeLabel = styled(ReqoreP)`
   flex-shrink: 1;
+
+  cursor: ${({ onClick }) => (onClick ? 'pointer' : 'default')};
 `;
 
 export const StyledTreeWrapper = styled.div<ITreeStyle>`
@@ -107,49 +108,68 @@ export const ReqoreTree = ({
         isExpandable = false;
       }
 
+      const badges: IReqoreButtonProps['badge'] = [`{...} ${lodashSize(data[key])} items`];
+
+      if (_showTypes) {
+        badges.push({
+          icon: 'CodeBoxFill',
+          label: dataType,
+        });
+      }
+
       return (
         <StyledTreeWrapper key={index} size={zoomToSize[zoom]} level={level}>
           {isObject ? (
             <ReqoreControlGroup size={zoomToSize[zoom]}>
+              {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
               <ReqoreButton
+                compact
+                minimal
                 className='reqore-tree-toggle'
                 icon={isExpandable ? 'ArrowDownSFill' : 'ArrowRightSFill'}
                 intent={isExpandable ? 'info' : undefined}
                 onClick={() => handleItemClick(stateKey, isExpandable)}
-                flat
+                flat={false}
+                badge={badges}
               >
                 {displayKey}
               </ReqoreButton>
-              {_showTypes ? <ReqoreTag label={dataType} className='reqore-tree-type' /> : null}
             </ReqoreControlGroup>
           ) : (
-            <ReqoreControlGroup size={zoomToSize[zoom]} verticalAlign='flex-start'>
-              <ReqoreTag
-                label={displayKey}
-                actions={
-                  withLabelCopy
-                    ? [
-                        {
-                          icon: 'FileCopy2Fill',
-                          onClick: () => {
-                            navigator.clipboard.writeText(JSON.stringify(data[key]));
-                            addNotification({
-                              content: 'Successfuly copied to clipboard',
-                              id: Date.now().toString(),
-                              type: 'success',
-                              duration: 3000,
-                            });
-                          },
-                        },
-                      ]
-                    : undefined
-                }
-              />
-              {_showTypes ? <ReqoreTag className='reqore-tree-type' label={dataType} /> : null}
+            <ReqoreControlGroup verticalAlign='flex-start'>
+              {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
+              <ReqoreP
+                customTheme={{ text: { color: 'info:lighten' } }}
+                style={{ flexShrink: 0 }}
+                size={zoomToSize[zoom]}
+              >
+                {displayKey}:
+              </ReqoreP>
+              {withLabelCopy && (
+                <ReqoreIcon
+                  interactive
+                  icon='ClipboardLine'
+                  size={getOneLessSize(zoomToSize[zoom])}
+                  onClick={() => {
+                    try {
+                      navigator.clipboard.writeText(JSON.stringify(data[key]));
+                      addNotification({
+                        content: 'Successfuly copied to clipboard',
+                        id: Date.now().toString(),
+                        type: 'success',
+                        duration: 3000,
+                      });
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                />
+              )}
               <StyledTreeLabel
                 flat
-                onClick={() => onItemClick(data[key], [...path, key])}
+                onClick={() => onItemClick?.(data[key], [...path, key])}
                 className='reqore-tree-label'
+                size={zoomToSize[zoom]}
               >
                 {JSON.stringify(data[key])}
               </StyledTreeLabel>

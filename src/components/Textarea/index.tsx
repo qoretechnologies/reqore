@@ -188,6 +188,8 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
         )}`;
 
         setValue(value);
+        // Trigger the onChange event
+        onChange?.({ target: { value } } as any);
       },
       [inputRef, _value]
     );
@@ -232,6 +234,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
           component={StyledTextareaWrapper}
           className={`${className || ''} reqore-control-wrapper`}
           width={width}
+          filterable
           height={height}
           fluid={fluid}
           fixed={fixed}

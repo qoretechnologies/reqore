@@ -1,5 +1,7 @@
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+
 export const parameters = {
+  actions: { argTypesRegex: '^on[A-Z].*' },
   layout: 'fullscreen',
   options: {
     panelPosition: 'right',

@@ -17,7 +17,8 @@ export interface IReqoreParagraphProps
 export const StyledParagraph = styled(StyledTextEffect)`
   padding: 0;
   margin: 0;
-  color: ${({ theme, intent }) => (intent ? theme.intents[intent] : 'inherit')};
+  color: ${({ theme, intent }) =>
+    intent ? theme.intents[intent] : theme.text?.color || 'inherit'};
   font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
 `;
 
@@ -29,6 +30,7 @@ export const ReqoreP = memo(
       <StyledParagraph
         as='p'
         theme={theme}
+        color={theme.text.color}
         intent={intent}
         {...props}
         _size={size}

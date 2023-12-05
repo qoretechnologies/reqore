@@ -29,6 +29,8 @@ export interface IReqoreIconProps
   rounded?: boolean;
   rotation?: number;
   animation?: 'spin' | 'heartbeat';
+  interactive?: boolean;
+  compact?: boolean;
 }
 
 const SpinKeyframes = keyframes`
@@ -51,18 +53,23 @@ export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left'
 
   border-radius: ${({ rounded }) => (rounded ? '50%' : undefined)};
   rotate: ${({ rotation }) => (rotation ? `${rotation}deg` : undefined)};
+  cursor: ${({ interactive }) => (interactive ? 'pointer' : undefined)};
 
-  ${({ margin, size }) =>
+  ${({ margin, size, compact }) =>
     margin &&
     css`
       margin-left: ${margin === 'left' || margin === 'both'
         ? isStringSize(size)
-          ? `${PADDING_FROM_SIZE[size]}px`
+          ? `${PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px`
+          : compact
+          ? '3px'
           : '10px'
         : undefined};
       margin-right: ${margin === 'right' || margin === 'both'
         ? isStringSize(size)
-          ? `${PADDING_FROM_SIZE[size]}px`
+          ? `${PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px`
+          : compact
+          ? '3px'
           : '10px'
         : undefined};
     `}

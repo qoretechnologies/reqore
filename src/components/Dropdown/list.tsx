@@ -81,7 +81,7 @@ const ReqoreDropdownList = memo(
 
       return _items.filter((item) => {
         if (item.divider) {
-          return false;
+          return true;
         }
 
         const text: string | undefined = item.label || item.value || item.children;
@@ -153,7 +153,8 @@ const ReqoreDropdownList = memo(
               {_onBackClick && (
                 <ReqoreButton
                   icon='ArrowLeftSLine'
-                  fluid
+                  fluid={!filterable}
+                  fixed={filterable}
                   onClick={_onBackClick}
                   className='reqore-dropdown-back-button'
                 />
@@ -163,7 +164,10 @@ const ReqoreDropdownList = memo(
                   value={onFilterChange ? filter : query}
                   icon='SearchLine'
                   onChange={handleQueryChange}
-                  placeholder={filterPlaceholder || `Search ${size(_items)} items...`}
+                  placeholder={
+                    filterPlaceholder ||
+                    `Search ${size(_items.filter((item) => !item.divider))} items...`
+                  }
                   onClearClick={() => (onFilterChange ? onFilterChange('') : setQuery(''))}
                   {...inputProps}
                 />
@@ -195,6 +199,7 @@ const ReqoreDropdownList = memo(
                     <ReqoreDropdownItem
                       key={item.label || item.value || index}
                       {...item}
+                      disabled={'items' in item && !size(item.items) ? true : item.disabled}
                       onItemClick={handleItemClick}
                       scrollIntoView={scrollToSelected && item.selected && !multiSelect}
                     />

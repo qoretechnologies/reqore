@@ -283,9 +283,10 @@ export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
   content?: TReqoreBadge | TReqoreBadge[];
   wrap?: boolean;
   wrapGroup?: boolean;
+  compact?: boolean;
 }
 
-export const ButtonBadge = memo(({ wrapGroup, ...props }: IReqoreButtonBadgeProps) => {
+export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButtonBadgeProps) => {
   const renderTag = useCallback(
     ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
       <ReqoreTag
@@ -309,7 +310,7 @@ export const ButtonBadge = memo(({ wrapGroup, ...props }: IReqoreButtonBadgeProp
     return (
       <>
         <ReqoreSpacer
-          width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size]}
+          width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
           height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
         />
         <ReqoreTagGroup wrap={wrapGroup}>
@@ -363,6 +364,7 @@ const ReqoreButton = memo(
         leftIconProps,
         rightIconProps,
         label,
+        compact,
         as,
         ...rest
       }: IReqoreButtonProps,
@@ -418,6 +420,7 @@ const ReqoreButton = memo(
           wrap={wrap}
           description={description}
           className={`${className || ''} reqore-control reqore-button`}
+          compact={compact}
         >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {hasLeftIcon ? (
@@ -426,6 +429,7 @@ const ReqoreButton = memo(
                   icon={icon}
                   size={size}
                   color={leftIconColor || iconColor}
+                  compact={compact}
                   {...leftIconProps}
                   style={
                     textAlign !== 'left' || iconsAlign === 'center'
@@ -440,7 +444,7 @@ const ReqoreButton = memo(
                   }
                 />
                 {_children || hasRightIcon ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (compact ? 2 : 1)} />
                 ) : null}
               </>
             ) : _children ? (
@@ -471,7 +475,7 @@ const ReqoreButton = memo(
               </StyledAnimatedTextWrapper>
             )}
             {(badge || badge === 0) && !wrap ? (
-              <ButtonBadge content={badge} size={size} theme={theme} />
+              <ButtonBadge content={badge} size={size} theme={theme} compact={compact} />
             ) : null}
             {!hasRightIcon ? (
               _children ? (
@@ -482,11 +486,14 @@ const ReqoreButton = memo(
               ) : null
             ) : (
               <>
-                {_children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size]} /> : null}
+                {_children || badge ? (
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (compact ? 2 : 1)} />
+                ) : null}
                 <ReqoreIcon
                   icon={rightIcon}
                   size={size}
                   color={rightIconColor || iconColor}
+                  compact={compact}
                   {...rightIconProps}
                   style={
                     textAlign !== 'right' || iconsAlign === 'center'
