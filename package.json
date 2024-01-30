@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "source": "source ~./profile",
     "test": "./node_modules/.bin/jest",
     "test:watch": "./node_modules/.bin/jest --watch",
     "test:ci": "./node_modules/.bin/jest --silent --json --outputFile=tests.json",
@@ -27,6 +28,7 @@
     "react"
   ],
   "pre-push": [
+    "source",
     "build:test:prod",
     "lint",
     "test"
