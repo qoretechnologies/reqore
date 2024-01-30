@@ -1,5 +1,6 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
+import { useState } from 'react';
 import { useMount } from 'react-use';
 import { IReqoreModalProps } from '../../components/Modal';
 import { ReqoreModal, ReqorePanel, useReqoreProperty } from '../../index';
@@ -67,15 +68,21 @@ type Story = StoryObj<typeof meta>;
 
 const Template: StoryFn<IReqoreModalProps & { confirm?: boolean }> = (args) => {
   const confirmAction = useReqoreProperty('confirmAction');
+  const [count, setCount] = useState(0);
+
+  const handleConfirm = () => {
+    confirmAction({
+      description: 'How is the wheather going to be?',
+      title: 'Tell me something',
+      onConfirm: noop,
+      onCancel: noop,
+    });
+    setCount(count + 1);
+  };
 
   useMount(() => {
     if (args.confirm) {
-      confirmAction({
-        description: 'How is the wheather going to be?',
-        title: 'Tell me something',
-        onConfirm: noop,
-        onCancel: noop,
-      });
+      handleConfirm();
     }
   });
 
@@ -126,7 +133,7 @@ const Template: StoryFn<IReqoreModalProps & { confirm?: boolean }> = (args) => {
         {...args}
         onClose={() => noop}
         bottomActions={[
-          { label: 'Confirm', intent: 'success', position: 'right' },
+          { label: 'Confirm', intent: 'success', position: 'right', onClick: handleConfirm },
           { label: 'Cancel', intent: 'danger', position: 'left' },
         ]}
       >

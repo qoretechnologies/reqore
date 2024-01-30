@@ -1,6 +1,6 @@
 import { animated } from '@react-spring/web';
 import { rgba } from 'polished';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import styled from 'styled-components';
 import { IReqoreDrawerStyle } from '.';
 import { useReqoreProperty } from '../..';
@@ -30,6 +30,7 @@ export const StyledBackdrop = styled(animated.div)<
 export const ReqoreBackdrop = memo(
   ({ onClose, zIndex, blur, opacity, ...rest }: IReqoreBackdropProps) => {
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
+    const finalZIndex = useMemo(() => zIndex || getAndIncreaseZIndex(), [zIndex]);
 
     return (
       <StyledBackdrop
@@ -42,7 +43,7 @@ export const ReqoreBackdrop = memo(
           }
         }}
         closable={!!onClose}
-        zIndex={zIndex || getAndIncreaseZIndex()}
+        zIndex={finalZIndex}
         blur={blur}
         style={{
           opacity,

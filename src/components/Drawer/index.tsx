@@ -7,7 +7,6 @@ import { useReqoreProperty } from '../..';
 import { SPRING_CONFIG, SPRING_CONFIG_NO_ANIMATIONS } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import useLatestZIndex from '../../hooks/useLatestZIndex';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
@@ -159,6 +158,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
   ...rest
 }: IReqoreDrawerProps) => {
   const animations = useReqoreProperty('animations');
+  const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
   const theme = useReqoreTheme('main', customTheme, intent);
   const layout = useMemo(
     () =>
@@ -183,8 +183,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
     config: animations.dialogs ? SPRING_CONFIG : SPRING_CONFIG_NO_ANIMATIONS,
   });
 
-  const zIndex = useLatestZIndex();
-  const wrapperZIndex = useLatestZIndex();
+  const zIndex = useMemo(() => getAndIncreaseZIndex(), []);
+  const wrapperZIndex = useMemo(() => getAndIncreaseZIndex(), []);
   const _actions: IReqorePanelAction[] = useMemo(() => {
     const builtActions: IReqorePanelAction[] = [...actions];
 
