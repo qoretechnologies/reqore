@@ -170,6 +170,7 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
         ]}
       />
       <ReqoreTag label='Danger Tag' icon='AlarmWarningLine' intent='danger' {...args} />
+      <ReqoreTag label='Transparent tag' icon='Ghost2Line' {...args} color='transparent' />
       <ReqoreTag
         label='Custom Color Tag'
         icon='AlarmWarningLine'
