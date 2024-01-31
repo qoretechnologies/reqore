@@ -35,6 +35,7 @@ import {
   IReqoreEffect,
   StyledEffect,
   StyledTextEffect,
+  TReqoreColor,
   TReqoreEffectColor,
   TReqoreHexColor,
 } from '../Effect';
@@ -81,7 +82,7 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   theme: IReqoreTheme;
   removable?: boolean;
   interactive?: boolean;
-  color?: TReqoreHexColor;
+  color?: TReqoreColor;
 }
 
 export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
@@ -116,19 +117,20 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
           height: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
         `}
 
-  ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) =>
-    css`
+  ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) => {
+    return css`
       background-color: ${color || changeLightness(theme.main, 0.1)};
       color: ${minimal
         ? getReadableColor(theme, undefined, undefined, true)
-        : color
+        : color && color !== 'transparent'
         ? getReadableColorFrom(color)
         : getReadableColorFrom(changeLightness(theme.main, 0.1))};
 
       ${StyledTagKeyWrapper} {
         background-color: ${labelKey ? rgba('#000000', 0.2) : undefined};
       }
-    `}
+    `;
+  }}
 
   ${({ theme, color, interactive, minimal, effect }) =>
     interactive

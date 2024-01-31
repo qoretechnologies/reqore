@@ -170,7 +170,7 @@ export const getColorFromMaybeString = (
   ) as TReqoreEffectColorList;
 
   if (providedColor === 'transparent') {
-    return '#00000000';
+    return theme.originalMain;
   }
 
   // First we need to get the actual color
