@@ -120,7 +120,9 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
         rightIcon='EditLine'
         onRightIconClick={() => alert('Icon clicked')}
         description='Button with right icon and description'
-        intent='info'
+        customTheme={{
+          main: 'info:darken:1:0.3',
+        }}
       >
         Some button
       </ReqoreMenuItem>

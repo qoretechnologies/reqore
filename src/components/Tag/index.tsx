@@ -283,6 +283,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         ? theme.intents[itemIntent]
         : getColorFromMaybeString(theme, color);
 
+      if (customColor?.length === 9) {
+        return customColor;
+      }
+
       customColor = minimal ? `${customColor || '#000000'}40` : customColor;
 
       return customColor;

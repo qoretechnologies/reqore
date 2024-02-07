@@ -90,6 +90,7 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px;
   min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   line-height: ${({ _size }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
+  vertical-align: middle;
 
   background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
     minimal ? 'transparent' : rgba(theme.main, 0.1)};

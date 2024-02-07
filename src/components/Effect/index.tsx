@@ -16,22 +16,35 @@ import { IWithReqoreMinimal } from '../../types/global';
 
 export type TReqoreEffectColorManipulation = 'darken' | 'lighten';
 export type TReqoreEffectColorManipulationMultiplier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type TReqoreEffectColorManipulationAlpha =
+  | 0.1
+  | 0.2
+  | 0.3
+  | 0.4
+  | 0.5
+  | 0.6
+  | 0.7
+  | 0.8
+  | 0.9
+  | 1;
 export type TReqoreHexColor = `#${string}`;
 export type TReqoreColor = TReqoreHexColor | 'transparent';
 export type TReqoreEffectColor =
-  | TReqoreColor
-  | TReqoreIntent
-  | `${TReqoreIntent}:${TReqoreEffectColorManipulation}`
-  | `${TReqoreIntent}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`
-  | 'main'
-  | `main:${TReqoreEffectColorManipulation}`
-  | `main:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`
-  | `${TReqoreHexColor}:${TReqoreEffectColorManipulation}`
-  | `${TReqoreHexColor}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`;
+  | (TReqoreColor | TReqoreHexColor | 'main' | TReqoreIntent)
+  | `${TReqoreIntent | 'main' | TReqoreHexColor}:${TReqoreEffectColorManipulation}`
+  | `${
+      | TReqoreIntent
+      | 'main'
+      | TReqoreHexColor}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`
+  | `${
+      | TReqoreIntent
+      | 'main'
+      | TReqoreHexColor}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}:${TReqoreEffectColorManipulationAlpha}`;
 export type TReqoreEffectColorList = [
   'main' | TReqoreIntent | TReqoreColor,
   TReqoreEffectColorManipulation | undefined,
-  TReqoreEffectColorManipulationMultiplier | undefined
+  TReqoreEffectColorManipulationMultiplier | undefined,
+  TReqoreEffectColorManipulationAlpha | undefined
 ];
 export type TReqoreEffectGradientColors =
   | 'main'

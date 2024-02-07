@@ -1,5 +1,5 @@
 import { cloneDeep, merge, reduce } from 'lodash';
-import { darken, getLuminance, lighten, mix, readableColor } from 'polished';
+import { darken, getLuminance, lighten, mix, readableColor, transparentize } from 'polished';
 import {
   TReqoreEffectColor,
   TReqoreEffectColorList,
@@ -49,6 +49,23 @@ export const percentToHexAlpha = (p: number) => {
   const hexValue = intValue.toString(16); // get hexadecimal representation
 
   return hexValue.padStart(2, '0').toUpperCase(); // format with leading 0 and upper case characters
+};
+
+export const RGBAToHexA = (rgba, forceRemoveAlpha = false): TReqoreHexColor => {
+  if (isValidSixCharHex(rgba)) {
+    return rgba as TReqoreHexColor;
+  }
+
+  return ('#' +
+    rgba
+      .replace(/^rgba?\(|\s+|\)$/g, '') // Get's rgba / rgb string values
+      .split(',') // splits them at ","
+      .filter((_string, index) => !forceRemoveAlpha || index !== 3)
+      .map((string) => parseFloat(string)) // Converts them to numbers
+      .map((number, index) => (index === 3 ? Math.round(number * 255) : number)) // Converts alpha to 255 number
+      .map((number) => number.toString(16)) // Converts numbers to hex
+      .map((string) => (string.length === 1 ? '0' + string : string)) // Adds 0 when length of one number is 1
+      .join('')) as TReqoreHexColor; // Puts the array to togehter to a string
 };
 
 export const shouldDarken = (mainColor: TReqoreHexColor): boolean => {
@@ -165,7 +182,7 @@ export const getColorFromMaybeString = (
     return undefined;
   }
 
-  const [providedColor, shading, multiplier = 1]: TReqoreEffectColorList = color.split(
+  const [providedColor, shading, multiplier = 1, alpha = 1]: TReqoreEffectColorList = color.split(
     ':'
   ) as TReqoreEffectColorList;
 
@@ -194,6 +211,10 @@ export const getColorFromMaybeString = (
     } else if (shading === 'darken') {
       _color = darken(0.1 * multiplier, _color) as TReqoreHexColor;
     }
+  }
+
+  if (_color && _color.length === 7 && alpha < 1) {
+    _color = RGBAToHexA(transparentize(1 - alpha, _color));
   }
 
   return _color;
@@ -277,11 +298,13 @@ export const getGradientMix = (
     const gradientColor1: TReqoreHexColor = getNthGradientColor(theme, _colors);
     const gradientColor2: TReqoreHexColor = getNthGradientColor(theme, _colors, 2);
 
-    return mix(
-      0.5,
-      gradientColor1 === '#00000000' ? theme.main : gradientColor1,
-      gradientColor2 === '#00000000' ? theme.main : gradientColor2
-    ) as TReqoreHexColor;
+    return RGBAToHexA(
+      mix(
+        0.5,
+        gradientColor1 === '#00000000' ? theme.main : gradientColor1,
+        gradientColor2 === '#00000000' ? theme.main : gradientColor2
+      ) as TReqoreHexColor
+    );
   }
 
   return fallback;
