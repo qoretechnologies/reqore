@@ -233,7 +233,7 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
             {
               effect: {
                 gradient: {
-                  colors: { 0: 'danger', 100: 'danger:darken' },
+                  colors: { 0: 'danger', 100: 'danger:darken:1:0.1' },
                   direction: 'to right bottom',
                 },
               },
