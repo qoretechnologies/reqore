@@ -61,6 +61,7 @@ export interface IReqoreTextareaProps
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
   theme: IReqoreTheme;
+  hasClearButton?: boolean;
   _size?: TSizes;
 }
 
@@ -88,6 +89,8 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   margin: 0;
   padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px;
+  padding-right: ${({ hasClearButton, _size }) =>
+    hasClearButton ? `${SIZE_TO_PX[_size]}px` : undefined};
   min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   line-height: ${({ _size }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
   vertical-align: middle;
@@ -218,6 +221,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
             value={_value}
             readonly={rest?.readOnly}
             tabIndex={rest?.disabled ? -1 : 0}
+            hasClearButton={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
           />
           <ReqoreInputClearButton
             enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
