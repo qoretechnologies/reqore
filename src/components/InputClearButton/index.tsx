@@ -19,7 +19,6 @@ export const StyledInputClearButton = styled(ReqoreIcon)<{ show?: boolean }>`
   align-items: center;
   transition: all 0.1s ease-out;
   cursor: pointer;
-  display: none;
 
   &:hover {
     opacity: 1 !important;
