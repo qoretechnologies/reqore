@@ -41,6 +41,8 @@ export interface IReqoreCollectionItemProps
   maxContentHeight?: number;
   showContentFade?: boolean;
   searchString?: string;
+  // Used for passing values and sorting
+  metadata?: Record<string, any>;
 }
 
 export const StyledCollectionItemContent = styled.div`

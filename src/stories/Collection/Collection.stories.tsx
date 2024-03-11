@@ -5,6 +5,10 @@ import { IReqoreColumnsProps } from '../../components/Columns';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import items, { bigCollection } from '../../mock/collectionData';
 
+import { expect } from '@storybook/jest';
+import { fireEvent } from '@storybook/testing-library';
+import { waitFor } from '@testing-library/react';
+import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
 import { argManager, IntentArg, SizeArg } from '../utils/args';
 
@@ -282,4 +286,32 @@ export const DefaultFilter: Story = {
       ...bigCollection,
     ],
   } as IReqoreCollectionProps,
+};
+
+export const CustomSortKeysWithDefaultSort: Story = {
+  args: {
+    label: 'Posts',
+    items: items.map((item) => ({
+      ...item,
+      badge: [item.metadata.id, item.metadata.category],
+    })),
+    defaultSort: 'desc',
+    defaultSortBy: 'id',
+    sortKeys: {
+      id: 'ID',
+      category: 'Category',
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await sleep(500);
+
+    await fireEvent.click(canvasElement.querySelector('.reqore-collection-sort'));
+
+    await waitFor(
+      () => expect(document.querySelectorAll('.reqore-popover-content')).toHaveLength(1),
+      {
+        timeout: 5000,
+      }
+    );
+  },
 };
