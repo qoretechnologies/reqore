@@ -14,12 +14,17 @@ export interface IReqoreMenuDividerProps
   label?: string | number;
   margin?: 'left' | 'right' | 'both' | 'none';
   align?: 'left' | 'center' | 'right';
+  padded?: 'top' | 'bottom' | 'both' | 'none';
   line?: boolean;
 }
 
 export const StyledMenuDivider = styled(StyledTextEffect)`
   width: 100%;
-  padding: ${({ size }) => `${PADDING_FROM_SIZE[size]}px 0`};
+  padding: 0;
+  padding-top: ${({ padded, size }) =>
+    padded === 'top' || padded === 'both' ? `${PADDING_FROM_SIZE[size]}px` : undefined};
+  padding-bottom: ${({ padded, size }) =>
+    padded === 'bottom' || padded === 'both' ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   background-color: transparent;
 
   ${({ margin, size }) =>
@@ -48,6 +53,7 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
       effect,
       size = 'normal',
       align = 'center',
+      padded = 'both',
       line,
       ...rest
     }: IReqoreMenuDividerProps,
@@ -63,6 +69,7 @@ const ReqoreMenuDivider = forwardRef<HTMLDivElement, IReqoreMenuDividerProps>(
       <StyledMenuDivider
         as='div'
         {...rest}
+        padded={padded}
         size={size}
         className={`${className || ''} reqore-menu-divider`}
         ref={ref}

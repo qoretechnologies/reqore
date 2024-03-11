@@ -45,6 +45,10 @@ export default [
       },
     ],
     expandable: true,
+    metadata: {
+      id: 23,
+      category: 'Article',
+    },
   },
   {
     label: 'Test with tooltip',
@@ -69,6 +73,10 @@ export default [
         icon: 'CodeLine',
       },
     ],
+    metadata: {
+      id: 24,
+      category: 'Post',
+    },
   },
   {
     icon: 'TextWrap',
@@ -80,6 +88,10 @@ export default [
     minimal: false,
     badge: 0,
     searchString: 'secret',
+    metadata: {
+      id: 1,
+      category: 'None',
+    },
   },
   {
     icon: 'ZcoolLine',
@@ -87,6 +99,10 @@ export default [
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long Hello I am a test item content and I am very long so will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long Hello I am a test item content and I am very long so will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     showContentFade: false,
+    metadata: {
+      id: 13,
+      category: 'Article',
+    },
   },
   {
     icon: 'FolderWarningFill',
@@ -114,8 +130,16 @@ export default [
         onRemoveClick: noop(),
       },
     ],
+    metadata: {
+      id: 99,
+      category: 'Post',
+    },
   },
   {
+    metadata: {
+      id: 30,
+      category: 'Article',
+    },
     label: 'Item with custom content when expanded',
     tooltip: 'Expandable item with custom content',
     selected: true,
@@ -234,6 +258,10 @@ export default [
     ],
   },
   {
+    metadata: {
+      id: 31,
+      category: 'None',
+    },
     label: 'I have intent!',
     transparent: true,
     minimal: false,
@@ -287,6 +315,10 @@ export default [
     intent: 'info',
   },
   {
+    metadata: {
+      id: 25,
+      category: 'Article',
+    },
     label: 'I have actions',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
@@ -309,6 +341,10 @@ export default [
     expandable: true,
   },
   {
+    metadata: {
+      id: 2,
+      category: 'None',
+    },
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
     expandedActions: [

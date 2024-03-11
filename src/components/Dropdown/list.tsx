@@ -21,6 +21,7 @@ export interface IReqoreDropdownItem
   onClick?: TDropdownItemOnClick;
   divider?: boolean;
   dividerAlign?: 'left' | 'center' | 'right';
+  dividerPadded?: 'top' | 'bottom' | 'both' | 'none';
   line?: boolean;
 }
 
@@ -188,12 +189,16 @@ const ReqoreDropdownList = memo(
               ref={setMenuRef}
             >
               {finalItems.map(
-                ({ dividerAlign, divider, ...item }: IReqoreDropdownItem, index: number) =>
+                (
+                  { dividerAlign, dividerPadded, divider, ...item }: IReqoreDropdownItem,
+                  index: number
+                ) =>
                   divider ? (
                     <ReqoreMenuDivider
                       key={index}
                       {...(item as unknown as IReqoreMenuDividerProps)}
                       align={dividerAlign}
+                      padded={dividerPadded}
                     />
                   ) : (
                     <ReqoreDropdownItem

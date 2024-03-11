@@ -21,10 +21,12 @@ export const sortTableData = (data: any[], sort: IReqoreTableSort) => {
 
   if (thenBy) {
     return [...data].sort(
+      // @ts-expect-error
       firstBy(by, { ignoreCase: true, direction }).thenBy(thenBy, { ignoreCase: true, direction })
     );
   }
 
+  // @ts-expect-error
   return [...data].sort(firstBy(by, { ignoreCase: true, direction }));
 };
 

@@ -1,4 +1,4 @@
-import { size } from 'lodash';
+import { map, size } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
@@ -12,7 +12,13 @@ import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import ReqoreMessage from '../Message';
-import { IReqorePanelAction, IReqorePanelProps, ReqorePanel, TReqorePanelActions } from '../Panel';
+import {
+  IReqorePanelAction,
+  IReqorePanelProps,
+  IReqorePanelSubAction,
+  ReqorePanel,
+  TReqorePanelActions,
+} from '../Panel';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import { getZoomActions, sizeToZoom, sortTableData, zoomToSize } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
@@ -32,6 +38,10 @@ export interface IReqoreCollectionProps extends IReqorePanelProps, IReqoreColumn
 
   defaultQuery?: string;
   defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
+  defaultSort?: 'asc' | 'desc';
+  defaultSortBy?: string;
+
+  sortKeys?: Record<string, string>;
 
   filterable?: boolean;
   sortable?: boolean;
@@ -103,7 +113,13 @@ export const ReqoreCollection = ({
   flat = true,
   minimal,
   transparent = true,
+
   defaultQuery,
+  defaultSort = 'asc',
+  defaultSortBy = 'label',
+
+  sortKeys = {},
+
   onQueryChange,
   contentRenderer = (children, _items, searchInput) => (
     <>
@@ -130,7 +146,8 @@ export const ReqoreCollection = ({
   ...rest
 }: IReqoreCollectionProps) => {
   const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
-  const [sort, setSort] = useState<'asc' | 'desc'>('asc');
+  const [sort, setSort] = useState<'asc' | 'desc'>(defaultSort);
+  const [sortBy, setSortBy] = useState<string>(defaultSortBy);
   const [contentRef, setContentRef] = useState<HTMLDivElement>(undefined);
   const isMobile = useReqoreProperty('isMobile');
   const [zoom, setZoom] = useState<number>(defaultZoom || sizeToZoom.normal);
@@ -150,6 +167,8 @@ export const ReqoreCollection = ({
       return items;
     }
 
+    const _sortBy = !!sortKeys[sortBy] ? (v) => v?.metadata?.[sortBy] : sortBy;
+
     if (showSelectedFirst) {
       // Filter out the selected items
       const selectedItems = items.filter((item) => item.selected);
@@ -157,12 +176,12 @@ export const ReqoreCollection = ({
       const unselectedItems = items.filter((item) => !item.selected);
       // Sort the selected items
       const sortedSelectedItems = sortTableData(selectedItems, {
-        by: 'label',
+        by: _sortBy,
         direction: sort,
       });
       // Sort the unselected items
       const sortedUnselectedItems = sortTableData(unselectedItems, {
-        by: 'label',
+        by: _sortBy,
         direction: sort,
       });
 
@@ -170,10 +189,10 @@ export const ReqoreCollection = ({
     }
 
     return sortTableData(items, {
-      by: 'label',
+      by: _sortBy,
       direction: sort,
     });
-  }, [items, sort]);
+  }, [items, sort, sortBy, showSelectedFirst, sortable]);
 
   const filteredItems: IReqoreCollectionItemProps[] = useMemo(() => {
     if (!filterable || query === '') {
@@ -216,17 +235,6 @@ export const ReqoreCollection = ({
       ],
     };
 
-    if (sortable) {
-      toolbarGroup.actions.push({
-        icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
-        onClick: () => setSort(sort === 'desc' ? 'asc' : 'desc'),
-        tooltip: sortButtonTooltip(sort),
-        label: sortButtonTooltip(sort),
-        disabled: !size(filteredItems),
-        ...sortButtonProps,
-      });
-    }
-
     if (zoomable) {
       toolbarGroup.actions = [
         ...toolbarGroup.actions,
@@ -256,6 +264,42 @@ export const ReqoreCollection = ({
           },
         },
       ];
+    }
+
+    if (sortable) {
+      const _sortKeys = {
+        label: 'Label',
+        intent: 'Intent',
+        ...sortKeys,
+      };
+
+      actions.push({
+        icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
+        tooltip: sortButtonTooltip(sort),
+        className: 'reqore-collection-sort',
+        disabled: !size(filteredItems),
+        actions: [
+          {
+            divider: true,
+            label: 'Sort by',
+            dividerAlign: 'left',
+            minimal: true,
+            dividerPadded: 'bottom',
+          },
+          ...map(
+            _sortKeys,
+            (label, key): IReqorePanelSubAction => ({
+              label,
+              selected: sortBy === key,
+              onClick: () => {
+                setSortBy(key);
+                setSort(sort === 'desc' ? 'asc' : 'desc');
+              },
+            })
+          ),
+        ],
+        ...sortButtonProps,
+      });
     }
 
     return [...actions, toolbarGroup];
