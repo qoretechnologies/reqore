@@ -277,6 +277,8 @@ export const ReqoreCollection = ({
         icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
         tooltip: sortButtonTooltip(sort),
         className: 'reqore-collection-sort',
+        fixed: true,
+        fluid: false,
         disabled: !size(filteredItems),
         actions: [
           {
