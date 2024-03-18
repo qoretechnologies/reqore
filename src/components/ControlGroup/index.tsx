@@ -357,8 +357,6 @@ const ReqoreControlGroup = memo(
       return undefined;
     };
 
-    let index = 0;
-
     const { clone } = useCloneThroughFragments(
       (props, _index, index) => {
         let newProps: any = {
@@ -418,7 +416,6 @@ const ReqoreControlGroup = memo(
         isLastGroup,
         isFirstGroup,
         realChildCount,
-        index,
         fluid,
         flat,
         minimal,
