@@ -90,7 +90,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
           theme={theme}
           className={`${rest.className || ''} reqore-menu`}
         >
-          <ReqoreControlGroup vertical gapSize={itemGap}>
+          <ReqoreControlGroup vertical gapSize={itemGap} fluid>
             {clone(children)}
           </ReqoreControlGroup>
         </StyledReqoreMenu>
