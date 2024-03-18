@@ -298,6 +298,16 @@ export const Transparent: Story = {
   },
 };
 
+export const Positioned: Story = {
+  render: Template,
+
+  args: {
+    position: 'left',
+    padded: false,
+    rounded: false,
+  },
+};
+
 export const BigGapSize: Story = {
   render: Template,
 

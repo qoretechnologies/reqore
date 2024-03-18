@@ -64,7 +64,10 @@ export interface IReqoreButtonProps
   fixed?: boolean;
   active?: boolean;
   flat?: boolean;
+
   compact?: boolean;
+  verticalPadding?: TSizes;
+
   rightIcon?: IReqoreIconName;
   customTheme?: IReqoreCustomTheme;
   wrap?: boolean;
@@ -122,17 +125,21 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   vertical-align: middle;
   border: ${({ theme, color, flat }) =>
     !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.2)}` : 0};
-  padding: 0
-    ${({ size, compact }) => (compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size])}px;
+  padding: ${({ size, compact, verticalPadding }) =>
+    `${verticalPadding ? PADDING_FROM_SIZE[verticalPadding] : 0}px ${
+      compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]
+    }px`};
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
+
   ${({ wrap, description }) =>
     !wrap && !description
       ? css`
-          max-height: ${({ size }) => SIZE_TO_PX[size]}px;
+          max-height: ${({ size, verticalPadding }) =>
+            SIZE_TO_PX[size] + (verticalPadding ? PADDING_FROM_SIZE[verticalPadding] * 2 : 0)}px;
         `
       : null}
 

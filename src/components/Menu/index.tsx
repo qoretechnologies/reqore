@@ -3,7 +3,7 @@ import styled, { css } from 'styled-components';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
+import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreComponent, IWithReqoreMinimal, IWithReqoreTransparent } from '../../types/global';
@@ -43,14 +43,11 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
     transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
   border-radius: ${({ rounded }) => (rounded ? `${RADIUS_FROM_SIZE['normal']}px` : `0`)};
 
-  ${({ theme, position }) =>
+  ${({ theme, position, padded }) =>
     position &&
     css`
-    border-${position === 'left' ? 'right' : 'left'}: 1px solid ${changeLightness(
-      theme.main,
-      0.05
-    )};
-    padding-${position === 'left' ? 'right' : 'left'}: 10px;
+    border-${position === 'left' ? 'right' : 'left'}: 1px solid ${changeDarkness(theme.main, 0.04)};
+    padding-${position === 'left' ? 'right' : 'left'}: ${padded ? '10px' : undefined};
   `}
 `;
 
