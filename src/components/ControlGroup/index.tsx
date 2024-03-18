@@ -5,6 +5,7 @@ import styled, { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
+import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -358,79 +359,56 @@ const ReqoreControlGroup = memo(
 
     let index = 0;
 
-    const cloneThroughFragments = useCallback(
-      (children: React.ReactNode): React.ReactNode => {
-        return React.Children.map(children, (child, _index) => {
-          if (child && React.isValidElement(child)) {
-            if (child.type === React.Fragment) {
-              return cloneThroughFragments(child.props.children);
-            }
+    const { clone } = useCloneThroughFragments(
+      (props, _index, index) => {
+        let newProps: any = {
+          ...props,
+          key: props.reactKey || _index,
+          minimal: props?.minimal || props?.minimal === false ? props.minimal : minimal,
+          size: props?.size || size,
+          flat: props?.flat || props?.flat === false ? props.flat : flat,
+          fluid: props?.fluid || props?.fluid === false ? props.fluid : fluid,
+          fixed: props?.fixed || props?.fixed === false ? props.fixed : fixed,
+          fill: props?.fill || props?.fill === false ? props.fill : fill,
+          stack: props?.stack || props?.stack === false ? props.stack : isStack,
+          intent: props?.intent || intent,
+          customTheme: props?.customTheme || customTheme,
+        };
 
-            let newProps = {
-              ...child.props,
-              key: child.props.reactKey || _index,
-              minimal:
-                child.props?.minimal || child.props?.minimal === false
-                  ? child.props.minimal
-                  : minimal,
-              size: child.props?.size || size,
-              flat: child.props?.flat || child.props?.flat === false ? child.props.flat : flat,
-              fluid: child.props?.fluid || child.props?.fluid === false ? child.props.fluid : fluid,
-              fixed: child.props?.fixed || child.props?.fixed === false ? child.props.fixed : fixed,
-              fill: child.props?.fill || child.props?.fill === false ? child.props.fill : fill,
-              stack:
-                child.props?.stack || child.props?.stack === false ? child.props.stack : isStack,
-              intent: child.props?.intent || intent,
-              customTheme: child.props?.customTheme || customTheme,
-            };
+        if (isStack) {
+          newProps = {
+            ...newProps,
+            style: {
+              borderTopLeftRadius: getBorderTopLeftRadius(index, props?.rounded),
+              borderBottomLeftRadius: getBorderBottomLeftRadius(index, props?.rounded),
+              borderTopRightRadius: getBorderTopRightRadius(index, props?.rounded),
+              borderBottomRightRadius: getBorderBottomRightRadius(index, props?.rounded),
+              ...(props?.style || {}),
+            },
+            isChild: true,
+            rounded:
+              isMasterGroupRounded === false
+                ? false
+                : props?.rounded || props?.rounded === false
+                ? props.rounded
+                : !isStack,
+            isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
+            isInsideStackGroup: isStack,
+            isInsideVerticalGroup: isVertical,
+            isFirst: isChild ? getIsFirst(index) : undefined,
+            isLast: isChild ? getIsLast(index) : undefined,
+            isLastInFirstGroup: getIsLastInFirstGroup(index),
+            isLastInLastGroup: getIsLastInLastGroup(index),
+            isFirstInLastGroup: getIsFirstInLastGroup(index),
+            childrenCount: realChildCount,
+            childId: index + 1,
 
-            if (isStack) {
-              newProps = {
-                ...newProps,
-                style: {
-                  borderTopLeftRadius: getBorderTopLeftRadius(index, child.props?.rounded),
-                  borderBottomLeftRadius: getBorderBottomLeftRadius(index, child.props?.rounded),
-                  borderTopRightRadius: getBorderTopRightRadius(index, child.props?.rounded),
-                  borderBottomRightRadius: getBorderBottomRightRadius(index, child.props?.rounded),
-                  ...(child.props?.style || {}),
-                },
-                isChild: true,
-                rounded:
-                  isMasterGroupRounded === false
-                    ? false
-                    : child.props?.rounded || child.props?.rounded === false
-                    ? child.props.rounded
-                    : !isStack,
-                isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
-                isInsideStackGroup: isStack,
-                isInsideVerticalGroup: isVertical,
-                isFirst: isChild ? getIsFirst(index) : undefined,
-                isLast: isChild ? getIsLast(index) : undefined,
-                isLastInFirstGroup: getIsLastInFirstGroup(index),
-                isLastInLastGroup: getIsLastInLastGroup(index),
-                isFirstInLastGroup: getIsFirstInLastGroup(index),
-                childrenCount: realChildCount,
-                childId: index + 1,
+            isFirstGroup: isChild ? isFirstGroup : index === 0,
+            isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
+          };
+        }
 
-                isFirstGroup: isChild ? isFirstGroup : index === 0,
-                isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
-              };
-            }
-
-            /*
-             * Because of the way React.Children.map works, we have to
-             * manually decrement the index for every child that is `null`
-             * because react maps through null children and returns them in `Count`
-             * We filter these children out in the `realChildCount` variable,
-             * but the index is still incremented
-             * */
-            index = index + 1;
-
-            return React.cloneElement(child, newProps);
-          }
-
-          return child;
-        });
+        return newProps;
       },
       [
         children,
@@ -522,7 +500,7 @@ const ReqoreControlGroup = memo(
           horizontalAlign={horizontalAlign}
           className={`${className || ''} reqore-control-group`}
         >
-          {cloneThroughFragments(_children)}
+          {clone(_children)}
         </StyledReqoreControlGroup>
       </>
     );

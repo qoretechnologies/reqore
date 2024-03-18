@@ -4,8 +4,10 @@ import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
+import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreComponent, IWithReqoreMinimal, IWithReqoreTransparent } from '../../types/global';
+import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 
 export interface IReqoreMenuProps
   extends IReqoreComponent,
@@ -22,6 +24,7 @@ export interface IReqoreMenuProps
   flat?: boolean;
   rounded?: boolean;
   padded?: boolean;
+  itemGap?: IReqoreControlGroupProps['gapSize'];
 }
 
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
@@ -49,10 +52,6 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
     )};
     padding-${position === 'left' ? 'right' : 'left'}: 10px;
   `}
-
-  > *:not(:last-child) {
-    margin-bottom: 5px;
-  }
 `;
 
 const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
@@ -67,11 +66,20 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       wrapText,
       flat = true,
       minimal,
+      itemGap,
       ...rest
     }: IReqoreMenuProps,
     ref
   ) => {
     const theme = useReqoreTheme('main', customTheme, intent);
+    const { clone } = useCloneThroughFragments((props) => ({
+      _insidePopover: props?._insidePopover ?? _insidePopover,
+      _popoverId: props?._popoverId ?? _popoverId,
+      customTheme: props?.customTheme || theme,
+      wrap: 'wrap' in (props || {}) ? props.wrap : wrapText,
+      flat: 'flat' in (props || {}) ? props.flat : flat,
+      minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
+    }));
 
     return (
       <ReqoreThemeProvider theme={theme}>
@@ -82,18 +90,9 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
           theme={theme}
           className={`${rest.className || ''} reqore-menu`}
         >
-          {React.Children.map(children, (child) => {
-            return child
-              ? React.cloneElement(child, {
-                  _insidePopover: child.props?._insidePopover ?? _insidePopover,
-                  _popoverId: child.props?._popoverId ?? _popoverId,
-                  customTheme: child.props?.customTheme || theme,
-                  wrap: 'wrap' in (child.props || {}) ? child.props.wrap : wrapText,
-                  flat: 'flat' in (child.props || {}) ? child.props.flat : flat,
-                  minimal: 'minimal' in (child.props || {}) ? child.props.minimal : minimal,
-                })
-              : null;
-          })}
+          <ReqoreControlGroup vertical gapSize={itemGap}>
+            {clone(children)}
+          </ReqoreControlGroup>
         </StyledReqoreMenu>
       </ReqoreThemeProvider>
     );

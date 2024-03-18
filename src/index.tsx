@@ -69,6 +69,7 @@ export { default as ReqoreNotifications } from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';
+export { useCloneThroughFragments } from './hooks/useCloneThroughFragments';
 export { default as useLatestZIndex } from './hooks/useLatestZIndex';
 export { useReqorePaging } from './hooks/usePaging';
 export { useReqore } from './hooks/useReqore';

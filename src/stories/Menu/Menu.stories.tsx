@@ -137,8 +137,8 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
         <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
           Selected success
         </ReqoreMenuItem>
-        <ReqoreMenuItem icon='Save3Fill' badge={10}>
-          Save
+        <ReqoreMenuItem icon='Save3Fill' badge={[10, 20]}>
+          Save this item
         </ReqoreMenuItem>
         <ReqoreMenuDivider label='BIG Divider' size='huge' />
         <ReqoreMenuItem
@@ -154,17 +154,19 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
           Delete
         </ReqoreMenuItem>
 
-        <ReqoreMenuItem
-          icon='BluetoothConnectLine'
-          rightIcon='EditLine'
-          onRightIconClick={() => alert('Icon clicked')}
-          description='Button with right icon and description'
-          customTheme={{
-            main: 'info:darken:1:0.3',
-          }}
-        >
-          Some button
-        </ReqoreMenuItem>
+        <>
+          <ReqoreMenuItem
+            icon='BluetoothConnectLine'
+            rightIcon='EditLine'
+            onRightIconClick={() => alert('Icon clicked')}
+            description='Button with right icon and description'
+            customTheme={{
+              main: 'info:darken:1:0.3',
+            }}
+          >
+            Some button
+          </ReqoreMenuItem>
+        </>
 
         <ReqoreMenuItem icon='Lock2Fill' description='I also have a description'>
           This is a really long item that should wrap
@@ -293,6 +295,14 @@ export const Transparent: Story = {
 
   args: {
     transparent: true,
+  },
+};
+
+export const BigGapSize: Story = {
+  render: Template,
+
+  args: {
+    itemGap: 'big',
   },
 };
 
