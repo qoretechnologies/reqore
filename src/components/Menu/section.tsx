@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { TReqoreIntent } from '../../constants/theme';
+import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { IReqoreComponent } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -44,6 +45,15 @@ export const ReqoreMenuSection = ({
     [_isCollapsed, onCollapseChange, collapsible, rest.onClick]
   );
 
+  const { clone } = useCloneThroughFragments((props) => ({
+    _insidePopover: props?._insidePopover ?? _insidePopover,
+    _popoverId: props?._popoverId ?? _popoverId,
+    customTheme: props?.customTheme || customTheme,
+    wrap: 'wrap' in (props || {}) ? props.wrap : wrap,
+    flat: 'flat' in (props || {}) ? props.flat : flat,
+    minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
+  }));
+
   return (
     <ReqoreControlGroup vertical fluid className='reqore-menu-section'>
       <ReqoreButton
@@ -63,18 +73,7 @@ export const ReqoreMenuSection = ({
       />
       {!_isCollapsed || !collapsible ? (
         <ReqoreControlGroup vertical fluid style={{ paddingLeft: '10px' }}>
-          {React.Children.map(children, (child) => {
-            return child
-              ? React.cloneElement(child, {
-                  _insidePopover: child.props?._insidePopover ?? _insidePopover,
-                  _popoverId: child.props?._popoverId ?? _popoverId,
-                  customTheme: child.props?.customTheme || customTheme,
-                  wrap: 'wrap' in (child.props || {}) ? child.props.wrap : wrap,
-                  flat: 'flat' in (child.props || {}) ? child.props.flat : flat,
-                  minimal: 'minimal' in (child.props || {}) ? child.props.minimal : minimal,
-                })
-              : null;
-          })}
+          {clone(children)}
         </ReqoreControlGroup>
       ) : null}
     </ReqoreControlGroup>

@@ -475,7 +475,14 @@ const ReqoreButton = memo(
               </StyledAnimatedTextWrapper>
             )}
             {(badge || badge === 0) && !wrap ? (
-              <ButtonBadge content={badge} size={size} theme={theme} compact={compact} />
+              <ButtonBadge
+                content={badge}
+                size={size}
+                theme={theme}
+                compact={compact}
+                wrapGroup={false}
+                wrap={false}
+              />
             ) : null}
             {!hasRightIcon ? (
               _children ? (
