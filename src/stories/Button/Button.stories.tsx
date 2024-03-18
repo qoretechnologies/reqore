@@ -89,6 +89,28 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
       </ReqoreControlGroup>
       <ReqoreControlGroup fluid wrap>
+        <ReqoreButton {...buttonProps} verticalPadding='tiny'>
+          Vertical padding tiny
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} verticalPadding='small'>
+          Vertical padding small
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} verticalPadding='normal'>
+          Vertical padding normal
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} verticalPadding='big'>
+          Vertical padding big
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          verticalPadding='huge'
+          badge={10}
+          description='This is a description'
+        >
+          Vertical padding huge
+        </ReqoreButton>
+      </ReqoreControlGroup>
+      <ReqoreControlGroup fluid wrap>
         <ReqoreButton {...buttonProps} fluid>
           Fluid button
         </ReqoreButton>
