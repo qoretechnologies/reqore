@@ -17,16 +17,14 @@ import { StyledEffect } from '../Effect';
 import { StyledHeader } from '../Header';
 import { StyledParagraph } from '../Paragraph';
 
-export interface IReqoreControlGroupProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    IWithReqoreFlat,
+export interface IReqoreControlGroupComponentProps
+  extends IWithReqoreFlat,
     IWithReqoreSize,
     IWithReqoreMinimal,
     IReqoreIntent,
     IWithReqoreFluid,
     IWithReqoreCustomTheme {
   stack?: boolean;
-  children: any;
   fixed?: boolean;
   rounded?: boolean;
   responsive?: boolean;
@@ -52,6 +50,12 @@ export interface IReqoreControlGroupProps
   isFirstGroup?: boolean;
   isLastGroup?: boolean;
   fill?: boolean;
+}
+
+export interface IReqoreControlGroupProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    IReqoreControlGroupComponentProps {
+  children: any;
 }
 
 export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
