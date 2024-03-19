@@ -57,6 +57,7 @@ const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
           placeholder='Clearable Input'
           onClearClick={handleValueClear}
           onChange={handleValueChange}
+          leftIconProps={{ size: 'tiny' }}
         />
         <ReqoreInput
           {...args}
@@ -66,6 +67,7 @@ const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
           onChange={handleValueChange}
           rightIcon='EraserFill'
           rightIconColor='#8727b7'
+          focusRules={{ type: 'keypress', shortcut: '.', doNotInsertShortcut: true }}
         />
         <ReqoreInput {...args} placeholder='Disabled Input' disabled onChange={handleValueChange} />
         <ReqoreInput
@@ -206,5 +208,13 @@ export const Effect: Story = {
         },
       },
     },
+  },
+};
+
+export const Pill: Story = {
+  render: Template,
+
+  args: {
+    pill: true,
   },
 };

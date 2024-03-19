@@ -369,3 +369,11 @@ export const GlobalEffect: Story = {
     },
   },
 };
+
+export const Pill: Story = {
+  render: Template,
+
+  args: {
+    pill: true,
+  },
+};

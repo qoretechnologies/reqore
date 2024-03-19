@@ -173,3 +173,5 @@ export const WEIGHT_TO_NUMBER = {
   bold: 550,
   thick: 700,
 };
+
+export const PILL_RADIUS_MODIFIER = 2.5;

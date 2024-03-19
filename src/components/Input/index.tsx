@@ -5,6 +5,7 @@ import styled, { css } from 'styled-components';
 import {
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
+  PILL_RADIUS_MODIFIER,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
   TSizes,
@@ -26,7 +27,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect, TReqoreEffectColor } from '../Effect';
-import ReqoreIcon from '../Icon';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 
 export interface IReqoreInputProps
@@ -56,6 +57,11 @@ export interface IReqoreInputProps
   iconColor?: TReqoreEffectColor;
   rightIconColor?: TReqoreEffectColor;
   focusRules?: IReqoreAutoFocusRules;
+
+  leftIconProps?: IReqoreIconProps;
+  rightIconProps?: IReqoreIconProps;
+
+  pill?: boolean;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -75,8 +81,10 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   position: relative;
   overflow: hidden;
-  border-radius: ${({ minimal, rounded, _size }) =>
-    minimal || rounded === false ? 0 : RADIUS_FROM_SIZE[_size]}px;
+  border-radius: ${({ minimal, rounded, _size, pill }) =>
+    minimal || rounded === false
+      ? 0
+      : RADIUS_FROM_SIZE[_size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
   &:focus-within {
     .reqore-clear-input-button {
@@ -117,8 +125,10 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   transition: all 0.2s ease-out;
-  border-radius: ${({ minimal, rounded, _size }) =>
-    minimal || rounded === false ? 0 : RADIUS_FROM_SIZE[_size]}px;
+  border-radius: ${({ minimal, rounded, _size, pill }) =>
+    minimal || rounded === false
+      ? 0
+      : RADIUS_FROM_SIZE[_size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
   border: ${({ minimal, theme, flat }) =>
     !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : 0};
   border-bottom: ${({ minimal, theme, flat }) =>
@@ -191,6 +201,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       intent,
       wrapperStyle,
       focusRules,
+      leftIconProps = {},
+      rightIconProps = {},
+      pill,
       ...rest
     }: IReqoreInputProps,
     ref
@@ -201,6 +214,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
 
     useTooltip(inputRef, tooltip);
     useAutoFocus(inputRef, readOnly || rest.disabled ? undefined : focusRules, rest.onChange);
+
+    const hasLeftIcon = icon || leftIconProps?.image;
+    const hasRightIcon = rightIcon || rightIconProps?.image;
 
     return (
       <StyledInputWrapper
@@ -217,10 +233,11 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         readOnly={readOnly}
         disabled={rest.disabled}
         style={wrapperStyle}
+        pill={pill}
       >
-        {icon && (
+        {hasLeftIcon && (
           <StyledIconWrapper _size={size}>
-            <ReqoreIcon size={size} icon={icon} color={iconColor} />
+            <ReqoreIcon size={size} icon={icon} color={iconColor} {...leftIconProps} />
           </StyledIconWrapper>
         )}
         <StyledInput
@@ -242,6 +259,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           clearable={!rest?.disabled && !readOnly && !!(onClearClick && rest?.onChange)}
           className={`${className || ''} reqore-control reqore-input`}
           readOnly={readOnly}
+          pill={pill}
         />
         <ReqoreInputClearButton
           enabled={!readOnly && !rest?.disabled && !!(onClearClick && rest?.onChange)}
@@ -250,9 +268,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           size={size}
           show={rest?.value && rest.value !== '' ? true : false}
         />
-        {rightIcon && (
+        {hasRightIcon && (
           <StyledIconWrapper _size={size} position='right'>
-            <ReqoreIcon size={size} icon={rightIcon} color={rightIconColor} />
+            <ReqoreIcon size={size} icon={rightIcon} color={rightIconColor} {...rightIconProps} />
           </StyledIconWrapper>
         )}
       </StyledInputWrapper>
