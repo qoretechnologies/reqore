@@ -10,6 +10,7 @@ export interface IReqoreAutoFocusRules {
   viewportMargin?: string;
   shortcut?: 'letters' | 'numbers' | string | ('letters' | 'numbers' | string)[];
   clearOnFocus?: boolean;
+  doNotInsertShortcut?: boolean;
 }
 
 export const useAutoFocus = (
@@ -96,9 +97,10 @@ export const useAutoFocus = (
 
   useEffect(() => {
     if (element && rules && rules.type === 'keypress') {
-      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener(rules.doNotInsertShortcut ? 'keyup' : 'keydown', handleKeyDown);
     }
 
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () =>
+      window.removeEventListener(rules?.doNotInsertShortcut ? 'keyup' : 'keydown', handleKeyDown);
   }, [element, rules]);
 };

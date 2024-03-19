@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/extend-expect';
 import { fireEvent, render } from '@testing-library/react';
 import { noop } from 'lodash';
-import React from 'react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreTextarea, ReqoreUIProvider } from '../src';
 

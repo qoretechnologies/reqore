@@ -5,6 +5,7 @@ import {
   CONTROL_TEXT_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
+  PILL_RADIUS_MODIFIER,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
   TSizes,
@@ -88,6 +89,8 @@ export interface IReqoreButtonProps
   grow?: 0 | 1 | 2 | 3 | 4;
   shrink?: 0 | 1 | 2 | 3 | 4;
   rounded?: boolean;
+
+  pill?: boolean;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -148,8 +151,8 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   flex-grow: ${({ grow }) => grow};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
-  border-radius: ${({ size, rounded }) =>
-    rounded === false ? undefined : RADIUS_FROM_SIZE[size]}px;
+  border-radius: ${({ size, rounded, pill }) =>
+    rounded === false ? undefined : RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
   background-color: ${({ minimal, color }) => {
     if (minimal) {

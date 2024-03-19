@@ -9,5 +9,5 @@ export const Colors: Record<string, TReqoreHexColor> = {
   YELLOW: '#d1a036',
   ORANGE: '#A66321',
   RED: '#A82A2A',
-  GRAY: '#444444',
+  GRAY: '#44444450',
 };
