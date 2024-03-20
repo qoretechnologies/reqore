@@ -14,7 +14,7 @@ export const useTooltip = (
   );
 
   useEffect(() => {
-    if (targetElement && content) {
+    if (targetElement) {
       setElement(targetElement);
       setData(tooltip);
     }
