@@ -1,6 +1,8 @@
+import { expect } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { fireEvent } from '@storybook/testing-library';
 import { useState } from 'react';
+import { useMount } from 'react-use';
 import { IReqorePopoverProps } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
 import usePopover from '../../hooks/usePopover';
@@ -16,6 +18,7 @@ import {
   ReqoreSpacer,
   ReqoreTextarea,
 } from '../../index';
+import { IReqoreTooltip } from '../../types/global';
 import { StoryMeta } from '../utils';
 import { FlatArg, argManager } from '../utils/args';
 
@@ -432,5 +435,37 @@ export const ChangingElement: Story = {
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl.',
       },
     });
+  },
+};
+
+export const TooltipIsRemovedWhenContentIsEmpty: Story = {
+  render: (args) => {
+    const [tooltip, setTooltip] = useState<IReqoreTooltip>({
+      content: 'test',
+      handler: 'focus',
+      noArrow: true,
+      noWrapper: true,
+      useTargetWidth: true,
+    });
+
+    useMount(() => {
+      setTimeout(() => {
+        setTooltip(undefined);
+      }, 1500);
+    });
+
+    return <ReqoreTextarea tooltip={tooltip} />;
+  },
+
+  play: async ({ canvasElement }) => {
+    const textarea = canvasElement.querySelector('textarea');
+    await sleep(500);
+    fireEvent.focusIn(textarea);
+    await sleep(300);
+    await expect(document.querySelector('.reqore-popover-content')).toBeInTheDocument();
+    await sleep(1000);
+    fireEvent.focusIn(textarea);
+    await sleep(300);
+    await expect(document.querySelector('.reqore-popover-content')).not.toBeInTheDocument();
   },
 };

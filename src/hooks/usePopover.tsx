@@ -182,19 +182,21 @@ const usePopover = ({
       }
     }
 
+    if (!content) {
+      _removePopover();
+    }
+
     return () => {
-      if (targetElement && content) {
-        cancelTimeout();
+      cancelTimeout();
 
-        targetElement.removeEventListener(startEvent, _addPopover);
+      targetElement?.removeEventListener(startEvent, _addPopover);
 
-        if (endEvent) {
-          targetElement.removeEventListener(endEvent, _removePopover);
-        }
+      if (endEvent) {
+        targetElement?.removeEventListener(endEvent, _removePopover);
+      }
 
-        if (handler === 'hoverStay') {
-          targetElement.removeEventListener('mouseleave', cancelTimeout);
-        }
+      if (handler === 'hoverStay') {
+        targetElement?.removeEventListener('mouseleave', cancelTimeout);
       }
     };
   }, [targetElement?.toString(), content, current, currentPopover]);
