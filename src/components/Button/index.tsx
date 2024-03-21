@@ -1,3 +1,4 @@
+import { size } from 'lodash';
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import styled, { css } from 'styled-components';
@@ -73,6 +74,7 @@ export interface IReqoreButtonProps
   customTheme?: IReqoreCustomTheme;
   wrap?: boolean;
   badge?: TReqoreBadge | TReqoreBadge[];
+
   description?: string | number;
   maxWidth?: string;
   textAlign?: 'left' | 'center' | 'right';
@@ -317,15 +319,51 @@ export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButton
 
   // If the content is a list
   if (Array.isArray(props.content)) {
+    const leftBadges = props.content.filter(
+      (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
+    );
+    const rightBadges = props.content.filter(
+      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
+    );
+    const middleBadges = props.content.filter(
+      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
+    );
+
+    const buildContent = (badge: TReqoreBadge) => {
+      if (typeof badge === 'string' || typeof badge === 'number') {
+        return { label: badge, align: undefined };
+      }
+
+      return { ...badge, align: undefined };
+    };
+
     return (
       <>
         <ReqoreSpacer
           width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
           height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
         />
-        <ReqoreTagGroup wrap={wrapGroup}>
-          {props.content.map((badge, index) => renderTag({ ...props, content: badge, key: index }))}
-        </ReqoreTagGroup>
+        {size(leftBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} align='left'>
+            {leftBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
+        {size(middleBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} fluid align='center'>
+            {middleBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
+        {size(rightBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} align='right'>
+            {rightBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
       </>
     );
   }
@@ -336,7 +374,7 @@ export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButton
         width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size]}
         height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
       />
-      {renderTag({ ...props, key: 0 })}
+      <ReqoreTagGroup>{renderTag({ ...props, key: 0 })}</ReqoreTagGroup>
     </>
   );
 });
@@ -401,6 +439,17 @@ const ReqoreButton = memo(
       const _children = useMemo(() => label || children, [label, children]);
       const hasLeftIcon = icon || leftIconProps?.image;
       const hasRightIcon = rightIcon || rightIconProps?.image;
+
+      const hasRightAlignedBadge = useMemo(() => {
+        if (Array.isArray(badge)) {
+          return badge.some(
+            (badge) =>
+              typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
+          );
+        }
+
+        return typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right';
+      }, [badge]);
 
       return (
         <StyledButton
@@ -515,7 +564,10 @@ const ReqoreButton = memo(
                   style={
                     textAlign !== 'right' || iconsAlign === 'center'
                       ? {
-                          marginLeft: iconsAlign !== 'center' || !_children ? 'auto' : undefined,
+                          marginLeft:
+                            !hasRightAlignedBadge && (iconsAlign !== 'center' || !_children)
+                              ? 'auto'
+                              : undefined,
                           marginRight:
                             iconsAlign === 'center' || (textAlign === 'center' && !_children)
                               ? 'auto'

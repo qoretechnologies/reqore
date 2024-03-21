@@ -28,6 +28,9 @@ export type TReqoreEffectColorManipulationAlpha =
   | 0.9
   | 1;
 export type TReqoreHexColor = `#${string}`;
+export type TReqoreRgbColor = `rgb(${number}, ${number}, ${number})`;
+export type TReqoreRgbaColor = `rgba(${number}, ${number}, ${number}, ${string})`;
+export type TReqoreMultiTypeColor = TReqoreHexColor | TReqoreRgbColor | TReqoreRgbaColor;
 export type TReqoreColor = TReqoreHexColor | 'transparent';
 export type TReqoreEffectColor =
   | (TReqoreColor | TReqoreHexColor | 'main' | TReqoreIntent)

@@ -111,17 +111,34 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
       </ReqoreControlGroup>
       <ReqoreControlGroup fluid wrap>
-        <ReqoreButton {...buttonProps} fluid>
-          Fluid button
+        <ReqoreButton
+          {...buttonProps}
+          fluid
+          badge={[
+            1,
+            { label: 'in da middle', align: 'center' },
+            { label: 'right align', align: 'right' },
+            2,
+          ]}
+        >
+          Positioned badges
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          fluid
+          badge={[1, { label: 'right align', align: 'right' }, 2]}
+        >
+          Positioned badges
         </ReqoreButton>
       </ReqoreControlGroup>
+
       <ReqoreControlGroup fluid wrap>
         <ReqoreButton {...buttonProps} fluid textAlign='center'>
           Fluid button with centered text
         </ReqoreButton>
       </ReqoreControlGroup>
       <ReqoreControlGroup fluid wrap>
-        <ReqoreButton {...buttonProps} fluid textAlign='center' iconsAlign='center'>
+        <ReqoreButton {...buttonProps} fluid textAlign='center' iconsAlign='center' badge='badge'>
           Fluid button with centered text & icons
         </ReqoreButton>
         <ReqoreButton
@@ -130,6 +147,7 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
           fluid
           textAlign='center'
           iconsAlign='center'
+          badge={[{ label: 'test', align: 'right' }, 2]}
         >
           Fluid button with centered text & icons
         </ReqoreButton>

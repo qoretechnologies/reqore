@@ -56,6 +56,7 @@ export interface IReqoreTagProps
     IWithReqoreEffect,
     IWithReqoreCustomTheme {
   fixed?: boolean | 'key' | 'label';
+  align?: 'left' | 'right' | 'center';
   size?: TSizes;
   label?: string | number;
   labelKey?: string | number;
@@ -104,6 +105,26 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
+
+  ${({ align }) => {
+    if (align === 'left') {
+      return css`
+        margin-right: auto;
+      `;
+    }
+
+    if (align === 'right') {
+      return css`
+        margin-left: auto;
+      `;
+    }
+
+    if (align === 'center') {
+      return css`
+        margin: 0 auto;
+      `;
+    }
+  }}
 
   ${InactiveIconScale};
 

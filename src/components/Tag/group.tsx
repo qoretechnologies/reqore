@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IWithReqoreMinimal, IWithReqoreSize } from '../../types/global';
 
@@ -11,13 +11,32 @@ export interface IReqoreTagGroup
   gapSize?: TSizes;
   columns?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
   wrap?: boolean;
+  fluid?: boolean;
+  align?: 'left' | 'center' | 'right';
 }
 
 const StyledTagGroup = styled.div`
   flex-shrink: ${({ wrap }: IReqoreTagGroup) => (wrap ? 1 : 0)};
+  flex-grow: ${({ fluid }: IReqoreTagGroup) => (fluid ? 1 : undefined)};
   display: flex;
   flex-wrap: ${({ wrap }: IReqoreTagGroup) => (wrap ? 'wrap' : 'nowrap')};
   gap: ${({ gapSize }: IReqoreTagGroup) => GAP_FROM_SIZE[gapSize]}px;
+
+  ${({ align }) => {
+    if (align === 'right') {
+      return css`
+        margin-left: auto;
+        justify-content: flex-end;
+      `;
+    }
+
+    if (align === 'center') {
+      return css`
+        margin: 0 auto;
+        justify-content: center;
+      `;
+    }
+  }}
 `;
 
 const ReqoreTagGroup = ({
