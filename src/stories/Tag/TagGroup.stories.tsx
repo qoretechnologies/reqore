@@ -228,7 +228,7 @@ const Template: StoryFn<IReqoreTagGroup> = (args) => {
             icon: 'SpyFill',
             onClick: noop,
             intent: 'success',
-            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
+            tooltip: { content: 'Hm, another tooltip' },
           },
         ]}
       />
@@ -251,7 +251,7 @@ const Template: StoryFn<IReqoreTagGroup> = (args) => {
             icon: 'SpyFill',
             onClick: noop,
             intent: 'success',
-            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
+            tooltip: { content: 'Hm, another tooltip' },
           },
         ]}
       />
@@ -274,7 +274,7 @@ const Template: StoryFn<IReqoreTagGroup> = (args) => {
             icon: 'SpyFill',
             onClick: noop,
             intent: 'success',
-            tooltip: { content: 'Hm, another tooltip', openOnMount: true },
+            tooltip: { content: 'Hm, another tooltip' },
           },
         ]}
       />
@@ -294,4 +294,14 @@ export const BigGapSize: Story = {
 export const NoWrap: Story = {
   render: Template,
   args: { wrap: false },
+};
+
+export const CenterAlign: Story = {
+  render: Template,
+  args: { align: 'center' },
+};
+
+export const RightAlign: Story = {
+  render: Template,
+  args: { align: 'right' },
 };
