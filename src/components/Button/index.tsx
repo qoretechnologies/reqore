@@ -317,64 +317,53 @@ export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButton
     [props]
   );
 
-  // If the content is a list
-  if (Array.isArray(props.content)) {
-    const leftBadges = props.content.filter(
-      (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
-    );
-    const rightBadges = props.content.filter(
-      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
-    );
-    const middleBadges = props.content.filter(
-      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
-    );
+  const content = Array.isArray(props.content) ? props.content : [props.content];
 
-    const buildContent = (badge: TReqoreBadge) => {
-      if (typeof badge === 'string' || typeof badge === 'number') {
-        return { label: badge, align: undefined };
-      }
+  const leftBadges = content.filter(
+    (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
+  );
+  const rightBadges = content.filter(
+    (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
+  );
+  const middleBadges = content.filter(
+    (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
+  );
 
-      return { ...badge, align: undefined };
-    };
+  const buildContent = (badge: TReqoreBadge) => {
+    if (typeof badge === 'string' || typeof badge === 'number') {
+      return { label: badge, align: undefined };
+    }
 
-    return (
-      <>
-        <ReqoreSpacer
-          width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
-          height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
-        />
-        {size(leftBadges) ? (
-          <ReqoreTagGroup wrap={wrapGroup} align='left'>
-            {leftBadges.map((badge, index) =>
-              renderTag({ ...props, content: buildContent(badge), key: index })
-            )}
-          </ReqoreTagGroup>
-        ) : null}
-        {size(middleBadges) ? (
-          <ReqoreTagGroup wrap={wrapGroup} fluid align='center'>
-            {middleBadges.map((badge, index) =>
-              renderTag({ ...props, content: buildContent(badge), key: index })
-            )}
-          </ReqoreTagGroup>
-        ) : null}
-        {size(rightBadges) ? (
-          <ReqoreTagGroup wrap={wrapGroup} align='right'>
-            {rightBadges.map((badge, index) =>
-              renderTag({ ...props, content: buildContent(badge), key: index })
-            )}
-          </ReqoreTagGroup>
-        ) : null}
-      </>
-    );
-  }
+    return { ...badge, align: undefined };
+  };
 
   return (
     <>
       <ReqoreSpacer
-        width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size]}
+        width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
         height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
       />
-      <ReqoreTagGroup>{renderTag({ ...props, key: 0 })}</ReqoreTagGroup>
+      {size(leftBadges) ? (
+        <ReqoreTagGroup wrap={wrapGroup} align='left'>
+          {leftBadges.map((badge, index) =>
+            renderTag({ ...props, content: buildContent(badge), key: index })
+          )}
+        </ReqoreTagGroup>
+      ) : null}
+      {size(middleBadges) ? (
+        <ReqoreTagGroup wrap={wrapGroup} fluid align='center'>
+          {middleBadges.map((badge, index) =>
+            renderTag({ ...props, content: buildContent(badge), key: index })
+          )}
+        </ReqoreTagGroup>
+      ) : null}
+      {size(rightBadges) ? (
+        <ReqoreTagGroup wrap={wrapGroup} align='right'>
+          {rightBadges.map((badge, index) =>
+            renderTag({ ...props, content: buildContent(badge), key: index })
+          )}
+        </ReqoreTagGroup>
+      ) : null}
     </>
   );
 });
@@ -547,7 +536,11 @@ const ReqoreButton = memo(
               _children ? (
                 <ReqoreHorizontalSpacer
                   width={1}
-                  style={textAlign !== 'right' ? { marginLeft: 'auto' } : undefined}
+                  style={
+                    textAlign !== 'right' && !hasRightAlignedBadge
+                      ? { marginLeft: 'auto' }
+                      : undefined
+                  }
                 />
               ) : null
             ) : (

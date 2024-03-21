@@ -95,8 +95,13 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} verticalPadding='small'>
           Vertical padding small
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} verticalPadding='normal'>
-          Vertical padding normal
+        <ReqoreButton
+          {...buttonProps}
+          verticalPadding='normal'
+          rightIcon={undefined}
+          badge={{ align: 'right', label: 'R' }}
+        >
+          Vertical padding
         </ReqoreButton>
         <ReqoreButton {...buttonProps} verticalPadding='big'>
           Vertical padding big
