@@ -107,6 +107,15 @@ export const Pending: Story = {
   },
 };
 
+export const Muted: Story = {
+  render: Template,
+
+  args: {
+    opaque: true,
+    intent: 'muted',
+  },
+};
+
 export const CustomTheme: Story = {
   render: Template,
 

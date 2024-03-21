@@ -6,6 +6,8 @@ import {
   TReqoreEffectGradientColors,
   TReqoreEffectGradientColorsObject,
   TReqoreHexColor,
+  TReqoreMultiTypeColor,
+  TReqoreRgbaColor,
 } from '../components/Effect';
 import { Colors } from '../constants/colors';
 import { DEFAULT_INTENTS, IReqoreTheme, TReqoreIntent } from '../constants/theme';
@@ -39,8 +41,9 @@ export const getReadableColorFrom = (
 ): TReqoreHexColor => {
   const returnIfLight = ifLight || lighten(dim ? 0.05 : 0, Colors.DARK);
   const returnIfDark = ifDark || darken(dim ? 0.05 : 0, Colors.LIGHT);
+  const fixedColor = hexAToRGBA(from);
 
-  return readableColor(from, returnIfLight, returnIfDark, false) as TReqoreHexColor;
+  return readableColor(fixedColor, returnIfLight, returnIfDark, false) as TReqoreHexColor;
 };
 
 export const percentToHexAlpha = (p: number) => {
@@ -49,6 +52,20 @@ export const percentToHexAlpha = (p: number) => {
   const hexValue = intValue.toString(16); // get hexadecimal representation
 
   return hexValue.padStart(2, '0').toUpperCase(); // format with leading 0 and upper case characters
+};
+
+export const hexAToRGBA = (hex: TReqoreMultiTypeColor): TReqoreRgbaColor => {
+  // Check if this color is already in rgba format
+  if (hex.startsWith('rgb')) {
+    return hex as TReqoreRgbaColor;
+  }
+
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const a = parseInt(hex.slice(7, 9) || 'ff', 16) / 255;
+
+  return `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
 };
 
 export const RGBAToHexA = (rgba, forceRemoveAlpha = false): TReqoreHexColor => {
@@ -68,8 +85,8 @@ export const RGBAToHexA = (rgba, forceRemoveAlpha = false): TReqoreHexColor => {
       .join('')) as TReqoreHexColor; // Puts the array to togehter to a string
 };
 
-export const shouldDarken = (mainColor: TReqoreHexColor): boolean => {
-  return getLuminance(mainColor) > 0.2;
+export const shouldDarken = (mainColor: TReqoreMultiTypeColor): boolean => {
+  return getLuminance(hexAToRGBA(mainColor)) > 0.2;
 };
 
 export const getMainColor: (theme: IReqoreTheme, component: string) => TReqoreHexColor = (
@@ -80,19 +97,24 @@ export const getMainColor: (theme: IReqoreTheme, component: string) => TReqoreHe
 //export const changeBasedOnContrast = (color: string, lightness?: number): string =>
 
 export const changeLightness = (color: TReqoreHexColor, lightness?: number): TReqoreHexColor => {
+  const fixedColor = hexAToRGBA(color);
+
   return lightness
-    ? shouldDarken(color)
-      ? (darken(lightness, color) as TReqoreHexColor)
-      : (lighten(lightness, color) as TReqoreHexColor)
+    ? shouldDarken(fixedColor)
+      ? (darken(lightness, fixedColor) as TReqoreHexColor)
+      : (lighten(lightness, fixedColor) as TReqoreHexColor)
     : color;
 };
 
-export const changeDarkness = (color: TReqoreHexColor, lightness?: number): TReqoreHexColor =>
-  lightness
-    ? shouldDarken(color)
-      ? (lighten(lightness, color) as TReqoreHexColor)
-      : (darken(lightness, color) as TReqoreHexColor)
+export const changeDarkness = (color: TReqoreHexColor, lightness?: number): TReqoreHexColor => {
+  const fixedColor = hexAToRGBA(color);
+
+  return lightness
+    ? shouldDarken(fixedColor)
+      ? (lighten(lightness, fixedColor) as TReqoreHexColor)
+      : (darken(lightness, fixedColor) as TReqoreHexColor)
     : color;
+};
 
 export const getColorByBgColor = (bgColor) => {
   if (!bgColor) {
