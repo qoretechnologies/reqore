@@ -30,8 +30,15 @@ export interface IReqoreNotifications {
   options?: IReqoreOptions;
 }
 
+export interface IReqoreModal {
+  modal: IReqoreModalFromProps | TReqoreCustomModal;
+  options?: {
+    closable?: boolean;
+  };
+}
+
 export interface IReqoreModals {
-  [id: string]: IReqoreModalFromProps | TReqoreCustomModal;
+  [id: string]: IReqoreModal;
 }
 
 export interface IReqoreModalFromProps extends IReqoreModalProps {}
@@ -86,13 +93,22 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
   };
 
   const addModal = useCallback(
-    (modal: IReqoreModalFromProps | TReqoreCustomModal, id?: string): string => {
+    (
+      modal: IReqoreModalFromProps | TReqoreCustomModal,
+      id?: string,
+      options?: IReqoreModal['options']
+    ): string => {
       const _id = id || shortid.generate();
 
       setModals((cur) => {
         return {
           ...cur,
-          [_id]: modal,
+          [_id]: {
+            modal,
+            options: {
+              closable: options?.closable ?? true,
+            },
+          },
         };
       });
 
@@ -233,16 +249,18 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
               </ReqoreTextEffect>
             </ReqoreModal>
           )}
-          {map(modals, (modal, key) =>
+          {map(modals, ({ modal, options }, key) =>
             React.isValidElement(modal) ? (
               createPortal(
                 React.cloneElement(modal, {
                   key,
                   isOpen: true,
-                  onClose: () => {
-                    removeModal(key);
-                    modal.props.onClose?.();
-                  },
+                  onClose: options?.closable
+                    ? () => {
+                        removeModal(key);
+                        modal.props.onClose?.();
+                      }
+                    : undefined,
                 }),
                 document.querySelector('#reqore-portal')!
               )
@@ -251,10 +269,14 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
                 {...modal}
                 key={key}
                 isOpen
-                onClose={() => {
-                  removeModal(key);
-                  modal.onClose?.();
-                }}
+                onClose={
+                  options?.closable
+                    ? () => {
+                        removeModal(key);
+                        modal.onClose?.();
+                      }
+                    : undefined
+                }
               />
             )
           )}

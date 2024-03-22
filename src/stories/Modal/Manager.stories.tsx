@@ -20,7 +20,7 @@ const TIMEOUT = 2000;
 const meta = {
   title: 'Utilities/Global Modal/Tests',
   component: ReqoreModal,
-  render: ({ data, updateToData }) => {
+  render: ({ data, updateToData, options }) => {
     const addModal = useReqoreProperty('addModal');
     const [modalId, setModalId] = useState<string>(undefined);
 
@@ -37,7 +37,7 @@ const meta = {
         <ReqoreButton
           id='modal'
           onClick={() => {
-            setModalId(addModal(data, 'modal'));
+            setModalId(addModal(data, 'modal', options));
           }}
         >
           Open new modal
@@ -159,6 +159,20 @@ export const CanBeClosedManually: Story = {
     await waitFor(async () => await canvas.findAllByText('Remove modal')[0], { timeout: 10000 });
 
     await fireEvent.click(canvas.getAllByText('Remove modal')[0]);
+  },
+};
+
+export const CannotBeClosed: Story = {
+  args: {
+    data: {
+      children: 'I cannot be closed',
+    },
+    options: {
+      closable: false,
+    },
+  },
+  play: async ({ canvasElement, ...rest }) => {
+    await FromObject.play({ canvasElement, ...rest });
   },
 };
 

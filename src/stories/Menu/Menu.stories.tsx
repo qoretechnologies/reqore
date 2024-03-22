@@ -161,7 +161,7 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
             onRightIconClick={() => alert('Icon clicked')}
             description='Button with right icon and description'
             customTheme={{
-              main: 'info:darken:1:0.3',
+              main: 'info:darken:5:0.3',
             }}
           >
             Some button
