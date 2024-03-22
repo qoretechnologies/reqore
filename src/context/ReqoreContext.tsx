@@ -2,6 +2,7 @@ import { createContext } from 'use-context-selector';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import {
   IReqoreConfirmationModal,
+  IReqoreModal,
   IReqoreModalFromProps,
   IReqoreNotificationData,
   TReqoreCustomModal,
@@ -12,7 +13,11 @@ export interface IReqoreContext {
   readonly confirmAction: (data: IReqoreConfirmationModal) => void;
   readonly notifications?: IReqoreNotificationData[] | null;
   readonly addNotification?: (data: IReqoreNotificationData) => any;
-  readonly addModal?: (modal: IReqoreModalFromProps | TReqoreCustomModal, id?: string) => string;
+  readonly addModal?: (
+    modal: IReqoreModalFromProps | TReqoreCustomModal,
+    id?: string,
+    options?: IReqoreModal['options']
+  ) => string;
   readonly removeModal?: (id: string) => void;
   readonly removeNotification?: (id: string) => any;
   readonly isMobile?: boolean;

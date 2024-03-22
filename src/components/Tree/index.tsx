@@ -139,7 +139,7 @@ export const ReqoreTree = ({
             <ReqoreControlGroup verticalAlign='flex-start'>
               {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
               <ReqoreP
-                customTheme={{ text: { color: 'info:lighten' } }}
+                customTheme={{ text: { color: 'info:lighten:3' } }}
                 style={{ flexShrink: 0 }}
                 size={zoomToSize[zoom]}
               >

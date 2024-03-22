@@ -231,9 +231,9 @@ export const getColorFromMaybeString = (
 
   if (shading) {
     if (shading === 'lighten') {
-      _color = lighten(0.1 * multiplier, _color) as TReqoreHexColor;
+      _color = lighten(0.033 * multiplier, _color) as TReqoreHexColor;
     } else if (shading === 'darken') {
-      _color = darken(0.1 * multiplier, _color) as TReqoreHexColor;
+      _color = darken(0.033 * multiplier, _color) as TReqoreHexColor;
     }
   }
 
