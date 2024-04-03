@@ -17,6 +17,9 @@ export const useTooltip = (
     if (!content) {
       setElement(targetElement);
       setData(undefined);
+    } else {
+      setElement(targetElement);
+      setData(tooltip);
     }
   }, [content]);
 

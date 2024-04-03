@@ -1,6 +1,6 @@
 import { expect } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from '@storybook/testing-library';
+import { fireEvent, within } from '@storybook/testing-library';
 import { useState } from 'react';
 import { useMount } from 'react-use';
 import { IReqorePopoverProps } from '../../components/Popover';
@@ -435,6 +435,45 @@ export const ChangingElement: Story = {
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl.',
       },
     });
+  },
+};
+
+export const TooltipIsUpdatedWhenContentChanges: Story = {
+  render: (args) => {
+    const [tooltip, setTooltip] = useState<IReqoreTooltip>({
+      content: 'test',
+      handler: 'focus',
+      noArrow: true,
+      noWrapper: true,
+      useTargetWidth: true,
+    });
+
+    useMount(() => {
+      setTimeout(() => {
+        setTooltip({
+          content: <ReqoreMessage> I just updated </ReqoreMessage>,
+          handler: 'focus',
+          noArrow: true,
+          noWrapper: true,
+          useTargetWidth: true,
+        });
+      }, 1500);
+    });
+
+    return <ReqoreTextarea tooltip={tooltip} />;
+  },
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const textarea = canvasElement.querySelector('textarea');
+    await sleep(500);
+    fireEvent.focusIn(textarea);
+    await sleep(300);
+    await expect(document.querySelector('.reqore-popover-content')).toBeInTheDocument();
+    await sleep(1000);
+    fireEvent.focusIn(textarea);
+    await sleep(300);
+    await expect(canvas.queryByText('I just updated')).toBeInTheDocument();
   },
 };
 
