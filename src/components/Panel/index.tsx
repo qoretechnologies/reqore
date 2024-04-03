@@ -412,6 +412,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           ? { main: Object.values(contentEffect.gradient.colors)[0] as TReqoreEffectColor }
           : undefined)
     );
+
     const isMobile = useReqoreProperty('isMobile');
     const { targetRef } = useCombinedRefs(ref);
     const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);

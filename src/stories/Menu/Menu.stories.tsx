@@ -303,7 +303,18 @@ export const Positioned: Story = {
 
   args: {
     position: 'left',
+    transparent: true,
+    rounded: false,
     padded: false,
+  },
+};
+
+export const Small: Story = {
+  render: Template,
+
+  args: {
+    position: 'left',
+    size: 'small',
     rounded: false,
   },
 };

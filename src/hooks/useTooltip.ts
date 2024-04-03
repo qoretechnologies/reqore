@@ -14,11 +14,18 @@ export const useTooltip = (
   );
 
   useEffect(() => {
+    if (!content) {
+      setElement(targetElement);
+      setData(undefined);
+    }
+  }, [content]);
+
+  useEffect(() => {
     if (targetElement) {
       setElement(targetElement);
       setData(tooltip);
     }
-  }, [targetElement, content]);
+  }, [targetElement]);
 
   const popoverData = typeof data === 'string' ? { content: data } : data;
 

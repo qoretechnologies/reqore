@@ -1,18 +1,24 @@
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE } from '../../constants/sizes';
+import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
+import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { IReqoreComponent, IWithReqoreMinimal, IWithReqoreTransparent } from '../../types/global';
+import {
+  IReqoreComponent,
+  IWithReqoreMinimal,
+  IWithReqoreSize,
+  IWithReqoreTransparent,
+} from '../../types/global';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 
 export interface IReqoreMenuProps
   extends IReqoreComponent,
     IWithReqoreMinimal,
     IWithReqoreTransparent,
+    IWithReqoreSize,
     React.HTMLAttributes<HTMLDivElement> {
   children: any;
   position?: 'left' | 'right';
@@ -34,21 +40,28 @@ export interface IReqoreMenuStyle extends IReqoreMenuProps {
 const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   width: ${({ width }) => width || undefined};
   min-width: ${({ width }) => (width ? undefined : '160px')};
-  padding: ${({ padded = true }) => (padded ? '5px' : undefined)};
+  padding: ${({ padded = true, size }) =>
+    padded ? `${HALF_PADDING_FROM_SIZE[size]}px` : undefined};
   max-height: ${({ maxHeight }) => maxHeight || undefined};
   overflow-y: auto;
   overflow-x: hidden;
 
   background-color: ${({ theme, transparent }) =>
     transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
-  border-radius: ${({ rounded }) => (rounded ? `${RADIUS_FROM_SIZE['normal']}px` : `0`)};
+  border-radius: ${({ rounded, size }) => (rounded ? `${RADIUS_FROM_SIZE[size]}px` : `0`)};
 
-  ${({ theme, position, padded }) =>
-    position &&
-    css`
-    border-${position === 'left' ? 'right' : 'left'}: 1px solid ${changeDarkness(theme.main, 0.04)};
-    padding-${position === 'left' ? 'right' : 'left'}: ${padded ? '10px' : undefined};
-  `}
+  ${({ theme, position, size, padded }) =>
+    position
+      ? css`
+    border-${position === 'left' ? 'right' : 'left'}: 1px solid ${changeLightness(
+          theme.main,
+          0.05
+        )};
+    padding-${position === 'left' ? 'right' : 'left'}: ${
+          !padded ? `${HALF_PADDING_FROM_SIZE[size]}px` : undefined
+        };
+  `
+      : undefined}
 `;
 
 const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
@@ -63,6 +76,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       wrapText,
       flat = true,
       minimal,
+      size = 'normal',
       itemGap,
       ...rest
     }: IReqoreMenuProps,
@@ -76,13 +90,16 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       wrap: 'wrap' in (props || {}) ? props.wrap : wrapText,
       flat: 'flat' in (props || {}) ? props.flat : flat,
       minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
+      size: 'size' in (props || {}) ? props.size : size,
     }));
 
     return (
       <ReqoreThemeProvider theme={theme}>
         <StyledReqoreMenu
           {...rest}
+          flat={flat}
           position={position}
+          size={size}
           ref={ref}
           theme={theme}
           className={`${rest.className || ''} reqore-menu`}
