@@ -125,6 +125,14 @@ export const ICON_FROM_SIZE = {
   huge: 33,
 };
 
+export const HALF_PADDING_FROM_SIZE = {
+  tiny: 2,
+  small: 4,
+  normal: 5,
+  big: 7,
+  huge: 9,
+};
+
 export const PADDING_FROM_SIZE = {
   tiny: 5,
   small: 8,

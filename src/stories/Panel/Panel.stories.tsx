@@ -281,6 +281,9 @@ const Template: StoryFn<IReqorePanelProps> = (args: IReqorePanelProps) => {
 
 export const Basic: Story = {
   render: Template,
+  args: {
+    customTheme: { main: '#333' },
+  },
 };
 
 export const NoPadding: Story = {

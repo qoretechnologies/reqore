@@ -60,7 +60,7 @@ export const hexAToRGBA = (hex: TReqoreMultiTypeColor): TReqoreRgbaColor => {
     return hex as TReqoreRgbaColor;
   }
 
-  const _hex = hex.length === 4 ? hex + hex.slice(1, 3) : hex;
+  const _hex = hex.length === 4 ? hex + hex.slice(1, 4) : hex;
 
   const r = parseInt(_hex.slice(1, 3), 16);
   const g = parseInt(_hex.slice(3, 5), 16);
