@@ -1,6 +1,6 @@
 import _size from 'lodash/size';
 import { rgba } from 'polished';
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, HTMLAttributes, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
 import {
@@ -41,7 +41,11 @@ import {
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 
-export interface IReqoreTagAction extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent {
+export interface IReqoreTagAction
+  extends IWithReqoreTooltip,
+    IReqoreDisabled,
+    IReqoreIntent,
+    HTMLAttributes<HTMLSpanElement> {
   icon: IReqoreIconName;
   show?: boolean;
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
@@ -410,25 +414,26 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         {_size(actions)
           ? actions
               .filter((action) => action.show !== false)
-              .map((action, index) => (
+              .map(({ intent, onClick, icon, tooltip, ...action }, index) => (
                 <React.Fragment key={index}>
                   <ReqorePopover
                     component={StyledButtonWrapper}
                     componentProps={{
                       size,
-                      color: getCustomColor(action.intent),
+                      color: getCustomColor(intent),
                       className: 'reqore-tag-action',
-                      onClick: action.onClick,
+                      onClick: onClick,
                       effect: rest.effect,
+                      ...action,
                     }}
-                    {...(action.tooltip
-                      ? typeof action.tooltip === 'string'
-                        ? { tooltip: action.tooltip }
-                        : action.tooltip
+                    {...(tooltip
+                      ? typeof tooltip === 'string'
+                        ? { tooltip: tooltip }
+                        : tooltip
                       : {})}
                     isReqoreComponent
                   >
-                    <ReqoreIcon icon={action.icon} size={size} />
+                    <ReqoreIcon icon={icon} size={size} />
                   </ReqorePopover>
                 </React.Fragment>
               ))
