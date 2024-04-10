@@ -57,6 +57,40 @@ export default [
   },
 ] satisfies IReqoreBreadcrumbItem[];
 
+export const specialbreadcrumbs = [
+  {
+    label: 'Home',
+    icon: Icons.Dashboard,
+    tooltip: 'Dashboard',
+  },
+  {
+    label: 'Some Kinda Link',
+    tooltip: 'Opens in a new window',
+    as: 'a',
+    props: {
+      href: 'https://google.com',
+    },
+    icon: 'ShareBoxLine',
+    flat: false,
+    intent: 'info',
+    effect: {
+      glow: {
+        color: 'info',
+        size: 1,
+        blur: 10,
+        when: 'hover',
+      },
+    },
+  },
+  {
+    icon: 'AliensLine',
+    tooltip: 'This is a max length item',
+    label: 'This is a max length item',
+    onClick: noop,
+    maxWidth: '100px',
+  },
+] satisfies IReqoreBreadcrumbItem[];
+
 export const breadcrumbsTabs = {
   withTabs: {
     activeTab: 'valuemaps',

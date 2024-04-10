@@ -1,6 +1,6 @@
 import { StoryObj } from '@storybook/react';
 import { ReqoreBreadcrumbs } from '../../index';
-import breadcrumbs, { breadcrumbsTabs } from '../../mock/breadcrumbs';
+import breadcrumbs, { breadcrumbsTabs, specialbreadcrumbs } from '../../mock/breadcrumbs';
 import { StoryMeta } from '../utils';
 import { SizeArg } from '../utils/args';
 
@@ -24,3 +24,4 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 export const WithTabs: Story = { args: { items: [...breadcrumbs, breadcrumbsTabs] } };
 export const Flat: Story = { args: { flat: true } };
+export const Special: Story = { args: { items: specialbreadcrumbs } };

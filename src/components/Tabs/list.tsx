@@ -145,7 +145,13 @@ export const getLabelLength = (
     closeIconSize +
     badgeLength;
 
-  return Math.max(topLabelLength, descriptionLength);
+  const maxWidth = isArray(item)
+    ? 0
+    : (item as IReqoreButtonProps)?.maxWidth
+    ? parseInt((item as IReqoreButtonProps).maxWidth, 10)
+    : 0;
+
+  return maxWidth || Math.max(topLabelLength, descriptionLength);
 };
 
 /**

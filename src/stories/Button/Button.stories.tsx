@@ -87,6 +87,9 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} disabled flat={false}>
           Disabled not flat
         </ReqoreButton>
+        <ReqoreButton {...buttonProps} maxWidth='150px'>
+          Max Width Button
+        </ReqoreButton>
       </ReqoreControlGroup>
       <ReqoreControlGroup fluid wrap>
         <ReqoreButton {...buttonProps} verticalPadding='tiny'>
