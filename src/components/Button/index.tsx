@@ -26,6 +26,7 @@ import {
   ReadOnlyElement,
   ScaleIconOnHover,
   StyledActiveContent,
+  StyledContent,
   StyledInActiveContent,
   StyledInvisibleContent,
 } from '../../styles';
@@ -66,6 +67,7 @@ export interface IReqoreButtonProps
   fixed?: boolean;
   active?: boolean;
   flat?: boolean;
+  animated?: boolean;
 
   compact?: boolean;
   verticalPadding?: TSizes;
@@ -403,6 +405,7 @@ const ReqoreButton = memo(
         label,
         compact,
         as,
+        animated,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -440,6 +443,8 @@ const ReqoreButton = memo(
         return typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right';
       }, [badge]);
 
+      const animate = animated === true || (animations.buttons && animated !== false);
+
       return (
         <StyledButton
           {...rest}
@@ -461,7 +466,7 @@ const ReqoreButton = memo(
           minimal={minimal}
           size={size}
           color={customColor}
-          animate={animations.buttons}
+          animate={animate}
           flat={_flat}
           active={active}
           readOnly={readOnly}
@@ -508,15 +513,42 @@ const ReqoreButton = memo(
                   textAlign === 'center' && iconsAlign !== 'center' ? { margin: 'auto' } : undefined
                 }
               >
-                <StyledActiveContent wrap={wrap} effect={labelEffect}>
-                  {_children}
-                </StyledActiveContent>
-                <StyledInActiveContent wrap={wrap} effect={labelEffect}>
-                  {_children}
-                </StyledInActiveContent>
-                <StyledInvisibleContent wrap={wrap} effect={labelEffect}>
-                  {_children}
-                </StyledInvisibleContent>
+                {!animate && (
+                  <StyledContent
+                    wrap={wrap}
+                    effect={labelEffect}
+                    className='reqore-button-text-content'
+                  >
+                    {_children}
+                  </StyledContent>
+                )}
+                {animate && (
+                  <StyledActiveContent
+                    wrap={wrap}
+                    effect={labelEffect}
+                    className='reqore-button-text-content reqore-animated'
+                  >
+                    {_children}
+                  </StyledActiveContent>
+                )}
+                {animate && (
+                  <StyledInActiveContent
+                    wrap={wrap}
+                    effect={labelEffect}
+                    className='reqore-button-text-content reqore-animated'
+                  >
+                    {_children}
+                  </StyledInActiveContent>
+                )}
+                {animate && (
+                  <StyledInvisibleContent
+                    wrap={wrap}
+                    effect={labelEffect}
+                    className='reqore-button-text-content reqore-animated'
+                  >
+                    {_children}
+                  </StyledInvisibleContent>
+                )}
                 {(badge || badge === 0) && wrap ? (
                   <ButtonBadge content={badge} size={size} theme={theme} wrap />
                 ) : null}

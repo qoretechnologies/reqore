@@ -5,6 +5,22 @@ import { StyledIconWrapper } from './components/Icon';
 export const INACTIVE_ICON_SCALE = 0.85;
 export const ACTIVE_ICON_SCALE = 1;
 
+export const StyledContent = styled(StyledTextEffect)`
+  position: relative;
+
+  ${({ wrap }) =>
+    !wrap
+      ? css`
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          width: 100%;
+        `
+      : css`
+          word-break: break-word;
+        `}
+`;
+
 export const StyledActiveContent = styled(StyledTextEffect)`
   position: absolute;
   transform: translateY(-150%);
