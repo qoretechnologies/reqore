@@ -336,3 +336,32 @@ export const SubmenuCanBeToggled: Story = {
     await fireEvent.click(canvas.queryAllByText('Collapsed submenu')[0]);
   },
 };
+
+export const Resizable: Story = {
+  render: Template,
+
+  args: {
+    position: 'left',
+    showResizableBorder: true,
+    resizable: {
+      enable: { left: true },
+      minWidth: 400,
+      maxWidth: 600,
+      defaultSize: { width: 400, height: '100%' },
+    },
+  },
+};
+
+export const ResizableBothSidesWithBorder: Story = {
+  render: Template,
+
+  args: {
+    showResizableBorder: true,
+    resizable: {
+      enable: { right: true, left: true },
+      minWidth: 400,
+      maxWidth: 600,
+      defaultSize: { width: 400, height: '100%' },
+    },
+  },
+};
