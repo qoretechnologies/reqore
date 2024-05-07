@@ -41,6 +41,7 @@ export interface IReqoreTextareaProps
     IReqoreIntent,
     IWithReqoreEffect {
   autoFocus?: boolean;
+  placeholder?: string;
   width?: number;
   height?: number;
   scaleWithContent?: boolean;
