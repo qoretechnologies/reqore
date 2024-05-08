@@ -53,6 +53,7 @@ export interface IReqoreInputProps
   flat?: boolean;
   rounded?: boolean;
   type?: 'text' | 'password' | 'email' | 'number' | 'tel' | 'url';
+  step?: number;
   wrapperStyle?: React.CSSProperties;
   iconColor?: TReqoreEffectColor;
   rightIconColor?: TReqoreEffectColor;
