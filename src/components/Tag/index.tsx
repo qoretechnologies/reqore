@@ -51,9 +51,8 @@ export interface IReqoreTagAction
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
-export interface IReqoreTagProps
-  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'>,
-    IWithReqoreTooltip,
+export interface IReqoreCustomTagProps
+  extends IWithReqoreTooltip,
     IReqoreDisabled,
     IWithReqoreMinimal,
     IWithReqoreFluid,
@@ -65,7 +64,6 @@ export interface IReqoreTagProps
   label?: string | number;
   labelKey?: string | number;
   onRemoveClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
-  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   icon?: IReqoreIconName;
   leftIconProps?: IReqoreIconProps;
   rightIcon?: IReqoreIconName;
@@ -81,7 +79,11 @@ export interface IReqoreTagProps
   wrap?: boolean;
   labelEffect?: IReqoreEffect;
   labelKeyEffect?: IReqoreEffect;
+  as?: string | React.ElementType;
 }
+export interface IReqoreTagProps
+  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children' | 'color'>,
+    IReqoreCustomTagProps {}
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
   theme: IReqoreTheme;
@@ -148,8 +150,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       color: ${minimal
         ? getReadableColor(theme, undefined, undefined, true)
         : color && color !== 'transparent'
-        ? getReadableColorFrom(color)
-        : getReadableColorFrom(changeLightness(theme.main, 0.1))};
+          ? getReadableColorFrom(color)
+          : getReadableColorFrom(changeLightness(theme.main, 0.1))};
 
       ${StyledTagKeyWrapper} {
         background-color: ${labelKey ? rgba('#000000', 0.2) : undefined};
@@ -173,8 +175,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
               color: ${minimal
                 ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
                 : color
-                ? getReadableColorFrom(color)
-                : getReadableColor(theme, undefined, undefined)};
+                  ? getReadableColorFrom(color)
+                  : getReadableColor(theme, undefined, undefined)};
             `}
           }
         `
@@ -247,22 +249,21 @@ const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   align-items: center;
   transition: all 0.2s ease-out;
 
-  ${({ color, effect }) =>
-    css`
-      .reqore-icon {
-        transform: scale(0.85);
-      }
-      &:hover {
-        cursor: pointer;
-        background-color: ${color && !effect?.gradient
-          ? changeLightness(color, 0.09)
-          : rgba('#000000', 0.2)};
+  ${({ color, effect }) => css`
+    .reqore-icon {
+      transform: scale(0.85);
+    }
+    &:hover {
+      cursor: pointer;
+      background-color: ${color && !effect?.gradient
+        ? changeLightness(color, 0.09)
+        : rgba('#000000', 0.2)};
 
-        .reqore-icon {
-          transform: scale(1);
-        }
+      .reqore-icon {
+        transform: scale(1);
       }
-    `}
+    }
+  `}
 `;
 
 const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(

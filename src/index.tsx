@@ -26,6 +26,7 @@ export {
 export { default as ReqoreIcon } from './components/Icon';
 export { default as ReqoreInput } from './components/Input';
 export { ReqoreKeyValueTable } from './components/KeyValueTable';
+export * from './components/Label';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
 export { default as ReqoreMenu } from './components/Menu';
 export { default as ReqoreMenuDivider } from './components/Menu/divider';
