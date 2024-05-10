@@ -39,7 +39,7 @@ export interface IReqoreInputProps
     IWithReqoreEffect,
     IWithReqoreTooltip {
   autoFocus?: boolean;
-
+  placeholder?: string;
   width?: number;
   size?: TSizes;
   minimal?: boolean;
