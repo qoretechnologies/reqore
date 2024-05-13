@@ -95,6 +95,7 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.6",
+    "@radix-ui/react-slider": "^1.1.2",
     "@react-spring/web": "^9.6.1",
     "classnames": "^2.2.6",
     "epoch-timeago": "^1.1.9",
