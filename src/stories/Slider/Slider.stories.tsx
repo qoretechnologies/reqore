@@ -18,6 +18,11 @@ const meta = {
       control: 'boolean',
       defaultValue: true,
     },
+    labelsPosition: {
+      control: 'select',
+      defaultValue: 'top',
+      options: ['top', 'bottom'],
+    },
   },
   args: {
     value: [2, 8],
@@ -86,6 +91,7 @@ export const WithLabelsAndIcons: Story = {
 };
 export const WithEffect: Story = {
   args: {
+    showLabels: true,
     effect: {
       gradient: {
         direction: 'to right bottom',
@@ -99,6 +105,15 @@ export const WithEffect: Story = {
     },
 
     rangeProps: {
+      effect: {
+        gradient: {
+          direction: 'to right bottom',
+          colors: { 0: '#f9f9f9', 100: '#ca55a9' },
+          animate: 'active',
+        },
+      },
+    },
+    thumbProps: {
       effect: {
         gradient: {
           direction: 'to right bottom',

@@ -1,14 +1,21 @@
 import * as Slider from '@radix-ui/react-slider';
+import { useState } from 'react';
 import styled from 'styled-components';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { IReqoreTooltip } from '../../types/global';
+import { useTooltip } from '../../hooks/useTooltip';
+import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { IReqoreEffect, IReqoreTextEffectProps, StyledEffect, TReqoreEffectColor } from '../Effect';
+import {
+  IReqoreEffect,
+  IReqoreTextEffectProps,
+  ReqoreTextEffect,
+  StyledEffect,
+  TReqoreEffectColor,
+} from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
-import { IReqoreLabelProps } from '../Label';
 
 export interface ISliderProps<T extends number | [number, number] = number>
   extends Omit<Slider.SliderProps, 'onChange' | 'value' | 'defaultValue' | 'onValueChange'> {
@@ -25,19 +32,19 @@ export interface ISliderProps<T extends number | [number, number] = number>
   rightIconProps?: IReqoreIconProps;
 
   showLabels?: boolean;
-  tooltipProps?: IReqoreTooltip;
-
   size?: TSizes;
+  labelsPosition: 'top' | 'bottom';
   customTheme?: IReqoreCustomTheme;
   intent?: TReqoreIntent;
   effect?: IReqoreEffect;
+  tooltip: TReqoreTooltipProp;
 
   trackProps?: Partial<IReqoreTextEffectProps>;
   rangeProps?: Partial<IReqoreTextEffectProps>;
   thumbProps?: Partial<IReqoreTextEffectProps>;
 
-  minLabelProps?: IReqoreLabelProps;
-  maxLabelProps?: IReqoreLabelProps;
+  minLabelProps?: IReqoreTextEffectProps;
+  maxLabelProps?: IReqoreTextEffectProps;
   wrapperProps?: React.ComponentProps<'div'>;
 }
 
@@ -57,6 +64,9 @@ const StyledWrapper = styled.div`
     &[data-fluid='false'] {
       max-width: 200px;
       min-width: 200px;
+    }
+    &[data-labels-position='bottom'] {
+      flex-direction: column-reverse;
     }
   }
   &[data-orientation='vertical'] {
@@ -262,7 +272,7 @@ const SliderRootWrapper = styled.div`
   }
 `;
 
-const StyledLabel = styled.label`
+const StyledLabel = styled(ReqoreTextEffect)`
   font-weight: 600;
 `;
 
@@ -289,9 +299,14 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
   maxLabelProps,
   size = 'normal',
   wrapperProps,
+  labelsPosition = 'top',
+  tooltip,
   ...props
 }: ISliderProps<T>) {
+  const [wrapperRef, setWrapperRef] = useState<HTMLDivElement>(undefined);
   const theme = useReqoreTheme('main', customTheme, intent);
+  useTooltip(wrapperRef, tooltip);
+
   const background = intent
     ? changeLightness(theme.main, 0.2)
     : getReadableColor(theme, undefined, undefined, true);
@@ -301,11 +316,21 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
   const isRange = Array.isArray(value);
 
   return (
-    <StyledWrapper data-orientation={orientation} data-fluid={fluid} {...wrapperProps}>
+    <StyledWrapper
+      data-orientation={orientation}
+      data-labels-position={labelsPosition}
+      data-fluid={fluid}
+      ref={setWrapperRef}
+      {...wrapperProps}
+    >
       {showLabels && orientation === 'horizontal' && (
         <StyledLabelsWrapper>
-          <StyledLabel {...minLabelProps}>{props.min}</StyledLabel>
-          <StyledLabel {...maxLabelProps}>{props.max}</StyledLabel>
+          <StyledLabel effect={effect} {...minLabelProps}>
+            {props.min}
+          </StyledLabel>
+          <StyledLabel effect={effect} {...maxLabelProps}>
+            {props.max}
+          </StyledLabel>
         </StyledLabelsWrapper>
       )}
       <SliderRootWrapper data-orientation={orientation} data-fluid={fluid}>
@@ -319,7 +344,9 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
           />
         )}
         {showLabels && orientation === 'vertical' && (
-          <StyledLabel {...minLabelProps}>{props.min}</StyledLabel>
+          <StyledLabel effect={effect} {...minLabelProps}>
+            {props.min}
+          </StyledLabel>
         )}
 
         <StyledRoot
@@ -352,7 +379,9 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
           )}
         </StyledRoot>
         {showLabels && orientation === 'vertical' && (
-          <StyledLabel {...minLabelProps}>{props.max}</StyledLabel>
+          <StyledLabel effect={effect} {...maxLabelProps}>
+            {props.max}
+          </StyledLabel>
         )}
         {rightIcon && (
           <ReqoreIcon
