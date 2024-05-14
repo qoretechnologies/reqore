@@ -1,12 +1,14 @@
 import * as Slider from '@radix-ui/react-slider';
-import React, { useState } from 'react';
 import styled from 'styled-components';
+import { TSizes } from '../../constants/sizes';
+import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { useTooltip } from '../../hooks/useTooltip';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, IReqoreTextEffectProps, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { IReqoreLabelProps } from '../Label';
 
 export interface ISliderProps<T extends number | [number, number] = number>
   extends Omit<Slider.SliderProps, 'onChange' | 'value' | 'defaultValue' | 'onValueChange'> {
@@ -24,12 +26,31 @@ export interface ISliderProps<T extends number | [number, number] = number>
 
   showLabels?: boolean;
   tooltipProps?: IReqoreTooltip;
+
+  size?: TSizes;
+  customTheme?: IReqoreCustomTheme;
+  intent?: TReqoreIntent;
+  effect?: IReqoreEffect;
+
+  trackProps?: Partial<IReqoreTextEffectProps>;
+  rangeProps?: Partial<IReqoreTextEffectProps>;
+  thumbProps?: Partial<IReqoreTextEffectProps>;
+
+  minLabelProps?: IReqoreLabelProps;
+  maxLabelProps?: IReqoreLabelProps;
+  wrapperProps?: React.ComponentProps<'div'>;
 }
 
+const StyledLabelsWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+`;
 const StyledWrapper = styled.div`
   display: flex;
+  gap: 4px;
 
   &[data-orientation='horizontal'] {
+    flex-direction: column;
     &[data-fluid='true'] {
       width: 100%;
     }
@@ -39,8 +60,8 @@ const StyledWrapper = styled.div`
     }
   }
   &[data-orientation='vertical'] {
-    align-items: center;
-    width: 20px;
+    flex-direction: row;
+    align-items: stretch;
 
     &[data-fluid='true'] {
       height: 100%;
@@ -50,17 +71,29 @@ const StyledWrapper = styled.div`
     }
   }
 `;
+
 const StyledTrack = styled(Slider.Track)`
-  background-color: ${(props) => changeLightness(props.theme.main, 0.2)};
+  background-color: ${(props) => props.background};
   position: relative;
   border-radius: 9999px;
 `;
 const StyledRange = styled(Slider.Range)`
   position: absolute;
-  background-color: ${(props) => getReadableColor(props.theme, undefined, undefined, true)};
+  background-color: ${(props) => props.background};
   border-radius: 9999px;
 `;
-const StyledRoot: React.FC<Slider.SliderProps> = styled(Slider.Root)`
+const StyledThumb = styled(Slider.Thumb)`
+  display: block;
+  background-color: ${(props) => props.background};
+  border-radius: 9999px;
+  transition: all 0.2s ease-out;
+
+  &:focus {
+    box-shadow: 0 0 0 8px ${(props) => props.background}15;
+    outline: none;
+  }
+`;
+const StyledRoot = styled(Slider.Root)`
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -71,13 +104,97 @@ const StyledRoot: React.FC<Slider.SliderProps> = styled(Slider.Root)`
     opacity: 0.5;
     cursor: not-allowed;
   }
+  &[data-size='tiny'] ${StyledThumb} {
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+  }
+  &[data-size='small'] ${StyledThumb} {
+    width: 18px;
+    min-width: 18px;
+    height: 18px;
+  }
+  &[data-size='normal'] ${StyledThumb} {
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+  }
+  &[data-size='big'] ${StyledThumb} {
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+  }
+  &[data-size='huge'] ${StyledThumb} {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+  }
 
   &[data-orientation='horizontal'] {
     width: 100%;
     height: 20px;
 
+    &[data-size='tiny'] {
+      height: 16px;
+
+      ${StyledTrack} {
+        height: 1px;
+      }
+      ${StyledThumb} {
+        width: 16px;
+        min-width: 16px;
+        height: 16px;
+      }
+    }
+    &[data-size='small'] {
+      height: 18px;
+
+      ${StyledTrack} {
+        height: 2px;
+      }
+      ${StyledThumb} {
+        width: 18px;
+        min-width: 18px;
+        height: 18px;
+      }
+    }
+    &[data-size='normal'] {
+      height: 20px;
+
+      ${StyledTrack} {
+        height: 3px;
+      }
+      ${StyledThumb} {
+        width: 20px;
+        min-width: 20px;
+        height: 20px;
+      }
+    }
+    &[data-size='big'] {
+      height: 24px;
+
+      ${StyledTrack} {
+        height: 6px;
+      }
+      ${StyledThumb} {
+        width: 24px;
+        min-width: 24px;
+        height: 24px;
+      }
+    }
+    &[data-size='huge'] {
+      height: 28px;
+      ${StyledTrack} {
+        height: 10px;
+      }
+      ${StyledThumb} {
+        width: 28px;
+        min-width: 28px;
+        height: 28px;
+      }
+    }
+
     ${StyledTrack} {
-      height: 3px;
       flex-grow: 1;
     }
     ${StyledRange} {
@@ -90,8 +207,42 @@ const StyledRoot: React.FC<Slider.SliderProps> = styled(Slider.Root)`
     width: 20px;
     height: 200px;
 
+    &[data-size='tiny'] {
+      width: 16px;
+
+      ${StyledTrack} {
+        width: 1px;
+      }
+    }
+    &[data-size='small'] {
+      width: 18px;
+
+      ${StyledTrack} {
+        width: 2px;
+      }
+    }
+    &[data-size='normal'] {
+      width: 20px;
+
+      ${StyledTrack} {
+        width: 3px;
+      }
+    }
+    &[data-size='big'] {
+      width: 24px;
+
+      ${StyledTrack} {
+        width: 6px;
+      }
+    }
+    &[data-size='huge'] {
+      width: 28px;
+      ${StyledTrack} {
+        width: 10px;
+      }
+    }
+
     ${StyledTrack} {
-      width: 3px;
       flex-grow: 1;
     }
     ${StyledRange} {
@@ -108,19 +259,6 @@ const SliderRootWrapper = styled.div`
 
   &[data-orientation='vertical'] {
     flex-direction: column;
-  }
-`;
-const StyledThumb = styled(Slider.Thumb)`
-  display: block;
-  width: 20px;
-  height: 20px;
-  background-color: ${(props) => getReadableColor(props.theme, undefined, undefined, true)};
-  border-radius: 10px;
-  transition: all 0.2s ease-out;
-
-  &:focus {
-    box-shadow: 0 0 0 8px ${(props) => changeLightness(props.theme.main, 0.5)}15;
-    outline: none;
   }
 `;
 
@@ -141,34 +279,51 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
   rightIcon,
   rightIconColor,
   rightIconProps,
-  tooltipProps = {},
+  customTheme,
+  intent,
+  effect,
+  trackProps,
+  rangeProps,
+  thumbProps,
+  minLabelProps,
+  maxLabelProps,
+  size = 'normal',
+  wrapperProps,
   ...props
 }: ISliderProps<T>) {
+  const theme = useReqoreTheme('main', customTheme, intent);
+  const background = intent
+    ? changeLightness(theme.main, 0.2)
+    : getReadableColor(theme, undefined, undefined, true);
+  const trackBackground = intent
+    ? changeLightness(theme.main, 0.05)
+    : changeLightness(theme.main, 0.2);
   const isRange = Array.isArray(value);
-  const [minRef, setMinRef] = useState<HTMLSpanElement>();
-  const [maxRef, setMaxRef] = useState<HTMLSpanElement>();
-
-  const tooltipOptions: IReqoreTooltip = {
-    handler: 'hoverStay',
-    placement: orientation === 'horizontal' ? 'bottom' : 'right',
-    ...tooltipProps,
-  };
-  useTooltip(minRef, {
-    ...tooltipOptions,
-    content: isRange ? value[0].toString() : value.toString(),
-  });
-  useTooltip(maxRef, {
-    ...tooltipOptions,
-    content: isRange ? value[1].toString() : undefined,
-  });
 
   return (
-    <StyledWrapper data-orientation={orientation} data-fluid={fluid}>
+    <StyledWrapper data-orientation={orientation} data-fluid={fluid} {...wrapperProps}>
+      {showLabels && orientation === 'horizontal' && (
+        <StyledLabelsWrapper>
+          <StyledLabel {...minLabelProps}>{props.min}</StyledLabel>
+          <StyledLabel {...maxLabelProps}>{props.max}</StyledLabel>
+        </StyledLabelsWrapper>
+      )}
       <SliderRootWrapper data-orientation={orientation} data-fluid={fluid}>
-        {icon && <ReqoreIcon icon={icon} color={iconColor || iconColor} {...iconProps} />}
-        {showLabels && <StyledLabel>{props.min}</StyledLabel>}
+        {icon && (
+          <ReqoreIcon
+            size={size}
+            effect={effect}
+            icon={icon}
+            color={iconColor || iconColor}
+            {...iconProps}
+          />
+        )}
+        {showLabels && orientation === 'vertical' && (
+          <StyledLabel {...minLabelProps}>{props.min}</StyledLabel>
+        )}
 
         <StyledRoot
+          data-size={size}
           orientation={orientation}
           minStepsBetweenThumbs={step}
           inverted={orientation === 'vertical'}
@@ -179,17 +334,34 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
             onChange((isRange ? values : values[0]) as T);
           }}
         >
-          <StyledTrack>
-            <StyledRange />
+          <StyledTrack background={trackBackground} asChild>
+            <StyledEffect effect={effect} {...trackProps}>
+              <StyledRange background={background} asChild>
+                <StyledEffect effect={effect} {...rangeProps} />
+              </StyledRange>
+            </StyledEffect>
           </StyledTrack>
 
-          <StyledThumb ref={(node) => setMinRef(node)} />
-          {isRange && <StyledThumb ref={(node) => setMaxRef(node)} />}
+          <StyledThumb background={background} asChild>
+            <StyledEffect effect={effect} {...thumbProps} />
+          </StyledThumb>
+          {isRange && (
+            <StyledThumb background={background} asChild>
+              <StyledEffect effect={effect} {...thumbProps} />
+            </StyledThumb>
+          )}
         </StyledRoot>
-
-        {showLabels && <StyledLabel>{props.max}</StyledLabel>}
+        {showLabels && orientation === 'vertical' && (
+          <StyledLabel {...minLabelProps}>{props.max}</StyledLabel>
+        )}
         {rightIcon && (
-          <ReqoreIcon icon={rightIcon} color={rightIconColor || iconColor} {...rightIconProps} />
+          <ReqoreIcon
+            size={size}
+            icon={rightIcon}
+            effect={effect}
+            color={rightIconColor || iconColor}
+            {...rightIconProps}
+          />
         )}
       </SliderRootWrapper>
     </StyledWrapper>
