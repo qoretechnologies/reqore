@@ -8,6 +8,7 @@ import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import {
   IReqoreEffect,
   IReqoreTextEffectProps,
@@ -45,22 +46,15 @@ export interface ISliderProps<T extends number | [number, number] = number>
 
   minLabelProps?: IReqoreTextEffectProps;
   maxLabelProps?: IReqoreTextEffectProps;
-  wrapperProps?: React.ComponentProps<'div'>;
+  wrapperProps?: IReqoreControlGroupProps;
 }
 
 const StyledLabelsWrapper = styled.div`
   display: flex;
   justify-content: space-between;
 `;
-const StyledWrapper = styled.div`
-  display: flex;
-  gap: 4px;
-
+const StyledControlGroupWrapper = styled(ReqoreControlGroup)`
   &[data-orientation='horizontal'] {
-    flex-direction: column;
-    &[data-fluid='true'] {
-      width: 100%;
-    }
     &[data-fluid='false'] {
       max-width: 200px;
       min-width: 200px;
@@ -70,12 +64,6 @@ const StyledWrapper = styled.div`
     }
   }
   &[data-orientation='vertical'] {
-    flex-direction: row;
-    align-items: stretch;
-
-    &[data-fluid='true'] {
-      height: 100%;
-    }
     &[data-fluid='false'] {
       max-height: 200px;
     }
@@ -260,18 +248,11 @@ const StyledRoot = styled(Slider.Root)`
     }
   }
 `;
-const SliderRootWrapper = styled.div`
-  display: flex;
+const SliderRootWrapper = styled(ReqoreControlGroup)`
   align-items: center;
   flex-grow: 1;
-  gap: 8px;
   width: 100%;
-
-  &[data-orientation='vertical'] {
-    flex-direction: column;
-  }
 `;
-
 const StyledLabel = styled(ReqoreTextEffect)`
   font-weight: 600;
 `;
@@ -316,11 +297,13 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
   const isRange = Array.isArray(value);
 
   return (
-    <StyledWrapper
+    <StyledControlGroupWrapper
+      ref={setWrapperRef}
       data-orientation={orientation}
       data-labels-position={labelsPosition}
       data-fluid={fluid}
-      ref={setWrapperRef}
+      fluid={fluid}
+      vertical={orientation === 'horizontal'}
       {...wrapperProps}
     >
       {showLabels && orientation === 'horizontal' && (
@@ -333,7 +316,7 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
           </StyledLabel>
         </StyledLabelsWrapper>
       )}
-      <SliderRootWrapper data-orientation={orientation} data-fluid={fluid}>
+      <SliderRootWrapper vertical={orientation === 'vertical'}>
         {icon && (
           <ReqoreIcon
             size={size}
@@ -393,7 +376,7 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
           />
         )}
       </SliderRootWrapper>
-    </StyledWrapper>
+    </StyledControlGroupWrapper>
   );
 }
 
