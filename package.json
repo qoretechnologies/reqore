@@ -94,6 +94,7 @@
     "react-dom": "^18.2.0"
   },
   "dependencies": {
+    "@internationalized/date": "^3.5.3",
     "@popperjs/core": "^2.11.6",
     "@radix-ui/react-slider": "^1.1.2",
     "@react-spring/web": "^9.6.1",
@@ -103,6 +104,7 @@
     "lodash": "^4.17.21",
     "polished": "^4.2.2",
     "re-resizable": "^6.9.0",
+    "react-aria-components": "^1.2.0",
     "react-icons": "^4.7.1",
     "react-popper": "^2.3.0",
     "react-scrollbar": "^0.5.6",

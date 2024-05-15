@@ -30,15 +30,15 @@ const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
           0.04
         )
       : intent
-      ? changeLightness(getNotificationIntent(theme, intent), flat ? 0.1 : 0.2)
-      : theme.popover?.main ||
-        rgba(
-          changeLightness(
-            flat ? theme.main : getNotificationIntent(theme, intent),
-            flat ? 0.1 : 0.2
+        ? changeLightness(getNotificationIntent(theme, intent), flat ? 0.1 : 0.2)
+        : theme.popover?.main ||
+          rgba(
+            changeLightness(
+              flat ? theme.main : getNotificationIntent(theme, intent),
+              flat ? 0.1 : 0.2
+            ),
+            isOpaque ? 1 : 0.3
           ),
-          isOpaque ? 1 : 0.3
-        ),
     dim ? 0.3 : 1
   );
 
@@ -58,7 +58,7 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
+export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   animation: 0.2s ${fadeIn} ease-out;
   max-width: ${({ maxWidth }) => maxWidth};
   max-height: ${({ maxHeight }) => maxHeight};
@@ -131,7 +131,7 @@ const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-const StyledPopoverContent = styled.div`
+export const StyledPopoverContent = styled.div`
   width: 100%;
   height: 100%;
   z-index: 20;
