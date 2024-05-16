@@ -196,6 +196,7 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
 }: ISliderProps<T>) {
   const [wrapperRef, setWrapperRef] = useState<HTMLDivElement>(undefined);
   const theme = useReqoreTheme('main', customTheme, intent);
+
   useTooltip(wrapperRef, tooltip);
 
   const background = intent
@@ -214,7 +215,9 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
     return (
       <ReqoreControlGroup fluid spaceBetween vertical={orientation === 'vertical'} fill>
         <ReqoreControlGroup fixed vertical={orientation === 'vertical'} horizontalAlign='center'>
-          {icon && <ReqoreIcon icon={icon} size={size} intent={intent} {...iconProps} />}
+          {icon && (
+            <ReqoreIcon icon={icon} size={size} color={iconColor} intent={intent} {...iconProps} />
+          )}
           {props.min || props.min === 0 ? (
             <ReqoreP size={size} intent={intent} effect={effect} {...minLabelProps}>
               {props.min}
@@ -228,7 +231,13 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
             </ReqoreP>
           ) : null}
           {rightIcon && (
-            <ReqoreIcon icon={rightIcon} size={size} intent={intent} {...rightIconProps} />
+            <ReqoreIcon
+              icon={rightIcon}
+              size={size}
+              color={rightIconColor}
+              intent={intent}
+              {...rightIconProps}
+            />
           )}
         </ReqoreControlGroup>
       </ReqoreControlGroup>
@@ -272,8 +281,6 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
 
     return _value > props.max - step * 5;
   }, [value, props.max]);
-
-  console.log({ isMaxValueAboveThreshold });
 
   return (
     <StyledControlGroupWrapper
