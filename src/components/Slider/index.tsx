@@ -1,7 +1,7 @@
 import * as Slider from '@radix-ui/react-slider';
-import { useState } from 'react';
-import styled from 'styled-components';
-import { TSizes } from '../../constants/sizes';
+import { useCallback, useMemo, useState } from 'react';
+import styled, { css } from 'styled-components';
+import { HALF_PADDING_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -9,14 +9,10 @@ import { useTooltip } from '../../hooks/useTooltip';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
-import {
-  IReqoreEffect,
-  IReqoreTextEffectProps,
-  ReqoreTextEffect,
-  StyledEffect,
-  TReqoreEffectColor,
-} from '../Effect';
+import { IReqoreEffect, IReqoreTextEffectProps, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { IReqoreParagraphProps, ReqoreP } from '../Paragraph';
+import ReqoreTag, { IReqoreTagProps } from '../Tag';
 
 export interface ISliderProps<T extends number | [number, number] = number>
   extends Omit<Slider.SliderProps, 'onChange' | 'value' | 'defaultValue' | 'onValueChange'> {
@@ -44,23 +40,20 @@ export interface ISliderProps<T extends number | [number, number] = number>
   rangeProps?: Partial<IReqoreTextEffectProps>;
   thumbProps?: Partial<IReqoreTextEffectProps>;
 
-  minLabelProps?: IReqoreTextEffectProps;
-  maxLabelProps?: IReqoreTextEffectProps;
+  minLabelProps?: IReqoreParagraphProps;
+  currentMinLabelProps?: IReqoreTagProps;
+  maxLabelProps?: IReqoreParagraphProps;
+  currentMaxLabelProps?: IReqoreTagProps;
   wrapperProps?: IReqoreControlGroupProps;
+
+  displayCurrentValueOverThumb?: boolean;
 }
 
-const StyledLabelsWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-`;
 const StyledControlGroupWrapper = styled(ReqoreControlGroup)`
   &[data-orientation='horizontal'] {
     &[data-fluid='false'] {
       max-width: 200px;
       min-width: 200px;
-    }
-    &[data-labels-position='bottom'] {
-      flex-direction: column-reverse;
     }
   }
   &[data-orientation='vertical'] {
@@ -101,96 +94,27 @@ const StyledRoot = styled(Slider.Root)`
   &[aria-disabled='true'] {
     opacity: 0.5;
     cursor: not-allowed;
+    pointer-events: none;
   }
-  &[data-size='tiny'] ${StyledThumb} {
-    width: 16px;
-    min-width: 16px;
-    height: 16px;
-  }
-  &[data-size='small'] ${StyledThumb} {
-    width: 18px;
-    min-width: 18px;
-    height: 18px;
-  }
-  &[data-size='normal'] ${StyledThumb} {
-    width: 20px;
-    min-width: 20px;
-    height: 20px;
-  }
-  &[data-size='big'] ${StyledThumb} {
-    width: 24px;
-    min-width: 24px;
-    height: 24px;
-  }
-  &[data-size='huge'] ${StyledThumb} {
-    width: 28px;
-    min-width: 28px;
-    height: 28px;
-  }
+
+  ${({ 'data-size': size }) => css`
+    ${StyledThumb} {
+      width: ${ICON_FROM_SIZE[size]}px;
+      height: ${ICON_FROM_SIZE[size]}px;
+      min-width: ${ICON_FROM_SIZE[size]}px;
+    }
+  `}
 
   &[data-orientation='horizontal'] {
     width: 100%;
-    height: 20px;
 
-    &[data-size='tiny'] {
-      height: 16px;
-
-      ${StyledTrack} {
-        height: 1px;
-      }
-      ${StyledThumb} {
-        width: 16px;
-        min-width: 16px;
-        height: 16px;
-      }
-    }
-    &[data-size='small'] {
-      height: 18px;
+    ${({ 'data-size': size }) => css`
+      height: ${ICON_FROM_SIZE[size]}px;
 
       ${StyledTrack} {
-        height: 2px;
+        height: ${HALF_PADDING_FROM_SIZE[size]}px;
       }
-      ${StyledThumb} {
-        width: 18px;
-        min-width: 18px;
-        height: 18px;
-      }
-    }
-    &[data-size='normal'] {
-      height: 20px;
-
-      ${StyledTrack} {
-        height: 3px;
-      }
-      ${StyledThumb} {
-        width: 20px;
-        min-width: 20px;
-        height: 20px;
-      }
-    }
-    &[data-size='big'] {
-      height: 24px;
-
-      ${StyledTrack} {
-        height: 6px;
-      }
-      ${StyledThumb} {
-        width: 24px;
-        min-width: 24px;
-        height: 24px;
-      }
-    }
-    &[data-size='huge'] {
-      height: 28px;
-      ${StyledTrack} {
-        height: 10px;
-      }
-      ${StyledThumb} {
-        width: 28px;
-        min-width: 28px;
-        height: 28px;
-      }
-    }
+    `}
 
     ${StyledTrack} {
       flex-grow: 1;
@@ -199,46 +123,19 @@ const StyledRoot = styled(Slider.Root)`
       height: 100%;
     }
   }
+
   &[data-orientation='vertical'] {
     flex-direction: column;
     justify-content: center;
-    width: 20px;
     height: 200px;
 
-    &[data-size='tiny'] {
-      width: 16px;
+    ${({ 'data-size': size }) => css`
+      width: ${ICON_FROM_SIZE[size]}px;
 
       ${StyledTrack} {
-        width: 1px;
+        width: ${HALF_PADDING_FROM_SIZE[size]}px;
       }
-    }
-    &[data-size='small'] {
-      width: 18px;
-
-      ${StyledTrack} {
-        width: 2px;
-      }
-    }
-    &[data-size='normal'] {
-      width: 20px;
-
-      ${StyledTrack} {
-        width: 3px;
-      }
-    }
-    &[data-size='big'] {
-      width: 24px;
-
-      ${StyledTrack} {
-        width: 6px;
-      }
-    }
-    &[data-size='huge'] {
-      width: 28px;
-      ${StyledTrack} {
-        width: 10px;
-      }
-    }
+    `}
 
     ${StyledTrack} {
       flex-grow: 1;
@@ -248,13 +145,23 @@ const StyledRoot = styled(Slider.Root)`
     }
   }
 `;
+
+const StyledCurrentValue = styled(ReqoreTag)`
+  position: absolute;
+  ${({ position, isAboveThreshold, isBelowThreshold }) =>
+    css`
+      ${position}: ${isAboveThreshold || isBelowThreshold ? '-5px' : '-35px'};
+      ${position === 'left' || position === 'right' ? 'top' : 'left'}: 50%;
+      transform: ${position === 'left' || position === 'right'
+        ? 'translateY(-50%)'
+        : 'translateX(-50%)'};
+    `}
+`;
+
 const SliderRootWrapper = styled(ReqoreControlGroup)`
   align-items: center;
   flex-grow: 1;
   width: 100%;
-`;
-const StyledLabel = styled(ReqoreTextEffect)`
-  font-weight: 600;
 `;
 
 export function ReqoreSlider<T extends number | [number, number] = number>({
@@ -282,6 +189,9 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
   wrapperProps,
   labelsPosition = 'top',
   tooltip,
+  currentMaxLabelProps,
+  currentMinLabelProps,
+  displayCurrentValueOverThumb,
   ...props
 }: ISliderProps<T>) {
   const [wrapperRef, setWrapperRef] = useState<HTMLDivElement>(undefined);
@@ -296,6 +206,75 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
     : changeLightness(theme.main, 0.2);
   const isRange = Array.isArray(value);
 
+  const renderLabels = useCallback(() => {
+    if (!showLabels) {
+      return null;
+    }
+
+    return (
+      <ReqoreControlGroup fluid spaceBetween vertical={orientation === 'vertical'} fill>
+        <ReqoreControlGroup fixed vertical={orientation === 'vertical'} horizontalAlign='center'>
+          {icon && <ReqoreIcon icon={icon} size={size} intent={intent} {...iconProps} />}
+          {props.min || props.min === 0 ? (
+            <ReqoreP size={size} intent={intent} effect={effect} {...minLabelProps}>
+              {props.min}
+            </ReqoreP>
+          ) : null}
+        </ReqoreControlGroup>
+        <ReqoreControlGroup fixed vertical={orientation === 'vertical'} horizontalAlign='center'>
+          {props.max || props.max === 0 ? (
+            <ReqoreP size={size} intent={intent} effect={effect} {...maxLabelProps}>
+              {props.max}
+            </ReqoreP>
+          ) : null}
+          {rightIcon && (
+            <ReqoreIcon icon={rightIcon} size={size} intent={intent} {...rightIconProps} />
+          )}
+        </ReqoreControlGroup>
+      </ReqoreControlGroup>
+    );
+  }, [
+    icon,
+    rightIcon,
+    iconProps,
+    rightIconProps,
+    minLabelProps,
+    maxLabelProps,
+    size,
+    intent,
+    props.min,
+    props.max,
+    showLabels,
+    orientation,
+    effect,
+  ]);
+
+  const currentValuePosition = useMemo(() => {
+    return orientation === 'horizontal'
+      ? labelsPosition === 'top'
+        ? 'top'
+        : 'bottom'
+      : labelsPosition === 'top'
+      ? 'left'
+      : 'right';
+  }, [orientation, labelsPosition]);
+
+  const isMinValueBelowThreshold = useMemo(() => {
+    const _value: number = isRange ? value[0] : value;
+
+    return _value < props.min + step * 5;
+  }, [value, props.min]);
+
+  const isMaxValueAboveThreshold = useMemo(() => {
+    if (!isRange) return false;
+
+    const _value: number = value[1];
+
+    return _value > props.max - step * 5;
+  }, [value, props.max]);
+
+  console.log({ isMaxValueAboveThreshold });
+
   return (
     <StyledControlGroupWrapper
       ref={setWrapperRef}
@@ -304,34 +283,12 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
       data-fluid={fluid}
       fluid={fluid}
       vertical={orientation === 'horizontal'}
+      fill
+      gapSize={orientation === 'horizontal' ? 'big' : 'normal'}
       {...wrapperProps}
     >
-      {showLabels && orientation === 'horizontal' && (
-        <StyledLabelsWrapper>
-          <StyledLabel effect={effect} {...minLabelProps}>
-            {props.min}
-          </StyledLabel>
-          <StyledLabel effect={effect} {...maxLabelProps}>
-            {props.max}
-          </StyledLabel>
-        </StyledLabelsWrapper>
-      )}
+      {labelsPosition === 'top' && renderLabels()}
       <SliderRootWrapper vertical={orientation === 'vertical'}>
-        {icon && (
-          <ReqoreIcon
-            size={size}
-            effect={effect}
-            icon={icon}
-            color={iconColor || iconColor}
-            {...iconProps}
-          />
-        )}
-        {showLabels && orientation === 'vertical' && (
-          <StyledLabel effect={effect} {...minLabelProps}>
-            {props.min}
-          </StyledLabel>
-        )}
-
         <StyledRoot
           data-size={size}
           orientation={orientation}
@@ -353,29 +310,40 @@ export function ReqoreSlider<T extends number | [number, number] = number>({
           </StyledTrack>
 
           <StyledThumb background={background} asChild>
-            <StyledEffect effect={effect} {...thumbProps} />
+            <StyledEffect effect={effect} {...thumbProps}>
+              {showLabels && (
+                <StyledCurrentValue
+                  size={size}
+                  effect={effect}
+                  intent={intent}
+                  position={currentValuePosition}
+                  label={isRange ? value[0] : value}
+                  isBelowThreshold={displayCurrentValueOverThumb || isMinValueBelowThreshold}
+                  {...currentMinLabelProps}
+                />
+              )}
+            </StyledEffect>
           </StyledThumb>
           {isRange && (
             <StyledThumb background={background} asChild>
-              <StyledEffect effect={effect} {...thumbProps} />
+              <StyledEffect effect={effect} {...thumbProps}>
+                {showLabels && (
+                  <StyledCurrentValue
+                    size={size}
+                    effect={effect}
+                    intent={intent}
+                    position={currentValuePosition}
+                    isAboveThreshold={displayCurrentValueOverThumb || isMaxValueAboveThreshold}
+                    label={value[1]}
+                    {...currentMaxLabelProps}
+                  />
+                )}
+              </StyledEffect>
             </StyledThumb>
           )}
         </StyledRoot>
-        {showLabels && orientation === 'vertical' && (
-          <StyledLabel effect={effect} {...maxLabelProps}>
-            {props.max}
-          </StyledLabel>
-        )}
-        {rightIcon && (
-          <ReqoreIcon
-            size={size}
-            icon={rightIcon}
-            effect={effect}
-            color={rightIconColor || iconColor}
-            {...rightIconProps}
-          />
-        )}
       </SliderRootWrapper>
+      {labelsPosition === 'bottom' && renderLabels()}
     </StyledControlGroupWrapper>
   );
 }
