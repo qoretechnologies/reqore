@@ -150,8 +150,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       color: ${minimal
         ? getReadableColor(theme, undefined, undefined, true)
         : color && color !== 'transparent'
-          ? getReadableColorFrom(color)
-          : getReadableColorFrom(changeLightness(theme.main, 0.1))};
+        ? getReadableColorFrom(color)
+        : getReadableColorFrom(changeLightness(theme.main, 0.1))};
 
       ${StyledTagKeyWrapper} {
         background-color: ${labelKey ? rgba('#000000', 0.2) : undefined};
@@ -175,8 +175,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
               color: ${minimal
                 ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
                 : color
-                  ? getReadableColorFrom(color)
-                  : getReadableColor(theme, undefined, undefined)};
+                ? getReadableColorFrom(color)
+                : getReadableColor(theme, undefined, undefined)};
             `}
           }
         `

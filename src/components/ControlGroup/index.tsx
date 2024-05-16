@@ -36,6 +36,7 @@ export interface IReqoreControlGroupComponentProps
   vertical?: boolean;
   verticalAlign?: 'flex-start' | 'center' | 'flex-end';
   horizontalAlign?: 'flex-start' | 'center' | 'flex-end';
+  spaceBetween?: boolean;
   wrap?: boolean;
   isInsideStackGroup?: boolean;
   isInsideVerticalGroup?: boolean;
@@ -67,9 +68,24 @@ export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroup
   display: flex;
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? undefined : '0 0 auto')};
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
-  justify-content: ${({ fluid, vertical }) => (vertical && fluid ? 'stretch' : undefined)};
-  align-items: ${({ vertical, fluid, horizontalAlign }) =>
-    vertical ? (fluid ? 'stretch' : horizontalAlign) : undefined};
+  justify-content: ${({ fluid, vertical, spaceBetween }) =>
+    vertical && fluid
+      ? spaceBetween
+        ? 'space-between'
+        : 'stretch'
+      : !vertical && spaceBetween
+      ? 'space-between'
+      : undefined};
+  align-items: ${({ vertical, fluid, horizontalAlign, spaceBetween }) =>
+    vertical
+      ? fluid
+        ? spaceBetween
+          ? 'space-between'
+          : 'stretch'
+        : horizontalAlign
+      : vertical && spaceBetween
+      ? 'space-between'
+      : undefined};
   flex-flow: ${({ vertical }) => (vertical ? 'column' : 'row')};
   gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
   flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};

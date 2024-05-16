@@ -46,6 +46,7 @@ export { ReqorePanel } from './components/Panel';
 export { ReqoreP, ReqoreP as ReqoreParagraph } from './components/Paragraph';
 export { default as ReqorePopover } from './components/Popover';
 export { default as ReqoreRadioGroup } from './components/RadioGroup';
+export * from './components/Slider';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
 export { ReqoreSpinner } from './components/Spinner';
 export { default as ReqoreTable } from './components/Table';

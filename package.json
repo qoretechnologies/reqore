@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.42.0",
+  "version": "0.43.0",
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -95,6 +95,7 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.6",
+    "@radix-ui/react-slider": "^1.1.2",
     "@react-spring/web": "^9.6.1",
     "classnames": "^2.2.6",
     "epoch-timeago": "^1.1.9",
