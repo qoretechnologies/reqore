@@ -28,7 +28,8 @@ import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
-import { StyledInput } from '../Input';
+import { StyledInput, StyledInputWrapper } from '../Input';
+import ReqoreInputClearButton from '../InputClearButton';
 import { StyledPopoverContent, StyledPopoverWrapper } from '../InternalPopover';
 import { ReqoreLabel } from '../Label';
 import ReqoreMessage from '../Message';
@@ -46,19 +47,21 @@ export interface IDatePickerProps
   flat?: boolean;
   customTheme?: IReqoreCustomTheme;
   intent?: TReqoreIntent;
+  isClearable?: boolean;
+  onClearClick?(): void;
 
   inputProps?: IReqoreTextEffectProps;
   timeInputProps?: IReqoreTextEffectProps;
   popoverTriggerProps?: IReqoreButtonProps;
   popoverProps?: React.ComponentProps<typeof Popover>;
   calendarProps?: React.ComponentProps<typeof Calendar>;
+  timeFieldProps?: React.ComponentProps<typeof TimeField<Time>>;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
   &[data-fluid='false'] {
+    min-width: 220px;
     width: fit-content;
-  }
-  .react-aria-DateSegment {
   }
 `;
 const StyledDateSegment: typeof DateSegment = styled(DateSegment)`
@@ -80,6 +83,10 @@ const StyledGroup: typeof Group = styled(Group)`
   align-items: center;
   gap: 12px;
   flex-grow: 1;
+
+  .reqore-clear-input-button {
+    position: static;
+  }
 `;
 const StyledCalendarMessage: typeof ReqoreMessage = styled(ReqoreMessage)`
   width: 300px;
@@ -98,20 +105,6 @@ const StyledCalendarMessage: typeof ReqoreMessage = styled(ReqoreMessage)`
   .react-aria-CalendarHeaderCell {
     padding-bottom: 12px;
     font-size: 14px;
-  }
-
-  .react-aria-DateInput {
-    display: flex;
-    align-items: center;
-    padding: 4px 2.5rem 4px 8px;
-  }
-  .react-aria-DateSegment {
-    padding: 0 2px;
-    &:focus {
-      background-color: ${(props) => changeLightness(props.theme.main, 0.1)};
-      outline: none;
-      border-radius: 4px;
-    }
   }
 `;
 const StyledCalendarCell = styled(CalendarCell)`
@@ -145,14 +138,8 @@ const StyledCalendarCell = styled(CalendarCell)`
 `;
 const StyledTimeField: typeof TimeField = styled(TimeField)`
   display: flex;
-
-  .react-aria-DateSegment {
-    padding: 0 2px;
-    &:focus {
-      background-color: ${(props) => changeLightness(props.theme.main, 0.2)};
-      outline: none;
-      border-radius: 4px;
-    }
+  ${StyledInput} {
+    height: auto;
   }
 `;
 
@@ -188,6 +175,13 @@ export const DatePicker = ({
   popoverProps,
   calendarProps,
   timeInputProps,
+  timeFieldProps,
+  granularity = 'minute',
+  hourCycle = 24,
+  hideTimeZone = true,
+  shouldForceLeadingZeros = true,
+  isClearable = true,
+  onClearClick,
   ...props
 }: IDatePickerProps) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -197,40 +191,64 @@ export const DatePicker = ({
   });
   const theme = useReqoreTheme('main', customTheme, intent);
 
+  const onDateChange: DatePickerProps<CalendarDateTime>['onChange'] = (value) => {
+    onChange?.(value ? value.toDate(getLocalTimeZone()) : null);
+    setTime(new Time(value?.hour, value.minute, value.second, value.millisecond));
+  };
+  const onTimeChange = (time: Time | null) => {
+    if (!time) return;
+    setTime(time);
+    onChange?.(toCalendarDateTime(value, time).toDate(getLocalTimeZone()));
+  };
+
   return (
     <StyledRADatePicker
       value={value}
-      onChange={(value) => {
-        onChange?.(value ? value.toDate(getLocalTimeZone()) : null);
-        setTime(new Time(value?.hour, value.minute, value.second, value.millisecond));
-      }}
-      granularity='minute'
-      hideTimeZone
-      shouldForceLeadingZeros
-      hourCycle={24}
+      onChange={onDateChange}
+      granularity={granularity}
+      hideTimeZone={hideTimeZone}
+      shouldForceLeadingZeros={shouldForceLeadingZeros}
+      hourCycle={hourCycle}
       data-fluid={fluid}
       {...props}
     >
-      <StyledInput
-        fluid={fluid}
-        flat={flat}
-        rounded={rounded}
-        minimal={minimal}
-        _size={size}
-        pill={pill}
-        as={StyledGroup}
-        theme={theme}
-        {...inputProps}
-      >
-        <StyledDateInput>{(segment) => <StyledDateSegment segment={segment} />}</StyledDateInput>
-        <ReqoreButton
-          customTheme={theme}
-          size='small'
-          as={Button}
-          icon={'Calendar2Fill'}
-          {...popoverTriggerProps}
-        />
-      </StyledInput>
+      <StyledInputWrapper fluid={fluid} rounded={rounded} _size={size} pill={pill}>
+        <StyledInput
+          fluid={fluid}
+          flat={flat}
+          rounded={rounded}
+          minimal={minimal}
+          _size={size}
+          pill={pill}
+          as={StyledGroup}
+          theme={theme}
+          {...inputProps}
+        >
+          <StyledDateInput>{(segment) => <StyledDateSegment segment={segment} />}</StyledDateInput>
+
+          <ReqoreControlGroup gapSize='tiny'>
+            <ReqoreInputClearButton
+              customTheme={theme}
+              enabled={isClearable && !props.isReadOnly && !props?.isDisabled && !!onChange}
+              onClick={() => {
+                onDateChange(null);
+                onTimeChange(null);
+                onClearClick?.();
+              }}
+              size={size}
+              show={true}
+            />
+            <ReqoreButton
+              customTheme={theme}
+              size='small'
+              as={Button}
+              icon={'Calendar2Fill'}
+              {...popoverTriggerProps}
+            />
+          </ReqoreControlGroup>
+        </StyledInput>
+      </StyledInputWrapper>
+
       <Popover {...popoverProps}>
         <Dialog>
           <Calendar {...calendarProps}>
@@ -256,20 +274,26 @@ export const DatePicker = ({
                     <CalendarGrid>
                       {(date) => <StyledCalendarCell theme={theme} date={date} />}
                     </CalendarGrid>
-                    <ReqoreControlGroup vertical>
-                      <div>
-                        <ReqoreLabel customTheme={theme} label='Time' minimal color='transparent' />
-                      </div>
-                      <div>
+                    {(granularity === 'minute' ||
+                      granularity === 'second' ||
+                      granularity === 'hour') && (
+                      <ReqoreControlGroup vertical>
+                        <div>
+                          <ReqoreLabel
+                            customTheme={theme}
+                            label='Time'
+                            minimal
+                            color='transparent'
+                          />
+                        </div>
                         <StyledTimeField
-                          shouldForceLeadingZeros
                           value={time}
-                          onChange={(time) => {
-                            if (!time) return;
-                            setTime(time);
-                            onChange?.(toCalendarDateTime(value, time).toDate(getLocalTimeZone()));
-                          }}
-                          granularity={'minute'}
+                          onChange={onTimeChange}
+                          granularity={granularity}
+                          hideTimeZone={hideTimeZone}
+                          shouldForceLeadingZeros={shouldForceLeadingZeros}
+                          hourCycle={hourCycle}
+                          {...timeFieldProps}
                         >
                           <StyledInput
                             fluid={fluid}
@@ -286,8 +310,8 @@ export const DatePicker = ({
                             </StyledDateInput>
                           </StyledInput>
                         </StyledTimeField>
-                      </div>
-                    </ReqoreControlGroup>
+                      </ReqoreControlGroup>
+                    )}
                   </ReqoreControlGroup>
                 </StyledCalendarMessage>
               </StyledPopoverContent>

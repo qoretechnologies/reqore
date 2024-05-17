@@ -36,6 +36,16 @@ type Story = StoryObj<typeof meta>;
 
 export default meta;
 export const Default: Story = {};
+export const WithAM_PM: Story = {
+  args: {
+    hourCycle: 12,
+  },
+};
+export const WithoutTimePicker: Story = {
+  args: {
+    granularity: 'day',
+  },
+};
 export const WithIntent: Story = {
   render(args, ctx) {
     return (
