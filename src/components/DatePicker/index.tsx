@@ -33,6 +33,27 @@ import { StyledPopoverContent, StyledPopoverWrapper } from '../InternalPopover';
 import { ReqoreLabel } from '../Label';
 import ReqoreMessage from '../Message';
 
+export interface IDatePickerProps
+  extends Omit<DatePickerProps<CalendarDateTime>, 'value' | 'onChange' | 'defaultValue'> {
+  value: Date;
+  onChange(value: Date): void;
+
+  size?: TSizes;
+  fluid?: boolean;
+  rounded?: boolean;
+  pill?: boolean;
+  minimal?: boolean;
+  flat?: boolean;
+  customTheme?: IReqoreCustomTheme;
+  intent?: TReqoreIntent;
+
+  inputProps?: IReqoreTextEffectProps;
+  timeInputProps?: IReqoreTextEffectProps;
+  popoverTriggerProps?: IReqoreButtonProps;
+  popoverProps?: React.ComponentProps<typeof Popover>;
+  calendarProps?: React.ComponentProps<typeof Calendar>;
+}
+
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
   &[data-fluid='false'] {
     width: fit-content;
@@ -151,26 +172,6 @@ const toDate = (date?: Date) => {
   return undefined;
 };
 
-export interface IDatePickerProps
-  extends Omit<DatePickerProps<CalendarDateTime>, 'value' | 'onChange' | 'defaultValue'> {
-  value: Date;
-  onChange(value: Date): void;
-
-  size?: TSizes;
-  fluid?: boolean;
-  rounded?: boolean;
-  pill?: boolean;
-  minimal?: boolean;
-  flat?: boolean;
-  customTheme?: IReqoreCustomTheme;
-  intent?: TReqoreIntent;
-
-  inputProps?: IReqoreTextEffectProps;
-  timeInputProps?: IReqoreTextEffectProps;
-  popoverTriggerProps?: IReqoreButtonProps;
-  popoverProps?: React.ComponentProps<typeof Popover>;
-  calendarProps?: React.ComponentProps<typeof Calendar>;
-}
 export const DatePicker = ({
   value: _value,
   onChange,
