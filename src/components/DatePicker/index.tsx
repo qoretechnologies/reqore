@@ -22,7 +22,9 @@ import {
 } from 'react-aria-components';
 import styled from 'styled-components';
 import { TSizes } from '../../constants/sizes';
+import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
@@ -91,7 +93,7 @@ const StyledCalendarMessage: typeof ReqoreMessage = styled(ReqoreMessage)`
     }
   }
 `;
-const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
+const StyledCalendarCell = styled(CalendarCell)`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -109,7 +111,7 @@ const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
   }
   &[data-selected='true'] {
     background-color: ${(props) => changeLightness(props.theme.main, 0.2)};
-    border: 1px solid ${(props) => changeLightness(props.theme.main, 0.5)};
+    border: 1px solid ${(props) => changeLightness(props.theme.main)};
     font-weight: bold;
     border-radius: 9999px;
   }
@@ -160,8 +162,11 @@ export interface IDatePickerProps
   pill?: boolean;
   minimal?: boolean;
   flat?: boolean;
+  customTheme?: IReqoreCustomTheme;
+  intent?: TReqoreIntent;
 
   inputProps?: IReqoreTextEffectProps;
+  timeInputProps?: IReqoreTextEffectProps;
   popoverTriggerProps?: IReqoreButtonProps;
   popoverProps?: React.ComponentProps<typeof Popover>;
   calendarProps?: React.ComponentProps<typeof Calendar>;
@@ -175,10 +180,13 @@ export const DatePicker = ({
   minimal,
   size = 'normal',
   pill,
+  intent,
+  customTheme,
   inputProps,
   popoverTriggerProps,
   popoverProps,
   calendarProps,
+  timeInputProps,
   ...props
 }: IDatePickerProps) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -186,6 +194,7 @@ export const DatePicker = ({
     if (!value) return undefined;
     return new Time(value?.hour, value?.minute, value?.second, value?.millisecond);
   });
+  const theme = useReqoreTheme('main', customTheme, intent);
 
   return (
     <StyledRADatePicker
@@ -209,10 +218,17 @@ export const DatePicker = ({
         _size={size}
         pill={pill}
         as={StyledGroup}
+        theme={theme}
         {...inputProps}
       >
         <StyledDateInput>{(segment) => <StyledDateSegment segment={segment} />}</StyledDateInput>
-        <ReqoreButton size='small' as={Button} icon={'Calendar2Fill'} {...popoverTriggerProps} />
+        <ReqoreButton
+          customTheme={theme}
+          size='small'
+          as={Button}
+          icon={'Calendar2Fill'}
+          {...popoverTriggerProps}
+        />
       </StyledInput>
       <Popover {...popoverProps}>
         <Dialog>
@@ -222,14 +238,26 @@ export const DatePicker = ({
                 <StyledCalendarMessage>
                   <ReqoreControlGroup fluid vertical>
                     <header>
-                      <ReqoreButton as={Button} slot='previous' icon='ArrowLeftFill' />
+                      <ReqoreButton
+                        customTheme={theme}
+                        as={Button}
+                        slot='previous'
+                        icon='ArrowLeftFill'
+                      />
                       <Heading />
-                      <ReqoreButton as={Button} slot='next' icon='ArrowRightFill' />
+                      <ReqoreButton
+                        customTheme={theme}
+                        as={Button}
+                        slot='next'
+                        icon='ArrowRightFill'
+                      />
                     </header>
-                    <CalendarGrid>{(date) => <StyledCalendarCell date={date} />}</CalendarGrid>
+                    <CalendarGrid>
+                      {(date) => <StyledCalendarCell theme={theme} date={date} />}
+                    </CalendarGrid>
                     <ReqoreControlGroup vertical>
                       <div>
-                        <ReqoreLabel label='Time' minimal color='transparent' />
+                        <ReqoreLabel customTheme={theme} label='Time' minimal color='transparent' />
                       </div>
                       <div>
                         <StyledTimeField
@@ -249,6 +277,8 @@ export const DatePicker = ({
                             minimal={minimal}
                             _size={size}
                             pill={pill}
+                            theme={theme}
+                            {...timeInputProps}
                           >
                             <StyledDateInput>
                               {(segment) => <StyledDateSegment segment={segment} />}

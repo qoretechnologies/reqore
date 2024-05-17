@@ -1,8 +1,10 @@
 import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
+import ReqoreControlGroup from '../../components/ControlGroup';
 import { DatePicker } from '../../components/DatePicker';
+import { DEFAULT_INTENTS, TReqoreIntent } from '../../constants/theme';
 import { StoryMeta } from '../utils';
-import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
+import { FlatArg, IntentArg, MinimalArg, SizeArg } from '../utils/args';
 
 const meta = {
   title: 'Form/DatePicker/Stories',
@@ -11,7 +13,7 @@ const meta = {
     ...MinimalArg,
     ...FlatArg,
     ...SizeArg,
-    ...IconArg('icon', 'Icon'),
+    ...IntentArg,
   },
   args: {
     fluid: false,
@@ -34,3 +36,20 @@ type Story = StoryObj<typeof meta>;
 
 export default meta;
 export const Default: Story = {};
+export const WithIntent: Story = {
+  render(args, ctx) {
+    return (
+      <ReqoreControlGroup gapSize='big' vertical>
+        {Object.keys(DEFAULT_INTENTS).map((intent) =>
+          meta.render({ ...args, intent: intent as TReqoreIntent }, ctx)
+        )}
+      </ReqoreControlGroup>
+    );
+  },
+};
+export const Minimal: Story = {
+  args: { minimal: true },
+};
+export const Pill: Story = {
+  args: { pill: true },
+};
