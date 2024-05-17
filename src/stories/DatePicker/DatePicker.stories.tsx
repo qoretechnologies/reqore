@@ -1,4 +1,3 @@
-import { CalendarDateTime, getLocalTimeZone } from '@internationalized/date';
 import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { DatePicker } from '../../components/DatePicker';
@@ -15,13 +14,20 @@ const meta = {
     ...IconArg('icon', 'Icon'),
   },
   args: {
-    icon: 'SearchLine',
-    label: 'Search',
+    fluid: false,
   },
   render(args) {
-    const [value, setValue] = useState<CalendarDateTime>();
-    console.log(new Date(value ? value?.toDate(getLocalTimeZone()) : new Date()).toISOString());
-    return <DatePicker {...args} value={value} onChange={setValue} />;
+    const [value, setValue] = useState<Date>(new Date());
+    return (
+      <DatePicker
+        {...args}
+        value={value}
+        onChange={(v) => {
+          setValue(v);
+          args.onChange?.(v);
+        }}
+      />
+    );
   },
 } as StoryMeta<typeof DatePicker>;
 type Story = StoryObj<typeof meta>;

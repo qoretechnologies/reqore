@@ -1,5 +1,10 @@
-import { CalendarDateTime, Time, toCalendarDateTime } from '@internationalized/date';
-import { useState } from 'react';
+import {
+  CalendarDateTime,
+  getLocalTimeZone,
+  Time,
+  toCalendarDateTime,
+} from '@internationalized/date';
+import React, { useMemo, useState } from 'react';
 import {
   Button,
   Calendar,
@@ -16,68 +21,44 @@ import {
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
-import ReqoreButton from '../Button';
-import { StyledInput, StyledInputWrapper } from '../Input';
+import { TSizes } from '../../constants/sizes';
+import { changeLightness } from '../../helpers/colors';
+import ReqoreButton, { IReqoreButtonProps } from '../Button';
+import ReqoreControlGroup from '../ControlGroup';
+import { IReqoreTextEffectProps } from '../Effect';
+import { StyledInput } from '../Input';
 import { StyledPopoverContent, StyledPopoverWrapper } from '../InternalPopover';
+import { ReqoreLabel } from '../Label';
 import ReqoreMessage from '../Message';
 
-const StyledWrapper = styled.div`
-  .react-aria-DatePicker {
-    color: ${(props) => getReadableColor(props.theme, undefined, undefined, true)};
-    .react-aria-Group {
-      display: flex;
-      width: fit-content;
-      align-items: center;
-    }
-
-    .react-aria-Button {
-      background: ${(props) => changeLightness(props.theme.main, 0.2)};
-      color: ${(props) => changeLightness(props.theme.main, 0.5)};
-      border: 2px solid ${(props) => changeLightness(props.theme.main, 0.2)};
-      forced-color-adjust: none;
-      border-radius: 4px;
-      border: none;
-      margin-left: -1.929rem;
-      width: 1.429rem;
-      height: 1.429rem;
-      padding: 0;
-      font-size: 0.857rem;
-      box-sizing: content-box;
-
-      &[data-pressed] {
-        box-shadow: none;
-        background: ${(props) => changeLightness(props.theme.main, 0.2)};
-      }
-    }
-    .react-aria-DateInput {
-      display: flex;
-      align-items: center;
-    }
-    .react-aria-DateSegment {
-      padding: 2px;
-      &:focus {
-        background-color: ${(props) => changeLightness(props.theme.main, 0.1)};
-        outline: none;
-        border-radius: 4px;
-      }
-    }
+const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
+  &[data-fluid='false'] {
+    width: fit-content;
   }
-
-  .react-aria-Popover[data-trigger='DatePicker'] {
-    max-width: unset;
-  }
-
-  ${StyledInput} {
-    display: flex;
-    padding: 4px 8px;
-    border-radius: 4px;
-    min-width: 280px;
-    justify-content: space-between;
+  .react-aria-DateSegment {
   }
 `;
+const StyledDateSegment: typeof DateSegment = styled(DateSegment)`
+  padding: 2px;
 
-const StyledCalendarMessage = styled(ReqoreMessage)`
+  &:focus {
+    background-color: ${(props) => changeLightness(props.theme.main, 0.1)};
+    outline: none;
+    border-radius: 4px;
+  }
+`;
+const StyledDateInput: typeof DateInput = styled(DateInput)`
+  display: flex;
+  align-items: center;
+`;
+const StyledGroup: typeof Group = styled(Group)`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-grow: 1;
+`;
+const StyledCalendarMessage: typeof ReqoreMessage = styled(ReqoreMessage)`
   width: 300px;
 
   header {
@@ -141,7 +122,6 @@ const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
 `;
 const StyledTimeField: typeof TimeField = styled(TimeField)`
   display: flex;
-  margin-top: 12px;
 
   .react-aria-DateSegment {
     padding: 0 2px;
@@ -151,80 +131,139 @@ const StyledTimeField: typeof TimeField = styled(TimeField)`
       border-radius: 4px;
     }
   }
-  ${StyledInput} {
-    display: flex;
-    padding: 2px 0;
-    border-radius: 4px;
-    justify-content: space-between;
-  }
 `;
-const toDate = (date: Date) =>
-  new CalendarDateTime(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    date.getHours(),
-    date.getMinutes(),
-    date.getSeconds(),
-    date.getMilliseconds()
-  );
-export const DatePicker = ({ value, onChange, ...props }: DatePickerProps<CalendarDateTime>) => {
-  const [time, setTime] = useState<Time>(
-    () => new Time(value?.hour, value?.minute, value?.second, value?.millisecond)
-  );
+
+// utility to convert date to calendardatetime because datepicker can't use Date
+const toDate = (date?: Date) => {
+  if (date) {
+    return new CalendarDateTime(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      date.getSeconds(),
+      date.getMilliseconds()
+    );
+  }
+  return undefined;
+};
+
+export interface IDatePickerProps
+  extends Omit<DatePickerProps<CalendarDateTime>, 'value' | 'onChange' | 'defaultValue'> {
+  value: Date;
+  onChange(value: Date): void;
+
+  size?: TSizes;
+  fluid?: boolean;
+  rounded?: boolean;
+  pill?: boolean;
+  minimal?: boolean;
+  flat?: boolean;
+
+  inputProps?: IReqoreTextEffectProps;
+  popoverTriggerProps?: IReqoreButtonProps;
+  popoverProps?: React.ComponentProps<typeof Popover>;
+  calendarProps?: React.ComponentProps<typeof Calendar>;
+}
+export const DatePicker = ({
+  value: _value,
+  onChange,
+  fluid = true,
+  flat,
+  rounded,
+  minimal,
+  size = 'normal',
+  pill,
+  inputProps,
+  popoverTriggerProps,
+  popoverProps,
+  calendarProps,
+  ...props
+}: IDatePickerProps) => {
+  const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
+  const [time, setTime] = useState<Time>(() => {
+    if (!value) return undefined;
+    return new Time(value?.hour, value?.minute, value?.second, value?.millisecond);
+  });
+
   return (
-    <StyledWrapper>
-      <RADatePicker
-        value={value}
-        onChange={(value) => {
-          onChange?.(value);
-          setTime(new Time(value?.hour, value.minute, value.second, value.millisecond));
-        }}
-        granularity='minute'
-        hideTimeZone
-        shouldForceLeadingZeros
-        {...props}
+    <StyledRADatePicker
+      value={value}
+      onChange={(value) => {
+        onChange?.(value ? value.toDate(getLocalTimeZone()) : null);
+        setTime(new Time(value?.hour, value.minute, value.second, value.millisecond));
+      }}
+      granularity='minute'
+      hideTimeZone
+      shouldForceLeadingZeros
+      hourCycle={24}
+      data-fluid={fluid}
+      {...props}
+    >
+      <StyledInput
+        fluid={fluid}
+        flat={flat}
+        rounded={rounded}
+        minimal={minimal}
+        _size={size}
+        pill={pill}
+        as={StyledGroup}
+        {...inputProps}
       >
-        <StyledInputWrapper fluid>
-          <Group>
-            <StyledInput>
-              <DateInput>{(segment) => <DateSegment segment={segment} />}</DateInput>
-              <ReqoreButton as={Button} icon={'Calendar2Fill'} />
-            </StyledInput>
-          </Group>
-          <Popover>
-            <Dialog>
-              <Calendar>
-                <StyledPopoverWrapper>
-                  <StyledPopoverContent>
-                    <StyledCalendarMessage>
-                      <header>
-                        <ReqoreButton as={Button} slot='previous' icon='ArrowLeftFill' />
-                        <Heading />
-                        <ReqoreButton as={Button} slot='previous' icon='ArrowRightFill' />
-                      </header>
-                      <CalendarGrid>{(date) => <StyledCalendarCell date={date} />}</CalendarGrid>
-                      <StyledTimeField
-                        value={time}
-                        onChange={(time) => {
-                          if (!time) return;
-                          setTime(time);
-                          onChange?.(toCalendarDateTime(value ?? toDate(new Date()), time));
-                        }}
-                        granularity={'minute'}
-                      >
-                        <StyledInput>
-                          <DateInput>{(segment) => <DateSegment segment={segment} />}</DateInput>
-                        </StyledInput>
-                      </StyledTimeField>
-                    </StyledCalendarMessage>
-                  </StyledPopoverContent>
-                </StyledPopoverWrapper>
-              </Calendar>
-            </Dialog>
-          </Popover>
-        </StyledInputWrapper>
-      </RADatePicker>
-    </StyledWrapper>
+        <StyledDateInput>{(segment) => <StyledDateSegment segment={segment} />}</StyledDateInput>
+        <ReqoreButton size='small' as={Button} icon={'Calendar2Fill'} {...popoverTriggerProps} />
+      </StyledInput>
+      <Popover {...popoverProps}>
+        <Dialog>
+          <Calendar {...calendarProps}>
+            <StyledPopoverWrapper>
+              <StyledPopoverContent>
+                <StyledCalendarMessage>
+                  <ReqoreControlGroup fluid vertical>
+                    <header>
+                      <ReqoreButton as={Button} slot='previous' icon='ArrowLeftFill' />
+                      <Heading />
+                      <ReqoreButton as={Button} slot='next' icon='ArrowRightFill' />
+                    </header>
+                    <CalendarGrid>{(date) => <StyledCalendarCell date={date} />}</CalendarGrid>
+                    <ReqoreControlGroup vertical>
+                      <div>
+                        <ReqoreLabel label='Time' minimal color='transparent' />
+                      </div>
+                      <div>
+                        <StyledTimeField
+                          shouldForceLeadingZeros
+                          value={time}
+                          onChange={(time) => {
+                            if (!time) return;
+                            setTime(time);
+                            onChange?.(toCalendarDateTime(value, time).toDate(getLocalTimeZone()));
+                          }}
+                          granularity={'minute'}
+                        >
+                          <StyledInput
+                            fluid={fluid}
+                            flat={flat}
+                            rounded={rounded}
+                            minimal={minimal}
+                            _size={size}
+                            pill={pill}
+                          >
+                            <StyledDateInput>
+                              {(segment) => <StyledDateSegment segment={segment} />}
+                            </StyledDateInput>
+                          </StyledInput>
+                        </StyledTimeField>
+                      </div>
+                    </ReqoreControlGroup>
+                  </ReqoreControlGroup>
+                </StyledCalendarMessage>
+              </StyledPopoverContent>
+            </StyledPopoverWrapper>
+          </Calendar>
+        </Dialog>
+      </Popover>
+    </StyledRADatePicker>
   );
 };
