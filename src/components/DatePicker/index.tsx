@@ -1,10 +1,12 @@
 import {
-  CalendarDateTime,
   getLocalTimeZone,
+  parseAbsoluteToLocal,
   Time,
   toCalendarDateTime,
+  toZoned,
+  ZonedDateTime,
 } from '@internationalized/date';
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Calendar,
@@ -34,10 +36,11 @@ import { StyledPopoverContent, StyledPopoverWrapper } from '../InternalPopover';
 import { ReqoreLabel } from '../Label';
 import ReqoreMessage from '../Message';
 
-export interface IDatePickerProps
-  extends Omit<DatePickerProps<CalendarDateTime>, 'value' | 'onChange' | 'defaultValue'> {
-  value: Date;
-  onChange(value: Date): void;
+type TDateValue = string | Date | null;
+export interface IDatePickerProps<T extends TDateValue>
+  extends Omit<DatePickerProps<ZonedDateTime>, 'value' | 'onChange' | 'defaultValue'> {
+  value: T;
+  onChange(value: T): void;
 
   size?: TSizes;
   fluid?: boolean;
@@ -143,23 +146,15 @@ const StyledTimeField: typeof TimeField = styled(TimeField)`
   }
 `;
 
-// utility to convert date to calendardatetime because datepicker can't use Date
-const toDate = (date?: Date) => {
+// utility to convert date to ZonedDateTime because datepicker can't use Date
+const toDate = (date?: Date | string) => {
   if (date) {
-    return new CalendarDateTime(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate(),
-      date.getHours(),
-      date.getMinutes(),
-      date.getSeconds(),
-      date.getMilliseconds()
-    );
+    return parseAbsoluteToLocal(typeof date === 'string' ? date : date.toISOString());
   }
   return undefined;
 };
 
-export const DatePicker = ({
+export const DatePicker = <T extends TDateValue>({
   value: _value,
   onChange,
   fluid = true,
@@ -183,22 +178,51 @@ export const DatePicker = ({
   isClearable = true,
   onClearClick,
   ...props
-}: IDatePickerProps) => {
+}: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
+  // save time in separate state because date can be cleared and equals to null
   const [time, setTime] = useState<Time>(() => {
     if (!value) return undefined;
-    return new Time(value?.hour, value?.minute, value?.second, value?.millisecond);
+    return new Time(
+      value?.hour ?? 0,
+      value?.minute ?? 0,
+      value?.second ?? 0,
+      value?.millisecond ?? 0
+    );
   });
   const theme = useReqoreTheme('main', customTheme, intent);
+  // use ref to save value type since datepicker can have null values
+  const isStringRef = useRef(typeof _value === 'string');
+  useLayoutEffect(() => {
+    if (value) isStringRef.current = typeof _value === 'string';
+  });
 
-  const onDateChange: DatePickerProps<CalendarDateTime>['onChange'] = (value) => {
-    onChange?.(value ? value.toDate(getLocalTimeZone()) : null);
-    setTime(new Time(value?.hour, value.minute, value.second, value.millisecond));
+  const onDateChange: DatePickerProps<ZonedDateTime>['onChange'] = (value) => {
+    let date: Date;
+    // if previous value is null apply saved time state
+    if (!_value && time) {
+      date = toZoned(toCalendarDateTime(value, time), getLocalTimeZone()).toDate();
+    } else {
+      // set date and time from changed value
+      date = value ? value.toDate() : null;
+      if (date) setTime(new Time(value?.hour, value?.minute, value?.second, value?.millisecond));
+    }
+
+    onChange?.((isStringRef.current ? date?.toISOString() : date) as T);
   };
   const onTimeChange = (time: Time | null) => {
     if (!time) return;
+
     setTime(time);
-    onChange?.(toCalendarDateTime(value, time).toDate(getLocalTimeZone()));
+    if (value) {
+      const date = toZoned(toCalendarDateTime(value, time), getLocalTimeZone());
+      onDateChange?.(date);
+    }
+  };
+  const onClear = () => {
+    if (value) onChange(null);
+    if (time) setTime(new Time(0, 0, 0, 0));
+    onClearClick?.();
   };
 
   return (
@@ -210,6 +234,7 @@ export const DatePicker = ({
       shouldForceLeadingZeros={shouldForceLeadingZeros}
       hourCycle={hourCycle}
       data-fluid={fluid}
+      aria-label='Date'
       {...props}
     >
       <StyledInputWrapper fluid={fluid} rounded={rounded} _size={size} pill={pill}>
@@ -230,11 +255,7 @@ export const DatePicker = ({
             <ReqoreInputClearButton
               customTheme={theme}
               enabled={isClearable && !props.isReadOnly && !props?.isDisabled && !!onChange}
-              onClick={() => {
-                onDateChange(null);
-                onTimeChange(null);
-                onClearClick?.();
-              }}
+              onClick={onClear}
               size={size}
               show={true}
             />
@@ -293,6 +314,7 @@ export const DatePicker = ({
                           hideTimeZone={hideTimeZone}
                           shouldForceLeadingZeros={shouldForceLeadingZeros}
                           hourCycle={hourCycle}
+                          aria-label='Time'
                           {...timeFieldProps}
                         >
                           <StyledInput

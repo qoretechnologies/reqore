@@ -19,14 +19,14 @@ const meta = {
     fluid: false,
   },
   render(args) {
-    const [value, setValue] = useState<Date>(new Date());
+    const [value, setValue] = useState<Date | string>(new Date());
     return (
       <DatePicker
         {...args}
         value={value}
         onChange={(v) => {
+          console.log(v);
           setValue(v);
-          args.onChange?.(v);
         }}
       />
     );
