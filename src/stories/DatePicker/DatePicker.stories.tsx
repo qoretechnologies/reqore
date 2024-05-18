@@ -17,19 +17,11 @@ const meta = {
   },
   args: {
     fluid: false,
+    value: new Date(),
   },
   render(args) {
-    const [value, setValue] = useState<Date | string>(new Date());
-    return (
-      <DatePicker
-        {...args}
-        value={value}
-        onChange={(v) => {
-          console.log(v);
-          setValue(v);
-        }}
-      />
-    );
+    const [value, setValue] = useState<Date | string>(args.value);
+    return <DatePicker {...args} value={value} onChange={setValue} />;
   },
 } as StoryMeta<typeof DatePicker>;
 type Story = StoryObj<typeof meta>;
@@ -39,6 +31,16 @@ export const Default: Story = {};
 export const WithAM_PM: Story = {
   args: {
     hourCycle: 12,
+  },
+};
+export const WithoutDefaultValue: Story = {
+  args: {
+    value: null,
+  },
+};
+export const Inline: Story = {
+  args: {
+    inline: true,
   },
 };
 export const WithoutTimePicker: Story = {
@@ -62,4 +64,9 @@ export const Minimal: Story = {
 };
 export const Pill: Story = {
   args: { pill: true },
+};
+export const WithTooltip: Story = {
+  args: {
+    tooltip: `Tooltip content`,
+  },
 };

@@ -27,13 +27,15 @@ import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { useTooltip } from '../../hooks/useTooltip';
+import { TReqoreTooltipProp } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
 import { StyledInput, StyledInputWrapper } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 import { StyledPopoverContent, StyledPopoverWrapper } from '../InternalPopover';
-import { ReqoreLabel } from '../Label';
+import { IReqoreLabelProps, ReqoreLabel } from '../Label';
 import ReqoreMessage from '../Message';
 
 type TDateValue = string | Date | null;
@@ -52,12 +54,15 @@ export interface IDatePickerProps<T extends TDateValue>
   intent?: TReqoreIntent;
   isClearable?: boolean;
   onClearClick?(): void;
+  tooltip?: TReqoreTooltipProp;
+  inline?: boolean;
 
   inputProps?: IReqoreTextEffectProps;
   timeInputProps?: IReqoreTextEffectProps;
   popoverTriggerProps?: IReqoreButtonProps;
   popoverProps?: React.ComponentProps<typeof Popover>;
   calendarProps?: React.ComponentProps<typeof Calendar>;
+  timeLabelProps?: IReqoreLabelProps;
   timeFieldProps?: React.ComponentProps<typeof TimeField<Time>>;
 }
 
@@ -165,18 +170,21 @@ export const DatePicker = <T extends TDateValue>({
   pill,
   intent,
   customTheme,
-  inputProps,
-  popoverTriggerProps,
-  popoverProps,
-  calendarProps,
-  timeInputProps,
-  timeFieldProps,
   granularity = 'minute',
   hourCycle = 24,
   hideTimeZone = true,
   shouldForceLeadingZeros = true,
   isClearable = true,
   onClearClick,
+  inline,
+  tooltip,
+  inputProps,
+  popoverTriggerProps,
+  popoverProps,
+  calendarProps,
+  timeInputProps,
+  timeFieldProps,
+  timeLabelProps,
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -191,6 +199,9 @@ export const DatePicker = <T extends TDateValue>({
     );
   });
   const theme = useReqoreTheme('main', customTheme, intent);
+  const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
+  useTooltip(containerRef, tooltip);
+
   // use ref to save value type since datepicker can have null values
   const isStringRef = useRef(typeof _value === 'string');
   useLayoutEffect(() => {
@@ -207,7 +218,6 @@ export const DatePicker = <T extends TDateValue>({
       date = value ? value.toDate() : null;
       if (date) setTime(new Time(value?.hour, value?.minute, value?.second, value?.millisecond));
     }
-
     onChange?.((isStringRef.current ? date?.toISOString() : date) as T);
   };
   const onTimeChange = (time: Time | null) => {
@@ -235,6 +245,7 @@ export const DatePicker = <T extends TDateValue>({
       hourCycle={hourCycle}
       data-fluid={fluid}
       aria-label='Date'
+      ref={(node) => setContainerRef(node)}
       {...props}
     >
       <StyledInputWrapper fluid={fluid} rounded={rounded} _size={size} pill={pill}>
@@ -252,20 +263,24 @@ export const DatePicker = <T extends TDateValue>({
           <StyledDateInput>{(segment) => <StyledDateSegment segment={segment} />}</StyledDateInput>
 
           <ReqoreControlGroup gapSize='tiny'>
-            <ReqoreInputClearButton
-              customTheme={theme}
-              enabled={isClearable && !props.isReadOnly && !props?.isDisabled && !!onChange}
-              onClick={onClear}
-              size={size}
-              show={true}
-            />
-            <ReqoreButton
-              customTheme={theme}
-              size='small'
-              as={Button}
-              icon={'Calendar2Fill'}
-              {...popoverTriggerProps}
-            />
+            {value && (
+              <ReqoreInputClearButton
+                customTheme={theme}
+                enabled={isClearable && !props.isReadOnly && !props?.isDisabled && !!onChange}
+                onClick={onClear}
+                size={size}
+                show={true}
+              />
+            )}
+            {!inline && (
+              <ReqoreButton
+                customTheme={theme}
+                size='small'
+                as={Button}
+                icon={'Calendar2Fill'}
+                {...popoverTriggerProps}
+              />
+            )}
           </ReqoreControlGroup>
         </StyledInput>
       </StyledInputWrapper>
@@ -305,6 +320,8 @@ export const DatePicker = <T extends TDateValue>({
                             label='Time'
                             minimal
                             color='transparent'
+                            intent={intent}
+                            {...timeLabelProps}
                           />
                         </div>
                         <StyledTimeField
