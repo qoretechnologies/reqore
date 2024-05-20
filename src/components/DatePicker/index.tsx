@@ -18,9 +18,11 @@ import {
   DateSegment,
   Dialog,
   Group,
-  Heading,
+  HeadingContext,
+  HeadingProps,
   Popover,
   TimeField,
+  useContextProps,
 } from 'react-aria-components';
 import styled from 'styled-components';
 import { TSizes } from '../../constants/sizes';
@@ -32,6 +34,7 @@ import { TReqoreTooltipProp } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
+import { IReqoreHeadingProps, ReqoreHeading } from '../Header';
 import { StyledInput, StyledInputWrapper } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 import { StyledPopoverContent, StyledPopoverWrapper } from '../InternalPopover';
@@ -64,6 +67,7 @@ export interface IDatePickerProps<T extends TDateValue>
   calendarProps?: React.ComponentProps<typeof Calendar>;
   timeLabelProps?: IReqoreLabelProps;
   timeFieldProps?: React.ComponentProps<typeof TimeField<Time>>;
+  headingProps: IReqoreHeadingProps;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
@@ -105,10 +109,6 @@ const StyledCalendarMessage: typeof ReqoreMessage = styled(ReqoreMessage)`
     align-items: center;
     gap: 20px;
     padding-bottom: 16px;
-  }
-  h2 {
-    font-size: 1.25rem;
-    margin: 0;
   }
   .react-aria-CalendarHeaderCell {
     padding-bottom: 12px;
@@ -185,6 +185,7 @@ export const DatePicker = <T extends TDateValue>({
   timeInputProps,
   timeFieldProps,
   timeLabelProps,
+  headingProps,
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -299,7 +300,7 @@ export const DatePicker = <T extends TDateValue>({
                         slot='previous'
                         icon='ArrowLeftFill'
                       />
-                      <Heading />
+                      <Heading headingProps={headingProps} />
                       <ReqoreButton
                         customTheme={theme}
                         as={Button}
@@ -361,3 +362,14 @@ export const DatePicker = <T extends TDateValue>({
     </StyledRADatePicker>
   );
 };
+
+const Heading = React.forwardRef(
+  (
+    props: HeadingProps & { headingProps?: IReqoreHeadingProps },
+    ref: React.ForwardedRef<HTMLHeadingElement>
+  ) => {
+    [props] = useContextProps(props, ref, HeadingContext);
+
+    return <ReqoreHeading size={3} {...props} {...props.headingProps} />;
+  }
+);
