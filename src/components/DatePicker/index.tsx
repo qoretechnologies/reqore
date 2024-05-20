@@ -24,6 +24,7 @@ import {
 import styled from 'styled-components';
 import { ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
+import { IPopoverControls } from '../../hooks/usePopover';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import {
@@ -58,6 +59,8 @@ export interface IDatePickerProps<T extends TDateValue>
   pill?: boolean;
   isClearable?: boolean;
   onClearClick?(): void;
+
+  closeOnSelect?: boolean;
 
   inputProps?: IReqoreTextEffectProps;
   timeInputProps?: IReqoreTextEffectProps;
@@ -150,6 +153,7 @@ export const DatePicker = <T extends TDateValue>({
   hideTimeZone = true,
   shouldForceLeadingZeros = true,
   onClearClick,
+  closeOnSelect = true,
   tooltip,
   inputProps,
   pickerProps,
@@ -169,8 +173,11 @@ export const DatePicker = <T extends TDateValue>({
     );
   });
   const theme = useReqoreTheme('main', customTheme, intent);
+  const popoverData = useRef({} as IPopoverControls);
   const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
   useTooltip(containerRef, tooltip);
+
+  const showTime = granularity === 'minute' || granularity === 'second' || granularity === 'hour';
 
   // use ref to save value type since datepicker can have null values
   const isStringRef = useRef(typeof _value === 'string');
@@ -189,6 +196,10 @@ export const DatePicker = <T extends TDateValue>({
       if (date) setTime(new Time(value?.hour, value?.minute, value?.second, value?.millisecond));
     }
     onChange?.((isStringRef.current ? date?.toISOString() : date) as T);
+
+    if (closeOnSelect && !showTime) {
+      popoverData.current?.close();
+    }
   };
   const onTimeChange = (time: Time | null) => {
     if (!time) return;
@@ -234,6 +245,7 @@ export const DatePicker = <T extends TDateValue>({
           icon: 'CalendarLine',
           ...inputProps,
         }}
+        passPopoverData={(data) => (popoverData.current = data)}
         isReqoreComponent
         noWrapper
         handler='click'
@@ -272,7 +284,7 @@ export const DatePicker = <T extends TDateValue>({
               <CalendarGrid>
                 {(date) => <StyledCalendarCell theme={theme} date={date} />}
               </CalendarGrid>
-              {(granularity === 'minute' || granularity === 'second' || granularity === 'hour') && (
+              {showTime && (
                 <ReqoreControlGroup fluid>
                   <StyledTimeField
                     value={time}
