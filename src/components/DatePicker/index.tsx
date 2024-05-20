@@ -15,54 +15,55 @@ import {
   DateInput,
   DatePickerProps,
   DateSegment,
-  Dialog,
-  Group,
-  Heading,
-  Popover,
+  HeadingContext,
+  HeadingProps,
   DatePicker as RADatePicker,
   TimeField,
+  useContextProps,
 } from 'react-aria-components';
 import styled from 'styled-components';
-import { ReqorePanel, ReqorePopover, ReqoreTag } from '../..';
-import { TSizes } from '../../constants/sizes';
-import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
+import { ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { TReqoreTooltipProp } from '../../types/global';
-import ReqoreButton, { IReqoreButtonProps } from '../Button';
+import { useTooltip } from '../../hooks/useTooltip';
+import {
+  IReqoreIntent,
+  IWithReqoreCustomTheme,
+  IWithReqoreFlat,
+  IWithReqoreFluid,
+  IWithReqoreMinimal,
+  IWithReqoreSize,
+  IWithReqoreTooltip,
+} from '../../types/global';
+import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
-import ReqoreInput, { StyledInput, StyledInputWrapper } from '../Input';
-import ReqoreInputClearButton from '../InputClearButton';
-import { StyledPopoverContent, StyledPopoverWrapper } from '../InternalPopover';
-import { IReqoreLabelProps, ReqoreLabel } from '../Label';
-import ReqoreMessage from '../Message';
+import { IReqoreHeadingProps } from '../Header';
+import ReqoreInput from '../Input';
+import { IReqorePanelProps } from '../Panel';
 
 type TDateValue = string | Date | null;
 export interface IDatePickerProps<T extends TDateValue>
-  extends Omit<DatePickerProps<ZonedDateTime>, 'value' | 'onChange' | 'defaultValue'> {
+  extends Omit<DatePickerProps<ZonedDateTime>, 'value' | 'onChange' | 'defaultValue'>,
+    IWithReqoreSize,
+    IWithReqoreTooltip,
+    IWithReqoreFlat,
+    IWithReqoreMinimal,
+    IWithReqoreFluid,
+    IWithReqoreCustomTheme,
+    IReqoreIntent {
   value: T;
   onChange(value: T): void;
 
-  size?: TSizes;
-  fluid?: boolean;
   rounded?: boolean;
   pill?: boolean;
-  minimal?: boolean;
-  flat?: boolean;
-  customTheme?: IReqoreCustomTheme;
-  intent?: TReqoreIntent;
   isClearable?: boolean;
   onClearClick?(): void;
-  tooltip?: TReqoreTooltipProp;
-  inline?: boolean;
 
   inputProps?: IReqoreTextEffectProps;
   timeInputProps?: IReqoreTextEffectProps;
-  popoverTriggerProps?: IReqoreButtonProps;
-  popoverProps?: React.ComponentProps<typeof Popover>;
+  pickerProps?: IReqorePanelProps;
   calendarProps?: React.ComponentProps<typeof Calendar>;
-  timeLabelProps?: IReqoreLabelProps;
   timeFieldProps?: React.ComponentProps<typeof TimeField<Time>>;
 }
 
@@ -85,36 +86,7 @@ const StyledDateInput: typeof DateInput = styled(DateInput)`
   display: flex;
   align-items: center;
 `;
-const StyledGroup: typeof Group = styled(Group)`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-grow: 1;
 
-  .reqore-clear-input-button {
-    position: static;
-  }
-`;
-const StyledCalendarMessage: typeof ReqoreMessage = styled(ReqoreMessage)`
-  width: 300px;
-
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    padding-bottom: 16px;
-  }
-  h2 {
-    font-size: 1.25rem;
-    margin: 0;
-  }
-  .react-aria-CalendarHeaderCell {
-    padding-bottom: 12px;
-    font-size: 14px;
-  }
-`;
 const StyledCalendarCell = styled(CalendarCell)`
   display: flex;
   justify-content: center;
@@ -146,9 +118,7 @@ const StyledCalendarCell = styled(CalendarCell)`
 `;
 const StyledTimeField: typeof TimeField = styled(TimeField)`
   display: flex;
-  ${StyledInput} {
-    height: auto;
-  }
+  flex: 1 auto;
 `;
 
 // utility to convert date to ZonedDateTime because datepicker can't use Date
@@ -158,6 +128,17 @@ const toDate = (date?: Date | string) => {
   }
   return undefined;
 };
+
+const Heading = React.forwardRef(
+  (
+    props: HeadingProps & { headingProps?: IReqoreHeadingProps },
+    ref: React.ForwardedRef<HTMLHeadingElement>
+  ) => {
+    [props] = useContextProps(props, ref, HeadingContext);
+
+    return props.children;
+  }
+);
 
 export const DatePicker = <T extends TDateValue>({
   value: _value,
@@ -176,15 +157,12 @@ export const DatePicker = <T extends TDateValue>({
   shouldForceLeadingZeros = true,
   isClearable = true,
   onClearClick,
-  inline,
   tooltip,
   inputProps,
-  popoverTriggerProps,
-  popoverProps,
+  pickerProps,
   calendarProps,
   timeInputProps,
   timeFieldProps,
-  timeLabelProps,
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -200,7 +178,7 @@ export const DatePicker = <T extends TDateValue>({
   });
   const theme = useReqoreTheme('main', customTheme, intent);
   const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
-  //useTooltip(containerRef, tooltip);
+  useTooltip(containerRef, tooltip);
 
   // use ref to save value type since datepicker can have null values
   const isStringRef = useRef(typeof _value === 'string');
@@ -208,8 +186,7 @@ export const DatePicker = <T extends TDateValue>({
     if (value) isStringRef.current = typeof _value === 'string';
   });
 
-  const onDateChange: DatePickerProps<ZonedDateTime>['onChange'] = (value) => {
-    console.log('value', value);
+  const handleDateChange: DatePickerProps<ZonedDateTime>['onChange'] = (value) => {
     let date: Date;
     // if previous value is null apply saved time state
     if (!_value && time) {
@@ -227,10 +204,10 @@ export const DatePicker = <T extends TDateValue>({
     setTime(time);
     if (value) {
       const date = toZoned(toCalendarDateTime(value, time), getLocalTimeZone());
-      onDateChange?.(date);
+      handleDateChange?.(date);
     }
   };
-  const onClear = () => {
+  const handleClearClick = () => {
     if (value) onChange(null);
     if (time) setTime(new Time(0, 0, 0, 0));
     onClearClick?.();
@@ -239,7 +216,7 @@ export const DatePicker = <T extends TDateValue>({
   return (
     <StyledRADatePicker
       value={value}
-      onChange={onDateChange}
+      onChange={handleDateChange}
       granularity={granularity}
       hideTimeZone={hideTimeZone}
       shouldForceLeadingZeros={shouldForceLeadingZeros}
@@ -253,7 +230,7 @@ export const DatePicker = <T extends TDateValue>({
         component={ReqoreInput}
         componentProps={{
           as: StyledDateInput,
-          onClearClick: onClear,
+          onClearClick: handleClearClick,
           fluid,
           value,
           rounded,
@@ -262,19 +239,23 @@ export const DatePicker = <T extends TDateValue>({
           minimal,
           intent,
           flat,
+          icon: 'CalendarLine',
+          ...inputProps,
         }}
         isReqoreComponent
         noWrapper
         handler='click'
+        placement='bottom-start'
         noArrow
         content={
-          <Calendar onChange={(val) => onDateChange(val as ZonedDateTime)}>
+          <Calendar onChange={(val) => handleDateChange(val as ZonedDateTime)}>
             <ReqorePanel
               minimal
               size='small'
               responsiveTitle={false}
               intent={intent}
               label={<Heading />}
+              {...pickerProps}
               actions={[
                 {
                   as: ReqoreButton,
@@ -300,16 +281,7 @@ export const DatePicker = <T extends TDateValue>({
                 {(date) => <StyledCalendarCell theme={theme} date={date} />}
               </CalendarGrid>
               {(granularity === 'minute' || granularity === 'second' || granularity === 'hour') && (
-                <ReqoreControlGroup stack>
-                  <ReqoreTag
-                    customTheme={theme}
-                    label='Time'
-                    minimal
-                    color='transparent'
-                    intent={intent}
-                    {...timeLabelProps}
-                  />
-
+                <ReqoreControlGroup fluid>
                   <StyledTimeField
                     value={time}
                     onChange={onTimeChange}
@@ -321,13 +293,15 @@ export const DatePicker = <T extends TDateValue>({
                     {...timeFieldProps}
                   >
                     <ReqoreInput
-                      fluid={fluid}
+                      icon='TimeLine'
+                      fluid
                       as={StyledDateInput}
                       flat={flat}
                       rounded={rounded}
                       minimal={minimal}
                       size={size}
                       pill={pill}
+                      intent={intent}
                       theme={theme}
                       {...timeInputProps}
                     >
@@ -342,116 +316,6 @@ export const DatePicker = <T extends TDateValue>({
       >
         {(segment) => <StyledDateSegment segment={segment} />}
       </ReqorePopover>
-      <StyledInputWrapper fluid={fluid} rounded={rounded} _size={size} pill={pill}>
-        <StyledInput
-          fluid={fluid}
-          flat={flat}
-          rounded={rounded}
-          minimal={minimal}
-          _size={size}
-          pill={pill}
-          as={StyledGroup}
-          theme={theme}
-          {...inputProps}
-        >
-          <StyledDateInput>{(segment) => <StyledDateSegment segment={segment} />}</StyledDateInput>
-
-          <ReqoreControlGroup gapSize='tiny'>
-            {value && (
-              <ReqoreInputClearButton
-                customTheme={theme}
-                enabled={isClearable && !props.isReadOnly && !props?.isDisabled && !!onChange}
-                onClick={onClear}
-                size={size}
-                show={true}
-              />
-            )}
-            {!inline && (
-              <ReqoreButton
-                customTheme={theme}
-                size='small'
-                as={Button}
-                icon={'Calendar2Fill'}
-                {...popoverTriggerProps}
-              />
-            )}
-          </ReqoreControlGroup>
-        </StyledInput>
-      </StyledInputWrapper>
-
-      <Popover {...popoverProps}>
-        <Dialog>
-          <Calendar {...calendarProps}>
-            <StyledPopoverWrapper>
-              <StyledPopoverContent>
-                <StyledCalendarMessage>
-                  <ReqoreControlGroup fluid vertical>
-                    <header>
-                      <ReqoreButton
-                        customTheme={theme}
-                        as={Button}
-                        slot='previous'
-                        icon='ArrowLeftFill'
-                      />
-                      <Heading />
-                      <ReqoreButton
-                        customTheme={theme}
-                        as={Button}
-                        slot='next'
-                        icon='ArrowRightFill'
-                      />
-                    </header>
-                    <CalendarGrid>
-                      {(date) => <StyledCalendarCell theme={theme} date={date} />}
-                    </CalendarGrid>
-                    {(granularity === 'minute' ||
-                      granularity === 'second' ||
-                      granularity === 'hour') && (
-                      <ReqoreControlGroup vertical>
-                        <div>
-                          <ReqoreLabel
-                            customTheme={theme}
-                            label='Time'
-                            minimal
-                            color='transparent'
-                            intent={intent}
-                            {...timeLabelProps}
-                          />
-                        </div>
-                        <StyledTimeField
-                          value={time}
-                          onChange={onTimeChange}
-                          granularity={granularity}
-                          hideTimeZone={hideTimeZone}
-                          shouldForceLeadingZeros={shouldForceLeadingZeros}
-                          hourCycle={hourCycle}
-                          aria-label='Time'
-                          {...timeFieldProps}
-                        >
-                          <StyledInput
-                            fluid={fluid}
-                            flat={flat}
-                            rounded={rounded}
-                            minimal={minimal}
-                            _size={size}
-                            pill={pill}
-                            theme={theme}
-                            {...timeInputProps}
-                          >
-                            <StyledDateInput>
-                              {(segment) => <StyledDateSegment segment={segment} />}
-                            </StyledDateInput>
-                          </StyledInput>
-                        </StyledTimeField>
-                      </ReqoreControlGroup>
-                    )}
-                  </ReqoreControlGroup>
-                </StyledCalendarMessage>
-              </StyledPopoverContent>
-            </StyledPopoverWrapper>
-          </Calendar>
-        </Dialog>
-      </Popover>
     </StyledRADatePicker>
   );
 };

@@ -1,4 +1,4 @@
-import { omit, rest } from 'lodash';
+import { omit } from 'lodash';
 import { rgba } from 'polished';
 import React, { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
@@ -31,7 +31,7 @@ import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 
 export interface IReqoreInputProps
-  extends React.HTMLAttributes<HTMLInputElement>,
+  extends Omit<React.ComponentPropsWithoutRef<'input'>, 'size' | 'children'>,
     IReqoreDisabled,
     IReqoreReadOnly,
     IReqoreIntent,
@@ -64,7 +64,7 @@ export interface IReqoreInputProps
 
   pill?: boolean;
 
-  children?: React.ReactNode;
+  children?: React.ReactNode | ((props: any) => React.ReactNode);
   as?: string | React.ElementType;
 }
 
@@ -221,15 +221,6 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
 
     const hasLeftIcon = icon || leftIconProps?.image;
     const hasRightIcon = rightIcon || rightIconProps?.image;
-
-    console.log(
-      'clear button enabled',
-      !readOnly &&
-        !rest?.disabled &&
-        !!(onClearClick && (rest.as || rest.children || rest?.onChange))
-    );
-
-    console.log('clear button show', rest?.value && rest.value !== '' ? true : false);
 
     return (
       <StyledInputWrapper

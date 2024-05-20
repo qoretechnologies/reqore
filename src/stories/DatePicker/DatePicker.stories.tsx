@@ -38,11 +38,6 @@ export const WithoutDefaultValue: Story = {
     value: null,
   },
 };
-export const Inline: Story = {
-  args: {
-    inline: true,
-  },
-};
 export const WithoutTimePicker: Story = {
   args: {
     granularity: 'day',
