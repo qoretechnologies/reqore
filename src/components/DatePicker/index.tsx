@@ -263,8 +263,9 @@ export const DatePicker = <T extends TDateValue>({
             >
               <CalendarGrid>
                 {(date) => (
-                  <CalendarCell date={date}>
+                  <CalendarCell date={date} key={date.toString()}>
                     <ReqoreButton
+                      key={date.toString()}
                       customTheme={isSameDay(date, value) ? theme : { main: 'transparent' }}
                       label={date.day}
                       onClick={() => handleDateChange(toZoned(date, getLocalTimeZone()))}
