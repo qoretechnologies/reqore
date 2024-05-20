@@ -14,11 +14,11 @@ import {
   CalendarCell,
   CalendarGrid,
   DateInput,
+  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
   HeadingContext,
   HeadingProps,
-  DatePicker as RADatePicker,
   TimeField,
   useContextProps,
 } from 'react-aria-components';
@@ -266,16 +266,18 @@ export const DatePicker = <T extends TDateValue>({
                   <CalendarCell date={date} key={date.toString()}>
                     <ReqoreButton
                       key={date.toString()}
-                      customTheme={isSameDay(date, value) ? theme : { main: 'transparent' }}
+                      customTheme={
+                        value && isSameDay(date, value) ? theme : { main: 'transparent' }
+                      }
                       label={date.day}
                       onClick={() => handleDateChange(toZoned(date, getLocalTimeZone()))}
-                      active={isSameDay(date, value)}
+                      active={value && isSameDay(date, value)}
                       textAlign='center'
                       circle
                       minimal
                       flat
                       compact
-                      {...(isSameDay(date, value) ? pickerActiveDayProps : pickerDayProps)}
+                      {...(value && isSameDay(date, value) ? pickerActiveDayProps : pickerDayProps)}
                     />
                   </CalendarCell>
                 )}
