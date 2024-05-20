@@ -1,4 +1,5 @@
 import { StoryObj } from '@storybook/react';
+import { size } from 'lodash';
 import { useState } from 'react';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { DatePicker } from '../../components/DatePicker';
@@ -18,6 +19,9 @@ const meta = {
   args: {
     fluid: false,
     value: new Date(),
+    popoverProps: {
+      openOnMount: true,
+    },
   },
   render(args) {
     const [value, setValue] = useState<Date | string>(args.value);
@@ -44,14 +48,45 @@ export const WithoutTimePicker: Story = {
   },
 };
 export const WithIntent: Story = {
+  args: {
+    popoverProps: {
+      openOnMount: false,
+    },
+  },
   render(args, ctx) {
     return (
       <ReqoreControlGroup gapSize='big' vertical>
-        {Object.keys(DEFAULT_INTENTS).map((intent) =>
-          meta.render({ ...args, intent: intent as TReqoreIntent }, ctx)
-        )}
+        {Object.keys(DEFAULT_INTENTS)
+          .reverse()
+          .map((intent, index) =>
+            meta.render(
+              {
+                ...args,
+                intent: intent as TReqoreIntent,
+                pickerActiveDayProps: {
+                  intent: intent as TReqoreIntent,
+                },
+                popoverProps: {
+                  openOnMount: index === size(DEFAULT_INTENTS) - 1,
+                },
+              },
+              ctx
+            )
+          )}
       </ReqoreControlGroup>
     );
+  },
+};
+
+export const WithEffect: Story = {
+  args: {
+    pickerProps: {
+      contentEffect: {
+        gradient: {
+          colors: 'info',
+        },
+      },
+    },
   },
 };
 export const Minimal: Story = {

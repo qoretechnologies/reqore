@@ -14,11 +14,11 @@ import {
   CalendarCell,
   CalendarGrid,
   DateInput,
-  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
   HeadingContext,
   HeadingProps,
+  DatePicker as RADatePicker,
   TimeField,
   useContextProps,
 } from 'react-aria-components';
@@ -37,11 +37,12 @@ import {
   IWithReqoreSize,
   IWithReqoreTooltip,
 } from '../../types/global';
-import ReqoreButton from '../Button';
+import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
 import ReqoreInput from '../Input';
 import { IReqorePanelProps } from '../Panel';
+import { IReqorePopoverProps } from '../Popover';
 
 type TDateValue = string | Date | null;
 export interface IDatePickerProps<T extends TDateValue>
@@ -63,11 +64,14 @@ export interface IDatePickerProps<T extends TDateValue>
 
   closeOnSelect?: boolean;
 
+  popoverProps?: Partial<IReqorePopoverProps>;
   inputProps?: IReqoreTextEffectProps;
   timeInputProps?: IReqoreTextEffectProps;
   pickerProps?: IReqorePanelProps;
   calendarProps?: React.ComponentProps<typeof Calendar>;
   timeFieldProps?: React.ComponentProps<typeof TimeField<Time>>;
+  pickerDayProps?: IReqoreButtonProps;
+  pickerActiveDayProps?: IReqoreButtonProps;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
@@ -127,10 +131,13 @@ export const DatePicker = <T extends TDateValue>({
   onClearClick,
   closeOnSelect = true,
   tooltip,
+  popoverProps,
   inputProps,
   pickerProps,
   timeInputProps,
   timeFieldProps,
+  pickerActiveDayProps,
+  pickerDayProps,
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -223,6 +230,7 @@ export const DatePicker = <T extends TDateValue>({
         handler='click'
         placement='bottom-start'
         noArrow
+        {...popoverProps}
         content={
           <Calendar<ZonedDateTime> value={value} onChange={handleDateChange}>
             <ReqorePanel
@@ -257,13 +265,16 @@ export const DatePicker = <T extends TDateValue>({
                 {(date) => (
                   <CalendarCell date={date}>
                     <ReqoreButton
-                      customTheme={theme}
+                      customTheme={isSameDay(date, value) ? theme : { main: 'transparent' }}
                       label={date.day}
                       onClick={() => handleDateChange(toZoned(date, getLocalTimeZone()))}
                       active={isSameDay(date, value)}
                       textAlign='center'
-                      pill
+                      circle
+                      minimal
+                      flat
                       compact
+                      {...(isSameDay(date, value) ? pickerActiveDayProps : pickerDayProps)}
                     />
                   </CalendarCell>
                 )}

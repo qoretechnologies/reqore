@@ -95,6 +95,7 @@ export interface IReqoreButtonProps
   rounded?: boolean;
 
   pill?: boolean;
+  circle?: boolean;
 }
 
 export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
@@ -155,8 +156,12 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   flex-grow: ${({ grow }) => grow};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
-  border-radius: ${({ size, rounded, pill }) =>
-    rounded === false ? undefined : RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+  border-radius: ${({ size, rounded, pill, circle }) =>
+    rounded === false
+      ? undefined
+      : circle
+      ? 9999
+      : RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
   background-color: ${({ minimal, color }) => {
     if (minimal) {
