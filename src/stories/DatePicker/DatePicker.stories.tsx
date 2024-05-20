@@ -25,7 +25,17 @@ const meta = {
   },
   render(args) {
     const [value, setValue] = useState<Date | string>(args.value);
-    return <DatePicker {...args} value={value} onChange={setValue} />;
+    console.log('render');
+    return (
+      <DatePicker
+        {...args}
+        value={value}
+        onChange={(v) => {
+          console.log('onchange ....');
+          setValue(v);
+        }}
+      />
+    );
   },
 } as StoryMeta<typeof DatePicker>;
 type Story = StoryObj<typeof meta>;

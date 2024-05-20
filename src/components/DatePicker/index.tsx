@@ -36,6 +36,7 @@ import {
   IWithReqoreMinimal,
   IWithReqoreSize,
   IWithReqoreTooltip,
+  TReqoreTooltipProp,
 } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -107,10 +108,26 @@ const toDate = (date?: Date | string) => {
   return undefined;
 };
 
+const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
+  &:focus {
+    outline: none;
+  }
+`;
 const Heading = (props: HeadingProps) => {
   [props] = useContextProps(props, undefined, HeadingContext);
 
   return <>{props.children}</>;
+};
+const DatePickerTooltip = ({
+  targetElement,
+  tooltip,
+}: {
+  targetElement: HTMLElement | undefined;
+  tooltip?: TReqoreTooltipProp;
+}) => {
+  useTooltip(targetElement, tooltip);
+
+  return null;
 };
 
 export const DatePicker = <T extends TDateValue>({
@@ -154,10 +171,7 @@ export const DatePicker = <T extends TDateValue>({
   const theme = useReqoreTheme('main', customTheme, intent);
   const popoverData = useRef({} as IPopoverControls);
   const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
-  useTooltip(containerRef, tooltip);
-
   const showTime = granularity === 'minute' || granularity === 'second' || granularity === 'hour';
-
   // use ref to save value type since datepicker can have null values
   const isStringRef = useRef(typeof _value === 'string');
   useLayoutEffect(() => {
@@ -208,6 +222,7 @@ export const DatePicker = <T extends TDateValue>({
       ref={(node) => setContainerRef(node)}
       {...props}
     >
+      <DatePickerTooltip targetElement={containerRef} tooltip={tooltip} />
       <ReqorePopover
         component={ReqoreInput}
         componentProps={{
@@ -263,7 +278,7 @@ export const DatePicker = <T extends TDateValue>({
             >
               <CalendarGrid>
                 {(date) => (
-                  <CalendarCell date={date} key={date.toString()}>
+                  <StyledCalendarCell date={date} key={date.toString()}>
                     <ReqoreButton
                       key={date.toString()}
                       customTheme={
@@ -279,7 +294,7 @@ export const DatePicker = <T extends TDateValue>({
                       compact
                       {...(value && isSameDay(date, value) ? pickerActiveDayProps : pickerDayProps)}
                     />
-                  </CalendarCell>
+                  </StyledCalendarCell>
                 )}
               </CalendarGrid>
               {showTime && (
