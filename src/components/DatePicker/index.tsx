@@ -149,12 +149,10 @@ export const DatePicker = <T extends TDateValue>({
   hourCycle = 24,
   hideTimeZone = true,
   shouldForceLeadingZeros = true,
-  isClearable = true,
   onClearClick,
   tooltip,
   inputProps,
   pickerProps,
-  calendarProps,
   timeInputProps,
   timeFieldProps,
   ...props
