@@ -38,7 +38,6 @@ import {
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
-import { IReqoreHeadingProps } from '../Header';
 import ReqoreInput from '../Input';
 import { IReqorePanelProps } from '../Panel';
 
@@ -129,16 +128,11 @@ const toDate = (date?: Date | string) => {
   return undefined;
 };
 
-const Heading = React.forwardRef(
-  (
-    props: HeadingProps & { headingProps?: IReqoreHeadingProps },
-    ref: React.ForwardedRef<HTMLHeadingElement>
-  ) => {
-    [props] = useContextProps(props, ref, HeadingContext);
+const Heading = (props: HeadingProps) => {
+  [props] = useContextProps(props, undefined, HeadingContext);
 
-    return props.children;
-  }
-);
+  return <>{props.children}</>;
+};
 
 export const DatePicker = <T extends TDateValue>({
   value: _value,
