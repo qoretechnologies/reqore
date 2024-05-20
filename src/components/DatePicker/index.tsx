@@ -13,11 +13,11 @@ import {
   CalendarCell,
   CalendarGrid,
   DateInput,
+  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
   HeadingContext,
   HeadingProps,
-  DatePicker as RADatePicker,
   TimeField,
   useContextProps,
 } from 'react-aria-components';
@@ -240,7 +240,7 @@ export const DatePicker = <T extends TDateValue>({
         placement='bottom-start'
         noArrow
         content={
-          <Calendar onChange={(val) => handleDateChange(val as ZonedDateTime)}>
+          <Calendar<ZonedDateTime> value={value} onChange={handleDateChange}>
             <ReqorePanel
               minimal
               size='small'
