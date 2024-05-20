@@ -1,5 +1,6 @@
 import {
   getLocalTimeZone,
+  isSameDay,
   parseAbsoluteToLocal,
   Time,
   toCalendarDateTime,
@@ -86,35 +87,6 @@ const StyledDateInput: typeof DateInput = styled(DateInput)`
   align-items: center;
 `;
 
-const StyledCalendarCell = styled(CalendarCell)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  transition: all 0.2s ease-out;
-  font-size: 14px;
-  outline: none;
-  width: 32px;
-  height: 32px;
-
-  &[aria-disabled='true'] {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  &[data-selected='true'] {
-    background-color: ${(props) => changeLightness(props.theme.main, 0.2)};
-    border: 1px solid ${(props) => changeLightness(props.theme.main)};
-    font-weight: bold;
-    border-radius: 9999px;
-  }
-  &:not([aria-disabled='true']) {
-    cursor: pointer;
-    &:hover {
-      background-color: ${(props) => changeLightness(props.theme.main, 0.2)};
-    }
-  }
-`;
 const StyledTimeField: typeof TimeField = styled(TimeField)`
   display: flex;
   flex: 1 auto;
@@ -270,7 +242,19 @@ export const DatePicker = <T extends TDateValue>({
               ]}
             >
               <CalendarGrid>
-                {(date) => <StyledCalendarCell theme={theme} date={date} />}
+                {(date) => (
+                  <CalendarCell date={date}>
+                    <ReqoreButton
+                      customTheme={theme}
+                      label={date.day}
+                      onClick={() => handleDateChange(toZoned(date, getLocalTimeZone()))}
+                      active={isSameDay(date, value)}
+                      textAlign='center'
+                      pill
+                      compact
+                    />
+                  </CalendarCell>
+                )}
               </CalendarGrid>
               {(granularity === 'minute' || granularity === 'second' || granularity === 'hour') && (
                 <ReqoreControlGroup fluid>
