@@ -90,7 +90,7 @@ const StyledDateSegment: typeof DateSegment = styled(DateSegment)`
   }
 `;
 const StyledDateInput: typeof DateInput = styled(DateInput)`
-  display: flex;
+  display: inline-flex;
   align-items: center;
 `;
 

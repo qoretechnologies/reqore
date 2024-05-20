@@ -20,7 +20,7 @@ const meta = {
     fluid: false,
     value: new Date(),
     popoverProps: {
-      openOnMount: true,
+      openOnMount: process.env.NODE_ENV === 'production',
     },
   },
   render(args) {
