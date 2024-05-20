@@ -13,26 +13,26 @@ import {
   CalendarCell,
   CalendarGrid,
   DateInput,
-  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
   Dialog,
   Group,
   Heading,
   Popover,
+  DatePicker as RADatePicker,
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
+import { ReqorePanel, ReqorePopover, ReqoreTag } from '../..';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import { TReqoreTooltipProp } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
-import { StyledInput, StyledInputWrapper } from '../Input';
+import ReqoreInput, { StyledInput, StyledInputWrapper } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
 import { StyledPopoverContent, StyledPopoverWrapper } from '../InternalPopover';
 import { IReqoreLabelProps, ReqoreLabel } from '../Label';
@@ -200,7 +200,7 @@ export const DatePicker = <T extends TDateValue>({
   });
   const theme = useReqoreTheme('main', customTheme, intent);
   const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
-  useTooltip(containerRef, tooltip);
+  //useTooltip(containerRef, tooltip);
 
   // use ref to save value type since datepicker can have null values
   const isStringRef = useRef(typeof _value === 'string');
@@ -209,6 +209,7 @@ export const DatePicker = <T extends TDateValue>({
   });
 
   const onDateChange: DatePickerProps<ZonedDateTime>['onChange'] = (value) => {
+    console.log('value', value);
     let date: Date;
     // if previous value is null apply saved time state
     if (!_value && time) {
@@ -248,6 +249,99 @@ export const DatePicker = <T extends TDateValue>({
       ref={(node) => setContainerRef(node)}
       {...props}
     >
+      <ReqorePopover
+        component={ReqoreInput}
+        componentProps={{
+          as: StyledDateInput,
+          onClearClick: onClear,
+          fluid,
+          value,
+          rounded,
+          size,
+          pill,
+          minimal,
+          intent,
+          flat,
+        }}
+        isReqoreComponent
+        noWrapper
+        handler='click'
+        noArrow
+        content={
+          <Calendar onChange={(val) => onDateChange(val as ZonedDateTime)}>
+            <ReqorePanel
+              minimal
+              size='small'
+              responsiveTitle={false}
+              intent={intent}
+              label={<Heading />}
+              actions={[
+                {
+                  as: ReqoreButton,
+                  props: {
+                    as: Button,
+                    customTheme: theme,
+                    slot: 'previous',
+                    icon: 'ArrowLeftFill',
+                  },
+                },
+                {
+                  as: ReqoreButton,
+                  props: {
+                    as: Button,
+                    customTheme: theme,
+                    slot: 'next',
+                    icon: 'ArrowRightFill',
+                  },
+                },
+              ]}
+            >
+              <CalendarGrid>
+                {(date) => <StyledCalendarCell theme={theme} date={date} />}
+              </CalendarGrid>
+              {(granularity === 'minute' || granularity === 'second' || granularity === 'hour') && (
+                <ReqoreControlGroup stack>
+                  <ReqoreTag
+                    customTheme={theme}
+                    label='Time'
+                    minimal
+                    color='transparent'
+                    intent={intent}
+                    {...timeLabelProps}
+                  />
+
+                  <StyledTimeField
+                    value={time}
+                    onChange={onTimeChange}
+                    granularity={granularity}
+                    hideTimeZone={hideTimeZone}
+                    shouldForceLeadingZeros={shouldForceLeadingZeros}
+                    hourCycle={hourCycle}
+                    aria-label='Time'
+                    {...timeFieldProps}
+                  >
+                    <ReqoreInput
+                      fluid={fluid}
+                      as={StyledDateInput}
+                      flat={flat}
+                      rounded={rounded}
+                      minimal={minimal}
+                      size={size}
+                      pill={pill}
+                      theme={theme}
+                      {...timeInputProps}
+                    >
+                      {(segment) => <StyledDateSegment segment={segment} />}
+                    </ReqoreInput>
+                  </StyledTimeField>
+                </ReqoreControlGroup>
+              )}
+            </ReqorePanel>
+          </Calendar>
+        }
+      >
+        {(segment) => <StyledDateSegment segment={segment} />}
+      </ReqorePopover>
       <StyledInputWrapper fluid={fluid} rounded={rounded} _size={size} pill={pill}>
         <StyledInput
           fluid={fluid}

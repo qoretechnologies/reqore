@@ -1,4 +1,4 @@
-import { omit } from 'lodash';
+import { omit, rest } from 'lodash';
 import { rgba } from 'polished';
 import React, { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
@@ -63,6 +63,9 @@ export interface IReqoreInputProps
   rightIconProps?: IReqoreIconProps;
 
   pill?: boolean;
+
+  children?: React.ReactNode;
+  as?: string | React.ElementType;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -219,6 +222,15 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     const hasLeftIcon = icon || leftIconProps?.image;
     const hasRightIcon = rightIcon || rightIconProps?.image;
 
+    console.log(
+      'clear button enabled',
+      !readOnly &&
+        !rest?.disabled &&
+        !!(onClearClick && (rest.as || rest.children || rest?.onChange))
+    );
+
+    console.log('clear button show', rest?.value && rest.value !== '' ? true : false);
+
     return (
       <StyledInputWrapper
         className='reqore-control-wrapper'
@@ -242,13 +254,13 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           </StyledIconWrapper>
         )}
         <StyledInput
+          as='input'
           {...omit(rest, ['children'])}
           effect={{
             interactive: !rest?.disabled && !readOnly,
             ...rest?.effect,
           }}
           onChange={!readOnly && !rest?.disabled ? rest?.onChange : undefined}
-          as='input'
           ref={(ref) => setInputRef(ref)}
           theme={theme}
           _size={size}
@@ -257,13 +269,23 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           rounded={rounded}
           hasIcon={!!icon}
           hasRightIcon={!!rightIcon}
-          clearable={!rest?.disabled && !readOnly && !!(onClearClick && rest?.onChange)}
+          clearable={
+            !rest?.disabled &&
+            !readOnly &&
+            !!(onClearClick && (rest.as || rest.children || rest?.onChange))
+          }
           className={`${className || ''} reqore-control reqore-input`}
           readOnly={readOnly}
           pill={pill}
-        />
+        >
+          {rest?.children}
+        </StyledInput>
         <ReqoreInputClearButton
-          enabled={!readOnly && !rest?.disabled && !!(onClearClick && rest?.onChange)}
+          enabled={
+            !readOnly &&
+            !rest?.disabled &&
+            !!(onClearClick && (rest.as || rest.children || rest?.onChange))
+          }
           onClick={onClearClick}
           hasRightIcon={!!rightIcon}
           size={size}
