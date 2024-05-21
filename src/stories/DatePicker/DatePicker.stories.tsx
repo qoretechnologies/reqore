@@ -25,6 +25,7 @@ const meta = {
     },
     mockingDate: new Date(2024, 4, 10, 8, 0, 0),
   },
+
   args: {
     fluid: false,
     value: new Date(2024, 4, 10, 8, 0, 0),
@@ -226,7 +227,7 @@ export const ValueCanBeTyped: Story = {
     await expect(year).toHaveTextContent('2023');
     await expect(hour).toHaveTextContent('08');
     await expect(minute).toHaveTextContent('30');
-    await expect(args.onChange).toHaveBeenLastCalledWith('2023-05-15T07:30:00.000Z');
+    await expect(args.onChange).toHaveBeenLastCalledWith('2023-05-15T08:30:00.000Z');
   },
 };
 export const ValueCanBeCleared: Story = {
@@ -251,7 +252,7 @@ export const ValueCanBeCleared: Story = {
 export const ValueCanBeChosenFromPopover: Story = {
   args: {
     popoverProps: {},
-    value: '2024-05-10T07:00:00.000Z',
+    value: '2024-05-10T08:00:00.000Z',
   },
   async play({ canvasElement, args }) {
     const { month, year, day, hour, minute, input } = await getDateElements(canvasElement);
@@ -266,7 +267,7 @@ export const ValueCanBeChosenFromPopover: Story = {
     await expect(year).toHaveTextContent('2024');
     await expect(hour).toHaveTextContent('08');
     await expect(minute).toHaveTextContent('00');
-    await expect(args.onChange).toHaveBeenLastCalledWith('2024-06-25T07:00:00.000Z');
+    await expect(args.onChange).toHaveBeenLastCalledWith('2024-06-25T08:00:00.000Z');
   },
 };
 
@@ -306,6 +307,6 @@ export const TimeCanBeChangedFromPopover: Story = {
     await expect(hour).toHaveTextContent('10');
     await expect(minute).toHaveTextContent('15');
 
-    await expect(args.onChange).toHaveBeenLastCalledWith('2024-05-10T09:15:00.000Z');
+    await expect(args.onChange).toHaveBeenLastCalledWith('2024-05-10T10:15:00.000Z');
   },
 };
