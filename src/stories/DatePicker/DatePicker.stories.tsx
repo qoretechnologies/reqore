@@ -16,6 +16,11 @@ const meta = {
     ...SizeArg,
     ...IntentArg,
   },
+  parameters: {
+    chromatic: {
+      viewports: [1440],
+    },
+  },
   args: {
     fluid: false,
     value: new Date(),
@@ -25,13 +30,11 @@ const meta = {
   },
   render(args) {
     const [value, setValue] = useState<Date | string>(args.value);
-    console.log('render');
     return (
       <DatePicker
         {...args}
         value={value}
         onChange={(v) => {
-          console.log('onchange ....');
           setValue(v);
         }}
       />
