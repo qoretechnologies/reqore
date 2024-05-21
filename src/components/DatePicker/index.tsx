@@ -28,6 +28,7 @@ import { changeLightness } from '../../helpers/colors';
 import { IPopoverControls } from '../../hooks/usePopover';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
+import { DisabledElement } from '../../styles';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -109,6 +110,9 @@ const toDate = (date?: Date | string) => {
 };
 
 const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
+  &[data-disabled='true']:not([data-selected='true']) {
+    ${DisabledElement}
+  }
   &:focus {
     outline: none;
   }
@@ -277,25 +281,30 @@ export const DatePicker = <T extends TDateValue>({
               ]}
             >
               <CalendarGrid>
-                {(date) => (
-                  <StyledCalendarCell date={date} key={date.toString()}>
-                    <ReqoreButton
+                {(date) => {
+                  const isSelected = value && isSameDay(date, value);
+                  return (
+                    <StyledCalendarCell
+                      data-selected={isSelected}
+                      date={date}
                       key={date.toString()}
-                      customTheme={
-                        value && isSameDay(date, value) ? theme : { main: 'transparent' }
-                      }
-                      label={date.day}
-                      onClick={() => handleDateChange(toZoned(date, getLocalTimeZone()))}
-                      active={value && isSameDay(date, value)}
-                      textAlign='center'
-                      circle
-                      minimal
-                      flat
-                      compact
-                      {...(value && isSameDay(date, value) ? pickerActiveDayProps : pickerDayProps)}
-                    />
-                  </StyledCalendarCell>
-                )}
+                    >
+                      <ReqoreButton
+                        key={date.toString()}
+                        customTheme={isSelected ? theme : { main: 'transparent' }}
+                        label={date.day}
+                        onClick={() => handleDateChange(toZoned(date, getLocalTimeZone()))}
+                        active={isSelected}
+                        textAlign='center'
+                        circle
+                        minimal
+                        flat
+                        compact
+                        {...(isSelected ? pickerActiveDayProps : pickerDayProps)}
+                      />
+                    </StyledCalendarCell>
+                  );
+                }}
               </CalendarGrid>
               {showTime && (
                 <ReqoreControlGroup fluid>
