@@ -1,5 +1,6 @@
 import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
+import { fn } from '@storybook/test';
 import { userEvent, within } from '@storybook/testing-library';
 import { size } from 'lodash';
 import { useState } from 'react';
@@ -31,6 +32,8 @@ const meta = {
       openOnMount: process.env.NODE_ENV === 'production',
     },
     'aria-label': 'Datepicker',
+    onChange: fn(),
+    onClearClick: fn(),
   },
   render(args) {
     const [value, setValue] = useState<Date | string>(args.value);
@@ -40,6 +43,7 @@ const meta = {
         value={value}
         onChange={(v) => {
           setValue(v);
+          args.onChange(v);
         }}
       />
     );
@@ -47,16 +51,53 @@ const meta = {
 } as StoryMeta<typeof DatePicker>;
 type Story = StoryObj<typeof meta>;
 
+const getDateElements = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  const month = await canvas.findByLabelText('month, Datepicker');
+  const day = await canvas.findByLabelText('day, Datepicker');
+  const year = await canvas.findByLabelText('year, Datepicker');
+  const hour = await canvas.findByLabelText('hour, Datepicker');
+  const minute = await canvas.findByLabelText('minute, Datepicker');
+  const popover = await canvasElement.querySelector('reqore-popover-content');
+  const input = await canvasElement.querySelector('input');
+
+  return {
+    month,
+    day,
+    year,
+    hour,
+    minute,
+    popover,
+    input,
+    canvas,
+  };
+};
+const getPopoverElements = async (canvasElement: HTMLElement) => {
+  const popover = canvasElement.querySelector('.reqore-popover-content');
+  const popoverCanvas = within(popover as HTMLElement);
+  const previousMonth = canvasElement.querySelector('button[aria-label="Previous"]');
+  const nextMonth = canvasElement.querySelector('button[aria-label="Next"]');
+  const hourTimeField = popoverCanvas.getByLabelText('hour, Time');
+  const minuteTimeField = popoverCanvas.getByLabelText('minute, Time');
+  const headingCanvas = within(canvasElement.querySelector('.reqore-panel .reqore-panel-title'));
+
+  return {
+    popoverCanvas,
+    headingCanvas,
+    popover,
+    previousMonth,
+    nextMonth,
+    hourTimeField,
+    minuteTimeField,
+  };
+};
 export default meta;
 export const Default: Story = {
+  args: {
+    value: new Date(2024, 4, 10, 8, 0, 0),
+  },
   async play({ canvasElement }) {
-    const canvas = within(canvasElement);
-    const month = await canvas.findByLabelText('month, Datepicker');
-    const day = await canvas.findByLabelText('day, Datepicker');
-    const year = await canvas.findByLabelText('year, Datepicker');
-    const hour = await canvas.findByLabelText('hour, Datepicker');
-    const minute = await canvas.findByLabelText('minute, Datepicker');
-    const input = await canvasElement.querySelector('input');
+    const { month, year, day, hour, minute, input } = await getDateElements(canvasElement);
 
     await expect(month).toBeInTheDocument();
     await expect(day).toBeInTheDocument();
@@ -65,85 +106,52 @@ export const Default: Story = {
     await expect(minute).toBeInTheDocument();
     await expect(input).toBeInTheDocument();
 
-    await userEvent.type(month, '08');
-    await userEvent.type(day, '07');
-    await userEvent.type(year, '2020');
-    await userEvent.type(hour, '08');
-    await userEvent.type(minute, '30');
-
-    const activeCell = canvasElement.querySelector('td [data-selected="true"]');
-    await expect(activeCell).toBeInTheDocument();
-    await expect(activeCell).toHaveTextContent('7');
-
-    const cell = canvas.getByText('10');
-    await userEvent.click(cell);
-
-    const popover = await canvasElement.querySelector('reqore-popover-content');
-    await expect(popover).not.toBeInTheDocument();
-
-    const clearBtn = await canvasElement.querySelector('.reqore-clear-input-button');
-    await userEvent.click(clearBtn);
-
-    await expect(month).toHaveTextContent('mm');
-    await expect(day).toHaveTextContent('d');
-    await expect(year).toHaveTextContent('yyyy');
-    await expect(hour).toHaveTextContent('––');
-    await expect(minute).toHaveTextContent('––');
-
-    await userEvent.click(input);
-    await userEvent.click(canvas.getByText('10'));
-
-    await userEvent.type(month, '05');
-    await userEvent.type(day, '10');
-    await userEvent.type(year, '2024');
-    await userEvent.type(hour, '00');
-    await userEvent.type(minute, '00');
-
-    await userEvent.click(input);
-    const hourTimeField = canvas.getByLabelText('hour, Time');
-    const minuteTimeField = canvas.getByLabelText('minute, Time');
-
-    await expect(hourTimeField).toBeInTheDocument();
-    await expect(minuteTimeField).toBeInTheDocument();
-
-    await userEvent.type(hourTimeField, '08');
-    await userEvent.type(minuteTimeField, '30');
-
+    await expect(month).toHaveTextContent('05');
+    await expect(day).toHaveTextContent('10');
+    await expect(year).toHaveTextContent('2024');
     await expect(hour).toHaveTextContent('08');
-    await expect(minute).toHaveTextContent('30');
-
-    const previousMonth = await canvasElement.querySelector('button[aria-label="Previous"]');
-    const nextMonth = await canvasElement.querySelector('button[aria-label="Next"]');
-
-    await userEvent.click(previousMonth);
-    const headingCanvas = within(canvasElement.querySelector('.reqore-panel .reqore-panel-title'));
-    let heading = headingCanvas.queryByText('April 2024');
-    await expect(heading).toBeInTheDocument();
-    await userEvent.click(nextMonth);
-    heading = headingCanvas.queryByText('May 2024');
-    await expect(heading).toBeInTheDocument();
+    await expect(minute).toHaveTextContent('00');
   },
 };
 
-export const Clearable: Story = {
-  args: {
-    isClearable: true,
-  },
-  async play() {},
-};
 export const WithAM_PM: Story = {
   args: {
     hourCycle: 12,
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+    const AM_PM = await canvas.findByLabelText('AM/PM, Datepicker');
+
+    await expect(AM_PM).toBeInTheDocument();
   },
 };
 export const WithoutDefaultValue: Story = {
   args: {
     value: null,
   },
+  async play({ canvasElement }) {
+    const { month, year, day, hour, minute } = await getDateElements(canvasElement);
+    await expect(month).toHaveTextContent('mm');
+    await expect(day).toHaveTextContent('d');
+    await expect(year).toHaveTextContent('yyyy');
+    await expect(hour).toHaveTextContent('––');
+    await expect(minute).toHaveTextContent('––');
+  },
 };
 export const WithoutTimePicker: Story = {
   args: {
     granularity: 'day',
+    popoverProps: { openOnMount: true },
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+    const hour = await canvas.queryByLabelText('hour, Datepicker');
+    const minute = await canvas.queryByLabelText('minute, Datepicker');
+    const timefield = canvasElement.querySelector('.reqore-popover-content .reqore-input');
+
+    await expect(hour).toBeNull();
+    await expect(minute).toBeNull();
+    await expect(timefield).toBeNull();
   },
 };
 export const WithIntent: Story = {
@@ -197,5 +205,107 @@ export const Pill: Story = {
 export const WithTooltip: Story = {
   args: {
     tooltip: `Tooltip content`,
+  },
+};
+
+export const ValueCanBeTyped: Story = {
+  args: {
+    value: '2024-05-10T07:00:00.000Z',
+  },
+  async play({ canvasElement, args }) {
+    const { month, year, day, hour, minute } = await getDateElements(canvasElement);
+
+    await userEvent.type(month, '05');
+    await userEvent.type(day, '15');
+    await userEvent.type(year, '2023');
+    await userEvent.type(hour, '08');
+    await userEvent.type(minute, '30');
+
+    await expect(month).toHaveTextContent('05');
+    await expect(day).toHaveTextContent('15');
+    await expect(year).toHaveTextContent('2023');
+    await expect(hour).toHaveTextContent('08');
+    await expect(minute).toHaveTextContent('30');
+    await expect(args.onChange).toHaveBeenLastCalledWith('2023-05-15T07:30:00.000Z');
+  },
+};
+export const ValueCanBeCleared: Story = {
+  args: {
+    value: new Date(2024, 4, 10, 8, 0, 0),
+  },
+  async play({ canvasElement, args }) {
+    const { month, year, day, hour, minute } = await getDateElements(canvasElement);
+    const clearBtn = await canvasElement.querySelector('.reqore-clear-input-button');
+    await expect(clearBtn).toBeInTheDocument();
+    await userEvent.click(clearBtn);
+    await expect(month).toHaveTextContent('mm');
+    await expect(day).toHaveTextContent('d');
+    await expect(year).toHaveTextContent('yyyy');
+    await expect(hour).toHaveTextContent('––');
+    await expect(minute).toHaveTextContent('––');
+
+    await expect(args.onClearClick).toBeCalledTimes(1);
+    await expect(args.onChange).toHaveBeenLastCalledWith(null);
+  },
+};
+export const ValueCanBeChosenFromPopover: Story = {
+  args: {
+    popoverProps: {},
+    value: '2024-05-10T07:00:00.000Z',
+  },
+  async play({ canvasElement, args }) {
+    const { month, year, day, hour, minute, input } = await getDateElements(canvasElement);
+    await userEvent.click(input);
+    const { popover, popoverCanvas, nextMonth } = await getPopoverElements(canvasElement);
+    await expect(popover).toBeInTheDocument();
+    await userEvent.click(nextMonth);
+    const cell = popoverCanvas.getByText('25');
+    await userEvent.click(cell);
+    await expect(month).toHaveTextContent('06');
+    await expect(day).toHaveTextContent('25');
+    await expect(year).toHaveTextContent('2024');
+    await expect(hour).toHaveTextContent('08');
+    await expect(minute).toHaveTextContent('00');
+    await expect(args.onChange).toHaveBeenLastCalledWith('2024-06-25T07:00:00.000Z');
+  },
+};
+
+export const CurrentCalendarMonthCanBeChanged: Story = {
+  args: {
+    popoverProps: {},
+    value: '2024-05-10T07:00:00.000Z',
+  },
+  async play({ canvasElement }) {
+    const { input } = await getDateElements(canvasElement);
+    await userEvent.click(input);
+    const { popover, headingCanvas, nextMonth, previousMonth } =
+      await getPopoverElements(canvasElement);
+    await expect(popover).toBeInTheDocument();
+    await userEvent.click(nextMonth);
+    let heading = headingCanvas.queryByText('June 2024');
+    await expect(heading).toBeInTheDocument();
+
+    await userEvent.click(previousMonth);
+    heading = headingCanvas.queryByText('May 2024');
+    await expect(heading).toBeInTheDocument();
+  },
+};
+export const TimeCanBeChangedFromPopover: Story = {
+  args: {
+    popoverProps: {},
+    value: '2024-05-10T07:00:00.000Z',
+  },
+  async play({ canvasElement, args }) {
+    const { input, hour, minute } = await getDateElements(canvasElement);
+    await userEvent.click(input);
+    const { hourTimeField, minuteTimeField } = await getPopoverElements(canvasElement);
+
+    await userEvent.type(hourTimeField, '10');
+    await userEvent.type(minuteTimeField, '15');
+
+    await expect(hour).toHaveTextContent('10');
+    await expect(minute).toHaveTextContent('15');
+
+    await expect(args.onChange).toHaveBeenLastCalledWith('2024-05-10T09:15:00.000Z');
   },
 };
