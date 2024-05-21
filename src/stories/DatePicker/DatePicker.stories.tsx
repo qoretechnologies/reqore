@@ -129,16 +129,26 @@ export const WithAM_PM: Story = {
 export const WithoutDefaultValue: Story = {
   args: {
     value: null,
+    popoverProps: {},
   },
   async play({ canvasElement }) {
-    const { month, year, day, hour, minute } = await getDateElements(canvasElement);
+    const { month, year, day, hour, minute, input } = await getDateElements(canvasElement);
     await expect(month).toHaveTextContent('mm');
     await expect(day).toHaveTextContent('d');
     await expect(year).toHaveTextContent('yyyy');
     await expect(hour).toHaveTextContent('––');
     await expect(minute).toHaveTextContent('––');
+
+    await userEvent.click(input);
+    const { headingCanvas, hourTimeField, minuteTimeField } =
+      await getPopoverElements(canvasElement);
+    const heading = headingCanvas.queryByText('May 2024');
+    await expect(heading).toBeInTheDocument();
+    await expect(hourTimeField).toHaveTextContent('––');
+    await expect(minuteTimeField).toHaveTextContent('––');
   },
 };
+
 export const WithoutTimePicker: Story = {
   args: {
     granularity: 'day',
@@ -210,10 +220,8 @@ export const WithTooltip: Story = {
 };
 
 export const ValueCanBeTyped: Story = {
-  args: {
-    value: '2024-05-10T07:00:00.000Z',
-  },
-  async play({ canvasElement, args }) {
+  args: {},
+  async play({ canvasElement }) {
     const { month, year, day, hour, minute } = await getDateElements(canvasElement);
 
     await userEvent.type(month, '05');
@@ -227,7 +235,6 @@ export const ValueCanBeTyped: Story = {
     await expect(year).toHaveTextContent('2023');
     await expect(hour).toHaveTextContent('08');
     await expect(minute).toHaveTextContent('30');
-    await expect(args.onChange).toHaveBeenLastCalledWith('2023-05-15T08:30:00.000Z');
   },
 };
 export const ValueCanBeCleared: Story = {
@@ -252,9 +259,9 @@ export const ValueCanBeCleared: Story = {
 export const ValueCanBeChosenFromPopover: Story = {
   args: {
     popoverProps: {},
-    value: '2024-05-10T08:00:00.000Z',
+    value: new Date(2024, 4, 10, 8, 0, 0),
   },
-  async play({ canvasElement, args }) {
+  async play({ canvasElement }) {
     const { month, year, day, hour, minute, input } = await getDateElements(canvasElement);
     await userEvent.click(input);
     const { popover, popoverCanvas, nextMonth } = await getPopoverElements(canvasElement);
@@ -267,14 +274,12 @@ export const ValueCanBeChosenFromPopover: Story = {
     await expect(year).toHaveTextContent('2024');
     await expect(hour).toHaveTextContent('08');
     await expect(minute).toHaveTextContent('00');
-    await expect(args.onChange).toHaveBeenLastCalledWith('2024-06-25T08:00:00.000Z');
   },
 };
 
 export const CurrentCalendarMonthCanBeChanged: Story = {
   args: {
     popoverProps: {},
-    value: '2024-05-10T07:00:00.000Z',
   },
   async play({ canvasElement }) {
     const { input } = await getDateElements(canvasElement);
@@ -294,9 +299,8 @@ export const CurrentCalendarMonthCanBeChanged: Story = {
 export const TimeCanBeChangedFromPopover: Story = {
   args: {
     popoverProps: {},
-    value: '2024-05-10T07:00:00.000Z',
   },
-  async play({ canvasElement, args }) {
+  async play({ canvasElement }) {
     const { input, hour, minute } = await getDateElements(canvasElement);
     await userEvent.click(input);
     const { hourTimeField, minuteTimeField } = await getPopoverElements(canvasElement);
@@ -306,7 +310,34 @@ export const TimeCanBeChangedFromPopover: Story = {
 
     await expect(hour).toHaveTextContent('10');
     await expect(minute).toHaveTextContent('15');
+  },
+};
+export const ShouldSaveTimeWhenDateValueIsNull: Story = {
+  args: {
+    value: null,
+    popoverProps: {},
+  },
+  async play({ canvasElement }) {
+    const { input } = await getDateElements(canvasElement);
 
-    await expect(args.onChange).toHaveBeenLastCalledWith('2024-05-10T10:15:00.000Z');
+    await userEvent.click(input);
+    const { month, day, year, hour, minute } = await getDateElements(canvasElement);
+    const { hourTimeField, minuteTimeField } = await getPopoverElements(canvasElement);
+    await userEvent.type(hourTimeField, '08');
+    await userEvent.type(minuteTimeField, '15');
+    await userEvent.click(canvasElement);
+    await userEvent.click(input);
+    await expect(hourTimeField).toHaveTextContent('08');
+    await expect(minuteTimeField).toHaveTextContent('15');
+
+    const { popoverCanvas } = await getPopoverElements(canvasElement);
+
+    const cell = popoverCanvas.getByText('25');
+    await userEvent.click(cell);
+    await expect(month).toHaveTextContent('05');
+    await expect(day).toHaveTextContent('25');
+    await expect(year).toHaveTextContent('2024');
+    await expect(hour).toHaveTextContent('08');
+    await expect(minute).toHaveTextContent('15');
   },
 };
