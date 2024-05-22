@@ -22,11 +22,11 @@ const meta = {
     chromatic: {
       viewports: [1440],
     },
+    mockdate: new Date('2024-04-10T08:00:00.000Z'),
   },
-
   args: {
     fluid: false,
-    value: new Date(2024, 4, 10, 8, 0, 0),
+    value: new Date(2024, 3, 10, 8, 0, 0),
     popoverProps: {
       openOnMount: process.env.NODE_ENV === 'production',
     },
@@ -138,7 +138,7 @@ export const WithoutDefaultValue: Story = {
     await userEvent.click(input);
     const { headingCanvas, hourTimeField, minuteTimeField } =
       await getPopoverElements(canvasElement);
-    const heading = headingCanvas.queryByText('May 2024');
+    const heading = headingCanvas.queryByText('April 2024');
     await expect(heading).toBeInTheDocument();
     await expect(hourTimeField).toHaveTextContent('––');
     await expect(minuteTimeField).toHaveTextContent('––');
@@ -268,7 +268,7 @@ export const ValueCanBeChosenFromPopover: Story = {
     await userEvent.click(nextMonth);
     const cell = popoverCanvas.getByText('25');
     await userEvent.click(cell);
-    await expect(month).toHaveTextContent('06');
+    await expect(month).toHaveTextContent('05');
     await expect(day).toHaveTextContent('25');
     await expect(year).toHaveTextContent('2024');
     await expect(hour).toHaveTextContent('08');
@@ -290,11 +290,11 @@ export const CurrentCalendarMonthCanBeChanged: Story = {
       await getPopoverElements(canvasElement);
     await expect(popover).toBeInTheDocument();
     await userEvent.click(nextMonth);
-    let heading = headingCanvas.queryByText('June 2024');
+    let heading = headingCanvas.queryByText('May 2024');
     await expect(heading).toBeInTheDocument();
 
     await userEvent.click(previousMonth);
-    heading = headingCanvas.queryByText('May 2024');
+    heading = headingCanvas.queryByText('April 2024');
     await expect(heading).toBeInTheDocument();
   },
 };
@@ -339,7 +339,7 @@ export const ShouldSaveTimeWhenDateValueIsNull: Story = {
 
     const cell = popoverCanvas.getByText('25');
     await userEvent.click(cell);
-    await expect(month).toHaveTextContent('05');
+    await expect(month).toHaveTextContent('04');
     await expect(day).toHaveTextContent('25');
     await expect(year).toHaveTextContent('2024');
     await expect(hour).toHaveTextContent('08');
