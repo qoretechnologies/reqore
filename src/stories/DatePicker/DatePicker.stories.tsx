@@ -40,7 +40,7 @@ const meta = {
         value={value}
         onChange={(v) => {
           setValue(v);
-          args.onChange(v);
+          args.onChange?.(v);
         }}
       />
     );
@@ -216,23 +216,22 @@ export const WithTooltip: Story = {
 };
 
 export const ValueCanBeTyped: Story = {
-  args: {
-    parameters: {
-      chromatic: { disableSnapshot: true },
-    },
+  parameters: {
+    chromatic: { disableSnapshot: true },
   },
+  args: {},
   async play({ canvasElement }) {
     const { month, year, day, hour, minute } = await getDateElements(canvasElement);
 
     await userEvent.type(month, '05');
     await userEvent.type(day, '15');
-    await userEvent.type(year, '2023');
+    await userEvent.type(year, '2024');
     await userEvent.type(hour, '08');
     await userEvent.type(minute, '30');
 
     await expect(month).toHaveTextContent('05');
     await expect(day).toHaveTextContent('15');
-    await expect(year).toHaveTextContent('2023');
+    await expect(year).toHaveTextContent('2024');
     await expect(hour).toHaveTextContent('08');
     await expect(minute).toHaveTextContent('30');
   },
@@ -241,10 +240,8 @@ export const ValueCanBeCleared: Story = {
   parameters: {
     chromatic: { disableSnapshot: true },
   },
-  args: {
-    value: new Date(2024, 4, 10, 8, 0, 0),
-  },
-  async play({ canvasElement, args }) {
+
+  async play({ canvasElement }) {
     const { month, year, day, hour, minute } = await getDateElements(canvasElement);
     const clearBtn = await canvasElement.querySelector('.reqore-clear-input-button');
     await expect(clearBtn).toBeInTheDocument();
@@ -257,12 +254,11 @@ export const ValueCanBeCleared: Story = {
   },
 };
 export const ValueCanBeChosenFromPopover: Story = {
+  parameters: {
+    chromatic: { disableSnapshot: true },
+  },
   args: {
     popoverProps: {},
-    value: new Date(2024, 4, 10, 8, 0, 0),
-    parameters: {
-      chromatic: { disableSnapshot: true },
-    },
   },
   async play({ canvasElement }) {
     const { month, year, day, hour, minute, input } = await getDateElements(canvasElement);
