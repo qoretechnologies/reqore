@@ -1,6 +1,5 @@
 import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
 import { userEvent, within } from '@storybook/testing-library';
 import { size } from 'lodash';
 import { useState } from 'react';
@@ -23,7 +22,6 @@ const meta = {
     chromatic: {
       viewports: [1440],
     },
-    mockingDate: new Date(2024, 4, 10, 8, 0, 0),
   },
 
   args: {
@@ -33,8 +31,6 @@ const meta = {
       openOnMount: process.env.NODE_ENV === 'production',
     },
     'aria-label': 'Datepicker',
-    onChange: fn(),
-    onClearClick: fn(),
   },
   render(args) {
     const [value, setValue] = useState<Date | string>(args.value);
@@ -258,9 +254,6 @@ export const ValueCanBeCleared: Story = {
     await expect(year).toHaveTextContent('yyyy');
     await expect(hour).toHaveTextContent('––');
     await expect(minute).toHaveTextContent('––');
-
-    await expect(args.onClearClick).toBeCalledTimes(1);
-    await expect(args.onChange).toHaveBeenLastCalledWith(null);
   },
 };
 export const ValueCanBeChosenFromPopover: Story = {

@@ -6,7 +6,6 @@ module.exports = {
     '@storybook/addon-jest',
     '@storybook/addon-interactions',
     '@chromaui/addon-visual-tests',
-    'storybook-addon-mock-date',
   ],
   framework: {
     name: '@storybook/react-webpack5',
