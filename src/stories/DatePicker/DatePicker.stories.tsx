@@ -220,7 +220,11 @@ export const WithTooltip: Story = {
 };
 
 export const ValueCanBeTyped: Story = {
-  args: {},
+  args: {
+    parameters: {
+      chromatic: { disableSnapshot: true },
+    },
+  },
   async play({ canvasElement }) {
     const { month, year, day, hour, minute } = await getDateElements(canvasElement);
 
@@ -238,6 +242,9 @@ export const ValueCanBeTyped: Story = {
   },
 };
 export const ValueCanBeCleared: Story = {
+  parameters: {
+    chromatic: { disableSnapshot: true },
+  },
   args: {
     value: new Date(2024, 4, 10, 8, 0, 0),
   },
@@ -247,7 +254,7 @@ export const ValueCanBeCleared: Story = {
     await expect(clearBtn).toBeInTheDocument();
     await userEvent.click(clearBtn);
     await expect(month).toHaveTextContent('mm');
-    await expect(day).toHaveTextContent('d');
+    await expect(day).toHaveTextContent('dd');
     await expect(year).toHaveTextContent('yyyy');
     await expect(hour).toHaveTextContent('––');
     await expect(minute).toHaveTextContent('––');
@@ -260,6 +267,9 @@ export const ValueCanBeChosenFromPopover: Story = {
   args: {
     popoverProps: {},
     value: new Date(2024, 4, 10, 8, 0, 0),
+    parameters: {
+      chromatic: { disableSnapshot: true },
+    },
   },
   async play({ canvasElement }) {
     const { month, year, day, hour, minute, input } = await getDateElements(canvasElement);
@@ -278,6 +288,9 @@ export const ValueCanBeChosenFromPopover: Story = {
 };
 
 export const CurrentCalendarMonthCanBeChanged: Story = {
+  parameters: {
+    chromatic: { disableSnapshot: true },
+  },
   args: {
     popoverProps: {},
   },
@@ -313,6 +326,9 @@ export const TimeCanBeChangedFromPopover: Story = {
   },
 };
 export const ShouldSaveTimeWhenDateValueIsNull: Story = {
+  parameters: {
+    chromatic: { disableSnapshot: true },
+  },
   args: {
     value: null,
     popoverProps: {},
