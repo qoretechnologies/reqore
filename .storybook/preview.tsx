@@ -1,4 +1,5 @@
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+import withMockdate from '@netsells/storybook-mockdate';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -57,6 +58,7 @@ export const argTypes = {
 };
 
 export const decorators = [
+  withMockdate,
   (Story, context) =>
     context.args.withoutContent ? (
       <ReqoreUIProvider

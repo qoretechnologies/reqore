@@ -31,7 +31,7 @@ import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 
 export interface IReqoreInputProps
-  extends React.HTMLAttributes<HTMLInputElement>,
+  extends Omit<React.ComponentPropsWithoutRef<'input'>, 'size' | 'children'>,
     IReqoreDisabled,
     IReqoreReadOnly,
     IReqoreIntent,
@@ -63,6 +63,9 @@ export interface IReqoreInputProps
   rightIconProps?: IReqoreIconProps;
 
   pill?: boolean;
+
+  children?: React.ReactNode | ((props: any) => React.ReactNode);
+  as?: string | React.ElementType;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -242,13 +245,13 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           </StyledIconWrapper>
         )}
         <StyledInput
+          as='input'
           {...omit(rest, ['children'])}
           effect={{
             interactive: !rest?.disabled && !readOnly,
             ...rest?.effect,
           }}
           onChange={!readOnly && !rest?.disabled ? rest?.onChange : undefined}
-          as='input'
           ref={(ref) => setInputRef(ref)}
           theme={theme}
           _size={size}
@@ -257,13 +260,23 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           rounded={rounded}
           hasIcon={!!icon}
           hasRightIcon={!!rightIcon}
-          clearable={!rest?.disabled && !readOnly && !!(onClearClick && rest?.onChange)}
+          clearable={
+            !rest?.disabled &&
+            !readOnly &&
+            !!(onClearClick && (rest.as || rest.children || rest?.onChange))
+          }
           className={`${className || ''} reqore-control reqore-input`}
           readOnly={readOnly}
           pill={pill}
-        />
+        >
+          {rest?.children}
+        </StyledInput>
         <ReqoreInputClearButton
-          enabled={!readOnly && !rest?.disabled && !!(onClearClick && rest?.onChange)}
+          enabled={
+            !readOnly &&
+            !rest?.disabled &&
+            !!(onClearClick && (rest.as || rest.children || rest?.onChange))
+          }
           onClick={onClearClick}
           hasRightIcon={!!rightIcon}
           size={size}

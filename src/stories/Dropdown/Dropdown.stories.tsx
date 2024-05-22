@@ -176,11 +176,10 @@ const Template: StoryFn<typeof ReqoreDropdown<IReqoreButtonProps>> = (args) => {
         <ReqoreDropdown
           rightIcon='SunCloudyLine'
           caretPosition='right'
+          label='Custom icon with caret on right'
           {...args}
           iconColor='success:lighten:2'
-        >
-          Custom icon with caret on right
-        </ReqoreDropdown>
+        />
         <ReqoreDropdown
           items={[
             {
@@ -235,6 +234,7 @@ export const CustomComponent: Story = {
   args: {
     component: ReqoreInput,
     placeholder: 'Custom component',
+    label: undefined,
   },
 };
 

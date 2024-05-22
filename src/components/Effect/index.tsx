@@ -47,6 +47,7 @@ export type TReqoreEffectColorManipulationMultiplier =
   | 29
   | 30;
 export type TReqoreEffectColorManipulationAlpha =
+  | 0
   | 0.1
   | 0.2
   | 0.3
