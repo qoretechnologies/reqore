@@ -14,9 +14,9 @@ import {
   CalendarCell,
   CalendarGrid,
   DateInput,
-  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
+  DatePicker as RADatePicker,
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
@@ -255,36 +255,34 @@ export const DatePicker = <T extends TDateValue>({
               size='small'
               responsiveTitle={false}
               intent={intent}
-              label={
-                <MonthYear
-                  open={open}
-                  onOpenChange={setOpen}
-                  value={value}
-                  onValueChange={handleDateChange}
-                />
-              }
+              label={<MonthYear value={value} onValueChange={handleDateChange} />}
               {...pickerProps}
               actions={[
                 {
-                  as: ReqoreButton,
-                  props: {
-                    as: Button,
-                    customTheme: theme,
-                    slot: 'previous',
-                    icon: 'ArrowLeftFill',
-                    size: 'normal',
-                    style: { marginLeft: 40 },
-                  },
-                },
-                {
-                  as: ReqoreButton,
-                  props: {
-                    as: Button,
-                    customTheme: theme,
-                    slot: 'next',
-                    icon: 'ArrowRightFill',
-                    size: 'normal',
-                  },
+                  group: [
+                    {
+                      as: ReqoreButton,
+                      props: {
+                        as: Button,
+                        customTheme: theme,
+                        slot: 'previous',
+                        icon: 'ArrowLeftFill',
+                        size: 'normal',
+                        compact: true,
+                      },
+                    },
+                    {
+                      as: ReqoreButton,
+                      props: {
+                        as: Button,
+                        customTheme: theme,
+                        slot: 'next',
+                        icon: 'ArrowRightFill',
+                        size: 'normal',
+                        compact: true,
+                      },
+                    },
+                  ],
                 },
               ]}
             >
@@ -403,7 +401,9 @@ function MonthYear({
           value: year,
           selected: year === value.year,
         }))}
-        onItemSelect={(item) => onValueChange(value.set({ year: item.value }))}
+        onItemSelect={(item) => {
+          onValueChange(value.set({ year: item.value }));
+        }}
       />
     </ReqoreControlGroup>
   );

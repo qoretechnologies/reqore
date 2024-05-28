@@ -60,6 +60,9 @@ export interface IPopover
   title?: string;
   updater?: string | number;
   uiScale?: IReqoreOptions['uiScale'];
+
+  onToggleChange?: (isOpen: boolean, popoverData?: IPopover) => void;
+  onUpdate?: (popoverData: IPopover) => void;
 }
 
 export interface IPopoverOptions extends IPopover {
