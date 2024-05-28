@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { isArray, omit, size } from 'lodash';
 import { darken, rgba } from 'polished';
 import { Resizable, ResizableProps } from 're-resizable';
-import { ReactElement, forwardRef, useCallback, useMemo, useState } from 'react';
+import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -41,7 +41,7 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreBreadcrumbs, { IReqoreBreadcrumbsProps } from '../Breadcrumbs';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { StyledCollectionItemContent } from '../Collection/item';
-import ReqoreControlGroup from '../ControlGroup';
+import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
@@ -128,6 +128,8 @@ export interface IReqorePanelProps
 
   headerProps?: React.HTMLAttributes<unknown>;
   showHeaderTooltip?: boolean;
+
+  responsiveActionsWrapperProps?: Partial<IReqoreControlGroupProps>;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -310,8 +312,8 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     !padded || isCollapsed
       ? `${PADDING_FROM_SIZE[size]}px`
       : minimal || transparent
-      ? 0
-      : undefined};
+        ? 0
+        : undefined};
   padding-top: ${({ minimal, size }: IStyledPanel) =>
     minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
 `;
@@ -334,22 +336,22 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     !padded
       ? undefined
       : noHorizontalPadding
-      ? `${PADDING_FROM_SIZE[size]}px 0`
-      : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
+        ? `${PADDING_FROM_SIZE[size]}px 0`
+        : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel, padded, size }) =>
     minimal && hasLabel && padded
       ? `${PADDING_FROM_SIZE[size] / 2}px`
       : padded
-      ? `${PADDING_FROM_SIZE[size]}px`
-      : undefined};
+        ? `${PADDING_FROM_SIZE[size]}px`
+        : undefined};
   padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
     minimal && hasBottomActions && padded
       ? `${PADDING_FROM_SIZE[size] / 2}px`
       : padded
-      ? `${PADDING_FROM_SIZE[size]}px`
-      : undefined};
+        ? `${PADDING_FROM_SIZE[size]}px`
+        : undefined};
   flex: 1;
   overflow: auto;
   overflow-wrap: anywhere;
@@ -400,6 +402,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       showHeaderTooltip,
       resizable,
       onLabelEdit,
+      responsiveActionsWrapperProps,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -815,6 +818,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 horizontalAlign='flex-end'
                 customTheme={theme}
                 size={panelSize}
+                {...responsiveActionsWrapperProps}
               >
                 {actions.map(renderResponsiveActions())}
               </ReqoreControlGroup>

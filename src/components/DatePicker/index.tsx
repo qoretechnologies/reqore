@@ -17,10 +17,7 @@ import {
   DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
-  HeadingContext,
-  HeadingProps,
   TimeField,
-  useContextProps,
 } from 'react-aria-components';
 import styled from 'styled-components';
 import { ReqorePanel, ReqorePopover } from '../..';
@@ -41,6 +38,7 @@ import {
 } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import ReqoreDropdown from '../Dropdown';
 import { IReqoreTextEffectProps } from '../Effect';
 import ReqoreInput from '../Input';
 import { IReqorePanelProps } from '../Panel';
@@ -117,11 +115,7 @@ const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
     outline: none;
   }
 `;
-const Heading = (props: HeadingProps) => {
-  [props] = useContextProps(props, undefined, HeadingContext);
 
-  return <>{props.children}</>;
-};
 const DatePickerTooltip = ({
   targetElement,
   tooltip,
@@ -172,6 +166,8 @@ export const DatePicker = <T extends TDateValue>({
       value?.millisecond ?? 0
     );
   });
+  const [open, setOpen] = useState(false);
+
   const theme = useReqoreTheme('main', customTheme, intent);
   const popoverData = useRef({} as IPopoverControls);
   const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
@@ -194,9 +190,9 @@ export const DatePicker = <T extends TDateValue>({
     }
     onChange?.((isStringRef.current ? date?.toISOString() : date) as T);
 
-    if (closeOnSelect && !showTime) {
-      popoverData.current?.close();
-    }
+    // if (closeOnSelect && !showTime) {
+    //   popoverData.current?.close();
+    // }
   };
   const onTimeChange = (time: Time | null) => {
     if (!time) return;
@@ -243,6 +239,7 @@ export const DatePicker = <T extends TDateValue>({
           icon: 'CalendarLine',
           ...inputProps,
         }}
+        closeOnOutsideClick={!open}
         passPopoverData={(data) => (popoverData.current = data)}
         isReqoreComponent
         noWrapper
@@ -253,11 +250,19 @@ export const DatePicker = <T extends TDateValue>({
         content={
           <Calendar<ZonedDateTime> value={value} onChange={handleDateChange}>
             <ReqorePanel
+              responsiveActionsWrapperProps={{ fluid: false }}
               minimal
               size='small'
               responsiveTitle={false}
               intent={intent}
-              label={<Heading />}
+              label={
+                <MonthYear
+                  open={open}
+                  onOpenChange={setOpen}
+                  value={value}
+                  onValueChange={handleDateChange}
+                />
+              }
               {...pickerProps}
               actions={[
                 {
@@ -267,6 +272,8 @@ export const DatePicker = <T extends TDateValue>({
                     customTheme: theme,
                     slot: 'previous',
                     icon: 'ArrowLeftFill',
+                    size: 'normal',
+                    style: { marginLeft: 40 },
                   },
                 },
                 {
@@ -276,11 +283,12 @@ export const DatePicker = <T extends TDateValue>({
                     customTheme: theme,
                     slot: 'next',
                     icon: 'ArrowRightFill',
+                    size: 'normal',
                   },
                 },
               ]}
             >
-              <CalendarGrid>
+              <CalendarGrid style={{ width: '100%' }}>
                 {(date) => {
                   const isSelected = value && isSameDay(date, value);
                   return (
@@ -345,3 +353,58 @@ export const DatePicker = <T extends TDateValue>({
     </StyledRADatePicker>
   );
 };
+
+function MonthYear({
+  value,
+  onValueChange,
+}: {
+  value: ZonedDateTime;
+  onValueChange(date: ZonedDateTime): void;
+}) {
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  const currentYear = new Date().getFullYear();
+  const years = new Array(currentYear - 1900 + 1).fill(null).map((_, index) => currentYear - index);
+  return (
+    <ReqoreControlGroup style={{ width: 'fit-content' }}>
+      <ReqoreDropdown
+        filterable
+        compact
+        caretPosition='right'
+        scrollToSelected
+        label={months[value.month - 1]}
+        items={months.map((month, index) => ({
+          value: month,
+          selected: index === value.month - 1,
+        }))}
+        onItemSelect={(item) =>
+          onValueChange(value.set({ month: months.findIndex((m) => m === item.value) + 1 }))
+        }
+      />
+      <ReqoreDropdown
+        compact
+        filterable
+        caretPosition='right'
+        scrollToSelected
+        label={value.year}
+        items={years.map((year) => ({
+          value: year,
+          selected: year === value.year,
+        }))}
+        onItemSelect={(item) => onValueChange(value.set({ year: item.value }))}
+      />
+    </ReqoreControlGroup>
+  );
+}
