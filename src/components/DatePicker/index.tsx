@@ -166,7 +166,6 @@ export const DatePicker = <T extends TDateValue>({
       value?.millisecond ?? 0
     );
   });
-  const [open, setOpen] = useState(false);
 
   const theme = useReqoreTheme('main', customTheme, intent);
   const popoverData = useRef({} as IPopoverControls);
@@ -239,7 +238,6 @@ export const DatePicker = <T extends TDateValue>({
           icon: 'CalendarLine',
           ...inputProps,
         }}
-        closeOnOutsideClick={!open}
         passPopoverData={(data) => (popoverData.current = data)}
         isReqoreComponent
         noWrapper
