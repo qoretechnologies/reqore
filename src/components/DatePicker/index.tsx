@@ -7,16 +7,16 @@ import {
   toZoned,
   ZonedDateTime,
 } from '@internationalized/date';
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
   Button,
   Calendar,
   CalendarCell,
   CalendarGrid,
   DateInput,
+  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
-  DatePicker as RADatePicker,
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
@@ -93,20 +93,13 @@ const StyledDateInput: typeof DateInput = styled(DateInput)`
   display: inline-flex;
   align-items: center;
 `;
-
+const StyledCalendarGrid = styled(CalendarGrid)`
+  width: 100%;
+`;
 const StyledTimeField: typeof TimeField = styled(TimeField)`
   display: flex;
   flex: 1 auto;
 `;
-
-// utility to convert date to ZonedDateTime because datepicker can't use Date
-const toDate = (date?: Date | string) => {
-  if (date) {
-    return parseAbsoluteToLocal(typeof date === 'string' ? date : date.toISOString());
-  }
-  return undefined;
-};
-
 const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
   &[data-disabled='true']:not([data-selected='true']) {
     ${DisabledElement}
@@ -126,6 +119,14 @@ const DatePickerTooltip = ({
   useTooltip(targetElement, tooltip);
 
   return null;
+};
+
+// utility to convert date to ZonedDateTime because datepicker can't use Date
+const toDate = (date?: Date | string) => {
+  if (date) {
+    return parseAbsoluteToLocal(typeof date === 'string' ? date : date.toISOString());
+  }
+  return undefined;
 };
 
 export const DatePicker = <T extends TDateValue>({
@@ -167,6 +168,11 @@ export const DatePicker = <T extends TDateValue>({
     );
   });
 
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+  // a key to reset calendar component to reflect the month/year change so it can show the current month correctly
+  const [calendarKey, changeCalendarKey] = useReducer((c) => c + 1, 0);
+
   const theme = useReqoreTheme('main', customTheme, intent);
   const popoverData = useRef({} as IPopoverControls);
   const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
@@ -177,7 +183,7 @@ export const DatePicker = <T extends TDateValue>({
     if (value) isStringRef.current = typeof _value === 'string';
   });
 
-  const handleDateChange: DatePickerProps<ZonedDateTime>['onChange'] = (value) => {
+  const handleDateChange = (value: ZonedDateTime, close = true) => {
     let date: Date;
     // if previous value is null apply saved time state
     if (!_value && time) {
@@ -189,9 +195,9 @@ export const DatePicker = <T extends TDateValue>({
     }
     onChange?.((isStringRef.current ? date?.toISOString() : date) as T);
 
-    // if (closeOnSelect && !showTime) {
-    //   popoverData.current?.close();
-    // }
+    if (closeOnSelect && !showTime && close) {
+      popoverData.current?.close();
+    }
   };
   const onTimeChange = (time: Time | null) => {
     if (!time) return;
@@ -206,6 +212,10 @@ export const DatePicker = <T extends TDateValue>({
     if (value) onChange(null);
     if (time) setTime(new Time(0, 0, 0, 0));
     onClearClick?.();
+  };
+  const onMonthYearChange = (date) => {
+    handleDateChange(date, false);
+    changeCalendarKey();
   };
 
   return (
@@ -238,6 +248,7 @@ export const DatePicker = <T extends TDateValue>({
           icon: 'CalendarLine',
           ...inputProps,
         }}
+        closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}
         passPopoverData={(data) => (popoverData.current = data)}
         isReqoreComponent
         noWrapper
@@ -246,14 +257,26 @@ export const DatePicker = <T extends TDateValue>({
         noArrow
         {...popoverProps}
         content={
-          <Calendar<ZonedDateTime> value={value} onChange={handleDateChange}>
+          <Calendar<ZonedDateTime>
+            key={calendarKey}
+            defaultFocusedValue={value}
+            value={value}
+            onChange={handleDateChange}
+          >
             <ReqorePanel
               responsiveActionsWrapperProps={{ fluid: false }}
               minimal
               size='small'
               responsiveTitle={false}
               intent={intent}
-              label={<MonthYear value={value} onValueChange={handleDateChange} />}
+              label={
+                <MonthYear
+                  value={value}
+                  onValueChange={onMonthYearChange}
+                  setIsMonthDropdownOpen={setIsMonthDropdownOpen}
+                  setIsYearDropdownOpen={setIsYearDropdownOpen}
+                />
+              }
               {...pickerProps}
               actions={[
                 {
@@ -284,7 +307,7 @@ export const DatePicker = <T extends TDateValue>({
                 },
               ]}
             >
-              <CalendarGrid style={{ width: '100%' }}>
+              <StyledCalendarGrid>
                 {(date) => {
                   const isSelected = value && isSameDay(date, value);
                   return (
@@ -309,7 +332,7 @@ export const DatePicker = <T extends TDateValue>({
                     </StyledCalendarCell>
                   );
                 }}
-              </CalendarGrid>
+              </StyledCalendarGrid>
               {showTime && (
                 <ReqoreControlGroup fluid>
                   <StyledTimeField
@@ -353,9 +376,13 @@ export const DatePicker = <T extends TDateValue>({
 function MonthYear({
   value,
   onValueChange,
+  setIsYearDropdownOpen,
+  setIsMonthDropdownOpen,
 }: {
   value: ZonedDateTime;
-  onValueChange(date: ZonedDateTime): void;
+  onValueChange(value: ZonedDateTime, close: boolean): void;
+  setIsMonthDropdownOpen(open: boolean): void;
+  setIsYearDropdownOpen(open: boolean): void;
 }) {
   const months = [
     'January',
@@ -374,23 +401,23 @@ function MonthYear({
   const currentYear = new Date().getFullYear();
   const years = new Array(currentYear - 1900 + 1).fill(null).map((_, index) => currentYear - index);
   return (
-    <ReqoreControlGroup style={{ width: 'fit-content' }}>
+    <ReqoreControlGroup gapSize='small'>
       <ReqoreDropdown
         filterable
-        compact
         caretPosition='right'
         scrollToSelected
-        label={months[value.month - 1]}
+        label={<span>{months[value.month - 1]}</span>}
         items={months.map((month, index) => ({
           value: month,
           selected: index === value.month - 1,
         }))}
         onItemSelect={(item) =>
-          onValueChange(value.set({ month: months.findIndex((m) => m === item.value) + 1 }))
+          onValueChange(value.set({ month: months.findIndex((m) => m === item.value) + 1 }), false)
         }
+        onToggleChange={setIsMonthDropdownOpen}
       />
       <ReqoreDropdown
-        compact
+        onToggleChange={setIsYearDropdownOpen}
         filterable
         caretPosition='right'
         scrollToSelected
@@ -399,9 +426,7 @@ function MonthYear({
           value: year,
           selected: year === value.year,
         }))}
-        onItemSelect={(item) => {
-          onValueChange(value.set({ year: item.value }));
-        }}
+        onItemSelect={(item) => onValueChange(value.set({ year: item.value }), false)}
       />
     </ReqoreControlGroup>
   );

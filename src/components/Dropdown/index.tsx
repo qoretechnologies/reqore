@@ -88,6 +88,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   scrollToSelected,
   paging,
   show,
+  onToggleChange,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -99,7 +100,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         style: buttonStyle || rest.style,
         disabled: !size(items) || (rest as any).disabled,
         className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
-      } as T),
+      }) as T,
     [items, icon, rightIcon, buttonStyle, caretPosition, rest]
   );
 
@@ -144,6 +145,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       content={popoverContent}
       passPopoverData={passPopoverData}
       show={show}
+      onToggleChange={onToggleChange}
     >
       {children || label}
     </ReqorePopover>
