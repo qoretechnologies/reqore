@@ -14,9 +14,9 @@ import {
   CalendarCell,
   CalendarGrid,
   DateInput,
-  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
+  DatePicker as RADatePicker,
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
@@ -403,6 +403,7 @@ function MonthYear({
   return (
     <ReqoreControlGroup gapSize='small'>
       <ReqoreDropdown
+        compact
         filterable
         caretPosition='right'
         scrollToSelected
@@ -411,6 +412,11 @@ function MonthYear({
           value: month,
           selected: index === value.month - 1,
         }))}
+        inputProps={{
+          focusRules: {
+            type: 'auto',
+          },
+        }}
         onItemSelect={(item) =>
           onValueChange(value.set({ month: months.findIndex((m) => m === item.value) + 1 }), false)
         }
@@ -418,6 +424,7 @@ function MonthYear({
       />
       <ReqoreDropdown
         onToggleChange={setIsYearDropdownOpen}
+        compact
         filterable
         caretPosition='right'
         scrollToSelected
@@ -426,6 +433,11 @@ function MonthYear({
           value: year,
           selected: year === value.year,
         }))}
+        inputProps={{
+          focusRules: {
+            type: 'auto',
+          },
+        }}
         onItemSelect={(item) => onValueChange(value.set({ year: item.value }), false)}
       />
     </ReqoreControlGroup>
