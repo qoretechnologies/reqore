@@ -270,7 +270,7 @@ export const DatePicker = <T extends TDateValue>({
               responsiveTitle={false}
               intent={intent}
               label={
-                <MonthYear
+                <YearMonthDropdowns
                   value={value}
                   onValueChange={onMonthYearChange}
                   setIsMonthDropdownOpen={setIsMonthDropdownOpen}
@@ -373,17 +373,18 @@ export const DatePicker = <T extends TDateValue>({
   );
 };
 
-function MonthYear({
-  value,
+export const YearMonthDropdowns = ({
+  value: _value,
   onValueChange,
   setIsYearDropdownOpen,
   setIsMonthDropdownOpen,
 }: {
-  value: ZonedDateTime;
+  value?: ZonedDateTime;
   onValueChange(value: ZonedDateTime, close: boolean): void;
   setIsMonthDropdownOpen(open: boolean): void;
   setIsYearDropdownOpen(open: boolean): void;
-}) {
+}) => {
+  const value = _value ?? toDate(new Date());
   const months = [
     'January',
     'February',
@@ -400,6 +401,7 @@ function MonthYear({
   ];
   const currentYear = new Date().getFullYear();
   const years = new Array(currentYear - 1900 + 1).fill(null).map((_, index) => currentYear - index);
+
   return (
     <ReqoreControlGroup gapSize='small'>
       <ReqoreDropdown
@@ -407,10 +409,10 @@ function MonthYear({
         filterable
         caretPosition='right'
         scrollToSelected
-        label={<span>{months[value.month - 1]}</span>}
+        label={<span>{months[value?.month - 1] ?? 'Month'}</span>}
         items={months.map((month, index) => ({
           value: month,
-          selected: index === value.month - 1,
+          selected: index === value?.month - 1,
         }))}
         inputProps={{
           focusRules: {
@@ -428,10 +430,10 @@ function MonthYear({
         filterable
         caretPosition='right'
         scrollToSelected
-        label={value.year}
+        label={value?.year ?? currentYear}
         items={years.map((year) => ({
           value: year,
-          selected: year === value.year,
+          selected: year === value?.year,
         }))}
         inputProps={{
           focusRules: {
@@ -442,4 +444,4 @@ function MonthYear({
       />
     </ReqoreControlGroup>
   );
-}
+};
