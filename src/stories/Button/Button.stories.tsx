@@ -365,6 +365,35 @@ export const Muted: Story = {
   },
 };
 
+export const Black: Story = {
+  render: Template,
+
+  args: {
+    intent: 'black',
+  },
+};
+
+export const White: Story = {
+  render: Template,
+
+  args: {
+    intent: 'white',
+  },
+};
+
+export const CustomIntent: Story = {
+  render: Template,
+
+  args: {
+    otherThemeOptions: {
+      intents: {
+        custom3: '#5a025a',
+      },
+    },
+    intent: 'custom3',
+  },
+};
+
 export const Effect: Story = {
   render: Template,
 

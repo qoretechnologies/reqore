@@ -90,9 +90,15 @@ export interface IReqoreIntents {
   warning?: TReqoreHexColor;
   danger?: TReqoreHexColor;
   muted?: TReqoreHexColor;
-}
+  black?: TReqoreHexColor;
+  white?: TReqoreHexColor;
 
-export type TReqoreIntent = 'info' | 'success' | 'pending' | 'warning' | 'danger' | 'muted';
+  custom1?: TReqoreHexColor;
+  custom2?: TReqoreHexColor;
+  custom3?: TReqoreHexColor;
+  custom4?: TReqoreHexColor;
+  custom5?: TReqoreHexColor;
+}
 
 export const DEFAULT_INTENTS: IReqoreIntents = {
   info: Colors.BLUE,
@@ -101,7 +107,17 @@ export const DEFAULT_INTENTS: IReqoreIntents = {
   warning: Colors.ORANGE,
   danger: Colors.RED,
   muted: Colors.GRAY,
+  black: Colors.DARK,
+  white: Colors.LIGHT,
+
+  custom1: Colors.GRAY,
+  custom2: Colors.GRAY,
+  custom3: Colors.GRAY,
+  custom4: Colors.GRAY,
+  custom5: Colors.GRAY,
 };
+
+export type TReqoreIntent = keyof IReqoreIntents;
 
 export const DEFAULT_THEME: IReqoreTheme = {
   main: Colors.DARK_THEME,
@@ -119,4 +135,11 @@ export const ReqoreIntents: { [key: string]: TReqoreIntent } = {
   WARNING: 'warning',
   DANGER: 'danger',
   MUTED: 'muted',
+  BLACK: 'black',
+  WHITE: 'white',
+  CUSTOM1: 'custom1',
+  CUSTOM2: 'custom2',
+  CUSTOM3: 'custom3',
+  CUSTOM4: 'custom4',
+  CUSTOM5: 'custom5',
 };
