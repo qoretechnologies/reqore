@@ -77,7 +77,9 @@ export interface IReqoreCustomTagProps
   asBadge?: boolean;
   intent?: TReqoreIntent;
   wrap?: boolean;
+  labelAlign?: 'left' | 'right' | 'center';
   labelEffect?: IReqoreEffect;
+  labelKeyAlign?: 'left' | 'right' | 'center';
   labelKeyEffect?: IReqoreEffect;
   as?: string | React.ElementType;
 }
@@ -217,6 +219,14 @@ const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
   align-items: center;
   flex: 1;
 
+  ${({ labelAlign }) => css`
+    justify-content: ${labelAlign === 'left'
+      ? 'flex-start'
+      : labelAlign === 'right'
+      ? 'flex-end'
+      : 'center'};
+  `}
+
   ${({ wrap, hasWidth }) =>
     !wrap && !hasWidth
       ? css`
@@ -289,6 +299,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       leftIconColor,
       rightIconColor,
       iconColor,
+      labelKeyAlign = 'left',
+      labelAlign = 'left',
       labelEffect,
       labelKeyEffect,
       leftIconProps,
@@ -367,6 +379,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 wrap={wrap}
                 hasWidth={!!width}
                 size={size}
+                labelAlign={labelKeyAlign}
                 effect={
                   {
                     weight: 'thick',
@@ -394,6 +407,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 wrap={wrap}
                 hasWidth={!!width}
+                labelAlign={labelAlign}
                 effect={{
                   ...labelEffect,
                 }}
