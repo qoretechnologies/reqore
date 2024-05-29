@@ -362,6 +362,11 @@ export const Wrap: Story = {
   args: { wrap: true },
 };
 
+export const WithTextAligns: Story = {
+  render: Template,
+  args: { labelAlign: 'right', labelKeyAlign: 'center' },
+};
+
 export const Effect = {
   render: Template,
 

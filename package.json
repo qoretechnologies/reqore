@@ -1,11 +1,11 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.46.0",
+  "version": "0.46.1",
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "source": "source ~/.profile",
+    "start": "yarn storybook",
     "test": "./node_modules/.bin/jest",
     "test:watch": "./node_modules/.bin/jest --watch",
     "test:ci": "./node_modules/.bin/jest --silent --json --outputFile=tests.json",

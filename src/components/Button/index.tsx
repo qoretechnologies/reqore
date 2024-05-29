@@ -315,6 +315,7 @@ export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButton
         color={color}
         customTheme={theme}
         className='reqore-button-badge'
+        labelAlign='center'
         minimal={!(content as IReqoreTagProps)?.effect?.gradient}
         {...(typeof content === 'string' || typeof content === 'number'
           ? { label: content }
