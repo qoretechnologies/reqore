@@ -28,7 +28,7 @@ const meta = {
     fluid: false,
     value: new Date(2024, 3, 10, 8, 0, 0),
     popoverProps: {
-      openOnMount: process.env.NODE_ENV === 'production',
+      openOnMount: true,
     },
     'aria-label': 'Datepicker',
   },

@@ -14,9 +14,9 @@ import {
   CalendarCell,
   CalendarGrid,
   DateInput,
+  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
-  DatePicker as RADatePicker,
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
@@ -38,11 +38,11 @@ import {
 } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import ReqoreDropdown from '../Dropdown';
 import { IReqoreTextEffectProps } from '../Effect';
 import ReqoreInput from '../Input';
 import { IReqorePanelProps } from '../Panel';
 import { IReqorePopoverProps } from '../Popover';
+import { YearMonthDropdowns } from './MonthYearDropdowns';
 
 type TDateValue = string | Date | null;
 export interface IDatePickerProps<T extends TDateValue>
@@ -122,7 +122,7 @@ const DatePickerTooltip = ({
 };
 
 // utility to convert date to ZonedDateTime because datepicker can't use Date
-const toDate = (date?: Date | string) => {
+export const toDate = (date?: Date | string) => {
   if (date) {
     return parseAbsoluteToLocal(typeof date === 'string' ? date : date.toISOString());
   }
@@ -199,6 +199,7 @@ export const DatePicker = <T extends TDateValue>({
       popoverData.current?.close();
     }
   };
+
   const onTimeChange = (time: Time | null) => {
     if (!time) return;
 
@@ -257,12 +258,7 @@ export const DatePicker = <T extends TDateValue>({
         noArrow
         {...popoverProps}
         content={
-          <Calendar<ZonedDateTime>
-            key={calendarKey}
-            defaultFocusedValue={value}
-            value={value}
-            onChange={handleDateChange}
-          >
+          <Calendar<ZonedDateTime> key={calendarKey} defaultFocusedValue={value}>
             <ReqorePanel
               responsiveActionsWrapperProps={{ fluid: false }}
               minimal
@@ -370,78 +366,5 @@ export const DatePicker = <T extends TDateValue>({
         {(segment) => <StyledDateSegment segment={segment} />}
       </ReqorePopover>
     </StyledRADatePicker>
-  );
-};
-
-export const YearMonthDropdowns = ({
-  value: _value,
-  onValueChange,
-  setIsYearDropdownOpen,
-  setIsMonthDropdownOpen,
-}: {
-  value?: ZonedDateTime;
-  onValueChange(value: ZonedDateTime, close: boolean): void;
-  setIsMonthDropdownOpen(open: boolean): void;
-  setIsYearDropdownOpen(open: boolean): void;
-}) => {
-  const value = _value ?? toDate(new Date());
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-  const currentYear = new Date().getFullYear();
-  const years = new Array(currentYear - 1900 + 1).fill(null).map((_, index) => currentYear - index);
-
-  return (
-    <ReqoreControlGroup gapSize='small'>
-      <ReqoreDropdown
-        compact
-        filterable
-        caretPosition='right'
-        scrollToSelected
-        label={<span>{months[value?.month - 1] ?? 'Month'}</span>}
-        items={months.map((month, index) => ({
-          value: month,
-          selected: index === value?.month - 1,
-        }))}
-        inputProps={{
-          focusRules: {
-            type: 'auto',
-          },
-        }}
-        onItemSelect={(item) =>
-          onValueChange(value.set({ month: months.findIndex((m) => m === item.value) + 1 }), false)
-        }
-        onToggleChange={setIsMonthDropdownOpen}
-      />
-      <ReqoreDropdown
-        onToggleChange={setIsYearDropdownOpen}
-        compact
-        filterable
-        caretPosition='right'
-        scrollToSelected
-        label={value?.year ?? currentYear}
-        items={years.map((year) => ({
-          value: year,
-          selected: year === value?.year,
-        }))}
-        inputProps={{
-          focusRules: {
-            type: 'auto',
-          },
-        }}
-        onItemSelect={(item) => onValueChange(value.set({ year: item.value }), false)}
-      />
-    </ReqoreControlGroup>
   );
 };
