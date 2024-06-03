@@ -249,7 +249,8 @@ export const createEffectGradient = (
   colors: TReqoreEffectGradientColors,
   lighten: number = 0,
   minimal?: boolean,
-  active?: boolean
+  active?: boolean,
+  transparent?: boolean
 ): string => {
   let _colors: TReqoreEffectGradientColorsObject;
   // Check if the colors are valid
@@ -267,7 +268,7 @@ export const createEffectGradient = (
     _colors,
     (colorsString, color, percentage) => {
       return `${colorsString}, ${
-        minimal
+        minimal || transparent
           ? active
             ? theme.originalMain
             : changeLightness(theme.originalMain, lighten)

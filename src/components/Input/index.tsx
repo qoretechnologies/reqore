@@ -51,6 +51,7 @@ export interface IReqoreInputProps
   icon?: IReqoreIconName;
   rightIcon?: IReqoreIconName;
   flat?: boolean;
+  transparent?: boolean;
   rounded?: boolean;
   type?: 'text' | 'password' | 'email' | 'number' | 'tel' | 'url';
   step?: number;
@@ -150,8 +151,8 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
         `
       : undefined}
 
-  background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-    minimal ? 'transparent' : rgba(theme.main, 0.1)};
+  background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
+    minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
   color: ${({ theme }: IReqoreInputStyle) =>
     getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
 
@@ -159,8 +160,8 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
 
   &:active,
   &:focus {
-    background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-      minimal ? 'transparent' : rgba(theme.main, 0.15)};
+    background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
+      minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
   }
 
   &::placeholder {
