@@ -136,6 +136,7 @@ export interface IReqoreTextEffectProps
   theme?: IReqoreTheme;
   active?: boolean;
   isText?: boolean;
+  transparent?: boolean;
 }
 
 // Animate the gradient
@@ -153,7 +154,7 @@ const StyledGradientKeyframes = keyframes`
 
 export const StyledEffect = styled.span`
   // If gradient was supplied
-  ${({ effect, theme, minimal, active, isText }: IReqoreTextEffectProps) => {
+  ${({ effect, theme, minimal, active, transparent, isText }: IReqoreTextEffectProps) => {
     if (!effect || !effect.gradient) {
       return undefined;
     }
@@ -163,14 +164,17 @@ export const StyledEffect = styled.span`
       theme,
       effect.gradient.colors,
       minimal ? 0.05 : 0,
-      !isText && minimal && !active
+      !isText && minimal && !active,
+      false,
+      transparent
     );
     const gradientColorsActive = createEffectGradient(
       theme,
       effect.gradient.colors,
       0.05,
       minimal,
-      true
+      true,
+      transparent
     );
 
     const gradientDirectionOrShape =
@@ -221,7 +225,7 @@ export const StyledEffect = styled.span`
       background: ${active ? gradientActive : gradient};
       border-color: ${borderColor} !important;
 
-      ${color && !minimal
+      ${color && !minimal && !transparent
         ? css`
             color: ${getReadableColorFrom(getColorFromMaybeString(theme, color), false)} !important;
             &::placeholder {

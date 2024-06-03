@@ -240,6 +240,28 @@ export const Effect: Story = {
   },
 };
 
+export const Transparent: Story = {
+  render: Template,
+
+  args: {
+    transparent: true,
+    effect: {
+      gradient: {
+        type: 'radial',
+        colors: {
+          0: '#361554',
+          50: '#160013',
+        },
+      },
+      spaced: 2,
+      color: '#ffffff',
+      uppercase: true,
+      textSize: 'small',
+      weight: 'bold',
+    },
+  },
+};
+
 export const WithTemplates: Story = {
   render: (args) => <ReqoreTextarea {...args} />,
 
