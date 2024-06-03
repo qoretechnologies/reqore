@@ -250,3 +250,12 @@ export const ConfirmationModal: Story = {
     confirm: true,
   },
 };
+
+export const CustomZIndex: Story = {
+  render: Template,
+
+  args: {
+    confirm: true,
+    customZIndex: 99999,
+  },
+};
