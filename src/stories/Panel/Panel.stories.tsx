@@ -751,3 +751,11 @@ export const EditableLabel: Story = {
     await fireEvent.click(canvasElement.querySelector('.reqore-label-editor'));
   },
 };
+
+export const Loading: Story = {
+  render: Template,
+
+  args: {
+    loading: true,
+  },
+};

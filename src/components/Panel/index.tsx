@@ -34,6 +34,7 @@ import {
   IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreIconImage,
+  IWithReqoreLoading,
   IWithReqoreSize,
   IWithReqoreTooltip,
 } from '../../types/global';
@@ -82,6 +83,7 @@ export interface IReqorePanelProps
     IWithReqoreTooltip,
     IWithReqoreFluid,
     IWithReqoreIconImage,
+    IWithReqoreLoading,
     React.HTMLAttributes<HTMLDivElement> {
   as?: any;
   children?: any;
@@ -400,6 +402,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       showHeaderTooltip,
       resizable,
       onLabelEdit,
+      loading,
+      loadingIconType,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -748,7 +752,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     size={panelSize}
                     {...headerProps}
                     hasLabel={!!label}
-                    hasIcon={!!icon || !!iconImage}
+                    hasIcon={!!icon || !!iconImage || loading}
                     iconSize={ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]}
                   >
                     {icon || iconImage ? (
@@ -756,14 +760,17 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         size={`${
                           ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
                         }px`}
-                        icon={icon}
-                        image={iconImage}
+                        image={loading ? undefined : iconImage}
                         margin='right'
                         color={iconColor}
                         tooltip={{
                           content: label,
                         }}
                         {...iconProps}
+                        animation={loading ? 'spin' : iconProps?.animation}
+                        icon={
+                          loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
+                        }
                       />
                     ) : null}
                     {typeof label === 'string' ? (

@@ -35,6 +35,7 @@ import {
   IReqoreIntent,
   IReqoreReadOnly,
   IWithReqoreEffect,
+  IWithReqoreLoading,
   IWithReqoreSize,
   TReqoreTooltipProp,
 } from '../../types/global';
@@ -58,6 +59,7 @@ export interface IReqoreButtonProps
     IReqoreDisabled,
     IReqoreIntent,
     IReqoreReadOnly,
+    IWithReqoreLoading,
     IWithReqoreEffect {
   icon?: IReqoreIconName;
   size?: TSizes;
@@ -412,6 +414,8 @@ const ReqoreButton = memo(
         compact,
         as,
         animated,
+        loading,
+        loadingIconType,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -450,6 +454,9 @@ const ReqoreButton = memo(
       }, [badge]);
 
       const animate = animated === true || (animations.buttons && animated !== false);
+      const leftIcon: IReqoreIconName = loading
+        ? `Loader${loadingIconType || ''}Line`
+        : icon || leftIconProps?.icon;
 
       return (
         <StyledButton
@@ -475,7 +482,7 @@ const ReqoreButton = memo(
           animate={animate}
           flat={_flat}
           active={active}
-          readOnly={readOnly}
+          readOnly={readOnly || loading}
           wrap={wrap}
           description={description}
           className={`${className || ''} reqore-control reqore-button`}
@@ -485,7 +492,6 @@ const ReqoreButton = memo(
             {hasLeftIcon ? (
               <>
                 <ReqoreIcon
-                  icon={icon}
                   size={size}
                   color={leftIconColor || iconColor}
                   compact={compact}
@@ -501,6 +507,8 @@ const ReqoreButton = memo(
                         }
                       : undefined
                   }
+                  animation={loading ? 'spin' : leftIconProps?.animation}
+                  icon={leftIcon}
                 />
                 {_children || hasRightIcon ? (
                   <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (compact ? 2 : 1)} />

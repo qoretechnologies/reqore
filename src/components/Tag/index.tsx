@@ -27,6 +27,7 @@ import {
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
   IWithReqoreFluid,
+  IWithReqoreLoading,
   IWithReqoreMinimal,
   IWithReqoreTooltip,
 } from '../../types/global';
@@ -57,6 +58,7 @@ export interface IReqoreCustomTagProps
     IWithReqoreMinimal,
     IWithReqoreFluid,
     IWithReqoreEffect,
+    IWithReqoreLoading,
     IWithReqoreCustomTheme {
   fixed?: boolean | 'key' | 'label';
   align?: 'left' | 'right' | 'center';
@@ -305,6 +307,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       labelKeyEffect,
       leftIconProps,
       rightIconProps,
+      loading,
+      loadingIconType,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -329,6 +333,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
 
       return customColor;
     };
+
+    const leftIcon: IReqoreIconName = loading
+      ? `Loader${loadingIconType || ''}Line`
+      : icon || leftIconProps?.icon;
 
     return (
       <StyledTag
@@ -355,7 +363,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         wrap={wrap}
         hasWidth={!!width}
       >
-        {icon || labelKey ? (
+        {leftIcon || labelKey ? (
           <StyledTagKeyWrapper
             size={size}
             className='reqore-tag-key-content'
@@ -365,13 +373,14 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             hasKey={!!labelKey}
             fixed={rest.fixed}
           >
-            {icon && (
+            {leftIcon && (
               <ReqoreIcon
-                icon={icon}
                 size={size}
                 margin={label || labelKey ? 'left' : 'both'}
                 color={leftIconColor || iconColor}
                 {...leftIconProps}
+                animation={loading ? 'spin' : leftIconProps?.animation}
+                icon={leftIcon}
               />
             )}
             {labelKey && (
