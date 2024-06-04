@@ -16,13 +16,14 @@ import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
-import { DisabledElement, ReadOnlyElement } from '../../styles';
+import { ActiveIconScale, DisabledElement, InactiveIconScale, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
   IReqoreReadOnly,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
+  IWithReqoreLoading,
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -37,6 +38,7 @@ export interface IReqoreInputProps
     IReqoreIntent,
     IWithReqoreCustomTheme,
     IWithReqoreEffect,
+    IWithReqoreLoading,
     IWithReqoreTooltip {
   autoFocus?: boolean;
   placeholder?: string;
@@ -91,10 +93,14 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
       ? 0
       : RADIUS_FROM_SIZE[_size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
+  ${InactiveIconScale}
+
   &:focus-within {
     .reqore-clear-input-button {
       display: flex;
     }
+
+    ${ActiveIconScale}
   }
 `;
 
@@ -209,6 +215,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       leftIconProps = {},
       rightIconProps = {},
       pill,
+      loading,
+      loadingIconType,
       ...rest
     }: IReqoreInputProps,
     ref
@@ -222,6 +230,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
 
     const hasLeftIcon = icon || leftIconProps?.image;
     const hasRightIcon = rightIcon || rightIconProps?.image;
+    const leftIcon: IReqoreIconName = loading
+      ? `Loader${loadingIconType || ''}Line`
+      : icon || leftIconProps?.icon;
 
     return (
       <StyledInputWrapper
@@ -235,14 +246,20 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         minimal={minimal}
         _size={size}
         ref={targetRef}
-        readOnly={readOnly}
+        readOnly={readOnly || loading}
         disabled={rest.disabled}
         style={wrapperStyle}
         pill={pill}
       >
         {hasLeftIcon && (
           <StyledIconWrapper _size={size}>
-            <ReqoreIcon size={size} icon={icon} color={iconColor} {...leftIconProps} />
+            <ReqoreIcon
+              size={size}
+              color={iconColor}
+              {...leftIconProps}
+              icon={leftIcon}
+              animation={loading ? 'spin' : leftIconProps?.animation}
+            />
           </StyledIconWrapper>
         )}
         <StyledInput
@@ -267,7 +284,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             !!(onClearClick && (rest.as || rest.children || rest?.onChange))
           }
           className={`${className || ''} reqore-control reqore-input`}
-          readOnly={readOnly}
+          readOnly={readOnly || loading}
           pill={pill}
         >
           {rest?.children}

@@ -384,3 +384,8 @@ export const Effect = {
     },
   },
 };
+
+export const Loading: Story = {
+  render: Template,
+  args: { loading: true },
+};

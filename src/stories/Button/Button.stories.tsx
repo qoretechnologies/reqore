@@ -432,3 +432,11 @@ export const Pill: Story = {
     pill: true,
   },
 };
+
+export const Loading: Story = {
+  render: Template,
+
+  args: {
+    loading: true,
+  },
+};
