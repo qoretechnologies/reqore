@@ -432,6 +432,7 @@ const ReqoreButton = memo(
       // If color or intent was specified, set the color
       const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
       const _flat = minimal ? flat : flat !== false;
+      const _compact = compact ?? theme.buttons?.compact;
       const color: TReqoreHexColor = customColor
         ? minimal
           ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
@@ -486,7 +487,7 @@ const ReqoreButton = memo(
           wrap={wrap}
           description={description}
           className={`${className || ''} reqore-control reqore-button`}
-          compact={compact}
+          compact={_compact}
         >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {hasLeftIcon ? (
@@ -494,7 +495,7 @@ const ReqoreButton = memo(
                 <ReqoreIcon
                   size={size}
                   color={leftIconColor || iconColor}
-                  compact={compact}
+                  compact={_compact}
                   {...leftIconProps}
                   style={
                     textAlign !== 'left' || iconsAlign === 'center'
@@ -511,7 +512,7 @@ const ReqoreButton = memo(
                   icon={leftIcon}
                 />
                 {_children || hasRightIcon ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (compact ? 2 : 1)} />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (_compact ? 2 : 1)} />
                 ) : null}
               </>
             ) : _children ? (
@@ -573,7 +574,7 @@ const ReqoreButton = memo(
                 content={badge}
                 size={size}
                 theme={theme}
-                compact={compact}
+                compact={_compact}
                 wrapGroup={false}
                 wrap={false}
               />
@@ -592,13 +593,13 @@ const ReqoreButton = memo(
             ) : (
               <>
                 {_children || badge ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (compact ? 2 : 1)} />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (_compact ? 2 : 1)} />
                 ) : null}
                 <ReqoreIcon
                   icon={rightIcon}
                   size={size}
                   color={rightIconColor || iconColor}
-                  compact={compact}
+                  compact={_compact}
                   {...rightIconProps}
                   style={
                     textAlign !== 'right' || iconsAlign === 'center'

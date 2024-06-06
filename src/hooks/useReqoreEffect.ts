@@ -1,9 +1,5 @@
 import { useMemo } from 'react';
-import {
-  IReqoreEffect,
-  TReqoreEffectGradientAnimationTrigger,
-  TReqoreHexColor,
-} from '../components/Effect';
+import { IReqoreEffect } from '../components/Effect';
 import { IReqoreTheme } from '../constants/theme';
 import { useReqoreTheme } from './useTheme';
 
@@ -15,7 +11,7 @@ export const useReqoreEffect = (
   let _theme: IReqoreTheme = useReqoreTheme();
 
   // Return the effect if the component is not defined in the theme
-  if (!theme[component]) {
+  if (!theme[component]?.effect) {
     return effect;
   }
 
@@ -24,26 +20,12 @@ export const useReqoreEffect = (
     _theme = theme;
   }
 
-  const colors: TReqoreHexColor = useMemo(() => {
-    return _theme[component].gradient ? _theme.main : undefined;
-  }, [_theme, effect]);
-
-  const animate: TReqoreEffectGradientAnimationTrigger = useMemo(() => {
-    return _theme[component].animate;
-  }, [_theme, effect]);
-
   const _effect = useMemo(() => {
     return {
       ...effect,
-      gradient: {
-        colors,
-        animate,
-
-        // If the user has defined a gradient, we don't want to override it
-        ...effect?.gradient,
-      },
+      ..._theme[component].effect,
     };
-  }, [colors, animate, effect]);
+  }, [effect, _theme[component].effect]);
 
   return _effect;
 };

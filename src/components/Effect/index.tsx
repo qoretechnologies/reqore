@@ -80,11 +80,7 @@ export type TReqoreEffectColorList = [
   TReqoreEffectColorManipulationMultiplier | undefined,
   TReqoreEffectColorManipulationAlpha | undefined
 ];
-export type TReqoreEffectGradientColors =
-  | 'main'
-  | TReqoreIntent
-  | TReqoreHexColor
-  | TReqoreEffectGradientColorsObject;
+export type TReqoreEffectGradientColors = TReqoreEffectColor | TReqoreEffectGradientColorsObject;
 export type TReqoreEffectGradientColorsObject = Record<number, TReqoreEffectColor>;
 export type TReqoreEffectGradientAnimationTrigger = 'always' | 'hover' | 'active' | 'never';
 

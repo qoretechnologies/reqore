@@ -127,10 +127,13 @@ const usePopover = ({
         _removePopover();
       }
     } else if (show) {
-      if (delay || tooltips.delay) {
+      const globalDelay =
+        handler === 'hover' || handler === 'hoverStay' ? delay ?? tooltips.delay : delay;
+
+      if (globalDelay) {
         timeout = setTimeout(() => {
           openPopover();
-        }, delay || tooltips.delay);
+        }, globalDelay);
       } else {
         openPopover();
       }
