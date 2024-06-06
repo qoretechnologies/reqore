@@ -418,8 +418,24 @@ export const GlobalEffect: Story = {
   args: {
     otherThemeOptions: {
       buttons: {
-        gradient: true,
-        animate: 'active',
+        effect: {
+          gradient: {
+            colors: 'info:darken:2:1',
+            animate: 'active',
+          },
+        },
+      },
+    },
+  },
+};
+
+export const GlobalCompact: Story = {
+  render: Template,
+
+  args: {
+    otherThemeOptions: {
+      buttons: {
+        compact: true,
       },
     },
   },

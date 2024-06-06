@@ -1,8 +1,4 @@
-import {
-  TReqoreEffectColor,
-  TReqoreEffectGradientAnimationTrigger,
-  TReqoreHexColor,
-} from '../components/Effect';
+import { IReqoreEffect, TReqoreEffectColor, TReqoreHexColor } from '../components/Effect';
 import { Colors } from './colors';
 
 export interface IReqoreSidebarTheme {
@@ -79,8 +75,8 @@ export interface IReqoreCustomTheme {
     color?: TReqoreEffectColor;
     dim?: boolean;
   };
-  gradient?: boolean;
-  animate?: TReqoreEffectGradientAnimationTrigger;
+  effect?: IReqoreEffect;
+  compact?: boolean;
 }
 
 export interface IReqoreIntents {
