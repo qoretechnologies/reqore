@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import _size from 'lodash/size';
 import { rgba } from 'polished';
 import React, { forwardRef, HTMLAttributes, useState } from 'react';
@@ -48,7 +49,7 @@ export interface IReqoreTagAction
     IReqoreIntent,
     HTMLAttributes<HTMLSpanElement> {
   icon: IReqoreIconName;
-  show?: boolean;
+  show?: boolean | 'hover';
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -194,6 +195,12 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       pointer-events: none;
       cursor: not-allowed;
     `}
+
+  &:not(:hover) {
+    .reqore-tag-action-hidden {
+      display: none;
+    }
+  }
 `;
 
 const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
@@ -445,7 +452,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                     componentProps={{
                       size,
                       color: getCustomColor(intent),
-                      className: 'reqore-tag-action',
+                      className: classNames(
+                        'reqore-tag-action',
+                        action.show === 'hover' ? 'reqore-tag-action-hidden' : ''
+                      ),
                       onClick: onClick,
                       effect: rest.effect,
                       ...action,
