@@ -344,6 +344,13 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
       <ReqoreTagGroup>
         <ReqoreTag label='Right aligned' align='right' {...args} />
       </ReqoreTagGroup>
+      <ReqoreTagGroup>
+        <ReqoreTag
+          label='With hidden action'
+          {...args}
+          actions={[...args.actions, { icon: 'VolumeDownLine', show: 'hover' }]}
+        />
+      </ReqoreTagGroup>
     </>
   );
 };
