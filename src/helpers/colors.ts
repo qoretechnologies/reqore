@@ -206,6 +206,10 @@ export const getColorFromMaybeString = (
     return undefined;
   }
 
+  if (color.startsWith('rgba')) {
+    return RGBAToHexA(color);
+  }
+
   const [providedColor, shading, multiplier = 1, alpha = 1]: TReqoreEffectColorList = color.split(
     ':'
   ) as TReqoreEffectColorList;
@@ -249,7 +253,8 @@ export const createEffectGradient = (
   colors: TReqoreEffectGradientColors,
   lighten: number = 0,
   minimal?: boolean,
-  active?: boolean
+  active?: boolean,
+  transparent?: boolean
 ): string => {
   let _colors: TReqoreEffectGradientColorsObject;
   // Check if the colors are valid
@@ -267,7 +272,7 @@ export const createEffectGradient = (
     _colors,
     (colorsString, color, percentage) => {
       return `${colorsString}, ${
-        minimal
+        minimal || transparent
           ? active
             ? theme.originalMain
             : changeLightness(theme.originalMain, lighten)
@@ -280,14 +285,15 @@ export const createEffectGradient = (
 
 export const buildGradientColorsFromString = (
   theme: IReqoreTheme,
-  color: 'main' | TReqoreHexColor | TReqoreIntent
+  colorString: TReqoreEffectColor
 ): TReqoreEffectGradientColorsObject => {
-  if (!color) {
+  if (!colorString) {
     throw new Error('You need to provide a color or intent');
   }
 
-  const colorFrom: TReqoreHexColor = getColorFromMaybeString(theme, `${color}:lighten:1`);
-  const colorTo: TReqoreHexColor = getColorFromMaybeString(theme, `${color}`);
+  const finalColor: TReqoreHexColor = getColorFromMaybeString(theme, colorString);
+  const colorFrom: TReqoreHexColor = getColorFromMaybeString(theme, `${finalColor}:lighten:5:1`);
+  const colorTo: TReqoreHexColor = getColorFromMaybeString(theme, `${finalColor}:darken:5:1`);
 
   return {
     0: colorFrom,

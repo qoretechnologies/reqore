@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import _size from 'lodash/size';
 import { rgba } from 'polished';
 import React, { forwardRef, HTMLAttributes, useState } from 'react';
@@ -27,6 +28,7 @@ import {
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
   IWithReqoreFluid,
+  IWithReqoreLoading,
   IWithReqoreMinimal,
   IWithReqoreTooltip,
 } from '../../types/global';
@@ -47,7 +49,7 @@ export interface IReqoreTagAction
     IReqoreIntent,
     HTMLAttributes<HTMLSpanElement> {
   icon: IReqoreIconName;
-  show?: boolean;
+  show?: boolean | 'hover';
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -57,6 +59,7 @@ export interface IReqoreCustomTagProps
     IWithReqoreMinimal,
     IWithReqoreFluid,
     IWithReqoreEffect,
+    IWithReqoreLoading,
     IWithReqoreCustomTheme {
   fixed?: boolean | 'key' | 'label';
   align?: 'left' | 'right' | 'center';
@@ -77,7 +80,9 @@ export interface IReqoreCustomTagProps
   asBadge?: boolean;
   intent?: TReqoreIntent;
   wrap?: boolean;
+  labelAlign?: 'left' | 'right' | 'center';
   labelEffect?: IReqoreEffect;
+  labelKeyAlign?: 'left' | 'right' | 'center';
   labelKeyEffect?: IReqoreEffect;
   as?: string | React.ElementType;
 }
@@ -190,6 +195,12 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       pointer-events: none;
       cursor: not-allowed;
     `}
+
+  &:not(:hover) {
+    .reqore-tag-action-hidden {
+      display: none;
+    }
+  }
 `;
 
 const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
@@ -216,6 +227,14 @@ const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
   display: flex;
   align-items: center;
   flex: 1;
+
+  ${({ labelAlign }) => css`
+    justify-content: ${labelAlign === 'left'
+      ? 'flex-start'
+      : labelAlign === 'right'
+      ? 'flex-end'
+      : 'center'};
+  `}
 
   ${({ wrap, hasWidth }) =>
     !wrap && !hasWidth
@@ -289,10 +308,14 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       leftIconColor,
       rightIconColor,
       iconColor,
+      labelKeyAlign = 'left',
+      labelAlign = 'left',
       labelEffect,
       labelKeyEffect,
       leftIconProps,
       rightIconProps,
+      loading,
+      loadingIconType,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -317,6 +340,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
 
       return customColor;
     };
+
+    const leftIcon: IReqoreIconName = loading
+      ? `Loader${loadingIconType || ''}Line`
+      : icon || leftIconProps?.icon;
 
     return (
       <StyledTag
@@ -343,7 +370,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         wrap={wrap}
         hasWidth={!!width}
       >
-        {icon || labelKey ? (
+        {leftIcon || labelKey ? (
           <StyledTagKeyWrapper
             size={size}
             className='reqore-tag-key-content'
@@ -353,13 +380,14 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             hasKey={!!labelKey}
             fixed={rest.fixed}
           >
-            {icon && (
+            {leftIcon && (
               <ReqoreIcon
-                icon={icon}
                 size={size}
                 margin={label || labelKey ? 'left' : 'both'}
                 color={leftIconColor || iconColor}
                 {...leftIconProps}
+                animation={loading ? 'spin' : leftIconProps?.animation}
+                icon={leftIcon}
               />
             )}
             {labelKey && (
@@ -367,6 +395,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 wrap={wrap}
                 hasWidth={!!width}
                 size={size}
+                labelAlign={labelKeyAlign}
                 effect={
                   {
                     weight: 'thick',
@@ -394,6 +423,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 wrap={wrap}
                 hasWidth={!!width}
+                labelAlign={labelAlign}
                 effect={{
                   ...labelEffect,
                 }}
@@ -422,7 +452,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                     componentProps={{
                       size,
                       color: getCustomColor(intent),
-                      className: 'reqore-tag-action',
+                      className: classNames(
+                        'reqore-tag-action',
+                        action.show === 'hover' ? 'reqore-tag-action-hidden' : ''
+                      ),
                       onClick: onClick,
                       effect: rest.effect,
                       ...action,

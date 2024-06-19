@@ -35,6 +35,7 @@ import {
   IReqoreIntent,
   IReqoreReadOnly,
   IWithReqoreEffect,
+  IWithReqoreLoading,
   IWithReqoreSize,
   TReqoreTooltipProp,
 } from '../../types/global';
@@ -58,6 +59,7 @@ export interface IReqoreButtonProps
     IReqoreDisabled,
     IReqoreIntent,
     IReqoreReadOnly,
+    IWithReqoreLoading,
     IWithReqoreEffect {
   icon?: IReqoreIconName;
   size?: TSizes;
@@ -315,6 +317,7 @@ export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButton
         color={color}
         customTheme={theme}
         className='reqore-button-badge'
+        labelAlign='center'
         minimal={!(content as IReqoreTagProps)?.effect?.gradient}
         {...(typeof content === 'string' || typeof content === 'number'
           ? { label: content }
@@ -411,6 +414,8 @@ const ReqoreButton = memo(
         compact,
         as,
         animated,
+        loading,
+        loadingIconType,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -427,6 +432,7 @@ const ReqoreButton = memo(
       // If color or intent was specified, set the color
       const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
       const _flat = minimal ? flat : flat !== false;
+      const _compact = compact ?? theme.buttons?.compact;
       const color: TReqoreHexColor = customColor
         ? minimal
           ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
@@ -449,6 +455,9 @@ const ReqoreButton = memo(
       }, [badge]);
 
       const animate = animated === true || (animations.buttons && animated !== false);
+      const leftIcon: IReqoreIconName = loading
+        ? `Loader${loadingIconType || ''}Line`
+        : icon || leftIconProps?.icon;
 
       return (
         <StyledButton
@@ -474,20 +483,19 @@ const ReqoreButton = memo(
           animate={animate}
           flat={_flat}
           active={active}
-          readOnly={readOnly}
+          readOnly={readOnly || loading}
           wrap={wrap}
           description={description}
           className={`${className || ''} reqore-control reqore-button`}
-          compact={compact}
+          compact={_compact}
         >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {hasLeftIcon ? (
               <>
                 <ReqoreIcon
-                  icon={icon}
                   size={size}
                   color={leftIconColor || iconColor}
-                  compact={compact}
+                  compact={_compact}
                   {...leftIconProps}
                   style={
                     textAlign !== 'left' || iconsAlign === 'center'
@@ -500,9 +508,11 @@ const ReqoreButton = memo(
                         }
                       : undefined
                   }
+                  animation={loading ? 'spin' : leftIconProps?.animation}
+                  icon={leftIcon}
                 />
                 {_children || hasRightIcon ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (compact ? 2 : 1)} />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (_compact ? 2 : 1)} />
                 ) : null}
               </>
             ) : _children ? (
@@ -564,7 +574,7 @@ const ReqoreButton = memo(
                 content={badge}
                 size={size}
                 theme={theme}
-                compact={compact}
+                compact={_compact}
                 wrapGroup={false}
                 wrap={false}
               />
@@ -583,13 +593,13 @@ const ReqoreButton = memo(
             ) : (
               <>
                 {_children || badge ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (compact ? 2 : 1)} />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (_compact ? 2 : 1)} />
                 ) : null}
                 <ReqoreIcon
                   icon={rightIcon}
                   size={size}
                   color={rightIconColor || iconColor}
-                  compact={compact}
+                  compact={_compact}
                   {...rightIconProps}
                   style={
                     textAlign !== 'right' || iconsAlign === 'center'

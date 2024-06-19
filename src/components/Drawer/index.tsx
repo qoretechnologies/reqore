@@ -34,6 +34,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   _isModal?: boolean;
   width?: number | string;
   height?: number | string;
+  customZIndex?: number;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -155,6 +156,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
   width,
   height,
   actions = [],
+  customZIndex,
   ...rest
 }: IReqoreDrawerProps) => {
   const animations = useReqoreProperty('animations');
@@ -183,8 +185,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
     config: animations.dialogs ? SPRING_CONFIG : SPRING_CONFIG_NO_ANIMATIONS,
   });
 
-  const zIndex = useMemo(() => getAndIncreaseZIndex(), []);
-  const wrapperZIndex = useMemo(() => getAndIncreaseZIndex(), []);
+  const zIndex = useMemo(() => customZIndex || getAndIncreaseZIndex(), [customZIndex]);
+  const wrapperZIndex = useMemo(() => customZIndex + 1 || getAndIncreaseZIndex(), [customZIndex]);
   const _actions: IReqorePanelAction[] = useMemo(() => {
     const builtActions: IReqorePanelAction[] = [...actions];
 

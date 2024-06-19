@@ -365,6 +365,35 @@ export const Muted: Story = {
   },
 };
 
+export const Black: Story = {
+  render: Template,
+
+  args: {
+    intent: 'black',
+  },
+};
+
+export const White: Story = {
+  render: Template,
+
+  args: {
+    intent: 'white',
+  },
+};
+
+export const CustomIntent: Story = {
+  render: Template,
+
+  args: {
+    otherThemeOptions: {
+      intents: {
+        custom3: '#5a025a',
+      },
+    },
+    intent: 'custom3',
+  },
+};
+
 export const Effect: Story = {
   render: Template,
 
@@ -389,8 +418,24 @@ export const GlobalEffect: Story = {
   args: {
     otherThemeOptions: {
       buttons: {
-        gradient: true,
-        animate: 'active',
+        effect: {
+          gradient: {
+            colors: 'info:darken:2:1',
+            animate: 'active',
+          },
+        },
+      },
+    },
+  },
+};
+
+export const GlobalCompact: Story = {
+  render: Template,
+
+  args: {
+    otherThemeOptions: {
+      buttons: {
+        compact: true,
       },
     },
   },
@@ -401,5 +446,13 @@ export const Pill: Story = {
 
   args: {
     pill: true,
+  },
+};
+
+export const Loading: Story = {
+  render: Template,
+
+  args: {
+    loading: true,
   },
 };

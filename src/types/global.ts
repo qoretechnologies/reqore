@@ -1,4 +1,5 @@
 import { IReqoreEffect } from '../components/Effect';
+import { IReqoreSpinnerProps } from '../components/Spinner';
 import { TSizes } from '../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../constants/theme';
 import { IPopoverOptions } from '../hooks/usePopover';
@@ -205,6 +206,21 @@ export interface IWithReqoreEffect {
    *
    */
   effect?: IReqoreEffect;
+}
+
+export interface IWithReqoreLoading {
+  /**
+   * If true, the component will be loading
+   * @default false
+   * @type boolean
+   * @example
+   * <ReqoreButton loading />
+   * <ReqoreButton loading={true} loadingIconType={2} />
+   * <ReqoreButton loading={false} />
+   *
+   */
+  loading?: boolean;
+  loadingIconType?: IReqoreSpinnerProps['type'];
 }
 
 export interface IReqoreTooltip extends IPopoverOptions {}

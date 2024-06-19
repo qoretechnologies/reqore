@@ -58,6 +58,7 @@ export interface IReqoreTextareaProps
   wrapperStyle?: React.CSSProperties;
   focusRules?: IReqoreAutoFocusRules;
   templates?: IReqoreFormTemplates;
+  transparent?: boolean;
 }
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
@@ -96,15 +97,15 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   line-height: ${({ _size }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
   vertical-align: middle;
 
-  background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-    minimal ? 'transparent' : rgba(theme.main, 0.1)};
+  background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
+    minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
   color: ${({ theme }: IReqoreInputStyle) =>
     getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
 
   &:active,
   &:focus {
-    background-color: ${({ theme, minimal }: IReqoreInputStyle) =>
-      minimal ? 'transparent' : rgba(theme.main, 0.15)};
+    background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
+      minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
   }
 
   border-radius: ${({ minimal, rounded, _size }) =>

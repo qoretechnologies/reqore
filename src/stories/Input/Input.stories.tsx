@@ -211,10 +211,34 @@ export const Effect: Story = {
   },
 };
 
+export const Transparent: Story = {
+  render: Template,
+
+  args: {
+    transparent: true,
+    effect: {
+      gradient: {
+        colors: {
+          0: '#56345e',
+          100: 'transparent',
+        },
+      },
+    },
+  },
+};
+
 export const Pill: Story = {
   render: Template,
 
   args: {
     pill: true,
+  },
+};
+
+export const Loading: Story = {
+  render: Template,
+
+  args: {
+    loading: true,
   },
 };

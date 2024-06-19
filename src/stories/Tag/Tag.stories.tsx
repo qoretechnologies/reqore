@@ -344,6 +344,13 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
       <ReqoreTagGroup>
         <ReqoreTag label='Right aligned' align='right' {...args} />
       </ReqoreTagGroup>
+      <ReqoreTagGroup>
+        <ReqoreTag
+          label='With hidden action'
+          {...args}
+          actions={[...args.actions, { icon: 'VolumeDownLine', show: 'hover' }]}
+        />
+      </ReqoreTagGroup>
     </>
   );
 };
@@ -362,6 +369,11 @@ export const Wrap: Story = {
   args: { wrap: true },
 };
 
+export const WithTextAligns: Story = {
+  render: Template,
+  args: { labelAlign: 'right', labelKeyAlign: 'center' },
+};
+
 export const Effect = {
   render: Template,
 
@@ -378,4 +390,9 @@ export const Effect = {
       textSize: 'small',
     },
   },
+};
+
+export const Loading: Story = {
+  render: Template,
+  args: { loading: true },
 };
