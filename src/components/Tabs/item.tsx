@@ -1,6 +1,6 @@
 import { omit } from 'lodash';
-import { forwardRef, memo, useEffect, useState, useTransition } from 'react';
-import { useUnmount } from 'react-use';
+import { forwardRef, memo, useState, useTransition } from 'react';
+import { useUnmount, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { TSizes } from '../../constants/sizes';
@@ -140,12 +140,12 @@ const ReqoreTabsListItem = memo(
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme);
 
-      useEffect(() => {
+      useUpdateEffect(() => {
         if (isPending) {
           setLoadingTimer(
             setTimeout(() => {
-              setStillPending(true);
-            }, 100)
+              setStillPending(() => true);
+            }, 300)
           );
         } else {
           clearTimeout(loadingTimer);

@@ -363,10 +363,10 @@ export const DontUnMountInactiveTabs: Story = {
   },
 };
 
-const SlowTab = () => {
+const SlowComponent = () => {
   let startTime = performance.now();
 
-  while (performance.now() - startTime < 1500) {
+  while (performance.now() - startTime < 150) {
     // Do nothing for 1 ms per item to emulate extremely slow code
   }
 
@@ -390,9 +390,7 @@ export const WithSlowTab: Story = {
         <ReqoreTabsContent tabId='tab1'>
           <ReqoreH3>I am Tab 1</ReqoreH3>
         </ReqoreTabsContent>
-        <ReqoreTabsContent tabId='slowtab'>
-          <SlowTab />
-        </ReqoreTabsContent>
+        <ReqoreTabsContent tabId='slowtab'>{Array(10).fill(<SlowComponent />)}</ReqoreTabsContent>
         <ReqoreTabsContent tabId='tab2'>
           <ReqoreH3>Tab 2</ReqoreH3>
         </ReqoreTabsContent>
