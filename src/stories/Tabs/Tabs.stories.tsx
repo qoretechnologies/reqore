@@ -1,5 +1,8 @@
+import { expect } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
+import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreTabsProps } from '../../components/Tabs';
+import { sleep } from '../../helpers/utils';
 import { ReqoreH3, ReqoreTabs, ReqoreTabsContent } from '../../index';
 import { StoryMeta } from '../utils';
 import { IntentArg, SizeArg, argManager } from '../utils/args';
@@ -237,6 +240,10 @@ const Template: StoryFn<IReqoreTabsProps> = (args) => {
 
 export const Basic: Story = {
   render: Template,
+
+  play: async () => {
+    await expect(document.querySelectorAll('.reqore-tabs-content').length).toBe(1);
+  },
 };
 
 export const Fill: Story = {
@@ -342,5 +349,61 @@ export const CustomTabsPadding: Story = {
 
   args: {
     tabsPadding: 'none',
+  },
+};
+
+export const DontUnMountInactiveTabs: Story = {
+  render: Template,
+
+  args: {
+    unMountOnTabChange: false,
+  },
+  play: async () => {
+    await expect(document.querySelectorAll('.reqore-tabs-content').length).toBe(9);
+  },
+};
+
+const SlowComponent = () => {
+  let startTime = performance.now();
+
+  while (performance.now() - startTime < 150) {
+    // Do nothing for 1 ms per item to emulate extremely slow code
+  }
+
+  return <ReqoreH3>SlowTab</ReqoreH3>;
+};
+
+export const WithSlowTab: Story = {
+  args: {
+    loadingIconType: 5,
+  },
+  render: (args) => {
+    return (
+      <ReqoreTabs
+        {...args}
+        tabs={[
+          { id: 'tab1', label: 'Tab 1' },
+          { id: 'slowtab', label: 'Slow Tab', icon: 'ErrorWarningLine' },
+          { id: 'tab2', label: 'Tab 2' },
+        ]}
+      >
+        <ReqoreTabsContent tabId='tab1'>
+          <ReqoreH3>I am Tab 1</ReqoreH3>
+        </ReqoreTabsContent>
+        <ReqoreTabsContent tabId='slowtab'>{Array(10).fill(<SlowComponent />)}</ReqoreTabsContent>
+        <ReqoreTabsContent tabId='tab2'>
+          <ReqoreH3>Tab 2</ReqoreH3>
+        </ReqoreTabsContent>
+      </ReqoreTabs>
+    );
+  },
+  play: async () => {
+    // Change the tab
+    await _testsClickButton({ nth: 1, selector: '.reqore-button' });
+
+    await sleep(500);
+
+    // The first tab text should be still visible
+    await _testsWaitForText('I am Tab 1');
   },
 };

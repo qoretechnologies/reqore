@@ -1,8 +1,9 @@
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useCallback, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
+import { IWithReqoreLoading } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
 import { TReqoreTabsContentPadding } from './content';
@@ -17,6 +18,7 @@ export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
   onCloseClick?: (id: string | number) => any;
   activeIntent?: TReqoreIntent;
   closeIcon?: IReqoreIconName;
+  loadingIconType?: IWithReqoreLoading['loadingIconType'];
 }
 
 export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -36,6 +38,8 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   width?: string;
   customTheme?: IReqoreCustomTheme;
   intent?: TReqoreIntent;
+  unMountOnTabChange?: boolean;
+  loadingIconType?: IWithReqoreLoading['loadingIconType'];
   // Internal prop, ignore!
   _testWidth?: number;
 }
@@ -67,6 +71,8 @@ const ReqoreTabs = ({
   intent,
   padded,
   tabsPadding,
+  unMountOnTabChange = true,
+  loadingIconType,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
@@ -80,6 +86,17 @@ const ReqoreTabs = ({
       }
     }
   }, [activeTab]);
+
+  const handleTabChange = useCallback(
+    (tabId: string | number) => {
+      setActiveTab(tabId);
+
+      if (onTabChange) {
+        onTabChange(tabId);
+      }
+    },
+    [onTabChange]
+  );
 
   return (
     <StyledTabs
@@ -102,18 +119,18 @@ const ReqoreTabs = ({
         activeTabIntent={activeTabIntent}
         customTheme={customTheme}
         intent={intent}
-        onTabChange={(tabId: string | number) => {
-          setActiveTab(tabId);
-
-          if (onTabChange) {
-            onTabChange(tabId);
-          }
-        }}
+        onTabChange={handleTabChange}
+        loadingIconType={loadingIconType}
       />
       {React.Children.map(children, (child) =>
-        child && child.props?.tabId === _activeTab
+        child && (child.props?.tabId === _activeTab || !unMountOnTabChange)
           ? React.cloneElement(child, {
               padded: child.props?.padded || tabsPadding,
+              key: child.props?.tabId,
+              style:
+                child.props?.tabId === _activeTab
+                  ? child.props.style
+                  : { ...(child.props.style || {}), display: 'none' },
             })
           : null
       )}
