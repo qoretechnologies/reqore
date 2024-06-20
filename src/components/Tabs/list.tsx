@@ -228,6 +228,7 @@ const ReqoreTabsList = ({
   size,
   intent,
   padded,
+  loadingIconType,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width }] = useMeasure();
@@ -349,6 +350,7 @@ const ReqoreTabsList = ({
                 padded={padded}
                 activeIntent={activeTabIntent}
                 wrapTabNames={wrapTabNames}
+                loadingIconType={loadingIconType}
                 {...item}
                 key={index}
                 vertical={vertical}

@@ -1,5 +1,5 @@
 import { omit } from 'lodash';
-import { forwardRef, memo } from 'react';
+import { forwardRef, memo, useTransition } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { TSizes } from '../../constants/sizes';
@@ -133,8 +133,15 @@ const ReqoreTabsListItem = memo(
       }: IReqoreTabListItemProps,
       ref
     ) => {
+      const [isPending, startTransition] = useTransition();
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme);
+
+      const handleClick = (event) => {
+        startTransition(() => {
+          onClick?.(event);
+        });
+      };
 
       return (
         <StyledTabListItem
@@ -163,11 +170,12 @@ const ReqoreTabsListItem = memo(
                 intent={active ? activeIntent || intent : intent}
                 active={active}
                 disabled={disabled}
-                onClick={onClick}
+                onClick={handleClick}
                 tooltip={tooltip}
                 customTheme={theme}
                 className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
                 {...omit(rest, ['id'])}
+                loading={isPending || rest.loading}
               >
                 {label}
               </ReqoreButton>
