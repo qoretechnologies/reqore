@@ -1,5 +1,6 @@
 import { omit } from 'lodash';
-import { forwardRef, memo, useTransition } from 'react';
+import { forwardRef, memo, useEffect, useState, useTransition } from 'react';
+import { useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { TSizes } from '../../constants/sizes';
@@ -134,14 +135,36 @@ const ReqoreTabsListItem = memo(
       ref
     ) => {
       const [isPending, startTransition] = useTransition();
+      const [isStillPending, setStillPending] = useState(false);
+      const [loadingTimer, setLoadingTimer] = useState(null);
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme);
+
+      useEffect(() => {
+        if (isPending) {
+          setLoadingTimer(
+            setTimeout(() => {
+              setStillPending(true);
+            }, 100)
+          );
+        } else {
+          clearTimeout(loadingTimer);
+          setStillPending(false);
+          setLoadingTimer(null);
+        }
+      }, [isPending]);
+
+      useUnmount(() => {
+        clearTimeout(loadingTimer);
+      });
 
       const handleClick = (event) => {
         startTransition(() => {
           onClick?.(event);
         });
       };
+
+      console.log(isPending, isStillPending);
 
       return (
         <StyledTabListItem
@@ -175,7 +198,7 @@ const ReqoreTabsListItem = memo(
                 customTheme={theme}
                 className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
                 {...omit(rest, ['id'])}
-                loading={isPending || rest.loading}
+                loading={isStillPending || rest.loading}
               >
                 {label}
               </ReqoreButton>
