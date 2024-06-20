@@ -164,8 +164,6 @@ const ReqoreTabsListItem = memo(
         });
       };
 
-      console.log(isPending, isStillPending);
-
       return (
         <StyledTabListItem
           ref={targetRef}
