@@ -36,6 +36,7 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   width?: string;
   customTheme?: IReqoreCustomTheme;
   intent?: TReqoreIntent;
+  unMountOnTabChange?: boolean;
   // Internal prop, ignore!
   _testWidth?: number;
 }
@@ -67,6 +68,7 @@ const ReqoreTabs = ({
   intent,
   padded,
   tabsPadding,
+  unMountOnTabChange = true,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
@@ -111,9 +113,14 @@ const ReqoreTabs = ({
         }}
       />
       {React.Children.map(children, (child) =>
-        child && child.props?.tabId === _activeTab
+        child && (child.props?.tabId === _activeTab || !unMountOnTabChange)
           ? React.cloneElement(child, {
               padded: child.props?.padded || tabsPadding,
+              key: child.props?.tabId,
+              style:
+                child.props?.tabId === _activeTab
+                  ? child.props.style
+                  : { ...(child.props.style || {}), display: 'none' },
             })
           : null
       )}

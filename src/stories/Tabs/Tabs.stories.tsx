@@ -1,3 +1,4 @@
+import { expect } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { IReqoreTabsProps } from '../../components/Tabs';
 import { ReqoreH3, ReqoreTabs, ReqoreTabsContent } from '../../index';
@@ -237,6 +238,10 @@ const Template: StoryFn<IReqoreTabsProps> = (args) => {
 
 export const Basic: Story = {
   render: Template,
+
+  play: async () => {
+    await expect(document.querySelectorAll('.reqore-tabs-content').length).toBe(1);
+  },
 };
 
 export const Fill: Story = {
@@ -342,5 +347,16 @@ export const CustomTabsPadding: Story = {
 
   args: {
     tabsPadding: 'none',
+  },
+};
+
+export const DontUnMountInactiveTabs: Story = {
+  render: Template,
+
+  args: {
+    unMountOnTabChange: false,
+  },
+  play: async () => {
+    await expect(document.querySelectorAll('.reqore-tabs-content').length).toBe(9);
   },
 };
