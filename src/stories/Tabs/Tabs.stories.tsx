@@ -61,6 +61,13 @@ const tabs = [
     intent: 'danger',
   },
   {
+    label: 'Hidden Tab',
+    id: 'hidden',
+    icon: 'WalkFill',
+    intent: 'warning',
+    show: false,
+  },
+  {
     label: 'Hey I am another long tab',
     id: 'tab7',
     icon: 'LeafFill',
@@ -163,6 +170,9 @@ const Template: StoryFn<IReqoreTabsProps> = (args) => {
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab4'>
         <ReqoreH3>Tab 4</ReqoreH3>
+      </ReqoreTabsContent>
+      <ReqoreTabsContent tabId='hidden'>
+        <ReqoreH3>I am not really here</ReqoreH3>
       </ReqoreTabsContent>
       <ReqoreTabsContent tabId='tab5'>
         <ReqoreH3>Tab 5</ReqoreH3>
