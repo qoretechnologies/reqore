@@ -125,7 +125,7 @@ const ReqoreTabs = ({
       />
       {React.Children.map(children, (child) =>
         child &&
-        child.props.show !== false &&
+        tabs.find((tab) => tab.id === child.props?.tabId)?.show !== false &&
         (child.props?.tabId === _activeTab || !unMountOnTabChange)
           ? React.cloneElement(child, {
               padded: child.props?.padded || tabsPadding,
