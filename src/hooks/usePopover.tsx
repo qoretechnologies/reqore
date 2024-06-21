@@ -86,7 +86,7 @@ const usePopover = ({
   const { addPopover, removePopover, updatePopover, popovers, isPopoverOpen } =
     useContext(PopoverContext);
   const tooltips = useReqoreProperty('tooltips');
-  const { current }: MutableRefObject<string> = useRef(shortid.generate());
+  const current: string = useMemo(() => shortid.generate(), []);
   let { current: timeout }: MutableRefObject<any> = useRef(0);
 
   const startEvent = startEvents[handler];
@@ -173,7 +173,7 @@ const usePopover = ({
     if (openOnMount && targetElement) {
       _addPopover();
     }
-  }, [targetElement?.outerHTML]);
+  }, [!!targetElement]);
 
   useEffect(() => {
     if (targetElement && content) {

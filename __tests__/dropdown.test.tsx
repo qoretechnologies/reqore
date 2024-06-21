@@ -250,8 +250,7 @@ test('Renders <Dropdown /> and calls a function on item click, closes the dropdo
       value: 'hello',
       icon: 'SunCloudyLine',
       onClick,
-    }),
-    expect.anything()
+    })
   );
 });
 expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);

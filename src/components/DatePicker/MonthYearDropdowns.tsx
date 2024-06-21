@@ -1,5 +1,6 @@
 import { ZonedDateTime } from '@internationalized/date';
 import { toDate } from '.';
+import { getPreviousYears, months } from '../../helpers/dates';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 
@@ -15,26 +16,14 @@ export const YearMonthDropdowns = ({
   setIsYearDropdownOpen(open: boolean): void;
 }) => {
   const value = _value ?? toDate(new Date());
-  const months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
+
   const currentYear = new Date().getFullYear();
-  const years = new Array(currentYear - 1900 + 1).fill(null).map((_, index) => currentYear - index);
+  const years = getPreviousYears(1900);
 
   return (
     <ReqoreControlGroup gapSize='small'>
       <ReqoreDropdown
+        delay={0}
         compact
         filterable
         caretPosition='right'
@@ -55,6 +44,7 @@ export const YearMonthDropdowns = ({
         onToggleChange={setIsMonthDropdownOpen}
       />
       <ReqoreDropdown
+        delay={0}
         compact
         filterable
         caretPosition='right'

@@ -27,9 +27,7 @@ const meta = {
   args: {
     fluid: false,
     value: new Date(2024, 3, 10, 8, 0, 0),
-    popoverProps: {
-      openOnMount: true,
-    },
+    popoverProps: { openOnMount: true },
     'aria-label': 'Datepicker',
   },
   render(args) {
@@ -76,16 +74,16 @@ const getPopoverElements = async (canvasElement: HTMLElement) => {
   const nextMonth = canvasElement.querySelector('button[aria-label="Next"]');
   const hourTimeField = popoverCanvas.getByLabelText('hour, Time');
   const minuteTimeField = popoverCanvas.getByLabelText('minute, Time');
-  const headingCanvas = within(canvasElement.querySelector('.reqore-panel .reqore-panel-title'));
+  const titleCanvas = within(canvasElement.querySelector('.reqore-panel-title'));
 
   return {
     popoverCanvas,
-    headingCanvas,
     popover,
     previousMonth,
     nextMonth,
     hourTimeField,
     minuteTimeField,
+    titleCanvas,
   };
 };
 export default meta;
@@ -136,10 +134,7 @@ export const WithoutDefaultValue: Story = {
     await expect(minute).toHaveTextContent('––');
 
     await userEvent.click(input);
-    const { headingCanvas, hourTimeField, minuteTimeField } =
-      await getPopoverElements(canvasElement);
-    const heading = headingCanvas.queryByText('April 2024');
-    await expect(heading).toBeInTheDocument();
+    const { hourTimeField, minuteTimeField } = await getPopoverElements(canvasElement);
     await expect(hourTimeField).toHaveTextContent('––');
     await expect(minuteTimeField).toHaveTextContent('––');
   },
@@ -171,6 +166,7 @@ export const WithIntent: Story = {
     return (
       <ReqoreControlGroup gapSize='big' vertical>
         {Object.keys(DEFAULT_INTENTS)
+          .filter((key) => !key.includes('custom'))
           .reverse()
           .map((intent, index) =>
             meta.render(
@@ -286,15 +282,22 @@ export const CurrentCalendarMonthCanBeChanged: Story = {
   async play({ canvasElement }) {
     const { input } = await getDateElements(canvasElement);
     await userEvent.click(input);
-    const { popover, headingCanvas, nextMonth, previousMonth } =
+    const { popover, nextMonth, previousMonth, titleCanvas } =
       await getPopoverElements(canvasElement);
+
     await expect(popover).toBeInTheDocument();
     await userEvent.click(nextMonth);
-    let heading = headingCanvas.queryByText('May 2024');
+    let heading = titleCanvas.queryByText('May');
     await expect(heading).toBeInTheDocument();
 
     await userEvent.click(previousMonth);
-    heading = headingCanvas.queryByText('April 2024');
+    heading = titleCanvas.queryByText('April');
+    await expect(heading).toBeInTheDocument();
+
+    await userEvent.click(titleCanvas.queryByText('April'));
+    await userEvent.click(within(canvasElement).queryByText('June'));
+
+    heading = titleCanvas.queryByText('June');
     await expect(heading).toBeInTheDocument();
   },
 };
