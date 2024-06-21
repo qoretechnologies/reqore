@@ -170,18 +170,18 @@ export const DatePicker = <T extends TDateValue>({
   const [focusedValue, setFocusedValue] = useState(value);
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
-  // a key to reset calendar component to reflect the month/year change so it can show the current month correctly
+  const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
 
   const theme = useReqoreTheme('main', customTheme, intent);
   const popoverData = useRef({} as IPopoverControls);
-  const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
-  const showTime = granularity === 'minute' || granularity === 'second' || granularity === 'hour';
   // use ref to save value type since datepicker can have null values
   const isStringRef = useRef(typeof _value === 'string');
+
   useLayoutEffect(() => {
     if (value) isStringRef.current = typeof _value === 'string';
   });
 
+  const showTime = granularity === 'minute' || granularity === 'second' || granularity === 'hour';
   const handleDateChange = (value: ZonedDateTime, close = true) => {
     let date: Date;
     // if previous value is null apply saved time state
