@@ -1,5 +1,5 @@
 import { isArray, isObject } from 'lodash';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
@@ -240,9 +240,14 @@ const ReqoreTabsList = ({
       : getNthGradientColor(theme, activeTabData?.effect?.gradient?.colors) ||
         getColorFromMaybeString(theme, activeTabData?.customTheme?.main || theme.main);
 
-  const transformedItems = vertical
-    ? tabs
-    : getTransformedItems(tabs, _testWidth || width, 'width', activeTab, size);
+  const filteredItems = tabs.filter((item) => item.show !== false);
+  const transformedItems = useMemo(
+    () =>
+      vertical
+        ? filteredItems
+        : getTransformedItems(filteredItems, _testWidth || width, 'width', activeTab, size),
+    [filteredItems, _testWidth, width, vertical, activeTab, size]
+  );
 
   return (
     <ReqoreThemeProvider theme={theme}>

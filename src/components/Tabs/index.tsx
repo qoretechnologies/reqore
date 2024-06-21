@@ -19,6 +19,7 @@ export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
   activeIntent?: TReqoreIntent;
   closeIcon?: IReqoreIconName;
   loadingIconType?: IWithReqoreLoading['loadingIconType'];
+  show?: boolean;
 }
 
 export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -123,7 +124,9 @@ const ReqoreTabs = ({
         loadingIconType={loadingIconType}
       />
       {React.Children.map(children, (child) =>
-        child && (child.props?.tabId === _activeTab || !unMountOnTabChange)
+        child &&
+        tabs.find((tab) => tab.id === child.props?.tabId)?.show !== false &&
+        (child.props?.tabId === _activeTab || !unMountOnTabChange)
           ? React.cloneElement(child, {
               padded: child.props?.padded || tabsPadding,
               key: child.props?.tabId,
