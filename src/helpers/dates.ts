@@ -12,7 +12,6 @@ export const months = [
   'November',
   'December',
 ];
-export const getPreviousYears = (min: number) => {
-  const currentYear = new Date().getFullYear();
-  return new Array(currentYear - min + 1).fill(null).map((_, index) => currentYear - index);
+export const getPreviousYears = (min: number, max = new Date().getFullYear()) => {
+  return new Array(max - min + 1).fill(null).map((_, index) => max - index);
 };

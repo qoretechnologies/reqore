@@ -44,9 +44,12 @@ import { IReqorePanelProps } from '../Panel';
 import { IReqorePopoverProps } from '../Popover';
 import { YearMonthDropdowns } from './MonthYearDropdowns';
 
-type TDateValue = string | Date | null;
+export type TDateValue = string | Date | null;
 export interface IDatePickerProps<T extends TDateValue>
-  extends Omit<DatePickerProps<ZonedDateTime>, 'value' | 'onChange' | 'defaultValue'>,
+  extends Omit<
+      DatePickerProps<ZonedDateTime>,
+      'value' | 'onChange' | 'defaultValue' | 'minValue' | 'maxValue'
+    >,
     IWithReqoreSize,
     IWithReqoreTooltip,
     IWithReqoreFlat,
@@ -72,6 +75,9 @@ export interface IDatePickerProps<T extends TDateValue>
   timeFieldProps?: React.ComponentProps<typeof TimeField<Time>>;
   pickerDayProps?: IReqoreButtonProps;
   pickerActiveDayProps?: IReqoreButtonProps;
+
+  minValue?: TDateValue;
+  maxValue?: TDateValue;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
@@ -154,6 +160,8 @@ export const DatePicker = <T extends TDateValue>({
   timeFieldProps,
   pickerActiveDayProps,
   pickerDayProps,
+  minValue,
+  maxValue,
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -237,6 +245,8 @@ export const DatePicker = <T extends TDateValue>({
       data-fluid={fluid}
       aria-label='Date'
       ref={(node) => setContainerRef(node)}
+      minValue={toDate(minValue)}
+      maxValue={toDate(maxValue)}
       {...props}
     >
       {tooltip && <DatePickerTooltip targetElement={containerRef} tooltip={tooltip} />}
@@ -273,6 +283,8 @@ export const DatePicker = <T extends TDateValue>({
               onChange={handleCalendarDateChange}
               focusedValue={focusedValue}
               onFocusChange={(date) => setFocusedValue(toZoned(date, getLocalTimeZone()))}
+              minValue={toDate(minValue)}
+              maxValue={toDate(maxValue)}
             >
               <ReqorePanel
                 responsiveActionsWrapperProps={{ fluid: false }}
@@ -286,6 +298,8 @@ export const DatePicker = <T extends TDateValue>({
                     onValueChange={onMonthYearChange}
                     setIsMonthDropdownOpen={setIsMonthDropdownOpen}
                     setIsYearDropdownOpen={setIsYearDropdownOpen}
+                    minValue={minValue}
+                    maxValue={maxValue}
                   />
                 }
                 {...pickerProps}

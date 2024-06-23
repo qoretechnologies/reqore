@@ -108,7 +108,9 @@ export const Default: Story = {
     await expect(minute).toHaveTextContent('00');
   },
 };
-
+export const WithMinMaxValue: Story = {
+  args: { minValue: new Date(2000, 0, 1), maxValue: new Date(2030, 11, 31) },
+};
 export const WithAM_PM: Story = {
   args: {
     hourCycle: 12,
@@ -257,21 +259,45 @@ export const ValueCanBeChosenFromPopover: Story = {
     popoverProps: {},
   },
   async play({ canvasElement }) {
-    const { month, year, day, hour, minute, input } = await getDateElements(canvasElement);
+    const { month, year, day, hour, minute, input, canvas } = await getDateElements(canvasElement);
     await userEvent.click(input);
-    const { popover, popoverCanvas, nextMonth } = await getPopoverElements(canvasElement);
+    const { popover, popoverCanvas, titleCanvas } = await getPopoverElements(canvasElement);
     await expect(popover).toBeInTheDocument();
-    await userEvent.click(nextMonth);
+
+    await userEvent.click(titleCanvas.getByText('April'));
+    await userEvent.click(canvas.getByText('May'));
+    await userEvent.click(titleCanvas.getByText('2024'));
+    await userEvent.click(canvas.getByText('2020'));
+
     const cell = popoverCanvas.getByText('25');
     await userEvent.click(cell);
     await expect(month).toHaveTextContent('05');
     await expect(day).toHaveTextContent('25');
-    await expect(year).toHaveTextContent('2024');
+    await expect(year).toHaveTextContent('2020');
     await expect(hour).toHaveTextContent('08');
     await expect(minute).toHaveTextContent('00');
   },
 };
+export const YeahMonthShouldBeDisabledIfOutOfRange: Story = {
+  args: {
+    popoverProps: {},
+    minValue: new Date(2000, 1, 1),
+    maxValue: new Date(2030, 1, 31),
+  },
+  async play({ canvasElement }) {
+    const { input, canvas } = await getDateElements(canvasElement);
+    await userEvent.click(input);
+    const { popover, titleCanvas } = await getPopoverElements(canvasElement);
+    await expect(popover).toBeInTheDocument();
 
+    await userEvent.click(titleCanvas.getByText('2024'));
+    await expect(canvas.getByText('2030').closest('button[value="2030"]')).toBeDisabled();
+    await userEvent.click(canvas.getByText('2000'));
+
+    await userEvent.click(titleCanvas.getByText('April'));
+    await expect(canvas.getByText('January').closest('button[value="January"]')).toBeDisabled();
+  },
+};
 export const CurrentCalendarMonthCanBeChanged: Story = {
   parameters: {
     chromatic: { disableSnapshot: true },
@@ -301,6 +327,7 @@ export const CurrentCalendarMonthCanBeChanged: Story = {
     await expect(heading).toBeInTheDocument();
   },
 };
+
 export const TimeCanBeChangedFromPopover: Story = {
   args: {
     popoverProps: {},
