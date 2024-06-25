@@ -229,6 +229,7 @@ const ReqoreTabsList = ({
   intent,
   padded,
   loadingIconType,
+  useReactTransition,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width }] = useMeasure();
@@ -356,10 +357,11 @@ const ReqoreTabsList = ({
                 activeIntent={activeTabIntent}
                 wrapTabNames={wrapTabNames}
                 loadingIconType={loadingIconType}
+                useReactTransition={useReactTransition}
                 {...item}
                 key={index}
                 vertical={vertical}
-                active={activeTab === item.id}
+                active={activeTab === item.id || item.props?.active}
                 onClick={(event: React.MouseEvent<any>) => {
                   if (!item.disabled) {
                     onTabChange?.(item.id);

@@ -41,6 +41,7 @@ export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
   intent?: TReqoreIntent;
   unMountOnTabChange?: boolean;
   loadingIconType?: IWithReqoreLoading['loadingIconType'];
+  useReactTransition?: boolean;
   // Internal prop, ignore!
   _testWidth?: number;
 }
@@ -74,6 +75,7 @@ const ReqoreTabs = ({
   tabsPadding,
   unMountOnTabChange = true,
   loadingIconType,
+  useReactTransition = true,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
@@ -122,6 +124,7 @@ const ReqoreTabs = ({
         intent={intent}
         onTabChange={handleTabChange}
         loadingIconType={loadingIconType}
+        useReactTransition={useReactTransition}
       />
       {React.Children.map(children, (child) =>
         child &&
