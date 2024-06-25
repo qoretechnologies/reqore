@@ -21,6 +21,7 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqor
   fill?: boolean;
   className?: string;
   padded?: boolean;
+  useReactTransition?: boolean;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
@@ -130,6 +131,7 @@ const ReqoreTabsListItem = memo(
         flat = true,
         wrapTabNames,
         padded,
+        useReactTransition,
         ...rest
       }: IReqoreTabListItemProps,
       ref
@@ -159,6 +161,11 @@ const ReqoreTabsListItem = memo(
       });
 
       const handleClick = (event) => {
+        if (!useReactTransition) {
+          onClick?.(event);
+          return;
+        }
+
         startTransition(() => {
           onClick?.(event);
         });
