@@ -137,16 +137,7 @@ export const ReqoreTree = ({
                 {displayKey}
               </ReqoreButton>
               {editable && (
-                <ReqoreButton
-                  compact
-                  minimal
-                  icon='DeleteBinLine'
-                  intent='danger'
-                  flat
-                  onClick={() => {
-                    console.log(data, path, key, k, level);
-                  }}
-                />
+                <ReqoreButton compact minimal icon='DeleteBinLine' intent='danger' flat />
               )}
             </ReqoreControlGroup>
           ) : (
