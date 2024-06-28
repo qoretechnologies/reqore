@@ -70,6 +70,12 @@ export const Exportable: Story = {
   },
 };
 
+export const Editable: Story = {
+  args: {
+    editable: true,
+  },
+};
+
 export const Object: Story = {
   args: {
     exportable: true,

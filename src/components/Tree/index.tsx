@@ -23,6 +23,7 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   zoomable?: boolean;
   exportable?: boolean;
   defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
+  editable?: boolean;
 }
 
 export interface ITreeStyle {
@@ -53,7 +54,7 @@ export const ReqoreTree = ({
   onItemClick,
   withLabelCopy,
   showControls = true,
-
+  editable,
   exportable,
   zoomable,
   defaultZoom,
@@ -91,24 +92,24 @@ export const ReqoreTree = ({
   const isDeep = () =>
     Object.keys(data).some((key: string): boolean => typeof data[key] === 'object');
 
-  const renderTree = (data, k?: any, level = 1, path: string[] = []) => {
-    return Object.keys(data).map((key, index) => {
-      const dataType: string = getTypeFromValue(data[key]);
+  const renderTree = (_data, k?: any, level = 1, path: string[] = []) => {
+    return Object.keys(_data).map((key, index) => {
+      const dataType: string = getTypeFromValue(_data[key]);
       const displayKey: string = key;
       const stateKey = k ? `${k}_${key}` : key;
 
-      let isObject = typeof data[key] === 'object' && data[key] !== null;
+      let isObject = typeof _data[key] === 'object' && _data[key] !== null;
       let isExpandable =
-        typeof data[key] !== 'object' ||
+        typeof _data[key] !== 'object' ||
         items[stateKey] ||
         (allExpanded && items[stateKey] !== false);
 
-      if (isObject && lodashSize(data[key]) === 0) {
+      if (isObject && lodashSize(_data[key]) === 0) {
         isObject = false;
         isExpandable = false;
       }
 
-      const badges: IReqoreButtonProps['badge'] = [`{...} ${lodashSize(data[key])} items`];
+      const badges: IReqoreButtonProps['badge'] = [`{...} ${lodashSize(_data[key])} items`];
 
       if (_showTypes) {
         badges.push({
@@ -126,7 +127,8 @@ export const ReqoreTree = ({
                 compact
                 minimal
                 className='reqore-tree-toggle'
-                icon={isExpandable ? 'ArrowDownSFill' : 'ArrowRightSFill'}
+                icon={'ArrowDownSFill'}
+                leftIconProps={{ rotation: isExpandable ? 0 : -90 }}
                 intent={isExpandable ? 'info' : undefined}
                 onClick={() => handleItemClick(stateKey, isExpandable)}
                 flat={false}
@@ -134,6 +136,18 @@ export const ReqoreTree = ({
               >
                 {displayKey}
               </ReqoreButton>
+              {editable && (
+                <ReqoreButton
+                  compact
+                  minimal
+                  icon='DeleteBinLine'
+                  intent='danger'
+                  flat
+                  onClick={() => {
+                    console.log(data, path, key, k, level);
+                  }}
+                />
+              )}
             </ReqoreControlGroup>
           ) : (
             <ReqoreControlGroup verticalAlign='flex-start'>
@@ -152,7 +166,7 @@ export const ReqoreTree = ({
                   size={getOneLessSize(zoomToSize[zoom])}
                   onClick={() => {
                     try {
-                      navigator.clipboard.writeText(JSON.stringify(data[key]));
+                      navigator.clipboard.writeText(JSON.stringify(_data[key]));
                       addNotification({
                         content: 'Successfuly copied to clipboard',
                         id: Date.now().toString(),
@@ -167,16 +181,16 @@ export const ReqoreTree = ({
               )}
               <StyledTreeLabel
                 flat
-                onClick={() => onItemClick?.(data[key], [...path, key])}
+                onClick={() => onItemClick?.(_data[key], [...path, key])}
                 className='reqore-tree-label'
                 size={zoomToSize[zoom]}
               >
-                {JSON.stringify(data[key])}
+                {JSON.stringify(_data[key])}
               </StyledTreeLabel>
             </ReqoreControlGroup>
           )}
           {isExpandable && isObject
-            ? renderTree(data[key], stateKey, level + 1, [...path, key])
+            ? renderTree(_data[key], stateKey, level + 1, [...path, key])
             : null}
         </StyledTreeWrapper>
       );
