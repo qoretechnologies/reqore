@@ -1,5 +1,6 @@
 import { StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
+import { useState } from 'react';
 import { IReqoreTreeProps, ReqoreTree } from '../../components/Tree';
 import MockObject from '../../mock/object.json';
 import { StoryMeta } from '../utils';
@@ -70,9 +71,81 @@ export const Exportable: Story = {
   },
 };
 
-export const Editable: Story = {
+export const EditableArray: Story = {
+  render: (args) => {
+    const [data, setData] = useState(args.data);
+
+    return (
+      <ReqoreTree
+        {...args}
+        data={data}
+        onDataChange={(newData) => {
+          setData(() => newData);
+        }}
+      />
+    );
+  },
   args: {
+    showTypes: false,
     editable: true,
+  },
+};
+
+export const EditableObject: Story = {
+  render: (args) => {
+    const [data, setData] = useState(args.data);
+
+    return (
+      <ReqoreTree
+        {...args}
+        data={data}
+        onDataChange={(newData) => {
+          setData(() => newData);
+        }}
+      />
+    );
+  },
+  args: {
+    showTypes: false,
+    editable: true,
+    data: {
+      _id: '606d4c955f96372fd1b8bcd1',
+      index: 0,
+      guid: 'd08cde5f-e18e-4d7f-80a9-6541848ab830',
+      isActive: false,
+      balance: '$3,219.32',
+      picture: 'http://placehold.it/32x32',
+      age: 25,
+      eyeColor: 'brown',
+      name: 'Zelma Short',
+      gender: 'female',
+      company: 'LINGOAGE',
+      email: 'zelmashort@lingoage.com',
+      phone: '+1 (840) 429-2274',
+      address: '757 Woodside Avenue, Winchester, Marshall Islands, 2032',
+      about:
+        'Ipsum est ex nisi veniam proident adipisicing. Occaecat Lorem minim amet aliqua laboris excepteur sint eu mollit laborum sunt. Duis aliquip nulla cillum labore culpa ullamco labore non in nostrud. Cupidatat nisi enim ullamco quis voluptate Lorem voluptate minim dolore esse irure eiusmod aliquip amet. Dolore laboris Lorem laboris irure magna sint dolor. In irure adipisicing minim ullamco commodo ad dolore elit occaecat dolor. Cillum commodo est commodo dolor enim velit.\r\n',
+      registered: '2015-03-19T05:00:22 -01:00',
+      latitude: -8.97737,
+      longitude: 110.576471,
+      tags: ['aute', 'qui', 'ut', 'mollit', 'culpa', 'qui', 'irure'],
+      friends: [
+        {
+          id: 0,
+          name: 'Angel Gallagher',
+        },
+        {
+          id: 1,
+          name: 'Rose Farmer',
+        },
+        {
+          id: 2,
+          name: 'Jaclyn Keith',
+        },
+      ],
+      greeting: 'Hello, Zelma Short! You have 5 unread messages.',
+      favoriteFruit: 'banana',
+    },
   },
 };
 

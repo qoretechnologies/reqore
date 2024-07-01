@@ -150,3 +150,26 @@ export const stringifyAndDecycleObject = (obj: any): string => {
     return value;
   });
 };
+
+export function parseInputValue(input) {
+  // Check for explicit quotes to save as a string
+  if (input.startsWith('"') && input.endsWith('"')) {
+    return input.slice(1, -1); // Remove the quotes
+  }
+
+  // Attempt to parse as a number
+  const parsedNumber = Number(input);
+  if (!isNaN(parsedNumber)) {
+    return parsedNumber;
+  }
+
+  // Attempt to parse as a boolean
+  if (input === 'true') {
+    return true;
+  } else if (input === 'false') {
+    return false;
+  }
+
+  // Default to a string
+  return input;
+}

@@ -26,6 +26,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   onHideToggle?: (isHidden: boolean) => void;
   hasBackdrop?: boolean;
   size?: string | 'auto';
+  panelSize?: IReqorePanelProps['size'];
   maxSize?: string;
   minSize?: string;
   opacity?: number;
@@ -157,6 +158,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
   height,
   actions = [],
   customZIndex,
+  panelSize,
   ...rest
 }: IReqoreDrawerProps) => {
   const animations = useReqoreProperty('animations');
@@ -337,6 +339,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
             {!_isHidden && (
               <ReqorePanel
                 {...rest}
+                size={panelSize}
                 opacity={opacity}
                 blur={hasBackdrop ? 0 : blur}
                 actions={_actions}
