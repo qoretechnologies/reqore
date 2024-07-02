@@ -12,13 +12,9 @@ import { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import {
   ReqoreHorizontalSpacer,
-  ReqoreInput,
-  ReqoreModal,
   ReqoreP,
   ReqorePanel,
   ReqorePopover,
-  ReqoreTag,
-  ReqoreTextarea,
   useReqoreProperty,
 } from '../..';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
@@ -28,9 +24,9 @@ import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { ReqoreExportModal } from '../ExportModal';
-import { IReqoreModalProps } from '../Modal';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
+import { IReqoreTreeManagementDialog, ReqoreTreeManagementDialog } from './modal';
 
 export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   data: Record<string, unknown> | Array<any>;
@@ -66,104 +62,6 @@ export const StyledTreeWrapper = styled.div<ITreeStyle>`
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
   margin-left: ${({ level, size }) => (level ? level * GAP_FROM_SIZE[size] : 0)}px;
 `;
-
-export interface IReqoreTreeManagementDialog extends IReqoreModalProps {
-  open?: boolean;
-  path?: string;
-  parentPath?: string;
-  type?: 'object' | 'array';
-  parentType?: 'object' | 'array';
-  data?: { key: string; value: any };
-  onSave?: (data: {
-    key: string;
-    value: any;
-    originalData?: { key?: string; value?: any };
-  }) => void;
-}
-
-export const ReqoreTreeManagementDialog = ({
-  path,
-  parentType,
-  type,
-  data,
-  onClose,
-  onSave,
-}: IReqoreTreeManagementDialog) => {
-  const [key, setKey] = useState(data?.key);
-  const [value, setValue] = useState<any>(data?.value);
-
-  return (
-    <ReqoreModal
-      isOpen
-      label={path ? `Updating "${path}"` : 'Adding new item'}
-      onClose={onClose}
-      minimal
-      panelSize='small'
-      actions={[
-        {
-          intent: 'success',
-          disabled: type === 'object' ? !key || !value : !value,
-          label: 'Save',
-          icon: 'CheckLine',
-          onClick: () => {
-            onSave({
-              key,
-              value,
-              originalData: data,
-            });
-            onClose();
-          },
-        },
-      ]}
-    >
-      <ReqoreControlGroup vertical>
-        {type === 'object' || (data?.key && parentType !== 'array') ? (
-          <ReqoreControlGroup fluid stack>
-            <ReqoreTag fixed width='100px' label='Key' />
-            <ReqoreInput
-              disabled={data && parentType === 'array'}
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              placeholder='Key'
-              fluid
-            />
-          </ReqoreControlGroup>
-        ) : null}
-        {typeof data?.value !== 'object' && (
-          <ReqoreControlGroup fluid stack verticalAlign='flex-start'>
-            <ReqoreTag fixed width='100px' label='Value' />
-
-            <ReqoreTextarea
-              value={value}
-              scaleWithContent
-              onChange={(e: any) => setValue(e.target.value)}
-              placeholder='Value'
-              fluid
-              disabled={value === '[]' || value === '{}'}
-            />
-            <ReqoreButton
-              fixed
-              onClick={() => (value === '[]' ? setValue('') : setValue('[]'))}
-              intent={value === '[]' ? 'info' : undefined}
-              compact
-              textAlign='center'
-            >
-              [...]
-            </ReqoreButton>
-            <ReqoreButton
-              fixed
-              onClick={() => (value === '{}' ? setValue('') : setValue('{}'))}
-              intent={value === '{}' ? 'info' : undefined}
-              compact
-              textAlign='center'
-              label='{...}'
-            />
-          </ReqoreControlGroup>
-        )}
-      </ReqoreControlGroup>
-    </ReqoreModal>
-  );
-};
 
 export const ReqoreTree = ({
   data,
@@ -253,6 +151,7 @@ export const ReqoreTree = ({
           <ReqoreButton
             compact
             minimal
+            className='reqore-tree-edit'
             icon='EditLine'
             flat
             size='tiny'
@@ -288,6 +187,7 @@ export const ReqoreTree = ({
             compact
             leftIconColor='muted'
             minimal
+            className='reqore-tree-delete'
             icon='IndeterminateCircleLine'
             intent='muted'
             flat
@@ -310,7 +210,12 @@ export const ReqoreTree = ({
       };
 
       return (
-        <StyledTreeWrapper key={index} size={zoomToSize[zoom]} level={level}>
+        <StyledTreeWrapper
+          key={index}
+          size={zoomToSize[zoom]}
+          level={level}
+          className='reqore-tree-item'
+        >
           {isObject ? (
             <ReqoreControlGroup size={zoomToSize[zoom]} verticalAlign='center'>
               {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
@@ -576,12 +481,14 @@ export const ReqoreTree = ({
         actions={actions}
       >
         {renderTree(data)}
+
         {editable && (
           <StyledTreeWrapper size={zoomToSize[zoom]} level={1}>
             <ReqoreButton
               size={size}
               flat
               fixed
+              className='reqore-tree-add'
               icon='AddCircleLine'
               onClick={() => {
                 setManagementDialog({
