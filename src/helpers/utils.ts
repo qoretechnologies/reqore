@@ -152,6 +152,10 @@ export const stringifyAndDecycleObject = (obj: any): string => {
 };
 
 export function parseInputValue(input) {
+  if (isBoolean(input)) {
+    return input;
+  }
+
   // Check for explicit quotes to save as a string
   if (input.startsWith('"') && input.endsWith('"')) {
     return input.slice(1, -1); // Remove the quotes

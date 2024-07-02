@@ -1,4 +1,13 @@
-import { cloneDeep, get, isArray, size as lodashSize, set, unset } from 'lodash';
+import {
+  cloneDeep,
+  get,
+  isArray,
+  isBoolean,
+  isNumber,
+  size as lodashSize,
+  set,
+  unset,
+} from 'lodash';
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import {
@@ -7,6 +16,7 @@ import {
   ReqoreModal,
   ReqoreP,
   ReqorePanel,
+  ReqorePopover,
   ReqoreTag,
   ReqoreTextarea,
   useReqoreProperty,
@@ -85,7 +95,7 @@ export const ReqoreTreeManagementDialog = ({
   return (
     <ReqoreModal
       isOpen
-      label={`Updating "${path}"`}
+      label={path ? `Updating "${path}"` : 'Adding new item'}
       onClose={onClose}
       minimal
       panelSize='small'
@@ -253,7 +263,15 @@ export const ReqoreTree = ({
                 path: stateKey,
                 parentType: isArray(_data) ? 'array' : 'object',
                 type: isArray(_data[key]) ? 'array' : 'object',
-                data: { key, value: _data[key] },
+                data: {
+                  key,
+                  value:
+                    typeof _data[key] === 'string' &&
+                    (isBoolean(parseInputValue(_data[key])) ||
+                      isNumber(parseInputValue(_data[key])))
+                      ? `"${_data[key]}"`
+                      : _data[key],
+                },
               });
             }}
           />
@@ -338,17 +356,34 @@ export const ReqoreTree = ({
           ) : (
             <ReqoreControlGroup verticalAlign='flex-start'>
               {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
-              <ReqoreP
-                customTheme={{ text: { color: 'info:lighten:5' } }}
-                style={{ flexShrink: 0 }}
-                size={zoomToSize[zoom]}
+              <ReqorePopover
+                component={ReqoreP}
+                componentProps={{
+                  customTheme: { text: { color: 'info:lighten:5' } },
+                  style: { flexShrink: 0 },
+                  size: zoomToSize[zoom],
+                }}
+                delay={200}
+                content={dataType}
+                isReqoreComponent
               >
                 {displayKey}:
-              </ReqoreP>
+              </ReqorePopover>
               <StyledTreeLabel
                 flat
                 onClick={() => onItemClick?.(_data[key], [...path, key])}
                 className='reqore-tree-label'
+                customTheme={{
+                  text: {
+                    color: isBoolean(_data[key])
+                      ? _data[key]
+                        ? 'success:lighten:5'
+                        : 'danger:lighten:10'
+                      : isNumber(_data[key])
+                      ? 'info:lighten:10'
+                      : undefined,
+                  },
+                }}
                 size={zoomToSize[zoom]}
               >
                 {JSON.stringify(_data[key])}
