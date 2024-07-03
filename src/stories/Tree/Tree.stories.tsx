@@ -74,6 +74,19 @@ export const Exportable: Story = {
   },
 };
 
+export const Empty: Story = {
+  args: {
+    data: {},
+  },
+};
+
+export const EmptyEditable: Story = {
+  args: {
+    data: [],
+    editable: true,
+  },
+};
+
 export const EditableArray: Story = {
   render: (args) => {
     const [data, setData] = useState(args.data);
