@@ -15,6 +15,7 @@ import {
   ReqoreP,
   ReqorePanel,
   ReqorePopover,
+  ReqoreSpan,
   useReqoreProperty,
 } from '../..';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
@@ -385,7 +386,7 @@ export const ReqoreTree = ({
     return _actions;
   }, [allExpanded, items, showControls, _showTypes, isDeep(), zoom]);
 
-  if (!data || !Object.keys(data).length) {
+  if (!data) {
     return <p>No data</p>;
   }
 
@@ -474,35 +475,38 @@ export const ReqoreTree = ({
         size={size}
         contentStyle={{
           display: 'flex',
-          flexFlow: 'column',
+          flexFlow: lodashSize(data) ? 'column' : 'row',
           gap: `${GAP_FROM_SIZE[size]}px`,
         }}
         {...rest}
         actions={actions}
       >
+        <ReqoreSpan intent='muted' size='small' inline>
+          {isArray(data) ? '[ ' : '{ '}
+        </ReqoreSpan>
         {renderTree(data)}
-
+        <ReqoreSpan intent='muted' size='small' inline>
+          {isArray(data) ? ' ]' : ' }'}
+        </ReqoreSpan>
         {editable && (
-          <StyledTreeWrapper size={zoomToSize[zoom]} level={1}>
-            <ReqoreButton
-              size={size}
-              flat
-              fixed
-              className='reqore-tree-add'
-              icon='AddCircleLine'
-              onClick={() => {
-                setManagementDialog({
-                  open: true,
-                  path: '',
-                  parentType: isArray(data) ? 'array' : 'object',
-                  type: isArray(data) ? 'array' : 'object',
-                });
-              }}
-              leftIconColor='info'
-              minimal
-              compact
-            />
-          </StyledTreeWrapper>
+          <ReqoreButton
+            size='tiny'
+            flat
+            fixed
+            className='reqore-tree-add'
+            icon='AddCircleLine'
+            onClick={() => {
+              setManagementDialog({
+                open: true,
+                path: '',
+                parentType: isArray(data) ? 'array' : 'object',
+                type: isArray(data) ? 'array' : 'object',
+              });
+            }}
+            leftIconColor='info'
+            minimal
+            compact
+          />
         )}
       </ReqorePanel>
     </>

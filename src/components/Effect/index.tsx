@@ -128,6 +128,7 @@ export interface IReqoreTextEffectProps
     IWithReqoreMinimal {
   children: React.ReactNode;
   effect: IReqoreEffect;
+  inline: boolean;
   as?: React.ElementType;
   theme?: IReqoreTheme;
   active?: boolean;
@@ -436,7 +437,7 @@ export const StyledEffect = styled.span`
 `;
 
 export const StyledTextEffect = styled(StyledEffect).attrs((props) => ({ ...props, isText: true }))`
-  display: inline-block;
+  display: ${({ inline }) => (inline ? 'inline' : 'inline-block')};
 
   ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.gradient
