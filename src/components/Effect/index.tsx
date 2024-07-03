@@ -128,7 +128,7 @@ export interface IReqoreTextEffectProps
     IWithReqoreMinimal {
   children: React.ReactNode;
   effect: IReqoreEffect;
-  inline: boolean;
+  inline?: boolean;
   as?: React.ElementType;
   theme?: IReqoreTheme;
   active?: boolean;
