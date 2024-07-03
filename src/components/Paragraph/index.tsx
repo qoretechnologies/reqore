@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { forwardRef, memo } from 'react';
 import styled from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { isStringSize } from '../../helpers/utils';
@@ -23,21 +23,24 @@ export const StyledParagraph = styled(StyledTextEffect)`
 `;
 
 export const ReqoreP = memo(
-  ({ size, children, customTheme, intent, className, ...props }: IReqoreParagraphProps) => {
-    const theme = useReqoreTheme('main', customTheme, intent);
+  forwardRef(
+    ({ size, children, customTheme, intent, className, ...props }: IReqoreParagraphProps, ref) => {
+      const theme = useReqoreTheme('main', customTheme, intent);
 
-    return (
-      <StyledParagraph
-        as='p'
-        theme={theme}
-        color={theme.text.color}
-        intent={intent}
-        {...props}
-        _size={size}
-        className={`${className || ''} reqore-paragraph`}
-      >
-        {children}
-      </StyledParagraph>
-    );
-  }
+      return (
+        <StyledParagraph
+          ref={ref}
+          as='p'
+          theme={theme}
+          color={theme.text.color}
+          intent={intent}
+          {...props}
+          _size={size}
+          className={`${className || ''} reqore-paragraph`}
+        >
+          {children}
+        </StyledParagraph>
+      );
+    }
+  )
 );

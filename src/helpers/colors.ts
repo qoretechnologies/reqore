@@ -140,6 +140,10 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
   // Add the original theme main color to the theme
   newTheme.originalMain = newTheme.main;
 
+  // Build the muted intent
+  const readableColor = getReadableColorFrom(newTheme.main, true);
+  newTheme.intents.muted = `${readableColor}30`;
+
   if (!newTheme.notifications?.info) {
     newTheme.notifications.info = newTheme.intents.info || DEFAULT_INTENTS.info;
   }
@@ -161,7 +165,7 @@ export const buildTheme = (theme: IReqoreTheme): IReqoreTheme => {
   }
 
   if (!newTheme.notifications?.muted) {
-    newTheme.notifications.muted = `${newTheme.intents.muted || DEFAULT_INTENTS.muted}30`;
+    newTheme.notifications.muted = newTheme.intents.muted || `${DEFAULT_INTENTS.muted}30`;
   }
 
   return newTheme;

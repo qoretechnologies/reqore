@@ -18,15 +18,7 @@
     "registered": "2015-03-19T05:00:22 -01:00",
     "latitude": -8.97737,
     "longitude": 110.576471,
-    "tags": [
-      "aute",
-      "qui",
-      "ut",
-      "mollit",
-      "culpa",
-      "qui",
-      "irure"
-    ],
+    "tags": ["aute", "qui", "ut", "mollit", "culpa", "qui", "irure"],
     "friends": [
       {
         "id": 0,
@@ -63,15 +55,7 @@
     "registered": "2014-11-25T11:58:45 -01:00",
     "latitude": 32.968241,
     "longitude": 21.905937,
-    "tags": [
-      "occaecat",
-      "id",
-      "sit",
-      "eiusmod",
-      "tempor",
-      "adipisicing",
-      "sint"
-    ],
+    "tags": ["occaecat", "id", "sit", "eiusmod", "tempor", "adipisicing", "sint"],
     "friends": [
       {
         "id": 0,
@@ -108,15 +92,7 @@
     "registered": "2019-06-05T08:58:50 -02:00",
     "latitude": -41.239498,
     "longitude": 11.237437,
-    "tags": [
-      "ut",
-      "consectetur",
-      "enim",
-      "deserunt",
-      "anim",
-      "adipisicing",
-      "irure"
-    ],
+    "tags": ["ut", "consectetur", "enim", "deserunt", "anim", "adipisicing", "irure"],
     "friends": [
       {
         "id": 0,
@@ -153,15 +129,7 @@
     "registered": "2020-02-24T06:26:21 -01:00",
     "latitude": -79.669108,
     "longitude": 19.666959,
-    "tags": [
-      "magna",
-      "nisi",
-      "eiusmod",
-      "elit",
-      "eu",
-      "in",
-      "anim"
-    ],
+    "tags": ["magna", "nisi", "eiusmod", "elit", "eu", "in", "anim"],
     "friends": [
       {
         "id": 0,
@@ -198,15 +166,7 @@
     "registered": "2018-05-30T10:39:01 -02:00",
     "latitude": 39.987328,
     "longitude": -18.121186,
-    "tags": [
-      "amet",
-      "reprehenderit",
-      "elit",
-      "nostrud",
-      "sunt",
-      "consequat",
-      "fugiat"
-    ],
+    "tags": ["amet", "reprehenderit", "elit", "nostrud", "sunt", "consequat", "fugiat"],
     "friends": [
       {
         "id": 0,
@@ -243,15 +203,8 @@
     "registered": "2015-09-29T09:39:54 -02:00",
     "latitude": -18.968669,
     "longitude": -33.485271,
-    "tags": [
-      "mollit",
-      "officia",
-      "ipsum",
-      "veniam",
-      "laborum",
-      "laboris",
-      "consectetur"
-    ],
+    "emptyList": [],
+    "tags": ["mollit", "officia", "ipsum", "veniam", "laborum", "laboris", "consectetur"],
     "friends": [
       {
         "id": 0,
@@ -288,15 +241,7 @@
     "registered": "2014-12-29T03:11:31 -01:00",
     "latitude": 55.032528,
     "longitude": 178.669012,
-    "tags": [
-      "sit",
-      "non",
-      "et",
-      "labore",
-      "consectetur",
-      "voluptate",
-      "ea"
-    ],
+    "tags": ["sit", "non", "et", "labore", "consectetur", "voluptate", "ea"],
     "friends": [
       {
         "id": 0,
@@ -313,5 +258,6 @@
     ],
     "greeting": "Hello, Levine Bray! You have 5 unread messages.",
     "favoriteFruit": "strawberry"
-  }
+  },
+  {}
 ]
