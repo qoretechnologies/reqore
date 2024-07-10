@@ -11,14 +11,14 @@ import {
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import {
-  ReqoreHorizontalSpacer,
+  ReqoreIcon,
   ReqoreP,
   ReqorePanel,
   ReqorePopover,
   ReqoreSpan,
   useReqoreProperty,
 } from '../..';
-import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { GAP_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { getOneLessSize, getTypeFromValue, parseInputValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
@@ -49,6 +49,7 @@ export interface ITreeStyle {
   theme: IReqoreTheme;
   level?: number;
   size?: TSizes;
+  expandable?: boolean;
 }
 
 export const StyledTreeLabel = styled(ReqoreP)`
@@ -61,7 +62,8 @@ export const StyledTreeWrapper = styled.div<ITreeStyle>`
   display: flex;
   flex-flow: column;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
-  margin-left: ${({ level, size }) => (level ? level * (GAP_FROM_SIZE[size] * 2) : 0)}px;
+  margin-left: ${({ level, size }) => ICON_FROM_SIZE[size]}px;
+  cursor: ${({ expandable }) => (expandable ? 'pointer' : 'default')};
 `;
 
 export const ReqoreTree = ({
@@ -148,7 +150,9 @@ export const ReqoreTree = ({
             icon='EditLine'
             flat
             size='tiny'
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
+
               setManagementDialog({
                 open: true,
                 parentPath: k,
@@ -185,7 +189,8 @@ export const ReqoreTree = ({
             intent='muted'
             flat
             size='tiny'
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               let modifiedData = cloneDeep(_data);
               // Remove the item from the data
               delete modifiedData[key];
@@ -210,26 +215,33 @@ export const ReqoreTree = ({
           className='reqore-tree-item'
         >
           {isObject ? (
-            <ReqoreControlGroup size={zoomToSize[zoom]} verticalAlign='center'>
-              {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
-              <ReqoreButton
-                flat
-                compact
+            <ReqoreControlGroup
+              size={zoomToSize[zoom]}
+              verticalAlign='center'
+              onClick={() => handleItemClick(stateKey, isExpandable)}
+              style={{ cursor: 'pointer' }}
+              gapSize='small'
+            >
+              <ReqoreIcon
+                size={zoomToSize[zoom]}
+                icon='ArrowDownSFill'
+                rotation={isExpandable ? 0 : -90}
+                intent='muted'
+                style={{
+                  position: 'absolute',
+                  marginLeft: `-${ICON_FROM_SIZE[zoomToSize[zoom]]}px`,
+                }}
+              />
+
+              <ReqoreP
                 className='reqore-tree-toggle'
-                minimal={!isExpandable}
-                leftIconColor='muted'
-                icon={'ArrowDownSFill'}
-                disabled={lodashSize(_data[key]) === 0}
-                leftIconProps={{ rotation: isExpandable ? 0 : -90 }}
-                onClick={() => handleItemClick(stateKey, isExpandable)}
-                labelEffect={{
+                effect={{
                   weight: 'normal',
                   color: 'info:lighten:5',
                 }}
-                badge={badges}
               >
                 {displayKey}:
-              </ReqoreButton>
+              </ReqoreP>
 
               {editable && isObject ? (
                 <ReqoreControlGroup>
@@ -253,15 +265,19 @@ export const ReqoreTree = ({
               ) : null}
               {renderEditButton()}
               {renderDeleteButton()}
-              <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+              <ReqoreSpan
+                intent='muted'
+                size={getOneLessSize(zoomToSize[zoom])}
+                inline
+                onClick={() => handleItemClick(stateKey, isExpandable)}
+              >
                 {isArray(_data[key]) ? '[' : '{'}
-                {!isExpandable && (isArray(_data[key]) ? 'asg...]' : '...}')}{' '}
+                {!isExpandable && (isArray(_data[key]) ? '...]' : '...}')}{' '}
                 {!isExpandable && `${lodashSize(_data[key])} items`}
               </ReqoreSpan>
             </ReqoreControlGroup>
           ) : (
             <ReqoreControlGroup verticalAlign='flex-start'>
-              {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
               <ReqorePopover
                 component={ReqoreP}
                 componentProps={{
@@ -325,7 +341,6 @@ export const ReqoreTree = ({
               {renderTree(_data[key], stateKey, level + 1, [...path, key])}
 
               <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
-                {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
                 {isArray(_data[key]) ? '] ' : '} '}
               </ReqoreSpan>
             </>
