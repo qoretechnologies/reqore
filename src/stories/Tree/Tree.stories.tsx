@@ -3,7 +3,11 @@ import { StoryObj } from '@storybook/react';
 import { fireEvent } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { useState } from 'react';
-import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
+import {
+  _testsClickButton,
+  _testsClickNonButton,
+  _testsWaitForText,
+} from '../../../__tests__/utils';
 import { IReqoreTreeProps, ReqoreTree } from '../../components/Tree';
 import MockObject from '../../mock/object.json';
 import { StoryMeta } from '../utils';
@@ -281,9 +285,9 @@ export const ObjectItemCanBeEdited: Story = {
     await expect(document.querySelector('.reqore-tree-save')).toBeEnabled();
     await _testsClickButton({ selector: '.reqore-tree-save' });
     await expect(document.querySelectorAll('.reqore-tree-item').length).toBe(22);
-    await _testsWaitForText('updated item key');
-    await _testsClickButton({ label: 'updated item key' });
-    await _testsClickButton({ label: '1' });
+    await _testsWaitForText('updated item key:');
+    await _testsClickNonButton({ label: 'updated item key:', selector: 'p' });
+    await _testsClickNonButton({ label: '1:', selector: 'p' });
   },
 };
 

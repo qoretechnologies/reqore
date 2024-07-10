@@ -11,16 +11,16 @@ import {
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import {
-  ReqoreHorizontalSpacer,
+  ReqoreIcon,
   ReqoreP,
   ReqorePanel,
   ReqorePopover,
   ReqoreSpan,
   useReqoreProperty,
 } from '../..';
-import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { GAP_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getTypeFromValue, parseInputValue } from '../../helpers/utils';
+import { getOneLessSize, getTypeFromValue, parseInputValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -49,6 +49,7 @@ export interface ITreeStyle {
   theme: IReqoreTheme;
   level?: number;
   size?: TSizes;
+  expandable?: boolean;
 }
 
 export const StyledTreeLabel = styled(ReqoreP)`
@@ -61,7 +62,8 @@ export const StyledTreeWrapper = styled.div<ITreeStyle>`
   display: flex;
   flex-flow: column;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
-  margin-left: ${({ level, size }) => (level ? level * GAP_FROM_SIZE[size] : 0)}px;
+  margin-left: ${({ size }) => ICON_FROM_SIZE[size]}px;
+  cursor: ${({ expandable }) => (expandable ? 'pointer' : 'default')};
 `;
 
 export const ReqoreTree = ({
@@ -126,15 +128,7 @@ export const ReqoreTree = ({
         items[stateKey] ||
         (allExpanded && items[stateKey] !== false);
 
-      const badges: IReqoreButtonProps['badge'] = [
-        {
-          label: `${isArray(_data[key]) ? '[...]' : '{...}'} ${lodashSize(_data[key])} items`,
-          minimal: true,
-          labelEffect: {
-            weight: 'thin',
-          },
-        },
-      ];
+      const badges: IReqoreButtonProps['badge'] = [];
 
       if (_showTypes) {
         badges.push({
@@ -156,7 +150,9 @@ export const ReqoreTree = ({
             icon='EditLine'
             flat
             size='tiny'
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
+
               setManagementDialog({
                 open: true,
                 parentPath: k,
@@ -193,7 +189,8 @@ export const ReqoreTree = ({
             intent='muted'
             flat
             size='tiny'
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               let modifiedData = cloneDeep(_data);
               // Remove the item from the data
               delete modifiedData[key];
@@ -218,23 +215,33 @@ export const ReqoreTree = ({
           className='reqore-tree-item'
         >
           {isObject ? (
-            <ReqoreControlGroup size={zoomToSize[zoom]} verticalAlign='center'>
-              {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
-              <ReqoreButton
-                flat
-                compact
-                className='reqore-tree-toggle'
-                icon={'ArrowDownSFill'}
-                disabled={lodashSize(_data[key]) === 0}
-                leftIconProps={{ rotation: isExpandable ? 0 : -90 }}
-                customTheme={{
-                  main: isExpandable ? 'info:lighten:10' : undefined,
+            <ReqoreControlGroup
+              size={zoomToSize[zoom]}
+              verticalAlign='center'
+              onClick={() => handleItemClick(stateKey, isExpandable)}
+              style={{ cursor: 'pointer' }}
+              gapSize='small'
+            >
+              <ReqoreIcon
+                size={zoomToSize[zoom]}
+                icon='ArrowDownSFill'
+                rotation={isExpandable ? 0 : -90}
+                intent='muted'
+                style={{
+                  position: 'absolute',
+                  marginLeft: `-${ICON_FROM_SIZE[zoomToSize[zoom]]}px`,
                 }}
-                onClick={() => handleItemClick(stateKey, isExpandable)}
-                badge={badges}
+              />
+
+              <ReqoreP
+                className='reqore-tree-toggle'
+                effect={{
+                  weight: 'normal',
+                  color: 'info:lighten:5',
+                }}
               >
-                {displayKey}
-              </ReqoreButton>
+                {displayKey}:
+              </ReqoreP>
 
               {editable && isObject ? (
                 <ReqoreControlGroup>
@@ -258,10 +265,29 @@ export const ReqoreTree = ({
               ) : null}
               {renderEditButton()}
               {renderDeleteButton()}
+              <ReqoreSpan
+                intent='muted'
+                size={getOneLessSize(zoomToSize[zoom])}
+                inline
+                onClick={() => handleItemClick(stateKey, isExpandable)}
+              >
+                {isArray(_data[key]) ? '[' : '{'}
+                {!isExpandable && (isArray(_data[key]) ? '...]' : '...}')}{' '}
+                {!isExpandable && `${lodashSize(_data[key])} items`}
+              </ReqoreSpan>
+              {_showTypes && (
+                <ReqoreSpan
+                  size={getOneLessSize(zoomToSize[zoom])}
+                  intent='muted'
+                  inline
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {dataType}
+                </ReqoreSpan>
+              )}
             </ReqoreControlGroup>
           ) : (
             <ReqoreControlGroup verticalAlign='flex-start'>
-              {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
               <ReqorePopover
                 component={ReqoreP}
                 componentProps={{
@@ -318,11 +344,27 @@ export const ReqoreTree = ({
               )}
               {renderEditButton()}
               {renderDeleteButton()}
+              {_showTypes && (
+                <ReqoreSpan
+                  size={getOneLessSize(zoomToSize[zoom])}
+                  intent='muted'
+                  inline
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {dataType}
+                </ReqoreSpan>
+              )}
             </ReqoreControlGroup>
           )}
-          {isExpandable && isObject
-            ? renderTree(_data[key], stateKey, level + 1, [...path, key])
-            : null}
+          {isExpandable && isObject ? (
+            <>
+              {renderTree(_data[key], stateKey, level + 1, [...path, key])}
+
+              <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+                {isArray(_data[key]) ? '] ' : '} '}
+              </ReqoreSpan>
+            </>
+          ) : null}
         </StyledTreeWrapper>
       );
     });
@@ -481,11 +523,11 @@ export const ReqoreTree = ({
         {...rest}
         actions={actions}
       >
-        <ReqoreSpan intent='muted' size='small' inline>
+        <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
           {isArray(data) ? '[ ' : '{ '}
         </ReqoreSpan>
         {renderTree(data)}
-        <ReqoreSpan intent='muted' size='small' inline>
+        <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
           {isArray(data) ? ' ]' : ' }'}
         </ReqoreSpan>
         {editable && (
