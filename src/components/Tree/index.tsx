@@ -62,7 +62,7 @@ export const StyledTreeWrapper = styled.div<ITreeStyle>`
   display: flex;
   flex-flow: column;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
-  margin-left: ${({ level, size }) => ICON_FROM_SIZE[size]}px;
+  margin-left: ${({ size }) => ICON_FROM_SIZE[size]}px;
   cursor: ${({ expandable }) => (expandable ? 'pointer' : 'default')};
 `;
 
