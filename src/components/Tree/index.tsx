@@ -275,6 +275,16 @@ export const ReqoreTree = ({
                 {!isExpandable && (isArray(_data[key]) ? '...]' : '...}')}{' '}
                 {!isExpandable && `${lodashSize(_data[key])} items`}
               </ReqoreSpan>
+              {_showTypes && (
+                <ReqoreSpan
+                  size={getOneLessSize(zoomToSize[zoom])}
+                  intent='muted'
+                  inline
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {dataType}
+                </ReqoreSpan>
+              )}
             </ReqoreControlGroup>
           ) : (
             <ReqoreControlGroup verticalAlign='flex-start'>
@@ -334,6 +344,16 @@ export const ReqoreTree = ({
               )}
               {renderEditButton()}
               {renderDeleteButton()}
+              {_showTypes && (
+                <ReqoreSpan
+                  size={getOneLessSize(zoomToSize[zoom])}
+                  intent='muted'
+                  inline
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {dataType}
+                </ReqoreSpan>
+              )}
             </ReqoreControlGroup>
           )}
           {isExpandable && isObject ? (
