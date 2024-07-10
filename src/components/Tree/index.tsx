@@ -20,7 +20,7 @@ import {
 } from '../..';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getTypeFromValue, parseInputValue } from '../../helpers/utils';
+import { getOneLessSize, getTypeFromValue, parseInputValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -61,7 +61,7 @@ export const StyledTreeWrapper = styled.div<ITreeStyle>`
   display: flex;
   flex-flow: column;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
-  margin-left: ${({ level, size }) => (level ? level * GAP_FROM_SIZE[size] : 0)}px;
+  margin-left: ${({ level, size }) => (level ? level * (GAP_FROM_SIZE[size] * 2) : 0)}px;
 `;
 
 export const ReqoreTree = ({
@@ -126,15 +126,7 @@ export const ReqoreTree = ({
         items[stateKey] ||
         (allExpanded && items[stateKey] !== false);
 
-      const badges: IReqoreButtonProps['badge'] = [
-        {
-          label: `${isArray(_data[key]) ? '[...]' : '{...}'} ${lodashSize(_data[key])} items`,
-          minimal: true,
-          labelEffect: {
-            weight: 'thin',
-          },
-        },
-      ];
+      const badges: IReqoreButtonProps['badge'] = [];
 
       if (_showTypes) {
         badges.push({
@@ -224,16 +216,19 @@ export const ReqoreTree = ({
                 flat
                 compact
                 className='reqore-tree-toggle'
+                minimal={!isExpandable}
+                leftIconColor='muted'
                 icon={'ArrowDownSFill'}
                 disabled={lodashSize(_data[key]) === 0}
                 leftIconProps={{ rotation: isExpandable ? 0 : -90 }}
-                customTheme={{
-                  main: isExpandable ? 'info:lighten:10' : undefined,
-                }}
                 onClick={() => handleItemClick(stateKey, isExpandable)}
+                labelEffect={{
+                  weight: 'normal',
+                  color: 'info:lighten:5',
+                }}
                 badge={badges}
               >
-                {displayKey}
+                {displayKey}:
               </ReqoreButton>
 
               {editable && isObject ? (
@@ -258,6 +253,11 @@ export const ReqoreTree = ({
               ) : null}
               {renderEditButton()}
               {renderDeleteButton()}
+              <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+                {isArray(_data[key]) ? '[' : '{'}
+                {!isExpandable && (isArray(_data[key]) ? 'asg...]' : '...}')}{' '}
+                {!isExpandable && `${lodashSize(_data[key])} items`}
+              </ReqoreSpan>
             </ReqoreControlGroup>
           ) : (
             <ReqoreControlGroup verticalAlign='flex-start'>
@@ -320,9 +320,16 @@ export const ReqoreTree = ({
               {renderDeleteButton()}
             </ReqoreControlGroup>
           )}
-          {isExpandable && isObject
-            ? renderTree(_data[key], stateKey, level + 1, [...path, key])
-            : null}
+          {isExpandable && isObject ? (
+            <>
+              {renderTree(_data[key], stateKey, level + 1, [...path, key])}
+
+              <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+                {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
+                {isArray(_data[key]) ? '] ' : '} '}
+              </ReqoreSpan>
+            </>
+          ) : null}
         </StyledTreeWrapper>
       );
     });
@@ -481,11 +488,11 @@ export const ReqoreTree = ({
         {...rest}
         actions={actions}
       >
-        <ReqoreSpan intent='muted' size='small' inline>
+        <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
           {isArray(data) ? '[ ' : '{ '}
         </ReqoreSpan>
         {renderTree(data)}
-        <ReqoreSpan intent='muted' size='small' inline>
+        <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
           {isArray(data) ? ' ]' : ' }'}
         </ReqoreSpan>
         {editable && (
