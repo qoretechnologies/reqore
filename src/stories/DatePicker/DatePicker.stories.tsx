@@ -1,7 +1,6 @@
 import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
-import { size } from 'lodash';
 import { useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreControlGroup from '../../components/ControlGroup';
@@ -180,7 +179,7 @@ export const WithIntent: Story = {
                   intent: intent as TReqoreIntent,
                 },
                 popoverProps: {
-                  openOnMount: index === size(DEFAULT_INTENTS) - 1,
+                  openOnMount: intent === 'info',
                 },
               },
               ctx
