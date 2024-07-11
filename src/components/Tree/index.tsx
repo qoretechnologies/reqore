@@ -1,19 +1,37 @@
-import { cloneDeep, size as lodashSize } from 'lodash';
+import {
+  cloneDeep,
+  get,
+  isArray,
+  isBoolean,
+  isNumber,
+  size as lodashSize,
+  set,
+  unset,
+} from 'lodash';
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { ReqoreHorizontalSpacer, ReqoreIcon, ReqoreP, ReqorePanel, useReqoreProperty } from '../..';
-import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  ReqoreIcon,
+  ReqoreP,
+  ReqorePanel,
+  ReqorePopover,
+  ReqoreSpan,
+  useReqoreProperty,
+} from '../..';
+import { GAP_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getOneLessSize, getTypeFromValue } from '../../helpers/utils';
+import { getOneLessSize, getTypeFromValue, parseInputValue } from '../../helpers/utils';
 import { IWithReqoreSize } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { ReqoreExportModal } from '../ExportModal';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
+import { IReqoreTreeManagementDialog, ReqoreTreeManagementDialog } from './modal';
 
 export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   data: Record<string, unknown> | Array<any>;
+  onDataChange?: (data: Record<string, unknown> | Array<any>) => void;
   mode?: 'tree' | 'copy';
   expanded?: boolean;
   showTypes?: boolean;
@@ -23,6 +41,7 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
   zoomable?: boolean;
   exportable?: boolean;
   defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
+  editable?: boolean;
 }
 
 export interface ITreeStyle {
@@ -30,6 +49,7 @@ export interface ITreeStyle {
   theme: IReqoreTheme;
   level?: number;
   size?: TSizes;
+  expandable?: boolean;
 }
 
 export const StyledTreeLabel = styled(ReqoreP)`
@@ -42,7 +62,8 @@ export const StyledTreeWrapper = styled.div<ITreeStyle>`
   display: flex;
   flex-flow: column;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
-  margin-left: ${({ level, size }) => (level ? level * GAP_FROM_SIZE[size] : 0)}px;
+  margin-left: ${({ size }) => ICON_FROM_SIZE[size]}px;
+  cursor: ${({ expandable }) => (expandable ? 'pointer' : 'default')};
 `;
 
 export const ReqoreTree = ({
@@ -53,10 +74,11 @@ export const ReqoreTree = ({
   onItemClick,
   withLabelCopy,
   showControls = true,
-
+  editable,
   exportable,
   zoomable,
   defaultZoom,
+  onDataChange,
   ...rest
 }: IReqoreTreeProps) => {
   const [items, setItems] = useState({});
@@ -65,6 +87,9 @@ export const ReqoreTree = ({
   const addNotification = useReqoreProperty('addNotification');
   const [zoom, setZoom] = useState(defaultZoom || sizeToZoom[size]);
   const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
+  const [managementDialog, setManagementDialog] = useState<IReqoreTreeManagementDialog>({
+    open: false,
+  });
 
   const handleTypesClick = () => {
     setShowTypes(!_showTypes);
@@ -91,24 +116,19 @@ export const ReqoreTree = ({
   const isDeep = () =>
     Object.keys(data).some((key: string): boolean => typeof data[key] === 'object');
 
-  const renderTree = (data, k?: any, level = 1, path: string[] = []) => {
-    return Object.keys(data).map((key, index) => {
-      const dataType: string = getTypeFromValue(data[key]);
+  const renderTree = (_data, k?: any, level = 1, path: string[] = []) => {
+    return Object.keys(_data).map((key, index) => {
+      const dataType: string = getTypeFromValue(_data[key]);
       const displayKey: string = key;
-      const stateKey = k ? `${k}_${key}` : key;
+      const stateKey = k ? `${k}.${key}` : key;
 
-      let isObject = typeof data[key] === 'object' && data[key] !== null;
-      let isExpandable =
-        typeof data[key] !== 'object' ||
+      const isObject = typeof _data[key] === 'object' && _data[key] !== null;
+      const isExpandable =
+        typeof _data[key] !== 'object' ||
         items[stateKey] ||
         (allExpanded && items[stateKey] !== false);
 
-      if (isObject && lodashSize(data[key]) === 0) {
-        isObject = false;
-        isExpandable = false;
-      }
-
-      const badges: IReqoreButtonProps['badge'] = [`{...} ${lodashSize(data[key])} items`];
+      const badges: IReqoreButtonProps['badge'] = [];
 
       if (_showTypes) {
         badges.push({
@@ -117,42 +137,199 @@ export const ReqoreTree = ({
         });
       }
 
+      const renderEditButton = () => {
+        if (!editable || (isArray(_data) && isObject)) {
+          return null;
+        }
+
+        return (
+          <ReqoreButton
+            compact
+            minimal
+            className='reqore-tree-edit'
+            icon='EditLine'
+            flat
+            size='tiny'
+            onClick={(e) => {
+              e.stopPropagation();
+
+              setManagementDialog({
+                open: true,
+                parentPath: k,
+                path: stateKey,
+                parentType: isArray(_data) ? 'array' : 'object',
+                type: isArray(_data[key]) ? 'array' : 'object',
+                data: {
+                  key,
+                  value:
+                    typeof _data[key] === 'string' &&
+                    (isBoolean(parseInputValue(_data[key])) ||
+                      isNumber(parseInputValue(_data[key])))
+                      ? `"${_data[key]}"`
+                      : _data[key],
+                },
+              });
+            }}
+          />
+        );
+      };
+
+      const renderDeleteButton = () => {
+        if (!editable) {
+          return null;
+        }
+
+        return (
+          <ReqoreButton
+            compact
+            leftIconColor='muted'
+            minimal
+            className='reqore-tree-delete'
+            icon='IndeterminateCircleLine'
+            intent='muted'
+            flat
+            size='tiny'
+            onClick={(e) => {
+              e.stopPropagation();
+              let modifiedData = cloneDeep(_data);
+              // Remove the item from the data
+              delete modifiedData[key];
+
+              if (isArray(modifiedData)) {
+                modifiedData = modifiedData.filter((item) => item);
+              }
+              // Update the data
+              const updatedData = k ? set(cloneDeep(data), k, modifiedData) : modifiedData;
+
+              onDataChange?.(updatedData);
+            }}
+          />
+        );
+      };
+
       return (
-        <StyledTreeWrapper key={index} size={zoomToSize[zoom]} level={level}>
+        <StyledTreeWrapper
+          key={index}
+          size={zoomToSize[zoom]}
+          level={level}
+          className='reqore-tree-item'
+        >
           {isObject ? (
-            <ReqoreControlGroup size={zoomToSize[zoom]}>
-              {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
-              <ReqoreButton
-                compact
-                minimal
-                className='reqore-tree-toggle'
-                icon={isExpandable ? 'ArrowDownSFill' : 'ArrowRightSFill'}
-                intent={isExpandable ? 'info' : undefined}
-                onClick={() => handleItemClick(stateKey, isExpandable)}
-                flat={false}
-                badge={badges}
-              >
-                {displayKey}
-              </ReqoreButton>
-            </ReqoreControlGroup>
-          ) : (
-            <ReqoreControlGroup verticalAlign='flex-start'>
-              {level !== 1 && <ReqoreHorizontalSpacer width={5} />}
-              <ReqoreP
-                customTheme={{ text: { color: 'info:lighten:3' } }}
-                style={{ flexShrink: 0 }}
+            <ReqoreControlGroup
+              size={zoomToSize[zoom]}
+              verticalAlign='center'
+              onClick={() => handleItemClick(stateKey, isExpandable)}
+              style={{ cursor: 'pointer' }}
+              gapSize='small'
+            >
+              <ReqoreIcon
                 size={zoomToSize[zoom]}
+                icon='ArrowDownSFill'
+                rotation={isExpandable ? 0 : -90}
+                intent='muted'
+                style={{
+                  position: 'absolute',
+                  marginLeft: `-${ICON_FROM_SIZE[zoomToSize[zoom]]}px`,
+                }}
+              />
+
+              <ReqoreP
+                className='reqore-tree-toggle'
+                effect={{
+                  weight: 'normal',
+                  color: 'info:lighten:5',
+                }}
               >
                 {displayKey}:
               </ReqoreP>
-              {withLabelCopy && (
-                <ReqoreIcon
-                  interactive
-                  icon='ClipboardLine'
+
+              {editable && isObject ? (
+                <ReqoreControlGroup>
+                  <ReqoreButton
+                    size='tiny'
+                    flat
+                    icon='AddCircleLine'
+                    onClick={() => {
+                      setManagementDialog({
+                        open: true,
+                        path: stateKey,
+                        parentType: isArray(_data) ? 'array' : 'object',
+                        type: isArray(_data[key]) ? 'array' : 'object',
+                      });
+                    }}
+                    leftIconColor='info'
+                    minimal
+                    compact
+                  />
+                </ReqoreControlGroup>
+              ) : null}
+              {renderEditButton()}
+              {renderDeleteButton()}
+              <ReqoreSpan
+                intent='muted'
+                size={getOneLessSize(zoomToSize[zoom])}
+                inline
+                onClick={() => handleItemClick(stateKey, isExpandable)}
+              >
+                {isArray(_data[key]) ? '[' : '{'}
+                {!isExpandable && (isArray(_data[key]) ? '...]' : '...}')}{' '}
+                {!isExpandable && `${lodashSize(_data[key])} items`}
+              </ReqoreSpan>
+              {_showTypes && (
+                <ReqoreSpan
                   size={getOneLessSize(zoomToSize[zoom])}
+                  intent='muted'
+                  inline
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {dataType}
+                </ReqoreSpan>
+              )}
+            </ReqoreControlGroup>
+          ) : (
+            <ReqoreControlGroup verticalAlign='flex-start'>
+              <ReqorePopover
+                component={ReqoreP}
+                componentProps={{
+                  customTheme: { text: { color: 'info:lighten:5' } },
+                  style: { flexShrink: 0 },
+                  size: zoomToSize[zoom],
+                }}
+                delay={200}
+                content={dataType}
+                isReqoreComponent
+              >
+                {displayKey}:
+              </ReqorePopover>
+              <StyledTreeLabel
+                flat
+                onClick={() => onItemClick?.(_data[key], [...path, key])}
+                className='reqore-tree-label'
+                customTheme={{
+                  text: {
+                    color: isBoolean(_data[key])
+                      ? _data[key]
+                        ? 'success:lighten:5'
+                        : 'danger:lighten:10'
+                      : isNumber(_data[key])
+                      ? 'info:lighten:10'
+                      : undefined,
+                  },
+                }}
+                size={zoomToSize[zoom]}
+              >
+                {JSON.stringify(_data[key])}
+              </StyledTreeLabel>
+              {withLabelCopy && (
+                <ReqoreButton
+                  compact
+                  minimal
+                  flat
+                  icon='ClipboardLine'
+                  size='tiny'
                   onClick={() => {
                     try {
-                      navigator.clipboard.writeText(JSON.stringify(data[key]));
+                      navigator.clipboard.writeText(JSON.stringify(_data[key]));
                       addNotification({
                         content: 'Successfuly copied to clipboard',
                         id: Date.now().toString(),
@@ -165,19 +342,29 @@ export const ReqoreTree = ({
                   }}
                 />
               )}
-              <StyledTreeLabel
-                flat
-                onClick={() => onItemClick?.(data[key], [...path, key])}
-                className='reqore-tree-label'
-                size={zoomToSize[zoom]}
-              >
-                {JSON.stringify(data[key])}
-              </StyledTreeLabel>
+              {renderEditButton()}
+              {renderDeleteButton()}
+              {_showTypes && (
+                <ReqoreSpan
+                  size={getOneLessSize(zoomToSize[zoom])}
+                  intent='muted'
+                  inline
+                  style={{ whiteSpace: 'nowrap' }}
+                >
+                  {dataType}
+                </ReqoreSpan>
+              )}
             </ReqoreControlGroup>
           )}
-          {isExpandable && isObject
-            ? renderTree(data[key], stateKey, level + 1, [...path, key])
-            : null}
+          {isExpandable && isObject ? (
+            <>
+              {renderTree(_data[key], stateKey, level + 1, [...path, key])}
+
+              <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+                {isArray(_data[key]) ? '] ' : '} '}
+              </ReqoreSpan>
+            </>
+          ) : null}
         </StyledTreeWrapper>
       );
     });
@@ -241,7 +428,7 @@ export const ReqoreTree = ({
     return _actions;
   }, [allExpanded, items, showControls, _showTypes, isDeep(), zoom]);
 
-  if (!data || !Object.keys(data).length) {
+  if (!data) {
     return <p>No data</p>;
   }
 
@@ -249,6 +436,78 @@ export const ReqoreTree = ({
     <>
       {showExportModal && (
         <ReqoreExportModal data={data} onClose={() => setShowExportModal(undefined)} />
+      )}
+      {managementDialog.open && (
+        <ReqoreTreeManagementDialog
+          {...managementDialog}
+          onClose={() => setManagementDialog({ open: false })}
+          onSave={({ key, value, originalData }) => {
+            const modifiedValue =
+              value === '{}'
+                ? {}
+                : value === '[]'
+                ? []
+                : typeof value === 'object'
+                ? value
+                : parseInputValue(value);
+
+            // If there is no path, it means we are adding a new item at the root level
+            if (!managementDialog.path) {
+              const updatedData = cloneDeep(data);
+
+              if (originalData) {
+                unset(updatedData, originalData.key);
+              } else {
+                if (isArray(updatedData)) {
+                  updatedData.push(modifiedValue);
+                } else {
+                  updatedData[key] = modifiedValue;
+                }
+              }
+
+              onDataChange?.(updatedData);
+
+              setManagementDialog({ open: false });
+
+              return;
+            }
+
+            const modifiedData = cloneDeep(get(data, managementDialog.path));
+
+            let updatedData;
+
+            if (originalData) {
+              updatedData = set(
+                cloneDeep(data),
+                `${managementDialog.parentPath ? `${managementDialog.parentPath}.` : ''}${key}`,
+                modifiedValue
+              );
+
+              if (key !== originalData.key) {
+                unset(
+                  updatedData,
+                  `${managementDialog.parentPath ? `${managementDialog.parentPath}.` : ''}${
+                    originalData.key
+                  }`
+                );
+              }
+            } else {
+              // Add the item to the data
+              if (isArray(modifiedData)) {
+                modifiedData.push(modifiedValue);
+              } else {
+                modifiedData[key] = modifiedValue;
+              }
+
+              // Update the data
+              updatedData = set(cloneDeep(data), managementDialog.path, modifiedData);
+            }
+
+            onDataChange?.(updatedData);
+
+            setManagementDialog({ open: false });
+          }}
+        />
       )}
       <ReqorePanel
         className='reqore-tree'
@@ -258,13 +517,39 @@ export const ReqoreTree = ({
         size={size}
         contentStyle={{
           display: 'flex',
-          flexFlow: 'column',
+          flexFlow: lodashSize(data) ? 'column' : 'row',
           gap: `${GAP_FROM_SIZE[size]}px`,
         }}
         {...rest}
         actions={actions}
       >
-        {renderTree(data, true)}
+        <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+          {isArray(data) ? '[ ' : '{ '}
+        </ReqoreSpan>
+        {renderTree(data)}
+        <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+          {isArray(data) ? ' ]' : ' }'}
+        </ReqoreSpan>
+        {editable && (
+          <ReqoreButton
+            size='tiny'
+            flat
+            fixed
+            className='reqore-tree-add'
+            icon='AddCircleLine'
+            onClick={() => {
+              setManagementDialog({
+                open: true,
+                path: '',
+                parentType: isArray(data) ? 'array' : 'object',
+                type: isArray(data) ? 'array' : 'object',
+              });
+            }}
+            leftIconColor='info'
+            minimal
+            compact
+          />
+        )}
       </ReqorePanel>
     </>
   );

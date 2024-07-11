@@ -16,6 +16,7 @@ export { default as ReqoreDropdown } from './components/Dropdown';
 export { ReqoreDropdownDivider, ReqoreDropdownItem } from './components/Dropdown/item';
 export { ReqoreEffect, ReqoreTextEffect } from './components/Effect';
 export {
+  IReqoreHeadingProps,
   ReqoreH1,
   ReqoreH2,
   ReqoreH3,
@@ -44,11 +45,12 @@ export { default as ReqoreNotificationsWrapper } from './components/Notification
 export { default as ReqoreNotification } from './components/Notifications/notification';
 export { ReqorePagination } from './components/Paging';
 export { ReqorePanel } from './components/Panel';
-export { ReqoreP, ReqoreP as ReqoreParagraph } from './components/Paragraph';
+export { IReqoreParagraphProps, ReqoreP, ReqoreP as ReqoreParagraph } from './components/Paragraph';
 export { default as ReqorePopover } from './components/Popover';
 export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export * from './components/Slider';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
+export { IReqoreSpanProps, ReqoreSpan } from './components/Span';
 export { ReqoreSpinner } from './components/Spinner';
 export { default as ReqoreTable } from './components/Table';
 export { ReqoreTableBodyCell } from './components/Table/cell';

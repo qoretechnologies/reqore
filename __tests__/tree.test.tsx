@@ -13,7 +13,7 @@ test('Renders basic <Tree /> properly', () => {
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll('.reqore-tree-toggle').length).toBe(7);
+  expect(document.querySelectorAll('.reqore-tree-toggle').length).toBe(8);
 });
 
 test('<Tree /> items can be expanded and collapsed', () => {

@@ -1,5 +1,6 @@
 import { omit } from 'lodash';
-import { forwardRef, memo } from 'react';
+import { forwardRef, memo, useState, useTransition } from 'react';
+import { useUnmount, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem } from '.';
 import { TSizes } from '../../constants/sizes';
@@ -20,6 +21,7 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqor
   fill?: boolean;
   className?: string;
   padded?: boolean;
+  useReactTransition?: boolean;
 }
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
@@ -129,12 +131,45 @@ const ReqoreTabsListItem = memo(
         flat = true,
         wrapTabNames,
         padded,
+        useReactTransition,
         ...rest
       }: IReqoreTabListItemProps,
       ref
     ) => {
+      const [isPending, startTransition] = useTransition();
+      const [isStillPending, setStillPending] = useState(false);
+      const [loadingTimer, setLoadingTimer] = useState(null);
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme);
+
+      useUpdateEffect(() => {
+        if (isPending) {
+          setLoadingTimer(
+            setTimeout(() => {
+              setStillPending(() => true);
+            }, 300)
+          );
+        } else {
+          clearTimeout(loadingTimer);
+          setStillPending(false);
+          setLoadingTimer(null);
+        }
+      }, [isPending]);
+
+      useUnmount(() => {
+        clearTimeout(loadingTimer);
+      });
+
+      const handleClick = (event) => {
+        if (!useReactTransition) {
+          onClick?.(event);
+          return;
+        }
+
+        startTransition(() => {
+          onClick?.(event);
+        });
+      };
 
       return (
         <StyledTabListItem
@@ -163,11 +198,12 @@ const ReqoreTabsListItem = memo(
                 intent={active ? activeIntent || intent : intent}
                 active={active}
                 disabled={disabled}
-                onClick={onClick}
+                onClick={handleClick}
                 tooltip={tooltip}
                 customTheme={theme}
                 className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
                 {...omit(rest, ['id'])}
+                loading={isStillPending || rest.loading}
               >
                 {label}
               </ReqoreButton>
