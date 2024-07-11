@@ -1,7 +1,6 @@
 import {
   getLocalTimeZone,
   isSameDay,
-  parseAbsoluteToLocal,
   Time,
   toCalendarDateTime,
   toZoned,
@@ -14,9 +13,9 @@ import {
   CalendarCell,
   CalendarGrid,
   DateInput,
-  DatePicker as RADatePicker,
   DatePickerProps,
   DateSegment,
+  DatePicker as RADatePicker,
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
@@ -43,6 +42,7 @@ import ReqoreInput from '../Input';
 import { IReqorePanelProps } from '../Panel';
 import { IReqorePopoverProps } from '../Popover';
 import { YearMonthDropdowns } from './MonthYearDropdowns';
+import { toDate } from '../../helpers/dates';
 
 export type TDateValue = string | Date | null;
 export interface IDatePickerProps<T extends TDateValue>
@@ -75,6 +75,7 @@ export interface IDatePickerProps<T extends TDateValue>
   timeFieldProps?: React.ComponentProps<typeof TimeField<Time>>;
   pickerDayProps?: IReqoreButtonProps;
   pickerActiveDayProps?: IReqoreButtonProps;
+  yearMonthPickerProps?: IReqoreButtonProps;
 
   minValue?: TDateValue;
   maxValue?: TDateValue;
@@ -127,14 +128,6 @@ const DatePickerTooltip = ({
   return null;
 };
 
-// utility to convert date to ZonedDateTime because datepicker can't use Date
-export const toDate = (date?: Date | string) => {
-  if (date) {
-    return parseAbsoluteToLocal(typeof date === 'string' ? date : date.toISOString());
-  }
-  return undefined;
-};
-
 export const DatePicker = <T extends TDateValue>({
   value: _value,
   onChange,
@@ -160,6 +153,7 @@ export const DatePicker = <T extends TDateValue>({
   timeFieldProps,
   pickerActiveDayProps,
   pickerDayProps,
+  yearMonthPickerProps,
   minValue,
   maxValue,
   ...props
@@ -186,10 +180,13 @@ export const DatePicker = <T extends TDateValue>({
   const isStringRef = useRef(typeof _value === 'string');
 
   useLayoutEffect(() => {
-    if (value) isStringRef.current = typeof _value === 'string';
+    if (value) {
+      isStringRef.current = typeof _value === 'string';
+    }
   });
 
   const showTime = granularity === 'minute' || granularity === 'second' || granularity === 'hour';
+
   const handleDateChange = (value: ZonedDateTime, close = true) => {
     let date: Date;
     // if previous value is null apply saved time state
@@ -207,6 +204,7 @@ export const DatePicker = <T extends TDateValue>({
       popoverData.current?.close();
     }
   };
+
   const onTimeChange = (time: Time | null) => {
     if (!time) return;
 
@@ -216,20 +214,24 @@ export const DatePicker = <T extends TDateValue>({
       handleDateChange?.(date);
     }
   };
+
   const handleClearClick = () => {
     if (value) onChange(null);
     if (time) setTime(new Time(0, 0, 0, 0));
     onClearClick?.();
   };
+
   const onMonthYearChange = (date) => {
     handleDateChange(date, false);
   };
+
   const onToggleChange = (open: boolean) => {
     // reset focusedvalue state on popover close
     if (!open) {
       setFocusedValue(null);
     }
   };
+
   const handleCalendarDateChange = (date: ZonedDateTime) => {
     handleDateChange(value ? toZoned(toCalendarDateTime(date, time), getLocalTimeZone()) : date);
   };
@@ -300,6 +302,9 @@ export const DatePicker = <T extends TDateValue>({
                     setIsYearDropdownOpen={setIsYearDropdownOpen}
                     minValue={minValue}
                     maxValue={maxValue}
+                    intent={intent}
+                    customTheme={theme}
+                    {...yearMonthPickerProps}
                   />
                 }
                 {...pickerProps}

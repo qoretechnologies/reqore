@@ -1,10 +1,11 @@
 import { ZonedDateTime } from '@internationalized/date';
-import { TDateValue, toDate } from '.';
-import { getPreviousYears, months } from '../../helpers/dates';
+import { TDateValue } from '.';
+import { getPreviousYears, months, toDate } from '../../helpers/dates';
+import { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 
-export interface IYearMonthDropdownsProps {
+export interface IYearMonthDropdownsProps extends IReqoreButtonProps {
   value?: ZonedDateTime;
   onValueChange(value: ZonedDateTime, close: boolean): void;
   setIsMonthDropdownOpen(open: boolean): void;
@@ -19,6 +20,7 @@ export const YearMonthDropdowns = ({
   setIsMonthDropdownOpen,
   minValue: _minValue = new Date(1970, 0, 1),
   maxValue: _maxValue = new Date(new Date().getFullYear() + 5, 11, 31),
+  ...rest
 }: IYearMonthDropdownsProps) => {
   const value = _value ?? toDate(new Date());
 
@@ -34,8 +36,14 @@ export const YearMonthDropdowns = ({
         compact
         filterable
         caretPosition='right'
+        label={months[value?.month - 1] ?? 'Month'}
+        inputProps={{
+          focusRules: {
+            type: 'auto',
+          },
+        }}
+        {...rest}
         scrollToSelected
-        label={<span>{months[value?.month - 1] ?? 'Month'}</span>}
         items={months.map((month, index) => ({
           value: month,
           selected: index === value?.month - 1,
@@ -43,11 +51,6 @@ export const YearMonthDropdowns = ({
             value.set({ month: index + 1 }).compare(minValue) < 1 ||
             value.set({ month: index + 1 }).compare(maxValue) > 1,
         }))}
-        inputProps={{
-          focusRules: {
-            type: 'auto',
-          },
-        }}
         onItemSelect={(item) =>
           onValueChange(value.set({ month: months.findIndex((m) => m === item.value) + 1 }), false)
         }
@@ -58,19 +61,20 @@ export const YearMonthDropdowns = ({
         compact
         filterable
         caretPosition='right'
-        scrollToSelected
         label={value?.year ?? currentYear}
+        inputProps={{
+          focusRules: {
+            type: 'auto',
+          },
+        }}
+        {...rest}
+        scrollToSelected
         items={years.map((year) => ({
           value: year,
           selected: year === value?.year,
           disabled:
             value.set({ year }).compare(minValue) < 1 || value.set({ year }).compare(maxValue) > 1,
         }))}
-        inputProps={{
-          focusRules: {
-            type: 'auto',
-          },
-        }}
         onItemSelect={(item) => onValueChange(value.set({ year: item.value }), false)}
         onToggleChange={setIsYearDropdownOpen}
       />

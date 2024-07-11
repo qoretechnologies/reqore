@@ -3,6 +3,7 @@ import { StoryObj } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
 import { size } from 'lodash';
 import { useState } from 'react';
+import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { DatePicker } from '../../components/DatePicker';
 import { DEFAULT_INTENTS, TReqoreIntent } from '../../constants/theme';
@@ -192,6 +193,7 @@ export const WithIntent: Story = {
 
 export const WithEffect: Story = {
   args: {
+    intent: 'muted',
     pickerProps: {
       contentEffect: {
         gradient: {
@@ -209,7 +211,11 @@ export const Pill: Story = {
 };
 export const WithTooltip: Story = {
   args: {
-    tooltip: `Tooltip content`,
+    tooltip: {
+      content: `Tooltip content`,
+      placement: 'right',
+      openOnMount: true,
+    },
   },
 };
 
@@ -278,7 +284,7 @@ export const ValueCanBeChosenFromPopover: Story = {
     await expect(minute).toHaveTextContent('00');
   },
 };
-export const YeahMonthShouldBeDisabledIfOutOfRange: Story = {
+export const YearMonthShouldBeDisabledIfOutOfRange: Story = {
   args: {
     popoverProps: {},
     minValue: new Date(2000, 1, 1),
@@ -308,8 +314,9 @@ export const CurrentCalendarMonthCanBeChanged: Story = {
   async play({ canvasElement }) {
     const { input } = await getDateElements(canvasElement);
     await userEvent.click(input);
-    const { popover, nextMonth, previousMonth, titleCanvas } =
-      await getPopoverElements(canvasElement);
+    const { popover, nextMonth, previousMonth, titleCanvas } = await getPopoverElements(
+      canvasElement
+    );
 
     await expect(popover).toBeInTheDocument();
     await userEvent.click(nextMonth);
@@ -317,14 +324,13 @@ export const CurrentCalendarMonthCanBeChanged: Story = {
     await expect(heading).toBeInTheDocument();
 
     await userEvent.click(previousMonth);
-    heading = titleCanvas.queryByText('April');
-    await expect(heading).toBeInTheDocument();
+
+    await _testsWaitForText('April');
 
     await userEvent.click(titleCanvas.queryByText('April'));
-    await userEvent.click(within(canvasElement).queryByText('June'));
+    await _testsClickButton({ label: 'June' });
 
-    heading = titleCanvas.queryByText('June');
-    await expect(heading).toBeInTheDocument();
+    await _testsWaitForText('June');
   },
 };
 
