@@ -60,6 +60,9 @@ export interface IPopover
   title?: string;
   updater?: string | number;
   uiScale?: IReqoreOptions['uiScale'];
+
+  onToggleChange?: (isOpen: boolean, popoverData?: IPopover) => void;
+  onUpdate?: (popoverData: IPopover) => void;
 }
 
 export interface IPopoverOptions extends IPopover {
@@ -83,19 +86,19 @@ const usePopover = ({
   const { addPopover, removePopover, updatePopover, popovers, isPopoverOpen } =
     useContext(PopoverContext);
   const tooltips = useReqoreProperty('tooltips');
-  const { current }: MutableRefObject<string> = useRef(shortid.generate());
+  const id: string = useMemo(() => shortid.generate(), []);
   let { current: timeout }: MutableRefObject<any> = useRef(0);
 
   const startEvent = startEvents[handler];
   const endEvent = endEvents[handler];
   const currentPopover: IPopoverData = useMemo(
-    () => popovers?.find((p) => p.id === current),
-    [popovers, current]
+    () => popovers?.find((p) => p.id === id),
+    [popovers, id]
   );
 
   const openPopover = () => {
     addPopover?.({
-      id: current,
+      id: id,
       content,
       targetElement,
       placement,
@@ -110,7 +113,7 @@ const usePopover = ({
       // Create a div and prepend before the targetElement
       const blurDiv = document.createElement('div');
 
-      blurDiv.id = `reqore-blur-${current}`;
+      blurDiv.id = `reqore-blur-${id}`;
       blurDiv.classList.add('reqore-blur-wrapper');
 
       // Add the blur div before the target element
@@ -142,7 +145,7 @@ const usePopover = ({
 
   const _removePopover = () => {
     cancelTimeout();
-    removePopover?.(current);
+    removePopover?.(id);
   };
 
   const cancelTimeout = () => {
@@ -152,8 +155,8 @@ const usePopover = ({
 
   useUpdateEffect(() => {
     if (content && show) {
-      updatePopover?.(current, {
-        id: current,
+      updatePopover?.(id, {
+        id: id,
         content,
         targetElement,
         placement,
@@ -170,7 +173,7 @@ const usePopover = ({
     if (openOnMount && targetElement) {
       _addPopover();
     }
-  }, [targetElement?.outerHTML]);
+  }, [!!targetElement]);
 
   useEffect(() => {
     if (targetElement && content) {
@@ -202,21 +205,21 @@ const usePopover = ({
         targetElement?.removeEventListener('mouseleave', cancelTimeout);
       }
     };
-  }, [targetElement?.toString(), content, current, currentPopover]);
+  }, [targetElement?.toString(), content, id, currentPopover]);
 
   useUnmount(() => {
     cancelTimeout();
   });
 
   return {
-    id: current,
+    id: id,
     open: () => {
-      if (!isPopoverOpen(current)) {
+      if (!isPopoverOpen(id)) {
         openPopover();
       }
     },
     close: () => _removePopover(),
-    isOpen: () => isPopoverOpen(current),
+    isOpen: () => isPopoverOpen(id),
   };
 };
 

@@ -67,6 +67,8 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
       }
       // Remove the popover
       setPopovers((cur: IPopoverData[]) => [...cur].filter((p) => p.id !== id));
+
+      popover.onToggleChange?.(false);
     }
   };
 
@@ -96,6 +98,7 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
         uiScale,
         addPopover: (popoverData: IPopoverData) => {
           setPopovers((cur: IPopoverData[]) => [...cur, popoverData]);
+          popoverData.onToggleChange?.(true, popoverData);
         },
         updatePopover: (popoverId: string, popoverData: Partial<IPopoverData>) => {
           setPopovers((cur: IPopoverData[]) =>
@@ -107,6 +110,8 @@ const PopoverProvider: React.FC<IReqorePopoverProviderProps> = ({ children, uiSc
               return [...newPopovers, popover];
             }, [])
           );
+
+          popoverData.onUpdate?.(popoverData);
         },
         isPopoverOpen: (popoverId: string) => !!popovers.find((p) => p.id === popoverId),
         removePopover,

@@ -1,4 +1,4 @@
-import { expect } from '@storybook/jest';
+import { expect, jest } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { fireEvent, within } from '@storybook/testing-library';
 import { useState } from 'react';
@@ -439,8 +439,12 @@ export const ChangingElement: Story = {
 };
 
 export const TooltipIsUpdatedWhenContentChanges: Story = {
+  args: {
+    onUpdate: jest.fn(),
+  },
   render: (args) => {
     const [tooltip, setTooltip] = useState<IReqoreTooltip>({
+      ...args,
       content: 'test',
       handler: 'focus',
       noArrow: true,
@@ -451,6 +455,7 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
     useMount(() => {
       setTimeout(() => {
         setTooltip({
+          ...args,
           content: <ReqoreMessage> I just updated </ReqoreMessage>,
           handler: 'focus',
           noArrow: true,
@@ -463,7 +468,8 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
     return <ReqoreTextarea tooltip={tooltip} />;
   },
 
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, ...rest }) => {
+    console.log(rest.args);
     const canvas = within(canvasElement);
     const textarea = canvasElement.querySelector('textarea');
     await sleep(500);
@@ -474,12 +480,17 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
     fireEvent.focusIn(textarea);
     await sleep(300);
     await expect(canvas.queryByText('I just updated')).toBeInTheDocument();
+    await expect(rest.args.onUpdate).toHaveBeenCalled();
   },
 };
 
 export const TooltipIsRemovedWhenContentIsEmpty: Story = {
+  args: {
+    onToggleChange: jest.fn(),
+  },
   render: (args) => {
     const [tooltip, setTooltip] = useState<IReqoreTooltip>({
+      ...args,
       content: 'test',
       handler: 'focus',
       noArrow: true,
@@ -496,15 +507,20 @@ export const TooltipIsRemovedWhenContentIsEmpty: Story = {
     return <ReqoreTextarea tooltip={tooltip} />;
   },
 
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, ...rest }) => {
     const textarea = canvasElement.querySelector('textarea');
     await sleep(500);
     fireEvent.focusIn(textarea);
     await sleep(300);
     await expect(document.querySelector('.reqore-popover-content')).toBeInTheDocument();
+    await expect(rest.args.onToggleChange).toHaveBeenLastCalledWith(
+      true,
+      expect.objectContaining({ content: 'test' })
+    );
     await sleep(1000);
     fireEvent.focusIn(textarea);
     await sleep(300);
     await expect(document.querySelector('.reqore-popover-content')).not.toBeInTheDocument();
+    await expect(rest.args.onToggleChange).toHaveBeenLastCalledWith(false);
   },
 };

@@ -13,7 +13,10 @@ import { IReqoreMenuItemProps } from '../Menu/item';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import { ReqoreDropdownItem } from './item';
 
-export type TDropdownItemOnClick = (item: IReqoreDropdownItem) => void;
+export type TDropdownItemOnClick = (
+  item: IReqoreDropdownItem,
+  event?: React.MouseEvent<HTMLElement>
+) => void;
 export interface IReqoreDropdownItem
   extends Omit<IReqoreMenuItemProps, 'onClick' | 'onRightIconClick'> {
   value?: any;
@@ -104,7 +107,7 @@ const ReqoreDropdownList = memo(
     };
 
     const handleItemClick = useCallback(
-      (item: IReqoreDropdownItem): void => {
+      (item: IReqoreDropdownItem, event: React.MouseEvent<HTMLElement>): void => {
         if (size(item.items)) {
           setSelectedItem(item);
 
@@ -112,11 +115,11 @@ const ReqoreDropdownList = memo(
         }
 
         if (item.onClick) {
-          item.onClick(item);
+          item.onClick(item, event);
         }
 
         if (onItemSelect) {
-          onItemSelect(item);
+          onItemSelect(item, event);
         }
       },
       [onItemSelect, selectedItem]
