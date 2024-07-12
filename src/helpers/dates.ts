@@ -1,4 +1,5 @@
 import { parseAbsoluteToLocal } from '@internationalized/date';
+import timeago from 'epoch-timeago';
 
 export const months = [
   'January',
@@ -24,4 +25,32 @@ export const toDate = (date?: Date | string) => {
     return parseAbsoluteToLocal(typeof date === 'string' ? date : date.toISOString());
   }
   return undefined;
+};
+
+export type TDateFormat = 'date' | 'iso' | 'epoch' | 'object';
+
+export const formatDateToType = (date: Date, type: TDateFormat) => {
+  switch (type) {
+    case 'date':
+      return date.toLocaleString();
+    case 'iso':
+      return date.toISOString();
+    case 'epoch':
+      // Convert the date to unix timestamp
+      const unixTimestamp = date.getTime();
+
+      return timeago(unixTimestamp);
+    case 'object':
+      return {
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        day: date.getDate(),
+        hours: date.getHours(),
+        minutes: date.getMinutes(),
+        seconds: date.getSeconds(),
+        milliseconds: date.getMilliseconds(),
+      };
+    default:
+      return date;
+  }
 };

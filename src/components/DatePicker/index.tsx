@@ -21,6 +21,7 @@ import {
 import styled from 'styled-components';
 import { ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
+import { formatDateToType, TDateFormat, toDate } from '../../helpers/dates';
 import { IPopoverControls } from '../../hooks/usePopover';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -42,7 +43,6 @@ import ReqoreInput from '../Input';
 import { IReqorePanelProps } from '../Panel';
 import { IReqorePopoverProps } from '../Popover';
 import { YearMonthDropdowns } from './MonthYearDropdowns';
-import { toDate } from '../../helpers/dates';
 
 export type TDateValue = string | Date | null;
 export interface IDatePickerProps<T extends TDateValue>
@@ -59,6 +59,8 @@ export interface IDatePickerProps<T extends TDateValue>
     IReqoreIntent {
   value: T;
   onChange(value: T): void;
+
+  dateType?: TDateFormat;
 
   rounded?: boolean;
   pill?: boolean;
@@ -156,6 +158,7 @@ export const DatePicker = <T extends TDateValue>({
   yearMonthPickerProps,
   minValue,
   maxValue,
+  dateType = 'iso',
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -197,7 +200,8 @@ export const DatePicker = <T extends TDateValue>({
       date = value ? value.toDate() : null;
       if (date) setTime(new Time(value?.hour, value?.minute, value?.second, value?.millisecond));
     }
-    onChange?.((isStringRef.current ? date?.toISOString() : date) as T);
+
+    onChange?.((isStringRef.current ? date?.toISOString() : formatDateToType(date, dateType)) as T);
     setFocusedValue(value);
 
     if (closeOnSelect && !showTime && close) {
