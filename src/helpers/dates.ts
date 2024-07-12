@@ -35,11 +35,12 @@ export const formatDateToType = (date: Date, type: TDateFormat) => {
       return date.toLocaleString();
     case 'iso':
       return date.toISOString();
-    case 'epoch':
+    case 'epoch': {
       // Convert the date to unix timestamp
       const unixTimestamp = date.getTime();
 
       return timeago(unixTimestamp);
+    }
     case 'object':
       return {
         year: date.getFullYear(),
