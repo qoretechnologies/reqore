@@ -32,6 +32,9 @@ const meta = {
   },
   render(args) {
     const [value, setValue] = useState<Date | string>(args.value);
+
+    console.log(args);
+
     return (
       <DatePicker
         {...args}
@@ -110,6 +113,11 @@ export const Default: Story = {
 };
 export const WithMinMaxValue: Story = {
   args: { minValue: new Date(2000, 0, 1), maxValue: new Date(2030, 11, 31) },
+};
+export const WithDefaultISOValue: Story = {
+  args: {
+    value: '2024-04-10T08:00:00.000Z',
+  },
 };
 export const WithAM_PM: Story = {
   args: {
