@@ -28,13 +28,31 @@ export const toDate = (date?: Date | string) => {
 };
 
 export type TDateFormat = 'date' | 'iso' | 'epoch' | 'object';
+export type TDateObjectFormat = {
+  year: number;
+  month: number;
+  day: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  milliseconds: number;
+};
+export type TDateFormatResult<T extends TDateFormat> = T extends 'date'
+  ? string
+  : T extends 'iso'
+  ? string
+  : T extends 'epoch'
+  ? string
+  : T extends 'object'
+  ? TDateObjectFormat
+  : Date;
 
-export const formatDateToType = (date: Date, type: TDateFormat) => {
+export function formatDateToType<T extends TDateFormat>(date: Date, type: T): TDateFormatResult<T> {
   switch (type) {
     case 'date':
-      return date.toLocaleString();
+      return date.toLocaleString() as TDateFormatResult<T>;
     case 'iso':
-      return date.toISOString();
+      return date.toISOString() as TDateFormatResult<T>;
     case 'epoch': {
       // Convert the date to unix timestamp
       const unixTimestamp = date.getTime();
@@ -50,8 +68,8 @@ export const formatDateToType = (date: Date, type: TDateFormat) => {
         minutes: date.getMinutes(),
         seconds: date.getSeconds(),
         milliseconds: date.getMilliseconds(),
-      };
+      } as TDateFormatResult<T>;
     default:
-      return date;
+      return date as TDateFormatResult<T>;
   }
-};
+}
