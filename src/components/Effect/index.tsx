@@ -437,7 +437,7 @@ export const StyledEffect = styled.span`
 `;
 
 export const StyledTextEffect = styled(StyledEffect).attrs((props) => ({ ...props, isText: true }))`
-  display: ${({ inline }) => (inline ? 'inline' : 'inline-block')};
+  display: ${({ inline, block }) => (inline ? 'inline' : block ? 'block' : 'inline-block')};
 
   ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.gradient

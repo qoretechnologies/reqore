@@ -34,6 +34,7 @@ export const ReqoreP = memo(
           theme={theme}
           color={theme.text.color}
           intent={intent}
+          block
           {...props}
           _size={size}
           className={`${className || ''} reqore-paragraph`}
