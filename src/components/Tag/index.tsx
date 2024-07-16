@@ -27,6 +27,7 @@ import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
+  IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreLoading,
   IWithReqoreMinimal,
@@ -60,6 +61,7 @@ export interface IReqoreCustomTagProps
     IWithReqoreFluid,
     IWithReqoreEffect,
     IWithReqoreLoading,
+    IWithReqoreFlat,
     IWithReqoreCustomTheme {
   fixed?: boolean | 'key' | 'label';
   align?: 'left' | 'right' | 'center';
@@ -114,6 +116,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) =>
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
+  border: ${({ theme, color, flat = true }) =>
+    !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
   border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;

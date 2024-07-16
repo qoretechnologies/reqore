@@ -110,6 +110,7 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
         />
         <ReqoreTag labelKey='Key' label='value' {...args} />
         <ReqoreTag icon='QuestionAnswerLine' {...args} fixed />
+        <ReqoreTag label='Non Flat Tag' icon='BaiduLine' flat={false} {...args} />
         <ReqoreTag label='Disabled Tag' disabled icon='AlarmWarningLine' {...args} />
         <ReqoreTag
           label='300px Tag'
