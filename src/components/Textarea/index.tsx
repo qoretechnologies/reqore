@@ -59,6 +59,7 @@ export interface IReqoreTextareaProps
   focusRules?: IReqoreAutoFocusRules;
   templates?: IReqoreFormTemplates;
   transparent?: boolean;
+  as?: React.ElementType;
 }
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
@@ -88,13 +89,13 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size = 'normal' }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   margin: 0;
-  padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px;
-  padding-right: ${({ hasClearButton, _size }) =>
+  padding: ${({ _size = 'normal' }) => PADDING_FROM_SIZE[_size] / 2}px;
+  padding-right: ${({ hasClearButton, _size = 'normal' }) =>
     hasClearButton ? `${SIZE_TO_PX[_size]}px` : undefined};
-  min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
-  line-height: ${({ _size }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
+  min-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size]}px;
+  line-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
   vertical-align: middle;
 
   background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
@@ -108,7 +109,7 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
       minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
   }
 
-  border-radius: ${({ minimal, rounded, _size }) =>
+  border-radius: ${({ minimal, rounded = true, _size = 'normal' }) =>
     minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
   border: ${({ minimal, theme, flat }) =>
     !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : 0};
@@ -213,7 +214,7 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
               setValue(e.target.value);
               onChange?.(e);
             }}
-            as='textarea'
+            as={rest.as || 'textarea'}
             className={`${className || ''} reqore-control reqore-textarea`}
             _size={size}
             ref={(ref) => setInputRef(ref)}

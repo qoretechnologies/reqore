@@ -94,7 +94,7 @@ export const isStringSize = (value: TSizes | string | number) => {
   return SIZES.includes(value as TSizes);
 };
 
-export const getOneLessSize = (size: TSizes): TSizes => {
+export const getOneLessSize = (size: TSizes = 'normal'): TSizes => {
   // Get the initial sizes number
   const initialSizeNumber: number = SIZE_TO_NUMBER[size];
   // Reduce the size number by one

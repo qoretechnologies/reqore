@@ -19,6 +19,7 @@ export const StyledSpan = styled(StyledTextEffect)`
   color: ${({ theme, intent }) =>
     intent ? theme.intents[intent] : theme.text?.color || 'inherit'};
   font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
+  vertical-align: ${({ inline }) => (inline ? 'middle' : undefined)};
 `;
 
 export const ReqoreSpan = memo(
