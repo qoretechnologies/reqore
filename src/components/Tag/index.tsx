@@ -85,6 +85,7 @@ export interface IReqoreCustomTagProps
   labelKeyAlign?: 'left' | 'right' | 'center';
   labelKeyEffect?: IReqoreEffect;
   as?: string | React.ElementType;
+  compact?: boolean;
 }
 export interface IReqoreTagProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children' | 'color'>,
@@ -222,7 +223,7 @@ const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
 `;
 
 const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
-  padding: 4px ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  padding: 4px ${({ size, compact }) => PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px;
   min-height: 100%;
   display: flex;
   align-items: center;
@@ -316,6 +317,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       rightIconProps,
       loading,
       loadingIconType,
+      compact,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -385,6 +387,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 margin={label || labelKey ? 'left' : 'both'}
                 color={leftIconColor || iconColor}
+                compact={compact}
                 {...leftIconProps}
                 animation={loading ? 'spin' : leftIconProps?.animation}
                 icon={leftIcon}
@@ -396,6 +399,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 hasWidth={!!width}
                 size={size}
                 labelAlign={labelKeyAlign}
+                compact={compact}
                 effect={
                   {
                     weight: 'thick',
@@ -424,6 +428,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 wrap={wrap}
                 hasWidth={!!width}
                 labelAlign={labelAlign}
+                compact={compact}
                 effect={{
                   ...labelEffect,
                 }}
@@ -437,6 +442,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 margin={label || (icon && !labelKey) ? 'right' : 'both'}
                 color={rightIconColor || iconColor}
+                compact={compact}
                 {...rightIconProps}
               />
             )}
