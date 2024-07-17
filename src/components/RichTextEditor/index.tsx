@@ -229,8 +229,7 @@ export const ReqoreRichTextEditor = ({
   }, [value]);
 
   const panelActions = useMemo<IReqorePanelAction[]>(() => {
-    console.log(editor.history, value);
-    let _actions: IReqorePanelAction[] = [...(panelProps?.actions || [])];
+    const _actions: IReqorePanelAction[] = [...(panelProps?.actions || [])];
 
     if (!actions) {
       return _actions;
