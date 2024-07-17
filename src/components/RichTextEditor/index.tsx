@@ -1,12 +1,18 @@
 import { map, size } from 'lodash';
 import { useCallback, useMemo, useState } from 'react';
-import { BaseEditor, createEditor, Descendant, Range, Transforms } from 'slate';
+import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
+import { HistoryEditor, withHistory } from 'slate-history';
 import { Editable, ReactEditor, Slate, useSelected, withReact } from 'slate-react';
-import { EditableProps } from 'slate-react/dist/components/editable';
-import { ReqoreDropdown, ReqoreTextarea } from '../..';
+import {
+  EditableProps,
+  RenderElementProps,
+  RenderLeafProps,
+} from 'slate-react/dist/components/editable';
+import { ReqorePanel, ReqoreTextarea } from '../..';
 import { getOneLessSize } from '../../helpers/utils';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
+import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
@@ -14,11 +20,18 @@ import { IReqoreTextareaProps } from '../Textarea';
 
 type CustomElement = {
   type: 'paragraph' | 'tag';
-  value?: string;
-  label?: string;
+  value?: string | number;
+  label?: string | number;
   children: CustomText[];
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  code?: boolean;
+  text?: string;
 };
-type CustomText = CustomElement | { text: string };
+type CustomText =
+  | CustomElement
+  | { text: string; bold?: boolean; italic?: boolean; underline?: boolean; code?: boolean };
 
 declare module 'slate' {
   interface CustomTypes {
@@ -31,18 +44,29 @@ declare module 'slate' {
 export interface IReqoreRichTextEditorProps
   extends Omit<IReqoreTextareaProps, 'value' | 'onChange'> {
   value: CustomElement[];
-  onChange: (value: Descendant[]) => void;
+  onChange: (value: CustomElement[]) => void;
   tags?: {
     [key: string]: Partial<IReqoreDropdownItemProps> & {
       items?: IReqoreDropdownProps['items'];
     };
   };
   getTagProps?: (tag: CustomElement) => IReqoreTagProps;
+  onTagClick?: (tag: CustomElement) => void;
   tagsProps?: IReqoreTagProps;
   tagsListProps: Omit<IReqoreDropdownProps, 'items'> & EditableProps;
+  panelProps?: IReqorePanelProps;
+
+  actions?: {
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    code?: boolean;
+    undo?: boolean;
+    redo?: boolean;
+  };
 }
 
-export const TemplateElement = (props) => {
+export const TemplateElement = (props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
   const selected = useSelected();
 
   return (
@@ -57,12 +81,8 @@ export const TemplateElement = (props) => {
           e.preventDefault();
           e.stopPropagation();
         }}
-        tooltip={props.element.value}
+        tooltip={props.element.value?.toString()}
         label={props.element.label}
-        onRemoveClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
         {...props.tagProps}
         contentEditable={false}
         intent={selected ? 'info' : props.tagProps?.intent}
@@ -72,7 +92,7 @@ export const TemplateElement = (props) => {
   );
 };
 
-export const withTemplates = (editor: BaseEditor & ReactEditor) => {
+export const withTemplates = (editor: HistoryEditor & ReactEditor) => {
   const { isInline, isVoid, markableVoid } = editor;
 
   editor.isInline = (element) => {
@@ -90,7 +110,7 @@ export const withTemplates = (editor: BaseEditor & ReactEditor) => {
   return editor;
 };
 
-const Leaf = ({ attributes, children, leaf }) => {
+const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
   if (leaf.bold) {
     children = <strong>{children}</strong>;
   }
@@ -114,15 +134,18 @@ const Leaf = ({ attributes, children, leaf }) => {
   );
 };
 
-export const DefaultElement = (props) => <ReqoreP {...props.attributes}>{props.children}</ReqoreP>;
+export const DefaultElement = (props: RenderElementProps) => (
+  <ReqoreP {...props.attributes}>{props.children}</ReqoreP>
+);
 
-const insertTag = (editor, value, label) => {
+const insertTag = (editor: Editor, value: string | number, label: string | number) => {
   const mention: CustomElement = {
     type: 'tag',
     value,
     label,
     children: [{ text: '' }],
   };
+
   Transforms.insertNodes(editor, mention);
   Transforms.move(editor);
 };
@@ -138,11 +161,14 @@ export const ReqoreRichTextEditor = ({
   tags,
   getTagProps = () => ({}),
   tagsProps = {},
+  onTagClick,
   tagsListProps,
+  panelProps,
+  actions,
   ...rest
 }: IReqoreRichTextEditorProps) => {
   // Create a Slate editor object that won't change across renders.
-  const [editor] = useState(() => withTemplates(withReact(createEditor())));
+  const [editor] = useState(() => withTemplates(withReact(withHistory(createEditor()))));
   const [target, setTarget] = useState<Range | undefined>();
 
   const renderElement = useCallback((props) => {
@@ -160,6 +186,21 @@ export const ReqoreRichTextEditor = ({
             tagProps={{
               ...finalProps,
               size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
+              onClick:
+                !rest.readOnly && !rest.disabled
+                  ? (event) => {
+                      onTagClick?.(props.element);
+                      finalProps.onClick?.(event);
+                    }
+                  : undefined,
+              onRemoveClick:
+                !rest.readOnly && !rest.disabled
+                  ? () => {
+                      Transforms.removeNodes(editor, {
+                        at: ReactEditor.findPath(editor, props.element),
+                      });
+                    }
+                  : undefined,
             }}
           />
         );
@@ -169,27 +210,7 @@ export const ReqoreRichTextEditor = ({
     }
   }, []);
 
-  const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
-
-  const EditorWithRef = useMemo(
-    () => (props) => {
-      return (
-        <ReqoreTextarea
-          {...props}
-          {...rest}
-          as={Editable}
-          style={{
-            lineHeight: 1.5,
-            outline: 'none',
-          }}
-          onClearClick={() => {
-            onChange([{ type: 'paragraph', children: [{ text: '' }] }]);
-          }}
-        />
-      );
-    },
-    []
-  );
+  const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
 
   const items: IReqoreDropdownProps['items'] = useMemo(() => {
     if (size(tags)) {
@@ -203,59 +224,93 @@ export const ReqoreRichTextEditor = ({
     return undefined;
   }, [tags]);
 
+  const isEmpty = useMemo(() => {
+    return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
+  }, [value]);
+
+  const panelActions = useMemo<IReqorePanelAction[]>(() => {
+    console.log(editor.history, value);
+    let _actions: IReqorePanelAction[] = [...(panelProps?.actions || [])];
+
+    if (!actions) {
+      return _actions;
+    }
+
+    if (actions.undo) {
+      _actions.push({
+        disabled: editor.history.undos.length === 0,
+        icon: 'ArrowGoBackLine',
+        onClick: () => {
+          editor.undo();
+        },
+      });
+    }
+
+    if (actions.redo) {
+      _actions.push({
+        disabled: editor.history.redos.length === 0,
+        icon: 'ArrowGoForwardLine',
+        onClick: () => {
+          editor.redo();
+        },
+      });
+    }
+
+    return _actions;
+  }, [actions, value]);
+
   return (
-    <Slate
-      editor={editor}
-      initialValue={value as any}
-      onChange={(data) => {
-        const { selection } = editor;
-
-        setTarget(selection);
-
-        onChange(data);
-      }}
+    <ReqorePanel
+      flat
+      padded={false}
+      minimal
+      transparent
+      size='small'
+      {...panelProps}
+      actions={panelActions}
     >
-      <ReqoreTextarea
-        {...rest}
-        renderElement={renderElement}
-        renderLeaf={renderLeaf}
-        as={Editable}
-        style={{
-          lineHeight: 1.5,
-          outline: 'none',
+      <Slate
+        editor={editor}
+        initialValue={value as any}
+        onChange={(data) => {
+          const { selection } = editor;
+
+          setTarget(selection);
+          onChange?.(data as CustomElement[]);
         }}
-        onClearClick={() => {
-          onChange([{ type: 'paragraph', children: [{ text: '' }] }]);
-        }}
-        templates={{
-          ...tagsListProps,
-          items,
-          onItemSelect: (item) => {
-            if (item.value) {
-              Transforms.select(editor, target);
-              insertTag(editor, item.value, item.label);
-              ReactEditor.focus(editor);
-            }
-          },
-        }}
-      />
-      <ReqoreDropdown<EditableProps>
-        component={EditorWithRef}
-        renderElement={renderElement}
-        renderLeaf={renderLeaf}
-        handler='focus'
-        useTargetWidth
-        filterable
-        items={items}
-        onItemSelect={(item) => {
-          if (item.value) {
-            Transforms.select(editor, target);
-            insertTag(editor, item.value, item.label);
-            ReactEditor.focus(editor);
+      >
+        <ReqoreTextarea<Pick<EditableProps, 'renderElement' | 'renderLeaf'>>
+          {...rest}
+          renderElement={renderElement}
+          renderLeaf={renderLeaf}
+          as={Editable}
+          style={{
+            lineHeight: 1.5,
+            outline: 'none',
+          }}
+          onClearClick={
+            isEmpty
+              ? undefined
+              : () => {
+                  onChange([{ type: 'paragraph', children: [{ text: '' }] }]);
+                }
           }
-        }}
-        {...tagsListProps}
-      />
-    </Slate>
+          value={JSON.stringify(value || [])}
+          onChange={useCallback(() => {}, [])}
+          templates={{
+            ...tagsListProps,
+            items,
+            closeOnInsideClick: false,
+            onItemSelect: (item) => {
+              if (item.value) {
+                Transforms.select(editor, target);
+                insertTag(editor, item.value, item.label);
+                ReactEditor.focus(editor);
+              }
+            },
+          }}
+        />
+      </Slate>
+    </ReqorePanel>
   );
 };

@@ -1,5 +1,10 @@
+import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
+import { userEvent } from '@storybook/testing-library';
+import { useState } from 'react';
+import { _testsClickButton } from '../../../__tests__/utils';
 import { ReqoreRichTextEditor } from '../../components/RichTextEditor';
+import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
 
@@ -8,6 +13,11 @@ const meta = {
   component: ReqoreRichTextEditor,
   args: {
     onChange: (data) => console.log(data),
+  },
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
+
+    return <ReqoreRichTextEditor {...args} value={value} onChange={(val) => setValue(val)} />;
   },
   argTypes: {
     ...MinimalArg,
@@ -52,6 +62,21 @@ export const WithCustomStyle: Story = {
     minimal: true,
   },
 };
+
+export const Readonly: Story = {
+  args: {
+    ...WithDefaultValue.args,
+    readOnly: true,
+  },
+};
+
+export const Disabled: Story = {
+  args: {
+    ...WithDefaultValue.args,
+    disabled: true,
+  },
+};
+
 export const WithCustomTags: Story = {
   args: {
     value: [
@@ -95,7 +120,7 @@ export const WithCustomTags: Story = {
       },
     ],
     getTagProps: (tag) => {
-      if (tag.value.startsWith('@')) {
+      if (tag.value.toString().startsWith('@')) {
         return {
           intent: 'success',
           icon: 'AtLine',
@@ -146,5 +171,38 @@ export const WithCustomTags: Story = {
         ],
       },
     },
+  },
+  play: async () => {
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+    await userEvent.click(document.querySelectorAll('.reqore-tag-remove')[1]);
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(2);
+    await _testsClickButton({ label: 'Mentions' });
+    await userEvent.click(document.querySelector('div[contenteditable]'));
+    await sleep(500);
+    await _testsClickButton({ label: 'Brad Pitt' });
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+  },
+};
+
+export const WithActions: Story = {
+  args: {
+    actions: {
+      undo: true,
+      redo: true,
+    },
+  },
+  play: async () => {
+    await userEvent.click(document.querySelector('div[contenteditable]'));
+    await userEvent.keyboard('Hello');
+
+    await expect(document.querySelector('.reqore-button')).toBeEnabled();
+    await expect(document.querySelectorAll('.reqore-button')[1]).toBeDisabled();
+
+    await userEvent.click(document.querySelector('.reqore-button'));
+    await expect(document.querySelector('.reqore-button')).toBeDisabled();
+    await expect(document.querySelectorAll('.reqore-button')[1]).toBeEnabled();
+
+    await userEvent.click(document.querySelectorAll('.reqore-button')[1]);
+    await expect(document.querySelector('.reqore-textarea')).toHaveTextContent('Hello');
   },
 };

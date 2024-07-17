@@ -73,6 +73,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   isDefaultOpen = false,
   onItemSelect,
   closeOnOutsideClick,
+  closeOnInsideClick,
   blur,
   closeOnAnyClick,
   delay,
@@ -100,7 +101,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         style: buttonStyle || rest.style,
         disabled: !size(items) || (rest as any).disabled,
         className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
-      }) as T,
+      } as T),
     [items, icon, rightIcon, buttonStyle, caretPosition, rest]
   );
 
@@ -127,6 +128,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   return (
     <ReqorePopover
       closeOnOutsideClick={closeOnOutsideClick}
+      closeOnInsideClick={closeOnInsideClick}
       blur={blur}
       closeOnAnyClick={closeOnAnyClick}
       delay={delay}

@@ -51,6 +51,7 @@ export interface IPopover
   useTargetWidth?: boolean;
   closeOnOutsideClick?: boolean;
   closeOnAnyClick?: boolean;
+  closeOnInsideClick?: boolean;
   delay?: number;
   blur?: boolean;
   transparent?: boolean;
@@ -79,6 +80,7 @@ const usePopover = ({
   noArrow,
   useTargetWidth,
   closeOnOutsideClick = true,
+  closeOnInsideClick = true,
   openOnMount = false,
   delay,
   ...rest
@@ -127,7 +129,9 @@ const usePopover = ({
   const _addPopover = () => {
     if (currentPopover) {
       if (handler !== 'hoverStay' && handler !== 'focus') {
-        _removePopover();
+        if (closeOnInsideClick) {
+          _removePopover();
+        }
       }
     } else if (show) {
       const globalDelay =
@@ -144,8 +148,10 @@ const usePopover = ({
   };
 
   const _removePopover = () => {
-    cancelTimeout();
-    removePopover?.(id);
+    if (isPopoverOpen(id)) {
+      cancelTimeout();
+      removePopover?.(id);
+    }
   };
 
   const cancelTimeout = () => {
