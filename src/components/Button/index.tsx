@@ -321,7 +321,7 @@ export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButton
         minimal={!(content as IReqoreTagProps)?.effect?.gradient}
         {...(typeof content === 'string' || typeof content === 'number'
           ? { label: content }
-          : content)}
+          : (content as IReqoreTagProps))}
       />
     ),
     [props]

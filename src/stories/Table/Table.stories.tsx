@@ -555,7 +555,11 @@ const CustomHeaderCell = (props: IReqoreCustomHeaderCellProps) => {
 };
 
 const CustomCell = (props: IReqoreCustomTableBodyCellProps) => {
-  return <ReqoreP style={{ width: props.width, flexGrow: props.grow }}>{props.children}</ReqoreP>;
+  return (
+    <ReqoreP style={{ width: props.width, flexGrow: props.grow }} block={false}>
+      {props.children}
+    </ReqoreP>
+  );
 };
 
 const CustomRow = (props: IReqoreCustomTableRowProps) => {

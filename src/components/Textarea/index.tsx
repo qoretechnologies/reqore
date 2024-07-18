@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 import styled, { css } from 'styled-components';
-import { ReqoreDropdown } from '../..';
+import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
@@ -14,7 +14,6 @@ import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import useAutosizeTextArea from '../../hooks/useTextareaAutoSize';
-import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import { DisabledElement, ReadOnlyElement } from '../../styles';
 import {
@@ -59,6 +58,7 @@ export interface IReqoreTextareaProps
   focusRules?: IReqoreAutoFocusRules;
   templates?: IReqoreFormTemplates;
   transparent?: boolean;
+  as?: React.ElementType;
 }
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
@@ -88,13 +88,13 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size = 'normal' }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   margin: 0;
-  padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px;
-  padding-right: ${({ hasClearButton, _size }) =>
+  padding: ${({ _size = 'normal' }) => PADDING_FROM_SIZE[_size] / 2}px;
+  padding-right: ${({ hasClearButton, _size = 'normal' }) =>
     hasClearButton ? `${SIZE_TO_PX[_size]}px` : undefined};
-  min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
-  line-height: ${({ _size }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
+  min-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size]}px;
+  line-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
   vertical-align: middle;
 
   background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
@@ -108,7 +108,7 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
       minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
   }
 
-  border-radius: ${({ minimal, rounded, _size }) =>
+  border-radius: ${({ minimal, rounded = true, _size = 'normal' }) =>
     minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
   border: ${({ minimal, theme, flat }) =>
     !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : 0};
@@ -140,127 +140,108 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   }
 
   ${({ readOnly }) => readOnly && ReadOnlyElement};
+  ${({ disabled }) => disabled && DisabledElement};
 
   &:disabled {
     ${DisabledElement};
   }
 `;
 
-const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
-  (
-    {
-      width,
-      height,
-      scaleWithContent,
-      size = 'normal',
-      className,
-      onClearClick,
-      fluid,
-      tooltip,
-      customTheme,
-      intent,
-      rounded = true,
-      wrapperStyle,
-      value,
-      onChange,
-      fixed,
-      focusRules,
-      templates,
-      ...rest
-    }: IReqoreTextareaProps,
-    ref
-  ) => {
-    const { targetRef }: any = useCombinedRefs(ref);
-    const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
-    const theme = useReqoreTheme('main', customTheme, intent);
-    const [_value, setValue] = useState(value || '');
+function Textarea<T>(
+  {
+    width,
+    height,
+    scaleWithContent,
+    size = 'normal',
+    className,
+    onClearClick,
+    fluid,
+    tooltip,
+    customTheme,
+    intent,
+    rounded = true,
+    wrapperStyle,
+    value,
+    onChange,
+    fixed,
+    focusRules,
+    templates,
+    ...rest
+  }: T & IReqoreTextareaProps,
+  ref
+) {
+  const { targetRef }: any = useCombinedRefs(ref);
+  const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
+  const theme = useReqoreTheme('main', customTheme, intent);
+  const [_value, setValue] = useState(value || '');
 
-    useEffect(() => {
-      setValue(value || '');
-    }, [value]);
+  useEffect(() => {
+    setValue(value || '');
+  }, [value]);
 
-    useTooltip(inputRef, tooltip);
-    useAutosizeTextArea(inputRef, _value, scaleWithContent);
-    useAutoFocus(inputRef, rest.readOnly || rest.disabled ? undefined : focusRules, onChange);
+  useTooltip(inputRef, tooltip);
+  useAutosizeTextArea(inputRef, _value, scaleWithContent);
+  useAutoFocus(inputRef, rest.readOnly || rest.disabled ? undefined : focusRules, onChange);
 
-    const handleItemSelect = useCallback(
-      (item) => {
-        if (!inputRef || !item || !item.value) {
-          return;
-        }
-        // Add the value of the selected item to the current value at the cursor position
-        const value = `${_value.slice(0, inputRef.selectionStart)}${item.value}${_value.slice(
-          inputRef.selectionEnd
-        )}`;
+  const handleItemSelect = useCallback(
+    (item) => {
+      if (!inputRef || !item || !item.value) {
+        return;
+      }
+      // Add the value of the selected item to the current value at the cursor position
+      const value = `${_value.slice(0, inputRef.selectionStart)}${item.value}${_value.slice(
+        inputRef.selectionEnd
+      )}`;
 
-        setValue(value);
-        // Trigger the onChange event
-        onChange?.({ target: { value } } as any);
-      },
-      [inputRef, _value]
-    );
+      setValue(value);
+      // Trigger the onChange event
+      onChange?.({ target: { value } } as any);
+    },
+    [inputRef, _value]
+  );
 
-    const renderChildren = () => {
-      return (
-        <>
-          <StyledTextarea
-            {...rest}
-            effect={{
-              interactive: !rest?.disabled && !rest.readOnly,
-              ...rest?.effect,
-            }}
-            onChange={(e) => {
-              setValue(e.target.value);
-              onChange?.(e);
-            }}
-            as='textarea'
-            className={`${className || ''} reqore-control reqore-textarea`}
-            _size={size}
-            ref={(ref) => setInputRef(ref)}
-            theme={theme}
-            rounded={rounded}
-            rows={1}
-            value={_value}
-            readonly={rest?.readOnly}
-            tabIndex={rest?.disabled ? -1 : 0}
-            hasClearButton={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
-          />
-          <ReqoreInputClearButton
-            enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
-            show={_value && _value !== ''}
-            onClick={onClearClick}
-            size={size}
-          />
-        </>
-      );
-    };
-
-    if (templates) {
-      return (
-        <ReqoreDropdown<Omit<IReqoreTextareaStyle & { ref: any }, 'content'>>
-          component={StyledTextareaWrapper}
-          className={`${className || ''} reqore-control-wrapper`}
-          width={width}
-          filterable
-          height={height}
-          fluid={fluid}
-          fixed={fixed}
-          _size={size}
-          theme={theme}
-          style={wrapperStyle}
-          ref={targetRef}
-          onItemSelect={handleItemSelect}
-          {...templates}
-        >
-          {renderChildren()}
-        </ReqoreDropdown>
-      );
-    }
-
+  const renderChildren = () => {
     return (
-      <StyledTextareaWrapper
+      <>
+        <StyledTextarea
+          {...rest}
+          effect={{
+            interactive: !rest?.disabled && !rest.readOnly,
+            ...rest?.effect,
+          }}
+          onChange={(e) => {
+            setValue(e.target.value);
+            onChange?.(e);
+          }}
+          as={rest.as || 'textarea'}
+          className={`${className || ''} reqore-control reqore-textarea`}
+          _size={size}
+          ref={(ref) => setInputRef(ref)}
+          theme={theme}
+          rounded={rounded}
+          rows={1}
+          value={_value}
+          readonly={rest?.readOnly}
+          tabIndex={rest?.disabled ? -1 : 0}
+          hasClearButton={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
+        />
+        <ReqoreInputClearButton
+          enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
+          show={_value && _value !== ''}
+          onClick={onClearClick}
+          size={size}
+        />
+      </>
+    );
+  };
+
+  if (templates) {
+    return (
+      <ReqoreDropdown<Omit<IReqoreTextareaStyle & { ref: any }, 'content'>>
+        component={StyledTextareaWrapper}
         className={`${className || ''} reqore-control-wrapper`}
         width={width}
+        filterable
         height={height}
         fluid={fluid}
         fixed={fixed}
@@ -268,11 +249,31 @@ const ReqoreInput = forwardRef<HTMLTextAreaElement, IReqoreTextareaProps>(
         theme={theme}
         style={wrapperStyle}
         ref={targetRef}
+        onItemSelect={handleItemSelect}
+        {...templates}
       >
         {renderChildren()}
-      </StyledTextareaWrapper>
+      </ReqoreDropdown>
     );
   }
-);
 
-export default ReqoreInput;
+  return (
+    <StyledTextareaWrapper
+      className={`${className || ''} reqore-control-wrapper`}
+      width={width}
+      height={height}
+      fluid={fluid}
+      fixed={fixed}
+      _size={size}
+      theme={theme}
+      style={wrapperStyle}
+      ref={targetRef}
+    >
+      {renderChildren()}
+    </StyledTextareaWrapper>
+  );
+}
+
+const ReqoreTextarea = forwardRef(Textarea);
+
+export default ReqoreTextarea;

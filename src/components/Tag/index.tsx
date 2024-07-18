@@ -27,6 +27,7 @@ import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
+  IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreLoading,
   IWithReqoreMinimal,
@@ -60,6 +61,7 @@ export interface IReqoreCustomTagProps
     IWithReqoreFluid,
     IWithReqoreEffect,
     IWithReqoreLoading,
+    IWithReqoreFlat,
     IWithReqoreCustomTheme {
   fixed?: boolean | 'key' | 'label';
   align?: 'left' | 'right' | 'center';
@@ -85,6 +87,7 @@ export interface IReqoreCustomTagProps
   labelKeyAlign?: 'left' | 'right' | 'center';
   labelKeyEffect?: IReqoreEffect;
   as?: string | React.ElementType;
+  compact?: boolean;
 }
 export interface IReqoreTagProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children' | 'color'>,
@@ -113,6 +116,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) =>
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
+  border: ${({ theme, color, flat = true }) =>
+    !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
   border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
@@ -222,7 +227,7 @@ const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
 `;
 
 const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
-  padding: 4px ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  padding: 4px ${({ size, compact }) => PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px;
   min-height: 100%;
   display: flex;
   align-items: center;
@@ -316,6 +321,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       rightIconProps,
       loading,
       loadingIconType,
+      compact,
       ...rest
     }: IReqoreTagProps,
     ref
@@ -385,6 +391,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 margin={label || labelKey ? 'left' : 'both'}
                 color={leftIconColor || iconColor}
+                compact={compact}
                 {...leftIconProps}
                 animation={loading ? 'spin' : leftIconProps?.animation}
                 icon={leftIcon}
@@ -396,6 +403,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 hasWidth={!!width}
                 size={size}
                 labelAlign={labelKeyAlign}
+                compact={compact}
                 effect={
                   {
                     weight: 'thick',
@@ -424,6 +432,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 wrap={wrap}
                 hasWidth={!!width}
                 labelAlign={labelAlign}
+                compact={compact}
                 effect={{
                   ...labelEffect,
                 }}
@@ -437,6 +446,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 margin={label || (icon && !labelKey) ? 'right' : 'both'}
                 color={rightIconColor || iconColor}
+                compact={compact}
                 {...rightIconProps}
               />
             )}

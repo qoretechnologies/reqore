@@ -12,6 +12,8 @@ export interface IReqoreParagraphProps
     IWithReqoreEffect,
     IReqoreIntent {
   size?: TSizes | string;
+  block?: boolean;
+  inline?: boolean;
 }
 
 export const StyledParagraph = styled(StyledTextEffect)`
@@ -24,7 +26,18 @@ export const StyledParagraph = styled(StyledTextEffect)`
 
 export const ReqoreP = memo(
   forwardRef(
-    ({ size, children, customTheme, intent, className, ...props }: IReqoreParagraphProps, ref) => {
+    (
+      {
+        size,
+        children,
+        customTheme,
+        intent,
+        className,
+        block = true,
+        ...props
+      }: IReqoreParagraphProps,
+      ref
+    ) => {
       const theme = useReqoreTheme('main', customTheme, intent);
 
       return (
@@ -34,6 +47,7 @@ export const ReqoreP = memo(
           theme={theme}
           color={theme.text.color}
           intent={intent}
+          block={block}
           {...props}
           _size={size}
           className={`${className || ''} reqore-paragraph`}
