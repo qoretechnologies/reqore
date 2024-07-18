@@ -33,8 +33,6 @@ const meta = {
   render(args) {
     const [value, setValue] = useState<Date | string>(args.value);
 
-    console.log(args);
-
     return (
       <DatePicker
         {...args}

@@ -291,7 +291,14 @@ export const ReqoreRichTextEditor = ({
             isEmpty
               ? undefined
               : () => {
-                  onChange([{ type: 'paragraph', children: [{ text: '' }] }]);
+                  Transforms.delete(editor, {
+                    at: {
+                      anchor: Editor.start(editor, []),
+                      focus: Editor.end(editor, []),
+                    },
+                  });
+                  // Focus the editor
+                  ReactEditor.focus(editor);
                 }
           }
           value={JSON.stringify(value || [])}

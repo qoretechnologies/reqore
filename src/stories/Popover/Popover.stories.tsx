@@ -469,7 +469,6 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
   },
 
   play: async ({ canvasElement, ...rest }) => {
-    console.log(rest.args);
     const canvas = within(canvasElement);
     const textarea = canvasElement.querySelector('textarea');
     await sleep(500);

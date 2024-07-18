@@ -11,9 +11,6 @@ import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
 const meta = {
   title: 'Form/RichTextEditor',
   component: ReqoreRichTextEditor,
-  args: {
-    onChange: (data) => console.log(data),
-  },
   render: (args) => {
     const [value, setValue] = useState(args.value);
 
