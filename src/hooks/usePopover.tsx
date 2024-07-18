@@ -148,8 +148,9 @@ const usePopover = ({
   };
 
   const _removePopover = () => {
+    cancelTimeout();
+
     if (isPopoverOpen(id)) {
-      cancelTimeout();
       removePopover?.(id);
     }
   };
