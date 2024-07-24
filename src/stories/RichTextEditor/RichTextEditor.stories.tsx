@@ -14,7 +14,16 @@ const meta = {
   render: (args) => {
     const [value, setValue] = useState(args.value);
 
-    return <ReqoreRichTextEditor {...args} value={value} onChange={(val) => setValue(val)} />;
+    return (
+      <ReqoreRichTextEditor
+        {...args}
+        value={value}
+        onChange={(val) => {
+          setValue(val);
+          args.onChange?.(val);
+        }}
+      />
+    );
   },
   argTypes: {
     ...MinimalArg,
@@ -184,22 +193,42 @@ export const WithCustomTags: Story = {
 export const WithActions: Story = {
   args: {
     actions: {
+      styling: true,
       undo: true,
       redo: true,
     },
+    onChange: (val) => console.log(val),
   },
   play: async () => {
     await userEvent.click(document.querySelector('div[contenteditable]'));
     await userEvent.keyboard('Hello');
 
-    await expect(document.querySelector('.reqore-button')).toBeEnabled();
-    await expect(document.querySelectorAll('.reqore-button')[1]).toBeDisabled();
+    await expect(document.querySelectorAll('.reqore-button')[3]).toBeEnabled();
+    await expect(document.querySelectorAll('.reqore-button')[4]).toBeDisabled();
 
-    await userEvent.click(document.querySelector('.reqore-button'));
-    await expect(document.querySelector('.reqore-button')).toBeDisabled();
-    await expect(document.querySelectorAll('.reqore-button')[1]).toBeEnabled();
+    await userEvent.click(document.querySelectorAll('.reqore-button')[3]);
+    await expect(document.querySelectorAll('.reqore-button')[3]).toBeDisabled();
+    await expect(document.querySelectorAll('.reqore-button')[4]).toBeEnabled();
 
-    await userEvent.click(document.querySelectorAll('.reqore-button')[1]);
+    await userEvent.click(document.querySelectorAll('.reqore-button')[4]);
     await expect(document.querySelector('.reqore-textarea')).toHaveTextContent('Hello');
+  },
+};
+
+export const WithStyling: Story = {
+  args: {
+    actions: {
+      styling: true,
+    },
+    value: [
+      {
+        type: 'paragraph',
+        children: [{ text: 'This is a styled text', bold: true, italic: true, underline: true }],
+      },
+    ],
+    onChange: (val) => console.log(val),
+  },
+  play: async () => {
+    await userEvent.click(document.querySelector('div[contenteditable]'));
   },
 };
