@@ -106,9 +106,13 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
     animationSpeed?: 1 | 2 | 3 | 4 | 5;
   };
   noWrap?: boolean;
-  color?: TReqoreEffectColor;
   spaced?: number;
+
   weight?: number | 'thin' | 'light' | 'normal' | 'bold' | 'thick';
+  italic?: boolean;
+  underline?: boolean;
+  color?: TReqoreEffectColor;
+
   uppercase?: boolean;
   textSize?: TSizes | string;
   textAlign?: 'left' | 'center' | 'right';
@@ -351,6 +355,20 @@ export const StyledEffect = styled.span`
       font-weight: ${weight} !important;
     `;
   }}
+
+${({ effect }: IReqoreTextEffectProps) =>
+    effect && effect.italic
+      ? css`
+          font-style: italic;
+        `
+      : undefined}
+
+${({ effect }: IReqoreTextEffectProps) =>
+    effect && effect.underline
+      ? css`
+          text-decoration: underline;
+        `
+      : undefined}
 
   ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.noWrap

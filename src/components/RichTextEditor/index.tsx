@@ -57,10 +57,7 @@ export interface IReqoreRichTextEditorProps
   panelProps?: IReqorePanelProps;
 
   actions?: {
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-    code?: boolean;
+    styling?: boolean;
     undo?: boolean;
     redo?: boolean;
   };
@@ -128,7 +125,15 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
   }
 
   return (
-    <ReqoreSpan inline {...attributes}>
+    <ReqoreSpan
+      inline
+      {...attributes}
+      effect={{
+        weight: leaf.bold ? 'bold' : 'normal',
+        italic: leaf.italic,
+        underline: leaf.underline,
+      }}
+    >
       {children}
     </ReqoreSpan>
   );
@@ -228,6 +233,24 @@ export const ReqoreRichTextEditor = ({
     return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
   }, [value]);
 
+  const isMarkActive = useCallback(
+    (editor: Editor, format: string) => {
+      const marks = Editor.marks(editor);
+      return marks ? marks[format] === true : false;
+    },
+    [editor, Editor, target]
+  );
+
+  const toggleMark = useCallback((editor: Editor, format: string) => {
+    const isActive = isMarkActive(editor, format);
+
+    if (isActive) {
+      Editor.removeMark(editor, format);
+    } else {
+      Editor.addMark(editor, format, true);
+    }
+  }, []);
+
   const panelActions = useMemo<IReqorePanelAction[]>(() => {
     const _actions: IReqorePanelAction[] = [...(panelProps?.actions || [])];
 
@@ -235,28 +258,70 @@ export const ReqoreRichTextEditor = ({
       return _actions;
     }
 
-    if (actions.undo) {
+    if (actions.styling) {
       _actions.push({
-        disabled: editor.history.undos.length === 0,
-        icon: 'ArrowGoBackLine',
-        onClick: () => {
-          editor.undo();
-        },
+        group: [
+          {
+            icon: 'Bold',
+            compact: true,
+            intent: isMarkActive(editor, 'bold') ? 'info' : undefined,
+            onMouseDown: () => {
+              toggleMark(editor, 'bold');
+            },
+          },
+          {
+            icon: 'Italic',
+            compact: true,
+            intent: isMarkActive(editor, 'italic') ? 'info' : undefined,
+            onMouseDown: () => {
+              toggleMark(editor, 'italic');
+            },
+          },
+          {
+            icon: 'Underline',
+            compact: true,
+            intent: isMarkActive(editor, 'underline') ? 'info' : undefined,
+            onMouseDown: () => {
+              toggleMark(editor, 'underline');
+            },
+          },
+        ],
       });
     }
 
-    if (actions.redo) {
-      _actions.push({
-        disabled: editor.history.redos.length === 0,
-        icon: 'ArrowGoForwardLine',
-        onClick: () => {
-          editor.redo();
-        },
-      });
+    if (actions.undo || actions.redo) {
+      const undoRedoActions: IReqorePanelAction = {
+        fixed: true,
+        group: [],
+      };
+
+      if (actions.undo) {
+        undoRedoActions.group.push({
+          disabled: editor.history.undos.length === 0,
+          compact: true,
+          icon: 'ArrowGoBackLine',
+          onClick: () => {
+            editor.undo();
+          },
+        });
+      }
+
+      if (actions.redo) {
+        undoRedoActions.group.push({
+          disabled: editor.history.redos.length === 0,
+          compact: true,
+          icon: 'ArrowGoForwardLine',
+          onClick: () => {
+            editor.redo();
+          },
+        });
+      }
+
+      _actions.push(undoRedoActions);
     }
 
     return _actions;
-  }, [actions, value]);
+  }, [actions, value, target, Editor.marks(editor), editor]);
 
   return (
     <ReqorePanel
