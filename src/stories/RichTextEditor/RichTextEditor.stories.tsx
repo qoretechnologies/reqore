@@ -242,5 +242,6 @@ export const WithStyling: Story = {
   },
   play: async () => {
     await userEvent.click(document.querySelector('div[contenteditable]'));
+    await userEvent.click(document.querySelector('div[contenteditable]'));
   },
 };
