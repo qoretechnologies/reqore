@@ -373,3 +373,21 @@ export const WithChildItems: Story = {
     await fireEvent.click(canvas.getAllByText('Test')[0]);
   },
 };
+
+export const WithCustomElements: Story = {
+  render: Template,
+
+  args: {
+    paging: {
+      itemsPerPage: 50,
+      changePageOnScroll: 'horizontal',
+    },
+    label: 'Dropdown with paging',
+    customElements: [
+      <ReqoreControlGroup size='small'>
+        <ReqoreButton icon='Bold' />
+        <ReqoreButton icon='Italic' intent='info' />
+      </ReqoreControlGroup>,
+    ],
+  },
+};

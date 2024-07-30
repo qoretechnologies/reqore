@@ -8,7 +8,7 @@ import {
   RenderElementProps,
   RenderLeafProps,
 } from 'slate-react/dist/components/editable';
-import { ReqorePanel, ReqoreTextarea } from '../..';
+import { ReqoreButton, ReqoreControlGroup, ReqorePanel, ReqoreTextarea } from '../..';
 import { getOneLessSize } from '../../helpers/utils';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
@@ -217,18 +217,6 @@ export const ReqoreRichTextEditor = ({
 
   const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
 
-  const items: IReqoreDropdownProps['items'] = useMemo(() => {
-    if (size(tags)) {
-      return map(tags, ({ items, ...tag }, key) => ({
-        label: tag.label || key,
-        ...tag,
-        items,
-      }));
-    }
-
-    return undefined;
-  }, [tags]);
-
   const isEmpty = useMemo(() => {
     return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
   }, [value]);
@@ -323,16 +311,20 @@ export const ReqoreRichTextEditor = ({
     return _actions;
   }, [actions, value, target, Editor.marks(editor), editor]);
 
+  const items: IReqoreDropdownProps['items'] = useMemo(() => {
+    if (size(tags)) {
+      return map(tags, ({ items, ...tag }, key) => ({
+        label: tag.label || key,
+        ...tag,
+        items,
+      }));
+    }
+
+    return undefined;
+  }, [tags]);
+
   return (
-    <ReqorePanel
-      flat
-      padded={false}
-      minimal
-      transparent
-      size='small'
-      {...panelProps}
-      actions={panelActions}
-    >
+    <ReqorePanel flat padded={false} minimal transparent size='small' {...panelProps}>
       <Slate
         editor={editor}
         initialValue={value as any}
@@ -369,6 +361,25 @@ export const ReqoreRichTextEditor = ({
           value={JSON.stringify(value || [])}
           onChange={useCallback(() => {}, [])}
           templates={{
+            customElements: size(panelActions)
+              ? [
+                  <ReqoreControlGroup spaceBetween size='small' key={0}>
+                    {panelActions.map((action, index) => {
+                      if (action.group) {
+                        return (
+                          <ReqoreControlGroup stack key={index}>
+                            {action.group?.map((action, index) => (
+                              <ReqoreButton key={index} {...action} />
+                            ))}
+                          </ReqoreControlGroup>
+                        );
+                      }
+
+                      return <ReqoreButton key={index} {...action} />;
+                    })}
+                  </ReqoreControlGroup>,
+                ]
+              : undefined,
             ...tagsListProps,
             items,
             closeOnInsideClick: false,

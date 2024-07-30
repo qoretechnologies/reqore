@@ -85,6 +85,11 @@ export const Disabled: Story = {
 
 export const WithCustomTags: Story = {
   args: {
+    actions: {
+      styling: true,
+      undo: true,
+      redo: true,
+    },
     value: [
       {
         type: 'paragraph',
@@ -201,17 +206,24 @@ export const WithActions: Story = {
   },
   play: async () => {
     await userEvent.click(document.querySelector('div[contenteditable]'));
-    await userEvent.keyboard('Hello');
+    await userEvent.click(document.querySelector('div[contenteditable]'));
+    await userEvent.keyboard('Papa', { delay: 100 });
 
     await expect(document.querySelectorAll('.reqore-button')[3]).toBeEnabled();
     await expect(document.querySelectorAll('.reqore-button')[4]).toBeDisabled();
 
     await userEvent.click(document.querySelectorAll('.reqore-button')[3]);
+
+    await sleep(1000);
+
     await expect(document.querySelectorAll('.reqore-button')[3]).toBeDisabled();
     await expect(document.querySelectorAll('.reqore-button')[4]).toBeEnabled();
 
     await userEvent.click(document.querySelectorAll('.reqore-button')[4]);
-    await expect(document.querySelector('.reqore-textarea')).toHaveTextContent('Hello');
+
+    await sleep(1000);
+
+    await expect(document.querySelector('.reqore-textarea')).toHaveTextContent('Papa');
   },
 };
 
@@ -229,6 +241,7 @@ export const WithStyling: Story = {
     onChange: (val) => console.log(val),
   },
   play: async () => {
+    await userEvent.click(document.querySelector('div[contenteditable]'));
     await userEvent.click(document.querySelector('div[contenteditable]'));
   },
 };
