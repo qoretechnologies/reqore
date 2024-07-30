@@ -363,7 +363,7 @@ export const ReqoreRichTextEditor = ({
           templates={{
             customElements: size(panelActions)
               ? [
-                  <ReqoreControlGroup spaceBetween size='small'>
+                  <ReqoreControlGroup spaceBetween size='small' key={0}>
                     {panelActions.map((action, index) => {
                       if (action.group) {
                         return (
