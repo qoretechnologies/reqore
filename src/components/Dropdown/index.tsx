@@ -38,6 +38,7 @@ export interface IReqoreDropdownProps
   wrapperProps?: IReqorePanelProps;
   scrollToSelected?: boolean;
   paging?: TReqorePaginationType<IReqoreDropdownItem>;
+  customElements?: React.ReactNode[];
 }
 
 const ReqoreDropdownListWrapper = memo(
@@ -90,6 +91,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   paging,
   show,
   onToggleChange,
+  customElements,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -106,13 +108,13 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   );
 
   const popoverContent = useMemo(() => {
-    return size(items) ? (
+    return size(items) || size(customElements) ? (
       <ReqoreDropdownListWrapper
         multiSelect={multiSelect}
         listStyle={listStyle}
         width={useTargetWidth ? '100%' : listWidth}
         height={listHeight}
-        items={items}
+        items={items || []}
         filterable={filterable}
         onItemSelect={onItemSelect}
         inputProps={inputProps}
@@ -121,9 +123,10 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         onFilterChange={onFilterChange}
         filterPlaceholder={filterPlaceholder}
         filter={filter}
+        customElements={customElements}
       />
     ) : undefined;
-  }, [items, onItemSelect]);
+  }, [items, onItemSelect, customElements]);
 
   return (
     <ReqorePopover

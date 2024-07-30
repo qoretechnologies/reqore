@@ -1,5 +1,6 @@
 import { size } from 'lodash';
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { IReqoreDropdownProps } from '.';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { ReqorePaginationContainer } from '../../containers/Paging';
@@ -31,7 +32,9 @@ export interface IReqoreDropdownItem
 export type TReqoreDropdownItem = IReqoreDropdownItem;
 export type TReqoreDropdownItems = TReqoreDropdownItem[];
 
-export interface IReqoreDropdownListProps extends IReqoreComponent {
+export interface IReqoreDropdownListProps
+  extends IReqoreComponent,
+    Pick<IReqoreDropdownProps, 'customElements'> {
   items?: TReqoreDropdownItems;
   multiSelect?: boolean;
   listStyle?: React.CSSProperties;
@@ -67,6 +70,7 @@ const ReqoreDropdownList = memo(
     onFilterChange,
     filterPlaceholder,
     filter,
+    customElements,
     _onBackClick,
   }: IReqoreDropdownListProps) => {
     const [_items, setItems] = useState<TReqoreDropdownItems>(items);
@@ -151,7 +155,11 @@ const ReqoreDropdownList = memo(
 
     return (
       <>
-        {filterable || _onBackClick ? (
+        {customElements}
+        {customElements && size(customElements) && (size(items) || _onBackClick) ? (
+          <ReqoreVerticalSpacer height={PADDING_FROM_SIZE.normal} />
+        ) : null}
+        {(size(items) && filterable) || _onBackClick ? (
           <>
             <ReqoreControlGroup fluid>
               {_onBackClick && (
