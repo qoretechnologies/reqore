@@ -266,6 +266,7 @@ export const WithTemplates: Story = {
   render: (args) => <ReqoreTextarea {...args} />,
 
   args: {
+    disabled: true,
     templates: {
       handler: 'focus',
       useTargetWidth: true,

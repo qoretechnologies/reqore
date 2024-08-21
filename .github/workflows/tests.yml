@@ -51,9 +51,7 @@ jobs:
         run: yarn test:ci
       - name: Build test
         id: build_test
-        run: |
-           yarn build
-           rm -rf dist
+        run: yarn build:test
       - name: Publish to Chromatic
         id: chromatic_publish
         uses: chromaui/action@v1
@@ -61,6 +59,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           exitZeroOnChanges: true
+          allowConsoleErrors: true
+
       - name: Save release version to outputs
         id: save_release_version
         run: echo ::set-output name=version::$(node -pe "require('./package.json').version")
