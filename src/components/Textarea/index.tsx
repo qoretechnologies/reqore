@@ -235,10 +235,12 @@ function Textarea<T>(
     );
   };
 
-  if (templates) {
+  if (templates && !rest?.readOnly && !rest?.disabled) {
     return (
       <ReqoreDropdown<Omit<IReqoreTextareaStyle & { ref: any }, 'content'>>
         component={StyledTextareaWrapper}
+        disabled={rest.disabled}
+        readOnly={rest.readOnly}
         className={`${className || ''} reqore-control-wrapper`}
         width={width}
         filterable

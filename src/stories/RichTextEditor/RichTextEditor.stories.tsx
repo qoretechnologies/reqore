@@ -76,13 +76,6 @@ export const Readonly: Story = {
   },
 };
 
-export const Disabled: Story = {
-  args: {
-    ...WithDefaultValue.args,
-    disabled: true,
-  },
-};
-
 export const WithCustomTags: Story = {
   args: {
     actions: {
@@ -192,6 +185,13 @@ export const WithCustomTags: Story = {
     await sleep(500);
     await _testsClickButton({ label: 'Brad Pitt' });
     await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+  },
+};
+
+export const Disabled: Story = {
+  args: {
+    ...WithCustomTags.args,
+    disabled: true,
   },
 };
 
