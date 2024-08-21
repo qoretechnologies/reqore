@@ -46,12 +46,9 @@ jobs:
           yarn cache clean
           rm -rf node_modules
           yarn install
-      - name: Running tests
+      - name: Running tests & linters
         id: tests
-        run: yarn test:ci
-      - name: Build test
-        id: build_test
-        run: yarn build:test
+        run: yarn precheck
       - name: Publish to Chromatic
         id: chromatic_publish
         uses: chromaui/action@v1
