@@ -83,8 +83,10 @@ export const useReqorePaging = <T>(
 
   const applyPaging = useCallback(
     (items: T[]): T[] =>
-      items.slice(infinite ? 0 : (currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
-    [currentPage, itemsPerPage, infinite]
+      !enabled
+        ? items
+        : items.slice(infinite ? 0 : (currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    [currentPage, itemsPerPage, infinite, enabled]
   );
 
   const pages: number[] = useMemo(() => {

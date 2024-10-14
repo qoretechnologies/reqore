@@ -253,7 +253,7 @@ test('Renders <Pagination /> as a list', () => {
 
   jest.advanceTimersByTime(1);
 
-  expect(document.querySelectorAll('.reqore-button').length).toBe(15);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(105);
 });
 
 test('Renders <Pagination /> with load more button and no load all button', () => {
