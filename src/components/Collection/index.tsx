@@ -356,9 +356,7 @@ export const ReqoreCollection = ({
                   key={index}
                   rounded={!stacked}
                   maxContentHeight={maxItemHeight}
-                >
-                  {item.content}
-                </ReqoreCollectionItem>
+                />
               ))}
             </StyledCollectionWrapper>
           )

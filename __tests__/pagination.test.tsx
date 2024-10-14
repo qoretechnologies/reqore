@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { useMount } from 'react-use';
 import {
@@ -253,7 +253,7 @@ test('Renders <Pagination /> as a list', () => {
 
   jest.advanceTimersByTime(1);
 
-  expect(document.querySelectorAll('.reqore-button').length).toBe(105);
+  expect(document.querySelectorAll('.reqore-button').length).toBe(15);
 });
 
 test('Renders <Pagination /> with load more button and no load all button', () => {
