@@ -22,6 +22,7 @@ export type TReqorePaginationTypeResult<T> = {
   pageControlsPosition?: 'top' | 'bottom' | 'both';
   includeTopControls?: boolean;
   includeBottomControls?: boolean;
+  applyPaging?: (items: T[]) => T[];
 };
 
 export function getPagingObjectFromType<T>(

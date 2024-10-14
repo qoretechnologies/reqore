@@ -189,7 +189,7 @@ const ReqoreDropdownList = memo(
           </>
         ) : null}
         <ReqorePaginationContainer type={paging} items={filteredItems} scrollContainer={menuRef}>
-          {(finalItems, Controls, { includeBottomControls }) => (
+          {(_finalItems, Controls, { includeBottomControls, applyPaging }) => (
             <ReqoreMenu
               _insidePopover={!multiSelect}
               _popoverId={_popoverId}
@@ -199,7 +199,7 @@ const ReqoreDropdownList = memo(
               padded={false}
               ref={setMenuRef}
             >
-              {finalItems.map(
+              {applyPaging(filteredItems).map(
                 (
                   { dividerAlign, dividerPadded, divider, ...item }: IReqoreDropdownItem,
                   index: number

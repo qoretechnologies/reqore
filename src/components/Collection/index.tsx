@@ -321,51 +321,47 @@ export const ReqoreCollection = ({
 
   const renderContent = useCallback(() => {
     return contentRenderer(
-      <>
-        <ReqorePaginationContainer
-          key='paging-container'
-          items={filteredItems}
-          type={paging}
-          size={rest.size}
-          scrollContainer={contentRef}
-        >
-          {(finalItems) => (
-            <>
-              {!size(finalItems) ? (
-                <ReqoreMessage flat icon='Search2Line'>
-                  {emptyMessage}
-                </ReqoreMessage>
-              ) : (
-                <StyledCollectionWrapper
-                  columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
-                  columnsGap={stacked ? '0px' : columnsGap}
-                  rounded={rounded}
-                  stacked={stacked}
-                  fill={fill}
-                  ref={setContentRef}
-                  height={height}
-                  alignItems={alignItems}
-                  minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
-                  maxColumnWidth={maxColumnWidth}
-                  className='reqore-collection-content'
-                >
-                  {finalItems?.map((item, index) => (
-                    <ReqoreCollectionItem
-                      size={zoomToSize[zoom]}
-                      responsiveTitle={false}
-                      {...item}
-                      icon={item.icon || (item.selected ? selectedIcon : undefined)}
-                      key={index}
-                      rounded={!stacked}
-                      maxContentHeight={maxItemHeight}
-                    />
-                  ))}
-                </StyledCollectionWrapper>
-              )}
-            </>
-          )}
-        </ReqorePaginationContainer>
-      </>,
+      <ReqorePaginationContainer
+        key='paging-container'
+        items={filteredItems}
+        type={paging}
+        size={rest.size}
+        scrollContainer={contentRef}
+      >
+        {(_items, _children, { applyPaging }) =>
+          !size(applyPaging(filteredItems)) ? (
+            <ReqoreMessage flat icon='Search2Line'>
+              {emptyMessage}
+            </ReqoreMessage>
+          ) : (
+            <StyledCollectionWrapper
+              columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
+              columnsGap={stacked ? '0px' : columnsGap}
+              rounded={rounded}
+              stacked={stacked}
+              fill={fill}
+              ref={setContentRef}
+              height={height}
+              alignItems={alignItems}
+              minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
+              maxColumnWidth={maxColumnWidth}
+              className='reqore-collection-content'
+            >
+              {applyPaging(filteredItems)?.map((item, index) => (
+                <ReqoreCollectionItem
+                  size={zoomToSize[zoom]}
+                  responsiveTitle={false}
+                  {...item}
+                  icon={item.icon || (item.selected ? selectedIcon : undefined)}
+                  key={index}
+                  rounded={!stacked}
+                  maxContentHeight={maxItemHeight}
+                />
+              ))}
+            </StyledCollectionWrapper>
+          )
+        }
+      </ReqorePaginationContainer>,
       filteredItems,
       !inputInTitle && filterable ? (
         <ReqoreControlGroup>

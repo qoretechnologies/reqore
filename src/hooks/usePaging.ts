@@ -1,5 +1,5 @@
 import { merge, size } from 'lodash';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useUpdateEffect } from 'react-use';
 import usePagination, { usePaginationReturn } from 'react-use-pagination-hook';
 
@@ -22,6 +22,7 @@ export interface IReqorePagingResult<T>
   extends Pick<usePaginationReturn, 'setPage' | 'currentPage'> {
   pages: number[];
   allPages: number[];
+  applyPaging: (items: T[]) => T[];
   items: T[];
   itemsPerPage: number;
   itemsLeft: number;
@@ -80,6 +81,14 @@ export const useReqorePaging = <T>(
     return items.slice(infinite ? 0 : (currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   }, [items, currentPage, itemsPerPage, infinite]);
 
+  const applyPaging = useCallback(
+    (items: T[]): T[] =>
+      !enabled
+        ? items
+        : items.slice(infinite ? 0 : (currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    [currentPage, itemsPerPage, infinite, enabled]
+  );
+
   const pages: number[] = useMemo(() => {
     if (!pagesToShow || pagesToShow >= allPageCount) {
       return pagelist;
@@ -110,6 +119,7 @@ export const useReqorePaging = <T>(
     allPages: pagelist,
     pageCount: allPageCount,
     items: enabled ? slicedItems : items,
+    applyPaging,
     itemsPerPage,
     itemsLeft: items.length - slicedItems.length,
     infinite,

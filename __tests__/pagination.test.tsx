@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { useMount } from 'react-use';
 import {
