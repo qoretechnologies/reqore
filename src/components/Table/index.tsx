@@ -763,21 +763,23 @@ const ReqoreTable = ({
                 : undefined
             }
           >
-            {(pagedData) => (
+            {(_pagedData, _children, { applyPaging }) => (
               <>
                 {showExportModal && (
                   <ReqoreTableExportModal
-                    data={showExportModal === 'current' ? pagedData : transformedData}
+                    data={
+                      showExportModal === 'current' ? applyPaging(transformedData) : transformedData
+                    }
                     onClose={() => setShowExportModal(undefined)}
                     exportMapper={exportMapper}
                   />
                 )}
                 <StyledTablesWrapper className='reqore-table-wrapper'>
-                  {renderTable('left', pagedData)}
-                  {renderTable('main', pagedData)}
-                  {renderTable('right', pagedData)}
+                  {renderTable('left', applyPaging(transformedData))}
+                  {renderTable('main', applyPaging(transformedData))}
+                  {renderTable('right', applyPaging(transformedData))}
                 </StyledTablesWrapper>
-                {count(pagedData) === 0 ? (
+                {count(applyPaging(transformedData)) === 0 ? (
                   <>
                     <ReqoreVerticalSpacer height={10} />
                     <ReqoreMessage flat size={size} icon='Search2Line'>

@@ -36,7 +36,7 @@ export interface IReqorePaginationComponentProps
   scrollToTopOnPageChange?: boolean;
 }
 export interface IReqorePaginationProps<T>
-  extends Omit<IReqorePagingResult<T>, 'items'>,
+  extends Omit<IReqorePagingResult<T>, 'items' | 'applyPaging'>,
     IReqorePaginationComponentProps {}
 
 export const StyledPagesWrapper = styled(ReqoreControlGroup)`

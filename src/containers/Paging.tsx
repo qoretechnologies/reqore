@@ -37,7 +37,7 @@ function PagingControls<T>({
   Partial<TReqorePaginationTypeResult<T>> & {
     withSpacer?: boolean;
     position?: 'top' | 'bottom';
-    pagingData: Omit<IReqorePagingResult<T>, 'items'>;
+    pagingData: Omit<IReqorePagingResult<T>, 'items' | 'applyPaging'>;
   }) {
   return pagingData.renderControls ? (
     <>
@@ -74,7 +74,11 @@ function PagingContainer<T>({
     includeBottomControls = true,
   } = useMemo(() => getPaginationOptionsFromType(type), [type]);
 
-  const { items: finalItems, ...pagingData } = useReqorePaging({
+  const {
+    items: finalItems,
+    applyPaging,
+    ...pagingData
+  } = useReqorePaging({
     items,
     ...pagingOptions,
     enabled: !!type,
@@ -109,6 +113,7 @@ function PagingContainer<T>({
         />,
         {
           pagingOptions,
+          applyPaging,
           componentOptions,
           pageControlsPosition,
           includeTopControls,
