@@ -27,6 +27,10 @@ export interface IReqoreContext {
   readonly animations?: IReqoreOptions['animations'];
   readonly tooltips?: IReqoreOptions['tooltips'];
   readonly closePopoversOnEscPress?: boolean;
+  readonly closeModalsOnEscPress?: boolean;
+  readonly escClosableModals?: string[];
+  readonly addEscClosableModal?: (id: string) => void;
+  readonly removeEscClosableModal?: (id: string, onRemove?: () => void) => void;
   readonly latestZIndex?: number;
   theme: IReqoreTheme;
 }
@@ -43,5 +47,9 @@ export default createContext<IReqoreContext>({
     dialogs: true,
   },
   closePopoversOnEscPress: true,
+  closeModalsOnEscPress: true,
+  escClosableModals: [],
+  addEscClosableModal: null,
+  removeEscClosableModal: null,
   theme: DEFAULT_THEME,
 });

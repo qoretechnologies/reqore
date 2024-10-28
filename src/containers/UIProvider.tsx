@@ -28,6 +28,7 @@ export interface IReqoreOptions {
     delay?: number;
   };
   closePopoversOnEscPress?: boolean;
+  closeModalsOnEscPress?: boolean;
 }
 export interface IReqoreUIProviderProps {
   children?: any;

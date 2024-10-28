@@ -36,6 +36,9 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   width?: number | string;
   height?: number | string;
   customZIndex?: number;
+  closeOnEscPress?: boolean;
+  // A function that runs, if defined, before closing the drawer and has to return a boolean.
+  beforeClose?: () => boolean;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
