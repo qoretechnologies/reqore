@@ -10,6 +10,9 @@ const meta = {
   argTypes: {
     ...IntentArg,
   },
+  args: {
+    tooltip: 'This is a tooltip',
+  },
 } as StoryMeta<typeof ReqoreSpan>;
 
 export default meta;

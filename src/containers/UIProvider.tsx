@@ -6,28 +6,20 @@ import styled, { createGlobalStyle, css } from 'styled-components';
 import ReqoreLayoutWrapper from '../components/Layout';
 import { IReqoreNotificationsPosition } from '../components/Notifications';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
+import { IReqoreContext } from '../context/ReqoreContext';
 import ThemeContext from '../context/ThemeContext';
 import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
 import ReqoreProvider from './ReqoreProvider';
 import ReqoreThemeProvider from './ThemeProvider';
 
-export interface IReqoreOptions {
+export interface IReqoreOptions
+  extends Pick<
+    IReqoreContext,
+    'closeModalsOnEscPress' | 'closePopoversOnEscPress' | 'animations' | 'tooltips'
+  > {
   withSidebar?: boolean;
   notificationsPosition?: IReqoreNotificationsPosition;
   uiScale?: number;
-  animations?: {
-    buttons?: boolean;
-    dialogs?: boolean;
-  };
-  tooltips?: {
-    /**
-     * Delay in ms before showing the tooltip
-     * @default 0
-     * Works only for `hover` handler
-     * */
-    delay?: number;
-  };
-  closePopoversOnEscPress?: boolean;
 }
 export interface IReqoreUIProviderProps {
   children?: any;

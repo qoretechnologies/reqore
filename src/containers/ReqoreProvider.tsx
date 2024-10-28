@@ -1,4 +1,4 @@
-import { map, size } from 'lodash';
+import { last, map, size } from 'lodash';
 import React, { useCallback, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useMedia } from 'react-use';
@@ -60,6 +60,7 @@ export interface IReqoreConfirmationModal {
 const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {} }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
   const [modals, setModals] = useState<IReqoreModals>({});
+  const [escClosableModals, setEscClosableModals] = useState<string[]>([]);
   const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>({});
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
   const latestZIndex = useRef<number>(9000);
@@ -91,6 +92,29 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
       isOpen: false,
     }));
   };
+
+  const addEscClosableModal = useCallback(
+    (id: string): void => {
+      setEscClosableModals((cur) => [...cur, id]);
+    },
+    [escClosableModals]
+  );
+
+  const removeEscClosableModal = useCallback(
+    (id: string, onRemove?: () => void): void => {
+      setEscClosableModals((cur) => {
+        // Check if the modal is still in the array and it's the last one
+        if (last(cur) === id) {
+          onRemove?.();
+
+          return [...cur].filter((modalId) => modalId !== id);
+        }
+
+        return cur;
+      });
+    },
+    [escClosableModals]
+  );
 
   const addModal = useCallback(
     (
@@ -175,6 +199,12 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
           tooltips: options.tooltips || { delay: 0 },
           closePopoversOnEscPress:
             'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
+          // ESC Closable modals management
+          closeModalsOnEscPress:
+            'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
+          escClosableModals,
+          addEscClosableModal,
+          removeEscClosableModal,
         }}
       >
         <PopoverProvider uiScale={options?.uiScale}>

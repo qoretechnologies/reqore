@@ -1,16 +1,24 @@
-import { forwardRef, memo } from 'react';
+import { ForwardedRef, forwardRef, memo, useState } from 'react';
 import styled from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { isStringSize } from '../../helpers/utils';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreEffect } from '../../types/global';
+import { useTooltip } from '../../hooks/useTooltip';
+import {
+  IReqoreIntent,
+  IWithReqoreCustomTheme,
+  IWithReqoreEffect,
+  IWithReqoreTooltip,
+} from '../../types/global';
 import { StyledTextEffect } from '../Effect';
 
 export interface IReqoreParagraphProps
   extends React.HTMLAttributes<HTMLParagraphElement>,
     IWithReqoreCustomTheme,
     IWithReqoreEffect,
-    IReqoreIntent {
+    IReqoreIntent,
+    IWithReqoreTooltip {
   size?: TSizes | string;
   block?: boolean;
   inline?: boolean;
@@ -34,15 +42,23 @@ export const ReqoreP = memo(
         intent,
         className,
         block = true,
+        tooltip,
         ...props
       }: IReqoreParagraphProps,
-      ref
+      forwardedRef
     ) => {
+      const { targetRef } = useCombinedRefs(forwardedRef);
+      const [stateRef, setStateRef] = useState(null);
       const theme = useReqoreTheme('main', customTheme, intent);
+
+      useTooltip(stateRef, tooltip);
 
       return (
         <StyledParagraph
-          ref={ref}
+          ref={(ref: ForwardedRef<unknown>) => {
+            targetRef.current = ref;
+            setStateRef(ref);
+          }}
           as='p'
           theme={theme}
           color={theme.text.color}

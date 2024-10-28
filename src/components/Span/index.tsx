@@ -1,16 +1,24 @@
-import { forwardRef, memo } from 'react';
+import { ForwardedRef, forwardRef, memo, useState } from 'react';
 import styled from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { isStringSize } from '../../helpers/utils';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreEffect } from '../../types/global';
+import { useTooltip } from '../../hooks/useTooltip';
+import {
+  IReqoreIntent,
+  IWithReqoreCustomTheme,
+  IWithReqoreEffect,
+  IWithReqoreTooltip,
+} from '../../types/global';
 import { IReqoreTextEffectProps, StyledTextEffect } from '../Effect';
 
 export interface IReqoreSpanProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     IWithReqoreCustomTheme,
     IWithReqoreEffect,
-    IReqoreIntent {
+    IReqoreIntent,
+    IWithReqoreTooltip {
   size?: TSizes | string;
   inline?: IReqoreTextEffectProps['inline'];
 }
@@ -32,15 +40,23 @@ export const ReqoreSpan = memo(
         intent,
         className,
         inline = false,
+        tooltip,
         ...props
       }: IReqoreSpanProps,
-      ref
+      forwardedRef
     ) => {
+      const { targetRef } = useCombinedRefs(forwardedRef);
+      const [stateRef, setStateRef] = useState(null);
       const theme = useReqoreTheme('main', customTheme, intent);
+
+      useTooltip(stateRef, tooltip);
 
       return (
         <StyledSpan
-          ref={ref}
+          ref={(ref: ForwardedRef<unknown>) => {
+            targetRef.current = ref;
+            setStateRef(ref);
+          }}
           as='span'
           theme={theme}
           color={theme.text.color}
