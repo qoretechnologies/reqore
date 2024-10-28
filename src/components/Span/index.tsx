@@ -2,6 +2,7 @@ import { ForwardedRef, forwardRef, memo, useState } from 'react';
 import styled from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { isStringSize } from '../../helpers/utils';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { useTooltip } from '../../hooks/useTooltip';
 import {
@@ -44,6 +45,7 @@ export const ReqoreSpan = memo(
       }: IReqoreSpanProps,
       forwardedRef
     ) => {
+      const { targetRef } = useCombinedRefs(forwardedRef);
       const [stateRef, setStateRef] = useState(null);
       const theme = useReqoreTheme('main', customTheme, intent);
 
@@ -52,7 +54,7 @@ export const ReqoreSpan = memo(
       return (
         <StyledSpan
           ref={(ref: ForwardedRef<unknown>) => {
-            forwardedRef = ref;
+            targetRef.current = ref;
             setStateRef(ref);
           }}
           as='span'

@@ -103,7 +103,6 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
   const removeEscClosableModal = useCallback(
     (id: string, onRemove?: () => void): void => {
       setEscClosableModals((cur) => {
-        console.log(cur, id);
         // Check if the modal is still in the array and it's the last one
         if (last(cur) === id) {
           onRemove?.();
@@ -200,6 +199,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
           tooltips: options.tooltips || { delay: 0 },
           closePopoversOnEscPress:
             'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
+          // ESC Closable modals management
           closeModalsOnEscPress:
             'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
           escClosableModals,

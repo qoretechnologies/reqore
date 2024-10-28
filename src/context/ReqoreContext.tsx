@@ -7,7 +7,6 @@ import {
   IReqoreNotificationData,
   TReqoreCustomModal,
 } from '../containers/ReqoreProvider';
-import { IReqoreOptions } from '../containers/UIProvider';
 
 export interface IReqoreContext {
   readonly confirmAction: (data: IReqoreConfirmationModal) => void;
@@ -24,8 +23,18 @@ export interface IReqoreContext {
   readonly isTablet?: boolean;
   readonly isMobileOrTablet?: boolean;
   readonly getAndIncreaseZIndex?: () => number;
-  readonly animations?: IReqoreOptions['animations'];
-  readonly tooltips?: IReqoreOptions['tooltips'];
+  readonly animations?: {
+    readonly buttons?: boolean;
+    readonly dialogs?: boolean;
+  };
+  readonly tooltips?: {
+    /**
+     * Delay in ms before showing the tooltip
+     * @default 0
+     * Works only for `hover` handler
+     * */
+    delay?: number;
+  };
   readonly closePopoversOnEscPress?: boolean;
   readonly closeModalsOnEscPress?: boolean;
   readonly escClosableModals?: string[];
