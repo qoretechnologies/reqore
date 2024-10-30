@@ -7,7 +7,7 @@ import { useMount } from 'react-use';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreModalProps } from '../../components/Modal';
 import { sleep } from '../../helpers/utils';
-import { ReqoreModal, ReqorePanel, useReqoreProperty } from '../../index';
+import { ReqoreCollection, ReqoreModal, ReqorePanel, useReqoreProperty } from '../../index';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 
@@ -434,22 +434,48 @@ export const EscKeyClosestOnlyTopModal: Story = {
           pursuit our but. Lasted hunted enough an up seeing in lively letter. Had judgment out
           opinions property the supplied.
         </ReqoreModal>
-        <ReqoreModal
-          {...args}
-          label='A second dialog'
-          isOpen={secondIsOpen}
-          closeOnEscPress
-          onClose={() => setSecondIsOpen(false)}
-          bottomActions={[
-            { label: 'Confirm', intent: 'success', position: 'right' },
-            { label: 'Cancel', intent: 'danger', position: 'left' },
-          ]}
-        >
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-          ut labore et dolore magna aliqua. Sit amet purus gravida quis blandit turpis cursus in
-          hac. Ultricies lacus sed turpis tincidunt. Ac tincidunt vitae semper quis lectus nulla at.
-          Aliquam vestibulum morbi blandit cursus risus at ultrices. Risus feugiat in ante metus
-          dictum. Enim blandit volutpat maecenas volutpat.
+        {secondIsOpen && (
+          <ReqoreModal
+            {...args}
+            label='A second dialog'
+            isOpen
+            closeOnEscPress
+            onClose={() => setSecondIsOpen(false)}
+            bottomActions={[
+              { label: 'Confirm', intent: 'success', position: 'right' },
+              { label: 'Cancel', intent: 'danger', position: 'left' },
+            ]}
+          >
+            <ReqoreCollection
+              maxItemHeight={200}
+              filterable
+              size='big'
+              sortable
+              padded={false}
+              showSelectedFirst
+              selectedIcon='CheckLine'
+              fill
+              className='q-select-dialog'
+              inputProps={{
+                rightIcon: 'KeyboardFill',
+                focusRules: {
+                  type: 'keypress',
+                  shortcut: 'letters',
+                  clearOnFocus: true,
+                },
+              }}
+              items={[
+                { label: 'Item 1' },
+                { label: 'Item 2' },
+                { label: 'Item 3' },
+                { label: 'Item 4' },
+              ]}
+            />
+          </ReqoreModal>
+        )}
+        <ReqoreModal label='Hidden modal' closeOnEscPress>
+          {' '}
+          I am hidden{' '}
         </ReqoreModal>
       </>
     );

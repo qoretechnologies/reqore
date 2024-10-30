@@ -46,12 +46,14 @@ export const ReqoreModal = ({ width = '80vw', height = 'auto', ...rest }: IReqor
   }, [escClosableModals, isEscClosable]);
 
   useEffect(() => {
-    add(id);
+    if (rest.isOpen) {
+      add(id);
+    }
 
     return () => {
       remove(id);
     };
-  }, [id]);
+  }, [id, rest.isOpen]);
 
   return (
     <ReqoreDrawer
