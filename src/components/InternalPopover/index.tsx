@@ -6,6 +6,7 @@ import { usePopper } from 'react-popper';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { useContext } from 'use-context-selector';
+import { useReqoreProperty } from '../..';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { IPopoverData } from '../../containers/PopoverProvider';
@@ -30,15 +31,15 @@ const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
           0.04
         )
       : intent
-        ? changeLightness(getNotificationIntent(theme, intent), flat ? 0.1 : 0.2)
-        : theme.popover?.main ||
-          rgba(
-            changeLightness(
-              flat ? theme.main : getNotificationIntent(theme, intent),
-              flat ? 0.1 : 0.2
-            ),
-            isOpaque ? 1 : 0.3
+      ? changeLightness(getNotificationIntent(theme, intent), flat ? 0.1 : 0.2)
+      : theme.popover?.main ||
+        rgba(
+          changeLightness(
+            flat ? theme.main : getNotificationIntent(theme, intent),
+            flat ? 0.1 : 0.2
           ),
+          isOpaque ? 1 : 0.3
+        ),
     dim ? 0.3 : 1
   );
 
@@ -59,7 +60,12 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
 `;
 
 export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
-  animation: 0.2s ${fadeIn} ease-out;
+  ${({ animate }) =>
+    animate &&
+    css`
+      animation: 0.2s ${fadeIn} ease-out;
+    `}
+
   max-width: ${({ maxWidth }) => maxWidth};
   max-height: ${({ maxHeight }) => maxHeight};
   z-index: 999999;
@@ -162,6 +168,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     effect,
   }) => {
     const { removePopover, updatePopover, uiScale: globalUiScale } = useContext(PopoverContext);
+    const animations = useReqoreProperty('animations');
     const [popperElement, setPopperElement] = useState(null);
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
@@ -261,6 +268,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
             transform: `translate(${translateValues?.[0] || 0}px, ${translateValues?.[1] || 0}px)`,
             width: useTargetWidth && (targetElement?.getBoundingClientRect()?.width || undefined),
           }}
+          animate={animations?.popovers}
           {...attributes.popper}
         >
           {!noArrow && !transparent ? (

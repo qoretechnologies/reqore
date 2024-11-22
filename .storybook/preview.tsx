@@ -1,5 +1,5 @@
-import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import withMockdate from '@netsells/storybook-mockdate';
+import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -69,6 +69,7 @@ export const decorators = [
             dialogs: context.args.animatedDialogs,
           },
           uiScale: context.args.globalUiScale,
+          ...context.args.options,
         }}
       >
         <ReqoreLayoutContent style={{ height: '100%' }}>
@@ -84,6 +85,7 @@ export const decorators = [
             dialogs: context.args.animatedDialogs,
           },
           uiScale: context.args.globalUiScale,
+          ...context.args.options,
         }}
       >
         <ReqoreLayoutContent>
