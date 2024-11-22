@@ -350,6 +350,17 @@ export const Basic: Story = {
   render: Template,
 };
 
+export const NoAnimation: Story = {
+  render: Template,
+  args: {
+    options: {
+      animations: {
+        popovers: false,
+      },
+    },
+  },
+};
+
 export const NotFlat: Story = {
   render: Template,
 

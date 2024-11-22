@@ -26,6 +26,7 @@ export interface IReqoreContext {
   readonly animations?: {
     readonly buttons?: boolean;
     readonly dialogs?: boolean;
+    readonly popovers?: boolean;
   };
   readonly tooltips?: {
     /**
