@@ -35,7 +35,6 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
     return css`
       display: flex;
       flex-shrink: 0;
-      overflow: hidden;
       position: relative;
       align-items: center;
       width: ${vertical ? `100%` : undefined};
@@ -171,6 +170,27 @@ const ReqoreTabsListItem = memo(
         });
       };
 
+      const renderButton = () => (
+        <ReqoreButton
+          flat={intent ? false : flat}
+          fluid={fill || vertical}
+          icon={icon}
+          minimal
+          wrap={wrapTabNames}
+          intent={active ? activeIntent || intent : intent}
+          active={active}
+          disabled={disabled}
+          onClick={handleClick}
+          tooltip={tooltip}
+          customTheme={theme}
+          className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
+          {...omit(rest, ['id'])}
+          loading={isStillPending || rest.loading}
+        >
+          {label}
+        </ReqoreButton>
+      );
+
       return (
         <StyledTabListItem
           ref={targetRef}
@@ -187,26 +207,11 @@ const ReqoreTabsListItem = memo(
           fixed={rest.fixed}
           padded={padded}
         >
-          {label || icon ? (
+          {!onCloseClick || disabled ? (
+            renderButton()
+          ) : (
             <ReqoreControlGroup stack size={size} fluid={fill || vertical}>
-              <ReqoreButton
-                flat={intent ? false : flat}
-                fluid={fill || vertical}
-                icon={icon}
-                minimal
-                wrap={wrapTabNames}
-                intent={active ? activeIntent || intent : intent}
-                active={active}
-                disabled={disabled}
-                onClick={handleClick}
-                tooltip={tooltip}
-                customTheme={theme}
-                className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
-                {...omit(rest, ['id'])}
-                loading={isStillPending || rest.loading}
-              >
-                {label}
-              </ReqoreButton>
+              {renderButton()}
               {onCloseClick && !disabled ? (
                 <ReqoreButton
                   fixed
@@ -224,7 +229,7 @@ const ReqoreTabsListItem = memo(
                 />
               ) : null}
             </ReqoreControlGroup>
-          ) : null}
+          )}
         </StyledTabListItem>
       );
     }

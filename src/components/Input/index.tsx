@@ -100,6 +100,8 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
       display: flex;
     }
 
+    outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
+
     ${ActiveIconScale}
   }
 `;
@@ -136,10 +138,8 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   transition: all 0.2s ease-out;
-  border-radius: ${({ minimal, rounded, _size, pill }) =>
-    minimal || rounded === false
-      ? 0
-      : RADIUS_FROM_SIZE[_size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+  border-radius: inherit;
+
   border: ${({ minimal, theme, flat }) =>
     !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : 0};
   border-bottom: ${({ minimal, theme, flat }) =>
@@ -151,7 +151,6 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
           &:active,
           &:focus,
           &:hover {
-            outline: none;
             border-color: ${({ theme }) => changeLightness(theme.main, 0.35)};
           }
         `
@@ -166,6 +165,7 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
 
   &:active,
   &:focus {
+    outline: none;
     background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
       minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
   }

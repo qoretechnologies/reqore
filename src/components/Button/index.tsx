@@ -129,12 +129,12 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   flex-flow: column;
   justify-content: center;
   margin: 0;
-  font-weight: 600;
+  font-weight: 500;
   position: relative;
   overflow: hidden;
   vertical-align: middle;
   border: ${({ theme, color, flat }) =>
-    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.2)}` : 0};
+    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.1)}` : 0};
   padding: ${({ size, compact, verticalPadding }) =>
     `${verticalPadding ? PADDING_FROM_SIZE[verticalPadding] : 0}px ${
       compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]
@@ -209,7 +209,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                   undefined
                 )};
               border-color: ${({ flat, theme, color }) =>
-                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.35)};
+                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
 
               ${animate &&
               css`
@@ -267,12 +267,13 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   &:focus,
   &:active {
-    outline: none;
+    outline: 2px solid
+      ${({ theme, color }) => changeLightness(getButtonMainColor(theme, color), 0.25)};
   }
 
   &:focus {
     border-color: ${({ minimal, theme, color }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.4)};
+      minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
   }
 
   .reqore-button-description {
@@ -431,7 +432,7 @@ const ReqoreButton = memo(
 
       // If color or intent was specified, set the color
       const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
-      const _flat = minimal ? flat : flat !== false;
+      const _flat = minimal ? flat : flat === true;
       const _compact = compact ?? theme.buttons?.compact;
       const color: TReqoreHexColor = customColor
         ? minimal

@@ -10,6 +10,7 @@ import {
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
+  TAG_TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -109,7 +110,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-weight: 600;
   overflow: hidden;
   vertical-align: middle;
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
 
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};

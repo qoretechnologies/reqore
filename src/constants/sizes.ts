@@ -110,11 +110,19 @@ export const TEXT_FROM_SIZE = {
 };
 
 export const CONTROL_TEXT_FROM_SIZE = {
-  tiny: 7,
-  small: 10,
-  normal: 13,
-  big: 16,
-  huge: 19,
+  tiny: 9,
+  small: 12,
+  normal: 15,
+  big: 18,
+  huge: 21,
+};
+
+export const TAG_TEXT_FROM_SIZE = {
+  tiny: 8,
+  small: 11,
+  normal: 14,
+  big: 17,
+  huge: 20,
 };
 
 export const ICON_FROM_SIZE = {

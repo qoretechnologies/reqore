@@ -126,9 +126,9 @@ const getHideShowIcon = (
 const getSpringConfig = (isModal?: boolean, position?: TPosition, floating?: boolean) =>
   isModal
     ? {
-        from: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)', filter: 'blur(10px)' },
-        enter: { opacity: 1, transform: 'scale(1) translate(-50%, -50%)', filter: 'blur(0px)' },
-        leave: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)', filter: 'blur(10px)' },
+        from: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)' },
+        enter: { opacity: 1, transform: 'scale(1) translate(-50%, -50%)' },
+        leave: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)' },
       }
     : {
         from: { opacity: 0, [position]: '-80px' },
@@ -276,6 +276,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
                 position: 'fixed',
                 overflow: hidable ? undefined : 'hidden',
                 transformOrigin: 'top left',
+                backfaceVisibility: 'hidden',
                 ...positions,
                 ...styles,
               } as any
