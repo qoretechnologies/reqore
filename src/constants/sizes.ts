@@ -54,11 +54,11 @@ export const HEADER_SIZE_TO_NUMBER = {
 };
 
 export const SIZE_TO_PX = {
-  tiny: 18,
-  small: 24,
-  normal: 30,
-  big: 40,
-  huge: 50,
+  tiny: 24,
+  small: 30,
+  normal: 36,
+  big: 46,
+  huge: 56,
 };
 
 export const BADGE_SIZE_TO_PX = {
@@ -198,4 +198,4 @@ export const WEIGHT_TO_NUMBER = {
   thick: 700,
 };
 
-export const PILL_RADIUS_MODIFIER = 2.5;
+export const PILL_RADIUS_MODIFIER = 3.5;

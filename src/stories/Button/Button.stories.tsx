@@ -48,6 +48,9 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} minimal flat>
           Minimal
         </ReqoreButton>
+        <ReqoreButton {...buttonProps} transparent flat>
+          Transparent
+        </ReqoreButton>
         <ReqoreButton {...buttonProps} icon={undefined} rightIcon={undefined} compact>
           Compact
         </ReqoreButton>
