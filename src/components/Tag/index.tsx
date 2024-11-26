@@ -8,8 +8,8 @@ import {
   BADGE_SIZE_TO_PX,
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
   SIZE_TO_PX,
+  TAG_RADIUS_FROM_SIZE,
   TAG_TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -111,6 +111,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   overflow: hidden;
   vertical-align: middle;
   font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
+  line-height: 1.1;
 
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
@@ -119,7 +120,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${({ theme, color, flat = true }) =>
     !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
-  border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
+  border-radius: ${({ asBadge, size }) => (asBadge ? 18 : TAG_RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
@@ -206,6 +207,12 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     .reqore-tag-action-hidden {
       display: none;
     }
+  }
+
+  &:focus,
+  &:active {
+    outline: 2px solid ${({ theme, color }) => changeLightness(color || theme.main, 0.25)};
+    outline-offset: -2px;
   }
 `;
 
@@ -374,6 +381,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         minimal={minimal}
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
+        tabIndex={onClick && !rest.disabled ? 0 : undefined}
         wrap={wrap}
         hasWidth={!!width}
       >

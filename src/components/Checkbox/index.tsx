@@ -114,6 +114,7 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   &:focus,
   &:active {
     outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
+    outline-offset: -2px;
   }
 `;
 

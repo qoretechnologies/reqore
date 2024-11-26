@@ -107,8 +107,7 @@ export const ChildActiveIconScale = css`
 `;
 
 export const ScaleIconOnHover = css`
-  &:hover,
-  &:focus {
+  &:hover {
     ${ActiveIconScale}
   }
 `;

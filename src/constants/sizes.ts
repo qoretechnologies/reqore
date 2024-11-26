@@ -142,11 +142,11 @@ export const HALF_PADDING_FROM_SIZE = {
 };
 
 export const PADDING_FROM_SIZE = {
-  tiny: 5,
-  small: 8,
-  normal: 11,
-  big: 14,
-  huge: 17,
+  tiny: 2,
+  small: 5,
+  normal: 8,
+  big: 11,
+  huge: 14,
 };
 
 export const RADIUS_FROM_SIZE = {
@@ -155,6 +155,14 @@ export const RADIUS_FROM_SIZE = {
   normal: 5.5,
   big: 7,
   huge: 9,
+};
+
+export const TAG_RADIUS_FROM_SIZE = {
+  tiny: 9,
+  small: 10,
+  normal: 10.5,
+  big: 12,
+  huge: 14,
 };
 
 export const GAP_FROM_SIZE = {

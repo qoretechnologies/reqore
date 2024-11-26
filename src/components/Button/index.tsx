@@ -140,6 +140,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]
     }px`};
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  outline-offset: -2px;
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
@@ -182,7 +183,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   ${InactiveIconScale}
 
-  ${({ readOnly, animate, active }) =>
+  ${({ readOnly, animate, active, theme, color }) =>
     !readOnly && !active
       ? css`
           &:not(:disabled) {
@@ -196,8 +197,10 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             }
 
             &:hover,
-            &:active,
-            &:focus {
+            &:active {
+              outline: 2px solid ${changeLightness(getButtonMainColor(theme, color), 0.25)};
+              border-color: ${({ flat, theme, color }) =>
+                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
               background-color: ${({ theme, color, minimal }: IReqoreButtonStyle) =>
                 minimal
                   ? rgba(changeLightness(getButtonMainColor(theme, color), 0.05), 0.2)
@@ -208,8 +211,6 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                   undefined,
                   undefined
                 )};
-              border-color: ${({ flat, theme, color }) =>
-                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
 
               ${animate &&
               css`
@@ -268,12 +269,9 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   &:focus,
   &:active {
     outline: 2px solid
-      ${({ theme, color }) => changeLightness(getButtonMainColor(theme, color), 0.25)};
-  }
-
-  &:focus {
+      ${({ theme, color }) => changeLightness(getButtonMainColor(theme, color), 0.1)};
     border-color: ${({ minimal, theme, color }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
+      minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
   }
 
   .reqore-button-description {
