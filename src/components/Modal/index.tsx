@@ -15,7 +15,11 @@ export interface IReqoreModalStyle extends IReqoreModalProps {
   zIndex?: number;
 }
 
-export const ReqoreModal = ({ width = '80vw', height = 'auto', ...rest }: IReqoreModalProps) => {
+export const ReqoreModal = ({
+  width = '80vw',
+  height = 'fit-content',
+  ...rest
+}: IReqoreModalProps) => {
   const id = useMemo(() => shortid.generate(), []);
   const escClosableModals = useReqoreProperty('escClosableModals');
   const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');

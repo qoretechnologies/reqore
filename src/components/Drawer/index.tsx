@@ -98,7 +98,9 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
   }}
 `;
 
-export const StyledDrawerResizable = styled(animated.div)``;
+export const StyledDrawerResizable = styled(animated.div)`
+  height: fit-content;
+`;
 
 /**
  * It returns an icon name based on the position and whether the panel is hidden or not
@@ -126,9 +128,9 @@ const getHideShowIcon = (
 const getSpringConfig = (isModal?: boolean, position?: TPosition, floating?: boolean) =>
   isModal
     ? {
-        from: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)' },
-        enter: { opacity: 1, transform: 'scale(1) translate(-50%, -50%)' },
-        leave: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)' },
+        from: { opacity: 0, transform: 'scale(0.5)' },
+        enter: { opacity: 1, transform: 'scale(1)' },
+        leave: { opacity: 0, transform: 'scale(0.5)' },
       }
     : {
         from: { opacity: 0, [position]: '-80px' },
@@ -218,9 +220,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
     /* Centering the modal. */
     if (_isModal) {
       return {
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%)',
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        margin: 'auto',
       };
     }
 
