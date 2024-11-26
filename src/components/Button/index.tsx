@@ -518,11 +518,13 @@ const ReqoreButton = memo(
                   compact={_compact}
                   {...leftIconProps}
                   style={
-                    textAlign !== 'left' || iconsAlign === 'center'
+                    textAlign !== 'left' || iconsAlign === 'center' || !_children
                       ? {
-                          marginRight: iconsAlign !== 'center' || !children ? 'auto' : undefined,
+                          marginRight: iconsAlign !== 'center' || !_children ? 'auto' : undefined,
                           marginLeft:
-                            iconsAlign === 'center' || (textAlign === 'center' && !_children)
+                            iconsAlign === 'center' ||
+                            !_children ||
+                            (textAlign === 'center' && !_children)
                               ? 'auto'
                               : undefined,
                         }

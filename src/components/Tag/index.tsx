@@ -113,7 +113,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
   line-height: 1.1;
 
-  min-width: ${({ size }) => SIZE_TO_PX[size]}px;
+  min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
   max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
   flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) =>
@@ -275,7 +275,7 @@ const StyledTagContentKey = styled(StyledTagContent)`
 const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   flex-shrink: 0;
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
-  width: ${({ size }) => SIZE_TO_PX[size]}px;
+  width: ${({ size }) => BADGE_SIZE_TO_PX[size]}px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -322,7 +322,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       rightIconColor,
       iconColor,
       labelKeyAlign = 'left',
-      labelAlign = 'left',
+      labelAlign,
       labelEffect,
       labelKeyEffect,
       leftIconProps,
@@ -440,7 +440,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 wrap={wrap}
                 hasWidth={!!width}
-                labelAlign={labelAlign}
+                labelAlign={labelAlign || (labelKey ? 'left' : 'center')}
                 compact={compact}
                 effect={{
                   ...labelEffect,
