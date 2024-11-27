@@ -309,7 +309,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
-  padding-bottom: ${({ minimal, padded, size, transparent, isCollapsed }: IStyledPanel) =>
+  padding-bottom: ${({ padded, size, isCollapsed }: IStyledPanel) =>
     !padded || isCollapsed ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   padding-top: ${({ minimal, size }: IStyledPanel) =>
     minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
