@@ -150,7 +150,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   border: ${({ theme, color, flat, effect }) =>
     !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.05)}` : 0};
   padding: ${({ size, compact, verticalPadding }) =>
-    `${verticalPadding ? PADDING_FROM_SIZE[verticalPadding] : 0}px ${
+    `${verticalPadding ? PADDING_FROM_SIZE[verticalPadding] : PADDING_FROM_SIZE[size]}px ${
       compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]
     }px`};
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
@@ -311,7 +311,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   }
 
   .reqore-button-description {
-    padding-bottom: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
+    padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
   }
 `;
 
@@ -323,7 +323,6 @@ export const StyledButtonContent = styled.div`
   min-width: ${({ size }) => ICON_FROM_SIZE[size]}px;
   flex: 1;
   flex-shrink: 0;
-  padding: ${({ size, flat }) => PADDING_FROM_SIZE[size] / 2 - (!flat ? 1 : 0)}px 0;
 
   ${({ wrap, description }) =>
     !wrap && !description

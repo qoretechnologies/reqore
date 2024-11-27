@@ -212,6 +212,14 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton
           {...buttonProps}
           description='This is a very interesting description for a button, I like it very much'
+          icon={undefined}
+          rightIcon={undefined}
+        >
+          With No Icons
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
+          description='This is a very interesting description for a button, I like it very much'
           maxWidth='200px'
           badge={{
             color: '#00fafd',
