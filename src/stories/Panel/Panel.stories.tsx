@@ -519,6 +519,8 @@ export const ActionsShownOnHover: Story = {
     style: { minWidth: 400, maxWidth: 600 },
     label: 'This is a simple test to',
     collapsible: false,
+    size: 'small',
+    minimal: true,
     responsiveActions: false,
     actions: [{ label: 'test', show: 'hover' }],
     children: 'This is a panel',

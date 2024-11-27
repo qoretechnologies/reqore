@@ -328,7 +328,7 @@ export const getGradientMix = (
   const _colors =
     typeof colors === 'string' ? buildGradientColorsFromString(theme, colors) : colors;
 
-  if (colors && Object.keys(colors).length === 2) {
+  if (_colors && Object.keys(_colors).length === 2) {
     const gradientColor1: TReqoreHexColor = getNthGradientColor(theme, _colors);
     const gradientColor2: TReqoreHexColor = getNthGradientColor(theme, _colors, 2);
 
