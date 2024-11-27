@@ -63,14 +63,14 @@ export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left'
           ? `${PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px`
           : compact
           ? '3px'
-          : '10px'
+          : '6px'
         : undefined};
       margin-right: ${margin === 'right' || margin === 'both'
         ? isStringSize(size)
           ? `${PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px`
           : compact
           ? '3px'
-          : '10px'
+          : '6px'
         : undefined};
     `}
 

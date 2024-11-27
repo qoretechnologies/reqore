@@ -61,6 +61,14 @@ export const SIZE_TO_PX = {
   huge: 56,
 };
 
+export const TAG_SIZE_TO_PX = {
+  tiny: 20,
+  small: 26,
+  normal: 32,
+  big: 42,
+  huge: 52,
+};
+
 export const BADGE_SIZE_TO_PX = {
   tiny: 14,
   small: 20,
@@ -110,11 +118,11 @@ export const TEXT_FROM_SIZE = {
 };
 
 export const CONTROL_TEXT_FROM_SIZE = {
-  tiny: 9,
-  small: 12,
-  normal: 15,
-  big: 18,
-  huge: 21,
+  tiny: 8,
+  small: 11,
+  normal: 14,
+  big: 17,
+  huge: 20,
 };
 
 export const TAG_TEXT_FROM_SIZE = {
@@ -134,11 +142,11 @@ export const ICON_FROM_SIZE = {
 };
 
 export const HALF_PADDING_FROM_SIZE = {
-  tiny: 2,
-  small: 4,
-  normal: 5,
-  big: 7,
-  huge: 9,
+  tiny: 1,
+  small: 2.5,
+  normal: 4,
+  big: 5.5,
+  huge: 7,
 };
 
 export const PADDING_FROM_SIZE = {
@@ -158,11 +166,11 @@ export const RADIUS_FROM_SIZE = {
 };
 
 export const TAG_RADIUS_FROM_SIZE = {
-  tiny: 9,
-  small: 10,
-  normal: 10.5,
-  big: 12,
-  huge: 14,
+  tiny: 4,
+  small: 6,
+  normal: 8,
+  big: 10,
+  huge: 12,
 };
 
 export const GAP_FROM_SIZE = {

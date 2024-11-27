@@ -272,15 +272,14 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
-  // 2 is border that has to be added to the size + the button size + padding
-  min-height: ${({ size, transparent, flat, minimal }) =>
-    2 +
-    (SIZE_TO_PX[size] + ((transparent && flat) || minimal ? 0 : PADDING_FROM_SIZE[size]) * 2)}px;
-  align-items: center;
+
+  min-height: ${({ size }) => SIZE_TO_PX[size] + PADDING_FROM_SIZE[size] * 2}px;
   padding: ${({ noHorizontalPadding, size, transparent, flat, intent }: IStyledPanel) =>
     `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
       noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`
     }`};
+
+  align-items: center;
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat
       ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
@@ -310,12 +309,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
-  padding-bottom: ${({ minimal, padded, size, transparent, isCollapsed }: IStyledPanel) =>
-    !padded || isCollapsed
-      ? `${PADDING_FROM_SIZE[size]}px`
-      : minimal || transparent
-        ? 0
-        : undefined};
+  padding-bottom: ${({ padded, size, isCollapsed }: IStyledPanel) =>
+    !padded || isCollapsed ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   padding-top: ${({ minimal, size }: IStyledPanel) =>
     minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
 `;
@@ -338,22 +333,18 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     !padded
       ? undefined
       : noHorizontalPadding
-        ? `${PADDING_FROM_SIZE[size]}px 0`
-        : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
+      ? `${PADDING_FROM_SIZE[size]}px 0`
+      : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel, padded, size }) =>
-    minimal && hasLabel && padded
-      ? `${PADDING_FROM_SIZE[size] / 2}px`
-      : padded
-        ? `${PADDING_FROM_SIZE[size]}px`
-        : undefined};
+    minimal && hasLabel && padded ? 0 : padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
     minimal && hasBottomActions && padded
       ? `${PADDING_FROM_SIZE[size] / 2}px`
       : padded
-        ? `${PADDING_FROM_SIZE[size]}px`
-        : undefined};
+      ? `${PADDING_FROM_SIZE[size]}px`
+      : undefined};
   flex: 1;
   overflow: auto;
   overflow-wrap: anywhere;

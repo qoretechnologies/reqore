@@ -8,8 +8,8 @@ import {
   BADGE_SIZE_TO_PX,
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
-  SIZE_TO_PX,
   TAG_RADIUS_FROM_SIZE,
+  TAG_SIZE_TO_PX,
   TAG_TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -113,7 +113,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
   line-height: 1.1;
 
-  min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
+  min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size])}px;
   max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
   flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) =>
@@ -150,10 +150,11 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     wrap || hasWidth
       ? css`
           min-height: ${({ size, asBadge }) =>
-            asBadge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size]}px;
+            asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
         `
       : css`
-          height: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
+          height: ${({ size, asBadge }) =>
+            asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
         `}
 
   ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) => {
@@ -235,7 +236,7 @@ const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
 `;
 
 const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
-  padding: 4px ${({ size, compact }) => PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px;
+  padding: 4px ${({ size }) => PADDING_FROM_SIZE[size]}px;
   min-height: 100%;
   display: flex;
   align-items: center;

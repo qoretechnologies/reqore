@@ -12,7 +12,12 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
+import {
+  changeLightness,
+  getGradientMix,
+  getReadableColor,
+  getReadableColorFrom,
+} from '../../helpers/colors';
 import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -107,7 +112,15 @@ export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
   color?: TReqoreHexColor;
 }
 
-const getButtonMainColor = (theme: IReqoreTheme, color?: TReqoreHexColor) => {
+const getButtonMainColor = (
+  theme: IReqoreTheme,
+  color?: TReqoreHexColor,
+  effect?: IReqoreEffect
+) => {
+  if (effect && effect.gradient) {
+    return getGradientMix(theme, effect.gradient.colors);
+  }
+
   if (color) {
     return color;
   }
@@ -130,12 +143,12 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   flex-flow: column;
   justify-content: center;
   margin: 0;
-  font-weight: 500;
+  font-weight: 570;
   position: relative;
   overflow: hidden;
   vertical-align: middle;
-  border: ${({ theme, color, flat }) =>
-    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.05)}` : 0};
+  border: ${({ theme, color, flat, effect }) =>
+    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.05)}` : 0};
   padding: ${({ size, compact, verticalPadding }) =>
     `${verticalPadding ? PADDING_FROM_SIZE[verticalPadding] : 0}px ${
       compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]
@@ -167,14 +180,14 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       ? 9999
       : RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
-  background-color: ${({ minimal, color, theme, transparent }) => {
+  background-color: ${({ minimal, color, theme, transparent, effect }) => {
     if (transparent) {
       return 'transparent';
     }
 
     if (minimal) {
       return css`
-        ${rgba(getButtonMainColor(theme, color), 0.2)}
+        ${rgba(getButtonMainColor(theme, color, effect), 0.2)}
       `;
     }
 
@@ -190,7 +203,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   ${InactiveIconScale}
 
-  ${({ readOnly, animate, active, theme, color }) =>
+  ${({ readOnly, animate, active, theme, color, effect }) =>
     !readOnly && !active
       ? css`
           &:not(:disabled) {
@@ -200,24 +213,24 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             transition: all 0.2s ease-out;
 
             &:active {
-              outline: 3px solid ${changeLightness(getButtonMainColor(theme, color), 0.25)};
+              outline: 3px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
               outline-offset: -3px;
               transition: none;
             }
 
             &:hover:not(:active) {
-              outline: 2px solid ${changeLightness(getButtonMainColor(theme, color), 0.25)};
+              outline: 2px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
               transition: none;
             }
 
             &:hover,
             &:active {
               border-color: ${({ flat, theme, color }) =>
-                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
+                flat ? undefined : changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
               background-color: ${({ theme, color, minimal, transparent }: IReqoreButtonStyle) =>
                 minimal || transparent
                   ? rgba(
-                      changeLightness(getButtonMainColor(theme, color), 0.05),
+                      changeLightness(getButtonMainColor(theme, color, effect), 0.05),
                       transparent ? 0.2 : 0.4
                     )
                   : changeLightness(getButtonMainColor(theme, color), 0.05)};
@@ -225,7 +238,11 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                 minimal || transparent
                   ? tint(0.85, color)
                   : getReadableColor(
-                      { main: minimal ? theme.originalMain : getButtonMainColor(theme, color) },
+                      {
+                        main: minimal
+                          ? theme.originalMain
+                          : getButtonMainColor(theme, color, effect),
+                      },
                       undefined,
                       undefined
                     )};
@@ -253,26 +270,26 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
         `
       : undefined}
 
-  ${({ active, flat, theme, color }: IReqoreButtonStyle) => {
+  ${({ active, flat, theme, color, effect }: IReqoreButtonStyle) => {
     if (active) {
       return css`
         cursor: pointer;
-        background-color: ${changeLightness(getButtonMainColor(theme, color), 0.1)};
+        background-color: ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
         color: ${getReadableColor(
-          { main: changeLightness(getButtonMainColor(theme, color), 0.1) },
+          { main: changeLightness(getButtonMainColor(theme, color, effect), 0.1) },
           undefined,
           undefined
         )};
         border-color: ${flat
           ? undefined
-          : changeLightness(getButtonMainColor(theme, color), 0.175)};
+          : changeLightness(getButtonMainColor(theme, color, effect), 0.175)};
 
         &:hover,
         &:active,
         &:focus {
           border-color: ${flat
             ? undefined
-            : changeLightness(getButtonMainColor(theme, color), 0.275)};
+            : changeLightness(getButtonMainColor(theme, color, effect), 0.275)};
         }
 
         ${ActiveIconScale}
@@ -287,9 +304,10 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   &:focus,
   &:active {
     outline: 2px solid
-      ${({ theme, color }) => changeLightness(getButtonMainColor(theme, color), 0.1)};
-    border-color: ${({ minimal, theme, color }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
+      ${({ theme, color, effect }) =>
+        changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
+    border-color: ${({ minimal, theme, color, effect }) =>
+      minimal ? undefined : changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
   }
 
   .reqore-button-description {
