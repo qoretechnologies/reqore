@@ -93,7 +93,7 @@ const ReqoreMenuItem = memo(
       }, [itemRef, scrollIntoView]);
 
       return (
-        <ReqoreControlGroup stack={!!onRightIconClick} fluid fill>
+        <ReqoreControlGroup stack={!!onRightIconClick} fluid fill responsive={false}>
           <ReqoreButton
             as={as}
             {...rest}

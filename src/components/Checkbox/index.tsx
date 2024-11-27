@@ -110,6 +110,12 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   ${StyledIconWrapper} {
     z-index: 1;
   }
+
+  &:focus,
+  &:active {
+    outline: 2px solid ${({ theme }) => changeLightness(theme.main, 0.25)};
+    outline-offset: -2px;
+  }
 `;
 
 const StyledSwitchTextWrapper = styled(StyledTextEffect)`
@@ -257,6 +263,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         {asSwitch ? (
           <StyledSwitch
             size={size}
+            tabIndex='0'
             labelPosition={labelPosition}
             checked={checked}
             theme={theme}
@@ -348,6 +355,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         ) : (
           <ReqoreIcon
             size={size}
+            tabIndex={0}
             icon={
               !image
                 ? checked

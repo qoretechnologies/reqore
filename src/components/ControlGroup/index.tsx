@@ -14,6 +14,7 @@ import {
   IWithReqoreMinimal,
   IWithReqoreSize,
 } from '../../types/global';
+import { IReqoreButtonProps } from '../Button';
 import { StyledEffect } from '../Effect';
 import { StyledHeader } from '../Header';
 import { StyledParagraph } from '../Paragraph';
@@ -52,6 +53,7 @@ export interface IReqoreControlGroupComponentProps
   isFirstGroup?: boolean;
   isLastGroup?: boolean;
   fill?: boolean;
+  overflowButtonProps?: IReqoreButtonProps;
 }
 
 export interface IReqoreControlGroupProps
@@ -167,6 +169,7 @@ const ReqoreControlGroup = memo(
     verticalAlign = 'center',
     horizontalAlign = 'flex-start',
     responsive,
+    overflowButtonProps,
     ...rest
   }: IReqoreControlGroupProps) => {
     const isStack = stack || isInsideStackGroup;
@@ -467,9 +470,9 @@ const ReqoreControlGroup = memo(
                   ),
                 }}
                 active={isOverflownDialogOpen}
-                flat
                 fixed
                 onClick={(e) => e.stopPropagation()}
+                {...overflowButtonProps}
               />,
             ]
           : children,

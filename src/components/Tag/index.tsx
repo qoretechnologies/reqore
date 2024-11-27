@@ -8,8 +8,9 @@ import {
   BADGE_SIZE_TO_PX,
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
   SIZE_TO_PX,
+  TAG_RADIUS_FROM_SIZE,
+  TAG_TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -109,16 +110,17 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-weight: 600;
   overflow: hidden;
   vertical-align: middle;
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
+  line-height: 1.1;
 
-  min-width: ${({ size }) => SIZE_TO_PX[size]}px;
+  min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : SIZE_TO_PX[size])}px;
   max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
   flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   align-self: ${({ fixed, fluid }) =>
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${({ theme, color, flat = true }) =>
     !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
-  border-radius: ${({ asBadge, size }) => (asBadge ? 18 : RADIUS_FROM_SIZE[size])}px;
+  border-radius: ${({ asBadge, size }) => (asBadge ? 18 : TAG_RADIUS_FROM_SIZE[size])}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
@@ -206,6 +208,12 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       display: none;
     }
   }
+
+  &:focus,
+  &:active {
+    outline: 2px solid ${({ theme, color }) => changeLightness(color || theme.main, 0.25)};
+    outline-offset: -2px;
+  }
 `;
 
 const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
@@ -267,7 +275,7 @@ const StyledTagContentKey = styled(StyledTagContent)`
 const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   flex-shrink: 0;
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
-  width: ${({ size }) => SIZE_TO_PX[size]}px;
+  width: ${({ size }) => BADGE_SIZE_TO_PX[size]}px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -314,7 +322,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       rightIconColor,
       iconColor,
       labelKeyAlign = 'left',
-      labelAlign = 'left',
+      labelAlign,
       labelEffect,
       labelKeyEffect,
       leftIconProps,
@@ -373,6 +381,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         minimal={minimal}
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
+        tabIndex={onClick && !rest.disabled ? 0 : undefined}
         wrap={wrap}
         hasWidth={!!width}
       >
@@ -431,7 +440,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={size}
                 wrap={wrap}
                 hasWidth={!!width}
-                labelAlign={labelAlign}
+                labelAlign={labelAlign || (labelKey ? 'left' : 'center')}
                 compact={compact}
                 effect={{
                   ...labelEffect,

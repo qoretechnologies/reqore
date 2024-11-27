@@ -3,7 +3,7 @@ import { StyledTextEffect } from './components/Effect';
 import { StyledIconWrapper } from './components/Icon';
 
 export const INACTIVE_ICON_SCALE = 0.85;
-export const ACTIVE_ICON_SCALE = 1;
+export const ACTIVE_ICON_SCALE = 0.93;
 
 export const StyledContent = styled(StyledTextEffect)`
   position: relative;
@@ -107,15 +107,14 @@ export const ChildActiveIconScale = css`
 `;
 
 export const ScaleIconOnHover = css`
-  &:hover,
-  &:focus {
+  &:hover {
     ${ActiveIconScale}
   }
 `;
 
 export const DisabledElement = css`
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 `;
 

@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import { rgba } from 'polished';
+import { rgba, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import styled, { css } from 'styled-components';
 import {
@@ -64,6 +64,7 @@ export interface IReqoreButtonProps
   icon?: IReqoreIconName;
   size?: TSizes;
   minimal?: boolean;
+  transparent?: boolean;
   tooltip?: TReqoreTooltipProp;
   fluid?: boolean;
   fixed?: boolean;
@@ -129,17 +130,18 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   flex-flow: column;
   justify-content: center;
   margin: 0;
-  font-weight: 600;
+  font-weight: 500;
   position: relative;
   overflow: hidden;
   vertical-align: middle;
   border: ${({ theme, color, flat }) =>
-    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.2)}` : 0};
+    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color), 0.05)}` : 0};
   padding: ${({ size, compact, verticalPadding }) =>
     `${verticalPadding ? PADDING_FROM_SIZE[verticalPadding] : 0}px ${
       compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]
     }px`};
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  outline-offset: -2px;
 
   min-height: ${({ size }) => SIZE_TO_PX[size]}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
@@ -165,24 +167,30 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       ? 9999
       : RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
-  background-color: ${({ minimal, color }) => {
-    if (minimal) {
+  background-color: ${({ minimal, color, theme, transparent }) => {
+    if (transparent) {
       return 'transparent';
+    }
+
+    if (minimal) {
+      return css`
+        ${rgba(getButtonMainColor(theme, color), 0.2)}
+      `;
     }
 
     return color;
   }};
 
-  color: ${({ theme, color, minimal }) =>
+  color: ${({ theme, color, minimal, transparent }) =>
     color
-      ? minimal
-        ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
+      ? minimal || transparent
+        ? tint(0.75, color)
         : getReadableColorFrom(color, true)
       : getReadableColor(theme, undefined, undefined, true)};
 
   ${InactiveIconScale}
 
-  ${({ readOnly, animate, active }) =>
+  ${({ readOnly, animate, active, theme, color }) =>
     !readOnly && !active
       ? css`
           &:not(:disabled) {
@@ -192,24 +200,35 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
             transition: all 0.2s ease-out;
 
             &:active {
-              transform: scale(0.97);
+              outline: 3px solid ${changeLightness(getButtonMainColor(theme, color), 0.25)};
+              outline-offset: -3px;
+              transition: none;
+            }
+
+            &:hover:not(:active) {
+              outline: 2px solid ${changeLightness(getButtonMainColor(theme, color), 0.25)};
+              transition: none;
             }
 
             &:hover,
-            &:active,
-            &:focus {
-              background-color: ${({ theme, color, minimal }: IReqoreButtonStyle) =>
-                minimal
-                  ? rgba(changeLightness(getButtonMainColor(theme, color), 0.05), 0.2)
-                  : changeLightness(getButtonMainColor(theme, color), 0.05)};
-              color: ${({ theme, color, minimal }) =>
-                getReadableColor(
-                  { main: minimal ? theme.originalMain : getButtonMainColor(theme, color) },
-                  undefined,
-                  undefined
-                )};
+            &:active {
               border-color: ${({ flat, theme, color }) =>
-                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.35)};
+                flat ? undefined : changeLightness(getButtonMainColor(theme, color), 0.25)};
+              background-color: ${({ theme, color, minimal, transparent }: IReqoreButtonStyle) =>
+                minimal || transparent
+                  ? rgba(
+                      changeLightness(getButtonMainColor(theme, color), 0.05),
+                      transparent ? 0.2 : 0.4
+                    )
+                  : changeLightness(getButtonMainColor(theme, color), 0.05)};
+              color: ${({ theme, color, minimal, transparent }) =>
+                minimal || transparent
+                  ? tint(0.85, color)
+                  : getReadableColor(
+                      { main: minimal ? theme.originalMain : getButtonMainColor(theme, color) },
+                      undefined,
+                      undefined
+                    )};
 
               ${animate &&
               css`
@@ -267,12 +286,10 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   &:focus,
   &:active {
-    outline: none;
-  }
-
-  &:focus {
+    outline: 2px solid
+      ${({ theme, color }) => changeLightness(getButtonMainColor(theme, color), 0.1)};
     border-color: ${({ minimal, theme, color }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.4)};
+      minimal ? undefined : changeLightness(getButtonMainColor(theme, color), 0.1)};
   }
 
   .reqore-button-description {
@@ -385,6 +402,7 @@ const ReqoreButton = memo(
         icon,
         size = 'normal',
         minimal,
+        transparent,
         children,
         tooltip,
         className,
@@ -431,7 +449,7 @@ const ReqoreButton = memo(
 
       // If color or intent was specified, set the color
       const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
-      const _flat = minimal ? flat : flat !== false;
+      const _flat = minimal ? flat : flat === true;
       const _compact = compact ?? theme.buttons?.compact;
       const color: TReqoreHexColor = customColor
         ? minimal
@@ -478,7 +496,9 @@ const ReqoreButton = memo(
           fixed={fixed}
           maxWidth={maxWidth}
           minimal={minimal}
+          transparent={transparent}
           size={size}
+          intent={intent}
           color={customColor}
           animate={animate}
           flat={_flat}
@@ -498,11 +518,13 @@ const ReqoreButton = memo(
                   compact={_compact}
                   {...leftIconProps}
                   style={
-                    textAlign !== 'left' || iconsAlign === 'center'
+                    textAlign !== 'left' || iconsAlign === 'center' || !_children
                       ? {
-                          marginRight: iconsAlign !== 'center' || !children ? 'auto' : undefined,
+                          marginRight: iconsAlign !== 'center' || !_children ? 'auto' : undefined,
                           marginLeft:
-                            iconsAlign === 'center' || (textAlign === 'center' && !_children)
+                            iconsAlign === 'center' ||
+                            !_children ||
+                            (textAlign === 'center' && !_children)
                               ? 'auto'
                               : undefined,
                         }

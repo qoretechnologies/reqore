@@ -54,11 +54,11 @@ export const HEADER_SIZE_TO_NUMBER = {
 };
 
 export const SIZE_TO_PX = {
-  tiny: 18,
-  small: 24,
-  normal: 30,
-  big: 40,
-  huge: 50,
+  tiny: 24,
+  small: 30,
+  normal: 36,
+  big: 46,
+  huge: 56,
 };
 
 export const BADGE_SIZE_TO_PX = {
@@ -110,11 +110,19 @@ export const TEXT_FROM_SIZE = {
 };
 
 export const CONTROL_TEXT_FROM_SIZE = {
-  tiny: 7,
-  small: 10,
-  normal: 13,
-  big: 16,
-  huge: 19,
+  tiny: 9,
+  small: 12,
+  normal: 15,
+  big: 18,
+  huge: 21,
+};
+
+export const TAG_TEXT_FROM_SIZE = {
+  tiny: 8,
+  small: 11,
+  normal: 14,
+  big: 17,
+  huge: 20,
 };
 
 export const ICON_FROM_SIZE = {
@@ -134,11 +142,11 @@ export const HALF_PADDING_FROM_SIZE = {
 };
 
 export const PADDING_FROM_SIZE = {
-  tiny: 5,
-  small: 8,
-  normal: 11,
-  big: 14,
-  huge: 17,
+  tiny: 2,
+  small: 5,
+  normal: 8,
+  big: 11,
+  huge: 14,
 };
 
 export const RADIUS_FROM_SIZE = {
@@ -147,6 +155,14 @@ export const RADIUS_FROM_SIZE = {
   normal: 5.5,
   big: 7,
   huge: 9,
+};
+
+export const TAG_RADIUS_FROM_SIZE = {
+  tiny: 9,
+  small: 10,
+  normal: 10.5,
+  big: 12,
+  huge: 14,
 };
 
 export const GAP_FROM_SIZE = {
@@ -182,4 +198,4 @@ export const WEIGHT_TO_NUMBER = {
   thick: 700,
 };
 
-export const PILL_RADIUS_MODIFIER = 2.5;
+export const PILL_RADIUS_MODIFIER = 3.5;

@@ -49,6 +49,16 @@ export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
   h?: number | string;
 }
 
+export const StyledWrapper = styled.div<IReqoreDrawerStyle>`
+  z-index: ${({ zIndex }) => zIndex};
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+`;
+
 export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
   position: absolute;
 
@@ -98,7 +108,9 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
   }}
 `;
 
-export const StyledDrawerResizable = styled(animated.div)``;
+export const StyledDrawerResizable = styled(animated.div)`
+  pointer-events: auto;
+`;
 
 /**
  * It returns an icon name based on the position and whether the panel is hidden or not
@@ -126,9 +138,9 @@ const getHideShowIcon = (
 const getSpringConfig = (isModal?: boolean, position?: TPosition, floating?: boolean) =>
   isModal
     ? {
-        from: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)', filter: 'blur(10px)' },
-        enter: { opacity: 1, transform: 'scale(1) translate(-50%, -50%)', filter: 'blur(0px)' },
-        leave: { opacity: 0, transform: 'scale(0.5) translate(-50%, -50%)', filter: 'blur(10px)' },
+        from: { opacity: 0, transform: 'scale(0.5)' },
+        enter: { opacity: 1, transform: 'scale(1)' },
+        leave: { opacity: 0, transform: 'scale(0.5)' },
       }
     : {
         from: { opacity: 0, [position]: '-80px' },
@@ -217,11 +229,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
   const positions = useMemo(() => {
     /* Centering the modal. */
     if (_isModal) {
-      return {
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%)',
-      };
+      return {};
     }
 
     return {
@@ -244,127 +252,132 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
               opacity={styles.opacity}
             />
           ) : null}
-          <Resizable
-            className={`${className || ''} reqore-drawer-resizable`}
-            maxHeight={
-              layout === 'horizontal' || layout === 'center' ? maxSize || '90vh' : undefined
-            }
-            minHeight={
-              layout === 'center'
-                ? '40px'
-                : layout === 'horizontal'
-                ? _isHidden
-                  ? 0
-                  : minSize || '40px'
-                : undefined
-            }
-            maxWidth={layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined}
-            minWidth={
-              layout === 'center'
-                ? '40px'
-                : layout === 'vertical'
-                ? _isHidden
-                  ? 0
-                  : minSize || '40px'
-                : undefined
-            }
-            as={StyledDrawerResizable}
-            style={
-              {
-                zIndex: wrapperZIndex,
-                display: 'flex',
-                position: 'fixed',
-                overflow: hidable ? undefined : 'hidden',
-                transformOrigin: 'top left',
-                ...positions,
-                ...styles,
-              } as any
-            }
-            handleWrapperStyle={{
-              zIndex: wrapperZIndex + 1,
-            }}
-            size={{
-              width: _isModal
-                ? _size.width
-                : layout === 'vertical'
-                ? _isHidden
-                  ? 0
-                  : _size.width
-                : 'auto',
-              height: _isModal
-                ? _size.height
-                : layout === 'horizontal'
-                ? _isHidden
-                  ? 0
-                  : _size.height
-                : 'auto',
-            }}
-            onResize={
-              resizable
-                ? (_, _direction, component: HTMLElement) => {
-                    setSize({
-                      width: component.style.width,
-                      height: component.style.height,
-                    });
-                  }
-                : undefined
-            }
-            enable={{
-              top: (resizable && position === 'bottom') || _isModal ? true : false,
-              right: (resizable && position === 'left') || _isModal ? true : false,
-              left: (resizable && position === 'right') || _isModal ? true : false,
-              bottom: (resizable && position === 'top') || _isModal ? true : false,
-              bottomLeft: _isModal,
-              bottomRight: _isModal,
-              topLeft: _isModal,
-              topRight: _isModal,
-            }}
-          >
-            {_isHidden && hidable ? (
-              <StyledCloseWrapper
-                className='reqore-drawer-controls'
-                position={position}
-                w={layout === 'vertical' ? 0 : _size.width}
-                h={layout === 'horizontal' ? 0 : _size.height}
-              >
-                <ReqoreButton
-                  flat
-                  customTheme={theme}
-                  className='reqore-drawer-control reqore-drawer-hide-button'
-                  icon={getHideShowIcon(position, _isHidden)}
-                  onClick={() => {
-                    setIsHidden(!_isHidden);
-                    onHideToggle?.(!_isHidden);
+          <StyledWrapper zIndex={wrapperZIndex} className='reqore-drawer-wrapper'>
+            <Resizable
+              className={`${className || ''} reqore-drawer-resizable`}
+              maxHeight={
+                layout === 'horizontal' || layout === 'center' ? maxSize || '90vh' : undefined
+              }
+              minHeight={
+                layout === 'center'
+                  ? '40px'
+                  : layout === 'horizontal'
+                  ? _isHidden
+                    ? 0
+                    : minSize || '40px'
+                  : undefined
+              }
+              maxWidth={
+                layout === 'vertical' || layout === 'center' ? maxSize || '90vw' : undefined
+              }
+              minWidth={
+                layout === 'center'
+                  ? '40px'
+                  : layout === 'vertical'
+                  ? _isHidden
+                    ? 0
+                    : minSize || '40px'
+                  : undefined
+              }
+              as={StyledDrawerResizable}
+              style={
+                {
+                  zIndex: wrapperZIndex,
+                  display: 'flex',
+                  position: 'fixed',
+                  overflow: hidable ? undefined : 'hidden',
+                  transformOrigin: 'top left',
+                  backfaceVisibility: 'hidden',
+                  ...positions,
+                  ...styles,
+                } as any
+              }
+              handleWrapperStyle={{
+                zIndex: wrapperZIndex + 1,
+              }}
+              size={{
+                width: _isModal
+                  ? _size.width
+                  : layout === 'vertical'
+                  ? _isHidden
+                    ? 0
+                    : _size.width
+                  : 'auto',
+                height: _isModal
+                  ? _size.height
+                  : layout === 'horizontal'
+                  ? _isHidden
+                    ? 0
+                    : _size.height
+                  : 'auto',
+              }}
+              onResize={
+                resizable
+                  ? (_, _direction, component: HTMLElement) => {
+                      setSize({
+                        width: component.style.width,
+                        height: component.style.height,
+                      });
+                    }
+                  : undefined
+              }
+              enable={{
+                top: (resizable && position === 'bottom') || _isModal ? true : false,
+                right: (resizable && position === 'left') || _isModal ? true : false,
+                left: (resizable && position === 'right') || _isModal ? true : false,
+                bottom: (resizable && position === 'top') || _isModal ? true : false,
+                bottomLeft: _isModal,
+                bottomRight: _isModal,
+                topLeft: _isModal,
+                topRight: _isModal,
+              }}
+            >
+              {_isHidden && hidable ? (
+                <StyledCloseWrapper
+                  className='reqore-drawer-controls'
+                  position={position}
+                  w={layout === 'vertical' ? 0 : _size.width}
+                  h={layout === 'horizontal' ? 0 : _size.height}
+                >
+                  <ReqoreButton
+                    flat
+                    customTheme={theme}
+                    className='reqore-drawer-control reqore-drawer-hide-button'
+                    icon={getHideShowIcon(position, _isHidden)}
+                    onClick={() => {
+                      setIsHidden(!_isHidden);
+                      onHideToggle?.(!_isHidden);
+                    }}
+                  />
+                </StyledCloseWrapper>
+              ) : null}
+              {!_isHidden && (
+                <ReqorePanel
+                  {...rest}
+                  size={panelSize}
+                  opacity={opacity}
+                  blur={hasBackdrop ? 0 : blur}
+                  actions={_actions}
+                  customTheme={customTheme}
+                  intent={intent}
+                  rounded={floating || _isModal ? true : false}
+                  flat={flat}
+                  onClose={onClose}
+                  closeButtonProps={{
+                    className: 'reqore-drawer-close-button',
                   }}
-                />
-              </StyledCloseWrapper>
-            ) : null}
-            {!_isHidden && (
-              <ReqorePanel
-                {...rest}
-                size={panelSize}
-                opacity={opacity}
-                blur={hasBackdrop ? 0 : blur}
-                actions={_actions}
-                customTheme={customTheme}
-                intent={intent}
-                rounded={floating || _isModal ? true : false}
-                flat={flat}
-                onClose={onClose}
-                closeButtonProps={{
-                  className: 'reqore-drawer-close-button',
-                }}
-                className={`reqore-drawer`}
-                style={{
-                  width: '100%',
-                  maxHeight: '100%',
-                  ...rest.style,
-                }}
-              >
-                {children}
-              </ReqorePanel>
-            )}
-          </Resizable>
+                  className={`reqore-drawer`}
+                  style={{
+                    width: '100%',
+                    maxHeight: '100%',
+                    ...rest.style,
+                  }}
+                >
+                  {children}
+                </ReqorePanel>
+              )}
+            </Resizable>
+          </StyledWrapper>
         </ReqoreThemeProvider>
       ) : null
     ),

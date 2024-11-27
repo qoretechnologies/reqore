@@ -183,7 +183,7 @@ export const ReqoreTree = ({
           <ReqoreButton
             compact
             leftIconColor='muted'
-            minimal
+            transparent
             className='reqore-tree-delete'
             icon='IndeterminateCircleLine'
             intent='muted'
@@ -228,7 +228,6 @@ export const ReqoreTree = ({
                 rotation={isExpandable ? 0 : -90}
                 intent='muted'
                 style={{
-                  position: 'absolute',
                   marginLeft: `-${ICON_FROM_SIZE[zoomToSize[zoom]]}px`,
                 }}
               />
@@ -248,6 +247,7 @@ export const ReqoreTree = ({
                   <ReqoreButton
                     size='tiny'
                     flat
+                    transparent
                     icon='AddCircleLine'
                     onClick={() => {
                       setManagementDialog({
@@ -257,8 +257,7 @@ export const ReqoreTree = ({
                         type: isArray(_data[key]) ? 'array' : 'object',
                       });
                     }}
-                    leftIconColor='info'
-                    minimal
+                    intent='info'
                     compact
                   />
                 </ReqoreControlGroup>
@@ -287,7 +286,7 @@ export const ReqoreTree = ({
               )}
             </ReqoreControlGroup>
           ) : (
-            <ReqoreControlGroup verticalAlign='flex-start'>
+            <ReqoreControlGroup verticalAlign='center'>
               <ReqorePopover
                 component={ReqoreP}
                 componentProps={{
