@@ -210,7 +210,7 @@ const ReqoreTabsListItem = memo(
           {!onCloseClick || disabled ? (
             renderButton()
           ) : (
-            <ReqoreControlGroup stack size={size} fluid={fill || vertical}>
+            <ReqoreControlGroup stack size={size} fluid={fill || vertical} fill={wrapTabNames}>
               {renderButton()}
               {onCloseClick && !disabled ? (
                 <ReqoreButton
@@ -219,6 +219,7 @@ const ReqoreTabsListItem = memo(
                   icon={closeIcon || 'CloseLine'}
                   intent={active ? activeIntent || intent : intent}
                   minimal
+                  wrap={wrapTabNames}
                   active={active}
                   className='reqore-tabs-list-item-close'
                   customTheme={theme}
