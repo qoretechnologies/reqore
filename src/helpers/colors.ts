@@ -1,4 +1,4 @@
-import { cloneDeep, merge, reduce } from 'lodash';
+import { cloneDeep, merge, reduce, size } from 'lodash';
 import { darken, getLuminance, lighten, mix, readableColor, transparentize } from 'polished';
 import {
   TReqoreEffectColor,
@@ -328,18 +328,19 @@ export const getGradientMix = (
   const _colors =
     typeof colors === 'string' ? buildGradientColorsFromString(theme, colors) : colors;
 
-  if (_colors && Object.keys(_colors).length === 2) {
-    const gradientColor1: TReqoreHexColor = getNthGradientColor(theme, _colors);
-    const gradientColor2: TReqoreHexColor = getNthGradientColor(theme, _colors, 2);
-
-    return RGBAToHexA(
-      mix(
-        0.5,
-        gradientColor1 === '#00000000' ? theme.main : gradientColor1,
-        gradientColor2 === '#00000000' ? theme.main : gradientColor2
-      ) as TReqoreHexColor
-    );
+  if (!_colors) {
+    return fallback;
   }
 
-  return fallback;
+  // If there are more than 2 colors, we can't mix them, so we get the first and last color
+  const gradientColor1: TReqoreHexColor = getNthGradientColor(theme, _colors);
+  const gradientColor2: TReqoreHexColor = getNthGradientColor(theme, _colors, size(_colors));
+
+  return RGBAToHexA(
+    mix(
+      0.5,
+      gradientColor1 === '#00000000' ? theme.main : gradientColor1,
+      gradientColor2 === '#00000000' ? theme.main : gradientColor2
+    ) as TReqoreHexColor
+  );
 };
