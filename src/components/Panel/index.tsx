@@ -281,7 +281,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 
   align-items: center;
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
-    !isCollapsed && !flat
+    !isCollapsed && !flat && opacity
       ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
       : null};
   transition: background-color 0.2s ease-out;
