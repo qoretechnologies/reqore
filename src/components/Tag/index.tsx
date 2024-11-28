@@ -8,6 +8,7 @@ import {
   BADGE_SIZE_TO_PX,
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
+  TAG_ICON_FROM_SIZE,
   TAG_RADIUS_FROM_SIZE,
   TAG_SIZE_TO_PX,
   TAG_TEXT_FROM_SIZE,
@@ -224,6 +225,7 @@ const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
   flex: ${({ hasKey, fixed }) => (hasKey ? (fixed === 'key' ? '0 0 auto' : 1) : undefined)};
   flex-shrink: 0;
   min-height: 100%;
+  padding-left: ${({ size, hasIcon }) => hasIcon && `${PADDING_FROM_SIZE[size]}px`};
 `;
 
 const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
@@ -394,12 +396,13 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             wrap={wrap}
             hasWidth={!!width}
             hasKey={!!labelKey}
+            hasIcon={!!leftIcon}
             fixed={rest.fixed}
           >
             {leftIcon && (
               <ReqoreIcon
-                size={size}
-                margin={label || labelKey ? 'left' : 'both'}
+                size={`${TAG_ICON_FROM_SIZE[size]}px`}
+                //margin={label || labelKey ? 'left' : 'both'}
                 color={leftIconColor || iconColor}
                 compact={compact}
                 {...leftIconProps}
@@ -453,8 +456,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             {rightIcon && (
               <ReqoreIcon
                 icon={rightIcon}
-                size={size}
-                margin={label || (icon && !labelKey) ? 'right' : 'both'}
+                size={`${TAG_ICON_FROM_SIZE[size]}px`}
+                margin={label || (!icon && !labelKey) ? 'right' : 'both'}
                 color={rightIconColor || iconColor}
                 compact={compact}
                 {...rightIconProps}
@@ -487,7 +490,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                       : {})}
                     isReqoreComponent
                   >
-                    <ReqoreIcon icon={icon} size={size} />
+                    <ReqoreIcon icon={icon} size={`${TAG_ICON_FROM_SIZE[size]}px`} />
                   </ReqorePopover>
                 </React.Fragment>
               ))

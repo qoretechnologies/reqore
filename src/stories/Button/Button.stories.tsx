@@ -296,9 +296,13 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
                   direction: 'to right bottom',
                 },
               },
+              icon: 'BluetoothLine',
               labelKey: 'Cool',
               label: 1234,
-              actions: [{ icon: 'ShuffleLine', onClick: noop }],
+              actions: [
+                { icon: 'Repeat2Line', onClick: noop },
+                { icon: 'ShuffleLine', onClick: noop },
+              ],
             },
           ]}
           onClick={alert}
