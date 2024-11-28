@@ -126,11 +126,19 @@ export const CONTROL_TEXT_FROM_SIZE = {
 };
 
 export const TAG_TEXT_FROM_SIZE = {
-  tiny: 8,
-  small: 11,
-  normal: 14,
-  big: 17,
-  huge: 20,
+  tiny: 6,
+  small: 9,
+  normal: 12,
+  big: 15,
+  huge: 18,
+};
+
+export const TAG_ICON_FROM_SIZE = {
+  tiny: 10,
+  small: 13,
+  normal: 16,
+  big: 19,
+  huge: 22,
 };
 
 export const ICON_FROM_SIZE = {
@@ -150,8 +158,8 @@ export const HALF_PADDING_FROM_SIZE = {
 };
 
 export const PADDING_FROM_SIZE = {
-  tiny: 2,
-  small: 5,
+  tiny: 4,
+  small: 6,
   normal: 8,
   big: 11,
   huge: 14,
