@@ -1,4 +1,4 @@
-import { hexAToRGBA, shouldDarken } from '../../src/helpers/colors';
+import { hexAToRGBA, isAchromatic, shouldDarken } from '../../src/helpers/colors';
 
 test('Tests whether a color should be darkened', () => {
   expect(shouldDarken('#000000')).toBe(false);
@@ -15,4 +15,12 @@ test('Transforms hex color with alpha to rgba', () => {
   expect(hexAToRGBA('#00000000')).toEqual('rgba(0, 0, 0, 0.00)');
   expect(hexAToRGBA('rgb(0, 0, 0)')).toEqual('rgb(0, 0, 0)');
   expect(hexAToRGBA('rgba(0, 0, 0, 1)')).toEqual('rgba(0, 0, 0, 1)');
+});
+
+test('Returns true if color is achromatic', () => {
+  expect(isAchromatic('#000000')).toEqual(true);
+  expect(isAchromatic('#d7d7d7')).toEqual(true);
+  expect(isAchromatic('#ffffff')).toEqual(true);
+  expect(isAchromatic('#ff0000')).toEqual(false);
+  expect(isAchromatic('#fa0782')).toEqual(false);
 });

@@ -84,6 +84,23 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
           actions={null}
           onRemoveClick={null}
           rightIcon={null}
+          label={null}
+          icon='Asterisk'
+          onClick={() => console.log('Tag clicked')}
+        />
+        <ReqoreTag
+          {...args}
+          onRemoveClick={null}
+          rightIcon={null}
+          label={null}
+          icon='UsbLine'
+          onClick={() => console.log('Tag clicked')}
+        />
+        <ReqoreTag
+          {...args}
+          actions={null}
+          onRemoveClick={null}
+          rightIcon={null}
           labelKey='Number'
           label={2}
         />

@@ -226,6 +226,7 @@ const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
   flex-shrink: 0;
   min-height: 100%;
   padding-left: ${({ size, hasIcon }) => hasIcon && `${PADDING_FROM_SIZE[size]}px`};
+  padding-right: ${({ size, padOnRight }) => padOnRight && `${PADDING_FROM_SIZE[size]}px`};
 `;
 
 const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
@@ -397,12 +398,12 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             hasWidth={!!width}
             hasKey={!!labelKey}
             hasIcon={!!leftIcon}
+            padOnRight={!label && !labelKey && !rightIcon}
             fixed={rest.fixed}
           >
             {leftIcon && (
               <ReqoreIcon
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
-                //margin={label || labelKey ? 'left' : 'both'}
                 color={leftIconColor || iconColor}
                 compact={compact}
                 {...leftIconProps}
