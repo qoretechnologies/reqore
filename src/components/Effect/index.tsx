@@ -210,12 +210,14 @@ export const StyledEffect = styled.span`
       const borderGradientColors: string = createEffectGradient(
         theme,
         effect.gradient.colors,
-        0.15
+        0.15,
+        minimal
       );
       const borderGradientColorsActive: string = createEffectGradient(
         theme,
         effect.gradient.colors,
-        0.25
+        0.25,
+        minimal
       );
 
       gradient = `${gradient}, ${gradientType}-gradient(${gradientDirectionOrShape}${borderGradientColors}) border-box`;

@@ -1,5 +1,5 @@
 import { cloneDeep, merge, reduce, size } from 'lodash';
-import { darken, getLuminance, lighten, mix, readableColor, transparentize } from 'polished';
+import { darken, getLuminance, lighten, mix, readableColor, rgba, transparentize } from 'polished';
 import {
   TReqoreEffectColor,
   TReqoreEffectColorList,
@@ -46,6 +46,12 @@ export const getReadableColorFrom = (
   return readableColor(fixedColor, returnIfLight, returnIfDark, false) as TReqoreHexColor;
 };
 
+export const isAchromatic = (color: TReqoreMultiTypeColor): boolean => {
+  const fixedColor = getRGBAFromHex(color);
+
+  return fixedColor.r === fixedColor.g && fixedColor.g === fixedColor.b;
+};
+
 export const percentToHexAlpha = (p: number) => {
   const percent = Math.max(0, Math.min(100, p)); // bound percent from 0 to 100
   const intValue = Math.round((percent / 100) * 255); // map percent to nearest integer (0 - 255)
@@ -54,18 +60,32 @@ export const percentToHexAlpha = (p: number) => {
   return hexValue.padStart(2, '0').toUpperCase(); // format with leading 0 and upper case characters
 };
 
+export const getRGBAFromHex = (
+  color: TReqoreMultiTypeColor
+): { r: number; g: number; b: number; a: number } => {
+  let hexColor = color as TReqoreHexColor;
+  // If this is already an rgba color, we need to convert it to hex
+  if (color.startsWith('rgba')) {
+    hexColor = RGBAToHexA(color);
+  }
+
+  const colorWithAlpha = hexColor.length === 4 ? hexColor + hexColor.slice(1, 4) : hexColor;
+
+  const r = parseInt(colorWithAlpha.slice(1, 3), 16);
+  const g = parseInt(colorWithAlpha.slice(3, 5), 16);
+  const b = parseInt(colorWithAlpha.slice(5, 7), 16);
+  const a = parseInt(colorWithAlpha.slice(7, 9) || 'ff', 16) / 255;
+
+  return { r, g, b, a };
+};
+
 export const hexAToRGBA = (hex: TReqoreMultiTypeColor): TReqoreRgbaColor => {
   // Check if this color is already in rgba format
   if (hex.startsWith('rgb')) {
     return hex as TReqoreRgbaColor;
   }
 
-  const _hex = hex.length === 4 ? hex + hex.slice(1, 4) : hex;
-
-  const r = parseInt(_hex.slice(1, 3), 16);
-  const g = parseInt(_hex.slice(3, 5), 16);
-  const b = parseInt(_hex.slice(5, 7), 16);
-  const a = parseInt(_hex.slice(7, 9) || 'ff', 16) / 255;
+  const { r, g, b, a } = getRGBAFromHex(hex as TReqoreHexColor);
 
   return `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
 };
@@ -276,10 +296,12 @@ export const createEffectGradient = (
     _colors,
     (colorsString, color, percentage) => {
       return `${colorsString}, ${
-        minimal || transparent
+        transparent
           ? active
             ? theme.originalMain
             : changeLightness(theme.originalMain, lighten)
+          : minimal
+          ? rgba(changeLightness(getColorFromMaybeString(theme, color), lighten), 0.25)
           : changeLightness(getColorFromMaybeString(theme, color), lighten)
       } ${percentage}%`;
     },

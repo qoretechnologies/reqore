@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import { rgba, tint } from 'polished';
+import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import styled, { css } from 'styled-components';
 import {
@@ -17,6 +17,7 @@ import {
   getGradientMix,
   getReadableColor,
   getReadableColorFrom,
+  isAchromatic,
 } from '../../helpers/colors';
 import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -194,14 +195,17 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
     return color;
   }};
 
-  color: ${({ theme, color, minimal, transparent }) =>
-    color
-      ? minimal || transparent
-        ? tint(0.75, color)
-        : getReadableColorFrom(color, true)
-      : getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ color, minimal, transparent, theme, effect }) => {
+    const finalColor = getButtonMainColor(theme, color, effect);
 
-  ${InactiveIconScale}
+    return minimal || transparent
+      ? isAchromatic(finalColor)
+        ? getReadableColorFrom(theme.originalMain, true)
+        : saturate(1, tint(0.8, finalColor))
+      : getReadableColorFrom(finalColor, true);
+  }};
+
+  ${InactiveIconScale};
 
   ${({ readOnly, animate, active, theme, color, effect }) =>
     !readOnly && !active
@@ -234,33 +238,28 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                       transparent ? 0.2 : 0.4
                     )
                   : changeLightness(getButtonMainColor(theme, color), 0.05)};
-              color: ${({ theme, color, minimal, transparent }) =>
-                minimal || transparent
-                  ? tint(0.85, color)
-                  : getReadableColor(
-                      {
-                        main: minimal
-                          ? theme.originalMain
-                          : getButtonMainColor(theme, color, effect),
-                      },
-                      undefined,
-                      undefined
-                    )};
+              color: ${({ theme, color, minimal, transparent, effect }) => {
+                  const finalColor = getButtonMainColor(theme, color, effect);
+                  return minimal || transparent
+                    ? isAchromatic(finalColor)
+                      ? getReadableColorFrom(theme.originalMain)
+                      : saturate(1, tint(0.9, finalColor))
+                    : getReadableColorFrom(finalColor);
+                }}
+                ${animate &&
+                css`
+                  ${StyledActiveContent} {
+                    transform: translateY(0px);
+                    filter: blur(0);
+                    opacity: 1;
+                  }
 
-              ${animate &&
-              css`
-                ${StyledActiveContent} {
-                  transform: translateY(0px);
-                  filter: blur(0);
-                  opacity: 1;
-                }
-
-                ${StyledInActiveContent} {
-                  transform: translateY(150%);
-                  filter: blur(10px);
-                  opacity: 0;
-                }
-              `}
+                  ${StyledInActiveContent} {
+                    transform: translateY(150%);
+                    filter: blur(10px);
+                    opacity: 0;
+                  }
+                `};
             }
           }
         `
@@ -268,7 +267,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       ? css`
           ${ReadOnlyElement};
         `
-      : undefined}
+      : undefined};
 
   ${({ active, flat, theme, color, effect }: IReqoreButtonStyle) => {
     if (active) {
@@ -295,7 +294,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
         ${ActiveIconScale}
       `;
     }
-  }}
+  }};
 
   &:disabled {
     ${DisabledElement};

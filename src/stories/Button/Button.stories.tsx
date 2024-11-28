@@ -51,6 +51,7 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} transparent flat>
           Transparent
         </ReqoreButton>
+
         <ReqoreButton {...buttonProps} icon={undefined} rightIcon={undefined} compact>
           Compact
         </ReqoreButton>
@@ -83,6 +84,9 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
           rightIconColor='#0a487b:lighten:3'
         >
           Minimal not flat
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} transparent>
+          Transparent not flat
         </ReqoreButton>
         <ReqoreButton {...buttonProps} readOnly onClick={alert} flat={false}>
           Read only not flat
@@ -232,7 +236,7 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
         <ReqoreButton
           {...buttonProps}
-          minimal
+          transparent
           description='This is a very interesting description for a button, I like it very much'
           maxWidth='200px'
           labelEffect={{
@@ -273,7 +277,7 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
         <ReqoreButton
           {...buttonProps}
-          minimal
+          transparent
           badge={20}
           onClick={alert}
           effect={{
@@ -283,7 +287,7 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
             gradient: { colors: { 0: '#ffe69c', 90: '#ff7818' }, type: 'radial' },
           }}
         >
-          Minimal with badge
+          Transparent with badge
         </ReqoreButton>
         <ReqoreButton
           {...buttonProps}
