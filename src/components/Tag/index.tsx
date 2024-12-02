@@ -1,13 +1,15 @@
 import classNames from 'classnames';
 import _size from 'lodash/size';
-import { rgba } from 'polished';
+import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, HTMLAttributes, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
+import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
+  BADGE_RADIUS_FROM_SIZE,
   BADGE_SIZE_TO_PX,
   CONTROL_TEXT_FROM_SIZE,
-  PADDING_FROM_SIZE,
+  TAG_HORIZONTAL_PADDING_FROM_SIZE,
   TAG_ICON_FROM_SIZE,
   TAG_RADIUS_FROM_SIZE,
   TAG_SIZE_TO_PX,
@@ -20,6 +22,7 @@ import {
   getColorFromMaybeString,
   getReadableColor,
   getReadableColorFrom,
+  isAchromatic,
 } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -108,7 +111,6 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   flex-shrink: 0;
   align-items: stretch;
   font-family: system-ui;
-  font-weight: 600;
   overflow: hidden;
   vertical-align: middle;
   font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
@@ -121,7 +123,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${({ theme, color, flat = true }) =>
     !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
-  border-radius: ${({ asBadge, size }) => (asBadge ? 18 : TAG_RADIUS_FROM_SIZE[size])}px;
+  border-radius: ${({ asBadge, size }) =>
+    asBadge ? BADGE_RADIUS_FROM_SIZE[size] : TAG_RADIUS_FROM_SIZE[size]}px;
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
@@ -160,15 +163,19 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
 
   ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) => {
     return css`
-      background-color: ${color || changeLightness(theme.main, 0.1)};
-      color: ${minimal
-        ? getReadableColor(theme, undefined, undefined, true)
+      background-color: ${minimal
+        ? color
+          ? rgba(color, 0.2)
+          : rgba(changeLightness(theme.main, 0), 0.7)
+        : color || changeLightness(theme.main, 0.1)};
+      color: ${minimal && color && color !== 'transparent' && !isAchromatic(color)
+        ? saturate(1, tint(0.8, color))
         : color && color !== 'transparent'
         ? getReadableColorFrom(color)
         : getReadableColorFrom(changeLightness(theme.main, 0.1))};
 
       ${StyledTagKeyWrapper} {
-        background-color: ${labelKey ? rgba('#000000', 0.2) : undefined};
+        background-color: ${labelKey ? rgba('#000000', minimal ? 0.1 : 0.3) : undefined};
       }
     `;
   }}
@@ -185,7 +192,9 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
 
             ${!effect?.gradient &&
             css`
-              background-color: ${changeLightness(color || theme.main, color ? 0.05 : 0.15)};
+              background-color: ${minimal
+                ? rgba(color || theme.main, 0.5)
+                : color || changeLightness(theme.main, 0.15)};
               color: ${minimal
                 ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
                 : color
@@ -225,8 +234,9 @@ const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
   flex: ${({ hasKey, fixed }) => (hasKey ? (fixed === 'key' ? '0 0 auto' : 1) : undefined)};
   flex-shrink: 0;
   min-height: 100%;
-  padding-left: ${({ size, hasIcon }) => hasIcon && `${PADDING_FROM_SIZE[size]}px`};
-  padding-right: ${({ size, padOnRight }) => padOnRight && `${PADDING_FROM_SIZE[size]}px`};
+  padding-left: ${({ size, hasIcon }) => hasIcon && `${TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px`};
+  padding-right: ${({ size, padOnRight }) =>
+    padOnRight && `${TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px`};
 `;
 
 const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
@@ -239,7 +249,7 @@ const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
 `;
 
 const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
-  padding: 4px ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  padding: 4px ${({ size }) => TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px;
   min-height: 100%;
   display: flex;
   align-items: center;
@@ -354,8 +364,6 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         return customColor;
       }
 
-      customColor = minimal ? `${customColor || '#000000'}40` : customColor;
-
       return customColor;
     };
 
@@ -406,6 +414,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
                 color={leftIconColor || iconColor}
                 compact={compact}
+                effect={{
+                  opacity: CONTROL_ICON_OPACITY,
+                }}
                 {...leftIconProps}
                 animation={loading ? 'spin' : leftIconProps?.animation}
                 icon={leftIcon}
@@ -420,7 +431,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 compact={compact}
                 effect={
                   {
-                    weight: 'thick',
+                    weight: 'bold',
                     ...labelKeyEffect,
                   } as IReqoreEffect
                 }
@@ -461,6 +472,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 margin={label || (!icon && !labelKey) ? 'right' : 'both'}
                 color={rightIconColor || iconColor}
                 compact={compact}
+                effect={{
+                  opacity: CONTROL_ICON_OPACITY,
+                }}
                 {...rightIconProps}
               />
             )}
@@ -491,7 +505,13 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                       : {})}
                     isReqoreComponent
                   >
-                    <ReqoreIcon icon={icon} size={`${TAG_ICON_FROM_SIZE[size]}px`} />
+                    <ReqoreIcon
+                      icon={icon}
+                      size={`${TAG_ICON_FROM_SIZE[size]}px`}
+                      effect={{
+                        opacity: CONTROL_ICON_OPACITY,
+                      }}
+                    />
                   </ReqorePopover>
                 </React.Fragment>
               ))

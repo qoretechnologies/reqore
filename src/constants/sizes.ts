@@ -101,6 +101,14 @@ export const TABS_PADDING_TO_PX = {
   huge: 5,
 };
 
+export const TAG_HORIZONTAL_PADDING_FROM_SIZE = {
+  tiny: 3,
+  small: 5,
+  normal: 6,
+  big: 9,
+  huge: 13,
+};
+
 export const MARGIN_FROM_SIZE = {
   tiny: 0,
   small: 0,
@@ -213,6 +221,14 @@ export const TAG_RADIUS_FROM_SIZE = {
   huge: 9,
 };
 
+export const BADGE_RADIUS_FROM_SIZE = {
+  tiny: 6,
+  small: 7,
+  normal: 9,
+  big: 11,
+  huge: 13,
+};
+
 export const GAP_FROM_SIZE = {
   tiny: 1,
   small: 3,
@@ -242,8 +258,8 @@ export const WEIGHT_TO_NUMBER = {
   thin: 100,
   light: 250,
   normal: 400,
-  bold: 550,
-  thick: 700,
+  bold: 500,
+  thick: 600,
 };
 
 export const PILL_RADIUS_MODIFIER = 3.5;
