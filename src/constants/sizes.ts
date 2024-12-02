@@ -136,8 +136,8 @@ export const CONTROL_TEXT_FROM_SIZE = {
 export const TAG_TEXT_FROM_SIZE = {
   tiny: 8,
   small: 11,
-  normal: 14,
-  big: 17,
+  normal: 13,
+  big: 16,
   huge: 19,
 };
 

@@ -166,7 +166,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       background-color: ${minimal
         ? color
           ? rgba(color, 0.2)
-          : rgba(changeLightness(theme.main, 0), 0.7)
+          : rgba(changeLightness('#000000', 0.05), 0.3)
         : color || changeLightness(theme.main, 0.1)};
       color: ${minimal && color && color !== 'transparent' && !isAchromatic(color)
         ? saturate(1, tint(0.8, color))
@@ -193,7 +193,9 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
             ${!effect?.gradient &&
             css`
               background-color: ${minimal
-                ? rgba(color || theme.main, 0.5)
+                ? color
+                  ? rgba(color || theme.main, 0.5)
+                  : rgba(changeLightness('#000000', 0.05), 0.4)
                 : color || changeLightness(theme.main, 0.15)};
               color: ${minimal
                 ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
@@ -458,9 +460,12 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 hasWidth={!!width}
                 labelAlign={labelAlign || (labelKey ? 'left' : 'center')}
                 compact={compact}
-                effect={{
-                  ...labelEffect,
-                }}
+                effect={
+                  {
+                    weight: 'bold',
+                    ...labelEffect,
+                  } as IReqoreEffect
+                }
               >
                 {label}
               </StyledTagContent>

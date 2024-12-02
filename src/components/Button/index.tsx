@@ -348,78 +348,81 @@ export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
   wrap?: boolean;
   wrapGroup?: boolean;
   compact?: boolean;
+  active?: boolean;
 }
 
-export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButtonBadgeProps) => {
-  const renderTag = useCallback(
-    ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
-      <ReqoreTag
-        key={key}
-        size={getOneLessSize(size)}
-        asBadge
-        color={color}
-        customTheme={theme}
-        className='reqore-button-badge'
-        labelAlign='center'
-        minimal={!(content as IReqoreTagProps)?.effect?.gradient}
-        {...(typeof content === 'string' || typeof content === 'number'
-          ? { label: content }
-          : (content as IReqoreTagProps))}
-      />
-    ),
-    [props]
-  );
+export const ButtonBadge = memo(
+  ({ wrapGroup, compact, active, ...props }: IReqoreButtonBadgeProps) => {
+    const renderTag = useCallback(
+      ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
+        <ReqoreTag
+          key={key}
+          size={getOneLessSize(size)}
+          asBadge
+          color={color}
+          customTheme={theme}
+          className='reqore-button-badge'
+          labelAlign='center'
+          minimal={!active && !(content as IReqoreTagProps)?.effect?.gradient}
+          {...(typeof content === 'string' || typeof content === 'number'
+            ? { label: content }
+            : (content as IReqoreTagProps))}
+        />
+      ),
+      [props]
+    );
 
-  const content = Array.isArray(props.content) ? props.content : [props.content];
+    const content = Array.isArray(props.content) ? props.content : [props.content];
 
-  const leftBadges = content.filter(
-    (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
-  );
-  const rightBadges = content.filter(
-    (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
-  );
-  const middleBadges = content.filter(
-    (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
-  );
+    const leftBadges = content.filter(
+      (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
+    );
+    const rightBadges = content.filter(
+      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
+    );
+    const middleBadges = content.filter(
+      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
+    );
 
-  const buildContent = (badge: TReqoreBadge) => {
-    if (typeof badge === 'string' || typeof badge === 'number') {
-      return { label: badge, align: undefined };
-    }
+    const buildContent = (badge: TReqoreBadge) => {
+      if (typeof badge === 'string' || typeof badge === 'number') {
+        return { label: badge, align: undefined };
+      }
 
-    return { ...badge, align: undefined };
-  };
+      return { ...badge, align: undefined };
+    };
 
-  return (
-    <>
-      <ReqoreSpacer
-        width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
-        height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
-      />
-      {size(leftBadges) ? (
-        <ReqoreTagGroup wrap={wrapGroup} align='left'>
-          {leftBadges.map((badge, index) =>
-            renderTag({ ...props, content: buildContent(badge), key: index })
-          )}
-        </ReqoreTagGroup>
-      ) : null}
-      {size(middleBadges) ? (
-        <ReqoreTagGroup wrap={wrapGroup} fluid align='center'>
-          {middleBadges.map((badge, index) =>
-            renderTag({ ...props, content: buildContent(badge), key: index })
-          )}
-        </ReqoreTagGroup>
-      ) : null}
-      {size(rightBadges) ? (
-        <ReqoreTagGroup wrap={wrapGroup} align='right'>
-          {rightBadges.map((badge, index) =>
-            renderTag({ ...props, content: buildContent(badge), key: index })
-          )}
-        </ReqoreTagGroup>
-      ) : null}
-    </>
-  );
-});
+    return (
+      <>
+        <ReqoreSpacer
+          width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
+          height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
+        />
+        {size(leftBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} align='left'>
+            {leftBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
+        {size(middleBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} fluid align='center'>
+            {middleBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
+        {size(rightBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} align='right'>
+            {rightBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
+      </>
+    );
+  }
+);
 
 const ReqoreButton = memo(
   forwardRef<HTMLButtonElement, IReqoreButtonProps>(
@@ -617,7 +620,7 @@ const ReqoreButton = memo(
                   </StyledInvisibleContent>
                 )}
                 {(badge || badge === 0) && wrap ? (
-                  <ButtonBadge content={badge} size={size} theme={theme} wrap />
+                  <ButtonBadge content={badge} size={size} wrap active={active} />
                 ) : null}
               </StyledAnimatedTextWrapper>
             )}
@@ -625,10 +628,10 @@ const ReqoreButton = memo(
               <ButtonBadge
                 content={badge}
                 size={size}
-                theme={theme}
                 compact={_compact}
                 wrapGroup={false}
                 wrap={false}
+                active={active}
               />
             ) : null}
             {!hasRightIcon ? (
