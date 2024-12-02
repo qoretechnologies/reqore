@@ -121,6 +121,7 @@ const ReqoreMenuItem = memo(
             <ReqoreButton
               icon={rightIcon}
               flat={flat}
+              verticalPadding='small'
               fixed
               compact
               transparent={rest.transparent === false ? false : !rest.effect}
