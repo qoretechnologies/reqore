@@ -206,9 +206,9 @@ export const CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE = {
 };
 
 export const RADIUS_FROM_SIZE = {
-  tiny: 2,
-  small: 3,
-  normal: 4.5,
+  tiny: 4,
+  small: 4,
+  normal: 5,
   big: 6,
   huge: 8,
 };

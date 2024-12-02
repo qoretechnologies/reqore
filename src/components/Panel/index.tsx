@@ -184,7 +184,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
       ? undefined
       : `1px solid ${changeLightness(
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-          0.2
+          0.08
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;

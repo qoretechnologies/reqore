@@ -98,6 +98,7 @@ const ReqoreMenuItem = memo(
             as={as}
             transparent={!rest.effect}
             verticalPadding='small'
+            compact
             {...rest}
             flat={flat}
             className={`${rest.className || ''} reqore-menu-item`}
@@ -121,6 +122,7 @@ const ReqoreMenuItem = memo(
               icon={rightIcon}
               flat={flat}
               fixed
+              compact
               transparent={rest.transparent === false ? false : !rest.effect}
               minimal={rest.minimal}
               customTheme={rest.customTheme}
