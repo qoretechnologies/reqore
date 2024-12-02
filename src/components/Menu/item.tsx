@@ -121,7 +121,8 @@ const ReqoreMenuItem = memo(
               icon={rightIcon}
               flat={flat}
               fixed
-              minimal={!onRightIconClick}
+              transparent={rest.transparent === false ? false : !rest.effect}
+              minimal={rest.minimal}
               customTheme={rest.customTheme}
               className='reqore-menu-item-right-icon'
               onClick={handleRightIconClick}
