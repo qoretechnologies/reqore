@@ -190,11 +190,11 @@ export const CONTROL_HORIZONTAL_PADDING_FROM_SIZE = {
 };
 
 export const CONTROL_VERTICAL_PADDING_FROM_SIZE = {
-  tiny: 6,
-  small: 8,
-  normal: 10,
-  big: 13,
-  huge: 16,
+  tiny: 5,
+  small: 6,
+  normal: 8,
+  big: 11,
+  huge: 14,
 };
 
 export const CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE = {
