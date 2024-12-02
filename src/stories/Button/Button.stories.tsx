@@ -35,7 +35,12 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
           iconsAlign='center'
           style={{ width: '100px' }}
         />
-        <ReqoreButton {...buttonProps}>Default</ReqoreButton>
+        <ReqoreButton {...buttonProps} icon={null} rightIcon={null}>
+          Just text
+        </ReqoreButton>
+        <ReqoreButton {...buttonProps} rightIcon={null}>
+          With icon
+        </ReqoreButton>
         <ReqoreButton {...buttonProps} wrap maxWidth='150px'>
           Default wrapped button with long text
         </ReqoreButton>
@@ -55,8 +60,6 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         <ReqoreButton {...buttonProps} icon={undefined} rightIcon={undefined} compact>
           Compact
         </ReqoreButton>
-        <ReqoreButton {...buttonProps} rightIcon={undefined} compact />
-        <ReqoreButton {...buttonProps} compact />
         <ReqoreButton
           {...buttonProps}
           compact

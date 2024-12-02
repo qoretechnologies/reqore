@@ -262,6 +262,17 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
         />
         <ReqoreTag
           {...args}
+          labelKey='Minimal Tag '
+          label='with Intent and Key'
+          minimal
+          intent='success'
+          icon='CodeView'
+          rightIcon={args.rightIcon}
+          actions={null}
+          onRemoveClick={null}
+        />
+        <ReqoreTag
+          {...args}
           labelKey='This is the key for a wrapped tag'
           label='Wrapped tag with some long text and width specified, no wrap specified'
           icon='ShareForward2Fill'
@@ -392,6 +403,16 @@ export const Badge: Story = {
 export const Wrap: Story = {
   render: Template,
   args: { wrap: true },
+};
+
+export const Minimal: Story = {
+  render: Template,
+  args: { minimal: true },
+};
+
+export const NotFlat: Story = {
+  render: Template,
+  args: { flat: false },
 };
 
 export const WithTextAligns: Story = {

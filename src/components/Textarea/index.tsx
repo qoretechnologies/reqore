@@ -4,9 +4,9 @@ import styled, { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
   CONTROL_TEXT_FROM_SIZE,
-  PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
+  TEXTAREA_PADDING_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -95,7 +95,7 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   max-height: 100%;
   font-size: ${({ _size = 'normal' }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   margin: 0;
-  padding: ${({ _size = 'normal' }) => PADDING_FROM_SIZE[_size] / 2}px;
+  padding: ${({ _size = 'normal' }) => TEXTAREA_PADDING_FROM_SIZE[_size]}px;
   padding-right: ${({ hasClearButton, _size = 'normal' }) =>
     hasClearButton ? `${SIZE_TO_PX[_size]}px` : undefined};
   min-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size]}px;

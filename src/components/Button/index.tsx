@@ -2,8 +2,12 @@ import { size } from 'lodash';
 import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import styled, { css } from 'styled-components';
+import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
+  CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
   CONTROL_TEXT_FROM_SIZE,
+  CONTROL_VERTICAL_PADDING_FROM_SIZE,
+  CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
@@ -150,22 +154,28 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   vertical-align: middle;
   border: ${({ theme, color, flat, effect }) =>
     !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.05)}` : 0};
-  padding: ${({ size, compact, verticalPadding }) =>
-    `${verticalPadding ? PADDING_FROM_SIZE[verticalPadding] : PADDING_FROM_SIZE[size]}px ${
-      compact ? PADDING_FROM_SIZE[size] / 2 : PADDING_FROM_SIZE[size]
+  padding: ${({ size, compact, verticalPadding = 'normal' }) =>
+    `${
+      CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +
+      CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding]
+    }px ${
+      compact
+        ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
+        : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
     }px`};
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
   outline-offset: -2px;
 
-  min-height: ${({ size }) => SIZE_TO_PX[size]}px;
+  min-height: ${({ size, verticalPadding = 'normal' }) =>
+    SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
   min-width: ${({ size }) => SIZE_TO_PX[size]}px;
   max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
 
   ${({ wrap, description }) =>
     !wrap && !description
       ? css`
-          max-height: ${({ size, verticalPadding }) =>
-            SIZE_TO_PX[size] + (verticalPadding ? PADDING_FROM_SIZE[verticalPadding] * 2 : 0)}px;
+          max-height: ${({ size, verticalPadding = 'normal' }) =>
+            SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
         `
       : null}
 
@@ -234,7 +244,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
               background-color: ${({ theme, color, minimal, transparent }: IReqoreButtonStyle) =>
                 minimal || transparent
                   ? rgba(
-                      changeLightness(getButtonMainColor(theme, color, effect), 0.05),
+                      changeLightness(getButtonMainColor(theme, color, effect), 0.1),
                       transparent ? 0.2 : 0.4
                     )
                   : changeLightness(getButtonMainColor(theme, color), 0.05)};
@@ -338,78 +348,81 @@ export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
   wrap?: boolean;
   wrapGroup?: boolean;
   compact?: boolean;
+  active?: boolean;
 }
 
-export const ButtonBadge = memo(({ wrapGroup, compact, ...props }: IReqoreButtonBadgeProps) => {
-  const renderTag = useCallback(
-    ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
-      <ReqoreTag
-        key={key}
-        size={getOneLessSize(size)}
-        asBadge
-        color={color}
-        customTheme={theme}
-        className='reqore-button-badge'
-        labelAlign='center'
-        minimal={!(content as IReqoreTagProps)?.effect?.gradient}
-        {...(typeof content === 'string' || typeof content === 'number'
-          ? { label: content }
-          : (content as IReqoreTagProps))}
-      />
-    ),
-    [props]
-  );
+export const ButtonBadge = memo(
+  ({ wrapGroup, compact, active, ...props }: IReqoreButtonBadgeProps) => {
+    const renderTag = useCallback(
+      ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
+        <ReqoreTag
+          key={key}
+          size={getOneLessSize(size)}
+          asBadge
+          color={color}
+          customTheme={theme}
+          className='reqore-button-badge'
+          labelAlign='center'
+          minimal={!active && !(content as IReqoreTagProps)?.effect?.gradient}
+          {...(typeof content === 'string' || typeof content === 'number'
+            ? { label: content }
+            : (content as IReqoreTagProps))}
+        />
+      ),
+      [props]
+    );
 
-  const content = Array.isArray(props.content) ? props.content : [props.content];
+    const content = Array.isArray(props.content) ? props.content : [props.content];
 
-  const leftBadges = content.filter(
-    (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
-  );
-  const rightBadges = content.filter(
-    (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
-  );
-  const middleBadges = content.filter(
-    (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
-  );
+    const leftBadges = content.filter(
+      (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
+    );
+    const rightBadges = content.filter(
+      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
+    );
+    const middleBadges = content.filter(
+      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
+    );
 
-  const buildContent = (badge: TReqoreBadge) => {
-    if (typeof badge === 'string' || typeof badge === 'number') {
-      return { label: badge, align: undefined };
-    }
+    const buildContent = (badge: TReqoreBadge) => {
+      if (typeof badge === 'string' || typeof badge === 'number') {
+        return { label: badge, align: undefined };
+      }
 
-    return { ...badge, align: undefined };
-  };
+      return { ...badge, align: undefined };
+    };
 
-  return (
-    <>
-      <ReqoreSpacer
-        width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
-        height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
-      />
-      {size(leftBadges) ? (
-        <ReqoreTagGroup wrap={wrapGroup} align='left'>
-          {leftBadges.map((badge, index) =>
-            renderTag({ ...props, content: buildContent(badge), key: index })
-          )}
-        </ReqoreTagGroup>
-      ) : null}
-      {size(middleBadges) ? (
-        <ReqoreTagGroup wrap={wrapGroup} fluid align='center'>
-          {middleBadges.map((badge, index) =>
-            renderTag({ ...props, content: buildContent(badge), key: index })
-          )}
-        </ReqoreTagGroup>
-      ) : null}
-      {size(rightBadges) ? (
-        <ReqoreTagGroup wrap={wrapGroup} align='right'>
-          {rightBadges.map((badge, index) =>
-            renderTag({ ...props, content: buildContent(badge), key: index })
-          )}
-        </ReqoreTagGroup>
-      ) : null}
-    </>
-  );
-});
+    return (
+      <>
+        <ReqoreSpacer
+          width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
+          height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
+        />
+        {size(leftBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} align='left'>
+            {leftBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
+        {size(middleBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} fluid align='center'>
+            {middleBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
+        {size(rightBadges) ? (
+          <ReqoreTagGroup wrap={wrapGroup} align='right'>
+            {rightBadges.map((badge, index) =>
+              renderTag({ ...props, content: buildContent(badge), key: index })
+            )}
+          </ReqoreTagGroup>
+        ) : null}
+      </>
+    );
+  }
+);
 
 const ReqoreButton = memo(
   forwardRef<HTMLButtonElement, IReqoreButtonProps>(
@@ -466,7 +479,7 @@ const ReqoreButton = memo(
       // If color or intent was specified, set the color
       const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
       const _flat = minimal ? flat : flat === true;
-      const _compact = compact ?? theme.buttons?.compact;
+
       const color: TReqoreHexColor = customColor
         ? minimal
           ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
@@ -474,6 +487,7 @@ const ReqoreButton = memo(
         : getReadableColor(theme, undefined, undefined, true);
 
       const _children = useMemo(() => label || children, [label, children]);
+      const _compact = compact ?? theme.buttons?.compact ?? !children;
       const hasLeftIcon = icon || leftIconProps?.image;
       const hasRightIcon = rightIcon || rightIconProps?.image;
 
@@ -531,7 +545,10 @@ const ReqoreButton = memo(
                 <ReqoreIcon
                   size={size}
                   color={leftIconColor || iconColor}
-                  compact={_compact}
+                  compact
+                  effect={{
+                    opacity: CONTROL_ICON_OPACITY,
+                  }}
                   {...leftIconProps}
                   style={
                     textAlign !== 'left' || iconsAlign === 'center' || !_children
@@ -550,7 +567,7 @@ const ReqoreButton = memo(
                   icon={leftIcon}
                 />
                 {_children || hasRightIcon ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (_compact ? 2 : 1)} />
+                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} />
                 ) : null}
               </>
             ) : _children ? (
@@ -603,7 +620,7 @@ const ReqoreButton = memo(
                   </StyledInvisibleContent>
                 )}
                 {(badge || badge === 0) && wrap ? (
-                  <ButtonBadge content={badge} size={size} theme={theme} wrap />
+                  <ButtonBadge content={badge} size={size} wrap active={active} />
                 ) : null}
               </StyledAnimatedTextWrapper>
             )}
@@ -611,10 +628,10 @@ const ReqoreButton = memo(
               <ButtonBadge
                 content={badge}
                 size={size}
-                theme={theme}
                 compact={_compact}
                 wrapGroup={false}
                 wrap={false}
+                active={active}
               />
             ) : null}
             {!hasRightIcon ? (
@@ -630,14 +647,14 @@ const ReqoreButton = memo(
               ) : null
             ) : (
               <>
-                {_children || badge ? (
-                  <ReqoreSpacer width={PADDING_FROM_SIZE[size] / (_compact ? 2 : 1)} />
-                ) : null}
+                {_children || badge ? <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} /> : null}
                 <ReqoreIcon
                   icon={rightIcon}
                   size={size}
                   color={rightIconColor || iconColor}
-                  compact={_compact}
+                  effect={{
+                    opacity: CONTROL_ICON_OPACITY,
+                  }}
                   {...rightIconProps}
                   style={
                     textAlign !== 'right' || iconsAlign === 'center'

@@ -11,3 +11,5 @@ export const Colors: Record<string, TReqoreHexColor> = {
   RED: '#A82A2A',
   GRAY: '#44444450',
 };
+
+export const CONTROL_ICON_OPACITY = 0.7;

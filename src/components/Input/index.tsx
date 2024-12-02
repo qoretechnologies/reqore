@@ -2,6 +2,7 @@ import { omit } from 'lodash';
 import { rgba } from 'polished';
 import React, { forwardRef, useState } from 'react';
 import styled, { css } from 'styled-components';
+import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
@@ -257,6 +258,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             <ReqoreIcon
               size={size}
               color={iconColor}
+              effect={{ opacity: CONTROL_ICON_OPACITY }}
               {...leftIconProps}
               icon={leftIcon}
               animation={loading ? 'spin' : leftIconProps?.animation}
@@ -303,7 +305,13 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         />
         {hasRightIcon && (
           <StyledIconWrapper _size={size} position='right'>
-            <ReqoreIcon size={size} icon={rightIcon} color={rightIconColor} {...rightIconProps} />
+            <ReqoreIcon
+              size={size}
+              icon={rightIcon}
+              color={rightIconColor}
+              effect={{ opacity: CONTROL_ICON_OPACITY }}
+              {...rightIconProps}
+            />
           </StyledIconWrapper>
         )}
       </StyledInputWrapper>

@@ -5,6 +5,7 @@ import { Resizable, ResizableProps } from 're-resizable';
 import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
+import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   GAP_FROM_SIZE,
   HEADER_SIZE_TO_NUMBER,
@@ -46,7 +47,6 @@ import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
-import { StyledHeader } from '../Header';
 import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
@@ -154,23 +154,15 @@ export const StyledPanelTitleHeaderContent = styled.div`
   align-items: center;
   flex: 0 1 auto;
   overflow: hidden;
-  min-width: ${({ iconSize, hasLabel, hasIcon }) => {
+  min-width: ${({ iconSize, hasIcon }) => {
     let width = 0;
 
     if (hasIcon) {
       width += iconSize;
     }
 
-    if (hasLabel) {
-      width += 50;
-    }
-
     return width;
   }}px;
-
-  ${StyledHeader} {
-    min-width: 50px;
-  }
 `;
 
 export type TPanelStyle = React.FC<
@@ -760,6 +752,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         tooltip={{
                           content: label,
                         }}
+                        effect={{
+                          opacity: CONTROL_ICON_OPACITY,
+                        }}
                         {...iconProps}
                         animation={loading ? 'spin' : iconProps?.animation}
                         icon={
@@ -786,7 +781,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 ) : null}
                 {badge || badge === 0 ? (
                   <ButtonBadge
-                    color={changeLightness(theme.main, 0.18)}
                     size={getOneHigherSize(panelSize)}
                     content={badge}
                     wrapGroup={isSmall}
