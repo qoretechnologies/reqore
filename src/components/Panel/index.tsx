@@ -184,7 +184,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
       ? undefined
       : `1px solid ${changeLightness(
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-          0.2
+          0.08
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
@@ -274,7 +274,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   align-items: center;
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat && opacity
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
+      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
       : null};
   transition: background-color 0.2s ease-out;
   overflow: hidden;
@@ -315,7 +315,7 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.2), opacity)}`
+      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
       : null};
 `;
 

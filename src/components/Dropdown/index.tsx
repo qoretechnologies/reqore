@@ -47,7 +47,7 @@ const ReqoreDropdownListWrapper = memo(
     ...rest
   }: IReqoreDropdownListProps & { wrapperProps?: IReqoreDropdownProps['wrapperProps'] }) => {
     return (
-      <ReqorePanel flat size='small' {...wrapperProps}>
+      <ReqorePanel size='small' {...wrapperProps}>
         <ReqoreDropdownList {...rest} />
       </ReqorePanel>
     );

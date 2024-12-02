@@ -153,7 +153,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   overflow: hidden;
   vertical-align: middle;
   border: ${({ theme, color, flat, effect }) =>
-    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.05)}` : 0};
+    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)}` : 0};
   padding: ${({ size, compact, verticalPadding = 'normal' }) =>
     `${
       CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +

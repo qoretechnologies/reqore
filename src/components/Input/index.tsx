@@ -143,9 +143,9 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   border-radius: inherit;
 
   border: ${({ minimal, theme, flat }) =>
-    !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.2)}` : 0};
+    !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.13)}` : 0};
   border-bottom: ${({ minimal, theme, flat }) =>
-    minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.2)}` : undefined};
+    minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.13)}` : undefined};
 
   ${({ disabled, readOnly }) =>
     !disabled && !readOnly

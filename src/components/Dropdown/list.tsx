@@ -198,6 +198,7 @@ const ReqoreDropdownList = memo(
               maxHeight={height || '300px'}
               padded={false}
               ref={setMenuRef}
+              transparent
             >
               {applyPaging(filteredItems).map(
                 (
