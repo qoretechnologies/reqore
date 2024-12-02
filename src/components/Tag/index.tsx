@@ -356,7 +356,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
 
     // If color or intent was specified, set the color
     const getCustomColor = (itemIntent?: TReqoreIntent): TReqoreHexColor => {
-      let customColor: TReqoreHexColor = itemIntent
+      const customColor: TReqoreHexColor = itemIntent
         ? theme.intents[itemIntent]
         : getColorFromMaybeString(theme, color);
 
