@@ -96,6 +96,8 @@ const ReqoreMenuItem = memo(
         <ReqoreControlGroup stack={!!onRightIconClick} fluid fill responsive={false}>
           <ReqoreButton
             as={as}
+            transparent={!rest.effect}
+            verticalPadding='small'
             {...rest}
             flat={flat}
             className={`${rest.className || ''} reqore-menu-item`}

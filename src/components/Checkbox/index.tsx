@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components';
 import {
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
-  SIZE_TO_PX,
+  TAG_SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -72,12 +72,12 @@ const StyledSwitchToggle = styled.div`
   align-items: center;
   justify-content: center;
   position: absolute;
-  height: ${({ size }) => SIZE_TO_PX[size] - 4}px;
-  width: ${({ size, width }) => width || SIZE_TO_PX[size] - 4}px;
+  height: ${({ size }) => TAG_SIZE_TO_PX[size] - 4}px;
+  width: ${({ size, width }) => width || TAG_SIZE_TO_PX[size] - 4}px;
   top: 50%;
   transform: translateY(-50%);
   left: ${({ checked, size, width }) =>
-    !checked ? '1px' : `calc(100% - ${width || SIZE_TO_PX[size] - 4}px - 1px)`};
+    !checked ? '1px' : `calc(100% - ${width || TAG_SIZE_TO_PX[size] - 4}px - 1px)`};
   border-radius: 50px;
   background-color: ${({ theme, checked, transparent, parentEffect }) =>
     transparent
@@ -99,8 +99,8 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   justify-content: center;
   flex-shrink: 0;
 
-  height: ${({ size }) => SIZE_TO_PX[size]}px;
-  min-width: ${({ size }) => SIZE_TO_PX[size] * 1.8}px;
+  height: ${({ size }) => TAG_SIZE_TO_PX[size]}px;
+  min-width: ${({ size }) => TAG_SIZE_TO_PX[size] * 1.8}px;
 
   border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.35 : 0.2)};
   border-radius: 50px;
@@ -145,7 +145,7 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   padding: 0px;
   transition: all 0.2s ease-out;
 
-  height: ${({ size }) => SIZE_TO_PX[size]}px;
+  height: ${({ size }) => TAG_SIZE_TO_PX[size]}px;
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
 
   max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};

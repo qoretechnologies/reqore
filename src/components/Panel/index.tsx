@@ -5,6 +5,7 @@ import { Resizable, ResizableProps } from 're-resizable';
 import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
+import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   GAP_FROM_SIZE,
   HEADER_SIZE_TO_NUMBER,
@@ -759,6 +760,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         color={iconColor}
                         tooltip={{
                           content: label,
+                        }}
+                        effect={{
+                          opacity: CONTROL_ICON_OPACITY,
                         }}
                         {...iconProps}
                         animation={loading ? 'spin' : iconProps?.animation}

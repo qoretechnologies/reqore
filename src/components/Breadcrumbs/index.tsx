@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqoreDropdown } from '../..';
+import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import { ICON_FROM_SIZE, MARGIN_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
@@ -188,7 +189,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             badge={count(itemOrItems)}
             items={itemOrItems as IReqoreDropdownItem[]}
           >
-            <ReqoreIcon icon='MoreLine' />
+            <ReqoreIcon
+              icon='MoreLine'
+              effect={{
+                opacity: CONTROL_ICON_OPACITY,
+              }}
+            />
           </ReqoreDropdown>
         </React.Fragment>
       );

@@ -54,17 +54,17 @@ export const HEADER_SIZE_TO_NUMBER = {
 };
 
 export const SIZE_TO_PX = {
-  tiny: 24,
-  small: 30,
-  normal: 36,
-  big: 46,
-  huge: 56,
+  tiny: 26,
+  small: 32,
+  normal: 38,
+  big: 48,
+  huge: 58,
 };
 
 export const TAG_SIZE_TO_PX = {
-  tiny: 20,
-  small: 26,
-  normal: 32,
+  tiny: 14,
+  small: 20,
+  normal: 26,
   big: 42,
   huge: 52,
 };
@@ -118,19 +118,19 @@ export const TEXT_FROM_SIZE = {
 };
 
 export const CONTROL_TEXT_FROM_SIZE = {
-  tiny: 8,
-  small: 11,
+  tiny: 9,
+  small: 12,
   normal: 14,
   big: 17,
   huge: 20,
 };
 
 export const TAG_TEXT_FROM_SIZE = {
-  tiny: 6,
-  small: 9,
-  normal: 12,
-  big: 15,
-  huge: 18,
+  tiny: 8,
+  small: 11,
+  normal: 14,
+  big: 17,
+  huge: 19,
 };
 
 export const TAG_ICON_FROM_SIZE = {
@@ -150,8 +150,8 @@ export const ICON_FROM_SIZE = {
 };
 
 export const HALF_PADDING_FROM_SIZE = {
-  tiny: 1,
-  small: 2.5,
+  tiny: 2,
+  small: 3,
   normal: 4,
   big: 5.5,
   huge: 7,
@@ -165,20 +165,52 @@ export const PADDING_FROM_SIZE = {
   huge: 14,
 };
 
+export const TEXTAREA_PADDING_FROM_SIZE = {
+  tiny: 2,
+  small: 5.5,
+  normal: 6,
+  big: 9,
+  huge: 12,
+};
+
+export const CONTROL_HORIZONTAL_PADDING_FROM_SIZE = {
+  tiny: 9,
+  small: 12,
+  normal: 14,
+  big: 17,
+  huge: 21,
+};
+
+export const CONTROL_VERTICAL_PADDING_FROM_SIZE = {
+  tiny: 6,
+  small: 8,
+  normal: 10,
+  big: 13,
+  huge: 16,
+};
+
+export const CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE = {
+  tiny: -4,
+  small: -2,
+  normal: 0,
+  big: 3,
+  huge: 6,
+};
+
 export const RADIUS_FROM_SIZE = {
-  tiny: 4,
-  small: 5,
-  normal: 5.5,
-  big: 7,
-  huge: 9,
+  tiny: 2,
+  small: 3,
+  normal: 4.5,
+  big: 6,
+  huge: 8,
 };
 
 export const TAG_RADIUS_FROM_SIZE = {
-  tiny: 4,
-  small: 6,
-  normal: 8,
-  big: 10,
-  huge: 12,
+  tiny: 2,
+  small: 3,
+  normal: 5,
+  big: 7,
+  huge: 9,
 };
 
 export const GAP_FROM_SIZE = {
