@@ -53,6 +53,14 @@ export const HEADER_SIZE_TO_NUMBER = {
   huge: 1,
 };
 
+export const SWITCH_SIZE_TO_PX = {
+  tiny: 20,
+  small: 26,
+  normal: 32,
+  big: 38,
+  huge: 48,
+};
+
 export const SIZE_TO_PX = {
   tiny: 26,
   small: 32,
