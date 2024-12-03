@@ -378,7 +378,6 @@ ${({ effect }: IReqoreTextEffectProps) =>
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
-          min-width: 30px;
         `
       : undefined}
 
