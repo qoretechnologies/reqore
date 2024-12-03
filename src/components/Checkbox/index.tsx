@@ -9,7 +9,7 @@ import {
   SWITCH_SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
   getNthGradientColor,
@@ -52,7 +52,9 @@ export interface IReqoreCheckboxProps
   tooltip?: TReqoreTooltipProp;
   asSwitch?: boolean;
   uncheckedIcon?: IReqoreIconName;
+  uncheckedIntent?: TReqoreIntent;
   checkedIcon?: IReqoreIconName;
+  checkedIntent?: TReqoreIntent;
   image?: string;
   onText?: string | number;
   offText?: string | number;
@@ -194,6 +196,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       asSwitch,
       uncheckedIcon,
       checkedIcon,
+      uncheckedIntent,
+      checkedIntent,
       readOnly,
       labelEffect,
       switchTextEffect,
@@ -212,7 +216,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
     const [offRef, { width: offWidth }] = useMeasure();
     const [onRef, { width: onWidth }] = useMeasure();
-    const theme = useReqoreTheme('main', customTheme, intent);
+    const _intent = checked ? checkedIntent || intent : uncheckedIntent || intent;
+    const theme = useReqoreTheme('main', customTheme, _intent);
 
     useTooltip(itemRef, tooltip);
 
@@ -367,7 +372,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
             }
             image={image}
             effect={{ grayscale: image ? !checked : undefined, opacity: checked ? 1 : 0.5 }}
-            color={intent ? changeLightness(theme.main, 0.2) : undefined}
+            color={_intent ? theme.main : undefined}
           />
         )}
         {label && labelPosition === 'right' ? (

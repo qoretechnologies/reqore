@@ -256,20 +256,23 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
                       : saturate(1, tint(0.9, finalColor))
                     : getReadableColorFrom(finalColor);
                 }}
-                ${animate &&
-                css`
-                  ${StyledActiveContent} {
-                    transform: translateY(0px);
-                    filter: blur(0);
-                    opacity: 1;
-                  }
+                ${animate
+                  ? css`
+                      cursor: pointer;
 
-                  ${StyledInActiveContent} {
-                    transform: translateY(150%);
-                    filter: blur(10px);
-                    opacity: 0;
-                  }
-                `};
+                      ${StyledInActiveContent} {
+                        transform: translateY(150%);
+                        filter: blur(10px);
+                        opacity: 0;
+                      }
+
+                      ${StyledActiveContent} {
+                        transform: translateY(0px);
+                        filter: blur(0);
+                        opacity: 1;
+                      }
+                    `
+                  : undefined};
             }
           }
         `
@@ -596,7 +599,7 @@ const ReqoreButton = memo(
                   <StyledActiveContent
                     wrap={wrap}
                     effect={labelEffect}
-                    className='reqore-button-text-content reqore-animated'
+                    className='reqore-button-text-content reqore-animated reqore-active'
                   >
                     {_children}
                   </StyledActiveContent>
@@ -605,7 +608,7 @@ const ReqoreButton = memo(
                   <StyledInActiveContent
                     wrap={wrap}
                     effect={labelEffect}
-                    className='reqore-button-text-content reqore-animated'
+                    className='reqore-button-text-content reqore-animated reqore-inactive'
                   >
                     {_children}
                   </StyledInActiveContent>
@@ -614,7 +617,7 @@ const ReqoreButton = memo(
                   <StyledInvisibleContent
                     wrap={wrap}
                     effect={labelEffect}
-                    className='reqore-button-text-content reqore-animated'
+                    className='reqore-button-text-content reqore-animated reqore-invisible'
                   >
                     {_children}
                   </StyledInvisibleContent>

@@ -18,6 +18,12 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
         <ReqoreCheckbox {...args} />
         <ReqoreCheckbox {...args} label='Label' labelDetail='Detail' labelDetailPosition='left' />
         <ReqoreCheckbox {...args} checked tooltip='I am checked' />
+        <ReqoreCheckbox
+          {...args}
+          checked
+          tooltip='I am checked with intent'
+          checkedIntent='danger'
+        />
         <ReqoreCheckbox {...args} disabled />
         <ReqoreCheckbox {...args} label='Label' labelDetail='Detail' labelPosition='left' />
         <ReqoreCheckbox {...args} label='Read Only' labelPosition='left' readOnly />

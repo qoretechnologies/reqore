@@ -25,7 +25,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const Template: StoryFn<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) => {
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState('checkedIntent');
 
   return (
     <ReqoreRadioGroup
@@ -70,6 +70,12 @@ const Template: StoryFn<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps)
           label: 'Warning option',
           value: 'warning',
           intent: 'warning',
+        },
+
+        {
+          label: 'Intent only when checked',
+          value: 'checkedIntent',
+          checkedIntent: 'info',
         },
 
         {

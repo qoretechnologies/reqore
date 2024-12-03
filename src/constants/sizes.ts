@@ -78,7 +78,7 @@ export const TAG_SIZE_TO_PX = {
 };
 
 export const BADGE_SIZE_TO_PX = {
-  tiny: 14,
+  tiny: 17,
   small: 20,
   normal: 26,
   big: 32,
@@ -142,16 +142,16 @@ export const CONTROL_TEXT_FROM_SIZE = {
 };
 
 export const TAG_TEXT_FROM_SIZE = {
-  tiny: 8,
-  small: 11,
-  normal: 13,
-  big: 16,
-  huge: 19,
+  tiny: 10,
+  small: 13,
+  normal: 15,
+  big: 18,
+  huge: 21,
 };
 
 export const TAG_ICON_FROM_SIZE = {
-  tiny: 10,
-  small: 13,
+  tiny: 12,
+  small: 14,
   normal: 16,
   big: 19,
   huge: 22,

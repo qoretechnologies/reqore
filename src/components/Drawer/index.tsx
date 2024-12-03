@@ -286,7 +286,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = ({
                   display: 'flex',
                   position: 'fixed',
                   overflow: hidable ? undefined : 'hidden',
-                  transformOrigin: 'top left',
+                  transformOrigin: 'center center',
                   backfaceVisibility: 'hidden',
                   ...positions,
                   ...styles,
