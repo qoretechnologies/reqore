@@ -5,7 +5,8 @@ import styled, { css } from 'styled-components';
 import {
   CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
-  TAG_SIZE_TO_PX,
+  SIZE_TO_PX,
+  SWITCH_SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -72,12 +73,12 @@ const StyledSwitchToggle = styled.div`
   align-items: center;
   justify-content: center;
   position: absolute;
-  height: ${({ size }) => TAG_SIZE_TO_PX[size] - 4}px;
-  width: ${({ size, width }) => width || TAG_SIZE_TO_PX[size] - 4}px;
+  height: ${({ size }) => SWITCH_SIZE_TO_PX[size] - 4}px;
+  width: ${({ size, width }) => width || SWITCH_SIZE_TO_PX[size] - 4}px;
   top: 50%;
   transform: translateY(-50%);
   left: ${({ checked, size, width }) =>
-    !checked ? '1px' : `calc(100% - ${width || TAG_SIZE_TO_PX[size] - 4}px - 1px)`};
+    !checked ? '1px' : `calc(100% - ${width || SWITCH_SIZE_TO_PX[size] - 4}px - 1px)`};
   border-radius: 50px;
   background-color: ${({ theme, checked, transparent, parentEffect }) =>
     transparent
@@ -99,8 +100,8 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   justify-content: center;
   flex-shrink: 0;
 
-  height: ${({ size }) => TAG_SIZE_TO_PX[size]}px;
-  min-width: ${({ size }) => TAG_SIZE_TO_PX[size] * 1.8}px;
+  height: ${({ size }) => SWITCH_SIZE_TO_PX[size]}px;
+  min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] * 1.8}px;
 
   border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.35 : 0.2)};
   border-radius: 50px;
@@ -124,6 +125,7 @@ const StyledSwitchTextWrapper = styled(StyledTextEffect)`
   align-items: center;
   justify-content: center;
   z-index: 1;
+  min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size]}px;
 `;
 
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
@@ -145,7 +147,7 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   padding: 0px;
   transition: all 0.2s ease-out;
 
-  height: ${({ size }) => TAG_SIZE_TO_PX[size]}px;
+  height: ${({ size }) => SIZE_TO_PX[size]}px;
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
 
   max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
@@ -215,7 +217,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     useTooltip(itemRef, tooltip);
 
     const width = useMemo(() => {
-      if ((!image && !onText) || !offText) return undefined;
+      if ((!image && !onText && onText !== 0) || (!offText && offText !== 0)) return undefined;
 
       const selectedWidth = checked ? onWidth : offWidth;
 
@@ -223,7 +225,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     }, [checked, offWidth, onWidth, size]);
 
     const hasText = useMemo(() => {
-      return !!onText || !!offText;
+      return !!(onText || offText || onText === 0 || offText === 0);
     }, [onText, offText]);
 
     return (
