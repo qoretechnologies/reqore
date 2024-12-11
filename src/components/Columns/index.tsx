@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { memo } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
 
@@ -32,10 +33,10 @@ export const StyledColumns = styled.div<IStyledColumns>`
   `}
 `;
 
-export const ReqoreColumns = ({ children, className, ...rest }: IReqoreColumnsProps) => {
+export const ReqoreColumns = memo(({ children, className, ...rest }: IReqoreColumnsProps) => {
   return (
     <StyledColumns {...rest} className={classNames('reqore-columns', className)}>
       {children}
     </StyledColumns>
   );
-};
+});

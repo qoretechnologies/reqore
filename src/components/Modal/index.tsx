@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 import shortid from 'shortid';
 import { useReqoreProperty } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
@@ -15,59 +15,60 @@ export interface IReqoreModalStyle extends IReqoreModalProps {
   zIndex?: number;
 }
 
-export const ReqoreModal = ({
-  width = '80vw',
-  height = 'fit-content',
-  ...rest
-}: IReqoreModalProps) => {
-  const id = useMemo(() => shortid.generate(), []);
-  const escClosableModals = useReqoreProperty('escClosableModals');
-  const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
-  const add = useReqoreProperty('addEscClosableModal');
-  const remove = useReqoreProperty('removeEscClosableModal');
+export const ReqoreModal = memo(
+  ({ width = '80vw', height = 'fit-content', ...rest }: IReqoreModalProps) => {
+    const id = useMemo(() => shortid.generate(), []);
+    const escClosableModals = useReqoreProperty('escClosableModals');
+    const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
+    const add = useReqoreProperty('addEscClosableModal');
+    const remove = useReqoreProperty('removeEscClosableModal');
 
-  const isEscClosable =
-    rest.isOpen &&
-    rest.onClose &&
-    !rest.disabled &&
-    (rest.closeOnEscPress ?? closeModalsOnEscPress);
+    const isEscClosable =
+      rest.isOpen &&
+      rest.onClose &&
+      !rest.disabled &&
+      (rest.closeOnEscPress ?? closeModalsOnEscPress);
 
-  // Close last popover when ESC is pressed
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      remove(id, rest.onClose);
-    }
-  };
+    // Close last popover when ESC is pressed
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          remove(id, rest.onClose);
+        }
+      },
+      [id, rest.onClose, remove]
+    );
 
-  useEffect(() => {
-    if (isEscClosable) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
+    useEffect(() => {
+      if (isEscClosable) {
+        document.addEventListener('keydown', handleKeyDown);
+      }
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [escClosableModals, isEscClosable]);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }, [escClosableModals, isEscClosable]);
 
-  useEffect(() => {
-    if (rest.isOpen) {
-      add(id);
-    }
+    useEffect(() => {
+      if (rest.isOpen) {
+        add(id);
+      }
 
-    return () => {
-      remove(id);
-    };
-  }, [id, rest.isOpen]);
+      return () => {
+        remove(id);
+      };
+    }, [id, rest.isOpen]);
 
-  return (
-    <ReqoreDrawer
-      closeOnEscPress={closeModalsOnEscPress}
-      {...rest}
-      width={width}
-      height={height}
-      position='left'
-      _isModal
-      className={`${rest.className || ''} reqore-modal`}
-    />
-  );
-};
+    return (
+      <ReqoreDrawer
+        closeOnEscPress={closeModalsOnEscPress}
+        {...rest}
+        width={width}
+        height={height}
+        position='left'
+        _isModal
+        className={`${rest.className || ''} reqore-modal`}
+      />
+    );
+  }
+);
