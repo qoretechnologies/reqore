@@ -1,6 +1,6 @@
 import { animated, useTransition } from '@react-spring/web';
 import { Resizable } from 're-resizable';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
@@ -247,6 +247,96 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       };
     }, [_isModal, position, layout, floating]);
 
+    const closeButtonProps = useMemo(
+      () => ({
+        className: 'reqore-drawer-close-button',
+        ...(rest.closeButtonProps || {}),
+      }),
+      [rest.closeButtonProps]
+    );
+
+    const panelStyle = useMemo(
+      () => ({
+        width: '100%',
+        maxHeight: '100%',
+        ...rest.style,
+      }),
+      [JSON.stringify(rest.style)]
+    );
+
+    const resizeableStyle = useMemo(
+      () =>
+        ({
+          zIndex: wrapperZIndex,
+          display: 'flex',
+          position: 'fixed',
+          overflow: hidable ? undefined : 'hidden',
+          transformOrigin: 'center center',
+          backfaceVisibility: 'hidden',
+          ...positions,
+        } as any),
+      [wrapperZIndex, hidable, positions]
+    );
+
+    const handleWrapperStyle = useMemo(
+      () => ({
+        zIndex: wrapperZIndex + 1,
+      }),
+      [wrapperZIndex]
+    );
+
+    const sizeObject = useMemo(
+      () => ({
+        width: _isModal
+          ? _size.width
+          : layout === 'vertical'
+          ? _isHidden
+            ? 0
+            : _size.width
+          : 'auto',
+        height: _isModal
+          ? _size.height
+          : layout === 'horizontal'
+          ? _isHidden
+            ? 0
+            : _size.height
+          : 'auto',
+      }),
+      [_isModal, layout, _isHidden, _size]
+    );
+
+    const onHideToggleClick = useCallback(() => {
+      setIsHidden(!_isHidden);
+      onHideToggle?.(!_isHidden);
+    }, [_isHidden, onHideToggle]);
+
+    const handleResize = useCallback(
+      (_, _direction, component: HTMLElement) => {
+        if (resizable) {
+          setSize({
+            width: component.style.width,
+            height: component.style.height,
+          });
+        }
+      },
+
+      [resizable]
+    );
+
+    const enable = useMemo(
+      () => ({
+        top: (resizable && position === 'bottom') || _isModal ? true : false,
+        right: (resizable && position === 'left') || _isModal ? true : false,
+        left: (resizable && position === 'right') || _isModal ? true : false,
+        bottom: (resizable && position === 'top') || _isModal ? true : false,
+        bottomLeft: _isModal,
+        bottomRight: _isModal,
+        topLeft: _isModal,
+        topRight: _isModal,
+      }),
+      [resizable, position, _isModal]
+    );
+
     return createPortal(
       transitions((styles: any, item) =>
         item ? (
@@ -287,57 +377,14 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     : undefined
                 }
                 as={StyledDrawerResizable}
-                style={
-                  {
-                    zIndex: wrapperZIndex,
-                    display: 'flex',
-                    position: 'fixed',
-                    overflow: hidable ? undefined : 'hidden',
-                    transformOrigin: 'center center',
-                    backfaceVisibility: 'hidden',
-                    ...positions,
-                    ...styles,
-                  } as any
-                }
-                handleWrapperStyle={{
-                  zIndex: wrapperZIndex + 1,
+                style={{
+                  ...resizeableStyle,
+                  ...styles,
                 }}
-                size={{
-                  width: _isModal
-                    ? _size.width
-                    : layout === 'vertical'
-                    ? _isHidden
-                      ? 0
-                      : _size.width
-                    : 'auto',
-                  height: _isModal
-                    ? _size.height
-                    : layout === 'horizontal'
-                    ? _isHidden
-                      ? 0
-                      : _size.height
-                    : 'auto',
-                }}
-                onResize={
-                  resizable
-                    ? (_, _direction, component: HTMLElement) => {
-                        setSize({
-                          width: component.style.width,
-                          height: component.style.height,
-                        });
-                      }
-                    : undefined
-                }
-                enable={{
-                  top: (resizable && position === 'bottom') || _isModal ? true : false,
-                  right: (resizable && position === 'left') || _isModal ? true : false,
-                  left: (resizable && position === 'right') || _isModal ? true : false,
-                  bottom: (resizable && position === 'top') || _isModal ? true : false,
-                  bottomLeft: _isModal,
-                  bottomRight: _isModal,
-                  topLeft: _isModal,
-                  topRight: _isModal,
-                }}
+                handleWrapperStyle={handleWrapperStyle}
+                size={sizeObject}
+                onResize={handleResize}
+                enable={enable}
               >
                 {_isHidden && hidable ? (
                   <StyledCloseWrapper
@@ -351,10 +398,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                       customTheme={theme}
                       className='reqore-drawer-control reqore-drawer-hide-button'
                       icon={getHideShowIcon(position, _isHidden)}
-                      onClick={() => {
-                        setIsHidden(!_isHidden);
-                        onHideToggle?.(!_isHidden);
-                      }}
+                      onClick={onHideToggleClick}
                     />
                   </StyledCloseWrapper>
                 ) : null}
@@ -370,16 +414,9 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     rounded={floating || _isModal ? true : false}
                     flat={flat}
                     onClose={onClose}
-                    closeButtonProps={{
-                      className: 'reqore-drawer-close-button',
-                      ...(rest.closeButtonProps || {}),
-                    }}
+                    closeButtonProps={closeButtonProps}
                     className={`reqore-drawer`}
-                    style={{
-                      width: '100%',
-                      maxHeight: '100%',
-                      ...rest.style,
-                    }}
+                    style={panelStyle}
                   >
                     {children}
                   </ReqorePanel>

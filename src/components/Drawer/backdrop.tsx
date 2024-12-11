@@ -1,6 +1,6 @@
 import { animated } from '@react-spring/web';
 import { rgba } from 'polished';
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { IReqoreDrawerStyle } from '.';
 import { useReqoreProperty } from '../..';
@@ -32,22 +32,33 @@ export const ReqoreBackdrop = memo(
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const finalZIndex = useMemo(() => zIndex || getAndIncreaseZIndex(), [zIndex]);
 
+    const handleClick = useCallback(
+      (event) => {
+        event.stopPropagation();
+        // Only close if the click is on the backdrop itself
+        if (event.target === event.currentTarget) {
+          onClose?.();
+        }
+      },
+      [onClose]
+    );
+
+    const style = useMemo(
+      () => ({
+        opacity,
+      }),
+      [opacity]
+    );
+
     return (
       <StyledBackdrop
         {...rest}
         className={`${rest.className || ''} reqore-drawer-backdrop`}
-        onClick={(event) => {
-          // Only close if the click is on the backdrop itself
-          if (event.target === event.currentTarget) {
-            onClose?.();
-          }
-        }}
+        onClick={handleClick}
         closable={!!onClose}
         zIndex={finalZIndex}
         blur={blur}
-        style={{
-          opacity,
-        }}
+        style={style}
       />
     );
   }

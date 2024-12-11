@@ -4,9 +4,9 @@ import { HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import { IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
 import { StyledTextEffect } from '../Effect';
+import { useTooltip } from '../../hooks/useTooltip';
 
 export interface IReqoreHeadingProps
   extends IWithReqoreEffect,
