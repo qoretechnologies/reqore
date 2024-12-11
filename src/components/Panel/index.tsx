@@ -27,7 +27,6 @@ import { getOneHigherSize, isActionShown } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import { ACTIVE_ICON_SCALE, DisabledElement, INACTIVE_ICON_SCALE } from '../../styles';
 import {
   IReqoreIntent,
@@ -408,8 +407,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
     const [measureRef, { width }] = useMeasure();
 
-    useTooltip(itemRef, tooltip);
-
     useUpdateEffect(() => {
       setIsCollapsed(!!isCollapsed);
     }, [isCollapsed]);
@@ -680,6 +677,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       return show;
     }, [isSmall, collapsible, actions, hasNonResponsiveActions]);
 
+    const iconTooltip = useMemo(
+      () => ({
+        content: label,
+      }),
+      [label]
+    );
+
     return (
       <StyledPanel
         {...omit(rest, ['onResize'])}
@@ -752,9 +756,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         image={loading ? undefined : iconImage}
                         margin='right'
                         color={iconColor}
-                        tooltip={{
-                          content: label,
-                        }}
+                        tooltip={iconTooltip}
                         effect={{
                           opacity: CONTROL_ICON_OPACITY,
                         }}
