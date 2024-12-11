@@ -218,6 +218,13 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
         </ReqoreButton>
         <ReqoreButton
           {...buttonProps}
+          minimal
+          description='This is a very interesting description for a button, I like it very much'
+        >
+          Minimal With Description
+        </ReqoreButton>
+        <ReqoreButton
+          {...buttonProps}
           description='This is a very interesting description for a button, I like it very much'
           icon={undefined}
           rightIcon={undefined}

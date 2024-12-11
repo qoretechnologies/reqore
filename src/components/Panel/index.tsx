@@ -524,7 +524,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       (
         action: IReqorePanelAction,
         index: number,
-        includeResponsive,
+        includeResponsive: boolean,
         align: 'flex-start' | 'center' | 'flex-end' = 'flex-end'
       ) => {
         if (
@@ -596,13 +596,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               fixed
               className={className}
               {...props}
-              // key={props.key || index}
-              // reactKey={props.key || index}
+              key={props.key || index}
               customTheme={props.customTheme || theme}
-              onClick={(e: React.MouseEvent<any>) => {
-                e.stopPropagation();
-                props?.onClick?.(e);
-              }}
+              onClick={
+                props.onClick
+                  ? (e: React.MouseEvent<any>) => {
+                      e.stopPropagation();
+                      props?.onClick?.(e);
+                    }
+                  : undefined
+              }
             />
           );
         }

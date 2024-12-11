@@ -133,6 +133,13 @@ const getButtonMainColor = (
   return theme.main;
 };
 
+const getButtonTextColor = ({ minimal, transparent, color, theme }) =>
+  minimal || transparent
+    ? isAchromatic(color)
+      ? getReadableColorFrom(theme.originalMain, true)
+      : saturate(1, tint(0.8, color))
+    : getReadableColorFrom(color, true);
+
 export const StyledAnimatedTextWrapper = styled.span`
   min-width: 5px;
   overflow: hidden;
@@ -208,11 +215,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   color: ${({ color, minimal, transparent, theme, effect }) => {
     const finalColor = getButtonMainColor(theme, color, effect);
 
-    return minimal || transparent
-      ? isAchromatic(finalColor)
-        ? getReadableColorFrom(theme.originalMain, true)
-        : saturate(1, tint(0.8, finalColor))
-      : getReadableColorFrom(finalColor, true);
+    return getButtonTextColor({ minimal, transparent, color: finalColor, theme });
   }};
 
   ${InactiveIconScale};
@@ -324,6 +327,8 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   .reqore-button-description {
     padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
+    color: ${({ theme, color, minimal, transparent }) =>
+      rgba(getButtonTextColor({ minimal, transparent, color, theme }), 0.7)};
   }
 `;
 
@@ -377,23 +382,39 @@ export const ButtonBadge = memo(
 
     const content = Array.isArray(props.content) ? props.content : [props.content];
 
-    const leftBadges = content.filter(
-      (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
-    );
-    const rightBadges = content.filter(
-      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
-    );
-    const middleBadges = content.filter(
-      (badge) => typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
+    const leftBadges = useMemo(
+      () =>
+        content.filter(
+          (badge) => typeof badge === 'string' || typeof badge === 'number' || !badge?.align
+        ),
+      [content]
     );
 
-    const buildContent = (badge: TReqoreBadge) => {
+    const rightBadges = useMemo(
+      () =>
+        content.filter(
+          (badge) =>
+            typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'right'
+        ),
+      [content]
+    );
+
+    const middleBadges = useMemo(
+      () =>
+        content.filter(
+          (badge) =>
+            typeof badge !== 'string' && typeof badge !== 'number' && badge?.align === 'center'
+        ),
+      [content]
+    );
+
+    const buildContent = useCallback((badge: TReqoreBadge) => {
       if (typeof badge === 'string' || typeof badge === 'number') {
         return { label: badge, align: undefined };
       }
 
       return { ...badge, align: undefined };
-    };
+    }, []);
 
     return (
       <>
@@ -480,14 +501,21 @@ const ReqoreButton = memo(
       useTooltip(buttonRef, tooltip);
 
       // If color or intent was specified, set the color
-      const customColor = intent ? theme.main : changeLightness(theme.main, 0.07);
+      const customColor = useMemo(
+        () => (intent ? theme.main : changeLightness(theme.main, 0.07)),
+        [intent, theme.main]
+      );
       const _flat = minimal ? flat : flat === true;
 
-      const color: TReqoreHexColor = customColor
-        ? minimal
-          ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
-          : getReadableColorFrom(customColor, true)
-        : getReadableColor(theme, undefined, undefined, true);
+      const color: TReqoreHexColor = useMemo(
+        () =>
+          customColor
+            ? minimal
+              ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
+              : getReadableColorFrom(customColor, true)
+            : getReadableColor(theme, undefined, undefined, true),
+        [customColor, minimal, JSON.stringify(theme)]
+      );
 
       const _children = useMemo(() => label || children, [label, children]);
       const _compact = compact ?? theme.buttons?.compact ?? !children;
@@ -684,7 +712,6 @@ const ReqoreButton = memo(
               effect={{
                 textSize: getOneLessSize(size),
                 weight: 'light',
-                color: `${color}90`,
                 textAlign,
                 ...descriptionEffect,
               }}
