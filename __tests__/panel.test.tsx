@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { ReqoreInput, ReqoreLayoutContent, ReqorePanel, ReqoreUIProvider } from '../src';
 
 test('Renders basic <Panel /> properly', () => {
@@ -201,24 +200,6 @@ test('Renders <Panel /> without title & bottom actions if all actions are not sh
   expect(document.querySelectorAll('.reqore-input').length).toBe(0);
   expect(document.querySelectorAll('.reqore-panel-title').length).toBe(0);
   expect(document.querySelectorAll('.reqore-panel-bottom-actions').length).toBe(0);
-});
-
-test('Tooltip on <Panel /> works', () => {
-  jest.useFakeTimers();
-
-  render(
-    <ReqoreUIProvider>
-      <ReqorePanel tooltip='Hello'>Hello</ReqorePanel>
-    </ReqoreUIProvider>
-  );
-
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
-
-  fireEvent.mouseEnter(document.querySelectorAll('.reqore-panel')[0]);
-
-  jest.advanceTimersByTime(1);
-
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
 
 test('Custom control props on <Panel />', () => {

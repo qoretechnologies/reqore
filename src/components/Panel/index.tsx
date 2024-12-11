@@ -370,7 +370,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       headerSize,
       contentSize,
       minimal,
-      tooltip,
       badge,
       iconColor,
       iconProps = {},
@@ -404,7 +403,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     const isMobile = useReqoreProperty('isMobile');
     const { targetRef } = useCombinedRefs(ref);
-    const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
     const [measureRef, { width }] = useMeasure();
 
     useUpdateEffect(() => {
@@ -697,7 +695,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           }
 
           targetRef.current = _ref;
-          setItemRef(_ref);
         }}
         isCollapsed={_isCollapsed}
         rounded={rounded}
