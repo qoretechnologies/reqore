@@ -506,17 +506,6 @@ const ReqoreButton = memo(
         [intent, theme.main]
       );
       const _flat = minimal ? flat : flat === true;
-
-      const color: TReqoreHexColor = useMemo(
-        () =>
-          customColor
-            ? minimal
-              ? getReadableColor(theme, undefined, undefined, true, theme.originalMain)
-              : getReadableColorFrom(customColor, true)
-            : getReadableColor(theme, undefined, undefined, true),
-        [customColor, minimal, JSON.stringify(theme)]
-      );
-
       const _children = useMemo(() => label || children, [label, children]);
       const _compact = compact ?? theme.buttons?.compact ?? !children;
       const hasLeftIcon = icon || leftIconProps?.image;
