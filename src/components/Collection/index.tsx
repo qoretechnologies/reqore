@@ -48,6 +48,7 @@ export interface IReqoreCollectionProps extends IReqorePanelProps, IReqoreColumn
   zoomable?: boolean;
 
   showAs?: 'list' | 'grid';
+  showLayoutSwitch?: boolean;
   showSelectedFirst?: boolean;
   selectedIcon?: IReqoreIconName;
   searchDelay?: number;
@@ -110,6 +111,7 @@ export const ReqoreCollection = memo(
     displayButtonProps,
     headerSize = 2,
     showAs = 'grid',
+    showLayoutSwitch = true,
     selectedIcon,
     flat = true,
     minimal,
@@ -229,7 +231,11 @@ export const ReqoreCollection = memo(
         responsive: false,
         icon: 'MoreLine',
         className: 'reqore-collection-more',
-        actions: [
+        actions: [],
+      };
+
+      if (showLayoutSwitch) {
+        toolbarGroup.actions = [
           {
             icon: _showAs === 'grid' ? 'ListUnordered' : 'GridLine',
             onClick: () => setShowAs(_showAs === 'grid' ? 'list' : 'grid'),
@@ -238,8 +244,8 @@ export const ReqoreCollection = memo(
             disabled: !size(filteredItems),
             ...displayButtonProps,
           },
-        ],
-      };
+        ];
+      }
 
       if (zoomable) {
         toolbarGroup.actions = [
@@ -310,7 +316,11 @@ export const ReqoreCollection = memo(
         });
       }
 
-      return [...actions, toolbarGroup];
+      if (size(toolbarGroup.actions)) {
+        return [...actions, toolbarGroup];
+      }
+
+      return actions;
     }, [
       filterable,
       preQuery,
@@ -323,6 +333,7 @@ export const ReqoreCollection = memo(
       isMobile,
       zoom,
       zoomable,
+      showLayoutSwitch,
     ]);
 
     const renderContent = useCallback(() => {
