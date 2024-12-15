@@ -1,5 +1,5 @@
 import { map, size } from 'lodash';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
 import { Editable, ReactEditor, Slate, useSelected, withReact } from 'slate-react';
@@ -175,6 +175,10 @@ export const ReqoreRichTextEditor = ({
   // Create a Slate editor object that won't change across renders.
   const [editor] = useState(() => withTemplates(withReact(withHistory(createEditor()))));
   const [target, setTarget] = useState<Range | undefined>();
+
+  useEffect(() => {
+    editor.children = value;
+  }, [JSON.stringify(value)]);
 
   const renderElement = useCallback((props) => {
     switch (props.element.type) {
