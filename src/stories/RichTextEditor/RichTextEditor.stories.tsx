@@ -2,7 +2,8 @@ import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { userEvent } from '@storybook/testing-library';
 import { useState } from 'react';
-import { _testsClickButton } from '../../../__tests__/utils';
+import { useMount } from 'react-use';
+import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { ReqoreRichTextEditor } from '../../components/RichTextEditor';
 import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
@@ -243,5 +244,50 @@ export const WithStyling: Story = {
   play: async () => {
     await userEvent.click(document.querySelector('div[contenteditable]'));
     await userEvent.click(document.querySelector('div[contenteditable]'));
+  },
+};
+
+export const UpdatesFromOutside: Story = {
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
+
+    useMount(() => {
+      setTimeout(() => {
+        setValue([
+          {
+            type: 'paragraph',
+            children: [
+              { text: 'This is a NEW UPDATED TEXT', bold: true, italic: true, underline: true },
+            ],
+          },
+        ]);
+      }, 1000);
+    });
+
+    return (
+      <ReqoreRichTextEditor
+        {...args}
+        value={value}
+        onChange={(val) => {
+          setValue(val);
+          args.onChange?.(val);
+        }}
+      />
+    );
+  },
+  args: {
+    actions: {
+      styling: true,
+    },
+    value: [
+      {
+        type: 'paragraph',
+        children: [{ text: 'This is a styled text', bold: true, italic: true, underline: true }],
+      },
+    ],
+    onChange: (val) => console.log(val),
+  },
+  play: async () => {
+    await _testsWaitForText('This is a NEW UPDATED TEXT');
   },
 };
