@@ -133,6 +133,17 @@ export const SelectedFirst: Story = {
   },
 };
 
+export const WithoutLayoutActions: Story = {
+  args: {
+    filterable: false,
+    sortable: false,
+    label: undefined,
+    badge: undefined,
+    showLayoutSwitch: false,
+    items,
+  },
+};
+
 export const Zoomable: Story = {
   args: {
     label: 'Collection of items',
