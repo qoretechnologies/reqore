@@ -21,6 +21,7 @@ const StyledTagGroup = styled.div`
   display: flex;
   flex-wrap: ${({ wrap }: IReqoreTagGroup) => (wrap ? 'wrap' : 'nowrap')};
   gap: ${({ gapSize }: IReqoreTagGroup) => GAP_FROM_SIZE[gapSize]}px;
+  align-items: center;
 
   ${({ align }) => {
     if (align === 'right') {

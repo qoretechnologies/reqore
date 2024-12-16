@@ -760,7 +760,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     flat
                     responsive
                   />
-                ) : icon || iconImage || label ? (
+                ) : icon || iconImage || label || badge ? (
                   <StyledPanelTitleHeaderContent
                     size={panelSize}
                     {...headerProps}
@@ -825,6 +825,14 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       )}
                     </StyledPanelTitleHeaderLabelAndDescription>
                   </StyledPanelTitleHeaderContent>
+                ) : null}
+                {breadcrumbs && (badge || badge === 0) ? (
+                  <ButtonBadge
+                    size={getOneHigherSize(panelSize)}
+                    content={badge}
+                    wrapGroup={isSmall}
+                    margin={label ? 'left' : 'none'}
+                  />
                 ) : null}
                 <ReqorePanelNonResponsiveActions
                   show={isSmall && (!!onClose || collapsible)}
