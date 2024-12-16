@@ -10,13 +10,14 @@ import {
   GAP_FROM_SIZE,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
+  NUMBER_TO_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   SIZE_TO_PX,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
@@ -47,6 +48,7 @@ import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
+import { ReqoreSpan } from '../Span';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
@@ -86,10 +88,13 @@ export interface IReqorePanelProps
     React.HTMLAttributes<HTMLDivElement> {
   as?: any;
   children?: any;
+
   icon?: IReqoreIconName;
   iconProps?: IReqoreIconProps;
   label?: string | ReactElement<any>;
   badge?: TReqoreBadge | TReqoreBadge[];
+  description?: string;
+
   collapsible?: boolean;
   isCollapsed?: boolean;
   collapseButtonProps?: IReqoreButtonProps;
@@ -121,6 +126,8 @@ export interface IReqorePanelProps
   contentSize?: TSizes;
   contentEffect?: IReqoreEffect;
   headerEffect?: IReqoreEffect;
+  descriptionEffect?: IReqoreEffect;
+  descriptionIntent?: TReqoreIntent;
   transparent?: boolean;
   iconColor?: TReqoreEffectColor;
   responsiveActions?: boolean;
@@ -162,6 +169,19 @@ export const StyledPanelTitleHeaderContent = styled.div`
 
     return width;
   }}px;
+`;
+
+export const StyledPanelTitleHeaderLabelAndDescription = styled.div`
+  display: flex;
+  flex-flow: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 auto;
+`;
+
+export const StyledPanelTitleHeaderLabelAndBadge = styled.div`
+  display: inline-flex;
+  max-width: 100%;
 `;
 
 export type TPanelStyle = React.FC<
@@ -347,6 +367,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     {
       children,
       label,
+      description,
       collapseButtonProps = {},
       collapsible,
       onClose,
@@ -367,6 +388,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       contentStyle,
       contentEffect,
       headerEffect = {},
+      descriptionEffect = {},
+      descriptionIntent,
       headerSize,
       contentSize,
       minimal,
@@ -737,7 +760,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     flat
                     responsive
                   />
-                ) : icon || iconImage || label ? (
+                ) : icon || iconImage || label || badge ? (
                   <StyledPanelTitleHeaderContent
                     size={panelSize}
                     {...headerProps}
@@ -764,28 +787,51 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         }
                       />
                     ) : null}
-                    {typeof label === 'string' ? (
-                      <LabelEditor
-                        size={headerSize || panelSize}
-                        customTheme={theme}
-                        effect={{
-                          noWrap: true,
-                          ...headerEffect,
-                        }}
-                        label={label}
-                        onSubmit={onLabelEdit}
-                        tooltip={showHeaderTooltip ? label : undefined}
-                      />
-                    ) : (
-                      label
-                    )}
+                    <StyledPanelTitleHeaderLabelAndDescription>
+                      <StyledPanelTitleHeaderLabelAndBadge>
+                        {typeof label === 'string' ? (
+                          <LabelEditor
+                            size={headerSize || panelSize}
+                            customTheme={theme}
+                            effect={{
+                              noWrap: true,
+                              ...headerEffect,
+                            }}
+                            style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}
+                            label={label}
+                            onSubmit={onLabelEdit}
+                            tooltip={showHeaderTooltip ? label : undefined}
+                          />
+                        ) : (
+                          label
+                        )}
+                        {badge || badge === 0 ? (
+                          <ButtonBadge
+                            size={getOneHigherSize(panelSize)}
+                            content={badge}
+                            wrapGroup={isSmall}
+                            margin={label ? 'left' : 'none'}
+                          />
+                        ) : null}
+                      </StyledPanelTitleHeaderLabelAndBadge>
+                      {description && (
+                        <ReqoreSpan
+                          size={headerSize ? NUMBER_TO_SIZE[headerSize] : panelSize}
+                          effect={{ opacity: 0.7, ...descriptionEffect }}
+                          intent={descriptionIntent}
+                        >
+                          {description}
+                        </ReqoreSpan>
+                      )}
+                    </StyledPanelTitleHeaderLabelAndDescription>
                   </StyledPanelTitleHeaderContent>
                 ) : null}
-                {badge || badge === 0 ? (
+                {breadcrumbs && (badge || badge === 0) ? (
                   <ButtonBadge
                     size={getOneHigherSize(panelSize)}
                     content={badge}
                     wrapGroup={isSmall}
+                    margin={label ? 'left' : 'none'}
                   />
                 ) : null}
                 <ReqorePanelNonResponsiveActions

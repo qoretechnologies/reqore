@@ -155,6 +155,16 @@ export const Basic: Story = {
             <ReqoreIcon icon='HotelFill' margin='both' />
             Sides
           </div>
+          <div>
+            Huge
+            <ReqoreIcon icon='HotelFill' margin='both' marginSize={50} />
+            Margins
+          </div>
+          <div>
+            Tiny
+            <ReqoreIcon icon='HotelFill' margin='both' marginSize='tiny' />
+            Margins
+          </div>
         </ReqorePanel>
       </>
     );

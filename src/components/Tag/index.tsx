@@ -119,7 +119,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size])}px;
   max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
   flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  align-self: ${({ fixed, fluid }) =>
+  justify-self: ${({ fixed, fluid }) =>
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${({ theme, color, flat = true }) =>
     !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
@@ -194,7 +194,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
             css`
               background-color: ${minimal
                 ? color
-                  ? rgba(color || theme.main, 0.5)
+                  ? rgba(color, 0.5)
                   : rgba(changeLightness('#000000', 0.05), 0.4)
                 : color || changeLightness(theme.main, 0.15)};
               color: ${minimal
