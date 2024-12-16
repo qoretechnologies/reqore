@@ -357,10 +357,11 @@ export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
   wrapGroup?: boolean;
   compact?: boolean;
   active?: boolean;
+  margin?: 'left' | 'none';
 }
 
 export const ButtonBadge = memo(
-  ({ wrapGroup, compact, active, ...props }: IReqoreButtonBadgeProps) => {
+  ({ wrapGroup, compact, active, margin = 'left', ...props }: IReqoreButtonBadgeProps) => {
     const renderTag = useCallback(
       ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
         <ReqoreTag
@@ -418,10 +419,12 @@ export const ButtonBadge = memo(
 
     return (
       <>
-        <ReqoreSpacer
-          width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
-          height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
-        />
+        {margin === 'left' && (
+          <ReqoreSpacer
+            width={props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / (compact ? 2 : 1)}
+            height={!props.wrap ? undefined : PADDING_FROM_SIZE[props.size] / 2}
+          />
+        )}
         {size(leftBadges) ? (
           <ReqoreTagGroup wrap={wrapGroup} align='left'>
             {leftBadges.map((badge, index) =>

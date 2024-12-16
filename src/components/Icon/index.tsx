@@ -24,7 +24,10 @@ export interface IReqoreIconProps
   wrapperSize?: TSizes | string;
   wrapperElement?: any;
   iconProps?: IconBaseProps;
+
   margin?: 'right' | 'left' | 'both';
+  marginSize?: TSizes | string | number;
+
   image?: string;
   rounded?: boolean;
   rotation?: number;
@@ -55,18 +58,22 @@ export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left'
   rotate: ${({ rotation }) => (rotation ? `${rotation}deg` : undefined)};
   cursor: ${({ interactive }) => (interactive ? 'pointer' : undefined)};
 
-  ${({ margin, size, compact }) =>
+  ${({ margin, marginSize, size, compact }) =>
     margin &&
     css`
       margin-left: ${margin === 'left' || margin === 'both'
-        ? isStringSize(size)
+        ? marginSize
+          ? `${marginSize}px`
+          : isStringSize(size)
           ? `${PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px`
           : compact
           ? '3px'
           : '6px'
         : undefined};
       margin-right: ${margin === 'right' || margin === 'both'
-        ? isStringSize(size)
+        ? marginSize
+          ? `${marginSize}px`
+          : isStringSize(size)
           ? `${PADDING_FROM_SIZE[size] / (compact ? 2 : 1)}px`
           : compact
           ? '3px'
@@ -95,7 +102,10 @@ const ReqoreIcon = memo(
         wrapperElement,
         className,
         color,
+
         margin,
+        marginSize,
+
         style = {},
         iconProps,
         intent,
@@ -118,6 +128,9 @@ const ReqoreIcon = memo(
           ? ICON_FROM_SIZE[wrapperSize]
           : wrapperSize
         : finalSize;
+      const finalMarginSize: number = isStringSize(marginSize)
+        ? PADDING_FROM_SIZE[marginSize]
+        : marginSize;
 
       useTooltip(iconRef, tooltip);
 
@@ -129,6 +142,7 @@ const ReqoreIcon = memo(
             ref={targetRef}
             size={size}
             margin={margin}
+            marginSize={finalMarginSize}
             className={`${className || ''} reqore-icon`}
             style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
           >
@@ -145,6 +159,7 @@ const ReqoreIcon = memo(
             ref={targetRef}
             size={size}
             margin={margin}
+            marginSize={finalMarginSize}
             className={`${className || ''} reqore-icon`}
             style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
           />
@@ -161,6 +176,7 @@ const ReqoreIcon = memo(
           }}
           margin={margin}
           size={size}
+          marginSize={finalMarginSize}
           style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
           className={`${className || ''} reqore-icon`}
         >

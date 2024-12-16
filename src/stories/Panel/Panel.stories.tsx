@@ -761,3 +761,26 @@ export const Loading: Story = {
     loading: true,
   },
 };
+
+export const WithDescription: Story = {
+  render: Template,
+
+  args: {
+    description: 'This is a description',
+  },
+};
+
+export const WithLongDescription: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+    descriptionIntent: 'info',
+    descriptionEffect: {
+      uppercase: true,
+      textSize: 'small',
+    },
+    description:
+      'This is a very long description that should be wrapped and not overflow, but it should be long enough to test the wrapping',
+  },
+};
