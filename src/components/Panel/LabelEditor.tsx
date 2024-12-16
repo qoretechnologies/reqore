@@ -3,6 +3,7 @@ import { useUpdateEffect } from 'react-use';
 import { IReqoreHeadingProps, ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
+import { ReqoreSpan } from '../Span';
 
 export interface IReqoreLabelEditorProps extends Omit<IReqoreHeadingProps, 'onSubmit'> {
   label: string | number;
@@ -12,7 +13,7 @@ export interface IReqoreLabelEditorProps extends Omit<IReqoreHeadingProps, 'onSu
 }
 
 export const LabelEditor = memo(
-  ({ label, onSubmit, inputProps, iconProps, ...rest }: IReqoreLabelEditorProps) => {
+  ({ label, onSubmit, inputProps, iconProps, effect, ...rest }: IReqoreLabelEditorProps) => {
     const [name, setName] = useState<string | number>(label);
     const [isEditing, setIsEditing] = useState(false);
 
@@ -59,7 +60,7 @@ export const LabelEditor = memo(
             : undefined
         }
       >
-        {name}
+        <ReqoreSpan effect={effect}>{name}</ReqoreSpan>
         {onSubmit ? <ReqoreIcon icon='EditLine' size='small' margin='left' {...iconProps} /> : null}
       </ReqoreHeading>
     );

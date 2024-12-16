@@ -797,6 +797,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                               noWrap: true,
                               ...headerEffect,
                             }}
+                            style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}
                             label={label}
                             onSubmit={onLabelEdit}
                             tooltip={showHeaderTooltip ? label : undefined}
