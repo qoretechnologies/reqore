@@ -178,6 +178,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     ...rest
   }: IReqoreDrawerProps) => {
     const animations = useReqoreProperty('animations');
+    const customPortalId = useReqoreProperty('customPortalId');
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const theme = useReqoreTheme('main', customTheme, intent);
     const layout = useMemo(
@@ -426,7 +427,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
           </ReqoreThemeProvider>
         ) : null
       ),
-      document.querySelector('#reqore-portal')!
+      document.querySelector(customPortalId || '#reqore-portal')!
     );
   }
 );

@@ -210,6 +210,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
           escClosableModals,
           addEscClosableModal,
           removeEscClosableModal,
+          customPortalId: options.customPortalId,
         }}
       >
         <PopoverProvider uiScale={options?.uiScale}>
@@ -284,20 +285,20 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
               </ReqoreTextEffect>
             </ReqoreModal>
           )}
-          {map(modals, ({ modal, options }, key) =>
+          {map(modals, ({ modal, options: modalOptions }, key) =>
             React.isValidElement(modal) ? (
               createPortal(
                 React.cloneElement(modal, {
                   key,
                   isOpen: true,
-                  onClose: options?.closable
+                  onClose: modalOptions?.closable
                     ? () => {
                         removeModal(key);
                         modal.props.onClose?.();
                       }
                     : undefined,
                 }),
-                document.querySelector('#reqore-portal')!
+                document.querySelector(options.customPortalId || '#reqore-portal')!
               )
             ) : (
               <ReqoreModal
@@ -305,7 +306,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
                 key={key}
                 isOpen
                 onClose={
-                  options?.closable
+                  modalOptions?.closable
                     ? () => {
                         removeModal(key);
                         modal.onClose?.();

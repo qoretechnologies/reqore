@@ -169,6 +169,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
   }) => {
     const { removePopover, updatePopover, uiScale: globalUiScale } = useContext(PopoverContext);
     const animations = useReqoreProperty('animations');
+    const customPortalId = useReqoreProperty('customPortalId');
     const [popperElement, setPopperElement] = useState(null);
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
@@ -303,7 +304,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           </StyledPopoverContent>
         </StyledPopoverWrapper>
       </ReqoreThemeProvider>,
-      document.querySelector('#reqore-portal')!
+      document.querySelector(customPortalId || '#reqore-portal')!
     );
   }
 );

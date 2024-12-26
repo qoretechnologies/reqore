@@ -15,7 +15,11 @@ import ReqoreThemeProvider from './ThemeProvider';
 export interface IReqoreOptions
   extends Pick<
     IReqoreContext,
-    'closeModalsOnEscPress' | 'closePopoversOnEscPress' | 'animations' | 'tooltips'
+    | 'closeModalsOnEscPress'
+    | 'closePopoversOnEscPress'
+    | 'animations'
+    | 'tooltips'
+    | 'customPortalId'
   > {
   withSidebar?: boolean;
   notificationsPosition?: IReqoreNotificationsPosition;
