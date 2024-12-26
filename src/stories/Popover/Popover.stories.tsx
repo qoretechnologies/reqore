@@ -534,3 +534,13 @@ export const TooltipIsRemovedWhenContentIsEmpty: Story = {
     await expect(rest.args.onToggleChange).toHaveBeenLastCalledWith(false);
   },
 };
+
+export const InCustomPortal: Story = {
+  render: Template,
+
+  args: {
+    options: {
+      customPortalId: '#my-custom-portal',
+    },
+  },
+};

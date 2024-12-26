@@ -73,6 +73,7 @@ export const decorators = [
         }}
       >
         <ReqoreLayoutContent style={{ height: '100%' }}>
+          <div id='my-custom-portal' />
           <Story />
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -97,6 +98,7 @@ export const decorators = [
             }}
           >
             <Story />
+            <div id='my-custom-portal' />
           </ReqoreContent>
         </ReqoreLayoutContent>
       </ReqoreUIProvider>

@@ -36,6 +36,7 @@ export interface IReqoreContext {
      * */
     delay?: number;
   };
+  readonly customPortalId?: string;
   readonly closePopoversOnEscPress?: boolean;
   readonly closeModalsOnEscPress?: boolean;
   readonly escClosableModals?: string[];
