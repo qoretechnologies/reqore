@@ -52,7 +52,6 @@ const ReqoreMenuItem = memo(
       }: IReqoreMenuItemProps,
       ref
     ) => {
-      console.log(closePopover);
       const { targetRef } = useCombinedRefs<HTMLButtonElement>(ref);
       const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
 
