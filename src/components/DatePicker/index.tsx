@@ -227,10 +227,9 @@ export const DatePicker = <T extends TDateValue>({
     handleDateChange(value ? toZoned(toCalendarDateTime(date, time), getLocalTimeZone()) : date);
   };
 
-  const { Component, props: finalProps } = useComponentTooltip(
+  const { Component, props: finalProps } = useComponentTooltip<any>(
     {
       value,
-      // @ts-expect-error whatever
       onChange: handleDateChange,
       granularity,
       tooltip,
