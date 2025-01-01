@@ -161,7 +161,8 @@ export const DatePicker = <T extends TDateValue>({
   const [focusedValue, setFocusedValue] = useState(value);
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
-  const [containerRef, setContainerRef] = useState<HTMLElement>(undefined);
+
+  const ref = useRef(null);
 
   const theme = useReqoreTheme('main', customTheme, intent);
   const popoverData = useRef({} as IPopoverControls);
@@ -229,7 +230,7 @@ export const DatePicker = <T extends TDateValue>({
   const { Component, props: finalProps } = useComponentTooltip(
     {
       value,
-      // @ts-ignore
+      // @ts-expect-error whatever
       onChange: handleDateChange,
       granularity,
       tooltip,
@@ -243,7 +244,7 @@ export const DatePicker = <T extends TDateValue>({
       ...props,
     },
     StyledRADatePicker,
-    (node) => setContainerRef(node)
+    ref
   );
 
   return (
