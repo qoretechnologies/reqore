@@ -22,9 +22,9 @@ import styled from 'styled-components';
 import { ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
 import { formatDateToType, TDateFormat, toDate } from '../../helpers/dates';
+import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { IPopoverControls } from '../../hooks/usePopover';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import { DisabledElement } from '../../styles';
 import {
   IReqoreIntent,
@@ -34,7 +34,6 @@ import {
   IWithReqoreMinimal,
   IWithReqoreSize,
   IWithReqoreTooltip,
-  TReqoreTooltipProp,
 } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -117,18 +116,6 @@ const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
     outline: none;
   }
 `;
-
-const DatePickerTooltip = ({
-  targetElement,
-  tooltip,
-}: {
-  targetElement: HTMLElement | undefined;
-  tooltip?: TReqoreTooltipProp;
-}) => {
-  useTooltip(targetElement, tooltip);
-
-  return null;
-};
 
 export const DatePicker = <T extends TDateValue>({
   value: _value,
@@ -230,7 +217,7 @@ export const DatePicker = <T extends TDateValue>({
   };
 
   const onToggleChange = (open: boolean) => {
-    // reset focusedvalue state on popover close
+    // reset focused value state on popover close
     if (!open) {
       setFocusedValue(null);
     }
@@ -240,22 +227,28 @@ export const DatePicker = <T extends TDateValue>({
     handleDateChange(value ? toZoned(toCalendarDateTime(date, time), getLocalTimeZone()) : date);
   };
 
+  const { Component, props: finalProps } = useComponentTooltip(
+    {
+      value,
+      // @ts-ignore
+      onChange: handleDateChange,
+      granularity,
+      tooltip,
+      hideTimeZone,
+      shouldForceLeadingZeros,
+      hourCycle,
+      'data-fluid': fluid,
+      'aria-label': 'Date',
+      minValue: toDate(minValue),
+      maxValue: toDate(maxValue),
+      ...props,
+    },
+    StyledRADatePicker,
+    (node) => setContainerRef(node)
+  );
+
   return (
-    <StyledRADatePicker
-      value={value}
-      onChange={handleDateChange}
-      granularity={granularity}
-      hideTimeZone={hideTimeZone}
-      shouldForceLeadingZeros={shouldForceLeadingZeros}
-      hourCycle={hourCycle}
-      data-fluid={fluid}
-      aria-label='Date'
-      ref={(node) => setContainerRef(node)}
-      minValue={toDate(minValue)}
-      maxValue={toDate(maxValue)}
-      {...props}
-    >
-      {tooltip && <DatePickerTooltip targetElement={containerRef} tooltip={tooltip} />}
+    <Component {...finalProps}>
       <ReqorePopover
         component={ReqoreInput}
         componentProps={{
@@ -400,6 +393,6 @@ export const DatePicker = <T extends TDateValue>({
       >
         {(segment) => <StyledDateSegment segment={segment} />}
       </ReqorePopover>
-    </StyledRADatePicker>
+    </Component>
   );
 };

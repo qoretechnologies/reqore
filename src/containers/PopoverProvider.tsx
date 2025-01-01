@@ -11,7 +11,6 @@ export interface IReqorePopoverProviderProps {
 }
 
 export interface IPopoverData extends IPopoverOptions {
-  id: string;
   popperRef?: MutableRefObject<any>;
 }
 

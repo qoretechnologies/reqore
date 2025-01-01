@@ -1,4 +1,5 @@
 import { Placement } from '@popperjs/core';
+import { noop } from 'lodash';
 import { MutableRefObject, useEffect, useMemo, useRef } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import shortid from 'shortid';
@@ -33,7 +34,6 @@ export interface IPopoverControls {
   open: () => void;
   close: () => void;
   isOpen: () => boolean;
-  id: string;
 }
 
 export interface IPopover
@@ -85,8 +85,13 @@ const usePopover = ({
   delay,
   ...rest
 }: IPopoverOptions): IPopoverControls => {
-  const { addPopover, removePopover, updatePopover, popovers, isPopoverOpen } =
-    useContext(PopoverContext);
+  const {
+    addPopover = noop,
+    removePopover = noop,
+    updatePopover = noop,
+    popovers = [],
+    isPopoverOpen = () => false,
+  } = useContext(PopoverContext);
   const tooltips = useReqoreProperty('tooltips');
   const id: string = useMemo(() => shortid.generate(), []);
   let { current: timeout }: MutableRefObject<any> = useRef(0);
@@ -99,6 +104,7 @@ const usePopover = ({
   );
 
   const openPopover = () => {
+    console.log('openPopover');
     addPopover?.({
       id: id,
       content,
@@ -130,7 +136,7 @@ const usePopover = ({
     if (currentPopover) {
       if (handler !== 'hoverStay' && handler !== 'focus') {
         if (closeOnInsideClick) {
-          _removePopover();
+          _removePopover?.();
         }
       }
     } else if (show) {
@@ -139,10 +145,10 @@ const usePopover = ({
 
       if (globalDelay) {
         timeout = setTimeout(() => {
-          openPopover();
+          openPopover?.();
         }, globalDelay);
       } else {
-        openPopover();
+        openPopover?.();
       }
     }
   };
@@ -178,11 +184,12 @@ const usePopover = ({
 
   useEffect(() => {
     if (openOnMount && targetElement) {
-      _addPopover();
+      _addPopover?.();
     }
   }, [!!targetElement]);
 
   useEffect(() => {
+    console.log(targetElement, content, id, currentPopover, placement);
     if (targetElement && content) {
       targetElement.addEventListener(startEvent, _addPopover);
 
@@ -196,7 +203,7 @@ const usePopover = ({
     }
 
     if (!content) {
-      _removePopover();
+      _removePopover?.();
     }
 
     return () => {
@@ -219,14 +226,13 @@ const usePopover = ({
   });
 
   return {
-    id: id,
     open: () => {
-      if (!isPopoverOpen(id)) {
+      if (!isPopoverOpen?.(id)) {
         openPopover();
       }
     },
-    close: () => _removePopover(),
-    isOpen: () => isPopoverOpen(id),
+    close: () => _removePopover?.(),
+    isOpen: () => isPopoverOpen?.(id),
   };
 };
 

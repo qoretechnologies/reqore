@@ -14,7 +14,6 @@ import { IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import ReqoreContext from '../context/ReqoreContext';
 import ThemeContext from '../context/ThemeContext';
 import { IReqoreIconName } from '../types/icons';
-import PopoverProvider from './PopoverProvider';
 import { IReqoreOptions } from './UIProvider';
 
 export interface IReqoreNotificationData extends IReqoreNotificationProps {
@@ -211,112 +210,111 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
           addEscClosableModal,
           removeEscClosableModal,
           customPortalId: options.customPortalId,
+          uiScale: options.uiScale,
         }}
       >
-        <PopoverProvider uiScale={options?.uiScale}>
-          {size(notifications) > 0 ? (
-            <ReqoreNotificationsWrapper position={options.notificationsPosition}>
-              {notifications.map((notification) => (
-                <ReqoreNotification
-                  {...notification}
-                  key={notification.id}
-                  onClick={
-                    notification.onClick
-                      ? () => void notification.onClick(notification.id)
-                      : undefined
-                  }
-                  onClose={() => {
-                    if (notification.onClose) {
-                      notification.onClose(notification.id);
-                    }
-
-                    removeNotification(notification.id);
-                  }}
-                  onFinish={() => {
-                    if (notification.onFinish) {
-                      notification.onFinish(notification.id);
-                    }
-
-                    removeNotification(notification.id);
-                  }}
-                />
-              ))}
-            </ReqoreNotificationsWrapper>
-          ) : null}
-          {children}
-          {confirmationModal.isOpen && (
-            <ReqoreModal
-              isOpen
-              flat
-              opacity={0.9}
-              blur={2}
-              width='500px'
-              intent={confirmationModal.intent}
-              label={confirmationModal.title || 'Confirm your action'}
-              icon='ErrorWarningFill'
-              className='reqore-confirmation-modal'
-              bottomActions={[
-                {
-                  label: confirmationModal.cancelLabel || 'Cancel',
-                  icon: 'CloseLine',
-                  onClick: () => {
-                    confirmationModal?.onCancel?.();
-                    closeConfirmationModal();
-                  },
-                  position: 'left',
-                },
-                {
-                  label: confirmationModal.confirmLabel || 'Confirm',
-                  intent: confirmationModal.confirmButtonIntent || 'success',
-                  icon: confirmationModal.confirmIcon || 'CheckLine',
-                  onClick: () => {
-                    confirmationModal?.onConfirm?.();
-                    closeConfirmationModal();
-                  },
-                  position: 'right',
-                },
-              ]}
-            >
-              <ReqoreTextEffect
-                as='p'
-                effect={{ textAlign: 'center', weight: 'bold', textSize: 'big' }}
-              >
-                {confirmationModal.description || 'Are you sure you want to proceed?'}
-              </ReqoreTextEffect>
-            </ReqoreModal>
-          )}
-          {map(modals, ({ modal, options: modalOptions }, key) =>
-            React.isValidElement(modal) ? (
-              createPortal(
-                React.cloneElement(modal, {
-                  key,
-                  isOpen: true,
-                  onClose: modalOptions?.closable
-                    ? () => {
-                        removeModal(key);
-                        modal.props.onClose?.();
-                      }
-                    : undefined,
-                }),
-                document.querySelector(options.customPortalId || '#reqore-portal')!
-              )
-            ) : (
-              <ReqoreModal
-                {...modal}
-                key={key}
-                isOpen
-                onClose={
-                  modalOptions?.closable
-                    ? () => {
-                        removeModal(key);
-                        modal.onClose?.();
-                      }
+        {size(notifications) > 0 ? (
+          <ReqoreNotificationsWrapper position={options.notificationsPosition}>
+            {notifications.map((notification) => (
+              <ReqoreNotification
+                {...notification}
+                key={notification.id}
+                onClick={
+                  notification.onClick
+                    ? () => void notification.onClick(notification.id)
                     : undefined
                 }
+                onClose={() => {
+                  if (notification.onClose) {
+                    notification.onClose(notification.id);
+                  }
+
+                  removeNotification(notification.id);
+                }}
+                onFinish={() => {
+                  if (notification.onFinish) {
+                    notification.onFinish(notification.id);
+                  }
+
+                  removeNotification(notification.id);
+                }}
               />
+            ))}
+          </ReqoreNotificationsWrapper>
+        ) : null}
+        {children}
+        {confirmationModal.isOpen && (
+          <ReqoreModal
+            isOpen
+            flat
+            opacity={0.9}
+            blur={2}
+            width='500px'
+            intent={confirmationModal.intent}
+            label={confirmationModal.title || 'Confirm your action'}
+            icon='ErrorWarningFill'
+            className='reqore-confirmation-modal'
+            bottomActions={[
+              {
+                label: confirmationModal.cancelLabel || 'Cancel',
+                icon: 'CloseLine',
+                onClick: () => {
+                  confirmationModal?.onCancel?.();
+                  closeConfirmationModal();
+                },
+                position: 'left',
+              },
+              {
+                label: confirmationModal.confirmLabel || 'Confirm',
+                intent: confirmationModal.confirmButtonIntent || 'success',
+                icon: confirmationModal.confirmIcon || 'CheckLine',
+                onClick: () => {
+                  confirmationModal?.onConfirm?.();
+                  closeConfirmationModal();
+                },
+                position: 'right',
+              },
+            ]}
+          >
+            <ReqoreTextEffect
+              as='p'
+              effect={{ textAlign: 'center', weight: 'bold', textSize: 'big' }}
+            >
+              {confirmationModal.description || 'Are you sure you want to proceed?'}
+            </ReqoreTextEffect>
+          </ReqoreModal>
+        )}
+        {map(modals, ({ modal, options: modalOptions }, key) =>
+          React.isValidElement(modal) ? (
+            createPortal(
+              React.cloneElement(modal, {
+                key,
+                isOpen: true,
+                onClose: modalOptions?.closable
+                  ? () => {
+                      removeModal(key);
+                      modal.props.onClose?.();
+                    }
+                  : undefined,
+              }),
+              document.querySelector(options.customPortalId || '#reqore-portal')!
             )
-          )}
-        </PopoverProvider>
+          ) : (
+            <ReqoreModal
+              {...modal}
+              key={key}
+              isOpen
+              onClose={
+                modalOptions?.closable
+                  ? () => {
+                      removeModal(key);
+                      modal.onClose?.();
+                    }
+                  : undefined
+              }
+            />
+          )
+        )}
       </ReqoreContext.Provider>
     </>
   );
