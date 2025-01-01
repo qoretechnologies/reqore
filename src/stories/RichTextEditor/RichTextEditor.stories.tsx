@@ -185,6 +185,7 @@ export const WithCustomTags: Story = {
     await userEvent.click(document.querySelector('div[contenteditable]'));
     await sleep(500);
     await _testsClickButton({ label: 'Brad Pitt' });
+    await sleep(500);
     await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
   },
 };

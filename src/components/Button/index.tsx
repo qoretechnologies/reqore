@@ -153,7 +153,6 @@ export const StyledButton = memo(styled(StyledEffect)<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
   justify-content: center;
-  margin: 0;
   font-weight: 570;
   position: relative;
   overflow: hidden;

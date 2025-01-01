@@ -294,6 +294,7 @@ export const ReqorePopover = memo(
                 minimal={minimal}
                 flat={flat}
                 effect={effect}
+                closePopover={close}
                 onPopperClose={close}
                 onPopperUpdate={handlePopperUpdate}
               />
@@ -335,6 +336,7 @@ export const ReqorePopover = memo(
               effect={effect}
               onPopperClose={close}
               onPopperUpdate={handlePopperUpdate}
+              closePopover={close}
             />
           )}
           {isOpen && blur ? <div className='reqore-blur-wrapper' /> : null}

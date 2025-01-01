@@ -60,6 +60,7 @@ const ReqoreDropdownList = memo(
     multiSelect,
     listStyle,
     _popoverId,
+    closePopover,
     filterable,
     width,
     height,
@@ -193,6 +194,7 @@ const ReqoreDropdownList = memo(
             <ReqoreMenu
               _insidePopover={!multiSelect}
               _popoverId={_popoverId}
+              closePopover={closePopover}
               style={listStyle}
               width={width}
               maxHeight={height || '300px'}

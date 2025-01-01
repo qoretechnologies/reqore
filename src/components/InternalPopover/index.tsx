@@ -146,6 +146,7 @@ export const StyledPopoverContent = styled.div`
 export interface IReqoreInternalPopoverProps extends IPopoverData {
   onPopperUpdate?: (popperRef: MutableRefObject<any>) => void;
   onPopperClose?: () => void;
+  closePopover: () => void;
 }
 
 const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
@@ -167,6 +168,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     effect,
     onPopperUpdate,
     onPopperClose,
+    closePopover,
   }) => {
     const animations = useReqoreProperty('animations');
     const customPortalId = useReqoreProperty('customPortalId');
@@ -296,7 +298,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
                   child
                     ? React.cloneElement(child, {
                         _insidePopover: true,
-                        //_popoverId: id,
+                        closePopover,
                       })
                     : null
                 )}
