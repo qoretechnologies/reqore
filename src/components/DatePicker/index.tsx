@@ -23,7 +23,6 @@ import { ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
 import { formatDateToType, TDateFormat, toDate } from '../../helpers/dates';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
-import { IPopoverControls } from '../../hooks/usePopover';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement } from '../../styles';
 import {
@@ -40,7 +39,7 @@ import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreTextEffectProps } from '../Effect';
 import ReqoreInput from '../Input';
 import { IReqorePanelProps } from '../Panel';
-import { IReqorePopoverProps } from '../Popover';
+import { IPopoverControls, IReqorePopoverProps } from '../Popover';
 import { YearMonthDropdowns } from './MonthYearDropdowns';
 
 export type TDateValue = string | Date | null;

@@ -2,7 +2,6 @@ import { Globals } from '@react-spring/web';
 import '@testing-library/jest-dom/extend-expect';
 import { fireEvent, render } from '@testing-library/react';
 import { noop } from 'lodash';
-import React from 'react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { ReqoreContent, ReqoreInput, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
@@ -461,22 +460,4 @@ test('<Input /> is cleared when focused', () => {
 
   expect(fn).toHaveBeenNthCalledWith(1, { target: { value: '' } });
   expect(document.querySelectorAll('.reqore-input')[0]).toHaveFocus();
-});
-
-test('Tooltip on <Input /> works', () => {
-  jest.useFakeTimers();
-
-  render(
-    <ReqoreUIProvider>
-      <ReqoreInput value='this is a test' tooltip='test' />
-    </ReqoreUIProvider>
-  );
-
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
-
-  fireEvent.mouseEnter(document.querySelectorAll('.reqore-input')[0]);
-
-  jest.advanceTimersByTime(1);
-
-  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

@@ -1,10 +1,18 @@
+import { Placement } from '@popperjs/core';
 import React, { forwardRef, memo, MutableRefObject, useCallback, useEffect, useRef } from 'react';
-import { useUnmount } from 'react-use';
+import { useUnmount, useUpdateEffect } from 'react-use';
 import styled from 'styled-components';
 import { useReqoreProperty } from '../..';
+import { IReqoreOptions } from '../../containers/UIProvider';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { IPopoverOptions } from '../../hooks/usePopover';
-import { IReqoreComponent } from '../../types/global';
+import {
+  IReqoreComponent,
+  IReqoreIntent,
+  IWithReqoreEffect,
+  IWithReqoreFlat,
+  IWithReqoreMinimal,
+} from '../../types/global';
+import { IReqoreIconName } from '../../types/icons';
 import InternalPopover from '../InternalPopover';
 
 export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
@@ -14,6 +22,52 @@ export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
   isReqoreComponent?: boolean;
   wrapperTag?: string;
   wrapperStyle?: React.CSSProperties;
+}
+
+export interface IPopoverControls {
+  open: () => void;
+  close: () => void;
+  isOpen: () => boolean;
+}
+
+export interface IPopover
+  extends IReqoreIntent,
+    IWithReqoreMinimal,
+    IWithReqoreEffect,
+    IWithReqoreFlat {
+  content?: JSX.Element | string | undefined;
+  handler?: 'hover' | 'click' | 'focus' | 'hoverStay';
+  placement?: Placement;
+  show?: boolean;
+  openOnMount?: boolean;
+  noArrow?: boolean;
+  noWrapper?: boolean;
+  useTargetWidth?: boolean;
+  closeOnOutsideClick?: boolean;
+  closeOnAnyClick?: boolean;
+  closeOnInsideClick?: boolean;
+  closeOnTargetClick?: boolean;
+  delay?: number;
+  blur?: boolean;
+  transparent?: boolean;
+  maxWidth?: string;
+  maxHeight?: string;
+  icon?: IReqoreIconName;
+  title?: string;
+  updater?: string | number;
+  uiScale?: IReqoreOptions['uiScale'];
+
+  onToggleChange?: (isOpen: boolean, popoverData?: IPopover) => void;
+  onUpdate?: (popoverData: IPopover) => void;
+}
+
+export interface IPopoverOptions extends IPopover {
+  targetElement?: HTMLElement;
+  passPopoverData?: (data: IPopoverControls) => void;
+}
+
+export interface IPopoverData extends IPopoverOptions {
+  popperRef?: MutableRefObject<any>;
 }
 
 export const StyledPopover = styled.span`
@@ -50,8 +104,8 @@ export const ReqorePopover = memo(
         content,
         blur,
         closeOnOutsideClick = true,
-        closeOnAnyClick,
         closeOnInsideClick = true,
+        closeOnTargetClick,
         handler = 'hover',
         delay,
         noArrow,
@@ -65,6 +119,7 @@ export const ReqorePopover = memo(
         icon,
         title,
         onToggleChange,
+        onUpdate,
         effect,
         flat,
         minimal,
@@ -86,7 +141,6 @@ export const ReqorePopover = memo(
       const endEvent = endEvents[handler];
 
       const open = useCallback(() => {
-        console.log('OPENING POPPER', _popoverId);
         if (isOpen) {
           if (handler !== 'hoverStay' && handler !== 'focus') {
             if (closeOnInsideClick) {
@@ -119,6 +173,13 @@ export const ReqorePopover = memo(
             return;
           }
 
+          console.log(
+            'closeOnOutsideClick',
+            closeOnOutsideClick,
+            !(popperRef?.current && popperRef.current.contains(event.target)),
+            !componentRef?.contains(event.target as Node)
+          );
+
           if (
             closeOnOutsideClick &&
             !(popperRef?.current && popperRef.current.contains(event.target)) &&
@@ -127,7 +188,7 @@ export const ReqorePopover = memo(
             close();
           }
         },
-        [closeOnOutsideClick, closeOnAnyClick, componentRef, popperRef.current]
+        [closeOnOutsideClick, componentRef, popperRef.current, closeOnTargetClick]
       );
 
       const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -136,9 +197,15 @@ export const ReqorePopover = memo(
         }
       }, []);
 
-      useEffect(() => {
-        onToggleChange?.(isOpen);
+      useUpdateEffect(() => {
+        onToggleChange?.(isOpen, { content });
+      }, [isOpen]);
 
+      useUpdateEffect(() => {
+        onUpdate?.({ content });
+      }, [content]);
+
+      useEffect(() => {
         passPopoverData?.({
           close,
           open,
@@ -160,6 +227,7 @@ export const ReqorePopover = memo(
 
       useUnmount(() => {
         cancelTimeout();
+        onToggleChange?.(false);
       });
 
       const cancelTimeout = useCallback(() => {
@@ -172,8 +240,8 @@ export const ReqorePopover = memo(
       }, []);
 
       useEffect(() => {
+        console.log('Adding event listeners', componentRef, content);
         if (componentRef && content) {
-          console.log('COMPONENT REF ATD', componentRef, startEvent, endEvent, handler);
           document.addEventListener('click', handleClick, true);
 
           if (closePopoversOnEscPress) {
@@ -210,7 +278,6 @@ export const ReqorePopover = memo(
       }, [componentRef, content]);
 
       const handleRef = useCallback((r) => {
-        console.log(r);
         setComponentRef(r);
         targetRef.current = r;
       }, []);

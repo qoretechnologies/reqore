@@ -1,11 +1,10 @@
 import * as Slider from '@radix-ui/react-slider';
-import { useCallback, useMemo, useState } from 'react';
+import { forwardRef, memo, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { HALF_PADDING_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
@@ -13,10 +12,11 @@ import { IReqoreEffect, IReqoreTextEffectProps, StyledEffect, TReqoreEffectColor
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqoreParagraphProps, ReqoreP } from '../Paragraph';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface ISliderProps<T extends number | [number, number] = number>
   extends Omit<Slider.SliderProps, 'onChange' | 'value' | 'defaultValue' | 'onValueChange'> {
-  value: T;
+  value: number | [number, number];
   onChange(values: T): void;
   fluid?: boolean;
 
@@ -164,195 +164,213 @@ const SliderRootWrapper = styled(ReqoreControlGroup)`
   width: 100%;
 `;
 
-export function ReqoreSlider<T extends number | [number, number] = number>({
-  value,
-  onChange,
-  step = 0.1,
-  orientation = 'horizontal',
-  fluid = true,
-  showLabels,
-  icon,
-  iconColor,
-  iconProps,
-  rightIcon,
-  rightIconColor,
-  rightIconProps,
-  customTheme,
-  intent,
-  effect,
-  trackProps,
-  rangeProps,
-  thumbProps,
-  minLabelProps,
-  maxLabelProps,
-  size = 'normal',
-  wrapperProps,
-  labelsPosition = 'top',
-  tooltip,
-  currentMaxLabelProps,
-  currentMinLabelProps,
-  displayCurrentValueOverThumb,
-  ...props
-}: ISliderProps<T>) {
-  const [wrapperRef, setWrapperRef] = useState<HTMLDivElement>(undefined);
-  const theme = useReqoreTheme('main', customTheme, intent);
+export const ReqoreSlider = memo(
+  forwardRef(
+    (
+      {
+        value,
+        onChange,
+        step = 0.1,
+        orientation = 'horizontal',
+        fluid = true,
+        showLabels,
+        icon,
+        iconColor,
+        iconProps,
+        rightIcon,
+        rightIconColor,
+        rightIconProps,
+        customTheme,
+        intent,
+        effect,
+        trackProps,
+        rangeProps,
+        thumbProps,
+        minLabelProps,
+        maxLabelProps,
+        size = 'normal',
+        wrapperProps,
+        labelsPosition = 'top',
+        tooltip,
+        currentMaxLabelProps,
+        currentMinLabelProps,
+        displayCurrentValueOverThumb,
+        ...props
+      }: ISliderProps,
+      ref
+    ) => {
+      const theme = useReqoreTheme('main', customTheme, intent);
 
-  useTooltip(wrapperRef, tooltip);
+      const background = intent
+        ? changeLightness(theme.main, 0.2)
+        : getReadableColor(theme, undefined, undefined, true);
+      const trackBackground = intent
+        ? changeLightness(theme.main, 0.05)
+        : changeLightness(theme.main, 0.2);
+      const isRange = Array.isArray(value);
 
-  const background = intent
-    ? changeLightness(theme.main, 0.2)
-    : getReadableColor(theme, undefined, undefined, true);
-  const trackBackground = intent
-    ? changeLightness(theme.main, 0.05)
-    : changeLightness(theme.main, 0.2);
-  const isRange = Array.isArray(value);
+      const renderLabels = useCallback(() => {
+        if (!showLabels) {
+          return null;
+        }
 
-  const renderLabels = useCallback(() => {
-    if (!showLabels) {
-      return null;
-    }
-
-    return (
-      <ReqoreControlGroup fluid spaceBetween vertical={orientation === 'vertical'} fill>
-        <ReqoreControlGroup fixed vertical={orientation === 'vertical'} horizontalAlign='center'>
-          {icon && (
-            <ReqoreIcon icon={icon} size={size} color={iconColor} intent={intent} {...iconProps} />
-          )}
-          {props.min || props.min === 0 ? (
-            <ReqoreP size={size} intent={intent} effect={effect} {...minLabelProps}>
-              {props.min}
-            </ReqoreP>
-          ) : null}
-        </ReqoreControlGroup>
-        <ReqoreControlGroup fixed vertical={orientation === 'vertical'} horizontalAlign='center'>
-          {props.max || props.max === 0 ? (
-            <ReqoreP size={size} intent={intent} effect={effect} {...maxLabelProps}>
-              {props.max}
-            </ReqoreP>
-          ) : null}
-          {rightIcon && (
-            <ReqoreIcon
-              icon={rightIcon}
-              size={size}
-              color={rightIconColor}
-              intent={intent}
-              {...rightIconProps}
-            />
-          )}
-        </ReqoreControlGroup>
-      </ReqoreControlGroup>
-    );
-  }, [
-    icon,
-    rightIcon,
-    iconProps,
-    rightIconProps,
-    minLabelProps,
-    maxLabelProps,
-    size,
-    intent,
-    props.min,
-    props.max,
-    showLabels,
-    orientation,
-    effect,
-  ]);
-
-  const currentValuePosition = useMemo(() => {
-    return orientation === 'horizontal'
-      ? labelsPosition === 'top'
-        ? 'top'
-        : 'bottom'
-      : labelsPosition === 'top'
-      ? 'left'
-      : 'right';
-  }, [orientation, labelsPosition]);
-
-  const isMinValueBelowThreshold = useMemo(() => {
-    const _value: number = isRange ? value[0] : value;
-
-    return _value < props.min + step * 5;
-  }, [value, props.min]);
-
-  const isMaxValueAboveThreshold = useMemo(() => {
-    if (!isRange) return false;
-
-    const _value: number = value[1];
-
-    return _value > props.max - step * 5;
-  }, [value, props.max]);
-
-  return (
-    <StyledControlGroupWrapper
-      ref={setWrapperRef}
-      data-orientation={orientation}
-      data-labels-position={labelsPosition}
-      data-fluid={fluid}
-      fluid={fluid}
-      vertical={orientation === 'horizontal'}
-      fill
-      gapSize={orientation === 'horizontal' ? 'big' : 'normal'}
-      {...wrapperProps}
-    >
-      {labelsPosition === 'top' && renderLabels()}
-      <SliderRootWrapper vertical={orientation === 'vertical'}>
-        <StyledRoot
-          data-size={size}
-          orientation={orientation}
-          minStepsBetweenThumbs={step}
-          inverted={orientation === 'vertical'}
-          step={step}
-          {...props}
-          value={isRange ? value : [value]}
-          onValueChange={(values) => {
-            onChange((isRange ? values : values[0]) as T);
-          }}
-        >
-          <StyledTrack background={trackBackground} asChild>
-            <StyledEffect effect={effect} {...trackProps}>
-              <StyledRange background={background} asChild>
-                <StyledEffect effect={effect} {...rangeProps} />
-              </StyledRange>
-            </StyledEffect>
-          </StyledTrack>
-
-          <StyledThumb background={background} asChild>
-            <StyledEffect effect={effect} {...thumbProps}>
-              {showLabels && (
-                <StyledCurrentValue
+        return (
+          <ReqoreControlGroup fluid spaceBetween vertical={orientation === 'vertical'} fill>
+            <ReqoreControlGroup
+              fixed
+              vertical={orientation === 'vertical'}
+              horizontalAlign='center'
+            >
+              {icon && (
+                <ReqoreIcon
+                  icon={icon}
                   size={size}
-                  effect={effect}
+                  color={iconColor}
                   intent={intent}
-                  position={currentValuePosition}
-                  label={isRange ? value[0] : value}
-                  isBelowThreshold={displayCurrentValueOverThumb || isMinValueBelowThreshold}
-                  {...currentMinLabelProps}
+                  {...iconProps}
                 />
               )}
-            </StyledEffect>
-          </StyledThumb>
-          {isRange && (
-            <StyledThumb background={background} asChild>
-              <StyledEffect effect={effect} {...thumbProps}>
-                {showLabels && (
-                  <StyledCurrentValue
-                    size={size}
-                    effect={effect}
-                    intent={intent}
-                    position={currentValuePosition}
-                    isAboveThreshold={displayCurrentValueOverThumb || isMaxValueAboveThreshold}
-                    label={value[1]}
-                    {...currentMaxLabelProps}
-                  />
-                )}
-              </StyledEffect>
-            </StyledThumb>
-          )}
-        </StyledRoot>
-      </SliderRootWrapper>
-      {labelsPosition === 'bottom' && renderLabels()}
-    </StyledControlGroupWrapper>
-  );
-}
+              {props.min || props.min === 0 ? (
+                <ReqoreP size={size} intent={intent} effect={effect} {...minLabelProps}>
+                  {props.min}
+                </ReqoreP>
+              ) : null}
+            </ReqoreControlGroup>
+            <ReqoreControlGroup
+              fixed
+              vertical={orientation === 'vertical'}
+              horizontalAlign='center'
+            >
+              {props.max || props.max === 0 ? (
+                <ReqoreP size={size} intent={intent} effect={effect} {...maxLabelProps}>
+                  {props.max}
+                </ReqoreP>
+              ) : null}
+              {rightIcon && (
+                <ReqoreIcon
+                  icon={rightIcon}
+                  size={size}
+                  color={rightIconColor}
+                  intent={intent}
+                  {...rightIconProps}
+                />
+              )}
+            </ReqoreControlGroup>
+          </ReqoreControlGroup>
+        );
+      }, [
+        icon,
+        rightIcon,
+        iconProps,
+        rightIconProps,
+        minLabelProps,
+        maxLabelProps,
+        size,
+        intent,
+        props.min,
+        props.max,
+        showLabels,
+        orientation,
+        effect,
+      ]);
 
-export default ReqoreSlider;
+      const currentValuePosition = useMemo(() => {
+        return orientation === 'horizontal'
+          ? labelsPosition === 'top'
+            ? 'top'
+            : 'bottom'
+          : labelsPosition === 'top'
+          ? 'left'
+          : 'right';
+      }, [orientation, labelsPosition]);
+
+      const isMinValueBelowThreshold = useMemo(() => {
+        const _value: number = isRange ? value[0] : value;
+
+        return _value < props.min + step * 5;
+      }, [value, props.min]);
+
+      const isMaxValueAboveThreshold = useMemo(() => {
+        if (!isRange) return false;
+
+        const _value: number = value[1];
+
+        return _value > props.max - step * 5;
+      }, [value, props.max]);
+
+      return (
+        <ReqoreTooltipComponent
+          data-orientation={orientation}
+          data-labels-position={labelsPosition}
+          data-fluid={fluid}
+          fluid={fluid}
+          vertical={orientation === 'horizontal'}
+          fill
+          gapSize={orientation === 'horizontal' ? 'big' : 'normal'}
+          {...wrapperProps}
+          Component={StyledControlGroupWrapper}
+          ref={ref}
+          tooltip={tooltip}
+        >
+          {labelsPosition === 'top' && renderLabels()}
+          <SliderRootWrapper vertical={orientation === 'vertical'}>
+            <StyledRoot
+              data-size={size}
+              orientation={orientation}
+              minStepsBetweenThumbs={step}
+              inverted={orientation === 'vertical'}
+              step={step}
+              {...props}
+              value={isRange ? value : [value]}
+              onValueChange={(values) => {
+                onChange(isRange ? values : values[0]);
+              }}
+            >
+              <StyledTrack background={trackBackground} asChild>
+                <StyledEffect effect={effect} {...trackProps}>
+                  <StyledRange background={background} asChild>
+                    <StyledEffect effect={effect} {...rangeProps} />
+                  </StyledRange>
+                </StyledEffect>
+              </StyledTrack>
+
+              <StyledThumb background={background} asChild>
+                <StyledEffect effect={effect} {...thumbProps}>
+                  {showLabels && (
+                    <StyledCurrentValue
+                      size={size}
+                      effect={effect}
+                      intent={intent}
+                      position={currentValuePosition}
+                      label={isRange ? value[0] : value}
+                      isBelowThreshold={displayCurrentValueOverThumb || isMinValueBelowThreshold}
+                      {...currentMinLabelProps}
+                    />
+                  )}
+                </StyledEffect>
+              </StyledThumb>
+              {isRange && (
+                <StyledThumb background={background} asChild>
+                  <StyledEffect effect={effect} {...thumbProps}>
+                    {showLabels && (
+                      <StyledCurrentValue
+                        size={size}
+                        effect={effect}
+                        intent={intent}
+                        position={currentValuePosition}
+                        isAboveThreshold={displayCurrentValueOverThumb || isMaxValueAboveThreshold}
+                        label={value[1]}
+                        {...currentMaxLabelProps}
+                      />
+                    )}
+                  </StyledEffect>
+                </StyledThumb>
+              )}
+            </StyledRoot>
+          </SliderRootWrapper>
+          {labelsPosition === 'bottom' && renderLabels()}
+        </ReqoreTooltipComponent>
+      );
+    }
+  )
+);

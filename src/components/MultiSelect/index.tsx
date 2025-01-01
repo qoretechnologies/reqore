@@ -2,7 +2,6 @@ import { omit, size } from 'lodash';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ReqoreDropdown, ReqoreInput } from '../..';
 import { TSizes } from '../../constants/sizes';
-import { IPopoverControls } from '../../hooks/usePopover';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
@@ -10,6 +9,7 @@ import { IReqoreEffect } from '../Effect';
 import { IReqoreInputProps } from '../Input';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
+import { IPopoverControls } from '../Popover';
 
 export type TReqoreMultiSelectItem = Omit<IReqoreDropdownItem, 'color'> &
   Pick<IReqoreTagProps, 'asBadge' | 'rightIcon' | 'actions'> & { isNew?: boolean };

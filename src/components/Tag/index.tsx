@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import _size from 'lodash/size';
 import { rgba, saturate, tint } from 'polished';
-import React, { forwardRef, HTMLAttributes, useState } from 'react';
+import React, { forwardRef, HTMLAttributes, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
@@ -24,8 +24,6 @@ import {
   getReadableColorFrom,
   isAchromatic,
 } from '../../helpers/colors';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { useTooltip } from '../../hooks/useTooltip';
 import { ActiveIconScale, InactiveIconScale } from '../../styles';
 import {
   IReqoreDisabled,
@@ -48,6 +46,7 @@ import {
   TReqoreHexColor,
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreTagAction
   extends IWithReqoreTooltip,
@@ -350,47 +349,50 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     }: IReqoreTagProps,
     ref
   ) => {
-    const { targetRef } = useCombinedRefs(ref);
     const theme: IReqoreTheme = useReqoreTheme('main', customTheme);
-    const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
-
-    useTooltip(itemRef, tooltip);
 
     // If color or intent was specified, set the color
-    const getCustomColor = (itemIntent?: TReqoreIntent): TReqoreHexColor => {
-      const customColor: TReqoreHexColor = itemIntent
-        ? theme.intents[itemIntent]
-        : getColorFromMaybeString(theme, color);
+    const getCustomColor = useCallback(
+      (itemIntent?: TReqoreIntent): TReqoreHexColor => {
+        const customColor: TReqoreHexColor = itemIntent
+          ? theme.intents[itemIntent]
+          : getColorFromMaybeString(theme, color);
 
-      if (customColor?.length === 9) {
+        if (customColor?.length === 9) {
+          return customColor;
+        }
+
         return customColor;
-      }
-
-      return customColor;
-    };
+      },
+      [theme, color]
+    );
 
     const leftIcon: IReqoreIconName = loading
       ? `Loader${loadingIconType || ''}Line`
       : icon || leftIconProps?.icon;
 
+    const effect = useMemo(
+      () => ({
+        ...rest.effect,
+        gradient: intent ? undefined : rest.effect?.gradient,
+        interactive: !!onClick && !rest.disabled,
+      }),
+      [intent, !!onClick, rest.disabled, JSON.stringify(rest.effect)]
+    );
+
     return (
-      <StyledTag
+      <ReqoreTooltipComponent
         {...rest}
+        Component={StyledTag}
+        tooltip={tooltip}
         theme={theme}
-        effect={{
-          ...rest.effect,
-          gradient: intent ? undefined : rest.effect?.gradient,
-          interactive: !!onClick && !rest.disabled,
-        }}
+        effect={effect}
         width={width}
         labelKey={labelKey}
         color={getCustomColor(intent)}
         className={`${className || ''} reqore-tag`}
         size={size}
-        ref={(ref) => {
-          targetRef.current = ref;
-          setItemRef(ref);
-        }}
+        ref={ref}
         asBadge={asBadge}
         minimal={minimal}
         removable={!!onRemoveClick}
@@ -537,7 +539,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             <ReqoreIcon icon='CloseLine' size={size} />
           </ReqorePopover>
         ) : null}
-      </StyledTag>
+      </ReqoreTooltipComponent>
     );
   }
 );

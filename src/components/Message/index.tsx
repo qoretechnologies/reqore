@@ -4,9 +4,7 @@ import { useMount, useUnmount } from 'react-use';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { getColorFromMaybeString } from '../../helpers/colors';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -31,6 +29,7 @@ import {
   typeToIcon,
 } from '../Notifications/notification';
 import { ReqoreSpinner } from '../Spinner';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreMessageProps
   extends IWithReqoreCustomTheme,
@@ -80,7 +79,6 @@ const ReqoreMessage = memo(
         size = 'normal',
         customTheme,
         iconColor,
-        tooltip,
         fixed,
         fluid,
         iconProps,
@@ -90,10 +88,6 @@ const ReqoreMessage = memo(
     ) => {
       const [internalTimeout, setInternalTimeout] = useState<NodeJS.Timeout | null>(null);
       const theme = useReqoreTheme('main', customTheme, intent);
-      const { targetRef } = useCombinedRefs(ref);
-      const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
-
-      useTooltip(itemRef, tooltip);
 
       useMount(() => {
         if (duration) {
@@ -127,14 +121,19 @@ const ReqoreMessage = memo(
         [icon, intent]
       );
 
+      const effect = useMemo(
+        () => ({
+          interactive: !!onClick,
+          ...rest?.effect,
+        }),
+        [!!onClick, JSON.stringify(rest?.effect)]
+      );
+
       return (
         <ReqoreThemeProvider>
-          <StyledReqoreNotification
+          <ReqoreTooltipComponent
             {...rest}
-            effect={{
-              interactive: !!onClick,
-              ...rest?.effect,
-            }}
+            Component={StyledReqoreNotification}
             as={animated.div}
             key={`${duration}${intent}${title}${children}`}
             intent={intent}
@@ -147,12 +146,10 @@ const ReqoreMessage = memo(
             fluid={fluid}
             fixed={fixed}
             className={`${rest?.className || ''} reqore-message`}
-            ref={(ref) => {
-              targetRef.current = ref;
-              setItemRef(ref);
-            }}
+            ref={ref}
             size={size}
             theme={theme}
+            effect={effect}
           >
             <StyledNotificationContentWrapper size={size} theme={theme}>
               {leftIcon ? (
@@ -210,7 +207,7 @@ const ReqoreMessage = memo(
                 <ReqoreIcon icon='CloseFill' margin='both' size={size} />
               </StyledIconWrapper>
             )}
-          </StyledReqoreNotification>
+          </ReqoreTooltipComponent>
         </ReqoreThemeProvider>
       );
     }

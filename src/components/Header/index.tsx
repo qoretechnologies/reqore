@@ -3,10 +3,10 @@ import styled from 'styled-components';
 import { HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { isStringSize } from '../../helpers/utils';
-import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
 import { StyledTextEffect } from '../Effect';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreHeadingProps
   extends IWithReqoreEffect,
@@ -58,21 +58,23 @@ export const ReqoreHeading = memo(
         return `h${_size}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
       }, [_size]);
 
-      const { Component, props } = useComponentTooltip(
-        {
-          tooltip,
-          as: HTMLheaderElement,
-          theme,
-          intent,
-          ...rest,
-          _size,
-          className: `${className || ''} reqore-heading`,
-        },
-        StyledHeader,
-        ref
+      return (
+        <ReqoreTooltipComponent
+          Component={StyledHeader}
+          ref={ref}
+          {...{
+            tooltip,
+            as: HTMLheaderElement,
+            theme,
+            intent,
+            ...rest,
+            _size,
+            className: `${className || ''} reqore-heading`,
+          }}
+        >
+          {children}
+        </ReqoreTooltipComponent>
       );
-
-      return <Component {...props}>{children}</Component>;
     }
   )
 );

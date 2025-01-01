@@ -8,7 +8,6 @@ import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { IPopoverData } from '../../containers/PopoverProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
 import {
@@ -17,6 +16,7 @@ import {
   getNotificationIntent,
 } from '../../helpers/colors';
 import ReqoreMessage from '../Message';
+import { IPopoverData } from '../Popover';
 
 const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
   rgba(

@@ -2,11 +2,11 @@ import { size } from 'lodash';
 import React, { memo, useMemo } from 'react';
 import { ReqorePanel, ReqorePopover } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
-import { IPopoverOptions } from '../../hooks/usePopover';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreInputProps } from '../Input';
 import { IReqorePanelProps } from '../Panel';
+import { IPopoverOptions } from '../Popover';
 import ReqoreDropdownList, {
   IReqoreDropdownItem,
   IReqoreDropdownListProps,
@@ -132,6 +132,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
     <ReqorePopover
       closeOnOutsideClick={closeOnOutsideClick}
       closeOnInsideClick={closeOnInsideClick}
+      closeOnTargetClick
       blur={blur}
       closeOnAnyClick={closeOnAnyClick}
       delay={delay}

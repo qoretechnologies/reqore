@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useMount } from 'react-use';
 import { IReqorePopoverProps } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
-import usePopover from '../../hooks/usePopover';
 import {
   ReqoreButton,
   ReqoreControlGroup,
@@ -78,44 +77,44 @@ const HoverButton = (args: any) => {
 };
 
 const ClickButton = (args: any) => {
-  const [refElement, setRefElement] = useState(null);
-
-  usePopover({
-    targetElement: refElement,
-    handler: 'click',
-    closeOnOutsideClick: true,
-    noArrow: true,
-    useTargetWidth: true,
-    ...args,
-  });
-
-  return <ReqoreButton ref={setRefElement}>Click popover</ReqoreButton>;
+  return (
+    <ReqoreButton
+      tooltip={{
+        handler: 'click',
+        closeOnOutsideClick: true,
+        noArrow: true,
+        useTargetWidth: true,
+        ...args,
+      }}
+    >
+      Click popover
+    </ReqoreButton>
+  );
 };
 
 const DelayButton = (args: any) => {
-  const [refElement, setRefElement] = useState(null);
-
-  usePopover({
-    targetElement: refElement,
-
-    delay: 500,
-    ...args,
-  });
-
-  return <ReqoreButton ref={setRefElement}>Tooltip with delay of 500ms</ReqoreButton>;
+  return (
+    <ReqoreButton
+      tooltip={{
+        delay: 500,
+        ...args,
+      }}
+    >
+      Tooltip with delay of 500ms
+    </ReqoreButton>
+  );
 };
 
 const HoverStayButton = (args: any) => {
-  const [refElement, setRefElement] = useState(null);
-
-  usePopover({
-    targetElement: refElement,
-    handler: 'hoverStay',
-    ...args,
-  });
-
   return (
-    <ReqoreButton ref={setRefElement}>Tooltip with hover start and click end events</ReqoreButton>
+    <ReqoreButton
+      tooltip={{
+        handler: 'hoverStay',
+        ...args,
+      }}
+    >
+      Tooltip with hover start and click end events
+    </ReqoreButton>
   );
 };
 

@@ -49,7 +49,7 @@ export { IReqoreParagraphProps, ReqoreP, ReqoreP as ReqoreParagraph } from './co
 export { ReqorePopover } from './components/Popover';
 export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export { IReqoreRichTextEditorProps, ReqoreRichTextEditor } from './components/RichTextEditor';
-export * from './components/Slider';
+export { ReqoreSlider } from './components/Slider';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
 export { IReqoreSpanProps, ReqoreSpan } from './components/Span';
 export { ReqoreSpinner } from './components/Spinner';

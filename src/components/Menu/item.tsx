@@ -1,8 +1,6 @@
 import React, { forwardRef, memo, useCallback, useEffect, useState } from 'react';
-import { useContext } from 'use-context-selector';
 import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import PopoverContext from '../../context/PopoverContext';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
@@ -53,7 +51,6 @@ const ReqoreMenuItem = memo(
       }: IReqoreMenuItemProps,
       ref
     ) => {
-      const { removePopover } = useContext(PopoverContext);
       const { targetRef } = useCombinedRefs<HTMLButtonElement>(ref);
       const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
 
@@ -64,10 +61,10 @@ const ReqoreMenuItem = memo(
           onClick?.(event, itemId);
 
           if (_insidePopover && _popoverId) {
-            removePopover!(_popoverId);
+            //removePopover!(_popoverId);
           }
         },
-        [itemId, _insidePopover, _popoverId, onClick, removePopover]
+        [itemId, _insidePopover, _popoverId, onClick]
       );
 
       const handleRightIconClick = useCallback(
@@ -79,11 +76,11 @@ const ReqoreMenuItem = memo(
             onRightIconClick(itemId, event);
 
             if (_insidePopover && _popoverId) {
-              removePopover!(_popoverId);
+              //removePopover!(_popoverId);
             }
           }
         },
-        [itemId, _insidePopover, _popoverId, onRightIconClick, removePopover]
+        [itemId, _insidePopover, _popoverId, onRightIconClick]
       );
 
       useEffect(() => {

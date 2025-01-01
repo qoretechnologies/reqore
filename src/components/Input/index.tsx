@@ -16,7 +16,6 @@ import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import { ActiveIconScale, DisabledElement, InactiveIconScale, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
@@ -31,6 +30,7 @@ import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreInputProps
   extends Omit<React.ComponentPropsWithoutRef<'input'>, 'size' | 'children'>,
@@ -195,7 +195,6 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
 const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
   (
     {
-      tooltip,
       width,
       size = 'normal',
       fluid,
@@ -227,7 +226,6 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const theme = useReqoreTheme('main', customTheme, intent);
 
-    useTooltip(inputRef, tooltip);
     useAutoFocus(inputRef, readOnly || rest.disabled ? undefined : focusRules, rest.onChange);
 
     const hasLeftIcon = icon || leftIconProps?.image;
@@ -237,7 +235,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       : icon || leftIconProps?.icon;
 
     return (
-      <StyledInputWrapper
+      <ReqoreTooltipComponent
+        Component={StyledInputWrapper}
         className='reqore-control-wrapper'
         fluid={fluid}
         fixed={fixed}
@@ -252,6 +251,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         disabled={rest.disabled}
         style={wrapperStyle}
         pill={pill}
+        tooltip={rest.tooltip}
       >
         {hasLeftIcon && (
           <StyledIconWrapper _size={size}>
@@ -314,7 +314,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             />
           </StyledIconWrapper>
         )}
-      </StyledInputWrapper>
+      </ReqoreTooltipComponent>
     );
   }
 );

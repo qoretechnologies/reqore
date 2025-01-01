@@ -1,5 +1,4 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { ReqorePopover, ReqoreUIProvider } from '../src/index';
 
 const SimpleContent = (props: any) => {
@@ -55,6 +54,7 @@ test('Shows popover on click, hides only on click away', async () => {
   act(() => {
     render(
       <ReqoreUIProvider>
+        <p>Click me to hide</p>
         <SimpleContent type='click' />
       </ReqoreUIProvider>
     );
@@ -69,7 +69,7 @@ test('Shows popover on click, hides only on click away', async () => {
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 
-  fireEvent.click(screen.getByText('Hover me'));
+  fireEvent.click(screen.getByText('Click me to hide'));
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 });
