@@ -173,13 +173,6 @@ export const ReqorePopover = memo(
             return;
           }
 
-          console.log(
-            'closeOnOutsideClick',
-            closeOnOutsideClick,
-            !(popperRef?.current && popperRef.current.contains(event.target)),
-            !componentRef?.contains(event.target as Node)
-          );
-
           if (
             closeOnOutsideClick &&
             !(popperRef?.current && popperRef.current.contains(event.target)) &&
@@ -240,7 +233,6 @@ export const ReqorePopover = memo(
       }, []);
 
       useEffect(() => {
-        console.log('Adding event listeners', componentRef, content);
         if (componentRef && content) {
           document.addEventListener('click', handleClick, true);
 
