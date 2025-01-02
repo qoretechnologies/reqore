@@ -43,11 +43,11 @@ export const ReqoreSpinner = ({
         effect={effect}
         animation='spin'
         className='reqore-spinner'
-        margin={iconMargin || (children ? 'right' : undefined)}
+        margin={iconMargin || (children && !centered ? 'right' : undefined)}
         {...iconProps}
       />
     );
-  }, [size, intent, type, children, iconColor]);
+  }, [size, intent, type, children, iconColor, centered]);
 
   if (children) {
     return (
