@@ -733,9 +733,11 @@ export const Resizable: Story = {
   render: Template,
 
   args: {
+    isCollapsed: true,
     resizable: {
       minWidth: 400,
       maxWidth: 600,
+
       defaultSize: { width: 400, height: '100%' },
       enable: { right: true },
     },

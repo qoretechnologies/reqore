@@ -446,12 +446,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         },
       };
 
-      if (isCollapsed || disabled) {
+      if (_isCollapsed || disabled) {
         return disabledProps;
       }
 
       return resizable || disabledProps;
-    }, [resizable, isCollapsed, disabled]);
+    }, [resizable, _isCollapsed, disabled]);
 
     // Return true if the card has a title bar, otherwise return false.
     const hasTitleBar: boolean = useMemo(
@@ -709,7 +709,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       <StyledPanel
         {...omit(rest, ['onResize'])}
         {..._resizable}
-        as={rest.as || !!resizable ? Resizable : 'div'}
+        as={rest.as || (!!resizable && !disabled && !_isCollapsed) ? Resizable : 'div'}
         ref={(ref) => {
           let _ref = ref;
 
