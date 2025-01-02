@@ -120,15 +120,21 @@ const ReqoreDropdownList = memo(
 
         if (item.onClick) {
           item.onClick(item, event);
-          closePopover?.();
+
+          if (!multiSelect) {
+            closePopover?.();
+          }
         }
 
         if (onItemSelect) {
           onItemSelect(item, event);
-          closePopover?.();
+
+          if (!multiSelect) {
+            closePopover?.();
+          }
         }
       },
-      [onItemSelect, selectedItem, closePopover]
+      [onItemSelect, selectedItem, closePopover, multiSelect]
     );
 
     if (selectedItem) {
