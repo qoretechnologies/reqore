@@ -1,17 +1,22 @@
 import { cloneDeep, isString } from 'lodash';
 import { rgba } from 'polished';
-import React, { MutableRefObject, memo, useEffect, useRef, useState } from 'react';
+import React, {
+  MutableRefObject,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { usePopper } from 'react-popper';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { useContext } from 'use-context-selector';
 import { useReqoreProperty } from '../..';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { IPopoverData } from '../../containers/PopoverProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import PopoverContext from '../../context/PopoverContext';
 import { fadeIn } from '../../helpers/animations';
 import {
   changeLightness,
@@ -19,6 +24,7 @@ import {
   getNotificationIntent,
 } from '../../helpers/colors';
 import ReqoreMessage from '../Message';
+import { IPopoverData } from '../Popover';
 
 const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
   rgba(
@@ -145,13 +151,16 @@ export const StyledPopoverContent = styled.div`
   overflow: hidden;
 `;
 
-export interface IReqoreInternalPopoverProps extends IPopoverData {}
+export interface IReqoreInternalPopoverProps extends IPopoverData {
+  onPopperUpdate?: (popperRef: MutableRefObject<any>) => void;
+  onPopperClose?: () => void;
+  closePopover: () => void;
+}
 
 const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
   ({
     targetElement,
     content,
-    id,
     placement,
     noArrow,
     noWrapper,
@@ -164,12 +173,14 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     icon,
     minimal,
     flat = true,
-    uiScale,
     effect,
+    onPopperUpdate,
+    onPopperClose,
+    closePopover,
   }) => {
-    const { removePopover, updatePopover, uiScale: globalUiScale } = useContext(PopoverContext);
     const animations = useReqoreProperty('animations');
     const customPortalId = useReqoreProperty('customPortalId');
+    const uiScale = useReqoreProperty('uiScale');
     const [popperElement, setPopperElement] = useState(null);
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
@@ -219,33 +230,51 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
 
     useEffect(() => {
       if (popperRef.current) {
-        updatePopover?.(id, { popperRef: cloneDeep(popperRef) });
+        onPopperUpdate?.(cloneDeep(popperRef));
       }
     }, [popperRef]);
 
     useEffect(() => {
       if (attributes.popper?.['data-popper-reference-hidden']) {
-        removePopover?.(id);
+        onPopperClose?.();
       }
     }, [attributes.popper]);
 
     /* Getting the x and y values from the transform property of the popper element. */
-    const translateValues = styles.popper.transform
-      ?.replace('translate3d(', '')
-      .replace('translate(', '')
-      .replace(')', '')
-      .split(',')
-      .map((axis) => {
-        const scale = uiScale || globalUiScale;
-        let modifiedAxis = parseInt(axis, 10);
+    const translateValues = useMemo(
+      () =>
+        styles.popper.transform
+          ?.replace('translate3d(', '')
+          .replace('translate(', '')
+          .replace(')', '')
+          .split(',')
+          .map((axis) => {
+            const scale = uiScale;
+            let modifiedAxis = parseInt(axis, 10);
 
-        if (scale || scale === 0) {
-          modifiedAxis =
-            parseInt(axis, 10) < 0 ? parseInt(axis, 10) * scale : parseInt(axis, 10) / scale;
-        }
+            if (scale || scale === 0) {
+              modifiedAxis =
+                parseInt(axis, 10) < 0 ? parseInt(axis, 10) * scale : parseInt(axis, 10) / scale;
+            }
 
-        return modifiedAxis;
-      });
+            return modifiedAxis;
+          }),
+      [styles.popper.transform, uiScale]
+    );
+
+    const style = useMemo(
+      () => ({
+        ...styles.popper,
+        transform: `translate(${translateValues?.[0] || 0}px, ${translateValues?.[1] || 0}px)`,
+        width: useTargetWidth && (targetElement?.getBoundingClientRect()?.width || undefined),
+      }),
+      [styles.popper, useTargetWidth, targetElement, translateValues]
+    );
+
+    const handleRef = useCallback((el) => {
+      setPopperElement(el);
+      popperRef.current = el;
+    }, []);
 
     return createPortal(
       <ReqoreThemeProvider>
@@ -260,15 +289,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           noWrapper={noWrapper}
           dim={flat && !transparent && !effect && minimal}
           className='reqore-popover-content'
-          ref={(el) => {
-            setPopperElement(el);
-            popperRef.current = el;
-          }}
-          style={{
-            ...styles.popper,
-            transform: `translate(${translateValues?.[0] || 0}px, ${translateValues?.[1] || 0}px)`,
-            width: useTargetWidth && (targetElement?.getBoundingClientRect()?.width || undefined),
-          }}
+          ref={handleRef}
+          style={style}
           animate={animations?.popovers}
           {...attributes.popper}
         >
@@ -294,8 +316,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
                 {React.Children.map(content, (child) =>
                   child
                     ? React.cloneElement(child, {
-                        _insidePopover: true,
-                        _popoverId: id,
+                        closePopover,
                       })
                     : null
                 )}

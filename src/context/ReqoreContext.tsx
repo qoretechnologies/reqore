@@ -23,6 +23,7 @@ export interface IReqoreContext {
   readonly isTablet?: boolean;
   readonly isMobileOrTablet?: boolean;
   readonly getAndIncreaseZIndex?: () => number;
+  readonly uiScale?: number;
   readonly animations?: {
     readonly buttons?: boolean;
     readonly dialogs?: boolean;
@@ -63,4 +64,5 @@ export default createContext<IReqoreContext>({
   addEscClosableModal: null,
   removeEscClosableModal: null,
   theme: DEFAULT_THEME,
+  uiScale: 1,
 });

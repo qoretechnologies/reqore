@@ -10,6 +10,7 @@ import {
 } from 'lodash';
 import { IReqorePanelAction } from '../components/Panel';
 import { NUMBER_TO_SIZE, SIZES, SIZE_TO_NUMBER, TSizes } from '../constants/sizes';
+import { TReqoreTooltipProp } from '../types/global';
 
 export const sleep = async (ms: number) => await new Promise((r) => setTimeout(r, ms));
 
@@ -176,4 +177,12 @@ export function parseInputValue(input) {
 
   // Default to a string
   return input;
+}
+
+export function buildTooltipForComponents(tooltip: TReqoreTooltipProp) {
+  if (isString(tooltip)) {
+    return { content: tooltip };
+  }
+
+  return tooltip;
 }

@@ -14,7 +14,6 @@ import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import useAutosizeTextArea from '../../hooks/useTextareaAutoSize';
-import { useTooltip } from '../../hooks/useTooltip';
 import { DisabledElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
@@ -28,6 +27,7 @@ import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
 import { IReqoreInputStyle } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreFormTemplates extends IReqoreDropdownProps {}
 
@@ -184,7 +184,6 @@ function Textarea<T>(
     setValue(value || '');
   }, [value]);
 
-  useTooltip(inputRef, tooltip);
   useAutosizeTextArea(inputRef, _value, scaleWithContent);
   useAutoFocus(inputRef, rest.readOnly || rest.disabled ? undefined : focusRules, onChange);
 
@@ -265,7 +264,9 @@ function Textarea<T>(
   }
 
   return (
-    <StyledTextareaWrapper
+    <ReqoreTooltipComponent
+      Component={StyledTextareaWrapper}
+      tooltip={tooltip}
       className={`${className || ''} reqore-control-wrapper`}
       width={width}
       height={height}
@@ -277,7 +278,7 @@ function Textarea<T>(
       ref={targetRef}
     >
       {renderChildren()}
-    </StyledTextareaWrapper>
+    </ReqoreTooltipComponent>
   );
 }
 

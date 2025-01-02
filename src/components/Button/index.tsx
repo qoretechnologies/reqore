@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { rgba, saturate, tint } from 'polished';
-import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
@@ -24,11 +24,9 @@ import {
   isAchromatic,
 } from '../../helpers/colors';
 import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreEffect } from '../../hooks/useReqoreEffect';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import {
   ActiveIconScale,
   DisabledElement,
@@ -61,6 +59,7 @@ import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export type TReqoreBadge = string | number | IReqoreTagProps;
 
@@ -111,7 +110,7 @@ export interface IReqoreButtonProps
   circle?: boolean;
 }
 
-export interface IReqoreButtonStyle extends Omit<IReqoreButtonProps, 'intent'> {
+export interface IReqoreButtonStyle extends IReqoreButtonProps {
   theme: IReqoreTheme;
   animate?: boolean;
   color?: TReqoreHexColor;
@@ -154,7 +153,6 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
   justify-content: center;
-  margin: 0;
   font-weight: 570;
   position: relative;
   overflow: hidden;
@@ -195,8 +193,8 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
     rounded === false
       ? undefined
       : circle
-      ? 9999
-      : RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+      ? '9999px'
+      : `${RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
 
   background-color: ${({ minimal, color, theme, transparent, effect }) => {
     if (transparent) {
@@ -494,14 +492,9 @@ const ReqoreButton = memo(
       }: IReqoreButtonProps,
       ref
     ) => {
-      const { targetRef } = useCombinedRefs(ref);
-      const [buttonRef, setButtonRef] = useState<HTMLButtonElement>(undefined);
       const animations = useReqoreProperty('animations');
       const theme = useReqoreTheme('main', customTheme, intent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
-
-      /* A custom hook that is used to add a tooltip to the button. */
-      useTooltip(buttonRef, tooltip);
 
       // If color or intent was specified, set the color
       const customColor = useMemo(
@@ -529,38 +522,43 @@ const ReqoreButton = memo(
       const leftIcon: IReqoreIconName = loading
         ? `Loader${loadingIconType || ''}Line`
         : icon || leftIconProps?.icon;
+      const memoEffect = useMemo(
+        () => ({
+          interactive: !readOnly && !rest.disabled,
+          ...fixedEffect,
+          gradient: intent ? undefined : fixedEffect?.gradient,
+        }),
+        [fixedEffect, intent, readOnly, rest.disabled]
+      );
 
       return (
-        <StyledButton
-          {...rest}
-          effect={{
-            interactive: !readOnly && !rest.disabled,
-            ...fixedEffect,
-            gradient: intent ? undefined : fixedEffect?.gradient,
+        <ReqoreTooltipComponent
+          {...{
+            ...rest,
+            effect: memoEffect,
+            tabIndex: rest.disabled ? -1 : 0,
+            as: as || 'button',
+            theme,
+            fluid,
+            fixed,
+            maxWidth,
+            minimal,
+            transparent,
+            size,
+            intent,
+            color: customColor,
+            animate,
+            flat: _flat,
+            active,
+            readOnly: readOnly || loading,
+            wrap,
+            description,
+            className: `${className || ''} reqore-control reqore-button`,
+            compact: _compact,
+            tooltip,
           }}
-          tabindex={rest.disabled ? -1 : 0}
-          as={as || 'button'}
-          theme={theme}
-          ref={(ref) => {
-            targetRef.current = ref;
-            setButtonRef(ref);
-          }}
-          fluid={fluid}
-          fixed={fixed}
-          maxWidth={maxWidth}
-          minimal={minimal}
-          transparent={transparent}
-          size={size}
-          intent={intent}
-          color={customColor}
-          animate={animate}
-          flat={_flat}
-          active={active}
-          readOnly={readOnly || loading}
-          wrap={wrap}
-          description={description}
-          className={`${className || ''} reqore-control reqore-button`}
-          compact={_compact}
+          Component={StyledButton}
+          ref={ref}
         >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {hasLeftIcon ? (
@@ -711,7 +709,7 @@ const ReqoreButton = memo(
               {description}
             </ReqoreTextEffect>
           )}
-        </StyledButton>
+        </ReqoreTooltipComponent>
       );
     }
   )

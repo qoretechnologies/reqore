@@ -1,4 +1,3 @@
-import { size } from 'lodash';
 import React, { memo, useCallback } from 'react';
 import { ReqoreMenuItem } from '../..';
 import ReqoreMenuDivider, { IReqoreMenuDividerProps } from '../Menu/divider';
@@ -21,7 +20,6 @@ export const ReqoreDropdownItem = memo(
     return (
       <ReqoreMenuItem
         {...rest}
-        _insidePopover={size(rest.items) ? false : rest._insidePopover}
         label={rest.label || rest.value}
         onClick={handleItemClick}
         rightIcon={rest.selected ? 'CheckLine' : rest.rightIcon}

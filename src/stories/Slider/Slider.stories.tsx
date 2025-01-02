@@ -1,7 +1,7 @@
 import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import ReqoreControlGroup from '../../components/ControlGroup';
-import ReqoreSlider from '../../components/Slider';
+import { ReqoreSlider } from '../../components/Slider';
 import { StoryMeta } from '../utils';
 import { DisabledArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
 

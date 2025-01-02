@@ -15,8 +15,6 @@ export interface IReqoreMenuSectionProps extends IReqoreComponent, IReqoreButton
 
 export const ReqoreMenuSection = ({
   children,
-  _insidePopover,
-  _popoverId,
   customTheme,
   wrap,
   flat,
@@ -46,8 +44,6 @@ export const ReqoreMenuSection = ({
   );
 
   const { clone } = useCloneThroughFragments((props) => ({
-    _insidePopover: props?._insidePopover ?? _insidePopover,
-    _popoverId: props?._popoverId ?? _popoverId,
     customTheme: props?.customTheme || customTheme,
     wrap: 'wrap' in (props || {}) ? props.wrap : wrap,
     flat: 'flat' in (props || {}) ? props.flat : flat,

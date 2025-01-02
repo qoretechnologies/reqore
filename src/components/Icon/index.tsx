@@ -1,4 +1,4 @@
-import React, { forwardRef, memo } from 'react';
+import React, { forwardRef, memo, useMemo } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
@@ -7,11 +7,10 @@ import { useReqoreTheme } from '../..';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getColorFromMaybeString } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { useTooltip } from '../../hooks/useTooltip';
 import { IReqoreIntent, IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect, TReqoreEffectColor } from '../Effect';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreIconProps
   extends React.HTMLAttributes<HTMLSpanElement>,
@@ -110,18 +109,16 @@ const ReqoreIcon = memo(
         iconProps,
         intent,
         image,
-        tooltip,
         ...rest
       }: IReqoreIconProps,
       ref
     ) => {
-      const { targetRef } = useCombinedRefs(ref);
-      const [iconRef, setIconRef] = React.useState<HTMLSpanElement>(undefined);
       const theme = useReqoreTheme();
       const Icon: IconType = RemixIcons[`Ri${icon}`];
-      const finalColor: string | undefined = intent
-        ? theme.intents[intent]
-        : getColorFromMaybeString(theme, color);
+      const finalColor: string | undefined = useMemo(
+        () => (intent ? theme.intents[intent] : getColorFromMaybeString(theme, color)),
+        [intent, theme, color]
+      );
       const finalSize: string = isStringSize(size) ? ICON_FROM_SIZE[size] : size;
       const finalWrapperSize: string = wrapperSize
         ? isStringSize(wrapperSize)
@@ -131,53 +128,55 @@ const ReqoreIcon = memo(
       const finalMarginSize: number = isStringSize(marginSize)
         ? PADDING_FROM_SIZE[marginSize]
         : marginSize;
-
-      useTooltip(iconRef, tooltip);
+      const finalStyle = useMemo(
+        () => ({ width: finalWrapperSize, height: finalWrapperSize, ...style }),
+        [finalWrapperSize, style]
+      );
 
       if (image) {
         return (
-          <StyledIconWrapper
+          <ReqoreTooltipComponent
             {...rest}
+            Component={StyledIconWrapper}
             as={wrapperElement}
-            ref={targetRef}
+            ref={ref}
             size={size}
             margin={margin}
             marginSize={finalMarginSize}
             className={`${className || ''} reqore-icon`}
-            style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
+            style={finalStyle}
           >
             <img src={image} alt='' />
-          </StyledIconWrapper>
+          </ReqoreTooltipComponent>
         );
       }
 
       if (!Icon) {
         return (
-          <StyledIconWrapper
+          <ReqoreTooltipComponent
             {...rest}
+            Component={StyledIconWrapper}
             as={wrapperElement}
-            ref={targetRef}
+            ref={ref}
             size={size}
             margin={margin}
             marginSize={finalMarginSize}
             className={`${className || ''} reqore-icon`}
-            style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
+            style={finalStyle}
           />
         );
       }
 
       return (
-        <StyledIconWrapper
+        <ReqoreTooltipComponent
           {...rest}
+          Component={StyledIconWrapper}
           as={wrapperElement}
-          ref={(ref) => {
-            targetRef.current = ref;
-            setIconRef(ref);
-          }}
+          ref={ref}
           margin={margin}
           size={size}
           marginSize={finalMarginSize}
-          style={{ width: finalWrapperSize, height: finalWrapperSize, ...style }}
+          style={finalStyle}
           className={`${className || ''} reqore-icon`}
         >
           <IconContext.Provider
@@ -191,7 +190,7 @@ const ReqoreIcon = memo(
           >
             <Icon {...iconProps} />
           </IconContext.Provider>
-        </StyledIconWrapper>
+        </ReqoreTooltipComponent>
       );
     }
   )

@@ -59,7 +59,7 @@ const ReqoreDropdownList = memo(
     items,
     multiSelect,
     listStyle,
-    _popoverId,
+    closePopover,
     filterable,
     width,
     height,
@@ -120,13 +120,21 @@ const ReqoreDropdownList = memo(
 
         if (item.onClick) {
           item.onClick(item, event);
+
+          if (!multiSelect) {
+            closePopover?.();
+          }
         }
 
         if (onItemSelect) {
           onItemSelect(item, event);
+
+          if (!multiSelect) {
+            closePopover?.();
+          }
         }
       },
-      [onItemSelect, selectedItem]
+      [onItemSelect, selectedItem, closePopover, multiSelect]
     );
 
     if (selectedItem) {
@@ -136,8 +144,8 @@ const ReqoreDropdownList = memo(
             items: selectedItem.items,
             multiSelect,
             listStyle,
-            _popoverId,
             filterable,
+            closePopover,
             width,
             height,
             onItemSelect,
@@ -191,8 +199,6 @@ const ReqoreDropdownList = memo(
         <ReqorePaginationContainer type={paging} items={filteredItems} scrollContainer={menuRef}>
           {(_finalItems, Controls, { includeBottomControls, applyPaging }) => (
             <ReqoreMenu
-              _insidePopover={!multiSelect}
-              _popoverId={_popoverId}
               style={listStyle}
               width={width}
               maxHeight={height || '300px'}

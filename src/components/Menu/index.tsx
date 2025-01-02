@@ -80,8 +80,6 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
     {
       children,
       position,
-      _insidePopover,
-      _popoverId,
       customTheme,
       intent,
       wrapText,
@@ -97,8 +95,6 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
     const theme = useReqoreTheme('main', customTheme, intent);
     const { targetRef } = useCombinedRefs(ref);
     const { clone } = useCloneThroughFragments((props) => ({
-      _insidePopover: props?._insidePopover ?? _insidePopover,
-      _popoverId: props?._popoverId ?? _popoverId,
       customTheme: props?.customTheme || theme,
       wrap: 'wrap' in (props || {}) ? props.wrap : wrapText,
       flat: 'flat' in (props || {}) ? props.flat : flat,

@@ -1,12 +1,11 @@
 import { IReqoreEffect } from '../components/Effect';
+import { IPopoverOptions } from '../components/Popover';
 import { IReqoreSpinnerProps } from '../components/Spinner';
 import { TSizes } from '../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../constants/theme';
-import { IPopoverOptions } from '../hooks/usePopover';
 
 export interface IReqoreComponent {
-  _insidePopover?: boolean;
-  _popoverId?: string;
+  closePopover?: () => void;
 }
 
 export interface IReqoreReadOnly {

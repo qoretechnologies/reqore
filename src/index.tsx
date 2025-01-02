@@ -46,10 +46,10 @@ export { default as ReqoreNotification } from './components/Notifications/notifi
 export { ReqorePagination } from './components/Paging';
 export { ReqorePanel } from './components/Panel';
 export { IReqoreParagraphProps, ReqoreP, ReqoreP as ReqoreParagraph } from './components/Paragraph';
-export { default as ReqorePopover } from './components/Popover';
+export { ReqorePopover } from './components/Popover';
 export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export { IReqoreRichTextEditorProps, ReqoreRichTextEditor } from './components/RichTextEditor';
-export * from './components/Slider';
+export { ReqoreSlider } from './components/Slider';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
 export { IReqoreSpanProps, ReqoreSpan } from './components/Span';
 export { ReqoreSpinner } from './components/Spinner';

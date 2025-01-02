@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import React, { forwardRef, useMemo, useState } from 'react';
+import React, { forwardRef, memo, useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -17,9 +17,8 @@ import {
   getReadableColorFrom,
 } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { useTooltip } from '../../hooks/useTooltip';
 import { DisabledElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
@@ -212,14 +211,10 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     }: IReqoreCheckboxProps,
     ref
   ) => {
-    const { targetRef } = useCombinedRefs(ref);
-    const [itemRef, setItemRef] = useState<HTMLDivElement>(undefined);
     const [offRef, { width: offWidth }] = useMeasure();
     const [onRef, { width: onWidth }] = useMeasure();
     const _intent = checked ? checkedIntent || intent : uncheckedIntent || intent;
     const theme = useReqoreTheme('main', customTheme, _intent);
-
-    useTooltip(itemRef, tooltip);
 
     const width = useMemo(() => {
       if ((!image && !onText && onText !== 0) || (!offText && offText !== 0)) return undefined;
@@ -233,20 +228,23 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       return !!(onText || offText || onText === 0 || offText === 0);
     }, [onText, offText]);
 
+    const { Component, props } = useComponentTooltip(
+      {
+        ...rest,
+        theme,
+        size,
+        tooltip,
+        disabled,
+        checked,
+        readOnly,
+        className: `${className || ''} reqore-checkbox reqore-control`,
+      },
+      StyledCheckbox,
+      ref
+    );
+
     return (
-      <StyledCheckbox
-        {...rest}
-        ref={(ref) => {
-          targetRef.current = ref;
-          setItemRef(ref);
-        }}
-        theme={theme}
-        size={size}
-        disabled={disabled}
-        checked={checked}
-        readOnly={readOnly}
-        className={`${className || ''} reqore-checkbox reqore-control`}
-      >
+      <Component {...props}>
         {margin === 'left' || margin === 'both' ? (
           <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
         ) : null}
@@ -395,9 +393,9 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         {margin === 'right' || margin === 'both' ? (
           <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
         ) : null}
-      </StyledCheckbox>
+      </Component>
     );
   }
 );
 
-export default Checkbox;
+export default memo(Checkbox);
