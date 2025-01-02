@@ -65,7 +65,7 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-export const StyledPopoverWrapper = memo(styled.div<{ theme: IReqoreTheme }>`
+export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   ${({ animate }) =>
     animate &&
     css`
@@ -141,15 +141,15 @@ export const StyledPopoverWrapper = memo(styled.div<{ theme: IReqoreTheme }>`
     visibility: hidden;
     pointer-events: none;
   }
-`);
+`;
 
-export const StyledPopoverContent = memo(styled.div`
+export const StyledPopoverContent = styled.div`
   width: 100%;
   height: 100%;
   z-index: 20;
   position: relative;
   overflow: hidden;
-`);
+`;
 
 export interface IReqoreInternalPopoverProps extends IPopoverData {
   onPopperUpdate?: (popperRef: MutableRefObject<any>) => void;

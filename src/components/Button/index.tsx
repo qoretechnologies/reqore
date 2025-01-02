@@ -149,7 +149,7 @@ export const StyledAnimatedTextWrapper = styled.span`
   align-items: ${({ textAlign }) => alignToFlexAlign(textAlign)};
 `;
 
-export const StyledButton = memo(styled(StyledEffect)<IReqoreButtonStyle>`
+export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
   justify-content: center;
@@ -328,7 +328,7 @@ export const StyledButton = memo(styled(StyledEffect)<IReqoreButtonStyle>`
     color: ${({ theme, color, minimal, transparent }) =>
       rgba(getButtonTextColor({ minimal, transparent, color, theme }), 0.7)};
   }
-`);
+`;
 
 export const StyledButtonContent = styled.div`
   display: flex;

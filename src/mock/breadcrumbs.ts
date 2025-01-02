@@ -1,6 +1,5 @@
 import { noop } from 'lodash';
 import { IReqoreBreadcrumbItem, IReqoreBreadcrumbItemTabs } from '../components/Breadcrumbs';
-import { ReqoreH3 } from '../components/Header';
 import { Icons } from './icons';
 
 export default [
@@ -35,7 +34,7 @@ export default [
   {
     icon: Icons.Services,
     tooltip: 'Services as H3',
-    as: ReqoreH3,
+    as: 'h3',
     label: 'Services as H3',
     props: {
       onClick: noop,

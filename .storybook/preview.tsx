@@ -21,7 +21,7 @@ export const parameters = {
   chromatic: {
     delay: 500,
     pauseAnimationAtEnd: true,
-    viewports: [600, 1440],
+    viewports: [1440],
   },
 };
 

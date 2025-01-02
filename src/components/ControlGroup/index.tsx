@@ -100,9 +100,9 @@ export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroup
     if (fill && !vertical) {
       return css`
         > * {
-          max-height: 100%;
+          max-height: 100% !important;
           height: unset !important;
-          align-self: stretch;
+          align-self: stretch !important;
         }
       `;
     }
