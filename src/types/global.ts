@@ -5,8 +5,6 @@ import { TSizes } from '../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../constants/theme';
 
 export interface IReqoreComponent {
-  _insidePopover?: boolean;
-  _popoverId?: string;
   closePopover?: () => void;
 }
 

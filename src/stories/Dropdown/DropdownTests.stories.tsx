@@ -1,6 +1,7 @@
 import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { fireEvent, waitFor, within } from '@storybook/testing-library';
+import { noop } from 'lodash';
 import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
 import { sleep } from '../../helpers/utils';
@@ -51,6 +52,7 @@ type Story = StoryObj<typeof meta>;
 export const ListIsClosedWhenItemIsClicked: Story = {
   args: {
     label: 'Default dropdown',
+    onItemSelect: noop,
     items: [
       {
         label: 'Test item 1',

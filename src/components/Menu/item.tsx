@@ -41,9 +41,6 @@ const ReqoreMenuItem = memo(
         onRightIconClick,
         disabled,
         itemId,
-        _insidePopover,
-        _popoverId,
-        closePopover,
         tooltip,
         intent,
         flat = true,
@@ -60,9 +57,8 @@ const ReqoreMenuItem = memo(
           event.persist();
 
           onClick?.(event, itemId);
-          closePopover?.();
         },
-        [itemId, _insidePopover, _popoverId, onClick]
+        [itemId, onClick]
       );
 
       const handleRightIconClick = useCallback(
@@ -72,10 +68,9 @@ const ReqoreMenuItem = memo(
 
           if (onRightIconClick) {
             onRightIconClick(itemId, event);
-            closePopover?.();
           }
         },
-        [itemId, _insidePopover, _popoverId, onRightIconClick]
+        [itemId, onRightIconClick]
       );
 
       useEffect(() => {

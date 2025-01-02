@@ -24,7 +24,6 @@ import {
   isAchromatic,
 } from '../../helpers/colors';
 import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
-import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreEffect } from '../../hooks/useReqoreEffect';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -60,6 +59,7 @@ import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export type TReqoreBadge = string | number | IReqoreTagProps;
 
@@ -531,37 +531,35 @@ const ReqoreButton = memo(
         [fixedEffect, intent, readOnly, rest.disabled]
       );
 
-      const { Component, props } = useComponentTooltip<IReqoreButtonStyle>(
-        {
-          ...rest,
-          effect: memoEffect,
-          tabIndex: rest.disabled ? -1 : 0,
-          as: as || 'button',
-          theme,
-          fluid,
-          fixed,
-          maxWidth,
-          minimal,
-          transparent,
-          size,
-          intent,
-          color: customColor,
-          animate,
-          flat: _flat,
-          active,
-          readOnly: readOnly || loading,
-          wrap,
-          description,
-          className: `${className || ''} reqore-control reqore-button`,
-          compact: _compact,
-          tooltip,
-        },
-        StyledButton,
-        ref
-      );
-
       return (
-        <Component {...props}>
+        <ReqoreTooltipComponent
+          {...{
+            ...rest,
+            effect: memoEffect,
+            tabIndex: rest.disabled ? -1 : 0,
+            as: as || 'button',
+            theme,
+            fluid,
+            fixed,
+            maxWidth,
+            minimal,
+            transparent,
+            size,
+            intent,
+            color: customColor,
+            animate,
+            flat: _flat,
+            active,
+            readOnly: readOnly || loading,
+            wrap,
+            description,
+            className: `${className || ''} reqore-control reqore-button`,
+            compact: _compact,
+            tooltip,
+          }}
+          Component={StyledButton}
+          ref={ref}
+        >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {hasLeftIcon ? (
               <>
@@ -711,7 +709,7 @@ const ReqoreButton = memo(
               {description}
             </ReqoreTextEffect>
           )}
-        </Component>
+        </ReqoreTooltipComponent>
       );
     }
   )

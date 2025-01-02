@@ -1,6 +1,14 @@
 import { cloneDeep, isString } from 'lodash';
 import { rgba } from 'polished';
-import React, { MutableRefObject, memo, useEffect, useRef, useState } from 'react';
+import React, {
+  MutableRefObject,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { usePopper } from 'react-popper';
 import { useUnmount, useUpdateEffect } from 'react-use';
@@ -57,7 +65,7 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
+export const StyledPopoverWrapper = memo(styled.div<{ theme: IReqoreTheme }>`
   ${({ animate }) =>
     animate &&
     css`
@@ -133,15 +141,15 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     visibility: hidden;
     pointer-events: none;
   }
-`;
+`);
 
-export const StyledPopoverContent = styled.div`
+export const StyledPopoverContent = memo(styled.div`
   width: 100%;
   height: 100%;
   z-index: 20;
   position: relative;
   overflow: hidden;
-`;
+`);
 
 export interface IReqoreInternalPopoverProps extends IPopoverData {
   onPopperUpdate?: (popperRef: MutableRefObject<any>) => void;
@@ -233,22 +241,40 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     }, [attributes.popper]);
 
     /* Getting the x and y values from the transform property of the popper element. */
-    const translateValues = styles.popper.transform
-      ?.replace('translate3d(', '')
-      .replace('translate(', '')
-      .replace(')', '')
-      .split(',')
-      .map((axis) => {
-        const scale = uiScale;
-        let modifiedAxis = parseInt(axis, 10);
+    const translateValues = useMemo(
+      () =>
+        styles.popper.transform
+          ?.replace('translate3d(', '')
+          .replace('translate(', '')
+          .replace(')', '')
+          .split(',')
+          .map((axis) => {
+            const scale = uiScale;
+            let modifiedAxis = parseInt(axis, 10);
 
-        if (scale || scale === 0) {
-          modifiedAxis =
-            parseInt(axis, 10) < 0 ? parseInt(axis, 10) * scale : parseInt(axis, 10) / scale;
-        }
+            if (scale || scale === 0) {
+              modifiedAxis =
+                parseInt(axis, 10) < 0 ? parseInt(axis, 10) * scale : parseInt(axis, 10) / scale;
+            }
 
-        return modifiedAxis;
-      });
+            return modifiedAxis;
+          }),
+      [styles.popper.transform, uiScale]
+    );
+
+    const style = useMemo(
+      () => ({
+        ...styles.popper,
+        transform: `translate(${translateValues?.[0] || 0}px, ${translateValues?.[1] || 0}px)`,
+        width: useTargetWidth && (targetElement?.getBoundingClientRect()?.width || undefined),
+      }),
+      [styles.popper, useTargetWidth, targetElement, translateValues]
+    );
+
+    const handleRef = useCallback((el) => {
+      setPopperElement(el);
+      popperRef.current = el;
+    }, []);
 
     return createPortal(
       <ReqoreThemeProvider>
@@ -263,15 +289,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           noWrapper={noWrapper}
           dim={flat && !transparent && !effect && minimal}
           className='reqore-popover-content'
-          ref={(el) => {
-            setPopperElement(el);
-            popperRef.current = el;
-          }}
-          style={{
-            ...styles.popper,
-            transform: `translate(${translateValues?.[0] || 0}px, ${translateValues?.[1] || 0}px)`,
-            width: useTargetWidth && (targetElement?.getBoundingClientRect()?.width || undefined),
-          }}
+          ref={handleRef}
+          style={style}
           animate={animations?.popovers}
           {...attributes.popper}
         >
@@ -297,7 +316,6 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
                 {React.Children.map(content, (child) =>
                   child
                     ? React.cloneElement(child, {
-                        _insidePopover: true,
                         closePopover,
                       })
                     : null

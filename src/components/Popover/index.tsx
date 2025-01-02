@@ -99,8 +99,6 @@ export const ReqorePopover = memo(
         wrapperTag = 'span',
         wrapperStyle = {},
         passPopoverData,
-        _insidePopover,
-        _popoverId,
         content,
         blur,
         closeOnOutsideClick = true,
@@ -305,8 +303,6 @@ export const ReqorePopover = memo(
               className={`${isOpen && blur ? 'reqore-blur-z-index' : ''} ${
                 componentProps?.className || ''
               }`}
-              _insidePopover={_insidePopover}
-              _popoverId={_popoverId}
               ref={handleRef}
             >
               {children}
@@ -346,9 +342,7 @@ export const ReqorePopover = memo(
             ref={handleRef}
             style={wrapperStyle}
           >
-            <Component {...componentProps} _insidePopover={_insidePopover} _popoverId={_popoverId}>
-              {children}
-            </Component>
+            <Component {...componentProps}>{children}</Component>
           </StyledPopover>
         </>
       );

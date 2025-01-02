@@ -121,13 +121,15 @@ const ReqoreDropdownList = memo(
 
         if (item.onClick) {
           item.onClick(item, event);
+          closePopover?.();
         }
 
         if (onItemSelect) {
           onItemSelect(item, event);
+          closePopover?.();
         }
       },
-      [onItemSelect, selectedItem]
+      [onItemSelect, selectedItem, closePopover]
     );
 
     if (selectedItem) {
@@ -192,9 +194,6 @@ const ReqoreDropdownList = memo(
         <ReqorePaginationContainer type={paging} items={filteredItems} scrollContainer={menuRef}>
           {(_finalItems, Controls, { includeBottomControls, applyPaging }) => (
             <ReqoreMenu
-              _insidePopover={!multiSelect}
-              _popoverId={_popoverId}
-              closePopover={multiSelect ? undefined : closePopover}
               style={listStyle}
               width={width}
               maxHeight={height || '300px'}
