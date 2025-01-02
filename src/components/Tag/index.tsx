@@ -122,8 +122,12 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${({ theme, color, flat = true }) =>
     !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
-  border-radius: ${({ asBadge, size }) =>
-    asBadge ? BADGE_RADIUS_FROM_SIZE[size] : TAG_RADIUS_FROM_SIZE[size]}px;
+  border-radius: ${({ asBadge, size, rounded }) =>
+    rounded === false
+      ? undefined
+      : asBadge
+      ? `${BADGE_RADIUS_FROM_SIZE[size]}px`
+      : `${TAG_RADIUS_FROM_SIZE[size]}px`};
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 

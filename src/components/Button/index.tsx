@@ -193,8 +193,8 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
     rounded === false
       ? undefined
       : circle
-      ? 9999
-      : RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+      ? '9999px'
+      : `${RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
 
   background-color: ${({ minimal, color, theme, transparent, effect }) => {
     if (transparent) {

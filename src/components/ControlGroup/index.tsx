@@ -135,7 +135,7 @@ export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroup
     `}
 
   > * {
-    border-radius: ${({ stack }) => (!stack ? undefined : 0)};
+    border-radius: ${({ stack }) => (!stack ? undefined : '0')};
   }
 `;
 
@@ -403,12 +403,7 @@ const ReqoreControlGroup = memo(
               ...(props?.style || {}),
             },
             isChild: true,
-            rounded:
-              isMasterGroupRounded === false
-                ? false
-                : props?.rounded || props?.rounded === false
-                ? props.rounded
-                : !isStack,
+            rounded: isMasterGroupRounded === false ? false : !isStack,
             isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
             isInsideStackGroup: isStack,
             isInsideVerticalGroup: isVertical,
