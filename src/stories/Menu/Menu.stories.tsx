@@ -327,6 +327,14 @@ export const BigGapSize: Story = {
   },
 };
 
+export const Skeleton: Story = {
+  render: Template,
+
+  args: {
+    skeleton: true,
+  },
+};
+
 export const SubmenuCanBeToggled: Story = {
   render: (args) => <MenuWithSubmenus {...args} />,
   play: async ({ canvasElement, ...rest }) => {

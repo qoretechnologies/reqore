@@ -326,3 +326,9 @@ export const CustomSortKeysWithDefaultSort: Story = {
     );
   },
 };
+
+export const Skeleton: Story = {
+  args: {
+    skeleton: true,
+  },
+};

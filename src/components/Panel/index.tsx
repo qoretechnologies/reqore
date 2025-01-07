@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { isArray, omit, size } from 'lodash';
 import { darken, rgba } from 'polished';
 import { Resizable, ResizableProps } from 're-resizable';
-import { forwardRef, ReactElement, useCallback, useMemo, useState } from 'react';
+import { forwardRef, memo, ReactElement, useCallback, useMemo, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
@@ -48,6 +48,7 @@ import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
+import { ReqoreSkeleton } from '../Skeleton';
 import { ReqoreSpan } from '../Span';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
@@ -362,6 +363,29 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 `;
 
+export const ReqorePanelSkeleton = memo(
+  ({ size, isCollapsed }: Pick<IReqorePanelProps, 'size' | 'isCollapsed'>) => (
+    <ReqoreControlGroup vertical fluid gapSize='big'>
+      <ReqoreControlGroup spaceBetween fluid>
+        <ReqoreControlGroup fixed gapSize='big'>
+          <ReqoreSkeleton circle size={size} />
+          <ReqoreSkeleton width='200px' size={size} />
+        </ReqoreControlGroup>
+
+        <ReqoreControlGroup fixed>
+          <ReqoreSkeleton size={size} />
+          <ReqoreSkeleton size={size} />
+        </ReqoreControlGroup>
+      </ReqoreControlGroup>
+      {!isCollapsed && (
+        <ReqoreControlGroup vertical>
+          <ReqoreSkeleton lines={5} width='100%' size='tiny' />
+        </ReqoreControlGroup>
+      )}
+    </ReqoreControlGroup>
+  )
+);
+
 export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
   (
     {
@@ -411,6 +435,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       responsiveActionsWrapperProps,
       loading,
       loadingIconType,
+      skeleton,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -704,6 +729,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }),
       [label]
     );
+
+    if (skeleton) {
+      return <ReqorePanelSkeleton size={panelSize} isCollapsed={_isCollapsed} />;
+    }
 
     return (
       <StyledPanel

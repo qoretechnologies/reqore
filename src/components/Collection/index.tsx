@@ -17,8 +17,10 @@ import {
   IReqorePanelProps,
   IReqorePanelSubAction,
   ReqorePanel,
+  ReqorePanelSkeleton,
   TReqorePanelActions,
 } from '../Panel';
+import { ReqoreSkeleton } from '../Skeleton';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import { getZoomActions, sizeToZoom, sortTableData, zoomToSize } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
@@ -121,6 +123,8 @@ export const ReqoreCollection = memo(
     defaultSort = 'asc',
     defaultSortBy = 'label',
 
+    skeleton,
+
     sortKeys = {},
 
     onQueryChange,
@@ -166,6 +170,10 @@ export const ReqoreCollection = memo(
     }, [showAs]);
 
     const sortedItems: IReqoreCollectionItemProps[] = useMemo(() => {
+      if (!size(items)) {
+        return [];
+      }
+
       if (!sortable) {
         return items;
       }
@@ -419,6 +427,30 @@ export const ReqoreCollection = memo(
       }),
       [fill]
     );
+
+    if (skeleton) {
+      return (
+        <ReqoreControlGroup vertical fluid gapSize='big'>
+          <ReqorePanelSkeleton isCollapsed size={rest.size} />
+          <StyledCollectionWrapper
+            columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
+            columnsGap={stacked ? '0px' : columnsGap}
+            rounded={rounded}
+            stacked={stacked}
+            fill={fill}
+            height={height}
+            alignItems={alignItems}
+            minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
+            maxColumnWidth={maxColumnWidth}
+            className='reqore-collection-content'
+          >
+            <ReqoreSkeleton height='100px' width='100%' />
+            <ReqoreSkeleton height='100px' width='100%' />
+            <ReqoreSkeleton height='100px' width='100%' />
+          </StyledCollectionWrapper>
+        </ReqoreControlGroup>
+      );
+    }
 
     return (
       <ReqorePanel

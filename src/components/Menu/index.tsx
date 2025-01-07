@@ -12,15 +12,18 @@ import {
   IReqoreComponent,
   IWithReqoreMinimal,
   IWithReqoreSize,
+  IWithReqoreSkeleton,
   IWithReqoreTransparent,
 } from '../../types/global';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
+import { ReqoreSkeleton } from '../Skeleton';
 
 export interface IReqoreMenuProps
   extends IReqoreComponent,
     IWithReqoreMinimal,
     IWithReqoreTransparent,
     IWithReqoreSize,
+    IWithReqoreSkeleton,
     React.HTMLAttributes<HTMLDivElement> {
   children: any;
   position?: 'left' | 'right';
@@ -88,6 +91,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       size = 'normal',
       itemGap,
       resizable,
+      skeleton,
       ...rest
     }: IReqoreMenuProps,
     ref
@@ -101,6 +105,16 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
       size: 'size' in (props || {}) ? props.size : size,
     }));
+
+    if (skeleton) {
+      return (
+        <ReqoreControlGroup vertical fluid>
+          {React.Children.map(children, (_child, index) => (
+            <ReqoreSkeleton key={index} size={size} width='200px' />
+          ))}
+        </ReqoreControlGroup>
+      );
+    }
 
     return (
       <ReqoreThemeProvider theme={theme}>

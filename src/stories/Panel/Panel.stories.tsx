@@ -764,6 +764,23 @@ export const Loading: Story = {
   },
 };
 
+export const Skeleton: Story = {
+  render: Template,
+
+  args: {
+    skeleton: true,
+  },
+};
+
+export const CollapsedSkeleton: Story = {
+  render: Template,
+
+  args: {
+    isCollapsed: true,
+    skeleton: true,
+  },
+};
+
 export const WithDescription: Story = {
   render: Template,
 
