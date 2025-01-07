@@ -220,6 +220,19 @@ export interface IWithReqoreLoading {
    */
   loading?: boolean;
   loadingIconType?: IReqoreSpinnerProps['type'];
+  skeleton?: boolean;
+}
+
+export interface IWithReqoreSkeleton {
+  /**
+   * If true, the component will be loading with a skeleton
+   * @default false
+   * @type boolean
+   * @example
+   * <ReqoreButton skeleton />
+   *
+   */
+  skeleton?: boolean;
 }
 
 export interface IReqoreTooltip extends IPopoverOptions {}
