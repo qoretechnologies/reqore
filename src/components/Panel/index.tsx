@@ -364,7 +364,11 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
 `;
 
 export const ReqorePanelSkeleton = memo(
-  ({ size, isCollapsed }: Pick<IReqorePanelProps, 'size' | 'isCollapsed'>) => {
+  ({
+    size,
+    isCollapsed,
+    children,
+  }: Pick<IReqorePanelProps, 'size' | 'isCollapsed' | 'children'>) => {
     const style = useMemo(() => ({ padding: `${PADDING_FROM_SIZE[size]}px` }), [size]);
 
     return (
@@ -380,11 +384,14 @@ export const ReqorePanelSkeleton = memo(
             <ReqoreSkeleton size={size} />
           </ReqoreControlGroup>
         </ReqoreControlGroup>
-        {!isCollapsed && (
-          <ReqoreControlGroup vertical>
-            <ReqoreSkeleton lines={5} width='100%' size='tiny' />
-          </ReqoreControlGroup>
-        )}
+        {!isCollapsed &&
+          (children ? (
+            children
+          ) : (
+            <ReqoreControlGroup vertical>
+              <ReqoreSkeleton lines={5} width='100%' size='tiny' />
+            </ReqoreControlGroup>
+          ))}
       </ReqoreControlGroup>
     );
   }
