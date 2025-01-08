@@ -364,26 +364,30 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
 `;
 
 export const ReqorePanelSkeleton = memo(
-  ({ size, isCollapsed }: Pick<IReqorePanelProps, 'size' | 'isCollapsed'>) => (
-    <ReqoreControlGroup vertical fluid gapSize='big'>
-      <ReqoreControlGroup spaceBetween fluid>
-        <ReqoreControlGroup fixed gapSize='big'>
-          <ReqoreSkeleton circle size={size} />
-          <ReqoreSkeleton width='200px' size={size} />
-        </ReqoreControlGroup>
+  ({ size, isCollapsed }: Pick<IReqorePanelProps, 'size' | 'isCollapsed'>) => {
+    const style = useMemo(() => ({ padding: `${PADDING_FROM_SIZE[size]}px` }), [size]);
 
-        <ReqoreControlGroup fixed>
-          <ReqoreSkeleton size={size} />
-          <ReqoreSkeleton size={size} />
+    return (
+      <ReqoreControlGroup vertical fluid gapSize='big' style={style}>
+        <ReqoreControlGroup spaceBetween fluid>
+          <ReqoreControlGroup fixed gapSize='big'>
+            <ReqoreSkeleton circle size={size} />
+            <ReqoreSkeleton width='200px' size={size} />
+          </ReqoreControlGroup>
+
+          <ReqoreControlGroup fixed>
+            <ReqoreSkeleton size={size} />
+            <ReqoreSkeleton size={size} />
+          </ReqoreControlGroup>
         </ReqoreControlGroup>
+        {!isCollapsed && (
+          <ReqoreControlGroup vertical>
+            <ReqoreSkeleton lines={5} width='100%' size='tiny' />
+          </ReqoreControlGroup>
+        )}
       </ReqoreControlGroup>
-      {!isCollapsed && (
-        <ReqoreControlGroup vertical>
-          <ReqoreSkeleton lines={5} width='100%' size='tiny' />
-        </ReqoreControlGroup>
-      )}
-    </ReqoreControlGroup>
-  )
+    );
+  }
 );
 
 export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
