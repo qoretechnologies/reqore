@@ -430,8 +430,7 @@ export const ReqoreCollection = memo(
 
     if (skeleton) {
       return (
-        <ReqoreControlGroup vertical fluid gapSize='big'>
-          <ReqorePanelSkeleton isCollapsed size={rest.size} />
+        <ReqorePanelSkeleton size={rest.size}>
           <StyledCollectionWrapper
             columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
             columnsGap={stacked ? '0px' : columnsGap}
@@ -448,7 +447,7 @@ export const ReqoreCollection = memo(
             <ReqoreSkeleton height='100px' width='100%' />
             <ReqoreSkeleton height='100px' width='100%' />
           </StyledCollectionWrapper>
-        </ReqoreControlGroup>
+        </ReqorePanelSkeleton>
       );
     }
 
