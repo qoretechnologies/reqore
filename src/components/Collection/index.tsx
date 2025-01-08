@@ -443,6 +443,7 @@ export const ReqoreCollection = memo(
             minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
             maxColumnWidth={maxColumnWidth}
             className='reqore-collection-content'
+            style={{ padding: `${PADDING_FROM_SIZE[rest.size || 'normal']}px`, paddingTop: 0 }}
           >
             <ReqoreSkeleton height='100px' width='100%' />
             <ReqoreSkeleton height='100px' width='100%' />

@@ -108,7 +108,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
 
     if (skeleton) {
       return (
-        <ReqoreControlGroup vertical fluid>
+        <ReqoreControlGroup vertical fluid style={{ padding: `${HALF_PADDING_FROM_SIZE[size]}px` }}>
           {React.Children.map(children, (_child, index) => (
             <ReqoreSkeleton key={index} size={size} width='200px' />
           ))}
