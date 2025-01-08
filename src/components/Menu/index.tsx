@@ -106,16 +106,6 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       size: 'size' in (props || {}) ? props.size : size,
     }));
 
-    if (skeleton) {
-      return (
-        <ReqoreControlGroup vertical fluid style={{ padding: `${HALF_PADDING_FROM_SIZE[size]}px` }}>
-          {React.Children.map(children, (_child, index) => (
-            <ReqoreSkeleton key={index} size={size} width='200px' />
-          ))}
-        </ReqoreControlGroup>
-      );
-    }
-
     return (
       <ReqoreThemeProvider theme={theme}>
         <StyledReqoreMenu
@@ -140,7 +130,11 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
           }}
         >
           <ReqoreControlGroup vertical gapSize={itemGap} fluid>
-            {clone(children)}
+            {skeleton
+              ? React.Children.map(children, (_child, index) => (
+                  <ReqoreSkeleton key={index} size={size} width='100%' />
+                ))
+              : clone(children)}
           </ReqoreControlGroup>
         </StyledReqoreMenu>
       </ReqoreThemeProvider>
