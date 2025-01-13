@@ -339,7 +339,7 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   min-height: ${({ size, wrapperPadding }) =>
     SIZE_TO_PX[size] +
     (wrapperPadding === 'both' || wrapperPadding === 'bottom' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
-  padding-top: ${({ minimal, padded, size, transparent }: IStyledPanel) =>
+  padding-top: ${({ padded, size }: IStyledPanel) =>
     !padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   padding-bottom: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'top' || wrapperPadding === 'none'
