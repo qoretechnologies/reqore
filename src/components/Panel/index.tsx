@@ -50,6 +50,7 @@ import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
 import { ReqoreSkeleton } from '../Skeleton';
 import { ReqoreSpan } from '../Span';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
@@ -110,6 +111,7 @@ export interface IReqorePanelProps
   closeButtonProps?: IReqoreButtonProps;
 
   rounded?: boolean;
+  wrapperPadding?: 'top' | 'bottom' | 'both' | 'none';
 
   actions?: TReqorePanelActions;
   bottomActions?: TReqorePanelBottomActions;
@@ -285,7 +287,6 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
 
-  min-height: ${({ size }) => SIZE_TO_PX[size] + PADDING_FROM_SIZE[size] * 2}px;
   padding: ${({ noHorizontalPadding, size, transparent, flat, intent }: IStyledPanel) =>
     `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
       noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`
@@ -321,17 +322,31 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
+  min-height: ${({ size, wrapperPadding }) =>
+    SIZE_TO_PX[size] +
+    (wrapperPadding === 'both' || wrapperPadding === 'top' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
   padding-bottom: ${({ padded, size, isCollapsed }: IStyledPanel) =>
     !padded || isCollapsed ? `${PADDING_FROM_SIZE[size]}px` : undefined};
-  padding-top: ${({ minimal, size }: IStyledPanel) =>
-    minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
+  padding-top: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
+    wrapperPadding === 'bottom' || wrapperPadding === 'none'
+      ? undefined
+      : minimal
+      ? `${PADDING_FROM_SIZE[size]}px`
+      : undefined};
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  padding-top: ${({ minimal, padded, size, transparent }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size]}px` : minimal || transparent ? 0 : undefined};
-  padding-bottom: ${({ minimal, size }: IStyledPanel) =>
-    minimal ? `${PADDING_FROM_SIZE[size]}px` : undefined};
+  min-height: ${({ size, wrapperPadding }) =>
+    SIZE_TO_PX[size] +
+    (wrapperPadding === 'both' || wrapperPadding === 'bottom' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
+  padding-top: ${({ padded, size }: IStyledPanel) =>
+    !padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
+  padding-bottom: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
+    wrapperPadding === 'top' || wrapperPadding === 'none'
+      ? undefined
+      : minimal
+      ? `${PADDING_FROM_SIZE[size]}px`
+      : undefined};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
@@ -353,7 +368,7 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     minimal && hasLabel && padded ? 0 : padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
   padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
     minimal && hasBottomActions && padded
-      ? `${PADDING_FROM_SIZE[size] / 2}px`
+      ? 0
       : padded
       ? `${PADDING_FROM_SIZE[size]}px`
       : undefined};
@@ -420,6 +435,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       unMountContentOnCollapse = true,
       onCollapseChange,
       padded = true,
+      wrapperPadding = 'both',
       contentStyle,
       contentEffect,
       headerEffect = {},
@@ -741,24 +757,25 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [label]
     );
 
+    const handleRef = useCallback((ref) => {
+      let _ref = ref;
+
+      if (ref?.resizable) {
+        _ref = ref.resizable;
+      }
+
+      targetRef.current = _ref;
+    }, []);
+
     if (skeleton) {
       return <ReqorePanelSkeleton size={panelSize} isCollapsed={_isCollapsed} />;
     }
 
     return (
-      <StyledPanel
+      <ReqoreTooltipComponent
         {...omit(rest, ['onResize'])}
         {..._resizable}
         as={rest.as || (!!resizable && !disabled && !_isCollapsed) ? Resizable : 'div'}
-        ref={(ref) => {
-          let _ref = ref;
-
-          if (ref?.resizable) {
-            _ref = ref.resizable;
-          }
-
-          targetRef.current = _ref;
-        }}
         isCollapsed={_isCollapsed}
         rounded={rounded}
         flat={flat}
@@ -770,6 +787,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         opacity={opacity}
         fluid={fluid}
         disabled={disabled}
+        Component={StyledPanel}
+        ref={handleRef}
       >
         {hasTitleBar && (
           <StyledPanelTopBar
@@ -787,6 +806,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             isMobile={isMobile || isSmall}
             ref={measureRef}
             padded={padded}
+            wrapperPadding={wrapperPadding}
             transparent={rest.transparent || opacity === 0}
             intent={intent}
           >
@@ -990,7 +1010,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             ) : null}
           </StyledPanelBottomActions>
         ) : null}
-      </StyledPanel>
+      </ReqoreTooltipComponent>
     );
   }
 );

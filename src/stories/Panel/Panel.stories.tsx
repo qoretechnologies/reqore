@@ -570,6 +570,7 @@ export const TransparentFlat: Story = {
   args: {
     transparent: true,
     flat: true,
+    wrapperPadding: 'none',
   },
 };
 
@@ -642,6 +643,17 @@ export const ContentSize: Story = {
 
   args: {
     contentSize: 'big',
+  },
+};
+
+export const WithTooltip: Story = {
+  render: Template,
+
+  args: {
+    tooltip: 'I am a panel with tooltip',
+  },
+  play: async ({ canvasElement }) => {
+    await fireEvent.mouseEnter(canvasElement.querySelector('.reqore-panel'));
   },
 };
 
