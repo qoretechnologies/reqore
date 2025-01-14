@@ -66,10 +66,10 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
               refs.left.current?.scrollTo({ top: refs.left.current?.scrollTop + e.deltaY });
             }
           }
+        }
 
-          if (e.deltaX && type === 'main') {
-            refs.header.current?.scrollTo({ left: refs.main.current?.scrollLeft + e.deltaX });
-          }
+        if (e.deltaX && type === 'main') {
+          refs.header.current?.scrollTo({ left: refs.main.current?.scrollLeft + e.deltaX });
         }
       });
     });

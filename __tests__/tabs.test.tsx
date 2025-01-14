@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ReqoreLayoutContent, ReqoreTabs, ReqoreTabsContent, ReqoreUIProvider } from '../src';
 
 test('Renders full <Tabs /> properly', () => {
@@ -62,19 +62,19 @@ test('Renders shortened <Tabs /> properly', () => {
     );
   });
 
-  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(3);
   expect(document.querySelectorAll('.reqore-tabs-list-item-menu').length).toBe(1);
 
   fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(document.querySelectorAll('.reqore-menu').length).toBe(1);
-  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(4);
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(3);
 
   fireEvent.click(document.querySelectorAll('.reqore-menu-item')[0]);
 
   expect(fn).toBeCalledTimes(1);
-  expect(fn).toBeCalledWith('tab2');
+  expect(fn).toBeCalledWith('tab3');
 });
 
 test('Can select hidden <Tabs /> when shortened', () => {
@@ -103,7 +103,7 @@ test('Can select hidden <Tabs /> when shortened', () => {
     );
   });
 
-  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(2);
+  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(3);
   expect(document.querySelectorAll('.reqore-tabs-list-item-menu').length).toBe(1);
 });
 

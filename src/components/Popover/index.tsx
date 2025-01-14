@@ -265,7 +265,7 @@ export const ReqorePopover = memo(
             componentRef?.removeEventListener('mouseleave', cancelTimeout);
           }
         };
-      }, [componentRef, content]);
+      }, [componentRef, content, handleClick, handleKeyDown, open, close]);
 
       const handleRef = useCallback((r) => {
         setComponentRef(r);

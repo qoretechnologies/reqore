@@ -139,7 +139,11 @@ export const getLabelLength = (
       );
 
   const topLabelLength =
-    calculateStringSizeInPixels(label?.toString(), CONTROL_TEXT_FROM_SIZE[tabsSize]) +
+    calculateStringSizeInPixels(
+      label?.toString(),
+      CONTROL_TEXT_FROM_SIZE[tabsSize],
+      (item as IReqoreBreadcrumbItem).effect?.spaced
+    ) +
     icon +
     rightIcon +
     closeIconSize +
@@ -176,8 +180,8 @@ export const getTabsLength = (
     }
 
     const labelLength: number =
-      PADDING_FROM_SIZE[tabsSize] * 2 +
-      GAP_FROM_SIZE[tabsSize] * 2 +
+      PADDING_FROM_SIZE[tabsSize] +
+      GAP_FROM_SIZE[tabsSize] +
       getLabelLength(item, activeTab, tabsSize);
 
     return len + labelLength;
@@ -319,14 +323,16 @@ const ReqoreTabsList = ({
                             rightIcon: onCloseClick ? closeIcon || 'CloseLine' : undefined,
                             onRightIconClick:
                               onCloseClick && !disabled
-                                ? () => {
+                                ? (_itemId, _event, closePopover) => {
                                     onCloseClick(id);
+                                    closePopover?.();
                                   }
                                 : undefined,
                             selected: activeTab === id,
-                            onClick: (event: React.MouseEvent<any>) => {
+                            onClick: (event: React.MouseEvent<any>, _itemId, closePopover) => {
                               if (!disabled) {
                                 onTabChange?.(id);
+                                closePopover?.();
 
                                 if (props?.onClick) {
                                   props.onClick(event);
