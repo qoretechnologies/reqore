@@ -427,6 +427,20 @@ export const DefaultFilter: Story = {
   },
 };
 
+export const EmptyData: Story = {
+  args: {
+    columns: [{ dataId: 'id', header: { label: 'ID' } }],
+    data: [],
+    responsiveActions: false,
+    responsiveTitle: false,
+    fluid: true,
+    rounded: true,
+    selectable: true,
+    fill: true,
+    actions: [{ icon: 'AddLine', intent: 'info', label: 'Should be shown!', minimal: true }],
+  },
+};
+
 export const NoDataMessage: Story = {
   args: {
     filterable: true,

@@ -9,8 +9,16 @@ export interface IReqoreMenuItemProps extends IReqoreComponent, IReqoreButtonPro
   label?: string | number;
   selected?: boolean;
   itemId?: string;
-  onRightIconClick?: (itemId?: string, event?: React.MouseEvent<HTMLElement>) => void;
-  onClick?: (event: React.MouseEvent<HTMLElement>, itemId?: string) => void;
+  onRightIconClick?: (
+    itemId?: string,
+    event?: React.MouseEvent<HTMLElement>,
+    closePopover?: () => void
+  ) => void;
+  onClick?: (
+    event: React.MouseEvent<HTMLElement>,
+    itemId?: string,
+    closePopover?: () => void
+  ) => void;
   scrollIntoView?: boolean;
 }
 
@@ -45,6 +53,7 @@ const ReqoreMenuItem = memo(
         intent,
         flat = true,
         scrollIntoView,
+        closePopover,
         ...rest
       }: IReqoreMenuItemProps,
       ref
@@ -56,7 +65,7 @@ const ReqoreMenuItem = memo(
         (event: React.MouseEvent<HTMLButtonElement>) => {
           event.persist();
 
-          onClick?.(event, itemId);
+          onClick?.(event, itemId, closePopover);
         },
         [itemId, onClick]
       );
@@ -67,7 +76,7 @@ const ReqoreMenuItem = memo(
           event.stopPropagation();
 
           if (onRightIconClick) {
-            onRightIconClick(itemId, event);
+            onRightIconClick(itemId, event, closePopover);
           }
         },
         [itemId, onRightIconClick]

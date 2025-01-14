@@ -67,7 +67,11 @@ export const convertToCSV = (objArray: any[]): string => {
   return [header, ...rows].join('\n');
 };
 
-export const calculateStringSizeInPixels = (value: string = '', fontSize: number): number => {
+export const calculateStringSizeInPixels = (
+  value: string = '',
+  fontSize: number,
+  spaced: number = 0
+): number => {
   const widths = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0.2796875, 0.2765625, 0.3546875, 0.5546875, 0.5546875, 0.8890625, 0.665625, 0.190625, 0.3328125,
@@ -87,7 +91,7 @@ export const calculateStringSizeInPixels = (value: string = '', fontSize: number
   /* It's calculating the width of a string in pixels. */
   return (
     Array.from(value).reduce((acc, cur) => acc + (widths[cur.charCodeAt(0)] ?? avg), 0) *
-    (fontSize * 1.35)
+    (fontSize * (1.45 + spaced / 5))
   );
 };
 

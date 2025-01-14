@@ -3,13 +3,7 @@ import { size as count, isArray } from 'lodash';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import {
-  ReqoreMessage,
-  ReqorePaginationContainer,
-  ReqorePanel,
-  ReqoreVerticalSpacer,
-  useReqoreTheme,
-} from '../..';
+import { ReqoreMessage, ReqorePaginationContainer, ReqorePanel, useReqoreTheme } from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
 import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -547,6 +541,10 @@ const ReqoreTable = ({
   const tableActions = useMemo<IReqorePanelAction[]>(() => {
     const finalActions: IReqorePanelAction[] = [...actions];
 
+    if (!count(data)) {
+      return finalActions;
+    }
+
     if (count(columnsList)) {
       finalActions.push({
         icon: 'LayoutColumnLine',
@@ -630,6 +628,7 @@ const ReqoreTable = ({
 
     return finalActions;
   }, [
+    count(data),
     preQuery,
     transformedData,
     actions,
@@ -676,7 +675,8 @@ const ReqoreTable = ({
     const tableColumns = columnsByType[type];
     const isPinned = type === 'left' || type === 'right';
 
-    if (count(tableColumns) === 0) {
+    // If there are no columns or outside items, return null
+    if (count(tableColumns) === 0 || count(data) === 0) {
       return null;
     }
 
@@ -780,12 +780,14 @@ const ReqoreTable = ({
                   {renderTable('right', applyPaging(transformedData))}
                 </StyledTablesWrapper>
                 {count(applyPaging(transformedData)) === 0 ? (
-                  <>
-                    <ReqoreVerticalSpacer height={10} />
-                    <ReqoreMessage flat size={size} icon='Search2Line'>
-                      {emptyMessage}
-                    </ReqoreMessage>
-                  </>
+                  <ReqoreMessage
+                    flat
+                    size={size}
+                    icon='Search2Line'
+                    margin={count(data) ? 'top' : 'none'}
+                  >
+                    {emptyMessage}
+                  </ReqoreMessage>
                 ) : null}
               </>
             )}

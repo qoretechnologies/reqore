@@ -417,3 +417,11 @@ export const WithSlowTab: Story = {
     await _testsWaitForText('I am Tab 1');
   },
 };
+
+export const MorePopoverShown: Story = {
+  render: Template,
+  args: {
+    activeTab: 'tab8',
+  },
+  play: async () => {},
+};

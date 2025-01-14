@@ -92,6 +92,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       itemGap,
       resizable,
       skeleton,
+      closePopover,
       ...rest
     }: IReqoreMenuProps,
     ref
@@ -104,6 +105,7 @@ const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
       flat: 'flat' in (props || {}) ? props.flat : flat,
       minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
       size: 'size' in (props || {}) ? props.size : size,
+      closePopover,
     }));
 
     return (
