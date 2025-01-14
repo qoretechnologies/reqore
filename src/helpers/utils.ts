@@ -91,7 +91,7 @@ export const calculateStringSizeInPixels = (
   /* It's calculating the width of a string in pixels. */
   return (
     Array.from(value).reduce((acc, cur) => acc + (widths[cur.charCodeAt(0)] ?? avg), 0) *
-    (fontSize * (1.45 + spaced / 5))
+    (fontSize * (1.4 + spaced / 2))
   );
 };
 
