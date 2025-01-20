@@ -1,5 +1,5 @@
 import { last, map, size } from 'lodash';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useMedia } from 'react-use';
 import shortid from 'shortid';
@@ -56,7 +56,7 @@ export interface IReqoreConfirmationModal {
   intent?: TReqoreIntent;
 }
 
-const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {} }) => {
+const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options = {} }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
   const [modals, setModals] = useState<IReqoreModals>({});
   const [escClosableModals, setEscClosableModals] = useState<string[]>([]);
@@ -77,43 +77,37 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
     return latestZIndex.current;
   }, [latestZIndex.current]);
 
-  const confirmAction = (data: IReqoreConfirmationModal): void => {
+  const confirmAction = useCallback((data: IReqoreConfirmationModal): void => {
     setConfirmationModal({
       ...data,
       isOpen: true,
     });
-  };
+  }, []);
 
   // FUnction that closes the confirmation modal
-  const closeConfirmationModal = (): void => {
+  const closeConfirmationModal = useCallback((): void => {
     setConfirmationModal((cur: IReqoreConfirmationModal) => ({
       ...cur,
       isOpen: false,
     }));
-  };
+  }, []);
 
-  const addEscClosableModal = useCallback(
-    (id: string): void => {
-      setEscClosableModals((cur) => [...cur, id]);
-    },
-    [escClosableModals]
-  );
+  const addEscClosableModal = useCallback((id: string): void => {
+    setEscClosableModals((cur) => [...cur, id]);
+  }, []);
 
-  const removeEscClosableModal = useCallback(
-    (id: string, onRemove?: () => void): void => {
-      setEscClosableModals((cur) => {
-        // Check if the modal is still in the array and it's the last one
-        if (last(cur) === id) {
-          onRemove?.();
+  const removeEscClosableModal = useCallback((id: string, onRemove?: () => void): void => {
+    setEscClosableModals((cur) => {
+      // Check if the modal is still in the array and it's the last one
+      if (last(cur) === id) {
+        onRemove?.();
 
-          return [...cur].filter((modalId) => modalId !== id);
-        }
+        return [...cur].filter((modalId) => modalId !== id);
+      }
 
-        return cur;
-      });
-    },
-    [escClosableModals]
-  );
+      return cur;
+    });
+  }, []);
 
   const addModal = useCallback(
     (
@@ -149,7 +143,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
     });
   }, []);
 
-  const addNotification = (data: IReqoreNotificationData) => {
+  const addNotification = useCallback((data: IReqoreNotificationData) => {
     setNotifications((cur) => {
       let newNotifications = [...cur];
 
@@ -170,7 +164,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
 
       return newNotifications;
     });
-  };
+  }, []);
 
   const removeNotification = (id: string | number) => {
     setNotifications((cur) => {
@@ -178,41 +172,61 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
     });
   };
 
+  const contextValue = useMemo(
+    () => ({
+      notifications,
+      theme,
+      addNotification,
+      removeNotification,
+      addModal,
+      removeModal,
+      confirmAction,
+      isMobile,
+      isTablet,
+      isMobileOrTablet,
+      latestZIndex: latestZIndex.current,
+      getAndIncreaseZIndex,
+      animations: {
+        buttons: true,
+        dialogs: true,
+        popovers: true,
+        ...(options?.animations || {}),
+      },
+      tooltips: options.tooltips || { delay: 0 },
+      closePopoversOnEscPress:
+        'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
+      // ESC Closable modals management
+      closeModalsOnEscPress:
+        'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
+      escClosableModals,
+      addEscClosableModal,
+      removeEscClosableModal,
+      customPortalId: options.customPortalId,
+      uiScale: options.uiScale,
+    }),
+    [
+      notifications,
+      theme,
+      addNotification,
+      removeNotification,
+      addModal,
+      removeModal,
+      confirmAction,
+      isMobile,
+      isTablet,
+      isMobileOrTablet,
+      latestZIndex,
+      getAndIncreaseZIndex,
+      options,
+      escClosableModals,
+      addEscClosableModal,
+      removeEscClosableModal,
+    ]
+  );
+
   return (
     <>
-      <ReqoreContext.Provider
-        value={{
-          notifications,
-          theme,
-          addNotification,
-          removeNotification,
-          addModal,
-          removeModal,
-          confirmAction,
-          isMobile,
-          isTablet,
-          isMobileOrTablet,
-          latestZIndex: latestZIndex.current,
-          getAndIncreaseZIndex,
-          animations: {
-            buttons: true,
-            dialogs: true,
-            popovers: true,
-            ...(options?.animations || {}),
-          },
-          tooltips: options.tooltips || { delay: 0 },
-          closePopoversOnEscPress:
-            'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
-          // ESC Closable modals management
-          closeModalsOnEscPress:
-            'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
-          escClosableModals,
-          addEscClosableModal,
-          removeEscClosableModal,
-          customPortalId: options.customPortalId,
-          uiScale: options.uiScale,
-        }}
-      >
+      <ReqoreContext.Provider value={contextValue}>
         {size(notifications) > 0 ? (
           <ReqoreNotificationsWrapper position={options.notificationsPosition}>
             {notifications.map((notification) => (
@@ -318,6 +332,6 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = ({ children, options = {}
       </ReqoreContext.Provider>
     </>
   );
-};
+});
 
 export default ReqoreProvider;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDebounce, useUpdateEffect } from 'react-use';
 
 export const useQueryWithDelay = (
@@ -21,10 +21,13 @@ export const useQueryWithDelay = (
     [preQuery]
   );
 
-  return {
-    query,
-    setQuery,
-    setPreQuery,
-    preQuery,
-  };
+  return useMemo(
+    () => ({
+      query,
+      setQuery,
+      setPreQuery,
+      preQuery,
+    }),
+    [query, preQuery]
+  );
 };
