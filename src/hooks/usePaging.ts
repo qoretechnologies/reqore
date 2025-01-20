@@ -114,25 +114,42 @@ export const useReqorePaging = <T>(
     return newPages;
   }, [pagesToShow, allPageCount, currentPage, pagelist]);
 
-  return {
-    pages,
-    allPages: pagelist,
-    pageCount: allPageCount,
-    items: enabled ? slicedItems : items,
-    applyPaging,
-    itemsPerPage,
-    itemsLeft: items.length - slicedItems.length,
-    infinite,
-    setPage,
-    currentPage,
-    next: goNext,
-    back: goBefore,
-    renderControls:
-      enabled &&
-      !(allPageCount === 1 || allPageCount === 0 || (infinite && currentPage === allPageCount)),
-    isLastPage: currentPage === allPageCount,
-    isFirstPage: currentPage === 1,
-    first: () => setPage(1),
-    last: () => setPage(allPageCount),
-  };
+  return useMemo(
+    () => ({
+      pages,
+      allPages: pagelist,
+      pageCount: allPageCount,
+      items: enabled ? slicedItems : items,
+      applyPaging,
+      itemsPerPage,
+      itemsLeft: items.length - slicedItems.length,
+      infinite,
+      setPage,
+      currentPage,
+      next: goNext,
+      back: goBefore,
+      renderControls:
+        enabled &&
+        !(allPageCount === 1 || allPageCount === 0 || (infinite && currentPage === allPageCount)),
+      isLastPage: currentPage === allPageCount,
+      isFirstPage: currentPage === 1,
+      first: () => setPage(1),
+      last: () => setPage(allPageCount),
+    }),
+    [
+      pages,
+      pagelist,
+      allPageCount,
+      enabled,
+      slicedItems,
+      items,
+      applyPaging,
+      itemsPerPage,
+      infinite,
+      setPage,
+      currentPage,
+      goNext,
+      goBefore,
+    ]
+  );
 };

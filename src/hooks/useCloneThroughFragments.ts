@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 export const useCloneThroughFragments = (
   propsMapper: (
@@ -35,5 +35,5 @@ export const useCloneThroughFragments = (
     });
   }, deps);
 
-  return { clone };
+  return useMemo(() => ({ clone }), [clone]);
 };

@@ -133,8 +133,8 @@ export const ReqorePopover = memo(
       const popperRef = useRef(null);
 
       const [isOpen, setIsOpen] = React.useState(false);
+      const [timeout, setTimeoutValue] = React.useState<any>(null);
 
-      let { current: timeout }: MutableRefObject<any> = useRef(0);
       const startEvent = startEvents[handler];
       const endEvent = endEvents[handler];
 
@@ -150,19 +150,26 @@ export const ReqorePopover = memo(
             handler === 'hover' || handler === 'hoverStay' ? delay ?? tooltips.delay : delay;
 
           if (globalDelay) {
-            timeout = setTimeout(() => {
-              setIsOpen(true);
-            }, globalDelay);
+            setTimeoutValue(() =>
+              setTimeout(() => {
+                setIsOpen(true);
+              }, globalDelay)
+            );
           } else {
             setIsOpen(true);
           }
         }
       }, [isOpen, handler, closeOnInsideClick, delay, tooltips.delay]);
 
+      const cancelTimeout = useCallback(() => {
+        clearTimeout(timeout);
+        setTimeout(null);
+      }, [timeout]);
+
       const close = useCallback(() => {
         cancelTimeout();
         setIsOpen(false);
-      }, []);
+      }, [cancelTimeout]);
 
       const handleClick = useCallback(
         (event: MouseEvent) => {
@@ -221,11 +228,6 @@ export const ReqorePopover = memo(
         onToggleChange?.(false);
       });
 
-      const cancelTimeout = useCallback(() => {
-        clearTimeout(timeout);
-        timeout = null;
-      }, []);
-
       const handlePopperUpdate = useCallback((internalPopperRef) => {
         popperRef.current = internalPopperRef.current;
       }, []);
@@ -265,7 +267,7 @@ export const ReqorePopover = memo(
             componentRef?.removeEventListener('mouseleave', cancelTimeout);
           }
         };
-      }, [componentRef, content, handleClick, handleKeyDown, open, close]);
+      }, [componentRef, content, handleClick, handleKeyDown, open, close, cancelTimeout]);
 
       const handleRef = useCallback((r) => {
         setComponentRef(r);
