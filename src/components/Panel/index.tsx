@@ -47,6 +47,7 @@ import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import { ReqoreErrorBoundary } from '../ErrorBoundary';
 import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
 import { ReqoreSkeleton } from '../Skeleton';
 import { ReqoreSpan } from '../Span';
@@ -772,245 +773,249 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }
 
     return (
-      <ReqoreTooltipComponent
-        {...omit(rest, ['onResize'])}
-        {..._resizable}
-        as={rest.as || (!!resizable && !disabled && !_isCollapsed) ? Resizable : 'div'}
-        isCollapsed={_isCollapsed}
-        rounded={rounded}
-        flat={flat}
-        intent={intent}
-        className={`${className || ''} reqore-panel`}
-        interactive={interactive}
-        theme={theme}
-        effect={transformedContentEffect}
-        opacity={opacity}
-        fluid={fluid}
-        disabled={disabled}
-        Component={StyledPanel}
-        ref={handleRef}
-      >
-        {hasTitleBar && (
-          <StyledPanelTopBar
-            flat={flat}
-            isCollapsed={_isCollapsed}
-            collapsible={collapsible}
-            className='reqore-panel-title'
-            onClick={handleCollapseClick}
-            theme={theme}
-            minimal={minimal}
-            size={contentSize || panelSize}
-            opacity={opacity ?? (minimal ? 0 : 1)}
-            noHorizontalPadding={noHorizontalPadding}
-            responsive={responsiveTitle}
-            isMobile={isMobile || isSmall}
-            ref={measureRef}
-            padded={padded}
-            wrapperPadding={wrapperPadding}
-            transparent={rest.transparent || opacity === 0}
-            intent={intent}
-          >
-            {hasTitleHeader && (
-              <StyledPanelTitleHeader>
-                {breadcrumbs ? (
-                  <ReqoreBreadcrumbs
-                    {...breadcrumbs}
-                    padded={false}
-                    margin='none'
-                    flat
-                    responsive
-                  />
-                ) : icon || iconImage || label || badge ? (
-                  <StyledPanelTitleHeaderContent
-                    size={panelSize}
-                    {...headerProps}
-                    hasLabel={!!label}
-                    hasIcon={!!icon || !!iconImage || loading}
-                    iconSize={ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]}
-                  >
-                    {icon || iconImage ? (
-                      <ReqoreIcon
-                        size={`${
-                          ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
-                        }px`}
-                        image={loading ? undefined : iconImage}
-                        margin='right'
-                        color={iconColor}
-                        tooltip={iconTooltip}
-                        effect={{
-                          opacity: CONTROL_ICON_OPACITY,
-                        }}
-                        {...iconProps}
-                        animation={loading ? 'spin' : iconProps?.animation}
-                        icon={
-                          loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
-                        }
-                      />
-                    ) : null}
-                    <StyledPanelTitleHeaderLabelAndDescription>
-                      <StyledPanelTitleHeaderLabelAndBadge>
-                        {typeof label === 'string' ? (
-                          <LabelEditor
-                            size={headerSize || panelSize}
-                            customTheme={theme}
-                            effect={{
-                              noWrap: true,
-                              ...headerEffect,
-                            }}
-                            style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}
-                            label={label}
-                            onSubmit={onLabelEdit}
-                            tooltip={showHeaderTooltip ? label : undefined}
-                          />
-                        ) : (
-                          label
-                        )}
-                        {badge || badge === 0 ? (
-                          <ButtonBadge
-                            size={getOneHigherSize(panelSize)}
-                            content={badge}
-                            wrapGroup={isSmall}
-                            margin={label ? 'left' : 'none'}
-                          />
-                        ) : null}
-                      </StyledPanelTitleHeaderLabelAndBadge>
-                      {description && (
-                        <ReqoreSpan
-                          size={headerSize ? NUMBER_TO_SIZE[headerSize] : panelSize}
-                          effect={{ opacity: 0.7, ...descriptionEffect }}
-                          intent={descriptionIntent}
-                        >
-                          {description}
-                        </ReqoreSpan>
-                      )}
-                    </StyledPanelTitleHeaderLabelAndDescription>
-                  </StyledPanelTitleHeaderContent>
-                ) : null}
-                {breadcrumbs && (badge || badge === 0) ? (
-                  <ButtonBadge
-                    size={getOneHigherSize(panelSize)}
-                    content={badge}
-                    wrapGroup={isSmall}
-                    margin={label ? 'left' : 'none'}
-                  />
-                ) : null}
-                <ReqorePanelNonResponsiveActions
-                  show={isSmall && (!!onClose || collapsible)}
-                  isSmall={isSmall}
-                  showControlButtons
-                  size={panelSize}
-                  hasResponsiveActions={hasResponsiveActions(actions)}
-                  customTheme={theme}
-                  isCollapsed={_isCollapsed}
-                  onCollapseClick={collapsible ? handleCollapseClick : undefined}
-                  onCloseClick={onClose}
-                  closeButtonProps={closeButtonProps}
-                  collapseButtonProps={collapseButtonProps}
-                  fluid={false}
-                  style={{ marginLeft: 'auto' }}
-                />
-              </StyledPanelTitleHeader>
-            )}
-            {hasResponsiveActions(actions) && (
-              <ReqoreControlGroup
-                responsive={responsiveActions}
-                fluid={responsiveActions || isSmall}
-                horizontalAlign='flex-end'
-                customTheme={theme}
-                size={panelSize}
-                {...responsiveActionsWrapperProps}
-              >
-                {actions.map(renderResponsiveActions())}
-              </ReqoreControlGroup>
-            )}
-            <ReqorePanelNonResponsiveActions
-              show={showNonResponsiveGroup()}
-              isSmall={isSmall}
-              showControlButtons={!isSmall}
-              size={panelSize}
-              hasResponsiveActions={hasResponsiveActions(actions)}
-              customTheme={theme}
+      <ReqoreErrorBoundary>
+        <ReqoreTooltipComponent
+          {...omit(rest, ['onResize'])}
+          {..._resizable}
+          as={rest.as || (!!resizable && !disabled && !_isCollapsed) ? Resizable : 'div'}
+          isCollapsed={_isCollapsed}
+          rounded={rounded}
+          flat={flat}
+          intent={intent}
+          className={`${className || ''} reqore-panel`}
+          interactive={interactive}
+          theme={theme}
+          effect={transformedContentEffect}
+          opacity={opacity}
+          fluid={fluid}
+          disabled={disabled}
+          Component={StyledPanel}
+          ref={handleRef}
+        >
+          {hasTitleBar && (
+            <StyledPanelTopBar
+              flat={flat}
               isCollapsed={_isCollapsed}
-              onCollapseClick={collapsible ? handleCollapseClick : undefined}
-              onCloseClick={onClose}
-              closeButtonProps={closeButtonProps}
-              collapseButtonProps={collapseButtonProps}
-              fluid={!hasTitleHeader || isSmall}
+              collapsible={collapsible}
+              className='reqore-panel-title'
+              onClick={handleCollapseClick}
+              theme={theme}
+              minimal={minimal}
+              size={contentSize || panelSize}
+              opacity={opacity ?? (minimal ? 0 : 1)}
+              noHorizontalPadding={noHorizontalPadding}
+              responsive={responsiveTitle}
+              isMobile={isMobile || isSmall}
+              ref={measureRef}
+              padded={padded}
+              wrapperPadding={wrapperPadding}
+              transparent={rest.transparent || opacity === 0}
+              intent={intent}
             >
-              {actions.map(renderNonResponsiveActions())}
-            </ReqorePanelNonResponsiveActions>
-          </StyledPanelTopBar>
-        )}
-        {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
-          <StyledPanelContent
-            as={'div'}
-            className='reqore-panel-content'
-            hasLabel={!!hasTitleBar}
-            hasBottomActions={hasBottomActions}
-            isCollapsed={_isCollapsed}
-            style={contentStyle}
-            padded={padded}
-            minimal={minimal}
-            size={contentSize || panelSize}
-            ref={getContentRef}
-            noHorizontalPadding={noHorizontalPadding}
-          >
-            {children}
-          </StyledPanelContent>
-        ) : null}
-        {hasBottomActions && !_isCollapsed ? (
-          <StyledPanelBottomActions
-            flat={flat}
-            className='reqore-panel-bottom-actions'
-            theme={theme}
-            padded={padded}
-            intent={intent}
-            minimal={minimal}
-            transparent={rest.transparent || opacity === 0}
-            opacity={opacity ?? (minimal ? 0 : 1)}
-            size={contentSize || panelSize}
-            noHorizontalPadding={noHorizontalPadding}
-          >
-            {hasNonResponsiveActions(leftBottomActions) ? (
-              <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
-                {leftBottomActions.map(renderNonResponsiveActions('flex-start'))}
-              </ReqoreControlGroup>
-            ) : null}
-            {hasResponsiveActions(leftBottomActions) && (
-              <ReqoreControlGroup
-                fluid={responsiveActions}
-                responsive={responsiveActions}
+              {hasTitleHeader && (
+                <StyledPanelTitleHeader>
+                  {breadcrumbs ? (
+                    <ReqoreBreadcrumbs
+                      {...breadcrumbs}
+                      padded={false}
+                      margin='none'
+                      flat
+                      responsive
+                    />
+                  ) : icon || iconImage || label || badge ? (
+                    <StyledPanelTitleHeaderContent
+                      size={panelSize}
+                      {...headerProps}
+                      hasLabel={!!label}
+                      hasIcon={!!icon || !!iconImage || loading}
+                      iconSize={
+                        ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                      }
+                    >
+                      {icon || iconImage ? (
+                        <ReqoreIcon
+                          size={`${
+                            ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                          }px`}
+                          image={loading ? undefined : iconImage}
+                          margin='right'
+                          color={iconColor}
+                          tooltip={iconTooltip}
+                          effect={{
+                            opacity: CONTROL_ICON_OPACITY,
+                          }}
+                          {...iconProps}
+                          animation={loading ? 'spin' : iconProps?.animation}
+                          icon={
+                            loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
+                          }
+                        />
+                      ) : null}
+                      <StyledPanelTitleHeaderLabelAndDescription>
+                        <StyledPanelTitleHeaderLabelAndBadge>
+                          {typeof label === 'string' ? (
+                            <LabelEditor
+                              size={headerSize || panelSize}
+                              customTheme={theme}
+                              effect={{
+                                noWrap: true,
+                                ...headerEffect,
+                              }}
+                              style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}
+                              label={label}
+                              onSubmit={onLabelEdit}
+                              tooltip={showHeaderTooltip ? label : undefined}
+                            />
+                          ) : (
+                            label
+                          )}
+                          {badge || badge === 0 ? (
+                            <ButtonBadge
+                              size={getOneHigherSize(panelSize)}
+                              content={badge}
+                              wrapGroup={isSmall}
+                              margin={label ? 'left' : 'none'}
+                            />
+                          ) : null}
+                        </StyledPanelTitleHeaderLabelAndBadge>
+                        {description && (
+                          <ReqoreSpan
+                            size={headerSize ? NUMBER_TO_SIZE[headerSize] : panelSize}
+                            effect={{ opacity: 0.7, ...descriptionEffect }}
+                            intent={descriptionIntent}
+                          >
+                            {description}
+                          </ReqoreSpan>
+                        )}
+                      </StyledPanelTitleHeaderLabelAndDescription>
+                    </StyledPanelTitleHeaderContent>
+                  ) : null}
+                  {breadcrumbs && (badge || badge === 0) ? (
+                    <ButtonBadge
+                      size={getOneHigherSize(panelSize)}
+                      content={badge}
+                      wrapGroup={isSmall}
+                      margin={label ? 'left' : 'none'}
+                    />
+                  ) : null}
+                  <ReqorePanelNonResponsiveActions
+                    show={isSmall && (!!onClose || collapsible)}
+                    isSmall={isSmall}
+                    showControlButtons
+                    size={panelSize}
+                    hasResponsiveActions={hasResponsiveActions(actions)}
+                    customTheme={theme}
+                    isCollapsed={_isCollapsed}
+                    onCollapseClick={collapsible ? handleCollapseClick : undefined}
+                    onCloseClick={onClose}
+                    closeButtonProps={closeButtonProps}
+                    collapseButtonProps={collapseButtonProps}
+                    fluid={false}
+                    style={{ marginLeft: 'auto' }}
+                  />
+                </StyledPanelTitleHeader>
+              )}
+              {hasResponsiveActions(actions) && (
+                <ReqoreControlGroup
+                  responsive={responsiveActions}
+                  fluid={responsiveActions || isSmall}
+                  horizontalAlign='flex-end'
+                  customTheme={theme}
+                  size={panelSize}
+                  {...responsiveActionsWrapperProps}
+                >
+                  {actions.map(renderResponsiveActions())}
+                </ReqoreControlGroup>
+              )}
+              <ReqorePanelNonResponsiveActions
+                show={showNonResponsiveGroup()}
+                isSmall={isSmall}
+                showControlButtons={!isSmall}
+                size={panelSize}
+                hasResponsiveActions={hasResponsiveActions(actions)}
                 customTheme={theme}
-                size={panelSize}
-                style={{ marginRight: 'auto' }}
+                isCollapsed={_isCollapsed}
+                onCollapseClick={collapsible ? handleCollapseClick : undefined}
+                onCloseClick={onClose}
+                closeButtonProps={closeButtonProps}
+                collapseButtonProps={collapseButtonProps}
+                fluid={!hasTitleHeader || isSmall}
               >
-                {leftBottomActions.map(renderResponsiveActions('flex-start'))}
-              </ReqoreControlGroup>
-            )}
-            {hasResponsiveActions(rightBottomActions) && (
-              <ReqoreControlGroup
-                fluid={responsiveActions}
-                horizontalAlign='flex-end'
-                responsive={responsiveActions}
-                customTheme={theme}
-                style={{ marginLeft: 'auto' }}
-                size={panelSize}
-              >
-                {rightBottomActions.map(renderResponsiveActions())}
-              </ReqoreControlGroup>
-            )}
-            {hasNonResponsiveActions(rightBottomActions) ? (
-              <ReqoreControlGroup
-                horizontalAlign='flex-end'
-                size={panelSize}
-                style={{ marginLeft: 'auto' }}
-              >
-                {rightBottomActions.map(renderNonResponsiveActions())}
-              </ReqoreControlGroup>
-            ) : null}
-          </StyledPanelBottomActions>
-        ) : null}
-      </ReqoreTooltipComponent>
+                {actions.map(renderNonResponsiveActions())}
+              </ReqorePanelNonResponsiveActions>
+            </StyledPanelTopBar>
+          )}
+          {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
+            <StyledPanelContent
+              as={'div'}
+              className='reqore-panel-content'
+              hasLabel={!!hasTitleBar}
+              hasBottomActions={hasBottomActions}
+              isCollapsed={_isCollapsed}
+              style={contentStyle}
+              padded={padded}
+              minimal={minimal}
+              size={contentSize || panelSize}
+              ref={getContentRef}
+              noHorizontalPadding={noHorizontalPadding}
+            >
+              {children}
+            </StyledPanelContent>
+          ) : null}
+          {hasBottomActions && !_isCollapsed ? (
+            <StyledPanelBottomActions
+              flat={flat}
+              className='reqore-panel-bottom-actions'
+              theme={theme}
+              padded={padded}
+              intent={intent}
+              minimal={minimal}
+              transparent={rest.transparent || opacity === 0}
+              opacity={opacity ?? (minimal ? 0 : 1)}
+              size={contentSize || panelSize}
+              noHorizontalPadding={noHorizontalPadding}
+            >
+              {hasNonResponsiveActions(leftBottomActions) ? (
+                <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
+                  {leftBottomActions.map(renderNonResponsiveActions('flex-start'))}
+                </ReqoreControlGroup>
+              ) : null}
+              {hasResponsiveActions(leftBottomActions) && (
+                <ReqoreControlGroup
+                  fluid={responsiveActions}
+                  responsive={responsiveActions}
+                  customTheme={theme}
+                  size={panelSize}
+                  style={{ marginRight: 'auto' }}
+                >
+                  {leftBottomActions.map(renderResponsiveActions('flex-start'))}
+                </ReqoreControlGroup>
+              )}
+              {hasResponsiveActions(rightBottomActions) && (
+                <ReqoreControlGroup
+                  fluid={responsiveActions}
+                  horizontalAlign='flex-end'
+                  responsive={responsiveActions}
+                  customTheme={theme}
+                  style={{ marginLeft: 'auto' }}
+                  size={panelSize}
+                >
+                  {rightBottomActions.map(renderResponsiveActions())}
+                </ReqoreControlGroup>
+              )}
+              {hasNonResponsiveActions(rightBottomActions) ? (
+                <ReqoreControlGroup
+                  horizontalAlign='flex-end'
+                  size={panelSize}
+                  style={{ marginLeft: 'auto' }}
+                >
+                  {rightBottomActions.map(renderNonResponsiveActions())}
+                </ReqoreControlGroup>
+              ) : null}
+            </StyledPanelBottomActions>
+          ) : null}
+        </ReqoreTooltipComponent>
+      </ReqoreErrorBoundary>
     );
   }
 );
