@@ -1,6 +1,7 @@
 import { Component, ErrorInfo } from 'react';
 import { ReqorePanel, ReqoreTree } from '../..';
 import { IReqorePanelProps } from '../Panel';
+import { omit } from 'lodash';
 
 export interface IReqoreErrorBoundaryProps extends Omit<IReqorePanelProps, 'onError'> {
   fallback?: React.ReactNode;
@@ -32,7 +33,7 @@ export class ReqoreErrorBoundary extends Component<
   }
 
   render() {
-    const { doNotCatch, fallback, children, onError, ...rest } = this.props;
+    const { doNotCatch, fallback, children, ...rest } = this.props;
 
     if (this.state.error && !doNotCatch) {
       if (fallback) {
@@ -50,7 +51,7 @@ export class ReqoreErrorBoundary extends Component<
           responsiveActions={false}
           iconProps={{ size: '20px' }}
           customTheme={{ main: 'danger' }}
-          {...rest}
+          {...omit(rest, ['onError'])}
           actions={[
             ...(rest.actions || []),
             {
