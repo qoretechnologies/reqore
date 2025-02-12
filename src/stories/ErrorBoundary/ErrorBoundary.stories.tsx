@@ -48,6 +48,45 @@ export const Throws: Story = {
   },
 };
 
+export const ShowDetails: Story = {
+  ...Throws,
+  play: async (args) => {
+    await Throws.play(args);
+    await _testsClickButton({ label: 'Details' });
+    await _testsWaitForText('"This is a test error"');
+  },
+};
+
+export const WithCustomMessage: Story = {
+  args: {
+    children: <ThrowsError />,
+    errorMessage: 'Ooooopsie doopsie, something went wrong!',
+  },
+  play: async ({ args }) => {
+    await _testsClickButton({ label: 'Throw error' });
+    await _testsWaitForText('Ooooopsie doopsie, something went wrong!');
+
+    expect(args.onError).toHaveBeenCalled();
+  },
+};
+
+export const WithCustomGlobalMessage: Story = {
+  args: {
+    children: <ThrowsError />,
+    options: {
+      errorBoundaryOptions: {
+        errorMessage: 'Ha! You thought you could break me! And you did! :D',
+      },
+    },
+  },
+  play: async ({ args }) => {
+    await _testsClickButton({ label: 'Throw error' });
+    await _testsWaitForText('Ha! You thought you could break me! And you did! :D');
+
+    expect(args.onError).toHaveBeenCalled();
+  },
+};
+
 export const Resets: Story = {
   ...Throws,
   play: async (args) => {

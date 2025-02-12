@@ -1,4 +1,5 @@
 import { createContext } from 'use-context-selector';
+import { IReqoreErrorBoundaryProps } from '../components/ErrorBoundary';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import {
   IReqoreConfirmationModal,
@@ -44,6 +45,7 @@ export interface IReqoreContext {
   readonly addEscClosableModal?: (id: string) => void;
   readonly removeEscClosableModal?: (id: string, onRemove?: () => void) => void;
   readonly latestZIndex?: number;
+  readonly errorBoundaryOptions?: Partial<IReqoreErrorBoundaryProps>;
   theme: IReqoreTheme;
 }
 

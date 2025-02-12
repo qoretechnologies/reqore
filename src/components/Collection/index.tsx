@@ -2,11 +2,12 @@ import { map, size } from 'lodash';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { useReqoreProperty } from '../..';
+import { ReqoreErrorBoundary, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { ReqorePaginationContainer } from '../../containers/Paging';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
+import { IReqoreComponent } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreColumnsProps, StyledColumns } from '../Columns';
 import ReqoreControlGroup from '../ControlGroup';
@@ -25,7 +26,10 @@ import { ReqoreVerticalSpacer } from '../Spacer';
 import { getZoomActions, sizeToZoom, sortTableData, zoomToSize } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 
-export interface IReqoreCollectionProps extends IReqorePanelProps, IReqoreColumnsProps {
+export interface IReqoreCollectionProps
+  extends IReqoreComponent,
+    IReqorePanelProps,
+    IReqoreColumnsProps {
   items?: IReqoreCollectionItemProps[];
   inputProps?: IReqoreInputProps;
   inputInTitle?: boolean;
@@ -149,6 +153,8 @@ export const ReqoreCollection = memo(
     columns,
     alignItems,
     columnsGap = '10px',
+
+    errorBoundaryOptions,
 
     ...rest
   }: IReqoreCollectionProps) => {
@@ -373,15 +379,17 @@ export const ReqoreCollection = memo(
                 className='reqore-collection-content'
               >
                 {applyPaging(filteredItems)?.map((item, index) => (
-                  <ReqoreCollectionItem
-                    size={zoomToSize[zoom]}
-                    responsiveTitle={false}
-                    {...item}
-                    icon={item.icon || (item.selected ? selectedIcon : undefined)}
-                    key={index}
-                    rounded={!stacked}
-                    maxContentHeight={maxItemHeight}
-                  />
+                  <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
+                    <ReqoreCollectionItem
+                      size={zoomToSize[zoom]}
+                      responsiveTitle={false}
+                      {...item}
+                      icon={item.icon || (item.selected ? selectedIcon : undefined)}
+                      key={index}
+                      rounded={!stacked}
+                      maxContentHeight={maxItemHeight}
+                    />
+                  </ReqoreErrorBoundary>
                 ))}
               </StyledCollectionWrapper>
             )

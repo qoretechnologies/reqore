@@ -1,12 +1,13 @@
-import { Component, ErrorInfo } from 'react';
-import { ReqorePanel, ReqoreTree } from '../..';
-import { IReqorePanelProps } from '../Panel';
 import { omit } from 'lodash';
+import { Component, ErrorInfo, memo } from 'react';
+import { ReqorePanel, ReqoreTree, useReqoreProperty } from '../..';
+import { IReqorePanelProps } from '../Panel';
 
 export interface IReqoreErrorBoundaryProps extends Omit<IReqorePanelProps, 'onError'> {
   fallback?: React.ReactNode;
   children: React.ReactNode;
   doNotCatch?: boolean;
+  errorMessage?: string;
   onError?: (error: Error, info: ErrorInfo) => void;
 }
 
@@ -15,10 +16,7 @@ export interface IReqoreErrorBoundaryState {
   showDetails: boolean;
 }
 
-export class ReqoreErrorBoundary extends Component<
-  IReqoreErrorBoundaryProps,
-  IReqoreErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<IReqoreErrorBoundaryProps, IReqoreErrorBoundaryState> {
   constructor(props) {
     super(props);
     this.state = { error: undefined, showDetails: false };
@@ -33,7 +31,7 @@ export class ReqoreErrorBoundary extends Component<
   }
 
   render() {
-    const { doNotCatch, fallback, children, ...rest } = this.props;
+    const { doNotCatch, fallback, errorMessage, children, ...rest } = this.props;
 
     if (this.state.error && !doNotCatch) {
       if (fallback) {
@@ -52,6 +50,7 @@ export class ReqoreErrorBoundary extends Component<
           iconProps={{ size: '20px' }}
           customTheme={{ main: 'danger' }}
           {...omit(rest, ['onError'])}
+          errorBoundaryOptions={{ doNotCatch: true }}
           actions={[
             ...(rest.actions || []),
             {
@@ -72,7 +71,7 @@ export class ReqoreErrorBoundary extends Component<
             },
           ]}
         >
-          There was an error rendering this component. You can try resetting or refreshing the page.
+          {errorMessage}
           {this.state.showDetails && (
             <ReqoreTree
               showControls={false}
@@ -91,3 +90,13 @@ export class ReqoreErrorBoundary extends Component<
     return children;
   }
 }
+
+export const ReqoreErrorBoundary = memo((props: IReqoreErrorBoundaryProps) => {
+  const errorBoundaryOptions = useReqoreProperty('errorBoundaryOptions');
+
+  if (errorBoundaryOptions?.doNotCatch || props.doNotCatch) {
+    return <>{props.children || null}</>;
+  }
+
+  return <ErrorBoundary {...errorBoundaryOptions} {...props} />;
+});

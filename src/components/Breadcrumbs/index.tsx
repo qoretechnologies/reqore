@@ -2,12 +2,13 @@ import { size as count, isArray, last } from 'lodash';
 import React, { useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqoreDropdown } from '../..';
+import { ReqoreDropdown, ReqoreErrorBoundary } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import { ICON_FROM_SIZE, MARGIN_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import ReqoreIcon from '../Icon';
@@ -30,7 +31,9 @@ export interface IReqoreBreadcrumbItem extends IReqoreButtonProps {
   withTabs?: IReqoreBreadcrumbItemTabs;
 }
 
-export interface IReqoreBreadcrumbsProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreBreadcrumbsProps
+  extends IReqoreComponent,
+    React.HTMLAttributes<HTMLDivElement> {
   items: IReqoreBreadcrumbItem[];
   rightElement?: JSX.Element;
   // Internal prop, ignore!
@@ -163,6 +166,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   flat,
   size = 'normal',
   responsive = true,
+  errorBoundaryOptions,
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
@@ -237,23 +241,25 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   };
 
   return (
-    <StyledReqoreBreadcrumbs
-      {...rest}
-      className={`${rest.className || ''} reqore-breadcrumbs-wrapper`}
-      ref={ref}
-      flat={flat}
-      theme={theme}
-      size={size}
-      responsive={responsive}
-    >
-      <div key='reqore-breadcrumbs-left-wrapper'>
-        {transformedItems.map(
-          (item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[], index: number) =>
-            renderItem(item, index)
-        )}
-      </div>
-      {rightElement && <div>{rightElement}</div>}
-    </StyledReqoreBreadcrumbs>
+    <ReqoreErrorBoundary {...errorBoundaryOptions}>
+      <StyledReqoreBreadcrumbs
+        {...rest}
+        className={`${rest.className || ''} reqore-breadcrumbs-wrapper`}
+        ref={ref}
+        flat={flat}
+        theme={theme}
+        size={size}
+        responsive={responsive}
+      >
+        <div key='reqore-breadcrumbs-left-wrapper'>
+          {transformedItems.map(
+            (item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[], index: number) =>
+              renderItem(item, index)
+          )}
+        </div>
+        {rightElement && <div>{rightElement}</div>}
+      </StyledReqoreBreadcrumbs>
+    </ReqoreErrorBoundary>
   );
 };
 

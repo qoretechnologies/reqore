@@ -30,6 +30,7 @@ import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ACTIVE_ICON_SCALE, DisabledElement, INACTIVE_ICON_SCALE } from '../../styles';
 import {
+  IReqoreComponent,
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreFlat,
@@ -80,7 +81,8 @@ export type TReqorePanelActions = IReqorePanelAction[];
 export type TReqorePanelBottomActions = IReqorePanelBottomAction[];
 
 export interface IReqorePanelProps
-  extends IWithReqoreSize,
+  extends IReqoreComponent,
+    IWithReqoreSize,
     IWithReqoreCustomTheme,
     IWithReqoreFlat,
     IReqoreIntent,
@@ -464,6 +466,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       loading,
       loadingIconType,
       skeleton,
+      errorBoundaryOptions,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -773,7 +776,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }
 
     return (
-      <ReqoreErrorBoundary>
+      <ReqoreErrorBoundary {...errorBoundaryOptions}>
         <ReqoreTooltipComponent
           {...omit(rest, ['onResize'])}
           {..._resizable}

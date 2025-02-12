@@ -19,13 +19,14 @@ import {
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
-import { ReqorePanel, ReqorePopover } from '../..';
+import { ReqoreErrorBoundary, ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
 import { formatDateToType, TDateFormat, toDate } from '../../helpers/dates';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement } from '../../styles';
 import {
+  IReqoreComponent,
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreFlat,
@@ -54,7 +55,8 @@ export interface IDatePickerProps<T extends TDateValue>
     IWithReqoreMinimal,
     IWithReqoreFluid,
     IWithReqoreCustomTheme,
-    IReqoreIntent {
+    IReqoreIntent,
+    IReqoreComponent {
   value: T;
   onChange(value: T): void;
 
@@ -145,6 +147,7 @@ export const DatePicker = <T extends TDateValue>({
   minValue,
   maxValue,
   dateType = 'iso',
+  errorBoundaryOptions,
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -247,151 +250,153 @@ export const DatePicker = <T extends TDateValue>({
   );
 
   return (
-    <Component {...finalProps}>
-      <ReqorePopover
-        component={ReqoreInput}
-        componentProps={{
-          as: StyledDateInput,
-          onClearClick: handleClearClick,
-          fluid,
-          value,
-          rounded,
-          size,
-          pill,
-          minimal,
-          intent,
-          flat,
-          icon: 'CalendarLine',
-          ...inputProps,
-        }}
-        closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}
-        closeOnAnyClick={false}
-        passPopoverData={(data) => (popoverData.current = data)}
-        isReqoreComponent
-        noWrapper
-        handler='click'
-        placement='bottom-start'
-        noArrow
-        onToggleChange={onToggleChange}
-        {...popoverProps}
-        content={useMemo(
-          () => (
-            <Calendar<ZonedDateTime>
-              defaultFocusedValue={value}
-              onChange={handleCalendarDateChange}
-              focusedValue={focusedValue}
-              onFocusChange={(date) => setFocusedValue(toZoned(date, getLocalTimeZone()))}
-              minValue={toDate(minValue)}
-              maxValue={toDate(maxValue)}
-            >
-              <ReqorePanel
-                responsiveActionsWrapperProps={{ fluid: false }}
-                minimal
-                size='small'
-                responsiveTitle={false}
-                intent={intent}
-                label={
-                  <YearMonthDropdowns
-                    value={focusedValue}
-                    onValueChange={onMonthYearChange}
-                    setIsMonthDropdownOpen={setIsMonthDropdownOpen}
-                    setIsYearDropdownOpen={setIsYearDropdownOpen}
-                    minValue={minValue}
-                    maxValue={maxValue}
-                    intent={intent}
-                    customTheme={theme}
-                    {...yearMonthPickerProps}
-                  />
-                }
-                {...pickerProps}
-                actions={[
-                  {
-                    group: [
-                      {
-                        as: ReqoreButton,
-                        props: {
-                          as: Button,
-                          customTheme: theme,
-                          slot: 'previous',
-                          icon: 'ArrowLeftFill',
-                          size: 'normal',
-                          compact: true,
-                        },
-                      },
-                      {
-                        as: ReqoreButton,
-                        props: {
-                          as: Button,
-                          customTheme: theme,
-                          slot: 'next',
-                          icon: 'ArrowRightFill',
-                          size: 'normal',
-                          compact: true,
-                        },
-                      },
-                    ],
-                  },
-                ]}
+    <ReqoreErrorBoundary {...errorBoundaryOptions}>
+      <Component {...finalProps}>
+        <ReqorePopover
+          component={ReqoreInput}
+          componentProps={{
+            as: StyledDateInput,
+            onClearClick: handleClearClick,
+            fluid,
+            value,
+            rounded,
+            size,
+            pill,
+            minimal,
+            intent,
+            flat,
+            icon: 'CalendarLine',
+            ...inputProps,
+          }}
+          closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}
+          closeOnAnyClick={false}
+          passPopoverData={(data) => (popoverData.current = data)}
+          isReqoreComponent
+          noWrapper
+          handler='click'
+          placement='bottom-start'
+          noArrow
+          onToggleChange={onToggleChange}
+          {...popoverProps}
+          content={useMemo(
+            () => (
+              <Calendar<ZonedDateTime>
+                defaultFocusedValue={value}
+                onChange={handleCalendarDateChange}
+                focusedValue={focusedValue}
+                onFocusChange={(date) => setFocusedValue(toZoned(date, getLocalTimeZone()))}
+                minValue={toDate(minValue)}
+                maxValue={toDate(maxValue)}
               >
-                <StyledCalendarGrid>
-                  {(date) => {
-                    const isSelected = value && isSameDay(date, value);
-                    return (
-                      <StyledCalendarCell data-selected={isSelected} date={date}>
-                        <ReqoreButton
-                          key={date.toString()}
-                          customTheme={isSelected ? theme : { main: 'transparent' }}
-                          label={date.day}
-                          active={isSelected}
-                          textAlign='center'
-                          circle
-                          minimal
-                          flat
-                          compact
-                          {...(isSelected ? pickerActiveDayProps : pickerDayProps)}
-                        />
-                      </StyledCalendarCell>
-                    );
-                  }}
-                </StyledCalendarGrid>
-                {showTime && (
-                  <ReqoreControlGroup fluid>
-                    <StyledTimeField
-                      value={time}
-                      onChange={onTimeChange}
-                      granularity={granularity}
-                      hideTimeZone={hideTimeZone}
-                      shouldForceLeadingZeros={shouldForceLeadingZeros}
-                      hourCycle={hourCycle}
-                      aria-label='Time'
-                      {...timeFieldProps}
-                    >
-                      <ReqoreInput
-                        icon='TimeLine'
-                        fluid
-                        as={StyledDateInput}
-                        flat={flat}
-                        rounded={rounded}
-                        minimal={minimal}
-                        size={size}
-                        pill={pill}
-                        intent={intent}
-                        theme={theme}
-                        {...timeInputProps}
+                <ReqorePanel
+                  responsiveActionsWrapperProps={{ fluid: false }}
+                  minimal
+                  size='small'
+                  responsiveTitle={false}
+                  intent={intent}
+                  label={
+                    <YearMonthDropdowns
+                      value={focusedValue}
+                      onValueChange={onMonthYearChange}
+                      setIsMonthDropdownOpen={setIsMonthDropdownOpen}
+                      setIsYearDropdownOpen={setIsYearDropdownOpen}
+                      minValue={minValue}
+                      maxValue={maxValue}
+                      intent={intent}
+                      customTheme={theme}
+                      {...yearMonthPickerProps}
+                    />
+                  }
+                  {...pickerProps}
+                  actions={[
+                    {
+                      group: [
+                        {
+                          as: ReqoreButton,
+                          props: {
+                            as: Button,
+                            customTheme: theme,
+                            slot: 'previous',
+                            icon: 'ArrowLeftFill',
+                            size: 'normal',
+                            compact: true,
+                          },
+                        },
+                        {
+                          as: ReqoreButton,
+                          props: {
+                            as: Button,
+                            customTheme: theme,
+                            slot: 'next',
+                            icon: 'ArrowRightFill',
+                            size: 'normal',
+                            compact: true,
+                          },
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <StyledCalendarGrid>
+                    {(date) => {
+                      const isSelected = value && isSameDay(date, value);
+                      return (
+                        <StyledCalendarCell data-selected={isSelected} date={date}>
+                          <ReqoreButton
+                            key={date.toString()}
+                            customTheme={isSelected ? theme : { main: 'transparent' }}
+                            label={date.day}
+                            active={isSelected}
+                            textAlign='center'
+                            circle
+                            minimal
+                            flat
+                            compact
+                            {...(isSelected ? pickerActiveDayProps : pickerDayProps)}
+                          />
+                        </StyledCalendarCell>
+                      );
+                    }}
+                  </StyledCalendarGrid>
+                  {showTime && (
+                    <ReqoreControlGroup fluid>
+                      <StyledTimeField
+                        value={time}
+                        onChange={onTimeChange}
+                        granularity={granularity}
+                        hideTimeZone={hideTimeZone}
+                        shouldForceLeadingZeros={shouldForceLeadingZeros}
+                        hourCycle={hourCycle}
+                        aria-label='Time'
+                        {...timeFieldProps}
                       >
-                        {(segment) => <StyledDateSegment segment={segment} />}
-                      </ReqoreInput>
-                    </StyledTimeField>
-                  </ReqoreControlGroup>
-                )}
-              </ReqorePanel>
-            </Calendar>
-          ),
-          [value, !isMonthDropdownOpen && !isYearDropdownOpen, focusedValue, time]
-        )}
-      >
-        {(segment) => <StyledDateSegment segment={segment} />}
-      </ReqorePopover>
-    </Component>
+                        <ReqoreInput
+                          icon='TimeLine'
+                          fluid
+                          as={StyledDateInput}
+                          flat={flat}
+                          rounded={rounded}
+                          minimal={minimal}
+                          size={size}
+                          pill={pill}
+                          intent={intent}
+                          theme={theme}
+                          {...timeInputProps}
+                        >
+                          {(segment) => <StyledDateSegment segment={segment} />}
+                        </ReqoreInput>
+                      </StyledTimeField>
+                    </ReqoreControlGroup>
+                  )}
+                </ReqorePanel>
+              </Calendar>
+            ),
+            [value, !isMonthDropdownOpen && !isYearDropdownOpen, focusedValue, time]
+          )}
+        >
+          {(segment) => <StyledDateSegment segment={segment} />}
+        </ReqorePopover>
+      </Component>
+    </ReqoreErrorBoundary>
   );
 };

@@ -1,9 +1,10 @@
 import React, { ReactElement, useCallback, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
+import { ReqoreErrorBoundary } from '../..';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
-import { IWithReqoreLoading } from '../../types/global';
+import { IReqoreComponent, IWithReqoreLoading } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
 import { TReqoreTabsContentPadding } from './content';
@@ -22,7 +23,7 @@ export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
   show?: boolean;
 }
 
-export interface IReqoreTabsProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes<HTMLDivElement> {
   tabs: IReqoreTabsListItem[];
   activeTab?: string | number;
   onTabChange?: (tabId: string | number) => any;
@@ -76,6 +77,7 @@ const ReqoreTabs = ({
   unMountOnTabChange = true,
   loadingIconType,
   useReactTransition = true,
+  errorBoundaryOptions,
   ...rest
 }: IReqoreTabsProps) => {
   const [_activeTab, setActiveTab] = useState<string | number>(activeTab || tabs[0].id);
@@ -102,45 +104,47 @@ const ReqoreTabs = ({
   );
 
   return (
-    <StyledTabs
-      {...rest}
-      width={width}
-      vertical={vertical}
-      className={`${className || ''} reqore-tabs`}
-    >
-      <ReqoreTabsList
-        tabs={tabs}
-        padded={padded}
-        flat={flat}
-        fill={fill}
-        size={size}
+    <ReqoreErrorBoundary {...errorBoundaryOptions}>
+      <StyledTabs
+        {...rest}
         width={width}
         vertical={vertical}
-        _testWidth={_testWidth}
-        activeTab={_activeTab}
-        wrapTabNames={wrapTabNames}
-        activeTabIntent={activeTabIntent}
-        customTheme={customTheme}
-        intent={intent}
-        onTabChange={handleTabChange}
-        loadingIconType={loadingIconType}
-        useReactTransition={useReactTransition}
-      />
-      {React.Children.map(children, (child) =>
-        child &&
-        tabs.find((tab) => tab.id === child.props?.tabId)?.show !== false &&
-        (child.props?.tabId === _activeTab || !unMountOnTabChange)
-          ? React.cloneElement(child, {
-              padded: child.props?.padded || tabsPadding,
-              key: child.props?.tabId,
-              style:
-                child.props?.tabId === _activeTab
-                  ? child.props.style
-                  : { ...(child.props.style || {}), display: 'none' },
-            })
-          : null
-      )}
-    </StyledTabs>
+        className={`${className || ''} reqore-tabs`}
+      >
+        <ReqoreTabsList
+          tabs={tabs}
+          padded={padded}
+          flat={flat}
+          fill={fill}
+          size={size}
+          width={width}
+          vertical={vertical}
+          _testWidth={_testWidth}
+          activeTab={_activeTab}
+          wrapTabNames={wrapTabNames}
+          activeTabIntent={activeTabIntent}
+          customTheme={customTheme}
+          intent={intent}
+          onTabChange={handleTabChange}
+          loadingIconType={loadingIconType}
+          useReactTransition={useReactTransition}
+        />
+        {React.Children.map(children, (child) =>
+          child &&
+          tabs.find((tab) => tab.id === child.props?.tabId)?.show !== false &&
+          (child.props?.tabId === _activeTab || !unMountOnTabChange)
+            ? React.cloneElement(child, {
+                padded: child.props?.padded || tabsPadding,
+                key: child.props?.tabId,
+                style:
+                  child.props?.tabId === _activeTab
+                    ? child.props.style
+                    : { ...(child.props.style || {}), display: 'none' },
+              })
+            : null
+        )}
+      </StyledTabs>
+    </ReqoreErrorBoundary>
   );
 };
 
