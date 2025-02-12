@@ -20,6 +20,7 @@ export interface IReqoreOptions
     | 'animations'
     | 'tooltips'
     | 'customPortalId'
+    | 'errorBoundaryOptions'
   > {
   withSidebar?: boolean;
   notificationsPosition?: IReqoreNotificationsPosition;

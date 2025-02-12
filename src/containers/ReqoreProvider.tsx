@@ -11,7 +11,7 @@ import ReqoreNotification, {
   IReqoreNotificationProps,
 } from '../components/Notifications/notification';
 import { IReqoreTheme, TReqoreIntent } from '../constants/theme';
-import ReqoreContext from '../context/ReqoreContext';
+import ReqoreContext, { IReqoreContext } from '../context/ReqoreContext';
 import ThemeContext from '../context/ThemeContext';
 import { IReqoreIconName } from '../types/icons';
 import { IReqoreOptions } from './UIProvider';
@@ -172,7 +172,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     });
   };
 
-  const contextValue = useMemo(
+  const contextValue: IReqoreContext = useMemo(
     () => ({
       notifications,
       theme,
@@ -203,6 +203,10 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       removeEscClosableModal,
       customPortalId: options.customPortalId,
       uiScale: options.uiScale,
+      errorBoundaryOptions: options.errorBoundaryOptions || {
+        errorMessage:
+          'There was an error rendering this component. You can try resetting or refreshing the page.',
+      },
     }),
     [
       notifications,

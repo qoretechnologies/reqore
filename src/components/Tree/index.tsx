@@ -11,6 +11,7 @@ import {
 import { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import {
+  ReqoreErrorBoundary,
   ReqoreIcon,
   ReqoreP,
   ReqorePanel,
@@ -21,7 +22,7 @@ import {
 import { GAP_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { getOneLessSize, getTypeFromValue, parseInputValue } from '../../helpers/utils';
-import { IWithReqoreSize } from '../../types/global';
+import { IReqoreComponent, IWithReqoreSize } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { ReqoreExportModal } from '../ExportModal';
@@ -29,7 +30,7 @@ import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
 import { IReqoreTreeManagementDialog, ReqoreTreeManagementDialog } from './modal';
 
-export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize {
+export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IReqoreComponent {
   data: Record<string, unknown> | Array<any>;
   onDataChange?: (data: Record<string, unknown> | Array<any>) => void;
   mode?: 'tree' | 'copy';
@@ -79,6 +80,7 @@ export const ReqoreTree = ({
   zoomable,
   defaultZoom,
   onDataChange,
+  errorBoundaryOptions,
   ...rest
 }: IReqoreTreeProps) => {
   const [items, setItems] = useState({});
@@ -432,7 +434,7 @@ export const ReqoreTree = ({
   }
 
   return (
-    <>
+    <ReqoreErrorBoundary {...errorBoundaryOptions}>
       {showExportModal && (
         <ReqoreExportModal data={data} onClose={() => setShowExportModal(undefined)} />
       )}
@@ -520,6 +522,7 @@ export const ReqoreTree = ({
           gap: `${GAP_FROM_SIZE[size]}px`,
         }}
         {...rest}
+        errorBoundaryOptions={errorBoundaryOptions}
         actions={actions}
       >
         <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
@@ -550,6 +553,6 @@ export const ReqoreTree = ({
           />
         )}
       </ReqorePanel>
-    </>
+    </ReqoreErrorBoundary>
   );
 };

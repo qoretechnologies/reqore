@@ -1,6 +1,7 @@
 import { Resizable, ResizableProps } from 're-resizable';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, memo } from 'react';
 import styled, { css } from 'styled-components';
+import { ReqoreErrorBoundary } from '../..';
 import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
@@ -78,70 +79,75 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
       : undefined}
 `;
 
-const ReqoreMenu = forwardRef<HTMLDivElement, IReqoreMenuProps>(
-  (
-    {
-      children,
-      position,
-      customTheme,
-      intent,
-      wrapText,
-      flat = true,
-      minimal,
-      size = 'normal',
-      itemGap,
-      resizable,
-      skeleton,
-      closePopover,
-      ...rest
-    }: IReqoreMenuProps,
-    ref
-  ) => {
-    const theme = useReqoreTheme('main', customTheme, intent);
-    const { targetRef } = useCombinedRefs(ref);
-    const { clone } = useCloneThroughFragments((props) => ({
-      customTheme: props?.customTheme || theme,
-      wrap: 'wrap' in (props || {}) ? props.wrap : wrapText,
-      flat: 'flat' in (props || {}) ? props.flat : flat,
-      minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
-      size: 'size' in (props || {}) ? props.size : size,
-      closePopover,
-    }));
+const ReqoreMenu = memo(
+  forwardRef<HTMLDivElement, IReqoreMenuProps>(
+    (
+      {
+        children,
+        position,
+        customTheme,
+        intent,
+        wrapText,
+        flat = true,
+        minimal,
+        size = 'normal',
+        itemGap,
+        resizable,
+        skeleton,
+        closePopover,
+        errorBoundaryOptions,
+        ...rest
+      }: IReqoreMenuProps,
+      ref
+    ) => {
+      const theme = useReqoreTheme('main', customTheme, intent);
+      const { targetRef } = useCombinedRefs(ref);
+      const { clone } = useCloneThroughFragments((props) => ({
+        customTheme: props?.customTheme || theme,
+        wrap: 'wrap' in (props || {}) ? props.wrap : wrapText,
+        flat: 'flat' in (props || {}) ? props.flat : flat,
+        minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
+        size: 'size' in (props || {}) ? props.size : size,
+        closePopover,
+      }));
 
-    return (
-      <ReqoreThemeProvider theme={theme}>
-        <StyledReqoreMenu
-          {...rest}
-          {...resizable}
-          as={!!resizable ? Resizable : 'div'}
-          isResizableRight={resizable?.enable?.right}
-          isResizableLeft={resizable?.enable?.left}
-          flat={flat}
-          position={position}
-          _size={size}
-          className={`${rest.className || ''} reqore-menu`}
-          theme={theme}
-          ref={(curRef) => {
-            let _ref = curRef;
+      return (
+        <ReqoreErrorBoundary {...errorBoundaryOptions}>
+          <ReqoreThemeProvider theme={theme}>
+            <StyledReqoreMenu
+              {...rest}
+              {...resizable}
+              as={!!resizable ? Resizable : 'div'}
+              isResizableRight={resizable?.enable?.right}
+              isResizableLeft={resizable?.enable?.left}
+              flat={flat}
+              position={position}
+              _size={size}
+              className={`${rest.className || ''} reqore-menu`}
+              theme={theme}
+              ref={(curRef) => {
+                let _ref = curRef;
 
-            if (curRef?.resizable) {
-              _ref = curRef.resizable;
-            }
+                if (curRef?.resizable) {
+                  _ref = curRef.resizable;
+                }
 
-            targetRef.current = _ref;
-          }}
-        >
-          <ReqoreControlGroup vertical gapSize={itemGap} fluid>
-            {skeleton
-              ? React.Children.map(children, (_child, index) => (
-                  <ReqoreSkeleton key={index} size={size} width='100%' />
-                ))
-              : clone(children)}
-          </ReqoreControlGroup>
-        </StyledReqoreMenu>
-      </ReqoreThemeProvider>
-    );
-  }
+                targetRef.current = _ref;
+              }}
+            >
+              <ReqoreControlGroup vertical gapSize={itemGap} fluid>
+                {skeleton
+                  ? React.Children.map(children, (_child, index) => (
+                      <ReqoreSkeleton key={index} size={size} width='100%' />
+                    ))
+                  : clone(children)}
+              </ReqoreControlGroup>
+            </StyledReqoreMenu>
+          </ReqoreThemeProvider>
+        </ReqoreErrorBoundary>
+      );
+    }
+  )
 );
 
 export default ReqoreMenu;

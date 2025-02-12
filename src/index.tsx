@@ -15,6 +15,7 @@ export { ReqoreBackdrop } from './components/Drawer/backdrop';
 export { default as ReqoreDropdown } from './components/Dropdown';
 export { ReqoreDropdownDivider, ReqoreDropdownItem } from './components/Dropdown/item';
 export { ReqoreEffect, ReqoreTextEffect } from './components/Effect';
+export { ReqoreErrorBoundary } from './components/ErrorBoundary';
 export {
   IReqoreHeadingProps,
   ReqoreH1,
