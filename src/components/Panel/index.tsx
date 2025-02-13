@@ -668,8 +668,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           return (
             <CustomElement
               fixed
-              className={className}
               {...props}
+              className={classNames(className, props.className)}
               key={props.key || index}
               customTheme={props.customTheme || theme}
               onClick={
