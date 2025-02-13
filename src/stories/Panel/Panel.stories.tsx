@@ -162,6 +162,15 @@ const Template: StoryFn<IReqorePanelProps> = (args: IReqorePanelProps) => {
                 },
               },
               {
+                as: ReqoreTag,
+                show: 'hover',
+                props: {
+                  className: 'my-custom-className',
+                  icon: 'AlarmLine' as IReqoreIconName,
+                  intent: 'danger',
+                },
+              },
+              {
                 group: [
                   {
                     icon: 'EditLine',
