@@ -1,9 +1,9 @@
-import { last, map, size } from 'lodash';
+import { last, size } from 'lodash';
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useMedia } from 'react-use';
 import shortid from 'shortid';
 import { useContext } from 'use-context-selector';
+import { create } from 'zustand';
 import { ReqoreModal, ReqoreTextEffect } from '..';
 import { IReqoreModalProps } from '../components/Modal';
 import ReqoreNotificationsWrapper from '../components/Notifications';
@@ -56,9 +56,45 @@ export interface IReqoreConfirmationModal {
   intent?: TReqoreIntent;
 }
 
+export const modalStore = create<{
+  modals: IReqoreModals;
+  addModal: IReqoreContext['addModal'];
+  removeModal: IReqoreContext['removeModal'];
+}>((set) => ({
+  modals: {},
+  addModal: (
+    modal: IReqoreModalFromProps | TReqoreCustomModal,
+    id: string = shortid.generate(),
+    options?: IReqoreModal['options']
+  ) => {
+    set((cur) => ({
+      modals: {
+        ...cur.modals,
+        [id]: {
+          modal,
+          options: {
+            closable: options?.closable ?? true,
+          },
+        },
+      },
+    }));
+
+    return id;
+  },
+  removeModal: (id: string) =>
+    set((cur) => {
+      const newModals = { ...cur.modals };
+      delete newModals[id];
+
+      return {
+        modals: newModals,
+      };
+    }),
+}));
+
 const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options = {} }) => {
   const [notifications, setNotifications] = useState<IReqoreNotificationData[] | null>([]);
-  const [modals, setModals] = useState<IReqoreModals>({});
+  const { addModal, removeModal } = modalStore();
   const [escClosableModals, setEscClosableModals] = useState<string[]>([]);
   const [confirmationModal, setConfirmationModal] = useState<IReqoreConfirmationModal>({});
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
@@ -109,40 +145,6 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     });
   }, []);
 
-  const addModal = useCallback(
-    (
-      modal: IReqoreModalFromProps | TReqoreCustomModal,
-      id?: string,
-      options?: IReqoreModal['options']
-    ): string => {
-      const _id = id || shortid.generate();
-
-      setModals((cur) => {
-        return {
-          ...cur,
-          [_id]: {
-            modal,
-            options: {
-              closable: options?.closable ?? true,
-            },
-          },
-        };
-      });
-
-      return _id;
-    },
-    []
-  );
-
-  const removeModal = useCallback((id: string): void => {
-    setModals((cur) => {
-      const newModals = { ...cur };
-      delete newModals[id];
-
-      return newModals;
-    });
-  }, []);
-
   const addNotification = useCallback((data: IReqoreNotificationData) => {
     setNotifications((cur) => {
       let newNotifications = [...cur];
@@ -173,41 +175,42 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   };
 
   const contextValue: IReqoreContext = useMemo(
-    () => ({
-      notifications,
-      theme,
-      addNotification,
-      removeNotification,
-      addModal,
-      removeModal,
-      confirmAction,
-      isMobile,
-      isTablet,
-      isMobileOrTablet,
-      latestZIndex: latestZIndex.current,
-      getAndIncreaseZIndex,
-      animations: {
-        buttons: true,
-        dialogs: true,
-        popovers: true,
-        ...(options?.animations || {}),
-      },
-      tooltips: options.tooltips || { delay: 0 },
-      closePopoversOnEscPress:
-        'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
-      // ESC Closable modals management
-      closeModalsOnEscPress:
-        'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
-      escClosableModals,
-      addEscClosableModal,
-      removeEscClosableModal,
-      customPortalId: options.customPortalId,
-      uiScale: options.uiScale,
-      errorBoundaryOptions: options.errorBoundaryOptions || {
-        errorMessage:
-          'There was an error rendering this component. You can try resetting or refreshing the page.',
-      },
-    }),
+    () =>
+      ({
+        notifications,
+        theme,
+        addNotification,
+        removeNotification,
+        addModal,
+        removeModal,
+        confirmAction,
+        isMobile,
+        isTablet,
+        isMobileOrTablet,
+        latestZIndex: latestZIndex.current,
+        getAndIncreaseZIndex,
+        animations: {
+          buttons: true,
+          dialogs: true,
+          popovers: true,
+          ...(options?.animations || {}),
+        },
+        tooltips: options.tooltips || { delay: 0 },
+        closePopoversOnEscPress:
+          'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
+        // ESC Closable modals management
+        closeModalsOnEscPress:
+          'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
+        escClosableModals,
+        addEscClosableModal,
+        removeEscClosableModal,
+        customPortalId: options.customPortalId,
+        uiScale: options.uiScale,
+        errorBoundaryOptions: options.errorBoundaryOptions || {
+          errorMessage:
+            'There was an error rendering this component. You can try resetting or refreshing the page.',
+        },
+      } satisfies IReqoreContext),
     [
       notifications,
       theme,
@@ -301,37 +304,6 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
               {confirmationModal.description || 'Are you sure you want to proceed?'}
             </ReqoreTextEffect>
           </ReqoreModal>
-        )}
-        {map(modals, ({ modal, options: modalOptions }, key) =>
-          React.isValidElement(modal) ? (
-            createPortal(
-              React.cloneElement(modal, {
-                key,
-                isOpen: true,
-                onClose: modalOptions?.closable
-                  ? () => {
-                      removeModal(key);
-                      modal.props.onClose?.();
-                    }
-                  : undefined,
-              }),
-              document.querySelector(options.customPortalId || '#reqore-portal')!
-            )
-          ) : (
-            <ReqoreModal
-              {...modal}
-              key={key}
-              isOpen
-              onClose={
-                modalOptions?.closable
-                  ? () => {
-                      removeModal(key);
-                      modal.onClose?.();
-                    }
-                  : undefined
-              }
-            />
-          )
         )}
       </ReqoreContext.Provider>
     </>

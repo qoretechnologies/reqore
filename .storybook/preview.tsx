@@ -1,5 +1,6 @@
 import withMockdate from '@netsells/storybook-mockdate';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+import { ReqoreModalsWrapper } from '../src/components/GlobalModalsWrapper';
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },
@@ -74,6 +75,7 @@ export const decorators = [
       >
         <ReqoreLayoutContent style={{ height: '100%' }}>
           <div id='my-custom-portal' />
+          <ReqoreModalsWrapper />
           <Story />
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
@@ -97,6 +99,7 @@ export const decorators = [
               transform: `scale(${context.args.globalUiScale || 1})`,
             }}
           >
+            <ReqoreModalsWrapper />
             <Story />
             <div id='my-custom-portal' />
           </ReqoreContent>

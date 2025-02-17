@@ -16,6 +16,7 @@ export { default as ReqoreDropdown } from './components/Dropdown';
 export { ReqoreDropdownDivider, ReqoreDropdownItem } from './components/Dropdown/item';
 export { ReqoreEffect, ReqoreTextEffect } from './components/Effect';
 export { ReqoreErrorBoundary } from './components/ErrorBoundary';
+export { ReqoreModalsWrapper } from './components/GlobalModalsWrapper';
 export {
   IReqoreHeadingProps,
   ReqoreH1,
@@ -73,7 +74,7 @@ export { Colors as ReqoreColors } from './constants/colors';
 export { ReqoreSizes } from './constants/sizes';
 export { ReqoreIntents } from './constants/theme';
 export { ReqorePaginationContainer } from './containers/Paging';
-export { default as ReqoreNotifications } from './containers/ReqoreProvider';
+export { modalStore, default as ReqoreNotifications } from './containers/ReqoreProvider';
 export { default as ReqoreUIProvider } from './containers/UIProvider';
 export { default as ReqoreContext } from './context/ReqoreContext';
 export { default as ReqoreThemeContext } from './context/ThemeContext';
