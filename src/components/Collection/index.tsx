@@ -339,7 +339,7 @@ export const ReqoreCollection = memo(
         return [...leftActions, ...actions, ...rightActions, toolbarGroup];
       }
 
-      return [...leftActions, ...rightActions, ...actions];
+      return [...leftActions, ...actions, ...rightActions];
     }, [
       filterable,
       preQuery,

@@ -38,7 +38,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   height?: number | string;
   customZIndex?: number;
   closeOnEscPress?: boolean;
-  confirmOnClose?: IReqoreConfirmationModal;
+  confirmOnClose?: boolean | IReqoreConfirmationModal;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -254,7 +254,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       ? () => {
           if (confirmOnClose) {
             confirmAction({
-              ...confirmOnClose,
+              ...(typeof confirmOnClose === 'object' ? confirmOnClose : {}),
               onConfirm: onClose,
             });
           } else {

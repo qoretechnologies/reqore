@@ -146,7 +146,11 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   }, []);
 
   const removeEscClosableModal = useCallback(
-    (id: string, onRemove?: () => void, confirmOnClose?: IReqoreConfirmationModal): void => {
+    (
+      id: string,
+      onRemove?: () => void,
+      confirmOnClose?: boolean | IReqoreConfirmationModal
+    ): void => {
       const onConfirm = (cur) => {
         onRemove?.();
 
@@ -155,7 +159,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
 
       if (confirmOnClose) {
         confirmAction({
-          ...confirmOnClose,
+          ...(typeof confirmOnClose === 'object' ? confirmOnClose : {}),
           onConfirm: () => {
             setEscClosableModals((cur) => onConfirm(cur));
           },
@@ -311,7 +315,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
               {
                 label: confirmationModal.cancelLabel || 'Cancel',
                 icon: confirmationModal.cancelIcon || 'CloseLine',
-                intent: confirmationModal.cancelButtonIntent || 'danger',
+                intent: confirmationModal.cancelButtonIntent,
                 ...(confirmationModal.cancelButtonProps || {}),
                 onClick: () => {
                   closeConfirmationModal();
