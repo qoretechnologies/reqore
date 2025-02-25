@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { noop } from 'lodash';
-import React from 'react';
 import {
   ReqoreContent,
   ReqoreControlGroup,
@@ -16,17 +15,17 @@ test('Renders <Tag /> properly', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreControlGroup minimal>
-            <ReqoreTag icon='24HoursLine' rightIcon='4KLine' onClick={noop} onRemoveClick={noop} />
+            <ReqoreTag icon='24HoursLine' rightIcon='4kLine' onClick={noop} onRemoveClick={noop} />
             <ReqoreTag
               icon='24HoursLine'
-              rightIcon='4KLine'
+              rightIcon='4kLine'
               onClick={noop}
               onRemoveClick={noop}
               size='big'
             />
             <ReqoreTag
               icon='24HoursLine'
-              rightIcon='4KLine'
+              rightIcon='4kLine'
               onClick={noop}
               onRemoveClick={noop}
               size='small'
@@ -49,21 +48,21 @@ test('Renders <Tag /> group properly', () => {
             <ReqoreTagGroup>
               <ReqoreTag
                 icon='24HoursLine'
-                rightIcon='4KLine'
+                rightIcon='4kLine'
                 onClick={noop}
                 onRemoveClick={noop}
                 label='Label'
               />
               <ReqoreTag
                 icon='24HoursLine'
-                rightIcon='4KLine'
+                rightIcon='4kLine'
                 onClick={noop}
                 onRemoveClick={noop}
                 size='big'
               />
               <ReqoreTag
                 icon='24HoursLine'
-                rightIcon='4KLine'
+                rightIcon='4kLine'
                 onClick={noop}
                 onRemoveClick={noop}
                 size='small'
@@ -89,7 +88,7 @@ test('Renders <Tag /> without remove button if disabled', () => {
             <ReqoreTagGroup>
               <ReqoreTag
                 icon='24HoursLine'
-                rightIcon='4KLine'
+                rightIcon='4kLine'
                 onClick={noop}
                 onRemoveClick={noop}
                 label='Label'
@@ -117,7 +116,7 @@ test('Fires onClick and onRemoveClick <Tag /> events', () => {
             <ReqoreTagGroup>
               <ReqoreTag
                 icon='24HoursLine'
-                rightIcon='4KLine'
+                rightIcon='4kLine'
                 label='Test'
                 onClick={clickFn}
                 onRemoveClick={removeClickFn}
@@ -147,7 +146,7 @@ test('Renders <Tag /> with the label key', () => {
         <ReqoreContent>
           <ReqoreControlGroup minimal>
             <ReqoreTagGroup>
-              <ReqoreTag icon='24HoursLine' rightIcon='4KLine' label='Label' labelKey='label key' />
+              <ReqoreTag icon='24HoursLine' rightIcon='4kLine' label='Label' labelKey='label key' />
             </ReqoreTagGroup>
           </ReqoreControlGroup>
         </ReqoreContent>

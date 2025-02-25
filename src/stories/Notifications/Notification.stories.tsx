@@ -117,7 +117,7 @@ const Template: StoryFn<IReqoreNotificationProps & IReqoreUIProviderProps> = ({
       onClose={noop}
       intent='warning'
       flat
-      icon='4KLine'
+      icon='4kLine'
       size='tiny'
     />
   </ReqoreUIProvider>
