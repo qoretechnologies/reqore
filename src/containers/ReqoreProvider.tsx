@@ -10,6 +10,7 @@ import ReqoreNotificationsWrapper from '../components/Notifications';
 import ReqoreNotification, {
   IReqoreNotificationProps,
 } from '../components/Notifications/notification';
+import { IReqorePanelAction } from '../components/Panel';
 import { IReqoreTheme, TReqoreIntent } from '../constants/theme';
 import ReqoreContext, { IReqoreContext } from '../context/ReqoreContext';
 import ThemeContext from '../context/ThemeContext';
@@ -45,15 +46,27 @@ export type TReqoreCustomModal = React.ReactElement<IReqoreModalProps>;
 
 export interface IReqoreConfirmationModal {
   title?: string;
+  label?: string;
   description?: string;
+  content?: string;
+  icon?: IReqoreIconName;
+
   onConfirm?: () => void;
   onCancel?: () => void;
+
   confirmButtonIntent?: TReqoreIntent;
   confirmLabel?: string;
   confirmIcon?: IReqoreIconName;
+  confirmButtonProps?: IReqorePanelAction;
+
   cancelLabel?: string;
+  cancelButtonIntent?: TReqoreIntent;
+  cancelIcon?: IReqoreIconName;
+  cancelButtonProps?: IReqorePanelAction;
+
   isOpen?: boolean;
   intent?: TReqoreIntent;
+  modalProps?: IReqoreModalProps;
 }
 
 export const modalStore = create<{
@@ -132,18 +145,36 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     setEscClosableModals((cur) => [...cur, id]);
   }, []);
 
-  const removeEscClosableModal = useCallback((id: string, onRemove?: () => void): void => {
-    setEscClosableModals((cur) => {
-      // Check if the modal is still in the array and it's the last one
-      if (last(cur) === id) {
+  const removeEscClosableModal = useCallback(
+    (id: string, onRemove?: () => void, confirmOnClose?: IReqoreConfirmationModal): void => {
+      const onConfirm = (cur) => {
         onRemove?.();
 
         return [...cur].filter((modalId) => modalId !== id);
+      };
+
+      if (confirmOnClose) {
+        confirmAction({
+          ...confirmOnClose,
+          onConfirm: () => {
+            setEscClosableModals((cur) => onConfirm(cur));
+          },
+        });
+
+        return;
       }
 
-      return cur;
-    });
-  }, []);
+      setEscClosableModals((cur) => {
+        // Check if the modal is still in the array and it's the last one
+        if (last(cur) === id) {
+          return onConfirm(cur);
+        }
+
+        return cur;
+      });
+    },
+    []
+  );
 
   const addNotification = useCallback((data: IReqoreNotificationData) => {
     setNotifications((cur) => {
@@ -272,16 +303,19 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
             blur={2}
             width='500px'
             intent={confirmationModal.intent}
-            label={confirmationModal.title || 'Confirm your action'}
-            icon='ErrorWarningFill'
+            label={confirmationModal.title || confirmationModal.label || 'Confirm your action'}
+            description={confirmationModal.description}
+            icon={confirmationModal.icon || 'ErrorWarningFill'}
             className='reqore-confirmation-modal'
             bottomActions={[
               {
                 label: confirmationModal.cancelLabel || 'Cancel',
-                icon: 'CloseLine',
+                icon: confirmationModal.cancelIcon || 'CloseLine',
+                intent: confirmationModal.cancelButtonIntent || 'danger',
+                ...(confirmationModal.cancelButtonProps || {}),
                 onClick: () => {
-                  confirmationModal?.onCancel?.();
                   closeConfirmationModal();
+                  confirmationModal?.onCancel?.();
                 },
                 position: 'left',
               },
@@ -289,9 +323,10 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
                 label: confirmationModal.confirmLabel || 'Confirm',
                 intent: confirmationModal.confirmButtonIntent || 'success',
                 icon: confirmationModal.confirmIcon || 'CheckLine',
+                ...(confirmationModal.confirmButtonProps || {}),
                 onClick: () => {
-                  confirmationModal?.onConfirm?.();
                   closeConfirmationModal();
+                  confirmationModal?.onConfirm?.();
                 },
                 position: 'right',
               },
@@ -301,7 +336,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
               as='p'
               effect={{ textAlign: 'center', weight: 'bold', textSize: 'big' }}
             >
-              {confirmationModal.description || 'Are you sure you want to proceed?'}
+              {confirmationModal.content || 'Are you sure you want to proceed?'}
             </ReqoreTextEffect>
           </ReqoreModal>
         )}

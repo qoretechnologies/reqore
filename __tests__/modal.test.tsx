@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   ReqoreButton,
   ReqoreContent,
@@ -63,8 +63,8 @@ const ConfirmButton = ({ confirmFn, cancelFn }) => {
         id='custom-confirm'
         onClick={() => {
           reqoreContext?.confirmAction({
-            title: 'Are you sure mate?',
-            description: 'Do you really wanna do this?',
+            label: 'Are you sure mate?',
+            content: 'Do you really wanna do this?',
             confirmButtonIntent: 'warning',
             confirmIcon: 'SunFill',
             confirmLabel: 'Yep',
@@ -119,7 +119,7 @@ const ConfirmButtonFromModal = ({ confirmFn, cancelFn }) => {
               id: 'open-confirm',
               onClick: () => {
                 confirmAction({
-                  description: 'Do you really wanna do this?',
+                  content: 'Do you really wanna do this?',
                   onConfirm: () => confirmFn(),
                   onCancel: () => cancelFn(),
                 });

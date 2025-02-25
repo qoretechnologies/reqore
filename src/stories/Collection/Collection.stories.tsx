@@ -83,8 +83,9 @@ export const Basic: Story = {
     label: 'Config Items',
     items,
     actions: [
-      { label: 'Custom action', icon: 'Home7Line', fixed: true },
+      { label: 'Custom', icon: 'Home7Line', fixed: true },
       { actions: [{ label: 'Test' }] },
+      { label: 'Right', icon: 'AiGenerate2', fixed: true, position: 'right' },
     ],
   },
 };

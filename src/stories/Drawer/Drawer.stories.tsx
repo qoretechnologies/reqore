@@ -239,7 +239,7 @@ const Template: StoryFn<typeof ReqoreDrawer> = (args) => {
             <ReqoreButton
               onClick={() =>
                 confirmAction({
-                  description:
+                  content:
                     'This is a simple test to establish the proper balance of your loud speakers',
                 })
               }
@@ -259,6 +259,15 @@ const Template: StoryFn<typeof ReqoreDrawer> = (args) => {
 
 export const Basic: Story = {
   render: Template,
+};
+
+export const BasicWithConfirmationOnClose: Story = {
+  render: Template,
+  args: {
+    confirmOnClose: {
+      content: 'Are you sure you want to close this drawer?',
+    },
+  },
 };
 
 export const Flat: Story = {

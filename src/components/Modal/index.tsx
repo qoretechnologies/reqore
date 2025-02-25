@@ -16,7 +16,7 @@ export interface IReqoreModalStyle extends IReqoreModalProps {
 }
 
 export const ReqoreModal = memo(
-  ({ width = '80vw', height = 'fit-content', ...rest }: IReqoreModalProps) => {
+  ({ width = '80vw', height = 'fit-content', confirmOnClose, ...rest }: IReqoreModalProps) => {
     const id = useMemo(() => shortid.generate(), []);
     const escClosableModals = useReqoreProperty('escClosableModals');
     const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
@@ -33,10 +33,10 @@ export const ReqoreModal = memo(
     const handleKeyDown = useCallback(
       (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
-          remove(id, rest.onClose);
+          remove(id, rest.onClose, confirmOnClose);
         }
       },
-      [id, rest.onClose, remove]
+      [id, rest.onClose, remove, confirmOnClose]
     );
 
     useEffect(() => {
@@ -63,6 +63,7 @@ export const ReqoreModal = memo(
       <ReqoreDrawer
         closeOnEscPress={closeModalsOnEscPress}
         {...rest}
+        confirmOnClose={confirmOnClose}
         width={width}
         height={height}
         position='left'
