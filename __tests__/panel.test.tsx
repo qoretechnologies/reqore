@@ -22,7 +22,7 @@ test('Renders basic <Panel /> with title properly', () => {
     <div style={{ width: '1000px' }}>
       <ReqoreUIProvider>
         <ReqoreLayoutContent>
-          <ReqorePanel icon='4KFill' label='Test'>
+          <ReqorePanel icon='4kFill' label='Test'>
             {' '}
             Panel{' '}
           </ReqorePanel>

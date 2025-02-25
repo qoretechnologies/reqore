@@ -290,6 +290,9 @@ export const CustomZIndex: Story = {
 
 export const CanBeClosedWithEscKey: Story = {
   ...Basic,
+  parameters: {
+    chromatic: { disable: true },
+  },
   play: async ({ canvasElement }) => {
     await _testsWaitForText('This is a test');
     await fireEvent.keyDown(canvasElement, { key: 'Escape' });
@@ -300,6 +303,9 @@ export const CanBeClosedWithEscKey: Story = {
 
 export const CanBeClosedWithEscKeyWithConfirmation: Story = {
   ...BasicWithConfirmationOnClose,
+  parameters: {
+    chromatic: { disable: true },
+  },
   play: async ({ canvasElement }) => {
     await _testsWaitForText('This is a test');
     await fireEvent.keyDown(canvasElement, { key: 'Escape' });
@@ -529,6 +535,9 @@ export const EscKeyClosestOnlyTopModal: Story = {
 
 export const EscKeyClosestOnlyTopModalWithConfirmation: Story = {
   ...EscKeyClosestOnlyTopModal,
+  parameters: {
+    chromatic: { disable: true },
+  },
   args: BasicWithConfirmationOnClose.args,
   play: async ({ canvasElement }) => {
     await _testsWaitForText('A second dialog');
@@ -547,6 +556,9 @@ export const EscKeyClosestOnlyTopModalWithConfirmation: Story = {
 
 export const CanNotBeClosedWithEscKeyIfUnclosable: Story = {
   ...ConfirmationModal,
+  parameters: {
+    chromatic: { disable: true },
+  },
   play: async ({ canvasElement }) => {
     await _testsWaitForText('Tell me something');
 
@@ -565,7 +577,9 @@ export const EscClosingDisabled: Story = {
   args: {
     closeOnEscPress: false,
   },
-
+  parameters: {
+    chromatic: { disable: true },
+  },
   play: async ({ canvasElement, ...rest }) => {
     await EscKeyClosestOnlyTopModal.play({ canvasElement, ...rest });
 

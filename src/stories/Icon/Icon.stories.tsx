@@ -16,7 +16,7 @@ export const Basic: Story = {
       <>
         <ReqorePanel label='Basic' flat minimal>
           <ReqoreIcon icon='AccountCircleLine' size='12px' margin='both' />
-          <ReqoreIcon icon='4KFill' size='14px' margin='both' />
+          <ReqoreIcon icon='4kFill' size='14px' margin='both' />
           <ReqoreIcon icon='ArrowLeftCircleFill' intent='success' margin='both' />
           <ReqoreIcon icon='HotelFill' size='18px' margin='both' />
           <ReqoreIcon icon='SignalTowerFill' size='20px' color='#ff0000' margin='both' />
@@ -138,7 +138,7 @@ export const Basic: Story = {
           <ReqoreIcon icon='AccountCircleLine' />
           No Margin
           <div>
-            <ReqoreIcon icon='4KFill' margin='right' />
+            <ReqoreIcon icon='4kFill' margin='right' />
             Right Margin
           </div>
           <div>
