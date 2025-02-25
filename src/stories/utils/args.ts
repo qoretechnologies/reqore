@@ -1,6 +1,5 @@
 import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
-import Icons from '../../icons.json';
 import { IReqoreIconName } from '../../types/icons';
 
 export interface IArgData {
@@ -63,7 +62,6 @@ export const IconArg = (
     control: {
       type: 'select',
     },
-    options: Icons,
   });
 
 export const MinimalArg = (): TArg<any> => {
