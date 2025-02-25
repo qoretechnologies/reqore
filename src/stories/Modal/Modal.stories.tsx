@@ -86,6 +86,7 @@ const Template: StoryFn<IReqoreModalProps & { confirm?: boolean }> = (args) => {
   };
 
   useMount(() => {
+    console.log(args);
     if (args.confirm) {
       handleConfirm();
     }
@@ -303,14 +304,18 @@ export const CanBeClosedWithEscKey: Story = {
 
 export const CanBeClosedWithEscKeyWithConfirmation: Story = {
   ...BasicWithConfirmationOnClose,
+  args: {
+    ...BasicWithConfirmationOnClose.args,
+    confirmOnClose: true,
+  },
   parameters: {
     chromatic: { disable: true },
   },
   play: async ({ canvasElement }) => {
     await _testsWaitForText('This is a test');
     await fireEvent.keyDown(canvasElement, { key: 'Escape' });
-    await _testsWaitForText('Are you sure you want to close this modal?');
-    await _testsClickButton({ label: 'Yes' });
+    await _testsWaitForText('Are you sure you want to proceed?');
+    await _testsClickButton({ label: 'Confirm', nth: 1 });
     await sleep(1000);
     await expect(document.querySelector('.reqore-modal')).not.toBeInTheDocument();
   },
