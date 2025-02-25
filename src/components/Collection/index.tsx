@@ -19,20 +19,22 @@ import {
   IReqorePanelSubAction,
   ReqorePanel,
   ReqorePanelSkeleton,
-  TReqorePanelActions,
 } from '../Panel';
 import { ReqoreSkeleton } from '../Skeleton';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import { getZoomActions, sizeToZoom, sortTableData, zoomToSize } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 
+export type TReqoreCollectionActions = (IReqorePanelAction & { position?: 'left' | 'right' })[];
 export interface IReqoreCollectionProps
   extends IReqoreComponent,
-    IReqorePanelProps,
+    Omit<IReqorePanelProps, 'actions'>,
     IReqoreColumnsProps {
   items?: IReqoreCollectionItemProps[];
   inputProps?: IReqoreInputProps;
   inputInTitle?: boolean;
+
+  actions?: TReqoreCollectionActions;
 
   sortButtonProps?: IReqorePanelAction;
   displayButtonProps?: IReqorePanelAction;
@@ -238,8 +240,14 @@ export const ReqoreCollection = memo(
       setPreQuery('');
     }, []);
 
-    const finalActions: TReqorePanelActions = useMemo(() => {
-      let actions: TReqorePanelActions = rest.actions ? [...rest.actions] : [];
+    const finalActions: TReqoreCollectionActions = useMemo(() => {
+      const leftActions: TReqoreCollectionActions = (rest.actions || []).filter(
+        (action) => action.position !== 'right'
+      );
+      const rightActions: TReqoreCollectionActions = (rest.actions || []).filter(
+        (action) => action.position === 'right'
+      );
+      const actions: TReqoreCollectionActions = [];
 
       const toolbarGroup: IReqorePanelAction = {
         responsive: false,
@@ -270,26 +278,23 @@ export const ReqoreCollection = memo(
       }
 
       if (filterable && inputInTitle) {
-        actions = [
-          ...actions,
-          {
-            as: ReqoreInput,
-            props: {
-              key: 'search',
-              fixed: false,
-              placeholder: inputPlaceholder(items),
-              onClearClick: () => {
-                setQuery('');
-                setPreQuery('');
-              },
-              onChange: handlePreQueryChange,
-              value: preQuery,
-              icon: 'Search2Line',
-              minimal: false,
-              ...inputProps,
+        actions.push({
+          as: ReqoreInput,
+          props: {
+            key: 'search',
+            fixed: false,
+            placeholder: inputPlaceholder(items),
+            onClearClick: () => {
+              setQuery('');
+              setPreQuery('');
             },
+            onChange: handlePreQueryChange,
+            value: preQuery,
+            icon: 'Search2Line',
+            minimal: false,
+            ...inputProps,
           },
-        ];
+        });
       }
 
       if (sortable) {
@@ -299,7 +304,7 @@ export const ReqoreCollection = memo(
           ...sortKeys,
         };
 
-        actions.push({
+        rightActions.push({
           icon: sort === 'desc' ? 'SortDesc' : 'SortAsc',
           tooltip: sortButtonTooltip(sort),
           className: 'reqore-collection-sort',
@@ -331,10 +336,10 @@ export const ReqoreCollection = memo(
       }
 
       if (size(toolbarGroup.actions)) {
-        return [...actions, toolbarGroup];
+        return [...leftActions, ...actions, ...rightActions, toolbarGroup];
       }
 
-      return actions;
+      return [...leftActions, ...rightActions, ...actions];
     }, [
       filterable,
       preQuery,

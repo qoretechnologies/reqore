@@ -43,7 +43,11 @@ export interface IReqoreContext {
   readonly closeModalsOnEscPress?: boolean;
   readonly escClosableModals?: string[];
   readonly addEscClosableModal?: (id: string) => void;
-  readonly removeEscClosableModal?: (id: string, onRemove?: () => void) => void;
+  readonly removeEscClosableModal?: (
+    id: string,
+    onRemove?: () => void,
+    confirmOnClose?: IReqoreConfirmationModal
+  ) => void;
   readonly latestZIndex?: number;
   readonly errorBoundaryOptions?: Partial<IReqoreErrorBoundaryProps>;
   theme: IReqoreTheme;

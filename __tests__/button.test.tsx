@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { ReqoreButton, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
 test('Renders <Button /> properly', () => {
@@ -8,7 +7,7 @@ test('Renders <Button /> properly', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreButton minimal>Hello</ReqoreButton>
-          <ReqoreButton icon='4KFill'>Another</ReqoreButton>
+          <ReqoreButton icon='4kFill'>Another</ReqoreButton>
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -54,7 +53,7 @@ test('Renders <Button /> with icon properly', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreButton icon='4KFill'>4K</ReqoreButton>
+          <ReqoreButton icon='4kFill'>4K</ReqoreButton>
           <ReqoreButton icon='24HoursFill'>24</ReqoreButton>
           <ReqoreButton icon='BallPenFill'>Pen</ReqoreButton>
         </ReqoreContent>
@@ -89,7 +88,7 @@ test('Renders <Button /> with right icon properly', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreButton rightIcon='4KFill'>4K</ReqoreButton>
+          <ReqoreButton rightIcon='4kFill'>4K</ReqoreButton>
           <ReqoreButton rightIcon='24HoursFill'>24</ReqoreButton>
           <ReqoreButton rightIcon='BallPenFill'>Pen</ReqoreButton>
         </ReqoreContent>
@@ -105,13 +104,13 @@ test('Renders <Button /> with icon and right icon properly', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreButton icon='4KFill' rightIcon='24HoursFill'>
+          <ReqoreButton icon='4kFill' rightIcon='24HoursFill'>
             4K
           </ReqoreButton>
           <ReqoreButton icon='24HoursFill' rightIcon='BallPenFill'>
             24
           </ReqoreButton>
-          <ReqoreButton icon='BallPenFill' rightIcon='4KFill'>
+          <ReqoreButton icon='BallPenFill' rightIcon='4kFill'>
             Pen
           </ReqoreButton>
         </ReqoreContent>

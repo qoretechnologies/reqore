@@ -176,7 +176,7 @@ const Template: StoryFn<typeof ReqoreControlGroup> = (args) => {
           checked
           uncheckedIcon='CheckboxBlankLine'
         />
-        <ReqoreInput icon='4KFill' value='Hello I am fluid' fluid />
+        <ReqoreInput icon='4kFill' value='Hello I am fluid' fluid />
         <ReqoreControlGroup stack>
           <ReqoreControlGroup>
             <ReqoreButton customTheme={{ main: '#00e3e8' }}>Level 2 deep</ReqoreButton>

@@ -1,5 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { fireEvent } from '@storybook/testing-library';
 import { noop } from 'lodash';
+import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
 import { IReqoreInputProps } from '../../components/Input';
 import {
@@ -239,7 +241,7 @@ const Template: StoryFn<typeof ReqoreDrawer> = (args) => {
             <ReqoreButton
               onClick={() =>
                 confirmAction({
-                  description:
+                  content:
                     'This is a simple test to establish the proper balance of your loud speakers',
                 })
               }
@@ -259,6 +261,20 @@ const Template: StoryFn<typeof ReqoreDrawer> = (args) => {
 
 export const Basic: Story = {
   render: Template,
+};
+
+export const BasicWithConfirmationOnClose: Story = {
+  render: Template,
+  args: {
+    confirmOnClose: {
+      content: 'Are you sure you want to close this drawer?',
+    },
+  },
+  play: async () => {
+    await _testsWaitForText('This is a test');
+    await fireEvent.click(document.querySelector('.reqore-drawer-close-button'));
+    await _testsWaitForText('Are you sure you want to close this drawer?');
+  },
 };
 
 export const Flat: Story = {

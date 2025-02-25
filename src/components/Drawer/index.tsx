@@ -6,6 +6,7 @@ import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
 import { SPRING_CONFIG, SPRING_CONFIG_NO_ANIMATIONS } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
+import { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
@@ -37,8 +38,7 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   height?: number | string;
   customZIndex?: number;
   closeOnEscPress?: boolean;
-  // A function that runs, if defined, before closing the drawer and has to return a boolean.
-  beforeClose?: () => boolean;
+  confirmOnClose?: IReqoreConfirmationModal;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -175,9 +175,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     actions = [],
     customZIndex,
     panelSize,
+    confirmOnClose,
     ...rest
   }: IReqoreDrawerProps) => {
     const animations = useReqoreProperty('animations');
+    const confirmAction = useReqoreProperty('confirmAction');
     const customPortalId = useReqoreProperty('customPortalId');
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const theme = useReqoreTheme('main', customTheme, intent);
@@ -247,6 +249,19 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
         left: position === 'left' || layout === 'horizontal' ? (floating ? '10px' : 0) : undefined,
       };
     }, [_isModal, position, layout, floating]);
+
+    const handleClose = onClose
+      ? () => {
+          if (confirmOnClose) {
+            confirmAction({
+              ...confirmOnClose,
+              onConfirm: onClose,
+            });
+          } else {
+            onClose?.();
+          }
+        }
+      : undefined;
 
     const closeButtonProps = useMemo(
       () => ({
@@ -344,7 +359,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
           <ReqoreThemeProvider theme={theme}>
             {hasBackdrop && !_isHidden ? (
               <ReqoreBackdrop
-                onClose={onClose}
+                onClose={handleClose}
                 zIndex={zIndex}
                 blur={blur}
                 opacity={styles.opacity}
@@ -414,7 +429,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     intent={intent}
                     rounded={floating || _isModal ? true : false}
                     flat={flat}
-                    onClose={onClose}
+                    onClose={handleClose}
                     closeButtonProps={closeButtonProps}
                     className={`reqore-drawer`}
                     style={panelStyle}

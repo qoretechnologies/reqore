@@ -4,7 +4,7 @@ import { fireEvent } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { useState } from 'react';
 import { useMount } from 'react-use';
-import { _testsWaitForText } from '../../../__tests__/utils';
+import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreModalProps } from '../../components/Modal';
 import { sleep } from '../../helpers/utils';
 import { ReqoreCollection, ReqoreModal, ReqorePanel, useReqoreProperty } from '../../index';
@@ -77,8 +77,8 @@ const Template: StoryFn<IReqoreModalProps & { confirm?: boolean }> = (args) => {
 
   const handleConfirm = () => {
     confirmAction({
-      description: 'How is the wheather going to be?',
-      title: 'Tell me something',
+      content: 'How is the wheather going to be?',
+      label: 'Tell me something',
       onConfirm: noop,
       onCancel: noop,
     });
@@ -257,6 +257,28 @@ export const ConfirmationModal: Story = {
   },
 };
 
+export const BasicWithConfirmationOnClose: Story = {
+  render: Template,
+
+  args: {
+    confirmOnClose: {
+      label: 'You sure?',
+      intent: 'warning',
+      content: 'Are you sure you want to close this modal?',
+      cancelIcon: 'EmotionHappyLine',
+      confirmIcon: 'EmotionSadLine',
+      confirmLabel: 'Yes',
+      cancelButtonIntent: 'info',
+    },
+  },
+
+  play: async () => {
+    await _testsWaitForText('This is a test');
+    await fireEvent.click(document.querySelector('.reqore-drawer-close-button'));
+    await _testsWaitForText('Are you sure you want to close this modal?');
+  },
+};
+
 export const CustomZIndex: Story = {
   render: Template,
 
@@ -268,9 +290,27 @@ export const CustomZIndex: Story = {
 
 export const CanBeClosedWithEscKey: Story = {
   ...Basic,
+  parameters: {
+    chromatic: { disable: true },
+  },
   play: async ({ canvasElement }) => {
     await _testsWaitForText('This is a test');
     await fireEvent.keyDown(canvasElement, { key: 'Escape' });
+    await sleep(1000);
+    await expect(document.querySelector('.reqore-modal')).not.toBeInTheDocument();
+  },
+};
+
+export const CanBeClosedWithEscKeyWithConfirmation: Story = {
+  ...BasicWithConfirmationOnClose,
+  parameters: {
+    chromatic: { disable: true },
+  },
+  play: async ({ canvasElement }) => {
+    await _testsWaitForText('This is a test');
+    await fireEvent.keyDown(canvasElement, { key: 'Escape' });
+    await _testsWaitForText('Are you sure you want to close this modal?');
+    await _testsClickButton({ label: 'Yes' });
     await sleep(1000);
     await expect(document.querySelector('.reqore-modal')).not.toBeInTheDocument();
   },
@@ -493,8 +533,32 @@ export const EscKeyClosestOnlyTopModal: Story = {
   },
 };
 
+export const EscKeyClosestOnlyTopModalWithConfirmation: Story = {
+  ...EscKeyClosestOnlyTopModal,
+  parameters: {
+    chromatic: { disable: true },
+  },
+  args: BasicWithConfirmationOnClose.args,
+  play: async ({ canvasElement }) => {
+    await _testsWaitForText('A second dialog');
+
+    await sleep(1000);
+
+    await fireEvent.keyDown(canvasElement, { key: 'Escape' });
+
+    await _testsClickButton({ label: 'Yes' });
+
+    await sleep(1000);
+
+    await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(1);
+  },
+};
+
 export const CanNotBeClosedWithEscKeyIfUnclosable: Story = {
   ...ConfirmationModal,
+  parameters: {
+    chromatic: { disable: true },
+  },
   play: async ({ canvasElement }) => {
     await _testsWaitForText('Tell me something');
 
@@ -513,7 +577,9 @@ export const EscClosingDisabled: Story = {
   args: {
     closeOnEscPress: false,
   },
-
+  parameters: {
+    chromatic: { disable: true },
+  },
   play: async ({ canvasElement, ...rest }) => {
     await EscKeyClosestOnlyTopModal.play({ canvasElement, ...rest });
 
