@@ -7,9 +7,9 @@ import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect } from '../Effect';
 import { IReqoreInputProps } from '../Input';
+import { IPopoverControls } from '../Popover';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
-import { IPopoverControls } from '../Popover';
 
 export type TReqoreMultiSelectItem = Omit<IReqoreDropdownItem, 'color'> &
   Pick<IReqoreTagProps, 'asBadge' | 'rightIcon' | 'actions'> & { isNew?: boolean };
@@ -30,10 +30,11 @@ export interface IReqoreMultiSelectProps
   selectorProps?: Omit<IReqoreInputProps, 'value' | 'onValueChange'> & IReqoreDropdownProps;
   openOnMount?: IReqoreDropdownProps['isDefaultOpen'];
   enterKeySelects?: boolean;
+  disabled?: boolean;
 }
 
 export interface IReqoreMultiSelectItemProps
-  extends Pick<IReqoreMultiSelectProps, 'selectedItemEffect' | 'selectedItemSize'> {
+  extends Pick<IReqoreMultiSelectProps, 'selectedItemEffect' | 'selectedItemSize' | 'disabled'> {
   item: TReqoreMultiSelectItem;
   onClick?: () => void;
   onRemoveClick?: () => void;
@@ -48,6 +49,7 @@ export const ReqoreMultiSelectItem = memo(
     selectedItemEffect,
     selectedItemSize,
     onItemClickIcon,
+    disabled,
   }: IReqoreMultiSelectItemProps) => {
     if (!item) {
       return null;
@@ -56,6 +58,7 @@ export const ReqoreMultiSelectItem = memo(
     return (
       <ReqoreTag
         {...item}
+        disabled={disabled || item.disabled}
         label={item.label || item.value}
         onRemoveClick={onRemoveClick}
         intent={item.intent}
@@ -91,6 +94,7 @@ export const ReqoreMultiSelect = ({
   onItemClickIcon,
   onItemAdded,
   onItemRemoved,
+  disabled,
   ...rest
 }: IReqoreMultiSelectProps) => {
   const [createdItems, setCreatedItems] = useState<TReqoreMultiSelectItem[]>([]);
@@ -252,6 +256,7 @@ export const ReqoreMultiSelect = ({
               }
               selectedItemEffect={selectedItemEffect}
               selectedItemSize={selectedItemSize}
+              disabled={disabled}
             />
           ))
         ) : (
@@ -261,6 +266,7 @@ export const ReqoreMultiSelect = ({
       <ReqoreControlGroup minimal={rest.minimal} flat={rest.flat} size={rest.size}>
         <ReqoreDropdown<IReqoreInputProps>
           {...selectorProps}
+          disabled={disabled || selectorProps?.disabled}
           multiSelect
           handler='focus'
           onFocus={() => setFocused(true)}

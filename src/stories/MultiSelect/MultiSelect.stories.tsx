@@ -114,6 +114,16 @@ export const Clickable: Story = {
   },
 };
 
+export const Disabled: Story = {
+  render: Template,
+
+  args: {
+    onItemClick: (item) => console.log('onItemClick', item),
+    onItemClickIcon: 'EditLine' as IReqoreIconName,
+    disabled: true,
+  },
+};
+
 export const WithEffect: Story = {
   render: Template,
 
