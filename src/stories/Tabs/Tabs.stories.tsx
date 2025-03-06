@@ -256,6 +256,16 @@ export const Basic: Story = {
   },
 };
 
+export const Small: Story = {
+  render: Template,
+  args: {
+    size: 'small',
+  },
+  play: async () => {
+    await expect(document.querySelectorAll('.reqore-tabs-content').length).toBe(1);
+  },
+};
+
 export const Fill: Story = {
   render: Template,
 

@@ -141,6 +141,8 @@ const ReqoreTabsListItem = memo(
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme);
 
+      console.log(size);
+
       useUpdateEffect(() => {
         if (isPending) {
           setLoadingTimer(
@@ -184,6 +186,7 @@ const ReqoreTabsListItem = memo(
           tooltip={tooltip}
           customTheme={theme}
           className={`reqore-tabs-list-item ${active ? 'reqore-tabs-list-item-active' : ''}`}
+          size={size}
           {...omit(rest, ['id'])}
           loading={isStillPending || rest.loading}
         >
@@ -223,6 +226,7 @@ const ReqoreTabsListItem = memo(
                   active={active}
                   className='reqore-tabs-list-item-close'
                   customTheme={theme}
+                  size={size}
                   onClick={(event) => {
                     event.stopPropagation();
                     onCloseClick?.();
