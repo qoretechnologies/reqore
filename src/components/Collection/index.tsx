@@ -117,7 +117,7 @@ export const ReqoreCollection = memo(
     inputProps,
     sortButtonProps,
     displayButtonProps,
-    headerSize = 2,
+    labelSize = 2,
     showAs = 'grid',
     showLayoutSwitch = true,
     selectedIcon,
@@ -467,7 +467,7 @@ export const ReqoreCollection = memo(
     return (
       <ReqorePanel
         {...rest}
-        headerSize={headerSize}
+        labelSize={labelSize}
         fill={fill}
         contentStyle={contentStyle}
         transparent={transparent}

@@ -72,11 +72,11 @@ const meta = {
       name: 'Opacity',
       description: 'The opacity of the panel',
     }),
-    ...createArg('headerSize', {
+    ...createArg('labelSize', {
       type: 'string',
       defaultValue: undefined,
-      name: 'Header Size',
-      description: 'The size of the header',
+      name: 'Label Size',
+      description: 'The size of the label',
     }),
     ...createArg('onClick', {
       type: 'function',
@@ -639,7 +639,7 @@ export const ImageAsIconLinkAsHeader: Story = {
     iconProps: {
       size: '30px',
     },
-    headerProps: {
+    labelProps: {
       as: 'a',
       href: 'https://qoretechnologies.com',
       target: '_blank',
@@ -736,7 +736,7 @@ export const WithEffect: Story = {
         animate: 'hover',
       },
     },
-    headerEffect: {
+    labelEffect: {
       gradient: {
         type: 'linear',
         colors: { 0: '#3b065e', 100: '#00d3c8' },
@@ -746,7 +746,7 @@ export const WithEffect: Story = {
       weight: 'normal',
       spaced: 2,
     },
-    headerSize: 2,
+    labelSize: 2,
   },
 };
 

@@ -110,7 +110,7 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
 
   weight?: number | 'thin' | 'light' | 'normal' | 'bold' | 'thick';
   italic?: boolean;
-  underline?: boolean;
+  underline?: boolean | string;
   color?: TReqoreEffectColor;
 
   uppercase?: boolean;
@@ -366,9 +366,9 @@ ${({ effect }: IReqoreTextEffectProps) =>
       : undefined}
 
 ${({ effect }: IReqoreTextEffectProps) =>
-    effect && effect.underline
+    effect?.underline
       ? css`
-          text-decoration: underline;
+          text-decoration: ${typeof effect.underline === 'string' ? effect.underline : 'underline'};
         `
       : undefined}
 
