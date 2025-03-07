@@ -32,6 +32,7 @@ import { ACTIVE_ICON_SCALE, DisabledElement, INACTIVE_ICON_SCALE } from '../../s
 import {
   IReqoreComponent,
   IReqoreIntent,
+  IReqoreTooltip,
   IWithReqoreCustomTheme,
   IWithReqoreFlat,
   IWithReqoreFluid,
@@ -142,6 +143,7 @@ export interface IReqorePanelProps
 
   labelProps?: React.HTMLAttributes<unknown>;
   showLabelTooltip?: boolean;
+  customLabelTooltip?: IReqoreTooltip;
 
   responsiveActionsWrapperProps?: Partial<IReqoreControlGroupProps>;
 }
@@ -460,6 +462,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       breadcrumbs,
       showActionsWhenCollapsed = true,
       showLabelTooltip,
+      customLabelTooltip,
       resizable,
       onLabelEdit,
       responsiveActionsWrapperProps,
@@ -867,7 +870,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                               style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}
                               label={label}
                               onSubmit={onLabelEdit}
-                              tooltip={showLabelTooltip ? label : undefined}
+                              tooltip={showLabelTooltip ? customLabelTooltip || label : undefined}
                             />
                           ) : (
                             label
