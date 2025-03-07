@@ -53,7 +53,7 @@ export default [
   {
     label: 'Test with tooltip',
     tooltip: 'This is a test item',
-    headerSize: 2,
+    labelSize: 2,
     contentSize: 'huge',
     selected: true,
     icon: 'Hashtag',

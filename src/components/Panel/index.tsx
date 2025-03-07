@@ -128,10 +128,10 @@ export interface IReqorePanelProps
   opacity?: number;
   blur?: number;
   minimal?: boolean;
-  headerSize?: 1 | 2 | 3 | 4 | 5 | 6;
+  labelSize?: 1 | 2 | 3 | 4 | 5 | 6;
   contentSize?: TSizes;
   contentEffect?: IReqoreEffect;
-  headerEffect?: IReqoreEffect;
+  labelEffect?: IReqoreEffect;
   descriptionEffect?: IReqoreEffect;
   descriptionIntent?: TReqoreIntent;
   transparent?: boolean;
@@ -140,8 +140,8 @@ export interface IReqorePanelProps
   responsiveTitle?: boolean;
   getContentRef?: (ref: HTMLDivElement) => any;
 
-  headerProps?: React.HTMLAttributes<unknown>;
-  showHeaderTooltip?: boolean;
+  labelProps?: React.HTMLAttributes<unknown>;
+  showLabelTooltip?: boolean;
 
   responsiveActionsWrapperProps?: Partial<IReqoreControlGroupProps>;
 }
@@ -441,10 +441,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       wrapperPadding = 'both',
       contentStyle,
       contentEffect,
-      headerEffect = {},
+      labelEffect = {},
       descriptionEffect = {},
       descriptionIntent,
-      headerSize,
+      labelSize,
       contentSize,
       minimal,
       badge,
@@ -455,11 +455,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       responsiveTitle = true,
       size: panelSize = 'normal',
       getContentRef,
-      headerProps = {},
+      labelProps = {},
       disabled,
       breadcrumbs,
       showActionsWhenCollapsed = true,
-      showHeaderTooltip,
+      showLabelTooltip,
       resizable,
       onLabelEdit,
       responsiveActionsWrapperProps,
@@ -828,17 +828,17 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   ) : icon || iconImage || label || badge ? (
                     <StyledPanelTitleHeaderContent
                       size={panelSize}
-                      {...headerProps}
+                      {...labelProps}
                       hasLabel={!!label}
                       hasIcon={!!icon || !!iconImage || loading}
                       iconSize={
-                        ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                        ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
                       }
                     >
                       {icon || iconImage ? (
                         <ReqoreIcon
                           size={`${
-                            ICON_FROM_HEADER_SIZE[headerSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                            ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
                           }px`}
                           image={loading ? undefined : iconImage}
                           margin='right'
@@ -858,16 +858,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         <StyledPanelTitleHeaderLabelAndBadge>
                           {typeof label === 'string' ? (
                             <LabelEditor
-                              size={headerSize || panelSize}
+                              size={labelSize || panelSize}
                               customTheme={theme}
                               effect={{
                                 noWrap: true,
-                                ...headerEffect,
+                                ...labelEffect,
                               }}
                               style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}
                               label={label}
                               onSubmit={onLabelEdit}
-                              tooltip={showHeaderTooltip ? label : undefined}
+                              tooltip={showLabelTooltip ? label : undefined}
                             />
                           ) : (
                             label
@@ -883,7 +883,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         </StyledPanelTitleHeaderLabelAndBadge>
                         {description && (
                           <ReqoreSpan
-                            size={headerSize ? NUMBER_TO_SIZE[headerSize] : panelSize}
+                            size={labelSize ? NUMBER_TO_SIZE[labelSize] : panelSize}
                             effect={{ opacity: 0.7, ...descriptionEffect }}
                             intent={descriptionIntent}
                           >
