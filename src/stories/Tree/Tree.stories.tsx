@@ -23,8 +23,10 @@ const meta: StoryMeta<typeof ReqoreTree> = {
     showTypes: true,
     expanded: false,
     onItemClick: noop,
-    getItemTooltip: (path, element) => {
-      return `This is a tooltip for ${element} at path ${path.join('.')}`;
+    getItemTooltip: (path, element, pathWithoutArrayKeys) => {
+      return `This is a tooltip for ${element} at path ${path.join(
+        '.'
+      )}, path without array keys ${pathWithoutArrayKeys.join('.')}`;
     },
     data: MockObject,
   },
