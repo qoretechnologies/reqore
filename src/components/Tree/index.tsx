@@ -15,14 +15,13 @@ import {
   ReqoreIcon,
   ReqoreP,
   ReqorePanel,
-  ReqorePopover,
   ReqoreSpan,
   useReqoreProperty,
 } from '../..';
 import { GAP_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { getOneLessSize, getTypeFromValue, parseInputValue } from '../../helpers/utils';
-import { IReqoreComponent, IWithReqoreSize } from '../../types/global';
+import { IReqoreComponent, IWithReqoreSize, TReqoreTooltipProp } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { ReqoreExportModal } from '../ExportModal';
@@ -37,6 +36,7 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   expanded?: boolean;
   showTypes?: boolean;
   onItemClick?: (value: any, path?: string[]) => void;
+  getItemTooltip?: (path: string[], element: 'key' | 'value') => TReqoreTooltipProp;
   withLabelCopy?: boolean;
   showControls?: boolean;
   zoomable?: boolean;
@@ -73,6 +73,7 @@ export const ReqoreTree = ({
   expanded,
   showTypes,
   onItemClick,
+  getItemTooltip,
   withLabelCopy,
   showControls = true,
   editable,
@@ -240,6 +241,7 @@ export const ReqoreTree = ({
                   weight: 'normal',
                   color: 'info:lighten:5',
                 }}
+                tooltip={getItemTooltip?.([...path, key], 'key')}
               >
                 {displayKey}:
               </ReqoreP>
@@ -289,19 +291,16 @@ export const ReqoreTree = ({
             </ReqoreControlGroup>
           ) : (
             <ReqoreControlGroup verticalAlign='center'>
-              <ReqorePopover
-                component={ReqoreP}
-                componentProps={{
+              <ReqoreP
+                {...{
                   customTheme: { text: { color: 'info:lighten:5' } },
                   style: { flexShrink: 0 },
                   size: zoomToSize[zoom],
                 }}
-                delay={200}
-                content={dataType}
-                isReqoreComponent
+                tooltip={getItemTooltip?.([...path, key], 'key')}
               >
                 {displayKey}:
-              </ReqorePopover>
+              </ReqoreP>
               <StyledTreeLabel
                 flat
                 onClick={() => onItemClick?.(_data[key], [...path, key])}
@@ -318,6 +317,7 @@ export const ReqoreTree = ({
                   },
                 }}
                 size={zoomToSize[zoom]}
+                tooltip={getItemTooltip?.([...path, key], 'value')}
               >
                 {JSON.stringify(_data[key])}
               </StyledTreeLabel>
