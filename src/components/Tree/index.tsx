@@ -36,7 +36,11 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   expanded?: boolean;
   showTypes?: boolean;
   onItemClick?: (value: any, path?: string[]) => void;
-  getItemTooltip?: (path: string[], element: 'key' | 'value') => TReqoreTooltipProp;
+  getItemTooltip?: (
+    path: string[],
+    element: 'key' | 'value',
+    pathWithoutArrayKeys: string[]
+  ) => TReqoreTooltipProp;
   withLabelCopy?: boolean;
   showControls?: boolean;
   zoomable?: boolean;
@@ -119,11 +123,20 @@ export const ReqoreTree = ({
   const isDeep = () =>
     Object.keys(data).some((key: string): boolean => typeof data[key] === 'object');
 
-  const renderTree = (_data, k?: any, level = 1, path: string[] = []) => {
+  const renderTree = (
+    _data,
+    k?: any,
+    level = 1,
+    path: string[] = [],
+    pathWithoutArrayKeys: string[] = []
+  ) => {
     return Object.keys(_data).map((key, index) => {
       const dataType: string = getTypeFromValue(_data[key]);
       const displayKey: string = key;
       const stateKey = k ? `${k}.${key}` : key;
+      const _pathWithoutArrayKeys = isArray(_data)
+        ? pathWithoutArrayKeys
+        : [...pathWithoutArrayKeys, key];
 
       const isObject = typeof _data[key] === 'object' && _data[key] !== null;
       const isExpandable =
@@ -241,7 +254,7 @@ export const ReqoreTree = ({
                   weight: 'normal',
                   color: 'info:lighten:5',
                 }}
-                tooltip={getItemTooltip?.([...path, key], 'key')}
+                tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
               >
                 {displayKey}:
               </ReqoreP>
@@ -297,7 +310,7 @@ export const ReqoreTree = ({
                   style: { flexShrink: 0 },
                   size: zoomToSize[zoom],
                 }}
-                tooltip={getItemTooltip?.([...path, key], 'key')}
+                tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
               >
                 {displayKey}:
               </ReqoreP>
@@ -317,7 +330,7 @@ export const ReqoreTree = ({
                   },
                 }}
                 size={zoomToSize[zoom]}
-                tooltip={getItemTooltip?.([...path, key], 'value')}
+                tooltip={getItemTooltip?.([...path, key], 'value', _pathWithoutArrayKeys)}
               >
                 {JSON.stringify(_data[key])}
               </StyledTreeLabel>
@@ -359,7 +372,7 @@ export const ReqoreTree = ({
           )}
           {isExpandable && isObject ? (
             <>
-              {renderTree(_data[key], stateKey, level + 1, [...path, key])}
+              {renderTree(_data[key], stateKey, level + 1, [...path, key], _pathWithoutArrayKeys)}
 
               <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
                 {isArray(_data[key]) ? '] ' : '} '}
