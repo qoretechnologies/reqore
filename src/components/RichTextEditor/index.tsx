@@ -53,7 +53,7 @@ export interface IReqoreRichTextEditorProps
   getTagProps?: (tag: CustomElement) => IReqoreTagProps;
   onTagClick?: (tag: CustomElement) => void;
   tagsProps?: IReqoreTagProps;
-  tagsListProps: Omit<IReqoreDropdownProps, 'items'> & EditableProps;
+  tagsListProps?: Omit<IReqoreDropdownProps, 'items'> & EditableProps;
   panelProps?: IReqorePanelProps;
 
   actions?: {
@@ -167,7 +167,7 @@ export const ReqoreRichTextEditor = ({
   getTagProps = () => ({}),
   tagsProps = {},
   onTagClick,
-  tagsListProps,
+  tagsListProps = {},
   panelProps,
   actions,
   ...rest
@@ -256,7 +256,7 @@ export const ReqoreRichTextEditor = ({
           {
             icon: 'Bold',
             compact: true,
-            intent: isMarkActive(editor, 'bold') ? 'info' : undefined,
+            active: isMarkActive(editor, 'bold') ? true : undefined,
             onMouseDown: () => {
               toggleMark(editor, 'bold');
             },
@@ -264,7 +264,7 @@ export const ReqoreRichTextEditor = ({
           {
             icon: 'Italic',
             compact: true,
-            intent: isMarkActive(editor, 'italic') ? 'info' : undefined,
+            active: isMarkActive(editor, 'italic') ? true : undefined,
             onMouseDown: () => {
               toggleMark(editor, 'italic');
             },
@@ -272,7 +272,7 @@ export const ReqoreRichTextEditor = ({
           {
             icon: 'Underline',
             compact: true,
-            intent: isMarkActive(editor, 'underline') ? 'info' : undefined,
+            active: isMarkActive(editor, 'underline') ? true : undefined,
             onMouseDown: () => {
               toggleMark(editor, 'underline');
             },
@@ -291,6 +291,7 @@ export const ReqoreRichTextEditor = ({
         undoRedoActions.group.push({
           disabled: editor.history.undos.length === 0,
           compact: true,
+          fixed: true,
           icon: 'ArrowGoBackLine',
           onClick: () => {
             editor.undo();
@@ -302,6 +303,7 @@ export const ReqoreRichTextEditor = ({
         undoRedoActions.group.push({
           disabled: editor.history.redos.length === 0,
           compact: true,
+          fixed: true,
           icon: 'ArrowGoForwardLine',
           onClick: () => {
             editor.redo();
@@ -367,19 +369,31 @@ export const ReqoreRichTextEditor = ({
           templates={{
             customElements: size(panelActions)
               ? [
-                  <ReqoreControlGroup spaceBetween size='small' key={0}>
+                  <ReqoreControlGroup spaceBetween size='small' key={0} fixed>
                     {panelActions.map((action, index) => {
                       if (action.group) {
                         return (
                           <ReqoreControlGroup stack key={index}>
                             {action.group?.map((action, index) => (
-                              <ReqoreButton key={index} {...action} />
+                              <ReqoreButton
+                                key={index}
+                                customTheme={tagsListProps?.listCustomTheme}
+                                intent={tagsListProps?.listIntent}
+                                {...action}
+                              />
                             ))}
                           </ReqoreControlGroup>
                         );
                       }
 
-                      return <ReqoreButton key={index} {...action} />;
+                      return (
+                        <ReqoreButton
+                          key={index}
+                          customTheme={tagsListProps?.listCustomTheme}
+                          intent={tagsListProps?.listIntent}
+                          {...action}
+                        />
+                      );
                     })}
                   </ReqoreControlGroup>,
                 ]

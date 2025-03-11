@@ -73,6 +73,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     `}
 
   max-width: ${({ maxWidth }) => maxWidth};
+  min-width: ${({ minWidth }) => minWidth};
   max-height: ${({ maxHeight }) => maxHeight};
   z-index: 999999;
   border-radius: ${RADIUS_FROM_SIZE.normal}px;
@@ -167,6 +168,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     useTargetWidth,
     transparent,
     maxWidth,
+    minWidth,
     maxHeight,
     intent,
     title,
@@ -280,6 +282,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
       <ReqoreThemeProvider>
         <StyledPopoverWrapper
           maxWidth={maxWidth}
+          minWidth={minWidth}
           maxHeight={maxHeight}
           transparent={transparent}
           effect={effect}

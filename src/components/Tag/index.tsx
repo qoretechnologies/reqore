@@ -375,6 +375,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       ? `Loader${loadingIconType || ''}Line`
       : icon || leftIconProps?.icon;
 
+    const hasLeftIcon = !!leftIcon || !!leftIconProps?.image;
+    const hasRightIcon = !!rightIcon || !!rightIconProps?.image;
+
     const effect = useMemo(
       () => ({
         ...rest.effect,
@@ -405,7 +408,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         wrap={wrap}
         hasWidth={!!width}
       >
-        {leftIcon || labelKey ? (
+        {labelKey || hasLeftIcon ? (
           <StyledTagKeyWrapper
             size={size}
             className='reqore-tag-key-content'
@@ -413,11 +416,11 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             wrap={wrap}
             hasWidth={!!width}
             hasKey={!!labelKey}
-            hasIcon={!!leftIcon}
-            padOnRight={!label && !labelKey && !rightIcon}
+            hasIcon={hasLeftIcon}
+            padOnRight={!label && !labelKey && !hasRightIcon}
             fixed={rest.fixed}
           >
-            {leftIcon && (
+            {leftIcon || leftIconProps?.image ? (
               <ReqoreIcon
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
                 color={leftIconColor || iconColor}
@@ -429,7 +432,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 animation={loading ? 'spin' : leftIconProps?.animation}
                 icon={leftIcon}
               />
-            )}
+            ) : null}
             {labelKey && (
               <StyledTagContentKey
                 wrap={wrap}
@@ -449,7 +452,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             )}
           </StyledTagKeyWrapper>
         ) : null}
-        {label || label === 0 || rightIcon ? (
+        {label || label === 0 || hasRightIcon ? (
           <StyledTagContentWrapper
             size={size}
             className='reqore-tag-content'
@@ -476,7 +479,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 {label}
               </StyledTagContent>
             ) : null}
-            {rightIcon && (
+            {hasRightIcon ? (
               <ReqoreIcon
                 icon={rightIcon}
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
@@ -488,7 +491,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 }}
                 {...rightIconProps}
               />
-            )}
+            ) : null}
           </StyledTagContentWrapper>
         ) : null}
         {_size(actions)

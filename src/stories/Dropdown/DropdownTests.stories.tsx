@@ -2,6 +2,7 @@ import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { noop } from 'lodash';
+import { _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
 import { sleep } from '../../helpers/utils';
@@ -109,5 +110,20 @@ export const BackButtonsWork: Story = {
     await fireEvent.click(document.querySelector('.reqore-dropdown-back-button'));
 
     await expect(canvas.getAllByText('Test child 3')[0]).toBeTruthy();
+  },
+};
+
+export const EmptySearch: Story = {
+  ...BackButtonsWork,
+  play: async ({ canvasElement, ...rest }) => {
+    const canvas = within(canvasElement);
+
+    await BackButtonsWork.play({ canvasElement, ...rest });
+
+    await fireEvent.change(document.querySelector('.reqore-input'), {
+      target: { value: 'asdasdasd' },
+    });
+
+    await _testsWaitForText('No items found');
   },
 };
