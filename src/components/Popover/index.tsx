@@ -51,6 +51,7 @@ export interface IPopover
   blur?: boolean;
   transparent?: boolean;
   maxWidth?: string;
+  minWidth?: string;
   maxHeight?: string;
   icon?: IReqoreIconName;
   title?: string;
@@ -113,6 +114,7 @@ export const ReqorePopover = memo(
         openOnMount,
         transparent,
         maxWidth,
+        minWidth,
         maxHeight,
         icon,
         title,
@@ -287,6 +289,7 @@ export const ReqorePopover = memo(
                 useTargetWidth={useTargetWidth}
                 transparent={transparent}
                 maxWidth={maxWidth}
+                minWidth={minWidth}
                 maxHeight={maxHeight}
                 intent={intent}
                 title={title}
@@ -325,6 +328,7 @@ export const ReqorePopover = memo(
               useTargetWidth={useTargetWidth}
               transparent={transparent}
               maxWidth={maxWidth}
+              minWidth={minWidth}
               maxHeight={maxHeight}
               intent={intent}
               title={title}

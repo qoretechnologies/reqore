@@ -2,16 +2,19 @@ import { size } from 'lodash';
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { IReqoreDropdownProps } from '.';
 import { TReqorePaginationType } from '../../constants/paging';
-import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { ReqorePaginationContainer } from '../../containers/Paging';
-import { IReqoreComponent } from '../../types/global';
+import { useReqoreTheme } from '../../hooks/useTheme';
+import { IReqoreComponent, IReqoreIntent, IWithReqoreCustomTheme } from '../../types/global';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import ReqoreIcon from '../Icon';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuDivider, { IReqoreMenuDividerProps } from '../Menu/divider';
 import { IReqoreMenuItemProps } from '../Menu/item';
-import { ReqoreVerticalSpacer } from '../Spacer';
+import { ReqoreP } from '../Paragraph';
+import ReqoreTag, { IReqoreTagProps } from '../Tag';
+import ReqoreTagGroup from '../Tag/group';
 import { ReqoreDropdownItem } from './item';
 
 export type TDropdownItemOnClick = (
@@ -34,7 +37,9 @@ export type TReqoreDropdownItems = TReqoreDropdownItem[];
 
 export interface IReqoreDropdownListProps
   extends IReqoreComponent,
-    Pick<IReqoreDropdownProps, 'customElements'> {
+    Pick<IReqoreDropdownProps, 'customElements'>,
+    IWithReqoreCustomTheme,
+    IReqoreIntent {
   items?: TReqoreDropdownItems;
   multiSelect?: boolean;
   listStyle?: React.CSSProperties;
@@ -51,6 +56,7 @@ export interface IReqoreDropdownListProps
   scrollToSelected?: boolean;
   paging?: TReqorePaginationType<TReqoreDropdownItem>;
 
+  labels?: IReqoreTagProps[];
   _onBackClick?: () => void;
 }
 
@@ -71,12 +77,16 @@ const ReqoreDropdownList = memo(
     filterPlaceholder,
     filter,
     customElements,
+    customTheme,
+    intent,
+    labels = [],
     _onBackClick,
   }: IReqoreDropdownListProps) => {
     const [_items, setItems] = useState<TReqoreDropdownItems>(items);
     const [query, setQuery] = useState<string | number>(onFilterChange ? '' : filter || '');
     const [menuRef, setMenuRef] = useState<HTMLDivElement>(undefined);
     const [selectedItem, setSelectedItem] = useState<IReqoreDropdownItem>(undefined);
+    const theme = useReqoreTheme('main', customTheme, intent);
 
     useEffect(() => {
       setItems(items);
@@ -155,6 +165,18 @@ const ReqoreDropdownList = memo(
             onFilterChange,
             filterPlaceholder,
             filter,
+            customTheme,
+            intent,
+            labels: [
+              ...labels,
+              {
+                label: selectedItem.label,
+                icon: selectedItem.icon,
+                leftIconProps: selectedItem.leftIconProps,
+                customTheme: selectedItem.customTheme || customTheme,
+                intent: selectedItem.intent || intent,
+              },
+            ],
             _onBackClick: () => setSelectedItem(undefined),
           }}
         />
@@ -162,11 +184,8 @@ const ReqoreDropdownList = memo(
     }
 
     return (
-      <>
+      <ReqoreControlGroup vertical fluid>
         {customElements}
-        {customElements && size(customElements) && (size(items) || _onBackClick) ? (
-          <ReqoreVerticalSpacer height={PADDING_FROM_SIZE.normal} />
-        ) : null}
         {(size(items) && filterable) || _onBackClick ? (
           <>
             <ReqoreControlGroup fluid>
@@ -177,6 +196,8 @@ const ReqoreDropdownList = memo(
                   fixed={filterable}
                   onClick={_onBackClick}
                   className='reqore-dropdown-back-button'
+                  customTheme={theme}
+                  intent={intent}
                 />
               )}
               {filterable && (
@@ -189,12 +210,20 @@ const ReqoreDropdownList = memo(
                     `Search ${size(_items.filter((item) => !item.divider))} items...`
                   }
                   onClearClick={() => (onFilterChange ? onFilterChange('') : setQuery(''))}
+                  customTheme={theme}
+                  intent={intent}
                   {...inputProps}
                 />
               )}
             </ReqoreControlGroup>
-            <ReqoreVerticalSpacer height={PADDING_FROM_SIZE.normal} />
           </>
+        ) : null}
+        {size(labels) ? (
+          <ReqoreTagGroup size='small'>
+            {labels.map((label, index) => (
+              <ReqoreTag key={index} {...label} />
+            ))}
+          </ReqoreTagGroup>
         ) : null}
         <ReqorePaginationContainer type={paging} items={filteredItems} scrollContainer={menuRef}>
           {(_finalItems, Controls, { includeBottomControls, applyPaging }) => (
@@ -205,7 +234,17 @@ const ReqoreDropdownList = memo(
               padded={false}
               ref={setMenuRef}
               transparent
+              customTheme={theme}
+              intent={intent}
             >
+              {query && size(filteredItems) === 0 ? (
+                <ReqoreControlGroup horizontalAlign='center'>
+                  <ReqoreP intent='muted'>
+                    <ReqoreIcon icon='ForbidLine' intent='muted' margin='right' />
+                    No items found
+                  </ReqoreP>
+                </ReqoreControlGroup>
+              ) : null}
               {applyPaging(filteredItems).map(
                 (
                   { dividerAlign, dividerPadded, divider, ...item }: IReqoreDropdownItem,
@@ -221,6 +260,11 @@ const ReqoreDropdownList = memo(
                   ) : (
                     <ReqoreDropdownItem
                       key={item.label || item.value || index}
+                      rightIcon={
+                        'items' in item && size(item.items) ? 'ArrowRightSLine' : item.rightIcon
+                      }
+                      customTheme={theme}
+                      intent={intent}
                       {...item}
                       disabled={'items' in item && !size(item.items) ? true : item.disabled}
                       onItemClick={handleItemClick}
@@ -232,7 +276,7 @@ const ReqoreDropdownList = memo(
             </ReqoreMenu>
           )}
         </ReqorePaginationContainer>
-      </>
+      </ReqoreControlGroup>
     );
   }
 );

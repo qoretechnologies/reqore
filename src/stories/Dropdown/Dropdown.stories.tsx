@@ -228,6 +228,15 @@ export const Basic: Story = {
   render: Template,
 };
 
+export const CustomListTheme: Story = {
+  render: Template,
+  args: {
+    listCustomTheme: {
+      main: '#160437',
+    },
+  },
+};
+
 export const CustomComponent: Story = {
   render: Template,
 
@@ -322,10 +331,16 @@ export const WithChildItems: Story = {
   render: (args) => <ReqoreDropdown {...args} />,
   args: {
     label: 'Dropdown with child items',
+    useTargetWidth: true,
+    minWidth: '500px',
     items: [
       {
         label: 'Test',
         description: 'I have children',
+        leftIconProps: {
+          image:
+            'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
+        },
         rightIcon: 'MenuLine',
         rightIconColor: 'info:lighten:2',
         items: [
@@ -337,6 +352,7 @@ export const WithChildItems: Story = {
           },
           {
             label: 'Test child 3',
+            intent: 'info',
             description: 'I have children too',
             items: [
               {
@@ -371,6 +387,16 @@ export const WithChildItems: Story = {
     await sleep(200);
 
     await fireEvent.click(canvas.getAllByText('Test')[0]);
+  },
+};
+
+export const WithChildItemsAndCustomTheme = {
+  ...WithChildItems,
+  args: {
+    ...WithChildItems.args,
+    listCustomTheme: {
+      main: '#160437',
+    },
   },
 };
 

@@ -2,6 +2,7 @@ import { size } from 'lodash';
 import React, { memo, useMemo } from 'react';
 import { ReqorePanel, ReqorePopover } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
+import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreInputProps } from '../Input';
@@ -39,6 +40,8 @@ export interface IReqoreDropdownProps
   scrollToSelected?: boolean;
   paging?: TReqorePaginationType<IReqoreDropdownItem>;
   customElements?: React.ReactNode[];
+  listCustomTheme?: IReqoreCustomTheme;
+  listIntent?: TReqoreIntent;
 }
 
 const ReqoreDropdownListWrapper = memo(
@@ -47,7 +50,12 @@ const ReqoreDropdownListWrapper = memo(
     ...rest
   }: IReqoreDropdownListProps & { wrapperProps?: IReqoreDropdownProps['wrapperProps'] }) => {
     return (
-      <ReqorePanel size='small' {...wrapperProps}>
+      <ReqorePanel
+        size='small'
+        customTheme={rest.customTheme}
+        intent={rest.intent}
+        {...wrapperProps}
+      >
         <ReqoreDropdownList {...rest} />
       </ReqorePanel>
     );
@@ -80,6 +88,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   delay,
   maxHeight,
   maxWidth,
+  minWidth,
   noArrow = true,
   transparent,
   useTargetWidth,
@@ -92,6 +101,9 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   show,
   onToggleChange,
   customElements,
+  wrapperProps,
+  listCustomTheme,
+  listIntent,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -124,6 +136,9 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         filterPlaceholder={filterPlaceholder}
         filter={filter}
         customElements={customElements}
+        wrapperProps={wrapperProps}
+        customTheme={listCustomTheme}
+        intent={listIntent}
       />
     ) : undefined;
   }, [items, onItemSelect, customElements]);
@@ -138,6 +153,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       delay={delay}
       maxHeight={maxHeight}
       maxWidth={maxWidth}
+      minWidth={minWidth}
       noArrow={noArrow}
       transparent={transparent}
       useTargetWidth={useTargetWidth}

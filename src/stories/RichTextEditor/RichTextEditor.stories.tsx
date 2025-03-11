@@ -61,6 +61,7 @@ export const WithDefaultValue: Story = {
     ],
   },
 };
+
 export const WithCustomStyle: Story = {
   args: {
     ...WithDefaultValue.args,
@@ -187,6 +188,36 @@ export const WithCustomTags: Story = {
     await _testsClickButton({ label: 'Brad Pitt' });
     await sleep(500);
     await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+  },
+};
+
+export const ListWithCustomTheme: Story = {
+  ...WithCustomTags,
+  args: {
+    ...WithCustomTags.args,
+    tagsListProps: {
+      listCustomTheme: {
+        main: '#160437',
+      },
+    },
+  },
+  play: async () => {
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+    await userEvent.click(document.querySelectorAll('.reqore-tag-remove')[1]);
+  },
+};
+
+export const ListWithCustomIntent: Story = {
+  ...WithCustomTags,
+  args: {
+    ...WithCustomTags.args,
+    tagsListProps: {
+      listIntent: 'success',
+    },
+  },
+  play: async () => {
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+    await userEvent.click(document.querySelectorAll('.reqore-tag-remove')[1]);
   },
 };
 

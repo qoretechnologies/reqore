@@ -387,6 +387,8 @@ const ReqoreControlGroup = memo(
           fluid: props?.fluid || props?.fluid === false ? props.fluid : fluid,
           fixed: props?.fixed || props?.fixed === false ? props.fixed : fixed,
           fill: props?.fill || props?.fill === false ? props.fill : fill,
+          spaceBetween:
+            props?.spaceBetween || props?.spaceBetween === false ? props.spaceBetween : false,
           stack: props?.stack || props?.stack === false ? props.stack : isStack,
           intent: props?.intent || intent,
           customTheme: props?.customTheme || customTheme,
