@@ -53,7 +53,7 @@ export interface IReqoreRichTextEditorProps
   getTagProps?: (tag: CustomElement) => IReqoreTagProps;
   onTagClick?: (tag: CustomElement) => void;
   tagsProps?: IReqoreTagProps;
-  tagsListProps: Omit<IReqoreDropdownProps, 'items'> & EditableProps;
+  tagsListProps?: Omit<IReqoreDropdownProps, 'items'> & EditableProps;
   panelProps?: IReqorePanelProps;
 
   actions?: {
@@ -167,7 +167,7 @@ export const ReqoreRichTextEditor = ({
   getTagProps = () => ({}),
   tagsProps = {},
   onTagClick,
-  tagsListProps,
+  tagsListProps = {},
   panelProps,
   actions,
   ...rest
@@ -377,8 +377,8 @@ export const ReqoreRichTextEditor = ({
                             {action.group?.map((action, index) => (
                               <ReqoreButton
                                 key={index}
-                                customTheme={tagsListProps.listCustomTheme}
-                                intent={tagsListProps.listIntent}
+                                customTheme={tagsListProps?.listCustomTheme}
+                                intent={tagsListProps?.listIntent}
                                 {...action}
                               />
                             ))}
@@ -389,8 +389,8 @@ export const ReqoreRichTextEditor = ({
                       return (
                         <ReqoreButton
                           key={index}
-                          customTheme={tagsListProps.listCustomTheme}
-                          intent={tagsListProps.listIntent}
+                          customTheme={tagsListProps?.listCustomTheme}
+                          intent={tagsListProps?.listIntent}
                           {...action}
                         />
                       );
