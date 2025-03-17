@@ -1,5 +1,5 @@
 import { map, size } from 'lodash';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
 import { Editable, ReactEditor, Slate, useSelected, withReact } from 'slate-react';
@@ -22,6 +22,7 @@ type CustomElement = {
   type: 'paragraph' | 'tag';
   value?: string | number;
   label?: string | number;
+  metadata?: Record<string, any>;
   children: CustomText[];
   bold?: boolean;
   italic?: boolean;
@@ -63,21 +64,23 @@ export interface IReqoreRichTextEditorProps
   };
 }
 
-export const TemplateElement = (props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
+export const TemplateElement = memo((props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
   const selected = useSelected();
+
+  const handleClick = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
 
   return (
     <>
       <ReqoreTag
         {...props.attributes}
         compact
-        labelEffect={{ weight: 'normal' }}
         flat={false}
         asBadge
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
+        fixed='key'
+        onClick={handleClick}
         tooltip={props.element.value?.toString()}
         label={props.element.label}
         {...props.tagProps}
@@ -87,7 +90,7 @@ export const TemplateElement = (props: RenderElementProps & { tagProps: IReqoreT
       {props.children}
     </>
   );
-};
+});
 
 export const withTemplates = (editor: HistoryEditor & ReactEditor) => {
   const { isInline, isVoid, markableVoid } = editor;
@@ -143,11 +146,17 @@ export const DefaultElement = (props: RenderElementProps) => (
   <ReqoreP {...props.attributes}>{props.children}</ReqoreP>
 );
 
-const insertTag = (editor: Editor, value: string | number, label: string | number) => {
+const insertTag = (
+  editor: Editor,
+  value: string | number,
+  label: string | number,
+  metadata: CustomElement['metadata']
+) => {
   const mention: CustomElement = {
     type: 'tag',
     value,
     label,
+    metadata,
     children: [{ text: '' }],
   };
 
@@ -404,7 +413,7 @@ export const ReqoreRichTextEditor = ({
             onItemSelect: (item) => {
               if (item.value) {
                 Transforms.select(editor, target);
-                insertTag(editor, item.value, item.label);
+                insertTag(editor, item.value, item.label, item.metadata);
                 ReactEditor.focus(editor);
               }
             },

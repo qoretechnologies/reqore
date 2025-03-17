@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useMount } from 'react-use';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { ReqoreRichTextEditor } from '../../components/RichTextEditor';
+import { IReqoreTagProps } from '../../components/Tag';
 import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
@@ -96,6 +97,17 @@ export const WithCustomTags: Story = {
             label: 'Discord Message Content',
             children: [{ text: '' }],
           },
+          {
+            type: 'tag',
+            value: '$data:{id:3}',
+            label: 'Item With Metadata',
+            metadata: {
+              image:
+                'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
+              labelKey: 'Qore',
+            },
+            children: [{ text: '' }],
+          },
           { text: ' inline with text' },
         ],
       },
@@ -125,13 +137,24 @@ export const WithCustomTags: Story = {
         ],
       },
     ],
-    getTagProps: (tag) => {
+    getTagProps: (tag): IReqoreTagProps => {
       if (tag.value.toString().startsWith('@')) {
         return {
           intent: 'success',
           icon: 'AtLine',
         };
       } else {
+        if (tag.metadata) {
+          return {
+            intent: 'warning',
+            icon: 'AtLine',
+            leftIconProps: {
+              image: tag.metadata.image,
+            },
+            labelKey: tag.metadata.labelKey,
+          };
+        }
+
         return {
           intent: 'info',
           icon: 'MoneyDollarCircleLine',
@@ -154,6 +177,15 @@ export const WithCustomTags: Story = {
           {
             label: 'Discord Message Embed',
             value: '$data:{id:2}',
+          },
+          {
+            label: 'Item With Metadata',
+            value: '$data:{id:3}',
+            metadata: {
+              image:
+                'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
+              labelKey: 'Qore',
+            },
           },
         ],
       },
