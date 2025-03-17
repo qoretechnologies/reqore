@@ -320,14 +320,16 @@ const ReqoreTabsList = ({
                             as,
                             intent: activeTab === id ? activeIntent || intent : intent,
                             disabled,
-                            rightIcon: onCloseClick ? closeIcon || 'CloseLine' : undefined,
-                            onRightIconClick:
-                              onCloseClick && !disabled
-                                ? (_itemId, _event, closePopover) => {
+                            rightAction: onCloseClick
+                              ? {
+                                  disabled,
+                                  icon: closeIcon || 'CloseLine',
+                                  onClick: (_itemId, _event, closePopover) => {
                                     onCloseClick(id);
                                     closePopover?.();
-                                  }
-                                : undefined,
+                                  },
+                                }
+                              : undefined,
                             selected: activeTab === id,
                             onClick: (event: React.MouseEvent<any>, _itemId, closePopover) => {
                               if (!disabled) {

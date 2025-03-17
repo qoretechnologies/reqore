@@ -1,6 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { fireEvent, within } from '@storybook/testing-library';
-import { noop } from 'lodash';
 import { IReqoreMenuProps } from '../../components/Menu';
 import { IReqoreMenuItemProps } from '../../components/Menu/item';
 import { ReqoreMenuSection } from '../../components/Menu/section';
@@ -98,14 +97,18 @@ type Story = StoryObj<typeof meta>;
 const MenuWithSubmenus = (args: IReqoreMenuProps) => (
   <ReqoreMenu {...args} width='300px'>
     <ReqoreMenuSection label='Submenu 1' icon='Apps2Fill'>
-      <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' onRightIconClick={noop}>
+      <ReqoreMenuItem
+        icon='DualSim1Line'
+        rightIcon='MoneyEuroBoxLine'
+        leftAction={{ icon: 'EditLine' }}
+      >
         Submenu Item 1
       </ReqoreMenuItem>
       <ReqoreMenuItem
         icon='DualSim1Line'
         rightIcon='MoneyEuroBoxLine'
         disabled
-        onRightIconClick={noop}
+        rightAction={{ icon: 'AddLine', disabled: true }}
       >
         Submenu Item 2
       </ReqoreMenuItem>
@@ -145,7 +148,7 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
           icon='ChatPollFill'
           onClick={() => alert('Item clicked')}
           rightIcon='FahrenheitFill'
-          onRightIconClick={() => alert('Icon clicked')}
+          rightAction={{ icon: 'AlertLine', onClick: () => alert('Icon clicked') }}
           tooltip={{
             content: 'You sure?',
           }}
@@ -158,7 +161,10 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
           <ReqoreMenuItem
             icon='BluetoothConnectLine'
             rightIcon='EditLine'
-            onRightIconClick={() => alert('Icon clicked')}
+            stackWithActions={false}
+            flat={false}
+            transparent={false}
+            rightAction={{ icon: 'AlertLine', onClick: () => alert('Icon clicked') }}
             description='Button with right icon and description'
             customTheme={{
               main: 'info:darken:5:0.3',

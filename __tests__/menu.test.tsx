@@ -1,5 +1,4 @@
 import { fireEvent, render } from '@testing-library/react';
-import React from 'react';
 import { ReqoreMenu, ReqoreMenuDivider, ReqoreMenuItem, ReqoreUIProvider } from '../src/index';
 
 test('Renders <Menu /> properly', () => {
@@ -48,7 +47,11 @@ test('<Menu /> item has right clickable button', () => {
     <ReqoreUIProvider>
       <ReqoreMenu>
         <ReqoreMenuItem> Item 1 </ReqoreMenuItem>
-        <ReqoreMenuItem onClick={itemCb} rightIcon='24HoursFill' onRightIconClick={iconCb}>
+        <ReqoreMenuItem
+          onClick={itemCb}
+          rightIcon='24HoursFill'
+          rightAction={{ icon: '24HoursFill', onClick: iconCb }}
+        >
           Item 2
         </ReqoreMenuItem>
         <ReqoreMenuDivider label='Divider' />
@@ -58,7 +61,7 @@ test('<Menu /> item has right clickable button', () => {
     </ReqoreUIProvider>
   );
 
-  fireEvent.click(document.querySelectorAll('.reqore-menu-item-right-icon')[0]);
+  fireEvent.click(document.querySelectorAll('.reqore-menu-item-right-action')[0]);
 
   expect(iconCb).toHaveBeenCalled();
   expect(itemCb).not.toHaveBeenCalled();
