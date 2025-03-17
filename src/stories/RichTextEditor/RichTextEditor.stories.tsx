@@ -118,10 +118,15 @@ export const WithCustomTags: Story = {
       },
 
       {
-        type: 'tag',
-        value: '$data:{id:1}',
-        label: 'Gmail Email Body',
-        children: [{ text: '' }],
+        type: 'paragraph',
+        children: [
+          {
+            type: 'tag',
+            value: '$data:{id:2}',
+            label: 'Discord Message Embed',
+            children: [{ text: '' }],
+          },
+        ],
       },
 
       {
@@ -211,15 +216,15 @@ export const WithCustomTags: Story = {
     },
   },
   play: async () => {
-    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(4);
     await userEvent.click(document.querySelectorAll('.reqore-tag-remove')[1]);
-    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(2);
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
     await _testsClickButton({ label: 'Mentions' });
     await userEvent.click(document.querySelector('div[contenteditable]'));
     await sleep(500);
     await _testsClickButton({ label: 'Brad Pitt' });
     await sleep(500);
-    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(4);
   },
 };
 
@@ -234,7 +239,7 @@ export const ListWithCustomTheme: Story = {
     },
   },
   play: async () => {
-    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(4);
     await userEvent.click(document.querySelectorAll('.reqore-tag-remove')[1]);
   },
 };
@@ -248,7 +253,7 @@ export const ListWithCustomIntent: Story = {
     },
   },
   play: async () => {
-    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(3);
+    await expect(document.querySelectorAll('.reqore-tag')).toHaveLength(4);
     await userEvent.click(document.querySelectorAll('.reqore-tag-remove')[1]);
   },
 };
