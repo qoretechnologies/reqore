@@ -29,6 +29,9 @@ test('Renders <Dropdown /> properly', () => {
                   label: 'Hello',
                   value: 'hello',
                   icon: 'SunCloudyLine',
+                  metadata: {
+                    some: 'data',
+                  },
                 },
                 {
                   label: 'How are ya',
@@ -227,6 +230,9 @@ test('Renders <Dropdown /> and calls a function on item click, closes the dropdo
                   label: 'Hello',
                   value: 'hello',
                   icon: 'SunCloudyLine',
+                  metadata: {
+                    some: 'data',
+                  },
                   onClick,
                 },
               ]}
@@ -249,6 +255,9 @@ test('Renders <Dropdown /> and calls a function on item click, closes the dropdo
       label: 'Hello',
       value: 'hello',
       icon: 'SunCloudyLine',
+      metadata: {
+        some: 'data',
+      },
       onClick,
     }),
     expect.anything()

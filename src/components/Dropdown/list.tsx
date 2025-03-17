@@ -17,13 +17,14 @@ import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
 import { ReqoreDropdownItem } from './item';
 
-export type TDropdownItemOnClick = (
-  item: IReqoreDropdownItem,
+export type TDropdownItemOnClick = <Metadata extends Record<string, any> = Record<string, any>>(
+  item: IReqoreDropdownItem<Metadata>,
   event?: React.MouseEvent<HTMLElement>
 ) => void;
-export interface IReqoreDropdownItem
+export interface IReqoreDropdownItem<Metadata extends Record<string, any> = Record<string, any>>
   extends Omit<IReqoreMenuItemProps, 'onClick' | 'onRightIconClick'> {
   value?: any;
+  metadata?: Metadata;
   items?: TReqoreDropdownItems;
   onClick?: TDropdownItemOnClick;
   divider?: boolean;
