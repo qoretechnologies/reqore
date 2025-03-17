@@ -5,20 +5,24 @@ import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 
+export type TReqoreMenuItemEventHandler = (
+  event: React.MouseEvent<HTMLElement>,
+  itemId?: string,
+  closePopover?: () => void
+) => void;
+
+export type TReqoreMenuItemAction = Omit<IReqoreButtonProps, 'onClick'> & {
+  onClick?: TReqoreMenuItemEventHandler;
+};
+
 export interface IReqoreMenuItemProps extends IReqoreComponent, IReqoreButtonProps {
   label?: string | number;
   selected?: boolean;
   itemId?: string;
-  onRightIconClick?: (
-    itemId?: string,
-    event?: React.MouseEvent<HTMLElement>,
-    closePopover?: () => void
-  ) => void;
-  onClick?: (
-    event: React.MouseEvent<HTMLElement>,
-    itemId?: string,
-    closePopover?: () => void
-  ) => void;
+  leftAction?: TReqoreMenuItemAction;
+  rightAction?: TReqoreMenuItemAction;
+  stackWithActions?: boolean;
+  onClick?: TReqoreMenuItemEventHandler;
   scrollIntoView?: boolean;
 }
 
@@ -46,12 +50,14 @@ const ReqoreMenuItem = memo(
         as,
         selected,
         onClick,
-        onRightIconClick,
+        rightAction,
+        leftAction,
         disabled,
         itemId,
         tooltip,
         intent,
         flat = true,
+        stackWithActions = true,
         scrollIntoView,
         closePopover,
         ...rest
@@ -70,16 +76,24 @@ const ReqoreMenuItem = memo(
         [itemId, onClick]
       );
 
-      const handleRightIconClick = useCallback(
+      const handleRightActionClick = useCallback(
         (event: React.MouseEvent<HTMLSpanElement>) => {
           event.persist();
           event.stopPropagation();
 
-          if (onRightIconClick) {
-            onRightIconClick(itemId, event, closePopover);
-          }
+          rightAction?.onClick?.(event, itemId, closePopover);
         },
-        [itemId, onRightIconClick]
+        [itemId, rightAction?.onClick]
+      );
+
+      const handleLeftActionClick = useCallback(
+        (event: React.MouseEvent<HTMLSpanElement>) => {
+          event.persist();
+          event.stopPropagation();
+
+          leftAction?.onClick?.(event, itemId, closePopover);
+        },
+        [itemId, leftAction?.onClick]
       );
 
       useEffect(() => {
@@ -89,7 +103,23 @@ const ReqoreMenuItem = memo(
       }, [itemRef, scrollIntoView]);
 
       return (
-        <ReqoreControlGroup stack={!!onRightIconClick} fluid fill responsive={false}>
+        <ReqoreControlGroup stack={stackWithActions} fluid fill responsive={false}>
+          {leftAction ? (
+            <ReqoreButton
+              flat={flat}
+              verticalPadding='small'
+              fixed
+              compact
+              transparent={rest.transparent === false ? false : !rest.effect}
+              minimal={rest.minimal}
+              customTheme={rest.customTheme}
+              className='reqore-menu-item-left-action'
+              intent={intent}
+              active={selected}
+              {...leftAction}
+              onClick={handleLeftActionClick}
+            />
+          ) : null}
           <ReqoreButton
             as={as}
             transparent={!rest.effect}
@@ -108,14 +138,13 @@ const ReqoreMenuItem = memo(
             disabled={disabled}
             intent={intent}
             icon={icon}
-            rightIcon={onRightIconClick ? undefined : rightIcon}
+            rightIcon={rightIcon}
             tooltip={tooltip}
           >
             {label || children}
           </ReqoreButton>
-          {rightIcon && onRightIconClick ? (
+          {rightAction ? (
             <ReqoreButton
-              icon={rightIcon}
               flat={flat}
               verticalPadding='small'
               fixed
@@ -123,11 +152,11 @@ const ReqoreMenuItem = memo(
               transparent={rest.transparent === false ? false : !rest.effect}
               minimal={rest.minimal}
               customTheme={rest.customTheme}
-              className='reqore-menu-item-right-icon'
-              onClick={handleRightIconClick}
-              readOnly={!onRightIconClick}
+              className='reqore-menu-item-right-action'
               intent={intent}
-              active={selected && !!onRightIconClick}
+              active={selected}
+              {...rightAction}
+              onClick={handleRightActionClick}
             />
           ) : null}
         </ReqoreControlGroup>

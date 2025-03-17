@@ -22,7 +22,7 @@ export type TDropdownItemOnClick = <Metadata extends Record<string, any> = Recor
   event?: React.MouseEvent<HTMLElement>
 ) => void;
 export interface IReqoreDropdownItem<Metadata extends Record<string, any> = Record<string, any>>
-  extends Omit<IReqoreMenuItemProps, 'onClick' | 'onRightIconClick'> {
+  extends Omit<IReqoreMenuItemProps, 'onClick'> {
   value?: any;
   metadata?: Metadata;
   items?: TReqoreDropdownItems;
