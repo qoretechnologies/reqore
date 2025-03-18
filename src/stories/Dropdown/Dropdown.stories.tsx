@@ -1,5 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { fireEvent, within } from '@storybook/testing-library';
+import { useState } from 'react';
+import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
 import { sleep } from '../../helpers/utils';
@@ -328,7 +330,11 @@ export const WithCustomPaging: Story = {
 };
 
 export const WithChildItems: Story = {
-  render: (args) => <ReqoreDropdown {...args} />,
+  render: (args) => {
+    const [val, setVal] = useState<any>(args.label);
+
+    return <ReqoreDropdown {...args} onItemSelect={(item) => setVal(item.label)} label={val} />;
+  },
   args: {
     label: 'Dropdown with child items',
     useTargetWidth: true,
@@ -354,6 +360,12 @@ export const WithChildItems: Story = {
             label: 'Test child 3',
             intent: 'info',
             description: 'I have children too',
+            rightAction: {
+              icon: 'AddLine',
+              onClick: (_event, _itemId, _closePopover, metadata) => {
+                metadata?.selectItem();
+              },
+            },
             items: [
               {
                 label: 'Test deep child 1',
@@ -387,6 +399,19 @@ export const WithChildItems: Story = {
     await sleep(200);
 
     await fireEvent.click(canvas.getAllByText('Test')[0]);
+  },
+};
+
+export const ItemWithItemsCanBeSelected: Story = {
+  ...WithChildItems,
+  play: async ({ canvasElement, ...rest }) => {
+    await WithChildItems.play({ canvasElement, ...rest });
+
+    await _testsClickButton({ selector: '.reqore-menu-item-right-action' });
+
+    await sleep(200);
+
+    await _testsWaitForText('Test child 3');
   },
 };
 

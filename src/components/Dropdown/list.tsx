@@ -22,7 +22,13 @@ export type TDropdownItemOnClick = <Metadata extends Record<string, any> = Recor
   event?: React.MouseEvent<HTMLElement>
 ) => void;
 export interface IReqoreDropdownItem<Metadata extends Record<string, any> = Record<string, any>>
-  extends Omit<IReqoreMenuItemProps, 'onClick'> {
+  extends Omit<
+    IReqoreMenuItemProps<{
+      item?: IReqoreDropdownItem;
+      selectItem?: () => void;
+    }>,
+    'onClick'
+  > {
   value?: any;
   metadata?: Metadata;
   items?: TReqoreDropdownItems;
@@ -121,14 +127,8 @@ const ReqoreDropdownList = memo(
       }
     };
 
-    const handleItemClick = useCallback(
+    const handleItemSelectClick = useCallback(
       (item: IReqoreDropdownItem, event: React.MouseEvent<HTMLElement>): void => {
-        if (size(item.items)) {
-          setSelectedItem(item);
-
-          return;
-        }
-
         if (item.onClick) {
           item.onClick(item, event);
 
@@ -147,6 +147,43 @@ const ReqoreDropdownList = memo(
       },
       [onItemSelect, selectedItem, closePopover, multiSelect]
     );
+
+    const handleItemClick = useCallback(
+      (item: IReqoreDropdownItem, event: React.MouseEvent<HTMLElement>): void => {
+        if (size(item.items)) {
+          setSelectedItem(item);
+
+          return;
+        }
+
+        handleItemSelectClick(item, event);
+      },
+      [onItemSelect, selectedItem, closePopover, multiSelect]
+    );
+
+    const getAction = useCallback((item: TReqoreDropdownItem, position: 'left' | 'right') => {
+      const action = position === 'left' ? item.leftAction : item.rightAction;
+
+      if (!action) {
+        return undefined;
+      }
+
+      if (!action.onClick) {
+        return action;
+      }
+
+      return {
+        ...action,
+        onClick: (event, itemId, closePopover) => {
+          action.onClick(event, itemId, closePopover, {
+            item,
+            selectItem: () => {
+              handleItemSelectClick(item, event);
+            },
+          });
+        },
+      };
+    }, []);
 
     if (selectedItem) {
       return (
@@ -267,6 +304,8 @@ const ReqoreDropdownList = memo(
                       customTheme={theme}
                       intent={intent}
                       {...item}
+                      rightAction={getAction(item, 'right')}
+                      leftAction={getAction(item, 'left')}
                       disabled={'items' in item && !size(item.items) ? true : item.disabled}
                       onItemClick={handleItemClick}
                       scrollIntoView={scrollToSelected && item.selected && !multiSelect}

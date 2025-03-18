@@ -11,16 +11,28 @@ export type TReqoreMenuItemEventHandler = (
   closePopover?: () => void
 ) => void;
 
-export type TReqoreMenuItemAction = Omit<IReqoreButtonProps, 'onClick'> & {
-  onClick?: TReqoreMenuItemEventHandler;
-};
+export type TReqoreMenuItemActionEventHandler<
+  Metadata extends Record<string, any> = Record<string, any>
+> = (
+  event: React.MouseEvent<HTMLElement>,
+  itemId?: string,
+  closePopover?: () => void,
+  metadata?: Metadata
+) => void;
 
-export interface IReqoreMenuItemProps extends IReqoreComponent, IReqoreButtonProps {
+export type TReqoreMenuItemAction<Metadata extends Record<string, any> = Record<string, any>> =
+  Omit<IReqoreButtonProps, 'onClick'> & {
+    onClick?: TReqoreMenuItemActionEventHandler<Metadata>;
+  };
+
+export interface IReqoreMenuItemProps<Metadata extends Record<string, any> = Record<string, any>>
+  extends IReqoreComponent,
+    IReqoreButtonProps {
   label?: string | number;
   selected?: boolean;
   itemId?: string;
-  leftAction?: TReqoreMenuItemAction;
-  rightAction?: TReqoreMenuItemAction;
+  leftAction?: TReqoreMenuItemAction<Metadata>;
+  rightAction?: TReqoreMenuItemAction<Metadata>;
   stackWithActions?: boolean;
   onClick?: TReqoreMenuItemEventHandler;
   scrollIntoView?: boolean;
