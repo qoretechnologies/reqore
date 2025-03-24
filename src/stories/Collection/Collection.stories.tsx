@@ -126,10 +126,20 @@ export const Fill: Story = {
   },
 };
 
+export const NoSorting: Story = {
+  args: {
+    label: 'Collection of items',
+    items,
+    sortable: false,
+    defaultSortBy: null,
+  },
+};
+
 export const SelectedFirst: Story = {
   args: {
     label: 'Collection of items',
     items,
+    sortable: false,
     showSelectedFirst: true,
   },
 };
