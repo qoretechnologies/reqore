@@ -33,11 +33,12 @@ export const useAutoFocus = (
   }, [element, rules, isInViewport.current]);
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    // Check if this event came from another html input
+    // Check if this event came from another html input or a content-editable div
     if (
       e.target &&
       ((e.target as HTMLElement).tagName === 'INPUT' ||
-        (e.target as HTMLElement).tagName === 'TEXTAREA')
+        (e.target as HTMLElement).tagName === 'TEXTAREA' ||
+        (e.target as HTMLElement).isContentEditable)
     ) {
       return;
     }
