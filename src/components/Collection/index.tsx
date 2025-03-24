@@ -182,11 +182,11 @@ export const ReqoreCollection = memo(
         return [];
       }
 
-      if (!sortable) {
+      const _sortBy = !!sortKeys[sortBy] ? (v) => v?.metadata?.[sortBy] : sortBy;
+
+      if (!_sortBy && !showSelectedFirst) {
         return items;
       }
-
-      const _sortBy = !!sortKeys[sortBy] ? (v) => v?.metadata?.[sortBy] : sortBy;
 
       if (showSelectedFirst) {
         // Filter out the selected items
