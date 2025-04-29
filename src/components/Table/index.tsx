@@ -5,7 +5,7 @@ import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqoreMessage, ReqorePaginationContainer, ReqorePanel, useReqoreTheme } from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
-import { TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
@@ -181,6 +181,10 @@ const StyledTablesWrapper = styled.div`
   display: flex;
   flex-flow: row;
   overflow: hidden;
+
+  ${({ rounded, size = 'normal' }) => css`
+    border-radius: ${rounded === false ? 0 : RADIUS_FROM_SIZE[size]}px;
+  `}
 `;
 
 export interface IReqoreTableExportModalProps {
@@ -281,7 +285,7 @@ const ReqoreTable = ({
     if (selectable) {
       fullColumns.unshift({
         dataId: 'selectbox',
-        width: 50,
+        width: 30,
         sortable: false,
         hideable: false,
         filterable: false,
@@ -774,7 +778,10 @@ const ReqoreTable = ({
                     exportMapper={exportMapper}
                   />
                 )}
-                <StyledTablesWrapper className='reqore-table-wrapper'>
+                <StyledTablesWrapper
+                  className='reqore-table-wrapper'
+                  rounded={rest.rounded !== false && rest.flat !== false}
+                >
                   {renderTable('left', applyPaging(transformedData))}
                   {renderTable('main', applyPaging(transformedData))}
                   {renderTable('right', applyPaging(transformedData))}

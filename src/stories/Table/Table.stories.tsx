@@ -34,7 +34,7 @@ const defaultColumns: IReqoreTableColumn[] = [
     cell: {
       content: 'tag',
     },
-    width: 80,
+    width: 40,
     align: 'center',
     sortable: true,
   },
