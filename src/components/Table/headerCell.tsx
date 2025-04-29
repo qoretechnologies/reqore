@@ -36,9 +36,9 @@ export const StyledTableHeaderResize = styled.div`
     left: 50%;
     top: 50%;
     transform: translateX(-50%) translateY(-50%);
-    width: 1px;
-    height: 70%;
-    border-left: 1px dashed ${({ theme }) => rgba(getReadableColor(theme), 0.3)};
+    width: 0.5px;
+    height: 100%;
+    border-left: 1px dashed ${({ theme }) => rgba(getReadableColor(theme), 0.5)};
   }
 `;
 
@@ -91,7 +91,8 @@ export const ReqoreTableHeaderCell = memo(
           _items.push({
             label: 'Pin left',
             icon: 'SkipBackLine',
-            active: pin === 'left',
+            selected: pin === 'left',
+            minimal: true,
             intent: pin === 'left' ? 'info' : undefined,
             onClick: () => {
               onColumnsUpdate?.(dataId, 'pin', pin !== 'left' ? 'left' : undefined);
@@ -101,7 +102,8 @@ export const ReqoreTableHeaderCell = memo(
           _items.push({
             label: 'Pin Right',
             icon: 'SkipForwardLine',
-            active: pin === 'right',
+            minimal: true,
+            selected: pin === 'right',
             intent: pin === 'right' ? 'info' : undefined,
             onClick: () => {
               onColumnsUpdate?.(dataId, 'pin', pin !== 'right' ? 'right' : undefined);
@@ -158,11 +160,15 @@ export const ReqoreTableHeaderCell = memo(
           ) : (
             <ReqoreButton
               {...rest}
+              compact
               size={size}
               readOnly={!sortable && !onClick}
               className={`${className || ''} reqore-table-header-cell`}
               rounded={false}
               textAlign={align}
+              style={{
+                borderRight: filterable || hideable || resizable ? 'none' : undefined,
+              }}
               rightIcon={
                 sortable && sortData.by === dataId
                   ? (`Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
@@ -181,9 +187,16 @@ export const ReqoreTableHeaderCell = memo(
           )}
           {filterable || hideable || resizable ? (
             <ReqoreDropdown<IReqoreButtonProps>
-              icon='MoreLine'
+              icon='More2Line'
               className='reqore-table-header-cell-options'
               fixed
+              compact
+              buttonStyle={{
+                paddingLeft: 0,
+                paddingRight: 0,
+                minWidth: '10px',
+                borderLeft: 'none',
+              }}
               size={size}
               rounded={false}
               intent={filter ? 'info' : rest.intent}
