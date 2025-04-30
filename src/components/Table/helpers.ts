@@ -252,7 +252,7 @@ export const prepareColumns = (
     }
 
     const newWidth = calculateMinimumCellWidth(
-      column.width || 50,
+      column.width || 40,
       size,
       column.header?.icon,
       column.sortable,
@@ -270,7 +270,7 @@ export const prepareColumns = (
 };
 
 export const calculateMinimumCellWidth = (
-  currentWidth: number = 50,
+  currentWidth: number = 40,
   size: TSizes,
   icon?: IReqoreIconName,
   sortable?: boolean,
