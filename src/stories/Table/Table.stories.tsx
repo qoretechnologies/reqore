@@ -140,6 +140,7 @@ const defaultColumns: IReqoreTableColumn[] = [
           width: 150,
           cell: { intent: 'muted' },
           filterable: true,
+          sortable: true,
         },
       ],
     },

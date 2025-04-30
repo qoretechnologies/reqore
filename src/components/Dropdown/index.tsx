@@ -42,6 +42,9 @@ export interface IReqoreDropdownProps
   customElements?: React.ReactNode[];
   listCustomTheme?: IReqoreCustomTheme;
   listIntent?: TReqoreIntent;
+  showCaret?: boolean;
+  // Whether the button should be shown as read-only when there are no items instead of disabled
+  readOnlyOnEmpty?: boolean;
 }
 
 const ReqoreDropdownListWrapper = memo(
@@ -104,16 +107,23 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   wrapperProps,
   listCustomTheme,
   listIntent,
+  showCaret = true,
+  readOnlyOnEmpty,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
     () =>
       ({
         ...rest,
-        icon: caretPosition === 'left' ? icon || 'ArrowDownSFill' : rightIcon,
-        rightIcon: caretPosition === 'right' ? icon || 'ArrowDownSFill' : rightIcon,
+        icon:
+          caretPosition === 'left' ? icon || (showCaret ? 'ArrowDownSFill' : undefined) : rightIcon,
+        rightIcon:
+          caretPosition === 'right'
+            ? icon || (showCaret ? 'ArrowDownSFill' : undefined)
+            : rightIcon,
         style: buttonStyle || rest.style,
-        disabled: !size(items) || (rest as any).disabled,
+        disabled: (!size(items) && !readOnlyOnEmpty) || (rest as any).disabled,
+        readOnly: (!size(items) && readOnlyOnEmpty) || (rest as any).readOnly,
         className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
       } as T),
     [items, icon, rightIcon, buttonStyle, caretPosition, rest]

@@ -1,10 +1,9 @@
-/* @flow */
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { memo, useMemo } from 'react';
 import styled from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
-import { ReqoreButton, ReqoreControlGroup, ReqoreDropdown } from '../..';
+import { ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
 import { IReqoreButtonProps } from '../Button';
@@ -73,25 +72,30 @@ export const ReqoreTableHeaderCell = memo(
     const items = useMemo(() => {
       let _items: IReqoreDropdownItem[] = [];
 
-      if (resizable || hideable) {
-        if (resizable) {
+      if (resizable || hideable || pinnable || sortable) {
+        if (sortable) {
           _items.push({
-            label: 'Reset size',
-            icon: 'HistoryLine',
-            disabled: !resizedWidth || width === resizedWidth,
+            label: `Sort ${sortData?.direction === 'desc' ? 'ascending' : 'descending'}`,
+            icon: sortData.direction === 'desc' ? 'ArrowDownFill' : 'ArrowUpFill',
+            flat: sortData?.by === dataId ? false : undefined,
+            transparent: sortData?.by === dataId ? false : undefined,
+            minimal: true,
+            intent: sortData?.by === dataId ? 'info' : undefined,
             onClick: () => {
-              onColumnsUpdate?.(dataId, 'resizedWidth', width);
+              onSortChange?.(dataId);
             },
           });
         }
-
         if (pinnable) {
-          _items.push({ divider: true, size: 'small', line: true });
+          if (sortable) {
+            _items.push({ divider: true, size: 'small', line: true });
+          }
 
           _items.push({
             label: 'Pin left',
             icon: 'SkipBackLine',
-            selected: pin === 'left',
+            flat: pin === 'left' ? false : undefined,
+            transparent: pin === 'left' ? false : undefined,
             minimal: true,
             intent: pin === 'left' ? 'info' : undefined,
             onClick: () => {
@@ -103,7 +107,8 @@ export const ReqoreTableHeaderCell = memo(
             label: 'Pin Right',
             icon: 'SkipForwardLine',
             minimal: true,
-            selected: pin === 'right',
+            flat: pin === 'right' ? false : undefined,
+            transparent: pin === 'right' ? false : undefined,
             intent: pin === 'right' ? 'info' : undefined,
             onClick: () => {
               onColumnsUpdate?.(dataId, 'pin', pin !== 'right' ? 'right' : undefined);
@@ -112,14 +117,31 @@ export const ReqoreTableHeaderCell = memo(
         }
 
         if (hideable) {
-          _items.push({ divider: true, size: 'small', line: true });
+          if (sortable || pinnable) {
+            _items.push({ divider: true, size: 'small', line: true });
+          }
 
           _items.push({
             label: 'Hide column',
+            transparent: false,
+            minimal: true,
             icon: 'EyeCloseLine',
             className: 'reqore-table-header-hide',
             onClick: () => {
               onColumnsUpdate?.(dataId, 'show', false);
+            },
+          });
+        }
+
+        if (resizable) {
+          _items.push({
+            transparent: false,
+            minimal: true,
+            label: 'Reset size',
+            icon: 'HistoryLine',
+            disabled: !resizedWidth || width === resizedWidth,
+            onClick: () => {
+              onColumnsUpdate?.(dataId, 'resizedWidth', width);
             },
           });
         }
@@ -130,7 +152,19 @@ export const ReqoreTableHeaderCell = memo(
       }
 
       return _items;
-    }, [resizable, hideable, width, resizedWidth, onColumnsUpdate, dataId]);
+    }, [
+      resizable,
+      hideable,
+      width,
+      resizedWidth,
+      onColumnsUpdate,
+      dataId,
+      sortData,
+      actions,
+      pinnable,
+      sortable,
+      pin,
+    ]);
 
     return (
       <Resizable
@@ -158,34 +192,43 @@ export const ReqoreTableHeaderCell = memo(
           {content ? (
             content
           ) : (
-            <ReqoreButton
-              {...rest}
+            <ReqoreDropdown<IReqoreButtonProps>
+              className={`${
+                className || ''
+              } reqore-table-header-cell-options reqore-table-header-cell`}
               compact
               size={size}
-              readOnly={!sortable && !onClick}
-              className={`${className || ''} reqore-table-header-cell`}
               rounded={false}
-              textAlign={align}
-              style={{
-                borderRight: filterable || hideable || resizable ? 'none' : undefined,
+              filterable={filterable}
+              filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
+              filter={filter}
+              onFilterChange={(value) => {
+                onFilterChange?.(dataId, value);
               }}
+              items={items}
+              style={{}}
+              showCaret={false}
+              textAlign={align}
+              readOnlyOnEmpty
               rightIcon={
                 sortable && sortData.by === dataId
                   ? (`Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
                       | 'ArrowDownFill'
                       | 'ArrowUpFill')
+                  : filter
+                  ? 'FilterLine'
                   : rest.rightIcon
               }
-              onClick={(e) => {
-                if (sortable) {
-                  onSortChange?.(dataId);
-                }
-
-                onClick?.(e);
+              rightIconProps={{
+                size: 'tiny',
+                intent: filter ? 'info' : undefined,
               }}
+              inputProps={{ intent: filter ? 'info' : undefined }}
+              onClick={onClick}
+              {...rest}
             />
           )}
-          {filterable || hideable || resizable ? (
+          {content && (filterable || hideable || resizable) ? (
             <ReqoreDropdown<IReqoreButtonProps>
               icon='More2Line'
               className='reqore-table-header-cell-options'
@@ -203,6 +246,7 @@ export const ReqoreTableHeaderCell = memo(
               filterable={filterable}
               filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
               filter={filter}
+              inputProps={{ intent: filter ? 'info' : undefined }}
               onFilterChange={(value) => {
                 onFilterChange?.(dataId, value);
               }}

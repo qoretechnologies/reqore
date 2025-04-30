@@ -189,14 +189,15 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
                 ...omit(colRest, ['cell']),
                 dataId,
                 size,
-                readOnly: !onClick,
                 onClick,
                 rounded: false,
                 textAlign: align,
                 className: 'reqore-table-column-group-header',
                 resizable: false,
                 hideable: false,
+                pinnable: false,
                 hasColumns: true,
+                grow: 1,
               })}
               <StyledColumnGroupHeaders className='reqore-table-headers'>
                 {renderColumns(columns)}
