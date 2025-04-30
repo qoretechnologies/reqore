@@ -6,6 +6,7 @@ import { IReqoreTableColumn, IReqoreTableProps } from '../src/components/Table';
 import tableData from '../src/mock/tableData';
 
 beforeAll(() => {
+  jest.useFakeTimers();
   jest.setTimeout(30000);
 });
 
@@ -249,6 +250,13 @@ test('Sorting on <Table /> works properly', () => {
   const lastNameHeaderCell = document.querySelectorAll('.reqore-table-header-cell')[2];
 
   fireEvent.click(lastNameHeaderCell);
+
+  jest.advanceTimersByTime(1);
+
+  const sortButton = document.querySelectorAll('.reqore-menu-item')[0];
+
+  fireEvent.click(sortButton);
+
   expect(fn).toHaveBeenCalledWith({ by: 'lastName', direction: 'desc' });
 
   const lastNameCell = firstRow!.querySelectorAll('.reqore-table-cell')[2];
@@ -256,6 +264,12 @@ test('Sorting on <Table /> works properly', () => {
   expect(lastNameCell.textContent).toBe('Zold');
 
   fireEvent.click(document.querySelectorAll('.reqore-table-header-cell')[2]);
+
+  jest.advanceTimersByTime(1);
+
+  const sortButtonAfter = document.querySelectorAll('.reqore-menu-item')[0];
+
+  fireEvent.click(sortButtonAfter);
 
   expect(fn).toHaveBeenLastCalledWith({ by: 'lastName', direction: 'asc' });
   expect(lastNameCell.textContent).toBe('Abbess');
