@@ -58,6 +58,8 @@ export interface IPopover
   updater?: string | number;
   uiScale?: IReqoreOptions['uiScale'];
 
+  onBeforeOpen?: (popoverData: IPopover, e?: MouseEvent | KeyboardEvent) => boolean;
+  onBeforeClose?: (popoverData: IPopover, e?: MouseEvent | KeyboardEvent) => boolean;
   onToggleChange?: (isOpen: boolean, popoverData?: IPopover) => void;
   onUpdate?: (popoverData: IPopover) => void;
 }
@@ -118,6 +120,8 @@ export const ReqorePopover = memo(
         maxHeight,
         icon,
         title,
+        onBeforeClose,
+        onBeforeOpen,
         onToggleChange,
         onUpdate,
         effect,
@@ -140,38 +144,60 @@ export const ReqorePopover = memo(
       const startEvent = startEvents[handler];
       const endEvent = endEvents[handler];
 
-      const open = useCallback(() => {
-        if (isOpen) {
-          if (handler !== 'hoverStay' && handler !== 'focus') {
-            if (closeOnInsideClick) {
-              close();
+      const open = useCallback(
+        (e?: MouseEvent | KeyboardEvent) => {
+          if (onBeforeOpen) {
+            const shouldOpen = onBeforeOpen({ content }, e);
+
+            if (!shouldOpen) {
+              return;
             }
           }
-        } else {
-          const globalDelay =
-            handler === 'hover' || handler === 'hoverStay' ? delay ?? tooltips.delay : delay;
 
-          if (globalDelay) {
-            setTimeoutValue(() =>
-              setTimeout(() => {
-                setIsOpen(true);
-              }, globalDelay)
-            );
+          if (isOpen) {
+            if (handler !== 'hoverStay' && handler !== 'focus') {
+              if (closeOnInsideClick) {
+                close();
+              }
+            }
           } else {
-            setIsOpen(true);
+            const globalDelay =
+              handler === 'hover' || handler === 'hoverStay' ? delay ?? tooltips.delay : delay;
+
+            if (globalDelay) {
+              setTimeoutValue(() =>
+                setTimeout(() => {
+                  setIsOpen(true);
+                }, globalDelay)
+              );
+            } else {
+              setIsOpen(true);
+            }
           }
-        }
-      }, [isOpen, handler, closeOnInsideClick, delay, tooltips.delay]);
+        },
+        [isOpen, handler, closeOnInsideClick, delay, tooltips.delay]
+      );
 
       const cancelTimeout = useCallback(() => {
         clearTimeout(timeout);
         setTimeout(null);
       }, [timeout]);
 
-      const close = useCallback(() => {
-        cancelTimeout();
-        setIsOpen(false);
-      }, [cancelTimeout]);
+      const close = useCallback(
+        (e?: MouseEvent | KeyboardEvent) => {
+          if (onBeforeClose) {
+            const shouldClose = onBeforeClose({ content }, e);
+
+            if (!shouldClose) {
+              return;
+            }
+          }
+
+          cancelTimeout();
+          setIsOpen(false);
+        },
+        [cancelTimeout]
+      );
 
       const handleClick = useCallback(
         (event: MouseEvent) => {

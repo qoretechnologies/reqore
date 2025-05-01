@@ -280,3 +280,59 @@ test('Correctly passes popover data for opened popover', async () => {
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(fn).toHaveBeenCalledWith(true);
 });
+
+test('Does not shows popover on click when onBeforeOpen returns false', async () => {
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqorePopover
+        component='p'
+        content={'Tooltip content'}
+        onBeforeOpen={() => {
+          fn();
+          return false;
+        }}
+        openOnMount
+        isReqoreComponent
+      >
+        Hover me
+      </ReqorePopover>
+    </ReqoreUIProvider>
+  );
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+  expect(fn).toHaveBeenCalled();
+});
+
+test('Does not hide popover on click when onBeforeClose returns false', async () => {
+  const fn = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <p>Click me to hide</p>
+      <ReqorePopover
+        component='p'
+        content={'Tooltip content'}
+        onBeforeClose={() => {
+          fn();
+          return false;
+        }}
+        openOnMount
+        isReqoreComponent
+      >
+        Hover me
+      </ReqorePopover>
+    </ReqoreUIProvider>
+  );
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+
+  fireEvent.click(screen.getByText('Click me to hide'));
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});

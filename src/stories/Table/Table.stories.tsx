@@ -140,6 +140,7 @@ const defaultColumns: IReqoreTableColumn[] = [
           width: 150,
           cell: { intent: 'muted' },
           filterable: true,
+          sortable: true,
         },
       ],
     },
@@ -372,7 +373,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Basic: Story = {};
+export const Basic: Story = {
+  args: {
+    showHelp: true,
+  },
+};
 
 export const NoLabel: Story = {
   args: {
@@ -473,6 +478,7 @@ export const PinnedColumns: Story = {
     columns: defaultColumnsWithPinnedColumns,
     zoomable: true,
     filterable: true,
+    showHelp: true,
   },
 };
 
