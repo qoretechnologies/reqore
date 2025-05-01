@@ -3,7 +3,15 @@ import { size as count, isArray } from 'lodash';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqoreMessage, ReqorePaginationContainer, ReqorePanel, useReqoreTheme } from '../..';
+import {
+  ReqoreControlGroup,
+  ReqoreMessage,
+  ReqoreP,
+  ReqorePaginationContainer,
+  ReqorePanel,
+  useReqoreProperty,
+  useReqoreTheme,
+} from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
 import { RADIUS_FROM_SIZE, TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -132,6 +140,7 @@ export interface IReqoreTableProps extends IReqorePanelProps {
 
   striped?: boolean;
   emptyMessage?: string;
+  showHelp?: boolean;
 
   onRowClick?: IReqoreTableRowClick;
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
@@ -240,6 +249,7 @@ const ReqoreTable = ({
   paging,
   exportable,
   exportMapper,
+  showHelp,
   ...rest
 }: IReqoreTableProps) => {
   const leftTableRef = useRef<HTMLDivElement>(null);
@@ -261,6 +271,7 @@ const ReqoreTable = ({
   const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
   const theme = useReqoreTheme('main', rest.customTheme, intent);
 
+  const addModal = useReqoreProperty('addModal');
   const [wrapperRef, sizes] = useMeasure();
   const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
     filter.toString(),
@@ -591,7 +602,7 @@ const ReqoreTable = ({
       });
     }
 
-    if (count(columnModifiers) || zoomable || filterable || exportable) {
+    if (count(columnModifiers) || zoomable || filterable || exportable || showHelp) {
       let moreActions: IReqorePanelSubAction[] = [];
 
       if (exportable) {
@@ -610,24 +621,63 @@ const ReqoreTable = ({
         ];
       }
 
-      finalActions.push({
+      const moreActionsWrapper: IReqorePanelAction = {
         icon: 'MoreLine',
         className: 'reqore-table-more',
-        actions: [
+        actions: [],
+      };
+
+      if (count(columnModifiers) || zoomable || filterable || exportable) {
+        moreActionsWrapper.actions = [
           ...moreActions,
           {
-            label: 'Reset table',
+            label: 'Reset all',
             icon: 'RestartLine',
             className: 'reqore-table-reset',
             onClick: () => {
+              setColumnModifiers({});
               setZoom(1);
               setPreQuery('');
               setQuery('');
-              setColumnModifiers({});
             },
           },
-        ],
-      });
+        ];
+      }
+
+      if (showHelp) {
+        moreActionsWrapper.actions.push({
+          label: 'Help',
+          icon: 'QuestionLine',
+          className: 'reqore-table-help',
+          onClick: () => {
+            addModal({
+              label: 'Table help',
+              icon: 'QuestionLine',
+              minimal: true,
+              panelSize: 'small',
+              children: (
+                <ReqoreMessage intent='info' opaque={false} size='small'>
+                  <ReqoreControlGroup vertical>
+                    <ReqoreP size='small'>
+                      - CMD / Control click on the column header to sort / reverse sort by that
+                      column
+                    </ReqoreP>
+                    <ReqoreP size='small'>
+                      - Click on the column header for more actions, such as filtering, sorting,
+                      pinning and hiding
+                    </ReqoreP>
+                    <ReqoreP size='small'>
+                      - Columns with right dashed border on headers can be resized
+                    </ReqoreP>
+                  </ReqoreControlGroup>
+                </ReqoreMessage>
+              ),
+            });
+          },
+        });
+      }
+
+      finalActions.push(moreActionsWrapper);
     }
 
     return finalActions;
@@ -643,6 +693,8 @@ const ReqoreTable = ({
     zoom,
     columnsList,
     isScrolled,
+    showHelp,
+    addModal,
   ]);
 
   const badge = useMemo(() => {
