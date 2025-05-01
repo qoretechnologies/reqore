@@ -109,6 +109,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   listIntent,
   showCaret = true,
   readOnlyOnEmpty,
+  onBeforeClose,
+  onBeforeOpen,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -178,6 +180,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       passPopoverData={passPopoverData}
       show={show}
       onToggleChange={onToggleChange}
+      onBeforeClose={onBeforeClose}
+      onBeforeOpen={onBeforeOpen}
     >
       {children || label}
     </ReqorePopover>

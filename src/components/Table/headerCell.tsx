@@ -37,7 +37,7 @@ export const StyledTableHeaderResize = styled.div`
     transform: translateX(-50%) translateY(-50%);
     width: 0.5px;
     height: 100%;
-    border-left: 1px dashed ${({ theme }) => rgba(getReadableColor(theme), 0.5)};
+    border-left: 1px dashed ${({ theme }) => rgba(getReadableColor(theme), 0.4)};
   }
 `;
 
@@ -206,7 +206,6 @@ export const ReqoreTableHeaderCell = memo(
                 onFilterChange?.(dataId, value);
               }}
               items={items}
-              style={{}}
               showCaret={false}
               textAlign={align}
               readOnlyOnEmpty
@@ -219,12 +218,25 @@ export const ReqoreTableHeaderCell = memo(
                   ? 'FilterLine'
                   : rest.rightIcon
               }
+              onBeforeOpen={(_popoverData, event) => {
+                if (event.metaKey) {
+                  return false;
+                }
+
+                return true;
+              }}
               rightIconProps={{
                 size: 'tiny',
                 intent: filter ? 'info' : undefined,
               }}
               inputProps={{ intent: filter ? 'info' : undefined }}
-              onClick={onClick}
+              onClick={(e) => {
+                if (sortable && e.metaKey) {
+                  onSortChange?.(dataId);
+                }
+
+                onClick?.(e);
+              }}
               {...rest}
             />
           )}
@@ -242,7 +254,7 @@ export const ReqoreTableHeaderCell = memo(
               }}
               size={size}
               rounded={false}
-              intent={filter ? 'info' : rest.intent}
+              intent={filter || sortData.by === dataId ? 'info' : rest.intent}
               filterable={filterable}
               filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
               filter={filter}
