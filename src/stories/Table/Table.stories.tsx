@@ -485,6 +485,7 @@ export const PinnedColumns: Story = {
 export const Selectable: Story = {
   args: {
     selectable: true,
+    striped: true,
   },
 };
 

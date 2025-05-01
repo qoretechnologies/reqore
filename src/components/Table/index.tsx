@@ -318,6 +318,8 @@ const ReqoreTable = ({
           actions: ({ _selectId }) => [
             {
               tooltip: selectToggleTooltip,
+              flat: true,
+              transparent: true,
               icon: !_selectId
                 ? 'Forbid2Line'
                 : _selected?.find((s) => s.toString() === _selectId.toString())
@@ -561,10 +563,16 @@ const ReqoreTable = ({
     }
 
     if (count(columnsList)) {
+      let columnsCount = getColumnsCount(getOnlyShownColumns(finalColumns));
+
+      if (selectable) {
+        columnsCount -= 1;
+      }
+
       finalActions.push({
         icon: 'LayoutColumnLine',
         className: 'reqore-table-columns-options',
-        badge: getColumnsCount(getOnlyShownColumns(finalColumns)),
+        badge: columnsCount,
         intent: hasHiddenColumns(finalColumns) ? 'info' : undefined,
         multiSelect: true,
         actions: columnsList,
@@ -636,7 +644,7 @@ const ReqoreTable = ({
             className: 'reqore-table-reset',
             onClick: () => {
               setColumnModifiers({});
-              setZoom(1);
+              setZoom(sizeToZoom[size]);
               setPreQuery('');
               setQuery('');
             },
@@ -691,9 +699,11 @@ const ReqoreTable = ({
     finalColumns,
     zoomable,
     zoom,
+    size,
     columnsList,
     isScrolled,
     showHelp,
+    selectable,
     addModal,
   ]);
 
