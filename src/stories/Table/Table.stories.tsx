@@ -32,7 +32,7 @@ const defaultColumns: IReqoreTableColumn[] = [
       tooltip: 'Custom ID tooltip nice',
     },
     cell: {
-      content: 'tag',
+      content: 'number',
     },
     width: 40,
     align: 'center',
@@ -59,9 +59,14 @@ const defaultColumns: IReqoreTableColumn[] = [
             },
           },
           cell: {
-            padded: 'none',
-            content: ({ _size, firstName }) => (
-              <ReqoreInput icon='PriceTag2Fill' size={_size} value={firstName} />
+            padded: 'both',
+            content: ({ firstName, isSelected }) => (
+              <ReqoreInput
+                icon='PriceTag2Fill'
+                size='small'
+                value={firstName}
+                intent={isSelected ? 'info' : undefined}
+              />
             ),
           },
           width: 150,

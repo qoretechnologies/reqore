@@ -3,10 +3,11 @@ import { isFunction, isString } from 'lodash';
 import React, { ReactElement, memo } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
-import { ReqoreButton, ReqoreControlGroup } from '../..';
+import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreTooltip } from '../../types/global';
+import { IReqoreIconName } from '../../types/icons';
 import { TReqoreHexColor } from '../Effect';
 import { ReqoreH4 } from '../Header';
 import { ReqoreP } from '../Paragraph';
@@ -128,6 +129,7 @@ const ReqoreTableRow = memo(
                 rounded={false}
                 iconsAlign={align === 'center' ? 'center' : 'sides'}
                 textAlign={align}
+                flat
                 {...action}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -147,7 +149,7 @@ const ReqoreTableRow = memo(
         if (React.isValidElement(content(data))) {
           const Content = content;
           // If it's a react element, return it
-          return <Content {...data} _size={size} _dataId={dataId} />;
+          return <Content {...data} _size={size} _dataId={dataId} isSelected={isSelected} />;
         }
 
         // If it's a function, call it and return the result
@@ -156,19 +158,23 @@ const ReqoreTableRow = memo(
 
       if (isString(content)) {
         // Separate the content string by colon
-        const [type, intentOrColor] = content.split(':');
+        const [type, intentOrColorOrIconName] = content.split(':');
         // Check if the intent starts with hash for tags
-        const intent: TReqoreIntent = intentOrColor?.startsWith('#')
+        const intent: TReqoreIntent = intentOrColorOrIconName?.startsWith('#')
           ? undefined
-          : (intentOrColor as TReqoreIntent);
+          : (intentOrColorOrIconName as TReqoreIntent);
         const color: TReqoreHexColor =
-          intentOrColor?.startsWith('#') && type === 'tag'
-            ? (intentOrColor as TReqoreHexColor)
+          intentOrColorOrIconName?.startsWith('#') && type === 'tag'
+            ? (intentOrColorOrIconName as TReqoreHexColor)
             : undefined;
         // Render content based on the type
         switch (type) {
           case 'time-ago':
-            return <TimeAgo time={data[dataId]} />;
+            return (
+              <ReqoreP className='reqore-table-text' intent={intent as TReqoreIntent} size={size}>
+                <TimeAgo time={data[dataId]} />
+              </ReqoreP>
+            );
           case 'tag':
             return (
               <ReqoreTag
@@ -182,12 +188,35 @@ const ReqoreTableRow = memo(
             return <ReqoreH4 intent={intent as TReqoreIntent}>{data[dataId]}</ReqoreH4>;
           case 'text':
             return (
-              <ReqoreP className='reqore-table-text' intent={intent as TReqoreIntent}>
+              <ReqoreP className='reqore-table-text' intent={intent as TReqoreIntent} size={size}>
                 {data[dataId]}
               </ReqoreP>
             );
+          case 'number':
+            return (
+              <ReqoreP
+                className='reqore-table-text'
+                intent={intent as TReqoreIntent}
+                size={size}
+                effect={{ italic: true }}
+              >
+                {data[dataId]}
+              </ReqoreP>
+            );
+          case 'boolean':
+            return data[dataId] ? (
+              <ReqoreIcon icon='CheckLine' size={size} intent='success' />
+            ) : (
+              <ReqoreIcon icon='CrossLine' size={size} intent='danger' />
+            );
+          case 'icon':
+            return <ReqoreIcon size={size} icon={intentOrColorOrIconName as IReqoreIconName} />;
           default:
-            return <ReqoreP className='reqore-table-text'>{content}</ReqoreP>;
+            return (
+              <ReqoreP className='reqore-table-text' size={size}>
+                {content}
+              </ReqoreP>
+            );
         }
       }
 

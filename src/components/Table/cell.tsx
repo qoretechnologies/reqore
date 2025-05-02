@@ -6,7 +6,7 @@ import { TEXT_FROM_SIZE } from '../../constants/sizes';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreTooltip } from '../../types/global';
-import { TReqoreColor } from '../Effect';
+import { TReqoreColor, TReqoreHexColor } from '../Effect';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { IReqoreTableCellStyle } from './row';
 
@@ -46,12 +46,21 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     hovered,
     padded,
   }: IReqoreTableCellStyle) => {
-    const getBackgroundColor = (): TReqoreColor => {
+    const getOriginalBackgroundColor = () => {
       let color = theme.main;
-      let opacity = 0;
       // Is there any intent
       if (intent || (selected && selectedIntent)) {
         color = theme.intents[intent || selectedIntent];
+      }
+
+      return color;
+    };
+
+    const getBackgroundColor = (): TReqoreColor => {
+      let color = getOriginalBackgroundColor();
+      let opacity = 0;
+      // Is there any intent
+      if (intent || (selected && selectedIntent)) {
         opacity += 0.02;
       }
       // Is the table striped and this row odd
@@ -76,6 +85,10 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     };
 
     const backgroundColor = getBackgroundColor();
+    const displayedBackgroundColor =
+      backgroundColor === 'transparent'
+        ? theme.main
+        : (rgba(backgroundColor, 0.3) as TReqoreHexColor);
 
     return css`
       display: flex;
@@ -90,15 +103,9 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       font-size: ${TEXT_FROM_SIZE[size]}px;
       background-color: ${backgroundColor === 'transparent'
         ? 'transparent'
-        : rgba(getBackgroundColor(), 0.8)};
-      color: ${getReadableColorFrom(
-        backgroundColor === 'transparent' ? theme.main : backgroundColor,
-        !hovered
-      )};
-      border-color: ${changeLightness(
-        backgroundColor === 'transparent' ? theme.main : backgroundColor,
-        0.1
-      )};
+        : displayedBackgroundColor};
+      color: ${getReadableColorFrom(getOriginalBackgroundColor(), !hovered)};
+      border-color: ${changeLightness(displayedBackgroundColor, 0.1)};
       transition: background-color 0.2s ease-out;
       opacity: ${disabled ? 0.2 : 1};
       pointer-events: ${disabled ? 'none' : undefined};
@@ -107,7 +114,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       ${interactiveCell &&
       css`
         &:hover {
-          background-color: ${lighten(0.2, getBackgroundColor())};
+          background-color: ${lighten(0.1, displayedBackgroundColor)};
         }
       `}
 
