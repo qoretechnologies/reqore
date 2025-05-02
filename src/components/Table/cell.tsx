@@ -57,7 +57,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     };
 
     const getBackgroundColor = (): TReqoreColor => {
-      let color = getOriginalBackgroundColor();
+      const color = getOriginalBackgroundColor();
       let opacity = 0;
       // Is there any intent
       if (intent || (selected && selectedIntent)) {
