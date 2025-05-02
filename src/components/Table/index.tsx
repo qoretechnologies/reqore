@@ -18,6 +18,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
+import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreExportModalProps, ReqoreExportModal } from '../ExportModal';
@@ -48,6 +49,7 @@ import { IReqoreTableRowOptions } from './row';
 export type TReqoreTableColumnContent =
   | ((data: IReqoreTableRowData) => any)
   | 'time-ago'
+  | `time-ago:${TReqoreIntent}`
   | 'tag'
   | `tag:${TReqoreIntent}`
   | `tag:#${string}`
@@ -55,6 +57,10 @@ export type TReqoreTableColumnContent =
   | `title:${TReqoreIntent}`
   | 'text'
   | `text:${TReqoreIntent}`
+  | 'number'
+  | `number:${TReqoreIntent}`
+  | 'boolean'
+  | `icon:${IReqoreIconName}`
   | string
   | number;
 
@@ -325,11 +331,7 @@ const ReqoreTable = ({
                 : _selected?.find((s) => s.toString() === _selectId.toString())
                 ? 'CheckboxCircleLine'
                 : 'CheckboxBlankCircleLine',
-              intent: !_selectId
-                ? 'muted'
-                : _selected?.find((s) => s.toString() === _selectId.toString())
-                ? selectedRowIntent
-                : undefined,
+              intent: !_selectId ? 'muted' : undefined,
               onClick: _selectId ? () => handleSelectClick(_selectId) : undefined,
             },
           ],
