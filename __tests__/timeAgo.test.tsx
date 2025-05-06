@@ -1,6 +1,5 @@
 import { render } from '@testing-library/react';
-import React from 'react';
-import { ReqoreContent, ReqoreLayoutContent, ReqoreP, ReqoreUIProvider } from '../src';
+import { ReqoreContent, ReqoreLayoutContent, ReqoreP, ReqoreTag, ReqoreUIProvider } from '../src';
 import { TimeAgo } from '../src/components/TimeAgo';
 
 test('Renders <TimeAgo /> data properly', () => {
@@ -14,6 +13,34 @@ test('Renders <TimeAgo /> data properly', () => {
           <ReqoreP>
             <TimeAgo time='2021-11-29T14:48:35.846576+01:00' />
           </ReqoreP>
+          <ReqoreP>
+            <TimeAgo time='Should say Invalid Date' />
+          </ReqoreP>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const firstPara = document.querySelectorAll('.reqore-paragraph')[0];
+  const secondPara = document.querySelectorAll('.reqore-paragraph')[1];
+  const invalidDate = document.querySelectorAll('.reqore-paragraph')[2];
+
+  expect(firstPara.textContent).toBe('just now');
+  expect(secondPara.textContent).not.toBe('NaN');
+  expect(invalidDate.textContent).toBe('Invalid Date');
+});
+
+test('Renders <TimeAgo /> if time is undefined', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreP>
+            <TimeAgo time={undefined} />
+          </ReqoreP>
+          <ReqoreP>
+            <TimeAgo time={undefined} emptyMessage={<ReqoreTag label='Empty' />} />
+          </ReqoreP>
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -22,6 +49,6 @@ test('Renders <TimeAgo /> data properly', () => {
   const firstPara = document.querySelectorAll('.reqore-paragraph')[0];
   const secondPara = document.querySelectorAll('.reqore-paragraph')[1];
 
-  expect(firstPara.textContent).toBe('just now');
-  expect(secondPara.textContent).not.toBe('NaN');
+  expect(firstPara.textContent).toBe('');
+  expect(secondPara.textContent).toBe('Empty');
 });
