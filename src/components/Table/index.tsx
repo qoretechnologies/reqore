@@ -314,8 +314,8 @@ const ReqoreTable = ({
         header: {
           icon: selectedIcon,
           tooltip: 'Toggle selection on all data',
-          onClick: () => {
-            handleToggleSelectClick();
+          onClick: (e) => {
+            handleToggleSelectClick(e);
           },
         },
 
@@ -466,12 +466,24 @@ const ReqoreTable = ({
     });
   };
 
-  const handleToggleSelectClick = () => {
+  const handleToggleSelectClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     switch (_selectedQuant) {
       case 'none':
       case 'some': {
         const selectableData: (string | number)[] = transformedData
-          .filter((datum) => datum._selectId ?? false)
+          .filter((datum) => {
+            // If the user held down the meta key, we will reverse the selection
+            if (e.metaKey) {
+              // Check if the datum is selected
+              const isSelected = _selected.find((selectId) => selectId === datum._selectId);
+              // If it is selected, we will remove it from the selected array
+              if (isSelected) {
+                return false;
+              }
+            }
+
+            return datum._selectId ?? false;
+          })
           .map((datum) => datum._selectId);
 
         setSelected(selectableData);
