@@ -1,3 +1,4 @@
+import count from 'lodash/size';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { memo, useMemo } from 'react';
@@ -6,7 +7,7 @@ import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
-import { IReqoreButtonProps } from '../Button';
+import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { TColumnsUpdater } from './header';
 
@@ -189,9 +190,8 @@ export const ReqoreTableHeaderCell = memo(
         }}
       >
         <ReqoreControlGroup fluid stack rounded={false} fill style={{ height: '100%' }}>
-          {content ? (
-            content
-          ) : (
+          {content ? content : null}
+          {count(items) ? (
             <ReqoreDropdown<IReqoreButtonProps>
               className={`${
                 className || ''
@@ -230,6 +230,24 @@ export const ReqoreTableHeaderCell = memo(
                 intent: filter ? 'info' : undefined,
               }}
               inputProps={{ intent: filter ? 'info' : undefined }}
+              onClick={(e) => {
+                if (sortable && e.metaKey) {
+                  onSortChange?.(dataId);
+                }
+
+                onClick?.(e);
+              }}
+              {...rest}
+            />
+          ) : (
+            <ReqoreButton
+              className={`${
+                className || ''
+              } reqore-table-header-cell-options reqore-table-header-cell`}
+              compact
+              size={size}
+              rounded={false}
+              textAlign={align}
               onClick={(e) => {
                 if (sortable && e.metaKey) {
                   onSortChange?.(dataId);
