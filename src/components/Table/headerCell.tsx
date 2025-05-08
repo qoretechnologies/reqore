@@ -190,73 +190,78 @@ export const ReqoreTableHeaderCell = memo(
         }}
       >
         <ReqoreControlGroup fluid stack rounded={false} fill style={{ height: '100%' }}>
-          {content ? content : null}
-          {count(items) ? (
-            <ReqoreDropdown<IReqoreButtonProps>
-              className={`${
-                className || ''
-              } reqore-table-header-cell-options reqore-table-header-cell`}
-              compact
-              size={size}
-              rounded={false}
-              filterable={filterable}
-              filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
-              filter={filter}
-              onFilterChange={(value) => {
-                onFilterChange?.(dataId, value);
-              }}
-              items={items}
-              showCaret={false}
-              textAlign={align}
-              readOnlyOnEmpty
-              rightIcon={
-                sortable && sortData.by === dataId
-                  ? (`Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
-                      | 'ArrowDownFill'
-                      | 'ArrowUpFill')
-                  : filter
-                  ? 'FilterLine'
-                  : rest.rightIcon
-              }
-              onBeforeOpen={(_popoverData, event) => {
-                if (event.metaKey) {
-                  return false;
-                }
-
-                return true;
-              }}
-              rightIconProps={{
-                size: 'tiny',
-                intent: filter ? 'info' : undefined,
-              }}
-              inputProps={{ intent: filter ? 'info' : undefined }}
-              onClick={(e) => {
-                if (sortable && e.metaKey) {
-                  onSortChange?.(dataId);
-                }
-
-                onClick?.(e);
-              }}
-              {...rest}
-            />
+          {content ? (
+            content
           ) : (
-            <ReqoreButton
-              className={`${
-                className || ''
-              } reqore-table-header-cell-options reqore-table-header-cell`}
-              compact
-              size={size}
-              rounded={false}
-              textAlign={align}
-              onClick={(e) => {
-                if (sortable && e.metaKey) {
-                  onSortChange?.(dataId);
-                }
+            <>
+              {count(items) ? (
+                <ReqoreDropdown<IReqoreButtonProps>
+                  className={`${
+                    className || ''
+                  } reqore-table-header-cell-options reqore-table-header-cell`}
+                  compact
+                  size={size}
+                  rounded={false}
+                  filterable={filterable}
+                  filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
+                  filter={filter}
+                  onFilterChange={(value) => {
+                    onFilterChange?.(dataId, value);
+                  }}
+                  items={items}
+                  showCaret={false}
+                  textAlign={align}
+                  readOnlyOnEmpty
+                  rightIcon={
+                    sortable && sortData.by === dataId
+                      ? (`Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
+                          | 'ArrowDownFill'
+                          | 'ArrowUpFill')
+                      : filter
+                      ? 'FilterLine'
+                      : rest.rightIcon
+                  }
+                  onBeforeOpen={(_popoverData, event) => {
+                    if (event.metaKey) {
+                      return false;
+                    }
 
-                onClick?.(e);
-              }}
-              {...rest}
-            />
+                    return true;
+                  }}
+                  rightIconProps={{
+                    size: 'tiny',
+                    intent: filter ? 'info' : undefined,
+                  }}
+                  inputProps={{ intent: filter ? 'info' : undefined }}
+                  onClick={(e) => {
+                    if (sortable && e.metaKey) {
+                      onSortChange?.(dataId);
+                    }
+
+                    onClick?.(e);
+                  }}
+                  {...rest}
+                />
+              ) : (
+                <ReqoreButton
+                  className={`${
+                    className || ''
+                  } reqore-table-header-cell-options reqore-table-header-cell`}
+                  compact
+                  size={size}
+                  rounded={false}
+                  textAlign={align}
+                  onClick={(e) => {
+                    if (sortable && e.metaKey) {
+                      onSortChange?.(dataId);
+                    }
+
+                    onClick?.(e);
+                  }}
+                  {...rest}
+                />
+              )}
+            </>
           )}
           {content && (filterable || hideable || resizable) ? (
             <ReqoreDropdown<IReqoreButtonProps>
