@@ -22,7 +22,6 @@ const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
           content: 'Yo, wassup?',
           icon: 'FileChartLine',
           opaque: true,
-          duration: 5000,
           id,
           onClick,
           onClose,

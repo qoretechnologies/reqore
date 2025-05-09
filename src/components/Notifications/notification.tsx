@@ -286,6 +286,9 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     useEffect(() => {
       if (internalTimeout) {
         clearTimeout(internalTimeout);
+      }
+
+      if (duration) {
         setInternalTimeout(
           setTimeout(() => {
             onFinish && onFinish();
