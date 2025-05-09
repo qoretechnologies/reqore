@@ -23,7 +23,7 @@ const AddingButton = ({ id, onClick, onClose, onFinish }: any) => {
           icon: 'FileChartLine',
           opaque: true,
           duration: 5000,
-          id: id || Date.now(),
+          id,
           onClick,
           onClose,
           onFinish,
@@ -68,8 +68,8 @@ const Template: StoryRenderer<typeof meta> = ({ theme, ...args }) => (
       }}
     >
       <h4>Hello, I am a notification testing page</h4>
-      <AddingButton {...args} />
-      {args.notificationId && <UpdatingButton id={args.id} />}
+      <AddingButton {...args} id='test' />
+      {args.notificationId && <UpdatingButton id={args.notificationId} />}
     </div>
   </ReqoreUIProvider>
 );

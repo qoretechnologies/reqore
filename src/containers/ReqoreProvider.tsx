@@ -183,15 +183,14 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   const addNotification = useCallback((data: IReqoreNotificationData) => {
     setNotifications((cur) => {
       let newNotifications = [...cur];
+      const id = data.id || shortid.generate();
 
-      const index = cur.findIndex(
-        (notification) => notification.id === (data.id || shortid.generate())
-      );
+      const index = cur.findIndex((notification) => notification.id === id);
 
       if (index >= 0) {
         newNotifications[index] = data;
       } else {
-        newNotifications = [...newNotifications, data];
+        newNotifications = [...newNotifications, { ...data, id }];
       }
 
       // If the length of the array is larger than 5, remove the first oldest notification
