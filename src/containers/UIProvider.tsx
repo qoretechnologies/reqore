@@ -4,7 +4,6 @@ import { rgba } from 'polished';
 import React, { forwardRef, memo, useMemo, useState } from 'react';
 import styled, { createGlobalStyle, css } from 'styled-components';
 import ReqoreLayoutWrapper from '../components/Layout';
-import { IReqoreNotificationsPosition } from '../components/Notifications';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import { IReqoreContext } from '../context/ReqoreContext';
 import ThemeContext from '../context/ThemeContext';
@@ -23,7 +22,6 @@ export interface IReqoreOptions
     | 'errorBoundaryOptions'
   > {
   withSidebar?: boolean;
-  notificationsPosition?: IReqoreNotificationsPosition;
   uiScale?: number;
 }
 export interface IReqoreUIProviderProps {

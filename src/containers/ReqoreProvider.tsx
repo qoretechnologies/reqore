@@ -6,7 +6,9 @@ import { useContext } from 'use-context-selector';
 import { create } from 'zustand';
 import { ReqoreModal, ReqoreTextEffect } from '..';
 import { IReqoreModalProps } from '../components/Modal';
-import ReqoreNotificationsWrapper from '../components/Notifications';
+import ReqoreNotificationsWrapper, {
+  IReqoreNotificationsPosition,
+} from '../components/Notifications';
 import ReqoreNotification, {
   IReqoreNotificationProps,
 } from '../components/Notifications/notification';
@@ -23,6 +25,8 @@ export interface IReqoreNotificationData extends IReqoreNotificationProps {
   onClose?: (id?: string) => any;
   onFinish?: (id?: string) => any;
   id?: string;
+  position?: IReqoreNotificationsPosition;
+  closable?: boolean;
 }
 
 export interface IReqoreNotifications {
@@ -208,6 +212,31 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     });
   };
 
+  const getNotificationsByPosition = useCallback(
+    (position: IReqoreNotificationsPosition) => {
+      return notifications?.filter((notification) => notification.position === position) || [];
+    },
+    [notifications]
+  );
+
+  const notificationsByPosition = useMemo(() => {
+    const positions: IReqoreNotificationsPosition[] = [
+      'TOP',
+      'BOTTOM',
+      'TOP LEFT',
+      'TOP RIGHT',
+      'BOTTOM LEFT',
+      'BOTTOM RIGHT',
+    ];
+    const notificationsByPosition: { [key: string]: IReqoreNotificationData[] } = {};
+
+    positions.forEach((position) => {
+      notificationsByPosition[position] = getNotificationsByPosition(position);
+    });
+
+    return notificationsByPosition;
+  }, [notifications, getNotificationsByPosition]);
+
   const contextValue: IReqoreContext = useMemo(
     () =>
       ({
@@ -268,35 +297,44 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   return (
     <>
       <ReqoreContext.Provider value={contextValue}>
-        {size(notifications) > 0 ? (
-          <ReqoreNotificationsWrapper position={options.notificationsPosition}>
-            {notifications.map((notification) => (
-              <ReqoreNotification
-                {...notification}
-                key={notification.id}
-                onClick={
-                  notification.onClick
-                    ? () => void notification.onClick(notification.id)
-                    : undefined
-                }
-                onClose={() => {
-                  if (notification.onClose) {
-                    notification.onClose(notification.id);
+        {Object.entries(notificationsByPosition).map(([position, notifications]) =>
+          size(notifications) ? (
+            <ReqoreNotificationsWrapper
+              key={position}
+              position={position as IReqoreNotificationsPosition}
+            >
+              {notifications.map((notification) => (
+                <ReqoreNotification
+                  {...notification}
+                  key={notification.id}
+                  onClick={
+                    notification.onClick
+                      ? () => void notification.onClick(notification.id)
+                      : undefined
                   }
+                  onClose={
+                    notification.closable === false
+                      ? undefined
+                      : () => {
+                          if (notification.onClose) {
+                            notification.onClose(notification.id);
+                          }
 
-                  removeNotification(notification.id);
-                }}
-                onFinish={() => {
-                  if (notification.onFinish) {
-                    notification.onFinish(notification.id);
+                          removeNotification(notification.id);
+                        }
                   }
+                  onFinish={() => {
+                    if (notification.onFinish) {
+                      notification.onFinish(notification.id);
+                    }
 
-                  removeNotification(notification.id);
-                }}
-              />
-            ))}
-          </ReqoreNotificationsWrapper>
-        ) : null}
+                    removeNotification(notification.id);
+                  }}
+                />
+              ))}
+            </ReqoreNotificationsWrapper>
+          ) : null
+        )}
         {children}
         {confirmationModal.isOpen && (
           <ReqoreModal
