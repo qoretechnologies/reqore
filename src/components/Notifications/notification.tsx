@@ -343,18 +343,20 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
                 </StyledNotificationContent>
               </StyledNotificationInnerContent>
             </StyledNotificationContentWrapper>
-            <StyledIconWrapper
-              type={type || intent}
-              size={size}
-              clickable
-              className='reqore-notification-close'
-              onClick={(event) => {
-                event.stopPropagation();
-                onClose && onClose();
-              }}
-            >
-              <ReqoreIcon icon='CloseFill' margin='both' size={size} />
-            </StyledIconWrapper>
+            {onClose ? (
+              <StyledIconWrapper
+                type={type || intent}
+                size={size}
+                clickable
+                className='reqore-notification-close'
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onClose();
+                }}
+              >
+                <ReqoreIcon icon='CloseFill' margin='both' size={size} />
+              </StyledIconWrapper>
+            ) : null}
           </StyledReqoreNotification>
         </ReqoreThemeProvider>
       ) : null
