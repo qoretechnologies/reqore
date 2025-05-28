@@ -1,4 +1,4 @@
-import { expect } from '@storybook/jest';
+import { expect, jest } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { userEvent } from '@storybook/testing-library';
 import { useState } from 'react';
@@ -313,6 +313,36 @@ export const WithStyling: Story = {
   play: async () => {
     await userEvent.click(document.querySelector('div[contenteditable]'));
     await userEvent.click(document.querySelector('div[contenteditable]'));
+  },
+};
+
+export const UpdatesFromInside: Story = {
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [{ text: 'This is the default text' }],
+      },
+    ],
+    onChange: jest.fn(),
+  },
+  play: async ({ args }) => {
+    await userEvent.click(document.querySelector('div[contenteditable]'));
+    await sleep(500);
+    // Press left arrow key a few times
+    await userEvent.keyboard('{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}', {
+      delay: 100,
+    });
+    console.log(args);
+    // Type "UPDATED" and a space using the keyboard
+    await userEvent.keyboard('UPDATED ', { delay: 100 });
+    await sleep(500);
+    await expect(args.onChange).toHaveBeenLastCalledWith([
+      {
+        type: 'paragraph',
+        children: [{ text: 'This is the default UPDATED text' }],
+      },
+    ]);
   },
 };
 
