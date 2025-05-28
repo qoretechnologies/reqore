@@ -1,5 +1,6 @@
 import { map, size } from 'lodash';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { useUpdateEffect } from 'react-use';
 import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
 import { Editable, ReactEditor, Slate, useSelected, withReact } from 'slate-react';
@@ -185,7 +186,7 @@ export const ReqoreRichTextEditor = ({
   const [editor] = useState(() => withTemplates(withReact(withHistory(createEditor()))));
   const [target, setTarget] = useState<Range | undefined>();
 
-  useEffect(() => {
+  useUpdateEffect(() => {
     // Remove selection before updating children to prevent crash
     editor.selection = null;
     editor.children = value;
