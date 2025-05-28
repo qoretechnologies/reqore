@@ -187,6 +187,10 @@ export const ReqoreRichTextEditor = ({
   const [target, setTarget] = useState<Range | undefined>();
 
   useUpdateEffect(() => {
+    // Only update the editor's children if the value has changed
+    if (JSON.stringify(value) === JSON.stringify(editor.children)) {
+      return;
+    }
     // Remove selection before updating children to prevent crash
     editor.selection = null;
     editor.children = value;
