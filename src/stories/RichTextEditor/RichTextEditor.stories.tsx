@@ -351,7 +351,14 @@ export const UpdatesFromOutside: Story = {
     value: [
       {
         type: 'paragraph',
-        children: [{ text: 'This is a styled text', bold: true, italic: true, underline: true }],
+        children: [
+          {
+            text: 'This is a styled text that is longer than the one that will be here soon',
+            bold: true,
+            italic: true,
+            underline: true,
+          },
+        ],
       },
     ],
     onChange: (val) => console.log(val),

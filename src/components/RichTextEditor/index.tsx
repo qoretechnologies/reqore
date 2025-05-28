@@ -186,7 +186,15 @@ export const ReqoreRichTextEditor = ({
   const [target, setTarget] = useState<Range | undefined>();
 
   useEffect(() => {
+    // Remove selection before updating children to prevent crash
+    editor.selection = null;
     editor.children = value;
+
+    // Set selection to end of document
+    editor.selection = {
+      anchor: Editor.end(editor, []),
+      focus: Editor.end(editor, []),
+    };
   }, [JSON.stringify(value)]);
 
   const renderElement = useCallback((props) => {
