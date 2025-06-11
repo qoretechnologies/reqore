@@ -8,7 +8,7 @@ import {
   isString,
   isUndefined,
 } from 'lodash';
-import { IReqorePanelAction } from '../components/Panel';
+import { IReqorePanelAction, IReqorePanelSubAction } from '../components/Panel';
 import { NUMBER_TO_SIZE, SIZES, SIZE_TO_NUMBER, TSizes } from '../constants/sizes';
 import { TReqoreTooltipProp } from '../types/global';
 
@@ -117,7 +117,8 @@ export const getOneHigherSize = (size: TSizes): TSizes => {
   return NUMBER_TO_SIZE[oneHigherSizeNumber];
 };
 
-export const isActionShown = (action: IReqorePanelAction) => action.show !== false;
+export const isActionShown = (action: IReqorePanelAction | IReqorePanelSubAction) =>
+  action.show !== false;
 
 export const alignToFlexAlign = (
   align: 'left' | 'right' | 'center'

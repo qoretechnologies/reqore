@@ -37,7 +37,7 @@ export interface IReqoreCollectionProps
   actions?: TReqoreCollectionActions;
 
   sortButtonProps?: IReqorePanelAction;
-  displayButtonProps?: IReqorePanelAction;
+  displayButtonProps?: IReqorePanelSubAction;
   stacked?: boolean;
   rounded?: boolean;
   height?: string;

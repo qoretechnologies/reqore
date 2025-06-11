@@ -57,7 +57,9 @@ import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
-export interface IReqorePanelSubAction extends Omit<IReqoreDropdownItem, 'value'> {}
+export interface IReqorePanelSubAction extends Omit<IReqoreDropdownItem, 'value'> {
+  show?: boolean;
+}
 export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreTooltip, IReqoreIntent {
   label?: string | number;
   onClick?: () => void;
@@ -657,7 +659,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               {...rest}
               key={index}
               label={label}
-              items={actions}
+              items={actions.filter(isActionShown)}
               intent={intent}
               className={className}
               customTheme={rest.customTheme || theme}
