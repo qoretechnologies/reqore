@@ -259,6 +259,7 @@ const Template: StoryFn<IReqorePanelProps> = (args: IReqorePanelProps) => {
           actions: [
             { label: 'Sub Test', icon: 'FileDownloadLine' },
             { label: 'Sub Test 2', icon: 'FileDownloadLine', intent: 'success' },
+            { label: 'Sub Test 3', icon: 'FileDownloadLine', intent: 'danger', show: false },
           ],
           intent: 'info',
         },
