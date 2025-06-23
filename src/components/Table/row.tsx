@@ -1,5 +1,5 @@
 /* @flow */
-import { isFunction, isString } from 'lodash';
+import { get, isFunction, isString } from 'lodash';
 import React, { ReactElement, memo } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
@@ -156,6 +156,8 @@ const ReqoreTableRow = memo(
         content = content(data) as any;
       }
 
+      const datum = get(data, dataId);
+
       if (isString(content)) {
         // Separate the content string by colon
         const [type, intentOrColorOrIconName] = content.split(':');
@@ -172,24 +174,19 @@ const ReqoreTableRow = memo(
           case 'time-ago':
             return (
               <ReqoreP className='reqore-table-text' intent={intent as TReqoreIntent} size={size}>
-                <TimeAgo time={data[dataId]} />
+                <TimeAgo time={datum} />
               </ReqoreP>
             );
           case 'tag':
             return (
-              <ReqoreTag
-                label={data[dataId]}
-                size={size}
-                intent={intent as TReqoreIntent}
-                color={color}
-              />
+              <ReqoreTag label={datum} size={size} intent={intent as TReqoreIntent} color={color} />
             );
           case 'title':
-            return <ReqoreH4 intent={intent as TReqoreIntent}>{data[dataId]}</ReqoreH4>;
+            return <ReqoreH4 intent={intent as TReqoreIntent}>{datum}</ReqoreH4>;
           case 'text':
             return (
               <ReqoreP className='reqore-table-text' intent={intent as TReqoreIntent} size={size}>
-                {data[dataId]}
+                {datum}
               </ReqoreP>
             );
           case 'number':
@@ -200,11 +197,11 @@ const ReqoreTableRow = memo(
                 size={size}
                 effect={{ italic: true }}
               >
-                {data[dataId]}
+                {datum}
               </ReqoreP>
             );
           case 'boolean':
-            return data[dataId] ? (
+            return datum ? (
               <ReqoreIcon icon='CheckLine' size={size} intent='success' />
             ) : (
               <ReqoreIcon icon='CrossLine' size={size} intent='danger' />
@@ -220,7 +217,7 @@ const ReqoreTableRow = memo(
         }
       }
 
-      return <ReqoreP className='reqore-table-text'>{data[dataId]}</ReqoreP>;
+      return <ReqoreP className='reqore-table-text'>{datum}</ReqoreP>;
     };
 
     const renderCells = (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
@@ -241,13 +238,15 @@ const ReqoreTableRow = memo(
             return renderCells(header.columns, data);
           }
 
+          const datum = get(data[index], dataId);
+
           // Build the tooltip
           const tooltip: IReqoreTooltip = cell?.tooltip
-            ? typeof cell?.tooltip(data[index][dataId]) !== 'object'
+            ? typeof cell?.tooltip(datum) !== 'object'
               ? {
-                  content: cell.tooltip(data[index][dataId]) as string,
+                  content: cell.tooltip(datum) as string,
                 }
-              : (cell.tooltip(data[index][dataId]) as IReqoreTooltip)
+              : (cell.tooltip(datum) as IReqoreTooltip)
             : {};
 
           return (

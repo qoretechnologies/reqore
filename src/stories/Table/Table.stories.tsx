@@ -384,6 +384,48 @@ export const Basic: Story = {
   },
 };
 
+export const WithDotNotation: Story = {
+  args: {
+    columns: [
+      {
+        dataId: 'id',
+        header: { label: 'ID' },
+        width: 50,
+        align: 'center',
+        cell: { content: 'number' },
+      },
+      {
+        dataId: 'address.city',
+        header: { label: 'City' },
+        width: 150,
+        cell: { content: 'text' },
+      },
+      {
+        dataId: 'address.country',
+        header: { label: 'Country' },
+        width: 150,
+        cell: { content: 'title' },
+      },
+      {
+        dataId: 'address.street',
+        header: { label: 'Street' },
+        width: 200,
+        cell: { content: 'text:info' },
+      },
+    ],
+    data: [
+      {
+        id: 1,
+        address: {
+          street: '123 Main St',
+          city: 'Anytown',
+          country: 'USA',
+        },
+      },
+    ],
+  },
+};
+
 export const NoLabel: Story = {
   args: {
     label: undefined,
