@@ -226,7 +226,7 @@ export const getOnlyShownColumns = (columns: IReqoreTableColumn[]): IReqoreTable
       return newColumns;
     }
 
-    if (column.show !== false) {
+    if (column.show !== false && column.enabled !== false) {
       return [...newColumns, column];
     }
 

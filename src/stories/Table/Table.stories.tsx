@@ -73,6 +73,15 @@ const defaultColumns: IReqoreTableColumn[] = [
           grow: 2,
         },
         {
+          dataId: 'middleName',
+          header: {
+            label: 'Middle Name',
+            icon: 'SlideshowLine',
+            tooltip: 'This is the middle name',
+          },
+          enabled: false,
+        },
+        {
           dataId: 'lastName',
           header: {
             icon: 'SlideshowLine',
