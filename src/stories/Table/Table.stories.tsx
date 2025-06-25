@@ -280,7 +280,7 @@ const defaultColumnsWithPinnedColumns: IReqoreTableColumn[] = defaultColumns.map
         header: {
           ...column.header,
           columns: column.header.columns.map((subColumn, subIndex) =>
-            subIndex === 1
+            subIndex === 2
               ? {
                   ...subColumn,
                   pin: 'left',
