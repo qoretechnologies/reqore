@@ -73,6 +73,15 @@ const defaultColumns: IReqoreTableColumn[] = [
           grow: 2,
         },
         {
+          dataId: 'middleName',
+          header: {
+            label: 'Middle Name',
+            icon: 'SlideshowLine',
+            tooltip: 'This is the middle name',
+          },
+          enabled: false,
+        },
+        {
           dataId: 'lastName',
           header: {
             icon: 'SlideshowLine',
@@ -271,7 +280,7 @@ const defaultColumnsWithPinnedColumns: IReqoreTableColumn[] = defaultColumns.map
         header: {
           ...column.header,
           columns: column.header.columns.map((subColumn, subIndex) =>
-            subIndex === 1
+            subIndex === 2
               ? {
                   ...subColumn,
                   pin: 'left',

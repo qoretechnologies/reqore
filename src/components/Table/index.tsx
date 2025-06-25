@@ -67,6 +67,7 @@ export type TReqoreTableColumnContent =
 export interface IReqoreTableColumn extends IReqoreIntent {
   dataId: string;
   show?: boolean;
+  enabled?: boolean;
   grow?: 0 | 1 | 2 | 3 | 4;
   width?: number;
   minWidth?: number;
@@ -529,7 +530,8 @@ const ReqoreTable = ({
     };
 
     finalColumns.forEach((column) => {
-      if (column.hideable === false) {
+      if (column.hideable === false || column.enabled === false) {
+        // If the column is not hideable or enabled, we skip it
         return;
       }
 
