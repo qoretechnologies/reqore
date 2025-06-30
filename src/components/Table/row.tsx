@@ -1,13 +1,11 @@
 /* @flow */
 import { get, isFunction, isString } from 'lodash';
 import React, { ReactElement, memo, useCallback } from 'react';
-import { useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
 import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { useWhyDidYouUpdate } from '../../hooks/useWhyDidYouUpdate';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { TReqoreHexColor } from '../Effect';
@@ -107,28 +105,6 @@ const ReqoreTableRow = memo(
 
     const CellComponent = cellComponent || ReqoreTableBodyCell;
     const RowComponent = rowComponent || StyledTableRow;
-
-    useUnmount(() => {
-      console.log('Unmounted row', index);
-    });
-
-    useWhyDidYouUpdate(`Row ${index}`, {
-      data,
-      columns,
-      selectable,
-      onSelectClick,
-      selected,
-      onRowClick,
-      striped,
-      size,
-      selectedRowIntent,
-      flat,
-      cellComponent,
-      rowComponent,
-      style,
-      index,
-      isSelected,
-    });
 
     const renderContent = useCallback(
       (

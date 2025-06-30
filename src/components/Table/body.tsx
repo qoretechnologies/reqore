@@ -1,11 +1,10 @@
 import count from 'lodash/size';
 import { forwardRef, memo, useMemo } from 'react';
-import { useMount, useUnmount } from 'react-use';
+import { useMount } from 'react-use';
 import { FixedSizeList as List } from 'react-window';
 import styled from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { useWhyDidYouUpdate } from '../../hooks/useWhyDidYouUpdate';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 
 export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
@@ -40,20 +39,6 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
-
-    useUnmount(() => {
-      console.log('Unmounting ReqoreTableBody');
-    });
-
-    useWhyDidYouUpdate('ReqoreTableBody', {
-      data,
-      height,
-      size,
-      refs,
-      type,
-      onScrollChange,
-      ...rest,
-    });
 
     useMount(() => {
       targetRef.current?.addEventListener('wheel', (e) => {
