@@ -264,7 +264,6 @@ const ReqoreTable = ({
   const mainTableRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
 
-  const [hoveredRow, setHoveredRow] = useState<number>();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort | undefined>(fixSort(sort));
@@ -447,25 +446,30 @@ const ReqoreTable = ({
     });
   };
 
-  const handleSelectClick = (selectId: string | number) => {
-    if (onSelectClick) {
-      onSelectClick(selectId);
-      return;
-    }
-
-    setSelected((current) => {
-      let newSelected = [...current];
-      const isSelected = newSelected.find((selected) => selectId === selected);
-
-      if (isSelected) {
-        newSelected = newSelected.filter((selected) => selected !== selectId);
-      } else {
-        newSelected = [...newSelected, selectId];
+  const handleSelectClick = useCallback(
+    (selectId: string | number) => {
+      if (onSelectClick) {
+        onSelectClick(selectId);
+        return;
       }
 
-      return newSelected;
-    });
-  };
+      setSelected((current) => {
+        let newSelected = [...current];
+        const isSelected = newSelected.find((selected) => selectId === selected);
+
+        if (isSelected) {
+          newSelected = newSelected.filter((selected) => selected !== selectId);
+        } else {
+          newSelected = [...newSelected, selectId];
+        }
+
+        return newSelected;
+      });
+    },
+    [onSelectClick]
+  );
+
+  const handleScrollChange = useCallback((isScrolled: boolean) => setIsScrolled(isScrolled), []);
 
   const handleToggleSelectClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     switch (_selectedQuant) {
@@ -737,12 +741,15 @@ const ReqoreTable = ({
     return badgeList;
   }, [transformedData, rest.badge]);
 
-  const refs = {
-    left: leftTableRef,
-    right: rightTableRef,
-    main: mainTableRef,
-    header: mainHeaderRef,
-  };
+  const refs = useMemo(
+    () => ({
+      left: leftTableRef,
+      right: rightTableRef,
+      main: mainTableRef,
+      header: mainHeaderRef,
+    }),
+    [leftTableRef, rightTableRef, mainTableRef, mainHeaderRef]
+  );
 
   const columnsByType = useMemo(
     () => ({
@@ -763,8 +770,9 @@ const ReqoreTable = ({
     }
 
     return (
-      <StyledTableWrapper isPinned={isPinned}>
+      <StyledTableWrapper isPinned={isPinned} key={`${type}-table-wrapper`}>
         <ReqoreTableHeader
+          key={`${type}-header`}
           size={zoomToSize[zoom]}
           columns={tableColumns}
           scrollable={type === 'main'}
@@ -782,10 +790,9 @@ const ReqoreTable = ({
         />
         {count(items) === 0 ? null : (
           <ReqoreTableBody
+            key={`${type}-body`}
             ref={refs[type]}
             refs={refs}
-            hoveredRow={hoveredRow}
-            setHoveredRow={setHoveredRow}
             type={type}
             data={items}
             columns={tableColumns}
@@ -793,7 +800,7 @@ const ReqoreTable = ({
             selectable={selectable}
             onSelectClick={handleSelectClick}
             onRowClick={onRowClick}
-            onScrollChange={(isScrolled) => setIsScrolled(isScrolled)}
+            onScrollChange={handleScrollChange}
             selected={_selected}
             selectedRowIntent={selectedRowIntent}
             size={zoomToSize[zoom]}

@@ -1,10 +1,11 @@
 import count from 'lodash/size';
 import { forwardRef, memo, useMemo } from 'react';
-import { useMount } from 'react-use';
+import { useMount, useUnmount } from 'react-use';
 import { FixedSizeList as List } from 'react-window';
 import styled from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useWhyDidYouUpdate } from '../../hooks/useWhyDidYouUpdate';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 
 export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
@@ -17,8 +18,6 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
   };
   type: 'left' | 'right' | 'main';
   onScrollChange?: (isScrolled: boolean) => void;
-  setHoveredRow?: (index: number) => void;
-  hoveredRow?: number;
 }
 
 const StyledList = styled(List)`
@@ -41,6 +40,20 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
+
+    useUnmount(() => {
+      console.log('Unmounting ReqoreTableBody');
+    });
+
+    useWhyDidYouUpdate('ReqoreTableBody', {
+      data,
+      height,
+      size,
+      refs,
+      type,
+      onScrollChange,
+      ...rest,
+    });
 
     useMount(() => {
       targetRef.current?.addEventListener('wheel', (e) => {
@@ -81,8 +94,17 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
 
     const itemCount = useMemo(() => count(data), [data]);
 
+    const itemData = useMemo(() => {
+      return {
+        data,
+        size,
+        ...rest,
+      };
+    }, [JSON.stringify(data), size, rest]);
+
     return (
       <StyledList
+        key={type}
         outerRef={targetRef}
         itemCount={itemCount}
         // If the defined height is less than the count of items' height
@@ -94,11 +116,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
         }
         className='reqore-table-body'
         itemSize={rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1}
-        itemData={{
-          data,
-          size,
-          ...rest,
-        }}
+        itemData={itemData}
       >
         {ReqoreTableRow}
       </StyledList>
