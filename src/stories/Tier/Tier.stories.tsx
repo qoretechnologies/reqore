@@ -8,17 +8,21 @@ const meta = {
   args: {
     name: 'Basic',
     nameDetail: 'For Individuals',
-    price: '0.00',
+    price: 3.99,
     currency: '$',
+    salePrice: 'FREE',
     priceDetail: 'per month',
     description: 'This is a basic tier with limited features. Great for individuals',
-    actionButtonProps: {
-      label: 'Get Started',
-      intent: 'success',
-      size: 'big',
-      fluid: true,
-      pill: true,
+    active: true,
+    style: {
+      width: '350px',
     },
+    badge: [
+      {
+        label: 'Limited time deal',
+        align: 'center',
+      },
+    ],
     featureList: [
       {
         icon: 'CheckLine',
@@ -47,12 +51,12 @@ export default meta;
 export const Default: Story = {};
 export const Group: Story = {
   render: (args) => (
-    <ReqoreColumns minColumnWidth='300px'>
+    <ReqoreColumns minColumnWidth='300px' columnsGap='15px'>
       <ReqoreTier {...args} />
       <ReqoreTier
         name='Pro'
         nameDetail='For Teams'
-        price='9.99'
+        price={9.99}
         currency='$'
         priceDetail='per month'
         description='This is a pro tier with additional features. Ideal for teams.'
@@ -95,6 +99,7 @@ export const Group: Story = {
             content: 'Custom integrations',
           },
         ]}
+        highlight
         badge={[
           {
             label: 'Most Popular',
@@ -106,10 +111,18 @@ export const Group: Story = {
       <ReqoreTier
         name='Enterprise'
         nameDetail='For Large Organizations'
-        price='49.99'
-        currency='$'
+        price={99}
+        currency='FROM $'
         priceDetail='per month'
         description='This is an enterprise tier with all features.'
+        actionButtonProps={{ label: 'Get In Touch' }}
+        badge={[
+          {
+            label: 'Coming Soon',
+            color: '#ff8000',
+            align: 'center',
+          },
+        ]}
         featureList={[
           {
             icon: 'ArrowLeftLine',
@@ -143,13 +156,6 @@ export const Group: Story = {
           {
             icon: 'CheckLine',
             content: 'Advanced security features',
-          },
-        ]}
-        badge={[
-          {
-            label: 'Sale',
-            align: 'center',
-            intent: 'success',
           },
         ]}
       />
