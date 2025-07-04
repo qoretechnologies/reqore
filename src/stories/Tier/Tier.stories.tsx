@@ -51,8 +51,8 @@ export default meta;
 export const Default: Story = {};
 export const Group: Story = {
   render: (args) => (
-    <ReqoreColumns minColumnWidth='300px' columnsGap='15px'>
-      <ReqoreTier {...args} />
+    <ReqoreColumns minColumnWidth='300px' columnsGap='15px' style={{ maxWidth: '1100px' }}>
+      <ReqoreTier {...args} style={{}} />
       <ReqoreTier
         name='Pro'
         nameDetail='For Teams'
@@ -114,7 +114,7 @@ export const Group: Story = {
         price={99}
         currency='FROM $'
         priceDetail='per month'
-        description='This is an enterprise tier with all features.'
+        description='This is an enterprise tier with all features necessary for your business.'
         actionButtonProps={{ label: 'Get In Touch' }}
         badge={[
           {
@@ -146,16 +146,19 @@ export const Group: Story = {
             content: '24/7 support',
           },
           {
-            icon: 'CheckLine',
             content: 'Custom SLAs',
+            intent: 'info',
+            icon: 'StarLine',
           },
           {
-            icon: 'CheckLine',
             content: 'On-premises deployment options',
+            intent: 'info',
+            icon: 'StarLine',
           },
           {
-            icon: 'CheckLine',
             content: 'Advanced security features',
+            intent: 'info',
+            icon: 'StarLine',
           },
         ]}
       />

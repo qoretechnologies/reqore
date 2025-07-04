@@ -59,6 +59,8 @@ export const ReqoreTier = memo(
         gradient: {
           type: 'linear',
           direction: 'to right bottom',
+          animate: highlight ? 'always' : 'never',
+          animationSpeed: 5,
           colors: {
             0: highlight ? 'main:darken:3' : 'transparent',
             150: highlight ? 'info:darken:7:0.8' : 'main:darken:5',
