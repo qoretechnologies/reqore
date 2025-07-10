@@ -41,6 +41,7 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
   heightAsGroup?: boolean;
   scrollable?: boolean;
   bodyRef: React.RefObject<HTMLDivElement>;
+  tableWidth: number;
 }
 
 export interface IReqoreTableSectionStyle {
@@ -133,6 +134,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       heightAsGroup,
       scrollable,
       bodyRef,
+      tableWidth,
     }: IReqoreTableSectionProps,
     ref
   ) => {
@@ -163,62 +165,70 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       [component]
     );
 
-    const renderColumns = (columns: IReqoreTableColumn[]) =>
-      getOnlyShownColumns(columns).map(
+    const renderColumns = (columns: IReqoreTableColumn[]) => {
+      const shownColumns: IReqoreTableColumn[] = getOnlyShownColumns(columns, tableWidth);
+
+      return shownColumns.map(
         ({
           grow,
           align,
           dataId,
           header: { columns, onClick, component: headerComponent, ...rest },
           ...colRest
-        }) =>
-          columns ? (
-            <StyledColumnGroup
-              grow={getOnlyShownColumns(columns).reduce((gr, col) => gr + col.grow, 0)}
-              key={dataId}
-              className='reqore-table-column-group'
-              width={getOnlyShownColumns(columns).reduce(
-                (wid, col) => wid + (col.resizedWidth || col.width || 80),
-                0
-              )}
-              maxWidth={getOnlyShownColumns(columns).reduce((wid, col) => wid + col.maxWidth, 0)}
-              minWidth={getOnlyShownColumns(columns).reduce((wid, col) => wid + col.minWidth, 0)}
-            >
-              {renderHeaderCell(headerComponent, {
-                ...rest,
-                ...omit(colRest, ['cell']),
-                dataId,
-                size,
-                onClick,
-                rounded: false,
-                textAlign: align,
-                className: 'reqore-table-column-group-header',
-                resizable: false,
-                hideable: false,
-                pinnable: false,
-                hasColumns: true,
-                grow: 1,
-              })}
-              <StyledColumnGroupHeaders className='reqore-table-headers'>
-                {renderColumns(columns)}
-              </StyledColumnGroupHeaders>
-            </StyledColumnGroup>
-          ) : (
-            renderHeaderCell(headerComponent, {
-              ...rest,
-              ...omit(colRest, ['cell']),
-              onClick,
-              dataId,
-              size,
-              sortData,
-              grow,
-              align,
-              onSortChange,
-              onColumnsUpdate,
-              onFilterChange,
-            })
-          )
+        }) => {
+          if (columns) {
+            const shownSubColumns: IReqoreTableColumn[] = getOnlyShownColumns(columns, tableWidth);
+
+            return (
+              <StyledColumnGroup
+                grow={shownSubColumns.reduce((gr, col) => gr + col.grow, 0)}
+                key={dataId}
+                className='reqore-table-column-group'
+                width={shownSubColumns.reduce(
+                  (wid, col) => wid + (col.resizedWidth || col.width || 80),
+                  0
+                )}
+                maxWidth={shownSubColumns.reduce((wid, col) => wid + col.maxWidth, 0)}
+                minWidth={shownSubColumns.reduce((wid, col) => wid + col.minWidth, 0)}
+              >
+                {renderHeaderCell(headerComponent, {
+                  ...rest,
+                  ...omit(colRest, ['cell']),
+                  dataId,
+                  size,
+                  onClick,
+                  rounded: false,
+                  textAlign: align,
+                  className: 'reqore-table-column-group-header',
+                  resizable: false,
+                  hideable: false,
+                  pinnable: false,
+                  hasColumns: true,
+                  grow: 1,
+                })}
+                <StyledColumnGroupHeaders className='reqore-table-headers'>
+                  {renderColumns(columns)}
+                </StyledColumnGroupHeaders>
+              </StyledColumnGroup>
+            );
+          }
+
+          return renderHeaderCell(headerComponent, {
+            ...rest,
+            ...omit(colRest, ['cell']),
+            onClick,
+            dataId,
+            size,
+            sortData,
+            grow,
+            align,
+            onSortChange,
+            onColumnsUpdate,
+            onFilterChange,
+          });
+        }
       );
+    };
 
     return (
       <StyledTableHeaderWrapper

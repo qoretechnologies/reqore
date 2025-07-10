@@ -81,6 +81,9 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   hideable?: boolean;
   pinnable?: boolean;
 
+  // Users can hide a column if the table size reaches a certain width
+  hideBelowWidth?: number;
+
   filterable?: boolean;
   filterPlaceholder?: string;
   filter?: string | number;
@@ -583,7 +586,7 @@ const ReqoreTable = ({
     }
 
     if (count(columnsList)) {
-      let columnsCount = getColumnsCount(getOnlyShownColumns(finalColumns));
+      let columnsCount = getColumnsCount(getOnlyShownColumns(finalColumns, sizes.width));
 
       if (selectable) {
         columnsCount -= 1;
@@ -787,6 +790,7 @@ const ReqoreTable = ({
             handleColumnsUpdate(dataId, 'filter', value);
           }}
           component={headerCellComponent}
+          tableWidth={sizes.width}
         />
         {count(items) === 0 ? null : (
           <ReqoreTableBody
@@ -808,6 +812,7 @@ const ReqoreTable = ({
             flat={rest.flat}
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}
+            tableWidth={sizes.width}
           />
         )}
       </StyledTableWrapper>
