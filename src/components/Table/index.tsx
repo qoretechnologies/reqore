@@ -81,6 +81,9 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   hideable?: boolean;
   pinnable?: boolean;
 
+  // Users can hide a column if the table size reaches a certain width
+  hideAtSize?: number;
+
   filterable?: boolean;
   filterPlaceholder?: string;
   filter?: string | number;
