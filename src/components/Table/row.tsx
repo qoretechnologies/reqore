@@ -30,6 +30,7 @@ export interface IReqoreTableRowOptions {
   cellComponent?: IReqoreCustomTableBodyCell;
   rowComponent?: IReqoreCustomTableRow;
   setHoveredRow?: (index: number) => void;
+  tableWidth: number;
 }
 export interface IReqoreCustomTableRowProps extends IReqoreTableRowOptions {
   style?: React.CSSProperties;
@@ -94,6 +95,7 @@ const ReqoreTableRow = memo(
       flat,
       cellComponent,
       rowComponent,
+      tableWidth,
     },
 
     style,
@@ -229,7 +231,7 @@ const ReqoreTableRow = memo(
 
     const renderCells = useCallback(
       (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
-        getOnlyShownColumns(columns).map(
+        getOnlyShownColumns(columns, tableWidth).map(
           ({
             width,
             minWidth,
@@ -306,6 +308,7 @@ const ReqoreTableRow = memo(
         isSelected,
         onRowClick,
         selectable,
+        tableWidth,
       ]
     );
 

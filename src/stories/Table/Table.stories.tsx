@@ -39,6 +39,7 @@ const defaultColumns: IReqoreTableColumn[] = [
     sortable: true,
   },
   {
+    hideBelowWidth: 500,
     header: {
       label: 'Name',
       columns: [
@@ -444,6 +445,9 @@ export const NoLabel: Story = {
 export const CustomWidth: Story = {
   args: {
     width: 400,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
   },
 };
 

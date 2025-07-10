@@ -208,17 +208,28 @@ export const getColumnsByPinType = (
   }, []);
 };
 
-export const getOnlyShownColumns = (columns: IReqoreTableColumn[]): IReqoreTableColumn[] => {
+export const getOnlyShownColumns = (
+  columns: IReqoreTableColumn[],
+  tableWidth: number
+): IReqoreTableColumn[] => {
   return columns.reduce((newColumns: IReqoreTableColumn[], column) => {
+    if (
+      column.show === false ||
+      column.enabled === false ||
+      (column.hideBelowWidth && column.hideBelowWidth > tableWidth)
+    ) {
+      return newColumns;
+    }
+
     if (column.header?.columns) {
-      const subColumns = getOnlyShownColumns(column.header.columns);
+      const subColumns = getOnlyShownColumns(column.header.columns, tableWidth);
 
       if (size(subColumns)) {
         return [
           ...newColumns,
           {
             ...column,
-            header: { ...column.header, columns: getOnlyShownColumns(column.header.columns) },
+            header: { ...column.header, columns: subColumns },
           },
         ];
       }
@@ -226,11 +237,7 @@ export const getOnlyShownColumns = (columns: IReqoreTableColumn[]): IReqoreTable
       return newColumns;
     }
 
-    if (column.show !== false && column.enabled !== false) {
-      return [...newColumns, column];
-    }
-
-    return newColumns;
+    return [...newColumns, column];
   }, []);
 };
 
