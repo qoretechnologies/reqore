@@ -1,3 +1,4 @@
+import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { fireEvent, userEvent, waitFor, within } from '@storybook/testing-library';
 import { noop, slice } from 'lodash';
@@ -446,8 +447,9 @@ export const CustomWidth: Story = {
   args: {
     width: 400,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async () => {
+    await sleep(1000);
+    await expect(document.querySelectorAll('.reqore-table-column-group').length).toBe(1);
   },
 };
 
