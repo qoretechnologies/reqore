@@ -41,11 +41,14 @@ const defaultColumns: IReqoreTableColumn[] = [
   },
   {
     hideBelowWidth: 500,
+
     header: {
       label: 'Name',
+
       columns: [
         {
           dataId: 'firstName',
+          sortable: true,
           minWidth: 50,
           maxWidth: 500,
           header: {
@@ -89,6 +92,7 @@ const defaultColumns: IReqoreTableColumn[] = [
             icon: 'SlideshowLine',
             label: 'Last Name',
           },
+          filterable: true,
           width: 150,
           grow: 1,
           sortable: true,

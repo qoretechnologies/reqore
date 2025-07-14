@@ -1,7 +1,7 @@
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableSort } from '.';
-import { ICON_FROM_SIZE, SIZE_TO_MODIFIER, SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { ICON_FROM_SIZE, SIZE_TO_MODIFIER, TSizes } from '../../constants/sizes';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
 
@@ -289,14 +289,6 @@ export const calculateMinimumCellWidth = (
 
   if (icon) {
     width += ICON_FROM_SIZE[size];
-  }
-
-  if (sortable) {
-    width += ICON_FROM_SIZE[size];
-  }
-
-  if (filterable || hideable || resizable) {
-    width += SIZE_TO_PX[size];
   }
 
   return width;
