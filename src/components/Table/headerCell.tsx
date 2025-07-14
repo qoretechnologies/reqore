@@ -4,7 +4,7 @@ import { Resizable } from 're-resizable';
 import { memo, useMemo } from 'react';
 import styled from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
-import { ReqoreControlGroup, ReqoreDropdown } from '../..';
+import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
@@ -40,6 +40,10 @@ export const StyledTableHeaderResize = styled.div`
     height: 100%;
     border-left: 1px dashed ${({ theme }) => rgba(getReadableColor(theme), 0.4)};
   }
+`;
+
+export const StyledSortIcon = styled(ReqoreIcon)`
+  position: absolute;
 `;
 
 export const ReqoreTableHeaderCell = memo(
@@ -212,25 +216,12 @@ export const ReqoreTableHeaderCell = memo(
                   showCaret={false}
                   textAlign={align}
                   readOnlyOnEmpty
-                  rightIcon={
-                    sortable && sortData.by === dataId
-                      ? (`Arrow${sortData.direction === 'desc' ? 'Down' : 'Up'}Fill` as
-                          | 'ArrowDownFill'
-                          | 'ArrowUpFill')
-                      : filter
-                      ? 'FilterLine'
-                      : rest.rightIcon
-                  }
                   onBeforeOpen={(_popoverData, event) => {
                     if (event.metaKey) {
                       return false;
                     }
 
                     return true;
-                  }}
-                  rightIconProps={{
-                    size: 'tiny',
-                    intent: filter ? 'info' : undefined,
                   }}
                   inputProps={{ intent: filter ? 'info' : undefined }}
                   onClick={(e) => {
@@ -241,6 +232,28 @@ export const ReqoreTableHeaderCell = memo(
                     onClick?.(e);
                   }}
                   {...rest}
+                  effect={{
+                    glow: filter
+                      ? {
+                          color: 'info',
+                          opacity: 1,
+                          inset: true,
+                          size: 1,
+                        }
+                      : undefined,
+                    gradient:
+                      sortable && sortData.by === dataId
+                        ? {
+                            direction: `to ${sortData.direction === 'desc' ? 'top' : 'bottom'}`,
+                            colors: {
+                              0: 'main:lighten:2',
+                              30: 'main:lighten:2',
+                              150: 'info:darken:3',
+                            },
+                          }
+                        : undefined,
+                    ...rest.effect,
+                  }}
                 />
               ) : (
                 <ReqoreButton

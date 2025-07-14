@@ -1,7 +1,7 @@
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableSort } from '.';
-import { ICON_FROM_SIZE, SIZE_TO_MODIFIER, SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { ICON_FROM_SIZE, SIZE_TO_MODIFIER, TSizes } from '../../constants/sizes';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
 
@@ -258,45 +258,26 @@ export const prepareColumns = (
       };
     }
 
-    const newWidth = calculateMinimumCellWidth(
-      column.width || 40,
-      size,
-      column.header?.icon,
-      column.sortable,
-      column.filterable,
-      column.hideable,
-      column.resizable
-    );
+    const newWidth = calculateMinimumCellWidth(column.width || 20, size, column.header?.icon);
 
     return {
       ...column,
       width: newWidth * SIZE_TO_MODIFIER[size],
+      grow: column.grow || (column.width ? undefined : 1),
       ...(columnModifiers?.[column.dataId] || {}),
     };
   });
 };
 
 export const calculateMinimumCellWidth = (
-  currentWidth: number = 40,
+  currentWidth: number = 20,
   size: TSizes,
-  icon?: IReqoreIconName,
-  sortable?: boolean,
-  filterable?: boolean,
-  hideable?: boolean,
-  resizable?: boolean
+  icon?: IReqoreIconName
 ): number => {
   let width = currentWidth;
 
   if (icon) {
     width += ICON_FROM_SIZE[size];
-  }
-
-  if (sortable) {
-    width += ICON_FROM_SIZE[size];
-  }
-
-  if (filterable || hideable || resizable) {
-    width += SIZE_TO_PX[size];
   }
 
   return width;

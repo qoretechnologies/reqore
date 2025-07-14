@@ -41,11 +41,14 @@ const defaultColumns: IReqoreTableColumn[] = [
   },
   {
     hideBelowWidth: 500,
+
     header: {
       label: 'Name',
+
       columns: [
         {
           dataId: 'firstName',
+          sortable: true,
           minWidth: 50,
           maxWidth: 500,
           header: {
@@ -89,6 +92,7 @@ const defaultColumns: IReqoreTableColumn[] = [
             icon: 'SlideshowLine',
             label: 'Last Name',
           },
+          filterable: true,
           width: 150,
           grow: 1,
           sortable: true,
@@ -401,26 +405,23 @@ export const WithDotNotation: Story = {
       {
         dataId: 'id',
         header: { label: 'ID' },
-        width: 50,
+        width: 40,
         align: 'center',
         cell: { content: 'number' },
       },
       {
         dataId: 'address.city',
         header: { label: 'City' },
-        width: 150,
         cell: { content: 'text' },
       },
       {
         dataId: 'address.country',
         header: { label: 'Country' },
-        width: 150,
         cell: { content: 'title' },
       },
       {
         dataId: 'address.street',
         header: { label: 'Street' },
-        width: 200,
         cell: { content: 'text:info' },
       },
     ],

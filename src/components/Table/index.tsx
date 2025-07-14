@@ -305,7 +305,7 @@ const ReqoreTable = ({
     if (selectable) {
       fullColumns.unshift({
         dataId: 'selectbox',
-        width: 30,
+        width: 20,
         sortable: false,
         hideable: false,
         filterable: false,
