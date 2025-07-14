@@ -258,15 +258,7 @@ export const prepareColumns = (
       };
     }
 
-    const newWidth = calculateMinimumCellWidth(
-      column.width || 40,
-      size,
-      column.header?.icon,
-      column.sortable,
-      column.filterable,
-      column.hideable,
-      column.resizable
-    );
+    const newWidth = calculateMinimumCellWidth(column.width || 30, size, column.header?.icon);
 
     return {
       ...column,
@@ -277,13 +269,9 @@ export const prepareColumns = (
 };
 
 export const calculateMinimumCellWidth = (
-  currentWidth: number = 40,
+  currentWidth: number = 30,
   size: TSizes,
-  icon?: IReqoreIconName,
-  sortable?: boolean,
-  filterable?: boolean,
-  hideable?: boolean,
-  resizable?: boolean
+  icon?: IReqoreIconName
 ): number => {
   let width = currentWidth;
 
