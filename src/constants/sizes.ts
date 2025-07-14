@@ -12,11 +12,11 @@ export const ReqoreSizes = {
 export const SIZES = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
 export const SIZE_TO_MODIFIER = {
-  tiny: 0.6,
-  small: 0.8,
+  tiny: 0.7,
+  small: 0.9,
   normal: 1,
-  big: 1.2,
-  huge: 1.4,
+  big: 1.1,
+  huge: 1.2,
 };
 
 export const LINE_SIZE_TO_NUMBER = {
@@ -93,13 +93,7 @@ export const TABS_SIZE_TO_PX = {
   huge: 60,
 };
 
-export const TABLE_SIZE_TO_PX = {
-  tiny: 20,
-  small: 30,
-  normal: 40,
-  big: 50,
-  huge: 60,
-};
+export const TABLE_SIZE_TO_PX = SIZE_TO_PX;
 
 export const TABS_PADDING_TO_PX = {
   tiny: 5,

@@ -598,6 +598,7 @@ export const Sizes: Story = {
     size: 'small',
     filterable: true,
     wrapperSize: 'big',
+    selectable: true,
   },
 };
 
