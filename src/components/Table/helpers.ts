@@ -258,18 +258,19 @@ export const prepareColumns = (
       };
     }
 
-    const newWidth = calculateMinimumCellWidth(column.width || 30, size, column.header?.icon);
+    const newWidth = calculateMinimumCellWidth(column.width || 20, size, column.header?.icon);
 
     return {
       ...column,
       width: newWidth * SIZE_TO_MODIFIER[size],
+      grow: column.grow || (column.width ? undefined : 1),
       ...(columnModifiers?.[column.dataId] || {}),
     };
   });
 };
 
 export const calculateMinimumCellWidth = (
-  currentWidth: number = 30,
+  currentWidth: number = 20,
   size: TSizes,
   icon?: IReqoreIconName
 ): number => {

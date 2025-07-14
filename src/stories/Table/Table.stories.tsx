@@ -405,26 +405,23 @@ export const WithDotNotation: Story = {
       {
         dataId: 'id',
         header: { label: 'ID' },
-        width: 50,
+        width: 40,
         align: 'center',
         cell: { content: 'number' },
       },
       {
         dataId: 'address.city',
         header: { label: 'City' },
-        width: 150,
         cell: { content: 'text' },
       },
       {
         dataId: 'address.country',
         header: { label: 'Country' },
-        width: 150,
         cell: { content: 'title' },
       },
       {
         dataId: 'address.street',
         header: { label: 'Street' },
-        width: 200,
         cell: { content: 'text:info' },
       },
     ],
