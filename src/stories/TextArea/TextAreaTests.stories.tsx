@@ -1,11 +1,12 @@
 import { expect, jest } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
-import { fireEvent, waitFor, within } from '@storybook/testing-library';
+import { fireEvent, userEvent, waitFor, within } from '@storybook/testing-library';
 import { IReqoreTextareaProps } from '../../components/Textarea';
 import { sleep } from '../../helpers/utils';
-import { ReqoreTextarea } from '../../index';
+import { ReqoreButton, ReqoreControlGroup, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { DisabledArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { WithTemplates } from './TextArea.stories';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
 
@@ -104,5 +105,37 @@ export const ItemCanBeSelected: Story = {
     await expect(args.onChange).toHaveBeenCalledWith({
       target: { value: '$state:{1.field.author}' },
     });
+  },
+};
+
+export const TemplatesAreNotClosedWhenFocusIsMovedToPopover: Story = {
+  ...WithTemplates,
+  play: async ({ canvasElement, args }) => {
+    // @ts-expect-error
+    await WithTemplates.play({ canvasElement, args });
+    await userEvent.click(document.querySelector('textarea'));
+    await sleep(500);
+    // Press the tab key to move focus to the button
+    await userEvent.keyboard('{Tab}');
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+  },
+};
+
+export const TemplatesAreClosedWhenFocusIsLost: Story = {
+  ...WithTemplates,
+  render: (args) => (
+    <ReqoreControlGroup>
+      <ReqoreTextarea {...args} />
+      <ReqoreButton>Test</ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement, args }) => {
+    // @ts-expect-error
+    await WithTemplates.play({ canvasElement, args });
+    await userEvent.click(document.querySelector('textarea'));
+    await sleep(500);
+    // Press the tab key to move focus to the button
+    await userEvent.keyboard('{Tab}');
+    await expect(document.querySelector('.reqore-popover-content')).toBeFalsy();
   },
 };

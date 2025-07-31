@@ -176,6 +176,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     minimal,
     flat = true,
     effect,
+    id,
     onPopperUpdate,
     onPopperClose,
     closePopover,
@@ -295,6 +296,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           ref={handleRef}
           style={style}
           animate={animations?.popovers}
+          id={id}
           {...attributes.popper}
         >
           {!noArrow && !transparent ? (

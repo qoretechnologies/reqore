@@ -58,6 +58,8 @@ export interface IPopover
   updater?: string | number;
   uiScale?: IReqoreOptions['uiScale'];
 
+  id?: string;
+
   onBeforeOpen?: (popoverData: IPopover, e?: MouseEvent | KeyboardEvent) => boolean;
   onBeforeClose?: (popoverData: IPopover, e?: MouseEvent | KeyboardEvent) => boolean;
   onToggleChange?: (isOpen: boolean, popoverData?: IPopover) => void;
@@ -128,6 +130,7 @@ export const ReqorePopover = memo(
         flat,
         minimal,
         intent,
+        id,
       }: IReqorePopoverProps,
       ref
     ) => {
@@ -326,6 +329,7 @@ export const ReqorePopover = memo(
                 closePopover={close}
                 onPopperClose={close}
                 onPopperUpdate={handlePopperUpdate}
+                id={id}
               />
             )}
             {isOpen && blur ? <div className='reqore-blur-wrapper' /> : null}
@@ -365,6 +369,7 @@ export const ReqorePopover = memo(
               onPopperClose={close}
               onPopperUpdate={handlePopperUpdate}
               closePopover={close}
+              id={id}
             />
           )}
           {isOpen && blur ? <div className='reqore-blur-wrapper' /> : null}

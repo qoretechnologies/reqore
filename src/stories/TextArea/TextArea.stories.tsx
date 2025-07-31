@@ -270,6 +270,7 @@ export const WithTemplates: Story = {
       handler: 'focus',
       useTargetWidth: true,
       noWrapper: true,
+      filterable: false,
       items: [
         {
           label: 'New message in discord',
