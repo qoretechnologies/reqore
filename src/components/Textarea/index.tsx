@@ -1,5 +1,6 @@
 import { rgba } from 'polished';
-import React, { forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import shortid from 'shortid';
 import styled, { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
@@ -27,6 +28,7 @@ import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
 import { IReqoreInputStyle } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
+import { IPopoverControls } from '../Popover';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreFormTemplates extends IReqoreDropdownProps {}
@@ -179,6 +181,8 @@ function Textarea<T>(
   const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
   const theme = useReqoreTheme('main', customTheme, intent);
   const [_value, setValue] = useState(value || '');
+  const [popoverData, setPopoverData] = useState<IPopoverControls>(null);
+  const uuid = useRef(shortid.generate());
 
   useEffect(() => {
     setValue(value || '');
@@ -203,6 +207,19 @@ function Textarea<T>(
     },
     [inputRef, _value]
   );
+
+  const handleBlur = useCallback(
+    (e) => {
+      if (e.relatedTarget.closest(`#id-${uuid.current}`) === null) {
+        popoverData?.close();
+      }
+    },
+    [popoverData]
+  );
+
+  const handlePassPopoverData = useCallback((data) => {
+    setPopoverData(data);
+  }, []);
 
   const renderChildren = () => {
     return (
@@ -257,6 +274,9 @@ function Textarea<T>(
         ref={targetRef}
         onItemSelect={handleItemSelect}
         {...templates}
+        popoverId={`id-${uuid.current}`}
+        onBlur={handleBlur}
+        passPopoverData={handlePassPopoverData}
       >
         {renderChildren()}
       </ReqoreDropdown>

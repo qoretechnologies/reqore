@@ -45,6 +45,8 @@ export interface IReqoreDropdownProps
   showCaret?: boolean;
   // Whether the button should be shown as read-only when there are no items instead of disabled
   readOnlyOnEmpty?: boolean;
+
+  popoverId?: string;
 }
 
 const ReqoreDropdownListWrapper = memo(
@@ -111,6 +113,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   readOnlyOnEmpty,
   onBeforeClose,
   onBeforeOpen,
+  popoverId,
   ...rest
 }: IReqoreDropdownProps & T) {
   const componentProps = useMemo(
@@ -182,6 +185,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       onToggleChange={onToggleChange}
       onBeforeClose={onBeforeClose}
       onBeforeOpen={onBeforeOpen}
+      id={popoverId}
     >
       {children || label}
     </ReqorePopover>
