@@ -43,6 +43,7 @@ export interface IReqoreCollectionItemProps
   searchString?: string;
   // Used for passing values and sorting
   metadata?: Record<string, any>;
+  group?: string;
 }
 
 export const StyledCollectionItemContent = styled.div`

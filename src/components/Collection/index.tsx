@@ -1,8 +1,8 @@
 import { map, size } from 'lodash';
-import { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { ReqoreErrorBoundary, useReqoreProperty } from '../..';
+import { ReqoreErrorBoundary, ReqoreP, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { ReqorePaginationContainer } from '../../containers/Paging';
@@ -195,12 +195,14 @@ export const ReqoreCollection = memo(
         const unselectedItems = items.filter((item) => !item.selected);
         // Sort the selected items
         const sortedSelectedItems = sortTableData(selectedItems, {
-          by: _sortBy,
+          by: 'group',
+          thenBy: _sortBy,
           direction: sort,
         });
         // Sort the unselected items
         const sortedUnselectedItems = sortTableData(unselectedItems, {
-          by: _sortBy,
+          by: 'group',
+          thenBy: _sortBy,
           direction: sort,
         });
 
@@ -208,7 +210,8 @@ export const ReqoreCollection = memo(
       }
 
       return sortTableData(items, {
-        by: _sortBy,
+        by: 'group',
+        thenBy: _sortBy,
         direction: sort,
       });
     }, [items, sort, sortBy, showSelectedFirst, sortable]);
@@ -383,19 +386,52 @@ export const ReqoreCollection = memo(
                 maxColumnWidth={maxColumnWidth}
                 className='reqore-collection-content'
               >
-                {applyPaging(filteredItems)?.map((item, index) => (
-                  <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
-                    <ReqoreCollectionItem
-                      size={zoomToSize[zoom]}
-                      responsiveTitle={false}
-                      {...item}
-                      icon={item.icon || (item.selected ? selectedIcon : undefined)}
-                      key={index}
-                      rounded={!stacked}
-                      maxContentHeight={maxItemHeight}
-                    />
-                  </ReqoreErrorBoundary>
-                ))}
+                {(() => {
+                  // Group items by their 'group' property
+                  const grouped = applyPaging(filteredItems).reduce((acc, item) => {
+                    const group = item.group && !paging ? item.group : 'Ungrouped';
+
+                    if (!acc[group]) {
+                      acc[group] = [];
+                    }
+
+                    acc[group].push(item);
+
+                    return acc;
+                  }, {} as Record<string, IReqoreCollectionItemProps[]>);
+
+                  // Render groups
+                  return Object.entries(grouped).map(([groupName, groupItems], groupIdx) => (
+                    <React.Fragment key={groupName}>
+                      {groupName !== 'Ungrouped' && (
+                        <ReqoreP
+                          style={{ gridColumn: '1 / -1' }}
+                          effect={{
+                            opacity: 0.8,
+                            uppercase: true,
+                            weight: 'bold',
+                            textSize: 'small',
+                            spaced: 1,
+                          }}
+                        >
+                          {groupName}
+                        </ReqoreP>
+                      )}
+                      {groupItems.map((item, index) => (
+                        <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
+                          <ReqoreCollectionItem
+                            size={zoomToSize[zoom]}
+                            responsiveTitle={false}
+                            {...item}
+                            icon={item.icon || (item.selected ? selectedIcon : undefined)}
+                            rounded={!stacked}
+                            maxContentHeight={maxItemHeight}
+                          />
+                        </ReqoreErrorBoundary>
+                      ))}
+                    </React.Fragment>
+                  ));
+                })()}
               </StyledCollectionWrapper>
             )
           }

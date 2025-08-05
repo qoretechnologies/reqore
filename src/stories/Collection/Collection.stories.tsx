@@ -3,11 +3,12 @@ import { ReqoreButton, ReqoreControlGroup, ReqoreVerticalSpacer } from '../..';
 import { IReqoreCollectionProps, ReqoreCollection } from '../../components/Collection';
 import { IReqoreColumnsProps } from '../../components/Columns';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
-import items, { bigCollection } from '../../mock/collectionData';
+import items, { bigCollection, collectionWithGroups } from '../../mock/collectionData';
 
 import { expect } from '@storybook/jest';
 import { fireEvent } from '@storybook/testing-library';
 import { waitFor } from '@testing-library/react';
+import { noop } from 'lodash';
 import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
 import { argManager, IntentArg, SizeArg } from '../utils/args';
@@ -341,5 +342,91 @@ export const CustomSortKeysWithDefaultSort: Story = {
 export const Skeleton: Story = {
   args: {
     skeleton: true,
+  },
+};
+
+export const WithGroups: Story = {
+  args: {
+    items: [
+      {
+        label: 'This item is not flat',
+        tooltip: 'This is a test item',
+        content:
+          'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+        flat: false,
+        tags: [
+          {
+            label: 23,
+            asBadge: true,
+          },
+          {
+            label: 2022,
+            labelKey: 'Year',
+            asBadge: true,
+            onRemoveClick: noop,
+          },
+        ],
+        expandable: true,
+        metadata: {
+          id: 23,
+          category: 'Article',
+        },
+      },
+      {
+        label: 'Test with tooltip',
+        tooltip: 'This is a test item',
+        labelSize: 2,
+        contentSize: 'huge',
+        selected: true,
+        icon: 'Hashtag',
+        content:
+          'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+        tags: [
+          {
+            label: 'local',
+            labelKey: 'level',
+            intent: 'info',
+            icon: 'Hashtag',
+          },
+          {
+            label: 'string',
+            labelKey: 'type',
+            intent: 'warning',
+            icon: 'CodeLine',
+          },
+        ],
+        metadata: {
+          id: 24,
+          category: 'Post',
+        },
+      },
+      {
+        icon: 'TextWrap',
+        label: 'Small item that is not minimal',
+        tooltip: 'This is a test item',
+        size: 'small',
+        content:
+          'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+        minimal: false,
+        badge: 0,
+        searchString: 'secret',
+        metadata: {
+          id: 1,
+          category: 'None',
+        },
+      },
+      {
+        icon: 'ZcoolLine',
+        label: 'Item without fade',
+        content:
+          'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long Hello I am a test item content and I am very long so will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long Hello I am a test item content and I am very long so will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+        showContentFade: false,
+        metadata: {
+          id: 13,
+          category: 'Article',
+        },
+      },
+      ...collectionWithGroups,
+    ],
   },
 };

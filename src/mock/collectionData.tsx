@@ -25,6 +25,25 @@ export const bigCollection = data.slice(0, 100).map((datum) => ({
   ],
 })) as IReqoreCollectionItemProps[];
 
+export const collectionWithGroups = data.slice(0, 100).map((datum) => ({
+  label: `${datum.firstName} ${datum.lastName}`,
+  badge: datum.id,
+  size: 'small',
+  expandable: true,
+  content: datum.address,
+  group: datum.occupation,
+  tags: [
+    {
+      labelKey: 'Age',
+      label: datum.age,
+    },
+    {
+      labelKey: 'Occupation',
+      label: datum.occupation,
+    },
+  ],
+})) as IReqoreCollectionItemProps[];
+
 export default [
   {
     label: 'This item is not flat',
