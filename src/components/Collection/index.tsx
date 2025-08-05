@@ -401,7 +401,7 @@ export const ReqoreCollection = memo(
                   }, {} as Record<string, IReqoreCollectionItemProps[]>);
 
                   // Render groups
-                  return Object.entries(grouped).map(([groupName, groupItems], groupIdx) => (
+                  return Object.entries(grouped).map(([groupName, groupItems]) => (
                     <React.Fragment key={groupName}>
                       {groupName !== 'Ungrouped' && (
                         <ReqoreP
