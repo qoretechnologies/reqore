@@ -174,7 +174,7 @@ export interface IReqoreTableStyle {
 
 export interface IReqoreTableSort {
   by: string | ((v: any) => any) | ((v1: any, v2: any) => number);
-  thenBy?: string;
+  thenBy?: string | ((v: any) => any) | ((v1: any, v2: any) => number);
   direction?: 'asc' | 'desc';
 }
 
