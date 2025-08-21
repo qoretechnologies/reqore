@@ -30,7 +30,8 @@ import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Tab
 import { IReqoreTreeManagementDialog, ReqoreTreeManagementDialog } from './modal';
 
 export interface IReqoreTreeCustomRendererProps {
-  value: string;
+  // Allow any value so renderers can decide how to display/edit it
+  value: any;
   isEditing?: boolean;
   onChange?: (newValue: string) => void;
   size?: TSizes;
@@ -55,8 +56,9 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
   editable?: boolean;
 
-  KeyRenderer?: (props: IReqoreTreeCustomRendererProps) => React.ReactNode;
-  ValueRenderer?: (props: IReqoreTreeCustomRendererProps) => React.ReactNode;
+  // Components provided here must be valid JSX components
+  KeyRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
+  ValueRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
 }
 
 export interface ITreeStyle {
