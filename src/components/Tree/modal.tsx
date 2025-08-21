@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IReqoreTreeProps } from '.';
 import { ReqoreTextarea } from '../..';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
@@ -6,7 +7,9 @@ import ReqoreInput from '../Input';
 import { IReqoreModalProps, ReqoreModal } from '../Modal';
 import ReqoreTag from '../Tag';
 
-export interface IReqoreTreeManagementDialog extends IReqoreModalProps {
+export interface IReqoreTreeManagementDialog
+  extends IReqoreModalProps,
+    Pick<IReqoreTreeProps, 'KeyRenderer' | 'ValueRenderer'> {
   open?: boolean;
   path?: string;
   parentPath?: string;
@@ -27,6 +30,8 @@ export const ReqoreTreeManagementDialog = ({
   data,
   onClose,
   onSave,
+  KeyRenderer,
+  ValueRenderer,
 }: IReqoreTreeManagementDialog) => {
   const [key, setKey] = useState(data?.key);
   const [value, setValue] = useState<any>(data?.value);
@@ -58,48 +63,61 @@ export const ReqoreTreeManagementDialog = ({
     >
       <ReqoreControlGroup vertical>
         {type === 'object' || (data?.key && parentType !== 'array') ? (
-          <ReqoreControlGroup fluid stack>
+          <ReqoreControlGroup fluid vertical>
             <ReqoreTag fixed width='100px' label='Key' />
-            <ReqoreInput
-              disabled={data && parentType === 'array'}
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
-              placeholder='Key'
-              fluid
-            />
+            {KeyRenderer ? (
+              <KeyRenderer value={key} isEditing onChange={(newKey) => setKey(newKey)} />
+            ) : (
+              <ReqoreInput
+                disabled={data && parentType === 'array'}
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder='Key'
+                fluid
+              />
+            )}
           </ReqoreControlGroup>
         ) : null}
         {typeof data?.value !== 'object' && (
-          <ReqoreControlGroup fluid stack verticalAlign='flex-start'>
+          <ReqoreControlGroup fluid verticalAlign='flex-start' vertical>
             <ReqoreTag fixed width='100px' label='Value' />
-
-            <ReqoreTextarea
-              value={value}
-              scaleWithContent
-              onChange={(e: any) => setValue(e.target.value)}
-              placeholder='Value'
-              fluid
-              disabled={value === '[]' || value === '{}'}
-            />
-            <ReqoreButton
-              fixed
-              className='reqore-tree-modal-list'
-              onClick={() => (value === '[]' ? setValue('') : setValue('[]'))}
-              intent={value === '[]' ? 'info' : undefined}
-              compact
-              textAlign='center'
-            >
-              [...]
-            </ReqoreButton>
-            <ReqoreButton
-              fixed
-              className='reqore-tree-modal-object'
-              onClick={() => (value === '{}' ? setValue('') : setValue('{}'))}
-              intent={value === '{}' ? 'info' : undefined}
-              compact
-              textAlign='center'
-              label='{...}'
-            />
+            <ReqoreControlGroup stack fluid>
+              {ValueRenderer ? (
+                <ValueRenderer
+                  value={value}
+                  isEditing
+                  onChange={(newValue) => setValue(newValue)}
+                />
+              ) : (
+                <ReqoreTextarea
+                  value={value}
+                  scaleWithContent
+                  onChange={(e: any) => setValue(e.target.value)}
+                  placeholder='Value'
+                  fluid
+                  disabled={value === '[]' || value === '{}'}
+                />
+              )}
+              <ReqoreButton
+                fixed
+                className='reqore-tree-modal-list'
+                onClick={() => (value === '[]' ? setValue('') : setValue('[]'))}
+                intent={value === '[]' ? 'info' : undefined}
+                compact
+                textAlign='center'
+              >
+                [...]
+              </ReqoreButton>
+              <ReqoreButton
+                fixed
+                className='reqore-tree-modal-object'
+                onClick={() => (value === '{}' ? setValue('') : setValue('{}'))}
+                intent={value === '{}' ? 'info' : undefined}
+                compact
+                textAlign='center'
+                label='{...}'
+              />
+            </ReqoreControlGroup>
           </ReqoreControlGroup>
         )}
       </ReqoreControlGroup>

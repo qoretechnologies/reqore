@@ -29,6 +29,13 @@ import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
 import { IReqoreTreeManagementDialog, ReqoreTreeManagementDialog } from './modal';
 
+export interface IReqoreTreeCustomRendererProps {
+  value: string;
+  isEditing?: boolean;
+  onChange?: (newValue: string) => void;
+  size?: TSizes;
+}
+
 export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IReqoreComponent {
   data: Record<string, unknown> | Array<any>;
   onDataChange?: (data: Record<string, unknown> | Array<any>) => void;
@@ -47,6 +54,9 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   exportable?: boolean;
   defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
   editable?: boolean;
+
+  KeyRenderer?: (props: IReqoreTreeCustomRendererProps) => React.ReactNode;
+  ValueRenderer?: (props: IReqoreTreeCustomRendererProps) => React.ReactNode;
 }
 
 export interface ITreeStyle {
@@ -86,6 +96,8 @@ export const ReqoreTree = ({
   defaultZoom,
   onDataChange,
   errorBoundaryOptions,
+  KeyRenderer,
+  ValueRenderer,
   ...rest
 }: IReqoreTreeProps) => {
   const [items, setItems] = useState({});
@@ -248,16 +260,20 @@ export const ReqoreTree = ({
                 }}
               />
 
-              <ReqoreP
-                className='reqore-tree-toggle'
-                effect={{
-                  weight: 'normal',
-                  color: 'info:lighten:5',
-                }}
-                tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
-              >
-                {displayKey}:
-              </ReqoreP>
+              {KeyRenderer ? (
+                <KeyRenderer value={displayKey} />
+              ) : (
+                <ReqoreP
+                  className='reqore-tree-toggle'
+                  effect={{
+                    weight: 'normal',
+                    color: 'info:lighten:5',
+                  }}
+                  tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
+                >
+                  {displayKey}:
+                </ReqoreP>
+              )}
 
               {editable && isObject ? (
                 <ReqoreControlGroup>
@@ -304,36 +320,44 @@ export const ReqoreTree = ({
             </ReqoreControlGroup>
           ) : (
             <ReqoreControlGroup verticalAlign='center'>
-              <ReqoreP
-                {...{
-                  customTheme: { text: { color: 'info:lighten:5' } },
-                  style: { flexShrink: 0 },
-                  size: zoomToSize[zoom],
-                }}
-                tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
-              >
-                {displayKey}:
-              </ReqoreP>
-              <StyledTreeLabel
-                flat
-                onClick={() => onItemClick?.(_data[key], [...path, key])}
-                className='reqore-tree-label'
-                customTheme={{
-                  text: {
-                    color: isBoolean(_data[key])
-                      ? _data[key]
-                        ? 'success:lighten:5'
-                        : 'danger:lighten:10'
-                      : isNumber(_data[key])
-                      ? 'info:lighten:10'
-                      : undefined,
-                  },
-                }}
-                size={zoomToSize[zoom]}
-                tooltip={getItemTooltip?.([...path, key], 'value', _pathWithoutArrayKeys)}
-              >
-                {JSON.stringify(_data[key])}
-              </StyledTreeLabel>
+              {KeyRenderer ? (
+                <KeyRenderer value={displayKey} />
+              ) : (
+                <ReqoreP
+                  {...{
+                    customTheme: { text: { color: 'info:lighten:5' } },
+                    style: { flexShrink: 0 },
+                    size: zoomToSize[zoom],
+                  }}
+                  tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
+                >
+                  {displayKey}:
+                </ReqoreP>
+              )}
+              {ValueRenderer ? (
+                <ValueRenderer value={JSON.stringify(_data[key])} />
+              ) : (
+                <StyledTreeLabel
+                  flat
+                  onClick={() => onItemClick?.(_data[key], [...path, key])}
+                  className='reqore-tree-label'
+                  customTheme={{
+                    text: {
+                      color: isBoolean(_data[key])
+                        ? _data[key]
+                          ? 'success:lighten:5'
+                          : 'danger:lighten:10'
+                        : isNumber(_data[key])
+                        ? 'info:lighten:10'
+                        : undefined,
+                    },
+                  }}
+                  size={zoomToSize[zoom]}
+                  tooltip={getItemTooltip?.([...path, key], 'value', _pathWithoutArrayKeys)}
+                >
+                  {JSON.stringify(_data[key])}
+                </StyledTreeLabel>
+              )}
               {withLabelCopy && (
                 <ReqoreButton
                   compact
@@ -454,6 +478,8 @@ export const ReqoreTree = ({
       {managementDialog.open && (
         <ReqoreTreeManagementDialog
           {...managementDialog}
+          KeyRenderer={KeyRenderer}
+          ValueRenderer={ValueRenderer}
           onClose={() => setManagementDialog({ open: false })}
           onSave={({ key, value, originalData }) => {
             const modifiedValue =
