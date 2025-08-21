@@ -131,7 +131,7 @@ export const ReqoreTier = memo(
           {description && (
             <ReqoreP style={{ textAlign: 'center', padding: '0 20px' }}>{description}</ReqoreP>
           )}
-          <ReqoreControlGroup fluid>
+          <ReqoreControlGroup fluid horizontalAlign='center'>
             <ReqoreButton
               minimal
               textAlign='center'

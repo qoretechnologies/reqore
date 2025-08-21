@@ -2,12 +2,15 @@ import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { fireEvent } from '@storybook/testing-library';
 import { noop } from 'lodash';
-import { useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 import {
   _testsClickButton,
   _testsClickNonButton,
   _testsWaitForText,
 } from '../../../__tests__/utils';
+import ReqoreInput from '../../components/Input';
+import ReqoreTag from '../../components/Tag';
+import ReqoreTextarea from '../../components/Textarea';
 import { IReqoreTreeProps, ReqoreTree } from '../../components/Tree';
 import MockObject from '../../mock/object.json';
 import { StoryMeta } from '../utils';
@@ -302,5 +305,38 @@ export const ItemsCanBeDeleted: Story = {
     await _testsClickButton({ selector: '.reqore-tree-delete', nth: 4 });
     await _testsClickButton({ selector: '.reqore-tree-delete', nth: 18 });
     await expect(document.querySelectorAll('.reqore-tree-item').length).toBe(20);
+  },
+};
+
+export const CustomRenderers: Story = {
+  ...EditableObject,
+  args: {
+    ...EditableObject.args,
+    KeyRenderer: ({ value, onChange, isEditing }) => {
+      if (isEditing) {
+        return (
+          <ReqoreInput
+            value={value}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+            className='reqore-tree-input'
+          />
+        );
+      }
+
+      console.log(value);
+
+      return <ReqoreTag label={value} />;
+    },
+    ValueRenderer: ({ value, onChange, isEditing, ...rest }) => {
+      return (
+        <ReqoreTextarea
+          value={value}
+          readOnly={!isEditing}
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
+          className='reqore-tree-input'
+          {...rest}
+        />
+      );
+    },
   },
 };
