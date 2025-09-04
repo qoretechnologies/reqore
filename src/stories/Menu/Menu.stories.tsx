@@ -134,30 +134,33 @@ const MenuWithSubmenus = (args: IReqoreMenuProps) => (
 
 const Template: StoryFn<IReqoreMenuProps> = (args) => {
   return (
-    <ReqoreControlGroup verticalAlign='flex-start'>
+    <ReqoreControlGroup verticalAlign='flex-start' style={{ height: '100%' }}>
       <ReqoreMenu {...args}>
-        <ReqoreInput placeholder='Custom component' icon='Search2Fill' flat={false} />
-        <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
-          Selected success
-        </ReqoreMenuItem>
-        <ReqoreMenuItem icon='Save3Fill' badge={[10, 20]}>
-          Save this item
-        </ReqoreMenuItem>
-        <ReqoreMenuDivider label='BIG Divider' size='huge' />
-        <ReqoreMenuItem
-          icon='ChatPollFill'
-          onClick={() => alert('Item clicked')}
-          rightIcon='FahrenheitFill'
-          rightAction={{ icon: 'AlertLine', onClick: () => alert('Icon clicked') }}
-          tooltip={{
-            content: 'You sure?',
-          }}
-          intent='danger'
-        >
-          Delete
-        </ReqoreMenuItem>
+        <ReqoreControlGroup>
+          <ReqoreInput placeholder='Custom component' icon='Search2Fill' flat={false} />
+        </ReqoreControlGroup>
+        <ReqoreControlGroup vertical style={{ overflow: 'auto' }}>
+          <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
+            Selected success
+          </ReqoreMenuItem>
+          <ReqoreMenuItem icon='Save3Fill' badge={[10, 20]}>
+            Save this item
+          </ReqoreMenuItem>
+          <ReqoreMenuDivider label='BIG Divider' size='huge' />
 
-        <>
+          <ReqoreMenuItem
+            icon='ChatPollFill'
+            onClick={() => alert('Item clicked')}
+            rightIcon='FahrenheitFill'
+            rightAction={{ icon: 'AlertLine', onClick: () => alert('Icon clicked') }}
+            tooltip={{
+              content: 'You sure?',
+            }}
+            intent='danger'
+          >
+            Delete
+          </ReqoreMenuItem>
+
           <ReqoreMenuItem
             icon='BluetoothConnectLine'
             rightIcon='EditLine'
@@ -172,88 +175,88 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
           >
             Some button
           </ReqoreMenuItem>
-        </>
 
-        <ReqoreMenuItem icon='Lock2Fill' description='I also have a description'>
-          This is a really long item that should wrap
-        </ReqoreMenuItem>
-        <ReqoreMenuItem icon='Lock2Fill' disabled>
-          Disabled
-        </ReqoreMenuItem>
-        <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
-          Disabled intent
-        </ReqoreMenuItem>
-        <ReqoreMenuDivider label='Divider' />
-        <ReqorePopover
-          component={ReqoreMenuItem}
-          flat={args.flat}
-          componentProps={
-            {
-              icon: 'EmotionUnhappyLine',
-              rightIcon: 'Scissors2Fill',
-              leftIconColor: 'danger:lighten',
-              wrap: args.wrapText,
-              flat: args.flat,
-            } as IReqoreMenuItemProps
-          }
-          openOnMount
-          content={
-            <ReqoreMenu {...args}>
-              <ReqoreMenuItem icon='ZhihuFill'>Item 1</ReqoreMenuItem>
-              <ReqoreMenuItem
-                icon='AccountCircleFill'
-                description='Would you look at that beautiful description'
-                intent='warning'
-              >
-                Item 2
-              </ReqoreMenuItem>
-              <ReqoreMenuItem icon='AnticlockwiseFill' disabled>
-                Item 3
-              </ReqoreMenuItem>
-              <ReqoreMenuItem
-                icon='ArchiveFill'
-                badge={{
-                  label: '10',
-                  effect: { gradient: { colors: { 0: '#00e3e8', 100: '#eb0e8c' } } },
-                }}
-              >
-                Item 4
-              </ReqoreMenuItem>
-            </ReqoreMenu>
-          }
-          isReqoreComponent
-          noWrapper
-          handler='click'
-          placement='right'
-        >
-          I have a submenu on click
-        </ReqorePopover>
-        <ReqoreMenuDivider
-          label='Fancy divider'
-          effect={{ gradient: { colors: { 0: '#0d5ba5', 100: '#ff5dfd' } } }}
-          align='left'
-          padded='none'
-          margin='none'
-        />
-        <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' selected>
-          I am selected!
-        </ReqoreMenuItem>
-        <ReqoreMenuItem
-          icon='FireLine'
-          rightIcon='ArrowRightDownLine'
-          effect={{
-            gradient: {
-              colors: {
-                0: '#000000',
-                100: 'transparent',
+          <ReqoreMenuItem icon='Lock2Fill' description='I also have a description'>
+            This is a really long item that should wrap
+          </ReqoreMenuItem>
+          <ReqoreMenuItem icon='Lock2Fill' disabled>
+            Disabled
+          </ReqoreMenuItem>
+          <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
+            Disabled intent
+          </ReqoreMenuItem>
+          <ReqoreMenuDivider label='Divider' />
+          <ReqorePopover
+            component={ReqoreMenuItem}
+            flat={args.flat}
+            componentProps={
+              {
+                icon: 'EmotionUnhappyLine',
+                rightIcon: 'Scissors2Fill',
+                leftIconColor: 'danger:lighten',
+                wrap: args.wrapText,
+                flat: args.flat,
+              } as IReqoreMenuItemProps
+            }
+            openOnMount
+            content={
+              <ReqoreMenu {...args}>
+                <ReqoreMenuItem icon='ZhihuFill'>Item 1</ReqoreMenuItem>
+                <ReqoreMenuItem
+                  icon='AccountCircleFill'
+                  description='Would you look at that beautiful description'
+                  intent='warning'
+                >
+                  Item 2
+                </ReqoreMenuItem>
+                <ReqoreMenuItem icon='AnticlockwiseFill' disabled>
+                  Item 3
+                </ReqoreMenuItem>
+                <ReqoreMenuItem
+                  icon='ArchiveFill'
+                  badge={{
+                    label: '10',
+                    effect: { gradient: { colors: { 0: '#00e3e8', 100: '#eb0e8c' } } },
+                  }}
+                >
+                  Item 4
+                </ReqoreMenuItem>
+              </ReqoreMenu>
+            }
+            isReqoreComponent
+            noWrapper
+            handler='click'
+            placement='right'
+          >
+            I have a submenu on click
+          </ReqorePopover>
+          <ReqoreMenuDivider
+            label='Fancy divider'
+            effect={{ gradient: { colors: { 0: '#0d5ba5', 100: '#ff5dfd' } } }}
+            align='left'
+            padded='none'
+            margin='none'
+          />
+          <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' selected>
+            I am selected!
+          </ReqoreMenuItem>
+          <ReqoreMenuItem
+            icon='FireLine'
+            rightIcon='ArrowRightDownLine'
+            effect={{
+              gradient: {
+                colors: {
+                  0: '#000000',
+                  100: 'transparent',
+                },
               },
-            },
-          }}
-          description='I also have a description'
-          badge={10}
-        >
-          Fancy
-        </ReqoreMenuItem>
+            }}
+            description='I also have a description'
+            badge={10}
+          >
+            Fancy
+          </ReqoreMenuItem>
+        </ReqoreControlGroup>
       </ReqoreMenu>
       <MenuWithSubmenus {...args} />
     </ReqoreControlGroup>
@@ -355,6 +358,9 @@ export const Resizable: Story = {
   render: Template,
 
   args: {
+    style: {
+      overflow: 'hidden',
+    },
     position: 'left',
     showResizableBorder: true,
     resizable: {

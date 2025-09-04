@@ -1,5 +1,5 @@
 import { Resizable, ResizableProps } from 're-resizable';
-import React, { forwardRef, memo } from 'react';
+import React, { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqoreErrorBoundary } from '../..';
 import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
@@ -111,6 +111,8 @@ const ReqoreMenu = memo(
         closePopover,
       }));
 
+      const style = useMemo(() => ({ height: '100%' }), []);
+
       return (
         <ReqoreErrorBoundary {...errorBoundaryOptions}>
           <ReqoreThemeProvider theme={theme}>
@@ -135,7 +137,13 @@ const ReqoreMenu = memo(
                 targetRef.current = _ref;
               }}
             >
-              <ReqoreControlGroup vertical gapSize={itemGap} fluid>
+              <ReqoreControlGroup
+                vertical
+                gapSize={itemGap}
+                fluid
+                style={style}
+                verticalAlign='flex-start'
+              >
                 {skeleton
                   ? React.Children.map(children, (_child, index) => (
                       <ReqoreSkeleton key={index} size={size} width='100%' />

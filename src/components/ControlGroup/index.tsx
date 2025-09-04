@@ -114,7 +114,7 @@ export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroup
     margin-top: ${({ fill, verticalAlign }) =>
       !fill && (verticalAlign === 'flex-end' || verticalAlign === 'center') ? 'auto' : undefined};
     margin-bottom: ${({ fill, verticalAlign }) =>
-      !fill && (verticalAlign === 'flex-start' || verticalAlign === 'center') ? 'auto' : undefined};
+      !fill && verticalAlign === 'center' ? 'auto' : undefined};
     margin-right: ${({ horizontalAlign }) => (horizontalAlign === 'center' ? 'auto' : undefined)};
 
     ${({ vertical }) =>
