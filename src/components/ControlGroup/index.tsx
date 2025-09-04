@@ -166,7 +166,7 @@ const ReqoreControlGroup = memo(
     isChild,
     isFirstGroup,
     isLastGroup,
-    verticalAlign = 'center',
+    verticalAlign,
     horizontalAlign = 'flex-start',
     responsive,
     overflowButtonProps,

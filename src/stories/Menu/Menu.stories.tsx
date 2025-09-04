@@ -134,30 +134,37 @@ const MenuWithSubmenus = (args: IReqoreMenuProps) => (
 
 const Template: StoryFn<IReqoreMenuProps> = (args) => {
   return (
-    <ReqoreControlGroup verticalAlign='flex-start'>
+    <ReqoreControlGroup verticalAlign='flex-start' style={{ height: '100%' }}>
       <ReqoreMenu {...args}>
-        <ReqoreInput placeholder='Custom component' icon='Search2Fill' flat={false} />
-        <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
-          Selected success
-        </ReqoreMenuItem>
-        <ReqoreMenuItem icon='Save3Fill' badge={[10, 20]}>
-          Save this item
-        </ReqoreMenuItem>
-        <ReqoreMenuDivider label='BIG Divider' size='huge' />
-        <ReqoreMenuItem
-          icon='ChatPollFill'
-          onClick={() => alert('Item clicked')}
-          rightIcon='FahrenheitFill'
-          rightAction={{ icon: 'AlertLine', onClick: () => alert('Icon clicked') }}
-          tooltip={{
-            content: 'You sure?',
-          }}
-          intent='danger'
+        <ReqoreControlGroup>
+          <ReqoreInput placeholder='Custom component' icon='Search2Fill' flat={false} />
+        </ReqoreControlGroup>
+        <ReqoreControlGroup
+          vertical
+          style={{ overflowY: 'auto', overflowX: 'hidden' }}
+          wrap={false}
         >
-          Delete
-        </ReqoreMenuItem>
+          <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
+            Selected success
+          </ReqoreMenuItem>
+          <ReqoreMenuItem icon='Save3Fill' badge={[10, 20]}>
+            Save this item
+          </ReqoreMenuItem>
+          <ReqoreMenuDivider label='BIG Divider' size='huge' />
 
-        <>
+          <ReqoreMenuItem
+            icon='ChatPollFill'
+            onClick={() => alert('Item clicked')}
+            rightIcon='FahrenheitFill'
+            rightAction={{ icon: 'AlertLine', onClick: () => alert('Icon clicked') }}
+            tooltip={{
+              content: 'You sure?',
+            }}
+            intent='danger'
+          >
+            Delete
+          </ReqoreMenuItem>
+
           <ReqoreMenuItem
             icon='BluetoothConnectLine'
             rightIcon='EditLine'
@@ -172,14 +179,14 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
           >
             Some button
           </ReqoreMenuItem>
-        </>
 
-        <ReqoreMenuItem icon='Lock2Fill' description='I also have a description'>
-          This is a really long item that should wrap
-        </ReqoreMenuItem>
-        <ReqoreMenuItem icon='Lock2Fill' disabled>
-          Disabled
-        </ReqoreMenuItem>
+          <ReqoreMenuItem icon='Lock2Fill' description='I also have a description' wrap>
+            This is a really long item that should wrap
+          </ReqoreMenuItem>
+          <ReqoreMenuItem icon='Lock2Fill' disabled>
+            Disabled
+          </ReqoreMenuItem>
+        </ReqoreControlGroup>
         <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
           Disabled intent
         </ReqoreMenuItem>
@@ -355,6 +362,9 @@ export const Resizable: Story = {
   render: Template,
 
   args: {
+    style: {
+      overflow: 'hidden',
+    },
     position: 'left',
     showResizableBorder: true,
     resizable: {
