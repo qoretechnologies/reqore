@@ -55,6 +55,8 @@ const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   max-height: ${({ maxHeight }) => maxHeight || undefined};
   overflow-y: auto;
   overflow-x: hidden;
+  display: flex;
+  flex-flow: column nowrap;
 
   background-color: ${({ theme, transparent }) =>
     transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
@@ -111,7 +113,7 @@ const ReqoreMenu = memo(
         closePopover,
       }));
 
-      const style = useMemo(() => ({ height: '100%' }), []);
+      const style = useMemo(() => ({ minHeight: '0', flex: '1 1 auto' }), []);
 
       return (
         <ReqoreErrorBoundary {...errorBoundaryOptions}>
@@ -137,13 +139,7 @@ const ReqoreMenu = memo(
                 targetRef.current = _ref;
               }}
             >
-              <ReqoreControlGroup
-                vertical
-                gapSize={itemGap}
-                fluid
-                style={style}
-                verticalAlign='flex-start'
-              >
+              <ReqoreControlGroup vertical gapSize={itemGap} fluid style={style}>
                 {skeleton
                   ? React.Children.map(children, (_child, index) => (
                       <ReqoreSkeleton key={index} size={size} width='100%' />

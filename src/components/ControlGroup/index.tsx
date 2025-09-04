@@ -114,7 +114,7 @@ export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroup
     margin-top: ${({ fill, verticalAlign }) =>
       !fill && (verticalAlign === 'flex-end' || verticalAlign === 'center') ? 'auto' : undefined};
     margin-bottom: ${({ fill, verticalAlign }) =>
-      !fill && verticalAlign === 'center' ? 'auto' : undefined};
+      !fill && (verticalAlign === 'flex-start' || verticalAlign === 'center') ? 'auto' : undefined};
     margin-right: ${({ horizontalAlign }) => (horizontalAlign === 'center' ? 'auto' : undefined)};
 
     ${({ vertical }) =>
@@ -166,7 +166,7 @@ const ReqoreControlGroup = memo(
     isChild,
     isFirstGroup,
     isLastGroup,
-    verticalAlign = 'center',
+    verticalAlign,
     horizontalAlign = 'flex-start',
     responsive,
     overflowButtonProps,
