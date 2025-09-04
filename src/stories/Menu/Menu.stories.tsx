@@ -139,7 +139,11 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
         <ReqoreControlGroup>
           <ReqoreInput placeholder='Custom component' icon='Search2Fill' flat={false} />
         </ReqoreControlGroup>
-        <ReqoreControlGroup vertical style={{ overflow: 'auto' }}>
+        <ReqoreControlGroup
+          vertical
+          style={{ overflowY: 'auto', overflowX: 'hidden' }}
+          wrap={false}
+        >
           <ReqoreMenuItem icon='Save3Fill' intent='success' selected>
             Selected success
           </ReqoreMenuItem>
@@ -176,87 +180,87 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
             Some button
           </ReqoreMenuItem>
 
-          <ReqoreMenuItem icon='Lock2Fill' description='I also have a description'>
+          <ReqoreMenuItem icon='Lock2Fill' description='I also have a description' wrap>
             This is a really long item that should wrap
           </ReqoreMenuItem>
           <ReqoreMenuItem icon='Lock2Fill' disabled>
             Disabled
           </ReqoreMenuItem>
-          <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
-            Disabled intent
-          </ReqoreMenuItem>
-          <ReqoreMenuDivider label='Divider' />
-          <ReqorePopover
-            component={ReqoreMenuItem}
-            flat={args.flat}
-            componentProps={
-              {
-                icon: 'EmotionUnhappyLine',
-                rightIcon: 'Scissors2Fill',
-                leftIconColor: 'danger:lighten',
-                wrap: args.wrapText,
-                flat: args.flat,
-              } as IReqoreMenuItemProps
-            }
-            openOnMount
-            content={
-              <ReqoreMenu {...args}>
-                <ReqoreMenuItem icon='ZhihuFill'>Item 1</ReqoreMenuItem>
-                <ReqoreMenuItem
-                  icon='AccountCircleFill'
-                  description='Would you look at that beautiful description'
-                  intent='warning'
-                >
-                  Item 2
-                </ReqoreMenuItem>
-                <ReqoreMenuItem icon='AnticlockwiseFill' disabled>
-                  Item 3
-                </ReqoreMenuItem>
-                <ReqoreMenuItem
-                  icon='ArchiveFill'
-                  badge={{
-                    label: '10',
-                    effect: { gradient: { colors: { 0: '#00e3e8', 100: '#eb0e8c' } } },
-                  }}
-                >
-                  Item 4
-                </ReqoreMenuItem>
-              </ReqoreMenu>
-            }
-            isReqoreComponent
-            noWrapper
-            handler='click'
-            placement='right'
-          >
-            I have a submenu on click
-          </ReqorePopover>
-          <ReqoreMenuDivider
-            label='Fancy divider'
-            effect={{ gradient: { colors: { 0: '#0d5ba5', 100: '#ff5dfd' } } }}
-            align='left'
-            padded='none'
-            margin='none'
-          />
-          <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' selected>
-            I am selected!
-          </ReqoreMenuItem>
-          <ReqoreMenuItem
-            icon='FireLine'
-            rightIcon='ArrowRightDownLine'
-            effect={{
-              gradient: {
-                colors: {
-                  0: '#000000',
-                  100: 'transparent',
-                },
-              },
-            }}
-            description='I also have a description'
-            badge={10}
-          >
-            Fancy
-          </ReqoreMenuItem>
         </ReqoreControlGroup>
+        <ReqoreMenuItem icon='Lock2Fill' disabled intent='warning'>
+          Disabled intent
+        </ReqoreMenuItem>
+        <ReqoreMenuDivider label='Divider' />
+        <ReqorePopover
+          component={ReqoreMenuItem}
+          flat={args.flat}
+          componentProps={
+            {
+              icon: 'EmotionUnhappyLine',
+              rightIcon: 'Scissors2Fill',
+              leftIconColor: 'danger:lighten',
+              wrap: args.wrapText,
+              flat: args.flat,
+            } as IReqoreMenuItemProps
+          }
+          openOnMount
+          content={
+            <ReqoreMenu {...args}>
+              <ReqoreMenuItem icon='ZhihuFill'>Item 1</ReqoreMenuItem>
+              <ReqoreMenuItem
+                icon='AccountCircleFill'
+                description='Would you look at that beautiful description'
+                intent='warning'
+              >
+                Item 2
+              </ReqoreMenuItem>
+              <ReqoreMenuItem icon='AnticlockwiseFill' disabled>
+                Item 3
+              </ReqoreMenuItem>
+              <ReqoreMenuItem
+                icon='ArchiveFill'
+                badge={{
+                  label: '10',
+                  effect: { gradient: { colors: { 0: '#00e3e8', 100: '#eb0e8c' } } },
+                }}
+              >
+                Item 4
+              </ReqoreMenuItem>
+            </ReqoreMenu>
+          }
+          isReqoreComponent
+          noWrapper
+          handler='click'
+          placement='right'
+        >
+          I have a submenu on click
+        </ReqorePopover>
+        <ReqoreMenuDivider
+          label='Fancy divider'
+          effect={{ gradient: { colors: { 0: '#0d5ba5', 100: '#ff5dfd' } } }}
+          align='left'
+          padded='none'
+          margin='none'
+        />
+        <ReqoreMenuItem icon='DualSim1Line' rightIcon='MoneyEuroBoxLine' selected>
+          I am selected!
+        </ReqoreMenuItem>
+        <ReqoreMenuItem
+          icon='FireLine'
+          rightIcon='ArrowRightDownLine'
+          effect={{
+            gradient: {
+              colors: {
+                0: '#000000',
+                100: 'transparent',
+              },
+            },
+          }}
+          description='I also have a description'
+          badge={10}
+        >
+          Fancy
+        </ReqoreMenuItem>
       </ReqoreMenu>
       <MenuWithSubmenus {...args} />
     </ReqoreControlGroup>
