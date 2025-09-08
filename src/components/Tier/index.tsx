@@ -22,6 +22,7 @@ export interface IReqoreTierProps extends Omit<IReqorePanelProps, 'description'>
   nameDetail?: string;
   price: string | number;
   currency: string;
+  currencyPosition?: 'before' | 'after';
   priceDetail?: string;
   salePrice?: string | number;
   description?: string | React.ReactNode;
@@ -34,6 +35,7 @@ export interface IReqoreTierProps extends Omit<IReqorePanelProps, 'description'>
 export const ReqoreTier = memo(
   ({
     currency,
+    currencyPosition = 'before',
     priceDetail,
     description,
     price,
@@ -107,8 +109,13 @@ export const ReqoreTier = memo(
                   color: 'success:lighten:15:1',
                 }}
               >
-                {currency && isNumber(salePrice) ? currency : undefined}
+                {currency && currencyPosition === 'before' && isNumber(salePrice)
+                  ? currency
+                  : undefined}
                 {salePrice}
+                {currency && currencyPosition === 'after' && isNumber(salePrice)
+                  ? currency
+                  : undefined}
               </ReqoreP>
             )}
             <ReqoreH1
@@ -119,8 +126,9 @@ export const ReqoreTier = memo(
                 opacity: salePrice ? 0.5 : 1,
               }}
             >
-              {currency && isNumber(price) ? currency : undefined}
+              {currency && currencyPosition === 'before' && isNumber(price) ? currency : undefined}
               {price}
+              {currency && currencyPosition === 'after' && isNumber(price) ? currency : undefined}
             </ReqoreH1>
             {priceDetail && (
               <ReqoreP intent='muted' size='small' effect={{ uppercase: true }}>

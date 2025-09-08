@@ -56,8 +56,9 @@ export const Group: Story = {
       <ReqoreTier
         name='Pro'
         nameDetail='For Teams'
-        price={9.99}
-        currency='$'
+        price={219}
+        currencyPosition='after'
+        currency='Kc'
         priceDetail='per month'
         description='This is a pro tier with additional features. Ideal for teams.'
         featureList={[
