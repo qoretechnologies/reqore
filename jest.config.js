@@ -5,13 +5,13 @@ module.exports = {
 
   testMatch: ['<rootDir>/__tests__/**/*.test.(ts|tsx)'],
 
-  // Jest transformations -- this adds support for TypeScript
-  // using ts-jest
+  // Use babel-jest to transform TS/JS so ESM deps (like nanoid) are transpiled for Jest
   transform: {
-    '^.+\\.(ts|tsx|js)?$': ['ts-jest', { diagnostics: false }],
+    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
   },
 
-  transformIgnorePatterns: ['<rootDir>/node_modules/(?!(yaml)/)'],
+  // Transform ESM packages that Jest can't run directly
+  transformIgnorePatterns: ['<rootDir>/node_modules/(?!(yaml|nanoid)/)'],
 
   // Module file extensions for importing
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node', 'css'],
