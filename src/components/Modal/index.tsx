@@ -1,5 +1,5 @@
+import { nanoid } from 'nanoid';
 import { memo, useCallback, useEffect, useMemo } from 'react';
-import shortid from 'shortid';
 import { useReqoreProperty } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../Drawer';
@@ -17,7 +17,7 @@ export interface IReqoreModalStyle extends IReqoreModalProps {
 
 export const ReqoreModal = memo(
   ({ width = '80vw', height = 'fit-content', confirmOnClose, ...rest }: IReqoreModalProps) => {
-    const id = useMemo(() => shortid.generate(), []);
+    const id = useMemo(() => nanoid(), []);
     const escClosableModals = useReqoreProperty('escClosableModals');
     const closeModalsOnEscPress = useReqoreProperty('closeModalsOnEscPress');
     const add = useReqoreProperty('addEscClosableModal');
