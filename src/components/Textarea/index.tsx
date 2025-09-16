@@ -1,6 +1,6 @@
+import { nanoid } from 'nanoid';
 import { rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
-import shortid from 'shortid';
 import styled, { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
@@ -182,7 +182,7 @@ function Textarea<T>(
   const theme = useReqoreTheme('main', customTheme, intent);
   const [_value, setValue] = useState(value || '');
   const [popoverData, setPopoverData] = useState<IPopoverControls>(null);
-  const uuid = useRef(shortid.generate());
+  const uuid = useRef(nanoid());
 
   useEffect(() => {
     setValue(value || '');

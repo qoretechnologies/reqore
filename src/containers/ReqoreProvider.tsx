@@ -1,7 +1,7 @@
 import { last, size } from 'lodash';
+import { nanoid } from 'nanoid';
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useMedia } from 'react-use';
-import shortid from 'shortid';
 import { useContext } from 'use-context-selector';
 import { create } from 'zustand';
 import { ReqoreModal, ReqoreTextEffect } from '..';
@@ -81,7 +81,7 @@ export const modalStore = create<{
   modals: {},
   addModal: (
     modal: IReqoreModalFromProps | TReqoreCustomModal,
-    id: string = shortid.generate(),
+    id: string = nanoid(),
     options?: IReqoreModal['options']
   ) => {
     set((cur) => ({
@@ -187,7 +187,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   const addNotification = useCallback((data: IReqoreNotificationData) => {
     setNotifications((cur) => {
       let newNotifications = [...cur];
-      const id = data.id || shortid.generate();
+      const id = data.id || nanoid();
       const fixedData: IReqoreNotificationData = {
         position: 'TOP',
         ...data,

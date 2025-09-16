@@ -40,7 +40,7 @@ jobs:
         run: echo "::set-output name=HEAD_COMMIT_MESSAGE::$(git show -s --format=%s)"
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 22.19.0
       - name: Preparing environment
         id: setup_environment
         run: npm install -g yarn
