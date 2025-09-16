@@ -15264,9 +15264,9 @@ snapdragon@^0.8.1:
     use "^3.1.0"
 
 snyk@^1.91.0:
-  version "1.1196.0"
-  resolved "https://registry.npmjs.org/snyk/-/snyk-1.1196.0.tgz"
-  integrity sha512-zrsIU9eDPqusrZ/zMjlOgubWFsU3PV/HGmSDvULNoMCxpt3ZR45ANljQXNZFCbT/jjVDfTuxos/YL9RnjBXPdg==
+  version "1.1299.0"
+  resolved "https://registry.yarnpkg.com/snyk/-/snyk-1.1299.0.tgz#1ed11d75b5c61eb57335f05b383fb20105bc5cd5"
+  integrity sha512-kBq4sW80A8BSFzm+71SnDoD47S/1Hh/jKvKE4XbPuLnSjrJthBIT3I3I+Yi/kb29W9f6+I8MilMReoRvYCDxHQ==
   dependencies:
     "@sentry/node" "^7.36.0"
     global-agent "^3.0.0"
