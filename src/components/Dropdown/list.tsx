@@ -174,8 +174,8 @@ const ReqoreDropdownList = memo(
 
       return {
         ...action,
-        onClick: (event, itemId, closePopover) => {
-          action.onClick(event, itemId, closePopover, {
+        onClick: (event, itemId, _closePopover) => {
+          action.onClick(event, itemId, _closePopover || closePopover, {
             item,
             selectItem: () => {
               handleItemSelectClick(item, event);
@@ -309,6 +309,7 @@ const ReqoreDropdownList = memo(
                       disabled={'items' in item && !size(item.items) ? true : item.disabled}
                       onItemClick={handleItemClick}
                       scrollIntoView={scrollToSelected && item.selected && !multiSelect}
+                      closePopover={closePopover}
                     />
                   )
               )}

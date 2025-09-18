@@ -83,6 +83,45 @@ export const ListIsClosedWhenItemIsClicked: Story = {
   },
 };
 
+export const ListIsClosedWhenItemActionIsClicked: Story = {
+  args: {
+    label: 'Default dropdown',
+    onItemSelect: noop,
+    items: [
+      {
+        label: 'Test item 1',
+      },
+      {
+        label: 'Test item 2',
+      },
+      {
+        label: 'Test item 3',
+        rightAction: {
+          label: 'Close',
+          onClick: (_e, _id, closePopover) => {
+            closePopover();
+          },
+        },
+      },
+    ],
+  },
+  play: async ({ canvasElement, ...rest }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    await fireEvent.click(canvas.getAllByText('Default dropdown')[0]);
+
+    await sleep(200);
+
+    await fireEvent.click(canvas.getAllByText('Close')[0]);
+
+    await sleep(200);
+
+    await expect(document.querySelector('.reqore-popover-content')).toBeFalsy();
+  },
+};
+
 export const ItemsCanBeTraversed: Story = {
   ...WithChildItems,
   play: async ({ canvasElement, ...rest }) => {
