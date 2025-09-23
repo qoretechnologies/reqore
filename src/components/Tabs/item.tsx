@@ -26,20 +26,25 @@ export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqor
 
 export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
   theme: IReqoreTheme;
-  closable?: boolean;
-  activeColor: string;
+  $closable?: boolean;
+  $activeColor: string;
+  $disabled?: boolean;
+  $vertical?: boolean;
+  $fill?: boolean;
+  $fixed?: boolean;
+  $padded?: boolean;
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ disabled, vertical, fill, fixed, padded }: IReqoreTabListItemStyle) => {
+  ${({ $disabled, $vertical, $fill, $fixed, $padded }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       flex-shrink: 0;
       position: relative;
       align-items: center;
-      width: ${vertical ? `100%` : undefined};
+      width: ${$vertical ? `100%` : undefined};
 
-      ${vertical
+      ${$vertical
         ? css`
             ${StyledButton}:last-child {
               border-right: 0;
@@ -49,7 +54,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
               border-bottom-right-radius: 0 !important;
             }
 
-            ${padded === false &&
+            ${$padded === false &&
             css`
               &:first-child {
                 padding-top: 0;
@@ -70,7 +75,7 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
               border-bottom-right-radius: 0 !important;
             }
 
-            ${padded === false &&
+            ${$padded === false &&
             css`
               &:first-child {
                 padding-left: 0;
@@ -81,13 +86,13 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
             `}
           `}
 
-      ${fill && !fixed
+      ${$fill && !$fixed
         ? css`
             flex: 1 0 auto;
           `
         : undefined}
 
-      ${disabled &&
+      ${$disabled &&
       css`
         cursor: not-allowed;
         > * {
@@ -197,16 +202,13 @@ const ReqoreTabsListItem = memo(
           ref={targetRef}
           {...props}
           className={className}
-          intent={intent}
           as={as}
-          size={size}
-          active={active}
-          disabled={disabled}
-          vertical={vertical}
           theme={theme}
-          fill={fill}
-          fixed={rest.fixed}
-          padded={padded}
+          $disabled={disabled}
+          $vertical={vertical}
+          $fill={fill}
+          $fixed={rest.fixed}
+          $padded={padded}
         >
           {!onCloseClick || disabled ? (
             renderButton()

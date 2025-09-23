@@ -74,25 +74,33 @@ export interface IReqoreInputProps
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
   theme: IReqoreTheme;
-  _size?: TSizes;
-  clearable?: boolean;
-  hasIcon?: boolean;
+  $_size?: TSizes;
+  $clearable?: boolean;
+  $hasIcon?: boolean;
+  $fluid?: boolean;
+  $fixed?: boolean;
+  $flat?: boolean;
+  $minimal?: boolean;
+  $readOnly?: boolean;
+  $disabled?: boolean;
+  $pill?: boolean;
+  $rounded?: boolean;
 }
 
 export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
-  height: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  height: ${({ $_size }) => SIZE_TO_PX[$_size]}px;
   width: ${({ width }) => (width ? `${width}px` : 'auto')};
-  max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
+  max-width: ${({ $fluid, $fixed }) => ($fluid && !$fixed ? '100%' : undefined)};
   min-width: 60px;
-  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 1 auto')};
-  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
-  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  flex: ${({ $fluid, $fixed }) => ($fixed ? '0 auto' : $fluid ? '1 auto' : '0 1 auto')};
+  align-self: ${({ $fixed, $fluid }) => ($fixed ? 'flex-start' : $fluid ? 'stretch' : undefined)};
+  font-size: ${({ $_size }) => CONTROL_TEXT_FROM_SIZE[$_size]}px;
   position: relative;
   overflow: hidden;
-  border-radius: ${({ minimal, rounded, _size, pill }) =>
-    minimal || rounded === false
+  border-radius: ${({ $minimal, $rounded, $_size, $pill }) =>
+    $minimal || $rounded === false
       ? 0
-      : RADIUS_FROM_SIZE[_size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+      : RADIUS_FROM_SIZE[$_size] * ($pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
   ${InactiveIconScale}
 
@@ -110,8 +118,8 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
 
 const StyledIconWrapper = styled.div<IReqoreInputStyle>`
   position: absolute;
-  height: ${({ _size }) => SIZE_TO_PX[_size]}px;
-  width: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  height: ${({ $_size }) => SIZE_TO_PX[$_size]}px;
+  width: ${({ $_size }) => SIZE_TO_PX[$_size]}px;
   right: ${({ position }) => (position === 'right' ? 0 : undefined)};
   top: 0;
   display: flex;
@@ -238,23 +246,23 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       <ReqoreTooltipComponent
         Component={StyledInputWrapper}
         className='reqore-control-wrapper'
-        fluid={fluid}
-        fixed={fixed}
         width={width}
-        flat={flat}
         theme={theme}
-        rounded={rounded}
-        minimal={minimal}
-        _size={size}
-        ref={targetRef}
-        readOnly={readOnly || loading}
-        disabled={rest.disabled}
-        style={wrapperStyle}
-        pill={pill}
         tooltip={rest.tooltip}
+        $fluid={fluid}
+        $fixed={fixed}
+        $flat={flat}
+        $rounded={rounded}
+        $minimal={minimal}
+        $_size={size}
+        $readOnly={readOnly || loading}
+        $disabled={rest.disabled}
+        $pill={pill}
+        style={wrapperStyle}
+        ref={targetRef}
       >
         {hasLeftIcon && (
-          <StyledIconWrapper _size={size}>
+          <StyledIconWrapper $_size={size}>
             <ReqoreIcon
               size={size}
               color={iconColor}
@@ -304,7 +312,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           show={rest?.value && rest.value !== '' ? true : false}
         />
         {hasRightIcon && (
-          <StyledIconWrapper _size={size} position='right'>
+          <StyledIconWrapper $_size={size} position='right'>
             <ReqoreIcon
               size={size}
               icon={rightIcon}

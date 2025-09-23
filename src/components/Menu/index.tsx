@@ -45,38 +45,46 @@ export interface IReqoreMenuProps
 
 export interface IReqoreMenuStyle extends IReqoreMenuProps {
   theme: IReqoreTheme;
+  $padded?: boolean;
+  $size?: string;
+  $transparent?: boolean;
+  $rounded?: boolean;
+  $position?: 'left' | 'right';
+  $isResizableLeft?: boolean;
+  $isResizableRight?: boolean;
+  $showResizableBorder?: boolean;
 }
 
 const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
   width: ${({ width }) => width || undefined};
   min-width: ${({ width }) => (width ? undefined : '160px')};
-  padding: ${({ padded = true, _size }) =>
-    padded ? `${HALF_PADDING_FROM_SIZE[_size]}px` : undefined};
+  padding: ${({ $padded = true, $size }) =>
+    $padded ? `${HALF_PADDING_FROM_SIZE[$size]}px` : undefined};
   max-height: ${({ maxHeight }) => maxHeight || undefined};
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-flow: column nowrap;
 
-  background-color: ${({ theme, transparent }) =>
-    transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
-  border-radius: ${({ rounded, _size }) => (rounded ? `${RADIUS_FROM_SIZE[_size]}px` : `0`)};
+  background-color: ${({ theme, $transparent }) =>
+    $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+  border-radius: ${({ $rounded, $size }) => ($rounded ? `${RADIUS_FROM_SIZE[$size]}px` : `0`)};
 
-  ${({ theme, position, _size, padded, isResizableLeft, showResizableBorder }) =>
-    position === 'right' || (isResizableLeft && showResizableBorder)
+  ${({ theme, $position, $size, $padded, $isResizableLeft, $showResizableBorder }) =>
+    $position === 'right' || ($isResizableLeft && $showResizableBorder)
       ? css`
-          border-left: 1px ${isResizableLeft && showResizableBorder ? 'dashed' : 'solid'}
+          border-left: 1px ${$isResizableLeft && $showResizableBorder ? 'dashed' : 'solid'}
             ${changeLightness(theme.main, 0.05)};
-          padding-left: ${!padded ? `${HALF_PADDING_FROM_SIZE[_size]}px` : undefined};
+          padding-left: ${!$padded ? `${HALF_PADDING_FROM_SIZE[$size]}px` : undefined};
         `
       : undefined}
 
-  ${({ theme, position, _size, padded, isResizableRight, showResizableBorder }) =>
-    position === 'left' || (isResizableRight && showResizableBorder)
+  ${({ theme, $position, $size, $padded, $isResizableRight, $showResizableBorder }) =>
+    $position === 'left' || ($isResizableRight && $showResizableBorder)
       ? css`
-          border-right: 1px ${isResizableRight && showResizableBorder ? 'dashed' : 'solid'}
+          border-right: 1px ${$isResizableRight && $showResizableBorder ? 'dashed' : 'solid'}
             ${changeLightness(theme.main, 0.05)};
-          padding-right: ${!padded ? `${HALF_PADDING_FROM_SIZE[_size]}px` : undefined};
+          padding-right: ${!$padded ? `${HALF_PADDING_FROM_SIZE[$size]}px` : undefined};
         `
       : undefined}
 `;
@@ -122,11 +130,16 @@ const ReqoreMenu = memo(
               {...rest}
               {...resizable}
               as={!!resizable ? Resizable : 'div'}
-              isResizableRight={resizable?.enable?.right}
-              isResizableLeft={resizable?.enable?.left}
-              flat={flat}
-              position={position}
-              _size={size}
+              width={rest.width}
+              maxHeight={rest.maxHeight}
+              $isResizableRight={resizable?.enable?.right}
+              $isResizableLeft={resizable?.enable?.left}
+              $position={position}
+              $size={size}
+              $padded={rest.padded}
+              $transparent={rest.transparent}
+              $rounded={rest.rounded}
+              $showResizableBorder={rest.showResizableBorder}
               className={`${rest.className || ''} reqore-menu`}
               theme={theme}
               ref={(curRef) => {
