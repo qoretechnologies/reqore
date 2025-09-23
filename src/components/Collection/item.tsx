@@ -47,14 +47,14 @@ export interface IReqoreCollectionItemProps
 }
 
 export const StyledCollectionItemContent = styled.div`
-  max-height: ${({ providedHeight }) => (providedHeight ? `${providedHeight}px` : 'auto')};
-  overflow: ${({ isSelected }) => (isSelected ? 'auto' : 'hidden')};
+  max-height: ${({ $providedHeight }) => ($providedHeight ? `${$providedHeight}px` : 'auto')};
+  overflow: ${({ $isSelected }) => ($isSelected ? 'auto' : 'hidden')};
   position: relative;
   transition: 0.3s ease-in-out;
   flex: 1;
 
-  ${({ contentOverflows, theme, opacity = 1 }) =>
-    contentOverflows &&
+  ${({ $contentOverflows, theme, $opacity = 1 }) =>
+    $contentOverflows &&
     css`
       &:after {
         content: '';
@@ -66,7 +66,7 @@ export const StyledCollectionItemContent = styled.div`
         transition: 0.3s ease-in-out;
         background: linear-gradient(
           to top,
-          ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)} 0%,
+          ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), $opacity)} 0%,
           transparent 100%
         );
       }
@@ -230,10 +230,10 @@ export const ReqoreCollectionItem = ({
         >
           <StyledCollectionItemContent
             theme={theme}
-            opacity={rest.transparent ? 0 : rest.opacity}
-            providedHeight={isSelected ? undefined : maxContentHeight}
-            isSelected={isSelected}
-            contentOverflows={
+            $opacity={rest.transparent ? 0 : rest.opacity}
+            $providedHeight={isSelected ? undefined : maxContentHeight}
+            $isSelected={isSelected}
+            $contentOverflows={
               !rest.transparent &&
               !rest.contentEffect &&
               !isSelected &&

@@ -50,17 +50,22 @@ export interface IReqoreBreadcrumbsProps
 
 interface IStyledBreadcrumbs extends Omit<IReqoreBreadcrumbsProps, 'items'> {
   theme: IReqoreTheme;
+  $size?: string;
+  $flat?: boolean;
+  $padded?: boolean;
+  $margin?: string;
+  $responsive?: boolean;
 }
 
 const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
-  ${({ theme, size, flat, padded = true, margin = 'both', responsive }: IStyledBreadcrumbs) => css`
-    width: ${responsive ? '100%' : undefined};
-    margin-top: ${margin === 'both' || margin === 'top' ? MARGIN_FROM_SIZE[size!] : 0}px;
-    margin-bottom: $ ${margin === 'both' || margin === 'bottom' ? MARGIN_FROM_SIZE[size!] : 0}px;
+  ${({ theme, $size, $flat, $padded = true, $margin = 'both', $responsive }: IStyledBreadcrumbs) => css`
+    width: ${$responsive ? '100%' : undefined};
+    margin-top: ${$margin === 'both' || $margin === 'top' ? MARGIN_FROM_SIZE[$size!] : 0}px;
+    margin-bottom: ${$margin === 'both' || $margin === 'bottom' ? MARGIN_FROM_SIZE[$size!] : 0}px;
     display: flex;
-    padding: 0 ${padded ? PADDING_FROM_SIZE[size!] : 0}px;
+    padding: 0 ${$padded ? PADDING_FROM_SIZE[$size!] : 0}px;
     justify-content: space-between;
-    border-bottom: ${flat ? undefined : `1px solid ${changeLightness(theme.main, 0.05)}`};
+    border-bottom: ${$flat ? undefined : `1px solid ${changeLightness(theme.main, 0.05)}`};
     background-color: ${({ theme }: { theme: IReqoreTheme }) =>
       theme.breadcrumbs?.main || 'transparent'};
 
@@ -246,10 +251,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         {...rest}
         className={`${rest.className || ''} reqore-breadcrumbs-wrapper`}
         ref={ref}
-        flat={flat}
         theme={theme}
-        size={size}
-        responsive={responsive}
+        $flat={flat}
+        $size={size}
+        $responsive={responsive}
+        $padded={rest.padded}
+        $margin={rest.margin}
       >
         <div key='reqore-breadcrumbs-left-wrapper'>
           {transformedItems.map(

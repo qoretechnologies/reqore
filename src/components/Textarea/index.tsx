@@ -65,21 +65,27 @@ export interface IReqoreTextareaProps
 
 export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
   theme: IReqoreTheme;
-  hasClearButton?: boolean;
-  _size?: TSizes;
+  $hasClearButton?: boolean;
+  $_size?: TSizes;
+  $fluid?: boolean;
+  $fixed?: boolean;
+  $minimal?: boolean;
+  $rounded?: boolean;
+  $readOnly?: boolean;
+  $disabled?: boolean;
 }
 
 export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   height: ${({ height }) => (height ? `${height}px` : undefined)};
-  min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
+  min-height: ${({ $_size }) => SIZE_TO_PX[$_size]}px;
   max-height: 100%;
-  width: ${({ width, fluid }) => (fluid ? '100%' : width ? `${width}px` : 'auto')};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
+  width: ${({ width, $fluid }) => ($fluid ? '100%' : width ? `${width}px` : 'auto')};
+  flex: ${({ $fluid, $fixed }) => ($fixed ? '0 0 auto' : $fluid ? '1 auto' : '0 0 auto')};
+  align-self: ${({ $fixed, $fluid }) => ($fixed ? 'flex-start' : $fluid ? 'stretch' : undefined)};
   position: relative;
   overflow: hidden;
-  border-radius: ${({ minimal, rounded = true, _size = 'normal' }) =>
-    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
+  border-radius: ${({ $minimal, $rounded = true, $_size = 'normal' }) =>
+    $minimal || !$rounded ? 0 : RADIUS_FROM_SIZE[$_size]}px;
 
   &:focus-within {
     .reqore-clear-input-button {
@@ -95,35 +101,35 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  font-size: ${({ _size = 'normal' }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ $_size = 'normal' }) => CONTROL_TEXT_FROM_SIZE[$_size]}px;
   margin: 0;
-  padding: ${({ _size = 'normal' }) => TEXTAREA_PADDING_FROM_SIZE[_size]}px;
-  padding-right: ${({ hasClearButton, _size = 'normal' }) =>
-    hasClearButton ? `${SIZE_TO_PX[_size]}px` : undefined};
-  min-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size]}px;
-  line-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
+  padding: ${({ $_size = 'normal' }) => TEXTAREA_PADDING_FROM_SIZE[$_size]}px;
+  padding-right: ${({ $hasClearButton, $_size = 'normal' }) =>
+    $hasClearButton ? `${SIZE_TO_PX[$_size]}px` : undefined};
+  min-height: ${({ $_size = 'normal' }) => SIZE_TO_PX[$_size]}px;
+  line-height: ${({ $_size = 'normal' }) => SIZE_TO_PX[$_size] - CONTROL_TEXT_FROM_SIZE[$_size]}px;
   vertical-align: middle;
 
-  background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
-    minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
+  background-color: ${({ theme, $minimal, transparent }: IReqoreTextareaStyle) =>
+    $minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
   color: ${({ theme }: IReqoreInputStyle) =>
     getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
 
   &:active,
   &:focus {
     outline: none;
-    background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
-      minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
+    background-color: ${({ theme, $minimal, transparent }: IReqoreTextareaStyle) =>
+      $minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
   }
 
   border-radius: inherit;
-  border: ${({ minimal, theme, flat }) =>
-    !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.13)}` : 0};
-  border-bottom: ${({ minimal, theme, flat }) =>
-    minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.13)}` : undefined};
+  border: ${({ $minimal, theme, flat }) =>
+    !$minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.13)}` : 0};
+  border-bottom: ${({ $minimal, theme, flat }) =>
+    $minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.13)}` : undefined};
 
-  ${({ disabled, readOnly }) =>
-    !disabled && !readOnly
+  ${({ $disabled, $readOnly }) =>
+    !$disabled && !$readOnly
       ? css`
           &:active,
           &:focus,
@@ -146,8 +152,8 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
     }
   }
 
-  ${({ readOnly }) => readOnly && ReadOnlyElement};
-  ${({ disabled }) => disabled && DisabledElement};
+  ${({ $readOnly }) => $readOnly && ReadOnlyElement};
+  ${({ $disabled }) => $disabled && DisabledElement};
 
   &:disabled {
     ${DisabledElement};
@@ -236,15 +242,18 @@ function Textarea<T>(
           }}
           as={rest.as || 'textarea'}
           className={`${className || ''} reqore-control reqore-textarea`}
-          _size={size}
+          $_size={size}
           ref={(ref) => setInputRef(ref)}
           theme={theme}
-          rounded={rounded}
+          $rounded={rounded}
           rows={1}
           value={_value}
           readonly={rest?.readOnly}
           tabIndex={rest?.disabled ? -1 : 0}
-          hasClearButton={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
+          $hasClearButton={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
+          $minimal={rest?.minimal}
+          $disabled={rest?.disabled}
+          $readOnly={rest?.readOnly}
         />
         <ReqoreInputClearButton
           enabled={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
@@ -260,18 +269,18 @@ function Textarea<T>(
     return (
       <ReqoreDropdown<Omit<IReqoreTextareaStyle & { ref: any }, 'content'>>
         component={StyledTextareaWrapper}
-        disabled={rest.disabled}
-        readOnly={rest.readOnly}
         className={`${className || ''} reqore-control-wrapper`}
         width={width}
-        filterable
         height={height}
-        fluid={fluid}
-        fixed={fixed}
-        _size={size}
         theme={theme}
         style={wrapperStyle}
         ref={targetRef}
+        filterable
+        $fluid={fluid}
+        $fixed={fixed}
+        $_size={size}
+        $disabled={rest.disabled}
+        $readOnly={rest.readOnly}
         onItemSelect={handleItemSelect}
         {...templates}
         popoverId={`id-${uuid.current}`}
@@ -290,12 +299,12 @@ function Textarea<T>(
       className={`${className || ''} reqore-control-wrapper`}
       width={width}
       height={height}
-      fluid={fluid}
-      fixed={fixed}
-      _size={size}
       theme={theme}
       style={wrapperStyle}
       ref={targetRef}
+      $fluid={fluid}
+      $fixed={fixed}
+      $_size={size}
     >
       {renderChildren()}
     </ReqoreTooltipComponent>

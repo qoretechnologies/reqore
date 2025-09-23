@@ -11,7 +11,7 @@ export interface IReqoreLayoutWrapperProps
 }
 
 const StyledReqoreLayoutWrapper = styled.div<{
-  withSidebar: boolean;
+  $withSidebar: boolean;
   theme: IReqoreTheme;
 }>`
   display: flex;
@@ -28,8 +28,8 @@ const StyledReqoreLayoutWrapper = styled.div<{
     text-decoration: none;
   }
 
-  ${({ withSidebar, theme }) => css`
-    flex-flow: ${withSidebar ? 'row' : 'column'};
+  ${({ $withSidebar, theme }) => css`
+    flex-flow: ${$withSidebar ? 'row' : 'column'};
     background-color: ${changeLightness(theme.main, 0.02)};
     color: ${getReadableColor(theme, undefined, undefined, true)};
   `}
@@ -45,7 +45,7 @@ const ReqoreLayoutWrapper = ({
     <StyledReqoreLayoutWrapper
       {...rest}
       className={`${className || ''} reqore-layout-wrapper`}
-      withSidebar={withSidebar}
+      $withSidebar={withSidebar}
     >
       {children}
     </StyledReqoreLayoutWrapper>
