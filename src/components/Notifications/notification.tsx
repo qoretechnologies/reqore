@@ -50,17 +50,19 @@ export interface IReqoreNotificationProps
 
 export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   theme: IReqoreTheme;
-  type?: IReqoreNotificationType;
-  clickable?: boolean;
-  timeout?: number;
-  intent?: TReqoreIntent;
-  hasShadow?: boolean;
-  fluid?: boolean;
-  flat?: boolean;
-  minimal?: boolean;
-  size?: TSizes;
-  asMessage?: boolean;
-  margin?: 'top' | 'bottom' | 'both' | 'none';
+  $type?: IReqoreNotificationType;
+  $clickable?: boolean;
+  $timeout?: number;
+  $intent?: TReqoreIntent;
+  $hasShadow?: boolean;
+  $fluid?: boolean;
+  $flat?: boolean;
+  $minimal?: boolean;
+  $size?: TSizes;
+  $asMessage?: boolean;
+  $margin?: 'top' | 'bottom' | 'both' | 'none';
+  $fixed?: boolean;
+  maxWidth?: string;
 }
 
 const timeoutAnimation = keyframes`
@@ -73,28 +75,28 @@ const timeoutAnimation = keyframes`
 `;
 
 export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotificationStyle>`
-  min-width: ${({ fluid }) => (!fluid ? '30px' : undefined)};
-  max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
+  min-width: ${({ $fluid }) => (!$fluid ? '30px' : undefined)};
+  max-width: ${({ maxWidth, $fluid, $fixed }) => maxWidth || ($fluid && !$fixed ? '100%' : undefined)};
   border-radius: 5px;
   display: flex;
-  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
+  flex: ${({ $fluid, $fixed }) => ($fixed ? '0 0 auto' : $fluid ? '1 auto' : '0 0 auto')};
+  align-self: ${({ $fixed, $fluid }) => ($fixed ? 'flex-start' : $fluid ? 'stretch' : undefined)};
   overflow: hidden;
   position: relative;
   transition: all 0.2s ease-out;
 
-  ${({ margin, size = 'normal' }) => css`
-    margin-top: ${margin === 'top' || margin === 'both'
-      ? `${PADDING_FROM_SIZE[size]}px`
+  ${({ $margin, $size = 'normal' }) => css`
+    margin-top: ${$margin === 'top' || $margin === 'both'
+      ? `${PADDING_FROM_SIZE[$size]}px`
       : undefined};
-    margin-bottom: ${margin === 'bottom' || margin === 'both'
-      ? `${PADDING_FROM_SIZE[size]}px`
+    margin-bottom: ${$margin === 'bottom' || $margin === 'both'
+      ? `${PADDING_FROM_SIZE[$size]}px`
       : undefined};
   `};
 
   // Do not fade in the component if it's a message
-  ${({ asMessage }) => {
-    if (asMessage) {
+  ${({ $asMessage }) => {
+    if ($asMessage) {
       return undefined;
     }
     return css`
@@ -103,35 +105,35 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
   }}
 
   &:not(:first-child) {
-    margin-top: ${({ asMessage, size }) =>
-      asMessage ? undefined : `${PADDING_FROM_SIZE[size]}px`};
+    margin-top: ${({ $asMessage, $size }) =>
+      $asMessage ? undefined : `${PADDING_FROM_SIZE[$size]}px`};
   }
 
   ${({
     theme,
-    type,
-    intent,
-    clickable,
-    timeout,
-    hasShadow,
-    flat,
-    minimal,
+    $type,
+    $intent,
+    $clickable,
+    $timeout,
+    $hasShadow,
+    $flat,
+    $minimal,
     opaque = true,
   }: IReqoreNotificationStyle) => css`
-    background-color: ${minimal
+    background-color: ${$minimal
       ? 'transparent'
       : opaque
       ? changeLightness(theme.main, 0.1)
-      : rgba(getNotificationIntent(theme, intent || type), 0.3)};
-    border: ${flat ? 0 : '1px solid'};
-    border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.2)};
+      : rgba(getNotificationIntent(theme, $intent || $type), 0.3)};
+    border: ${$flat ? 0 : '1px solid'};
+    border-color: ${changeLightness(getNotificationIntent(theme, $intent || $type), 0.2)};
 
-    ${hasShadow &&
+    ${$hasShadow &&
     css`
       box-shadow: 0px 0px 30px 10px ${rgba('#000000', 0.3)};
     `}
 
-    ${timeout &&
+    ${$timeout &&
     css`
       &::before {
         content: '';
@@ -139,26 +141,26 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
         display: block;
         top: 0;
         height: 3px;
-        background-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.2)};
+        background-color: ${changeLightness(getNotificationIntent(theme, $intent || $type), 0.2)};
         animation-name: ${timeoutAnimation};
-        animation-duration: ${timeout}ms;
+        animation-duration: ${$timeout}ms;
       }
     `}
 
-    color: ${minimal || !opaque
+    color: ${$minimal || !opaque
       ? 'inherit'
-      : getReadableColor(theme, null, null, true, minimal ? theme.originalMain : undefined)};
+      : getReadableColor(theme, null, null, true, $minimal ? theme.originalMain : undefined)};
 
-    ${clickable &&
+    ${$clickable &&
     css`
       cursor: pointer;
       &:hover {
-        background-color: ${minimal
+        background-color: ${$minimal
           ? 'transparent'
           : opaque
           ? changeDarkness(theme.main, 0.002)
-          : rgba(getNotificationIntent(theme, intent || type), 0.4)};
-        border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.25)};
+          : rgba(getNotificationIntent(theme, $intent || $type), 0.4)};
+        border-color: ${changeLightness(getNotificationIntent(theme, $intent || $type), 0.25)};
       }
     `}
   `}
@@ -172,8 +174,8 @@ export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
   align-items: center;
   transition: all 0.2s ease-out;
 
-  ${({ clickable, theme, intent, type }) =>
-    clickable &&
+  ${({ $clickable, theme, $intent, $type }) =>
+    $clickable &&
     css`
       margin-top: unset;
       height: unset;
@@ -184,7 +186,7 @@ export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
 
       &:hover {
         cursor: pointer;
-        background-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.02)};
+        background-color: ${changeLightness(getNotificationIntent(theme, $intent || $type), 0.02)};
         .reqore-icon {
           transform: scale(1);
         }
@@ -207,7 +209,7 @@ export const StyledNotificationContentWrapper = styled.div<IReqoreNotificationSt
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: ${({ size = 'normal' }: IReqoreNotificationStyle) => `${PADDING_FROM_SIZE[size]}px`};
+  padding: ${({ $size = 'normal' }: IReqoreNotificationStyle) => `${PADDING_FROM_SIZE[$size]}px`};
 `;
 
 export const StyledNotificationTitle = styled.h4`
@@ -307,22 +309,24 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
           <StyledReqoreNotification
             as={animated.div}
             key={`${duration}${type || intent}${title}${content}`}
-            type={type || intent}
-            hasShadow
-            timeout={duration}
-            clickable={!!onClick}
+            $type={type || intent}
+            $hasShadow
+            $timeout={duration}
+            $clickable={!!onClick}
             onClick={() => onClick?.()}
-            flat={flat}
-            minimal={minimal}
+            $flat={flat}
+            $minimal={minimal}
             className='reqore-notification'
             ref={ref}
             style={styles}
-            size={size}
+            $size={size}
             opaque={opaque}
             theme={theme}
             maxWidth='450px'
+            $fluid={fluid}
+            $fixed={rest?.fixed}
           >
-            <StyledNotificationContentWrapper size={size} theme={theme}>
+            <StyledNotificationContentWrapper $size={size} theme={theme}>
               {type || intent || icon ? (
                 <>
                   {intent === 'pending' || type === 'pending' ? (
@@ -345,9 +349,9 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             </StyledNotificationContentWrapper>
             {onClose ? (
               <StyledIconWrapper
-                type={type || intent}
-                size={size}
-                clickable
+                $type={type || intent}
+                $size={size}
+                $clickable
                 className='reqore-notification-close'
                 onClick={(event) => {
                   event.stopPropagation();

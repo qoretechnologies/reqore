@@ -65,8 +65,8 @@ export interface ITreeStyle {
   interactive?: boolean;
   theme: IReqoreTheme;
   level?: number;
-  size?: TSizes;
-  expandable?: boolean;
+  $size?: TSizes;
+  $expandable?: boolean;
 }
 
 export const StyledTreeLabel = styled(ReqoreP)`
@@ -78,9 +78,9 @@ export const StyledTreeLabel = styled(ReqoreP)`
 export const StyledTreeWrapper = styled.div<ITreeStyle>`
   display: flex;
   flex-flow: column;
-  gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
-  margin-left: ${({ size }) => ICON_FROM_SIZE[size]}px;
-  cursor: ${({ expandable }) => (expandable ? 'pointer' : 'default')};
+  gap: ${({ $size }) => GAP_FROM_SIZE[$size]}px;
+  margin-left: ${({ $size }) => ICON_FROM_SIZE[$size]}px;
+  cursor: ${({ $expandable }) => ($expandable ? 'pointer' : 'default')};
 `;
 
 export const ReqoreTree = ({
@@ -240,7 +240,7 @@ export const ReqoreTree = ({
       return (
         <StyledTreeWrapper
           key={index}
-          size={zoomToSize[zoom]}
+          $size={zoomToSize[zoom]}
           level={level}
           className='reqore-tree-item'
         >
