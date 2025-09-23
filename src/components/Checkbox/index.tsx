@@ -71,6 +71,7 @@ export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
   $disabled?: boolean;
   $readOnly?: boolean;
   $checked?: boolean;
+  $parentHasGradient?: boolean;
 }
 
 const StyledSwitchToggle = styled.div`
@@ -136,14 +137,14 @@ const StyledSwitchTextWrapper = styled(StyledTextEffect)`
 `;
 
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
-  color: ${({ theme, $checked, parentHasGradient }) =>
-    !parentHasGradient &&
+  color: ${({ theme, $checked, $parentHasGradient }) =>
+    !$parentHasGradient &&
     getReadableColorFrom($checked ? changeLightness(theme.main, 0.25) : theme.originalMain)};
 `;
 
 const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
-  color: ${({ theme, $checked, parentHasGradient }) =>
-    !parentHasGradient &&
+  color: ${({ theme, $checked, $parentHasGradient }) =>
+    !$parentHasGradient &&
     getReadableColorFrom($checked ? theme.originalMain : changeLightness(theme.main, 0.2))};
 `;
 
@@ -277,7 +278,6 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
           <StyledSwitch
             $size={size}
             tabIndex='0'
-            labelPosition={labelPosition}
             $checked={checked}
             theme={theme}
             as='div'
@@ -295,7 +295,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                   $size={size}
                   theme={theme}
                   $checked={checked}
-                  parentHasGradient={!!effect?.gradient}
+                  $parentHasGradient={!!effect?.gradient}
                   effect={
                     {
                       uppercase: true,
@@ -324,7 +324,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                   $size={size}
                   theme={theme}
                   $checked={checked}
-                  parentHasGradient={!!effect?.gradient}
+                  $parentHasGradient={!!effect?.gradient}
                   effect={
                     {
                       uppercase: true,
