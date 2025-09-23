@@ -264,7 +264,6 @@ const ReqoreTabsList = ({
     <ReqoreThemeProvider theme={theme}>
       <StyledReqoreTabsList
         {...rest}
-        width={width}
         className={`${rest.className || ''} reqore-tabs-list`}
         ref={ref}
         theme={theme}
