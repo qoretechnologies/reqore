@@ -20,6 +20,10 @@ export interface IReqoreNavbarItemProps extends React.HTMLAttributes<HTMLDivElem
 
 export interface IReqoreNavbarItemStyle extends IReqoreNavbarItemProps {
   theme?: IReqoreTheme;
+  $interactive?: boolean;
+  $type?: 'header' | 'footer';
+  $disabled?: boolean;
+  $active?: boolean;
 }
 
 const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
@@ -30,13 +34,13 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
   align-items: center;
   padding: 10px;
   color: inherit;
-  background-color: ${({ theme, active, type }) =>
-    active && (theme[type]?.hoverColor || changeLightness(getMainColor(theme, type), 0.05))};
+  background-color: ${({ theme, $active, $type }) =>
+    $active && (theme[$type]?.hoverColor || changeLightness(getMainColor(theme, $type), 0.05))};
 
   ${InactiveIconScale}
 
-  ${({ active }: IReqoreNavbarItemStyle) => {
-    if (active) {
+  ${({ $active }: IReqoreNavbarItemStyle) => {
+    if ($active) {
       return css`
         ${ActiveIconScale}
       `;
@@ -45,14 +49,14 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
     return undefined;
   }}
 
-  ${({ interactive, theme, type }: IReqoreNavbarItemStyle) => {
-    if (interactive) {
+  ${({ $interactive, theme, $type }: IReqoreNavbarItemStyle) => {
+    if ($interactive) {
       return css`
         transition: background-color 0.2s ease-out;
         cursor: pointer;
         &:hover {
-          background-color: ${theme[type]?.hoverColor ||
-          changeLightness(getMainColor(theme, type), 0.05)};
+          background-color: ${theme[$type]?.hoverColor ||
+          changeLightness(getMainColor(theme, $type), 0.05)};
         }
         ${ScaleIconOnHover}
       `;
@@ -61,10 +65,10 @@ const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
     return undefined;
   }}
 
-  opacity: ${({ disabled }) => disabled && 0.3};
+  opacity: ${({ $disabled }) => $disabled && 0.3};
 
-  ${({ disabled }) =>
-    disabled &&
+  ${({ $disabled }) =>
+    $disabled &&
     css`
       ${DisabledElement}
     `}
@@ -78,10 +82,10 @@ const ReqoreNavbarItem = forwardRef<HTMLDivElement, IReqoreNavbarItemProps>(
     <StyledNavbarItem
       {...rest}
       className={`${rest.className || ''} reqore-navbar-item`}
-      interactive={interactive || !!rest.onClick}
-      disabled={disabled}
-      active={active}
-      type={type}
+      $interactive={interactive || !!rest.onClick}
+      $disabled={disabled}
+      $active={active}
+      $type={type}
       ref={ref}
     >
       {children}

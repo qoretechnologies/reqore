@@ -6,10 +6,10 @@ export interface IReqoreCommentFeedProps extends React.HTMLAttributes<HTMLDivEle
   gapSize?: string;
 }
 
-export const StyledCommentFeed = styled.div<{ gapSize: string }>`
+export const StyledCommentFeed = styled.div<{ $gapSize: string }>`
   ${StyledPanel} {
     &:not(:first-child) {
-      margin-top: ${({ gapSize }) => gapSize};
+      margin-top: ${({ $gapSize }) => $gapSize};
     }
   }
 `;
@@ -23,7 +23,7 @@ export const ReqoreCommentFeed = ({
   return (
     <StyledCommentFeed
       {...rest}
-      gapSize={gapSize}
+      $gapSize={gapSize}
       className={classNames('reqore-comment-feed', {
         className,
       })}

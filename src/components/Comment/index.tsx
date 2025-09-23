@@ -43,12 +43,12 @@ export const StyledInfoWrapper = styled.div`
   overflow: hidden;
 `;
 
-export const StyledCommentText = styled(ReqoreP)<{ marginTop?: string }>`
+export const StyledCommentText = styled(ReqoreP)<{ $marginTop?: string }>`
   min-height: 10px;
   overflow: hidden;
   padding: 0;
   margin: 0;
-  margin-top: ${({ marginTop }: { marginTop?: string }) => marginTop};
+  margin-top: ${({ $marginTop }: { $marginTop?: string }) => $marginTop};
 `;
 
 export const StyledCommentTitle = styled(ReqoreH3)`
@@ -131,7 +131,7 @@ export const ReqoreComment = ({
               </ReqoreColumn>
             ) : null}
           </ReqoreColumns>
-          <StyledCommentText marginTop={title || detail || size(actions) ? '10px' : '0px'}>
+          <StyledCommentText $marginTop={title || detail || size(actions) ? '10px' : '0px'}>
             {children}
           </StyledCommentText>
         </StyledInfoWrapper>

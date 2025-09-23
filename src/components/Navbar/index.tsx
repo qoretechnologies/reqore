@@ -15,32 +15,34 @@ export interface IReqoreNavbarProps extends React.HTMLAttributes<HTMLDivElement>
 
 export interface IReqoreNavbarStyle extends IReqoreNavbarProps {
   theme: IReqoreTheme;
+  $type?: 'header' | 'footer';
+  $flat?: boolean;
 }
 
 export const StyledNavbar = styled.div<IReqoreNavbarStyle>`
-  ${({ theme, type }: IReqoreNavbarStyle) => css`
+  ${({ theme, $type }: IReqoreNavbarStyle) => css`
     height: 50px;
     flex-shrink: 0;
     width: 100%;
     padding: 0 10px;
-    color: ${theme[type]?.color ||
+    color: ${theme[$type]?.color ||
     getReadableColor(
       theme,
       undefined,
       undefined,
       true,
-      theme[type]?.background || theme[type]?.main || theme.main
+      theme[$type]?.background || theme[$type]?.main || theme.main
     )};
-    background-color: ${theme[type]?.background || theme[type]?.main || theme.main};
+    background-color: ${theme[$type]?.background || theme[$type]?.main || theme.main};
   `}
 
-  ${({ theme, type, flat }: IReqoreNavbarStyle) =>
-    !flat
+  ${({ theme, $type, $flat }: IReqoreNavbarStyle) =>
+    !$flat
       ? css`
-    box-shadow: rgba(31, 26, 34, 0.05) 0px ${type === 'header' ? '2px' : '-2px'} 6px;
+    box-shadow: rgba(31, 26, 34, 0.05) 0px ${$type === 'header' ? '2px' : '-2px'} 6px;
 
-    border-${type === 'header' ? 'bottom' : 'top'}: 1px solid ${
-          theme[type]?.border || darken(0.05, getMainColor(theme, type))
+    border-${$type === 'header' ? 'bottom' : 'top'}: 1px solid ${
+          theme[$type]?.border || darken(0.05, getMainColor(theme, $type))
         };
   `
       : undefined}
@@ -55,7 +57,8 @@ const ReqoreNavbar = forwardRef<HTMLDivElement, IReqoreNavbarProps>(
         {...rest}
         className={`${rest.className || ''} reqore-navbar-${type}`}
         position={position}
-        type={type}
+        $type={type}
+        $flat={rest.flat}
         ref={ref}
         theme={theme}
       >

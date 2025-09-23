@@ -10,7 +10,7 @@ export interface IReqoreNavbarDividerProps extends React.HTMLAttributes<HTMLDivE
 
 const StyledNavbarDivider = styled.div<{
   theme: IReqoreTheme;
-  type?: 'header' | 'footer';
+  $type?: 'header' | 'footer';
 }>`
   position: relative;
   width: 20px;
@@ -24,13 +24,13 @@ const StyledNavbarDivider = styled.div<{
     display: block;
     width: 1px;
     height: 50%;
-    background-color: ${({ theme, type }) =>
+    background-color: ${({ theme, $type }) =>
       getReadableColor(
         theme,
         undefined,
         undefined,
         true,
-        theme[type]?.background || theme[type]?.main || theme.main
+        theme[$type]?.background || theme[$type]?.main || theme.main
       )};
     opacity: 0.2;
   }
@@ -40,7 +40,7 @@ const ReqoreNavbarDivider = forwardRef<HTMLDivElement, IReqoreNavbarDividerProps
   ({ type, ...rest }: IReqoreNavbarDividerProps, ref: any) => (
     <StyledNavbarDivider
       {...rest}
-      type={type}
+      $type={type}
       className={`${rest.className || ''} reqore-navbar-divider`}
       ref={ref}
     />

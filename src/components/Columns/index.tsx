@@ -15,27 +15,39 @@ export interface IReqoreColumnsProps extends React.HTMLAttributes<HTMLDivElement
 
 export interface IStyledColumns extends IReqoreColumnsProps {
   theme?: IReqoreTheme;
+  $minColumnWidth?: string;
+  $maxColumnWidth?: string;
+  $columns?: number | 'auto-fit' | 'auto-fill';
+  $columnsGap?: string;
+  $alignItems?: string;
 }
 
 export const StyledColumns = styled.div<IStyledColumns>`
   display: grid;
   ${({
-    minColumnWidth = '300px',
-    maxColumnWidth = '1fr',
-    columns = 'auto-fit',
-    columnsGap,
-    alignItems = 'normal',
+    $minColumnWidth = '300px',
+    $maxColumnWidth = '1fr',
+    $columns = 'auto-fit',
+    $columnsGap,
+    $alignItems = 'normal',
   }: IStyledColumns) => css`
-    grid-template-columns: repeat(${columns}, minmax(${minColumnWidth}, ${maxColumnWidth}));
+    grid-template-columns: repeat(${$columns}, minmax(${$minColumnWidth}, ${$maxColumnWidth}));
     grid-auto-rows: max-content;
-    grid-gap: ${columnsGap};
-    align-items: ${alignItems};
+    grid-gap: ${$columnsGap};
+    align-items: ${$alignItems};
   `}
 `;
 
 export const ReqoreColumns = memo(({ children, className, ...rest }: IReqoreColumnsProps) => {
   return (
-    <StyledColumns {...rest} className={classNames('reqore-columns', className)}>
+    <StyledColumns 
+      className={classNames('reqore-columns', className)}
+      $minColumnWidth={rest.minColumnWidth}
+      $maxColumnWidth={rest.maxColumnWidth}
+      $columns={rest.columns}
+      $columnsGap={rest.columnsGap}
+      $alignItems={rest.alignItems}
+    >
       {children}
     </StyledColumns>
   );

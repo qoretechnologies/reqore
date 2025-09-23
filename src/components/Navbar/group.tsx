@@ -11,12 +11,13 @@ export interface IReqoreNavbarGroupProps extends React.HTMLAttributes<HTMLDivEle
 
 export interface IReqoreNavbarGroupStyle extends IReqoreNavbarGroupProps {
   theme: IReqoreTheme;
+  $position?: 'right' | 'left';
 }
 
 export const StyledNavbarGroup = styled.div<IReqoreNavbarGroupStyle>`
-  ${({ position }: IReqoreNavbarGroupStyle) => css`
+  ${({ $position }: IReqoreNavbarGroupStyle) => css`
     height: 100%;
-    float: ${position};
+    float: ${$position};
     color: inherit;
     background-color: inherit;
     display: flex;
@@ -30,7 +31,7 @@ const ReqoreNavbarGroup = forwardRef<HTMLDivElement, IReqoreNavbarGroupProps>(
     <StyledNavbarGroup
       {...rest}
       className={`${rest.className || ''} reqore-navbar-group`}
-      position={position}
+      $position={position}
       ref={ref}
     >
       {React.Children.map(children, (child) =>
