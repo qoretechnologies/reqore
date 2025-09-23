@@ -183,8 +183,8 @@ const StyledTableWrapper = styled.div`
   display: flex;
   flex-flow: column;
 
-  ${({ isPinned }) =>
-    isPinned
+  ${({ $isPinned }: { $isPinned?: boolean }) =>
+    $isPinned
       ? css`
           flex-shrink: 0;
           z-index: 1;
@@ -201,8 +201,8 @@ const StyledTablesWrapper = styled.div`
   flex-flow: row;
   overflow: hidden;
 
-  ${({ rounded, size = 'normal' }) => css`
-    border-radius: ${rounded === false ? 0 : RADIUS_FROM_SIZE[size]}px;
+  ${({ $rounded, $size = 'normal' }: { $rounded?: boolean; $size?: string }) => css`
+    border-radius: ${$rounded === false ? 0 : RADIUS_FROM_SIZE[$size]}px;
   `}
 `;
 
@@ -773,7 +773,7 @@ const ReqoreTable = ({
     }
 
     return (
-      <StyledTableWrapper isPinned={isPinned} key={`${type}-table-wrapper`}>
+      <StyledTableWrapper $isPinned={isPinned} key={`${type}-table-wrapper`}>
         <ReqoreTableHeader
           key={`${type}-header`}
           size={zoomToSize[zoom]}
@@ -870,7 +870,8 @@ const ReqoreTable = ({
                 )}
                 <StyledTablesWrapper
                   className='reqore-table-wrapper'
-                  rounded={rest.rounded !== false && rest.flat !== false}
+                  $rounded={rest.rounded !== false && rest.flat !== false}
+                  $size={size}
                 >
                   {renderTable('left', applyPaging(transformedData))}
                   {renderTable('main', applyPaging(transformedData))}
