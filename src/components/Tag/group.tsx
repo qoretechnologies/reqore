@@ -16,22 +16,22 @@ export interface IReqoreTagGroup
 }
 
 const StyledTagGroup = styled.div`
-  flex-shrink: ${({ wrap }: IReqoreTagGroup) => (wrap ? 1 : 0)};
-  flex-grow: ${({ fluid }: IReqoreTagGroup) => (fluid ? 1 : undefined)};
+  flex-shrink: ${({ $wrap }: { $wrap?: boolean }) => ($wrap ? 1 : 0)};
+  flex-grow: ${({ $fluid }: { $fluid?: boolean }) => ($fluid ? 1 : undefined)};
   display: flex;
-  flex-wrap: ${({ wrap }: IReqoreTagGroup) => (wrap ? 'wrap' : 'nowrap')};
-  gap: ${({ gapSize }: IReqoreTagGroup) => GAP_FROM_SIZE[gapSize]}px;
+  flex-wrap: ${({ $wrap }: { $wrap?: boolean }) => ($wrap ? 'wrap' : 'nowrap')};
+  gap: ${({ $gapSize }: { $gapSize?: TSizes }) => GAP_FROM_SIZE[$gapSize]}px;
   align-items: center;
 
-  ${({ align }) => {
-    if (align === 'right') {
+  ${({ $align }: { $align?: 'left' | 'center' | 'right' }) => {
+    if ($align === 'right') {
       return css`
         margin-left: auto;
         justify-content: flex-end;
       `;
     }
 
-    if (align === 'center') {
+    if ($align === 'center') {
       return css`
         margin: 0 auto;
         justify-content: center;
@@ -51,9 +51,10 @@ const ReqoreTagGroup = ({
   ...rest
 }: IReqoreTagGroup) => (
   <StyledTagGroup
-    {...rest}
-    gapSize={gapSize}
-    wrap={wrap}
+    $gapSize={gapSize}
+    $wrap={wrap}
+    $fluid={rest.fluid}
+    $align={rest.align}
     className={`${className || ''} reqore-tag-group`}
   >
     {React.Children.map(children, (child) =>
