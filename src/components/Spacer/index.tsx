@@ -7,17 +7,17 @@ import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreEffect } from '../../
 import { StyledEffect } from '../Effect';
 
 export const StyledSpacer = styled.div`
-  display: ${({ horizontal }) => (horizontal ? 'inline-flex' : 'flex')};
+  display: ${({ $horizontal }) => ($horizontal ? 'inline-flex' : 'flex')};
   vertical-align: middle;
 
-  ${({ horizontal, vertical }) => {
-    if (horizontal) {
+  ${({ $horizontal, $vertical }) => {
+    if ($horizontal) {
       return css`
         flex-flow: row;
       `;
     }
 
-    if (vertical) {
+    if ($vertical) {
       return css`
         flex-flow: column;
       `;
@@ -31,18 +31,18 @@ export const StyledSpace = styled.div`
   display: inline-block;
   flex: 0 0 auto;
 
-  ${({ horizontal, vertical, width, height, lineSize }) => {
-    if (horizontal) {
+  ${({ $horizontal, $vertical, $width, $height, $lineSize }) => {
+    if ($horizontal) {
       return css`
-        width: ${width / 2 - lineSize / 2}px;
-        height: ${height ? `${height}px` : `${TEXT_FROM_SIZE.normal}px`};
+        width: ${$width / 2 - $lineSize / 2}px;
+        height: ${$height ? `${$height}px` : `${TEXT_FROM_SIZE.normal}px`};
       `;
     }
 
-    if (vertical) {
+    if ($vertical) {
       return css`
-        width: ${width ? `${width}px` : '100%'};
-        height: ${height / 2 - lineSize / 2}px;
+        width: ${$width ? `${$width}px` : '100%'};
+        height: ${$height / 2 - $lineSize / 2}px;
       `;
     }
   }}
@@ -50,21 +50,21 @@ export const StyledSpace = styled.div`
 
 export const StyledLine = styled(StyledEffect)`
   flex-shrink: 0;
-  background-color: ${({ theme, lineSize }) =>
-    lineSize === 'none' ? 'transparent' : changeLightness(theme.main, 0.2)};
+  background-color: ${({ theme, $lineSize }) =>
+    $lineSize === 'none' ? 'transparent' : changeLightness(theme.main, 0.2)};
 
-  ${({ horizontal, vertical, width, height, lineSize }) => {
-    if (horizontal) {
+  ${({ $horizontal, $vertical, $width, $height, $lineSize }) => {
+    if ($horizontal) {
       return css`
-        width: ${lineSize}px;
-        height: ${height ? `${height}px` : `${TEXT_FROM_SIZE.normal}px`};
+        width: ${$lineSize}px;
+        height: ${$height ? `${$height}px` : `${TEXT_FROM_SIZE.normal}px`};
       `;
     }
 
-    if (vertical) {
+    if ($vertical) {
       return css`
-        width: ${width ? `${width}px` : '100%'};
-        height: ${lineSize}px;
+        width: ${$width ? `${$width}px` : '100%'};
+        height: ${$lineSize}px;
       `;
     }
   }}
@@ -111,19 +111,21 @@ export const ReqoreSpacer = memo(
       <StyledSpacer
         as='div'
         {...rest}
-        horizontal={horizontal}
-        vertical={vertical}
+        $horizontal={horizontal}
+        $vertical={vertical}
         className='reqore-spacer'
       >
-        <StyledSpace {...rest} horizontal={horizontal} vertical={vertical} lineSize={_lineSize} />
+        <StyledSpace $horizontal={horizontal} $vertical={vertical} $width={rest.width} $height={rest.height} $lineSize={_lineSize} />
         <StyledLine
           {...rest}
-          horizontal={horizontal}
-          vertical={vertical}
+          $horizontal={horizontal}
+          $vertical={vertical}
           theme={theme}
-          lineSize={_lineSize}
+          $lineSize={_lineSize}
+          $width={rest.width}
+          $height={rest.height}
         />
-        <StyledSpace {...rest} horizontal={horizontal} vertical={vertical} lineSize={_lineSize} />
+        <StyledSpace $horizontal={horizontal} $vertical={vertical} $width={rest.width} $height={rest.height} $lineSize={_lineSize} />
       </StyledSpacer>
     );
   }
