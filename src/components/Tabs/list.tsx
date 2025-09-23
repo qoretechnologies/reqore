@@ -39,30 +39,36 @@ export interface IReqoreTabsListProps
 
 export interface IReqoreTabsListStyle extends Omit<IReqoreTabsListProps, 'tabs'> {
   theme: IReqoreTheme;
+  $fill?: boolean;
+  $vertical?: boolean;
+  $size?: TSizes;
+  $padded?: boolean;
+  $flat?: boolean;
+  $currentTabColor?: string;
 }
 
 export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
-  ${({ fill, vertical, size, padded, flat, currentTabColor, width }) => css`
-    height: ${vertical ? '100%' : undefined};
-    width: ${vertical ? width || '200px' : '100%'};
-    flex-flow: ${vertical ? 'column' : 'row'};
+  ${({ $fill, $vertical, $size, $padded, $flat, $currentTabColor, width }) => css`
+    height: ${$vertical ? '100%' : undefined};
+    width: ${$vertical ? width || '200px' : '100%'};
+    flex-flow: ${$vertical ? 'column' : 'row'};
     display: flex;
     align-items: center;
 
-    gap: ${GAP_FROM_SIZE[size]}px;
+    gap: ${GAP_FROM_SIZE[$size]}px;
 
-    ${padded &&
+    ${$padded &&
     css`
-      padding: 0 ${PADDING_FROM_SIZE[size]}px;
+      padding: 0 ${PADDING_FROM_SIZE[$size]}px;
     `}
 
-    ${!flat &&
+    ${!$flat &&
     css`
-    border-${vertical ? 'right' : 'bottom'}: 1px solid ${changeLightness(currentTabColor, 0.175)};
+    border-${$vertical ? 'right' : 'bottom'}: 1px solid ${changeLightness($currentTabColor, 0.175)};
     `}
 
 
-    ${fill &&
+    ${$fill &&
     css`
       justify-content: space-around;
     `}
@@ -258,14 +264,16 @@ const ReqoreTabsList = ({
     <ReqoreThemeProvider theme={theme}>
       <StyledReqoreTabsList
         {...rest}
-        size={size}
-        fill={fill}
-        vertical={vertical}
+        width={width}
         className={`${rest.className || ''} reqore-tabs-list`}
         ref={ref}
-        flat={flat}
         theme={theme}
-        currentTabColor={currentTabColor}
+        $size={size}
+        $fill={fill}
+        $vertical={vertical}
+        $flat={flat}
+        $padded={padded}
+        $currentTabColor={currentTabColor}
       >
         {transformedItems.map((item: IReqoreTabsListItem | IReqoreTabsListItem[], index: number) =>
           isArray(item) ? (

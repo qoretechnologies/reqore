@@ -49,10 +49,10 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
 
 const StyledTabs = styled.div<Partial<IReqoreTabsProps>>`
   display: flex;
-  ${({ vertical, fillParent, width }) => css`
+  ${({ $vertical, $fillParent, width }) => css`
     width: ${width ? `${width}px` : '100%'};
-    height: ${fillParent ? '100%' : undefined};
-    flex-flow: ${vertical ? 'row' : 'column'};
+    height: ${$fillParent ? '100%' : undefined};
+    flex-flow: ${$vertical ? 'row' : 'column'};
   `}
 `;
 
@@ -63,6 +63,7 @@ const ReqoreTabs = ({
   className,
   onTabChange,
   fill,
+  fillParent,
   _testWidth,
   vertical,
   activeTabIntent,
@@ -108,8 +109,9 @@ const ReqoreTabs = ({
       <StyledTabs
         {...rest}
         width={width}
-        vertical={vertical}
         className={`${className || ''} reqore-tabs`}
+        $vertical={vertical}
+        $fillParent={fillParent}
       >
         <ReqoreTabsList
           tabs={tabs}

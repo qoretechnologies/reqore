@@ -65,6 +65,12 @@ export interface IReqoreCheckboxProps
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
   theme: IReqoreTheme;
+  $size?: TSizes;
+  $fluid?: boolean;
+  $fixed?: boolean;
+  $disabled?: boolean;
+  $readOnly?: boolean;
+  $checked?: boolean;
 }
 
 const StyledSwitchToggle = styled.div`
@@ -101,10 +107,10 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
   justify-content: center;
   flex-shrink: 0;
 
-  height: ${({ size }) => SWITCH_SIZE_TO_PX[size]}px;
-  min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] * 1.8}px;
+  height: ${({ $size }) => SWITCH_SIZE_TO_PX[$size]}px;
+  min-width: ${({ $size }) => SWITCH_SIZE_TO_PX[$size] * 1.8}px;
 
-  border: 1px solid ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.35 : 0.2)};
+  border: 1px solid ${({ theme, $checked }) => changeLightness(theme.main, $checked ? 0.35 : 0.2)};
   border-radius: 50px;
 
   background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.3), 0.1)};
@@ -121,24 +127,24 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
 `;
 
 const StyledSwitchTextWrapper = styled(StyledTextEffect)`
-  margin: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  margin: 0 ${({ $size }) => PADDING_FROM_SIZE[$size]}px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
-  min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size]}px;
+  min-width: ${({ $size }) => SWITCH_SIZE_TO_PX[$size]}px;
 `;
 
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
-  color: ${({ theme, checked, parentHasGradient }) =>
+  color: ${({ theme, $checked, parentHasGradient }) =>
     !parentHasGradient &&
-    getReadableColorFrom(checked ? changeLightness(theme.main, 0.25) : theme.originalMain)};
+    getReadableColorFrom($checked ? changeLightness(theme.main, 0.25) : theme.originalMain)};
 `;
 
 const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
-  color: ${({ theme, checked, parentHasGradient }) =>
+  color: ${({ theme, $checked, parentHasGradient }) =>
     !parentHasGradient &&
-    getReadableColorFrom(checked ? theme.originalMain : changeLightness(theme.main, 0.2))};
+    getReadableColorFrom($checked ? theme.originalMain : changeLightness(theme.main, 0.2))};
 `;
 
 const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
@@ -148,33 +154,33 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
   padding: 0px;
   transition: all 0.2s ease-out;
 
-  height: ${({ size }) => SIZE_TO_PX[size]}px;
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  height: ${({ $size }) => SIZE_TO_PX[$size]}px;
+  font-size: ${({ $size }) => CONTROL_TEXT_FROM_SIZE[$size]}px;
 
-  max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
-  flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 0 auto')};
+  max-width: ${({ $fluid, $fixed }) => ($fluid && !$fixed ? '100%' : undefined)};
+  flex: ${({ $fluid, $fixed }) => ($fixed ? '0 auto' : $fluid ? '1 auto' : '0 0 auto')};
 
-  ${({ disabled }) =>
-    disabled &&
+  ${({ $disabled }) =>
+    $disabled &&
     css`
       ${DisabledElement};
     `}
 
-  ${({ readOnly }) =>
-    readOnly &&
+  ${({ $readOnly }) =>
+    $readOnly &&
     css`
       ${ReadOnlyElement};
     `}
 
-  color: ${({ theme, checked }) =>
-    getReadableColor(theme, undefined, undefined, !checked, theme.originalMain)};
+  color: ${({ theme, $checked }) =>
+    getReadableColor(theme, undefined, undefined, !$checked, theme.originalMain)};
 
   &:hover {
     color: ${({ theme }) =>
       getReadableColor(theme, undefined, undefined, false, theme.originalMain)};
 
     > ${StyledSwitch} {
-      border-color: ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.4 : 0.35)};
+      border-color: ${({ theme, $checked }) => changeLightness(theme.main, $checked ? 0.4 : 0.35)};
     }
   }
 `;
@@ -232,12 +238,14 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       {
         ...rest,
         theme,
-        size,
         tooltip,
-        disabled,
-        checked,
-        readOnly,
         className: `${className || ''} reqore-checkbox reqore-control`,
+        $size: size,
+        $disabled: disabled,
+        $checked: checked,
+        $readOnly: readOnly,
+        $fluid: rest.fluid,
+        $fixed: rest.fixed,
       },
       StyledCheckbox,
       ref
@@ -267,10 +275,10 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         ) : null}
         {asSwitch ? (
           <StyledSwitch
-            size={size}
+            $size={size}
             tabIndex='0'
             labelPosition={labelPosition}
-            checked={checked}
+            $checked={checked}
             theme={theme}
             as='div'
             effect={
@@ -284,9 +292,9 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
               {offText || offText === 0 ? (
                 <StyledOffSwitchText
                   ref={offRef}
-                  size={size}
+                  $size={size}
                   theme={theme}
-                  checked={checked}
+                  $checked={checked}
                   parentHasGradient={!!effect?.gradient}
                   effect={
                     {
@@ -313,9 +321,9 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
               {onText || onText === 0 ? (
                 <StyledOnSwitchText
                   ref={onRef}
-                  size={size}
+                  $size={size}
                   theme={theme}
-                  checked={checked}
+                  $checked={checked}
                   parentHasGradient={!!effect?.gradient}
                   effect={
                     {
