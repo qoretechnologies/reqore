@@ -77,14 +77,23 @@ export interface IReqoreCollectionProps
   paging?: TReqorePaginationType<IReqoreCollectionItemProps>;
 }
 
-export const StyledCollectionWrapper = styled(StyledColumns)`
-  height: ${({ height }) => (height ? `${height}` : 'auto')};
-  flex: ${({ fill }) => (fill ? 1 : undefined)};
+interface IStyledCollectionWrapperInternal {
+  $height?: string;
+  $fill?: boolean;
+  $rounded?: boolean;
+  $stacked?: boolean;
+}
 
-  ${({ rounded, stacked }: IReqoreCollectionProps) =>
-    (!rounded || stacked) &&
+export const StyledCollectionWrapper = styled(StyledColumns).withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<IStyledCollectionWrapperInternal>`
+  height: ${({ $height }) => ($height ? `${$height}` : 'auto')};
+  flex: ${({ $fill }) => ($fill ? 1 : undefined)};
+
+  ${({ $rounded, $stacked }: IStyledCollectionWrapperInternal) =>
+    (!$rounded || $stacked) &&
     css`
-      border-radius: ${stacked && rounded ? '10px' : undefined};
+      border-radius: ${$stacked && $rounded ? '10px' : undefined};
     `}
 
   overflow: auto;
@@ -374,16 +383,16 @@ export const ReqoreCollection = memo(
               </ReqoreMessage>
             ) : (
               <StyledCollectionWrapper
-                columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
-                columnsGap={stacked ? '0px' : columnsGap}
-                rounded={rounded}
-                stacked={stacked}
-                fill={fill}
+                $columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
+                $columnsGap={stacked ? '0px' : columnsGap}
+                $rounded={rounded}
+                $stacked={stacked}
+                $fill={fill}
                 ref={setContentRef}
-                height={height}
-                alignItems={alignItems}
-                minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
-                maxColumnWidth={maxColumnWidth}
+                $height={height}
+                $alignItems={alignItems}
+                $minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
+                $maxColumnWidth={maxColumnWidth}
                 className='reqore-collection-content'
               >
                 {(() => {
@@ -481,15 +490,15 @@ export const ReqoreCollection = memo(
       return (
         <ReqorePanelSkeleton size={rest.size}>
           <StyledCollectionWrapper
-            columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
-            columnsGap={stacked ? '0px' : columnsGap}
-            rounded={rounded}
-            stacked={stacked}
-            fill={fill}
-            height={height}
-            alignItems={alignItems}
-            minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
-            maxColumnWidth={maxColumnWidth}
+            $columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
+            $columnsGap={stacked ? '0px' : columnsGap}
+            $rounded={rounded}
+            $stacked={stacked}
+            $fill={fill}
+            $height={height}
+            $alignItems={alignItems}
+            $minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
+            $maxColumnWidth={maxColumnWidth}
             className='reqore-collection-content'
           >
             <ReqoreSkeleton height='100px' width='100%' />

@@ -82,6 +82,7 @@ const ReqoreMessage = memo(
         fixed,
         fluid,
         iconProps,
+        margin,
         ...rest
       },
       ref
@@ -146,6 +147,9 @@ const ReqoreMessage = memo(
             $asMessage
             $fluid={fluid}
             $fixed={fixed}
+            // Map public margin to transient styled prop
+            margin={margin}
+            $margin={margin}
             className={`${rest?.className || ''} reqore-message`}
             ref={ref}
             $size={size}

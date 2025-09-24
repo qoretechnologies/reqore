@@ -40,13 +40,14 @@ export const StyledColumns = styled.div<IStyledColumns>`
 
 export const ReqoreColumns = memo(({ children, className, ...rest }: IReqoreColumnsProps) => {
   return (
-    <StyledColumns 
+    <StyledColumns
       className={classNames('reqore-columns', className)}
       $minColumnWidth={rest.minColumnWidth}
       $maxColumnWidth={rest.maxColumnWidth}
       $columns={rest.columns}
       $columnsGap={rest.columnsGap}
       $alignItems={rest.alignItems}
+      {...rest}
     >
       {children}
     </StyledColumns>

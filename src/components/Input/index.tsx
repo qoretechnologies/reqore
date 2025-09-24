@@ -85,6 +85,7 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
   $disabled?: boolean;
   $pill?: boolean;
   $rounded?: boolean;
+  $hasRightIcon?: boolean;
 }
 
 export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
@@ -127,33 +128,35 @@ const StyledIconWrapper = styled.div<IReqoreInputStyle>`
   align-items: center;
 `;
 
-export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
+export const StyledInput = styled(StyledEffect).withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<IReqoreInputStyle>`
   height: 100%;
   width: 100%;
   flex: 1;
   margin: 0;
-  padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px 7px;
-  padding-right: ${({ clearable, hasRightIcon, _size }) => {
+  padding: ${({ $_size }) => PADDING_FROM_SIZE[$_size] / 2}px 7px;
+  padding-right: ${({ $clearable, $hasRightIcon, $_size }) => {
     let padding = 7;
 
-    if (clearable || hasRightIcon) {
+    if ($clearable || $hasRightIcon) {
       padding = 0;
-      padding += clearable ? SIZE_TO_PX[_size] : 0;
-      padding += hasRightIcon ? SIZE_TO_PX[_size] : 0;
+      padding += $clearable ? SIZE_TO_PX[$_size] : 0;
+      padding += $hasRightIcon ? SIZE_TO_PX[$_size] : 0;
     }
 
     return padding;
   }}px;
 
-  padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
-  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  padding-left: ${({ $hasIcon, $_size }) => ($hasIcon ? SIZE_TO_PX[$_size] : 7)}px;
+  font-size: ${({ $_size }) => CONTROL_TEXT_FROM_SIZE[$_size]}px;
   transition: all 0.2s ease-out;
   border-radius: inherit;
 
-  border: ${({ minimal, theme, flat }) =>
-    !minimal && !flat ? `1px solid ${changeLightness(theme.main, 0.13)}` : 0};
-  border-bottom: ${({ minimal, theme, flat }) =>
-    minimal && !flat ? `0.5px solid ${changeLightness(theme.main, 0.13)}` : undefined};
+  border: ${({ $minimal, theme, $flat }) =>
+    !$minimal && !$flat ? `1px solid ${changeLightness(theme.main, 0.13)}` : 0};
+  border-bottom: ${({ $minimal, theme, $flat }) =>
+    $minimal && !$flat ? `0.5px solid ${changeLightness(theme.main, 0.13)}` : undefined};
 
   ${({ disabled, readOnly }) =>
     !disabled && !readOnly
@@ -166,8 +169,8 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
         `
       : undefined}
 
-  background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
-    minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
+  background-color: ${({ theme, $minimal, transparent }: IReqoreInputStyle) =>
+    $minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
   color: ${({ theme }: IReqoreInputStyle) =>
     getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
 
@@ -176,8 +179,8 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   &:active,
   &:focus {
     outline: none;
-    background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
-      minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
+    background-color: ${({ theme, $minimal, transparent }: IReqoreInputStyle) =>
+      $minimal || transparent ? 'transparent' : rgba(theme.main, 0.15)};
   }
 
   &::placeholder {
@@ -193,11 +196,13 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
     }
   }
 
-  ${({ readOnly }) => readOnly && ReadOnlyElement};
+  ${({ $readOnly }) => $readOnly && ReadOnlyElement};
 
-  &:disabled {
-    ${DisabledElement};
-  }
+  ${({ $disabled }) =>
+    $disabled &&
+    css`
+      ${DisabledElement};
+    `}
 `;
 
 const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
@@ -283,20 +288,21 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           onChange={!readOnly && !rest?.disabled ? rest?.onChange : undefined}
           ref={(ref) => setInputRef(ref)}
           theme={theme}
-          _size={size}
-          minimal={minimal}
-          flat={flat}
-          rounded={rounded}
-          hasIcon={!!icon}
-          hasRightIcon={!!rightIcon}
-          clearable={
+          $_size={size}
+          $minimal={minimal}
+          $flat={flat}
+          $rounded={rounded}
+          $hasIcon={!!icon}
+          $hasRightIcon={!!rightIcon}
+          $clearable={
             !rest?.disabled &&
             !readOnly &&
             !!(onClearClick && (rest.as || rest.children || rest?.onChange))
           }
           className={`${className || ''} reqore-control reqore-input`}
-          readOnly={readOnly || loading}
-          pill={pill}
+          $readOnly={readOnly || loading}
+          $pill={pill}
+          $disabled={rest.disabled}
         >
           {rest?.children}
         </StyledInput>

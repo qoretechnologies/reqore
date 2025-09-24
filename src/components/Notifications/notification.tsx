@@ -50,7 +50,7 @@ export interface IReqoreNotificationProps
 
 export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   theme: IReqoreTheme;
-  // Already transient ($) internal styling props
+  // Transient ($) internal styling props consumed by styled component
   $type?: IReqoreNotificationType;
   $clickable?: boolean;
   $timeout?: number;
@@ -63,7 +63,8 @@ export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   $asMessage?: boolean;
   $margin?: 'top' | 'bottom' | 'both' | 'none';
   $fixed?: boolean;
-  maxWidth?: string;
+  $opaque?: boolean; // mapped from public opaque
+  $maxWidth?: string; // mapped from public maxWidth
 }
 
 const timeoutAnimation = keyframes`
@@ -75,10 +76,12 @@ const timeoutAnimation = keyframes`
   }
 `;
 
-export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotificationStyle>`
+export const StyledReqoreNotification = styled(StyledEffect).withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<IReqoreNotificationStyle>`
   min-width: ${({ $fluid }) => (!$fluid ? '30px' : undefined)};
-  max-width: ${({ maxWidth, $fluid, $fixed }) =>
-    maxWidth || ($fluid && !$fixed ? '100%' : undefined)};
+  max-width: ${({ $maxWidth, $fluid, $fixed }) =>
+    $maxWidth || ($fluid && !$fixed ? '100%' : undefined)};
   border-radius: 5px;
   display: flex;
   flex: ${({ $fluid, $fixed }) => ($fixed ? '0 0 auto' : $fluid ? '1 auto' : '0 0 auto')};
@@ -120,12 +123,12 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     $hasShadow,
     $flat,
     $minimal,
-    opaque = true,
+    $opaque = true,
   }: IReqoreNotificationStyle) => css`
     background-color: ${$minimal
       ? 'transparent'
-      : opaque
-      ? changeLightness(theme.main, 0.1)
+      : $opaque
+      ? changeLightness(getNotificationIntent(theme, $intent || $type), 0.1)
       : rgba(getNotificationIntent(theme, $intent || $type), 0.3)};
     border: ${$flat ? 0 : '1px solid'};
     border-color: ${changeLightness(getNotificationIntent(theme, $intent || $type), 0.2)};
@@ -149,7 +152,7 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
       }
     `}
 
-    color: ${$minimal || !opaque
+    color: ${$minimal || !$opaque
       ? 'inherit'
       : getReadableColor(theme, null, null, true, $minimal ? theme.originalMain : undefined)};
 
@@ -159,8 +162,8 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
       &:hover {
         background-color: ${$minimal
           ? 'transparent'
-          : opaque
-          ? changeDarkness(theme.main, 0.002)
+          : $opaque
+          ? changeDarkness(getNotificationIntent(theme, $intent || $type), 0.002)
           : rgba(getNotificationIntent(theme, $intent || $type), 0.4)};
         border-color: ${changeLightness(getNotificationIntent(theme, $intent || $type), 0.25)};
       }
@@ -325,11 +328,13 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             ref={ref}
             style={styles}
             $size={size}
-            opaque={opaque}
+            $opaque={opaque}
             theme={theme}
-            maxWidth='450px'
+            $maxWidth='450px'
             $fluid={fluid}
             $fixed={(rest as any)?.fixed}
+            // Forward effect if provided for custom colors / gradients
+            effect={(rest as any)?.effect}
           >
             <StyledNotificationContentWrapper $size={size} theme={theme}>
               {type || intent || icon ? (

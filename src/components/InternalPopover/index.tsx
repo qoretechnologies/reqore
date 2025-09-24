@@ -26,7 +26,7 @@ import {
 import ReqoreMessage from '../Message';
 import { IPopoverData } from '../Popover';
 
-const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
+const getPopoverArrowColor = ({ theme, $dim: dim, $intent: intent, $flat: flat, $effect: effect, $isOpaque: isOpaque }) =>
   rgba(
     effect
       ? changeLightness(
@@ -49,7 +49,7 @@ const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
     dim ? 0.3 : 1
   );
 
-const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
+const StyledPopoverArrow = styled.div.withConfig({ shouldForwardProp: (prop) => !prop.startsWith('$') })<{ theme: IReqoreTheme }>`
   width: 10px;
   height: 10px;
   position: absolute;
@@ -65,23 +65,40 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
-  ${({ animate }) =>
-    animate &&
+interface IStyledPopoverWrapperInternal {
+  theme: IReqoreTheme;
+  $animate?: boolean;
+  $maxWidth?: string | number;
+  $minWidth?: string | number;
+  $maxHeight?: string | number;
+  $transparent?: boolean;
+  $intent?: any;
+  $flat?: boolean;
+  $noWrapper?: boolean;
+  $dim?: boolean;
+  $effect?: any;
+  $isOpaque?: boolean;
+}
+
+export const StyledPopoverWrapper = styled.div.withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<IStyledPopoverWrapperInternal>`
+  ${({ $animate }) =>
+    $animate &&
     css`
       animation: 0.2s ${fadeIn} ease-out;
     `}
 
-  max-width: ${({ maxWidth }) => maxWidth};
-  min-width: ${({ minWidth }) => minWidth};
-  max-height: ${({ maxHeight }) => maxHeight};
+  max-width: ${({ $maxWidth }) => $maxWidth};
+  min-width: ${({ $minWidth }) => $minWidth};
+  max-height: ${({ $maxHeight }) => $maxHeight};
   z-index: 999999;
   border-radius: ${RADIUS_FROM_SIZE.normal}px;
-  border: ${({ flat, noWrapper, ...rest }: any) =>
-    !flat && noWrapper ? `1px solid ${getPopoverArrowColor({ ...rest, flat })}` : undefined};
+  border: ${({ $flat, $noWrapper, ...rest }: any) =>
+    !$flat && $noWrapper ? `1px solid ${getPopoverArrowColor({ ...rest, $flat })}` : undefined};
 
-  ${({ transparent }) =>
-    !transparent &&
+  ${({ $transparent }) =>
+    !$transparent &&
     css`
       box-shadow: rgba(31, 26, 34, 0.7) 0px 0px 10px;
     `}
@@ -282,20 +299,20 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     return createPortal(
       <ReqoreThemeProvider>
         <StyledPopoverWrapper
-          maxWidth={maxWidth}
-          minWidth={minWidth}
-          maxHeight={maxHeight}
-          transparent={transparent}
-          effect={effect}
-          isOpaque={!transparent && !minimal}
-          intent={intent}
-          flat={flat}
-          noWrapper={noWrapper}
-          dim={flat && !transparent && !effect && minimal}
+          $maxWidth={maxWidth}
+          $minWidth={minWidth}
+          $maxHeight={maxHeight}
+          $transparent={transparent}
+          $effect={effect}
+          $isOpaque={!transparent && !minimal}
+          $intent={intent}
+          $flat={flat}
+          $noWrapper={noWrapper}
+          $dim={flat && !transparent && !effect && minimal}
           className='reqore-popover-content'
           ref={handleRef}
           style={style}
-          animate={animations?.popovers}
+          $animate={animations?.popovers}
           id={id}
           {...attributes.popper}
         >
