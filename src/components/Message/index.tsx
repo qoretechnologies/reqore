@@ -136,18 +136,19 @@ const ReqoreMessage = memo(
             Component={StyledReqoreNotification}
             as={animated.div}
             key={`${duration}${intent}${title}${children}`}
-            intent={intent}
-            timeout={duration}
-            clickable={!!onClick}
+            // Transient props to StyledReqoreNotification
+            $intent={intent}
+            $timeout={duration}
+            $clickable={!!onClick}
             onClick={onClick}
-            flat={flat}
-            minimal={minimal}
-            asMessage
-            fluid={fluid}
-            fixed={fixed}
+            $flat={flat}
+            $minimal={minimal}
+            $asMessage
+            $fluid={fluid}
+            $fixed={fixed}
             className={`${rest?.className || ''} reqore-message`}
             ref={ref}
-            size={size}
+            $size={size}
             theme={theme}
             effect={effect}
           >

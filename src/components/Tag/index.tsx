@@ -97,11 +97,28 @@ export interface IReqoreTagProps
   extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children' | 'color'>,
     IReqoreCustomTagProps {}
 
-export interface IReqoreTagStyle extends IReqoreTagProps {
+// Internal styling props (transient with $ prefix on the styled component)
+interface IReqoreTagStyleInternal {
+  $size?: TSizes;
+  $asBadge?: boolean;
+  $fixed?: IReqoreTagProps['fixed'];
+  $fluid?: boolean;
+  $intent?: TReqoreIntent;
+  $color?: TReqoreColor;
+  $minimal?: boolean;
+  $rounded?: boolean;
+  $wrap?: boolean;
+  $hasWidth?: boolean;
+  $labelKey?: IReqoreTagProps['labelKey'];
+  $interactive?: boolean;
+  $removable?: boolean;
+  $effect?: IReqoreEffect;
+  $disabled?: boolean;
+}
+
+export interface IReqoreTagStyle extends IReqoreTagProps, IReqoreTagStyleInternal {
   theme: IReqoreTheme;
-  removable?: boolean;
-  interactive?: boolean;
-  color?: TReqoreColor;
+  color?: TReqoreColor; // kept for backward compatibility inside logic
 }
 
 export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
@@ -112,22 +129,23 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   font-family: system-ui;
   overflow: hidden;
   vertical-align: middle;
-  font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ $size = 'normal' }) => TAG_TEXT_FROM_SIZE[$size]}px;
   line-height: 1.1;
 
-  min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size])}px;
-  max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
-  flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
-  justify-self: ${({ fixed, fluid }) =>
-    fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
-  border: ${({ theme, color, flat = true }) =>
-    !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
-  border-radius: ${({ asBadge, size, rounded }) =>
+  min-width: ${({ $size = 'normal', $asBadge }) =>
+    $asBadge ? BADGE_SIZE_TO_PX[$size] : TAG_SIZE_TO_PX[$size]}px;
+  max-width: ${({ $fixed }) => ($fixed !== true ? '100%' : undefined)};
+  flex: ${({ $fluid, $fixed }) => ($fixed === true ? '0 0 auto' : $fluid ? '1 auto' : '0 0 auto')};
+  justify-self: ${({ $fixed, $fluid }) =>
+    $fixed === true ? 'flex-start' : $fluid ? 'stretch' : undefined};
+  border: ${({ theme, $color, flat = true }) =>
+    !flat ? `1px solid ${changeLightness($color || theme.main, 0.2)}` : 0};
+  border-radius: ${({ $asBadge, $size = 'normal', rounded }) =>
     rounded === false
       ? undefined
-      : asBadge
-      ? `${BADGE_RADIUS_FROM_SIZE[size]}px`
-      : `${TAG_RADIUS_FROM_SIZE[size]}px`};
+      : $asBadge
+      ? `${BADGE_RADIUS_FROM_SIZE[$size]}px`
+      : `${TAG_RADIUS_FROM_SIZE[$size]}px`};
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
@@ -153,18 +171,18 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
 
   ${InactiveIconScale};
 
-  ${({ wrap, hasWidth }) =>
-    wrap || hasWidth
+  ${({ $wrap, $hasWidth }) =>
+    $wrap || $hasWidth
       ? css`
-          min-height: ${({ size, asBadge }) =>
-            asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
+          min-height: ${({ $size = 'normal', $asBadge }) =>
+            $asBadge ? BADGE_SIZE_TO_PX[$size] : TAG_SIZE_TO_PX[$size]}px;
         `
       : css`
-          height: ${({ size, asBadge }) =>
-            asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
+          height: ${({ $size = 'normal', $asBadge }) =>
+            $asBadge ? BADGE_SIZE_TO_PX[$size] : TAG_SIZE_TO_PX[$size]}px;
         `}
 
-  ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) => {
+  ${({ theme, $color: color, $labelKey: labelKey, minimal }: IReqoreTagStyle) => {
     return css`
       background-color: ${minimal
         ? color
@@ -183,7 +201,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     `;
   }}
 
-  ${({ theme, color, interactive, minimal, effect }) =>
+  ${({ theme, $color: color, $interactive: interactive, minimal, $effect: effect }) =>
     interactive
       ? css`
           cursor: pointer;
@@ -211,7 +229,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       : undefined}
 
 
-  ${({ disabled }) =>
+  ${({ $disabled: disabled }) =>
     disabled &&
     css`
       opacity: 0.5;
@@ -395,18 +413,23 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         theme={theme}
         effect={effect}
         width={width}
-        labelKey={labelKey}
-        color={getCustomColor(intent)}
+        // Transient styling props ($ prefix) to prevent DOM leakage
+        $labelKey={labelKey}
+        $color={getCustomColor(intent)}
         className={`${className || ''} reqore-tag`}
-        size={size}
+        $size={size}
         ref={ref}
-        asBadge={asBadge}
+        $asBadge={asBadge}
         minimal={minimal}
-        removable={!!onRemoveClick}
-        interactive={!!onClick && !rest.disabled}
+        $removable={!!onRemoveClick}
+        $interactive={!!onClick && !rest.disabled}
         tabIndex={onClick && !rest.disabled ? 0 : undefined}
-        wrap={wrap}
-        hasWidth={!!width}
+        $wrap={wrap}
+        $hasWidth={!!width}
+        $fixed={rest.fixed}
+        $fluid={rest.fluid}
+        $disabled={rest.disabled}
+        $effect={effect}
       >
         {labelKey || hasLeftIcon ? (
           <StyledTagKeyWrapper

@@ -50,6 +50,7 @@ export interface IReqoreNotificationProps
 
 export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   theme: IReqoreTheme;
+  // Already transient ($) internal styling props
   $type?: IReqoreNotificationType;
   $clickable?: boolean;
   $timeout?: number;
@@ -76,7 +77,8 @@ const timeoutAnimation = keyframes`
 
 export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotificationStyle>`
   min-width: ${({ $fluid }) => (!$fluid ? '30px' : undefined)};
-  max-width: ${({ maxWidth, $fluid, $fixed }) => maxWidth || ($fluid && !$fixed ? '100%' : undefined)};
+  max-width: ${({ maxWidth, $fluid, $fixed }) =>
+    maxWidth || ($fluid && !$fixed ? '100%' : undefined)};
   border-radius: 5px;
   display: flex;
   flex: ${({ $fluid, $fixed }) => ($fixed ? '0 0 auto' : $fluid ? '1 auto' : '0 0 auto')};
@@ -250,23 +252,26 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     {
       type,
       intent,
-      icon,
       title,
       content,
+      icon,
       onClose,
       onClick,
       duration,
       onFinish,
+      fluid,
       flat,
+      size = 'normal',
       minimal,
       opaque = true,
-      size = 'normal',
       customTheme,
+      // transient-like external props
+      ...rest
     },
-    ref: any
+    ref
   ) => {
-    const [internalTimeout, setInternalTimeout] = useState(null);
-    const theme = useReqoreTheme('main', customTheme, type || intent, 'notifications');
+    const [internalTimeout, setInternalTimeout] = useState<NodeJS.Timeout | null>(null);
+    const theme = useReqoreTheme('main', customTheme, intent || type);
 
     const transitions = useTransition(true, {
       from: { opacity: 0, transform: 'scale(0.9)' },
@@ -324,7 +329,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             theme={theme}
             maxWidth='450px'
             $fluid={fluid}
-            $fixed={rest?.fixed}
+            $fixed={(rest as any)?.fixed}
           >
             <StyledNotificationContentWrapper $size={size} theme={theme}>
               {type || intent || icon ? (

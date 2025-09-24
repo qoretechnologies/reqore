@@ -150,9 +150,35 @@ export interface IReqorePanelProps
   responsiveActionsWrapperProps?: Partial<IReqoreControlGroupProps>;
 }
 
+// Internal styled props (transient) to prevent passing non-DOM props to HTML elements
 export interface IStyledPanel extends IReqorePanelProps {
   theme: IReqoreTheme;
   noHorizontalPadding?: boolean;
+}
+
+// Transient version used inside styled-components (prefixed with $ when mapped)
+interface IStyledPanelInternal {
+  $theme: IReqoreTheme;
+  $noHorizontalPadding?: boolean;
+  $flat?: boolean;
+  $intent?: TReqoreIntent;
+  $rounded?: boolean;
+  $interactive?: boolean;
+  $opacity?: number;
+  $fluid?: boolean;
+  $blur?: number;
+  $isCollapsed?: boolean;
+  $collapsible?: boolean;
+  $minimal?: boolean;
+  $size?: TSizes;
+  $padded?: boolean;
+  $wrapperPadding?: 'top' | 'bottom' | 'both' | 'none';
+  $transparent?: boolean;
+  $hasLabel?: boolean;
+  $hasBottomActions?: boolean;
+  $disabled?: boolean;
+  $responsive?: boolean;
+  $isMobile?: boolean;
 }
 
 export const StyledPanelTitleHeader = styled.div`
@@ -204,26 +230,29 @@ export type TPanelStyle = React.FC<
     }
 >;
 
-export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
-  background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
-  border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
-  border: ${({ theme, flat, intent }) =>
-    flat && !intent
+export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<IStyledPanelInternal>`
+  background-color: ${({ $theme, $opacity = 1 }: IStyledPanelInternal) =>
+    rgba(changeDarkness(getMainBackgroundColor($theme), 0.03), $opacity)};
+  border-radius: ${({ $rounded }) => ($rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
+  border: ${({ $theme, $flat, $intent }) =>
+    $flat && !$intent
       ? undefined
       : `1px solid ${changeLightness(
-          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+          $intent ? $theme.intents[$intent] : getMainBackgroundColor($theme),
           0.08
         )}`};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ $theme }) => getReadableColor($theme, undefined, undefined, true)};
   overflow: hidden;
   display: flex;
   flex-flow: column;
   position: relative;
-  backdrop-filter: ${({ blur, opacity }) => (blur && opacity < 1 ? `blur(${blur}px)` : undefined)};
-  width: ${({ fluid }) => (fluid ? '100%' : undefined)};
+  backdrop-filter: ${({ $blur, $opacity }) =>
+    $blur && $opacity < 1 ? `blur(${$blur}px)` : undefined};
+  width: ${({ $fluid }) => ($fluid ? '100%' : undefined)};
   max-width: 100%;
-  flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
+  flex: ${({ $fluid }) => ($fluid ? '1 auto' : '0 0 auto')};
 
   &:not(:hover) {
     .reqore-panel-action-hidden {
@@ -231,8 +260,8 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
     }
   }
 
-  ${({ interactive, theme, opacity = 1, flat, intent }) =>
-    interactive
+  ${({ $interactive, $theme, $opacity = 1, $flat, $intent }) =>
+    $interactive
       ? css`
           cursor: pointer;
 
@@ -241,21 +270,24 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
               transform: scale(${ACTIVE_ICON_SCALE});
             }
 
-            background-color: ${opacity === 0 && flat
+            background-color: ${$opacity === 0 && $flat
               ? undefined
               : rgba(
-                  darken(0.025, rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)),
-                  opacity
+                  darken(
+                    0.025,
+                    rgba(changeDarkness(getMainBackgroundColor($theme), 0.03), $opacity)
+                  ),
+                  $opacity
                 )};
 
-            border-color: ${flat && !intent
+            border-color: ${$flat && !$intent
               ? undefined
               : `${changeLightness(
-                  intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+                  $intent ? $theme.intents[$intent] : getMainBackgroundColor($theme),
                   0.25
                 )}`};
 
-            ${opacity !== 0 &&
+            ${$opacity !== 0 &&
             css`
               ${StyledCollectionItemContent}:after {
                 background: linear-gradient(
@@ -263,9 +295,9 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
                   ${rgba(
                       darken(
                         0.025,
-                        rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                        rgba(changeDarkness(getMainBackgroundColor($theme), 0.03), $opacity)
                       ),
-                      opacity
+                      $opacity
                     )}
                     0%,
                   transparent 100%
@@ -276,33 +308,42 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
         `
       : undefined}
 
-  ${({ fill, isCollapsed }) =>
-    !isCollapsed && fill
+  ${({ fill, $isCollapsed }) =>
+    !$isCollapsed && fill
       ? css`
           height: 100%;
           flex: 1;
         `
       : undefined}
 
-  ${({ disabled }) => disabled && DisabledElement}
+  ${({ $disabled }) => $disabled && DisabledElement}
 `;
 
-export const StyledPanelTitle = styled.div<IStyledPanel>`
+export const StyledPanelTitle = styled.div.withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<IStyledPanelInternal>`
   display: flex;
-  flex-flow: ${({ responsive, isMobile }) => (responsive ? (isMobile ? 'column' : 'row') : 'row')};
-  background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+  flex-flow: ${({ $responsive, $isMobile }) =>
+    $responsive ? ($isMobile ? 'column' : 'row') : 'row'};
+  background-color: ${({ $theme, $opacity = 1 }: IStyledPanelInternal) =>
+    rgba(changeLightness(getMainBackgroundColor($theme), 0.03), $opacity)};
   justify-content: space-between;
 
-  padding: ${({ noHorizontalPadding, size, transparent, flat, intent }: IStyledPanel) =>
-    `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
-      noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`
+  padding: ${({
+    $noHorizontalPadding,
+    $size,
+    $transparent,
+    $flat,
+    $intent,
+  }: IStyledPanelInternal) =>
+    `${$transparent && $flat && !$intent ? 0 : PADDING_FROM_SIZE[$size]}px ${
+      $noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[$size]}px`
     }`};
 
   align-items: center;
-  border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
-    !isCollapsed && !flat && opacity
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
+  border-bottom: ${({ $theme, $isCollapsed, $flat, $opacity = 1 }) =>
+    !$isCollapsed && !$flat && $opacity
+      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor($theme), 0.08), $opacity)}`
       : null};
   transition: background-color 0.2s ease-out;
   overflow: hidden;
@@ -313,8 +354,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     transform: scale(${INACTIVE_ICON_SCALE});
   }
 
-  ${({ collapsible }) =>
-    collapsible &&
+  ${({ $collapsible }) =>
+    $collapsible &&
     css`
       cursor: pointer;
       &:hover {
@@ -322,67 +363,71 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
           transform: scale(${ACTIVE_ICON_SCALE});
         }
 
-        background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-          rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
+        background-color: ${({ $theme, $opacity = 1 }: IStyledPanelInternal) =>
+          rgba(changeLightness(getMainBackgroundColor($theme), 0.05), $opacity)};
       }
     `}
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
-  min-height: ${({ size, wrapperPadding }) =>
-    SIZE_TO_PX[size] +
-    (wrapperPadding === 'both' || wrapperPadding === 'top' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
-  padding-bottom: ${({ padded, size, isCollapsed }: IStyledPanel) =>
-    !padded || isCollapsed ? `${PADDING_FROM_SIZE[size]}px` : undefined};
-  padding-top: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
-    wrapperPadding === 'bottom' || wrapperPadding === 'none'
+  min-height: ${({ $size, $wrapperPadding }: IStyledPanelInternal) =>
+    SIZE_TO_PX[$size] +
+    ($wrapperPadding === 'both' || $wrapperPadding === 'top' ? PADDING_FROM_SIZE[$size] * 2 : 0)}px;
+  padding-bottom: ${({ $padded, $size, $isCollapsed }: IStyledPanelInternal) =>
+    !$padded || $isCollapsed ? `${PADDING_FROM_SIZE[$size]}px` : undefined};
+  padding-top: ${({ $minimal, $size, $wrapperPadding }: IStyledPanelInternal) =>
+    $wrapperPadding === 'bottom' || $wrapperPadding === 'none'
       ? undefined
-      : minimal
-      ? `${PADDING_FROM_SIZE[size]}px`
+      : $minimal
+      ? `${PADDING_FROM_SIZE[$size]}px`
       : undefined};
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  min-height: ${({ size, wrapperPadding }) =>
-    SIZE_TO_PX[size] +
-    (wrapperPadding === 'both' || wrapperPadding === 'bottom' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
-  padding-top: ${({ padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
-  padding-bottom: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
-    wrapperPadding === 'top' || wrapperPadding === 'none'
+  min-height: ${({ $size, $wrapperPadding }: IStyledPanelInternal) =>
+    SIZE_TO_PX[$size] +
+    ($wrapperPadding === 'both' || $wrapperPadding === 'bottom'
+      ? PADDING_FROM_SIZE[$size] * 2
+      : 0)}px;
+  padding-top: ${({ $padded, $size }: IStyledPanelInternal) =>
+    !$padded ? `${PADDING_FROM_SIZE[$size]}px` : undefined};
+  padding-bottom: ${({ $minimal, $size, $wrapperPadding }: IStyledPanelInternal) =>
+    $wrapperPadding === 'top' || $wrapperPadding === 'none'
       ? undefined
-      : minimal
-      ? `${PADDING_FROM_SIZE[size]}px`
+      : $minimal
+      ? `${PADDING_FROM_SIZE[$size]}px`
       : undefined};
   border-bottom: 0;
-  border-top: ${({ theme, flat, opacity = 1 }) =>
-    !flat
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
+  border-top: ${({ $theme, $flat, $opacity = 1 }) =>
+    !$flat
+      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor($theme), 0.08), $opacity)}`
       : null};
 `;
 
-export const StyledPanelContent = styled.div<IStyledPanel>`
-  display: ${({ isCollapsed }) => (isCollapsed ? 'none !important' : undefined)};
-  padding: ${({ padded, size, noHorizontalPadding, minimal }) =>
-    !padded
+export const StyledPanelContent = styled.div.withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<IStyledPanelInternal>`
+  display: ${({ $isCollapsed }) => ($isCollapsed ? 'none !important' : undefined)};
+  padding: ${({ $padded, $size, $noHorizontalPadding, $minimal }: IStyledPanelInternal) =>
+    !$padded
       ? undefined
-      : noHorizontalPadding
-      ? `${PADDING_FROM_SIZE[size]}px 0`
-      : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
+      : $noHorizontalPadding
+      ? `${PADDING_FROM_SIZE[$size]}px 0`
+      : `${PADDING_FROM_SIZE[$size] / ($minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[$size]}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
-  padding-top: ${({ minimal, hasLabel, padded, size }) =>
-    minimal && hasLabel && padded ? 0 : padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
-  padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
-    minimal && hasBottomActions && padded
+  padding-top: ${({ $minimal, $hasLabel, $padded, $size }: IStyledPanelInternal) =>
+    $minimal && $hasLabel && $padded ? 0 : $padded ? `${PADDING_FROM_SIZE[$size]}px` : undefined};
+  padding-bottom: ${({ $minimal, $padded, $size, $hasBottomActions }: IStyledPanelInternal) =>
+    $minimal && $hasBottomActions && $padded
       ? 0
-      : padded
-      ? `${PADDING_FROM_SIZE[size]}px`
+      : $padded
+      ? `${PADDING_FROM_SIZE[$size]}px`
       : undefined};
   flex: 1;
   overflow: auto;
   overflow-wrap: anywhere;
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ $size }: IStyledPanelInternal) => TEXT_FROM_SIZE[$size]}px;
 `;
 
 export const ReqorePanelSkeleton = memo(
@@ -786,39 +831,50 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           {...omit(rest, ['onResize'])}
           {..._resizable}
           as={rest.as || (!!resizable && !disabled && !_isCollapsed) ? Resizable : 'div'}
+          // Public props (may be used by tooltip / effect logic)
           isCollapsed={_isCollapsed}
           rounded={rounded}
           flat={flat}
           intent={intent}
-          className={`${className || ''} reqore-panel`}
           interactive={interactive}
           theme={theme}
-          effect={transformedContentEffect}
           opacity={opacity}
           fluid={fluid}
           disabled={disabled}
+          // Transient props consumed by StyledPanel
+          $isCollapsed={_isCollapsed}
+          $rounded={rounded}
+          $flat={flat}
+          $intent={intent}
+          $interactive={interactive}
+          $theme={theme}
+          $opacity={opacity}
+          $fluid={fluid}
+          $disabled={disabled}
+          className={`${className || ''} reqore-panel`}
+          effect={transformedContentEffect}
           Component={StyledPanel}
           ref={handleRef}
         >
           {hasTitleBar && (
             <StyledPanelTopBar
-              flat={flat}
-              isCollapsed={_isCollapsed}
-              collapsible={collapsible}
+              $flat={flat}
+              $isCollapsed={_isCollapsed}
+              $collapsible={collapsible}
               className='reqore-panel-title'
               onClick={handleCollapseClick}
-              theme={theme}
-              minimal={minimal}
-              size={contentSize || panelSize}
-              opacity={opacity ?? (minimal ? 0 : 1)}
-              noHorizontalPadding={noHorizontalPadding}
-              responsive={responsiveTitle}
-              isMobile={isMobile || isSmall}
+              $theme={theme}
+              $minimal={minimal}
+              $size={contentSize || panelSize}
+              $opacity={opacity ?? (minimal ? 0 : 1)}
+              $noHorizontalPadding={noHorizontalPadding}
+              $responsive={responsiveTitle}
+              $isMobile={isMobile || isSmall}
               ref={measureRef}
-              padded={padded}
-              wrapperPadding={wrapperPadding}
-              transparent={rest.transparent || opacity === 0}
-              intent={intent}
+              $padded={padded}
+              $wrapperPadding={wrapperPadding}
+              $transparent={rest.transparent || opacity === 0}
+              $intent={intent}
             >
               {hasTitleHeader && (
                 <StyledPanelTitleHeader>
@@ -957,31 +1013,31 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             <StyledPanelContent
               as={'div'}
               className='reqore-panel-content'
-              hasLabel={!!hasTitleBar}
-              hasBottomActions={hasBottomActions}
-              isCollapsed={_isCollapsed}
+              $hasLabel={!!hasTitleBar}
+              $hasBottomActions={hasBottomActions}
+              $isCollapsed={_isCollapsed}
               style={contentStyle}
-              padded={padded}
-              minimal={minimal}
-              size={contentSize || panelSize}
+              $padded={padded}
+              $minimal={minimal}
+              $size={contentSize || panelSize}
               ref={getContentRef}
-              noHorizontalPadding={noHorizontalPadding}
+              $noHorizontalPadding={noHorizontalPadding}
             >
               {children}
             </StyledPanelContent>
           ) : null}
           {hasBottomActions && !_isCollapsed ? (
             <StyledPanelBottomActions
-              flat={flat}
+              $flat={flat}
               className='reqore-panel-bottom-actions'
-              theme={theme}
-              padded={padded}
-              intent={intent}
-              minimal={minimal}
-              transparent={rest.transparent || opacity === 0}
-              opacity={opacity ?? (minimal ? 0 : 1)}
-              size={contentSize || panelSize}
-              noHorizontalPadding={noHorizontalPadding}
+              $theme={theme}
+              $padded={padded}
+              $intent={intent}
+              $minimal={minimal}
+              $transparent={rest.transparent || opacity === 0}
+              $opacity={opacity ?? (minimal ? 0 : 1)}
+              $size={contentSize || panelSize}
+              $noHorizontalPadding={noHorizontalPadding}
             >
               {hasNonResponsiveActions(leftBottomActions) ? (
                 <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
