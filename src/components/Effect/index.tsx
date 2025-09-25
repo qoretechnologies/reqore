@@ -154,7 +154,9 @@ const StyledGradientKeyframes = keyframes`
   }
 `;
 
-export const StyledEffect = styled.span`
+export const StyledEffect = styled.span.withConfig({
+  shouldForwardProp: (prop) => !prop.toString().startsWith('$'),
+})`
   // If gradient was supplied
   ${({ effect, theme, minimal, active, transparent, isText }: IReqoreTextEffectProps) => {
     if (!effect || !effect.gradient) {

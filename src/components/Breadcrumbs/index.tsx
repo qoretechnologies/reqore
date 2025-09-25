@@ -245,18 +245,20 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     );
   };
 
+  const { padded, margin, ...domRest } = rest as any;
+
   return (
     <ReqoreErrorBoundary {...errorBoundaryOptions}>
       <StyledReqoreBreadcrumbs
-        {...rest}
+        {...domRest}
         className={`${rest.className || ''} reqore-breadcrumbs-wrapper`}
         ref={ref}
         theme={theme}
         $flat={flat}
         $size={size}
         $responsive={responsive}
-        $padded={rest.padded}
-        $margin={rest.margin}
+        $padded={padded}
+        $margin={margin}
       >
         <div key='reqore-breadcrumbs-left-wrapper'>
           {transformedItems.map(

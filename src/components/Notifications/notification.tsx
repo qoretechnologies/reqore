@@ -171,7 +171,7 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
   `}
 `;
 
-export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
+export const StyledIconWrapper = styled.div<Pick<IReqoreNotificationStyle, '$clickable' | '$intent' | '$type'>>`
   flex: 0 1 auto;
   flex-shrink: 0;
   display: flex;
@@ -199,7 +199,7 @@ export const StyledIconWrapper = styled.div<IReqoreNotificationStyle>`
     `}
 `;
 
-export const StyledNotificationInnerContent = styled.div<IReqoreNotificationStyle>`
+export const StyledNotificationInnerContent = styled.div`
   flex: 1;
   display: flex;
   flex-flow: column;
@@ -210,7 +210,7 @@ export const StyledNotificationInnerContent = styled.div<IReqoreNotificationStyl
   }
 `;
 
-export const StyledNotificationContentWrapper = styled.div<IReqoreNotificationStyle>`
+export const StyledNotificationContentWrapper = styled.div<{ $size?: TSizes }>`
   flex: 1;
   display: flex;
   justify-content: center;
@@ -224,7 +224,7 @@ export const StyledNotificationTitle = styled.h4`
   align-items: center;
 `;
 
-export const StyledNotificationContent = styled.div`
+export const StyledNotificationContent = styled.div<{ hasTitle?: boolean; size?: TSizes; theme?: IReqoreTheme }>`
   margin: 0;
   padding: 0;
   flex: 1;

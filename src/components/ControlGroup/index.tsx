@@ -64,40 +64,52 @@ export interface IReqoreControlGroupProps
 
 export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
   theme: IReqoreTheme;
+  $fluid?: boolean;
+  $fixed?: boolean;
+  $vertical?: boolean;
+  $gapSize?: TSizes;
+  $stack?: boolean;
+  $wrap?: boolean;
+  $fill?: boolean;
+  $verticalAlign?: 'flex-start' | 'center' | 'flex-end';
+  $horizontalAlign?: 'flex-start' | 'center' | 'flex-end';
+  $spaceBetween?: boolean;
 }
 
-export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroupStyle>`
+export const StyledReqoreControlGroup = styled(StyledEffect).withConfig({
+  shouldForwardProp: (prop) => !prop.toString().startsWith('$'),
+})<IReqoreControlGroupStyle>`
   display: flex;
-  flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? undefined : '0 0 auto')};
-  width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
-  justify-content: ${({ fluid, vertical, spaceBetween }) =>
-    vertical && fluid
-      ? spaceBetween
+  flex: ${({ $fluid, $fixed }) => ($fixed ? '0 0 auto' : $fluid ? undefined : '0 0 auto')};
+  width: ${({ $fluid, $fixed }) => ($fluid && !$fixed ? '100%' : undefined)};
+  justify-content: ${({ $fluid, $vertical, $spaceBetween }) =>
+    $vertical && $fluid
+      ? $spaceBetween
         ? 'space-between'
         : 'stretch'
-      : !vertical && spaceBetween
+      : !$vertical && $spaceBetween
       ? 'space-between'
       : undefined};
-  align-items: ${({ vertical, fluid, horizontalAlign, spaceBetween }) =>
-    vertical
-      ? fluid
-        ? spaceBetween
+  align-items: ${({ $vertical, $fluid, $horizontalAlign, $spaceBetween }) =>
+    $vertical
+      ? $fluid
+        ? $spaceBetween
           ? 'space-between'
           : 'stretch'
-        : horizontalAlign
-      : vertical && spaceBetween
+        : $horizontalAlign
+      : $vertical && $spaceBetween
       ? 'space-between'
       : undefined};
-  flex-flow: ${({ vertical }) => (vertical ? 'column' : 'row')};
-  gap: ${({ gapSize, stack }) => (!stack ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
-  flex-wrap: ${({ wrap }) => (wrap ? 'wrap' : 'nowrap')};
+  flex-flow: ${({ $vertical }) => ($vertical ? 'column' : 'row')};
+  gap: ${({ $gapSize, $stack }) => (!$stack ? `${GAP_FROM_SIZE[$gapSize]}px` : undefined)};
+  flex-wrap: ${({ $wrap }) => ($wrap ? 'wrap' : 'nowrap')};
 
   // If the group has the fill prop,
   // we need to make sure that the children are vertically stretched
   // kind of like 'fluid' but vertically
   // ! Only works when the group is horizontal & wrap is false
-  ${({ fill, vertical }) => {
-    if (fill && !vertical) {
+  ${({ $fill, $vertical }) => {
+    if ($fill && !$vertical) {
       return css`
         > * {
           max-height: 100% !important;
@@ -111,31 +123,35 @@ export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroup
   }}
 
   > *, > ${StyledParagraph}, > ${StyledHeader} {
-    margin-top: ${({ fill, verticalAlign }) =>
-      !fill && (verticalAlign === 'flex-end' || verticalAlign === 'center') ? 'auto' : undefined};
-    margin-bottom: ${({ fill, verticalAlign }) =>
-      !fill && (verticalAlign === 'flex-start' || verticalAlign === 'center') ? 'auto' : undefined};
-    margin-right: ${({ horizontalAlign }) => (horizontalAlign === 'center' ? 'auto' : undefined)};
+    margin-top: ${({ $fill, $verticalAlign }) =>
+      !$fill && ($verticalAlign === 'flex-end' || $verticalAlign === 'center')
+        ? 'auto'
+        : undefined};
+    margin-bottom: ${({ $fill, $verticalAlign }) =>
+      !$fill && ($verticalAlign === 'flex-start' || $verticalAlign === 'center')
+        ? 'auto'
+        : undefined};
+    margin-right: ${({ $horizontalAlign }) => ($horizontalAlign === 'center' ? 'auto' : undefined)};
 
-    ${({ vertical }) =>
-      vertical &&
+    ${({ $vertical }) =>
+      $vertical &&
       css`
-        margin-left: ${({ horizontalAlign }) =>
-          horizontalAlign === 'flex-end' || horizontalAlign === 'center' ? 'auto' : undefined};
+        margin-left: ${({ $horizontalAlign }) =>
+          $horizontalAlign === 'flex-end' || $horizontalAlign === 'center' ? 'auto' : undefined};
       `}
   }
 
-  ${({ vertical }) =>
-    !vertical &&
+  ${({ $vertical }) =>
+    !$vertical &&
     css`
       > *:first-child {
-        margin-left: ${({ horizontalAlign }) =>
-          horizontalAlign === 'flex-end' || horizontalAlign === 'center' ? 'auto' : undefined};
+        margin-left: ${({ $horizontalAlign }) =>
+          $horizontalAlign === 'flex-end' || $horizontalAlign === 'center' ? 'auto' : undefined};
       }
     `}
 
   > * {
-    border-radius: ${({ stack }) => (!stack ? undefined : '0')};
+    border-radius: ${({ $stack }) => (!$stack ? undefined : '0')};
   }
 `;
 
@@ -495,22 +511,22 @@ const ReqoreControlGroup = memo(
         <StyledReqoreControlGroup
           as='div'
           {...rest}
-          vertical={vertical}
+          $vertical={vertical}
           style={{
             overflowX: responsive ? 'auto' : undefined,
             ...rest.style,
           }}
           size={size}
-          gapSize={gapSize}
+          $gapSize={gapSize}
           ref={ref}
           rounded={rounded}
-          fluid={fluid}
-          fixed={fixed}
-          fill={fill}
-          wrap={wrap}
-          stack={isStack}
-          verticalAlign={verticalAlign}
-          horizontalAlign={horizontalAlign}
+          $fluid={fluid}
+          $fixed={fixed}
+          $fill={fill}
+          $wrap={wrap}
+          $stack={isStack}
+          $verticalAlign={verticalAlign}
+          $horizontalAlign={horizontalAlign}
           className={`${className || ''} reqore-control-group`}
         >
           {clone(_children)}

@@ -22,7 +22,9 @@ export interface IStyledColumns extends IReqoreColumnsProps {
   $alignItems?: string;
 }
 
-export const StyledColumns = styled.div<IStyledColumns>`
+export const StyledColumns = styled.div.withConfig({
+  shouldForwardProp: (prop) => !prop.toString().startsWith('$'),
+})<IStyledColumns>`
   display: grid;
   ${({
     $minColumnWidth = '300px',
@@ -47,7 +49,6 @@ export const ReqoreColumns = memo(({ children, className, ...rest }: IReqoreColu
       $columns={rest.columns}
       $columnsGap={rest.columnsGap}
       $alignItems={rest.alignItems}
-      {...rest}
     >
       {children}
     </StyledColumns>

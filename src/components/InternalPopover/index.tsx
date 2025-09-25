@@ -26,7 +26,14 @@ import {
 import ReqoreMessage from '../Message';
 import { IPopoverData } from '../Popover';
 
-const getPopoverArrowColor = ({ theme, $dim: dim, $intent: intent, $flat: flat, $effect: effect, $isOpaque: isOpaque }) =>
+const getPopoverArrowColor = ({
+  theme,
+  $dim: dim,
+  $intent: intent,
+  $flat: flat,
+  $effect: effect,
+  $isOpaque: isOpaque,
+}) =>
   rgba(
     effect
       ? changeLightness(
@@ -49,7 +56,9 @@ const getPopoverArrowColor = ({ theme, $dim: dim, $intent: intent, $flat: flat, 
     dim ? 0.3 : 1
   );
 
-const StyledPopoverArrow = styled.div.withConfig({ shouldForwardProp: (prop) => !prop.startsWith('$') })<{ theme: IReqoreTheme }>`
+const StyledPopoverArrow = styled.div.withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<{ theme: IReqoreTheme }>`
   width: 10px;
   height: 10px;
   position: absolute;

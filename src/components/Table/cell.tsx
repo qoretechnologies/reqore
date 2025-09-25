@@ -20,7 +20,9 @@ export interface IReqoreTableBodyCellProps
   padded?: IReqoreTableColumn['cell']['padded'];
 }
 
-export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
+export const StyledTableCell = styled.div.withConfig({
+  shouldForwardProp: (prop) => !prop.startsWith('$'),
+})<IReqoreTableCellStyle>`
   ${({ width, minWidth, maxWidth, grow }) =>
     css`
       width: ${width}px;
