@@ -53,7 +53,8 @@ export interface IReqoreTableSectionStyle {
 }
 
 const StyledTableHeaderWrapper = styled.div.withConfig({
-  shouldForwardProp: (prop) => !['leftScroll', 'hasVerticalScroll', 'heightAsGroup', 'size'].includes(prop as string),
+  shouldForwardProp: (prop) =>
+    !['leftScroll', 'hasVerticalScroll', 'heightAsGroup', 'size'].includes(prop as string),
 })<IReqoreTableSectionStyle>`
   ${({ heightAsGroup, size }) => css`
     display: flex;

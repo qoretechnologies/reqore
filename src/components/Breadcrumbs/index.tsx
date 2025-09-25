@@ -58,7 +58,14 @@ interface IStyledBreadcrumbs extends Omit<IReqoreBreadcrumbsProps, 'items'> {
 }
 
 const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
-  ${({ theme, $size, $flat, $padded = true, $margin = 'both', $responsive }: IStyledBreadcrumbs) => css`
+  ${({
+    theme,
+    $size,
+    $flat,
+    $padded = true,
+    $margin = 'both',
+    $responsive,
+  }: IStyledBreadcrumbs) => css`
     width: ${$responsive ? '100%' : undefined};
     margin-top: ${$margin === 'both' || $margin === 'top' ? MARGIN_FROM_SIZE[$size!] : 0}px;
     margin-bottom: ${$margin === 'both' || $margin === 'bottom' ? MARGIN_FROM_SIZE[$size!] : 0}px;

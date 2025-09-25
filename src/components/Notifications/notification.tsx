@@ -171,7 +171,9 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
   `}
 `;
 
-export const StyledIconWrapper = styled.div<Pick<IReqoreNotificationStyle, '$clickable' | '$intent' | '$type'>>`
+export const StyledIconWrapper = styled.div<
+  Pick<IReqoreNotificationStyle, '$clickable' | '$intent' | '$type'>
+>`
   flex: 0 1 auto;
   flex-shrink: 0;
   display: flex;
@@ -224,7 +226,11 @@ export const StyledNotificationTitle = styled.h4`
   align-items: center;
 `;
 
-export const StyledNotificationContent = styled.div<{ hasTitle?: boolean; size?: TSizes; theme?: IReqoreTheme }>`
+export const StyledNotificationContent = styled.div<{
+  hasTitle?: boolean;
+  size?: TSizes;
+  theme?: IReqoreTheme;
+}>`
   margin: 0;
   padding: 0;
   flex: 1;
