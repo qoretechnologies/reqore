@@ -64,7 +64,9 @@ export interface IReqoreDropdownListProps
   paging?: TReqorePaginationType<TReqoreDropdownItem>;
 
   labels?: IReqoreTagProps[];
+
   _onBackClick?: () => void;
+  _level?: number;
 }
 
 const ReqoreDropdownList = memo(
@@ -86,13 +88,17 @@ const ReqoreDropdownList = memo(
     customElements,
     customTheme,
     intent,
+
     labels = [],
     _onBackClick,
+    _level = 0,
   }: IReqoreDropdownListProps) => {
     const [_items, setItems] = useState<TReqoreDropdownItems>(items);
     const [query, setQuery] = useState<string | number>(onFilterChange ? '' : filter || '');
     const [menuRef, setMenuRef] = useState<HTMLDivElement>(undefined);
-    const [selectedItem, setSelectedItem] = useState<IReqoreDropdownItem>(undefined);
+    const [selectedItem, setSelectedItem] = useState<IReqoreDropdownItem>(
+      size(items) === 1 && items[0].items && _level === 0 ? items[0] : undefined
+    );
     const theme = useReqoreTheme('main', customTheme, intent);
 
     useEffect(() => {
@@ -216,6 +222,7 @@ const ReqoreDropdownList = memo(
               },
             ],
             _onBackClick: () => setSelectedItem(undefined),
+            _level: _level + 1,
           }}
         />
       );
