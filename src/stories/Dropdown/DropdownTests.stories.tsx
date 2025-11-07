@@ -250,9 +250,7 @@ export const ItemIsNotAutomaticallySelectedWhenDisabled: Story = {
 
     await sleep(200);
 
-    await waitFor(() => expect(canvas.getAllByText('Test child 3')[0]).toBeTruthy(), {
-      timeout: 5000,
-    });
+    await _testsWaitForText('I have children');
   },
 };
 
@@ -285,9 +283,7 @@ export const ItemIsNotAutomaticallySelectedWhenSubItemsAreEmpty: Story = {
 
     await sleep(200);
 
-    await waitFor(() => expect(canvas.getAllByText('Test child 3')[0]).toBeTruthy(), {
-      timeout: 5000,
-    });
+    await _testsWaitForText('I have children');
   },
 };
 
