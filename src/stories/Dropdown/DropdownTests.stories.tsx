@@ -139,6 +139,68 @@ export const ItemsCanBeTraversed: Story = {
   },
 };
 
+export const ItemIsAutomaticallySelected: Story = {
+  ...WithChildItems,
+  args: {
+    label: 'Dropdown with a single child item',
+    useTargetWidth: true,
+    minWidth: '500px',
+    items: [
+      {
+        label: 'Test',
+        description: 'I have children',
+        leftIconProps: {
+          image:
+            'https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4',
+        },
+        rightIcon: 'MenuLine',
+        rightIconColor: 'info:lighten:2',
+        items: [
+          {
+            label: 'Test child 3',
+            intent: 'info',
+            description: 'I have children too',
+            rightAction: {
+              icon: 'AddLine',
+              onClick: (_event, _itemId, _closePopover, metadata) => {
+                metadata?.selectItem();
+              },
+            },
+            items: [
+              {
+                label: 'Test deep child 1',
+              },
+              {
+                label: 'Test deep child 2',
+              },
+              {
+                label: 'Test deep child 3',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  play: async ({ canvasElement, ...rest }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    await fireEvent.click(canvas.getAllByText('Dropdown with a single child item')[0]);
+
+    await sleep(200);
+
+    await waitFor(() => expect(canvas.getAllByText('Test child 3')[0]).toBeTruthy(), {
+      timeout: 5000,
+    });
+
+    // await fireEvent.click(canvas.getAllByText('Test child 3')[0]);
+
+    // await expect(canvas.getAllByText('Test deep child 3')[0]).toBeTruthy();
+  },
+};
+
 export const BackButtonsWork: Story = {
   ...ItemsCanBeTraversed,
   play: async ({ canvasElement, ...rest }) => {
