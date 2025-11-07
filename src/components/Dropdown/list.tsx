@@ -97,7 +97,9 @@ const ReqoreDropdownList = memo(
     const [query, setQuery] = useState<string | number>(onFilterChange ? '' : filter || '');
     const [menuRef, setMenuRef] = useState<HTMLDivElement>(undefined);
     const [selectedItem, setSelectedItem] = useState<IReqoreDropdownItem>(
-      size(items) === 1 && items[0].items && _level === 0 ? items[0] : undefined
+      size(items) === 1 && size(items[0].items) && !items[0]?.disabled && _level === 0
+        ? items[0]
+        : undefined
     );
     const theme = useReqoreTheme('main', customTheme, intent);
 
