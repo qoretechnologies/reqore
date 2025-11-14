@@ -70,7 +70,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const Template: StoryFn<IReqoreModalProps & { confirm?: boolean }> = (args) => {
+const Template: StoryFn<
+  IReqoreModalProps & { confirm?: boolean; modalProps?: IReqoreModalProps }
+> = ({ modalProps, ...args }) => {
   const [isOpen, setIsOpen] = useState(args.isOpen);
   const confirmAction = useReqoreProperty('confirmAction');
   const [count, setCount] = useState(0);
@@ -81,6 +83,7 @@ const Template: StoryFn<IReqoreModalProps & { confirm?: boolean }> = (args) => {
       label: 'Tell me something',
       onConfirm: noop,
       onCancel: noop,
+      modalProps: modalProps,
     });
     setCount(count + 1);
   };
@@ -286,6 +289,19 @@ export const CustomZIndex: Story = {
   args: {
     confirm: true,
     customZIndex: 99999,
+  },
+};
+
+export const CustomZIndexOnConfirmationDialog: Story = {
+  render: Template,
+
+  args: {
+    confirm: true,
+    customZIndex: 99999,
+    // @ts-ignore
+    modalProps: {
+      customZIndex: 100000,
+    },
   },
 };
 

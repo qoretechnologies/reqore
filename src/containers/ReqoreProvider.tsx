@@ -376,6 +376,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
                 position: 'right',
               },
             ]}
+            {...(confirmationModal.modalProps || {})}
           >
             <ReqoreTextEffect
               as='p'
