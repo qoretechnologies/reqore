@@ -378,12 +378,14 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
             ]}
             {...(confirmationModal.modalProps || {})}
           >
-            <ReqoreTextEffect
-              as='p'
-              effect={{ textAlign: 'center', weight: 'bold', textSize: 'big' }}
-            >
-              {confirmationModal.content || 'Are you sure you want to proceed?'}
-            </ReqoreTextEffect>
+            {confirmationModal.modalProps?.children || (
+              <ReqoreTextEffect
+                as='p'
+                effect={{ textAlign: 'center', weight: 'bold', textSize: 'big' }}
+              >
+                {confirmationModal.content || 'Are you sure you want to proceed?'}
+              </ReqoreTextEffect>
+            )}
           </ReqoreModal>
         )}
       </ReqoreContext.Provider>
