@@ -7,7 +7,13 @@ import { useMount } from 'react-use';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreModalProps } from '../../components/Modal';
 import { sleep } from '../../helpers/utils';
-import { ReqoreCollection, ReqoreModal, ReqorePanel, useReqoreProperty } from '../../index';
+import {
+  ReqoreCollection,
+  ReqoreModal,
+  ReqoreP,
+  ReqorePanel,
+  useReqoreProperty,
+} from '../../index';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 
@@ -301,6 +307,7 @@ export const CustomZIndexOnConfirmationDialog: Story = {
     // @ts-ignore
     modalProps: {
       customZIndex: 100000,
+      children: <ReqoreP intent='pending'> Hello there, You did not expect me did you. </ReqoreP>,
     },
   },
 };
