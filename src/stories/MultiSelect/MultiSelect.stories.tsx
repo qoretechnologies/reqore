@@ -105,6 +105,25 @@ export const Minimal: Story = {
   },
 };
 
+export const WithoutNoItemsMessage: Story = {
+  render: Template,
+
+  args: {
+    value: [],
+    showNoItemsMessage: false,
+  },
+};
+
+export const WithCustomNoItemsMessage: Story = {
+  render: Template,
+
+  args: {
+    value: [],
+    selectorProps: { placeholder: 'Select items...' },
+    noItemsMessageProps: { label: 'There are no items yet', color: 'warning' },
+  },
+};
+
 export const Clickable: Story = {
   render: Template,
 

@@ -31,6 +31,9 @@ export interface IReqoreMultiSelectProps
   openOnMount?: IReqoreDropdownProps['isDefaultOpen'];
   enterKeySelects?: boolean;
   disabled?: boolean;
+
+  showNoItemsMessage?: boolean;
+  noItemsMessageProps?: IReqoreTagProps;
 }
 
 export interface IReqoreMultiSelectItemProps
@@ -95,6 +98,8 @@ export const ReqoreMultiSelect = ({
   onItemAdded,
   onItemRemoved,
   disabled,
+  showNoItemsMessage = true,
+  noItemsMessageProps = {},
   ...rest
 }: IReqoreMultiSelectProps) => {
   const [createdItems, setCreatedItems] = useState<TReqoreMultiSelectItem[]>([]);
@@ -259,16 +264,23 @@ export const ReqoreMultiSelect = ({
               disabled={disabled}
             />
           ))
-        ) : (
-          <ReqoreTag color='transparent' icon='ForbidLine' label='No items selected' />
-        )}
+        ) : showNoItemsMessage ? (
+          <ReqoreTag
+            color='transparent'
+            icon='ForbidLine'
+            label='No items selected'
+            {...noItemsMessageProps}
+          />
+        ) : null}
       </ReqoreTagGroup>
       <ReqoreControlGroup minimal={rest.minimal} flat={rest.flat} size={rest.size}>
         <ReqoreDropdown<IReqoreInputProps>
+          useTargetWidth
+          handler='focus'
+          placeholder={canCreateItems ? 'Type to search or create an item...' : 'Type to search...'}
           {...selectorProps}
           disabled={disabled || selectorProps?.disabled}
           multiSelect
-          handler='focus'
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           passPopoverData={(data) => (popoverData.current = data)}
@@ -277,7 +289,6 @@ export const ReqoreMultiSelect = ({
           value={query}
           isDefaultOpen={openOnMount}
           onItemSelect={handleItemSelect}
-          placeholder={canCreateItems ? 'Type to search or create an item...' : 'Type to search...'}
           onChange={(e: any) => setQuery(e.target.value)}
           items={
             size(allItems)
@@ -286,7 +297,6 @@ export const ReqoreMultiSelect = ({
               ? [{ label: 'No items exist', readOnly: true, minimal: true, icon: 'ForbidLine' }]
               : []
           }
-          useTargetWidth
         />
       </ReqoreControlGroup>
     </ReqoreControlGroup>
