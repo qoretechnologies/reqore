@@ -244,9 +244,9 @@ export const ReqoreMultiSelect = ({
 
   return (
     <ReqoreControlGroup vertical fluid {...rest}>
-      <ReqoreTagGroup minimal={rest.minimal} size={rest.size}>
-        {size(value) ? (
-          value.map((v) => (
+      {size(value) ? (
+        <ReqoreTagGroup minimal={rest.minimal} size={rest.size}>
+          {value.map((v) => (
             <ReqoreMultiSelectItem
               key={v}
               item={getItemByValue(v)}
@@ -263,16 +263,19 @@ export const ReqoreMultiSelect = ({
               selectedItemSize={selectedItemSize}
               disabled={disabled}
             />
-          ))
-        ) : showNoItemsMessage ? (
+          ))}
+        </ReqoreTagGroup>
+      ) : showNoItemsMessage ? (
+        <ReqoreTagGroup minimal={rest.minimal} size={rest.size}>
           <ReqoreTag
             color='transparent'
             icon='ForbidLine'
             label='No items selected'
             {...noItemsMessageProps}
           />
-        ) : null}
-      </ReqoreTagGroup>
+        </ReqoreTagGroup>
+      ) : null}
+
       <ReqoreControlGroup minimal={rest.minimal} flat={rest.flat} size={rest.size}>
         <ReqoreDropdown<IReqoreInputProps>
           useTargetWidth
