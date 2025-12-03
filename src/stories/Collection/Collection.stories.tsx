@@ -430,3 +430,91 @@ export const WithGroups: Story = {
     ],
   },
 };
+
+export const ItemIsInMultipleGroups: Story = {
+  args: {
+    items: [
+      {
+        label: 'This item is not flat',
+        tooltip: 'This is a test item',
+        content:
+          'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+        flat: false,
+        tags: [
+          {
+            label: 23,
+            asBadge: true,
+          },
+          {
+            label: 2022,
+            labelKey: 'Year',
+            asBadge: true,
+            onRemoveClick: noop,
+          },
+        ],
+        expandable: true,
+        metadata: {
+          id: 23,
+          category: 'Article',
+        },
+        groups: ['Group A'],
+      },
+      {
+        label: 'Test with tooltip',
+        tooltip: 'This is a test item',
+        labelSize: 2,
+        contentSize: 'huge',
+        selected: true,
+        icon: 'Hashtag',
+        groups: ['Group A', 'Group B'],
+        content:
+          'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+        tags: [
+          {
+            label: 'local',
+            labelKey: 'level',
+            intent: 'info',
+            icon: 'Hashtag',
+          },
+          {
+            label: 'string',
+            labelKey: 'type',
+            intent: 'warning',
+            icon: 'CodeLine',
+          },
+        ],
+        metadata: {
+          id: 24,
+          category: 'Post',
+        },
+      },
+      {
+        icon: 'TextWrap',
+        label: 'Small item that is not minimal',
+        tooltip: 'This is a test item',
+        size: 'small',
+        content:
+          'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+        minimal: false,
+        badge: 0,
+        searchString: 'secret',
+        metadata: {
+          id: 1,
+          category: 'None',
+        },
+        groups: ['Group B'],
+      },
+      {
+        icon: 'ZcoolLine',
+        label: 'Item without fade',
+        content:
+          'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long Hello I am a test item content and I am very long so will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long Hello I am a test item content and I am very long so will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long. Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',
+        showContentFade: false,
+        metadata: {
+          id: 13,
+          category: 'Article',
+        },
+      },
+    ],
+  },
+};

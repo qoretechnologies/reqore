@@ -387,15 +387,18 @@ export const ReqoreCollection = memo(
                 className='reqore-collection-content'
               >
                 {(() => {
-                  // Group items by their 'group' property
+                  // Group items by their 'groups' property
+                  // Groups is a list of strings, so an item can be in multiple groups
                   const grouped = applyPaging(filteredItems).reduce((acc, item) => {
-                    const group = item.group && !paging ? item.group : 'Ungrouped';
+                    const groups = item.groups && !paging ? item.groups : ['Ungrouped'];
 
-                    if (!acc[group]) {
-                      acc[group] = [];
-                    }
+                    groups.forEach((group) => {
+                      if (!acc[group]) {
+                        acc[group] = [];
+                      }
 
-                    acc[group].push(item);
+                      acc[group].push(item);
+                    });
 
                     return acc;
                   }, {} as Record<string, IReqoreCollectionItemProps[]>);
