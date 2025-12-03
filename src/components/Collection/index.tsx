@@ -1,4 +1,4 @@
-import { map, size } from 'lodash';
+import { map, orderBy, size } from 'lodash';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
@@ -389,6 +389,8 @@ export const ReqoreCollection = memo(
                 {(() => {
                   // Group items by their 'groups' property
                   // Groups is a list of strings, so an item can be in multiple groups
+                  // Sort the groups based on defaultSort
+
                   const grouped = applyPaging(filteredItems).reduce((acc, item) => {
                     const groups = item.groups && !paging ? item.groups : ['Ungrouped'];
 
@@ -403,8 +405,31 @@ export const ReqoreCollection = memo(
                     return acc;
                   }, {} as Record<string, IReqoreCollectionItemProps[]>);
 
+                  // Apply default sorting to the grouped items
+                  if (defaultSort) {
+                    Object.keys(grouped).forEach((group) => {
+                      grouped[group] = orderBy(grouped[group], defaultSort);
+                    });
+                  }
+
+                  // Also sort the group names, but keep 'Ungrouped' at the start, always
+                  const orderedGrouped = Object.keys(grouped)
+                    .sort((a, b) => {
+                      if (a === 'Ungrouped') return -1;
+                      if (b === 'Ungrouped') return 1;
+                      if (defaultSort === 'asc') {
+                        return a.localeCompare(b);
+                      } else {
+                        return b.localeCompare(a);
+                      }
+                    })
+                    .reduce((acc, group) => {
+                      acc[group] = grouped[group];
+                      return acc;
+                    }, {} as Record<string, IReqoreCollectionItemProps[]>);
+
                   // Render groups
-                  return Object.entries(grouped).map(([groupName, groupItems]) => (
+                  return Object.entries(orderedGrouped).map(([groupName, groupItems]) => (
                     <React.Fragment key={groupName}>
                       {groupName !== 'Ungrouped' && (
                         <ReqoreP
