@@ -31,7 +31,7 @@ export const collectionWithGroups = data.slice(0, 100).map((datum) => ({
   size: 'small',
   expandable: true,
   content: datum.address,
-  group: datum.occupation,
+  groups: [datum.occupation],
   tags: [
     {
       labelKey: 'Age',
