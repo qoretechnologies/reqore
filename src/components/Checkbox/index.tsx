@@ -63,6 +63,9 @@ export interface IReqoreCheckboxProps
   labelEffect?: IReqoreEffect;
   margin?: 'left' | 'right' | 'both' | 'none';
   wrapLabel?: boolean;
+
+  onCheckClick?: () => void;
+  onUncheckClick?: () => void;
 }
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
@@ -168,12 +171,13 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
 `;
 
 const StyledSwitchTextWrapper = styled(StyledTextEffect)`
-  margin: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  margin: 0 ${({ size, hasMargin }) => (hasMargin ? PADDING_FROM_SIZE[size] : 0)}px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
-  min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size]}px;
+  height: 100%;
+  min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] - 4}px;
 `;
 
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
@@ -256,6 +260,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       effect,
       customTheme,
       wrapLabel,
+      onCheckClick,
+      onUncheckClick,
       ...rest
     }: IReqoreCheckboxProps,
     ref
@@ -270,11 +276,16 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
     const theme = useReqoreTheme('main', customTheme, _intent);
 
     const width = useMemo(() => {
-      if ((!image && !onText && onText !== 0) || (!offText && offText !== 0)) return undefined;
-
       const selectedWidth = checked ? onWidth : offWidth;
+      const addedWidth = checked
+        ? onText || onText === 0
+          ? PADDING_FROM_SIZE[size] * 2
+          : 0
+        : offText || offText === 0
+        ? PADDING_FROM_SIZE[size] * 2
+        : 0;
 
-      return selectedWidth + PADDING_FROM_SIZE[size] * 2;
+      return selectedWidth + addedWidth;
     }, [checked, offWidth, onWidth, size]);
 
     const hasText = useMemo(() => {
@@ -334,63 +345,63 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
             }
           >
             <>
-              {offText || offText === 0 ? (
-                <StyledOffSwitchText
-                  ref={offRef}
-                  size={size}
-                  theme={theme}
-                  checked={checked}
-                  parentHasGradient={!!effect?.gradient}
-                  effect={
-                    {
-                      uppercase: true,
-                      textSize: getOneLessSize(size),
-                      weight: 'bold',
-                      ...switchTextEffect,
-                      opacity: checked || checked === undefined ? 0.3 : 1,
-                    } as IReqoreEffect
-                  }
-                >
-                  {image || uncheckedIcon ? (
-                    <ReqoreIcon
-                      size={size}
-                      image={image}
-                      icon={uncheckedIcon}
-                      effect={{ grayscale: true }}
-                      margin={offText ? 'right' : undefined}
-                    />
-                  ) : null}
-                  {offText}
-                </StyledOffSwitchText>
-              ) : null}
-              {onText || onText === 0 ? (
-                <StyledOnSwitchText
-                  ref={onRef}
-                  size={size}
-                  theme={theme}
-                  checked={checked}
-                  parentHasGradient={!!effect?.gradient}
-                  effect={
-                    {
-                      uppercase: true,
-                      textSize: getOneLessSize(size),
-                      weight: 'thick',
-                      ...switchTextEffect,
-                      opacity: checked ? 1 : 0.3,
-                    } as IReqoreEffect
-                  }
-                >
-                  {image || checkedIcon ? (
-                    <ReqoreIcon
-                      size={size}
-                      image={image}
-                      margin={onText ? 'right' : undefined}
-                      icon={checkedIcon}
-                    />
-                  ) : null}
-                  {onText}
-                </StyledOnSwitchText>
-              ) : null}
+              <StyledOffSwitchText
+                onClick={onUncheckClick}
+                ref={offRef}
+                size={size}
+                theme={theme}
+                checked={checked}
+                hasMargin={offText || offText === 0}
+                parentHasGradient={!!effect?.gradient}
+                effect={
+                  {
+                    uppercase: true,
+                    textSize: getOneLessSize(size),
+                    weight: 'bold',
+                    ...switchTextEffect,
+                    opacity: checked || checked === undefined ? 0.3 : 1,
+                  } as IReqoreEffect
+                }
+              >
+                {offText && (image || uncheckedIcon) ? (
+                  <ReqoreIcon
+                    size={size}
+                    image={image}
+                    icon={uncheckedIcon}
+                    effect={{ grayscale: true }}
+                    margin={offText ? 'right' : undefined}
+                  />
+                ) : null}
+                {offText}
+              </StyledOffSwitchText>
+              <StyledOnSwitchText
+                ref={onRef}
+                onClick={onCheckClick}
+                size={size}
+                theme={theme}
+                checked={checked}
+                parentHasGradient={!!effect?.gradient}
+                hasMargin={onText || onText === 0}
+                effect={
+                  {
+                    uppercase: true,
+                    textSize: getOneLessSize(size),
+                    weight: 'thick',
+                    ...switchTextEffect,
+                    opacity: checked ? 1 : 0.3,
+                  } as IReqoreEffect
+                }
+              >
+                {onText && (image || checkedIcon) ? (
+                  <ReqoreIcon
+                    size={size}
+                    image={image}
+                    margin={onText ? 'right' : undefined}
+                    icon={checkedIcon}
+                  />
+                ) : null}
+                {onText}
+              </StyledOnSwitchText>
             </>
             <StyledSwitchToggle
               size={size}

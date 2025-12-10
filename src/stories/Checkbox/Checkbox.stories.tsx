@@ -7,6 +7,10 @@ import { StoryMeta } from '../utils';
 const meta = {
   title: 'Form/Checkbox/Stories',
   component: ReqoreCheckbox,
+  args: {
+    onCheckClick: () => alert('Checked!'),
+    onUncheckClick: () => alert('Unchecked!'),
+  },
 } as StoryMeta<typeof ReqoreCheckbox>;
 
 export default meta;
@@ -15,23 +19,39 @@ type Story = StoryObj<typeof meta>;
 const Template: StoryFn<typeof Checkbox> = (args) => {
   const [checked, setChecked] = useState<boolean>(args.checked ?? undefined);
 
-  const onChange = () => {
-    setChecked(!checked);
+  const handleCheckClick = () => {
+    setChecked(true);
+  };
+
+  const handleUncheckChange = () => {
+    setChecked(false);
   };
 
   return (
     <ReqoreControlGroup vertical>
       <ReqoreControlGroup wrap>
-        <ReqoreCheckbox {...args} onClick={onChange} checked={checked} />
+        <ReqoreCheckbox
+          {...args}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
+          checked={checked}
+        />
         <ReqoreCheckbox
           {...args}
           label='Label'
           labelDetail='Detail'
           labelDetailPosition='left'
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
           checked={checked}
         />
-        <ReqoreCheckbox {...args} tooltip='I am checked' onClick={onChange} checked={checked} />
+        <ReqoreCheckbox
+          {...args}
+          tooltip='I am checked'
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
+          checked={checked}
+        />
         <ReqoreCheckbox
           {...args}
           checked={checked}
@@ -39,16 +59,24 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
           checkedIntent='success'
           uncheckedIntent='danger'
           unsetIntent='pending'
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
         />
-        <ReqoreCheckbox {...args} disabled onClick={onChange} checked={checked} />
+        <ReqoreCheckbox
+          {...args}
+          disabled
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
+          checked={checked}
+        />
         <ReqoreCheckbox
           {...args}
           label='Label'
           checked={checked}
           labelDetail='Detail'
           labelPosition='left'
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
         />
         <ReqoreCheckbox
           {...args}
@@ -56,12 +84,19 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
           checked={checked}
           labelPosition='left'
           readOnly
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
         />
       </ReqoreControlGroup>
       <ReqoreVerticalSpacer height={10} />
       <ReqoreControlGroup wrap>
-        <ReqoreCheckbox {...args} intent='info' onClick={onChange} checked={checked} />
+        <ReqoreCheckbox
+          {...args}
+          intent='info'
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
+          checked={checked}
+        />
         <ReqoreCheckbox
           {...args}
           label='Label'
@@ -69,25 +104,41 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
           labelDetail='Detail'
           labelDetailPosition='left'
           labelEffect={{ gradient: { colors: { 0: 'danger:lighten:1', 100: '#ff6700' } } }}
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
         />
         <ReqoreCheckbox
           {...args}
           checked={checked}
           tooltip='I am checked'
           effect={{ gradient: { colors: { 0: '#00fafd', 100: '#ff00d0' } } }}
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
         />
         <ReqoreCheckbox
           {...args}
           disabled
           onText='yes'
           offText='no'
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
           checked={checked}
         />
-        <ReqoreCheckbox {...args} onText='yes' offText='no' onClick={onChange} checked={checked} />
-        <ReqoreCheckbox {...args} onText='yes' offText='no' onClick={onChange} checked={checked} />
+        <ReqoreCheckbox
+          {...args}
+          onText='yes'
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
+          checked={checked}
+        />
+        <ReqoreCheckbox
+          {...args}
+          onText='yes'
+          offText='no'
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
+          checked={checked}
+        />
         <ReqoreCheckbox
           {...args}
           label='Label'
@@ -96,7 +147,8 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
           unsetIcon='EmotionNormalLine'
           checkedIcon='EmotionHappyFill'
           uncheckedIcon='EmotionSadFill'
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
           checked={checked}
         />
         <ReqoreCheckbox
@@ -105,7 +157,8 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
           labelPosition='left'
           readOnly
           image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
-          onClick={onChange}
+          onCheckClick={handleCheckClick}
+          onUncheckClick={handleUncheckChange}
           checked={checked}
         />
       </ReqoreControlGroup>
@@ -115,6 +168,22 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
 
 export const Basic: Story = {
   render: Template,
+};
+
+export const BasicUnchecked: Story = {
+  render: Template,
+
+  args: {
+    checked: false,
+  },
+};
+
+export const BasicChecked: Story = {
+  render: Template,
+
+  args: {
+    checked: true,
+  },
 };
 
 export const SwitchUnset: Story = {
