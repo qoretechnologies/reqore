@@ -50,6 +50,8 @@ export interface IReqoreCheckboxProps
   fixed?: boolean;
   tooltip?: TReqoreTooltipProp;
   asSwitch?: boolean;
+  unsetIcon?: IReqoreIconName;
+  unsetIntent?: TReqoreIntent;
   uncheckedIcon?: IReqoreIconName;
   uncheckedIntent?: TReqoreIntent;
   checkedIcon?: IReqoreIconName;
@@ -61,6 +63,9 @@ export interface IReqoreCheckboxProps
   labelEffect?: IReqoreEffect;
   margin?: 'left' | 'right' | 'both' | 'none';
   wrapLabel?: boolean;
+
+  onCheckClick?: () => void;
+  onUncheckClick?: () => void;
 }
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
@@ -75,12 +80,57 @@ const StyledSwitchToggle = styled.div`
   justify-content: center;
   position: absolute;
   height: ${({ size }) => SWITCH_SIZE_TO_PX[size] - 4}px;
-  width: ${({ size, width }) => width || SWITCH_SIZE_TO_PX[size] - 4}px;
+  width: ${({ size, width, checked }) =>
+    checked === undefined
+      ? width < SWITCH_SIZE_TO_PX[size]
+        ? width
+        : SWITCH_SIZE_TO_PX[size] - 4
+      : width || SWITCH_SIZE_TO_PX[size] - 4}px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) translateX(${({ checked }) => (checked === undefined ? '-50%' : 0)});
+  ${({ checked, theme, parentEffect }) =>
+    checked === undefined &&
+    css`
+      background-image: repeating-linear-gradient(
+        45deg,
+        ${rgba(
+            parentEffect?.gradient
+              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 1), 0.1)
+              : changeLightness(theme.main, 0.1),
+            1
+          )}
+          0px,
+        ${rgba(
+            parentEffect?.gradient
+              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 2), 0.15)
+              : changeLightness(theme.main, 0.15),
+            1
+          )}
+          2px,
+        ${rgba(
+            parentEffect?.gradient
+              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 2), 0.15)
+              : changeLightness(theme.main, 0.15),
+            1
+          )}
+          4px,
+        ${rgba(
+            parentEffect?.gradient
+              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 1), 0.1)
+              : changeLightness(theme.main, 0.1),
+            1
+          )}
+          6px
+      );
+    `}
   left: ${({ checked, size, width }) =>
-    !checked ? '1px' : `calc(100% - ${width || SWITCH_SIZE_TO_PX[size] - 4}px - 1px)`};
+    !checked
+      ? checked === undefined
+        ? '50%'
+        : '1px'
+      : `calc(100% - ${width || SWITCH_SIZE_TO_PX[size] - 4}px - 1px)`};
   border-radius: 50px;
+  opacity: ${({ checked }) => (checked === undefined ? 0.2 : 1)};
   background-color: ${({ theme, checked, transparent, parentEffect }) =>
     transparent
       ? 'transparent'
@@ -121,12 +171,13 @@ const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
 `;
 
 const StyledSwitchTextWrapper = styled(StyledTextEffect)`
-  margin: 0 ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  margin: 0 ${({ size, hasMargin }) => (hasMargin ? PADDING_FROM_SIZE[size] : 0)}px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
-  min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size]}px;
+  height: 100%;
+  min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] - 4}px;
 `;
 
 const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
@@ -193,6 +244,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       labelPosition = 'right',
       tooltip,
       asSwitch,
+      unsetIcon,
+      unsetIntent,
       uncheckedIcon,
       checkedIcon,
       uncheckedIntent,
@@ -207,21 +260,32 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       effect,
       customTheme,
       wrapLabel,
+      onCheckClick,
+      onUncheckClick,
       ...rest
     }: IReqoreCheckboxProps,
     ref
   ) => {
     const [offRef, { width: offWidth }] = useMeasure();
     const [onRef, { width: onWidth }] = useMeasure();
-    const _intent = checked ? checkedIntent || intent : uncheckedIntent || intent;
+    const _intent = checked
+      ? checkedIntent || intent
+      : checked === undefined
+      ? unsetIntent || intent
+      : uncheckedIntent || intent;
     const theme = useReqoreTheme('main', customTheme, _intent);
 
     const width = useMemo(() => {
-      if ((!image && !onText && onText !== 0) || (!offText && offText !== 0)) return undefined;
-
       const selectedWidth = checked ? onWidth : offWidth;
+      const addedWidth = checked
+        ? onText || onText === 0
+          ? PADDING_FROM_SIZE[size] * 2
+          : 0
+        : offText || offText === 0
+        ? PADDING_FROM_SIZE[size] * 2
+        : 0;
 
-      return selectedWidth + PADDING_FROM_SIZE[size] * 2;
+      return selectedWidth + addedWidth;
     }, [checked, offWidth, onWidth, size]);
 
     const hasText = useMemo(() => {
@@ -281,63 +345,63 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
             }
           >
             <>
-              {offText || offText === 0 ? (
-                <StyledOffSwitchText
-                  ref={offRef}
-                  size={size}
-                  theme={theme}
-                  checked={checked}
-                  parentHasGradient={!!effect?.gradient}
-                  effect={
-                    {
-                      uppercase: true,
-                      textSize: getOneLessSize(size),
-                      weight: 'bold',
-                      ...switchTextEffect,
-                      opacity: checked ? 0.3 : 1,
-                    } as IReqoreEffect
-                  }
-                >
-                  {image || uncheckedIcon ? (
-                    <ReqoreIcon
-                      size={size}
-                      image={image}
-                      icon={uncheckedIcon}
-                      effect={{ grayscale: true }}
-                      margin={offText ? 'right' : undefined}
-                    />
-                  ) : null}
-                  {offText}
-                </StyledOffSwitchText>
-              ) : null}
-              {onText || onText === 0 ? (
-                <StyledOnSwitchText
-                  ref={onRef}
-                  size={size}
-                  theme={theme}
-                  checked={checked}
-                  parentHasGradient={!!effect?.gradient}
-                  effect={
-                    {
-                      uppercase: true,
-                      textSize: getOneLessSize(size),
-                      weight: 'thick',
-                      ...switchTextEffect,
-                      opacity: checked ? 1 : 0.3,
-                    } as IReqoreEffect
-                  }
-                >
-                  {image || checkedIcon ? (
-                    <ReqoreIcon
-                      size={size}
-                      image={image}
-                      margin={onText ? 'right' : undefined}
-                      icon={checkedIcon}
-                    />
-                  ) : null}
-                  {onText}
-                </StyledOnSwitchText>
-              ) : null}
+              <StyledOffSwitchText
+                onClick={onUncheckClick}
+                ref={offRef}
+                size={size}
+                theme={theme}
+                checked={checked}
+                hasMargin={offText || offText === 0}
+                parentHasGradient={!!effect?.gradient}
+                effect={
+                  {
+                    uppercase: true,
+                    textSize: getOneLessSize(size),
+                    weight: 'bold',
+                    ...switchTextEffect,
+                    opacity: checked || checked === undefined ? 0.3 : 1,
+                  } as IReqoreEffect
+                }
+              >
+                {offText && (image || uncheckedIcon) ? (
+                  <ReqoreIcon
+                    size={size}
+                    image={image}
+                    icon={uncheckedIcon}
+                    effect={{ grayscale: true }}
+                    margin={offText ? 'right' : undefined}
+                  />
+                ) : null}
+                {offText}
+              </StyledOffSwitchText>
+              <StyledOnSwitchText
+                ref={onRef}
+                onClick={onCheckClick}
+                size={size}
+                theme={theme}
+                checked={checked}
+                parentHasGradient={!!effect?.gradient}
+                hasMargin={onText || onText === 0}
+                effect={
+                  {
+                    uppercase: true,
+                    textSize: getOneLessSize(size),
+                    weight: 'thick',
+                    ...switchTextEffect,
+                    opacity: checked ? 1 : 0.3,
+                  } as IReqoreEffect
+                }
+              >
+                {onText && (image || checkedIcon) ? (
+                  <ReqoreIcon
+                    size={size}
+                    image={image}
+                    margin={onText ? 'right' : undefined}
+                    icon={checkedIcon}
+                  />
+                ) : null}
+                {onText}
+              </StyledOnSwitchText>
             </>
             <StyledSwitchToggle
               size={size}
@@ -351,7 +415,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 <ReqoreIcon
                   size={size}
                   image={image}
-                  icon={checked ? checkedIcon : uncheckedIcon}
+                  icon={checked ? checkedIcon : checked === undefined ? unsetIcon : uncheckedIcon}
                   effect={{ grayscale: !checked, opacity: checked ? 1 : 0.5 }}
                 />
               ) : null}
