@@ -50,6 +50,8 @@ export interface IReqoreCheckboxProps
   fixed?: boolean;
   tooltip?: TReqoreTooltipProp;
   asSwitch?: boolean;
+  unsetIcon?: IReqoreIconName;
+  unsetIntent?: TReqoreIntent;
   uncheckedIcon?: IReqoreIconName;
   uncheckedIntent?: TReqoreIntent;
   checkedIcon?: IReqoreIconName;
@@ -75,12 +77,57 @@ const StyledSwitchToggle = styled.div`
   justify-content: center;
   position: absolute;
   height: ${({ size }) => SWITCH_SIZE_TO_PX[size] - 4}px;
-  width: ${({ size, width }) => width || SWITCH_SIZE_TO_PX[size] - 4}px;
+  width: ${({ size, width, checked }) =>
+    checked === undefined
+      ? width < SWITCH_SIZE_TO_PX[size]
+        ? width
+        : SWITCH_SIZE_TO_PX[size] - 4
+      : width || SWITCH_SIZE_TO_PX[size] - 4}px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) translateX(${({ checked }) => (checked === undefined ? '-50%' : 0)});
+  ${({ checked, theme, parentEffect }) =>
+    checked === undefined &&
+    css`
+      background-image: repeating-linear-gradient(
+        45deg,
+        ${rgba(
+            parentEffect?.gradient
+              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 1), 0.1)
+              : changeLightness(theme.main, 0.1),
+            1
+          )}
+          0px,
+        ${rgba(
+            parentEffect?.gradient
+              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 2), 0.15)
+              : changeLightness(theme.main, 0.15),
+            1
+          )}
+          2px,
+        ${rgba(
+            parentEffect?.gradient
+              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 2), 0.15)
+              : changeLightness(theme.main, 0.15),
+            1
+          )}
+          4px,
+        ${rgba(
+            parentEffect?.gradient
+              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 1), 0.1)
+              : changeLightness(theme.main, 0.1),
+            1
+          )}
+          6px
+      );
+    `}
   left: ${({ checked, size, width }) =>
-    !checked ? '1px' : `calc(100% - ${width || SWITCH_SIZE_TO_PX[size] - 4}px - 1px)`};
+    !checked
+      ? checked === undefined
+        ? '50%'
+        : '1px'
+      : `calc(100% - ${width || SWITCH_SIZE_TO_PX[size] - 4}px - 1px)`};
   border-radius: 50px;
+  opacity: ${({ checked }) => (checked === undefined ? 0.2 : 1)};
   background-color: ${({ theme, checked, transparent, parentEffect }) =>
     transparent
       ? 'transparent'
@@ -193,6 +240,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       labelPosition = 'right',
       tooltip,
       asSwitch,
+      unsetIcon,
+      unsetIntent,
       uncheckedIcon,
       checkedIcon,
       uncheckedIntent,
@@ -213,7 +262,11 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
   ) => {
     const [offRef, { width: offWidth }] = useMeasure();
     const [onRef, { width: onWidth }] = useMeasure();
-    const _intent = checked ? checkedIntent || intent : uncheckedIntent || intent;
+    const _intent = checked
+      ? checkedIntent || intent
+      : checked === undefined
+      ? unsetIntent || intent
+      : uncheckedIntent || intent;
     const theme = useReqoreTheme('main', customTheme, _intent);
 
     const width = useMemo(() => {
@@ -294,7 +347,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                       textSize: getOneLessSize(size),
                       weight: 'bold',
                       ...switchTextEffect,
-                      opacity: checked ? 0.3 : 1,
+                      opacity: checked || checked === undefined ? 0.3 : 1,
                     } as IReqoreEffect
                   }
                 >
@@ -351,7 +404,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 <ReqoreIcon
                   size={size}
                   image={image}
-                  icon={checked ? checkedIcon : uncheckedIcon}
+                  icon={checked ? checkedIcon : checked === undefined ? unsetIcon : uncheckedIcon}
                   effect={{ grayscale: !checked, opacity: checked ? 1 : 0.5 }}
                 />
               ) : null}
