@@ -209,7 +209,7 @@ const ReqoreControlGroup = memo(
         responsive &&
         ref.current.scrollWidth > ref.current.clientWidth
       );
-    }, [vertical, responsive, ref, children]);
+    }, [vertical, responsive]);
 
     useMount(() => {
       if (!vertical && responsive) {
@@ -244,7 +244,7 @@ const ReqoreControlGroup = memo(
       if (overflowingChildren === 0) {
         setIsOverflownDialogOpen(false);
       }
-    }, [overflowingChildren, lastReSize]);
+    }, [overflowingChildren, lastReSize, checkIfOverflowing]);
 
     const getIsFirst = (index: number): boolean => {
       return !isInsideStackGroup || childrenCount === 1
@@ -425,7 +425,6 @@ const ReqoreControlGroup = memo(
         return newProps;
       },
       [
-        children,
         isStack,
         isVertical,
         isChild,
@@ -438,6 +437,10 @@ const ReqoreControlGroup = memo(
         size,
         intent,
         rounded,
+        fixed,
+        fill,
+        customTheme,
+        isMasterGroupRounded,
       ]
     );
 
@@ -473,7 +476,15 @@ const ReqoreControlGroup = memo(
               />,
             ]
           : children,
-      [children, overflowingChildren, responsive, overflownChildren]
+      [
+        children,
+        overflowingChildren,
+        responsive,
+        overflownChildren,
+        customTheme,
+        overflowButtonProps,
+        isOverflownDialogOpen,
+      ]
     );
 
     return (

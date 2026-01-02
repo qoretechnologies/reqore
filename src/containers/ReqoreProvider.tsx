@@ -73,6 +73,20 @@ export interface IReqoreConfirmationModal {
   modalProps?: IReqoreModalProps;
 }
 
+const DEFAULT_ERROR_BOUNDARY_OPTIONS = {
+  errorMessage:
+    'There was an error rendering this component. You can try resetting or refreshing the page.',
+};
+const DEFAULT_TOOLTIP_OPTIONS = { delay: 0 };
+const NOTIFICATION_POSITIONS: IReqoreNotificationsPosition[] = [
+  'TOP',
+  'BOTTOM',
+  'TOP LEFT',
+  'TOP RIGHT',
+  'BOTTOM LEFT',
+  'BOTTOM RIGHT',
+];
+
 export const modalStore = create<{
   modals: IReqoreModals;
   addModal: IReqoreContext['addModal'];
@@ -128,7 +142,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     latestZIndex.current += 1;
 
     return latestZIndex.current;
-  }, [latestZIndex.current]);
+  }, []);
 
   const confirmAction = useCallback((data: IReqoreConfirmationModal): void => {
     setConfirmationModal({
@@ -181,7 +195,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         return cur;
       });
     },
-    []
+    [confirmAction]
   );
 
   const addNotification = useCallback((data: IReqoreNotificationData) => {
@@ -224,22 +238,34 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   );
 
   const notificationsByPosition = useMemo(() => {
-    const positions: IReqoreNotificationsPosition[] = [
-      'TOP',
-      'BOTTOM',
-      'TOP LEFT',
-      'TOP RIGHT',
-      'BOTTOM LEFT',
-      'BOTTOM RIGHT',
-    ];
     const notificationsByPosition: { [key: string]: IReqoreNotificationData[] } = {};
 
-    positions.forEach((position) => {
+    NOTIFICATION_POSITIONS.forEach((position) => {
       notificationsByPosition[position] = getNotificationsByPosition(position);
     });
 
     return notificationsByPosition;
   }, [notifications, getNotificationsByPosition]);
+
+  const resolvedOptions = useMemo(
+    () => ({
+      animations: {
+        buttons: true,
+        dialogs: true,
+        popovers: true,
+        ...(options?.animations || {}),
+      },
+      tooltips: options?.tooltips ?? DEFAULT_TOOLTIP_OPTIONS,
+      closePopoversOnEscPress:
+        options && 'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
+      closeModalsOnEscPress:
+        options && 'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
+      customPortalId: options?.customPortalId,
+      uiScale: options?.uiScale,
+      errorBoundaryOptions: options?.errorBoundaryOptions || DEFAULT_ERROR_BOUNDARY_OPTIONS,
+    }),
+    [options]
+  );
 
   const contextValue: IReqoreContext = useMemo(
     () =>
@@ -256,27 +282,17 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         isMobileOrTablet,
         latestZIndex: latestZIndex.current,
         getAndIncreaseZIndex,
-        animations: {
-          buttons: true,
-          dialogs: true,
-          popovers: true,
-          ...(options?.animations || {}),
-        },
-        tooltips: options.tooltips || { delay: 0 },
-        closePopoversOnEscPress:
-          'closePopoversOnEscPress' in options ? options.closePopoversOnEscPress : true,
+        animations: resolvedOptions.animations,
+        tooltips: resolvedOptions.tooltips,
+        closePopoversOnEscPress: resolvedOptions.closePopoversOnEscPress,
         // ESC Closable modals management
-        closeModalsOnEscPress:
-          'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
+        closeModalsOnEscPress: resolvedOptions.closeModalsOnEscPress,
         escClosableModals,
         addEscClosableModal,
         removeEscClosableModal,
-        customPortalId: options.customPortalId,
-        uiScale: options.uiScale,
-        errorBoundaryOptions: options.errorBoundaryOptions || {
-          errorMessage:
-            'There was an error rendering this component. You can try resetting or refreshing the page.',
-        },
+        customPortalId: resolvedOptions.customPortalId,
+        uiScale: resolvedOptions.uiScale,
+        errorBoundaryOptions: resolvedOptions.errorBoundaryOptions,
       } satisfies IReqoreContext),
     [
       notifications,
@@ -291,7 +307,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       isMobileOrTablet,
       latestZIndex,
       getAndIncreaseZIndex,
-      options,
+      resolvedOptions,
       escClosableModals,
       addEscClosableModal,
       removeEscClosableModal,
