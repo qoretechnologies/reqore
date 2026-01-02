@@ -209,7 +209,7 @@ const ReqoreControlGroup = memo(
         responsive &&
         ref.current.scrollWidth > ref.current.clientWidth
       );
-    }, [vertical, responsive]);
+    }, [vertical, responsive, children]);
 
     useMount(() => {
       if (!vertical && responsive) {
@@ -425,6 +425,7 @@ const ReqoreControlGroup = memo(
         return newProps;
       },
       [
+        children,
         isStack,
         isVertical,
         isChild,
