@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useContextSelector } from 'use-context-selector';
 import ReqoreContext, { IReqoreContext } from '../context/ReqoreContext';
 
@@ -13,5 +12,5 @@ export const useReqoreProperty = <T extends keyof IReqoreContext>(
     return value[property];
   });
 
-  return useMemo(() => contextProperty, [contextProperty]);
+  return contextProperty;
 };

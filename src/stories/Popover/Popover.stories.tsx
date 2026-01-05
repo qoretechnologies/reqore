@@ -329,7 +329,10 @@ const Template: StoryFn<IReqorePopoverProps & { insideModal?: boolean }> = (
               <ReqorePanel label='This is a test' flat>
                 <ReqoreMessage
                   flat
-                  tooltip={{ content: 'I am a popover inside a popover with blur', blur: true }}
+                  tooltip={{
+                    content: 'I am a popover inside a popover with blur',
+                    blur: true,
+                  }}
                 >
                   In to am attended desirous raptures declared diverted confined at. Collected
                   instantly remaining up certainly to necessary as. Over walk dull into
@@ -531,6 +534,62 @@ export const TooltipIsRemovedWhenContentIsEmpty: Story = {
     await sleep(300);
     await expect(document.querySelector('.reqore-popover-content')).not.toBeInTheDocument();
     await expect(rest.args.onToggleChange).toHaveBeenLastCalledWith(false);
+  },
+};
+
+export const TooltipOffsetIsApplied: Story = {
+  render: () => (
+    <ReqoreControlGroup>
+      <ReqoreButton
+        tooltip={{
+          content: 'Offset tooltip 1',
+          handler: 'hover',
+          placement: 'bottom-start',
+          noArrow: true,
+          offsetX: 20,
+          offsetY: 80,
+          openOnMount: true,
+        }}
+      >
+        Offset no arrow
+      </ReqoreButton>
+      <ReqoreButton
+        tooltip={{
+          content: 'Offset tooltip 2',
+          handler: 'hover',
+          placement: 'bottom-start',
+          offsetX: -25,
+          offsetY: 25,
+          openOnMount: true,
+        }}
+      >
+        Offset with arrow
+      </ReqoreButton>
+      <ReqoreButton
+        tooltip={{
+          content: 'Offset tooltip 3',
+          handler: 'hover',
+          placement: 'top-end',
+          offsetX: 70,
+          openOnMount: true,
+        }}
+      >
+        Offset top
+      </ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector('button');
+    fireEvent.mouseEnter(button);
+    await sleep(300);
+    const popover = document.querySelector('.reqore-popover-content') as HTMLElement;
+    await expect(popover).toBeInTheDocument();
+    const buttonRect = button.getBoundingClientRect();
+    const popoverRect = popover.getBoundingClientRect();
+    const xOffset = Math.round(popoverRect.left - buttonRect.left);
+    const yOffset = Math.round(popoverRect.top - buttonRect.bottom);
+    await expect(Math.abs(xOffset - 20)).toBeLessThanOrEqual(2);
+    await expect(Math.abs(yOffset - 85)).toBeLessThanOrEqual(2);
   },
 };
 

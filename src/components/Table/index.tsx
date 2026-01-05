@@ -1,6 +1,6 @@
 /* @flow */
 import { size as count, isArray } from 'lodash';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -266,6 +266,7 @@ const ReqoreTable = ({
   const rightTableRef = useRef<HTMLDivElement>(null);
   const mainTableRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
+  const transformedDataRef = useRef<IReqoreTableData>(data || []);
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
@@ -287,6 +288,7 @@ const ReqoreTable = ({
     300,
     onFilterChange
   );
+  const normalizedQuery = useMemo(() => query.toString().toLowerCase(), [query]);
 
   const selectedIcon = useMemo(() => {
     switch (_selectedQuant) {
@@ -298,6 +300,74 @@ const ReqoreTable = ({
         return 'CheckboxBlankCircleLine';
     }
   }, [_selectedQuant]);
+
+  const handleSortChange = useCallback((by: string) => {
+    setSort((currentSort: IReqoreTableSort) => {
+      const newSort: IReqoreTableSort = { ...currentSort };
+
+      newSort.by = by;
+      newSort.direction =
+        currentSort.by === by ? flipSortDirection(currentSort.direction) : currentSort.direction;
+
+      return newSort;
+    });
+  }, []);
+
+  const handleSelectClick = useCallback(
+    (selectId: string | number) => {
+      if (onSelectClick) {
+        onSelectClick(selectId);
+        return;
+      }
+
+      setSelected((current) => {
+        let newSelected = [...current];
+        const isSelected = newSelected.find((selected) => selectId === selected);
+
+        if (isSelected) {
+          newSelected = newSelected.filter((selected) => selected !== selectId);
+        } else {
+          newSelected = [...newSelected, selectId];
+        }
+
+        return newSelected;
+      });
+    },
+    [onSelectClick]
+  );
+
+  const handleToggleSelectClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      switch (_selectedQuant) {
+        case 'none':
+        case 'some': {
+          const selectableData: (string | number)[] = transformedDataRef.current
+            .filter((datum) => {
+              // If the user held down the meta key, we will reverse the selection
+              if (e.metaKey) {
+                // Check if the datum is selected
+                const isSelected = _selected.find((selectId) => selectId === datum._selectId);
+                // If it is selected, we will remove it from the selected array
+                if (isSelected) {
+                  return false;
+                }
+              }
+
+              return datum._selectId ?? false;
+            })
+            .map((datum) => datum._selectId);
+
+          setSelected(selectableData);
+          break;
+        }
+        default: {
+          setSelected([]);
+          break;
+        }
+      }
+    },
+    [_selected, _selectedQuant]
+  );
 
   const finalColumns = useMemo(() => {
     const fullColumns = [..._internalColumns];
@@ -317,9 +387,7 @@ const ReqoreTable = ({
         header: {
           icon: selectedIcon,
           tooltip: 'Toggle selection on all data',
-          onClick: (e) => {
-            handleToggleSelectClick(e);
-          },
+          onClick: handleToggleSelectClick,
         },
 
         cell: {
@@ -348,11 +416,10 @@ const ReqoreTable = ({
     columnModifiers,
     zoom,
     selectable,
-    _selectedQuant,
     selectedIcon,
     selectToggleTooltip,
     _selected,
-    selectedRowIntent,
+    handleToggleSelectClick,
   ]);
 
   const filters: { [key: string]: string } = useMemo(() => {
@@ -378,24 +445,40 @@ const ReqoreTable = ({
     return getFilters(finalColumns);
   }, [finalColumns]);
 
+  const normalizedFilters = useMemo(
+    () =>
+      Object.entries(filters).map(([filterKey, filterValue]) => [
+        filterKey,
+        filterValue.toString().toLowerCase(),
+      ]),
+    [filters]
+  );
+
   const transformedData = useMemo(() => {
+    const hasQuery = normalizedQuery.length > 0;
+
     // Filter by global query
-    let filteredData = _data.filter((datum) =>
-      JSON.stringify(datum).toLowerCase().includes(query.toString().toLowerCase())
-    );
+    let filteredData = hasQuery
+      ? _data.filter((datum) =>
+          JSON.stringify(datum).toLowerCase().includes(normalizedQuery)
+        )
+      : _data;
 
     // Filter by column filters
     filteredData = filteredData.filter((datum) => {
-      return Object.keys(filters).every((filterKey) => {
-        const filterValue = filters[filterKey];
-        const datumValue = datum[filterKey];
+      return normalizedFilters.every(([filterKey, filterValue]) => {
+        const datumValue = datum[filterKey as string];
 
-        return datumValue?.toString().toLowerCase().includes(filterValue.toString().toLowerCase());
+        return datumValue?.toString().toLowerCase().includes(filterValue);
       });
     });
 
     return _sort ? sortTableData(filteredData, _sort) : filteredData;
-  }, [_data, _sort, query, filters]);
+  }, [_data, _sort, normalizedFilters, normalizedQuery]);
+
+  useEffect(() => {
+    transformedDataRef.current = transformedData;
+  }, [transformedData]);
 
   useUpdateEffect(() => {
     if (onSortChange) {
@@ -422,7 +505,7 @@ const ReqoreTable = ({
       onSelectedChange(_selected);
     }
 
-    const selectableData: IReqoreTableData = transformedData.filter(
+    const selectableData: IReqoreTableData = transformedDataRef.current.filter(
       (datum) => datum._selectId ?? false
     );
 
@@ -437,72 +520,7 @@ const ReqoreTable = ({
     }
   }, [_selected]);
 
-  const handleSortChange = (by: string) => {
-    setSort((currentSort: IReqoreTableSort) => {
-      const newSort: IReqoreTableSort = { ...currentSort };
-
-      newSort.by = by;
-      newSort.direction =
-        currentSort.by === by ? flipSortDirection(currentSort.direction) : currentSort.direction;
-
-      return newSort;
-    });
-  };
-
-  const handleSelectClick = useCallback(
-    (selectId: string | number) => {
-      if (onSelectClick) {
-        onSelectClick(selectId);
-        return;
-      }
-
-      setSelected((current) => {
-        let newSelected = [...current];
-        const isSelected = newSelected.find((selected) => selectId === selected);
-
-        if (isSelected) {
-          newSelected = newSelected.filter((selected) => selected !== selectId);
-        } else {
-          newSelected = [...newSelected, selectId];
-        }
-
-        return newSelected;
-      });
-    },
-    [onSelectClick]
-  );
-
   const handleScrollChange = useCallback((isScrolled: boolean) => setIsScrolled(isScrolled), []);
-
-  const handleToggleSelectClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    switch (_selectedQuant) {
-      case 'none':
-      case 'some': {
-        const selectableData: (string | number)[] = transformedData
-          .filter((datum) => {
-            // If the user held down the meta key, we will reverse the selection
-            if (e.metaKey) {
-              // Check if the datum is selected
-              const isSelected = _selected.find((selectId) => selectId === datum._selectId);
-              // If it is selected, we will remove it from the selected array
-              if (isSelected) {
-                return false;
-              }
-            }
-
-            return datum._selectId ?? false;
-          })
-          .map((datum) => datum._selectId);
-
-        setSelected(selectableData);
-        break;
-      }
-      default: {
-        setSelected([]);
-        break;
-      }
-    }
-  };
 
   const handleColumnsUpdate = useCallback(
     <T extends keyof IReqoreTableColumn>(id: string, key: T, value: IReqoreTableColumn[T]) => {
@@ -516,7 +534,7 @@ const ReqoreTable = ({
         };
       });
     },
-    [columnModifiers]
+    []
   );
 
   const handlePreQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -713,21 +731,27 @@ const ReqoreTable = ({
 
     return finalActions;
   }, [
-    count(data),
-    preQuery,
-    transformedData,
     actions,
-    filterable,
-    filterProps,
-    finalColumns,
-    zoomable,
-    zoom,
-    size,
-    columnsList,
-    isScrolled,
-    showHelp,
-    selectable,
     addModal,
+    columnModifiers,
+    columnsList,
+    data,
+    exportable,
+    filterProps,
+    filterable,
+    handlePreQueryChange,
+    handleScrollToTop,
+    isScrolled,
+    preQuery,
+    query,
+    selectable,
+    showHelp,
+    size,
+    setPreQuery,
+    setQuery,
+    transformedData,
+    zoom,
+    zoomable,
   ]);
 
   const badge = useMemo(() => {
@@ -742,7 +766,7 @@ const ReqoreTable = ({
     }
 
     return badgeList;
-  }, [transformedData, rest.badge]);
+  }, [rest.badge, rest.label, transformedData]);
 
   const refs = useMemo(
     () => ({
@@ -751,7 +775,7 @@ const ReqoreTable = ({
       main: mainTableRef,
       header: mainHeaderRef,
     }),
-    [leftTableRef, rightTableRef, mainTableRef, mainHeaderRef]
+    []
   );
 
   const columnsByType = useMemo(

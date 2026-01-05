@@ -5,7 +5,10 @@ const useLatestZIndex = (): number => {
   const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
   const latestZIndex = useReqoreProperty('latestZIndex');
 
-  const zIndex = useMemo(() => getAndIncreaseZIndex(), [latestZIndex]);
+  const zIndex = useMemo(
+    () => getAndIncreaseZIndex(),
+    [getAndIncreaseZIndex, latestZIndex]
+  );
 
   return zIndex;
 };

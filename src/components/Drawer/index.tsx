@@ -210,8 +210,14 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       config: animations.dialogs ? SPRING_CONFIG : SPRING_CONFIG_NO_ANIMATIONS,
     });
 
-    const zIndex = useMemo(() => customZIndex || getAndIncreaseZIndex(), [customZIndex]);
-    const wrapperZIndex = useMemo(() => customZIndex + 1 || getAndIncreaseZIndex(), [customZIndex]);
+    const zIndex = useMemo(
+      () => customZIndex || getAndIncreaseZIndex(),
+      [customZIndex, getAndIncreaseZIndex]
+    );
+    const wrapperZIndex = useMemo(
+      () => customZIndex + 1 || getAndIncreaseZIndex(),
+      [customZIndex, getAndIncreaseZIndex]
+    );
     const _actions: IReqorePanelAction[] = useMemo(() => {
       const builtActions: IReqorePanelAction[] = [...actions];
 
