@@ -30,7 +30,10 @@ export const StyledBackdrop = styled(animated.div)<
 export const ReqoreBackdrop = memo(
   ({ onClose, zIndex, blur, opacity, ...rest }: IReqoreBackdropProps) => {
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
-    const finalZIndex = useMemo(() => zIndex || getAndIncreaseZIndex(), [zIndex]);
+    const finalZIndex = useMemo(
+      () => zIndex || getAndIncreaseZIndex(),
+      [zIndex, getAndIncreaseZIndex]
+    );
 
     const handleClick = useCallback(
       (event) => {

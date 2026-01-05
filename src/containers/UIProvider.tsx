@@ -72,7 +72,7 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(({ children, the
   const [modalPortal, setModalPortal] = useState<any>(false);
 
   const _theme: Partial<IReqoreTheme> = useMemo(() => cloneDeep(theme || {}), [theme]);
-  const _defaultTheme: IReqoreTheme = useMemo(() => cloneDeep(DEFAULT_THEME), [DEFAULT_THEME]);
+  const _defaultTheme: IReqoreTheme = useMemo(() => cloneDeep(DEFAULT_THEME), []);
   const rebuiltTheme: IReqoreTheme = useMemo(
     () => buildTheme(merge(_defaultTheme, _theme)),
     [_defaultTheme, _theme]

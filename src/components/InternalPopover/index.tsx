@@ -170,6 +170,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     maxWidth,
     minWidth,
     maxHeight,
+    offsetX = 0,
+    offsetY = 0,
     intent,
     title,
     icon,
@@ -188,19 +190,27 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
     const mutationObserber: MutableRefObject<any> = useRef(null);
+    const baseOffsetY = noArrow ? 5 : 10;
     const { styles, attributes, forceUpdate, state } = usePopper(targetElement, popperElement, {
       placement,
       modifiers: [
         {
           name: 'offset',
           options: {
-            offset: [0, noArrow ? 5 : 10],
+            offset: [offsetX, baseOffsetY + offsetY],
           },
         },
         {
           name: 'arrow',
           options: {
             element: arrowElement,
+            padding: 8,
+          },
+        },
+        {
+          name: 'preventOverflow',
+          options: {
+            padding: 8,
           },
         },
         {
@@ -265,6 +275,34 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
       [styles.popper.transform, uiScale]
     );
 
+    const arrowStyle = useMemo(() => {
+      if (uiScale === undefined) {
+        return styles.arrow;
+      }
+
+      const scaleAxisValue = (value: number | string | undefined) => {
+        if (value === undefined) {
+          return value;
+        }
+
+        const numericValue = typeof value === 'number' ? value : Number.parseFloat(value);
+
+        if (Number.isNaN(numericValue)) {
+          return value;
+        }
+
+        const scaledValue = numericValue < 0 ? numericValue * uiScale : numericValue / uiScale;
+
+        return typeof value === 'number' ? scaledValue : `${scaledValue}px`;
+      };
+
+      return {
+        ...styles.arrow,
+        left: scaleAxisValue(styles.arrow.left),
+        top: scaleAxisValue(styles.arrow.top),
+      };
+    }, [styles.arrow, uiScale]);
+
     const style = useMemo(
       () => ({
         ...styles.popper,
@@ -300,7 +338,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           {...attributes.popper}
         >
           {!noArrow && !transparent ? (
-            <StyledPopoverArrow ref={setArrowElement} style={styles.arrow} data-popper-arrow />
+            <StyledPopoverArrow ref={setArrowElement} style={arrowStyle} data-popper-arrow />
           ) : null}
           <StyledPopoverContent>
             {!noWrapper || isString(content) ? (
