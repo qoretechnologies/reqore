@@ -142,10 +142,33 @@ export const ReqorePopover = memo(
       const popperRef = useRef(null);
 
       const [isOpen, setIsOpen] = React.useState(false);
-      const [timeout, setTimeoutValue] = React.useState<any>(null);
+      const timeoutRef = useRef<number | null>(null);
 
       const startEvent = startEvents[handler];
       const endEvent = endEvents[handler];
+
+      const cancelTimeout = useCallback(() => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+      }, []);
+
+      const close = useCallback(
+        (e?: MouseEvent | KeyboardEvent) => {
+          if (onBeforeClose) {
+            const shouldClose = onBeforeClose({ content }, e);
+
+            if (!shouldClose) {
+              return;
+            }
+          }
+
+          cancelTimeout();
+          setIsOpen(false);
+        },
+        [cancelTimeout, onBeforeClose, content]
+      );
 
       const open = useCallback(
         (e?: MouseEvent | KeyboardEvent) => {
@@ -168,38 +191,15 @@ export const ReqorePopover = memo(
               handler === 'hover' || handler === 'hoverStay' ? delay ?? tooltips.delay : delay;
 
             if (globalDelay) {
-              setTimeoutValue(() =>
-                setTimeout(() => {
-                  setIsOpen(true);
-                }, globalDelay)
-              );
+              timeoutRef.current = window.setTimeout(() => {
+                setIsOpen(true);
+              }, globalDelay);
             } else {
               setIsOpen(true);
             }
           }
         },
-        [isOpen, handler, closeOnInsideClick, delay, tooltips.delay]
-      );
-
-      const cancelTimeout = useCallback(() => {
-        clearTimeout(timeout);
-        setTimeout(null);
-      }, [timeout]);
-
-      const close = useCallback(
-        (e?: MouseEvent | KeyboardEvent) => {
-          if (onBeforeClose) {
-            const shouldClose = onBeforeClose({ content }, e);
-
-            if (!shouldClose) {
-              return;
-            }
-          }
-
-          cancelTimeout();
-          setIsOpen(false);
-        },
-        [cancelTimeout]
+        [isOpen, handler, closeOnInsideClick, delay, tooltips.delay, close, onBeforeOpen, content]
       );
 
       const handleClick = useCallback(
@@ -217,14 +217,17 @@ export const ReqorePopover = memo(
             close();
           }
         },
-        [closeOnOutsideClick, componentRef, popperRef.current, closeOnTargetClick]
+        [closeOnOutsideClick, componentRef, popperRef.current, closeOnTargetClick, close, handler]
       );
 
-      const handleKeyDown = useCallback((event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          close();
-        }
-      }, []);
+      const handleKeyDown = useCallback(
+        (event: KeyboardEvent) => {
+          if (event.key === 'Escape') {
+            close();
+          }
+        },
+        [close]
+      );
 
       useUpdateEffect(() => {
         onToggleChange?.(isOpen, { content });
