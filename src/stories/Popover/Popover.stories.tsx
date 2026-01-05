@@ -84,7 +84,6 @@ const ClickButton = (args: any) => {
         closeOnOutsideClick: true,
         noArrow: true,
         useTargetWidth: true,
-        openOnMount: true,
         ...args,
       }}
     >
@@ -98,7 +97,6 @@ const DelayButton = (args: any) => {
     <ReqoreButton
       tooltip={{
         delay: 500,
-        openOnMount: true,
         ...args,
       }}
     >
@@ -112,7 +110,6 @@ const HoverStayButton = (args: any) => {
     <ReqoreButton
       tooltip={{
         handler: 'hoverStay',
-        openOnMount: true,
         ...args,
       }}
     >
@@ -135,7 +132,6 @@ const Template: StoryFn<IReqorePopoverProps & { insideModal?: boolean }> = (
             content: 'See? Told you',
             blur: true,
             handler: 'hoverStay',
-            openOnMount: true,
           }}
         >
           Hover me for something cool
@@ -335,7 +331,6 @@ const Template: StoryFn<IReqorePopoverProps & { insideModal?: boolean }> = (
                   tooltip={{
                     content: 'I am a popover inside a popover with blur',
                     blur: true,
-                    openOnMount: true,
                   }}
                 >
                   In to am attended desirous raptures declared diverted confined at. Collected
@@ -439,7 +434,6 @@ export const ChangingElement: Story = {
     noArrow: true,
     noWrapper: true,
     useTargetWidth: true,
-    openOnMount: true,
   },
 
   play: async ({ canvasElement }) => {
@@ -468,7 +462,6 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
       noArrow: true,
       noWrapper: true,
       useTargetWidth: true,
-      openOnMount: true,
     });
 
     useMount(() => {
@@ -480,7 +473,6 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
           noArrow: true,
           noWrapper: true,
           useTargetWidth: true,
-          openOnMount: true,
         });
       }, 1500);
     });
@@ -515,7 +507,6 @@ export const TooltipIsRemovedWhenContentIsEmpty: Story = {
       noArrow: true,
       noWrapper: true,
       useTargetWidth: true,
-      openOnMount: true,
     });
 
     useMount(() => {
