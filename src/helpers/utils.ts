@@ -162,6 +162,14 @@ export function parseInputValue(input) {
     return input;
   }
 
+  if (isNumber(input)) {
+    return input;
+  }
+
+  if (!isString(input)) {
+    return input;
+  }
+
   // Check for explicit quotes to save as a string
   if (input.startsWith('"') && input.endsWith('"')) {
     return input.slice(1, -1); // Remove the quotes
