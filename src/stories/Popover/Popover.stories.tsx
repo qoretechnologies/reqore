@@ -84,6 +84,7 @@ const ClickButton = (args: any) => {
         closeOnOutsideClick: true,
         noArrow: true,
         useTargetWidth: true,
+        openOnMount: true,
         ...args,
       }}
     >
@@ -97,6 +98,7 @@ const DelayButton = (args: any) => {
     <ReqoreButton
       tooltip={{
         delay: 500,
+        openOnMount: true,
         ...args,
       }}
     >
@@ -110,6 +112,7 @@ const HoverStayButton = (args: any) => {
     <ReqoreButton
       tooltip={{
         handler: 'hoverStay',
+        openOnMount: true,
         ...args,
       }}
     >
@@ -329,7 +332,11 @@ const Template: StoryFn<IReqorePopoverProps & { insideModal?: boolean }> = (
               <ReqorePanel label='This is a test' flat>
                 <ReqoreMessage
                   flat
-                  tooltip={{ content: 'I am a popover inside a popover with blur', blur: true }}
+                  tooltip={{
+                    content: 'I am a popover inside a popover with blur',
+                    blur: true,
+                    openOnMount: true,
+                  }}
                 >
                   In to am attended desirous raptures declared diverted confined at. Collected
                   instantly remaining up certainly to necessary as. Over walk dull into
@@ -432,6 +439,7 @@ export const ChangingElement: Story = {
     noArrow: true,
     noWrapper: true,
     useTargetWidth: true,
+    openOnMount: true,
   },
 
   play: async ({ canvasElement }) => {
@@ -460,6 +468,7 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
       noArrow: true,
       noWrapper: true,
       useTargetWidth: true,
+      openOnMount: true,
     });
 
     useMount(() => {
@@ -471,6 +480,7 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
           noArrow: true,
           noWrapper: true,
           useTargetWidth: true,
+          openOnMount: true,
         });
       }, 1500);
     });
@@ -505,6 +515,7 @@ export const TooltipIsRemovedWhenContentIsEmpty: Story = {
       noArrow: true,
       noWrapper: true,
       useTargetWidth: true,
+      openOnMount: true,
     });
 
     useMount(() => {
@@ -545,6 +556,7 @@ export const TooltipOffsetIsApplied: Story = {
           noArrow: true,
           offsetX: 20,
           offsetY: 10,
+          openOnMount: true,
         }}
       >
         Offset no arrow
@@ -556,6 +568,7 @@ export const TooltipOffsetIsApplied: Story = {
           placement: 'bottom-start',
           offsetX: -15,
           offsetY: 5,
+          openOnMount: true,
         }}
       >
         Offset with arrow
@@ -567,6 +580,7 @@ export const TooltipOffsetIsApplied: Story = {
           placement: 'top-end',
           offsetX: 10,
           offsetY: -8,
+          openOnMount: true,
         }}
       >
         Offset top
