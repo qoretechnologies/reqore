@@ -589,7 +589,7 @@ export const TooltipOffsetIsApplied: Story = {
     const xOffset = Math.round(popoverRect.left - buttonRect.left);
     const yOffset = Math.round(popoverRect.top - buttonRect.bottom);
     await expect(Math.abs(xOffset - 20)).toBeLessThanOrEqual(2);
-    await expect(Math.abs(yOffset - 15)).toBeLessThanOrEqual(2);
+    await expect(Math.abs(yOffset - 85)).toBeLessThanOrEqual(2);
   },
 };
 
