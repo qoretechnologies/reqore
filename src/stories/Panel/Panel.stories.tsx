@@ -825,3 +825,46 @@ export const WithLongDescription: Story = {
       'This is a very long description that should be wrapped and not overflow, but it should be long enough to test the wrapping',
   },
 };
+
+export const StickyHeaderOutsideScroll: Story = {
+  render: () => {
+    const panels = new Array(6).fill(null);
+
+    return (
+      <div
+        style={{
+          maxHeight: '600px',
+          overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+        }}
+        data-testid='sticky-scroll-container'
+      >
+        {panels.map((_, index) => (
+          <ReqorePanel
+            key={index}
+            label={`Sticky panel ${index + 1}`}
+            stickyHeader
+            icon='PushpinLine'
+            padded
+            fluid
+          >
+            {message}
+          </ReqorePanel>
+        ))}
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const container = canvasElement.querySelector('[data-testid="sticky-scroll-container"]');
+
+    if (!container) {
+      return;
+    }
+
+    container.scrollTop = 640;
+    fireEvent.scroll(container);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  },
+};

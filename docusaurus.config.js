@@ -1,7 +1,8 @@
 // @ts-check
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const { themes } = require('prism-react-renderer');
+const lightCodeTheme = themes.github;
+const darkCodeTheme = themes.dracula;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -10,7 +11,9 @@ const config = {
   url: 'https://qoretechnologies.github.io',
   baseUrl: '/reqore/',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
+  markdown: {
+    mermaid: true,
+  },
   organizationName: 'qoretechnologies',
   projectName: 'reqore',
   presets: [
@@ -29,23 +32,18 @@ const config = {
       }),
     ],
   ],
-  themes: [
-    [
-      'docusaurus-plugin-typedoc',
-      /** @type {import('docusaurus-plugin-typedoc').PluginOptions} */
-      ({
-        entryPoints: ['src/index.tsx'],
-        tsconfig: 'tsconfig.prod.json',
-        out: 'api',
-        plugin: ['typedoc-plugin-markdown'],
-        readme: 'none',
-        entryDocument: 'api/index.md',
-        sidebar: {
-          categoryLabel: 'API Reference',
-        },
-      }),
-    ],
-  ],
+  // TypeDoc plugin temporarily disabled due to compatibility issues
+  // plugins: [
+  //   [
+  //     'docusaurus-plugin-typedoc',
+  //     /** @type {import('docusaurus/plugin-typedoc').PluginOptions} */
+  //     ({
+  //       entryPoints: ['src/index.tsx'],
+  //       tsconfig: 'tsconfig.prod.json',
+  //       out: 'api',
+  //     }),
+  //   ],
+  // ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -59,11 +57,6 @@ const config = {
             label: 'Docs',
           },
           {
-            to: '/api',
-            label: 'API',
-            position: 'left',
-          },
-          {
             href: 'https://github.com/qoretechnologies/reqore',
             label: 'GitHub',
             position: 'right',
@@ -72,8 +65,9 @@ const config = {
       },
       footer: {
         style: 'dark',
-        copyright: `Copyright © ${new Date().getFullYear()} Qore Technologies`.
-          concat(' Built with Docusaurus.'),
+        copyright: `Copyright © ${new Date().getFullYear()} Qore Technologies`.concat(
+          ' Built with Docusaurus.'
+        ),
       },
       prism: {
         theme: lightCodeTheme,

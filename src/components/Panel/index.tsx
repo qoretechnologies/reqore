@@ -148,11 +148,14 @@ export interface IReqorePanelProps
   customLabelTooltip?: IReqoreTooltip;
 
   responsiveActionsWrapperProps?: Partial<IReqoreControlGroupProps>;
+  stickyHeader?: boolean;
+  stickyHeaderOffset?: number;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
   theme: IReqoreTheme;
   noHorizontalPadding?: boolean;
+  stickyHeaderOffset?: number;
 }
 
 export const StyledPanelTitleHeader = styled.div`
@@ -216,7 +219,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
           0.08
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  overflow: hidden;
+  overflow: ${({ stickyHeader }) => (stickyHeader ? 'visible' : 'hidden')};
   display: flex;
   flex-flow: column;
   position: relative;
@@ -340,6 +343,12 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
       : minimal
       ? `${PADDING_FROM_SIZE[size]}px`
       : undefined};
+  position: ${({ stickyHeader }) => (stickyHeader ? 'sticky' : 'relative')};
+  top: ${({ stickyHeader, stickyHeaderOffset = 0 }) =>
+    stickyHeader ? `${stickyHeaderOffset}px` : undefined};
+  z-index: ${({ stickyHeader }) => (stickyHeader ? 2 : undefined)};
+  background: ${({ theme, opacity = 1 }: IStyledPanel) =>
+    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
@@ -819,6 +828,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               wrapperPadding={wrapperPadding}
               transparent={rest.transparent || opacity === 0}
               intent={intent}
+              stickyHeader={rest.stickyHeader}
+              stickyHeaderOffset={rest.stickyHeaderOffset}
             >
               {hasTitleHeader && (
                 <StyledPanelTitleHeader>

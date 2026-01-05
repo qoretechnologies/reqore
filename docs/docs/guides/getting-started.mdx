@@ -1,0 +1,164 @@
+---
+sidebar_position: 1
+---
+
+# Getting Started
+
+## Installation
+
+Install Reqore using your preferred package manager:
+
+```bash
+# Using npm
+npm install @qoretechnologies/reqore
+
+# Using yarn
+yarn add @qoretechnologies/reqore
+
+# Using pnpm
+pnpm add @qoretechnologies/reqore
+```
+
+## Peer Dependencies
+
+Reqore requires React 18.2.0 or higher:
+
+```bash
+npm install react@^18.2.0 react-dom@^18.2.0
+```
+
+## Basic Setup
+
+Wrap your application with `ReqoreUIProvider` to enable Reqore components:
+
+```tsx
+import React from 'react';
+import { ReqoreUIProvider, ReqoreButton } from '@qoretechnologies/reqore';
+
+export const App = () => (
+  <ReqoreUIProvider>
+    <ReqoreButton intent='success'>Hello Reqore</ReqoreButton>
+  </ReqoreUIProvider>
+);
+```
+
+## Provider Options
+
+The `ReqoreUIProvider` accepts several configuration options:
+
+```tsx
+import { ReqoreUIProvider } from '@qoretechnologies/reqore';
+
+function App() {
+  return (
+    <ReqoreUIProvider
+      theme={{
+        main: '#3b82f6',
+        text: {
+          color: '#ffffff',
+        },
+      }}
+      options={{
+        animations: {
+          buttons: true,
+          dialogs: true,
+        },
+        uiScale: 1.0,
+      }}
+    >
+      {/* Your app */}
+    </ReqoreUIProvider>
+  );
+}
+```
+
+### Provider Props
+
+- **theme**: Custom theme object (see [Theming](./theming) for details)
+- **options**: Configuration options
+  - `animations`: Enable/disable animations for different component types
+  - `uiScale`: Scale the entire UI (useful for accessibility)
+  - `customPortalId`: Custom portal element ID for modals and popovers
+
+## Using Components
+
+### Basic Button Example
+
+```tsx
+import { ReqoreButton } from '@qoretechnologies/reqore';
+
+function MyComponent() {
+  return (
+    <ReqoreButton intent='success' icon='CheckLine' onClick={() => console.log('Clicked!')}>
+      Click Me
+    </ReqoreButton>
+  );
+}
+```
+
+### Form Components
+
+```tsx
+import {
+  ReqoreInput,
+  ReqoreTextarea,
+  ReqoreCheckbox,
+  ReqoreControlGroup,
+} from '@qoretechnologies/reqore';
+
+function MyForm() {
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreInput label='Name' placeholder='Enter your name' />
+      <ReqoreTextarea label='Description' placeholder='Enter description' />
+      <ReqoreCheckbox label='I agree to terms' />
+    </ReqoreControlGroup>
+  );
+}
+```
+
+### Layout Components
+
+```tsx
+import { ReqorePanel, ReqoreColumns, ReqoreColumn } from '@qoretechnologies/reqore';
+
+function MyLayout() {
+  return (
+    <ReqorePanel label='Dashboard'>
+      <ReqoreColumns>
+        <ReqoreColumn>Left column content</ReqoreColumn>
+        <ReqoreColumn>Right column content</ReqoreColumn>
+      </ReqoreColumns>
+    </ReqorePanel>
+  );
+}
+```
+
+## TypeScript Support
+
+Reqore is written in TypeScript and provides full type definitions:
+
+```tsx
+import { IReqoreButtonProps, IReqoreTheme } from '@qoretechnologies/reqore';
+
+const buttonProps: IReqoreButtonProps = {
+  intent: 'success',
+  icon: 'CheckLine',
+  disabled: false,
+};
+
+const customTheme: IReqoreTheme = {
+  main: '#3b82f6',
+  // ... other theme properties
+};
+```
+
+## Next Steps
+
+- Learn how to customize the appearance with [Theming](./theming)
+- Explore individual components:
+  - [Button](../components/button)
+  - [Panel](../components/panel)
+  - [Input](../components/input)
+  - [Table](../components/table)
+- Check out [Effects](./effects) for advanced visual styling

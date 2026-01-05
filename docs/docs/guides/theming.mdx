@@ -1,0 +1,252 @@
+---
+sidebar_position: 2
+---
+
+# Theming
+
+Reqore provides a powerful theming system that allows you to customize the appearance of all components from a single place.
+
+## Basic Theme Customization
+
+The simplest way to theme Reqore is by passing a theme object to the `ReqoreUIProvider`:
+
+```tsx
+import { ReqoreUIProvider, ReqoreButton } from '@qoretechnologies/reqore';
+
+const theme = {
+  main: '#3b82f6', // Primary color
+  text: {
+    color: '#ffffff', // Text color
+  },
+};
+
+function App() {
+  return (
+    <ReqoreUIProvider theme={theme}>
+      <ReqoreButton>Themed Button</ReqoreButton>
+    </ReqoreUIProvider>
+  );
+}
+```
+
+## Theme Structure
+
+### Main Colors
+
+```tsx
+const theme = {
+  main: '#3b82f6', // Primary brand color
+  originalMain: '#1e40af', // Fallback main color
+  sidebar: {
+    main: '#1e293b', // Sidebar background
+  },
+  popover: {
+    main: '#1e293b', // Popover background
+  },
+};
+```
+
+### Intent Colors
+
+Intent colors provide semantic meaning to components:
+
+```tsx
+const theme = {
+  intents: {
+    info: '#3b82f6', // Information
+    success: '#10b981', // Success states
+    warning: '#f59e0b', // Warnings
+    danger: '#ef4444', // Errors and dangerous actions
+    pending: '#8b5cf6', // Pending states
+    muted: '#6b7280', // Muted/disabled states
+  },
+};
+```
+
+### Text Styling
+
+```tsx
+const theme = {
+  text: {
+    color: '#f9fafb', // Default text color
+    dim: '#9ca3af', // Dimmed text
+  },
+};
+```
+
+## Using Intents
+
+Most components support the `intent` prop for semantic coloring:
+
+```tsx
+import { ReqoreButton, ReqoreControlGroup } from '@qoretechnologies/reqore';
+
+function IntentExample() {
+  return (
+    <ReqoreControlGroup>
+      <ReqoreButton intent='info'>Info</ReqoreButton>
+      <ReqoreButton intent='success'>Success</ReqoreButton>
+      <ReqoreButton intent='warning'>Warning</ReqoreButton>
+      <ReqoreButton intent='danger'>Danger</ReqoreButton>
+    </ReqoreControlGroup>
+  );
+}
+```
+
+## Component-Specific Theming
+
+Some components support their own theme customization:
+
+```tsx
+const theme = {
+  main: '#3b82f6',
+  buttons: {
+    effect: {
+      gradient: {
+        colors: 'info:darken:2:1',
+        animate: 'active',
+      },
+    },
+  },
+};
+```
+
+## Custom Themes Per Component
+
+Components can override the global theme using the `customTheme` prop:
+
+```tsx
+import { ReqoreButton } from '@qoretechnologies/reqore';
+
+function CustomThemedButton() {
+  return (
+    <ReqoreButton
+      customTheme={{
+        main: '#ec4899',
+        text: {
+          color: '#ffffff',
+        },
+      }}
+    >
+      Custom Theme
+    </ReqoreButton>
+  );
+}
+```
+
+## Dark Mode
+
+Reqore's default theme works well in dark mode. You can create your own dark theme:
+
+```tsx
+const darkTheme = {
+  main: '#1e40af',
+  text: {
+    color: '#f9fafb',
+    dim: '#6b7280',
+  },
+  intents: {
+    info: '#60a5fa',
+    success: '#34d399',
+    warning: '#fbbf24',
+    danger: '#f87171',
+  },
+};
+```
+
+## Effects and Gradients
+
+Components support advanced visual effects:
+
+```tsx
+import { ReqoreButton } from '@qoretechnologies/reqore';
+
+function EffectButton() {
+  return (
+    <ReqoreButton
+      effect={{
+        gradient: {
+          colors: {
+            0: '#3b82f6',
+            100: '#8b5cf6',
+          },
+          animate: 'hover',
+        },
+        spaced: 2,
+        uppercase: true,
+        weight: 'bold',
+      }}
+    >
+      Gradient Button
+    </ReqoreButton>
+  );
+}
+```
+
+### Effect Properties
+
+- **gradient**: Define color gradients
+  - `colors`: Color stops (0-100)
+  - `type`: 'linear' or 'radial'
+  - `direction`: Gradient direction
+  - `animate`: Animation trigger ('hover', 'active', 'always')
+- **spaced**: Letter spacing
+- **uppercase**: Transform text to uppercase
+- **weight**: Font weight
+- **textSize**: Custom text size
+- **glow**: Add glow effects
+
+## Theme Helper Functions
+
+Reqore provides helper functions for working with colors:
+
+```tsx
+import { changeLightness, getReadableColor } from '@qoretechnologies/reqore';
+
+// Lighten or darken a color
+const lighter = changeLightness('#3b82f6', 0.2);
+const darker = changeLightness('#3b82f6', -0.2);
+
+// Get readable text color for a background
+const textColor = getReadableColor(theme, '#3b82f6');
+```
+
+## Best Practices
+
+1. **Consistency**: Use intent colors consistently across your application
+2. **Contrast**: Ensure sufficient contrast for accessibility
+3. **Test**: Test your theme in both light and dark environments
+4. **Gradual**: Start with main colors and add intent colors as needed
+5. **Component Props**: Use `customTheme` sparingly for one-off customizations
+
+## Complete Theme Example
+
+```tsx
+import { ReqoreUIProvider, IReqoreTheme } from '@qoretechnologies/reqore';
+
+const myTheme: IReqoreTheme = {
+  main: '#3b82f6',
+  text: {
+    color: '#f9fafb',
+    dim: '#9ca3af',
+  },
+  intents: {
+    info: '#3b82f6',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    pending: '#8b5cf6',
+    muted: '#6b7280',
+  },
+  sidebar: {
+    main: '#1e293b',
+  },
+  popover: {
+    main: '#1e293b',
+  },
+};
+
+function App() {
+  return <ReqoreUIProvider theme={myTheme}>{/* Your app */}</ReqoreUIProvider>;
+}
+```

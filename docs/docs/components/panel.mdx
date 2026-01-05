@@ -1,0 +1,424 @@
+---
+sidebar_position: 2
+---
+
+import LiveDemo from '../../src/components/LiveDemo';
+import {
+  ReqorePanel,
+  ReqoreButton,
+  ReqoreControlGroup,
+  ReqoreInput,
+  ReqoreCheckbox,
+  ReqoreP,
+} from '../../../src';
+
+# Panel
+
+Panels are container components that provide a consistent way to group related content with optional headers, footers, and actions.
+
+## Props
+
+| Prop               | Type                   | Required | Default    | Description            |
+| ------------------ | ---------------------- | -------- | ---------- | ---------------------- |
+| `label`            | `string`               | -        | -          | Panel header title     |
+| `icon`             | `IReqoreIconName`      | -        | -          | Header icon            |
+| `children`         | `ReactNode`            | -        | -          | Panel content          |
+| `actions`          | `IReqorePanelAction[]` | -        | -          | Header action buttons  |
+| `collapsible`      | `boolean`              | -        | `false`    | Enable collapse        |
+| `isCollapsed`      | `boolean`              | -        | -          | Collapsed state        |
+| `onCollapseChange` | `function`             | -        | -          | Collapse callback      |
+| `badge`            | `number \| object`     | -        | -          | Header badge           |
+| `size`             | `TSizes`               | -        | `'normal'` | Panel size             |
+| `intent`           | `TReqoreIntent`        | -        | -          | Color intent           |
+| `flat`             | `boolean`              | -        | `true`     | Flat styling           |
+| `minimal`          | `boolean`              | -        | `false`    | Minimal styling        |
+| `unpadded`         | `boolean`              | -        | `false`    | Remove padding         |
+| `tooltip`          | `string \| object`     | -        | -          | Tooltip                |
+| `breadcrumbs`      | `object`               | -        | -          | Breadcrumb navigation  |
+| `contentStyle`     | `CSSProperties`        | -        | -          | Content wrapper styles |
+
+## Basic Usage
+
+<LiveDemo vertical>
+  <ReqorePanel label='Panel Title'>Panel content goes here</ReqorePanel>
+</LiveDemo>
+
+```tsx
+import { ReqorePanel } from '@qoretechnologies/reqore';
+
+function Example() {
+  return <ReqorePanel label='Panel Title'>Panel content goes here</ReqorePanel>;
+}
+```
+
+## With Icon
+
+<LiveDemo vertical>
+  <ReqorePanel label='Settings' icon='Settings4Line'>
+    Your settings content
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqorePanel label='Settings' icon='Settings4Line'>
+  Your settings content
+</ReqorePanel>
+```
+
+## Panel Actions
+
+Add action buttons to the panel header:
+
+<LiveDemo vertical>
+  <ReqorePanel
+    label='My Panel'
+    actions={[
+      {
+        icon: 'EditLine',
+        label: 'Edit',
+        onClick: () => alert('Edit clicked'),
+      },
+      {
+        icon: 'DeleteBinLine',
+        label: 'Delete',
+        intent: 'danger',
+        onClick: () => alert('Delete clicked'),
+      },
+    ]}
+  >
+    Click the action buttons in the header!
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqorePanel
+  label='My Panel'
+  actions={[
+    {
+      icon: 'EditLine',
+      label: 'Edit',
+      onClick: () => console.log('Edit clicked'),
+    },
+    {
+      icon: 'DeleteBinLine',
+      label: 'Delete',
+      intent: 'danger',
+      onClick: () => console.log('Delete clicked'),
+    },
+  ]}
+>
+  Content
+</ReqorePanel>
+```
+
+## Collapsible Panel
+
+<LiveDemo vertical>
+  <ReqorePanel label='Collapsible Panel' collapsible isCollapsed={false}>
+    This content can be collapsed - try clicking the collapse button!
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqorePanel
+  label='Collapsible Panel'
+  collapsible
+  isCollapsed={false}
+  onCollapseChange={(isCollapsed) => console.log(isCollapsed)}
+>
+  This content can be collapsed
+</ReqorePanel>
+```
+
+## With Badge
+
+<LiveDemo vertical>
+  <ReqorePanel label='Notifications' badge={5} icon='NotificationLine'>
+    You have 5 new notifications
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqorePanel label='Notifications' badge={5} icon='NotificationLine'>
+  You have 5 new notifications
+</ReqorePanel>
+```
+
+## With Intent
+
+<LiveDemo vertical>
+  <ReqorePanel label='Info Panel' intent='info'>
+    Information content
+  </ReqorePanel>
+  <ReqorePanel label='Success Panel' intent='success'>
+    Success content
+  </ReqorePanel>
+  <ReqorePanel label='Warning Panel' intent='warning'>
+    Warning content
+  </ReqorePanel>
+  <ReqorePanel label='Danger Panel' intent='danger'>
+    Error content
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqorePanel label='Info Panel' intent='info'>
+    Information content
+  </ReqorePanel>
+  <ReqorePanel label='Success Panel' intent='success'>
+    Success content
+  </ReqorePanel>
+  <ReqorePanel label='Warning Panel' intent='warning'>
+    Warning content
+  </ReqorePanel>
+  <ReqorePanel label='Danger Panel' intent='danger'>
+    Error content
+  </ReqorePanel>
+</ReqoreControlGroup>
+```
+
+## Panel Sizes
+
+<LiveDemo vertical>
+  <ReqorePanel label='Tiny Panel' size='tiny'>
+    Tiny content
+  </ReqorePanel>
+  <ReqorePanel label='Small Panel' size='small'>
+    Small content
+  </ReqorePanel>
+  <ReqorePanel label='Normal Panel'>Normal content</ReqorePanel>
+  <ReqorePanel label='Big Panel' size='big'>
+    Big content
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqorePanel label='Tiny Panel' size='tiny'>
+    Tiny content
+  </ReqorePanel>
+  <ReqorePanel label='Small Panel' size='small'>
+    Small content
+  </ReqorePanel>
+  <ReqorePanel label='Normal Panel'>Normal content</ReqorePanel>
+  <ReqorePanel label='Big Panel' size='big'>
+    Big content
+  </ReqorePanel>
+</ReqoreControlGroup>
+```
+
+## Flat vs Non-Flat
+
+<LiveDemo vertical>
+  <ReqorePanel label='Flat Panel' flat>
+    Flat styling (default)
+  </ReqorePanel>
+  <ReqorePanel label='Raised Panel' flat={false}>
+    Raised with shadow
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqorePanel label='Flat Panel' flat>
+    Flat styling (default)
+  </ReqorePanel>
+  <ReqorePanel label='Raised Panel' flat={false}>
+    Raised with shadow
+  </ReqorePanel>
+</ReqoreControlGroup>
+```
+
+## Content Alignment
+
+<LiveDemo vertical>
+  <ReqorePanel
+    label='Centered Content'
+    contentStyle={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100px',
+    }}
+  >
+    Centered content
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqorePanel
+  label='Centered Content'
+  contentStyle={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}
+>
+  Centered content
+</ReqorePanel>
+```
+
+## Minimal Panel
+
+<LiveDemo vertical>
+  <ReqorePanel label='Minimal' minimal>
+    Minimal styling with less visual weight
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqorePanel label='Minimal' minimal>
+  Minimal styling with less visual weight
+</ReqorePanel>
+```
+
+## With Tooltip
+
+<LiveDemo vertical>
+  <ReqorePanel label='Panel' tooltip='This is helpful panel information'>
+    Hover over the label to see tooltip
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+<ReqorePanel label='Panel' tooltip='This is helpful panel information'>
+  Content
+</ReqorePanel>
+```
+
+## Examples
+
+### Card Layout
+
+<LiveDemo vertical>
+  <ReqorePanel
+    label='Premium Plan'
+    badge={{ label: 'Popular', intent: 'success' }}
+    actions={[
+      {
+        label: 'Subscribe',
+        icon: 'ShoppingCartLine',
+        intent: 'success',
+        onClick: () => alert('Subscribed!'),
+      },
+    ]}
+  >
+    <ReqoreControlGroup vertical>
+      <ReqoreP>$29/month</ReqoreP>
+      <ReqoreP>All features included</ReqoreP>
+      <ReqoreButton fluid intent='success'>
+        Get Started
+      </ReqoreButton>
+    </ReqoreControlGroup>
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+function ProductCard() {
+  return (
+    <ReqorePanel
+      label='Premium Plan'
+      badge={{ label: 'Popular', intent: 'success' }}
+      actions={[
+        {
+          label: 'Learn More',
+          icon: 'InformationLine',
+          onClick: () => {},
+        },
+        {
+          label: 'Subscribe',
+          icon: 'ShoppingCartLine',
+          intent: 'success',
+          onClick: () => {},
+        },
+      ]}
+    >
+      <ReqoreControlGroup vertical>
+        <ReqoreP>$29/month</ReqoreP>
+        <ReqoreP>All features included</ReqoreP>
+        <ReqoreButton fluid intent='success'>
+          Get Started
+        </ReqoreButton>
+      </ReqoreControlGroup>
+    </ReqorePanel>
+  );
+}
+```
+
+### Settings Section
+
+<LiveDemo vertical>
+  <ReqorePanel
+    label='Account Settings'
+    icon='UserLine'
+    collapsible
+    actions={[
+      {
+        icon: 'SaveLine',
+        label: 'Save',
+        intent: 'success',
+        onClick: () => alert('Settings saved!'),
+      },
+    ]}
+  >
+    <ReqoreControlGroup vertical>
+      <ReqoreInput label='Email' placeholder='user@example.com' />
+      <ReqoreInput label='Username' placeholder='johndoe' />
+      <ReqoreCheckbox label='Email notifications' />
+    </ReqoreControlGroup>
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+function SettingsSection() {
+  return (
+    <ReqorePanel
+      label='Account Settings'
+      icon='UserLine'
+      collapsible
+      actions={[
+        {
+          icon: 'SaveLine',
+          label: 'Save',
+          intent: 'success',
+        },
+      ]}
+    >
+      <ReqoreControlGroup vertical>
+        <ReqoreInput label='Email' />
+        <ReqoreInput label='Username' />
+        <ReqoreCheckbox label='Email notifications' />
+      </ReqoreControlGroup>
+    </ReqorePanel>
+  );
+}
+```
+
+### Dashboard Widget
+
+<LiveDemo vertical>
+  <ReqorePanel label='Active Users' icon='UserSmileLine' badge={{ label: '1,247', intent: 'info' }}>
+    <ReqoreControlGroup vertical>
+      <ReqoreP size='huge'>1,247</ReqoreP>
+      <ReqoreP intent='success'>↑ 12% from last week</ReqoreP>
+    </ReqoreControlGroup>
+  </ReqorePanel>
+</LiveDemo>
+
+```tsx
+function DashboardWidget() {
+  return (
+    <ReqorePanel
+      label='Active Users'
+      icon='UserSmileLine'
+      badge={{ label: '1,247', intent: 'info' }}
+    >
+      <ReqoreControlGroup vertical>
+        <ReqoreP size='huge'>1,247</ReqoreP>
+        <ReqoreP intent='success'>+12% from last week</ReqoreP>
+      </ReqoreControlGroup>
+    </ReqorePanel>
+  );
+}
+```

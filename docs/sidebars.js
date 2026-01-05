@@ -1,11 +1,21 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   docs: [
-    'intro',
+    'docs/intro',
     {
       type: 'category',
       label: 'Guides',
-      items: ['guides/getting-started', 'guides/theming'],
+      items: ['docs/guides/getting-started', 'docs/guides/theming', 'docs/guides/effects'],
+    },
+    {
+      type: 'category',
+      label: 'Components',
+      items: [
+        'docs/components/button',
+        'docs/components/panel',
+        'docs/components/input',
+        'docs/components/table',
+      ],
     },
   ],
 };

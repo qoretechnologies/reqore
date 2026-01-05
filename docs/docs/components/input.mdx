@@ -1,0 +1,320 @@
+---
+sidebar_position: 3
+---
+
+import LiveDemo from '../../src/components/LiveDemo';
+import { ReqoreInput, ReqoreControlGroup, ReqoreButton } from '../../../src';
+
+# Input
+
+Text input fields for user data entry with validation, icons, and various configurations.
+
+## Props
+
+| Prop           | Type               | Required | Default    | Description          |
+| -------------- | ------------------ | -------- | ---------- | -------------------- |
+| `value`        | `string \| number` | -        | -          | Input value          |
+| `onChange`     | `function`         | -        | -          | Change handler       |
+| `placeholder`  | `string`           | -        | -          | Placeholder text     |
+| `label`        | `string`           | -        | -          | Input label          |
+| `type`         | `string`           | -        | `'text'`   | Input type           |
+| `icon`         | `IReqoreIconName`  | -        | -          | Left icon            |
+| `rightIcon`    | `IReqoreIconName`  | -        | -          | Right icon           |
+| `size`         | `TSizes`           | -        | `'normal'` | Input size           |
+| `intent`       | `TReqoreIntent`    | -        | -          | Color intent         |
+| `disabled`     | `boolean`          | -        | `false`    | Disabled state       |
+| `readOnly`     | `boolean`          | -        | `false`    | Read only state      |
+| `onClearClick` | `function`         | -        | -          | Clear button handler |
+| `fluid`        | `boolean`          | -        | `false`    | Full width           |
+| `tooltip`      | `string \| object` | -        | -          | Tooltip              |
+| `effect`       | `IReqoreEffect`    | -        | -          | Visual effects       |
+| `autoFocus`    | `boolean`          | -        | `false`    | Auto focus on mount  |
+| `minimal`      | `boolean`          | -        | `false`    | Minimal styling      |
+| `flat`         | `boolean`          | -        | `true`     | Flat styling         |
+
+## Basic Usage
+
+<LiveDemo vertical>
+  <ReqoreInput placeholder='Enter text...' />
+</LiveDemo>
+
+```tsx
+import { ReqoreInput } from '@qoretechnologies/reqore';
+
+function Example() {
+  const [value, setValue] = useState('');
+
+  return (
+    <ReqoreInput
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      placeholder='Enter text...'
+    />
+  );
+}
+```
+
+## With Label
+
+<LiveDemo vertical>
+  <ReqoreInput label='Email Address' placeholder='user@example.com' />
+</LiveDemo>
+
+```tsx
+<ReqoreInput label='Email Address' placeholder='user@example.com' />
+```
+
+## With Icons
+
+<LiveDemo vertical>
+  <ReqoreInput icon='SearchLine' placeholder='Search...' />
+  <ReqoreInput icon='User3Line' rightIcon='MailLine' placeholder='Email' />
+</LiveDemo>
+
+```tsx
+<ReqoreInput
+  icon="SearchLine"
+  placeholder="Search..."
+/>
+
+<ReqoreInput
+  icon="User3Line"
+  rightIcon="MailLine"
+  placeholder="Email"
+/>
+```
+
+## Input Types
+
+<LiveDemo vertical>
+  <ReqoreInput type='text' placeholder='Text' />
+  <ReqoreInput type='email' placeholder='Email' />
+  <ReqoreInput type='password' placeholder='Password' />
+  <ReqoreInput type='number' placeholder='Number' />
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqoreInput type='text' placeholder='Text' />
+  <ReqoreInput type='email' placeholder='Email' />
+  <ReqoreInput type='password' placeholder='Password' />
+  <ReqoreInput type='number' placeholder='Number' />
+  <ReqoreInput type='tel' placeholder='Phone' />
+  <ReqoreInput type='url' placeholder='URL' />
+</ReqoreControlGroup>
+```
+
+## Sizes
+
+<LiveDemo vertical>
+  <ReqoreInput size='small' placeholder='Small input' />
+  <ReqoreInput size='normal' placeholder='Normal input' />
+  <ReqoreInput size='big' placeholder='Big input' />
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqoreInput size='small' placeholder='Small input' />
+  <ReqoreInput size='normal' placeholder='Normal input' />
+  <ReqoreInput size='big' placeholder='Big input' />
+</ReqoreControlGroup>
+```
+
+## With Intent
+
+<LiveDemo vertical>
+  <ReqoreInput intent='info' placeholder='Info' />
+  <ReqoreInput intent='success' placeholder='Valid input' />
+  <ReqoreInput intent='warning' placeholder='Warning' />
+  <ReqoreInput intent='danger' placeholder='Error' />
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqoreInput intent='info' placeholder='Info' />
+  <ReqoreInput intent='success' placeholder='Valid input' />
+  <ReqoreInput intent='warning' placeholder='Warning' />
+  <ReqoreInput intent='danger' placeholder='Error' />
+</ReqoreControlGroup>
+```
+
+## Clearable Input
+
+<LiveDemo vertical>
+  <ReqoreInput
+    defaultValue='Clear me!'
+    onClearClick={() => alert('Cleared!')}
+    placeholder='Clearable input'
+  />
+</LiveDemo>
+
+```tsx
+<ReqoreInput
+  value={value}
+  onChange={(e) => setValue(e.target.value)}
+  onClearClick={() => setValue('')}
+  placeholder='Clearable input'
+/>
+```
+
+## Disabled & ReadOnly
+
+<LiveDemo vertical>
+  <ReqoreInput disabled placeholder='Disabled' />
+  <ReqoreInput readOnly value='Read only value' />
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqoreInput disabled placeholder='Disabled' />
+  <ReqoreInput readOnly value='Read only value' />
+</ReqoreControlGroup>
+```
+
+## With Validation
+
+```tsx
+function ValidatedInput() {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+
+  const validateEmail = (value) => {
+    if (!value.includes('@')) {
+      setError('Invalid email address');
+      return false;
+    }
+    setError('');
+    return true;
+  };
+
+  return (
+    <ReqoreInput
+      label='Email'
+      value={email}
+      onChange={(e) => {
+        setEmail(e.target.value);
+        validateEmail(e.target.value);
+      }}
+      intent={error ? 'danger' : 'success'}
+      tooltip={error || 'Valid email'}
+    />
+  );
+}
+```
+
+## With Tooltip
+
+```tsx
+<ReqoreInput label='Password' type='password' tooltip='Must be at least 8 characters' />
+```
+
+## Fluid Width
+
+```tsx
+<ReqoreInput fluid placeholder='Full width input' />
+```
+
+## With Effect
+
+```tsx
+<ReqoreInput
+  placeholder='Styled input'
+  effect={{
+    gradient: {
+      colors: { 0: 'info', 100: 'success' },
+    },
+  }}
+/>
+```
+
+## Focus on Mount
+
+```tsx
+<ReqoreInput placeholder='Auto focused' autoFocus />
+```
+
+## Examples
+
+### Search Input
+
+<LiveDemo vertical>
+  <ReqoreInput icon='SearchLine' placeholder='Search...' />
+</LiveDemo>
+
+```tsx
+function SearchInput() {
+  const [search, setSearch] = useState('');
+
+  return (
+    <ReqoreInput
+      icon='SearchLine'
+      placeholder='Search...'
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      onClearClick={() => setSearch('')}
+      fluid
+    />
+  );
+}
+```
+
+### Login Form
+
+<LiveDemo vertical>
+  <ReqoreControlGroup vertical>
+    <ReqoreInput label='Email' type='email' icon='MailLine' placeholder='user@example.com' />
+    <ReqoreInput label='Password' type='password' icon='LockLine' placeholder='••••••••' />
+    <ReqoreButton intent='success' fluid>
+      Sign In
+    </ReqoreButton>
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreInput
+        label='Email'
+        type='email'
+        icon='MailLine'
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        fluid
+      />
+      <ReqoreInput
+        label='Password'
+        type='password'
+        icon='LockLine'
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        fluid
+      />
+      <ReqoreButton intent='success' fluid>
+        Sign In
+      </ReqoreButton>
+    </ReqoreControlGroup>
+  );
+}
+```
+
+### Input with Icons
+
+<LiveDemo vertical>
+  <ReqoreControlGroup vertical>
+    <ReqoreInput icon='MailLine' placeholder='Email address' />
+    <ReqoreInput icon='LockLine' type='password' placeholder='Password' />
+    <ReqoreInput icon='PhoneLine' type='tel' placeholder='Phone number' />
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqoreInput icon='MailLine' placeholder='Email address' />
+  <ReqoreInput icon='LockLine' type='password' placeholder='Password' />
+  <ReqoreInput icon='PhoneLine' type='tel' placeholder='Phone number' />
+</ReqoreControlGroup>
+```
