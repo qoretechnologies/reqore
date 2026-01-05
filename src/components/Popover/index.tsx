@@ -48,6 +48,8 @@ export interface IPopover
   closeOnInsideClick?: boolean;
   closeOnTargetClick?: boolean;
   delay?: number;
+  offsetX?: number;
+  offsetY?: number;
   blur?: boolean;
   transparent?: boolean;
   maxWidth?: string;
@@ -111,6 +113,8 @@ export const ReqorePopover = memo(
         closeOnTargetClick,
         handler = 'hover',
         delay,
+        offsetX,
+        offsetY,
         noArrow,
         noWrapper,
         useTargetWidth,
@@ -323,6 +327,8 @@ export const ReqorePopover = memo(
                 maxWidth={maxWidth}
                 minWidth={minWidth}
                 maxHeight={maxHeight}
+                offsetX={offsetX}
+                offsetY={offsetY}
                 intent={intent}
                 title={title}
                 icon={icon}
@@ -363,6 +369,8 @@ export const ReqorePopover = memo(
               maxWidth={maxWidth}
               minWidth={minWidth}
               maxHeight={maxHeight}
+              offsetX={offsetX}
+              offsetY={offsetY}
               intent={intent}
               title={title}
               icon={icon}

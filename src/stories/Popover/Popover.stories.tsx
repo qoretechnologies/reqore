@@ -534,6 +534,36 @@ export const TooltipIsRemovedWhenContentIsEmpty: Story = {
   },
 };
 
+export const TooltipOffsetIsApplied: Story = {
+  render: () => (
+    <ReqoreButton
+      tooltip={{
+        content: 'Offset tooltip',
+        handler: 'hover',
+        placement: 'bottom-start',
+        noArrow: true,
+        offsetX: 20,
+        offsetY: 10,
+      }}
+    >
+      Hover offset tooltip
+    </ReqoreButton>
+  ),
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector('button');
+    fireEvent.mouseEnter(button);
+    await sleep(300);
+    const popover = document.querySelector('.reqore-popover-content') as HTMLElement;
+    await expect(popover).toBeInTheDocument();
+    const buttonRect = button.getBoundingClientRect();
+    const popoverRect = popover.getBoundingClientRect();
+    const xOffset = Math.round(popoverRect.left - buttonRect.left);
+    const yOffset = Math.round(popoverRect.top - buttonRect.bottom);
+    await expect(Math.abs(xOffset - 20)).toBeLessThanOrEqual(2);
+    await expect(Math.abs(yOffset - 15)).toBeLessThanOrEqual(2);
+  },
+};
+
 export const InCustomPortal: Story = {
   render: Template,
 

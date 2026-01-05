@@ -165,14 +165,16 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     placement,
     noArrow,
     noWrapper,
-    useTargetWidth,
-    transparent,
-    maxWidth,
-    minWidth,
-    maxHeight,
-    intent,
-    title,
-    icon,
+  useTargetWidth,
+  transparent,
+  maxWidth,
+  minWidth,
+  maxHeight,
+  offsetX = 0,
+  offsetY = 0,
+  intent,
+  title,
+  icon,
     minimal,
     flat = true,
     effect,
@@ -188,13 +190,14 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
     const mutationObserber: MutableRefObject<any> = useRef(null);
+    const baseOffsetY = noArrow ? 5 : 10;
     const { styles, attributes, forceUpdate, state } = usePopper(targetElement, popperElement, {
       placement,
       modifiers: [
         {
           name: 'offset',
           options: {
-            offset: [0, noArrow ? 5 : 10],
+            offset: [offsetX, baseOffsetY + offsetY],
           },
         },
         {
