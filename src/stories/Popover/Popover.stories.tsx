@@ -536,18 +536,42 @@ export const TooltipIsRemovedWhenContentIsEmpty: Story = {
 
 export const TooltipOffsetIsApplied: Story = {
   render: () => (
-    <ReqoreButton
-      tooltip={{
-        content: 'Offset tooltip',
-        handler: 'hover',
-        placement: 'bottom-start',
-        noArrow: true,
-        offsetX: 20,
-        offsetY: 10,
-      }}
-    >
-      Hover offset tooltip
-    </ReqoreButton>
+    <ReqoreControlGroup>
+      <ReqoreButton
+        tooltip={{
+          content: 'Offset tooltip 1',
+          handler: 'hover',
+          placement: 'bottom-start',
+          noArrow: true,
+          offsetX: 20,
+          offsetY: 10,
+        }}
+      >
+        Offset no arrow
+      </ReqoreButton>
+      <ReqoreButton
+        tooltip={{
+          content: 'Offset tooltip 2',
+          handler: 'hover',
+          placement: 'bottom-start',
+          offsetX: -15,
+          offsetY: 5,
+        }}
+      >
+        Offset with arrow
+      </ReqoreButton>
+      <ReqoreButton
+        tooltip={{
+          content: 'Offset tooltip 3',
+          handler: 'hover',
+          placement: 'top-end',
+          offsetX: 10,
+          offsetY: -8,
+        }}
+      >
+        Offset top
+      </ReqoreButton>
+    </ReqoreControlGroup>
   ),
   play: async ({ canvasElement }) => {
     const button = canvasElement.querySelector('button');
