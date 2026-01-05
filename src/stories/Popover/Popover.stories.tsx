@@ -132,6 +132,7 @@ const Template: StoryFn<IReqorePopoverProps & { insideModal?: boolean }> = (
             content: 'See? Told you',
             blur: true,
             handler: 'hoverStay',
+            openOnMount: true,
           }}
         >
           Hover me for something cool
@@ -546,7 +547,7 @@ export const TooltipOffsetIsApplied: Story = {
           placement: 'bottom-start',
           noArrow: true,
           offsetX: 20,
-          offsetY: 10,
+          offsetY: 80,
           openOnMount: true,
         }}
       >
@@ -557,8 +558,8 @@ export const TooltipOffsetIsApplied: Story = {
           content: 'Offset tooltip 2',
           handler: 'hover',
           placement: 'bottom-start',
-          offsetX: -15,
-          offsetY: 5,
+          offsetX: -25,
+          offsetY: 25,
           openOnMount: true,
         }}
       >
@@ -569,8 +570,7 @@ export const TooltipOffsetIsApplied: Story = {
           content: 'Offset tooltip 3',
           handler: 'hover',
           placement: 'top-end',
-          offsetX: 10,
-          offsetY: -8,
+          offsetX: 70,
           openOnMount: true,
         }}
       >
