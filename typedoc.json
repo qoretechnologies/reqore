@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["src/index.tsx"],
+  "tsconfig": "tsconfig.prod.json",
+  "out": "docs/api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true
+}

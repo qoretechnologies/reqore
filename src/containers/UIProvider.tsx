@@ -24,6 +24,9 @@ export interface IReqoreOptions
   withSidebar?: boolean;
   uiScale?: number;
 }
+/**
+ * Props for the top-level UI provider that wires Reqore theme and global layout.
+ */
 export interface IReqoreUIProviderProps {
   children?: any;
   theme?: Partial<IReqoreTheme>;
@@ -68,6 +71,9 @@ const ReqorePortal = memo(
   })
 );
 
+/**
+ * Wrap your application with Reqore's theme, layout, and modal portal context.
+ */
 const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(({ children, theme, options }) => {
   const [modalPortal, setModalPortal] = useState<any>(false);
 

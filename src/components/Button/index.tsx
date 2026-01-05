@@ -63,6 +63,9 @@ import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export type TReqoreBadge = string | number | IReqoreTagProps;
 
+/**
+ * Button props for the primary Reqore action component.
+ */
 export interface IReqoreButtonProps
   extends React.HTMLAttributes<HTMLButtonElement>,
     IReqoreDisabled,
@@ -449,6 +452,9 @@ export const ButtonBadge = memo(
   }
 );
 
+/**
+ * Primary Reqore button component that supports intents, icons, and badges.
+ */
 const ReqoreButton = memo(
   forwardRef<HTMLButtonElement, IReqoreButtonProps>(
     (
