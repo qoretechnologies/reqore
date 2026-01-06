@@ -827,6 +827,11 @@ export const WithLongDescription: Story = {
 };
 
 export const StickyHeaderOutsideScroll: Story = {
+  parameters: {
+    chromatic: {
+      viewports: [600],
+    },
+  },
   render: () => {
     const panels = new Array(6).fill(null);
 
@@ -834,6 +839,7 @@ export const StickyHeaderOutsideScroll: Story = {
       <div
         style={{
           maxHeight: '600px',
+          width: '600px',
           overflow: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -863,7 +869,7 @@ export const StickyHeaderOutsideScroll: Story = {
       return;
     }
 
-    container.scrollTop = 640;
+    container.scrollTop = 960;
     fireEvent.scroll(container);
     await new Promise((resolve) => setTimeout(resolve, 200));
   },

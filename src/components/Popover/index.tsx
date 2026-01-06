@@ -48,6 +48,7 @@ export interface IPopover
   closeOnInsideClick?: boolean;
   closeOnTargetClick?: boolean;
   delay?: number;
+  keepOpenOnHover?: boolean;
   offsetX?: number;
   offsetY?: number;
   blur?: boolean;
@@ -120,6 +121,7 @@ export const ReqorePopover = memo(
         useTargetWidth,
         placement,
         openOnMount,
+        keepOpenOnHover,
         transparent,
         maxWidth,
         minWidth,
@@ -147,6 +149,9 @@ export const ReqorePopover = memo(
 
       const [isOpen, setIsOpen] = React.useState(false);
       const timeoutRef = useRef<number | null>(null);
+      const isTargetHovered = useRef(false);
+      const isPopoverHovered = useRef(false);
+      const closeTimeoutRef = useRef<number | null>(null);
 
       const startEvent = startEvents[handler];
       const endEvent = endEvents[handler];
@@ -156,7 +161,35 @@ export const ReqorePopover = memo(
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
         }
+        if (closeTimeoutRef.current) {
+          clearTimeout(closeTimeoutRef.current);
+          closeTimeoutRef.current = null;
+        }
       }, []);
+
+      const attemptClose = useCallback(
+        (e?: MouseEvent | KeyboardEvent) => {
+          if (keepOpenOnHover) {
+            // Add a small delay before checking to allow hover state to update
+            closeTimeoutRef.current = window.setTimeout(() => {
+              if (!isTargetHovered.current && !isPopoverHovered.current) {
+                setIsOpen(false);
+              }
+            }, 50);
+          } else {
+            if (onBeforeClose) {
+              const shouldClose = onBeforeClose({ content }, e);
+
+              if (!shouldClose) {
+                return;
+              }
+            }
+
+            setIsOpen(false);
+          }
+        },
+        [keepOpenOnHover, onBeforeClose, content]
+      );
 
       const close = useCallback(
         (e?: MouseEvent | KeyboardEvent) => {
@@ -169,6 +202,8 @@ export const ReqorePopover = memo(
           }
 
           cancelTimeout();
+          isTargetHovered.current = false;
+          isPopoverHovered.current = false;
           setIsOpen(false);
         },
         [cancelTimeout, onBeforeClose, content]
@@ -183,6 +218,9 @@ export const ReqorePopover = memo(
               return;
             }
           }
+
+          // Cancel any pending close timeout when opening
+          cancelTimeout();
 
           if (isOpen) {
             if (handler !== 'hoverStay' && handler !== 'focus') {
@@ -203,25 +241,67 @@ export const ReqorePopover = memo(
             }
           }
         },
-        [isOpen, handler, closeOnInsideClick, delay, tooltips.delay, close, onBeforeOpen, content]
+        [
+          isOpen,
+          handler,
+          closeOnInsideClick,
+          delay,
+          tooltips.delay,
+          close,
+          onBeforeOpen,
+          content,
+          cancelTimeout,
+        ]
       );
 
       const handleClick = useCallback(
         (event: MouseEvent) => {
-          if (handler === 'hover') {
+          const clickedInsidePopover =
+            popperRef?.current && popperRef.current.contains(event.target);
+          const clickedInsideTarget = componentRef?.contains(event.target as Node);
+
+          // Special handling for hover handler with keepOpenOnHover
+          if (handler === 'hover' && !keepOpenOnHover) {
+            // Original behavior: close on any click
             close();
             return;
           }
 
-          if (
-            closeOnOutsideClick &&
-            !(popperRef?.current && popperRef.current.contains(event.target)) &&
-            !componentRef?.contains(event.target as Node)
-          ) {
+          // If clicked inside popover, only close if closeOnInsideClick is true
+          if (clickedInsidePopover) {
+            // Stop propagation to prevent this from being treated as an outside click
+            event.stopPropagation();
+
+            if (closeOnInsideClick) {
+              // Use setTimeout to ensure click handlers complete first
+              setTimeout(() => close(), 0);
+            }
+            return;
+          }
+
+          // If clicked inside target, only close if closeOnTargetClick is true
+          if (clickedInsideTarget) {
+            if (closeOnTargetClick) {
+              close();
+            }
+            return;
+          }
+
+          // Clicked outside both - close if closeOnOutsideClick is true
+          if (closeOnOutsideClick) {
             close();
           }
         },
-        [closeOnOutsideClick, componentRef, popperRef.current, closeOnTargetClick, close, handler]
+        [
+          closeOnOutsideClick,
+          closeOnInsideClick,
+          closeOnTargetClick,
+          componentRef,
+          popperRef.current,
+          close,
+          handler,
+          keepOpenOnHover,
+        ]
       );
 
       const handleKeyDown = useCallback(
@@ -270,42 +350,93 @@ export const ReqorePopover = memo(
         popperRef.current = internalPopperRef.current;
       }, []);
 
+      const handleTargetMouseEnter = useCallback(
+        (e: MouseEvent) => {
+          isTargetHovered.current = true;
+          cancelTimeout();
+          open(e);
+        },
+        [open, cancelTimeout]
+      );
+
+      const handleTargetMouseLeave = useCallback(
+        (e: MouseEvent) => {
+          isTargetHovered.current = false;
+          attemptClose(e);
+        },
+        [attemptClose]
+      );
+
+      const handlePopoverMouseEnter = useCallback(() => {
+        isPopoverHovered.current = true;
+        cancelTimeout();
+      }, [cancelTimeout]);
+
+      const handlePopoverMouseLeave = useCallback(() => {
+        isPopoverHovered.current = false;
+        attemptClose();
+      }, [attemptClose]);
+
       useEffect(() => {
         if (componentRef && content) {
-          document.addEventListener('click', handleClick, true);
+          // Use bubble phase (false) instead of capture phase for clicks inside popover
+          // This allows button onClick handlers to fire first
+          document.addEventListener('click', handleClick, false);
 
           if (closePopoversOnEscPress) {
             document.addEventListener('keydown', handleKeyDown);
           }
 
-          componentRef.addEventListener(startEvent, open);
+          if (keepOpenOnHover) {
+            componentRef.addEventListener('mouseenter', handleTargetMouseEnter);
+            componentRef.addEventListener('mouseleave', handleTargetMouseLeave);
+          } else {
+            componentRef.addEventListener(startEvent, open);
 
-          if (endEvent) {
-            componentRef.addEventListener(endEvent, close);
-          }
+            if (endEvent) {
+              componentRef.addEventListener(endEvent, close);
+            }
 
-          if (handler === 'hoverStay') {
-            componentRef.addEventListener('mouseleave', cancelTimeout);
+            if (handler === 'hoverStay') {
+              componentRef.addEventListener('mouseleave', cancelTimeout);
+            }
           }
         }
 
         return () => {
           cancelTimeout();
 
-          document.removeEventListener('click', handleClick, true);
+          document.removeEventListener('click', handleClick, false);
           document.removeEventListener('keydown', handleKeyDown);
 
-          componentRef?.removeEventListener(startEvent, open);
+          if (keepOpenOnHover) {
+            componentRef?.removeEventListener('mouseenter', handleTargetMouseEnter);
+            componentRef?.removeEventListener('mouseleave', handleTargetMouseLeave);
+          } else {
+            componentRef?.removeEventListener(startEvent, open);
 
-          if (endEvent) {
-            componentRef?.removeEventListener(endEvent, close);
-          }
+            if (endEvent) {
+              componentRef?.removeEventListener(endEvent, close);
+            }
 
-          if (handler === 'hoverStay') {
-            componentRef?.removeEventListener('mouseleave', cancelTimeout);
+            if (handler === 'hoverStay') {
+              componentRef?.removeEventListener('mouseleave', cancelTimeout);
+            }
           }
         };
-      }, [componentRef, content, handleClick, handleKeyDown, open, close, cancelTimeout]);
+      }, [
+        componentRef,
+        content,
+        handleClick,
+        handleKeyDown,
+        open,
+        close,
+        cancelTimeout,
+        handler,
+        keepOpenOnHover,
+        handleTargetMouseEnter,
+        handleTargetMouseLeave,
+      ]);
 
       const handleRef = useCallback((r) => {
         setComponentRef(r);
@@ -339,6 +470,9 @@ export const ReqorePopover = memo(
                 onPopperClose={close}
                 onPopperUpdate={handlePopperUpdate}
                 id={id}
+                handler={handler}
+                onPopoverMouseEnter={keepOpenOnHover ? handlePopoverMouseEnter : undefined}
+                onPopoverMouseLeave={keepOpenOnHover ? handlePopoverMouseLeave : undefined}
               />
             )}
             {isOpen && blur ? <div className='reqore-blur-wrapper' /> : null}
@@ -381,6 +515,9 @@ export const ReqorePopover = memo(
               onPopperUpdate={handlePopperUpdate}
               closePopover={close}
               id={id}
+              handler={handler}
+              onPopoverMouseEnter={keepOpenOnHover ? handlePopoverMouseEnter : undefined}
+              onPopoverMouseLeave={keepOpenOnHover ? handlePopoverMouseLeave : undefined}
             />
           )}
           {isOpen && blur ? <div className='reqore-blur-wrapper' /> : null}

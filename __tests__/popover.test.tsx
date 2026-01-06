@@ -336,3 +336,153 @@ test('Does not hide popover on click when onBeforeClose returns false', async ()
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
+
+test('Keeps popover open when hovering over target or popover with keepOpenOnHover', async () => {
+  const onClickSpy = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqorePopover
+        component='p'
+        content={<button onClick={onClickSpy}>Click me</button>}
+        handler='hover'
+        keepOpenOnHover
+        closeOnInsideClick={false}
+        isReqoreComponent
+      >
+        Hover me
+      </ReqorePopover>
+    </ReqoreUIProvider>
+  );
+
+  const trigger = screen.getByText('Hover me');
+
+  // Hover over trigger to open popover
+  fireEvent.mouseEnter(trigger);
+  act(() => {
+    jest.advanceTimersByTime(1);
+  });
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+
+  // Leave trigger, hover over popover
+  fireEvent.mouseLeave(trigger);
+
+  const popover = document.querySelector('.reqore-popover-content') as HTMLElement;
+  fireEvent.mouseEnter(popover);
+
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
+
+  // Popover should still be open
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+
+  // Click button inside popover
+  const button = screen.getByText('Click me');
+  fireEvent.click(button);
+
+  act(() => {
+    jest.advanceTimersByTime(1);
+  });
+
+  // Verify button click was registered
+  expect(onClickSpy).toHaveBeenCalled();
+
+  // Popover should still be open (closeOnInsideClick is false)
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+
+  // Leave popover
+  fireEvent.mouseLeave(popover);
+
+  act(() => {
+    jest.advanceTimersByTime(100);
+  });
+
+  // Now popover should close
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+});
+
+test('Clicking inside popover closes it when closeOnInsideClick is true', async () => {
+  const onClickSpy = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqorePopover
+        component='p'
+        content={<button onClick={onClickSpy}>Click me</button>}
+        handler='click'
+        closeOnInsideClick={true}
+        isReqoreComponent
+      >
+        Click to open
+      </ReqorePopover>
+    </ReqoreUIProvider>
+  );
+
+  const trigger = screen.getByText('Click to open');
+
+  // Click trigger to open popover
+  fireEvent.click(trigger);
+  act(() => {
+    jest.advanceTimersByTime(1);
+  });
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+
+  // Click button inside popover
+  const button = screen.getByText('Click me');
+  fireEvent.click(button);
+
+  act(() => {
+    jest.advanceTimersByTime(1);
+  });
+
+  // Verify button click was registered
+  expect(onClickSpy).toHaveBeenCalled();
+
+  // Popover should be closed (closeOnInsideClick is true)
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+});
+
+test('Clicking inside popover does not close it when closeOnInsideClick is false', async () => {
+  const onClickSpy = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqorePopover
+        component='p'
+        content={<button onClick={onClickSpy}>Click me</button>}
+        handler='click'
+        closeOnInsideClick={false}
+        isReqoreComponent
+      >
+        Click to open
+      </ReqorePopover>
+    </ReqoreUIProvider>
+  );
+
+  const trigger = screen.getByText('Click to open');
+
+  // Click trigger to open popover
+  fireEvent.click(trigger);
+  act(() => {
+    jest.advanceTimersByTime(1);
+  });
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+
+  // Click button inside popover
+  const button = screen.getByText('Click me');
+  fireEvent.click(button);
+
+  act(() => {
+    jest.advanceTimersByTime(1);
+  });
+
+  // Verify button click was registered
+  expect(onClickSpy).toHaveBeenCalled();
+
+  // Popover should still be open (closeOnInsideClick is false)
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});
