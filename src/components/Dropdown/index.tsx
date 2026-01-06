@@ -162,7 +162,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   return (
     <ReqorePopover
       closeOnOutsideClick={closeOnOutsideClick}
-      closeOnInsideClick={closeOnInsideClick}
+      closeOnInsideClick={closeOnInsideClick ?? false}
       closeOnTargetClick={closeOnTargetClick}
       blur={blur}
       closeOnAnyClick={closeOnAnyClick}

@@ -389,3 +389,74 @@ test('Renders <Dropdown /> and updates its items when state changes, does not cl
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
+
+test('Renders <Dropdown /> with nested items, closes only on leaf item click', () => {
+  jest.useFakeTimers();
+  const onItemSelect = jest.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDropdown
+              onItemSelect={onItemSelect}
+              items={[
+                {
+                  label: 'Parent Item',
+                  value: 'parent',
+                  items: [
+                    {
+                      label: 'Child Item 1',
+                      value: 'child1',
+                    },
+                    {
+                      label: 'Child Item 2',
+                      value: 'child2',
+                    },
+                  ],
+                },
+                {
+                  label: 'Leaf Item',
+                  value: 'leaf',
+                },
+              ]}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    jest.advanceTimersByTime(1);
+  });
+
+  // Open the dropdown
+  fireEvent.click(document.querySelector('.reqore-button')!);
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(2);
+
+  // Click on parent item with sub-items - should NOT close
+  fireEvent.click(document.querySelectorAll('.reqore-menu-item')[0]);
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(2);
+  expect(onItemSelect).not.toHaveBeenCalled();
+
+  // Now we should see child items
+  expect(document.querySelectorAll('.reqore-menu-item')[0].textContent).toContain('Child Item 1');
+
+  // Click on leaf item - should close
+  fireEvent.click(document.querySelectorAll('.reqore-menu-item')[0]);
+  jest.advanceTimersByTime(1);
+
+  expect(onItemSelect).toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Child Item 1',
+      value: 'child1',
+    }),
+    expect.anything()
+  );
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+});
