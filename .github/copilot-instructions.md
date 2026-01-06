@@ -15,6 +15,35 @@ ReQore is a **themeable React component library** for the Qorus platform. It pro
 
 ## Architecture Essentials
 
+### General Development Practices
+
+# General
+
+- Focus is first on user experience and performance, complexity and tech debt secondary
+- Follow existing code patterns for new components; refer to similar components for guidance
+- Check if a helper or utility already exists before writing a new one
+
+# TypeScript
+
+- Use TypeScript with strict typing; define prop interfaces for each component with `I` prefix for interfaces and `T` prefix for types
+
+# UI / UX
+
+- Always make sure to create reusable components
+- Always use named exports for React components
+- There can be multiple React components in one file if it makes sense
+- Use styled-components for styling; define style interfaces for styled components
+- Always componentize styles with styled-components; avoid inline styles except for dynamic cases
+- Use functional components with React hooks
+- For React, always wrap components in `memo()` unless there's a specific reason not to
+- For React, always wrap callbacks in `useCallback()` unless there's a specific reason not to
+- For React, always memoize computed values in `useMemo()` unless there's a specific reason not to
+
+# Testing
+
+- Run tests after changes, run `yarn precheck` after feature completions
+- Write a unit test if it makes sense for the change you have made, but Storybook tests will always have higher priority
+
 ### Component Structure
 
 - **Folder:** `src/components/{ComponentName}/` contains only `index.tsx` (and occasionally `backdrop.tsx` for overlay components)
