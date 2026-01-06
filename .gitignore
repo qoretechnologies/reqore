@@ -4,3 +4,6 @@ output.json
 tests.json
 coverage
 storybook-static
+.docusaurus
+build
+docs/api

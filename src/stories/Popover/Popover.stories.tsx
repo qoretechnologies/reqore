@@ -1,6 +1,6 @@
 import { expect, jest } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent, within } from '@storybook/testing-library';
+import { fireEvent, userEvent, within } from '@storybook/testing-library';
 import { useState } from 'react';
 import { useMount } from 'react-use';
 import { IReqorePopoverProps } from '../../components/Popover';
@@ -72,6 +72,21 @@ const HoverButton = (args: any) => {
   return (
     <ReqorePopover component={ReqoreButton} isReqoreComponent {...args} fixed>
       Hover popover
+    </ReqorePopover>
+  );
+};
+
+const HoverKeepOpenButton = (args: any) => {
+  return (
+    <ReqorePopover
+      component={ReqoreButton}
+      isReqoreComponent
+      {...args}
+      fixed
+      keepOpenOnHover
+      closeOnInsideClick={false}
+    >
+      Hover for actions
     </ReqorePopover>
   );
 };
@@ -242,6 +257,16 @@ const Template: StoryFn<IReqorePopoverProps & { insideModal?: boolean }> = (
     <>
       <ReqoreControlGroup vertical gapSize='huge' horizontalAlign='flex-start'>
         <HoverButton {...args} />
+        <HoverKeepOpenButton
+          {...args}
+          content={
+            <ReqoreControlGroup>
+              <ReqoreButton icon='EditLine' onClick={() => alert('Edit clicked')} />
+              <ReqoreButton icon='AddLine' onClick={() => alert('Add clicked')} />
+              <ReqoreButton icon='DeleteBinLine' onClick={() => alert('Delete clicked')} />
+            </ReqoreControlGroup>
+          }
+        />
         <ClickButton {...args} />
         <DelayButton {...args} />
         <HoverStayButton {...args} />
@@ -600,5 +625,91 @@ export const InCustomPortal: Story = {
     options: {
       customPortalId: '#my-custom-portal',
     },
+  },
+};
+
+export const KeepOpenOnHoverWithClickableContent: Story = {
+  render: () => {
+    const [clickedButton, setClickedButton] = useState<string | null>(null);
+
+    return (
+      <ReqoreControlGroup vertical>
+        <ReqoreMessage intent={clickedButton ? 'success' : 'info'}>
+          {clickedButton ? `Clicked: ${clickedButton}` : 'Hover the button and click an action'}
+        </ReqoreMessage>
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          handler='hover'
+          keepOpenOnHover
+          noArrow
+          noWrapper
+          closeOnInsideClick={false}
+          content={
+            <ReqoreControlGroup stack>
+              <ReqoreButton
+                onClick={() => setClickedButton('Action 1')}
+                data-testid='action-1'
+                icon='EditLine'
+              />
+              <ReqoreButton
+                onClick={() => setClickedButton('Action 2')}
+                data-testid='action-2'
+                icon='AddLine'
+              />
+              <ReqoreButton
+                onClick={() => setClickedButton('Action 3')}
+                data-testid='action-3'
+                icon='DeleteBinLine'
+              />
+            </ReqoreControlGroup>
+          }
+        >
+          Hover for actions
+        </ReqorePopover>
+      </ReqoreControlGroup>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Find the trigger button
+    const triggerButton = canvas.getByText('Hover for actions');
+
+    // Hover over the trigger button to open popover
+    userEvent.hover(triggerButton);
+    await sleep(150);
+
+    // Verify popover is open
+    let popover = document.querySelector('.reqore-popover-content');
+    await expect(popover).toBeInTheDocument();
+
+    // Find and click Action 2 button inside the popover
+    const action2Button = document.querySelector('[data-testid="action-2"]') as HTMLElement;
+    await expect(action2Button).toBeInTheDocument();
+
+    fireEvent.click(action2Button);
+    await sleep(100);
+
+    // Verify the click was registered (message should update)
+    const message = canvas.getByText('Clicked: Action 2');
+    await expect(message).toBeInTheDocument();
+
+    // Verify popover is still open (closeOnInsideClick is false)
+    popover = document.querySelector('.reqore-popover-content');
+    await expect(popover).toBeInTheDocument();
+
+    // Move mouse away from trigger
+    fireEvent.mouseLeave(triggerButton);
+    await sleep(100);
+
+    // Move away from popover too
+    if (popover) {
+      fireEvent.mouseLeave(popover);
+    }
+    await sleep(100);
+
+    // Verify popover is not closed
+    await expect(document.querySelector('.reqore-popover-content')).toBeInTheDocument();
   },
 };

@@ -270,6 +270,7 @@ export const DatePicker = <T extends TDateValue>({
           }}
           closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}
           closeOnAnyClick={false}
+          closeOnInsideClick={false}
           passPopoverData={(data) => (popoverData.current = data)}
           isReqoreComponent
           noWrapper

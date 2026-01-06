@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.56.0",
+  "version": "0.56.1",
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,10 @@
     "lint": "yarn run eslint ./src/",
     "storybook": "storybook dev -p 6007",
     "init-storybook": "yarn test:ci && yarn storybook",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "docs:dev": "docusaurus start",
+    "docs:build": "docusaurus build",
+    "docs:api": "typedoc --options typedoc.json"
   },
   "repository": {
     "type": "git",
@@ -89,7 +92,12 @@
     "ts-jest": "^29.0.5",
     "ts-node": "^9.1.1",
     "typescript": "^4.7.3",
-    "viteshot": "^0.3.1"
+    "viteshot": "^0.3.1",
+    "@docusaurus/core": "^3.6.0",
+    "@docusaurus/preset-classic": "^3.6.0",
+    "docusaurus-plugin-typedoc": "^1.0.4",
+    "typedoc": "^0.26.6",
+    "typedoc-plugin-markdown": "^4.1.0"
   },
   "peerDependencies": {
     "react": "^18.2.0",

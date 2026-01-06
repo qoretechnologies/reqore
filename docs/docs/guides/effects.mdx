@@ -1,0 +1,586 @@
+---
+sidebar_position: 3
+---
+
+import LiveDemo from '../../src/components/LiveDemo';
+import { ReqoreButton, ReqoreControlGroup } from '../../../src';
+
+# Visual Effects
+
+Reqore provides a powerful effects system that allows you to add advanced visual styling to components including gradients, animations, glows, and text transformations.
+
+## What are Effects?
+
+Effects are a way to apply advanced styling to components through the `effect` prop. They can include:
+
+- Gradient backgrounds
+- Text transformations
+- Glow effects
+- Animations
+- And more
+
+## Basic Effect
+
+The simplest effect is a gradient:
+
+<LiveDemo>
+  <ReqoreButton
+    effect={{
+      gradient: {
+        colors: {
+          0: '#3b82f6',
+          100: '#8b5cf6',
+        },
+      },
+    }}
+  >
+    Gradient Button
+  </ReqoreButton>
+</LiveDemo>
+
+```tsx
+import { ReqoreButton } from '@qoretechnologies/reqore';
+
+function GradientButton() {
+  return (
+    <ReqoreButton
+      effect={{
+        gradient: {
+          colors: {
+            0: '#3b82f6',
+            100: '#8b5cf6',
+          },
+        },
+      }}
+    >
+      Gradient Button
+    </ReqoreButton>
+  );
+}
+```
+
+## Gradient Types
+
+### Linear Gradients
+
+<LiveDemo>
+  <ReqoreButton
+    effect={{
+      gradient: {
+        type: 'linear',
+        direction: 'to right',
+        colors: {
+          0: '#3b82f6',
+          50: '#8b5cf6',
+          100: '#ec4899',
+        },
+      },
+    }}
+  >
+    Linear Gradient
+  </ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      type: 'linear',
+      direction: 'to right',
+      colors: {
+        0: '#3b82f6',
+        50: '#8b5cf6',
+        100: '#ec4899',
+      },
+    },
+  }}
+>
+  Linear Gradient
+</ReqoreButton>
+```
+
+### Radial Gradients
+
+<LiveDemo>
+  <ReqoreButton
+    effect={{
+      gradient: {
+        type: 'radial',
+        shape: 'circle',
+        direction: 'at center',
+        colors: {
+          0: '#3b82f6',
+          100: '#1e40af',
+        },
+      },
+    }}
+  >
+    Radial Gradient
+  </ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      type: 'radial',
+      shape: 'circle',
+      direction: 'at center',
+      colors: {
+        0: '#3b82f6',
+        100: '#1e40af',
+      },
+    },
+  }}
+>
+  Radial Gradient
+</ReqoreButton>
+```
+
+## Using Intent Colors
+
+You can reference theme intent colors in gradients:
+
+<LiveDemo>
+  <ReqoreButton
+    effect={{
+      gradient: {
+        colors: {
+          0: 'info',
+          100: 'success',
+        },
+      },
+    }}
+  >
+    Intent Gradient
+  </ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      colors: {
+        0: 'info',
+        100: 'success',
+      },
+    },
+  }}
+>
+  Intent Gradient
+</ReqoreButton>
+```
+
+### Color Modifiers
+
+Modify intent colors on the fly:
+
+<LiveDemo>
+  <ReqoreButton
+    effect={{
+      gradient: {
+        colors: {
+          0: 'info:darken:2:1',
+          100: 'success:lighten:1:0.8',
+        },
+      },
+    }}
+  >
+    Modified Colors
+  </ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      // Format: 'intent:operation:amount:opacity'
+      colors: {
+        0: 'info:darken:2:1', // Darken info color by 0.2
+        100: 'success:lighten:1:0.8', // Lighten success, 80% opacity
+      },
+    },
+  }}
+>
+  Modified Colors
+</ReqoreButton>
+```
+
+## Animated Gradients
+
+Add animation to gradients:
+
+<LiveDemo>
+  <ReqoreControlGroup>
+    <ReqoreButton
+      effect={{
+        gradient: {
+          colors: { 0: '#3b82f6', 100: '#8b5cf6' },
+          animate: 'hover',
+          animationSpeed: 3,
+        },
+      }}
+    >
+      Hover to Animate
+    </ReqoreButton>
+    <ReqoreButton
+      effect={{
+        gradient: {
+          colors: { 0: 'info', 100: 'success' },
+          animate: 'always',
+        },
+      }}
+    >
+      Always Animated
+    </ReqoreButton>
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      colors: {
+        0: '#3b82f6',
+        100: '#8b5cf6',
+      },
+      animate: 'hover',      // Animate on hover
+      animationSpeed: 3,     // Speed from 1-5
+    },
+  }}
+>
+  Hover to Animate
+</ReqoreButton>
+
+<ReqoreButton
+  effect={{
+    gradient: {
+      colors: { 0: 'info', 100: 'success' },
+      animate: 'always',     // Always animating
+    },
+  }}
+>
+  Always Animated
+</ReqoreButton>
+
+<ReqoreButton
+  effect={{
+    gradient: {
+      colors: { 0: 'info', 100: 'success' },
+      animate: 'active',     // Animate when active
+    },
+  }}
+  active
+>
+  Active Animation
+</ReqoreButton>
+```
+
+## Text Transformations
+
+### Uppercase
+
+<LiveDemo>
+  <ReqoreButton
+    effect={{
+      uppercase: true,
+    }}
+  >
+    uppercase text
+  </ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  effect={{
+    uppercase: true,
+  }}
+>
+  uppercase text
+</ReqoreButton>
+```
+
+### Letter Spacing
+
+<LiveDemo>
+  <ReqoreButton
+    effect={{
+      spaced: 2,
+    }}
+  >
+    S P A C E D
+  </ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  effect={{
+    spaced: 2, // Letter spacing in pixels
+  }}
+>
+  S P A C E D
+</ReqoreButton>
+```
+
+### Font Weight
+
+```tsx
+<ReqoreControlGroup>
+  <ReqoreButton effect={{ weight: 'thin' }}>Thin</ReqoreButton>
+  <ReqoreButton effect={{ weight: 'light' }}>Light</ReqoreButton>
+  <ReqoreButton effect={{ weight: 'normal' }}>Normal</ReqoreButton>
+  <ReqoreButton effect={{ weight: 'bold' }}>Bold</ReqoreButton>
+  <ReqoreButton effect={{ weight: 'thick' }}>Thick</ReqoreButton>
+</ReqoreControlGroup>
+```
+
+### Text Decorations
+
+```tsx
+<ReqoreControlGroup vertical>
+  <ReqoreSpan effect={{ underline: true }}>Underlined text</ReqoreSpan>
+  <ReqoreSpan effect={{ lineThrough: true }}>Strikethrough text</ReqoreSpan>
+  <ReqoreSpan effect={{ italic: true }}>Italic text</ReqoreSpan>
+</ReqoreControlGroup>
+```
+
+### Custom Text Size
+
+```tsx
+<ReqoreButton effect={{ textSize: 'big' }}>
+  Bigger Text
+</ReqoreButton>
+
+<ReqoreButton effect={{ textSize: '20px' }}>
+  Custom Size
+</ReqoreButton>
+```
+
+## Glow Effects
+
+Add glow to components:
+
+```tsx
+<ReqoreButton
+  effect={{
+    glow: {
+      color: '#3b82f6',
+      size: 10,
+      blur: 20,
+    },
+  }}
+>
+  Glowing Button
+</ReqoreButton>
+
+<ReqoreButton
+  effect={{
+    glow: {
+      color: 'success',
+      size: 5,
+      inset: true,  // Inner glow
+    },
+  }}
+>
+  Inner Glow
+</ReqoreButton>
+```
+
+## Custom Colors
+
+Override text and border colors:
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      colors: { 0: '#1e1e1e', 100: '#3e3e3e' },
+    },
+    color: '#fbbf24', // Text color
+  }}
+>
+  Custom Colors
+</ReqoreButton>
+```
+
+## Text Alignment
+
+```tsx
+<ReqorePanel
+  label='Panel'
+  effect={{
+    textAlign: 'center',
+  }}
+>
+  Centered text content
+</ReqorePanel>
+```
+
+## Combining Effects
+
+You can combine multiple effects:
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      colors: { 0: 'info', 100: 'success' },
+      animate: 'hover',
+    },
+    uppercase: true,
+    spaced: 2,
+    weight: 'bold',
+    glow: {
+      color: 'info',
+      size: 5,
+    },
+  }}
+>
+  Fully Styled
+</ReqoreButton>
+```
+
+## Interactive Effects
+
+Effects can respond to component state:
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      colors: { 0: 'info', 100: 'success' },
+    },
+    interactive: true, // Brighten on hover
+  }}
+>
+  Interactive
+</ReqoreButton>
+```
+
+## Examples
+
+### Premium Button
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      type: 'linear',
+      direction: 'to right',
+      colors: {
+        0: '#f59e0b',
+        100: '#d97706',
+      },
+      animate: 'hover',
+    },
+    uppercase: true,
+    weight: 'bold',
+    spaced: 1,
+    glow: {
+      color: '#f59e0b',
+      size: 8,
+    },
+  }}
+  size='big'
+>
+  Premium Feature
+</ReqoreButton>
+```
+
+### Alert Panel
+
+```tsx
+<ReqorePanel
+  label='Warning'
+  icon='AlertLine'
+  effect={{
+    gradient: {
+      colors: {
+        0: 'warning:darken:1',
+        100: 'danger:darken:1',
+      },
+    },
+    weight: 'bold',
+  }}
+>
+  Important warning message
+</ReqorePanel>
+```
+
+### Neon Text
+
+```tsx
+<ReqoreH1
+  effect={{
+    color: '#00ff88',
+    uppercase: true,
+    weight: 'thick',
+    spaced: 3,
+    glow: {
+      color: '#00ff88',
+      size: 10,
+      blur: 30,
+    },
+  }}
+>
+  NEON TITLE
+</ReqoreH1>
+```
+
+### Animated Heading
+
+```tsx
+<ReqoreH2
+  effect={{
+    gradient: {
+      type: 'linear',
+      direction: 'to right',
+      colors: {
+        0: '#3b82f6',
+        50: '#8b5cf6',
+        100: '#ec4899',
+      },
+      animate: 'always',
+      animationSpeed: 2,
+    },
+    uppercase: true,
+    weight: 'bold',
+  }}
+>
+  Animated Header
+</ReqoreH2>
+```
+
+## Effect Props Reference
+
+| Property                  | Type      | Description             |
+| ------------------------- | --------- | ----------------------- | -------------- | ----------------- |
+| `gradient`                | `object`  | Gradient configuration  |
+| `gradient.type`           | `'linear' | 'radial'`               | Gradient type  |
+| `gradient.colors`         | `object`  | Color stops (0-100)     |
+| `gradient.direction`      | `string`  | Gradient direction      |
+| `gradient.animate`        | `'hover'  | 'active'                | 'always'`      | Animation trigger |
+| `gradient.animationSpeed` | `1-5`     | Animation speed         |
+| `color`                   | `string`  | Text color              |
+| `uppercase`               | `boolean` | Transform to uppercase  |
+| `spaced`                  | `number`  | Letter spacing          |
+| `weight`                  | `string   | number`                 | Font weight    |
+| `textSize`                | `string`  | Text size               |
+| `textAlign`               | `'left'   | 'center'                | 'right'`       | Text alignment    |
+| `italic`                  | `boolean` | Italic text             |
+| `underline`               | `boolean  | string`                 | Underline text |
+| `lineThrough`             | `boolean  | string`                 | Strikethrough  |
+| `glow`                    | `object`  | Glow effect config      |
+| `glow.color`              | `string`  | Glow color              |
+| `glow.size`               | `number`  | Glow size               |
+| `glow.blur`               | `number`  | Blur amount             |
+| `glow.inset`              | `boolean` | Inner glow              |
+| `interactive`             | `boolean` | Brighten on interaction |
+
+## Tips
+
+1. **Performance**: Animated gradients can impact performance. Use sparingly.
+2. **Readability**: Ensure text remains readable when applying effects
+3. **Consistency**: Use similar effects across related components
+4. **Accessibility**: Test effects with different color vision modes
+5. **Subtle is Better**: Often subtle effects work better than extreme ones

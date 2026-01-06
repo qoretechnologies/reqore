@@ -273,6 +273,7 @@ function Textarea<T>(
         style={wrapperStyle}
         ref={targetRef}
         onItemSelect={handleItemSelect}
+        closeOnTargetClick={false}
         {...templates}
         popoverId={`id-${uuid.current}`}
         onBlur={handleBlur}

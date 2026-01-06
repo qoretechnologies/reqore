@@ -1,0 +1,391 @@
+---
+sidebar_position: 1
+---
+
+import LiveDemo from '../../src/components/LiveDemo';
+import { ReqoreButton, ReqoreControlGroup } from '../../../src';
+
+# Button
+
+Buttons allow users to take actions and make choices with a single tap.
+
+## Props
+
+| Prop          | Type                 | Required | Default    | Description           |
+| ------------- | -------------------- | -------- | ---------- | --------------------- |
+| `children`    | `ReactNode`          | -        | -          | Button content        |
+| `onClick`     | `function`           | -        | -          | Click handler         |
+| `intent`      | `TReqoreIntent`      | -        | -          | Semantic color intent |
+| `icon`        | `IReqoreIconName`    | -        | -          | Left icon name        |
+| `rightIcon`   | `IReqoreIconName`    | -        | -          | Right icon name       |
+| `size`        | `TSizes`             | -        | `'normal'` | Button size           |
+| `flat`        | `boolean`            | -        | `true`     | Flat styling          |
+| `minimal`     | `boolean`            | -        | `false`    | Minimal styling       |
+| `disabled`    | `boolean`            | -        | `false`    | Disabled state        |
+| `loading`     | `boolean`            | -        | `false`    | Loading state         |
+| `active`      | `boolean`            | -        | `false`    | Active state          |
+| `fluid`       | `boolean`            | -        | `false`    | Full width            |
+| `badge`       | `number \| object`   | -        | -          | Badge content         |
+| `tooltip`     | `string \| object`   | -        | -          | Tooltip content       |
+| `effect`      | `IReqoreEffect`      | -        | -          | Visual effects        |
+| `customTheme` | `IReqoreCustomTheme` | -        | -          | Custom theme          |
+| `className`   | `string`             | -        | -          | CSS class name        |
+
+## Basic Usage
+
+<LiveDemo>
+  <ReqoreButton onClick={() => alert('Clicked!')}>Click Me</ReqoreButton>
+</LiveDemo>
+
+```tsx
+import { ReqoreButton } from '@qoretechnologies/reqore';
+
+function Example() {
+  return <ReqoreButton onClick={() => alert('Clicked!')}>Click Me</ReqoreButton>;
+}
+```
+
+## With Intent
+
+Use the `intent` prop to convey meaning:
+
+<LiveDemo>
+  <ReqoreControlGroup>
+    <ReqoreButton intent='info'>Info</ReqoreButton>
+    <ReqoreButton intent='success'>Success</ReqoreButton>
+    <ReqoreButton intent='warning'>Warning</ReqoreButton>
+    <ReqoreButton intent='danger'>Danger</ReqoreButton>
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+import { ReqoreButton, ReqoreControlGroup } from '@qoretechnologies/reqore';
+
+function IntentExample() {
+  return (
+    <ReqoreControlGroup>
+      <ReqoreButton intent='info'>Info</ReqoreButton>
+      <ReqoreButton intent='success'>Success</ReqoreButton>
+      <ReqoreButton intent='warning'>Warning</ReqoreButton>
+      <ReqoreButton intent='danger'>Danger</ReqoreButton>
+    </ReqoreControlGroup>
+  );
+}
+```
+
+## With Icons
+
+Add icons using the `icon` prop (uses Remix Icons):
+
+<LiveDemo>
+  <ReqoreControlGroup>
+    <ReqoreButton icon='CheckLine'>Success</ReqoreButton>
+    <ReqoreButton icon='DeleteBinLine' rightIcon='ArrowRightLine'>
+      Delete and Next
+    </ReqoreButton>
+    <ReqoreButton icon='Settings4Line' />
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+<ReqoreButton icon="CheckLine">
+  Success
+</ReqoreButton>
+
+<ReqoreButton icon="DeleteBinLine" rightIcon="ArrowRightLine">
+  Delete and Next
+</ReqoreButton>
+
+{/* Icon only button */}
+<ReqoreButton icon="Settings4Line" />
+```
+
+## Sizes
+
+<LiveDemo center>
+  <ReqoreControlGroup>
+    <ReqoreButton size='micro'>Micro</ReqoreButton>
+    <ReqoreButton size='tiny'>Tiny</ReqoreButton>
+    <ReqoreButton size='small'>Small</ReqoreButton>
+    <ReqoreButton size='normal'>Normal</ReqoreButton>
+    <ReqoreButton size='big'>Big</ReqoreButton>
+    <ReqoreButton size='huge'>Huge</ReqoreButton>
+    <ReqoreButton size='massive'>Massive</ReqoreButton>
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+<ReqoreControlGroup>
+  <ReqoreButton size='micro'>Micro</ReqoreButton>
+  <ReqoreButton size='tiny'>Tiny</ReqoreButton>
+  <ReqoreButton size='small'>Small</ReqoreButton>
+  <ReqoreButton size='normal'>Normal</ReqoreButton>
+  <ReqoreButton size='big'>Big</ReqoreButton>
+  <ReqoreButton size='huge'>Huge</ReqoreButton>
+  <ReqoreButton size='massive'>Massive</ReqoreButton>
+</ReqoreControlGroup>
+```
+
+## Variants
+
+### Flat Buttons
+
+<LiveDemo>
+  <ReqoreControlGroup>
+    <ReqoreButton flat>Flat Button</ReqoreButton>
+    <ReqoreButton flat={false}>Raised Button</ReqoreButton>
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+<ReqoreButton flat>Flat Button</ReqoreButton>
+<ReqoreButton flat={false}>Raised Button</ReqoreButton>
+```
+
+### Minimal Buttons
+
+<LiveDemo>
+  <ReqoreButton minimal>Minimal</ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton minimal>Minimal</ReqoreButton>
+```
+
+### Badge
+
+<LiveDemo>
+  <ReqoreControlGroup>
+    <ReqoreButton badge={5} icon='NotificationLine'>
+      Notifications
+    </ReqoreButton>
+    <ReqoreButton badge={{ label: 'New', intent: 'success' }}>Messages</ReqoreButton>
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  badge={5}
+  icon="NotificationLine"
+>
+  Notifications
+</ReqoreButton>
+
+<ReqoreButton
+  badge={{ label: 'New', intent: 'success' }}
+>
+  Messages
+</ReqoreButton>
+```
+
+## States
+
+### Loading
+
+<LiveDemo>
+  <ReqoreButton loading>Loading...</ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton loading>Loading...</ReqoreButton>
+```
+
+### Disabled
+
+<LiveDemo>
+  <ReqoreButton disabled>Disabled</ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton disabled>Disabled</ReqoreButton>
+```
+
+### Active
+
+<LiveDemo>
+  <ReqoreButton active>Active State</ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton active>Active State</ReqoreButton>
+```
+
+## Full Width
+
+<LiveDemo>
+  <ReqoreButton fluid>Full Width Button</ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton fluid>Full Width Button</ReqoreButton>
+```
+
+## With Tooltip
+
+<LiveDemo>
+  <ReqoreControlGroup>
+    <ReqoreButton tooltip='This is helpful information' icon='QuestionLine'>
+      Help
+    </ReqoreButton>
+    <ReqoreButton
+      tooltip={{
+        content: 'Advanced tooltip',
+        intent: 'info',
+        placement: 'top',
+      }}
+    >
+      Hover Me
+    </ReqoreButton>
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  tooltip="This is helpful information"
+  icon="QuestionLine"
+>
+  Help
+</ReqoreButton>
+
+<ReqoreButton
+  tooltip={{
+    content: 'Advanced tooltip',
+    intent: 'info',
+    placement: 'top',
+  }}
+>
+  Hover Me
+</ReqoreButton>
+```
+
+## Effects
+
+Add visual effects for enhanced appearance:
+
+<LiveDemo>
+  <ReqoreButton
+    effect={{
+      gradient: {
+        colors: {
+          0: '#3b82f6',
+          100: '#8b5cf6',
+        },
+        animate: 'hover',
+      },
+      uppercase: true,
+      weight: 'bold',
+    }}
+  >
+    Gradient Button
+  </ReqoreButton>
+</LiveDemo>
+
+```tsx
+<ReqoreButton
+  effect={{
+    gradient: {
+      colors: {
+        0: '#3b82f6',
+        100: '#8b5cf6',
+      },
+      animate: 'hover',
+    },
+    uppercase: true,
+    weight: 'bold',
+  }}
+>
+  Gradient Button
+</ReqoreButton>
+```
+
+## As Link
+
+Render button as a link:
+
+```tsx
+<ReqoreButton
+  as='a'
+  props={{
+    href: 'https://example.com',
+    target: '_blank',
+  }}
+>
+  External Link
+</ReqoreButton>
+```
+
+## Examples
+
+### Action Buttons
+
+<LiveDemo>
+  <ReqoreControlGroup>
+    <ReqoreButton intent='success' icon='CheckLine'>
+      Save
+    </ReqoreButton>
+    <ReqoreButton intent='danger' icon='CloseLine'>
+      Cancel
+    </ReqoreButton>
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+function ActionButtons() {
+  return (
+    <ReqoreControlGroup>
+      <ReqoreButton intent='success' icon='CheckLine'>
+        Save
+      </ReqoreButton>
+      <ReqoreButton intent='danger' icon='CloseLine'>
+        Cancel
+      </ReqoreButton>
+    </ReqoreControlGroup>
+  );
+}
+```
+
+### Icon Button Group
+
+<LiveDemo>
+  <ReqoreControlGroup>
+    <ReqoreButton icon='DeleteBinLine' tooltip='Delete' />
+    <ReqoreButton icon='EditLine' tooltip='Edit' />
+    <ReqoreButton icon='ShareLine' tooltip='Share' />
+  </ReqoreControlGroup>
+</LiveDemo>
+
+```tsx
+function IconButtons() {
+  return (
+    <ReqoreControlGroup>
+      <ReqoreButton icon='DeleteBinLine' tooltip='Delete' />
+      <ReqoreButton icon='EditLine' tooltip='Edit' />
+      <ReqoreButton icon='ShareLine' tooltip='Share' />
+    </ReqoreControlGroup>
+  );
+}
+```
+
+### Loading Button
+
+<LiveDemo>
+  <ReqoreButton loading>Loading...</ReqoreButton>
+</LiveDemo>
+
+```tsx
+function LoadingButton() {
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    await someAsyncOperation();
+    setLoading(false);
+  };
+
+  return (
+    <ReqoreButton loading={loading} onClick={handleClick}>
+      Submit
+    </ReqoreButton>
+  );
+}
+```

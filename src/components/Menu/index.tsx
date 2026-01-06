@@ -38,7 +38,7 @@ export interface IReqoreMenuProps
   padded?: boolean;
   itemGap?: IReqoreControlGroupProps['gapSize'];
   resizable?: Omit<ResizableProps, 'enable'> & {
-    enable?: Pick<ResizableProps['enable'], 'left' | 'right'>;
+    enable?: { left?: boolean; right?: boolean };
   };
   showResizableBorder?: boolean;
 }

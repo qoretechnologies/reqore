@@ -1,0 +1,872 @@
+---
+sidebar_position: 4
+---
+
+import LiveDemo from '../../src/components/LiveDemo';
+import { ReqoreTable, ReqoreButton, ReqoreControlGroup } from '../../../src';
+
+# Table
+
+Feature-rich data table component with sorting, filtering, pagination, and customizable cells.
+
+## Props
+
+| Prop               | Type                   | Required | Default    | Description             |
+| ------------------ | ---------------------- | -------- | ---------- | ----------------------- |
+| `columns`          | `IReqoreTableColumn[]` | ✓        | -          | Column definitions      |
+| `data`             | `any[]`                | ✓        | -          | Table data              |
+| `height`           | `number`               | -        | -          | Table height in pixels  |
+| `width`            | `number`               | -        | -          | Table width in pixels   |
+| `sort`             | `object`               | -        | -          | Sort configuration      |
+| `onSortChange`     | `function`             | -        | -          | Sort change callback    |
+| `filter`           | `string`               | -        | -          | Global filter text      |
+| `paging`           | `object \| boolean`    | -        | -          | Pagination config       |
+| `selectable`       | `boolean`              | -        | `false`    | Enable row selection    |
+| `selected`         | `string[]`             | -        | -          | Pre-selected row IDs    |
+| `onSelectedChange` | `function`             | -        | -          | Selection callback      |
+| `onRowClick`       | `function`             | -        | -          | Row click handler       |
+| `exportable`       | `boolean`              | -        | `false`    | Enable export           |
+| `exportFileName`   | `string`               | -        | -          | Export file name        |
+| `striped`          | `boolean`              | -        | `false`    | Striped rows            |
+| `size`             | `TSizes`               | -        | `'normal'` | Table size              |
+| `intent`           | `TReqoreIntent`        | -        | -          | Color intent            |
+| `flat`             | `boolean`              | -        | `true`     | Flat styling            |
+| `filterable`       | `boolean`              | -        | `false`    | Enable column filtering |
+| `zoomable`         | `boolean`              | -        | `false`    | Enable zoom controls    |
+| `rounded`          | `boolean`              | -        | -          | Rounded corners         |
+| `fill`             | `boolean`              | -        | `false`    | Fill parent container   |
+
+## Basic Usage
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      { dataId: 'name', header: { label: 'Name' }, minWidth: 150, width: 150, grow: 1 },
+      { dataId: 'age', header: { label: 'Age' }, minWidth: 80, width: 80 },
+      { dataId: 'email', header: { label: 'Email' }, minWidth: 200, width: 200 },
+    ]}
+    data={[
+      { name: 'John Doe', age: 30, email: 'john@example.com' },
+      { name: 'Jane Smith', age: 25, email: 'jane@example.com' },
+    ]}
+  />
+</LiveDemo>
+
+```tsx
+import { ReqoreTable } from '@qoretechnologies/reqore';
+
+function Example() {
+  const columns = [
+    { dataId: 'name', header: { label: 'Name' }, minWidth: 150 },
+    { dataId: 'age', header: { label: 'Age' }, minWidth: 80 },
+    { dataId: 'email', header: { label: 'Email' }, minWidth: 200 },
+  ];
+
+  const data = [
+    { name: 'John Doe', age: 30, email: 'john@example.com' },
+    { name: 'Jane Smith', age: 25, email: 'jane@example.com' },
+  ];
+
+  return <ReqoreTable columns={columns} data={data} />;
+}}
+```
+
+## Sortable Columns
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'name',
+        header: { label: 'Name' },
+        sortable: true,
+        minWidth: 150,
+        width: 150,
+        grow: 1,
+      },
+      { dataId: 'age', header: { label: 'Age' }, sortable: true, minWidth: 80, width: 80 },
+      { dataId: 'email', header: { label: 'Email' }, minWidth: 200, width: 200 },
+    ]}
+    data={[
+      { name: 'John Doe', age: 30, email: 'john@example.com' },
+      { name: 'Jane Smith', age: 25, email: 'jane@example.com' },
+      { name: 'Bob Johnson', age: 35, email: 'bob@example.com' },
+    ]}
+  />
+</LiveDemo>
+
+```tsx
+const columns = [
+  {
+    dataId: 'name',
+    header: { label: 'Name' },
+    sortable: true,
+    minWidth: 150,
+  },
+  {
+    dataId: 'age',
+    header: { label: 'Age' },
+    sortable: true,
+    minWidth: 80,
+  },
+];
+
+<ReqoreTable
+  columns={columns}
+  data={data}
+  sort={{ by: 'name', direction: 'asc' }}
+  onSortChange={(sortData) => console.log(sortData)}
+/>;
+```
+
+## With Icons
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'user',
+        header: { label: 'User', icon: 'UserLine' },
+        minWidth: 150,
+        width: 150,
+        grow: 1,
+      },
+      {
+        dataId: 'status',
+        header: { label: 'Status', icon: 'CheckLine' },
+        minWidth: 120,
+        width: 120,
+      },
+    ]}
+    data={[
+      { user: 'John Doe', status: 'Active' },
+      { user: 'Jane Smith', status: 'Inactive' },
+    ]}
+  />
+</LiveDemo>
+
+```tsx
+const columns = [
+  {
+    dataId: 'user',
+    header: {
+      label: 'User',
+      icon: 'UserLine',
+    },
+    minWidth: 150,
+  },
+  {
+    dataId: 'status',
+    header: {
+      label: 'Status',
+      icon: 'CheckLine',
+    },
+    minWidth: 120,
+  },
+];
+```
+
+## Cell Customization
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'name',
+        header: { label: 'Name' },
+        minWidth: 150,
+        width: 150,
+        grow: 1,
+      },
+      {
+        dataId: 'status',
+        header: { label: 'Status' },
+        cell: { align: 'center' },
+        minWidth: 120,
+        width: 120,
+      },
+      {
+        dataId: 'age',
+        header: { label: 'Age' },
+        cell: { align: 'center' },
+        minWidth: 80,
+        width: 80,
+      },
+    ]}
+    data={[
+      { name: 'John Doe', status: 'Active', age: 30 },
+      { name: 'Jane Smith', status: 'Pending', age: 25 },
+    ]}
+  />
+</LiveDemo>
+
+```tsx
+const columns = [
+  {
+    dataId: 'name',
+    header: { label: 'Name' },
+    minWidth: 150,
+  },
+  {
+    dataId: 'status',
+    header: { label: 'Status' },
+    cell: {
+      content: 'tag:success', // Render as tag
+      intent: 'success',
+      align: 'center',
+    },
+    minWidth: 120,
+  },
+  {
+    dataId: 'age',
+    header: { label: 'Age' },
+    cell: {
+      align: 'center',
+      tooltip: (value) => `Age: ${value}`,
+    },
+    minWidth: 80,
+  },
+];
+```
+
+## Column Width
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'name',
+        header: { label: 'Name' },
+        grow: 2,
+        minWidth: 150,
+        width: 150,
+      },
+      {
+        dataId: 'email',
+        header: { label: 'Email' },
+        minWidth: 200,
+        width: 200,
+      },
+    ]}
+    data={[
+      { name: 'John Doe', email: 'john@example.com' },
+      { name: 'Jane Smith', email: 'jane@example.com' },
+    ]}
+  />
+</LiveDemo>
+
+```tsx
+const columns = [
+  {
+    dataId: 'name',
+    header: { label: 'Name' },
+    width: 200,
+    minWidth: 150,
+    grow: 2, // Takes 2x space relative to other columns
+  },
+  {
+    dataId: 'email',
+    header: { label: 'Email' },
+    width: 300,
+    minWidth: 200,
+  },
+];
+```
+
+## Column Pinning
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'name',
+        header: { label: 'Name' },
+        pin: 'left',
+        minWidth: 150,
+        width: 150,
+      },
+      {
+        dataId: 'email',
+        header: { label: 'Email' },
+        minWidth: 200,
+        width: 200,
+        grow: 1,
+      },
+      {
+        dataId: 'role',
+        header: { label: 'Role' },
+        minWidth: 150,
+        width: 150,
+      },
+      {
+        dataId: 'status',
+        header: { label: 'Status' },
+        pin: 'right',
+        minWidth: 100,
+        width: 100,
+      },
+    ]}
+    data={[
+      { name: 'John Doe', email: 'john@example.com', role: 'Developer', status: 'Active' },
+      { name: 'Jane Smith', email: 'jane@example.com', role: 'Manager', status: 'Active' },
+      { name: 'Bob Johnson', email: 'bob@example.com', role: 'Designer', status: 'Away' },
+    ]}
+  />
+</LiveDemo>
+
+```tsx
+const columns = [
+  {
+    dataId: 'name',
+    header: { label: 'Name' },
+    pin: 'left', // Pin to left side
+    minWidth: 150,
+  },
+  {
+    dataId: 'email',
+    header: { label: 'Email' },
+    minWidth: 200,
+  },
+  {
+    dataId: 'role',
+    header: { label: 'Role' },
+    minWidth: 150,
+  },
+  {
+    dataId: 'status',
+    header: { label: 'Status' },
+    pin: 'right', // Pin to right side
+    minWidth: 100,
+  },
+];
+
+<ReqoreTable columns={columns} data={data} />;
+```
+
+## With Pagination
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, minWidth: 60, width: 60 },
+      { dataId: 'name', header: { label: 'Name' }, minWidth: 150, width: 150, grow: 1 },
+      { dataId: 'email', header: { label: 'Email' }, minWidth: 200, width: 200 },
+    ]}
+    data={[
+      { id: 1, name: 'User 1', email: 'user1@example.com' },
+      { id: 2, name: 'User 2', email: 'user2@example.com' },
+      { id: 3, name: 'User 3', email: 'user3@example.com' },
+      { id: 4, name: 'User 4', email: 'user4@example.com' },
+      { id: 5, name: 'User 5', email: 'user5@example.com' },
+      { id: 6, name: 'User 6', email: 'user6@example.com' },
+      { id: 7, name: 'User 7', email: 'user7@example.com' },
+      { id: 8, name: 'User 8', email: 'user8@example.com' },
+      { id: 9, name: 'User 9', email: 'user9@example.com' },
+      { id: 10, name: 'User 10', email: 'user10@example.com' },
+      { id: 11, name: 'User 11', email: 'user11@example.com' },
+      { id: 12, name: 'User 12', email: 'user12@example.com' },
+    ]}
+    paging={{
+      itemsPerPage: 5,
+    }}
+  />
+</LiveDemo>
+
+```tsx
+<ReqoreTable
+  columns={columns}
+  data={data}
+  paging={{
+    itemsPerPage: 10,
+    infinite: false,
+    fluid: true,
+  }}
+/>
+```
+
+## Filterable Columns
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'name',
+        header: { label: 'Name' },
+        filterable: true,
+        minWidth: 150,
+        width: 150,
+        filter: 'John',
+        grow: 1,
+      },
+      {
+        dataId: 'email',
+        header: { label: 'Email' },
+        filterable: true,
+        minWidth: 200,
+        width: 200,
+      },
+    ]}
+    data={[
+      { name: 'John Doe', email: 'john@example.com' },
+      { name: 'Jane Smith', email: 'jane@example.com' },
+      { name: 'Bob Johnson', email: 'bob@example.com' },
+    ]}
+  />
+</LiveDemo>
+
+```tsx
+const columns = [
+  {
+    dataId: 'name',
+    header: { label: 'Name' },
+    filterable: true,
+    minWidth: 150,
+    filter: 'John', // Column-specific default filter
+    filterPlaceholder: 'Search name...',
+  },
+  {
+    dataId: 'email',
+    header: { label: 'Email' },
+    filterable: true,
+    minWidth: 200,
+  },
+];
+
+<ReqoreTable columns={columns} data={data} />;
+```
+
+## With Row Selection
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      { dataId: 'name', header: { label: 'Name' }, width: 150, grow: 1 },
+      { dataId: 'email', header: { label: 'Email' }, width: 200 },
+      { dataId: 'department', header: { label: 'Department' }, width: 150 },
+    ]}
+    data={[
+      { _selectId: '1', name: 'Sarah Wilson', email: 'sarah@example.com', department: 'Sales' },
+      { _selectId: '2', name: 'Mike Johnson', email: 'mike@example.com', department: 'IT' },
+      { _selectId: '3', name: 'Emma Davis', email: 'emma@example.com', department: 'HR' },
+      { _selectId: '4', name: 'Tom Miller', email: 'tom@example.com', department: 'Finance' },
+    ]}
+    selectable
+  />
+</LiveDemo>
+
+```tsx
+const data = [
+  { _selectId: '1', name: 'Sarah Wilson', email: 'sarah@example.com', department: 'Sales' },
+  { _selectId: '2', name: 'Mike Johnson', email: 'mike@example.com', department: 'IT' },
+];
+
+<ReqoreTable
+  columns={columns}
+  data={data}
+  selectable
+  onSelectedChange={(selectedRows) => console.log(selectedRows)}
+/>;
+```
+
+## Nested Columns
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        header: { label: 'User Info' },
+        columns: [
+          { dataId: 'name', header: { label: 'Name' }, width: 150, grow: 1 },
+          { dataId: 'email', header: { label: 'Email' }, width: 200 },
+        ],
+      },
+      {
+        header: { label: 'Details' },
+        columns: [
+          { dataId: 'age', header: { label: 'Age' }, width: 80 },
+          { dataId: 'role', header: { label: 'Role' }, width: 150 },
+        ],
+      },
+    ]}
+    data={[
+      { name: 'Alex Brown', email: 'alex@example.com', age: '28', role: 'Manager' },
+      { name: 'Lisa Chen', email: 'lisa@example.com', age: '32', role: 'Developer' },
+    ]}
+  />
+</LiveDemo>
+
+````tsx
+const columns = [
+  {
+    header: { label: 'User Info' },
+    columns: [
+      { dataId: 'name', header: { label: 'Name' }, width: 150 },
+      { dataId: 'email', header: { label: 'Email' }, width: 200 },
+    ],
+  },
+  {
+    header: { label: 'Details' },
+    columns: [
+      { dataId: 'age', header: { label: 'Age' }, width: 80 },
+      { dataId: 'role', header: { label: 'Role' }, width: 150 },
+    ],
+  },
+];```
+````
+
+## Click Handlers
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'event',
+        header: {
+          label: 'Event Type',
+        },
+        width: 150,
+      },
+      {
+        dataId: 'description',
+        header: { label: 'Description' },
+        width: 250,
+        grow: 1,
+      },
+    ]}
+    data={[
+      { event: 'Header Click', description: 'Click column header' },
+      { event: 'Cell Click', description: 'Click any cell' },
+      { event: 'Row Click', description: 'Click entire row' },
+    ]}
+    onRowClick={(row) => alert(`Row clicked: ${row.event}`)}
+  />
+</LiveDemo>
+
+````tsx
+const columns = [
+  {
+    dataId: 'name',
+    header: {
+      label: 'Name',
+      onClick: () => console.log('Header clicked'),
+    },
+    width: 150,
+    cell: {
+      onClick: (rowData) => console.log('Cell clicked', rowData),
+    },
+  },
+];
+
+<ReqoreTable
+  columns={columns}
+  data={data}
+  onRowClick={(row) => console.log('Row clicked', row)}
+/>```
+````
+
+## Exportable
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      { dataId: 'product', header: { label: 'Product' }, width: 200, grow: 1 },
+      { dataId: 'quantity', header: { label: 'Quantity' }, width: 120 },
+      { dataId: 'price', header: { label: 'Price' }, width: 120 },
+    ]}
+    data={[
+      { product: 'Widget A', quantity: '100', price: '$50' },
+      { product: 'Widget B', quantity: '250', price: '$75' },
+      { product: 'Widget C', quantity: '75', price: '$100' },
+    ]}
+    exportable
+    exportFileName='products.csv'
+  />
+</LiveDemo>
+
+````tsx
+<ReqoreTable
+  columns={columns}
+  data={data}
+  exportable
+  exportFileName="my-data.csv"
+/>```
+````
+
+## Striped Rows
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      { dataId: 'product', header: { label: 'Product' }, width: 200, grow: 1 },
+      { dataId: 'price', header: { label: 'Price' }, width: 120 },
+      { dataId: 'stock', header: { label: 'Stock' }, width: 100 },
+    ]}
+    data={[
+      { product: 'Laptop', price: '$999', stock: '5' },
+      { product: 'Mouse', price: '$25', stock: '50' },
+      { product: 'Keyboard', price: '$75', stock: '25' },
+    ]}
+    striped
+  />
+</LiveDemo>
+
+```tsx
+<ReqoreTable columns={columns} data={data} striped />
+```
+
+## Table Sizes
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Micro table' },
+      { id: '2', name: 'Very compact' },
+    ]}
+    size='micro'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Tiny table' },
+      { id: '2', name: 'Extra small' },
+    ]}
+    size='tiny'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Small table' },
+      { id: '2', name: 'Compact size' },
+    ]}
+    size='small'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Big table' },
+      { id: '2', name: 'Spacious' },
+    ]}
+    size='big'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Huge table' },
+      { id: '2', name: 'Extra spacious' },
+    ]}
+    size='huge'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Massive table' },
+      { id: '2', name: 'Maximum spacing' },
+    ]}
+    size='massive'
+  />
+</LiveDemo>
+
+```tsx
+<ReqoreTable columns={columns} data={data} size='micro' />
+<ReqoreTable columns={columns} data={data} size='tiny' />
+<ReqoreTable columns={columns} data={data} size='small' />
+<ReqoreTable columns={columns} data={data} size='big' />
+<ReqoreTable columns={columns} data={data} size='huge' />
+<ReqoreTable columns={columns} data={data} size='massive' />
+```
+
+## With Intent
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      { dataId: 'status', header: { label: 'Status' }, width: 120 },
+      { dataId: 'message', header: { label: 'Message' }, width: 300, grow: 1 },
+    ]}
+    data={[
+      { status: 'Info', message: 'This is an informational table' },
+      { status: 'Info', message: 'With a blue color scheme' },
+    ]}
+    intent='info'
+  />
+</LiveDemo>
+
+````tsx
+<ReqoreTable
+  columns={columns}
+  data={data}
+  intent="info"
+/>```
+````
+
+## Examples
+
+### User List Table
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'name',
+        header: { label: 'Name', icon: 'UserLine' },
+        sortable: true,
+        grow: 2,
+        width: 200,
+      },
+      {
+        dataId: 'email',
+        header: { label: 'Email' },
+        width: 220,
+      },
+      {
+        dataId: 'role',
+        header: { label: 'Role' },
+        width: 150,
+      },
+      {
+        dataId: 'status',
+        header: { label: 'Status' },
+        width: 120,
+      },
+    ]}
+    data={[
+      { name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', status: 'Active' },
+      { name: 'Bob Smith', email: 'bob@example.com', role: 'Manager', status: 'Active' },
+      { name: 'Carol White', email: 'carol@example.com', role: 'Developer', status: 'Away' },
+      { name: 'Diana Brown', email: 'diana@example.com', role: 'Designer', status: 'Active' },
+      { name: 'Eve Wilson', email: 'eve@example.com', role: 'Analyst', status: 'Offline' },
+    ]}
+    striped
+    paging={{ itemsPerPage: 10 }}
+  />
+</LiveDemo>
+
+```tsx
+function UserTable() {
+  const columns = [
+    {
+      dataId: 'name',
+      header: { label: 'Name', icon: 'UserLine' },
+      sortable: true,
+      grow: 2,
+      width: 200,
+    },
+    {
+      dataId: 'email',
+      header: { label: 'Email' },
+      width: 220,
+    },
+    {
+      dataId: 'role',
+      header: { label: 'Role' },
+      width: 150,
+    },
+    {
+      dataId: 'status',
+      header: { label: 'Status' },
+      width: 120,
+    },
+  ];
+
+  const data = [
+    { name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', status: 'Active' },
+    { name: 'Bob Smith', email: 'bob@example.com', role: 'Manager', status: 'Active' },
+  ];
+
+  return <ReqoreTable columns={columns} data={data} paging={{ itemsPerPage: 10 }} striped />;
+}
+```
+
+### Interactive Table
+
+<LiveDemo vertical>
+  <ReqoreTable
+    columns={[
+      {
+        dataId: 'product',
+        header: { label: 'Product' },
+        sortable: true,
+        grow: 2,
+        width: 200,
+      },
+      {
+        dataId: 'price',
+        header: { label: 'Price' },
+        sortable: true,
+        width: 120,
+      },
+      {
+        dataId: 'actions',
+        header: { label: 'Actions' },
+        width: 150,
+      },
+    ]}
+    data={[
+      { product: 'Laptop', price: '$999', actions: 'Edit | Delete' },
+      { product: 'Mouse', price: '$29', actions: 'Edit | Delete' },
+      { product: 'Keyboard', price: '$79', actions: 'Edit | Delete' },
+      { product: 'Monitor', price: '$299', actions: 'Edit | Delete' },
+    ]}
+    selectable
+    striped
+  />
+</LiveDemo>
+
+```tsx
+import { useState } from 'react';
+
+function InteractiveTable() {
+  const [selected, setSelected] = useState([]);
+
+  const columns = [
+    {
+      dataId: 'product',
+      header: { label: 'Product' },
+      sortable: true,
+      width: 200,
+    },
+    {
+      dataId: 'price',
+      header: { label: 'Price' },
+      sortable: true,
+      width: 120,
+    },
+    {
+      dataId: 'actions',
+      header: { label: 'Actions' },
+      width: 150,
+      cell: {
+        content: (_, row) => (
+          <ReqoreControlGroup>
+            <ReqoreButton icon='EditLine' size='small' />
+            <ReqoreButton icon='DeleteBinLine' size='small' intent='danger' />
+          </ReqoreControlGroup>
+        ),
+      },
+    },
+  ];
+
+  return (
+    <ReqoreTable columns={columns} data={products} selectable onSelectedChange={setSelected} />
+  );
+}
+```

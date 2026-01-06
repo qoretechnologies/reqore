@@ -156,6 +156,9 @@ export interface IReqoreInternalPopoverProps extends IPopoverData {
   onPopperUpdate?: (popperRef: MutableRefObject<any>) => void;
   onPopperClose?: () => void;
   closePopover: () => void;
+  handler?: 'hover' | 'click' | 'focus' | 'hoverStay';
+  onPopoverMouseEnter?: () => void;
+  onPopoverMouseLeave?: () => void;
 }
 
 const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
@@ -182,6 +185,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     onPopperUpdate,
     onPopperClose,
     closePopover,
+    onPopoverMouseEnter,
+    onPopoverMouseLeave,
   }) => {
     const animations = useReqoreProperty('animations');
     const customPortalId = useReqoreProperty('customPortalId');
@@ -335,6 +340,8 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           style={style}
           animate={animations?.popovers}
           id={id}
+          onMouseEnter={onPopoverMouseEnter}
+          onMouseLeave={onPopoverMouseLeave}
           {...attributes.popper}
         >
           {!noArrow && !transparent ? (
