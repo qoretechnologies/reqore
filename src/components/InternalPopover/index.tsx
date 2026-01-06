@@ -185,7 +185,6 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     onPopperUpdate,
     onPopperClose,
     closePopover,
-    handler,
     onPopoverMouseEnter,
     onPopoverMouseLeave,
   }) => {

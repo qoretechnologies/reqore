@@ -269,9 +269,6 @@ export const ReqorePopover = memo(
 
           // If clicked inside popover, only close if closeOnInsideClick is true
           if (clickedInsidePopover) {
-            // Stop propagation to prevent this from being treated as an outside click
-            event.stopPropagation();
-
             if (closeOnInsideClick) {
               // Use setTimeout to ensure click handlers complete first
               setTimeout(() => close(), 0);
@@ -379,9 +376,8 @@ export const ReqorePopover = memo(
 
       useEffect(() => {
         if (componentRef && content) {
-          // Use bubble phase (false) instead of capture phase for clicks inside popover
-          // This allows button onClick handlers to fire first
-          document.addEventListener('click', handleClick, false);
+          // Use capture phase for click detection
+          document.addEventListener('click', handleClick, true);
 
           if (closePopoversOnEscPress) {
             document.addEventListener('keydown', handleKeyDown);
@@ -406,7 +402,7 @@ export const ReqorePopover = memo(
         return () => {
           cancelTimeout();
 
-          document.removeEventListener('click', handleClick, false);
+          document.removeEventListener('click', handleClick, true);
           document.removeEventListener('keydown', handleKeyDown);
 
           if (keepOpenOnHover) {
