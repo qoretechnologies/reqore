@@ -99,7 +99,7 @@ export const SizeArg = {
   ...argManager<any>().createArg('size', {
     control: 'select',
     description: 'The size of the element',
-    options: ['tiny', 'small', 'normal', 'big', 'huge'] as TSizes[],
+    options: ['micro', 'tiny', 'small', 'normal', 'big', 'huge', 'massive'] as TSizes[],
     name: 'Size',
     defaultValue: 'normal' as TSizes,
     table: {

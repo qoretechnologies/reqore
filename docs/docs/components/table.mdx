@@ -614,26 +614,84 @@ const columns = [
 <ReqoreTable columns={columns} data={data} striped />
 ```
 
-## Compact Size
+## Table Sizes
 
 <LiveDemo vertical>
   <ReqoreTable
     columns={[
       { dataId: 'id', header: { label: 'ID' }, width: 80 },
       { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
-      { dataId: 'status', header: { label: 'Status' }, width: 140 },
     ]}
     data={[
-      { id: '001', name: 'Item 1', status: 'Active' },
-      { id: '002', name: 'Item 2', status: 'Pending' },
-      { id: '003', name: 'Item 3', status: 'Complete' },
+      { id: '1', name: 'Micro table' },
+      { id: '2', name: 'Very compact' },
+    ]}
+    size='micro'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Tiny table' },
+      { id: '2', name: 'Extra small' },
+    ]}
+    size='tiny'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Small table' },
+      { id: '2', name: 'Compact size' },
     ]}
     size='small'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Big table' },
+      { id: '2', name: 'Spacious' },
+    ]}
+    size='big'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Huge table' },
+      { id: '2', name: 'Extra spacious' },
+    ]}
+    size='huge'
+  />
+  <ReqoreTable
+    columns={[
+      { dataId: 'id', header: { label: 'ID' }, width: 80 },
+      { dataId: 'name', header: { label: 'Name' }, width: 180, grow: 1 },
+    ]}
+    data={[
+      { id: '1', name: 'Massive table' },
+      { id: '2', name: 'Maximum spacing' },
+    ]}
+    size='massive'
   />
 </LiveDemo>
 
 ```tsx
+<ReqoreTable columns={columns} data={data} size='micro' />
+<ReqoreTable columns={columns} data={data} size='tiny' />
 <ReqoreTable columns={columns} data={data} size='small' />
+<ReqoreTable columns={columns} data={data} size='big' />
+<ReqoreTable columns={columns} data={data} size='huge' />
+<ReqoreTable columns={columns} data={data} size='massive' />
 ```
 
 ## With Intent
