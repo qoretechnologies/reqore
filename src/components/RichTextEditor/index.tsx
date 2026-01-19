@@ -193,18 +193,18 @@ export const ReqoreRichTextEditor = ({
     }
     // Use Slate transforms instead of direct mutation
     try {
-      // Deselect before replacing content
-      Transforms.deselect(editor);
-      // Replace all children
-      Transforms.delete(editor, {
-        at: {
-          anchor: Editor.start(editor, []),
-          focus: Editor.end(editor, []),
-        },
+      Editor.withoutNormalizing(editor, () => {
+        // Deselect before replacing content
+        Transforms.deselect(editor);
+        // Remove all existing top-level nodes
+        while (editor.children.length) {
+          Transforms.removeNodes(editor, { at: [0] });
+        }
+        // Insert new content
+        Transforms.insertNodes(editor, value, { at: [0] });
+        // Move selection to end
+        Transforms.select(editor, Editor.end(editor, []));
       });
-      Transforms.insertNodes(editor, value, { at: [0] });
-      // Move selection to end
-      Transforms.select(editor, Editor.end(editor, []));
     } catch (error) {
       // Fallback to direct mutation if transforms fail
       editor.selection = null;
