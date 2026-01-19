@@ -191,15 +191,25 @@ export const ReqoreRichTextEditor = ({
     if (JSON.stringify(value) === JSON.stringify(editor.children)) {
       return;
     }
-    // Remove selection before updating children to prevent crash
-    editor.selection = null;
-    editor.children = value;
-
-    // Set selection to end of document
-    editor.selection = {
-      anchor: Editor.end(editor, []),
-      focus: Editor.end(editor, []),
-    };
+    // Use Slate transforms instead of direct mutation
+    try {
+      // Deselect before replacing content
+      Transforms.deselect(editor);
+      // Replace all children
+      Transforms.delete(editor, {
+        at: {
+          anchor: Editor.start(editor, []),
+          focus: Editor.end(editor, []),
+        },
+      });
+      Transforms.insertNodes(editor, value, { at: [0] });
+      // Move selection to end
+      Transforms.select(editor, Editor.end(editor, []));
+    } catch (error) {
+      // Fallback to direct mutation if transforms fail
+      editor.selection = null;
+      editor.children = value;
+    }
   }, [JSON.stringify(value)]);
 
   const renderElement = useCallback((props) => {
@@ -227,9 +237,13 @@ export const ReqoreRichTextEditor = ({
               onRemoveClick:
                 !rest.readOnly && !rest.disabled
                   ? () => {
-                      Transforms.removeNodes(editor, {
-                        at: ReactEditor.findPath(editor, props.element),
-                      });
+                      try {
+                        const path = ReactEditor.findPath(editor, props.element);
+                        Transforms.removeNodes(editor, { at: path });
+                      } catch (error) {
+                        // Element may no longer be in the editor
+                        console.warn('Failed to remove tag:', error);
+                      }
                     }
                   : undefined,
             }}
@@ -247,23 +261,23 @@ export const ReqoreRichTextEditor = ({
     return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
   }, [value]);
 
-  const isMarkActive = useCallback(
-    (editor: Editor, format: string) => {
-      const marks = Editor.marks(editor);
-      return marks ? marks[format] === true : false;
-    },
-    [editor, Editor, target]
-  );
-
-  const toggleMark = useCallback((editor: Editor, format: string) => {
-    const isActive = isMarkActive(editor, format);
-
-    if (isActive) {
-      Editor.removeMark(editor, format);
-    } else {
-      Editor.addMark(editor, format, true);
-    }
+  const isMarkActive = useCallback((editor: Editor, format: string) => {
+    const marks = Editor.marks(editor);
+    return marks ? marks[format] === true : false;
   }, []);
+
+  const toggleMark = useCallback(
+    (editor: Editor, format: string) => {
+      const isActive = isMarkActive(editor, format);
+
+      if (isActive) {
+        Editor.removeMark(editor, format);
+      } else {
+        Editor.addMark(editor, format, true);
+      }
+    },
+    [isMarkActive]
+  );
 
   const panelActions = useMemo<IReqorePanelAction[]>(() => {
     const _actions: IReqorePanelAction[] = [...(panelProps?.actions || [])];
@@ -383,7 +397,11 @@ export const ReqoreRichTextEditor = ({
                     },
                   });
                   // Focus the editor
-                  ReactEditor.focus(editor);
+                  try {
+                    ReactEditor.focus(editor);
+                  } catch (error) {
+                    // Editor may not be mounted
+                  }
                 }
           }
           value={JSON.stringify(value || [])}
@@ -425,9 +443,23 @@ export const ReqoreRichTextEditor = ({
             closeOnInsideClick: false,
             onItemSelect: (item) => {
               if (item.value) {
-                Transforms.select(editor, target);
-                insertTag(editor, item.value, item.label, item.metadata);
-                ReactEditor.focus(editor);
+                try {
+                  // Use current selection or fallback to end of document
+                  const selection = editor.selection || {
+                    anchor: Editor.end(editor, []),
+                    focus: Editor.end(editor, []),
+                  };
+                  Transforms.select(editor, selection);
+                  insertTag(editor, item.value, item.label, item.metadata);
+                  ReactEditor.focus(editor);
+                } catch (error) {
+                  // Fallback: just insert at current position
+                  try {
+                    insertTag(editor, item.value, item.label, item.metadata);
+                  } catch (e) {
+                    console.warn('Failed to insert tag:', e);
+                  }
+                }
               }
             },
           }}
