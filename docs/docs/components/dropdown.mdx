@@ -1,0 +1,253 @@
+# Dropdown
+
+## Overview
+
+The Dropdown component is a versatile, themeable select component that supports filtering, multi-select, nested items, and comprehensive keyboard navigation.
+
+## Basic Usage
+
+```tsx
+import { ReqoreDropdown } from '@reqore/react';
+
+export function MyDropdown() {
+  return (
+    <ReqoreDropdown
+      label='Select an option'
+      items={[
+        { label: 'Option 1', value: 'opt1' },
+        { label: 'Option 2', value: 'opt2' },
+        { label: 'Option 3', value: 'opt3' },
+      ]}
+      onItemSelect={(item) => console.log('Selected:', item)}
+    />
+  );
+}
+```
+
+## Keyboard Navigation
+
+The Dropdown component includes comprehensive keyboard navigation support, enabled by default. Users can interact with dropdowns using arrow keys, Enter, Escape, and more.
+
+### Keyboard Controls
+
+| Key             | Action                       |
+| --------------- | ---------------------------- |
+| **Arrow Down**  | Move focus to next item      |
+| **Arrow Up**    | Move focus to previous item  |
+| **Enter**       | Select focused item          |
+| **Arrow Right** | Open submenu (if available)  |
+| **Arrow Left**  | Navigate back to parent menu |
+
+### Keyboard Navigation Features
+
+- **Automatic Skip of Disabled Items**: Keyboard navigation automatically skips disabled items and dividers
+- **Filter Integration**: Works seamlessly with the filterable input
+- **Visual Feedback**: Focused items are visually highlighted
+- **Wrapping**: Navigation wraps around (last → first, first → last)
+- **Nested Navigation**: Full support for submenus with independent focus tracking
+- **MultiSelect Support**: Dropdown stays open when selecting items in multiselect mode
+
+### Example with Keyboard Navigation
+
+```tsx
+<ReqoreDropdown
+  label='Navigate with keyboard'
+  items={[
+    { label: 'Apple', value: 'apple' },
+    { label: 'Banana', value: 'banana' },
+    { label: 'Cherry', value: 'cherry' },
+    { label: 'Date', value: 'date' },
+  ]}
+  filterable={true}
+  keyboardNavigation={true}
+  onItemSelect={(item) => console.log('Selected:', item.label)}
+/>
+```
+
+### Keyboard Navigation with Submenus
+
+```tsx
+<ReqoreDropdown
+  label='Navigate nested items'
+  items={[
+    {
+      label: 'Fruits',
+      items: [
+        { label: 'Apple', value: 'apple' },
+        { label: 'Banana', value: 'banana' },
+        { label: 'Cherry', value: 'cherry' },
+      ],
+    },
+    {
+      label: 'Vegetables',
+      items: [
+        { label: 'Carrot', value: 'carrot' },
+        { label: 'Broccoli', value: 'broccoli' },
+      ],
+    },
+  ]}
+/>
+```
+
+**Navigation Steps:**
+
+1. Press Arrow Down to focus "Fruits"
+2. Press Arrow Right to open "Fruits" submenu
+3. Press Arrow Down to navigate between fruit options
+4. Press Enter to select an option
+5. Press Arrow Left to go back to main menu
+
+### Disabling Keyboard Navigation
+
+While keyboard navigation is enabled by default, you can disable it for specific dropdowns:
+
+```tsx
+<ReqoreDropdown items={items} keyboardNavigation={false} />
+```
+
+### Edge Cases Handled
+
+- **Disabled Items**: Automatically skipped during keyboard navigation
+- **Empty Lists**: Gracefully handles navigation attempts on empty lists
+- **Dividers**: Never receive focus, treated as visual separators only
+- **Multiple Dropdowns**: Each maintains independent focus state
+- **Filtering**: Filter input remains focused and editable during keyboard navigation
+
+## Configuration
+
+### Props
+
+#### `keyboardNavigation?: boolean`
+
+- **Default**: `true`
+- **Description**: Enable/disable keyboard navigation feature
+- **Example**: `keyboardNavigation={false}`
+
+#### `filterable?: boolean`
+
+- **Default**: `false`
+- **Description**: Show a search/filter input
+- **Example**: `filterable={true}`
+
+#### `multiSelect?: boolean`
+
+- **Default**: `false`
+- **Description**: Allow selecting multiple items
+- **Example**: `multiSelect={true}`
+
+#### `items?: IReqoreDropdownItem[]`
+
+- **Description**: Array of dropdown items
+- **Type**: `IReqoreDropdownItem[]`
+
+#### `onItemSelect?: (item: IReqoreDropdownItem) => void`
+
+- **Description**: Callback when an item is selected
+- **Example**: `onItemSelect={(item) => console.log(item)}`
+
+### Item Configuration
+
+```tsx
+interface IReqoreDropdownItem {
+  label?: string; // Display text
+  value?: any; // Item value
+  disabled?: boolean; // Disable item
+  selected?: boolean; // Mark as selected
+  icon?: IReqoreIconName; // Icon name
+  items?: IReqoreDropdownItem[]; // Nested items
+  divider?: boolean; // Render as divider
+  onClick?: (item) => void; // Custom click handler
+  metadata?: Record<string, any>; // Custom data
+}
+```
+
+## Common Patterns
+
+### With Filtering
+
+```tsx
+const [filter, setFilter] = useState('');
+
+<ReqoreDropdown
+  label='Search items'
+  items={items}
+  filterable={true}
+  filter={filter}
+  onFilterChange={setFilter}
+  keyboardNavigation={true}
+/>;
+```
+
+### Multi-Select
+
+```tsx
+const [selected, setSelected] = useState<string[]>([]);
+
+<ReqoreDropdown
+  label='Select multiple'
+  items={items.map((item) => ({
+    ...item,
+    selected: selected.includes(item.value),
+  }))}
+  multiSelect={true}
+  onItemSelect={(item) => {
+    if (selected.includes(item.value)) {
+      setSelected(selected.filter((v) => v !== item.value));
+    } else {
+      setSelected([...selected, item.value]);
+    }
+  }}
+/>;
+```
+
+### With Nested Items
+
+```tsx
+<ReqoreDropdown
+  label='Select category'
+  items={[
+    {
+      label: 'Fruits',
+      items: [
+        { label: 'Apple', value: 'apple' },
+        { label: 'Banana', value: 'banana' },
+      ],
+    },
+    {
+      label: 'Vegetables',
+      items: [
+        { label: 'Carrot', value: 'carrot' },
+        { label: 'Lettuce', value: 'lettuce' },
+      ],
+    },
+  ]}
+/>
+```
+
+## Best Practices
+
+1. **Always Provide Labels**: Use descriptive labels for better UX
+2. **Validate Selection**: Validate the selected value in your application logic
+3. **Handle Edge Cases**: Consider what happens with empty lists or disabled items
+4. **Test Keyboard Navigation**: Ensure your users can navigate using keyboard alone
+5. **Use Nesting Wisely**: Don't nest too deeply (2-3 levels recommended)
+6. **Provide Feedback**: Update UI to show current selection
+
+## Accessibility
+
+The Dropdown component supports keyboard navigation to improve accessibility:
+
+- Full keyboard support with arrow keys, Enter, and Escape
+- Visual focus indicators on keyboard navigation
+- Screen reader friendly (when used with proper labels)
+- All items remain focusable and selectable
+- Escape key properly closes the dropdown
+
+## Browser Support
+
+- Chrome/Chromium (Latest)
+- Firefox (Latest)
+- Safari (Latest)
+- Edge (Latest)
+
+Keyboard navigation uses modern browser APIs and doesn't require polyfills for contemporary browsers (IE11+).

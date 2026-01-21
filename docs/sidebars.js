@@ -12,6 +12,7 @@ const sidebars = {
       label: 'Components',
       items: [
         'docs/components/button',
+        'docs/components/dropdown',
         'docs/components/panel',
         'docs/components/input',
         'docs/components/table',

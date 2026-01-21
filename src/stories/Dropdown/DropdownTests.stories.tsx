@@ -314,3 +314,227 @@ export const EmptySearch: Story = {
     await _testsWaitForText('No items found');
   },
 };
+export const KeyboardNavigationWithArrowKeys: Story = {
+  args: {
+    label: 'Keyboard Navigation Test',
+    items: [
+      {
+        label: 'Item 1',
+        value: 'item1',
+      },
+      {
+        label: 'Item 2',
+        value: 'item2',
+      },
+      {
+        label: 'Item 3',
+        value: 'item3',
+      },
+    ],
+    keyboardNavigation: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    // Click to open
+    await fireEvent.click(canvas.getAllByText('Keyboard Navigation Test')[0]);
+    await sleep(200);
+
+    // Get the input for keyboard events
+    const filterInput = document.querySelector('.reqore-input');
+    expect(filterInput).toBeTruthy();
+
+    // Press arrow down
+    await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+    await sleep(100);
+
+    // Should have menu items visible
+    await expect(canvas.getAllByText('Item 1')[0]).toBeTruthy();
+
+    // Press arrow down again
+    await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+    await sleep(100);
+
+    // Press arrow up
+    await fireEvent.keyDown(filterInput, { key: 'ArrowUp' });
+    await sleep(100);
+
+    // Menu should still be open
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+  },
+};
+
+export const KeyboardNavigationWithEnter: Story = {
+  args: {
+    label: 'Keyboard Enter Test',
+    items: [
+      {
+        label: 'Select Me',
+        value: 'select-me',
+      },
+      {
+        label: 'Item 2',
+        value: 'item2',
+      },
+    ],
+    keyboardNavigation: true,
+    onItemSelect: noop,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    // Click to open
+    await fireEvent.click(canvas.getAllByText('Keyboard Enter Test')[0]);
+    await sleep(200);
+
+    const filterInput = document.querySelector('.reqore-input');
+
+    // Navigate to first item
+    await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+    await sleep(100);
+
+    // Press enter to select
+    await fireEvent.keyDown(filterInput, { key: 'Enter' });
+    await sleep(200);
+
+    // Dropdown should close
+    await expect(document.querySelector('.reqore-popover-content')).toBeFalsy();
+  },
+};
+
+export const KeyboardNavigationWithArrowRightOpenSubmenu: Story = {
+  args: {
+    label: 'Keyboard Submenu Test',
+    items: [
+      {
+        label: 'Parent Item',
+        value: 'parent',
+        items: [
+          {
+            label: 'Child Item 1',
+            value: 'child1',
+          },
+          {
+            label: 'Child Item 2',
+            value: 'child2',
+          },
+        ],
+      },
+      {
+        label: 'Normal Item',
+        value: 'normal',
+      },
+    ],
+    keyboardNavigation: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    // Click to open
+    await fireEvent.click(canvas.getAllByText('Keyboard Submenu Test')[0]);
+    await sleep(200);
+
+    const filterInput = document.querySelector('.reqore-input');
+
+    // Navigate to first item (parent)
+    await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+    await sleep(100);
+
+    // Press right arrow to open submenu
+    await fireEvent.keyDown(filterInput, { key: 'ArrowRight' });
+    await sleep(200);
+
+    // Should now show child items
+    await expect(canvas.getAllByText('Child Item 1')[0]).toBeTruthy();
+    await expect(canvas.getAllByText('Child Item 2')[0]).toBeTruthy();
+  },
+};
+
+export const KeyboardNavigationWithLeftArrowNavigatesBack: Story = {
+  args: {
+    label: 'Keyboard Left Arrow Test',
+    items: [
+      {
+        label: 'Item with Submenu',
+        value: 'item1',
+        items: [
+          {
+            label: 'Submenu Item 1',
+            value: 'subitem1',
+          },
+          {
+            label: 'Submenu Item 2',
+            value: 'subitem2',
+          },
+        ],
+      },
+    ],
+    keyboardNavigation: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    // Click to open
+    await fireEvent.click(canvas.getAllByText('Keyboard Left Arrow Test')[0]);
+    await sleep(200);
+
+    // Menu should be open
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+
+    const filterInput = document.querySelector('.reqore-input');
+
+    // Press arrow down to focus first item
+    await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+    await sleep(100);
+
+    // Press right arrow to open submenu
+    await fireEvent.keyDown(filterInput, { key: 'ArrowRight' });
+    await sleep(200);
+
+    // Press left arrow to navigate back
+    await fireEvent.keyDown(filterInput, { key: 'ArrowLeft' });
+    await sleep(200);
+
+    // Menu should still be open
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+  },
+};
+
+export const KeyboardNavigationCanBeDisabled: Story = {
+  args: {
+    label: 'Keyboard Disabled Test',
+    items: [
+      {
+        label: 'Item 1',
+        value: 'item1',
+      },
+    ],
+    keyboardNavigation: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    // Click to open
+    await fireEvent.click(canvas.getAllByText('Keyboard Disabled Test')[0]);
+    await sleep(200);
+
+    const filterInput = document.querySelector('.reqore-input');
+
+    // Try arrow keys - should not affect focus
+    await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+    await sleep(100);
+
+    // Menu should still be open (escape won't close it when keyboard nav is disabled)
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+  },
+};

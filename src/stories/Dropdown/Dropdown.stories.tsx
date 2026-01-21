@@ -442,3 +442,17 @@ export const WithCustomElements: Story = {
     ],
   },
 };
+export const WithKeyboardNavigation: Story = {
+  render: Template,
+
+  args: {
+    label: 'Dropdown with keyboard navigation',
+    keyboardNavigation: true,
+    items: Array(20)
+      .fill(null)
+      .map((_, i) => ({
+        label: `Item ${i + 1}`,
+        value: `item-${i}`,
+      })),
+  },
+};

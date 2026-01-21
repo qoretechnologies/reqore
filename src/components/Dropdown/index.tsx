@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import React, { memo, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { ReqorePanel, ReqorePopover } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
@@ -45,6 +45,8 @@ export interface IReqoreDropdownProps
   showCaret?: boolean;
   // Whether the button should be shown as read-only when there are no items instead of disabled
   readOnlyOnEmpty?: boolean;
+  // Whether keyboard navigation is enabled (arrow keys, enter, etc.)
+  keyboardNavigation?: boolean;
 
   popoverId?: string;
 }
@@ -52,8 +54,15 @@ export interface IReqoreDropdownProps
 const ReqoreDropdownListWrapper = memo(
   ({
     wrapperProps,
+    selectedItems,
+    onSelectedItemsChange,
+    _onNavigateToLevel,
     ...rest
-  }: IReqoreDropdownListProps & { wrapperProps?: IReqoreDropdownProps['wrapperProps'] }) => {
+  }: IReqoreDropdownListProps & {
+    wrapperProps?: IReqoreDropdownProps['wrapperProps'];
+    selectedItems?: Array<IReqoreDropdownItem | undefined>;
+    onSelectedItemsChange?: (items: Array<IReqoreDropdownItem | undefined>) => void;
+  }) => {
     return (
       <ReqorePanel
         size='small'
@@ -61,7 +70,12 @@ const ReqoreDropdownListWrapper = memo(
         intent={rest.intent}
         {...wrapperProps}
       >
-        <ReqoreDropdownList {...rest} />
+        <ReqoreDropdownList
+          {...rest}
+          selectedItems={selectedItems}
+          onSelectedItemsChange={onSelectedItemsChange}
+          _onNavigateToLevel={_onNavigateToLevel}
+        />
       </ReqorePanel>
     );
   }
@@ -112,11 +126,16 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   listIntent,
   showCaret = true,
   readOnlyOnEmpty,
+  keyboardNavigation = true,
   onBeforeClose,
   onBeforeOpen,
   popoverId,
   ...rest
 }: IReqoreDropdownProps & T) {
+  // Track the selected item at each navigation level
+  // selectedItems[0] is the root level item, selectedItems[1] is the first submenu item, etc.
+  const [selectedItems, setSelectedItems] = useState<Array<IReqoreDropdownItem | undefined>>([]);
+
   const componentProps = useMemo(
     () =>
       ({
@@ -133,6 +152,29 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
       } as T),
     [items, icon, rightIcon, buttonStyle, caretPosition, rest]
+  );
+
+  // Handle navigation to a specific submenu level via breadcrumb click
+  const handleNavigateToLevel = useCallback((level: number) => {
+    // Trim to requested level and explicitly clear the slot to prevent auto-entering
+    // a submenu when there's a single item at that level (breadcrumb click).
+    setSelectedItems((prev) => {
+      const next = prev.slice(0, level + 1);
+      next[level] = undefined;
+      return next;
+    });
+  }, []);
+
+  // Reset selection when the dropdown closes so auto-enter works again on next open
+  const handleToggleChange = useCallback(
+    (isOpen: boolean, data?: any) => {
+      if (!isOpen) {
+        setSelectedItems([]);
+      }
+
+      onToggleChange?.(isOpen, data);
+    },
+    [onToggleChange]
   );
 
   const popoverContent = useMemo(() => {
@@ -155,9 +197,13 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         wrapperProps={wrapperProps}
         customTheme={listCustomTheme}
         intent={listIntent}
+        keyboardNavigation={keyboardNavigation}
+        _onNavigateToLevel={handleNavigateToLevel}
+        selectedItems={selectedItems}
+        onSelectedItemsChange={setSelectedItems}
       />
     ) : undefined;
-  }, [items, onItemSelect, customElements]);
+  }, [items, onItemSelect, customElements, selectedItems, handleNavigateToLevel]);
 
   return (
     <ReqorePopover
@@ -183,7 +229,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       content={popoverContent}
       passPopoverData={passPopoverData}
       show={show}
-      onToggleChange={onToggleChange}
+      onToggleChange={handleToggleChange}
       onBeforeClose={onBeforeClose}
       onBeforeOpen={onBeforeOpen}
       id={popoverId}
