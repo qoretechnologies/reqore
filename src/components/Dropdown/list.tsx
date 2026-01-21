@@ -120,6 +120,20 @@ const ReqoreDropdownList = memo(
       return undefined;
     }, [selectedItems, _level, items]);
 
+    // When an item is auto-selected at root level, ensure it gets marked in selectedItems
+    // so that sub-selections work correctly
+    useEffect(() => {
+      if (
+        _level === 0 &&
+        currentSelectedItem &&
+        selectedItems.length === 0 &&
+        onSelectedItemsChange
+      ) {
+        // Mark the auto-selected item so future clicks work correctly
+        onSelectedItemsChange([currentSelectedItem]);
+      }
+    }, [currentSelectedItem, selectedItems, _level, onSelectedItemsChange]);
+
     const theme = useReqoreTheme('main', customTheme, intent);
 
     useEffect(() => {

@@ -952,3 +952,58 @@ test('Keyboard navigation can be disabled completely', () => {
   // Menu should still be open
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
+
+test('Auto-selected parent item - clicking subitem selects subitem not parent', async () => {
+  jest.useRealTimers();
+  const onItemSelect = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreDropdown
+            items={[
+              {
+                label: 'Parent (auto-selected)',
+                value: 'parent',
+                items: [
+                  { label: 'Subitem 1', value: 'subitem1' },
+                  { label: 'Subitem 2', value: 'subitem2' },
+                ],
+              },
+            ]}
+            onItemSelect={onItemSelect}
+            isDefaultOpen
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // Auto-select should show subitems
+  await waitFor(() => expect(document.querySelectorAll('.reqore-menu-item').length).toBe(2));
+
+  // Click on first subitem
+  const subitems = document.querySelectorAll('.reqore-menu-item');
+  fireEvent.click(subitems[0]);
+
+  // Should have selected Subitem 1, not Parent
+  await waitFor(() =>
+    expect(onItemSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        label: 'Subitem 1',
+        value: 'subitem1',
+      }),
+      expect.anything()
+    )
+  );
+
+  // Should NOT have selected the parent
+  expect(onItemSelect).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Parent (auto-selected)',
+      value: 'parent',
+    }),
+    expect.anything()
+  );
+});
