@@ -1007,3 +1007,77 @@ test('Auto-selected parent item - clicking subitem selects subitem not parent', 
     expect.anything()
   );
 });
+
+test('Keyboard navigation skips disabled items and empty-items items', () => {
+  jest.useFakeTimers();
+  const onItemSelect = jest.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDropdown
+              label='Mixed items test'
+              onItemSelect={onItemSelect}
+              items={[
+                { label: 'Item 1', value: 'item1' },
+                { label: 'Disabled Item', value: 'disabled', disabled: true },
+                { label: 'Item with empty items', value: 'empty', items: [] },
+                { label: 'Item 2', value: 'item2' },
+              ]}
+              keyboardNavigation={true}
+              filterable={true}
+              isDefaultOpen={true}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    jest.advanceTimersByTime(1);
+  });
+
+  const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
+  expect(filterInput).toBeTruthy();
+
+  // Check initial state - should show 4 items (all visible, including disabled)
+  let menuItems = document.querySelectorAll('.reqore-menu-item');
+  expect(menuItems.length).toBe(4);
+
+  // Press down once - should select Item 1
+  fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+  jest.advanceTimersByTime(1);
+
+  // Press down twice - should skip Disabled and Empty items, select Item 2
+  fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+  jest.advanceTimersByTime(1);
+
+  fireEvent.keyDown(filterInput, { key: 'Enter' });
+  jest.advanceTimersByTime(1);
+
+  // Should have selected Item 2, NOT disabled or empty items
+  expect(onItemSelect).toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Item 2',
+      value: 'item2',
+    }),
+    expect.anything()
+  );
+
+  // Verify it was not called with disabled or empty items
+  expect(onItemSelect).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Disabled Item',
+      value: 'disabled',
+    }),
+    expect.anything()
+  );
+
+  expect(onItemSelect).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Item with empty items',
+      value: 'empty',
+    }),
+    expect.anything()
+  );
+});

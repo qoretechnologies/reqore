@@ -328,7 +328,12 @@ export const KeyboardNavigationWithArrowKeys: Story = {
       },
       {
         label: 'Item 3',
+        disabled: true,
         value: 'item3',
+      },
+      {
+        label: 'Item 4',
+        value: 'item4',
       },
     ],
     keyboardNavigation: true,
@@ -358,7 +363,7 @@ export const KeyboardNavigationWithArrowKeys: Story = {
     await sleep(100);
 
     // Press arrow up
-    await fireEvent.keyDown(filterInput, { key: 'ArrowUp' });
+    await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
     await sleep(100);
 
     // Menu should still be open
