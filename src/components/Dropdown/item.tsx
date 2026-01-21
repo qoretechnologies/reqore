@@ -6,10 +6,11 @@ import { IReqoreDropdownItem } from './list';
 export interface IReqoreDropdownItemProps extends IReqoreDropdownItem {
   onItemClick: (item: IReqoreDropdownItem, event: React.MouseEvent<HTMLElement>) => void;
   scrollIntoView?: boolean;
+  keyboardFocused?: boolean;
 }
 
 export const ReqoreDropdownItem = memo(
-  ({ onItemClick, scrollIntoView, ...rest }: IReqoreDropdownItemProps) => {
+  ({ onItemClick, scrollIntoView, keyboardFocused, ...rest }: IReqoreDropdownItemProps) => {
     const handleItemClick = useCallback(
       (event: React.MouseEvent<HTMLElement>) => {
         onItemClick(rest, event);
@@ -23,7 +24,8 @@ export const ReqoreDropdownItem = memo(
         label={rest.label || rest.value}
         onClick={handleItemClick}
         rightIcon={rest.selected ? 'CheckLine' : rest.rightIcon}
-        scrollIntoView={scrollIntoView}
+        scrollIntoView={scrollIntoView || keyboardFocused}
+        selected={keyboardFocused ? true : rest.selected}
       />
     );
   }
