@@ -952,3 +952,132 @@ test('Keyboard navigation can be disabled completely', () => {
   // Menu should still be open
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
+
+test('Auto-selected parent item - clicking subitem selects subitem not parent', async () => {
+  jest.useRealTimers();
+  const onItemSelect = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreDropdown
+            items={[
+              {
+                label: 'Parent (auto-selected)',
+                value: 'parent',
+                items: [
+                  { label: 'Subitem 1', value: 'subitem1' },
+                  { label: 'Subitem 2', value: 'subitem2' },
+                ],
+              },
+            ]}
+            onItemSelect={onItemSelect}
+            isDefaultOpen
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // Auto-select should show subitems
+  await waitFor(() => expect(document.querySelectorAll('.reqore-menu-item').length).toBe(2));
+
+  // Click on first subitem
+  const subitems = document.querySelectorAll('.reqore-menu-item');
+  fireEvent.click(subitems[0]);
+
+  // Should have selected Subitem 1, not Parent
+  await waitFor(() =>
+    expect(onItemSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        label: 'Subitem 1',
+        value: 'subitem1',
+      }),
+      expect.anything()
+    )
+  );
+
+  // Should NOT have selected the parent
+  expect(onItemSelect).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Parent (auto-selected)',
+      value: 'parent',
+    }),
+    expect.anything()
+  );
+});
+
+test('Keyboard navigation skips disabled items and empty-items items', () => {
+  jest.useFakeTimers();
+  const onItemSelect = jest.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDropdown
+              label='Mixed items test'
+              onItemSelect={onItemSelect}
+              items={[
+                { label: 'Item 1', value: 'item1' },
+                { label: 'Disabled Item', value: 'disabled', disabled: true },
+                { label: 'Item with empty items', value: 'empty', items: [] },
+                { label: 'Item 2', value: 'item2' },
+              ]}
+              keyboardNavigation={true}
+              filterable={true}
+              isDefaultOpen={true}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    jest.advanceTimersByTime(1);
+  });
+
+  const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
+  expect(filterInput).toBeTruthy();
+
+  // Check initial state - should show 4 items (all visible, including disabled)
+  let menuItems = document.querySelectorAll('.reqore-menu-item');
+  expect(menuItems.length).toBe(4);
+
+  // Press down once - should select Item 1
+  fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+  jest.advanceTimersByTime(1);
+
+  // Press down twice - should skip Disabled and Empty items, select Item 2
+  fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+  jest.advanceTimersByTime(1);
+
+  fireEvent.keyDown(filterInput, { key: 'Enter' });
+  jest.advanceTimersByTime(1);
+
+  // Should have selected Item 2, NOT disabled or empty items
+  expect(onItemSelect).toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Item 2',
+      value: 'item2',
+    }),
+    expect.anything()
+  );
+
+  // Verify it was not called with disabled or empty items
+  expect(onItemSelect).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Disabled Item',
+      value: 'disabled',
+    }),
+    expect.anything()
+  );
+
+  expect(onItemSelect).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      label: 'Item with empty items',
+      value: 'empty',
+    }),
+    expect.anything()
+  );
+});

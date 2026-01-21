@@ -120,6 +120,20 @@ const ReqoreDropdownList = memo(
       return undefined;
     }, [selectedItems, _level, items]);
 
+    // When an item is auto-selected at root level, ensure it gets marked in selectedItems
+    // so that sub-selections work correctly
+    useEffect(() => {
+      if (
+        _level === 0 &&
+        currentSelectedItem &&
+        selectedItems.length === 0 &&
+        onSelectedItemsChange
+      ) {
+        // Mark the auto-selected item so future clicks work correctly
+        onSelectedItemsChange([currentSelectedItem]);
+      }
+    }, [currentSelectedItem, selectedItems, _level, onSelectedItemsChange]);
+
     const theme = useReqoreTheme('main', customTheme, intent);
 
     useEffect(() => {
@@ -170,10 +184,24 @@ const ReqoreDropdownList = memo(
     };
 
     // Get selectable items (non-dividers, non-disabled, non-empty submenus)
+    // Use the SAME disabled logic as rendering to ensure consistency
     const selectableItems = useMemo(() => {
-      return filteredItems.filter(
-        (item) => !item.divider && !item.disabled && !('items' in item && !size(item.items)) // Exclude items with empty subitems array
-      );
+      return filteredItems.filter((item) => {
+        // Skip dividers
+        if (item.divider) {
+          return false;
+        }
+        // Skip items that are explicitly disabled
+        if (item.disabled) {
+          return false;
+        }
+        // Skip items with empty items array or falsy items (rendered as disabled)
+        // An item is considered "parent-like" if it has the items property
+        if ('items' in item && (!item.items || !size(item.items))) {
+          return false;
+        }
+        return true;
+      });
     }, [filteredItems]);
 
     const handleItemSelectClick = useCallback(
@@ -422,12 +450,17 @@ const ReqoreDropdownList = memo(
                     { dividerAlign, dividerPadded, divider, ...item }: IReqoreDropdownItem,
                     index: number
                   ) => {
+                    // Check if this item is actually selectable (same logic as selectableItems filter)
+                    const isSelectableItem =
+                      !divider &&
+                      !item.disabled &&
+                      !('items' in item && (!item.items || !size(item.items)));
+
                     // Assign selectableIndex BEFORE incrementing
-                    const itemSelectableIndex =
-                      divider || item.disabled ? -1 : selectableIndexCounter;
+                    const itemSelectableIndex = isSelectableItem ? selectableIndexCounter : -1;
 
                     // Increment counter for next selectable item
-                    if (!divider && !item.disabled) {
+                    if (isSelectableItem) {
                       selectableIndexCounter++;
                     }
 
@@ -449,10 +482,16 @@ const ReqoreDropdownList = memo(
                         {...item}
                         rightAction={getAction(item, 'right')}
                         leftAction={getAction(item, 'left')}
-                        disabled={'items' in item && !size(item.items) ? true : item.disabled}
+                        disabled={
+                          'items' in item && (!item.items || !size(item.items))
+                            ? true
+                            : item.disabled
+                        }
                         onItemClick={handleItemClick}
                         keyboardFocused={
-                          keyboardNavigation && focusedItemIndex === itemSelectableIndex
+                          keyboardNavigation &&
+                          isSelectableItem &&
+                          focusedItemIndex === itemSelectableIndex
                         }
                         scrollIntoView={scrollToSelected && item.selected && !multiSelect}
                         closePopover={closePopover}
