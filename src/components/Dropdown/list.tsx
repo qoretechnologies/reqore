@@ -169,9 +169,11 @@ const ReqoreDropdownList = memo(
       setFocusedItemIndex(null);
     };
 
-    // Get selectable items (non-dividers, non-disabled)
+    // Get selectable items (non-dividers, non-disabled, non-empty submenus)
     const selectableItems = useMemo(() => {
-      return filteredItems.filter((item) => !item.divider && !item.disabled);
+      return filteredItems.filter(
+        (item) => !item.divider && !item.disabled && !('items' in item && !size(item.items)) // Exclude items with empty subitems array
+      );
     }, [filteredItems]);
 
     const handleItemSelectClick = useCallback(
