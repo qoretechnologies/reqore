@@ -315,7 +315,7 @@ const ReqoreDropdownList = memo(
           });
         },
       };
-    }, []);
+    }, [closePopover, handleItemSelectClick]);
 
     if (currentSelectedItem) {
       return (
