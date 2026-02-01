@@ -126,7 +126,7 @@ const ReqoreMessage = memo(
           interactive: !!onClick,
           ...rest?.effect,
         }),
-        [!!onClick, JSON.stringify(rest?.effect)]
+        [!!onClick, rest?.effect]
       );
 
       return (
