@@ -432,6 +432,7 @@ export const ReqorePopover = memo(
         keepOpenOnHover,
         handleTargetMouseEnter,
         handleTargetMouseLeave,
+        closePopoversOnEscPress,
       ]);
 
       const handleRef = useCallback((r) => {
