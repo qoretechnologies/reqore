@@ -49,7 +49,7 @@ export const ReqoreModal = memo(
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
       };
-    }, [escClosableModals, isEscClosable]);
+    }, [escClosableModals, isEscClosable, handleKeyDown]);
 
     useEffect(() => {
       if (rest.isOpen) {

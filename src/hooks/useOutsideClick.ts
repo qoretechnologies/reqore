@@ -23,7 +23,7 @@ const useOutsideClick = (
     return () => {
       window.removeEventListener('click', handleClick);
     };
-  });
+  }, [handleClick]);
 };
 
 export default useOutsideClick;

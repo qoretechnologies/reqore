@@ -30,33 +30,37 @@ export const useAutoFocus = (
       element.setSelectionRange(-1, -1);
       element.focus();
     }
-  }, [element, rules, isInViewport.current]);
+    // Note: isInViewport.current is intentionally not in deps as it's a ref that's read at call time
+  }, [element, rules, onChange]);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    // Check if this event came from another html input or a content-editable div
-    if (
-      e.target &&
-      ((e.target as HTMLElement).tagName === 'INPUT' ||
-        (e.target as HTMLElement).tagName === 'TEXTAREA' ||
-        (e.target as HTMLElement).isContentEditable)
-    ) {
-      return;
-    }
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      // Check if this event came from another html input or a content-editable div
+      if (
+        e.target &&
+        ((e.target as HTMLElement).tagName === 'INPUT' ||
+          (e.target as HTMLElement).tagName === 'TEXTAREA' ||
+          (e.target as HTMLElement).isContentEditable)
+      ) {
+        return;
+      }
 
-    const shortcut = Array.isArray(rules?.shortcut) ? rules?.shortcut : [rules?.shortcut];
+      const shortcut = Array.isArray(rules?.shortcut) ? rules?.shortcut : [rules?.shortcut];
 
-    if (shortcut.includes('letters') && e.key.length === 1 && e.key.match(/[a-z]/i)) {
-      focus();
-    }
+      if (shortcut.includes('letters') && e.key.length === 1 && e.key.match(/[a-z]/i)) {
+        focus();
+      }
 
-    if (shortcut.includes('numbers') && e.key.length === 1 && e.key.match(/[0-9]/i)) {
-      focus();
-    }
+      if (shortcut.includes('numbers') && e.key.length === 1 && e.key.match(/[0-9]/i)) {
+        focus();
+      }
 
-    if (shortcut.includes(e.key)) {
-      focus();
-    }
-  };
+      if (shortcut.includes(e.key)) {
+        focus();
+      }
+    },
+    [rules?.shortcut, focus]
+  );
 
   useUpdateEffect(() => {
     if (element && rules) {
@@ -103,5 +107,5 @@ export const useAutoFocus = (
 
     return () =>
       window.removeEventListener(rules?.doNotInsertShortcut ? 'keyup' : 'keydown', handleKeyDown);
-  }, [element, rules]);
+  }, [element, rules, handleKeyDown]);
 };
