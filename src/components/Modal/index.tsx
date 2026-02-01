@@ -8,6 +8,8 @@ export interface IReqoreModalProps extends Omit<IReqoreDrawerProps, 'position'> 
   position?: 'top' | 'center' | 'bottom';
   width?: string;
   height?: string;
+  /** Whether to trap focus within the modal when open. Defaults to true. */
+  focusTrap?: boolean;
 }
 
 export interface IReqoreModalStyle extends IReqoreModalProps {
