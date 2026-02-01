@@ -300,7 +300,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
         maxHeight: '100%',
         ...rest.style,
       }),
-      [rest.style]
+      [JSON.stringify(rest.style)]
     );
 
     const resizeableStyle = useMemo(

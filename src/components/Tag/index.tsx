@@ -384,7 +384,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         gradient: intent ? undefined : rest.effect?.gradient,
         interactive: !!onClick && !rest.disabled,
       }),
-      [intent, !!onClick, rest.disabled, rest.effect]
+      [intent, !!onClick, rest.disabled, JSON.stringify(rest.effect)]
     );
 
     return (
