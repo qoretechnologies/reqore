@@ -1,6 +1,6 @@
 import { animated, useTransition } from '@react-spring/web';
 import { Resizable } from 're-resizable';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
@@ -8,6 +8,7 @@ import { SPRING_CONFIG, SPRING_CONFIG_NO_ANIMATIONS } from '../../constants/anim
 import { IReqoreTheme } from '../../constants/theme';
 import { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
@@ -39,6 +40,8 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   customZIndex?: number;
   closeOnEscPress?: boolean;
   confirmOnClose?: boolean | IReqoreConfirmationModal;
+  /** Whether to trap focus within the drawer when open. Defaults to true for modals and drawers with backdrop. */
+  focusTrap?: boolean;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -176,8 +179,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     customZIndex,
     panelSize,
     confirmOnClose,
+    focusTrap,
     ...rest
   }: IReqoreDrawerProps) => {
+    // Ref for the drawer wrapper to enable focus trapping
+    const drawerRef = useRef<HTMLDivElement>(null);
     const animations = useReqoreProperty('animations');
     const confirmAction = useReqoreProperty('confirmAction');
     const customPortalId = useReqoreProperty('customPortalId');
@@ -196,6 +202,17 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     const [_size, setSize] = useState<any>({
       width: width || (layout === 'horizontal' ? 'auto' : size || '300px'),
       height: height || (layout === 'vertical' ? 'auto' : size || '300px'),
+    });
+
+    // Determine if focus trap should be active
+    // By default, enable focus trap for modals and drawers with backdrop
+    const shouldTrapFocus = focusTrap ?? (_isModal || hasBackdrop);
+
+    // Use focus trap to keep focus within the drawer when open
+    useFocusTrap(drawerRef, {
+      active: isOpen && shouldTrapFocus && !_isHidden,
+      restoreFocus: true,
+      autoFocus: true,
     });
 
     useEffect(() => {
@@ -371,7 +388,13 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                 opacity={styles.opacity}
               />
             ) : null}
-            <StyledWrapper zIndex={wrapperZIndex} className='reqore-drawer-wrapper'>
+            <StyledWrapper
+              ref={drawerRef}
+              zIndex={wrapperZIndex}
+              className='reqore-drawer-wrapper'
+              role={_isModal || hasBackdrop ? 'dialog' : undefined}
+              aria-modal={_isModal || hasBackdrop ? 'true' : undefined}
+            >
               <Resizable
                 className={`${className || ''} reqore-drawer-resizable`}
                 maxHeight={
