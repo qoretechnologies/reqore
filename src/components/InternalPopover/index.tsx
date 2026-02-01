@@ -232,7 +232,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           forceUpdate();
         });
 
-        observer.observe(document, {
+        observer.observe(targetElement, {
           attributes: true,
           childList: true,
           subtree: true,
