@@ -94,17 +94,27 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
       previouslyFocusedRef.current = document.activeElement;
     }
 
-    // Auto-focus the first focusable element
+    // Auto-focus the first focusable element, but only if focus isn't already inside
+    // This respects components that have their own autoFocus logic (e.g., Input with focusRules)
     if (autoFocus) {
-      // Use requestAnimationFrame to ensure the DOM is ready
+      // Use requestAnimationFrame to ensure the DOM is ready and any native autoFocus has fired
       requestAnimationFrame(() => {
-        const focusableElements = getFocusableElements();
-        if (focusableElements.length > 0) {
-          focusableElements[0].focus();
-        } else if (containerRef.current) {
-          // If no focusable elements, focus the container itself if it can receive focus
-          containerRef.current.setAttribute('tabindex', '-1');
-          containerRef.current.focus();
+        if (!containerRef.current) return;
+
+        // Check if focus is already inside the container (e.g., from a component's own autoFocus)
+        const activeElement = document.activeElement;
+        const focusAlreadyInside = activeElement && containerRef.current.contains(activeElement);
+
+        // Only auto-focus if focus is not already inside the container
+        if (!focusAlreadyInside) {
+          const focusableElements = getFocusableElements();
+          if (focusableElements.length > 0) {
+            focusableElements[0].focus();
+          } else {
+            // If no focusable elements, focus the container itself
+            containerRef.current.setAttribute('tabindex', '-1');
+            containerRef.current.focus();
+          }
         }
       });
     }
