@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreProgress, ReqoreUIProvider } from '../src';
 
 test('Renders <Progress /> properly', () => {
@@ -14,6 +14,7 @@ test('Renders <Progress /> properly', () => {
 
   expect(document.querySelectorAll('.reqore-progress').length).toBe(1);
   expect(document.querySelectorAll('.reqore-progress-bar').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-progress-track').length).toBe(1);
 });
 
 test('Renders <Progress /> with different sizes', () => {
@@ -52,33 +53,48 @@ test('Renders <Progress /> with intents', () => {
   expect(document.querySelectorAll('.reqore-progress').length).toBe(5);
 });
 
-test('Renders <Progress /> with value label', () => {
+test('Renders <Progress /> with value label above track', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreProgress value={75} showValue size='big' />
+          <ReqoreProgress value={75} showValue />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll('.reqore-progress-label').length).toBe(1);
-  expect(document.querySelector('.reqore-progress-label')?.textContent).toBe('75%');
+  expect(document.querySelectorAll('.reqore-progress-labels').length).toBe(1);
+  expect(document.querySelector('.reqore-progress-value')?.textContent).toBe('75%');
 });
 
-test('Renders <Progress /> with custom label', () => {
+test('Renders <Progress /> with custom label on left side', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreProgress value={45} label='45/100 items' size='big' />
+          <ReqoreProgress value={45} label='Uploading files...' />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelector('.reqore-progress-label')?.textContent).toBe('45/100 items');
+  expect(document.querySelector('.reqore-progress-label')?.textContent).toBe('Uploading files...');
+});
+
+test('Renders <Progress /> with both label and value', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreProgress value={60} label='Processing...' showValue />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-progress-label')?.textContent).toBe('Processing...');
+  expect(document.querySelector('.reqore-progress-value')?.textContent).toBe('60%');
 });
 
 test('Renders <Progress /> indeterminate mode', () => {
@@ -133,14 +149,14 @@ test('Renders <Progress /> with custom max value', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreProgress value={50} max={200} showValue size='big' />
+          <ReqoreProgress value={50} max={200} showValue />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
   // 50/200 = 25%
-  expect(document.querySelector('.reqore-progress-label')?.textContent).toBe('25%');
+  expect(document.querySelector('.reqore-progress-value')?.textContent).toBe('25%');
 });
 
 test('Renders <Progress /> clamping value to max', () => {
@@ -148,29 +164,92 @@ test('Renders <Progress /> clamping value to max', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreProgress value={150} max={100} showValue size='big' />
+          <ReqoreProgress value={150} max={100} showValue />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
   // Value should be clamped to 100%
-  expect(document.querySelector('.reqore-progress-label')?.textContent).toBe('100%');
+  expect(document.querySelector('.reqore-progress-value')?.textContent).toBe('100%');
 });
 
-test('Does not show label for small sizes', () => {
+test('Renders <Progress /> with icons', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreProgress value={50} showValue size='micro' />
-          <ReqoreProgress value={50} showValue size='tiny' />
-          <ReqoreProgress value={50} showValue size='small' />
+          <ReqoreProgress
+            value={50}
+            icon='DownloadLine'
+            rightIcon='CheckLine'
+            label='Downloading'
+          />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
-  // Labels should not render for micro, tiny, small sizes
-  expect(document.querySelectorAll('.reqore-progress-label').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-icon').length).toBe(2);
+  expect(document.querySelector('.reqore-progress-label')?.textContent).toBe('Downloading');
+});
+
+test('Renders <Progress /> with flat={false} shows border', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreProgress value={50} flat={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-progress-track').length).toBe(1);
+});
+
+test('Renders <Progress /> animated with stripes', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreProgress value={50} animated />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-progress-bar').length).toBe(1);
+});
+
+test('Tooltip on <Progress /> works', () => {
+  jest.useFakeTimers();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreProgress value={50} tooltip='Progress tooltip' />
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  fireEvent.mouseEnter(document.querySelectorAll('.reqore-progress')[0]);
+
+  jest.advanceTimersByTime(1);
+
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+});
+
+test('Does not show labels section when no label props provided', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreProgress value={50} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-progress-labels').length).toBe(0);
 });

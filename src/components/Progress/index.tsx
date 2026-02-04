@@ -1,18 +1,29 @@
+import { darken, rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css, keyframes } from 'styled-components';
-import { PROGRESS_HEIGHT_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  CONTROL_TEXT_FROM_SIZE,
+  PROGRESS_HEIGHT_FROM_SIZE,
+  RADIUS_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreDisabled,
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
+  IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreSize,
+  IWithReqoreTooltip,
 } from '../../types/global';
-import { StyledEffect } from '../Effect';
+import { IReqoreIconName } from '../../types/icons';
+import { TReqoreEffectColor } from '../Effect';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreProgressProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'>,
@@ -21,23 +32,37 @@ export interface IReqoreProgressProps
     IWithReqoreCustomTheme,
     IWithReqoreEffect,
     IWithReqoreFluid,
-    IWithReqoreSize {
+    IWithReqoreFlat,
+    IWithReqoreSize,
+    IWithReqoreTooltip {
   /** Current progress value */
   value?: number;
   /** Maximum value (default: 100) */
   max?: number;
   /** Show indeterminate animation instead of value-based progress */
   indeterminate?: boolean;
-  /** Display the current value as text */
+  /** Display the current value as text above the track */
   showValue?: boolean;
-  /** Custom label to display instead of percentage */
+  /** Custom label to display above the track (left side) */
   label?: string;
-  /** Enable animation when value changes */
+  /** Show animated diagonal stripes on the progress bar */
   animated?: boolean;
   /** Whether the progress bar should have rounded corners */
   rounded?: boolean;
   /** Whether the progress track should be transparent */
   transparent?: boolean;
+  /** Left icon */
+  icon?: IReqoreIconName;
+  /** Left icon color */
+  iconColor?: TReqoreEffectColor;
+  /** Left icon props */
+  leftIconProps?: IReqoreIconProps;
+  /** Right icon */
+  rightIcon?: IReqoreIconName;
+  /** Right icon color */
+  rightIconColor?: TReqoreEffectColor;
+  /** Right icon props */
+  rightIconProps?: IReqoreIconProps;
 }
 
 export interface IReqoreProgressStyle extends IReqoreProgressProps {
@@ -60,17 +85,20 @@ const indeterminateAnimation = keyframes`
   }
 `;
 
-const StyledProgressTrack = styled(StyledEffect)<IReqoreProgressStyle>`
-  position: relative;
+const stripesAnimation = keyframes`
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 0;
+  }
+`;
+
+const StyledProgressWrapper = styled.div<IReqoreProgressStyle>`
   display: flex;
-  align-items: center;
-  overflow: hidden;
+  flex-direction: column;
+  gap: 4px;
   width: ${({ fluid }) => (fluid ? '100%' : '200px')};
-  height: ${({ size }) => PROGRESS_HEIGHT_FROM_SIZE[size!]}px;
-  border-radius: ${({ size, rounded }) =>
-    rounded === false ? 0 : `${RADIUS_FROM_SIZE[size!]}px`};
-  background-color: ${({ theme, transparent }) =>
-    transparent ? 'transparent' : changeLightness(theme.main, 0.1)};
 
   ${({ disabled }) =>
     disabled &&
@@ -80,14 +108,62 @@ const StyledProgressTrack = styled(StyledEffect)<IReqoreProgressStyle>`
     `}
 `;
 
+const StyledProgressLabels = styled.div<{ size: TSizes; theme: IReqoreTheme }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  color: ${({ theme }) => getReadableColor(theme, undefined, undefined)};
+  gap: 8px;
+`;
+
+const StyledProgressLabelLeft = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const StyledProgressLabelRight = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+`;
+
+// Returns the progress bar color - uses intent color if applied, otherwise a readable default
+const getProgressColor = (theme: IReqoreTheme) => {
+  // If theme.main differs from originalMain, an intent was applied
+  const hasIntent = theme.main !== theme.originalMain;
+  return hasIntent ? theme.main : getReadableColor(theme, undefined, undefined, true);
+};
+
+const StyledProgressTrack = styled.div<IReqoreProgressStyle>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+  height: ${({ size }) => PROGRESS_HEIGHT_FROM_SIZE[size!]}px;
+  border-radius: ${({ size, rounded }) => (rounded === false ? 0 : `${RADIUS_FROM_SIZE[size!]}px`)};
+  background-color: ${({ theme, transparent }) =>
+    transparent ? 'transparent' : rgba(getProgressColor(theme), 0.2)};
+  border: ${({ flat, theme }) =>
+    flat === false ? `1px solid ${rgba(getProgressColor(theme), 0.6)}` : 'none'};
+`;
+
 const StyledProgressBar = styled.div<IReqoreProgressStyle>`
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
   border-radius: inherit;
-  background-color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  transition: ${({ animated }) => (animated ? 'width 0.3s ease-out' : 'none')};
+  background-color: ${({ theme }) => getProgressColor(theme)};
+  transition: width 0.3s ease-out;
   width: ${({ percentage, indeterminate }) => (indeterminate ? '35%' : `${percentage}%`)};
 
   ${({ indeterminate }) =>
@@ -95,15 +171,24 @@ const StyledProgressBar = styled.div<IReqoreProgressStyle>`
     css`
       animation: ${indeterminateAnimation} 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
     `}
-`;
 
-const StyledProgressLabel = styled.span<{ size: TSizes; theme: IReqoreTheme }>`
-  position: absolute;
-  right: 8px;
-  font-size: ${({ size }) => (size === 'micro' || size === 'tiny' ? 8 : size === 'small' ? 10 : 12)}px;
-  font-weight: 500;
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined)};
-  white-space: nowrap;
+  ${({ animated, indeterminate, theme }) =>
+    animated &&
+    !indeterminate &&
+    css`
+      background-image: linear-gradient(
+        -45deg,
+        ${rgba(darken(0.1, getProgressColor(theme)), 0.5)} 25%,
+        transparent 25%,
+        transparent 50%,
+        ${rgba(darken(0.1, getProgressColor(theme)), 0.5)} 50%,
+        ${rgba(darken(0.1, getProgressColor(theme)), 0.5)} 75%,
+        transparent 75%,
+        transparent
+      );
+      background-size: 40px 40px;
+      animation: ${stripesAnimation} 1s linear infinite;
+    `}
 `;
 
 const ReqoreProgress = memo(
@@ -116,19 +201,30 @@ const ReqoreProgress = memo(
         indeterminate = false,
         showValue = false,
         label,
-        animated = true,
+        animated = false,
         customTheme,
         intent,
         fluid = false,
         rounded = true,
         transparent = false,
+        flat = true,
         disabled,
         className,
+        tooltip,
+        icon,
+        iconColor,
+        leftIconProps,
+        rightIcon,
+        rightIconColor,
+        rightIconProps,
         ...rest
       },
       ref
     ) => {
+      // Theme with intent for the progress bar
       const theme = useReqoreTheme('main', customTheme, intent);
+      // Base theme without intent for labels
+      const baseTheme = useReqoreTheme('main', customTheme);
 
       const percentage = useMemo(() => {
         if (indeterminate || max === 0) return 0;
@@ -136,45 +232,79 @@ const ReqoreProgress = memo(
         return (clampedValue / max) * 100;
       }, [value, max, indeterminate]);
 
-      const displayLabel = useMemo(() => {
-        if (label) return label;
-        if (showValue && !indeterminate) return `${Math.round(percentage)}%`;
-        return null;
-      }, [label, showValue, percentage, indeterminate]);
+      const valueLabel = useMemo(() => {
+        if (!showValue || indeterminate) return null;
+        return `${Math.round(percentage)}%`;
+      }, [showValue, percentage, indeterminate]);
 
-      const shouldShowLabel = displayLabel && size !== 'micro' && size !== 'tiny' && size !== 'small';
+      const hasLabels = !!(
+        label ||
+        icon ||
+        leftIconProps ||
+        valueLabel ||
+        rightIcon ||
+        rightIconProps
+      );
+      const leftIcon = icon || leftIconProps?.icon;
+      const hasLeftIcon = !!leftIcon || !!leftIconProps?.image;
+      const hasRightIcon = !!rightIcon || !!rightIconProps?.image;
 
       return (
-        <StyledProgressTrack
+        <ReqoreTooltipComponent
           {...rest}
+          Component={StyledProgressWrapper}
+          tooltip={tooltip}
           ref={ref}
           theme={theme}
           size={size}
           fluid={fluid}
-          rounded={rounded}
-          transparent={transparent}
           disabled={disabled}
           className={`${className || ''} reqore-progress`}
-          role="progressbar"
+          role='progressbar'
           aria-valuenow={indeterminate ? undefined : Math.round(percentage)}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label={rest['aria-label'] || 'Progress'}
+          aria-label={rest['aria-label'] || label || 'Progress'}
         >
-          <StyledProgressBar
+          {hasLabels && (
+            <StyledProgressLabels size={size} theme={baseTheme} className='reqore-progress-labels'>
+              <StyledProgressLabelLeft className='reqore-progress-label-left'>
+                {hasLeftIcon && (
+                  <ReqoreIcon icon={leftIcon} size={size} color={iconColor} {...leftIconProps} />
+                )}
+                {label && <span className='reqore-progress-label'>{label}</span>}
+              </StyledProgressLabelLeft>
+              <StyledProgressLabelRight className='reqore-progress-label-right'>
+                {valueLabel && <span className='reqore-progress-value'>{valueLabel}</span>}
+                {hasRightIcon && (
+                  <ReqoreIcon
+                    icon={rightIcon}
+                    size={size}
+                    color={rightIconColor}
+                    {...rightIconProps}
+                  />
+                )}
+              </StyledProgressLabelRight>
+            </StyledProgressLabels>
+          )}
+          <StyledProgressTrack
             theme={theme}
             size={size}
-            percentage={percentage}
-            indeterminate={indeterminate}
-            animated={animated}
-            className="reqore-progress-bar"
-          />
-          {shouldShowLabel && (
-            <StyledProgressLabel size={size!} theme={theme} className="reqore-progress-label">
-              {displayLabel}
-            </StyledProgressLabel>
-          )}
-        </StyledProgressTrack>
+            rounded={rounded}
+            transparent={transparent}
+            flat={flat}
+            className='reqore-progress-track'
+          >
+            <StyledProgressBar
+              theme={theme}
+              size={size}
+              percentage={percentage}
+              indeterminate={indeterminate}
+              animated={animated}
+              className='reqore-progress-bar'
+            />
+          </StyledProgressTrack>
+        </ReqoreTooltipComponent>
       );
     }
   )
