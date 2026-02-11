@@ -325,3 +325,13 @@ export const WEIGHT_TO_NUMBER = {
 };
 
 export const PILL_RADIUS_MODIFIER = 3.5;
+
+export const PROGRESS_HEIGHT_FROM_SIZE = {
+  micro: 2,
+  tiny: 3,
+  small: 4,
+  normal: 6,
+  big: 8,
+  huge: 10,
+  massive: 14,
+};
