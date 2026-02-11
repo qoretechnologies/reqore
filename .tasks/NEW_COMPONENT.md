@@ -89,6 +89,7 @@ List exact files/dirs you will add or modify.
 
 Implement the component strictly following repo conventions:
 
+- increase major version if you add a new component (e.g., `1.0.0` → `2.0.0`)
 - structure, naming, exports
 - tokens/theme usage
 - typing style

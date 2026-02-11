@@ -152,7 +152,8 @@ Run locally and report in the PR:
 2. Implement the **smallest coherent fix**
 3. Add or update tests
 4. Run full verification
-5. Open PR targeting **`develop`**
+5. Increase minor version (e.g., `1.0.0` → `1.1.0`) if you made a non-breaking change
+6. Open PR targeting **`develop`**
 
 ---
 

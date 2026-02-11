@@ -1,4 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { userEvent } from '@storybook/testing-library';
 import { useEffect, useState } from 'react';
 import ReqoreProgress, { IReqoreProgressProps } from '../../components/Progress';
 import { ReqoreControlGroup } from '../../index';
@@ -213,21 +214,30 @@ export const WithTooltip: Story = {
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress
         {...args}
+        value={80}
+        tooltip={{
+          content: 'Rich tooltip content',
+          intent: 'info',
+          openOnMount: true,
+          placement: 'right',
+        }}
+        label='With rich tooltip'
+        showValue
+        intent='info'
+      />
+      <ReqoreProgress
+        {...args}
         value={65}
         tooltip='This is a progress tooltip'
         label='Hover me'
         showValue
       />
-      <ReqoreProgress
-        {...args}
-        value={80}
-        tooltip={{ content: 'Rich tooltip content', intent: 'info' }}
-        label='With rich tooltip'
-        showValue
-        intent='info'
-      />
     </ReqoreControlGroup>
   ),
+  play: async () => {
+    // This story is meant to be tested visually by hovering over the progress bars to see the tooltips.
+    userEvent.hover(document.querySelectorAll('.reqore-progress')[1]!);
+  },
 };
 
 export const Fluid: Story = {
