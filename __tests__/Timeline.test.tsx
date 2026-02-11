@@ -46,15 +46,13 @@ test('Renders <Timeline /> with icons properly', () => {
   expect(document.querySelectorAll('.reqore-icon').length).toBe(2);
 });
 
-test('Renders <Timeline /> with title and content', () => {
+test('Renders <Timeline /> with title and content using ReqoreSpan and ReqoreP', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreTimeline
-            items={[
-              { title: 'My Title', content: 'My Content' },
-            ]}
+            items={[{ title: 'My Title', content: 'My Content' }]}
           />
         </ReqoreContent>
       </ReqoreLayoutContent>
@@ -63,6 +61,8 @@ test('Renders <Timeline /> with title and content', () => {
 
   expect(screen.getByText('My Title')).toBeTruthy();
   expect(screen.getByText('My Content')).toBeTruthy();
+  expect(document.querySelectorAll('.reqore-timeline-title').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-timeline-content').length).toBe(1);
 });
 
 test('Renders <Timeline /> with timestamp', () => {
@@ -71,9 +71,7 @@ test('Renders <Timeline /> with timestamp', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreTimeline
-            items={[
-              { title: 'Event', timestamp: 'Jan 1, 2024' },
-            ]}
+            items={[{ title: 'Event', timestamp: 'Jan 1, 2024' }]}
           />
         </ReqoreContent>
       </ReqoreLayoutContent>
@@ -81,6 +79,32 @@ test('Renders <Timeline /> with timestamp', () => {
   );
 
   expect(screen.getByText('Jan 1, 2024')).toBeTruthy();
+  expect(document.querySelectorAll('.reqore-timeline-timestamp').length).toBe(1);
+});
+
+test('Renders <Timeline /> with relative time via TimeAgo', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            items={[
+              {
+                title: 'Recent event',
+                timestamp: Date.now() - 1000 * 60 * 5,
+                relativeTime: true,
+              },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-timeline-timestamp').length).toBe(1);
+  // TimeAgo should render something like "5 minutes ago"
+  const timestamp = document.querySelector('.reqore-timeline-timestamp');
+  expect(timestamp?.textContent).toBeTruthy();
 });
 
 test('Renders <Timeline /> with different sizes', () => {
@@ -90,15 +114,11 @@ test('Renders <Timeline /> with different sizes', () => {
         <ReqoreContent>
           <ReqoreTimeline
             size="small"
-            items={[
-              { title: 'Small timeline item' },
-            ]}
+            items={[{ title: 'Small timeline item' }]}
           />
           <ReqoreTimeline
             size="big"
-            items={[
-              { title: 'Big timeline item' },
-            ]}
+            items={[{ title: 'Big timeline item' }]}
           />
         </ReqoreContent>
       </ReqoreLayoutContent>
@@ -156,9 +176,7 @@ test('Handles onClick on timeline items', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreTimeline
-            items={[
-              { title: 'Clickable', onClick },
-            ]}
+            items={[{ title: 'Clickable', onClick }]}
           />
         </ReqoreContent>
       </ReqoreLayoutContent>
@@ -176,9 +194,7 @@ test('Does not call onClick when item is disabled', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreTimeline
-            items={[
-              { title: 'Disabled', onClick, disabled: true },
-            ]}
+            items={[{ title: 'Disabled', onClick, disabled: true }]}
           />
         </ReqoreContent>
       </ReqoreLayoutContent>
@@ -196,9 +212,7 @@ test('Handles keyboard interaction on clickable items', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreTimeline
-            items={[
-              { title: 'Clickable', onClick },
-            ]}
+            items={[{ title: 'Clickable', onClick }]}
           />
         </ReqoreContent>
       </ReqoreLayoutContent>
@@ -220,9 +234,7 @@ test('Renders <Timeline /> with fluid prop', () => {
         <ReqoreContent>
           <ReqoreTimeline
             fluid
-            items={[
-              { title: 'Fluid item' },
-            ]}
+            items={[{ title: 'Fluid item' }]}
           />
         </ReqoreContent>
       </ReqoreLayoutContent>
@@ -238,9 +250,7 @@ test('Renders <Timeline /> with single item (no trailing line)', () => {
       <ReqoreLayoutContent>
         <ReqoreContent>
           <ReqoreTimeline
-            items={[
-              { title: 'Only item' },
-            ]}
+            items={[{ title: 'Only item' }]}
           />
         </ReqoreContent>
       </ReqoreLayoutContent>
@@ -266,8 +276,113 @@ test('Renders <Timeline /> without icons (uses dots)', () => {
     </ReqoreUIProvider>
   );
 
-  // Should not have icons since none were provided
   expect(document.querySelectorAll('.reqore-icon').length).toBe(0);
-  // Should still have timeline items
   expect(document.querySelectorAll('.reqore-timeline-item').length).toBe(2);
+});
+
+test('Renders <Timeline /> with badges on items', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            items={[
+              { title: 'With string badge', badge: 'v1.0' },
+              { title: 'With number badge', badge: 42 },
+              { title: 'With multiple badges', badge: ['A', 'B'] },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // 1 + 1 + 2 = 4 badges total
+  expect(document.querySelectorAll('.reqore-timeline-badge').length).toBe(4);
+});
+
+test('Renders <Timeline /> with collapsible items', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            items={[
+              {
+                title: 'Collapsible expanded',
+                content: 'Visible content',
+                collapsible: true,
+              },
+              {
+                title: 'Collapsible collapsed',
+                content: 'Hidden content',
+                collapsible: true,
+                isCollapsed: true,
+              },
+              {
+                title: 'Not collapsible',
+                content: 'Always visible',
+              },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // Collapse toggle icons should be present for collapsible items
+  expect(document.querySelectorAll('.reqore-timeline-collapse').length).toBe(2);
+});
+
+test('Toggling collapse on a collapsible item', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            items={[
+              {
+                title: 'Toggle me',
+                content: 'Some content',
+                collapsible: true,
+              },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const collapseButton = document.querySelector('.reqore-timeline-collapse')!;
+  expect(collapseButton).toBeTruthy();
+
+  // Click to collapse
+  fireEvent.click(collapseButton);
+
+  // Click again to expand
+  fireEvent.click(collapseButton);
+
+  // Item should still be there
+  expect(document.querySelectorAll('.reqore-timeline-item').length).toBe(1);
+});
+
+test('Renders <Timeline /> title-only items with connecting lines', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            items={[
+              { title: 'First', icon: 'FlagLine' },
+              { title: 'Second', icon: 'RocketLine' },
+              { title: 'Third', icon: 'TrophyLine' },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-timeline-item').length).toBe(3);
+  expect(document.querySelectorAll('.reqore-icon').length).toBe(3);
 });
