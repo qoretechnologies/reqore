@@ -70,6 +70,7 @@ export { default as ReqoreTagGroup } from './components/Tag/group';
 export { default as ReqoreTextarea } from './components/Textarea';
 export { ReqoreTier } from './components/Tier';
 export { TimeAgo as ReqoreTimeAgo } from './components/TimeAgo';
+export { default as ReqoreTimeline } from './components/Timeline';
 export { ReqoreTree } from './components/Tree';
 export { Colors as ReqoreColors } from './constants/colors';
 export { ReqoreSizes } from './constants/sizes';
