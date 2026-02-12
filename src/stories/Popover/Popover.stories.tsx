@@ -439,7 +439,8 @@ export const BlurredBackground: Story = {
     content:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl.',
   },
-  play: async ({ canvasElement }) => {
+  play: async () => {
+    await sleep(500);
     await _testsWaitForText('I opened on my own');
   },
 };
