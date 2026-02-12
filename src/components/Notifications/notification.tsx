@@ -46,6 +46,7 @@ export interface IReqoreNotificationProps
   fluid?: boolean;
   flat?: boolean;
   size?: TSizes;
+  blur?: number;
 }
 
 export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
@@ -61,6 +62,7 @@ export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   size?: TSizes;
   asMessage?: boolean;
   margin?: 'top' | 'bottom' | 'both' | 'none';
+  blur?: number;
 }
 
 const timeoutAnimation = keyframes`
@@ -117,6 +119,7 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     flat,
     minimal,
     opaque = true,
+    blur,
   }: IReqoreNotificationStyle) => css`
     background-color: ${minimal
       ? 'transparent'
@@ -125,6 +128,11 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
       : rgba(getNotificationIntent(theme, intent || type), 0.3)};
     border: ${flat ? 0 : '1px solid'};
     border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.2)};
+
+    ${blur &&
+    css`
+      backdrop-filter: blur(${blur}px);
+    `}
 
     ${hasShadow &&
     css`
@@ -258,6 +266,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       flat,
       minimal,
       opaque = true,
+      blur,
       size = 'normal',
       customTheme,
     },
@@ -319,6 +328,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             style={styles}
             size={size}
             opaque={opaque}
+            blur={blur}
             theme={theme}
             maxWidth='450px'
           >

@@ -148,7 +148,7 @@ Run locally and report in the PR:
 
 ## Workflow
 
-1. Create branch: `random-issue/<short-slug>`
+1. Create branch: `bugfix/<short-slug>`
 2. Implement the **smallest coherent fix**
 3. Add or update tests
 4. Run full verification
