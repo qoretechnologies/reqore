@@ -3,7 +3,6 @@ import { StoryFn, StoryObj } from '@storybook/react';
 import { fireEvent, userEvent, within } from '@storybook/testing-library';
 import { useState } from 'react';
 import { useMount } from 'react-use';
-import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqorePopoverProps } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
 import {
@@ -439,9 +438,14 @@ export const BlurredBackground: Story = {
     content:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl.',
   },
-  play: async () => {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
     await sleep(500);
-    await _testsWaitForText('I opened on my own');
+    // Click anywhere
+    await userEvent.click(canvasElement);
+    // Hover the button with text "Tooltip with hover start and click end events"
+    await userEvent.hover(canvas.getByText('Tooltip with hover start and click end events'));
+    await userEvent.hover(canvas.getByText('Full popover'));
   },
 };
 
