@@ -101,6 +101,11 @@ const StyledRatingItem = styled.span<IReqoreRatingItemStyle>`
       &:hover {
         transform: scale(1.2);
       }
+
+      &:active {
+        transform: scale(0.85);
+        transition: transform 0.05s ease-out;
+      }
     `}
 `;
 
