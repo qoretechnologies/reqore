@@ -165,3 +165,21 @@ export const Effect: Story = {
     },
   },
 };
+
+export const WithBackgroundBlur: Story = {
+  render: (args) => (
+    <>
+      <ReqoreMessage {...args}>
+        In to am attended desirous raptures declared diverted confined at. Collected instantly
+        remaining up certainly to necessary as. Over walk dull into son boy door went new. At or
+        happiness commanded daughters as.
+      </ReqoreMessage>
+    </>
+  ),
+
+  args: {
+    backgroundBlur: 10,
+    intent: 'info',
+    opaque: false,
+  },
+};

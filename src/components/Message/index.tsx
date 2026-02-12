@@ -54,7 +54,7 @@ export interface IReqoreMessageProps
   flat?: boolean;
   hasShadow?: boolean;
   margin?: 'top' | 'bottom' | 'both' | 'none';
-  blur?: number;
+  backgroundBlur?: number;
 }
 
 export interface IReqoreNotificationStyle extends IReqoreMessageProps {

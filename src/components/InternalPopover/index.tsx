@@ -181,6 +181,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     minimal,
     flat = true,
     effect,
+    backgroundBlur,
     id,
     onPopperUpdate,
     onPopperClose,
@@ -358,6 +359,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
                 minimal={transparent}
                 flat={flat || transparent}
                 effect={effect}
+                backgroundBlur={backgroundBlur}
               >
                 {content}
               </ReqoreMessage>

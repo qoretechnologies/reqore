@@ -60,6 +60,7 @@ export interface IPopover
   title?: string;
   updater?: string | number;
   uiScale?: IReqoreOptions['uiScale'];
+  backgroundBlur?: number;
 
   id?: string;
 
@@ -137,6 +138,7 @@ export const ReqorePopover = memo(
         minimal,
         intent,
         id,
+        backgroundBlur,
       }: IReqorePopoverProps,
       ref
     ) => {
@@ -468,6 +470,7 @@ export const ReqorePopover = memo(
                 onPopperUpdate={handlePopperUpdate}
                 id={id}
                 handler={handler}
+                backgroundBlur={backgroundBlur}
                 onPopoverMouseEnter={keepOpenOnHover ? handlePopoverMouseEnter : undefined}
                 onPopoverMouseLeave={keepOpenOnHover ? handlePopoverMouseLeave : undefined}
               />
@@ -513,6 +516,7 @@ export const ReqorePopover = memo(
               closePopover={close}
               id={id}
               handler={handler}
+              backgroundBlur={backgroundBlur}
               onPopoverMouseEnter={keepOpenOnHover ? handlePopoverMouseEnter : undefined}
               onPopoverMouseLeave={keepOpenOnHover ? handlePopoverMouseLeave : undefined}
             />

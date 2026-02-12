@@ -429,6 +429,26 @@ export const Blurred: Story = {
   },
 };
 
+export const BlurredBackground: Story = {
+  render: Template,
+
+  args: {
+    backgroundBlur: 10,
+    minimal: true,
+    content:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl.',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await sleep(500);
+    // Click anywhere
+    await userEvent.click(canvasElement);
+    // Hover the button with text "Tooltip with hover start and click end events"
+    await userEvent.hover(canvas.getByText('Tooltip with hover start and click end events'));
+    await userEvent.hover(canvas.getByText('Full popover'));
+  },
+};
+
 export const BlurredInsideModal: Story = {
   render: Template,
 
