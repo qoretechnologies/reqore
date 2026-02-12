@@ -48,30 +48,30 @@ const Template: StoryFn<IReqoreTimelineProps> = (args) => {
 
 const SizesTemplate: StoryFn<IReqoreTimelineProps> = (args) => {
   return (
-    <ReqoreControlGroup vertical gapSize="big">
+    <ReqoreControlGroup vertical gapSize='big'>
       <div>
         <h4 style={{ marginBottom: '8px' }}>Micro</h4>
-        <ReqoreTimeline {...args} size="micro" />
+        <ReqoreTimeline {...args} size='micro' />
       </div>
       <div>
         <h4 style={{ marginBottom: '8px' }}>Tiny</h4>
-        <ReqoreTimeline {...args} size="tiny" />
+        <ReqoreTimeline {...args} size='tiny' />
       </div>
       <div>
         <h4 style={{ marginBottom: '8px' }}>Small</h4>
-        <ReqoreTimeline {...args} size="small" />
+        <ReqoreTimeline {...args} size='small' />
       </div>
       <div>
         <h4 style={{ marginBottom: '8px' }}>Normal</h4>
-        <ReqoreTimeline {...args} size="normal" />
+        <ReqoreTimeline {...args} size='normal' />
       </div>
       <div>
         <h4 style={{ marginBottom: '8px' }}>Big</h4>
-        <ReqoreTimeline {...args} size="big" />
+        <ReqoreTimeline {...args} size='big' />
       </div>
       <div>
         <h4 style={{ marginBottom: '8px' }}>Huge</h4>
-        <ReqoreTimeline {...args} size="huge" />
+        <ReqoreTimeline {...args} size='huge' />
       </div>
     </ReqoreControlGroup>
   );
@@ -278,12 +278,12 @@ export const WithIntents: Story = {
 
 export const GlobalIntent: Story = {
   render: (args) => (
-    <ReqoreControlGroup vertical gapSize="big">
+    <ReqoreControlGroup vertical gapSize='big'>
       <div>
         <h4 style={{ marginBottom: '8px' }}>Info Intent</h4>
         <ReqoreTimeline
           {...args}
-          intent="info"
+          intent='info'
           items={[
             { title: 'Step 1', content: 'First step', icon: 'Number1' },
             { title: 'Step 2', content: 'Second step', icon: 'Number2' },
@@ -295,7 +295,7 @@ export const GlobalIntent: Story = {
         <h4 style={{ marginBottom: '8px' }}>Success Intent</h4>
         <ReqoreTimeline
           {...args}
-          intent="success"
+          intent='success'
           items={[
             { title: 'Step 1', content: 'First step', icon: 'Number1' },
             { title: 'Step 2', content: 'Second step', icon: 'Number2' },
@@ -337,7 +337,7 @@ export const Interactive: Story = {
     const [selected, setSelected] = useState<number | null>(null);
 
     return (
-      <ReqoreControlGroup vertical gapSize="normal">
+      <ReqoreControlGroup vertical gapSize='normal'>
         <p>Selected: {selected !== null ? `Item ${selected + 1}` : 'None'}</p>
         <ReqoreTimeline
           {...args}
@@ -493,7 +493,7 @@ export const WorkflowExample: Story = {
           relativeTime: true,
           icon: 'SearchEyeLine',
           intent: 'info',
-          badge: [{ label: '2 comments', icon: 'ChatLine' }],
+          badge: [{ label: '2 comments', icon: 'Chat1Line' }],
           collapsible: true,
         },
         {
