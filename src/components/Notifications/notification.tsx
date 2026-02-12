@@ -62,7 +62,7 @@ export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   size?: TSizes;
   asMessage?: boolean;
   margin?: 'top' | 'bottom' | 'both' | 'none';
-  blur?: number;
+  backgroundBlur?: number;
 }
 
 const timeoutAnimation = keyframes`
@@ -119,7 +119,7 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     flat,
     minimal,
     opaque = true,
-    blur,
+    backgroundBlur,
   }: IReqoreNotificationStyle) => css`
     background-color: ${minimal
       ? 'transparent'
@@ -129,9 +129,9 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     border: ${flat ? 0 : '1px solid'};
     border-color: ${changeLightness(getNotificationIntent(theme, intent || type), 0.2)};
 
-    ${blur &&
+    ${backgroundBlur &&
     css`
-      backdrop-filter: blur(${blur}px);
+      backdrop-filter: blur(${backgroundBlur}px);
     `}
 
     ${hasShadow &&

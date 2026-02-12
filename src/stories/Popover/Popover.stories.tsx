@@ -429,6 +429,17 @@ export const Blurred: Story = {
   },
 };
 
+export const BlurredBackground: Story = {
+  render: Template,
+
+  args: {
+    backgroundBlur: 10,
+    minimal: true,
+    content:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl eget aliquam tincidunt, nunc nisl aliquet nunc, quis aliquam nisl nisl.',
+  },
+};
+
 export const BlurredInsideModal: Story = {
   render: Template,
 
