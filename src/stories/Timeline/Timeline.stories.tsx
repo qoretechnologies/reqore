@@ -463,7 +463,7 @@ const customContentItems: IReqoreTimelineProps['items'] = [
   {
     title: 'Mixed usage',
     content: 'You can mix string and component content across items.',
-    icon: 'MixLine',
+    icon: 'Exchange2Line',
     intent: 'success',
   },
 ];
