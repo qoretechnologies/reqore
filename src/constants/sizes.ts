@@ -297,6 +297,16 @@ export const GAP_FROM_SIZE = {
   massive: 42,
 };
 
+export const RATING_GAP_FROM_SIZE = {
+  micro: 0.5,
+  tiny: 1,
+  small: 3,
+  normal: 5,
+  big: 7,
+  huge: 9,
+  massive: 12,
+};
+
 export const ICON_FROM_HEADER_SIZE = {
   1: 23,
   2: 20,

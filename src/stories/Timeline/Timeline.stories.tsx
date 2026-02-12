@@ -440,6 +440,38 @@ export const TitleOnly: Story = {
   },
 };
 
+const customContentItems: IReqoreTimelineProps['items'] = [
+  {
+    title: 'String content',
+    content: 'This is plain string content rendered in a ReqoreP.',
+    icon: 'TextWrap',
+  },
+  {
+    title: 'Custom component content',
+    icon: 'CodeLine',
+    intent: 'info',
+    content: (
+      <div>
+        <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+          <li>Custom React elements are rendered directly</li>
+          <li>String and number content uses ReqoreP</li>
+          <li>Mix both freely across items</li>
+        </ul>
+      </div>
+    ),
+  },
+  {
+    title: 'Mixed usage',
+    content: 'You can mix string and component content across items.',
+    icon: 'MixLine',
+    intent: 'success',
+  },
+];
+
+export const CustomContent: Story = {
+  render: (args) => <ReqoreTimeline {...args} items={customContentItems} />,
+};
+
 export const WorkflowExample: Story = {
   render: (args) => (
     <ReqoreTimeline

@@ -24,6 +24,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { TReqoreBadge } from '../Button';
+import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon from '../Icon';
 import { ReqoreP } from '../Paragraph';
@@ -207,26 +208,6 @@ const StyledTimelineContent = styled.div<IReqoreTimelineItemStyle>`
   padding-bottom: ${({ size }) => PADDING_FROM_SIZE[size] * 2}px;
 `;
 
-const StyledTimelineTitleWrapper = styled.div<IReqoreTimelineStyle>`
-  display: flex;
-  align-items: center;
-  gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
-  flex-wrap: wrap;
-`;
-
-const StyledCollapseIcon = styled.span<IReqoreTimelineItemStyle>`
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  transition: transform 0.2s ease-in-out;
-  transform: rotate(${({ isCollapsed }) => (isCollapsed ? '-90deg' : '0deg')});
-  margin-right: ${({ size }) => GAP_FROM_SIZE[size]}px;
-
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
 const StyledTimelineDetails = styled.div<IReqoreTimelineItemStyle>`
   overflow: hidden;
   transition: all 0.2s ease-in-out;
@@ -259,8 +240,8 @@ const TimelineBadge = memo(({ size, content }: IBadgeProps) => {
         key={key}
         size={getOneLessSize(size)}
         asBadge
-        className="reqore-timeline-badge"
-        labelAlign="center"
+        className='reqore-timeline-badge'
+        labelAlign='center'
         minimal
         {...(typeof badge === 'string' || typeof badge === 'number'
           ? { label: badge }
@@ -276,7 +257,7 @@ const TimelineBadge = memo(({ size, content }: IBadgeProps) => {
 
   if (Array.isArray(content)) {
     return (
-      <ReqoreTagGroup className="reqore-timeline-badges">
+      <ReqoreTagGroup className='reqore-timeline-badges'>
         {content.map((badge, index) => renderTag(badge, index))}
       </ReqoreTagGroup>
     );
@@ -287,24 +268,18 @@ const TimelineBadge = memo(({ size, content }: IBadgeProps) => {
 
 const ReqoreTimeline = memo(
   forwardRef<HTMLOListElement, IReqoreTimelineProps>(
-    (
-      { items, size = 'normal', customTheme, intent, fluid = false, className, ...rest },
-      ref
-    ) => {
+    ({ items, size = 'normal', customTheme, intent, fluid = false, className, ...rest }, ref) => {
       const theme = useReqoreTheme('main', customTheme, intent);
       const baseTheme = useReqoreTheme('main', customTheme);
 
       // Track collapsed state for each item
       const [collapsedStates, setCollapsedStates] = useState<Record<number, boolean>>(() =>
-        items.reduce(
-          (acc, item, index) => {
-            if (item.collapsible) {
-              acc[index] = item.isCollapsed ?? false;
-            }
-            return acc;
-          },
-          {} as Record<number, boolean>
-        )
+        items.reduce((acc, item, index) => {
+          if (item.collapsible) {
+            acc[index] = item.isCollapsed ?? false;
+          }
+          return acc;
+        }, {} as Record<number, boolean>)
       );
 
       const handleItemClick = useCallback((item: IReqoreTimelineItem) => {
@@ -313,15 +288,12 @@ const ReqoreTimeline = memo(
         }
       }, []);
 
-      const handleKeyDown = useCallback(
-        (event: React.KeyboardEvent, item: IReqoreTimelineItem) => {
-          if ((event.key === 'Enter' || event.key === ' ') && item.onClick && !item.disabled) {
-            event.preventDefault();
-            item.onClick();
-          }
-        },
-        []
-      );
+      const handleKeyDown = useCallback((event: React.KeyboardEvent, item: IReqoreTimelineItem) => {
+        if ((event.key === 'Enter' || event.key === ' ') && item.onClick && !item.disabled) {
+          event.preventDefault();
+          item.onClick();
+        }
+      }, []);
 
       const toggleCollapse = useCallback((index: number, event: React.MouseEvent) => {
         event.stopPropagation();
@@ -339,7 +311,7 @@ const ReqoreTimeline = memo(
           size={size}
           fluid={fluid}
           className={`${className || ''} reqore-timeline`}
-          role="list"
+          role='list'
         >
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
@@ -360,15 +332,15 @@ const ReqoreTimeline = memo(
                 onClick={() => handleItemClick(item)}
                 onKeyDown={(e) => handleKeyDown(e, item)}
                 tabIndex={isClickable ? 0 : undefined}
-                role="listitem"
-                className="reqore-timeline-item"
+                role='listitem'
+                className='reqore-timeline-item'
               >
                 <StyledTimelineMarkerWrapper theme={itemTheme} size={size}>
                   <StyledTimelineMarker
                     theme={itemTheme}
                     size={size}
                     hasIntent={hasIntent}
-                    className="reqore-timeline-marker"
+                    className='reqore-timeline-marker'
                   >
                     {item.icon ? (
                       <ReqoreIcon
@@ -384,26 +356,26 @@ const ReqoreTimeline = memo(
                 </StyledTimelineMarkerWrapper>
                 <StyledTimelineContent theme={baseTheme} size={size}>
                   {item.title && (
-                    <StyledTimelineTitleWrapper theme={baseTheme} size={size}>
+                    <ReqoreControlGroup
+                      verticalAlign='center'
+                      wrap
+                      gapSize={size}
+                      onClick={item.collapsible ? (e) => toggleCollapse(index, e) : undefined}
+                      style={item.collapsible ? { cursor: 'pointer' } : undefined}
+                    >
                       {item.collapsible && (
-                        <StyledCollapseIcon
-                          theme={baseTheme}
-                          size={size}
-                          isCollapsed={isCollapsed}
-                          onClick={(e) => toggleCollapse(index, e)}
-                          className="reqore-timeline-collapse"
-                        >
-                          <ReqoreIcon
-                            icon="ArrowDownSLine"
-                            size={getOneLessSize(size)}
-                            color={getReadableColor(baseTheme, undefined, undefined)}
-                          />
-                        </StyledCollapseIcon>
+                        <ReqoreIcon
+                          icon='ArrowDownSLine'
+                          size={getOneLessSize(size)}
+                          color={getReadableColor(baseTheme, undefined, undefined)}
+                          rotation={isCollapsed ? -90 : 0}
+                          className='reqore-timeline-collapse'
+                        />
                       )}
                       <ReqoreSpan
                         size={size}
                         effect={item.titleEffect}
-                        className="reqore-timeline-title"
+                        className='reqore-timeline-title'
                         style={{ fontWeight: 500 }}
                       >
                         {item.title}
@@ -411,42 +383,37 @@ const ReqoreTimeline = memo(
                       {(item.badge || item.badge === 0) && (
                         <TimelineBadge content={item.badge} size={size} />
                       )}
-                    </StyledTimelineTitleWrapper>
+                    </ReqoreControlGroup>
                   )}
                   {hasContent && (
-                    <StyledTimelineDetails
-                      theme={baseTheme}
-                      size={size}
-                      isCollapsed={isCollapsed}
-                    >
-                      {item.content && (
-                        <ReqoreP
-                          size={getOneLessSize(size)}
-                          effect={item.contentEffect}
-                          className="reqore-timeline-content"
-                          style={{
-                            color: rgba(getReadableColor(baseTheme, undefined, undefined), 0.7),
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {item.content}
-                        </ReqoreP>
-                      )}
+                    <StyledTimelineDetails theme={baseTheme} size={size} isCollapsed={isCollapsed}>
+                      {item.content &&
+                        (typeof item.content === 'string' || typeof item.content === 'number' ? (
+                          <ReqoreP
+                            size={getOneLessSize(size)}
+                            effect={item.contentEffect}
+                            className='reqore-timeline-content'
+                            style={{
+                              color: rgba(getReadableColor(baseTheme, undefined, undefined), 0.7),
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            {item.content}
+                          </ReqoreP>
+                        ) : (
+                          <div className='reqore-timeline-content'>{item.content}</div>
+                        ))}
                       {item.timestamp && (
                         <ReqoreSpan
                           size={getOneLessSize(getOneLessSize(size))}
-                          className="reqore-timeline-timestamp"
+                          className='reqore-timeline-timestamp'
                           style={{
                             color: rgba(getReadableColor(baseTheme, undefined, undefined), 0.5),
                             display: 'block',
                             marginTop: `${GAP_FROM_SIZE[size]}px`,
                           }}
                         >
-                          {item.relativeTime ? (
-                            <TimeAgo time={item.timestamp} />
-                          ) : (
-                            item.timestamp
-                          )}
+                          {item.relativeTime ? <TimeAgo time={item.timestamp} /> : item.timestamp}
                         </ReqoreSpan>
                       )}
                     </StyledTimelineDetails>
@@ -457,7 +424,7 @@ const ReqoreTimeline = memo(
 
             if (item.tooltip) {
               return (
-                <ReqoreTooltipComponent key={index} tooltip={item.tooltip} Component="div">
+                <ReqoreTooltipComponent key={index} tooltip={item.tooltip} Component='div'>
                   {itemContent}
                 </ReqoreTooltipComponent>
               );

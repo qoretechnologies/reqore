@@ -90,6 +90,7 @@ List exact files/dirs you will add or modify.
 Implement the component strictly following repo conventions:
 
 - increase major version if you add a new component (e.g., `1.0.0` → `2.0.0`)
+- switch to a branch named `feature/<component-name>` (e.g., `feature/Tooltip`) must be clean and well-structured, with clear naming and consistent patterns.
 - structure, naming, exports
 - tokens/theme usage
 - typing style

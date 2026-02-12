@@ -1,13 +1,10 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import styled, { css } from 'styled-components';
-import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, RATING_GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import {
-  changeLightness,
-  getColorFromMaybeString,
-  getReadableColor,
-} from '../../helpers/colors';
+import { changeLightness, getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
+import { getOneLessSize } from '../../helpers/utils';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, ReadOnlyElement } from '../../styles';
@@ -20,8 +17,11 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import ReqoreControlGroup from '../ControlGroup';
 import { TReqoreEffectColor } from '../Effect';
-import ReqoreIcon from '../Icon';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { IReqoreParagraphProps, ReqoreP } from '../Paragraph';
+import { ReqoreSpan } from '../Span';
 
 export interface IReqoreRatingProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'>,
@@ -33,6 +33,9 @@ export interface IReqoreRatingProps
     IWithReqoreTooltip {
   /** Current rating value (controlled) */
   value?: number;
+  /** Label for the rating component */
+  label?: string;
+  labelProps?: IReqoreParagraphProps;
   /** Callback fired when rating changes */
   onChange?: (value: number) => void;
   /** Maximum number of icons (default: 5) */
@@ -51,6 +54,10 @@ export interface IReqoreRatingProps
   filledColor?: TReqoreEffectColor;
   /** Color for empty icons */
   emptyColor?: TReqoreEffectColor;
+  // Whether to show the numeric rating value next to the icons
+  showRatingValue?: boolean;
+  /** Additional props passed to each ReqoreIcon */
+  iconProps?: Omit<IReqoreIconProps, 'icon' | 'size' | 'color'>;
 }
 
 interface IReqoreRatingStyle {
@@ -69,7 +76,7 @@ interface IReqoreRatingItemStyle {
 const StyledRating = styled.div<IReqoreRatingStyle>`
   display: inline-flex;
   align-items: center;
-  gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
+  gap: ${({ size }) => RATING_GAP_FROM_SIZE[size]}px;
 
   ${({ disabled }) =>
     disabled &&
@@ -114,6 +121,7 @@ const ReqoreRating = memo(
     (
       {
         value = 0,
+        label,
         onChange,
         max = 5,
         allowHalf = false,
@@ -130,6 +138,9 @@ const ReqoreRating = memo(
         customTheme,
         tooltip,
         className,
+        labelProps,
+        showRatingValue,
+        iconProps,
         ...rest
       },
       ref
@@ -232,7 +243,15 @@ const ReqoreRating = memo(
           }
           return { icon: emptyIcon, color: resolvedEmptyColor };
         },
-        [displayValue, filledIcon, emptyIcon, halfIcon, resolvedFilledColor, resolvedEmptyColor, allowHalf]
+        [
+          displayValue,
+          filledIcon,
+          emptyIcon,
+          halfIcon,
+          resolvedFilledColor,
+          resolvedEmptyColor,
+          allowHalf,
+        ]
       );
 
       const stars = useMemo(() => Array.from({ length: max }, (_, i) => i), [max]);
@@ -253,35 +272,44 @@ const ReqoreRating = memo(
       );
 
       return (
-        <Component
-          {...componentProps}
-          onMouseLeave={handleMouseLeave}
-          onKeyDown={handleKeyDown}
-          tabIndex={isInteractive ? 0 : undefined}
-          role="slider"
-          aria-valuenow={value}
-          aria-valuemin={0}
-          aria-valuemax={max}
-          aria-label={rest['aria-label'] || 'Rating'}
-          aria-disabled={disabled || undefined}
-          aria-readonly={readOnly || undefined}
-        >
-          {stars.map((index) => {
-            const { icon, color } = getIconForIndex(index);
-            return (
-              <StyledRatingItem
-                key={index}
-                className="reqore-rating-item"
-                onMouseMove={(e) => handleMouseMove(index, e)}
-                onClick={(e) => handleClick(index, e)}
-                isInteractive={isInteractive}
-                size={size}
-              >
-                <ReqoreIcon icon={icon} size={size} color={color as TReqoreEffectColor} />
-              </StyledRatingItem>
-            );
-          })}
-        </Component>
+        <ReqoreControlGroup vertical>
+          {label && <ReqoreP size={size} {...labelProps}>{label}</ReqoreP>}
+          <Component
+            {...componentProps}
+            onMouseLeave={handleMouseLeave}
+            onKeyDown={handleKeyDown}
+            tabIndex={isInteractive ? 0 : undefined}
+            role='slider'
+            aria-valuenow={value}
+            aria-valuemin={0}
+            aria-valuemax={max}
+            aria-disabled={disabled || undefined}
+            aria-readonly={readOnly || undefined}
+            aria-label={label || rest['aria-label'] || 'Rating'}
+          >
+            {stars.map((index) => {
+              const { icon, color } = getIconForIndex(index);
+              return (
+                <StyledRatingItem
+                  key={index}
+                  className='reqore-rating-item'
+                  onMouseMove={(e) => handleMouseMove(index, e)}
+                  onClick={(e) => handleClick(index, e)}
+                  isInteractive={isInteractive}
+                  size={size}
+                >
+                  <ReqoreIcon {...iconProps} icon={icon} size={size} color={color as TReqoreEffectColor} />
+                </StyledRatingItem>
+              );
+            })}
+            {showRatingValue && (
+              <ReqoreSpan
+                intent='muted'
+                size={getOneLessSize(size)}
+              >{`${displayValue} / ${max}`}</ReqoreSpan>
+            )}
+          </Component>
+        </ReqoreControlGroup>
       );
     }
   )
