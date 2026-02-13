@@ -57,6 +57,7 @@ export { ReqoreSlider } from './components/Slider';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
 export { ReqoreSpan } from './components/Span';
 export { ReqoreSpinner } from './components/Spinner';
+export { default as ReqoreStatistic } from './components/Statistic';
 export { default as ReqoreTable } from './components/Table';
 export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
