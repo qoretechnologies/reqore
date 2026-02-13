@@ -134,9 +134,23 @@ export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroup
       }
     `}
 
-  > * {
-    border-radius: ${({ stack }) => (!stack ? undefined : '0')};
-  }
+  ${({ stack, wrap }) => {
+    if (!stack) return undefined;
+
+    return css`
+      ${wrap ? 'padding: 1px 0 0 1px;' : ''}
+
+      > * {
+        border-radius: 0;
+        position: relative;
+
+        &:hover,
+        &:focus-within {
+          z-index: 1;
+        }
+      }
+    `;
+  }}
 `;
 
 const ReqoreControlGroup = memo(
@@ -395,9 +409,24 @@ const ReqoreControlGroup = memo(
         };
 
         if (isStack) {
+          const childIsFlat = props?.flat || props?.flat === false ? props.flat : flat;
+          const needsCollapse = !childIsFlat;
+          const isFirstChild = index === 0;
+
+          const collapseMargin = needsCollapse
+            ? wrap
+              ? { marginTop: -1, marginLeft: -1 }
+              : !isFirstChild
+                ? isVertical
+                  ? { marginTop: -1 }
+                  : { marginLeft: -1 }
+                : {}
+            : {};
+
           newProps = {
             ...newProps,
             style: {
+              ...collapseMargin,
               borderTopLeftRadius: getBorderTopLeftRadius(index, props?.rounded),
               borderBottomLeftRadius: getBorderBottomLeftRadius(index, props?.rounded),
               borderTopRightRadius: getBorderTopRightRadius(index, props?.rounded),
@@ -442,6 +471,7 @@ const ReqoreControlGroup = memo(
         fill,
         customTheme,
         isMasterGroupRounded,
+        wrap,
       ]
     );
 

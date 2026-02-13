@@ -6,6 +6,7 @@ import {
   ReqoreControlGroup,
   ReqoreDropdown,
   ReqoreInput,
+  ReqoreStatistic,
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
@@ -357,6 +358,39 @@ export const Stacked: Story = {
   },
 };
 
+export const StackedButtonsOnly: Story = {
+  render: () => {
+    return (
+      <ReqoreControlGroup stack wrap>
+        <ReqoreButton flat={false}>First</ReqoreButton>
+        <ReqoreButton flat={false}>Second</ReqoreButton>
+        <ReqoreButton flat={false}>Third</ReqoreButton>
+        <ReqoreButton flat={false}>Fourth</ReqoreButton>
+        <ReqoreButton flat={false}>Fifth</ReqoreButton>
+        <ReqoreButton flat>Sixth</ReqoreButton>
+        <ReqoreButton flat={false}>Seventh</ReqoreButton>
+        <ReqoreButton flat={false}>Eighth</ReqoreButton>
+        <ReqoreButton flat={false}>Ninth</ReqoreButton>
+        <ReqoreButton flat={false}>Tenth</ReqoreButton>
+        <ReqoreButton flat={false}>Eleventh</ReqoreButton>
+        <ReqoreButton flat>Twelfth</ReqoreButton>
+        <ReqoreButton flat={false}>Thirteenth</ReqoreButton>
+        <ReqoreButton flat>Fourteenth</ReqoreButton>
+        <ReqoreButton flat={false}>Fifteenth</ReqoreButton>
+        <ReqoreButton flat={false}>Sixteenth</ReqoreButton>
+        <ReqoreButton flat={false}>Seventeenth</ReqoreButton>
+        <ReqoreButton flat={false}>Eighteenth</ReqoreButton>
+        <ReqoreButton flat={false}>Nineteenth</ReqoreButton>
+        <ReqoreButton flat={false}>Twentieth</ReqoreButton>
+      </ReqoreControlGroup>
+    );
+  },
+
+  args: {
+    stack: true,
+  },
+};
+
 export const BigGapSize: Story = {
   render: Template,
 
@@ -396,4 +430,74 @@ export const Responsive: Story = {
   args: {
     responsive: true,
   },
+};
+
+export const StackedBorders: Story = {
+  render: (args) => (
+    <ReqoreControlGroup {...args} stack>
+      <ReqoreButton flat={false}>First</ReqoreButton>
+      <ReqoreButton flat={false}>Second</ReqoreButton>
+      <ReqoreButton flat={false}>Third</ReqoreButton>
+      <ReqoreButton flat={false}>Fourth</ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+};
+
+export const StackedBordersVertical: Story = {
+  render: (args) => (
+    <ReqoreControlGroup {...args} stack vertical>
+      <ReqoreButton flat={false}>First</ReqoreButton>
+      <ReqoreButton flat={false}>Second</ReqoreButton>
+      <ReqoreButton flat={false}>Third</ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+};
+
+export const StackedBordersWithIntents: Story = {
+  render: (args) => (
+    <ReqoreControlGroup {...args} stack>
+      <ReqoreButton flat={false}>Default</ReqoreButton>
+      <ReqoreButton flat={false} intent='info'>
+        Info
+      </ReqoreButton>
+      <ReqoreButton flat={false} intent='success'>
+        Success
+      </ReqoreButton>
+      <ReqoreButton flat={false} intent='warning'>
+        Warning
+      </ReqoreButton>
+      <ReqoreButton flat={false} intent='danger'>
+        Danger
+      </ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+};
+
+export const StackedBordersWrapping: Story = {
+  render: (args) => (
+    <div style={{ width: '400px', border: '1px dashed gray', padding: '8px' }}>
+      <ReqoreControlGroup {...args} stack wrap>
+        <ReqoreButton flat={false}>One</ReqoreButton>
+        <ReqoreButton flat={false}>Two</ReqoreButton>
+        <ReqoreButton flat={false}>Three</ReqoreButton>
+        <ReqoreButton flat={false}>Four</ReqoreButton>
+        <ReqoreButton flat={false}>Five</ReqoreButton>
+        <ReqoreButton flat={false}>Six</ReqoreButton>
+        <ReqoreButton flat={false}>Seven</ReqoreButton>
+        <ReqoreButton flat={false}>Eight</ReqoreButton>
+      </ReqoreControlGroup>
+    </div>
+  ),
+};
+
+export const StackedStatistics: Story = {
+  render: (args) => (
+    <ReqoreControlGroup {...args} stack fluid>
+      <ReqoreStatistic value={0} label='Prod. executions' rounded fluid />
+      <ReqoreStatistic value={0} label='Failed prod. executions' rounded fluid />
+      <ReqoreStatistic value='0%' label='Failure rate' rounded fluid />
+      <ReqoreStatistic value='--' label='Time saved' rounded fluid icon='InformationLine' />
+      <ReqoreStatistic value='0s' label='Run time (avg.)' rounded fluid />
+    </ReqoreControlGroup>
+  ),
 };
