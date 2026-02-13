@@ -124,7 +124,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
             0.08
           )}`};
       color: ${getReadableColor(theme, undefined, undefined, true)};
-      padding: ${PADDING_FROM_SIZE[size]}px ${PADDING_FROM_SIZE[size] * 1.5}px;
+      padding: ${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 5}px;
     `}
 
   ${({ $interactive, disabled }) =>
@@ -244,7 +244,6 @@ const ReqoreStatistic = memo(
         >
           <ReqoreControlGroup
             vertical
-            gapSize='micro'
             horizontalAlign={flexAlign}
             className='reqore-statistic-content'
           >
@@ -262,7 +261,7 @@ const ReqoreStatistic = memo(
               <ReqoreSpan
                 size={secondarySize}
                 className='reqore-statistic-label'
-                effect={{ opacity: 0.7, ...labelEffect }}
+                effect={{ opacity: 0.7, uppercase: true, spaced: 1, ...labelEffect }}
               >
                 {label}
               </ReqoreSpan>
