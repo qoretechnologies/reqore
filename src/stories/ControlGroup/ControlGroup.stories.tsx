@@ -6,7 +6,6 @@ import {
   ReqoreControlGroup,
   ReqoreDropdown,
   ReqoreInput,
-  ReqoreStatistic,
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
@@ -487,17 +486,5 @@ export const StackedBordersWrapping: Story = {
         <ReqoreButton flat={false}>Eight</ReqoreButton>
       </ReqoreControlGroup>
     </div>
-  ),
-};
-
-export const StackedStatistics: Story = {
-  render: (args) => (
-    <ReqoreControlGroup {...args} stack fluid>
-      <ReqoreStatistic value={0} label='Prod. executions' rounded fluid />
-      <ReqoreStatistic value={0} label='Failed prod. executions' rounded fluid />
-      <ReqoreStatistic value='0%' label='Failure rate' rounded fluid />
-      <ReqoreStatistic value='--' label='Time saved' rounded fluid icon='InformationLine' />
-      <ReqoreStatistic value='0s' label='Run time (avg.)' rounded fluid />
-    </ReqoreControlGroup>
   ),
 };

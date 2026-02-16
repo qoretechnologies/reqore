@@ -116,20 +116,8 @@ export const Intents: Story = {
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreStatistic {...args} value={100} label='Default' icon='InformationLine' />
       <ReqoreStatistic {...args} value={200} label='Info' icon='InformationLine' intent='info' />
-      <ReqoreStatistic
-        {...args}
-        value={300}
-        label='Success'
-        icon='CheckLine'
-        intent='success'
-      />
-      <ReqoreStatistic
-        {...args}
-        value={400}
-        label='Warning'
-        icon='AlertLine'
-        intent='warning'
-      />
+      <ReqoreStatistic {...args} value={300} label='Success' icon='CheckLine' intent='success' />
+      <ReqoreStatistic {...args} value={400} label='Warning' icon='AlertLine' intent='warning' />
       <ReqoreStatistic
         {...args}
         value={500}
@@ -226,14 +214,7 @@ export const WithBackground: Story = {
 export const WithBackgroundFlat: Story = {
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
-      <ReqoreStatistic
-        {...args}
-        value='12,345'
-        label='Total Users'
-        icon='UserLine'
-        rounded
-        flat
-      />
+      <ReqoreStatistic {...args} value='12,345' label='Total Users' icon='UserLine' rounded flat />
       <ReqoreStatistic
         {...args}
         value='$48,200'
@@ -412,6 +393,47 @@ export const DashboardExample: Story = {
         suffix='%'
         rounded
         trend={{ direction: 'neutral', value: '0%' }}
+      />
+    </ReqoreControlGroup>
+  ),
+};
+
+export const StackedStatistics: Story = {
+  render: (args) => (
+    <ReqoreControlGroup {...args} stack fluid>
+      <ReqoreStatistic
+        value={0}
+        label='Prod. executions'
+        rounded
+        fluid
+        flat={false}
+        align='center'
+      />
+      <ReqoreStatistic
+        value={0}
+        label='Failed prod. executions'
+        rounded
+        fluid
+        flat={false}
+        align='center'
+      />
+      <ReqoreStatistic value='0%' label='Failure rate' rounded fluid flat={false} align='center' />
+      <ReqoreStatistic
+        value='--'
+        label='Time saved'
+        rounded
+        fluid
+        icon='InformationLine'
+        flat={false}
+        align='center'
+      />
+      <ReqoreStatistic
+        value='0s'
+        label='Run time (avg.)'
+        rounded
+        fluid
+        flat={false}
+        align='center'
       />
     </ReqoreControlGroup>
   ),

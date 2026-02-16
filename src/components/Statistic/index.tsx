@@ -90,6 +90,7 @@ interface IStyledStatisticWrapper {
   disabled?: boolean;
   $hasBackground?: boolean;
   $interactive?: boolean;
+  $align?: 'flex-start' | 'center' | 'flex-end';
   rounded?: boolean;
   flat?: boolean;
   intent?: string;
@@ -110,6 +111,7 @@ const TREND_DEFAULT_INTENTS: Record<TReqoreStatisticTrendDirection, TReqoreInten
 
 const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
   display: inline-flex;
+  justify-content: ${({ $align }) => $align};
   width: ${({ $fluid }) => ($fluid ? '100%' : undefined)};
 
   ${({ $hasBackground, theme, size, rounded, flat, intent, opacity = 1 }) =>
@@ -235,6 +237,7 @@ const ReqoreStatistic = memo(
           disabled={disabled}
           $hasBackground={hasBackground}
           $interactive={interactive}
+          $align={flexAlign}
           rounded={rounded}
           flat={flat}
           intent={intent}
