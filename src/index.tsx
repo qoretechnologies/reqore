@@ -1,3 +1,4 @@
+export { ReqoreAccordion } from './components/Accordion';
 export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
 export { default as ReqoreButton } from './components/Button';
