@@ -111,13 +111,7 @@ export const Intents: Story = {
       <ReqoreEmptyState {...args} icon='InformationLine' title='Info' intent='info' rounded />
       <ReqoreEmptyState {...args} icon='CheckLine' title='Success' intent='success' rounded />
       <ReqoreEmptyState {...args} icon='AlertLine' title='Warning' intent='warning' rounded />
-      <ReqoreEmptyState
-        {...args}
-        icon='ErrorWarningLine'
-        title='Danger'
-        intent='danger'
-        rounded
-      />
+      <ReqoreEmptyState {...args} icon='ErrorWarningLine' title='Danger' intent='danger' rounded />
       <ReqoreEmptyState {...args} icon='TimeLine' title='Pending' intent='pending' rounded />
       <ReqoreEmptyState {...args} icon='SubtractLine' title='Muted' intent='muted' rounded />
     </ReqoreControlGroup>
@@ -241,7 +235,9 @@ export const SearchNoResults: Story = {
       description='Try adjusting your search or filter criteria.'
       rounded
       actions={
-        <ReqoreButton icon='RefreshLine'>Clear filters</ReqoreButton>
+        <ReqoreButton icon='RefreshLine' size='small'>
+          Clear filters
+        </ReqoreButton>
       }
     />
   ),

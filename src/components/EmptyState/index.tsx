@@ -1,6 +1,5 @@
 import { rgba } from 'polished';
-import { forwardRef, memo, useMemo } from 'react';
-import React from 'react';
+import React, { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -134,7 +133,7 @@ export const ReqoreEmptyState = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent);
 
-      const iconSize = useMemo(() => getOneHigherSize(getOneHigherSize(size)), [size]);
+      const iconSize = useMemo(() => getOneHigherSize(size), [size]);
       const descriptionSize = useMemo(() => getOneLessSize(size), [size]);
 
       const hasBackground = useMemo(
@@ -176,7 +175,6 @@ export const ReqoreEmptyState = memo(
           <ReqoreControlGroup
             vertical
             horizontalAlign='center'
-            gapSize={size}
             className='reqore-empty-state-content'
           >
             {icon && (
@@ -185,20 +183,17 @@ export const ReqoreEmptyState = memo(
                 icon={icon}
                 size={iconSize}
                 color={iconColor}
-                intent={iconColor ? undefined : intent}
+                intent={iconColor || hasBackground ? undefined : intent}
                 className='reqore-empty-state-icon'
               />
             )}
             {title && (
-              <ReqoreHeading
-                size={getOneHigherSize(size)}
-                className='reqore-empty-state-title'
-              >
+              <ReqoreHeading size={getOneHigherSize(size)} className='reqore-empty-state-title'>
                 {title}
               </ReqoreHeading>
             )}
-            {description && (
-              typeof description === 'string' ? (
+            {description &&
+              (typeof description === 'string' ? (
                 <ReqoreP
                   size={descriptionSize}
                   className='reqore-empty-state-description'
@@ -208,16 +203,9 @@ export const ReqoreEmptyState = memo(
                   {description}
                 </ReqoreP>
               ) : (
-                <div className='reqore-empty-state-description'>
-                  {description}
-                </div>
-              )
-            )}
-            {actions && (
-              <div className='reqore-empty-state-actions'>
-                {actions}
-              </div>
-            )}
+                <div className='reqore-empty-state-description'>{description}</div>
+              ))}
+            {actions && <div className='reqore-empty-state-actions'>{actions}</div>}
           </ReqoreControlGroup>
         </ReqoreTooltipComponent>
       );
