@@ -7,6 +7,11 @@ import { StoryMeta } from '../utils';
 const meta = {
   title: 'Navigation/Accordion/Stories',
   component: ReqoreAccordion,
+  argTypes: {
+    items: { control: false },
+    onItemToggle: { control: false },
+    effect: { control: false },
+  },
 } as StoryMeta<typeof ReqoreAccordion>;
 
 export default meta;
