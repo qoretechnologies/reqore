@@ -12,6 +12,11 @@ const meta = {
     onItemToggle: { control: false },
     effect: { control: false },
   },
+  parameters: {
+    docs: {
+      source: { type: 'code' },
+    },
+  },
 } as StoryMeta<typeof ReqoreAccordion>;
 
 export default meta;
