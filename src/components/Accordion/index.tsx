@@ -269,6 +269,116 @@ const AccordionBadge = memo(({ size, content }: IBadgeProps) => {
   return renderTag(content, 0);
 });
 
+interface IAccordionItemRendererProps {
+  item: IReqoreAccordionItem;
+  index: number;
+  isOpen: boolean;
+  theme: IReqoreTheme;
+  customTheme?: IReqoreAccordionProps['customTheme'];
+  size: TSizes;
+  intent?: TReqoreIntent;
+  flat?: boolean;
+  rounded?: boolean;
+  minimal?: boolean;
+  disabled?: boolean;
+  effectiveOpacity?: number;
+  isFirst: boolean;
+  isLast: boolean;
+  onToggle: (index: number) => void;
+  onKeyDown: (event: React.KeyboardEvent, index: number) => void;
+}
+
+const AccordionItemRenderer = memo(
+  ({
+    item,
+    index,
+    isOpen,
+    theme,
+    customTheme,
+    size,
+    intent,
+    flat,
+    rounded,
+    minimal,
+    disabled,
+    effectiveOpacity,
+    isFirst,
+    isLast,
+    onToggle,
+    onKeyDown,
+  }: IAccordionItemRendererProps) => {
+    const itemIntent = item.intent || intent;
+    const itemTheme = useReqoreTheme('main', customTheme, itemIntent);
+    const isItemDisabled = item.disabled || disabled;
+
+    return (
+      <StyledAccordionItem
+        theme={theme}
+        size={size}
+        disabled={isItemDisabled}
+        intent={itemIntent}
+        flat={flat}
+        isFirst={isFirst}
+        isLast={isLast}
+        rounded={rounded}
+        opacity={effectiveOpacity}
+        className='reqore-accordion-item'
+      >
+        <StyledAccordionHeader
+          theme={itemTheme}
+          size={size}
+          $isOpen={isOpen}
+          disabled={isItemDisabled}
+          intent={itemIntent}
+          flat={flat}
+          minimal={minimal}
+          opacity={effectiveOpacity}
+          onClick={() => onToggle(index)}
+          onKeyDown={(e) => onKeyDown(e, index)}
+          tabIndex={isItemDisabled ? undefined : 0}
+          role='button'
+          aria-expanded={isOpen}
+          className='reqore-accordion-header'
+        >
+          <StyledAccordionChevron as='span' $isOpen={isOpen}>
+            <ReqoreIcon icon='ArrowDownSLine' size={getOneLessSize(size)} />
+          </StyledAccordionChevron>
+          {item.icon && (
+            <ReqoreIcon
+              icon={item.icon}
+              size={size}
+              color={item.iconColor}
+              intent={item.iconColor ? undefined : itemIntent}
+              className='reqore-accordion-icon'
+            />
+          )}
+          <StyledAccordionHeaderTitle className='reqore-accordion-title'>
+            {item.title}
+          </StyledAccordionHeaderTitle>
+          {(item.badge || item.badge === 0) && (
+            <AccordionBadge content={item.badge} size={size} />
+          )}
+        </StyledAccordionHeader>
+        <StyledAccordionContentWrapper theme={theme} size={size} $isOpen={isOpen}>
+          <StyledAccordionContentInner theme={theme} size={size}>
+            <StyledAccordionContentBody
+              theme={theme}
+              size={size}
+              className='reqore-accordion-content'
+            >
+              {typeof item.content === 'string' ? (
+                <ReqoreSpan size={size}>{item.content}</ReqoreSpan>
+              ) : (
+                item.content
+              )}
+            </StyledAccordionContentBody>
+          </StyledAccordionContentInner>
+        </StyledAccordionContentWrapper>
+      </StyledAccordionItem>
+    );
+  }
+);
+
 export const ReqoreAccordion = memo(
   forwardRef<HTMLDivElement, IReqoreAccordionProps>(
     (
@@ -361,89 +471,27 @@ export const ReqoreAccordion = memo(
           effect={transformedEffect}
           className={`${className || ''} reqore-accordion`}
         >
-          {items.map((item, index) => {
-            const isOpen = !!openItems[index];
-            const itemIntent = item.intent || intent;
-            const itemTheme = useReqoreTheme('main', customTheme, itemIntent);
-            const isItemDisabled = item.disabled || disabled;
-
-            return (
-              <StyledAccordionItem
-                key={item.id || index}
-                theme={theme}
-                size={size}
-                disabled={isItemDisabled}
-                intent={itemIntent}
-                flat={flat}
-                isFirst={index === 0}
-                isLast={index === items.length - 1}
-                rounded={rounded}
-                opacity={effectiveOpacity}
-                className='reqore-accordion-item'
-              >
-                <StyledAccordionHeader
-                  theme={itemTheme}
-                  size={size}
-                  $isOpen={isOpen}
-                  disabled={isItemDisabled}
-                  intent={itemIntent}
-                  flat={flat}
-                  minimal={minimal}
-                  opacity={effectiveOpacity}
-                  onClick={() => handleToggle(index)}
-                  onKeyDown={(e) => handleKeyDown(e, index)}
-                  tabIndex={isItemDisabled ? undefined : 0}
-                  role='button'
-                  aria-expanded={isOpen}
-                  className='reqore-accordion-header'
-                >
-                  <StyledAccordionChevron
-                    as='span'
-                    $isOpen={isOpen}
-                  >
-                    <ReqoreIcon
-                      icon='ArrowDownSLine'
-                      size={getOneLessSize(size)}
-                    />
-                  </StyledAccordionChevron>
-                  {item.icon && (
-                    <ReqoreIcon
-                      icon={item.icon}
-                      size={size}
-                      color={item.iconColor}
-                      intent={item.iconColor ? undefined : itemIntent}
-                      className='reqore-accordion-icon'
-                    />
-                  )}
-                  <StyledAccordionHeaderTitle className='reqore-accordion-title'>
-                    {item.title}
-                  </StyledAccordionHeaderTitle>
-                  {(item.badge || item.badge === 0) && (
-                    <AccordionBadge content={item.badge} size={size} />
-                  )}
-                </StyledAccordionHeader>
-                <StyledAccordionContentWrapper
-                  theme={theme}
-                  size={size}
-                  $isOpen={isOpen}
-                >
-                  <StyledAccordionContentInner theme={theme} size={size}>
-                    <StyledAccordionContentBody
-                      theme={theme}
-                      size={size}
-                      className='reqore-accordion-content'
-                    >
-                      {typeof item.content === 'string' ? (
-                        <ReqoreSpan size={size}>{item.content}</ReqoreSpan>
-                      ) : (
-                        item.content
-                      )}
-                    </StyledAccordionContentBody>
-                  </StyledAccordionContentInner>
-                </StyledAccordionContentWrapper>
-              </StyledAccordionItem>
-            );
-          })}
+          {items.map((item, index) => (
+            <AccordionItemRenderer
+              key={item.id || index}
+              item={item}
+              index={index}
+              isOpen={!!openItems[index]}
+              theme={theme}
+              customTheme={customTheme}
+              size={size}
+              intent={intent}
+              flat={flat}
+              rounded={rounded}
+              minimal={minimal}
+              disabled={disabled}
+              effectiveOpacity={effectiveOpacity}
+              isFirst={index === 0}
+              isLast={index === items.length - 1}
+              onToggle={handleToggle}
+              onKeyDown={handleKeyDown}
+            />
+          ))}
         </ReqoreTooltipComponent>
       );
     }
