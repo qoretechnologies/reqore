@@ -104,17 +104,18 @@ export const ReqoreCollectionItem = ({
     left: undefined,
     top: undefined,
     transform: undefined,
+    transformOrigin: undefined,
   });
 
   useEffect(() => {
-    if (isSelected) {
+    if (isSelected && expandable) {
       setPosition('fixed');
     }
-  }, [isSelected]);
+  }, [isSelected, expandable]);
 
   useDebounce(
     () => {
-      if (isSelected) {
+      if (isSelected && expandable) {
         setDimensions({
           ...dimensions,
           width: undefined,
@@ -126,16 +127,17 @@ export const ReqoreCollectionItem = ({
           maxHeight: '90vh',
           top: '50%',
           transform: 'translateX(-50%) translateY(-50%)',
+          transformOrigin: 'center',
         });
       }
     },
     100,
-    [isSelected]
+    [isSelected, expandable]
   );
 
   useDebounce(
     () => {
-      if (!isSelected) {
+      if (!isSelected && expandable) {
         setPosition(undefined);
         setDimensions({
           minHeight: undefined,
@@ -145,11 +147,12 @@ export const ReqoreCollectionItem = ({
           left: undefined,
           top: undefined,
           transform: 'translateX(0) translateY(0)',
+          transformOrigin: 'center',
         });
       }
     },
     220,
-    [isSelected]
+    [isSelected, expandable]
   );
 
   const renderContent = () => {
@@ -164,6 +167,7 @@ export const ReqoreCollectionItem = ({
             width: ref.current.getBoundingClientRect()?.width,
             height: ref.current.getBoundingClientRect()?.height,
             transform: 'translateX(0) translateY(0)',
+            transformOrigin: 'center',
           };
 
           setDimensions({
@@ -172,6 +176,7 @@ export const ReqoreCollectionItem = ({
             width: ref.current.getBoundingClientRect()?.width,
             height: ref.current.getBoundingClientRect()?.height,
             transform: 'translateX(0) translateY(0)',
+            transformOrigin: 'center',
           });
         }
         setIsSelected(!isSelected);
@@ -216,7 +221,6 @@ export const ReqoreCollectionItem = ({
             position,
             zIndex: isSelected ? getAndIncreaseZIndex() : undefined,
             ...dimensions,
-            transformOrigin: 'center',
           }}
           contentStyle={{
             ...rest.contentStyle,
