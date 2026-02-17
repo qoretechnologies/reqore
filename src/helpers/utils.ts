@@ -112,7 +112,7 @@ export const getOneHigherSize = (size: TSizes): TSizes => {
   // Get the initial sizes number
   const initialSizeNumber: number = SIZE_TO_NUMBER[size];
   // Reduce the size number by one
-  const oneHigherSizeNumber: number = initialSizeNumber + 1 === 6 ? 5 : initialSizeNumber + 1;
+  const oneHigherSizeNumber: number = initialSizeNumber + 1 === 8 ? 7 : initialSizeNumber + 1;
   // Get the size name from the number
   return NUMBER_TO_SIZE[oneHigherSizeNumber];
 };
