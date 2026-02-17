@@ -17,11 +17,7 @@ import {
 } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import {
-  ACTIVE_ICON_SCALE,
-  DisabledElement,
-  INACTIVE_ICON_SCALE,
-} from '../../styles';
+import { ACTIVE_ICON_SCALE, DisabledElement, INACTIVE_ICON_SCALE } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -164,15 +160,13 @@ const StyledAccordionItem = styled.div<IStyledAccordionItem>`
 const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
   display: flex;
   align-items: center;
-  gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
+  gap: ${() => GAP_FROM_SIZE.normal}px;
   padding: ${({ size }) => `${PADDING_FROM_SIZE[size]}px ${PADDING_FROM_SIZE[size] * 1.5}px`};
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease-out;
   background-color: ${({ theme, opacity = 1, minimal }) =>
-    minimal
-      ? 'transparent'
-      : rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    minimal ? 'transparent' : rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
@@ -183,9 +177,7 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
 
   &:hover {
     background-color: ${({ theme, opacity = 1, disabled }) =>
-      disabled
-        ? undefined
-        : rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
+      disabled ? undefined : rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
 
     ${StyledIconWrapper} {
       transform: scale(${ACTIVE_ICON_SCALE});
@@ -225,10 +217,8 @@ const StyledAccordionContentBody = styled.div<{ theme: IReqoreTheme; size: TSize
   padding: ${({ size }) => `${PADDING_FROM_SIZE[size]}px ${PADDING_FROM_SIZE[size] * 1.5}px`};
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  background-color: ${({ theme }) =>
-    rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
-  border-top: 1px solid ${({ theme }) =>
-    changeLightness(getMainBackgroundColor(theme), 0.05)};
+  background-color: ${({ theme }) => rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
+  border-top: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.05)};
 `;
 
 interface IBadgeProps {
@@ -348,16 +338,13 @@ const AccordionItemRenderer = memo(
               icon={item.icon}
               size={size}
               color={item.iconColor}
-              intent={item.iconColor ? undefined : itemIntent}
               className='reqore-accordion-icon'
             />
           )}
           <StyledAccordionHeaderTitle className='reqore-accordion-title'>
             {item.title}
           </StyledAccordionHeaderTitle>
-          {(item.badge || item.badge === 0) && (
-            <AccordionBadge content={item.badge} size={size} />
-          )}
+          {(item.badge || item.badge === 0) && <AccordionBadge content={item.badge} size={size} />}
         </StyledAccordionHeader>
         <StyledAccordionContentWrapper theme={theme} size={size} $isOpen={isOpen}>
           <StyledAccordionContentInner theme={theme} size={size}>
