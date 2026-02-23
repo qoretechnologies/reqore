@@ -403,6 +403,8 @@ const ReqoreDropdownList = memo(
             <ReqoreTag
               icon='Home4Line'
               size='small'
+              intent={intent}
+              customTheme={customTheme}
               onClick={() => {
                 _onNavigateToLevel?.(0);
               }}
