@@ -404,10 +404,7 @@ const ReqoreDropdownList = memo(
               icon='Home4Line'
               size='small'
               onClick={() => {
-                console.log('Home clicked');
-                if (_onNavigateToLevel) {
-                  _onNavigateToLevel(0);
-                }
+                _onNavigateToLevel?.(0);
               }}
             />
             {labels.map((label, index) => (
@@ -418,9 +415,7 @@ const ReqoreDropdownList = memo(
                   // Navigate back to the clicked label's level
                   const targetLevel = label._levelIndex ?? index;
 
-                  if (_onNavigateToLevel) {
-                    _onNavigateToLevel(targetLevel);
-                  }
+                  _onNavigateToLevel?.(targetLevel);
 
                   // Call any original onClick if provided
                   if (label.onClick) {
