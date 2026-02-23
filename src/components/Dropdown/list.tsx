@@ -293,29 +293,32 @@ const ReqoreDropdownList = memo(
       ]
     );
 
-    const getAction = useCallback((item: TReqoreDropdownItem, position: 'left' | 'right') => {
-      const action = position === 'left' ? item.leftAction : item.rightAction;
+    const getAction = useCallback(
+      (item: TReqoreDropdownItem, position: 'left' | 'right') => {
+        const action = position === 'left' ? item.leftAction : item.rightAction;
 
-      if (!action) {
-        return undefined;
-      }
+        if (!action) {
+          return undefined;
+        }
 
-      if (!action.onClick) {
-        return action;
-      }
+        if (!action.onClick) {
+          return action;
+        }
 
-      return {
-        ...action,
-        onClick: (event, itemId, _closePopover) => {
-          action.onClick(event, itemId, _closePopover || closePopover, {
-            item,
-            selectItem: () => {
-              handleItemSelectClick(item, event);
-            },
-          });
-        },
-      };
-    }, [closePopover, handleItemSelectClick]);
+        return {
+          ...action,
+          onClick: (event, itemId, _closePopover) => {
+            action.onClick(event, itemId, _closePopover || closePopover, {
+              item,
+              selectItem: () => {
+                handleItemSelectClick(item, event);
+              },
+            });
+          },
+        };
+      },
+      [closePopover, handleItemSelectClick]
+    );
 
     if (currentSelectedItem) {
       return (
@@ -346,7 +349,7 @@ const ReqoreDropdownList = memo(
                 leftIconProps: currentSelectedItem.leftIconProps,
                 customTheme: currentSelectedItem.customTheme || customTheme,
                 intent: currentSelectedItem.intent || intent,
-                _levelIndex: _level,
+                _levelIndex: _level + 1,
               },
             ],
             _onBackClick: () => handleSelectItemAtLevel(undefined),
@@ -388,7 +391,6 @@ const ReqoreDropdownList = memo(
                   onClearClick={() => (onFilterChange ? onFilterChange('') : setQuery(''))}
                   customTheme={theme}
                   intent={intent}
-                  autoFocus={keyboardNavigation}
                   {...inputProps}
                   onKeyDown={keyboardNavigation ? handleKeyDown : inputProps?.onKeyDown}
                 />
@@ -398,6 +400,15 @@ const ReqoreDropdownList = memo(
         ) : null}
         {size(labels) ? (
           <ReqoreTagGroup size='small'>
+            <ReqoreTag
+              icon='Home4Line'
+              size='small'
+              intent={intent}
+              customTheme={customTheme}
+              onClick={() => {
+                _onNavigateToLevel?.(0);
+              }}
+            />
             {labels.map((label, index) => (
               <ReqoreTag
                 key={index}

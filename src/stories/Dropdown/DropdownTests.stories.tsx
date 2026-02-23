@@ -139,6 +139,21 @@ export const ItemsCanBeTraversed: Story = {
   },
 };
 
+export const ItemsCanBeTraversedViaTags: Story = {
+  ...ItemsCanBeTraversed,
+  play: async ({ canvasElement, ...rest }) => {
+    const canvas = within(canvasElement);
+
+    await ItemsCanBeTraversed.play({ canvasElement, ...rest });
+
+    await sleep(500);
+
+    await fireEvent.click(document.querySelectorAll('.reqore-tag-key-content')[0]);
+
+    await expect(canvas.getAllByText('I have children')[0]).toBeTruthy();
+  },
+};
+
 export const ItemIsAutomaticallySelected: Story = {
   ...WithChildItems,
   args: {
