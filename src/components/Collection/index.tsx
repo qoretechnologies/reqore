@@ -25,6 +25,21 @@ import { ReqoreVerticalSpacer } from '../Spacer';
 import { getZoomActions, sizeToZoom, sortTableData, zoomToSize } from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 
+const CollectionGroupHeader = memo(({ name }: { name: string }) => (
+  <ReqoreP
+    style={{ gridColumn: '1 / -1' }}
+    effect={{
+      opacity: 0.8,
+      uppercase: true,
+      weight: 'bold',
+      textSize: 'small',
+      spaced: 1,
+    }}
+  >
+    {name}
+  </ReqoreP>
+));
+
 export type TReqoreCollectionActions = (IReqorePanelAction & { position?: 'left' | 'right' })[];
 export interface IReqoreCollectionProps
   extends IReqoreComponent,
@@ -50,6 +65,7 @@ export interface IReqoreCollectionProps
   defaultSortBy?: string;
 
   sortKeys?: Record<string, string>;
+  sortByGroupFirst?: boolean;
 
   filterable?: boolean;
   sortable?: boolean;
@@ -132,6 +148,7 @@ export const ReqoreCollection = memo(
     skeleton,
 
     sortKeys = {},
+    sortByGroupFirst = true,
 
     onQueryChange,
     contentRenderer = (children, _items, searchInput) => (
@@ -188,33 +205,25 @@ export const ReqoreCollection = memo(
         return items;
       }
 
+      const sortConfig = sortByGroupFirst
+        ? { by: 'group', thenBy: _sortBy, direction: sort }
+        : { by: _sortBy, thenBy: 'group', direction: sort };
+
       if (showSelectedFirst) {
         // Filter out the selected items
         const selectedItems = items.filter((item) => item.selected);
         // Filter out the unselected items
         const unselectedItems = items.filter((item) => !item.selected);
         // Sort the selected items
-        const sortedSelectedItems = sortTableData(selectedItems, {
-          by: 'group',
-          thenBy: _sortBy,
-          direction: sort,
-        });
+        const sortedSelectedItems = sortTableData(selectedItems, sortConfig);
         // Sort the unselected items
-        const sortedUnselectedItems = sortTableData(unselectedItems, {
-          by: 'group',
-          thenBy: _sortBy,
-          direction: sort,
-        });
+        const sortedUnselectedItems = sortTableData(unselectedItems, sortConfig);
 
         return [...sortedSelectedItems, ...sortedUnselectedItems];
       }
 
-      return sortTableData(items, {
-        by: 'group',
-        thenBy: _sortBy,
-        direction: sort,
-      });
-    }, [items, sort, sortBy, showSelectedFirst, sortable]);
+      return sortTableData(items, sortConfig);
+    }, [items, sort, sortBy, showSelectedFirst, sortable, sortByGroupFirst]);
 
     const filteredItems: IReqoreCollectionItemProps[] = useMemo(() => {
       if (!filterable || query === '') {
@@ -387,11 +396,51 @@ export const ReqoreCollection = memo(
                 className='reqore-collection-content'
               >
                 {(() => {
+                  const pagedItems = applyPaging(filteredItems);
+
+                  // When sortByGroupFirst is false, render items in flat
+                  // sorted order with inline group headers when the group
+                  // changes, preserving the primary sort field order
+                  if (!sortByGroupFirst) {
+                    let lastGroup: string | undefined;
+
+                    return pagedItems.map((item, index) => {
+                      const group =
+                        item.groups && !paging ? item.groups[0] : undefined;
+                      const showHeader =
+                        group && group !== 'Ungrouped' && group !== lastGroup;
+
+                      if (group) {
+                        lastGroup = group;
+                      }
+
+                      return (
+                        <React.Fragment key={index}>
+                          {showHeader && (
+                            <CollectionGroupHeader name={group} />
+                          )}
+                          <ReqoreErrorBoundary {...errorBoundaryOptions}>
+                            <ReqoreCollectionItem
+                              size={zoomToSize[zoom]}
+                              responsiveTitle={false}
+                              {...item}
+                              icon={
+                                item.icon ||
+                                (item.selected ? selectedIcon : undefined)
+                              }
+                              rounded={!stacked}
+                              maxContentHeight={maxItemHeight}
+                            />
+                          </ReqoreErrorBoundary>
+                        </React.Fragment>
+                      );
+                    });
+                  }
+
                   // Group items by their 'groups' property
                   // Groups is a list of strings, so an item can be in multiple groups
                   // Sort the groups based on defaultSort
-
-                  const grouped = applyPaging(filteredItems).reduce((acc, item) => {
+                  const grouped = pagedItems.reduce((acc, item) => {
                     const groups = item.groups && !paging ? item.groups : ['Ungrouped'];
 
                     groups.forEach((group) => {
@@ -432,18 +481,7 @@ export const ReqoreCollection = memo(
                   return Object.entries(orderedGrouped).map(([groupName, groupItems]) => (
                     <React.Fragment key={groupName}>
                       {groupName !== 'Ungrouped' && (
-                        <ReqoreP
-                          style={{ gridColumn: '1 / -1' }}
-                          effect={{
-                            opacity: 0.8,
-                            uppercase: true,
-                            weight: 'bold',
-                            textSize: 'small',
-                            spaced: 1,
-                          }}
-                        >
-                          {groupName}
-                        </ReqoreP>
+                        <CollectionGroupHeader name={groupName} />
                       )}
                       {groupItems.map((item, index) => (
                         <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
