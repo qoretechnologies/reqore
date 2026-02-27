@@ -431,6 +431,82 @@ export const WithGroups: Story = {
   },
 };
 
+export const SortByRelevanceAcrossGroups: Story = {
+  args: {
+    label: 'Search Results (sorted by relevance, not group)',
+    sortByGroupFirst: false,
+    defaultSortBy: 'relevance',
+    defaultSort: 'asc',
+    sortKeys: {
+      relevance: 'Relevance',
+    },
+    items: [
+      {
+        label: 'Zendesk: Create Ticket',
+        groups: ['Zendesk'],
+        badge: 'Exact',
+        intent: 'success',
+        content: 'Creates a new support ticket in Zendesk',
+        metadata: { relevance: 0 },
+      },
+      {
+        label: 'AWS: Launch Instance',
+        groups: ['AWS'],
+        badge: 'Partial',
+        content: 'Launch a new EC2 instance in AWS',
+        metadata: { relevance: 1 },
+      },
+      {
+        label: 'AWS: S3 Upload',
+        groups: ['AWS'],
+        badge: 'Exact',
+        intent: 'success',
+        content: 'Upload a file to an S3 bucket',
+        metadata: { relevance: 0 },
+      },
+      {
+        label: 'Slack: Send Message',
+        groups: ['Slack'],
+        badge: 'Weak',
+        intent: 'warning',
+        content: 'Send a message to a Slack channel',
+        metadata: { relevance: 2 },
+      },
+      {
+        label: 'Slack: Create Channel',
+        groups: ['Slack'],
+        badge: 'Partial',
+        content: 'Create a new Slack channel',
+        metadata: { relevance: 1 },
+      },
+      {
+        label: 'Zendesk: Update Ticket',
+        groups: ['Zendesk'],
+        badge: 'Weak',
+        intent: 'warning',
+        content: 'Update an existing support ticket',
+        metadata: { relevance: 2 },
+      },
+      {
+        label: 'Discord: Post Announcement',
+        groups: ['Discord'],
+        badge: 'Exact',
+        intent: 'success',
+        content: 'Post an announcement to a Discord channel',
+        metadata: { relevance: 0 },
+      },
+      {
+        label: 'Discord: Ban User',
+        groups: ['Discord'],
+        badge: 'Weak',
+        intent: 'warning',
+        content: 'Ban a user from the Discord server',
+        metadata: { relevance: 2 },
+      },
+    ],
+  },
+};
+
 export const ItemIsInMultipleGroups: Story = {
   args: {
     items: [

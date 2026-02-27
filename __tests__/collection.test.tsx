@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/extend-expect';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { ReqoreCollection, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+import { IReqoreCollectionItemProps } from '../src/components/Collection/item';
 import items, { bigCollection } from '../src/mock/collectionData';
 
 test('Renders basic <Collection /> properly', () => {
@@ -240,4 +241,77 @@ test('<Collection /> has 2 paging controls', () => {
   expect(document.querySelectorAll('.reqore-pagination-wrapper').length).toBe(2);
   expect(document.querySelectorAll('.reqore-button').length).toBe(11);
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(10);
+});
+
+test('<Collection /> sortByGroupFirst=false sorts by custom field before group', () => {
+  const groupedItems: IReqoreCollectionItemProps[] = [
+    {
+      label: 'Zendesk Exact Match',
+      groups: ['Zendesk'],
+      metadata: { relevance: 0 },
+    },
+    {
+      label: 'AWS Partial Match',
+      groups: ['AWS'],
+      metadata: { relevance: 1 },
+    },
+    {
+      label: 'AWS Exact Match',
+      groups: ['AWS'],
+      metadata: { relevance: 0 },
+    },
+    {
+      label: 'Zendesk Weak Match',
+      groups: ['Zendesk'],
+      metadata: { relevance: 2 },
+    },
+  ];
+
+  // With sortByGroupFirst=true (default): items grouped by group first
+  const { unmount } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection
+          items={groupedItems}
+          defaultSortBy='relevance'
+          sortKeys={{ relevance: 'Relevance' }}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const defaultLabels = Array.from(
+    document.querySelectorAll('.reqore-collection-item .reqore-panel-title')
+  ).map((el) => el.textContent);
+
+  // Group sort first: AWS items come before Zendesk items (A < Z)
+  expect(defaultLabels[0]).toBe('AWS Exact Match');
+  expect(defaultLabels[1]).toBe('AWS Partial Match');
+
+  unmount();
+
+  // With sortByGroupFirst=false: items sorted by relevance first
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection
+          items={groupedItems}
+          sortByGroupFirst={false}
+          defaultSortBy='relevance'
+          sortKeys={{ relevance: 'Relevance' }}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const relevanceLabels = Array.from(
+    document.querySelectorAll('.reqore-collection-item .reqore-panel-title')
+  ).map((el) => el.textContent);
+
+  // Relevance sort first: relevance=0 items before relevance=1 items
+  // Items are rendered flat (not re-grouped), preserving relevance order
+  expect(relevanceLabels[0]).toBe('Zendesk Exact Match');
+  expect(relevanceLabels[1]).toBe('AWS Exact Match');
+  expect(relevanceLabels[2]).toBe('AWS Partial Match');
+  expect(relevanceLabels[3]).toBe('Zendesk Weak Match');
 });
