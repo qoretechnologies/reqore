@@ -305,7 +305,7 @@ const TimelineItemRenderer = memo(
     const itemTheme = useReqoreTheme('main', customTheme, item.intent || intent);
     const isClickable = !!item.onClick && !item.disabled;
     const hasIntent = !!(item.intent || intent);
-    const hasContent = !!(item.content || item.timestamp);
+
 
     const itemContent = (
       <StyledTimelineItem
