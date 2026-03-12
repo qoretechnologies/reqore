@@ -498,6 +498,39 @@ export const DynamicItemCount: Story = {
   },
 };
 
+const largeCollapsibleItems: IReqoreTimelineProps['items'] = [
+  {
+    title: 'Tall content (expanded)',
+    icon: 'FileTextLine',
+    intent: 'info',
+    collapsible: true,
+    content:
+      'This collapsible item has no max-height cap, so arbitrarily tall content will display fully without scrollbars or clipping. '.repeat(
+        80
+      ),
+  },
+  {
+    title: 'Tall content (collapsed by default)',
+    icon: 'FileTextLine',
+    collapsible: true,
+    isCollapsed: true,
+    content: 'Expand to see content. No height limit applied. '.repeat(20),
+  },
+  {
+    title: 'Normal item after collapsible items',
+    content: 'Timeline renders correctly after collapsible items.',
+    icon: 'CheckLine',
+    intent: 'success',
+  },
+];
+
+export const LargeCollapsibleContent: Story = {
+  render: Template,
+  args: {
+    items: largeCollapsibleItems,
+  },
+};
+
 export const WorkflowExample: Story = {
   render: (args) => (
     <ReqoreTimeline
@@ -513,8 +546,8 @@ export const WorkflowExample: Story = {
           collapsible: true,
         },
         {
-          title: 'Under Review',
-          content: 'The request is being reviewed by the product team.',
+          title:
+            'Under Review because this is a very long title that should wrap but not go under the arrow. Under Review because this is a very long title that should wrap but not go under the arrow. Under Review because this is a very long title that should wrap but not go under the arrow. Under Review because this is a very long title that should wrap but not go under the arrow.',
           timestamp: Date.now() - 1000 * 60 * 60 * 24 * 7, // 7 days ago
           relativeTime: true,
           icon: 'SearchEyeLine',
@@ -537,7 +570,8 @@ export const WorkflowExample: Story = {
           content: 'Development has started. Expected completion: 2 weeks.',
           timestamp: Date.now() - 1000 * 60 * 60 * 24, // 1 day ago
           relativeTime: true,
-          icon: 'CodeLine',
+          icon: 'Progress1Fill',
+          iconProps: { animation: 'spin' },
           intent: 'pending',
           badge: ['Sprint 42', { label: '30%', intent: 'info' }],
           collapsible: true,

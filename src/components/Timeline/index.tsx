@@ -26,7 +26,7 @@ import { IReqoreIconName } from '../../types/icons';
 import { TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
-import ReqoreIcon from '../Icon';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
@@ -47,6 +47,8 @@ export interface IReqoreTimelineItem extends IReqoreDisabled, IReqoreIntent {
   icon?: IReqoreIconName;
   /** Custom color for the icon */
   iconColor?: TReqoreEffectColor;
+  /** Additional props passed to the ReqoreIcon component */
+  iconProps?: Partial<IReqoreIconProps>;
   /** Click handler for interactive items */
   onClick?: () => void;
   /** Tooltip for the timeline item */
@@ -209,13 +211,14 @@ const StyledTimelineContent = styled.div<IReqoreTimelineItemStyle>`
 `;
 
 const StyledTimelineDetails = styled.div<IReqoreTimelineItemStyle>`
-  overflow: hidden;
-  transition: all 0.2s ease-in-out;
+  display: grid;
+  transition: grid-template-rows 0.2s ease-in-out, opacity 0.2s ease-in-out,
+    margin-top 0.2s ease-in-out;
 
   ${({ isCollapsed }) =>
     isCollapsed &&
     css`
-      max-height: 0;
+      grid-template-rows: 0fr;
       opacity: 0;
       margin-top: 0;
     `}
@@ -223,10 +226,15 @@ const StyledTimelineDetails = styled.div<IReqoreTimelineItemStyle>`
   ${({ isCollapsed, size }) =>
     !isCollapsed &&
     css`
-      max-height: 1000px;
+      grid-template-rows: 1fr;
       opacity: 1;
       margin-top: ${GAP_FROM_SIZE[size]}px;
     `}
+
+  > * {
+    overflow: hidden;
+    min-height: 0;
+  }
 `;
 
 interface IBadgeProps extends IWithReqoreSize {
@@ -297,7 +305,7 @@ const TimelineItemRenderer = memo(
     const itemTheme = useReqoreTheme('main', customTheme, item.intent || intent);
     const isClickable = !!item.onClick && !item.disabled;
     const hasIntent = !!(item.intent || intent);
-    const hasContent = !!(item.content || item.timestamp);
+
 
     const itemContent = (
       <StyledTimelineItem
@@ -322,8 +330,9 @@ const TimelineItemRenderer = memo(
             {item.icon ? (
               <ReqoreIcon
                 icon={item.icon}
-                size={getOneLessSize(size)}
+                size={getOneLessSize(getOneLessSize(size))}
                 color={item.iconColor || (hasIntent ? itemTheme.main : undefined)}
+                {...item.iconProps}
               />
             ) : (
               <StyledTimelineDot theme={itemTheme} size={size} hasIntent={hasIntent} />
@@ -334,8 +343,7 @@ const TimelineItemRenderer = memo(
         <StyledTimelineContent theme={baseTheme} size={size}>
           {item.title && (
             <ReqoreControlGroup
-              verticalAlign='center'
-              wrap
+              verticalAlign='flex-start'
               gapSize={size}
               onClick={item.collapsible ? (e) => onToggleCollapse(index, e) : undefined}
               style={item.collapsible ? { cursor: 'pointer' } : undefined}
@@ -347,6 +355,7 @@ const TimelineItemRenderer = memo(
                   color={getReadableColor(baseTheme, undefined, undefined)}
                   rotation={isCollapsed ? -90 : 0}
                   className='reqore-timeline-collapse'
+                  style={{ flexShrink: 0 }}
                 />
               )}
               <ReqoreSpan
@@ -362,10 +371,23 @@ const TimelineItemRenderer = memo(
               )}
             </ReqoreControlGroup>
           )}
-          {hasContent && (
+          {item.timestamp && (
+            <ReqoreSpan
+              size={getOneLessSize(getOneLessSize(size))}
+              className='reqore-timeline-timestamp'
+              style={{
+                color: rgba(getReadableColor(baseTheme, undefined, undefined), 0.5),
+                display: 'block',
+                marginTop: `${GAP_FROM_SIZE[size]}px`,
+              }}
+            >
+              {item.relativeTime ? <TimeAgo time={item.timestamp} /> : item.timestamp}
+            </ReqoreSpan>
+          )}
+          {item.content && (
             <StyledTimelineDetails theme={baseTheme} size={size} isCollapsed={isCollapsed}>
-              {item.content &&
-                (typeof item.content === 'string' || typeof item.content === 'number' ? (
+              <div>
+                {typeof item.content === 'string' || typeof item.content === 'number' ? (
                   <ReqoreP
                     size={getOneLessSize(size)}
                     effect={item.contentEffect}
@@ -379,20 +401,8 @@ const TimelineItemRenderer = memo(
                   </ReqoreP>
                 ) : (
                   <div className='reqore-timeline-content'>{item.content}</div>
-                ))}
-              {item.timestamp && (
-                <ReqoreSpan
-                  size={getOneLessSize(getOneLessSize(size))}
-                  className='reqore-timeline-timestamp'
-                  style={{
-                    color: rgba(getReadableColor(baseTheme, undefined, undefined), 0.5),
-                    display: 'block',
-                    marginTop: `${GAP_FROM_SIZE[size]}px`,
-                  }}
-                >
-                  {item.relativeTime ? <TimeAgo time={item.timestamp} /> : item.timestamp}
-                </ReqoreSpan>
-              )}
+                )}
+              </div>
             </StyledTimelineDetails>
           )}
         </StyledTimelineContent>
@@ -468,7 +478,9 @@ const ReqoreTimeline = memo(
               customTheme={customTheme}
               intent={intent}
               baseTheme={baseTheme}
-              isCollapsed={item.collapsible ? (collapsedStates[index] ?? item.isCollapsed ?? false) : false}
+              isCollapsed={
+                item.collapsible ? collapsedStates[index] ?? item.isCollapsed ?? false : false
+              }
               onToggleCollapse={toggleCollapse}
               onItemClick={handleItemClick}
               onKeyDown={handleKeyDown}
