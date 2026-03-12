@@ -53,6 +53,7 @@ export { ReqorePopover } from './components/Popover';
 export { default as ReqoreProgress } from './components/Progress';
 export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export { default as ReqoreRating } from './components/Rating';
+export { default as ReqoreSegmentedControl } from './components/SegmentedControl';
 export { ReqoreRichTextEditor } from './components/RichTextEditor';
 export { ReqoreSkeleton } from './components/Skeleton';
 export { ReqoreSlider } from './components/Slider';

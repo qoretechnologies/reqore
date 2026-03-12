@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ReqoreTimeline, { IReqoreTimelineProps } from '../../components/Timeline';
 import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
@@ -470,6 +470,32 @@ const customContentItems: IReqoreTimelineProps['items'] = [
 
 export const CustomContent: Story = {
   render: (args) => <ReqoreTimeline {...args} items={customContentItems} />,
+};
+
+export const DynamicItemCount: Story = {
+  render: (args) => {
+    const fiveItems: IReqoreTimelineProps['items'] = Array.from({ length: 5 }, (_, i) => ({
+      title: `Event ${i + 1}`,
+      content: `Description for event ${i + 1}.`,
+      icon: 'TimeLine' as const,
+    }));
+
+    const tenItems: IReqoreTimelineProps['items'] = Array.from({ length: 10 }, (_, i) => ({
+      title: `Event ${i + 1}`,
+      content: `Description for event ${i + 1}.`,
+      icon: 'TimeLine' as const,
+      intent: i >= 5 ? ('info' as const) : undefined,
+    }));
+
+    const [items, setItems] = useState(fiveItems);
+
+    useEffect(() => {
+      const timer = setTimeout(() => setItems(tenItems), 1000);
+      return () => clearTimeout(timer);
+    }, []);
+
+    return <ReqoreTimeline {...args} items={items} />;
+  },
 };
 
 export const WorkflowExample: Story = {
