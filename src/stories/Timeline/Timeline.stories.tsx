@@ -1,7 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ReqoreTimeline, { IReqoreTimelineProps } from '../../components/Timeline';
-import { ReqoreControlGroup } from '../../index';
+import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -528,6 +528,91 @@ export const LargeCollapsibleContent: Story = {
   render: Template,
   args: {
     items: largeCollapsibleItems,
+  },
+};
+
+export const ControlledCollapse: Story = {
+  render: (args) => {
+    const collapsibleItems: IReqoreTimelineProps['items'] = [
+      {
+        title: 'Request Submitted',
+        content: 'User submitted a new feature request via the portal.',
+        timestamp: '2024-01-10 09:00',
+        icon: 'FileAddLine',
+        collapsible: true,
+      },
+      {
+        title: 'Under Review',
+        content: 'The request is being evaluated by the product team.',
+        timestamp: '2024-01-11 14:00',
+        icon: 'SearchEyeLine',
+        intent: 'info',
+        collapsible: true,
+      },
+      {
+        title: 'Approved',
+        content: 'The feature request has been approved for development.',
+        timestamp: '2024-01-14 11:30',
+        icon: 'CheckDoubleLine',
+        intent: 'success',
+        collapsible: true,
+      },
+      {
+        title: 'In Progress',
+        content: 'Development has started. Expected completion: 2 weeks.',
+        timestamp: '2024-01-15 09:00',
+        icon: 'Progress1Fill',
+        intent: 'pending',
+        collapsible: true,
+      },
+    ];
+
+    const [collapsed, setCollapsed] = useState<Record<number, boolean>>({ 0: true, 2: true });
+
+    const handleCollapseChange = useCallback((index: number, isCollapsed: boolean) => {
+      setCollapsed((prev) => ({ ...prev, [index]: isCollapsed }));
+    }, []);
+
+    const expandAll = useCallback(() => {
+      setCollapsed(
+        collapsibleItems.reduce<Record<number, boolean>>((acc, _, i) => ({ ...acc, [i]: false }), {})
+      );
+    }, []);
+
+    const collapseAll = useCallback(() => {
+      setCollapsed(
+        collapsibleItems.reduce<Record<number, boolean>>((acc, _, i) => ({ ...acc, [i]: true }), {})
+      );
+    }, []);
+
+    return (
+      <ReqoreControlGroup vertical gapSize='normal'>
+        <ReqoreControlGroup>
+          <ReqoreButton onClick={expandAll} icon='ArrowDownSLine'>
+            Expand all
+          </ReqoreButton>
+          <ReqoreButton onClick={collapseAll} icon='ArrowUpSLine'>
+            Collapse all
+          </ReqoreButton>
+          {collapsibleItems.map((_, i) => (
+            <ReqoreButton
+              key={i}
+              onClick={() => setCollapsed((prev) => ({ ...prev, [i]: false }))}
+              intent='info'
+              minimal
+            >
+              Expand #{i + 1}
+            </ReqoreButton>
+          ))}
+        </ReqoreControlGroup>
+        <ReqoreTimeline
+          {...args}
+          items={collapsibleItems}
+          collapsedState={collapsed}
+          onCollapseChange={handleCollapseChange}
+        />
+      </ReqoreControlGroup>
+    );
   },
 };
 
