@@ -1,6 +1,10 @@
+import { expect } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
+import { within } from '@storybook/testing-library';
 import { useCallback, useEffect, useState } from 'react';
+import { _testsClickButton } from '../../../__tests__/utils';
 import ReqoreTimeline, { IReqoreTimelineProps } from '../../components/Timeline';
+import { sleep } from '../../helpers/utils';
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
@@ -567,7 +571,10 @@ export const ControlledCollapse: Story = {
       },
     ];
 
-    const [collapsed, setCollapsed] = useState<Record<number, boolean>>({ 0: true, 2: true });
+    const [collapsed, setCollapsed] = useState<Record<number, boolean>>({
+      1: true,
+      3: true,
+    });
 
     const handleCollapseChange = useCallback((index: number, isCollapsed: boolean) => {
       setCollapsed((prev) => ({ ...prev, [index]: isCollapsed }));
@@ -575,7 +582,10 @@ export const ControlledCollapse: Story = {
 
     const expandAll = useCallback(() => {
       setCollapsed(
-        collapsibleItems.reduce<Record<number, boolean>>((acc, _, i) => ({ ...acc, [i]: false }), {})
+        collapsibleItems.reduce<Record<number, boolean>>(
+          (acc, _, i) => ({ ...acc, [i]: false }),
+          {}
+        )
       );
     }, []);
 
@@ -594,16 +604,6 @@ export const ControlledCollapse: Story = {
           <ReqoreButton onClick={collapseAll} icon='ArrowUpSLine'>
             Collapse all
           </ReqoreButton>
-          {collapsibleItems.map((_, i) => (
-            <ReqoreButton
-              key={i}
-              onClick={() => setCollapsed((prev) => ({ ...prev, [i]: false }))}
-              intent='info'
-              minimal
-            >
-              Expand #{i + 1}
-            </ReqoreButton>
-          ))}
         </ReqoreControlGroup>
         <ReqoreTimeline
           {...args}
@@ -613,6 +613,24 @@ export const ControlledCollapse: Story = {
         />
       </ReqoreControlGroup>
     );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.queryByText('User submitted a new feature request via the portal.')
+    ).toBeVisible();
+
+    await expect(
+      canvas.queryByText('The request is being evaluated by the product team.')
+    ).not.toBeVisible();
+
+    await _testsClickButton({ label: 'Expand all' });
+
+    await sleep(500); // Wait for animation
+
+    await expect(
+      canvas.queryByText('The request is being evaluated by the product team.')
+    ).toBeVisible();
   },
 };
 
