@@ -74,6 +74,14 @@ export interface IReqoreTimelineProps
     IWithReqoreSize {
   /** Array of timeline items to display */
   items: IReqoreTimelineItem[];
+  /**
+   * Controlled collapsed state — map of item index to collapsed boolean.
+   * When provided, the component becomes controlled for those indices.
+   * Items not in the map fall back to their own `isCollapsed` prop.
+   */
+  collapsedState?: Record<number, boolean>;
+  /** Callback fired when any item's collapsed state changes (click, keyboard, etc.) */
+  onCollapseChange?: (index: number, isCollapsed: boolean) => void;
 }
 
 export interface IReqoreTimelineStyle {
@@ -423,12 +431,27 @@ const TimelineItemRenderer = memo(
 
 const ReqoreTimeline = memo(
   forwardRef<HTMLOListElement, IReqoreTimelineProps>(
-    ({ items, size = 'normal', customTheme, intent, fluid = false, className, ...rest }, ref) => {
+    (
+      {
+        items,
+        size = 'normal',
+        customTheme,
+        intent,
+        fluid = false,
+        className,
+        collapsedState,
+        onCollapseChange,
+        ...rest
+      },
+      ref
+    ) => {
       const theme = useReqoreTheme('main', customTheme, intent);
       const baseTheme = useReqoreTheme('main', customTheme);
 
-      // Track collapsed state for each item
-      const [collapsedStates, setCollapsedStates] = useState<Record<number, boolean>>(() =>
+      // Internal state used only in uncontrolled mode
+      const [internalCollapsedStates, setInternalCollapsedStates] = useState<
+        Record<number, boolean>
+      >(() =>
         items.reduce((acc, item, index) => {
           if (item.collapsible) {
             acc[index] = item.isCollapsed ?? false;
@@ -436,6 +459,8 @@ const ReqoreTimeline = memo(
           return acc;
         }, {} as Record<number, boolean>)
       );
+
+      const isControlled = collapsedState !== undefined;
 
       const handleItemClick = useCallback((item: IReqoreTimelineItem) => {
         if (item.onClick && !item.disabled) {
@@ -450,13 +475,33 @@ const ReqoreTimeline = memo(
         }
       }, []);
 
-      const toggleCollapse = useCallback((index: number, event: React.MouseEvent) => {
-        event.stopPropagation();
-        setCollapsedStates((prev) => ({
-          ...prev,
-          [index]: !prev[index],
-        }));
-      }, []);
+      const toggleCollapse = useCallback(
+        (index: number, event: React.MouseEvent) => {
+          event.stopPropagation();
+          if (isControlled) {
+            const currentCollapsed = collapsedState![index] ?? items[index]?.isCollapsed ?? false;
+            onCollapseChange?.(index, !currentCollapsed);
+          } else {
+            setInternalCollapsedStates((prev) => {
+              const next = !prev[index];
+              onCollapseChange?.(index, next);
+              return { ...prev, [index]: next };
+            });
+          }
+        },
+        [isControlled, collapsedState, items, onCollapseChange]
+      );
+
+      const getIsCollapsed = useCallback(
+        (item: IReqoreTimelineItem, index: number): boolean => {
+          if (!item.collapsible) return false;
+          if (isControlled) {
+            return collapsedState![index] ?? item.isCollapsed ?? false;
+          }
+          return internalCollapsedStates[index] ?? item.isCollapsed ?? false;
+        },
+        [isControlled, collapsedState, internalCollapsedStates]
+      );
 
       return (
         <StyledTimeline
@@ -478,9 +523,7 @@ const ReqoreTimeline = memo(
               customTheme={customTheme}
               intent={intent}
               baseTheme={baseTheme}
-              isCollapsed={
-                item.collapsible ? collapsedStates[index] ?? item.isCollapsed ?? false : false
-              }
+              isCollapsed={getIsCollapsed(item, index)}
               onToggleCollapse={toggleCollapse}
               onItemClick={handleItemClick}
               onKeyDown={handleKeyDown}

@@ -221,3 +221,8 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
 - **Docusaurus:** Run `yarn docs:dev` for user guides + API docs
 - **TypeDoc:** `yarn docs:api` generates API reference from JSDoc comments
 - **Inline:** Use JSDoc comments on public props/methods for IDE tooltips
+
+## Other
+
+- You may need to source zsh to get some commands (like gh) working
+- If there is an issue, always start the branch with the issue number e.g. `feature/1234_new-component`

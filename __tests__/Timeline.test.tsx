@@ -366,6 +366,118 @@ test('Toggling collapse on a collapsible item', () => {
   expect(document.querySelectorAll('.reqore-timeline-item').length).toBe(1);
 });
 
+test('Controlled collapse: reads collapsed state from collapsedState prop', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            collapsedState={{ 0: true, 1: false }}
+            items={[
+              { title: 'Item 0', content: 'Content 0', collapsible: true },
+              { title: 'Item 1', content: 'Content 1', collapsible: true },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // Both collapse icons should render
+  expect(document.querySelectorAll('.reqore-timeline-collapse').length).toBe(2);
+});
+
+test('Controlled collapse: onCollapseChange fires with correct args when toggled', () => {
+  const onCollapseChange = jest.fn();
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            collapsedState={{ 0: false }}
+            onCollapseChange={onCollapseChange}
+            items={[
+              { title: 'Item 0', content: 'Content 0', collapsible: true },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(document.querySelector('.reqore-timeline-collapse')!);
+  expect(onCollapseChange).toHaveBeenCalledWith(0, true);
+});
+
+test('Controlled collapse: onCollapseChange fires with false when already collapsed', () => {
+  const onCollapseChange = jest.fn();
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            collapsedState={{ 0: true }}
+            onCollapseChange={onCollapseChange}
+            items={[
+              { title: 'Item 0', content: 'Content 0', collapsible: true },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(document.querySelector('.reqore-timeline-collapse')!);
+  expect(onCollapseChange).toHaveBeenCalledWith(0, false);
+});
+
+test('Controlled collapse: items not in collapsedState map fall back to isCollapsed prop', () => {
+  const onCollapseChange = jest.fn();
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            collapsedState={{}}
+            onCollapseChange={onCollapseChange}
+            items={[
+              { title: 'Item 0', content: 'Content 0', collapsible: true, isCollapsed: true },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // Item is collapsed via isCollapsed fallback; clicking should call onCollapseChange with false
+  fireEvent.click(document.querySelector('.reqore-timeline-collapse')!);
+  expect(onCollapseChange).toHaveBeenCalledWith(0, false);
+});
+
+test('Uncontrolled collapse: onCollapseChange fires when internal state changes', () => {
+  const onCollapseChange = jest.fn();
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            onCollapseChange={onCollapseChange}
+            items={[
+              { title: 'Item 0', content: 'Content 0', collapsible: true },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(document.querySelector('.reqore-timeline-collapse')!);
+  expect(onCollapseChange).toHaveBeenCalledWith(0, true);
+
+  fireEvent.click(document.querySelector('.reqore-timeline-collapse')!);
+  expect(onCollapseChange).toHaveBeenCalledWith(0, false);
+});
+
 test('Renders <Timeline /> title-only items with connecting lines', () => {
   render(
     <ReqoreUIProvider>
