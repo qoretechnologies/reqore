@@ -2,6 +2,8 @@ import { expect, jest } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { userEvent } from '@storybook/testing-library';
 import { useState } from 'react';
+import { RenderLeafProps } from 'slate-react/dist/components/editable';
+import { ReqoreSpan } from '../../components/Span';
 import { useMount } from 'react-use';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { ReqoreRichTextEditor } from '../../components/RichTextEditor';
@@ -343,6 +345,40 @@ export const UpdatesFromInside: Story = {
         children: [{ text: 'This is the default UPDATED text' }],
       },
     ]);
+  },
+};
+
+export const WithCustomRenderLeaf: Story = {
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'Normal text, ' },
+          { text: 'bold text', bold: true },
+          { text: ', and ' },
+          { text: 'italic text', italic: true },
+          { text: '.' },
+        ],
+      },
+    ],
+    customRenderLeaf: ({ attributes, children, leaf }: RenderLeafProps) => (
+      <ReqoreSpan
+        inline
+        {...attributes}
+        style={{
+          fontWeight: leaf.bold ? 900 : undefined,
+          fontStyle: leaf.italic ? 'italic' : undefined,
+          color: leaf.bold ? '#ff6b6b' : leaf.italic ? '#4ecdc4' : undefined,
+          letterSpacing: leaf.bold ? '0.05em' : undefined,
+        }}
+      >
+        {children}
+      </ReqoreSpan>
+    ),
+  },
+  play: async () => {
+    await expect(document.querySelector('div[contenteditable]')).toBeInTheDocument();
   },
 };
 

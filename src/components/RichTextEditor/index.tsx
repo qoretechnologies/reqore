@@ -52,6 +52,7 @@ export interface IReqoreRichTextEditorProps
       items?: IReqoreDropdownProps['items'];
     };
   };
+  customRenderLeaf?: (props: RenderLeafProps) => React.ReactNode;
   getTagProps?: (tag: CustomElement) => IReqoreTagProps;
   onTagClick?: (tag: CustomElement) => void;
   tagsProps?: IReqoreTagProps;
@@ -170,308 +171,318 @@ export type TReqoreRichTextEditorRef = BaseEditor & ReactEditor & HistoryEditor;
 export const ReqoreRichTextEditor = forwardRef<
   TReqoreRichTextEditorRef,
   IReqoreRichTextEditorProps
->(({
-  value = [
+>(
+  (
     {
-      type: 'paragraph',
-      children: [{ text: '' }],
-    },
-  ],
-  onChange,
-  tags,
-  getTagProps = () => ({}),
-  tagsProps = {},
-  onTagClick,
-  tagsListProps = {},
-  panelProps,
-  actions,
-  ...rest
-}: IReqoreRichTextEditorProps, ref) => {
-  // Create a Slate editor object that won't change across renders.
-  const [editor] = useState(() => withTemplates(withReact(withHistory(createEditor()))));
+      value = [
+        {
+          type: 'paragraph',
+          children: [{ text: '' }],
+        },
+      ],
+      onChange,
+      tags,
+      getTagProps = () => ({}),
+      tagsProps = {},
+      onTagClick,
+      tagsListProps = {},
+      panelProps,
+      actions,
+      customRenderLeaf,
+      ...rest
+    }: IReqoreRichTextEditorProps,
+    ref
+  ) => {
+    // Create a Slate editor object that won't change across renders.
+    const [editor] = useState(() => withTemplates(withReact(withHistory(createEditor()))));
 
-  useImperativeHandle(ref, () => editor, [editor]);
-  const [target, setTarget] = useState<Range | undefined>();
+    useImperativeHandle(ref, () => editor, [editor]);
+    const [target, setTarget] = useState<Range | undefined>();
 
-  useUpdateEffect(() => {
-    // Only update the editor's children if the value has changed
-    if (JSON.stringify(value) === JSON.stringify(editor.children)) {
-      return;
-    }
-    // Use Slate transforms instead of direct mutation
-    try {
-      Editor.withoutNormalizing(editor, () => {
-        // Deselect before replacing content
-        Transforms.deselect(editor);
-        // Remove all existing top-level nodes
-        while (editor.children.length) {
-          Transforms.removeNodes(editor, { at: [0] });
+    useUpdateEffect(() => {
+      // Only update the editor's children if the value has changed
+      if (JSON.stringify(value) === JSON.stringify(editor.children)) {
+        return;
+      }
+      // Use Slate transforms instead of direct mutation
+      try {
+        Editor.withoutNormalizing(editor, () => {
+          // Deselect before replacing content
+          Transforms.deselect(editor);
+          // Remove all existing top-level nodes
+          while (editor.children.length) {
+            Transforms.removeNodes(editor, { at: [0] });
+          }
+          // Insert new content
+          Transforms.insertNodes(editor, value, { at: [0] });
+          // Move selection to end
+          Transforms.select(editor, Editor.end(editor, []));
+        });
+      } catch (error) {
+        // Fallback to direct mutation if transforms fail
+        editor.selection = null;
+        editor.children = value;
+      }
+    }, [JSON.stringify(value)]);
+
+    const renderElement = useCallback((props) => {
+      switch (props.element.type) {
+        case 'tag': {
+          const tagProps = getTagProps(props.element);
+          const finalProps = {
+            ...tagsProps,
+            ...tagProps,
+          };
+
+          return (
+            <TemplateElement
+              {...props}
+              tagProps={{
+                ...finalProps,
+                size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
+                onClick:
+                  !rest.readOnly && !rest.disabled
+                    ? (event) => {
+                        onTagClick?.(props.element);
+                        finalProps.onClick?.(event);
+                      }
+                    : undefined,
+                onRemoveClick:
+                  !rest.readOnly && !rest.disabled
+                    ? () => {
+                        try {
+                          const path = ReactEditor.findPath(editor, props.element);
+                          Transforms.removeNodes(editor, { at: path });
+                        } catch (error) {
+                          // Element may no longer be in the editor
+                          console.warn('Failed to remove tag:', error);
+                        }
+                      }
+                    : undefined,
+              }}
+            />
+          );
         }
-        // Insert new content
-        Transforms.insertNodes(editor, value, { at: [0] });
-        // Move selection to end
-        Transforms.select(editor, Editor.end(editor, []));
-      });
-    } catch (error) {
-      // Fallback to direct mutation if transforms fail
-      editor.selection = null;
-      editor.children = value;
-    }
-  }, [JSON.stringify(value)]);
+        default:
+          return <DefaultElement {...props} />;
+      }
+    }, []);
 
-  const renderElement = useCallback((props) => {
-    switch (props.element.type) {
-      case 'tag': {
-        const tagProps = getTagProps(props.element);
-        const finalProps = {
-          ...tagsProps,
-          ...tagProps,
+    const renderLeaf = useCallback(
+      (props: RenderLeafProps) =>
+        customRenderLeaf ? customRenderLeaf(props) : <Leaf {...props} />,
+      [customRenderLeaf]
+    );
+
+    const isEmpty = useMemo(() => {
+      return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
+    }, [value]);
+
+    const isMarkActive = useCallback((editor: Editor, format: string) => {
+      const marks = Editor.marks(editor);
+      return marks ? marks[format] === true : false;
+    }, []);
+
+    const toggleMark = useCallback(
+      (editor: Editor, format: string) => {
+        const isActive = isMarkActive(editor, format);
+
+        if (isActive) {
+          Editor.removeMark(editor, format);
+        } else {
+          Editor.addMark(editor, format, true);
+        }
+      },
+      [isMarkActive]
+    );
+
+    const panelActions = useMemo<IReqorePanelAction[]>(() => {
+      const _actions: IReqorePanelAction[] = [...(panelProps?.actions || [])];
+
+      if (!actions) {
+        return _actions;
+      }
+
+      if (actions.styling) {
+        _actions.push({
+          group: [
+            {
+              icon: 'Bold',
+              compact: true,
+              active: isMarkActive(editor, 'bold') ? true : undefined,
+              onMouseDown: () => {
+                toggleMark(editor, 'bold');
+              },
+            },
+            {
+              icon: 'Italic',
+              compact: true,
+              active: isMarkActive(editor, 'italic') ? true : undefined,
+              onMouseDown: () => {
+                toggleMark(editor, 'italic');
+              },
+            },
+            {
+              icon: 'Underline',
+              compact: true,
+              active: isMarkActive(editor, 'underline') ? true : undefined,
+              onMouseDown: () => {
+                toggleMark(editor, 'underline');
+              },
+            },
+          ],
+        });
+      }
+
+      if (actions.undo || actions.redo) {
+        const undoRedoActions: IReqorePanelAction = {
+          fixed: true,
+          group: [],
         };
 
-        return (
-          <TemplateElement
-            {...props}
-            tagProps={{
-              ...finalProps,
-              size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
-              onClick:
-                !rest.readOnly && !rest.disabled
-                  ? (event) => {
-                      onTagClick?.(props.element);
-                      finalProps.onClick?.(event);
-                    }
-                  : undefined,
-              onRemoveClick:
-                !rest.readOnly && !rest.disabled
-                  ? () => {
-                      try {
-                        const path = ReactEditor.findPath(editor, props.element);
-                        Transforms.removeNodes(editor, { at: path });
-                      } catch (error) {
-                        // Element may no longer be in the editor
-                        console.warn('Failed to remove tag:', error);
-                      }
-                    }
-                  : undefined,
-            }}
-          />
-        );
+        if (actions.undo) {
+          undoRedoActions.group.push({
+            disabled: editor.history.undos.length === 0,
+            compact: true,
+            fixed: true,
+            icon: 'ArrowGoBackLine',
+            onClick: () => {
+              editor.undo();
+            },
+          });
+        }
+
+        if (actions.redo) {
+          undoRedoActions.group.push({
+            disabled: editor.history.redos.length === 0,
+            compact: true,
+            fixed: true,
+            icon: 'ArrowGoForwardLine',
+            onClick: () => {
+              editor.redo();
+            },
+          });
+        }
+
+        _actions.push(undoRedoActions);
       }
-      default:
-        return <DefaultElement {...props} />;
-    }
-  }, []);
 
-  const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
-
-  const isEmpty = useMemo(() => {
-    return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
-  }, [value]);
-
-  const isMarkActive = useCallback((editor: Editor, format: string) => {
-    const marks = Editor.marks(editor);
-    return marks ? marks[format] === true : false;
-  }, []);
-
-  const toggleMark = useCallback(
-    (editor: Editor, format: string) => {
-      const isActive = isMarkActive(editor, format);
-
-      if (isActive) {
-        Editor.removeMark(editor, format);
-      } else {
-        Editor.addMark(editor, format, true);
-      }
-    },
-    [isMarkActive]
-  );
-
-  const panelActions = useMemo<IReqorePanelAction[]>(() => {
-    const _actions: IReqorePanelAction[] = [...(panelProps?.actions || [])];
-
-    if (!actions) {
       return _actions;
-    }
+    }, [actions, value, target, Editor.marks(editor), editor]);
 
-    if (actions.styling) {
-      _actions.push({
-        group: [
-          {
-            icon: 'Bold',
-            compact: true,
-            active: isMarkActive(editor, 'bold') ? true : undefined,
-            onMouseDown: () => {
-              toggleMark(editor, 'bold');
-            },
-          },
-          {
-            icon: 'Italic',
-            compact: true,
-            active: isMarkActive(editor, 'italic') ? true : undefined,
-            onMouseDown: () => {
-              toggleMark(editor, 'italic');
-            },
-          },
-          {
-            icon: 'Underline',
-            compact: true,
-            active: isMarkActive(editor, 'underline') ? true : undefined,
-            onMouseDown: () => {
-              toggleMark(editor, 'underline');
-            },
-          },
-        ],
-      });
-    }
-
-    if (actions.undo || actions.redo) {
-      const undoRedoActions: IReqorePanelAction = {
-        fixed: true,
-        group: [],
-      };
-
-      if (actions.undo) {
-        undoRedoActions.group.push({
-          disabled: editor.history.undos.length === 0,
-          compact: true,
-          fixed: true,
-          icon: 'ArrowGoBackLine',
-          onClick: () => {
-            editor.undo();
-          },
-        });
+    const items: IReqoreDropdownProps['items'] = useMemo(() => {
+      if (size(tags)) {
+        return map(tags, ({ items, ...tag }, key) => ({
+          label: tag.label || key,
+          ...tag,
+          items,
+        }));
       }
 
-      if (actions.redo) {
-        undoRedoActions.group.push({
-          disabled: editor.history.redos.length === 0,
-          compact: true,
-          fixed: true,
-          icon: 'ArrowGoForwardLine',
-          onClick: () => {
-            editor.redo();
-          },
-        });
-      }
+      return undefined;
+    }, [tags]);
 
-      _actions.push(undoRedoActions);
-    }
+    return (
+      <ReqorePanel flat padded={false} minimal transparent size='small' {...panelProps}>
+        <Slate
+          editor={editor}
+          initialValue={value as any}
+          onChange={(data) => {
+            const { selection } = editor;
 
-    return _actions;
-  }, [actions, value, target, Editor.marks(editor), editor]);
-
-  const items: IReqoreDropdownProps['items'] = useMemo(() => {
-    if (size(tags)) {
-      return map(tags, ({ items, ...tag }, key) => ({
-        label: tag.label || key,
-        ...tag,
-        items,
-      }));
-    }
-
-    return undefined;
-  }, [tags]);
-
-  return (
-    <ReqorePanel flat padded={false} minimal transparent size='small' {...panelProps}>
-      <Slate
-        editor={editor}
-        initialValue={value as any}
-        onChange={(data) => {
-          const { selection } = editor;
-
-          setTarget(selection);
-          onChange?.(data as CustomElement[]);
-        }}
-      >
-        <ReqoreTextarea<Pick<EditableProps, 'renderElement' | 'renderLeaf'>>
-          {...rest}
-          renderElement={renderElement}
-          renderLeaf={renderLeaf}
-          as={Editable}
-          style={{
-            lineHeight: 1.5,
-            outline: 'none',
+            setTarget(selection);
+            onChange?.(data as CustomElement[]);
           }}
-          onClearClick={
-            isEmpty
-              ? undefined
-              : () => {
-                  Transforms.delete(editor, {
-                    at: {
-                      anchor: Editor.start(editor, []),
-                      focus: Editor.end(editor, []),
-                    },
-                  });
-                  // Focus the editor
+        >
+          <ReqoreTextarea<Pick<EditableProps, 'renderElement' | 'renderLeaf'>>
+            {...rest}
+            renderElement={renderElement}
+            renderLeaf={renderLeaf}
+            as={Editable}
+            style={{
+              lineHeight: 1.5,
+              outline: 'none',
+            }}
+            onClearClick={
+              isEmpty
+                ? undefined
+                : () => {
+                    Transforms.delete(editor, {
+                      at: {
+                        anchor: Editor.start(editor, []),
+                        focus: Editor.end(editor, []),
+                      },
+                    });
+                    // Focus the editor
+                    try {
+                      ReactEditor.focus(editor);
+                    } catch (error) {
+                      // Editor may not be mounted
+                    }
+                  }
+            }
+            value={JSON.stringify(value || [])}
+            onChange={useCallback(() => {}, [])}
+            templates={{
+              customElements: size(panelActions)
+                ? [
+                    <ReqoreControlGroup spaceBetween size='small' key={0} fixed>
+                      {panelActions.map((action, index) => {
+                        if (action.group) {
+                          return (
+                            <ReqoreControlGroup stack key={index}>
+                              {action.group?.map((action, index) => (
+                                <ReqoreButton
+                                  key={index}
+                                  customTheme={tagsListProps?.listCustomTheme}
+                                  intent={tagsListProps?.listIntent}
+                                  {...action}
+                                />
+                              ))}
+                            </ReqoreControlGroup>
+                          );
+                        }
+
+                        return (
+                          <ReqoreButton
+                            key={index}
+                            customTheme={tagsListProps?.listCustomTheme}
+                            intent={tagsListProps?.listIntent}
+                            {...action}
+                          />
+                        );
+                      })}
+                    </ReqoreControlGroup>,
+                  ]
+                : undefined,
+              ...tagsListProps,
+              items,
+              closeOnInsideClick: false,
+              onItemSelect: (item) => {
+                if (item.value) {
                   try {
+                    // Use current selection or fallback to end of document
+                    const selection = editor.selection || {
+                      anchor: Editor.end(editor, []),
+                      focus: Editor.end(editor, []),
+                    };
+                    Transforms.select(editor, selection);
+                    insertTag(editor, item.value, item.label, item.metadata);
                     ReactEditor.focus(editor);
                   } catch (error) {
-                    // Editor may not be mounted
+                    // Fallback: just insert at current position
+                    try {
+                      insertTag(editor, item.value, item.label, item.metadata);
+                    } catch (e) {
+                      console.warn('Failed to insert tag:', e);
+                    }
                   }
                 }
-          }
-          value={JSON.stringify(value || [])}
-          onChange={useCallback(() => {}, [])}
-          templates={{
-            customElements: size(panelActions)
-              ? [
-                  <ReqoreControlGroup spaceBetween size='small' key={0} fixed>
-                    {panelActions.map((action, index) => {
-                      if (action.group) {
-                        return (
-                          <ReqoreControlGroup stack key={index}>
-                            {action.group?.map((action, index) => (
-                              <ReqoreButton
-                                key={index}
-                                customTheme={tagsListProps?.listCustomTheme}
-                                intent={tagsListProps?.listIntent}
-                                {...action}
-                              />
-                            ))}
-                          </ReqoreControlGroup>
-                        );
-                      }
-
-                      return (
-                        <ReqoreButton
-                          key={index}
-                          customTheme={tagsListProps?.listCustomTheme}
-                          intent={tagsListProps?.listIntent}
-                          {...action}
-                        />
-                      );
-                    })}
-                  </ReqoreControlGroup>,
-                ]
-              : undefined,
-            ...tagsListProps,
-            items,
-            closeOnInsideClick: false,
-            onItemSelect: (item) => {
-              if (item.value) {
-                try {
-                  // Use current selection or fallback to end of document
-                  const selection = editor.selection || {
-                    anchor: Editor.end(editor, []),
-                    focus: Editor.end(editor, []),
-                  };
-                  Transforms.select(editor, selection);
-                  insertTag(editor, item.value, item.label, item.metadata);
-                  ReactEditor.focus(editor);
-                } catch (error) {
-                  // Fallback: just insert at current position
-                  try {
-                    insertTag(editor, item.value, item.label, item.metadata);
-                  } catch (e) {
-                    console.warn('Failed to insert tag:', e);
-                  }
-                }
-              }
-            },
-          }}
-        />
-      </Slate>
-    </ReqorePanel>
-  );
-});
+              },
+            }}
+          />
+        </Slate>
+      </ReqorePanel>
+    );
+  }
+);
