@@ -1,5 +1,5 @@
 import { map, size } from 'lodash';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
 import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
@@ -165,7 +165,12 @@ const insertTag = (
   Transforms.move(editor);
 };
 
-export const ReqoreRichTextEditor = ({
+export type TReqoreRichTextEditorRef = BaseEditor & ReactEditor & HistoryEditor;
+
+export const ReqoreRichTextEditor = forwardRef<
+  TReqoreRichTextEditorRef,
+  IReqoreRichTextEditorProps
+>(({
   value = [
     {
       type: 'paragraph',
@@ -181,9 +186,11 @@ export const ReqoreRichTextEditor = ({
   panelProps,
   actions,
   ...rest
-}: IReqoreRichTextEditorProps) => {
+}: IReqoreRichTextEditorProps, ref) => {
   // Create a Slate editor object that won't change across renders.
   const [editor] = useState(() => withTemplates(withReact(withHistory(createEditor()))));
+
+  useImperativeHandle(ref, () => editor, [editor]);
   const [target, setTarget] = useState<Range | undefined>();
 
   useUpdateEffect(() => {
@@ -467,4 +474,4 @@ export const ReqoreRichTextEditor = ({
       </Slate>
     </ReqorePanel>
   );
-};
+});
