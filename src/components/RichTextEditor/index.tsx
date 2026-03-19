@@ -52,7 +52,7 @@ export interface IReqoreRichTextEditorProps
       items?: IReqoreDropdownProps['items'];
     };
   };
-  customRenderLeaf?: (props: RenderLeafProps) => React.ReactNode;
+  customRenderLeaf?: (props: RenderLeafProps) => JSX.Element;
   getTagProps?: (tag: CustomElement) => IReqoreTagProps;
   onTagClick?: (tag: CustomElement) => void;
   tagsProps?: IReqoreTagProps;
