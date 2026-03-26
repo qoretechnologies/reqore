@@ -150,6 +150,7 @@ export interface IReqorePanelProps
   responsiveActionsWrapperProps?: Partial<IReqoreControlGroupProps>;
   stickyHeader?: boolean;
   stickyHeaderOffset?: number;
+  floatingActions?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -219,7 +220,8 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
           0.08
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  overflow: ${({ stickyHeader }) => (stickyHeader ? 'visible' : 'hidden')};
+  overflow: ${({ stickyHeader, floatingActions }) =>
+    stickyHeader || floatingActions ? 'visible' : 'hidden'};
   display: flex;
   flex-flow: column;
   position: relative;
@@ -230,7 +232,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
 
   &:not(:hover) {
     .reqore-panel-action-hidden {
-      display: none;
+      visibility: hidden;
     }
   }
 
@@ -394,6 +396,22 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 `;
 
+export const StyledFloatingActions = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY(-100%);
+  z-index: 1;
+  display: flex;
+  padding: ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  background-color: ${({ theme }) => rgba(changeLightness(getMainBackgroundColor(theme), 0.05), 1)};
+  border: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.08)};
+  border-bottom: none;
+  border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px ${({ size }) => RADIUS_FROM_SIZE[size]}px
+    0 0;
+  gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
+`;
+
 export const ReqorePanelSkeleton = memo(
   ({
     size,
@@ -481,6 +499,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       loadingIconType,
       skeleton,
       errorBoundaryOptions,
+      floatingActions,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -523,6 +542,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       return resizable || disabledProps;
     }, [resizable, _isCollapsed, disabled]);
 
+    const floatingActionsList: TReqorePanelActions = useMemo(
+      () => (floatingActions ? actions.filter((action) => action.show === 'hover') : []),
+      [floatingActions, actions]
+    );
+
+    const nonFloatingActions: TReqorePanelActions = useMemo(
+      () => (floatingActions ? actions.filter((action) => action.show !== 'hover') : actions),
+      [floatingActions, actions]
+    );
+
     // Return true if the card has a title bar, otherwise return false.
     const hasTitleBar: boolean = useMemo(
       () =>
@@ -530,10 +559,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         !!breadcrumbs ||
         collapsible ||
         !!onClose ||
-        !!size(actions.filter(isActionShown)) ||
+        !!size(nonFloatingActions.filter(isActionShown)) ||
         !!(isArray(badge) ? size(badge) : badge) ||
         !!icon,
-      [label, collapsible, onClose, actions, badge, icon]
+      [label, collapsible, onClose, nonFloatingActions, badge, icon]
     );
 
     // Return true if the card has a title bar, otherwise return false.
@@ -761,12 +790,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       // OTHERWISE, ARE THERE ANY NON RESPONSIVE ACTIONS TO BE SHOWN?
       // This either means actions where user specified responsive: false
       // or user passed responsiveActions: false
-      if (hasNonResponsiveActions(actions)) {
+      if (hasNonResponsiveActions(nonFloatingActions)) {
         show = true;
       }
 
       return show;
-    }, [isSmall, collapsible, actions, hasNonResponsiveActions]);
+    }, [isSmall, collapsible, nonFloatingActions, hasNonResponsiveActions]);
 
     const iconTooltip = useMemo(
       () => ({
@@ -806,9 +835,21 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           opacity={opacity}
           fluid={fluid}
           disabled={disabled}
+          floatingActions={floatingActions}
           Component={StyledPanel}
           ref={handleRef}
         >
+          {size(floatingActionsList) > 0 && (
+            <StyledFloatingActions
+              className='reqore-panel-floating-actions reqore-panel-action-hidden'
+              theme={theme}
+              size={panelSize}
+            >
+              <ReqoreControlGroup size={panelSize} gapSize={panelSize}>
+                {floatingActionsList.map((action, index) => renderActions(action, index, true))}
+              </ReqoreControlGroup>
+            </StyledFloatingActions>
+          )}
           {hasTitleBar && (
             <StyledPanelTopBar
               flat={flat}
@@ -922,7 +963,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     isSmall={isSmall}
                     showControlButtons
                     size={panelSize}
-                    hasResponsiveActions={hasResponsiveActions(actions)}
+                    hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                     customTheme={theme}
                     isCollapsed={_isCollapsed}
                     onCollapseClick={collapsible ? handleCollapseClick : undefined}
@@ -934,7 +975,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   />
                 </StyledPanelTitleHeader>
               )}
-              {hasResponsiveActions(actions) && (
+              {hasResponsiveActions(nonFloatingActions) && (
                 <ReqoreControlGroup
                   responsive={responsiveActions}
                   fluid={responsiveActions || isSmall}
@@ -943,7 +984,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   size={panelSize}
                   {...responsiveActionsWrapperProps}
                 >
-                  {actions.map(renderResponsiveActions())}
+                  {nonFloatingActions.map(renderResponsiveActions())}
                 </ReqoreControlGroup>
               )}
               <ReqorePanelNonResponsiveActions
@@ -951,7 +992,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 isSmall={isSmall}
                 showControlButtons={!isSmall}
                 size={panelSize}
-                hasResponsiveActions={hasResponsiveActions(actions)}
+                hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                 customTheme={theme}
                 isCollapsed={_isCollapsed}
                 onCollapseClick={collapsible ? handleCollapseClick : undefined}
@@ -960,7 +1001,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 collapseButtonProps={collapseButtonProps}
                 fluid={!hasTitleHeader || isSmall}
               >
-                {actions.map(renderNonResponsiveActions())}
+                {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>
             </StyledPanelTopBar>
           )}

@@ -548,6 +548,30 @@ export const ActionsShownOnHover: Story = {
   },
 };
 
+export const FloatingActions: Story = {
+  render: Template,
+  parameters: {
+    chromatic: {
+      disable: true,
+    },
+  },
+
+  args: {
+    style: { minWidth: 400, maxWidth: 600, marginTop: 50 },
+    label: 'Panel with floating actions',
+    customTheme: { main: '#0b3c5d' },
+    collapsible: false,
+    size: 'small',
+    floatingActions: true,
+    actions: [
+      { label: 'Always visible' },
+      { label: 'Edit', icon: 'EditLine', show: 'hover' },
+      { label: 'Delete', icon: 'DeleteBinLine', show: 'hover', intent: 'danger' },
+    ],
+    children: 'Hover over this panel to see floating actions above it',
+  },
+};
+
 export const ActionsShownOnlyWhenExpanded: Story = {
   render: (args) => (
     <ReqoreControlGroup verticalAlign='flex-start'>
