@@ -304,6 +304,14 @@ export const NoPadding: Story = {
   },
 };
 
+export const HugePadding: Story = {
+  render: Template,
+
+  args: {
+    padded: 'massive',
+  },
+};
+
 export const Flat: Story = {
   render: Template,
 
@@ -529,6 +537,8 @@ export const ActionsShownOnHover: Story = {
     style: { minWidth: 400, maxWidth: 600 },
     label: 'This is a simple test to',
     collapsible: false,
+    description:
+      'Hover over this panel to see actions on the right side of the header and the bottom bar, this is a very long description that should be wrapped and not overflow, but it should be long enough to test the wrapping',
     size: 'small',
     minimal: true,
     responsiveActions: false,
@@ -545,6 +555,30 @@ export const ActionsShownOnHover: Story = {
         ],
       },
     ],
+  },
+};
+
+export const FloatingActions: Story = {
+  render: Template,
+  parameters: {
+    chromatic: {
+      disable: true,
+    },
+  },
+
+  args: {
+    style: { minWidth: 400, maxWidth: 600, marginTop: 50 },
+    label: 'Panel with floating actions',
+    customTheme: { main: '#0b3c5d' },
+    collapsible: false,
+    size: 'small',
+    floatingActions: true,
+    actions: [
+      { label: 'Always visible' },
+      { label: 'Edit', icon: 'EditLine', show: 'hover' },
+      { label: 'Delete', icon: 'DeleteBinLine', show: 'hover', intent: 'danger' },
+    ],
+    children: 'Hover over this panel to see floating actions above it',
   },
 };
 

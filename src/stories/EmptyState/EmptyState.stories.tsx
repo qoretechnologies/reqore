@@ -140,28 +140,6 @@ export const Sizes: Story = {
   },
 };
 
-export const Compact: Story = {
-  render: (args) => (
-    <ReqoreControlGroup gapSize='big' vertical>
-      <ReqoreEmptyState
-        {...args}
-        icon='FolderLine'
-        title='Default padding'
-        description='This uses the default spacious padding.'
-        rounded
-      />
-      <ReqoreEmptyState
-        {...args}
-        icon='FolderLine'
-        title='Compact padding'
-        description='This uses reduced padding for tighter layouts.'
-        rounded
-        compact
-      />
-    </ReqoreControlGroup>
-  ),
-};
-
 export const Fluid: Story = {
   render: (args) => (
     <ReqoreEmptyState

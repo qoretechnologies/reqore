@@ -57,6 +57,9 @@ import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
+const getPaddingSize = (padded: boolean | TSizes, size: TSizes): number =>
+  typeof padded === 'string' ? PADDING_FROM_SIZE[padded] : PADDING_FROM_SIZE[size];
+
 export interface IReqorePanelSubAction extends Omit<IReqoreDropdownItem, 'value'> {
   show?: boolean;
 }
@@ -126,7 +129,7 @@ export interface IReqorePanelProps
   unMountContentOnCollapse?: boolean;
   onCollapseChange?: (isCollapsed?: boolean) => void;
   fill?: boolean;
-  padded?: boolean;
+  padded?: boolean | TSizes;
   contentStyle?: React.CSSProperties;
   opacity?: number;
   blur?: number;
@@ -150,6 +153,7 @@ export interface IReqorePanelProps
   responsiveActionsWrapperProps?: Partial<IReqoreControlGroupProps>;
   stickyHeader?: boolean;
   stickyHeaderOffset?: number;
+  floatingActions?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -219,7 +223,8 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
           0.08
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  overflow: ${({ stickyHeader }) => (stickyHeader ? 'visible' : 'hidden')};
+  overflow: ${({ stickyHeader, floatingActions }) =>
+    stickyHeader || floatingActions ? 'visible' : 'hidden'};
   display: flex;
   flex-flow: column;
   position: relative;
@@ -230,6 +235,10 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
 
   &:not(:hover) {
     .reqore-panel-action-hidden {
+      visibility: hidden;
+    }
+
+    .reqore-panel-floating-actions {
       display: none;
     }
   }
@@ -297,9 +306,9 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
 
-  padding: ${({ noHorizontalPadding, size, transparent, flat, intent }: IStyledPanel) =>
-    `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
-      noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`
+  padding: ${({ noHorizontalPadding, size, padded, transparent, flat, intent }: IStyledPanel) =>
+    `${transparent && flat && !intent ? 0 : getPaddingSize(padded, size)}px ${
+      noHorizontalPadding ? 0 : `${getPaddingSize(padded, size)}px`
     }`};
 
   align-items: center;
@@ -332,16 +341,18 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
-  min-height: ${({ size, wrapperPadding }) =>
+  min-height: ${({ size, padded, wrapperPadding }) =>
     SIZE_TO_PX[size] +
-    (wrapperPadding === 'both' || wrapperPadding === 'top' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
+    (wrapperPadding === 'both' || wrapperPadding === 'top'
+      ? getPaddingSize(padded, size) * 2
+      : 0)}px;
   padding-bottom: ${({ padded, size, isCollapsed }: IStyledPanel) =>
-    !padded || isCollapsed ? `${PADDING_FROM_SIZE[size]}px` : undefined};
-  padding-top: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
+    !padded || isCollapsed ? `${getPaddingSize(padded, size)}px` : undefined};
+  padding-top: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'bottom' || wrapperPadding === 'none'
       ? undefined
       : minimal
-      ? `${PADDING_FROM_SIZE[size]}px`
+      ? `${getPaddingSize(padded, size)}px`
       : undefined};
   position: ${({ stickyHeader }) => (stickyHeader ? 'sticky' : 'relative')};
   top: ${({ stickyHeader, stickyHeaderOffset = 0 }) =>
@@ -352,16 +363,18 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  min-height: ${({ size, wrapperPadding }) =>
+  min-height: ${({ size, padded, wrapperPadding }) =>
     SIZE_TO_PX[size] +
-    (wrapperPadding === 'both' || wrapperPadding === 'bottom' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
+    (wrapperPadding === 'both' || wrapperPadding === 'bottom'
+      ? getPaddingSize(padded, size) * 2
+      : 0)}px;
   padding-top: ${({ padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
-  padding-bottom: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
+    !padded ? `${getPaddingSize(padded, size)}px` : undefined};
+  padding-bottom: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'top' || wrapperPadding === 'none'
       ? undefined
       : minimal
-      ? `${PADDING_FROM_SIZE[size]}px`
+      ? `${getPaddingSize(padded, size)}px`
       : undefined};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
@@ -376,22 +389,38 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     !padded
       ? undefined
       : noHorizontalPadding
-      ? `${PADDING_FROM_SIZE[size]}px 0`
-      : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
+      ? `${getPaddingSize(padded, size)}px 0`
+      : `${getPaddingSize(padded, size) / (minimal ? 2 : 1)}px ${getPaddingSize(padded, size)}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel, padded, size }) =>
-    minimal && hasLabel && padded ? 0 : padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
+    minimal && hasLabel && padded ? 0 : padded ? `${getPaddingSize(padded, size)}px` : undefined};
   padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
     minimal && hasBottomActions && padded
       ? 0
       : padded
-      ? `${PADDING_FROM_SIZE[size]}px`
+      ? `${getPaddingSize(padded, size)}px`
       : undefined};
   flex: 1;
   overflow: auto;
   overflow-wrap: anywhere;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+`;
+
+export const StyledFloatingActions = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY(-100%);
+  z-index: 1;
+  display: flex;
+  padding: ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  background-color: ${({ theme }) => rgba(changeLightness(getMainBackgroundColor(theme), 0.05), 1)};
+  border: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.08)};
+  border-bottom: none;
+  border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px ${({ size }) => RADIUS_FROM_SIZE[size]}px
+    0 0;
+  gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
 `;
 
 export const ReqorePanelSkeleton = memo(
@@ -481,6 +510,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       loadingIconType,
       skeleton,
       errorBoundaryOptions,
+      floatingActions,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -523,6 +553,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       return resizable || disabledProps;
     }, [resizable, _isCollapsed, disabled]);
 
+    const floatingActionsList: TReqorePanelActions = useMemo(
+      () => (floatingActions ? actions.filter((action) => action.show === 'hover') : []),
+      [floatingActions, actions]
+    );
+
+    const nonFloatingActions: TReqorePanelActions = useMemo(
+      () => (floatingActions ? actions.filter((action) => action.show !== 'hover') : actions),
+      [floatingActions, actions]
+    );
+
     // Return true if the card has a title bar, otherwise return false.
     const hasTitleBar: boolean = useMemo(
       () =>
@@ -530,10 +570,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         !!breadcrumbs ||
         collapsible ||
         !!onClose ||
-        !!size(actions.filter(isActionShown)) ||
+        !!size(nonFloatingActions.filter(isActionShown)) ||
         !!(isArray(badge) ? size(badge) : badge) ||
         !!icon,
-      [label, collapsible, onClose, actions, badge, icon]
+      [label, collapsible, onClose, nonFloatingActions, badge, icon]
     );
 
     // Return true if the card has a title bar, otherwise return false.
@@ -761,12 +801,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       // OTHERWISE, ARE THERE ANY NON RESPONSIVE ACTIONS TO BE SHOWN?
       // This either means actions where user specified responsive: false
       // or user passed responsiveActions: false
-      if (hasNonResponsiveActions(actions)) {
+      if (hasNonResponsiveActions(nonFloatingActions)) {
         show = true;
       }
 
       return show;
-    }, [isSmall, collapsible, actions, hasNonResponsiveActions]);
+    }, [isSmall, collapsible, nonFloatingActions, hasNonResponsiveActions]);
 
     const iconTooltip = useMemo(
       () => ({
@@ -806,9 +846,21 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           opacity={opacity}
           fluid={fluid}
           disabled={disabled}
+          floatingActions={floatingActions}
           Component={StyledPanel}
           ref={handleRef}
         >
+          {size(floatingActionsList) > 0 && (
+            <StyledFloatingActions
+              className='reqore-panel-floating-actions'
+              theme={theme}
+              size={panelSize}
+            >
+              <ReqoreControlGroup size={panelSize} gapSize={panelSize}>
+                {floatingActionsList.map((action, index) => renderActions(action, index, true))}
+              </ReqoreControlGroup>
+            </StyledFloatingActions>
+          )}
           {hasTitleBar && (
             <StyledPanelTopBar
               flat={flat}
@@ -922,7 +974,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     isSmall={isSmall}
                     showControlButtons
                     size={panelSize}
-                    hasResponsiveActions={hasResponsiveActions(actions)}
+                    hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                     customTheme={theme}
                     isCollapsed={_isCollapsed}
                     onCollapseClick={collapsible ? handleCollapseClick : undefined}
@@ -934,7 +986,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   />
                 </StyledPanelTitleHeader>
               )}
-              {hasResponsiveActions(actions) && (
+              {hasResponsiveActions(nonFloatingActions) && (
                 <ReqoreControlGroup
                   responsive={responsiveActions}
                   fluid={responsiveActions || isSmall}
@@ -943,7 +995,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   size={panelSize}
                   {...responsiveActionsWrapperProps}
                 >
-                  {actions.map(renderResponsiveActions())}
+                  {nonFloatingActions.map(renderResponsiveActions())}
                 </ReqoreControlGroup>
               )}
               <ReqorePanelNonResponsiveActions
@@ -951,7 +1003,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 isSmall={isSmall}
                 showControlButtons={!isSmall}
                 size={panelSize}
-                hasResponsiveActions={hasResponsiveActions(actions)}
+                hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                 customTheme={theme}
                 isCollapsed={_isCollapsed}
                 onCollapseClick={collapsible ? handleCollapseClick : undefined}
@@ -960,7 +1012,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 collapseButtonProps={collapseButtonProps}
                 fluid={!hasTitleHeader || isSmall}
               >
-                {actions.map(renderNonResponsiveActions())}
+                {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>
             </StyledPanelTopBar>
           )}
