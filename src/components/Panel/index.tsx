@@ -570,6 +570,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       if (!_isHovered || !floatingActions || !size(floatingActionsList)) return;
 
       updateFloatingActionsPosition();
+
+      const onScroll = () => updateFloatingActionsPosition();
+
+      window.addEventListener('scroll', onScroll, true);
+      return () => window.removeEventListener('scroll', onScroll, true);
     }, [_isHovered, floatingActions, floatingActionsList, updateFloatingActionsPosition]);
 
     const handleMouseEnter = useCallback(
