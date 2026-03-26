@@ -57,6 +57,9 @@ import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
+const getPaddingSize = (padded: boolean | TSizes, size: TSizes): number =>
+  typeof padded === 'string' ? PADDING_FROM_SIZE[padded] : PADDING_FROM_SIZE[size];
+
 export interface IReqorePanelSubAction extends Omit<IReqoreDropdownItem, 'value'> {
   show?: boolean;
 }
@@ -126,7 +129,7 @@ export interface IReqorePanelProps
   unMountContentOnCollapse?: boolean;
   onCollapseChange?: (isCollapsed?: boolean) => void;
   fill?: boolean;
-  padded?: boolean;
+  padded?: boolean | TSizes;
   contentStyle?: React.CSSProperties;
   opacity?: number;
   blur?: number;
@@ -303,9 +306,9 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
 
-  padding: ${({ noHorizontalPadding, size, transparent, flat, intent }: IStyledPanel) =>
-    `${transparent && flat && !intent ? 0 : PADDING_FROM_SIZE[size]}px ${
-      noHorizontalPadding ? 0 : `${PADDING_FROM_SIZE[size]}px`
+  padding: ${({ noHorizontalPadding, size, padded, transparent, flat, intent }: IStyledPanel) =>
+    `${transparent && flat && !intent ? 0 : getPaddingSize(padded, size)}px ${
+      noHorizontalPadding ? 0 : `${getPaddingSize(padded, size)}px`
     }`};
 
   align-items: center;
@@ -338,16 +341,18 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
-  min-height: ${({ size, wrapperPadding }) =>
+  min-height: ${({ size, padded, wrapperPadding }) =>
     SIZE_TO_PX[size] +
-    (wrapperPadding === 'both' || wrapperPadding === 'top' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
+    (wrapperPadding === 'both' || wrapperPadding === 'top'
+      ? getPaddingSize(padded, size) * 2
+      : 0)}px;
   padding-bottom: ${({ padded, size, isCollapsed }: IStyledPanel) =>
-    !padded || isCollapsed ? `${PADDING_FROM_SIZE[size]}px` : undefined};
-  padding-top: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
+    !padded || isCollapsed ? `${getPaddingSize(padded, size)}px` : undefined};
+  padding-top: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'bottom' || wrapperPadding === 'none'
       ? undefined
       : minimal
-      ? `${PADDING_FROM_SIZE[size]}px`
+      ? `${getPaddingSize(padded, size)}px`
       : undefined};
   position: ${({ stickyHeader }) => (stickyHeader ? 'sticky' : 'relative')};
   top: ${({ stickyHeader, stickyHeaderOffset = 0 }) =>
@@ -358,16 +363,18 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  min-height: ${({ size, wrapperPadding }) =>
+  min-height: ${({ size, padded, wrapperPadding }) =>
     SIZE_TO_PX[size] +
-    (wrapperPadding === 'both' || wrapperPadding === 'bottom' ? PADDING_FROM_SIZE[size] * 2 : 0)}px;
+    (wrapperPadding === 'both' || wrapperPadding === 'bottom'
+      ? getPaddingSize(padded, size) * 2
+      : 0)}px;
   padding-top: ${({ padded, size }: IStyledPanel) =>
-    !padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
-  padding-bottom: ${({ minimal, size, wrapperPadding }: IStyledPanel) =>
+    !padded ? `${getPaddingSize(padded, size)}px` : undefined};
+  padding-bottom: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'top' || wrapperPadding === 'none'
       ? undefined
       : minimal
-      ? `${PADDING_FROM_SIZE[size]}px`
+      ? `${getPaddingSize(padded, size)}px`
       : undefined};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
@@ -382,17 +389,17 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     !padded
       ? undefined
       : noHorizontalPadding
-      ? `${PADDING_FROM_SIZE[size]}px 0`
-      : `${PADDING_FROM_SIZE[size] / (minimal ? 2 : 1)}px ${PADDING_FROM_SIZE[size]}px`};
+      ? `${getPaddingSize(padded, size)}px 0`
+      : `${getPaddingSize(padded, size) / (minimal ? 2 : 1)}px ${getPaddingSize(padded, size)}px`};
   // The padding is not needed when the panel is minimal and has title, since
   // the title already has padding and is transparent
   padding-top: ${({ minimal, hasLabel, padded, size }) =>
-    minimal && hasLabel && padded ? 0 : padded ? `${PADDING_FROM_SIZE[size]}px` : undefined};
+    minimal && hasLabel && padded ? 0 : padded ? `${getPaddingSize(padded, size)}px` : undefined};
   padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
     minimal && hasBottomActions && padded
       ? 0
       : padded
-      ? `${PADDING_FROM_SIZE[size]}px`
+      ? `${getPaddingSize(padded, size)}px`
       : undefined};
   flex: 1;
   overflow: auto;

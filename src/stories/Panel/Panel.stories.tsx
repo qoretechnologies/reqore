@@ -304,6 +304,14 @@ export const NoPadding: Story = {
   },
 };
 
+export const HugePadding: Story = {
+  render: Template,
+
+  args: {
+    padded: 'massive',
+  },
+};
+
 export const Flat: Story = {
   render: Template,
 

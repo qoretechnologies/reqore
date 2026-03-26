@@ -102,6 +102,7 @@ export const ReqoreEmptyState = memo(
           transparent={transparent}
           minimal
           flat
+          padded='massive'
           {...rest}
           tooltip={tooltip}
           ref={ref}
