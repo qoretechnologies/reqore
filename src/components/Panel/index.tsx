@@ -567,7 +567,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }, []);
 
     useEffect(() => {
-      if (!_isHovered || !floatingActions || !size(floatingActionsList)) return;
+      if (!_isHovered || !floatingActions || !size(floatingActionsList)) return undefined;
 
       updateFloatingActionsPosition();
 
