@@ -535,12 +535,19 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           : undefined)
     );
 
+    useEffect(() => {
+      return () => {
+        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      };
+    }, []);
+
     const isMobile = useReqoreProperty('isMobile');
     const { targetRef } = useCombinedRefs(ref);
     const [measureRef, { width }] = useMeasure();
     const [_isHovered, setIsHovered] = useState(false);
     const floatingActionsRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
+    const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useUpdateEffect(() => {
       setIsCollapsed(!!isCollapsed);
@@ -579,11 +586,22 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
-        if (floatingActions) setIsHovered(true);
+        if (floatingActions) {
+          if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+          hoverTimerRef.current = setTimeout(() => setIsHovered(true), 150);
+        }
         rest.onMouseEnter?.(e);
       },
       [floatingActions, rest.onMouseEnter]
     );
+
+    const cancelHover = useCallback(() => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
+      }
+      setIsHovered(false);
+    }, []);
 
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
@@ -598,22 +616,25 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             return;
           }
 
-          setIsHovered(false);
+          cancelHover();
         }
         rest.onMouseLeave?.(e);
       },
-      [floatingActions, rest.onMouseLeave]
+      [floatingActions, rest.onMouseLeave, cancelHover]
     );
 
-    const handleFloatingActionsMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-      const relatedTarget = e.relatedTarget as Node | null;
+    const handleFloatingActionsMouseLeave = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        const relatedTarget = e.relatedTarget as Node | null;
 
-      if (panelRef.current && relatedTarget && panelRef.current.contains(relatedTarget)) {
-        return;
-      }
+        if (panelRef.current && relatedTarget && panelRef.current.contains(relatedTarget)) {
+          return;
+        }
 
-      setIsHovered(false);
-    }, []);
+        cancelHover();
+      },
+      [cancelHover]
+    );
 
     const _resizable: ResizableProps = useMemo(() => {
       const disabledProps: ResizableProps = {
