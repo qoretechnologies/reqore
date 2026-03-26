@@ -285,6 +285,13 @@ export default [
     label: 'I have intent!',
     transparent: true,
     minimal: false,
+    floatingActions: true,
+    actions: [
+      {
+        label: 'Action 1',
+        show: 'hover',
+      },
+    ],
     flat: false,
     content: (
       <ReqoreP>

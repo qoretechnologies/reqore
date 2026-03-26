@@ -418,15 +418,24 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 `;
 
-export const StyledFloatingActions = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
+export const StyledFloatingActions = styled.div<{
+  theme: IReqoreTheme;
+  size: TSizes;
+  intent?: TReqoreIntent;
+  flat?: boolean;
+}>`
   position: fixed;
   z-index: 999999;
   display: flex;
   padding: ${({ size }) => PADDING_FROM_SIZE[size]}px;
-  background-color: ${({ theme, opacity = 1 }) =>
-    rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
-  border: ${({ flat, theme }) =>
-    flat ? 'none' : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
+  background-color: ${({ theme }) => rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
+  border: ${({ theme, flat, intent }) =>
+    flat && !intent
+      ? undefined
+      : `1px solid ${changeLightness(
+          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+          0.08
+        )}`};
   border-bottom: none;
   border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px ${({ size }) => RADIUS_FROM_SIZE[size]}px
     0 0;
@@ -569,9 +578,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const panelRect = panelRef.current.getBoundingClientRect();
       const floatingRect = floatingActionsRef.current.getBoundingClientRect();
 
-      floatingActionsRef.current.style.top = `${panelRect.top - floatingRect.height}px`;
+      floatingActionsRef.current.style.top = `${panelRect.top - floatingRect.height + (flat ? 0 : 1)}px`;
       floatingActionsRef.current.style.left = `${panelRect.right - floatingRect.width}px`;
-    }, []);
+    }, [flat]);
 
     useEffect(() => {
       if (!_isHovered || !floatingActions || !size(floatingActionsList)) return undefined;
@@ -606,11 +615,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (floatingActions) {
-          const relatedTarget = e.relatedTarget as Node | null;
+          const relatedTarget = e.relatedTarget;
 
           if (
             floatingActionsRef.current &&
-            relatedTarget &&
+            relatedTarget instanceof Node &&
             floatingActionsRef.current.contains(relatedTarget)
           ) {
             return;
@@ -625,9 +634,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
     const handleFloatingActionsMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
-        const relatedTarget = e.relatedTarget as Node | null;
+        const relatedTarget = e.relatedTarget;
 
-        if (panelRef.current && relatedTarget && panelRef.current.contains(relatedTarget)) {
+        if (
+          panelRef.current &&
+          relatedTarget instanceof Node &&
+          panelRef.current.contains(relatedTarget)
+        ) {
           return;
         }
 
@@ -956,8 +969,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               <StyledFloatingActions
                 className='reqore-panel-floating-actions'
                 theme={theme}
-                opacity={opacity}
                 size={panelSize}
+                intent={intent}
                 flat={flat}
                 ref={floatingActionsRef}
                 onMouseLeave={handleFloatingActionsMouseLeave}
