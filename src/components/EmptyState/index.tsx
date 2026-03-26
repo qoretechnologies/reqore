@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
+import { ReqorePanel } from '../..';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
@@ -27,7 +28,6 @@ import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreP } from '../Paragraph';
-import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreEmptyStateProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'>,
@@ -154,22 +154,20 @@ export const ReqoreEmptyState = memo(
       }, [effect, intent, theme]);
 
       return (
-        <ReqoreTooltipComponent
+        <ReqorePanel
+          transparent={transparent}
+          minimal
+          flat
           {...rest}
-          Component={StyledEmptyStateWrapper}
           tooltip={tooltip}
           ref={ref}
-          theme={theme}
+          customTheme={theme}
           size={size}
-          $fluid={fluid}
+          fluid={fluid}
           disabled={disabled}
-          $hasBackground={hasBackground}
           rounded={rounded}
-          flat={flat}
           intent={intent}
-          opacity={transparent ? 0 : opacity}
-          effect={transformedEffect}
-          compact={compact}
+          contentEffect={transformedEffect}
           className={`${className || ''} reqore-empty-state`}
         >
           <ReqoreControlGroup
@@ -207,7 +205,7 @@ export const ReqoreEmptyState = memo(
               ))}
             {actions && <div className='reqore-empty-state-actions'>{actions}</div>}
           </ReqoreControlGroup>
-        </ReqoreTooltipComponent>
+        </ReqorePanel>
       );
     }
   )

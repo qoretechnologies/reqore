@@ -900,16 +900,18 @@ const ReqoreTable = ({
                   {renderTable('main', applyPaging(transformedData))}
                   {renderTable('right', applyPaging(transformedData))}
                 </StyledTablesWrapper>
-                {count(applyPaging(transformedData)) === 0 ? (
-                  <ReqoreMessage
-                    flat
-                    size={size}
-                    icon='Search2Line'
-                    margin={count(data) ? 'top' : 'none'}
-                  >
-                    {emptyMessage}
-                  </ReqoreMessage>
-                ) : null}
+                {count(applyPaging(transformedData)) === 0
+                  ? rest.children || (
+                      <ReqoreMessage
+                        flat
+                        size={size}
+                        icon='Search2Line'
+                        margin={count(data) ? 'top' : 'none'}
+                      >
+                        {emptyMessage}
+                      </ReqoreMessage>
+                    )
+                  : null}
               </>
             )}
           </ReqorePaginationContainer>

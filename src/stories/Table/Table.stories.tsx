@@ -3,6 +3,7 @@ import { StoryObj } from '@storybook/react';
 import { fireEvent, userEvent, waitFor, within } from '@storybook/testing-library';
 import { noop, slice } from 'lodash';
 import { StyledEffect } from '../../components/Effect';
+import { ReqoreEmptyState } from '../../components/EmptyState';
 import { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
 import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
@@ -656,5 +657,20 @@ export const CustomCellsAndRows: Story = {
     headerCellComponent: CustomHeaderCell,
     bodyCellComponent: CustomCell,
     rowComponent: CustomRow,
+  },
+};
+
+export const CustomEmptyState: Story = {
+  args: {
+    data: [],
+    flat: false,
+    children: (
+      <ReqoreEmptyState
+        transparent
+        icon='InboxLine'
+        title='No data available'
+        description='There are no records to display in this table yet.'
+      />
+    ),
   },
 };
