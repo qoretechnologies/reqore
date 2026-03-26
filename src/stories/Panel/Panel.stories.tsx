@@ -529,6 +529,8 @@ export const ActionsShownOnHover: Story = {
     style: { minWidth: 400, maxWidth: 600 },
     label: 'This is a simple test to',
     collapsible: false,
+    description:
+      'Hover over this panel to see actions on the right side of the header and the bottom bar, this is a very long description that should be wrapped and not overflow, but it should be long enough to test the wrapping',
     size: 'small',
     minimal: true,
     responsiveActions: false,

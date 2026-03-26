@@ -234,6 +234,10 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
     .reqore-panel-action-hidden {
       visibility: hidden;
     }
+
+    .reqore-panel-floating-actions {
+      display: none;
+    }
   }
 
   ${({ interactive, theme, opacity = 1, flat, intent }) =>
@@ -841,7 +845,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         >
           {size(floatingActionsList) > 0 && (
             <StyledFloatingActions
-              className='reqore-panel-floating-actions reqore-panel-action-hidden'
+              className='reqore-panel-floating-actions'
               theme={theme}
               size={panelSize}
             >
