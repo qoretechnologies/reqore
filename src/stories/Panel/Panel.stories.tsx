@@ -542,7 +542,7 @@ export const ActionsShownOnHover: Story = {
     size: 'small',
     minimal: true,
     responsiveActions: false,
-    actions: [{ label: 'test', show: 'hover' }],
+    actions: [{ label: 'test', show: 'hover', icon: '24HoursFill' }],
     children: 'This is a panel',
     bottomActions: [
       {
@@ -550,7 +550,7 @@ export const ActionsShownOnHover: Story = {
         show: 'hover',
         fluid: false,
         group: [
-          { label: 'test 2', show: true },
+          { label: 'test 2', show: true, icon: '24HoursFill' },
           { label: 'test 3', show: true },
         ],
       },

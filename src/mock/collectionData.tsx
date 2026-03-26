@@ -126,6 +126,7 @@ export default [
   {
     icon: 'FolderWarningFill',
     label: 'Expandable item',
+    floatingActions: true,
     tooltip: 'This is a test item',
     content:
       'Hello I am a test item content and I am very long so I will wrap to the next line and I will be very long',

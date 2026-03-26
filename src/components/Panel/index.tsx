@@ -2,7 +2,17 @@ import classNames from 'classnames';
 import { isArray, omit, size } from 'lodash';
 import { darken, rgba } from 'polished';
 import { Resizable, ResizableProps } from 're-resizable';
-import { forwardRef, memo, ReactElement, useCallback, useMemo, useState } from 'react';
+import {
+  forwardRef,
+  memo,
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { createPortal } from 'react-dom';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
@@ -223,8 +233,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
           0.08
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  overflow: ${({ stickyHeader, floatingActions }) =>
-    stickyHeader || floatingActions ? 'visible' : 'hidden'};
+  overflow: ${({ stickyHeader }) => (stickyHeader ? 'visible' : 'hidden')};
   display: flex;
   flex-flow: column;
   position: relative;
@@ -235,12 +244,14 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
 
   &:not(:hover) {
     .reqore-panel-action-hidden {
+      opacity: 0;
+      pointer-events: none;
       visibility: hidden;
     }
+  }
 
-    .reqore-panel-floating-actions {
-      display: none;
-    }
+  &.reqore-panel-floating-active {
+    border-top-right-radius: 0;
   }
 
   ${({ interactive, theme, opacity = 1, flat, intent }) =>
@@ -408,19 +419,19 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
 `;
 
 export const StyledFloatingActions = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
-  position: absolute;
-  top: 0;
-  right: 0;
-  transform: translateY(-100%);
-  z-index: 1;
+  position: fixed;
+  z-index: 999999;
   display: flex;
   padding: ${({ size }) => PADDING_FROM_SIZE[size]}px;
-  background-color: ${({ theme }) => rgba(changeLightness(getMainBackgroundColor(theme), 0.05), 1)};
-  border: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.08)};
+  background-color: ${({ theme, opacity = 1 }) =>
+    rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
+  border: ${({ flat, theme }) =>
+    flat ? 'none' : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
   border-bottom: none;
   border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px ${({ size }) => RADIUS_FROM_SIZE[size]}px
     0 0;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
+  pointer-events: auto;
 `;
 
 export const ReqorePanelSkeleton = memo(
@@ -527,10 +538,84 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const isMobile = useReqoreProperty('isMobile');
     const { targetRef } = useCombinedRefs(ref);
     const [measureRef, { width }] = useMeasure();
+    const [_isHovered, setIsHovered] = useState(false);
+    const floatingActionsRef = useRef<HTMLDivElement>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
 
     useUpdateEffect(() => {
       setIsCollapsed(!!isCollapsed);
     }, [isCollapsed]);
+
+    const floatingActionsList: TReqorePanelActions = useMemo(
+      () => (floatingActions ? actions.filter((action) => action.show === 'hover') : []),
+      [floatingActions, actions]
+    );
+
+    const nonFloatingActions: TReqorePanelActions = useMemo(
+      () => (floatingActions ? actions.filter((action) => action.show !== 'hover') : actions),
+      [floatingActions, actions]
+    );
+
+    const updateFloatingActionsPosition = useCallback(() => {
+      if (!floatingActionsRef.current || !panelRef.current) return;
+
+      const panelRect = panelRef.current.getBoundingClientRect();
+      const floatingRect = floatingActionsRef.current.getBoundingClientRect();
+
+      floatingActionsRef.current.style.top = `${panelRect.top - floatingRect.height}px`;
+      floatingActionsRef.current.style.left = `${panelRect.right - floatingRect.width}px`;
+    }, []);
+
+    useEffect(() => {
+      if (!_isHovered || !floatingActions || !size(floatingActionsList)) return;
+
+      updateFloatingActionsPosition();
+    }, [_isHovered, floatingActions, floatingActionsList, updateFloatingActionsPosition]);
+
+    const handleMouseEnter = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        if (floatingActions) setIsHovered(true);
+        rest.onMouseEnter?.(e);
+      },
+      [floatingActions, rest.onMouseEnter]
+    );
+
+    const handleMouseLeave = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        if (floatingActions) {
+          const relatedTarget = e.relatedTarget as Node | null;
+
+          if (
+            floatingActionsRef.current &&
+            relatedTarget &&
+            floatingActionsRef.current.contains(relatedTarget)
+          ) {
+            return;
+          }
+
+          setIsHovered(false);
+        }
+        rest.onMouseLeave?.(e);
+      },
+      [floatingActions, rest.onMouseLeave]
+    );
+
+    const handleFloatingActionsMouseLeave = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        const relatedTarget = e.relatedTarget as Node | null;
+
+        if (
+          panelRef.current &&
+          relatedTarget &&
+          panelRef.current.contains(relatedTarget)
+        ) {
+          return;
+        }
+
+        setIsHovered(false);
+      },
+      []
+    );
 
     const _resizable: ResizableProps = useMemo(() => {
       const disabledProps: ResizableProps = {
@@ -552,16 +637,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
       return resizable || disabledProps;
     }, [resizable, _isCollapsed, disabled]);
-
-    const floatingActionsList: TReqorePanelActions = useMemo(
-      () => (floatingActions ? actions.filter((action) => action.show === 'hover') : []),
-      [floatingActions, actions]
-    );
-
-    const nonFloatingActions: TReqorePanelActions = useMemo(
-      () => (floatingActions ? actions.filter((action) => action.show !== 'hover') : actions),
-      [floatingActions, actions]
-    );
 
     // Return true if the card has a title bar, otherwise return false.
     const hasTitleBar: boolean = useMemo(
@@ -829,6 +904,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       return <ReqorePanelSkeleton size={panelSize} isCollapsed={_isCollapsed} />;
     }
 
+    console.log(theme, customTheme);
+
     return (
       <ReqoreErrorBoundary {...errorBoundaryOptions}>
         <ReqoreTooltipComponent
@@ -839,28 +916,39 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           rounded={rounded}
           flat={flat}
           intent={intent}
-          className={`${className || ''} reqore-panel`}
+          className={`${className || ''} reqore-panel${_isHovered && size(floatingActionsList) > 0 ? ' reqore-panel-floating-active' : ''}`}
           interactive={interactive}
           theme={theme}
           effect={transformedContentEffect}
           opacity={opacity}
           fluid={fluid}
           disabled={disabled}
-          floatingActions={floatingActions}
           Component={StyledPanel}
-          ref={handleRef}
+          ref={(node: any) => {
+            handleRef(node);
+            panelRef.current = node;
+          }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-          {size(floatingActionsList) > 0 && (
-            <StyledFloatingActions
-              className='reqore-panel-floating-actions'
-              theme={theme}
-              size={panelSize}
-            >
-              <ReqoreControlGroup size={panelSize} gapSize={panelSize}>
-                {floatingActionsList.map((action, index) => renderActions(action, index, true))}
-              </ReqoreControlGroup>
-            </StyledFloatingActions>
-          )}
+          {_isHovered &&
+            size(floatingActionsList) > 0 &&
+            createPortal(
+              <StyledFloatingActions
+                className='reqore-panel-floating-actions'
+                theme={theme}
+                opacity={opacity}
+                size={panelSize}
+                flat={flat}
+                ref={floatingActionsRef}
+                onMouseLeave={handleFloatingActionsMouseLeave}
+              >
+                <ReqoreControlGroup size={panelSize} gapSize={panelSize}>
+                  {floatingActionsList.map((action, index) => renderActions(action, index, true))}
+                </ReqoreControlGroup>
+              </StyledFloatingActions>,
+              document.body
+            )}
           {hasTitleBar && (
             <StyledPanelTopBar
               flat={flat}
