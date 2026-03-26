@@ -600,22 +600,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [floatingActions, rest.onMouseLeave]
     );
 
-    const handleFloatingActionsMouseLeave = useCallback(
-      (e: React.MouseEvent<HTMLDivElement>) => {
-        const relatedTarget = e.relatedTarget as Node | null;
+    const handleFloatingActionsMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+      const relatedTarget = e.relatedTarget as Node | null;
 
-        if (
-          panelRef.current &&
-          relatedTarget &&
-          panelRef.current.contains(relatedTarget)
-        ) {
-          return;
-        }
+      if (panelRef.current && relatedTarget && panelRef.current.contains(relatedTarget)) {
+        return;
+      }
 
-        setIsHovered(false);
-      },
-      []
-    );
+      setIsHovered(false);
+    }, []);
 
     const _resizable: ResizableProps = useMemo(() => {
       const disabledProps: ResizableProps = {
@@ -904,8 +897,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       return <ReqorePanelSkeleton size={panelSize} isCollapsed={_isCollapsed} />;
     }
 
-    console.log(theme, customTheme);
-
     return (
       <ReqoreErrorBoundary {...errorBoundaryOptions}>
         <ReqoreTooltipComponent
@@ -916,7 +907,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           rounded={rounded}
           flat={flat}
           intent={intent}
-          className={`${className || ''} reqore-panel${_isHovered && size(floatingActionsList) > 0 ? ' reqore-panel-floating-active' : ''}`}
+          className={`${className || ''} reqore-panel${
+            _isHovered && size(floatingActionsList) > 0 ? ' reqore-panel-floating-active' : ''
+          }`}
           interactive={interactive}
           theme={theme}
           effect={transformedContentEffect}
