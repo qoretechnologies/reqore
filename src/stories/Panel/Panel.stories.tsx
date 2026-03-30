@@ -582,6 +582,41 @@ export const FloatingActions: Story = {
   },
 };
 
+export const FloatingActionsInScrollableContainer: Story = {
+  render: (args) => (
+    <div style={{ height: 300, overflow: 'auto', border: '1px solid #333', padding: 20 }}>
+      <ReqoreControlGroup vertical gapSize='big' style={{ paddingTop: 50 }}>
+        {Array.from({ length: 5 }, (_, i) => (
+          <ReqorePanel
+            key={i}
+            fluid
+            {...args}
+            label={`Panel ${i + 1}`}
+            floatingActions
+            actions={[
+              { label: 'Visible', icon: 'Settings3Line' },
+              { label: 'Edit', icon: 'EditLine', show: 'hover' },
+              { label: 'Delete', icon: 'DeleteBinLine', show: 'hover', intent: 'danger' },
+            ]}
+          >
+            Content for panel {i + 1}
+          </ReqorePanel>
+        ))}
+      </ReqoreControlGroup>
+    </div>
+  ),
+
+  parameters: {
+    chromatic: {
+      disable: true,
+    },
+  },
+
+  args: {
+    size: 'small',
+  },
+};
+
 export const ActionsShownOnlyWhenExpanded: Story = {
   render: (args) => (
     <ReqoreControlGroup verticalAlign='flex-start'>
