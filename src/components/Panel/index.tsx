@@ -576,12 +576,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const panelRect = panelRef.current.getBoundingClientRect();
       const floatingRect = floatingActionsRef.current.getBoundingClientRect();
 
-      // Check if the panel's top edge is visible by testing if the element
-      // at the panel's top-right corner belongs to the panel
-      const topRight = document.elementFromPoint(
-        panelRect.right - 1,
-        panelRect.top + 1
-      );
+      // Temporarily hide the floating actions from hit-testing so they don't
+      // block the elementFromPoint check on the panel
+      floatingActionsRef.current.style.pointerEvents = 'none';
+      const topRight = document.elementFromPoint(panelRect.right - 1, panelRect.top + 1);
+      floatingActionsRef.current.style.pointerEvents = '';
+
       const isPanelTopVisible =
         topRight && (panelRef.current.contains(topRight) || topRight === panelRef.current);
 
