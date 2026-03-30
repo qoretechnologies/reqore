@@ -244,9 +244,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
 
   &:not(:hover) {
     .reqore-panel-action-hidden {
-      opacity: 0;
-      pointer-events: none;
-      visibility: hidden;
+      display: none;
     }
   }
 
@@ -578,6 +576,21 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const panelRect = panelRef.current.getBoundingClientRect();
       const floatingRect = floatingActionsRef.current.getBoundingClientRect();
 
+      // Check if the panel's top edge is visible by testing if the element
+      // at the panel's top-right corner belongs to the panel
+      const topRight = document.elementFromPoint(
+        panelRect.right - 1,
+        panelRect.top + 1
+      );
+      const isPanelTopVisible =
+        topRight && (panelRef.current.contains(topRight) || topRight === panelRef.current);
+
+      if (!isPanelTopVisible) {
+        floatingActionsRef.current.style.display = 'none';
+        return;
+      }
+
+      floatingActionsRef.current.style.display = 'flex';
       floatingActionsRef.current.style.top = `${panelRect.top - floatingRect.height + (flat ? 0 : 1)}px`;
       floatingActionsRef.current.style.left = `${panelRect.right - floatingRect.width}px`;
     }, [flat]);
