@@ -56,7 +56,7 @@ import ReqoreBreadcrumbs, { IReqoreBreadcrumbsProps } from '../Breadcrumbs';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { StyledCollectionItemContent } from '../Collection/item';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
-import ReqoreDropdown from '../Dropdown';
+import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreErrorBoundary } from '../ErrorBoundary';
@@ -78,6 +78,7 @@ export interface IReqorePanelAction extends IReqoreButtonProps, IWithReqoreToolt
   onClick?: () => void;
   group?: IReqorePanelAction[];
   actions?: IReqorePanelSubAction[];
+  actionsProps?: IReqoreDropdownProps;
   multiSelect?: boolean;
   // Custom react element
   as?: React.ElementType;
@@ -591,7 +592,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
 
       floatingActionsRef.current.style.display = 'flex';
-      floatingActionsRef.current.style.top = `${panelRect.top - floatingRect.height + (flat ? 0 : 1)}px`;
+      floatingActionsRef.current.style.top = `${
+        panelRect.top - floatingRect.height + (flat ? 0 : 1)
+      }px`;
       floatingActionsRef.current.style.left = `${panelRect.right - floatingRect.width}px`;
     }, [flat]);
 
@@ -789,6 +792,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         const {
           id,
           actions,
+          actionsProps,
           label,
           intent,
           as: CustomElement,
@@ -823,17 +827,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
 
         if (size(actions)) {
           return (
-            <ReqoreDropdown<IReqoreButtonProps>
+            <ReqoreDropdown
               fixed
               {...rest}
               key={index}
               label={label}
-              items={actions.filter(isActionShown)}
               intent={intent}
               className={className}
               customTheme={rest.customTheme || theme}
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
               id={id}
+              {...actionsProps}
+              items={actions.filter(isActionShown)}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
             />
           );
         }
