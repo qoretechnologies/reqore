@@ -117,3 +117,15 @@ const Template: StoryFn<IReqoreNavbarProps> = (args: IReqoreNavbarProps) => {
 export const Basic: Story = {
   render: Template,
 };
+
+export const WithEffect: Story = {
+  render: Template,
+  args: {
+    effect: {
+      gradient: {
+        colors: { 0: 'info:darken:2', 100: 'success:darken:2' },
+        direction: 'to bottom right',
+      },
+    },
+  },
+};

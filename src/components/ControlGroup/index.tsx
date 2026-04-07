@@ -9,6 +9,7 @@ import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
+  IWithReqoreEffect,
   IWithReqoreFlat,
   IWithReqoreFluid,
   IWithReqoreMinimal,
@@ -25,7 +26,8 @@ export interface IReqoreControlGroupComponentProps
     IWithReqoreMinimal,
     IReqoreIntent,
     IWithReqoreFluid,
-    IWithReqoreCustomTheme {
+    IWithReqoreCustomTheme,
+    IWithReqoreEffect {
   stack?: boolean;
   fixed?: boolean;
   rounded?: boolean;
