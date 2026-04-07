@@ -153,6 +153,15 @@ export const Fluid: Story = {
   ),
 };
 
+export const NotFlat: Story = {
+  args: {
+    title: 'Not Flat',
+    description: 'This section is currently not flat.',
+    flat: false,
+    gapSize: 'big',
+  },
+};
+
 export const Disabled: Story = {
   args: {
     icon: 'ForbidLine',

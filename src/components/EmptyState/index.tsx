@@ -1,5 +1,6 @@
 import React, { forwardRef, memo, useMemo } from 'react';
 import { ReqorePanel } from '../..';
+import { TSizes } from '../../constants/sizes';
 import { getOneHigherSize, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
@@ -47,6 +48,7 @@ export interface IReqoreEmptyStateProps
   transparent?: boolean;
   /** Background opacity */
   opacity?: number;
+  gapSize?: TSizes;
 }
 
 export const ReqoreEmptyState = memo(
@@ -63,7 +65,7 @@ export const ReqoreEmptyState = memo(
         customTheme,
         intent,
         fluid,
-        flat,
+        flat = true,
         disabled,
         tooltip,
         rounded,
@@ -71,6 +73,7 @@ export const ReqoreEmptyState = memo(
         opacity,
         effect,
         className,
+        gapSize,
         ...rest
       },
       ref
@@ -101,7 +104,7 @@ export const ReqoreEmptyState = memo(
         <ReqorePanel
           transparent={transparent}
           minimal
-          flat
+          flat={flat}
           padded='massive'
           {...rest}
           tooltip={tooltip}
@@ -119,6 +122,7 @@ export const ReqoreEmptyState = memo(
             vertical
             horizontalAlign='center'
             className='reqore-empty-state-content'
+            gapSize={gapSize}
           >
             {icon && (
               <ReqoreIcon

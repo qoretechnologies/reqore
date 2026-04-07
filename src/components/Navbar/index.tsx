@@ -4,8 +4,12 @@ import styled, { css } from 'styled-components';
 import { IReqoreNavbarTheme, IReqoreTheme } from '../../constants/theme';
 import { getMainColor, getReadableColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { IWithReqoreEffect } from '../../types/global';
+import { IReqoreEffect, StyledEffect } from '../Effect';
 
-export interface IReqoreNavbarProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreNavbarProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    IWithReqoreEffect {
   children?: any;
   position?: 'top' | 'bottom';
   type?: 'header' | 'footer';
@@ -15,9 +19,10 @@ export interface IReqoreNavbarProps extends React.HTMLAttributes<HTMLDivElement>
 
 export interface IReqoreNavbarStyle extends IReqoreNavbarProps {
   theme: IReqoreTheme;
+  effect?: IReqoreEffect;
 }
 
-export const StyledNavbar = styled.div<IReqoreNavbarStyle>`
+export const StyledNavbar = styled(StyledEffect)<IReqoreNavbarStyle>`
   ${({ theme, type }: IReqoreNavbarStyle) => css`
     height: 50px;
     flex-shrink: 0;
