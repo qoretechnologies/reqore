@@ -108,7 +108,7 @@ const ReqoreMenu = memo(
       const theme = useReqoreTheme('main', customTheme, intent);
       const { targetRef } = useCombinedRefs(ref);
       const { clone } = useCloneThroughFragments((props) => ({
-        customTheme: props?.customTheme || theme,
+        customTheme: props?.customTheme || customTheme,
         wrap: 'wrap' in (props || {}) ? props.wrap : wrapText,
         flat: 'flat' in (props || {}) ? props.flat : flat,
         minimal: 'minimal' in (props || {}) ? props.minimal : minimal,
