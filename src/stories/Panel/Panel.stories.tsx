@@ -4,7 +4,7 @@ import { noop } from 'lodash';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
-import { ReqoreVerticalSpacer } from '../../components/Spacer';
+import { ReqoreHorizontalSpacer, ReqoreVerticalSpacer } from '../../components/Spacer';
 import ReqoreTag from '../../components/Tag';
 import { IReqoreIconName } from '../../types/icons';
 import { StoryMeta } from '../utils';
@@ -253,6 +253,14 @@ const Template: StoryFn<IReqorePanelProps> = (args: IReqorePanelProps) => {
             icon: 'Search2Line',
             minimal: false,
           } as IReqoreInputProps,
+        },
+        {
+          as: ReqoreHorizontalSpacer,
+          props: {
+            width: 5,
+            height: '80%',
+            lineSize: 'tiny',
+          },
         },
         {
           label: 'More actions',

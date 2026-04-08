@@ -30,12 +30,12 @@ const Template: StoryFn<IReqoreSpacerProps> = () => {
         width of 10px and lineSize of normal
         <br />
         <br />
-        This is a horizontal spacer with <ReqoreHorizontalSpacer width={50} height={100} /> width of
-        50px and height of 100px
+        This is a horizontal spacer with <ReqoreHorizontalSpacer width={50} height='100xpx' /> width
+        of 50px and height of 100px
         <br />
         <br />
         This is a horizontal spacer with{' '}
-        <ReqoreHorizontalSpacer width={50} height={50} lineSize='tiny' intent='info' /> width of
+        <ReqoreHorizontalSpacer width={50} height='50px' lineSize='tiny' intent='info' /> width of
         50px and height of 50px and lineSize of tiny and intent info
         <br />
         <br />
@@ -63,18 +63,25 @@ const Template: StoryFn<IReqoreSpacerProps> = () => {
         of 10px and lineSize of normal
         <br />
         <br />
-        This is a vertical spacer with <ReqoreVerticalSpacer height={50} width={100} /> height of
+        This is a vertical spacer with <ReqoreVerticalSpacer height={50} width='100px' /> height of
         50px and width of 100px
         <br />
         <br />
         This is a vertical spacer with{' '}
-        <ReqoreVerticalSpacer width={50} height={50} lineSize='tiny' intent='info' /> width of 50px
-        and height of 50px and lineSize of tiny and intent info
+        <ReqoreVerticalSpacer
+          width='50px'
+          height={50}
+          lineSize='tiny'
+          intent='info'
+          align='end'
+        />{' '}
+        width of 50px and height of 50px and lineSize of tiny and intent info, aligned to end
         <br />
         <br />
         This is a vertical spacer with{' '}
         <ReqoreVerticalSpacer
           height={50}
+          width='80%'
           lineSize='tiny'
           effect={{
             gradient: {
