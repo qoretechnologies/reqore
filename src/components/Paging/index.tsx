@@ -201,6 +201,7 @@ function Pagination<T>({
               icon='ArrowDropDownLine'
               badge={itemsPerPage}
               iconsAlign='center'
+              compact
               {...loadMoreButtonProps}
               onClick={next}
               ref={setLoadMoreRef}
@@ -215,6 +216,7 @@ function Pagination<T>({
                 icon='ArrowDropDownLine'
                 badge={itemsLeft}
                 iconsAlign='center'
+                compact
                 {...loadAllButtonProps}
                 onClick={last}
                 style={{
@@ -233,6 +235,7 @@ function Pagination<T>({
             <ReqoreButton
               icon='RewindMiniLine'
               fixed
+              compact
               {...controlPageButtonProps}
               onClick={first}
               disabled={isFirstPage}
@@ -245,6 +248,7 @@ function Pagination<T>({
             <ReqoreButton
               icon='ArrowDropLeftLine'
               fixed
+              compact
               {...controlPageButtonProps}
               onClick={back}
               disabled={isFirstPage}
@@ -260,6 +264,7 @@ function Pagination<T>({
                   <ReqoreButton
                     textAlign='center'
                     fixed
+                    compact
                     key={page}
                     onClick={() => setPage(page)}
                     active={page === currentPage}
@@ -271,6 +276,7 @@ function Pagination<T>({
               ) : (
                 <ReqoreDropdown
                   filterable
+                  compact
                   label={`${showLabels ? `${pageLabel} ` : ''}${currentPage} / ${pageCount}`}
                   items={pages.map((page) => ({
                     label: `${showLabels ? `${pageLabel} ` : ''}${page}`,
@@ -292,6 +298,7 @@ function Pagination<T>({
             <ReqoreButton
               icon='ArrowDropRightLine'
               fixed
+              compact
               {...controlPageButtonProps}
               onClick={next}
               disabled={isLastPage}
@@ -304,6 +311,7 @@ function Pagination<T>({
             <ReqoreButton
               icon='SpeedMiniLine'
               fixed
+              compact
               {...controlPageButtonProps}
               onClick={last}
               disabled={isLastPage}

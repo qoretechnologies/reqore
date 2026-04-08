@@ -44,6 +44,7 @@ export const ReqorePanelNonResponsiveActions = memo(
         fixed={isSmall ? false : hasResponsiveActions}
         fluid={isSmall}
         horizontalAlign='flex-end'
+        verticalAlign='center'
         {...rest}
       >
         {children}

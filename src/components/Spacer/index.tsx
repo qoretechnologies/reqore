@@ -9,6 +9,12 @@ import { StyledEffect } from '../Effect';
 export const StyledSpacer = styled.div`
   display: ${({ horizontal }) => (horizontal ? 'inline-flex' : 'flex')};
   vertical-align: middle;
+  align-items: ${({ align }) => {
+    if (align === 'start') return 'flex-start';
+    if (align === 'center') return 'center';
+    if (align === 'end') return 'flex-end';
+    return 'center';
+  }};
 
   ${({ horizontal, vertical }) => {
     if (horizontal) {
@@ -35,13 +41,13 @@ export const StyledSpace = styled.div`
     if (horizontal) {
       return css`
         width: ${width / 2 - lineSize / 2}px;
-        height: ${height ? `${height}px` : `${TEXT_FROM_SIZE.normal}px`};
+        height: ${height ? height : `${TEXT_FROM_SIZE.normal}px`};
       `;
     }
 
     if (vertical) {
       return css`
-        width: ${width ? `${width}px` : '100%'};
+        width: ${width ? width : '100%'};
         height: ${height / 2 - lineSize / 2}px;
       `;
     }
@@ -57,13 +63,13 @@ export const StyledLine = styled(StyledEffect)`
     if (horizontal) {
       return css`
         width: ${lineSize}px;
-        height: ${height ? `${height}px` : `${TEXT_FROM_SIZE.normal}px`};
+        height: ${height ? height : `${TEXT_FROM_SIZE.normal}px`};
       `;
     }
 
     if (vertical) {
       return css`
-        width: ${width ? `${width}px` : '100%'};
+        width: ${width ? width : '100%'};
         height: ${lineSize}px;
       `;
     }
@@ -75,9 +81,10 @@ export interface IReqoreSpacerProps
     IWithReqoreEffect,
     IWithReqoreCustomTheme,
     IReqoreIntent {
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   lineSize?: TSizes | 'none';
+  align?: 'start' | 'center' | 'end';
 }
 
 export const ReqoreSpacer = memo(
@@ -85,6 +92,7 @@ export const ReqoreSpacer = memo(
     customTheme,
     intent,
     lineSize = 'none',
+    align,
     ...rest
   }: IReqoreSpacerProps & { horizontal?: boolean; vertical?: boolean }) => {
     const theme = useReqoreTheme('main', customTheme, intent);
@@ -113,6 +121,7 @@ export const ReqoreSpacer = memo(
         {...rest}
         horizontal={horizontal}
         vertical={vertical}
+        align={align}
         className='reqore-spacer'
       >
         <StyledSpace {...rest} horizontal={horizontal} vertical={vertical} lineSize={_lineSize} />
@@ -130,13 +139,21 @@ export const ReqoreSpacer = memo(
 );
 
 export const ReqoreHorizontalSpacer = memo(
-  ({ width = 1, lineSize = 'none', ...rest }: IReqoreSpacerProps) => {
+  ({
+    width = 1,
+    lineSize = 'none',
+    ...rest
+  }: Omit<IReqoreSpacerProps, 'height'> & { height?: string }) => {
     return <ReqoreSpacer width={width} lineSize={lineSize} horizontal {...rest} />;
   }
 );
 
 export const ReqoreVerticalSpacer = memo(
-  ({ height = 1, lineSize = 'none', ...rest }: IReqoreSpacerProps) => {
+  ({
+    height = 1,
+    lineSize = 'none',
+    ...rest
+  }: Omit<IReqoreSpacerProps, 'width'> & { width?: string }) => {
     return <ReqoreSpacer height={height} lineSize={lineSize} vertical {...rest} />;
   }
 );
