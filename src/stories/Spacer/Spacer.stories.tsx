@@ -30,7 +30,7 @@ const Template: StoryFn<IReqoreSpacerProps> = () => {
         width of 10px and lineSize of normal
         <br />
         <br />
-        This is a horizontal spacer with <ReqoreHorizontalSpacer width={50} height='100xpx' /> width
+        This is a horizontal spacer with <ReqoreHorizontalSpacer width={50} height='100px' /> width
         of 50px and height of 100px
         <br />
         <br />
