@@ -390,6 +390,14 @@ export const ResizableBothSidesWithBorder: Story = {
   },
 };
 
+export const WithCustomTheme: Story = {
+  render: Template,
+
+  args: {
+    customTheme: { main: '#2b052b' },
+  },
+};
+
 export const WithEffect: Story = {
   render: Template,
 
