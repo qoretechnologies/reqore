@@ -57,6 +57,7 @@ export const ReqoreMenuSection = ({
         flat={flat}
         minimal={minimal}
         active={collapsible && !_isCollapsed}
+        customTheme={customTheme}
         {...rest}
         className={`${rest.className || ''} reqore-menu-section-toggle`}
         intent={collapsible && !_isCollapsed ? activeIntent : rest.intent}
