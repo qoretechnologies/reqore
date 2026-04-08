@@ -11,12 +11,14 @@ import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreComponent,
+  IWithReqoreEffect,
   IWithReqoreMinimal,
   IWithReqoreSize,
   IWithReqoreSkeleton,
   IWithReqoreTransparent,
 } from '../../types/global';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
+import { StyledEffect } from '../Effect';
 import { ReqoreSkeleton } from '../Skeleton';
 
 export interface IReqoreMenuProps
@@ -25,6 +27,7 @@ export interface IReqoreMenuProps
     IWithReqoreTransparent,
     IWithReqoreSize,
     IWithReqoreSkeleton,
+    IWithReqoreEffect,
     React.HTMLAttributes<HTMLDivElement> {
   children: any;
   position?: 'left' | 'right';
@@ -47,7 +50,7 @@ export interface IReqoreMenuStyle extends IReqoreMenuProps {
   theme: IReqoreTheme;
 }
 
-const StyledReqoreMenu = styled.div<IReqoreMenuStyle>`
+const StyledReqoreMenu = styled(StyledEffect)<IReqoreMenuStyle>`
   width: ${({ width }) => width || undefined};
   min-width: ${({ width }) => (width ? undefined : '160px')};
   padding: ${({ padded = true, _size }) =>

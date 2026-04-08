@@ -389,3 +389,18 @@ export const ResizableBothSidesWithBorder: Story = {
     },
   },
 };
+
+export const WithEffect: Story = {
+  render: Template,
+
+  args: {
+    effect: {
+      gradient: {
+        colors: {
+          0: '#5e00ff',
+          100: '#ff0073',
+        },
+      },
+    },
+  },
+};
