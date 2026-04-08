@@ -235,7 +235,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         {index !== 0 && (
           <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
         )}
-        <ReqoreBreadcrumbsItem {...item} key={index} customTheme={customTheme} size={size} />
+        <ReqoreBreadcrumbsItem customTheme={customTheme} {...item} key={index} size={size} />
       </React.Fragment>
     );
   };
