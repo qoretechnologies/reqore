@@ -25,3 +25,11 @@ export const Default: Story = {};
 export const WithTabs: Story = { args: { items: [...breadcrumbs, breadcrumbsTabs] } };
 export const Flat: Story = { args: { flat: true } };
 export const Special: Story = { args: { items: specialbreadcrumbs } };
+export const CustomTheme: Story = {
+  args: {
+    items: breadcrumbs,
+    customTheme: {
+      main: '#ff69b4',
+    },
+  },
+};

@@ -16,7 +16,7 @@ export interface IReqoreBreadcrumbItemStyle extends IReqoreBreadcrumbItemProps {
 
 const ReqoreBreadcrumbsItem = forwardRef<HTMLButtonElement, IReqoreBreadcrumbItemProps>(
   ({ label, props, as, customTheme, ...rest }: IReqoreBreadcrumbItemProps, ref) => {
-    const theme = useReqoreTheme('breadcrumbs', customTheme);
+    const theme = useReqoreTheme('main', customTheme);
 
     return (
       <ReqoreButton

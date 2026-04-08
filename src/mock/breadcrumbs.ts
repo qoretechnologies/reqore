@@ -52,7 +52,7 @@ export default [
   {
     tooltip: 'Connections',
     icon: Icons.Connections,
-    customTheme: { main: 'danger:darken' },
+    customTheme: { main: '#280d37' },
   },
 ] satisfies IReqoreBreadcrumbItem[];
 
