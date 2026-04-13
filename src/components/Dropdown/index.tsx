@@ -47,6 +47,14 @@ export interface IReqoreDropdownProps
   readOnlyOnEmpty?: boolean;
   // Whether keyboard navigation is enabled (arrow keys, enter, etc.)
   keyboardNavigation?: boolean;
+  /** Callback that receives keyboard controls, allowing external components
+   *  (e.g., a text input) to forward arrow/enter key events to the dropdown list.
+   *  This enables the aria-activedescendant pattern where focus stays on the input
+   *  while arrow keys navigate the dropdown. */
+  passKeyHandler?: IReqoreDropdownListProps['passKeyHandler'];
+  /** Unique ID for the dropdown list, used for aria-activedescendant support.
+   *  When set, each dropdown item gets an id of `${listId}-option-${index}`. */
+  listId?: string;
 
   popoverId?: string;
 }
@@ -127,6 +135,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   showCaret = true,
   readOnlyOnEmpty,
   keyboardNavigation = true,
+  passKeyHandler,
+  listId,
   onBeforeClose,
   onBeforeOpen,
   popoverId,
@@ -198,6 +208,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         customTheme={listCustomTheme}
         intent={listIntent}
         keyboardNavigation={keyboardNavigation}
+        passKeyHandler={passKeyHandler}
+        listId={listId}
         _onNavigateToLevel={handleNavigateToLevel}
         selectedItems={selectedItems}
         onSelectedItemsChange={setSelectedItems}
