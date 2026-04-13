@@ -283,8 +283,9 @@ const ReqoreDropdownList = memo(
             return Math.max(prev - 1, 0);
           });
         } else if (key === 'Enter') {
-          event.preventDefault();
           if (focusedItemIndex !== null && selectableItems[focusedItemIndex]) {
+            event.preventDefault();
+            event.stopPropagation();
             const item = selectableItems[focusedItemIndex];
             handleItemClick(item, event as any);
           }
@@ -342,8 +343,8 @@ const ReqoreDropdownList = memo(
         handleKeyDown(event);
       };
 
-      document.addEventListener('keydown', listener);
-      return () => document.removeEventListener('keydown', listener);
+      document.addEventListener('keydown', listener, true);
+      return () => document.removeEventListener('keydown', listener, true);
     }, [keyboardNavigation, handleKeyDown, menuRef]);
 
     // Expose keyboard controls to external components (aria-activedescendant pattern)
