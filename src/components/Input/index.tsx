@@ -210,6 +210,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       minimal,
       readOnly,
       customTheme,
+        inheritCustomTheme,
       intent,
       wrapperStyle,
       focusRules,
@@ -224,7 +225,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
   ) => {
     const { targetRef } = useCombinedRefs(ref);
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
-    const theme = useReqoreTheme('main', customTheme, intent);
+    const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
     useAutoFocus(inputRef, readOnly || rest.disabled ? undefined : focusRules, rest.onChange);
 

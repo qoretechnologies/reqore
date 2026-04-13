@@ -120,7 +120,7 @@ const ReqoreMenu = memo(
 
       return (
         <ReqoreErrorBoundary {...errorBoundaryOptions}>
-          <ReqoreThemeProvider theme={theme}>
+          <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
             <StyledReqoreMenu
               {...rest}
               {...resizable}

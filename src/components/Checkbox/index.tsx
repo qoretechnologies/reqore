@@ -259,6 +259,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       intent,
       effect,
       customTheme,
+        inheritCustomTheme,
       wrapLabel,
       onCheckClick,
       onUncheckClick,
@@ -273,7 +274,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       : checked === undefined
       ? unsetIntent || intent
       : uncheckedIntent || intent;
-    const theme = useReqoreTheme('main', customTheme, _intent);
+    const theme = useReqoreTheme('main', customTheme, _intent, undefined, inheritCustomTheme);
 
     const width = useMemo(() => {
       const selectedWidth = checked ? onWidth : offWidth;

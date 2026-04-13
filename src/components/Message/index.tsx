@@ -79,6 +79,7 @@ const ReqoreMessage = memo(
         minimal,
         size = 'normal',
         customTheme,
+        inheritCustomTheme,
         iconColor,
         fixed,
         fluid,
@@ -88,7 +89,7 @@ const ReqoreMessage = memo(
       ref
     ) => {
       const [internalTimeout, setInternalTimeout] = useState<NodeJS.Timeout | null>(null);
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       useMount(() => {
         if (duration) {

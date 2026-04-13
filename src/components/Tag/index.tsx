@@ -335,6 +335,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       color,
       minimal,
       customTheme,
+        inheritCustomTheme,
       wrap = false,
       width,
       leftIconColor,
@@ -353,7 +354,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     }: IReqoreTagProps,
     ref
   ) => {
-    const theme: IReqoreTheme = useReqoreTheme('main', customTheme);
+    const theme: IReqoreTheme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
 
     // If color or intent was specified, set the color
     const getCustomColor = useCallback(

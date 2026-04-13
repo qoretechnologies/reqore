@@ -203,6 +203,7 @@ const ReqoreProgress = memo(
         label,
         animated = false,
         customTheme,
+        inheritCustomTheme,
         intent,
         fluid = false,
         rounded = true,
@@ -222,9 +223,9 @@ const ReqoreProgress = memo(
       ref
     ) => {
       // Theme with intent for the progress bar
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       // Base theme without intent for labels
-      const baseTheme = useReqoreTheme('main', customTheme);
+      const baseTheme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
 
       const percentage = useMemo(() => {
         if (indeterminate || max === 0) return 0;

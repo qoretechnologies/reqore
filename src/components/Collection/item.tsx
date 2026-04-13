@@ -93,7 +93,7 @@ export const ReqoreCollectionItem = ({
   const [contentRef, sizes] = useMeasure();
   const originalDimensions = useRef(null);
   const [position, setPosition] = useState(undefined);
-  const theme = useReqoreTheme('main', rest.customTheme);
+  const theme = useReqoreTheme('main', rest.customTheme, undefined, undefined, rest.inheritCustomTheme);
   const [dimensions, setDimensions] = useState<any>({
     minWidth: undefined,
     minHeight: undefined,

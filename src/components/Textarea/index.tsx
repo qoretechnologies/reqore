@@ -165,6 +165,7 @@ function Textarea<T>(
     fluid,
     tooltip,
     customTheme,
+        inheritCustomTheme,
     intent,
     rounded = true,
     wrapperStyle,
@@ -179,7 +180,7 @@ function Textarea<T>(
 ) {
   const { targetRef }: any = useCombinedRefs(ref);
   const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
-  const theme = useReqoreTheme('main', customTheme, intent);
+  const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
   const [_value, setValue] = useState(value || '');
   const [popoverData, setPopoverData] = useState<IPopoverControls>(null);
   const uuid = useRef(nanoid());

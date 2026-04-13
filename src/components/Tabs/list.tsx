@@ -255,7 +255,7 @@ const ReqoreTabsList = ({
   );
 
   return (
-    <ReqoreThemeProvider theme={theme}>
+    <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
       <StyledReqoreTabsList
         {...rest}
         size={size}

@@ -170,7 +170,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
-  const theme = useReqoreTheme('breadcrumbs', customTheme);
+  const theme = useReqoreTheme('breadcrumbs', customTheme, undefined);
   const transformedItems = useMemo(
     () => (responsive ? getTransformedItems(items, _testWidth || width, size) : items),
     [items, width, _testWidth, size]

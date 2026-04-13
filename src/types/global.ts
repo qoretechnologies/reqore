@@ -66,6 +66,13 @@ export interface IWithReqoreCustomTheme {
    * <ReqoreInput customTheme={{ main: '#ff0000', text: { color: '#0000ff' } }} />
    */
   customTheme?: IReqoreCustomTheme;
+  /**
+   * Whether to inherit a custom theme from a parent component's context.
+   * Set to false to opt out of an ancestor's custom theme.
+   * @default true
+   * @type boolean
+   */
+  inheritCustomTheme?: boolean;
 }
 
 export interface IWithReqoreTooltip {
