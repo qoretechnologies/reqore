@@ -2,11 +2,13 @@ import { expect } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { noop } from 'lodash';
+import { useRef, useState } from 'react';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
+import { IPopoverControls } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
-import { ReqoreDropdown, ReqoreTextarea } from '../../index';
+import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
 import { WithChildItems } from './Dropdown.stories';
@@ -556,5 +558,86 @@ export const KeyboardNavigationCanBeDisabled: Story = {
 
     // Menu should still be open (escape won't close it when keyboard nav is disabled)
     await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+  },
+};
+
+export const EnterOnUnrelatedInputIsNotSwallowed: Story = {
+  render: (args) => {
+    const popoverData = useRef<IPopoverControls>(null);
+    const [inputValue, setInputValue] = useState('');
+    const [submittedValue, setSubmittedValue] = useState('');
+    const [selectedValue, setSelectedValue] = useState('');
+
+    return (
+      <ReqoreControlGroup vertical>
+        <ReqoreControlGroup>
+          <ReqoreInput
+            placeholder='Unrelated input'
+            data-testid='unrelated-input'
+            value={inputValue}
+            onChange={(e: any) => setInputValue(e.target.value)}
+            onFocus={() => popoverData.current?.open()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setSubmittedValue(inputValue);
+              }
+            }}
+          />
+          {submittedValue && <span data-testid='submitted-value'>Submitted: {submittedValue}</span>}
+          {selectedValue && <span data-testid='selected-value'>Selected: {selectedValue}</span>}
+        </ReqoreControlGroup>
+        <ReqoreDropdown
+          {...args}
+          onItemSelect={(item) => {
+            setSelectedValue(item?.value || '');
+          }}
+          passPopoverData={(data) => {
+            popoverData.current = data;
+          }}
+        />
+      </ReqoreControlGroup>
+    );
+  },
+  args: {
+    label: 'Dropdown',
+    items: [
+      { label: 'Item 1', value: 'item1' },
+      { label: 'Item 2', value: 'item2' },
+    ],
+    keyboardNavigation: true,
+    onItemSelect: noop,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+
+    // Focus the unrelated input, which opens the dropdown
+    const unrelatedInput = canvas.getByTestId('unrelated-input');
+    await fireEvent.focusIn(unrelatedInput);
+    await sleep(300);
+
+    // Type something into the input
+    await fireEvent.change(unrelatedInput, { target: { value: 'hello' } });
+    await sleep(300);
+
+    // Dropdown should be open
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+
+    // Navigate to first item with keyboard via the dropdown's filter input
+    const filterInput = document.querySelector('.reqore-popover-content .reqore-input');
+    await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
+    await sleep(100);
+
+    // Press Enter to select the item
+    await fireEvent.keyDown(filterInput, { key: 'Enter' });
+    await sleep(200);
+
+    // Dropdown should be closed after selection
+    await expect(document.querySelector('.reqore-popover-content')).toBeFalsy();
+
+    // The submitted value should NOT exist — Enter was caught by the dropdown
+    await expect(canvas.queryByTestId('submitted-value')).toBeFalsy();
+    await expect(canvas.queryByTestId('selected-value')).toBeTruthy();
   },
 };
