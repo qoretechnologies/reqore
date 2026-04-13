@@ -15,7 +15,7 @@ import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItemProps } from '../Dropdown/item';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
 import { ReqoreP } from '../Paragraph';
-import { ReqoreSpan } from '../Span';
+import { IReqoreSpanProps, ReqoreSpan } from '../Span';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import { IReqoreTextareaProps } from '../Textarea';
 
@@ -59,6 +59,7 @@ export interface IReqoreRichTextEditorProps
   tagsListProps?: Omit<IReqoreDropdownProps, 'items'> & EditableProps;
   panelProps?: IReqorePanelProps;
 
+  placeholderProps?: IReqoreSpanProps;
   actions?: {
     styling?: boolean;
     undo?: boolean;
@@ -144,8 +145,31 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
   );
 };
 
-export const DefaultElement = (props: RenderElementProps) => (
-  <ReqoreP {...props.attributes}>{props.children}</ReqoreP>
+export const DefaultElement = (
+  props: RenderElementProps & { placeholder?: string; placeholderProps?: IReqoreSpanProps }
+) => (
+  <ReqoreP {...props.attributes} style={{ position: 'relative' }}>
+    {props.placeholder && (
+      <ReqoreSpan
+        inline
+        effect={{ opacity: 0.3 }}
+        {...props.placeholderProps}
+        contentEditable={false}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          ...props.placeholderProps?.style,
+        }}
+      >
+        {props.placeholder}
+      </ReqoreSpan>
+    )}
+    {props.children}
+  </ReqoreP>
 );
 
 const insertTag = (
@@ -189,6 +213,8 @@ export const ReqoreRichTextEditor = forwardRef<
       panelProps,
       actions,
       customRenderLeaf,
+      placeholder,
+      placeholderProps,
       ...rest
     }: IReqoreRichTextEditorProps,
     ref
@@ -225,58 +251,67 @@ export const ReqoreRichTextEditor = forwardRef<
       }
     }, [JSON.stringify(value)]);
 
-    const renderElement = useCallback((props) => {
-      switch (props.element.type) {
-        case 'tag': {
-          const tagProps = getTagProps(props.element);
-          const finalProps = {
-            ...tagsProps,
-            ...tagProps,
-          };
+    const isEmpty = useMemo(() => {
+      return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
+    }, [value]);
 
-          return (
-            <TemplateElement
-              {...props}
-              tagProps={{
-                ...finalProps,
-                size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
-                onClick:
-                  !rest.readOnly && !rest.disabled
-                    ? (event) => {
-                        onTagClick?.(props.element);
-                        finalProps.onClick?.(event);
-                      }
-                    : undefined,
-                onRemoveClick:
-                  !rest.readOnly && !rest.disabled
-                    ? () => {
-                        try {
-                          const path = ReactEditor.findPath(editor, props.element);
-                          Transforms.removeNodes(editor, { at: path });
-                        } catch (error) {
-                          // Element may no longer be in the editor
-                          console.warn('Failed to remove tag:', error);
+    const renderElement = useCallback(
+      (props) => {
+        switch (props.element.type) {
+          case 'tag': {
+            const tagProps = getTagProps(props.element);
+            const finalProps = {
+              ...tagsProps,
+              ...tagProps,
+            };
+
+            return (
+              <TemplateElement
+                {...props}
+                tagProps={{
+                  ...finalProps,
+                  size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
+                  onClick:
+                    !rest.readOnly && !rest.disabled
+                      ? (event) => {
+                          onTagClick?.(props.element);
+                          finalProps.onClick?.(event);
                         }
-                      }
-                    : undefined,
-              }}
-            />
-          );
+                      : undefined,
+                  onRemoveClick:
+                    !rest.readOnly && !rest.disabled
+                      ? () => {
+                          try {
+                            const path = ReactEditor.findPath(editor, props.element);
+                            Transforms.removeNodes(editor, { at: path });
+                          } catch (error) {
+                            // Element may no longer be in the editor
+                            console.warn('Failed to remove tag:', error);
+                          }
+                        }
+                      : undefined,
+                }}
+              />
+            );
+          }
+          default:
+            return (
+              <DefaultElement
+                {...props}
+                placeholder={isEmpty ? placeholder : undefined}
+                placeholderProps={isEmpty ? placeholderProps : undefined}
+              />
+            );
         }
-        default:
-          return <DefaultElement {...props} />;
-      }
-    }, []);
+      },
+      [isEmpty, placeholder, placeholderProps]
+    );
 
     const renderLeaf = useCallback(
       (props: RenderLeafProps) =>
         customRenderLeaf ? customRenderLeaf(props) : <Leaf {...props} />,
       [customRenderLeaf]
     );
-
-    const isEmpty = useMemo(() => {
-      return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
-    }, [value]);
 
     const isMarkActive = useCallback((editor: Editor, format: string) => {
       const marks = Editor.marks(editor);

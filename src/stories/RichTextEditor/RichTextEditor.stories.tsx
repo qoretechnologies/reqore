@@ -40,6 +40,11 @@ type Story = StoryObj<typeof meta>;
 
 export default meta;
 export const Empty: Story = {};
+export const WithPlaceholder: Story = {
+  args: {
+    placeholder: 'Type something here...',
+  },
+};
 export const WithDefaultValue: Story = {
   args: {
     value: [
