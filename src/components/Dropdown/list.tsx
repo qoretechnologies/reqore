@@ -42,6 +42,15 @@ export interface IReqoreDropdownItem<Metadata extends Record<string, any> = Reco
 export type TReqoreDropdownItem = IReqoreDropdownItem;
 export type TReqoreDropdownItems = TReqoreDropdownItem[];
 
+export type TDropdownKeyHandler = (event: React.KeyboardEvent | KeyboardEvent) => void;
+
+export interface IDropdownKeyboardControls {
+  /** Forward keyboard events (ArrowUp/Down, Enter) to the dropdown list. */
+  handleKeyDown: TDropdownKeyHandler;
+  /** The DOM id of the currently highlighted item, for aria-activedescendant. Null when nothing is highlighted. */
+  focusedItemId: string | null;
+}
+
 export interface IReqoreDropdownListProps
   extends IReqoreComponent,
     Pick<IReqoreDropdownProps, 'customElements'>,
@@ -66,6 +75,14 @@ export interface IReqoreDropdownListProps
   labels?: (IReqoreTagProps & { _levelIndex?: number })[];
 
   keyboardNavigation?: boolean;
+
+  /** Callback that receives keyboard controls, allowing external components
+   *  to forward arrow key events to the dropdown (aria-activedescendant pattern).
+   *  Called on every render with updated focusedItemId. */
+  passKeyHandler?: (controls: IDropdownKeyboardControls) => void;
+
+  /** Unique ID prefix for dropdown items, used for aria-activedescendant support. */
+  listId?: string;
 
   _onBackClick?: () => void;
   _onNavigateToLevel?: (level: number) => void;
@@ -95,6 +112,8 @@ const ReqoreDropdownList = memo(
     customTheme,
     intent,
     keyboardNavigation = true,
+    passKeyHandler,
+    listId,
 
     labels = [],
     _onBackClick,
@@ -239,8 +258,8 @@ const ReqoreDropdownList = memo(
     );
 
     // Handle keyboard navigation
-    const handleKeyDown = useCallback(
-      (event: React.KeyboardEvent<HTMLInputElement | HTMLDivElement>) => {
+    const handleKeyDown: TDropdownKeyHandler = useCallback(
+      (event: React.KeyboardEvent | KeyboardEvent) => {
         if (!keyboardNavigation) {
           return;
         }
@@ -292,6 +311,47 @@ const ReqoreDropdownList = memo(
         handleSelectItemAtLevel,
       ]
     );
+
+    // Compute the focused item's DOM id for aria-activedescendant
+    const focusedItemDomId = useMemo(() => {
+      if (focusedItemIndex === null || !listId) return null;
+      return `${listId}-option-${focusedItemIndex}`;
+    }, [focusedItemIndex, listId]);
+
+    // Register document-level keyboard listener so arrow keys work
+    // regardless of which element has focus (button, external input, etc.)
+    // Skip if the event target is already inside the dropdown (handled by input/menu onKeyDown)
+    useEffect(() => {
+      if (!keyboardNavigation) {
+        return () => {};
+      }
+
+      const listener = (event: KeyboardEvent) => {
+        const key = event.key;
+        if (key !== 'ArrowDown' && key !== 'ArrowUp' && key !== 'Enter' &&
+            key !== 'ArrowRight' && key !== 'ArrowLeft') {
+          return;
+        }
+
+        // Don't intercept if the event target is inside the dropdown's own elements
+        // (the filter input or menu already handle these via their onKeyDown)
+        if (menuRef && (event.target as HTMLElement)?.closest?.('.reqore-popover-content')) {
+          return;
+        }
+
+        handleKeyDown(event);
+      };
+
+      document.addEventListener('keydown', listener);
+      return () => document.removeEventListener('keydown', listener);
+    }, [keyboardNavigation, handleKeyDown, menuRef]);
+
+    // Expose keyboard controls to external components (aria-activedescendant pattern)
+    useEffect(() => {
+      if (passKeyHandler && keyboardNavigation) {
+        passKeyHandler({ handleKeyDown, focusedItemId: focusedItemDomId });
+      }
+    }, [passKeyHandler, handleKeyDown, keyboardNavigation, focusedItemDomId]);
 
     const getAction = useCallback(
       (item: TReqoreDropdownItem, position: 'left' | 'right') => {
@@ -485,6 +545,7 @@ const ReqoreDropdownList = memo(
                     ) : (
                       <ReqoreDropdownItem
                         key={item.label || item.value || index}
+                        id={listId ? `${listId}-option-${itemSelectableIndex}` : undefined}
                         rightIcon={
                           'items' in item && size(item.items) ? 'ArrowRightSLine' : item.rightIcon
                         }

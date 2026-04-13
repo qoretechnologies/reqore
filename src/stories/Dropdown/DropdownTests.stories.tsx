@@ -6,7 +6,7 @@ import { _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
 import { sleep } from '../../helpers/utils';
-import { ReqoreDropdown } from '../../index';
+import { ReqoreDropdown, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { argManager } from '../utils/args';
 import { WithChildItems } from './Dropdown.stories';
@@ -331,6 +331,7 @@ export const EmptySearch: Story = {
 };
 export const KeyboardNavigationWithArrowKeys: Story = {
   args: {
+    component: ReqoreTextarea,
     label: 'Keyboard Navigation Test',
     items: [
       {
