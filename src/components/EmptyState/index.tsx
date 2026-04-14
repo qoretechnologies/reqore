@@ -63,6 +63,7 @@ export const ReqoreEmptyState = memo(
         actions,
         size = 'normal',
         customTheme,
+        inheritCustomTheme,
         intent,
         fluid,
         flat = true,
@@ -78,7 +79,7 @@ export const ReqoreEmptyState = memo(
       },
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       const iconSize = useMemo(() => getOneHigherSize(size), [size]);
       const descriptionSize = useMemo(() => getOneLessSize(size), [size]);

@@ -491,6 +491,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       bottomActions = [],
       isCollapsed,
       customTheme,
+      inheritCustomTheme,
       icon,
       iconImage,
       intent,
@@ -540,7 +541,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       customTheme ||
         (contentEffect?.gradient && minimal
           ? { main: Object.values(contentEffect.gradient.colors)[0] as TReqoreEffectColor }
-          : undefined)
+          : undefined),
+      undefined,
+      undefined,
+      inheritCustomTheme
     );
 
     useEffect(() => {

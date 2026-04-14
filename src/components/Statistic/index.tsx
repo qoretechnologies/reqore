@@ -175,6 +175,7 @@ const ReqoreStatistic = memo(
         align = 'center',
         size = 'normal',
         customTheme,
+        inheritCustomTheme,
         intent,
         fluid,
         flat,
@@ -188,7 +189,7 @@ const ReqoreStatistic = memo(
       },
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       const secondarySize = useMemo(() => getOneLessSize(size), [size]);
       const flexAlign = useMemo(() => alignToFlexAlign(align), [align]);

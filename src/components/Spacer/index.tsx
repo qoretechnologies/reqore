@@ -90,12 +90,13 @@ export interface IReqoreSpacerProps
 export const ReqoreSpacer = memo(
   ({
     customTheme,
+        inheritCustomTheme,
     intent,
     lineSize = 'none',
     align,
     ...rest
   }: IReqoreSpacerProps & { horizontal?: boolean; vertical?: boolean }) => {
-    const theme = useReqoreTheme('main', customTheme, intent);
+    const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
     let { horizontal, vertical } = rest;
 
     // The user is using old version of the component

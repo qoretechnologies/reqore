@@ -38,6 +38,7 @@ export const ReqoreP = memo(
         size,
         children,
         customTheme,
+        inheritCustomTheme,
         intent,
         className,
         block = true,
@@ -46,7 +47,7 @@ export const ReqoreP = memo(
       }: IReqoreParagraphProps,
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       return (
         <ReqoreTooltipComponent

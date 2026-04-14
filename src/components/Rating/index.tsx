@@ -136,6 +136,7 @@ const ReqoreRating = memo(
         readOnly,
         intent,
         customTheme,
+        inheritCustomTheme,
         tooltip,
         className,
         labelProps,
@@ -145,7 +146,7 @@ const ReqoreRating = memo(
       },
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const [hoverValue, setHoverValue] = useState<number | null>(null);
 
       const isInteractive = !disabled && !readOnly && !!onChange;

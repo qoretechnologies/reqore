@@ -374,6 +374,7 @@ export const ReqoreAccordion = memo(
         allowMultiple = true,
         size = 'normal',
         customTheme,
+        inheritCustomTheme,
         intent,
         fluid,
         flat,
@@ -390,7 +391,7 @@ export const ReqoreAccordion = memo(
       },
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       const [openItems, setOpenItems] = useState<Record<number, boolean>>(() =>
         items.reduce((acc, item, index) => {

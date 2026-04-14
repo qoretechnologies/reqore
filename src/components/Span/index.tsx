@@ -36,6 +36,7 @@ export const ReqoreSpan = memo(
         size,
         children,
         customTheme,
+        inheritCustomTheme,
         intent,
         className,
         inline = false,
@@ -44,7 +45,7 @@ export const ReqoreSpan = memo(
       }: IReqoreSpanProps,
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       return (
         <ReqoreTooltipComponent

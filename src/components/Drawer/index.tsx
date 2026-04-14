@@ -157,6 +157,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     isOpen,
     isHidden,
     customTheme,
+        inheritCustomTheme,
     position = 'right',
     maxSize,
     minSize = '150px',
@@ -188,7 +189,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     const confirmAction = useReqoreProperty('confirmAction');
     const customPortalId = useReqoreProperty('customPortalId');
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
-    const theme = useReqoreTheme('main', customTheme, intent);
+    const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
     const layout = useMemo(
       () =>
         _isModal
@@ -379,7 +380,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     return createPortal(
       transitions((styles: any, item) =>
         item ? (
-          <ReqoreThemeProvider theme={theme}>
+          <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
             {hasBackdrop && !_isHidden ? (
               <ReqoreBackdrop
                 onClose={handleClose}

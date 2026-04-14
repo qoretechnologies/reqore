@@ -436,6 +436,7 @@ const ReqoreTimeline = memo(
         items,
         size = 'normal',
         customTheme,
+        inheritCustomTheme,
         intent,
         fluid = false,
         className,
@@ -445,8 +446,8 @@ const ReqoreTimeline = memo(
       },
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, intent);
-      const baseTheme = useReqoreTheme('main', customTheme);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      const baseTheme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
 
       // Internal state used only in uncontrolled mode
       const [internalCollapsedStates, setInternalCollapsedStates] = useState<

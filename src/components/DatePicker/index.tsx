@@ -129,6 +129,7 @@ export const DatePicker = <T extends TDateValue>({
   pill,
   intent,
   customTheme,
+        inheritCustomTheme,
   granularity = 'minute',
   hourCycle = 24,
   hideTimeZone = true,
@@ -167,7 +168,7 @@ export const DatePicker = <T extends TDateValue>({
 
   const ref = useRef(null);
 
-  const theme = useReqoreTheme('main', customTheme, intent);
+  const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
   const popoverData = useRef({} as IPopoverControls);
   // use ref to save value type since datepicker can have null values
   const isStringRef = useRef(typeof _value === 'string');

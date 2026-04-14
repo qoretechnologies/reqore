@@ -110,6 +110,7 @@ const ReqoreDropdownList = memo(
     filter,
     customElements,
     customTheme,
+        inheritCustomTheme,
     intent,
     keyboardNavigation = true,
     passKeyHandler,
@@ -153,7 +154,7 @@ const ReqoreDropdownList = memo(
       }
     }, [currentSelectedItem, selectedItems, _level, onSelectedItemsChange]);
 
-    const theme = useReqoreTheme('main', customTheme, intent);
+    const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
     useEffect(() => {
       setItems(items);

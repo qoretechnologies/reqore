@@ -269,11 +269,12 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       blur,
       size = 'normal',
       customTheme,
+        inheritCustomTheme,
     },
     ref: any
   ) => {
     const [internalTimeout, setInternalTimeout] = useState(null);
-    const theme = useReqoreTheme('main', customTheme, type || intent, 'notifications');
+    const theme = useReqoreTheme('main', customTheme, type || intent, 'notifications', inheritCustomTheme);
 
     const transitions = useTransition(true, {
       from: { opacity: 0, transform: 'scale(0.9)' },

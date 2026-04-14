@@ -290,6 +290,7 @@ const ReqoreSegmentedControl = memo(
         readOnly,
         intent,
         customTheme,
+        inheritCustomTheme,
         fluid,
         className,
         _testWidth,
@@ -298,7 +299,7 @@ const ReqoreSegmentedControl = memo(
       ref
     ) => {
       const animations = useReqoreProperty('animations');
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
 
       const [_value, _setValue] = useState<string | undefined>(
         value ?? defaultValue ?? items[0]?.value

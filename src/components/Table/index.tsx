@@ -865,7 +865,7 @@ const ReqoreTable = ({
         getContentRef={wrapperRef}
         badge={badge}
       >
-        <ReqoreThemeProvider theme={theme}>
+        <ReqoreThemeProvider theme={theme} customTheme={rest.customTheme}>
           <ReqorePaginationContainer<IReqoreTableRowData>
             items={transformedData}
             type={

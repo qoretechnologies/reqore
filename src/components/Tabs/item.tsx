@@ -139,7 +139,7 @@ const ReqoreTabsListItem = memo(
       const [isStillPending, setStillPending] = useState(false);
       const [loadingTimer, setLoadingTimer] = useState(null);
       const { targetRef } = useCombinedRefs(ref);
-      const theme = useReqoreTheme('main', customTheme);
+      const theme = useReqoreTheme('main', customTheme, undefined);
 
       useUpdateEffect(() => {
         if (isPending) {
