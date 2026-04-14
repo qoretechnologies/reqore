@@ -151,6 +151,7 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   striped?: boolean;
   emptyMessage?: string;
   showHelp?: boolean;
+  showColumnsOptions?: boolean;
 
   onRowClick?: IReqoreTableRowClick;
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
@@ -260,6 +261,7 @@ const ReqoreTable = ({
   exportable,
   exportMapper,
   showHelp,
+  showColumnsOptions,
   ...rest
 }: IReqoreTableProps) => {
   const leftTableRef = useRef<HTMLDivElement>(null);
@@ -459,9 +461,7 @@ const ReqoreTable = ({
 
     // Filter by global query
     let filteredData = hasQuery
-      ? _data.filter((datum) =>
-          JSON.stringify(datum).toLowerCase().includes(normalizedQuery)
-        )
+      ? _data.filter((datum) => JSON.stringify(datum).toLowerCase().includes(normalizedQuery))
       : _data;
 
     // Filter by column filters
@@ -603,7 +603,7 @@ const ReqoreTable = ({
       return finalActions;
     }
 
-    if (count(columnsList)) {
+    if (count(columnsList) && showColumnsOptions) {
       let columnsCount = getColumnsCount(getOnlyShownColumns(finalColumns, sizes.width));
 
       if (selectable) {
@@ -614,7 +614,7 @@ const ReqoreTable = ({
         icon: 'LayoutColumnLine',
         className: 'reqore-table-columns-options',
         badge: columnsCount,
-        intent: hasHiddenColumns(finalColumns) ? 'info' : undefined,
+        active: hasHiddenColumns(finalColumns) ? true : undefined,
         multiSelect: true,
         actions: columnsList,
       });

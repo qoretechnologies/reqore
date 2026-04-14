@@ -533,6 +533,7 @@ export const AllFiltersActive: Story = {
 
 export const HiddenColumns: Story = {
   args: {
+    showColumnsOptions: true,
     columns: defaultColumnsWithHiddenColumns,
   },
 };
