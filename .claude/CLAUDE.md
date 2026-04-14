@@ -56,6 +56,7 @@ ReQore is a **themeable React component library** for the Qorus platform. It pro
 - **Dynamic theming:** Components read theme via hooks, enabling runtime theme switching
 - **Intents:** Type-safe intent system (e.g., `'primary' | 'secondary' | 'success' | 'danger'`) maps to theme colors
 - **Custom themes:** Merge with `DEFAULT_THEME`; see `ThemeProvider.tsx`
+- **Custom theme inheritance:** Components automatically inherit `customTheme` from ancestor components via `CustomThemeContext`. The `useReqoreTheme()` hook checks this context when no explicit `customTheme` prop is passed. Components can opt out with `inheritCustomTheme={false}` (available on components extending `IWithReqoreCustomTheme`). Components that wrap children and set a custom theme must pass `customTheme` to `ReqoreThemeProvider` so descendants can inherit it.
 
 ### Sizing System (`src/constants/sizes.ts`)
 
@@ -112,7 +113,7 @@ yarn build              # TypeScript compilation
 
 ### Component Prop Interfaces
 
-- **Extend mixins:** `IWithReqoreSize`, `IWithReqoreEffect`, `IWithReqoreLoading`, `IWithReqoreReadOnly`
+- **Extend mixins:** `IWithReqoreSize`, `IWithReqoreEffect`, `IWithReqoreLoading`, `IWithReqoreReadOnly`, `IWithReqoreCustomTheme`
 - **Naming:** Props interface is `IReqore{ComponentName}Props`; style interface is `IReqore{ComponentName}Style`
 - **Optional theme:** Style interfaces accept `theme: IReqoreTheme` for styled-components access
 - **Readonly context:** Use `readonly` keyword on context properties (immutability)
@@ -135,7 +136,7 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
 
 ### Hooks Usage
 
-- **Theme:** `useReqoreTheme()` returns `IReqoreTheme`
+- **Theme:** `useReqoreTheme(element?, customTheme?, intent?, intentsKey?, inheritCustomTheme?)` returns `IReqoreTheme`. Pass `customTheme` and `inheritCustomTheme` from component props to support custom theme inheritance.
 - **Context props:** `useReqoreProperty('propertyName')` for context values (avoids consuming entire context)
 - **Local refs:** `useCombinedRefs()` for forwarding + internal refs; `useOutsideClick()` for popover clicks
 - **Auto-focus:** `useAutoFocus()` for modal/drawer focus management
@@ -209,11 +210,12 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
 
 1. **Create folder:** `src/components/{ComponentName}/index.tsx`
 2. **Define interfaces:** `IReqore{ComponentName}Props` + `IReqore{ComponentName}Style`
-3. **Use mixins:** Extend `IWithReqoreEffect`, `IWithReqoreSize` as needed
-4. **Apply theme:** Use `useReqoreTheme()` and styled-components `theme` prop
-5. **Export:** Add named export to `src/index.tsx`
-6. **Test:** Add test file in `__tests__/{ComponentName}.test.tsx` with UIProvider wrapper
-7. **Story:** Create `src/stories/{ComponentName}.stories.tsx` with argTypes
+3. **Use mixins:** Extend `IWithReqoreEffect`, `IWithReqoreSize`, `IWithReqoreCustomTheme` as needed
+4. **Apply theme:** Use `useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme)` — destructure both `customTheme` and `inheritCustomTheme` from props so the component supports custom theme inheritance from ancestor components
+5. **Propagate theme to children:** If the component wraps children with `ReqoreThemeProvider`, pass both the resolved `theme` and raw `customTheme` prop: `<ReqoreThemeProvider theme={theme} customTheme={customTheme}>` — this enables descendant components to inherit the custom theme via `CustomThemeContext`
+6. **Export:** Add named export to `src/index.tsx`
+7. **Test:** Add test file in `__tests__/{ComponentName}.test.tsx` with UIProvider wrapper
+8. **Story:** Create `src/stories/{ComponentName}.stories.tsx` with argTypes
 
 ## Documentation
 

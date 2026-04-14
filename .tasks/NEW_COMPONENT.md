@@ -97,6 +97,13 @@ Implement the component strictly following repo conventions:
 - consistent prop naming and event patterns
 - consistent className/slot patterns (if present)
 
+### Custom theme handling (required)
+
+- Extend `IWithReqoreCustomTheme` in the component's props interface — this provides `customTheme` and `inheritCustomTheme` props
+- Destructure both `customTheme` and `inheritCustomTheme` from props
+- Pass them to `useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme)`
+- If the component wraps children with `ReqoreThemeProvider`, also pass the raw `customTheme` prop: `<ReqoreThemeProvider theme={theme} customTheme={customTheme}>` — this allows descendant components to automatically inherit the custom theme via `CustomThemeContext` without prop drilling
+
 Keep scope minimal: **one component**, plus required supporting pieces.
 
 ---
