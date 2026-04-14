@@ -614,7 +614,7 @@ const ReqoreTable = ({
         icon: 'LayoutColumnLine',
         className: 'reqore-table-columns-options',
         badge: columnsCount,
-        intent: hasHiddenColumns(finalColumns) ? 'info' : undefined,
+        active: hasHiddenColumns(finalColumns) ? true : undefined,
         multiSelect: true,
         actions: columnsList,
       });
