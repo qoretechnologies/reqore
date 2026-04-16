@@ -185,6 +185,32 @@ export const CustomColumnsData: Story = {
   },
 };
 
+export const WithStretchedItems: Story = {
+  args: {
+    label: 'Collection with stretched items',
+    items: [
+      {
+        label: 'Stretched hero item',
+        content: 'This item stretches across all columns regardless of count.',
+        stretch: true,
+        intent: 'info',
+      },
+      { label: 'Normal item', content: 'Regular item.' },
+      { label: 'Normal item', content: 'Regular item.' },
+      { label: 'Normal item', content: 'Regular item.' },
+      { label: 'Normal item', content: 'Regular item.' },
+      {
+        label: 'Another stretched item',
+        content: 'Also spans the full width, even as the window resizes.',
+        stretch: true,
+        intent: 'success',
+      },
+      { label: 'Normal item', content: 'Regular item.' },
+      { label: 'Normal item', content: 'Regular item.' },
+    ],
+  },
+};
+
 export const CustomPropsAndTexts: Story = {
   args: {
     label: 'Collection of items',

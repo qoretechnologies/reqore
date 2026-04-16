@@ -41,6 +41,14 @@ export interface IReqoreCollectionItemProps
   maxContentHeight?: number;
   showContentFade?: boolean;
   searchString?: string;
+  /**
+   * If true, the item will stretch to span all grid columns. Works with any
+   * `columns` setting on the Collection (fixed number, `'auto-fit'`, or
+   * `'auto-fill'`) and reflows responsively as the container resizes.
+   * Has no visible effect when the Collection is rendered as a list.
+   * @default false
+   */
+  stretch?: boolean;
   // Used for passing values and sorting
   metadata?: Record<string, any>;
   groups?: string[];
@@ -85,6 +93,7 @@ export const ReqoreCollectionItem = ({
   expandedActions,
   maxContentHeight,
   showContentFade = true,
+  stretch,
   ...rest
 }: IReqoreCollectionItemProps) => {
   const [isSelected, setIsSelected] = useState(false);
@@ -217,6 +226,7 @@ export const ReqoreCollectionItem = ({
           responsiveActions={false}
           bottomActions={isSelected ? expandedActions : undefined}
           style={{
+            gridColumn: stretch ? '1 / -1' : undefined,
             ...style,
             position,
             zIndex: isSelected ? getAndIncreaseZIndex() : undefined,
