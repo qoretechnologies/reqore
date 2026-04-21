@@ -175,6 +175,8 @@ export const ReqoreCollection = memo(
 
     errorBoundaryOptions,
 
+    children,
+
     ...rest
   }: IReqoreCollectionProps) => {
     const [_showAs, setShowAs] = useState<'list' | 'grid'>(showAs);
@@ -378,9 +380,11 @@ export const ReqoreCollection = memo(
         >
           {(_items, _children, { applyPaging }) =>
             !size(applyPaging(filteredItems)) ? (
-              <ReqoreMessage flat icon='Search2Line'>
-                {emptyMessage}
-              </ReqoreMessage>
+              children || (
+                <ReqoreMessage flat icon='Search2Line'>
+                  {emptyMessage}
+                </ReqoreMessage>
+              )
             ) : (
               <StyledCollectionWrapper
                 columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
@@ -405,10 +409,8 @@ export const ReqoreCollection = memo(
                     let lastGroup: string | undefined;
 
                     return pagedItems.map((item, index) => {
-                      const group =
-                        item.groups && !paging ? item.groups[0] : undefined;
-                      const showHeader =
-                        group && group !== 'Ungrouped' && group !== lastGroup;
+                      const group = item.groups && !paging ? item.groups[0] : undefined;
+                      const showHeader = group && group !== 'Ungrouped' && group !== lastGroup;
 
                       if (group) {
                         lastGroup = group;
@@ -416,18 +418,13 @@ export const ReqoreCollection = memo(
 
                       return (
                         <React.Fragment key={index}>
-                          {showHeader && (
-                            <CollectionGroupHeader name={group} />
-                          )}
+                          {showHeader && <CollectionGroupHeader name={group} />}
                           <ReqoreErrorBoundary {...errorBoundaryOptions}>
                             <ReqoreCollectionItem
                               size={zoomToSize[zoom]}
                               responsiveTitle={false}
                               {...item}
-                              icon={
-                                item.icon ||
-                                (item.selected ? selectedIcon : undefined)
-                              }
+                              icon={item.icon || (item.selected ? selectedIcon : undefined)}
                               rounded={!stacked}
                               maxContentHeight={maxItemHeight}
                             />
@@ -480,9 +477,7 @@ export const ReqoreCollection = memo(
                   // Render groups
                   return Object.entries(orderedGrouped).map(([groupName, groupItems]) => (
                     <React.Fragment key={groupName}>
-                      {groupName !== 'Ungrouped' && (
-                        <CollectionGroupHeader name={groupName} />
-                      )}
+                      {groupName !== 'Ungrouped' && <CollectionGroupHeader name={groupName} />}
                       {groupItems.map((item, index) => (
                         <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
                           <ReqoreCollectionItem
