@@ -143,16 +143,43 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
         z-index: 2;
         ${pinEdge &&
         css`
-          box-shadow: ${pin === 'left'
-            ? '4px 0 6px -4px rgba(0, 0, 0, 0.35)'
-            : '-4px 0 6px -4px rgba(0, 0, 0, 0.35)'};
+          /* Use a pseudo-element instead of box-shadow so the shadow is strictly bounded to
+             the cell's height — a blurred box-shadow bleeds vertically and stacks across
+             neighboring pinned cells, producing dark bands between rows. */
+          &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 12px;
+            pointer-events: none;
+            ${pin === 'left' ? 'right: -12px;' : 'left: -12px;'}
+            background: linear-gradient(
+              to ${pin === 'left' ? 'right' : 'left'},
+              rgba(0, 0, 0, 0.35),
+              rgba(0, 0, 0, 0)
+            );
+          }
         `}
       `}
 
       ${interactiveCell &&
       css`
         &:hover {
-          background-color: ${lighten(0.1, displayedBackgroundColor)};
+          /* Pinned cells rely on the layered background shorthand for their opaque base —
+             overriding just background-color would lose theme.main and let the non-pinned
+             cells scrolling underneath show through on hover. */
+          ${pin
+            ? css`
+                background: linear-gradient(
+                    ${lighten(0.1, displayedBackgroundColor)},
+                    ${lighten(0.1, displayedBackgroundColor)}
+                  ),
+                  ${theme.main};
+              `
+            : css`
+                background-color: ${lighten(0.1, displayedBackgroundColor)};
+              `}
         }
       `}
 

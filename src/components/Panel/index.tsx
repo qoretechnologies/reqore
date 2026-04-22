@@ -316,8 +316,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
 
-  padding: ${({ noHorizontalPadding, size, padded, transparent, flat, intent }: IStyledPanel) =>
-    `${transparent && flat && !intent ? 0 : getPaddingSize(padded, size)}px ${
+  padding: ${({ noHorizontalPadding, size, padded, opacity, flat, intent }: IStyledPanel) =>
+    `${opacity === 0 && flat && !intent ? 0 : getPaddingSize(padded, size)}px ${
       noHorizontalPadding ? 0 : `${getPaddingSize(padded, size)}px`
     }`};
 

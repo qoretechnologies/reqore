@@ -2,7 +2,7 @@ import count from 'lodash/size';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { memo, useMemo } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
@@ -46,6 +46,36 @@ export const StyledTableHeaderResize = styled.div`
 
 export const StyledSortIcon = styled(ReqoreIcon)`
   position: absolute;
+`;
+
+const StyledHeaderResizable = styled(Resizable)<{
+  $pin?: 'left' | 'right';
+  $pinEdge?: boolean;
+}>`
+  ${({ $pin, $pinEdge }) =>
+    $pin &&
+    $pinEdge &&
+    css`
+      /* Bounded-height pseudo-shadow (matches body pinned cells). Override the inline
+         overflow:hidden so the 12px projection isn't clipped on this cell. */
+      overflow: visible !important;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 12px;
+        pointer-events: none;
+        ${$pin === 'left' ? 'right: -12px;' : 'left: -12px;'}
+        background: linear-gradient(
+          to ${$pin === 'left' ? 'right' : 'left'},
+          rgba(0, 0, 0, 0.35),
+          rgba(0, 0, 0, 0)
+        );
+        z-index: 1;
+      }
+    `}
 `;
 
 export const ReqoreTableHeaderCell = memo(
@@ -180,16 +210,12 @@ export const ReqoreTableHeaderCell = memo(
           position: 'sticky',
           [pin === 'left' ? 'left' : 'right']: pinOffset || 0,
           zIndex: 2,
-          boxShadow: pinEdge
-            ? pin === 'left'
-              ? '4px 0 6px -4px rgba(0, 0, 0, 0.35)'
-              : '-4px 0 6px -4px rgba(0, 0, 0, 0.35)'
-            : undefined,
         }
       : {};
 
     return (
-      <Resizable
+      <StyledHeaderResizable
+        {...({ $pin: pin, $pinEdge: pinEdge } as any)}
         minWidth={minWidth || width}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {
@@ -320,7 +346,7 @@ export const ReqoreTableHeaderCell = memo(
             />
           ) : null}
         </ReqoreControlGroup>
-      </Resizable>
+      </StyledHeaderResizable>
     );
   }
 );
