@@ -174,38 +174,119 @@ export const hasHiddenColumns = (columns: IReqoreTableColumn[]): boolean => {
   });
 };
 
-export const getColumnsByPinType = (
-  columns: IReqoreTableColumn[],
-  type: 'left' | 'right' | 'main'
-): IReqoreTableColumn[] => {
-  return columns.reduce((newColumns: IReqoreTableColumn[], column): IReqoreTableColumn[] => {
+export const flattenColumns = (columns: IReqoreTableColumn[]): IReqoreTableColumn[] => {
+  return columns.reduce((flat: IReqoreTableColumn[], column) => {
     if (column.header?.columns) {
-      const subColumns: IReqoreTableColumn[] = getColumnsByPinType(column.header.columns, type);
-
-      if (!size(subColumns)) {
-        return newColumns;
-      }
-
-      const columnsResult = [
-        ...newColumns,
-        {
-          ...column,
-          header: {
-            ...column.header,
-            columns: subColumns,
-          },
-        },
-      ];
-
-      return columnsResult;
+      return [...flat, ...flattenColumns(column.header.columns)];
     }
-
-    if ((type === 'main' && !column.pin) || column.pin === type) {
-      return [...newColumns, column];
-    }
-
-    return newColumns;
+    return [...flat, column];
   }, []);
+};
+
+export interface IColumnPartition {
+  leftPinned: IReqoreTableColumn[];
+  unpinned: IReqoreTableColumn[];
+  rightPinned: IReqoreTableColumn[];
+}
+
+/**
+ * Splits columns into left-pinned leaves, unpinned columns (preserving group structure but with
+ * pinned sub-columns hoisted out), and right-pinned leaves. This is what drives the physical
+ * render order of both the header and the body so that pinned columns sit at the edges of the
+ * row — `position: sticky` then keeps them there during scroll.
+ */
+export const partitionPinnedColumns = (columns: IReqoreTableColumn[]): IColumnPartition => {
+  const leftPinned: IReqoreTableColumn[] = [];
+  const unpinned: IReqoreTableColumn[] = [];
+  const rightPinned: IReqoreTableColumn[] = [];
+
+  columns.forEach((column) => {
+    if (column.header?.columns) {
+      const sub = partitionPinnedColumns(column.header.columns);
+      leftPinned.push(...sub.leftPinned);
+      rightPinned.push(...sub.rightPinned);
+      if (size(sub.unpinned) > 0) {
+        unpinned.push({
+          ...column,
+          header: { ...column.header, columns: sub.unpinned },
+        });
+      }
+      return;
+    }
+    if (column.pin === 'left') {
+      leftPinned.push(column);
+    } else if (column.pin === 'right') {
+      rightPinned.push(column);
+    } else {
+      unpinned.push(column);
+    }
+  });
+
+  return { leftPinned, unpinned, rightPinned };
+};
+
+/**
+ * Returns a flat list of leaf columns reordered so pinned columns sit at the edges:
+ * `[...leftPinned, ...unpinnedLeaves, ...rightPinned]`. Used by the body row renderer to render
+ * cells in render order.
+ */
+export const getReorderedLeaves = (
+  columns: IReqoreTableColumn[],
+  tableWidth?: number
+): IReqoreTableColumn[] => {
+  const shown = getOnlyShownColumns(columns, tableWidth);
+  const { leftPinned, unpinned, rightPinned } = partitionPinnedColumns(shown);
+  return [...leftPinned, ...flattenColumns(unpinned), ...rightPinned];
+};
+
+export interface IColumnPinInfo {
+  pin?: 'left' | 'right';
+  offset: number;
+  isEdge: boolean;
+}
+
+export const calculatePinOffsets = (
+  columns: IReqoreTableColumn[]
+): Record<string, IColumnPinInfo> => {
+  const leaves = flattenColumns(columns).filter(
+    (column) => column.show !== false && column.enabled !== false
+  );
+  const map: Record<string, IColumnPinInfo> = {};
+
+  let leftAcc = 0;
+  let lastLeftId: string | undefined;
+  leaves.forEach((column) => {
+    if (column.pin === 'left') {
+      map[column.dataId] = { pin: 'left', offset: leftAcc, isEdge: false };
+      leftAcc += column.resizedWidth || column.width || 0;
+      lastLeftId = column.dataId;
+    }
+  });
+  if (lastLeftId) {
+    map[lastLeftId].isEdge = true;
+  }
+
+  let rightAcc = 0;
+  let firstRightId: string | undefined;
+  for (let i = leaves.length - 1; i >= 0; i--) {
+    const column = leaves[i];
+    if (column.pin === 'right') {
+      map[column.dataId] = { pin: 'right', offset: rightAcc, isEdge: false };
+      rightAcc += column.resizedWidth || column.width || 0;
+      firstRightId = column.dataId;
+    }
+  }
+  if (firstRightId) {
+    map[firstRightId].isEdge = true;
+  }
+
+  return map;
+};
+
+export const getTotalColumnsWidth = (columns: IReqoreTableColumn[]): number => {
+  return flattenColumns(columns)
+    .filter((column) => column.show !== false && column.enabled !== false)
+    .reduce((total, column) => total + (column.resizedWidth || column.width || 0), 0);
 };
 
 export const getOnlyShownColumns = (

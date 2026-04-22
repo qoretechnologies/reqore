@@ -1,6 +1,6 @@
 /* @flow */
 import { get, isFunction, isString } from 'lodash';
-import React, { ReactElement, memo, useCallback } from 'react';
+import React, { ReactElement, memo, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
 import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
@@ -13,8 +13,14 @@ import { ReqoreH4 } from '../Header';
 import { ReqoreP } from '../Paragraph';
 import ReqoreTag from '../Tag';
 import { TimeAgo } from '../TimeAgo';
+import { IReqoreButtonProps } from '../Button';
 import { IReqoreCustomTableBodyCell, ReqoreTableBodyCell } from './cell';
-import { getOnlyShownColumns } from './helpers';
+import {
+  calculatePinOffsets,
+  getReorderedLeaves,
+  getTotalColumnsWidth,
+  IColumnPinInfo,
+} from './helpers';
 
 export interface IReqoreTableRowOptions {
   columns: IReqoreTableColumn[];
@@ -27,6 +33,9 @@ export interface IReqoreTableRowOptions {
   selectedRowIntent?: TReqoreIntent;
   size?: TSizes;
   flat?: boolean;
+  wrap?: boolean;
+  maxCellHeight?: number;
+  expandHeightButtonProps?: Partial<IReqoreButtonProps>;
   cellComponent?: IReqoreCustomTableBodyCell;
   rowComponent?: IReqoreCustomTableRow;
   setHoveredRow?: (index: number) => void;
@@ -41,6 +50,7 @@ export interface IReqoreTableRowProps extends React.HTMLAttributes<HTMLDivElemen
   data: IReqoreTableRowOptions;
   index: number;
   isHovered?: boolean;
+  style?: React.CSSProperties;
 }
 
 export interface IReqoreTableRowStyle {
@@ -52,12 +62,26 @@ export interface IReqoreTableRowStyle {
   flat?: boolean;
   disabled?: boolean;
   hovered?: boolean;
+  size?: TSizes;
+  wrap?: boolean;
+  minWidth?: number;
 }
 
 export const StyledTableRow = styled.div<IReqoreTableRowStyle>`
-  ${({ size }) => css`
+  ${({ size, wrap, minWidth }) => css`
     display: flex;
-    height: ${SIZE_TO_PX[size]}px;
+    ${wrap
+      ? css`
+          min-height: ${SIZE_TO_PX[size]}px;
+        `
+      : css`
+          height: ${SIZE_TO_PX[size]}px;
+        `}
+    ${minWidth
+      ? css`
+          min-width: ${minWidth}px;
+        `
+      : ''}
   `}
 `;
 
@@ -78,6 +102,11 @@ export interface IReqoreTableCellStyle {
   even?: boolean;
   striped?: boolean;
   padded?: IReqoreTableColumn['cell']['padded'];
+  wrap?: boolean;
+  pin?: 'left' | 'right';
+  pinOffset?: number;
+  pinEdge?: boolean;
+  maxHeight?: number;
 }
 
 const ReqoreTableRow = memo(
@@ -93,6 +122,9 @@ const ReqoreTableRow = memo(
       size,
       selectedRowIntent,
       flat,
+      wrap,
+      maxCellHeight,
+      expandHeightButtonProps,
       cellComponent,
       rowComponent,
       tableWidth,
@@ -107,6 +139,20 @@ const ReqoreTableRow = memo(
 
     const CellComponent = cellComponent || ReqoreTableBodyCell;
     const RowComponent = rowComponent || StyledTableRow;
+
+    const pinOffsets = useMemo(() => calculatePinOffsets(columns), [columns]);
+    const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(columns), [columns]);
+    const rowWrap = useMemo(() => {
+      if (wrap) {
+        return true;
+      }
+      return columns.some(function check(column): boolean {
+        if (column.header?.columns) {
+          return column.header.columns.some(check);
+        }
+        return column.cell?.wrap === true;
+      });
+    }, [columns, wrap]);
 
     const renderContent = useCallback(
       (
@@ -229,25 +275,15 @@ const ReqoreTableRow = memo(
       []
     );
 
-    const renderCells = useCallback(
-      (columns: IReqoreTableColumn[], data: IReqoreTableData) =>
-        getOnlyShownColumns(columns, tableWidth).map(
-          ({
-            width,
-            minWidth,
-            maxWidth,
-            resizedWidth,
-            grow,
-            dataId,
-            cell,
-            header,
-            align,
-            intent,
-          }) => {
-            if (header?.columns) {
-              return renderCells(header.columns, data);
-            }
+    const reorderedLeaves = useMemo(
+      () => getReorderedLeaves(columns, tableWidth),
+      [columns, tableWidth]
+    );
 
+    const renderCells = useCallback(
+      () =>
+        reorderedLeaves.map(
+          ({ width, minWidth, maxWidth, resizedWidth, grow, dataId, cell, align, intent }) => {
             const datum = get(data[index], dataId);
 
             // Build the tooltip
@@ -258,6 +294,11 @@ const ReqoreTableRow = memo(
                   }
                 : (cell.tooltip(datum) as IReqoreTooltip)
               : {};
+
+            const pinInfo: IColumnPinInfo | undefined = pinOffsets[dataId];
+            const cellWrap = cell?.wrap ?? wrap;
+            const cellMaxHeight =
+              cell?.maxHeight ?? data[index]._maxHeight ?? maxCellHeight;
 
             return (
               <CellComponent
@@ -276,6 +317,12 @@ const ReqoreTableRow = memo(
                   selected: !!isSelected,
                   selectedIntent: selectedRowIntent,
                   flat,
+                  wrap: cellWrap,
+                  maxHeight: cellMaxHeight,
+                  expandHeightButtonProps,
+                  pin: pinInfo?.pin,
+                  pinOffset: pinInfo?.offset,
+                  pinEdge: pinInfo?.isEdge,
                   even: index % 2 === 0 ? true : false,
                   intent: cell?.intent || data[index]._intent || intent,
                   interactive: !!cell?.onClick || !!onRowClick,
@@ -301,14 +348,23 @@ const ReqoreTableRow = memo(
           }
         ),
       [
-        columns,
-        JSON.stringify(data),
-        getOnlyShownColumns,
+        reorderedLeaves,
+        data,
         index,
         isSelected,
         onRowClick,
         selectable,
-        tableWidth,
+        pinOffsets,
+        wrap,
+        maxCellHeight,
+        expandHeightButtonProps,
+        size,
+        striped,
+        selectedRowIntent,
+        flat,
+        CellComponent,
+        onSelectClick,
+        renderContent,
       ]
     );
 
@@ -317,8 +373,11 @@ const ReqoreTableRow = memo(
         style={style}
         className='reqore-table-row'
         interactive={!!onRowClick && !data[index]._disabled}
+        size={size}
+        wrap={rowWrap}
+        minWidth={totalColumnsWidth}
       >
-        {renderCells(columns, data)}
+        {renderCells()}
       </RowComponent>
     );
   }

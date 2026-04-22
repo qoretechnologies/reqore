@@ -675,3 +675,159 @@ export const CustomEmptyState: Story = {
     ),
   },
 };
+
+const longTextColumns: IReqoreTableColumn[] = [
+  {
+    dataId: 'id',
+    header: { label: 'ID' },
+    width: 60,
+    align: 'center',
+    cell: { content: 'number' },
+  },
+  {
+    dataId: 'title',
+    header: { label: 'Title' },
+    width: 200,
+    cell: { content: 'title' },
+  },
+  {
+    dataId: 'description',
+    header: { label: 'Description' },
+    grow: 3,
+    cell: { content: 'text' },
+  },
+  {
+    dataId: 'status',
+    header: { label: 'Status' },
+    width: 120,
+    cell: { content: 'tag:info' },
+  },
+];
+
+const longTextData = [
+  {
+    id: 1,
+    title: 'Release v1.0',
+    description:
+      'Initial production release. Includes the core API surface, theming, accessible components, and a migration guide for the preview users who have been on v0.x builds since October.',
+    status: 'shipped',
+  },
+  {
+    id: 2,
+    title: 'Compact mode',
+    description:
+      'Short description.',
+    status: 'in progress',
+  },
+  {
+    id: 3,
+    title: 'Variable row height',
+    description:
+      'Support rows whose natural content dictates their height. Replaces the three-table sticky-pin architecture with a single scroller, lets cells wrap text, and cuts DOM node count by roughly two-thirds on wide tables.',
+    status: 'review',
+  },
+  {
+    id: 4,
+    title: 'Trackpad-native scroll',
+    description:
+      'Drops the manual wheel handler so horizontal and vertical scroll both use real momentum scrolling. Users on macOS trackpads and touch screens get the behavior they expect from every other native list.',
+    status: 'shipped',
+  },
+];
+
+export const NonVirtualized: Story = {
+  args: {
+    virtualized: false,
+    data: longTextData,
+    columns: longTextColumns,
+    height: 400,
+    label: 'Non-virtualized table',
+  },
+};
+
+export const Wrapped: Story = {
+  args: {
+    wrap: true,
+    data: longTextData,
+    columns: longTextColumns,
+    height: 400,
+    label: 'Wrapped rows',
+  },
+};
+
+export const WrappedWithPinnedColumns: Story = {
+  args: {
+    wrap: true,
+    data: longTextData,
+    columns: [
+      { ...longTextColumns[0], pin: 'left' },
+      longTextColumns[1],
+      longTextColumns[2],
+      { ...longTextColumns[3], pin: 'right' },
+    ],
+    width: 520,
+    height: 400,
+    label: 'Wrapped with pinned columns',
+  },
+};
+
+export const PerColumnWrap: Story = {
+  args: {
+    virtualized: false,
+    data: longTextData,
+    columns: [
+      longTextColumns[0],
+      longTextColumns[1],
+      { ...longTextColumns[2], cell: { ...longTextColumns[2].cell, wrap: true } },
+      longTextColumns[3],
+    ],
+    height: 400,
+    label: 'Description column wraps, others truncate',
+  },
+};
+
+export const WrappedWithMaxCellHeight: Story = {
+  args: {
+    wrap: true,
+    maxCellHeight: 80,
+    data: longTextData,
+    columns: longTextColumns,
+    height: 500,
+    label: 'Max cell height with Show more overlay',
+  },
+};
+
+export const PerColumnMaxHeight: Story = {
+  args: {
+    virtualized: false,
+    data: longTextData,
+    columns: [
+      longTextColumns[0],
+      longTextColumns[1],
+      {
+        ...longTextColumns[2],
+        cell: { ...longTextColumns[2].cell, wrap: true, maxHeight: 60 },
+      },
+      longTextColumns[3],
+    ],
+    height: 500,
+    label: 'Only Description column clips at 60px',
+  },
+};
+
+export const CustomExpandHeightButton: Story = {
+  args: {
+    wrap: true,
+    maxCellHeight: 80,
+    data: longTextData,
+    columns: longTextColumns,
+    height: 500,
+    label: 'Custom "Show more" button via expandHeightButtonProps',
+    customTheme: { main: '#321e5c' },
+    expandHeightButtonProps: {
+      intent: 'info',
+      rightIcon: 'ArrowDownLine',
+      children: 'Reveal rest',
+    },
+  },
+};

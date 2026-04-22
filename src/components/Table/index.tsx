@@ -13,7 +13,7 @@ import {
   useReqoreTheme,
 } from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
-import { RADIUS_FROM_SIZE, TABLE_SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
@@ -31,7 +31,6 @@ import { IReqoreTableHeaderCellProps } from './headerCell';
 import {
   fixSort,
   flipSortDirection,
-  getColumnsByPinType,
   getColumnsCount,
   getExportActions,
   getOnlyShownColumns,
@@ -105,6 +104,18 @@ export interface IReqoreTableColumn extends IReqoreIntent {
     ) => Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'>[];
     intent?: TReqoreIntent;
     padded?: 'both' | 'horizontal' | 'vertical' | 'none';
+    /**
+     * When true, this column's cells wrap their content instead of truncating with ellipsis.
+     * Works best with the table-level `wrap` prop (which implies `virtualized={false}`).
+     */
+    wrap?: boolean;
+    /**
+     * Maximum height in pixels for this column's cells. When content exceeds this height the cell
+     * clips and an inset-shadow overlay with a "Show more" button appears; clicking it expands
+     * the cell (and the row) to fit the full content. Overrides the table-level `maxCellHeight`
+     * and any row-level `_maxHeight`.
+     */
+    maxHeight?: number;
   };
 }
 
@@ -113,6 +124,11 @@ export interface IReqoreTableRowData {
   _selectId?: string | number;
   _intent?: TReqoreIntent;
   _disabled?: boolean;
+  /**
+   * Per-row override for the cell max-height. Takes precedence over the table-level
+   * `maxCellHeight` but is still overridden by a column's `cell.maxHeight`.
+   */
+  _maxHeight?: number;
 }
 
 export type IReqoreTableRowClick = (data: IReqoreTableRowData) => void;
@@ -153,6 +169,35 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   showHelp?: boolean;
   showColumnsOptions?: boolean;
 
+  /**
+   * When `false`, the table renders every row in the DOM instead of virtualizing via react-window.
+   * Required when using `wrap` or per-column `cell.wrap` so rows can grow to their tallest cell.
+   * Defaults to `true` (virtualized) unless `wrap` is set, in which case it defaults to `false`.
+   */
+  virtualized?: boolean;
+
+  /**
+   * When `true`, every cell allows natural text flow (no ellipsis truncation) and rows grow to fit
+   * the tallest cell. Individual columns can override with `cell.wrap`. Setting this implicitly
+   * disables virtualization unless `virtualized` is explicitly set.
+   */
+  wrap?: boolean;
+
+  /**
+   * Default max-height in pixels for every body cell. When content exceeds this height the cell
+   * clips and an overlay with a "Show more" button appears; clicking it expands that cell (and
+   * the row) to fit the full content. Expansion is one-way — once expanded the cell stays open.
+   * Override per-row with `_maxHeight` on the row data or per-column with `cell.maxHeight`. No
+   * limit by default.
+   */
+  maxCellHeight?: number;
+
+  /**
+   * Props forwarded to the "Show more" button rendered by the max-height overlay. Use this to
+   * customize the button's label, icon, intent, `customTheme`, etc.
+   */
+  expandHeightButtonProps?: Partial<IReqoreButtonProps>;
+
   onRowClick?: IReqoreTableRowClick;
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
   rowComponent?: IReqoreTableRowOptions['rowComponent'];
@@ -180,26 +225,10 @@ export interface IReqoreTableSort {
 }
 
 const StyledTableWrapper = styled.div`
-  overflow: hidden;
   display: flex;
   flex-flow: column;
-
-  ${({ isPinned }) =>
-    isPinned
-      ? css`
-          flex-shrink: 0;
-          z-index: 1;
-          box-shadow: 1px -1px 20px -2px rgba(0, 0, 0, 0.8);
-        `
-      : css`
-          width: 100%;
-          flex: 1;
-        `};
-`;
-
-const StyledTablesWrapper = styled.div`
-  display: flex;
-  flex-flow: row;
+  width: 100%;
+  flex: 1;
   overflow: hidden;
 
   ${({ rounded, size = 'normal' }) => css`
@@ -262,13 +291,37 @@ const ReqoreTable = ({
   exportMapper,
   showHelp,
   showColumnsOptions,
+  virtualized,
+  wrap,
+  maxCellHeight,
+  expandHeightButtonProps,
   ...rest
 }: IReqoreTableProps) => {
-  const leftTableRef = useRef<HTMLDivElement>(null);
-  const rightTableRef = useRef<HTMLDivElement>(null);
   const mainTableRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
   const transformedDataRef = useRef<IReqoreTableData>(data || []);
+
+  const hasColumnWrap = useMemo(() => {
+    const walk = (cols: IReqoreTableColumn[]): boolean =>
+      cols.some((column) => {
+        if (column.header?.columns) {
+          return walk(column.header.columns);
+        }
+        return column.cell?.wrap === true;
+      });
+    return walk(columns);
+  }, [columns]);
+
+  const shouldVirtualize = virtualized ?? !(wrap || hasColumnWrap);
+
+  useEffect(() => {
+    if ((wrap || hasColumnWrap) && virtualized === true) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[ReqoreTable] `wrap` / `cell.wrap` has no visual effect when `virtualized` is explicitly true — FixedSizeList enforces fixed row height. Drop `virtualized={true}` or disable wrapping.'
+      );
+    }
+  }, [wrap, hasColumnWrap, virtualized]);
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
@@ -584,14 +637,6 @@ const ReqoreTable = ({
       top: 0,
       behavior: 'smooth',
     });
-    leftTableRef.current?.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-    rightTableRef.current?.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
 
     setIsScrolled(false);
   };
@@ -768,47 +813,25 @@ const ReqoreTable = ({
     return badgeList;
   }, [rest.badge, rest.label, transformedData]);
 
-  const refs = useMemo(
-    () => ({
-      left: leftTableRef,
-      right: rightTableRef,
-      main: mainTableRef,
-      header: mainHeaderRef,
-    }),
-    []
-  );
-
-  const columnsByType = useMemo(
-    () => ({
-      left: getColumnsByPinType(finalColumns, 'left'),
-      right: getColumnsByPinType(finalColumns, 'right'),
-      main: getColumnsByPinType(finalColumns, 'main'),
-    }),
-    [finalColumns]
-  );
-
-  const renderTable = (type: 'left' | 'main' | 'right' = 'main', items: IReqoreTableRowData[]) => {
-    const tableColumns = columnsByType[type];
-    const isPinned = type === 'left' || type === 'right';
-
-    // If there are no columns or outside items, return null
-    if (count(tableColumns) === 0 || count(data) === 0) {
+  const renderTable = (items: IReqoreTableRowData[]) => {
+    if (count(finalColumns) === 0 || count(data) === 0) {
       return null;
     }
 
     return (
-      <StyledTableWrapper isPinned={isPinned} key={`${type}-table-wrapper`}>
+      <StyledTableWrapper
+        className='reqore-table-wrapper'
+        rounded={rest.rounded !== false && rest.flat !== false}
+        size={rest.flat === false ? wrapperSize : zoomToSize[zoom]}
+      >
         <ReqoreTableHeader
-          key={`${type}-header`}
           size={zoomToSize[zoom]}
-          columns={tableColumns}
-          scrollable={type === 'main'}
-          ref={type === 'main' ? mainHeaderRef : undefined}
+          columns={finalColumns}
+          ref={mainHeaderRef}
           bodyRef={mainTableRef}
           onSortChange={handleSortChange}
           heightAsGroup={hasGroupedColumns(finalColumns)}
           sortData={_sort}
-          hasVerticalScroll={count(items) * TABLE_SIZE_TO_PX[size] > height}
           onColumnsUpdate={handleColumnsUpdate}
           onFilterChange={(dataId: string, value: any) => {
             handleColumnsUpdate(dataId, 'filter', value);
@@ -818,12 +841,10 @@ const ReqoreTable = ({
         />
         {count(items) === 0 ? null : (
           <ReqoreTableBody
-            key={`${type}-body`}
-            ref={refs[type]}
-            refs={refs}
-            type={type}
+            ref={mainTableRef}
+            headerRef={mainHeaderRef}
             data={items}
-            columns={tableColumns}
+            columns={finalColumns}
             height={fill ? sizes.height : height}
             selectable={selectable}
             onSelectClick={handleSelectClick}
@@ -834,6 +855,10 @@ const ReqoreTable = ({
             size={zoomToSize[zoom]}
             striped={striped}
             flat={rest.flat}
+            wrap={wrap}
+            maxCellHeight={maxCellHeight}
+            expandHeightButtonProps={expandHeightButtonProps}
+            virtualized={shouldVirtualize}
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}
             tableWidth={sizes.width}
@@ -892,14 +917,7 @@ const ReqoreTable = ({
                     exportMapper={exportMapper}
                   />
                 )}
-                <StyledTablesWrapper
-                  className='reqore-table-wrapper'
-                  rounded={rest.rounded !== false && rest.flat !== false}
-                >
-                  {renderTable('left', applyPaging(transformedData))}
-                  {renderTable('main', applyPaging(transformedData))}
-                  {renderTable('right', applyPaging(transformedData))}
-                </StyledTablesWrapper>
+                {renderTable(applyPaging(transformedData))}
                 {count(applyPaging(transformedData)) === 0
                   ? rest.children || (
                       <ReqoreMessage

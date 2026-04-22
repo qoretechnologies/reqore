@@ -2,7 +2,7 @@ import count from 'lodash/size';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { memo, useMemo } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
@@ -19,6 +19,8 @@ export interface IReqoreTableHeaderCellProps
   sortData?: IReqoreTableSort;
   onColumnsUpdate?: TColumnsUpdater;
   onFilterChange?: (dataId: string, filter: string) => void;
+  pinOffset?: number;
+  pinEdge?: boolean;
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -46,6 +48,36 @@ export const StyledSortIcon = styled(ReqoreIcon)`
   position: absolute;
 `;
 
+const StyledHeaderResizable = styled(Resizable)<{
+  $pin?: 'left' | 'right';
+  $pinEdge?: boolean;
+}>`
+  ${({ $pin, $pinEdge }) =>
+    $pin &&
+    $pinEdge &&
+    css`
+      /* Bounded-height pseudo-shadow (matches body pinned cells). Override the inline
+         overflow:hidden so the 12px projection isn't clipped on this cell. */
+      overflow: visible !important;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 12px;
+        pointer-events: none;
+        ${$pin === 'left' ? 'right: -12px;' : 'left: -12px;'}
+        background: linear-gradient(
+          to ${$pin === 'left' ? 'right' : 'left'},
+          rgba(0, 0, 0, 0.35),
+          rgba(0, 0, 0, 0)
+        );
+        z-index: 1;
+      }
+    `}
+`;
+
 export const ReqoreTableHeaderCell = memo(
   ({
     width,
@@ -55,6 +87,8 @@ export const ReqoreTableHeaderCell = memo(
     grow,
     align,
     pin,
+    pinOffset,
+    pinEdge,
     onSortChange,
     dataId,
     sortable,
@@ -171,8 +205,17 @@ export const ReqoreTableHeaderCell = memo(
       pin,
     ]);
 
+    const pinStyle: React.CSSProperties = pin
+      ? {
+          position: 'sticky',
+          [pin === 'left' ? 'left' : 'right']: pinOffset || 0,
+          zIndex: 2,
+        }
+      : {};
+
     return (
-      <Resizable
+      <StyledHeaderResizable
+        {...({ $pin: pin, $pinEdge: pinEdge } as any)}
         minWidth={minWidth || width}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {
@@ -184,6 +227,7 @@ export const ReqoreTableHeaderCell = memo(
         style={{
           overflow: 'hidden',
           flexGrow: grow,
+          ...pinStyle,
         }}
         size={{
           width: resizedWidth || width,
@@ -302,7 +346,7 @@ export const ReqoreTableHeaderCell = memo(
             />
           ) : null}
         </ReqoreControlGroup>
-      </Resizable>
+      </StyledHeaderResizable>
     );
   }
 );

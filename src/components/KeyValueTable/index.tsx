@@ -40,6 +40,10 @@ export interface IReqoreKeyValueTableProps
       | 'wrapperSize'
       | 'paging'
       | 'onRowClick'
+      | 'virtualized'
+      | 'wrap'
+      | 'maxCellHeight'
+      | 'expandHeightButtonProps'
     > {
   data: { [key: string | number]: TReqoreKeyValueTableValue };
 

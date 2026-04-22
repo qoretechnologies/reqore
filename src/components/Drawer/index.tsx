@@ -111,8 +111,35 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
   }}
 `;
 
-export const StyledDrawerResizable = styled(animated.div)`
+export const StyledDrawerResizable = styled(animated.div)<{
+  $edgelessPosition?: TPosition;
+}>`
   pointer-events: auto;
+
+  ${({ $edgelessPosition }) => {
+    if (!$edgelessPosition) {
+      return undefined;
+    }
+
+    // The edges touching the viewport don't need a border. Strip the three sides that meet the
+    // document edge so only the single side facing the content keeps its stroke.
+    const sidesToStrip: Record<TPosition, ('top' | 'right' | 'bottom' | 'left')[]> = {
+      right: ['top', 'right', 'bottom'],
+      left: ['top', 'left', 'bottom'],
+      top: ['top', 'left', 'right'],
+      bottom: ['bottom', 'left', 'right'],
+    };
+
+    return css`
+      > .reqore-drawer {
+        ${sidesToStrip[$edgelessPosition].map(
+          (side) => css`
+            border-${side}: none;
+          `
+        )}
+      }
+    `;
+  }}
 `;
 
 /**
@@ -423,6 +450,9 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     : undefined
                 }
                 as={StyledDrawerResizable}
+                {...({
+                  $edgelessPosition: !floating && !_isModal ? position : undefined,
+                } as any)}
                 style={{
                   ...resizeableStyle,
                   ...styles,

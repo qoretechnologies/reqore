@@ -23,7 +23,6 @@ import {
   NUMBER_TO_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
-  SIZE_TO_PX,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -316,8 +315,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
 
-  padding: ${({ noHorizontalPadding, size, padded, transparent, flat, intent }: IStyledPanel) =>
-    `${transparent && flat && !intent ? 0 : getPaddingSize(padded, size)}px ${
+  padding: ${({ noHorizontalPadding, size, padded, opacity, flat, intent }: IStyledPanel) =>
+    `${opacity === 0 && flat && !intent ? 0 : getPaddingSize(padded, size)}px ${
       noHorizontalPadding ? 0 : `${getPaddingSize(padded, size)}px`
     }`};
 
@@ -351,13 +350,8 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 `;
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
-  min-height: ${({ size, padded, wrapperPadding }) =>
-    SIZE_TO_PX[size] +
-    (wrapperPadding === 'both' || wrapperPadding === 'top'
-      ? getPaddingSize(padded, size) * 2
-      : 0)}px;
-  padding-bottom: ${({ padded, size, isCollapsed }: IStyledPanel) =>
-    !padded || isCollapsed ? `${getPaddingSize(padded, size)}px` : undefined};
+  padding-bottom: ${({ padded, size, isCollapsed, minimal }: IStyledPanel) =>
+    !padded || isCollapsed || !minimal ? `${getPaddingSize(padded, size)}px` : 0};
   padding-top: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'bottom' || wrapperPadding === 'none'
       ? undefined
@@ -373,13 +367,8 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
-  min-height: ${({ size, padded, wrapperPadding }) =>
-    SIZE_TO_PX[size] +
-    (wrapperPadding === 'both' || wrapperPadding === 'bottom'
-      ? getPaddingSize(padded, size) * 2
-      : 0)}px;
-  padding-top: ${({ padded, size }: IStyledPanel) =>
-    !padded ? `${getPaddingSize(padded, size)}px` : undefined};
+  padding-top: ${({ padded, size, minimal }: IStyledPanel) =>
+    !padded || !minimal ? `${getPaddingSize(padded, size)}px` : 0};
   padding-bottom: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'top' || wrapperPadding === 'none'
       ? undefined
@@ -395,22 +384,12 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none !important' : undefined)};
-  padding: ${({ padded, size, noHorizontalPadding, minimal }) =>
+  padding: ${({ padded, size, noHorizontalPadding }) =>
     !padded
       ? undefined
       : noHorizontalPadding
       ? `${getPaddingSize(padded, size)}px 0`
-      : `${getPaddingSize(padded, size) / (minimal ? 2 : 1)}px ${getPaddingSize(padded, size)}px`};
-  // The padding is not needed when the panel is minimal and has title, since
-  // the title already has padding and is transparent
-  padding-top: ${({ minimal, hasLabel, padded, size }) =>
-    minimal && hasLabel && padded ? 0 : padded ? `${getPaddingSize(padded, size)}px` : undefined};
-  padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
-    minimal && hasBottomActions && padded
-      ? 0
-      : padded
-      ? `${getPaddingSize(padded, size)}px`
-      : undefined};
+      : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
   flex: 1;
   overflow: auto;
   overflow-wrap: anywhere;
@@ -1011,16 +990,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               className='reqore-panel-title'
               onClick={handleCollapseClick}
               theme={theme}
-              minimal={minimal}
+              minimal={minimal || opacity === 0}
               size={contentSize || panelSize}
-              opacity={opacity ?? (minimal ? 0 : 1)}
+              opacity={minimal ? 0 : opacity ?? 1}
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
               isMobile={isMobile || isSmall}
               ref={measureRef}
               padded={padded}
               wrapperPadding={wrapperPadding}
-              transparent={rest.transparent || opacity === 0}
               intent={intent}
               stickyHeader={rest.stickyHeader}
               stickyHeaderOffset={rest.stickyHeaderOffset}
@@ -1167,7 +1145,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               isCollapsed={_isCollapsed}
               style={contentStyle}
               padded={padded}
-              minimal={minimal}
+              minimal={minimal || opacity === 0}
               size={contentSize || panelSize}
               ref={getContentRef}
               noHorizontalPadding={noHorizontalPadding}
@@ -1182,9 +1160,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               theme={theme}
               padded={padded}
               intent={intent}
-              minimal={minimal}
-              transparent={rest.transparent || opacity === 0}
-              opacity={opacity ?? (minimal ? 0 : 1)}
+              minimal={minimal || opacity === 0}
+              opacity={minimal ? 0 : opacity ?? 1}
               size={contentSize || panelSize}
               noHorizontalPadding={noHorizontalPadding}
             >

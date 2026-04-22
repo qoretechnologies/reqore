@@ -308,3 +308,18 @@ export const WithSize: Story = {
     size: '500px',
   },
 };
+
+export const WithBackgroundBlur: Story = {
+  render: Template,
+
+  args: {
+    minimal: true,
+    size: '500px',
+    hasBackdrop: false,
+    customTheme: { main: '#3b0541' },
+    opacity: 0.7,
+    contentEffect: {
+      backgroundBlur: 5,
+    },
+  },
+};

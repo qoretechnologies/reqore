@@ -1,5 +1,6 @@
 import {
-  getColumnsByPinType,
+  calculatePinOffsets,
+  flattenColumns,
   getColumnsCount,
   getOnlyShownColumns,
   hasHiddenColumns,
@@ -39,7 +40,7 @@ test('Filters out hidden columns', () => {
   columns[3].show = false;
   columns[4].header!.columns![1].show = false;
 
-  const newColumns = getOnlyShownColumns(columns);
+  const newColumns = getOnlyShownColumns(columns, undefined);
 
   expect(getColumnsCount(newColumns)).toBe(4);
   expect(hasHiddenColumns(columns)).toBe(true);
@@ -47,21 +48,68 @@ test('Filters out hidden columns', () => {
   expect(newColumns[1].dataId).toBe('address');
 });
 
-test('Returns pinned columns', () => {
-  const columns = [...testColumns];
+const pinTestColumns = () => [
+  { dataId: 'id', header: { label: 'ID' }, width: 50, align: 'center' as const },
+  {
+    dataId: 'name',
+    header: {
+      label: 'Name',
+      columns: [
+        { dataId: 'firstName', header: { label: 'First Name' }, width: 150 },
+        { dataId: 'lastName', header: { label: 'Last Name' }, width: 150 },
+      ],
+    },
+  },
+  { dataId: 'address', header: { label: 'Address' }, width: 300 },
+  {
+    dataId: 'data',
+    header: {
+      label: 'Data',
+      columns: [
+        { dataId: 'occupation', header: { label: 'Occupation' }, width: 200 },
+        { dataId: 'group', header: { label: 'Group' }, width: 150 },
+      ],
+    },
+  },
+];
 
-  expect(getColumnsCount(columns)).toBe(8);
+test('flattenColumns walks grouped headers into leaves', () => {
+  const leaves = flattenColumns(pinTestColumns());
 
-  columns[1].header!.columns![1].pin = 'left';
+  expect(leaves.length).toBe(6);
+  expect(leaves.map((c) => c.dataId)).toEqual([
+    'id',
+    'firstName',
+    'lastName',
+    'address',
+    'occupation',
+    'group',
+  ]);
+});
+
+test('calculatePinOffsets produces cumulative sticky offsets and marks edges', () => {
+  const columns = pinTestColumns();
+
   columns[0].pin = 'left';
-  columns[4].header!.columns![0].pin = 'right';
-  columns[4].header!.columns![1].pin = 'right';
+  columns[1].header.columns![1].pin = 'left';
+  columns[3].header.columns![0].pin = 'right';
+  columns[3].header.columns![1].pin = 'right';
 
-  const leftPinColumns = getColumnsByPinType(columns, 'left');
-  const rightPinColumns = getColumnsByPinType(columns, 'right');
-  const mainColumns = getColumnsByPinType(columns, 'main');
+  const offsets = calculatePinOffsets(columns);
 
-  expect(getColumnsCount(leftPinColumns)).toBe(2);
-  expect(getColumnsCount(rightPinColumns)).toBe(2);
-  expect(getColumnsCount(mainColumns)).toBe(4);
+  expect(offsets.id.pin).toBe('left');
+  expect(offsets.id.offset).toBe(0);
+  expect(offsets.id.isEdge).toBe(false);
+
+  expect(offsets.lastName.pin).toBe('left');
+  expect(offsets.lastName.offset).toBe(columns[0].width);
+  expect(offsets.lastName.isEdge).toBe(true);
+
+  expect(offsets.group.pin).toBe('right');
+  expect(offsets.group.offset).toBe(0);
+  expect(offsets.group.isEdge).toBe(false);
+
+  expect(offsets.occupation.pin).toBe('right');
+  expect(offsets.occupation.offset).toBe(columns[3].header.columns![1].width);
+  expect(offsets.occupation.isEdge).toBe(true);
 });

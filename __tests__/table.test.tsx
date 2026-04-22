@@ -367,6 +367,88 @@ test('Rows on <Table /> cannot be selected if _selectId is missing', () => {
   expect(fn).toHaveBeenCalledTimes(1);
 });
 
+test('Non-virtualized <Table /> renders every row in the DOM', () => {
+  const data: IReqoreTableProps = {
+    ...tableData,
+    virtualized: false,
+    height: 200,
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-table-row').length).toBe(tableData.data.length);
+});
+
+test('Wrapped <Table /> renders rows with min-height instead of fixed height', () => {
+  const longText =
+    'This is a deliberately long description that should wrap onto multiple lines in a sufficiently narrow cell so that we can observe row height growing past the baseline.';
+
+  const data: IReqoreTableProps = {
+    ...tableData,
+    wrap: true,
+    width: 500,
+    height: 400,
+    columns: [
+      { dataId: 'id', header: { label: 'ID' }, width: 60, align: 'center' },
+      {
+        dataId: 'description',
+        header: { label: 'Description' },
+        grow: 2,
+        cell: { content: 'text' },
+      },
+    ],
+    data: [
+      { id: 1, description: longText },
+      { id: 2, description: 'Short' },
+      { id: 3, description: longText },
+    ],
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const rows = document.querySelectorAll('.reqore-table-row');
+  expect(rows.length).toBe(3);
+  rows.forEach((row) => {
+    const inline = (row as HTMLElement).style.minHeight;
+    expect(inline === '' || inline.endsWith('px')).toBe(true);
+  });
+});
+
+test('<Table /> renders a single header wrapper even with pinned columns', () => {
+  const data: IReqoreTableProps = {
+    ...tableData,
+    columns: [
+      { dataId: 'id', header: { label: 'ID' }, width: 60, pin: 'left' },
+      { dataId: 'firstName', header: { label: 'First Name' }, width: 150 },
+      { dataId: 'lastName', header: { label: 'Last Name' }, width: 150 },
+      { dataId: 'address', header: { label: 'Address' }, width: 300, pin: 'right' },
+    ],
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-table-header-wrapper').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-table-wrapper').length).toBe(1);
+});
+
 test('Rows on <Table /> are all selected/deselected when clicking on header', () => {
   const data: IReqoreTableProps = {
     ...tableData,
