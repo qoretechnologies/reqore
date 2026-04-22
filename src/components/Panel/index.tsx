@@ -384,18 +384,12 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
 
 export const StyledPanelContent = styled.div<IStyledPanel>`
   display: ${({ isCollapsed }) => (isCollapsed ? 'none !important' : undefined)};
-  padding: ${({ padded, size, noHorizontalPadding, minimal }) =>
+  padding: ${({ padded, size, noHorizontalPadding }) =>
     !padded
       ? undefined
       : noHorizontalPadding
       ? `${getPaddingSize(padded, size)}px 0`
       : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
-  /* // The padding is not needed when the panel is minimal and has title, since
-  // the title already has padding and is transparent
-  padding-top: ${({ minimal, hasLabel, padded, size }) =>
-    minimal && hasLabel ? 0 : `${getPaddingSize(padded, size)}px`};
-  padding-bottom: ${({ minimal, padded, size, hasBottomActions }) =>
-    minimal && hasBottomActions ? 0 : `${getPaddingSize(padded, size)}px`}; */
   flex: 1;
   overflow: auto;
   overflow-wrap: anywhere;
