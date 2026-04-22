@@ -344,3 +344,20 @@ export const CustomExportMapper: Story = {
     await waitFor(() => canvas.findAllByText('Export data'), { timeout: 5000 });
   },
 };
+
+export const NonVirtualizedWrapped: Story = {
+  args: {
+    wrap: true,
+    height: 500,
+    data: {
+      Summary:
+        'Variable row height support for ReqoreTable and ReqoreKeyValueTable. Enabling `wrap` implicitly turns virtualization off and lets each row grow to fit its tallest cell.',
+      Owner: 'Platform team',
+      Status: 'In review',
+      Notes:
+        'When virtualization is off, row content is never clipped. Pinned columns still work via `position: sticky` within the single body scroller, and horizontal scroll tracks the header natively.',
+      Tags: 'table, virtualization, sticky, accessibility, wrap',
+      CreatedAt: '2026-04-22',
+    },
+  },
+};

@@ -87,6 +87,13 @@ export type TReqoreEffectGradientAnimationTrigger = 'always' | 'hover' | 'active
 export interface IReqoreEffectFilters {
   grayscale?: boolean;
   blur?: number;
+  /**
+   * Blur radius in pixels applied to whatever is rendered behind this element (frosted-glass
+   * effect via `backdrop-filter`). Unlike `blur`, this leaves the element's own content sharp.
+   * Requires the element to have a translucent background to be visible.
+   */
+  backgroundBlur?: number;
+
   sepia?: boolean;
   invert?: boolean;
   opacity?: number;
@@ -426,6 +433,13 @@ ${({ effect }: IReqoreTextEffectProps) =>
     effect.blur &&
     css`
       filter: blur(${effect.blur}px);
+    `};
+  ${({ effect }) =>
+    effect &&
+    effect.backgroundBlur &&
+    css`
+      backdrop-filter: blur(${effect.backgroundBlur}px);
+      -webkit-backdrop-filter: blur(${effect.backgroundBlur}px);
     `};
   ${({ effect }) =>
     effect &&

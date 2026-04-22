@@ -19,6 +19,8 @@ export interface IReqoreTableHeaderCellProps
   sortData?: IReqoreTableSort;
   onColumnsUpdate?: TColumnsUpdater;
   onFilterChange?: (dataId: string, filter: string) => void;
+  pinOffset?: number;
+  pinEdge?: boolean;
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -55,6 +57,8 @@ export const ReqoreTableHeaderCell = memo(
     grow,
     align,
     pin,
+    pinOffset,
+    pinEdge,
     onSortChange,
     dataId,
     sortable,
@@ -171,6 +175,19 @@ export const ReqoreTableHeaderCell = memo(
       pin,
     ]);
 
+    const pinStyle: React.CSSProperties = pin
+      ? {
+          position: 'sticky',
+          [pin === 'left' ? 'left' : 'right']: pinOffset || 0,
+          zIndex: 2,
+          boxShadow: pinEdge
+            ? pin === 'left'
+              ? '4px 0 6px -4px rgba(0, 0, 0, 0.35)'
+              : '-4px 0 6px -4px rgba(0, 0, 0, 0.35)'
+            : undefined,
+        }
+      : {};
+
     return (
       <Resizable
         minWidth={minWidth || width}
@@ -184,6 +201,7 @@ export const ReqoreTableHeaderCell = memo(
         style={{
           overflow: 'hidden',
           flexGrow: grow,
+          ...pinStyle,
         }}
         size={{
           width: resizedWidth || width,

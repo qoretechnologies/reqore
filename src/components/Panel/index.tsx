@@ -547,6 +547,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       inheritCustomTheme
     );
 
+    console.log(theme);
+
     useEffect(() => {
       return () => {
         if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
@@ -1013,14 +1015,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               theme={theme}
               minimal={minimal}
               size={contentSize || panelSize}
-              opacity={opacity ?? (minimal ? 0 : 1)}
+              opacity={minimal ? 0 : opacity ?? 1}
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
               isMobile={isMobile || isSmall}
               ref={measureRef}
               padded={padded}
               wrapperPadding={wrapperPadding}
-              transparent={rest.transparent || opacity === 0}
               intent={intent}
               stickyHeader={rest.stickyHeader}
               stickyHeaderOffset={rest.stickyHeaderOffset}
@@ -1183,8 +1184,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               padded={padded}
               intent={intent}
               minimal={minimal}
-              transparent={rest.transparent || opacity === 0}
-              opacity={opacity ?? (minimal ? 0 : 1)}
+              opacity={minimal ? 0 : opacity ?? 1}
               size={contentSize || panelSize}
               noHorizontalPadding={noHorizontalPadding}
             >

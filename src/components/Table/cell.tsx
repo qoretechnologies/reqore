@@ -1,11 +1,13 @@
 import { lighten, rgba } from 'polished';
-import { forwardRef, memo } from 'react';
+import { forwardRef, memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
-import { TEXT_FROM_SIZE } from '../../constants/sizes';
+import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreTooltip } from '../../types/global';
+import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { TReqoreColor, TReqoreHexColor } from '../Effect';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { IReqoreTableCellStyle } from './row';
@@ -18,6 +20,12 @@ export interface IReqoreTableBodyCellProps
     IWithReqoreTooltip {
   children?: React.ReactNode;
   padded?: IReqoreTableColumn['cell']['padded'];
+  wrap?: boolean;
+  pinOffset?: number;
+  pinEdge?: boolean;
+  maxHeight?: number;
+  size?: TSizes;
+  expandHeightButtonProps?: Partial<IReqoreButtonProps>;
 }
 
 export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
@@ -45,6 +53,11 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
     disabled,
     hovered,
     padded,
+    wrap,
+    pin,
+    pinOffset,
+    pinEdge,
+    maxHeight,
   }: IReqoreTableCellStyle) => {
     const getOriginalBackgroundColor = () => {
       let color = theme.main;
@@ -76,9 +89,9 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
         opacity += 0.08;
       }
 
-      // Set the color as transparent if opacity is 0
+      // Pinned cells must paint opaque — otherwise non-pinned cells scrolling underneath show through
       if (opacity === 0) {
-        return 'transparent';
+        return pin ? theme.main : 'transparent';
       }
 
       return changeLightness(color, opacity);
@@ -90,26 +103,51 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
         ? theme.main
         : (rgba(backgroundColor, 0.3) as TReqoreHexColor);
 
+    // Pinned cells need an opaque paint so non-pinned cells scrolling underneath don't show
+    // through. We layer the semi-transparent displayed color over a solid theme.main base.
+    const pinnedBackground = pin
+      ? `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${theme.main}`
+      : undefined;
+
     return css`
       display: flex;
-      align-items: center;
+      align-items: ${maxHeight ? 'flex-start' : 'center'};
       justify-content: ${align ? alignToFlexAlign(align) : 'flex-start'};
       flex-shrink: 0;
+      align-self: stretch;
       border-bottom: ${!flat ? '1px solid ' : undefined};
 
-      height: 100%;
-      padding: ${!padded || padded === 'both' || padded === 'vertical' ? 0 : undefined}
+      ${maxHeight &&
+      css`
+        position: relative;
+        max-height: ${maxHeight}px;
+        overflow: hidden;
+      `}
+
+      padding: ${!padded || padded === 'both' || padded === 'vertical' ? (wrap ? '6px' : 0) : undefined}
         ${!padded || padded === 'both' || padded === 'horizontal' ? '10px' : undefined};
       font-size: ${TEXT_FROM_SIZE[size]}px;
-      background-color: ${backgroundColor === 'transparent'
-        ? 'transparent'
-        : displayedBackgroundColor};
+      background: ${pinnedBackground ??
+      (backgroundColor === 'transparent' ? 'transparent' : displayedBackgroundColor)};
       color: ${getReadableColorFrom(getOriginalBackgroundColor(), !hovered)};
       border-color: ${changeLightness(displayedBackgroundColor, 0.1)};
       transition: background-color 0.2s ease-out;
       opacity: ${disabled ? 0.2 : 1};
       pointer-events: ${disabled ? 'none' : undefined};
       cursor: ${interactive || interactiveCell ? 'pointer' : 'default'};
+
+      ${pin &&
+      css`
+        position: sticky;
+        ${pin === 'left' ? `left: ${pinOffset || 0}px;` : `right: ${pinOffset || 0}px;`}
+        z-index: 2;
+        ${pinEdge &&
+        css`
+          box-shadow: ${pin === 'left'
+            ? '4px 0 6px -4px rgba(0, 0, 0, 0.35)'
+            : '-4px 0 6px -4px rgba(0, 0, 0, 0.35)'};
+        `}
+      `}
 
       ${interactiveCell &&
       css`
@@ -119,9 +157,17 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       `}
 
       p.reqore-table-text {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+        ${wrap
+          ? css`
+              white-space: normal;
+              word-break: break-word;
+              overflow-wrap: anywhere;
+            `
+          : css`
+              overflow: hidden;
+              white-space: nowrap;
+              text-overflow: ellipsis;
+            `}
         margin: 0;
         padding: 0;
       }
@@ -129,10 +175,104 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
   }}
 `;
 
+const StyledCellExpandOverlay = styled.div<{
+  theme: IReqoreTheme;
+}>`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 4px 6px;
+  pointer-events: none;
+  z-index: 1;
+  height: 36px;
+  background: ${({ theme }) =>
+    `linear-gradient(to bottom, ${rgba(theme.main, 0)} 0%, ${theme.main} 80%)`};
+
+  > * {
+    pointer-events: auto;
+  }
+`;
+
 export const ReqoreTableBodyCell = memo(
-  forwardRef<HTMLButtonElement, IReqoreTableBodyCellProps>(
+  forwardRef<HTMLDivElement, IReqoreTableBodyCellProps>(
     (props: IReqoreTableBodyCellProps, ref) => {
-      return <ReqoreTooltipComponent Component={StyledTableCell} {...props} ref={ref} />;
+      const { expandHeightButtonProps, ...cellStyleProps } = props;
+      const { maxHeight, children, size } = cellStyleProps;
+      const [expanded, setExpanded] = useState(false);
+      const [isOverflowing, setIsOverflowing] = useState(false);
+      const localRef = useRef<HTMLDivElement | null>(null);
+
+      const setRefs = useCallback(
+        (el: HTMLDivElement | null) => {
+          localRef.current = el;
+          if (typeof ref === 'function') {
+            ref(el);
+          } else if (ref) {
+            (ref as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          }
+        },
+        [ref]
+      );
+
+      // Expansion is a one-way action, so once expanded the overlay hides and the cell grows
+      // naturally — no need to keep measuring.
+      useLayoutEffect(() => {
+        if (!maxHeight || expanded) {
+          setIsOverflowing(false);
+          return undefined;
+        }
+        const el = localRef.current;
+        if (!el) {
+          return undefined;
+        }
+
+        const check = () => {
+          setIsOverflowing(el.scrollHeight > el.clientHeight + 1);
+        };
+
+        check();
+        const observer = new ResizeObserver(check);
+        observer.observe(el);
+        return () => observer.disconnect();
+      }, [maxHeight, expanded, children]);
+
+      const effectiveMaxHeight = expanded ? undefined : maxHeight;
+      const showOverlay = !!maxHeight && !expanded && isOverflowing;
+
+      return (
+        <ReqoreTooltipComponent
+          Component={StyledTableCell}
+          {...cellStyleProps}
+          maxHeight={effectiveMaxHeight}
+          ref={setRefs}
+        >
+          {children}
+          {showOverlay && (
+            <StyledCellExpandOverlay
+              className='reqore-table-cell-expand'
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ReqoreButton
+                compact
+                size={size === 'micro' || size === 'tiny' ? 'tiny' : 'small'}
+                rightIcon='ArrowDownSLine'
+                {...expandHeightButtonProps}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  expandHeightButtonProps?.onClick?.(e);
+                  setExpanded(true);
+                }}
+              >
+                {expandHeightButtonProps?.children ?? 'Show more'}
+              </ReqoreButton>
+            </StyledCellExpandOverlay>
+          )}
+        </ReqoreTooltipComponent>
+      );
     }
   )
 );
