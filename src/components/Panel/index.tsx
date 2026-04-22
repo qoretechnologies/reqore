@@ -547,8 +547,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       inheritCustomTheme
     );
 
-    console.log(theme);
-
     useEffect(() => {
       return () => {
         if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);

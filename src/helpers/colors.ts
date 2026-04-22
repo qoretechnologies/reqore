@@ -269,8 +269,6 @@ export const getColorFromMaybeString = (
     _color = RGBAToHexA(transparentize(1 - alpha, _color));
   }
 
-  console.log(color, _color);
-
   return _color;
 };
 
