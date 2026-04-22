@@ -1,6 +1,6 @@
 {
   "name": "@qoretechnologies/reqore",
-  "version": "0.63.22",
+  "version": "0.63.23",
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
