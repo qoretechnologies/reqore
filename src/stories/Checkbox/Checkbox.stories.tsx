@@ -162,6 +162,23 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
           checked={checked}
         />
       </ReqoreControlGroup>
+      <ReqoreCheckbox
+        {...args}
+        label='Hello'
+        description="I am a really long description that should be truncated with an ellipsis if it exceeds the width of the checkbox. Let's see how it looks!"
+        onCheckClick={handleCheckClick}
+        onUncheckClick={handleUncheckChange}
+        checked={checked}
+      />
+      <ReqoreCheckbox
+        {...args}
+        labelPosition='left'
+        label='Hello'
+        description="I am a really long description that should be truncated with an ellipsis if it exceeds the width of the checkbox. Let's see how it looks!"
+        onCheckClick={handleCheckClick}
+        onUncheckClick={handleUncheckChange}
+        checked={checked}
+      />
     </ReqoreControlGroup>
   );
 };

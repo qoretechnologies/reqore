@@ -29,6 +29,7 @@ import {
   TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, ReqoreTextEffect, StyledEffect, StyledTextEffect } from '../Effect';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
 import { ReqoreSpacer } from '../Spacer';
@@ -42,6 +43,8 @@ export interface IReqoreCheckboxProps
     IWithReqoreCustomTheme {
   label?: string;
   labelDetail?: any;
+  description?: string;
+  descriptionEffect?: IReqoreEffect;
   labelDetailPosition?: 'left' | 'right';
   size?: TSizes;
   checked?: boolean;
@@ -256,10 +259,12 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       image,
       onText,
       offText,
+      description,
+      descriptionEffect,
       intent,
       effect,
       customTheme,
-        inheritCustomTheme,
+      inheritCustomTheme,
       wrapLabel,
       onCheckClick,
       onUncheckClick,
@@ -315,18 +320,34 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         ) : null}
         {label && labelPosition === 'left' ? (
           <>
-            {labelDetailPosition === 'left' && labelDetail}
-            <ReqoreTextEffect
-              active={checked}
-              effect={{
-                ...labelEffect,
-                interactive: !disabled && !readOnly && !checked,
-                noWrap: !wrapLabel,
-              }}
-            >
-              {label}
-            </ReqoreTextEffect>
-            {labelDetailPosition === 'right' && labelDetail}
+            <ReqoreControlGroup vertical>
+              <ReqoreControlGroup>
+                {labelDetailPosition === 'left' && labelDetail}
+                <ReqoreTextEffect
+                  active={checked}
+                  effect={{
+                    ...labelEffect,
+                    interactive: !disabled && !readOnly && !checked,
+                    noWrap: !wrapLabel,
+                  }}
+                >
+                  {label}
+                </ReqoreTextEffect>
+                {labelDetailPosition === 'right' && labelDetail}
+              </ReqoreControlGroup>
+              {description && (
+                <ReqoreTextEffect
+                  className='reqore-checkbox-description'
+                  effect={{
+                    textSize: getOneLessSize(size),
+                    weight: 'light',
+                    ...descriptionEffect,
+                  }}
+                >
+                  {description}
+                </ReqoreTextEffect>
+              )}
+            </ReqoreControlGroup>
             <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
           </>
         ) : null}
@@ -441,18 +462,34 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         {label && labelPosition === 'right' ? (
           <>
             <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
-            {labelDetailPosition === 'left' && labelDetail}
-            <ReqoreTextEffect
-              active={checked}
-              effect={{
-                ...labelEffect,
-                interactive: !disabled && !readOnly && !checked,
-                noWrap: !wrapLabel,
-              }}
-            >
-              {label}
-            </ReqoreTextEffect>
-            {labelDetailPosition === 'right' && labelDetail}
+            <ReqoreControlGroup vertical gapSize={getOneLessSize(size)}>
+              <ReqoreControlGroup>
+                {labelDetailPosition === 'left' && labelDetail}
+                <ReqoreTextEffect
+                  active={checked}
+                  effect={{
+                    ...labelEffect,
+                    interactive: !disabled && !readOnly && !checked,
+                    noWrap: !wrapLabel,
+                  }}
+                >
+                  {label}
+                </ReqoreTextEffect>
+                {labelDetailPosition === 'right' && labelDetail}
+              </ReqoreControlGroup>
+              {description && (
+                <ReqoreTextEffect
+                  className='reqore-checkbox-description'
+                  effect={{
+                    textSize: getOneLessSize(size),
+                    weight: 'light',
+                    ...descriptionEffect,
+                  }}
+                >
+                  {description}
+                </ReqoreTextEffect>
+              )}
+            </ReqoreControlGroup>
           </>
         ) : null}
         {margin === 'right' || margin === 'both' ? (
