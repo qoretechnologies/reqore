@@ -16,10 +16,14 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
 
 const StyledList = styled(List)``;
 
-const StyledNonVirtualizedBody = styled.div<{ height: number; minWidth: number }>`
+const StyledNonVirtualizedBody = styled.div<{ height?: number; minWidth: number }>`
   ${({ height, minWidth }) => css`
     overflow: auto;
-    height: ${height}px;
+    ${height || height === 0
+      ? css`
+          height: ${height}px;
+        `
+      : ''}
     > * {
       min-width: ${minWidth}px;
     }
@@ -91,11 +95,14 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     );
 
     if (!virtualized) {
+      // Non-virtualized rows can wrap and exceed the fixed `rowHeight`, so pinning a pixel
+      // height would force a vertical scrollbar. Only set a height when the caller explicitly
+      // requested one — otherwise let the body grow to fit its content.
       return (
         <StyledNonVirtualizedBody
           className='reqore-table-body'
           ref={targetRef}
-          height={measuredHeight}
+          height={height || height === 0 ? measuredHeight : undefined}
           minWidth={totalColumnsWidth}
         >
           {data.map(renderNonVirtualizedRow)}
