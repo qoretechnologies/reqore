@@ -1,5 +1,5 @@
 import { debounce } from 'lodash';
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
@@ -156,7 +156,7 @@ export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroup
 `;
 
 const ReqoreControlGroup = memo(
-  ({
+  forwardRef<HTMLDivElement, IReqoreControlGroupProps>(({
     children,
     className,
     minimal,
@@ -187,7 +187,7 @@ const ReqoreControlGroup = memo(
     responsive,
     overflowButtonProps,
     ...rest
-  }: IReqoreControlGroupProps) => {
+  }, externalRef) => {
     const isStack = stack || isInsideStackGroup;
     const isVertical = vertical || isInsideVerticalGroup;
 
@@ -196,6 +196,18 @@ const ReqoreControlGroup = memo(
     const [isOverflownDialogOpen, setIsOverflownDialogOpen] = useState<boolean>(false);
     const observer = useRef<ResizeObserver | null>(null);
     const ref = useRef<HTMLDivElement>(null);
+
+    const setRefs = useCallback(
+      (node: HTMLDivElement | null) => {
+        (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (typeof externalRef === 'function') {
+          externalRef(node);
+        } else if (externalRef) {
+          (externalRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }
+      },
+      [externalRef]
+    );
 
     const realChildCount = useMemo((): number => {
       let count = 0;
@@ -546,7 +558,7 @@ const ReqoreControlGroup = memo(
           }}
           size={size}
           gapSize={gapSize}
-          ref={ref}
+          ref={setRefs}
           rounded={rounded}
           fluid={fluid}
           fixed={fixed}
@@ -561,7 +573,7 @@ const ReqoreControlGroup = memo(
         </StyledReqoreControlGroup>
       </>
     );
-  }
+  })
 );
 
 export default ReqoreControlGroup;
