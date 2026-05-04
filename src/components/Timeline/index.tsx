@@ -12,6 +12,7 @@ import {
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreComponent,
@@ -75,9 +76,23 @@ export interface IReqoreTimelineProps
   /** Array of timeline items to display */
   items: IReqoreTimelineItem[];
   /**
+   * Layout direction. `'vertical'` stacks items top-to-bottom (default).
+   * `'horizontal'` lays them out left-to-right with the connector line between markers.
+   * Horizontal timelines do not render the `content` body or collapse controls — only
+   * marker, title, timestamp and badges are shown.
+   */
+  direction?: 'vertical' | 'horizontal';
+  /**
+   * When `true` (default), `direction='horizontal'` automatically falls back to vertical on
+   * mobile viewports — horizontal step indicators get cramped on narrow screens. Set to
+   * `false` to force the requested direction regardless of viewport.
+   */
+  responsive?: boolean;
+  /**
    * Controlled collapsed state — map of item index to collapsed boolean.
    * When provided, the component becomes controlled for those indices.
    * Items not in the map fall back to their own `isCollapsed` prop.
+   * Only honored in vertical mode.
    */
   collapsedState?: Record<number, boolean>;
   /** Callback fired when any item's collapsed state changes (click, keyboard, etc.) */
@@ -88,6 +103,7 @@ export interface IReqoreTimelineStyle {
   theme: IReqoreTheme;
   size: TSizes;
   fluid?: boolean;
+  direction?: 'vertical' | 'horizontal';
 }
 
 export interface IReqoreTimelineItemStyle extends IReqoreTimelineStyle {
@@ -125,13 +141,46 @@ const StyledTimeline = styled.ol<IReqoreTimelineStyle>`
   margin: 0;
   padding: 0;
   display: flex;
-  flex-direction: column;
-  width: ${({ fluid }) => (fluid ? '100%' : 'auto')};
+  flex-direction: ${({ direction }) => (direction === 'horizontal' ? 'row' : 'column')};
+  width: ${({ fluid, direction }) =>
+    direction === 'horizontal' ? '100%' : fluid ? '100%' : 'auto'};
+  ${({ direction }) =>
+    direction === 'horizontal' &&
+    css`
+      align-items: flex-start;
+    `}
 `;
 
 const StyledTimelineItem = styled.li<IReqoreTimelineItemStyle>`
   display: flex;
   position: relative;
+
+  ${({ direction, theme, size, isLast }) =>
+    direction === 'horizontal' &&
+    css`
+      flex-direction: column;
+      align-items: center;
+      flex: 1 1 0;
+      min-width: 0;
+      text-align: center;
+
+      /* Connector line to the next item. Each item is the same flex width, so the line
+         starts at the right edge of this item's marker and ends at the left edge of the
+         next item's marker — distance = item_width - marker_size. */
+      &::after {
+        content: '';
+        position: absolute;
+        top: ${MARKER_SIZE_FROM_SIZE[size] / 2 - LINE_WIDTH_FROM_SIZE[size] / 2}px;
+        left: calc(50% + ${MARKER_SIZE_FROM_SIZE[size] / 2}px);
+        width: calc(100% - ${MARKER_SIZE_FROM_SIZE[size]}px);
+        height: ${LINE_WIDTH_FROM_SIZE[size]}px;
+        background-color: ${rgba(changeLightness(theme.main, 0.1), 0.4)};
+        ${isLast &&
+        css`
+          display: none;
+        `}
+      }
+    `}
 
   ${({ disabled }) =>
     disabled &&
@@ -164,7 +213,8 @@ const StyledTimelineMarkerWrapper = styled.div<IReqoreTimelineItemStyle>`
   align-items: center;
   flex-shrink: 0;
   width: ${({ size }) => MARKER_SIZE_FROM_SIZE[size]}px;
-  margin-right: ${({ size }) => PADDING_FROM_SIZE[size]}px;
+  margin-right: ${({ direction, size }) =>
+    direction === 'horizontal' ? 0 : `${PADDING_FROM_SIZE[size]}px`};
   position: relative;
 `;
 
@@ -193,7 +243,8 @@ const StyledTimelineDot = styled.div<IReqoreTimelineItemStyle>`
     hasIntent ? theme.main : changeLightness(theme.main, 0.2)};
 `;
 
-// Line now positioned to connect markers (icon to icon)
+// Line now positioned to connect markers (icon to icon) — vertical mode only.
+// Horizontal mode draws its connector via a pseudo-element on StyledTimelineItem.
 const StyledTimelineLine = styled.div<IReqoreTimelineItemStyle>`
   position: absolute;
   left: 50%;
@@ -213,9 +264,18 @@ const StyledTimelineLine = styled.div<IReqoreTimelineItemStyle>`
 const StyledTimelineContent = styled.div<IReqoreTimelineItemStyle>`
   flex: 1;
   min-width: 0;
-  padding-top: ${({ size }) =>
-    Math.max(0, (MARKER_SIZE_FROM_SIZE[size] - TEXT_FROM_SIZE[size]) / 2 - 2)}px;
-  padding-bottom: ${({ size }) => PADDING_FROM_SIZE[size] * 2}px;
+  ${({ direction, size }) =>
+    direction === 'horizontal'
+      ? css`
+          padding-top: ${GAP_FROM_SIZE[size]}px;
+          padding-bottom: 0;
+          width: 100%;
+          text-align: center;
+        `
+      : css`
+          padding-top: ${Math.max(0, (MARKER_SIZE_FROM_SIZE[size] - TEXT_FROM_SIZE[size]) / 2 - 2)}px;
+          padding-bottom: ${PADDING_FROM_SIZE[size] * 2}px;
+        `}
 `;
 
 const StyledTimelineDetails = styled.div<IReqoreTimelineItemStyle>`
@@ -291,6 +351,7 @@ interface ITimelineItemRendererProps {
   intent?: IReqoreTimelineProps['intent'];
   baseTheme: IReqoreTheme;
   isCollapsed: boolean;
+  direction: 'vertical' | 'horizontal';
   onToggleCollapse: (index: number, event: React.MouseEvent) => void;
   onItemClick: (item: IReqoreTimelineItem) => void;
   onKeyDown: (event: React.KeyboardEvent, item: IReqoreTimelineItem) => void;
@@ -306,6 +367,7 @@ const TimelineItemRenderer = memo(
     intent,
     baseTheme,
     isCollapsed,
+    direction,
     onToggleCollapse,
     onItemClick,
     onKeyDown,
@@ -313,12 +375,16 @@ const TimelineItemRenderer = memo(
     const itemTheme = useReqoreTheme('main', customTheme, item.intent || intent);
     const isClickable = !!item.onClick && !item.disabled;
     const hasIntent = !!(item.intent || intent);
-
+    const isHorizontal = direction === 'horizontal';
+    // Horizontal mode is intentionally minimal: no expanding/collapsing and no content body.
+    const showCollapsible = !isHorizontal && item.collapsible;
+    const showContent = !isHorizontal && item.content;
 
     const itemContent = (
       <StyledTimelineItem
         theme={itemTheme}
         size={size}
+        direction={direction}
         isClickable={isClickable}
         isLast={isLast}
         disabled={item.disabled}
@@ -328,7 +394,7 @@ const TimelineItemRenderer = memo(
         role='listitem'
         className='reqore-timeline-item'
       >
-        <StyledTimelineMarkerWrapper theme={itemTheme} size={size}>
+        <StyledTimelineMarkerWrapper theme={itemTheme} size={size} direction={direction}>
           <StyledTimelineMarker
             theme={itemTheme}
             size={size}
@@ -346,17 +412,21 @@ const TimelineItemRenderer = memo(
               <StyledTimelineDot theme={itemTheme} size={size} hasIntent={hasIntent} />
             )}
           </StyledTimelineMarker>
-          <StyledTimelineLine theme={baseTheme} size={size} isLast={isLast} />
+          {!isHorizontal && (
+            <StyledTimelineLine theme={baseTheme} size={size} isLast={isLast} />
+          )}
         </StyledTimelineMarkerWrapper>
-        <StyledTimelineContent theme={baseTheme} size={size}>
+        <StyledTimelineContent theme={baseTheme} size={size} direction={direction}>
           {item.title && (
             <ReqoreControlGroup
               verticalAlign='flex-start'
+              horizontalAlign={isHorizontal ? 'center' : undefined}
+              vertical={isHorizontal}
               gapSize={size}
-              onClick={item.collapsible ? (e) => onToggleCollapse(index, e) : undefined}
-              style={item.collapsible ? { cursor: 'pointer' } : undefined}
+              onClick={showCollapsible ? (e) => onToggleCollapse(index, e) : undefined}
+              style={showCollapsible ? { cursor: 'pointer' } : undefined}
             >
-              {item.collapsible && (
+              {showCollapsible && (
                 <ReqoreIcon
                   icon='ArrowDownSLine'
                   size={getOneLessSize(size)}
@@ -387,12 +457,13 @@ const TimelineItemRenderer = memo(
                 color: rgba(getReadableColor(baseTheme, undefined, undefined), 0.5),
                 display: 'block',
                 marginTop: `${GAP_FROM_SIZE[size]}px`,
+                textAlign: isHorizontal ? 'center' : undefined,
               }}
             >
               {item.relativeTime ? <TimeAgo time={item.timestamp} /> : item.timestamp}
             </ReqoreSpan>
           )}
-          {item.content && (
+          {showContent && (
             <StyledTimelineDetails theme={baseTheme} size={size} isCollapsed={isCollapsed}>
               <div>
                 {typeof item.content === 'string' || typeof item.content === 'number' ? (
@@ -440,6 +511,8 @@ const ReqoreTimeline = memo(
         intent,
         fluid = false,
         className,
+        direction: directionProp = 'vertical',
+        responsive = true,
         collapsedState,
         onCollapseChange,
         ...rest
@@ -448,6 +521,11 @@ const ReqoreTimeline = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const baseTheme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+      const isMobile = useReqoreProperty('isMobile');
+      // Horizontal step rows get cramped on narrow viewports. Auto-fall back to vertical on
+      // mobile unless the caller explicitly opts out via `responsive={false}`.
+      const direction =
+        responsive && isMobile && directionProp === 'horizontal' ? 'vertical' : directionProp;
 
       // Internal state used only in uncontrolled mode
       const [internalCollapsedStates, setInternalCollapsedStates] = useState<
@@ -511,7 +589,8 @@ const ReqoreTimeline = memo(
           theme={theme}
           size={size}
           fluid={fluid}
-          className={`${className || ''} reqore-timeline`}
+          direction={direction}
+          className={`${className || ''} reqore-timeline reqore-timeline-${direction}`}
           role='list'
         >
           {items.map((item, index) => (
@@ -524,6 +603,7 @@ const ReqoreTimeline = memo(
               customTheme={customTheme}
               intent={intent}
               baseTheme={baseTheme}
+              direction={direction}
               isCollapsed={getIsCollapsed(item, index)}
               onToggleCollapse={toggleCollapse}
               onItemClick={handleItemClick}
