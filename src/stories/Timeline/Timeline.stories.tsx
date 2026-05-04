@@ -634,6 +634,165 @@ export const ControlledCollapse: Story = {
   },
 };
 
+const horizontalProgressItems: IReqoreTimelineProps['items'] = [
+  {
+    title: 'Cart',
+    timestamp: 'Step 1',
+    icon: 'ShoppingCartLine',
+    intent: 'success',
+  },
+  {
+    title: 'Address',
+    timestamp: 'Step 2',
+    icon: 'MapPinLine',
+    intent: 'success',
+  },
+  {
+    title: 'Payment',
+    timestamp: 'Step 3',
+    icon: 'BankCardLine',
+    intent: 'info',
+  },
+  {
+    title: 'Confirmation',
+    timestamp: 'Step 4',
+    icon: 'CheckboxCircleLine',
+  },
+];
+
+export const Horizontal: Story = {
+  render: (args) => (
+    <div style={{ width: '100%', padding: '24px 0' }}>
+      <ReqoreTimeline {...args} direction='horizontal' items={horizontalProgressItems} />
+    </div>
+  ),
+};
+
+export const HorizontalWithBadges: Story = {
+  render: (args) => (
+    <div style={{ width: '100%', padding: '24px 0' }}>
+      <ReqoreTimeline
+        {...args}
+        direction='horizontal'
+        items={[
+          {
+            title: 'Created',
+            timestamp: '09:00',
+            icon: 'AddLine',
+            badge: { label: 'New', intent: 'info' },
+          },
+          {
+            title: 'Reviewed',
+            timestamp: '11:30',
+            icon: 'EyeLine',
+            intent: 'info',
+            badge: 3,
+          },
+          {
+            title: 'Approved',
+            timestamp: '14:00',
+            icon: 'CheckLine',
+            intent: 'success',
+            badge: { label: 'Done' },
+          },
+          {
+            title: 'Shipped',
+            timestamp: '16:45',
+            icon: 'TruckLine',
+            intent: 'pending',
+          },
+        ]}
+      />
+    </div>
+  ),
+};
+
+export const HorizontalSizes: Story = {
+  render: (args) => (
+    <ReqoreControlGroup vertical gapSize='big' fluid>
+      <div>
+        <h4 style={{ marginBottom: '8px' }}>Small</h4>
+        <ReqoreTimeline {...args} direction='horizontal' size='small' />
+      </div>
+      <div>
+        <h4 style={{ marginBottom: '8px' }}>Normal</h4>
+        <ReqoreTimeline {...args} direction='horizontal' size='normal' />
+      </div>
+      <div>
+        <h4 style={{ marginBottom: '8px' }}>Big</h4>
+        <ReqoreTimeline {...args} direction='horizontal' size='big' />
+      </div>
+      <div>
+        <h4 style={{ marginBottom: '8px' }}>Huge</h4>
+        <ReqoreTimeline {...args} direction='horizontal' size='huge' />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  args: {
+    items: horizontalProgressItems,
+  },
+};
+
+export const HorizontalInteractive: Story = {
+  render: (args) => {
+    const [step, setStep] = useState(1);
+
+    const items: IReqoreTimelineProps['items'] = [
+      'Cart',
+      'Address',
+      'Payment',
+      'Review',
+      'Confirmation',
+    ].map((label, i) => ({
+      title: label,
+      icon: 'CheckLine',
+      intent: i < step ? 'success' : i === step ? 'info' : undefined,
+      onClick: () => setStep(i),
+    }));
+
+    return (
+      <ReqoreControlGroup vertical gapSize='normal' fluid>
+        <p>Current step: {items[step]?.title}</p>
+        <ReqoreTimeline {...args} direction='horizontal' items={items} />
+      </ReqoreControlGroup>
+    );
+  },
+};
+
+export const HorizontalIgnoresContentAndCollapse: Story = {
+  render: (args) => (
+    <div style={{ width: '100%', padding: '24px 0' }}>
+      <ReqoreTimeline
+        {...args}
+        direction='horizontal'
+        items={[
+          {
+            title: 'First',
+            icon: 'Number1',
+            // content and collapsible are intentionally ignored in horizontal mode
+            content: 'This content should NOT render in horizontal mode.',
+            collapsible: true,
+            isCollapsed: false,
+          },
+          {
+            title: 'Second',
+            icon: 'Number2',
+            intent: 'info',
+            content: 'Hidden too.',
+            collapsible: true,
+          },
+          {
+            title: 'Third',
+            icon: 'Number3',
+            intent: 'success',
+            content: 'And this one.',
+          },
+        ]}
+      />
+    </div>
+  ),
+};
+
 export const WorkflowExample: Story = {
   render: (args) => (
     <ReqoreTimeline
