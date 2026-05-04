@@ -12,6 +12,7 @@ import {
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreComponent,
@@ -81,6 +82,12 @@ export interface IReqoreTimelineProps
    * marker, title, timestamp and badges are shown.
    */
   direction?: 'vertical' | 'horizontal';
+  /**
+   * When `true` (default), `direction='horizontal'` automatically falls back to vertical on
+   * mobile viewports — horizontal step indicators get cramped on narrow screens. Set to
+   * `false` to force the requested direction regardless of viewport.
+   */
+  responsive?: boolean;
   /**
    * Controlled collapsed state — map of item index to collapsed boolean.
    * When provided, the component becomes controlled for those indices.
@@ -504,7 +511,8 @@ const ReqoreTimeline = memo(
         intent,
         fluid = false,
         className,
-        direction = 'vertical',
+        direction: directionProp = 'vertical',
+        responsive = true,
         collapsedState,
         onCollapseChange,
         ...rest
@@ -513,6 +521,11 @@ const ReqoreTimeline = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const baseTheme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+      const isMobile = useReqoreProperty('isMobile');
+      // Horizontal step rows get cramped on narrow viewports. Auto-fall back to vertical on
+      // mobile unless the caller explicitly opts out via `responsive={false}`.
+      const direction =
+        responsive && isMobile && directionProp === 'horizontal' ? 'vertical' : directionProp;
 
       // Internal state used only in uncontrolled mode
       const [internalCollapsedStates, setInternalCollapsedStates] = useState<
