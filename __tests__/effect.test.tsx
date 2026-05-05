@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react';
-import React from 'react';
 import {
   ReqoreContent,
   ReqoreEffect,
@@ -67,4 +66,27 @@ test('Renders <ReqoreTextEffect /> properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-text-effect').length).toBe(1);
+});
+
+test('Renders <ReqoreTextEffect /> with frost effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTextEffect
+            as='p'
+            effect={{
+              frost: true,
+              weight: 'bold',
+            }}
+          >
+            Frosted text
+          </ReqoreTextEffect>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-text-effect').length).toBe(1);
+  expect(document.querySelector('.reqore-text-effect')!.textContent).toBe('Frosted text');
 });
