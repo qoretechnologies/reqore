@@ -132,6 +132,14 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
     opacity?: number;
     when?: 'always' | 'hover' | 'focus' | 'active';
   };
+  frost?:
+    | boolean
+    | {
+        color?: TReqoreEffectColor;
+        opacity?: number;
+        shadowOpacity?: number;
+        blur?: number;
+      };
   interactive?: boolean;
 }
 
@@ -489,6 +497,34 @@ export const StyledTextEffect = styled(StyledEffect).attrs((props) => ({ ...prop
           -webkit-text-fill-color: transparent !important;
         `
       : undefined}
+
+  ${({ effect, theme }: IReqoreTextEffectProps) => {
+    if (!effect?.frost) {
+      return undefined;
+    }
+
+    const frost = typeof effect.frost === 'boolean' ? {} : effect.frost;
+    const color = getColorFromMaybeString(theme, frost.color || 'main:lighten:8');
+    const opacity = frost.opacity ?? 0.72;
+    const shadowOpacity = frost.shadowOpacity ?? 0.28;
+    const blur = frost.blur ?? 0.4;
+
+    return css`
+      color: transparent !important;
+      background: linear-gradient(
+        180deg,
+        ${rgba(color, Math.min(opacity + 0.18, 1))},
+        ${rgba(color, opacity * 0.52)}
+      );
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      text-shadow:
+        0 1px 0 ${rgba(Colors.LIGHT, shadowOpacity)},
+        0 -1px 0 ${rgba(Colors.DARK, shadowOpacity * 0.7)},
+        0 0 ${blur}px ${rgba(color, shadowOpacity)};
+    `;
+  }}
 `;
 
 export const ReqoreEffect = ({ children, ...rest }: IReqoreTextEffectProps) => {
