@@ -68,13 +68,14 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
   padding: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size] * 3}px;
-  background-color: ${({ theme, flat }) =>
-    flat ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
-  border: 1px solid
-    ${({ theme, intent, flat }) =>
-      flat
-        ? 'transparent'
-        : changeLightness(intent ? theme.intents[intent] : getMainBackgroundColor(theme), 0.08)};
+  background-color: ${({ theme }) => changeDarkness(getMainBackgroundColor(theme), 0.03)};
+  border: ${({ theme, intent, flat }) =>
+    flat
+      ? 0
+      : `1px solid ${changeLightness(
+          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+          0.08
+        )}`};
   border-radius: ${({ rounded }) => (rounded ? '8px' : 0)};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;

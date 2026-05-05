@@ -1,4 +1,5 @@
 import { forwardRef, memo } from 'react';
+import { rgba } from 'polished';
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, TEXT_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
@@ -21,7 +22,7 @@ import {
   IWithReqoreSize,
   IWithReqoreTooltip,
 } from '../../types/global';
-import { StyledTextEffect } from '../Effect';
+import { IReqoreEffect, StyledEffect, StyledTextEffect } from '../Effect';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreCalloutProps
@@ -37,6 +38,7 @@ export interface IReqoreCalloutProps
     IWithReqoreTooltip {
   accentPosition?: 'left' | 'top';
   accentSize?: number;
+  contentEffect?: IReqoreEffect;
   rounded?: boolean;
   interactive?: boolean;
 }
@@ -45,7 +47,7 @@ interface IStyledCalloutProps extends IReqoreCalloutProps {
   theme: IReqoreTheme;
 }
 
-const StyledCallout = styled(StyledTextEffect)<IStyledCalloutProps>`
+const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
   position: relative;
   display: flex;
   align-items: center;
@@ -59,13 +61,10 @@ const StyledCallout = styled(StyledTextEffect)<IStyledCalloutProps>`
       : `${PADDING_FROM_SIZE[size] * 3 + accentSize}px ${PADDING_FROM_SIZE[size] * 3}px ${
           PADDING_FROM_SIZE[size] * 3
         }px`};
-  background-color: ${({ theme, flat }) =>
-    flat ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+  background-color: ${({ theme }) => changeDarkness(getMainBackgroundColor(theme), 0.03)};
+  border: ${({ theme, flat }) =>
+    flat ? 0 : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
   border-radius: ${({ rounded }) => (rounded ? '8px' : 0)};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size] * 1.2}px;
-  line-height: 1.25;
-  font-weight: 800;
   overflow: hidden;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
   transition:
@@ -111,6 +110,16 @@ const StyledCallout = styled(StyledTextEffect)<IStyledCalloutProps>`
       : undefined}
 `;
 
+const StyledCalloutContent = styled(StyledTextEffect)<{
+  size: IReqoreCalloutProps['size'];
+  theme: IReqoreTheme;
+}>`
+  color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
+  font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size] * 1.2}px;
+  line-height: 1.25;
+  font-weight: 800;
+`;
+
 export const ReqoreCallout = memo(
   forwardRef<HTMLDivElement, IReqoreCalloutProps>(
     (
@@ -128,6 +137,7 @@ export const ReqoreCallout = memo(
         tooltip,
         rounded,
         effect,
+        contentEffect,
         interactive,
         onClick,
         accentPosition = 'left',
@@ -162,7 +172,14 @@ export const ReqoreCallout = memo(
           accentSize={accentSize}
           className={`${className || ''} reqore-callout`}
         >
-          {children}
+          <StyledCalloutContent
+            theme={theme}
+            size={size}
+            effect={contentEffect || {}}
+            className='reqore-callout-content'
+          >
+            {children}
+          </StyledCalloutContent>
         </ReqoreTooltipComponent>
       );
     }

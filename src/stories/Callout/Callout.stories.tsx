@@ -38,6 +38,9 @@ const meta = {
       name: 'Accent size',
       defaultValue: 5,
     }),
+    ...createArg('contentEffect', {
+      name: 'Content effect',
+    }),
   },
 } as StoryMeta<typeof ReqoreCallout>;
 
@@ -110,8 +113,36 @@ export const Frosted: Story = {
   render: Template,
   args: {
     children: 'Important context can use the frosted text effect.',
-    effect: {
+    contentEffect: {
       frost: true,
+    },
+  },
+};
+
+export const BackgroundEffect: Story = {
+  render: Template,
+  args: {
+    children: 'Container effects apply to the callout surface.',
+    effect: {
+      gradient: {
+        colors: {
+          0: 'info:darken:2',
+          100: 'success:darken:2',
+        },
+        borderColor: 'info',
+      },
+    },
+  },
+};
+
+export const ContentEffect: Story = {
+  render: Template,
+  args: {
+    children: 'Content effects apply only to the callout text.',
+    contentEffect: {
+      frost: true,
+      uppercase: true,
+      spaced: 1,
     },
   },
 };
