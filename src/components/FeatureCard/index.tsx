@@ -17,7 +17,7 @@ import {
 } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { DisabledElement } from '../../styles';
+import { DisabledElement, RaisedElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -71,6 +71,12 @@ export interface IReqoreFeatureCardProps
   /** Hide the card's tinted background. */
   transparent?: boolean;
   /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` (no border); the highlight is suppressed
+   * when `flat={false}` because the border already provides surface definition.
+   */
+  raised?: boolean;
+  /**
    * Whether the description wraps when it overflows.
    * - `true` (default): wrap to multiple lines
    * - `false`: single line with ellipsis
@@ -78,9 +84,10 @@ export interface IReqoreFeatureCardProps
   wrap?: boolean;
 }
 
-interface IStyledFeatureCardProps extends Omit<IReqoreFeatureCardProps, 'transparent'> {
+interface IStyledFeatureCardProps extends Omit<IReqoreFeatureCardProps, 'transparent' | 'raised'> {
   theme: IReqoreTheme;
   $transparent?: boolean;
+  $raised?: boolean;
 }
 
 const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
@@ -106,6 +113,8 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
   position: relative;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
   transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
+
+  ${({ $raised, flat }) => $raised && flat !== false && RaisedElement}
 
   ${({ disabled }) => disabled && DisabledElement}
 
@@ -219,6 +228,7 @@ export const ReqoreFeatureCard = memo(
         tooltip,
         rounded = true,
         transparent = false,
+        raised,
         wrap = true,
         effect,
         interactive,
@@ -249,6 +259,7 @@ export const ReqoreFeatureCard = memo(
           tooltip={tooltip}
           rounded={rounded}
           $transparent={transparent}
+          $raised={raised}
           effect={{ interactive: isInteractive, ...effect }}
           interactive={isInteractive}
           onClick={onClick}

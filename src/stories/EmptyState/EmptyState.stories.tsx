@@ -229,3 +229,13 @@ export const SearchNoResults: Story = {
     />
   ),
 };
+
+export const Raised: Story = {
+  args: {
+    icon: 'InboxLine',
+    title: 'Raised empty state',
+    description:
+      'Subtle inset highlight gives the placeholder surface a tactile, slightly elevated feel.',
+    raised: true,
+  },
+};

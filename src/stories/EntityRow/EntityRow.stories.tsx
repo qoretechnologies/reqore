@@ -212,3 +212,15 @@ export const Transparent: Story = {
     actions: [{ label: 'Open' }],
   },
 };
+
+export const Raised: Story = {
+  args: {
+    label: 'Raised entity row',
+    description: 'Inset top highlight + bottom shadow give the surface tactile depth.',
+    metadata: 'Last run: success · just now',
+    icon: 'PlayCircleLine',
+    intent: 'success',
+    raised: true,
+    actions: [{ label: 'Run', icon: 'PlayLine' }],
+  },
+};

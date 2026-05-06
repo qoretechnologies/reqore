@@ -6,7 +6,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { DisabledElement } from '../../styles';
+import { DisabledElement, RaisedElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -65,6 +65,12 @@ export interface IReqoreEntityRowProps
   rounded?: boolean;
   /** Show the leading icon tile. Default `true` when icon/iconImage is provided. */
   showIcon?: boolean;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` (no border); the highlight is suppressed
+   * when `flat={false}` because the border already provides surface definition.
+   */
+  raised?: boolean;
   /** Effect applied to the label text. */
   labelEffect?: IReqoreEffect;
   /** Effect applied to the description text. */
@@ -90,6 +96,7 @@ interface IStyledRowProps {
   rounded?: boolean;
   disabled?: boolean;
   $hasIcon?: boolean;
+  $raised?: boolean;
 }
 
 const ICON_TILE_SIZE_FROM_SIZE: Record<TSizes, number> = {
@@ -139,6 +146,8 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
           : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)};
       }
     `}
+
+  ${({ $raised, flat }) => $raised && flat !== false && RaisedElement}
 
   ${({ disabled }) => disabled && DisabledElement}
 `;
@@ -221,6 +230,7 @@ const ReqoreEntityRow = memo(
         flat = true,
         fluid = true,
         rounded = true,
+        raised,
         customTheme,
         inheritCustomTheme,
         disabled,
@@ -261,6 +271,7 @@ const ReqoreEntityRow = memo(
           $fluid={fluid}
           flat={flat}
           rounded={rounded}
+          $raised={raised}
           $clickable={interactive}
           disabled={disabled}
           $hasIcon={hasIcon}

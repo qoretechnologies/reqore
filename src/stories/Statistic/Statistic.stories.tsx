@@ -438,3 +438,27 @@ export const StackedStatistics: Story = {
     </ReqoreControlGroup>
   ),
 };
+
+export const Raised: Story = {
+  render: () => (
+    <ReqoreControlGroup gapSize='huge'>
+      <ReqoreStatistic value='12,345' label='Total Users' icon='UserLine' rounded raised />
+      <ReqoreStatistic
+        value='$48,200'
+        label='Revenue'
+        icon='MoneyDollarCircleLine'
+        rounded
+        raised
+        intent='success'
+      />
+      <ReqoreStatistic
+        value={342}
+        label='Active Sessions'
+        icon='FlashlightLine'
+        rounded
+        raised
+        intent='info'
+      />
+    </ReqoreControlGroup>
+  ),
+};

@@ -215,3 +215,17 @@ test('Tooltip on <Button /> works', () => {
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
+
+test('Renders <Button /> with raised effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton flat raised>Raised</ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-button').length).toBe(1);
+});

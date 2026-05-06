@@ -330,3 +330,17 @@ test('Renders <SeverityRow /> with wrap=true by default', () => {
 
   expect(document.querySelectorAll('.reqore-severity-row-description').length).toBe(1);
 });
+
+test('Renders <SeverityRow /> with raised effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow label='Raised' raised />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-severity-row').length).toBe(1);
+});

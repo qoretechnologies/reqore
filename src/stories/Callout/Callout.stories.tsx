@@ -293,3 +293,15 @@ export const FullyComposed: Story = {
     accentSize: 4,
   },
 };
+
+export const Raised: Story = {
+  render: Template,
+  args: {
+    label: 'Raised callout',
+    description: 'Pairs the accent strip with a subtle inset highlight for a tactile surface.',
+    icon: 'InformationLine',
+    intent: 'info',
+    flat: true,
+    raised: true,
+  },
+};

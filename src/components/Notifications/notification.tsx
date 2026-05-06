@@ -22,6 +22,7 @@ import {
   IWithReqoreOpaque,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import { RaisedElement } from '../../styles';
 import { StyledEffect } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon from '../Icon';
@@ -63,6 +64,7 @@ export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   asMessage?: boolean;
   margin?: 'top' | 'bottom' | 'both' | 'none';
   backgroundBlur?: number;
+  raised?: boolean;
 }
 
 const timeoutAnimation = keyframes`
@@ -120,6 +122,7 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     minimal,
     opaque = true,
     backgroundBlur,
+    raised,
   }: IReqoreNotificationStyle) => css`
     background-color: ${minimal
       ? 'transparent'
@@ -138,6 +141,8 @@ export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotification
     css`
       box-shadow: 0px 0px 30px 10px ${rgba('#000000', 0.3)};
     `}
+
+    ${raised && flat && !minimal && RaisedElement}
 
     ${timeout &&
     css`

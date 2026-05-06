@@ -245,3 +245,17 @@ test('Auto-detects interactive when onClick is provided', () => {
   fireEvent.click(document.querySelector('.reqore-feature-card')!);
   expect(handleClick).toHaveBeenCalledTimes(1);
 });
+
+test('Renders <FeatureCard /> with raised effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreFeatureCard label='Raised' flat raised />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-feature-card').length).toBe(1);
+});

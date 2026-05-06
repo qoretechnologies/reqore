@@ -6,7 +6,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { DisabledElement } from '../../styles';
+import { DisabledElement, RaisedElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -55,6 +55,12 @@ export interface IReqoreSeverityRowProps
   showStrip?: boolean;
   /** Rounded corners on the row. Default `true`. */
   rounded?: boolean;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` (no border) since a border already provides
+   * surface definition; the highlight is suppressed when `flat={false}`.
+   */
+  raised?: boolean;
   /** Effect applied to the label text. */
   labelEffect?: IReqoreEffect;
   /** Effect applied to the description text. */
@@ -77,6 +83,7 @@ interface IStyledRowProps {
   $clickable?: boolean;
   rounded?: boolean;
   disabled?: boolean;
+  $raised?: boolean;
 }
 
 const stripColorFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
@@ -118,6 +125,8 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
           : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)};
       }
     `}
+
+  ${({ $raised, flat }) => $raised && flat !== false && RaisedElement}
 
   ${({ disabled }) => disabled && DisabledElement}
 `;
@@ -185,6 +194,7 @@ const ReqoreSeverityRow = memo(
         flat = true,
         fluid = true,
         rounded = true,
+        raised,
         customTheme,
         inheritCustomTheme,
         disabled,
@@ -218,6 +228,7 @@ const ReqoreSeverityRow = memo(
           $fluid={fluid}
           flat={flat}
           rounded={rounded}
+          $raised={raised}
           $clickable={interactive}
           disabled={disabled}
           effect={effect}

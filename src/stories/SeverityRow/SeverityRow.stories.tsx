@@ -199,3 +199,15 @@ export const Disabled: Story = {
     actions: [{ label: 'Investigate' }],
   },
 };
+
+export const Raised: Story = {
+  args: {
+    label: 'Raised severity row',
+    description:
+      'Subtle inset highlight on top + inset shadow on bottom — best paired with `flat={true}` (default).',
+    intent: 'danger',
+    raised: true,
+    leading: <ReqoreTag size='tiny' intent='danger' label='Critical' />,
+    actions: [{ label: 'Investigate', intent: 'danger' }],
+  },
+};

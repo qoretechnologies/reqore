@@ -11,7 +11,7 @@ import {
 } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { DisabledElement } from '../../styles';
+import { DisabledElement, RaisedElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -75,11 +75,18 @@ export interface IReqoreCalloutProps
   interactive?: boolean;
   /** Hide the tinted surface background. */
   transparent?: boolean;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` (no border); the highlight is suppressed
+   * when `flat={false}` because the border already provides surface definition.
+   */
+  raised?: boolean;
 }
 
-interface IStyledCalloutProps extends Omit<IReqoreCalloutProps, 'transparent'> {
+interface IStyledCalloutProps extends Omit<IReqoreCalloutProps, 'transparent' | 'raised'> {
   theme: IReqoreTheme;
   $transparent?: boolean;
+  $raised?: boolean;
   $hasContent?: boolean;
 }
 
@@ -135,6 +142,8 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
     background-color: ${({ theme, intent }) =>
       intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.22)};
   }
+
+  ${({ $raised, flat }) => $raised && flat !== false && RaisedElement}
 
   ${({ disabled }) => disabled && DisabledElement}
 
@@ -207,6 +216,7 @@ export const ReqoreCallout = memo(
         tooltip,
         rounded = true,
         transparent = false,
+        raised,
         effect,
         contentEffect,
         interactive,
@@ -246,6 +256,7 @@ export const ReqoreCallout = memo(
           tooltip={tooltip}
           rounded={rounded}
           $transparent={transparent}
+          $raised={raised}
           effect={{ interactive: isInteractive, ...effect }}
           interactive={isInteractive}
           onClick={onClick}

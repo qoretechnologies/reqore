@@ -297,3 +297,17 @@ test('Renders <Callout /> disabled', () => {
 
   expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
 });
+
+test('Renders <Callout /> with raised effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Raised' flat raised />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});

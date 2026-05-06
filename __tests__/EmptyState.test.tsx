@@ -279,3 +279,17 @@ test('Renders <EmptyState /> with all features', () => {
   );
   expect(document.querySelectorAll('.reqore-empty-state-actions').length).toBe(1);
 });
+
+test('Renders <EmptyState /> with raised effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEmptyState title='Raised' description='Test' raised />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-empty-state').length).toBe(1);
+});

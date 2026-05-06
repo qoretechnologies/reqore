@@ -308,3 +308,17 @@ test('Renders <EntityRow /> with wrap=true by default', () => {
 
   expect(document.querySelectorAll('.reqore-entity-row-description').length).toBe(1);
 });
+
+test('Renders <EntityRow /> with raised effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Raised' raised />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-entity-row').length).toBe(1);
+});

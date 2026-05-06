@@ -37,7 +37,12 @@ import { getOneHigherSize, isActionShown } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { ACTIVE_ICON_SCALE, DisabledElement, INACTIVE_ICON_SCALE } from '../../styles';
+import {
+  ACTIVE_ICON_SCALE,
+  DisabledElement,
+  INACTIVE_ICON_SCALE,
+  RaisedElement,
+} from '../../styles';
 import {
   IReqoreComponent,
   IReqoreIntent,
@@ -164,6 +169,13 @@ export interface IReqorePanelProps
   stickyHeader?: boolean;
   stickyHeaderOffset?: number;
   floatingActions?: boolean;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` (no border); the highlight is suppressed
+   * when a border is rendered (i.e. `flat={false}` or an `intent` is set)
+   * because the border already provides surface definition.
+   */
+  raised?: boolean;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -296,6 +308,8 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
           }
         `
       : undefined}
+
+  ${({ raised, flat, intent }) => raised && flat && !intent && RaisedElement}
 
   ${({ fill, isCollapsed }) =>
     !isCollapsed && fill

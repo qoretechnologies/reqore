@@ -265,3 +265,15 @@ export const CustomTheme: Story = {
     customTheme: { main: '#1a1142' },
   },
 };
+
+export const Raised: Story = {
+  render: Template,
+  args: {
+    label: 'Raised card',
+    description:
+      'Inset top highlight + bottom shadow. Pairs with `flat={true}` to add depth without a hard border.',
+    intent: 'info',
+    flat: true,
+    raised: true,
+  },
+};
