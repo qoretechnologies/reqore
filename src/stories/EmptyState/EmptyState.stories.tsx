@@ -4,7 +4,7 @@ import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Data Display/EmptyState/Stories',
+  title: 'Display/Empty State/Stories',
   component: ReqoreEmptyState,
 } as StoryMeta<typeof ReqoreEmptyState>;
 
@@ -228,4 +228,14 @@ export const SearchNoResults: Story = {
       }
     />
   ),
+};
+
+export const Raised: Story = {
+  args: {
+    icon: 'InboxLine',
+    title: 'Raised empty state',
+    description:
+      'Subtle inset highlight gives the placeholder surface a tactile, slightly elevated feel.',
+    raised: true,
+  },
 };

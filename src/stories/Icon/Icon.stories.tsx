@@ -1,5 +1,5 @@
 import { StoryObj } from '@storybook/react';
-import { ReqoreIcon, ReqorePanel } from '../../index';
+import { ReqoreControlGroup, ReqoreIcon, ReqorePanel, ReqoreUIProvider } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -168,5 +168,50 @@ export const Basic: Story = {
         </ReqorePanel>
       </>
     );
+  },
+};
+
+export const Glow: Story = {
+  render: () => (
+    <ReqorePanel padded>
+      <ReqoreControlGroup gapSize='huge' verticalAlign='center'>
+        <ReqoreIcon icon='SparklingLine' size='huge' intent='info' glow />
+        <ReqoreIcon icon='AlarmWarningLine' size='huge' intent='danger' glow />
+        <ReqoreIcon icon='CheckDoubleLine' size='huge' intent='success' glow />
+        <ReqoreIcon icon='AlertLine' size='huge' intent='warning' glow />
+        <ReqoreIcon icon='InformationLine' size='huge' color='#bd2ff6' glow />
+        <ReqoreIcon
+          icon='Star2Line'
+          size='huge'
+          intent='success'
+          glow={{ color: 'success', blur: 16, opacity: 0.7 }}
+        />
+      </ReqoreControlGroup>
+    </ReqorePanel>
+  ),
+};
+
+export const GlobalGlowingIcons: Story = {
+  render: () => (
+    <ReqoreUIProvider options={{ glowingIcons: true }}>
+      <ReqorePanel padded>
+        <ReqoreControlGroup gapSize='huge' verticalAlign='center'>
+          <ReqoreIcon icon='SparklingLine' size='huge' intent='info' />
+          <ReqoreIcon icon='AlarmWarningLine' size='huge' intent='danger' />
+          <ReqoreIcon icon='CheckDoubleLine' size='huge' intent='success' />
+          <ReqoreIcon icon='AlertLine' size='huge' intent='warning' />
+          {/* Opt-out: pass glow={false} explicitly */}
+          <ReqoreIcon icon='InformationLine' size='huge' intent='info' glow={false} />
+        </ReqoreControlGroup>
+      </ReqorePanel>
+    </ReqoreUIProvider>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Setting `glowingIcons: true` on the UI provider applies the glow to every ReqoreIcon by default. Individual icons can opt out with `glow={false}`.',
+      },
+    },
   },
 };

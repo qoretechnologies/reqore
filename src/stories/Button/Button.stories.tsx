@@ -485,3 +485,11 @@ export const Loading: Story = {
     loading: true,
   },
 };
+
+export const Raised: Story = {
+  args: {
+    label: 'Raised button',
+    flat: true,
+    raised: true,
+  },
+};

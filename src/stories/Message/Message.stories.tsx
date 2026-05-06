@@ -183,3 +183,13 @@ export const WithBackgroundBlur: Story = {
     opaque: false,
   },
 };
+
+export const Raised: Story = {
+  args: {
+    title: 'Raised message',
+    children: 'Subtle inset highlight on top + inset shadow on bottom for a tactile surface.',
+    intent: 'info',
+    flat: true,
+    raised: true,
+  },
+};

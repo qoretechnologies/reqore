@@ -5,7 +5,7 @@ import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Data Display/Statistic/Stories',
+  title: 'Display/Statistic/Stories',
   component: ReqoreStatistic,
 } as StoryMeta<typeof ReqoreStatistic>;
 
@@ -434,6 +434,30 @@ export const StackedStatistics: Story = {
         fluid
         flat={false}
         align='center'
+      />
+    </ReqoreControlGroup>
+  ),
+};
+
+export const Raised: Story = {
+  render: () => (
+    <ReqoreControlGroup gapSize='huge'>
+      <ReqoreStatistic value='12,345' label='Total Users' icon='UserLine' rounded raised />
+      <ReqoreStatistic
+        value='$48,200'
+        label='Revenue'
+        icon='MoneyDollarCircleLine'
+        rounded
+        raised
+        intent='success'
+      />
+      <ReqoreStatistic
+        value={342}
+        label='Active Sessions'
+        icon='FlashlightLine'
+        rounded
+        raised
+        intent='info'
       />
     </ReqoreControlGroup>
   ),

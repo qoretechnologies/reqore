@@ -49,6 +49,12 @@ export interface IReqoreEmptyStateProps
   /** Background opacity */
   opacity?: number;
   gapSize?: TSizes;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` (default); the highlight is suppressed
+   * when a border is rendered.
+   */
+  raised?: boolean;
 }
 
 export const ReqoreEmptyState = memo(
@@ -75,6 +81,7 @@ export const ReqoreEmptyState = memo(
         effect,
         className,
         gapSize,
+        raised,
         ...rest
       },
       ref
@@ -107,6 +114,7 @@ export const ReqoreEmptyState = memo(
           minimal
           flat={flat}
           padded='massive'
+          raised={raised}
           {...rest}
           tooltip={tooltip}
           ref={ref}

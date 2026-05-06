@@ -146,3 +146,162 @@ export const ContentEffect: Story = {
     },
   },
 };
+
+export const WithLabel: Story = {
+  render: Template,
+  args: {
+    label: 'Configuration required',
+    description:
+      'Set up your AI provider before publishing this Qog. The build will succeed but runs will fail at execution time.',
+    intent: 'warning',
+  },
+};
+
+export const WithIcon: Story = {
+  render: Template,
+  args: {
+    label: 'Heads up',
+    description: 'Icons inherit the intent colour automatically.',
+    icon: 'InformationLine',
+    intent: 'info',
+  },
+};
+
+export const WithBadge: Story = {
+  render: Template,
+  args: {
+    label: 'New release available',
+    description: 'A new version of the platform is ready to install.',
+    icon: 'AlertLine',
+    intent: 'info',
+    badge: { label: 'v7.2', intent: 'info' },
+  },
+};
+
+export const WithMultipleBadges: Story = {
+  render: Template,
+  args: {
+    label: 'Pending approvals',
+    description: 'Three workflows are waiting for review across two business areas.',
+    icon: 'TimeLine',
+    intent: 'pending',
+    badge: [3, { label: 'high priority', intent: 'danger' }],
+  },
+};
+
+export const Closable: Story = {
+  render: Template,
+  args: {
+    label: 'Cookie notice',
+    description: 'We use cookies to improve your experience. Dismiss to acknowledge.',
+    icon: 'InformationLine',
+    intent: 'info',
+    onClose: () => alert('Closed'),
+  },
+};
+
+export const Bordered: Story = {
+  render: Template,
+  args: {
+    label: 'Bordered callout',
+    description: 'flat={false} renders an intent-coloured border in addition to the accent.',
+    icon: 'InformationLine',
+    intent: 'info',
+    flat: false,
+  },
+};
+
+export const Square: Story = {
+  render: Template,
+  args: {
+    label: 'Square corners',
+    description: 'rounded={false} removes the corner radius.',
+    rounded: false,
+  },
+};
+
+export const Transparent: Story = {
+  render: Template,
+  args: {
+    label: 'Transparent surface',
+    description: 'transparent={true} drops the surface colour, leaving the accent strip visible.',
+    icon: 'InformationLine',
+    intent: 'info',
+    transparent: true,
+  },
+};
+
+export const Clickable: Story = {
+  render: Template,
+  args: {
+    label: 'Whole-callout click',
+    description: 'Provide onClick (or interactive) to enable hover/lift behaviour.',
+    icon: 'CursorLine',
+    intent: 'info',
+    onClick: () => alert('Callout clicked'),
+  },
+};
+
+export const Disabled: Story = {
+  render: Template,
+  args: {
+    label: 'Disabled callout',
+    description: 'Disabled callouts dim and do not respond to hover or click.',
+    icon: 'CloseCircleLine',
+    disabled: true,
+  },
+};
+
+export const Tooltip: Story = {
+  render: Template,
+  args: {
+    children: 'Hover me to see a tooltip.',
+    tooltip: 'Callouts expose the same tooltip prop as every other Reqore component.',
+  },
+};
+
+export const Fixed: Story = {
+  render: (args) => <ReqoreCallout {...args} fixed />,
+  args: {
+    label: 'Fixed width callout',
+    description: 'fixed={true} prevents the callout from stretching.',
+    icon: 'InformationLine',
+    intent: 'info',
+  },
+};
+
+export const CustomTheme: Story = {
+  render: Template,
+  args: {
+    label: 'Branded callout',
+    description: 'customTheme overrides the surface colour while keeping the accent strip.',
+    icon: 'InformationLine',
+    customTheme: { main: '#1a1142' },
+  },
+};
+
+export const FullyComposed: Story = {
+  render: Template,
+  args: {
+    label: 'New deploy ready · staging',
+    description:
+      'Promotion to production is gated on the staging smoke tests; pass them then click Promote.',
+    icon: 'RocketLine',
+    intent: 'success',
+    badge: { label: 'v7.2', intent: 'success' },
+    onClose: () => alert('Dismissed'),
+    accentSize: 4,
+  },
+};
+
+export const Raised: Story = {
+  render: Template,
+  args: {
+    label: 'Raised callout',
+    description: 'Pairs the accent strip with a subtle inset highlight for a tactile surface.',
+    icon: 'InformationLine',
+    intent: 'info',
+    flat: true,
+    raised: true,
+  },
+};

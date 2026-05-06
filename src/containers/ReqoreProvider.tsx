@@ -262,6 +262,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         options && 'closeModalsOnEscPress' in options ? options.closeModalsOnEscPress : true,
       customPortalId: options?.customPortalId,
       uiScale: options?.uiScale,
+      glowingIcons: options?.glowingIcons ?? false,
       errorBoundaryOptions: options?.errorBoundaryOptions || DEFAULT_ERROR_BOUNDARY_OPTIONS,
     }),
     [options]
@@ -284,6 +285,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         getAndIncreaseZIndex,
         animations: resolvedOptions.animations,
         tooltips: resolvedOptions.tooltips,
+        glowingIcons: resolvedOptions.glowingIcons,
         closePopoversOnEscPress: resolvedOptions.closePopoversOnEscPress,
         // ESC Closable modals management
         closeModalsOnEscPress: resolvedOptions.closeModalsOnEscPress,

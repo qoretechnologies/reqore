@@ -316,3 +316,17 @@ test('Renders <Statistic /> as interactive when onClick is provided', () => {
   expect(handleClick).toHaveBeenCalledTimes(1);
 });
 
+
+test('Renders <Statistic /> with raised effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreStatistic value={100} label='Raised' rounded raised />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-statistic').length).toBe(1);
+});

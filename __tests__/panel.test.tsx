@@ -222,3 +222,15 @@ test('Custom control props on <Panel />', () => {
   expect(screen.getAllByText('Close me')).toBeTruthy();
   expect(screen.getAllByText('Collapse me')).toBeTruthy();
 });
+
+test('Renders <Panel /> with raised effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqorePanel flat raised> Raised </ReqorePanel>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-panel').length).toBe(1);
+});

@@ -38,6 +38,13 @@ export interface IReqoreContext {
      * */
     delay?: number;
   };
+  /**
+   * When `true`, every `<ReqoreIcon />` rendered without an explicit `glow` prop
+   * receives a subtle drop-shadow glow using its resolved colour. Individual icons
+   * can opt out with `glow={false}`.
+   * @default false
+   */
+  readonly glowingIcons?: boolean;
   readonly customPortalId?: string;
   readonly closePopoversOnEscPress?: boolean;
   readonly closeModalsOnEscPress?: boolean;

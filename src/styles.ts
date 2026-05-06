@@ -121,3 +121,18 @@ export const DisabledElement = css`
 export const ReadOnlyElement = css`
   cursor: not-allowed;
 `;
+
+/**
+ * Subtle "raised" effect — adds a 1px inset highlight on the top edge and a
+ * 1px inset shadow on the bottom edge so a borderless surface reads as a
+ * tactile, slightly elevated card. Designed to be paired with `flat={true}`
+ * (no border); pass `raised={true}` on supporting components.
+ *
+ * The colours are theme-neutral additive overlays (white-on-dark, black-on-
+ * light) so the same recipe lights up correctly across every Reqore theme.
+ */
+export const RaisedElement = css`
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+`;

@@ -11,7 +11,7 @@ import {
 } from '../../helpers/colors';
 import { alignToFlexAlign, getOneHigherSize, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { DisabledElement, InactiveIconScale, ScaleIconOnHover } from '../../styles';
+import { DisabledElement, InactiveIconScale, RaisedElement, ScaleIconOnHover } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -81,6 +81,12 @@ export interface IReqoreStatisticProps
   transparent?: boolean;
   /** Background opacity */
   opacity?: number;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` (no border) and `rounded` so the surface
+   * reads as a tactile card; the highlight is suppressed when `flat={false}`.
+   */
+  raised?: boolean;
 }
 
 interface IStyledStatisticWrapper {
@@ -95,6 +101,7 @@ interface IStyledStatisticWrapper {
   flat?: boolean;
   intent?: string;
   opacity?: number;
+  $raised?: boolean;
 }
 
 const TREND_ICONS: Record<TReqoreStatisticTrendDirection, IReqoreIconName> = {
@@ -128,6 +135,9 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
       color: ${getReadableColor(theme, undefined, undefined, true)};
       padding: ${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 5}px;
     `}
+
+  ${({ $raised, $hasBackground, flat }) =>
+    $raised && $hasBackground && flat !== false && RaisedElement}
 
   ${({ $interactive, disabled }) =>
     $interactive && !disabled
@@ -184,6 +194,7 @@ const ReqoreStatistic = memo(
         rounded,
         transparent,
         opacity,
+        raised,
         className,
         ...rest
       },
@@ -200,8 +211,9 @@ const ReqoreStatistic = memo(
       );
 
       const hasBackground = useMemo(
-        () => !!(effect || rounded || flat !== undefined || transparent || opacity !== undefined),
-        [effect, rounded, flat, transparent, opacity]
+        () =>
+          !!(effect || rounded || flat !== undefined || transparent || opacity !== undefined || raised),
+        [effect, rounded, flat, transparent, opacity, raised]
       );
 
       const trendIntent = useMemo(
@@ -243,6 +255,7 @@ const ReqoreStatistic = memo(
           flat={flat}
           intent={intent}
           opacity={transparent ? 0 : opacity}
+          $raised={raised}
           effect={transformedEffect}
           className={`${className || ''} reqore-statistic`}
         >

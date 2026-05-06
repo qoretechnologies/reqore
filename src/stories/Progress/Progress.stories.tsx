@@ -291,6 +291,54 @@ export const Disabled: Story = {
   ),
 };
 
+export const WithTargetMarker: Story = {
+  render: (args) => (
+    <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px', paddingTop: '24px' }}>
+      <ReqoreProgress
+        {...args}
+        value={45}
+        target={80}
+        intent='warning'
+        label='Approaching target'
+        showValue
+      />
+      <ReqoreProgress
+        {...args}
+        value={78}
+        target={90}
+        intent='info'
+        label='AI coverage'
+        showValue
+      />
+      <ReqoreProgress
+        {...args}
+        value={95}
+        target={90}
+        intent='success'
+        label='Past target'
+        showValue
+      />
+      <ReqoreProgress
+        {...args}
+        value={50}
+        target={75}
+        targetLabel='Goal'
+        targetColor='success:lighten:2'
+        label='Custom target label and color'
+        showValue
+      />
+      <ReqoreProgress
+        {...args}
+        value={30}
+        target={60}
+        showTargetLabel={false}
+        label='Marker without label'
+        showValue
+      />
+    </ReqoreControlGroup>
+  ),
+};
+
 export const NotRounded: Story = {
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>

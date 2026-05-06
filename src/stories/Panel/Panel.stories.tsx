@@ -951,3 +951,13 @@ export const StickyHeaderOutsideScroll: Story = {
     await new Promise((resolve) => setTimeout(resolve, 200));
   },
 };
+
+export const Raised: Story = {
+  args: {
+    label: 'Raised panel',
+    children: 'Subtle inset highlight on top + inset shadow on bottom — best paired with `flat`.',
+    flat: true,
+    raised: true,
+    padded: true,
+  },
+};

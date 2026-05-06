@@ -31,6 +31,7 @@ import {
   ActiveIconScale,
   DisabledElement,
   InactiveIconScale,
+  RaisedElement,
   ReadOnlyElement,
   ScaleIconOnHover,
   StyledActiveContent,
@@ -111,6 +112,13 @@ export interface IReqoreButtonProps
 
   pill?: boolean;
   circle?: boolean;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` (no border) and a non-`minimal`/non-
+   * `transparent` button so the surface is visible. Suppressed when a border
+   * is rendered (`flat={false}`) since the border already provides definition.
+   */
+  raised?: boolean;
 }
 
 export interface IReqoreButtonStyle extends IReqoreButtonProps {
@@ -220,6 +228,9 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   }};
 
   ${InactiveIconScale};
+
+  ${({ raised, flat, minimal, transparent }) =>
+    raised && flat && !minimal && !transparent && RaisedElement}
 
   ${({ readOnly, animate, active, theme, color, effect }) =>
     !readOnly && !active

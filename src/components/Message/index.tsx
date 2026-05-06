@@ -55,6 +55,12 @@ export interface IReqoreMessageProps
   hasShadow?: boolean;
   margin?: 'top' | 'bottom' | 'both' | 'none';
   backgroundBlur?: number;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
+   * Best paired with `flat={true}` and a non-`minimal` message; suppressed
+   * when `flat={false}` (border) or `minimal={true}` (no surface).
+   */
+  raised?: boolean;
 }
 
 export interface IReqoreNotificationStyle extends IReqoreMessageProps {
