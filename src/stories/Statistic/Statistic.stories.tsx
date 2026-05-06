@@ -5,7 +5,7 @@ import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Data Display/Statistic/Stories',
+  title: 'Display/Statistic/Stories',
   component: ReqoreStatistic,
 } as StoryMeta<typeof ReqoreStatistic>;
 

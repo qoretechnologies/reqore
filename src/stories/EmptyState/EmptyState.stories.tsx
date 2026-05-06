@@ -4,7 +4,7 @@ import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Data Display/EmptyState/Stories',
+  title: 'Display/Empty State/Stories',
   component: ReqoreEmptyState,
 } as StoryMeta<typeof ReqoreEmptyState>;
 

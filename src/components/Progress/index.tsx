@@ -63,6 +63,17 @@ export interface IReqoreProgressProps
   rightIconColor?: TReqoreEffectColor;
   /** Right icon props */
   rightIconProps?: IReqoreIconProps;
+  /**
+   * Target marker drawn on top of the track at this value (must be between 0 and `max`).
+   * Useful for visualising goals (e.g. "90% target coverage"). Hidden when not set.
+   */
+  target?: number;
+  /** Optional label rendered above the target marker. Defaults to the target percentage. */
+  targetLabel?: string;
+  /** Whether to render the marker label above the marker line. Defaults to `true`. */
+  showTargetLabel?: boolean;
+  /** Custom color for the target marker line/label. Falls back to a theme-readable colour. */
+  targetColor?: TReqoreEffectColor;
 }
 
 export interface IReqoreProgressStyle extends IReqoreProgressProps {
@@ -156,6 +167,38 @@ const StyledProgressTrack = styled.div<IReqoreProgressStyle>`
     flat === false ? `1px solid ${rgba(getProgressColor(theme), 0.6)}` : 'none'};
 `;
 
+interface IStyledProgressTargetProps {
+  $left: number;
+  $color: string;
+}
+
+const StyledProgressTargetMarker = styled.div<IStyledProgressTargetProps>`
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: ${({ $left }) => $left}%;
+  width: 2px;
+  background-color: ${({ $color }) => $color};
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 2;
+`;
+
+const StyledProgressTargetLabel = styled.div<{ $left: number; $color: string }>`
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: ${({ $left }) => $left}%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${({ $color }) => $color};
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+`;
+
 const StyledProgressBar = styled.div<IReqoreProgressStyle>`
   position: absolute;
   top: 0;
@@ -218,6 +261,10 @@ const ReqoreProgress = memo(
         rightIcon,
         rightIconColor,
         rightIconProps,
+        target,
+        targetLabel,
+        showTargetLabel = true,
+        targetColor,
         ...rest
       },
       ref
@@ -237,6 +284,23 @@ const ReqoreProgress = memo(
         if (!showValue || indeterminate) return null;
         return `${Math.round(percentage)}%`;
       }, [showValue, percentage, indeterminate]);
+
+      const targetPercent = useMemo(() => {
+        if (target === undefined || indeterminate || max <= 0) return null;
+        const clamped = Math.max(0, Math.min(target, max));
+        return (clamped / max) * 100;
+      }, [target, max, indeterminate]);
+
+      const resolvedTargetColor = useMemo(() => {
+        if (targetColor) return targetColor as string;
+        return getReadableColor(baseTheme, undefined, undefined, true);
+      }, [targetColor, baseTheme]);
+
+      const resolvedTargetLabel = useMemo(() => {
+        if (targetPercent === null) return null;
+        if (targetLabel !== undefined) return targetLabel;
+        return `Target ${Math.round(targetPercent)}%`;
+      }, [targetPercent, targetLabel]);
 
       const hasLabels = !!(
         label ||
@@ -304,6 +368,25 @@ const ReqoreProgress = memo(
               animated={animated}
               className='reqore-progress-bar'
             />
+            {targetPercent !== null && (
+              <>
+                {showTargetLabel && resolvedTargetLabel && (
+                  <StyledProgressTargetLabel
+                    $left={targetPercent}
+                    $color={resolvedTargetColor}
+                    className='reqore-progress-target-label'
+                  >
+                    {resolvedTargetLabel}
+                  </StyledProgressTargetLabel>
+                )}
+                <StyledProgressTargetMarker
+                  $left={targetPercent}
+                  $color={resolvedTargetColor}
+                  className='reqore-progress-target'
+                  aria-hidden
+                />
+              </>
+            )}
           </StyledProgressTrack>
         </ReqoreTooltipComponent>
       );

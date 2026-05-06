@@ -20,6 +20,7 @@ export interface IReqoreOptions
     | 'tooltips'
     | 'customPortalId'
     | 'errorBoundaryOptions'
+    | 'glowingIcons'
   > {
   withSidebar?: boolean;
   uiScale?: number;

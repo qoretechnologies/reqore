@@ -1,6 +1,6 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { ReqoreFeatureCard, IReqoreFeatureCardProps } from '../../components/FeatureCard';
 import ReqoreControlGroup from '../../components/ControlGroup';
+import { IReqoreFeatureCardProps, ReqoreFeatureCard } from '../../components/FeatureCard';
 import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
@@ -8,7 +8,7 @@ import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreFeatureCardProps>();
 
 const meta = {
-  title: 'Display/FeatureCard/Stories',
+  title: 'Display/Feature Card/Stories',
   component: ReqoreFeatureCard,
   parameters: {
     chromatic: {
@@ -134,5 +134,134 @@ export const FrostedLabel: Story = {
     labelEffect: {
       frost: true,
     },
+  },
+};
+
+export const Bordered: Story = {
+  render: Template,
+  args: {
+    label: 'Bordered card',
+    description: 'flat={false} renders an intent-coloured border around the card.',
+    intent: 'info',
+    flat: false,
+  },
+};
+
+export const Square: Story = {
+  render: Template,
+  args: {
+    label: 'Square corners',
+    description: 'rounded={false} removes the corner radius.',
+    rounded: false,
+  },
+};
+
+export const Transparent: Story = {
+  render: Template,
+  args: {
+    label: 'Transparent surface',
+    description: 'transparent={true} drops the tinted background, leaving the border + marker.',
+    intent: 'warning',
+    transparent: true,
+  },
+};
+
+export const Clickable: Story = {
+  render: Template,
+  args: {
+    label: 'Clickable card',
+    description: 'Provide onClick (or interactive) to enable hover/lift behaviour.',
+    onClick: () => alert('Card clicked'),
+  },
+};
+
+export const Disabled: Story = {
+  render: Template,
+  args: {
+    label: 'Disabled card',
+    description: 'Disabled cards dim and do not respond to hover or click.',
+    disabled: true,
+    onClick: () => {
+      // no-op while disabled
+    },
+  },
+};
+
+export const Tooltip: Story = {
+  render: Template,
+  args: {
+    label: 'With tooltip',
+    description: 'Hover the card to see a contextual tooltip.',
+    tooltip: 'Cards expose the same tooltip prop as every other Reqore component.',
+  },
+};
+
+export const Fixed: Story = {
+  render: (args) => <ReqoreFeatureCard {...args} fixed />,
+  args: {
+    label: 'Fixed width card',
+    description: 'fixed={true} prevents the card from stretching.',
+  },
+};
+
+export const WithBadge: Story = {
+  render: Template,
+  args: {
+    label: 'Just shipped',
+    description: 'Badges render to the right of the label using the standard TReqoreBadge type.',
+    badge: { label: 'New', intent: 'success' },
+    intent: 'success',
+  },
+};
+
+export const WithMultipleBadges: Story = {
+  render: Template,
+  args: {
+    label: 'Pricing tier',
+    description: 'Pass an array of badges to surface several pieces of metadata at once.',
+    badge: [
+      { label: 'v2', minimal: true },
+      { label: 'beta', intent: 'warning', minimal: true },
+    ],
+  },
+};
+
+export const NoWrap: Story = {
+  render: (args) => (
+    <div style={{ width: 320 }}>
+      <ReqoreFeatureCard {...args} />
+    </div>
+  ),
+  args: {
+    label: 'Process incoming order with strict SKU validation',
+    description:
+      'Routes Shopify orders into the warehouse pipeline and validates each line against the master catalog before fulfilment.',
+    wrap: false,
+  },
+};
+
+export const WithEffects: Story = {
+  render: Template,
+  args: {
+    label: 'Effects everywhere',
+    description: 'Background gradient, label uppercase, italic description.',
+    intent: 'info',
+    effect: {
+      gradient: {
+        colors: { 0: 'info:darken:5', 100: 'transparent' },
+        direction: 'to right',
+      },
+    },
+    labelEffect: { weight: 'bold', uppercase: true, spaced: 1 },
+    descriptionEffect: { italic: true },
+  },
+};
+
+export const CustomTheme: Story = {
+  render: Template,
+  args: {
+    label: 'Branded card',
+    description: 'customTheme overrides the surface colour while keeping the same primitives.',
+    customTheme: { main: '#1a1142' },
   },
 };

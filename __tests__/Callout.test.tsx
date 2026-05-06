@@ -68,3 +68,232 @@ test('Renders <Callout /> with container effect', () => {
   expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
   expect(document.querySelector('.reqore-callout')!.textContent).toBe('Gradient surface');
 });
+
+test('Renders <Callout /> with label and description', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Heads up' description='Something to look at' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-callout-label')!.textContent).toBe('Heads up');
+  expect(document.querySelector('.reqore-callout-description')!.textContent).toBe(
+    'Something to look at'
+  );
+});
+
+test('Falls back to children when label/description are not provided', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout>Plain children content</ReqoreCallout>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-callout-label').length).toBe(0);
+});
+
+test('Renders <Callout /> with icon', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout icon='InformationLine' label='Notice' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout-icon').length).toBe(1);
+});
+
+test('Renders <Callout /> with badge (string)', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Notice' badge='New' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-button-badge')!.textContent).toContain('New');
+});
+
+test('Renders <Callout /> with badge array', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout
+            label='Notice'
+            badge={[3, { label: 'high', intent: 'danger' }]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-button-badge').length).toBe(2);
+});
+
+test('Renders <Callout /> with onClose and fires it', () => {
+  const handleClose = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Notice' onClose={handleClose} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout-close').length).toBe(1);
+
+  fireEvent.click(document.querySelector('.reqore-callout-close')!);
+  expect(handleClose).toHaveBeenCalledTimes(1);
+});
+
+test('Close button click does not bubble to onClick', () => {
+  const handleClick = jest.fn();
+  const handleClose = jest.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout
+            label='Notice'
+            onClick={handleClick}
+            onClose={handleClose}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(document.querySelector('.reqore-callout-close')!);
+  expect(handleClose).toHaveBeenCalledTimes(1);
+  expect(handleClick).toHaveBeenCalledTimes(0);
+});
+
+test('Renders <Callout /> with intents', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Info' intent='info' />
+          <ReqoreCallout label='Success' intent='success' />
+          <ReqoreCallout label='Warning' intent='warning' />
+          <ReqoreCallout label='Danger' intent='danger' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(4);
+});
+
+test('Renders <Callout /> with different sizes', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout size='tiny'>Tiny</ReqoreCallout>
+          <ReqoreCallout size='small'>Small</ReqoreCallout>
+          <ReqoreCallout size='normal'>Normal</ReqoreCallout>
+          <ReqoreCallout size='big'>Big</ReqoreCallout>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(4);
+});
+
+test('Renders <Callout /> bordered with flat={false}', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Bordered' intent='info' flat={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});
+
+test('Renders <Callout /> with rounded={false}', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Square' rounded={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});
+
+test('Renders <Callout /> with transparent background', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Transparent' intent='info' transparent />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});
+
+test('Renders <Callout /> with labelEffect / descriptionEffect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout
+            label='Notice'
+            description='Body'
+            labelEffect={{ uppercase: true }}
+            descriptionEffect={{ italic: true }}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout-label').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-callout-description').length).toBe(1);
+});
+
+test('Renders <Callout /> disabled', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Disabled' disabled />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});

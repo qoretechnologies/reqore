@@ -5,6 +5,7 @@
 | **ReqoreAccordion** | Expandable/collapsible panels that can display multiple items with optional icons, badges, and callbacks for toggling. |
 | **ReqoreBreadcrumbs** | Navigation component displaying hierarchical breadcrumb trails with responsive collapse and optional tab support. |
 | **ReqoreButton** | Primary action button with support for icons, badges, loading states, effects, and multiple style variants (minimal, flat, transparent). |
+| **ReqoreCallout** | Inline message surface for inline notices, warnings, and confirmations. Supports a leading icon, optional `label` + `description` (or freeform `children`), badge (TReqoreBadge), accent strip (left/top with configurable size), close button (`onClose` + `closeButtonProps`), and the standard prop set: intent (info/success/warning/danger; controls accent + border + icon colour), size, flat (border on `false`), rounded, fluid, fixed, transparent, customTheme, tooltip, disabled, effect / labelEffect / descriptionEffect / contentEffect, and click handlers. |
 | **ReqoreCheckbox** | Toggle control that can render as a standard checkbox or switch component with customizable icons and text labels. |
 | **ReqoreCollection** | Grid/list view component for displaying arrays of items with filtering, sorting, zoom, and pagination capabilities. |
 | **ReqoreColumns** | Layout component using CSS Grid to arrange content into responsive columns with customizable gaps and alignment. |
@@ -17,11 +18,13 @@
 | **ReqoreDropdown** | Button-triggered dropdown menu supporting filtering, nested items, multi-select, and keyboard navigation. |
 | **ReqoreEffect** | Styled component providing visual effects like gradients, glows, filters, and text decorations. |
 | **ReqoreEmptyState** | Placeholder component displayed when content is unavailable, with optional icon, title, description, and action buttons. |
+| **ReqoreEntityRow** | Compact row primitive for lists of items (e.g. automations, drafts, integrations) with a leading icon tile, label/description/metadata stack, badge support (TReqoreBadge), and right-side action buttons. Supports the standard prop set: intent (with tinted backgrounds), size, flat (border on `false`), rounded, fluid, transparent, customTheme, tooltip, disabled, effect / labelEffect / descriptionEffect / metadataEffect, wrap (single-line ellipsis on `false`), and click handlers. |
+| **ReqoreFeatureCard** | Highlight card for onboarding flows, feature spotlights, and product steps. Renders an optional marker (line/number/none), label, description, and badge. Supports the standard prop set: intent (controls marker + border colour), size, flat (border on `false`), rounded, fluid, fixed, transparent, customTheme, tooltip, disabled, interactive (auto-detected from `onClick`), effect / labelEffect / descriptionEffect / markerEffect, and wrap (single-line ellipsis on `false`). |
 | **ReqoreErrorBoundary** | React error boundary that catches errors and displays them with optional fallback UI and reset functionality. |
 | **ReqoreExportModal** | Modal dialog for exporting data in multiple formats (CSV, JSON, YAML) with copy-to-clipboard functionality. |
 | **ReqoreModalsWrapper** | Portal wrapper that renders all queued modals and dialogs from the global context. |
 | **ReqoreHeading** | Typography component for headings (H1-H6) with theme support and text effects. |
-| **ReqoreIcon** | Icon rendering component using RemixIcon set with size, color, animation, and tooltip support. |
+| **ReqoreIcon** | Icon rendering component using RemixIcon set with size, color, animation, tooltip, and an optional contour-following `glow` (boolean / colour / `{ color, blur, opacity }`) rendered via `filter: drop-shadow`. The global `ReqoreUIProvider` option `glowingIcons: true` opts every icon into glow mode by default; individual icons opt out with `glow={false}`. |
 | **ReqoreInput** | Text input field with optional icons, clear button, loading states, and comprehensive styling options. |
 | **ReqoreInputClearButton** | Animated clear button component for input fields that appears on focus. |
 | **ReqoreInternalPopover** | Internal popover positioning and rendering component using Popper.js for precise placement. |
@@ -38,11 +41,12 @@
 | **ReqorePanel** | Container component with optional header, footer, actions, and resizable panels with breadcrumbs support. |
 | **ReqoreP** | Text paragraph component with theme support, effects, and size customization. |
 | **ReqorePopover** | Popover/tooltip component with multiple trigger handlers (hover, click, focus) and smart positioning. |
-| **ReqoreProgress** | Progress bar component with optional animations, indeterminate state, and customizable labels and icons. |
+| **ReqoreProgress** | Progress bar component with optional animations, indeterminate state, customizable labels/icons, and an optional target marker for visualising goals (e.g. "90% target coverage"). |
 | **ReqoreRadioGroup** | Radio button group component allowing single selection from multiple options with optional dividers. |
 | **ReqoreRating** | Star rating component supporting half-steps, keyboard navigation, and optional clear functionality. |
 | **ReqoreRichTextEditor** | Rich text editor using Slate framework with support for inline tags and text formatting options. |
 | **ReqoreSegmentedControl** | Compact button-bar toggle for selecting one of 2-4 exclusive options with a sliding indicator animation. |
+| **ReqoreSeverityRow** | Row primitive for issue/alert/anomaly lists with a left severity strip, leading slot for a severity tag, label/description body, badge support (TReqoreBadge), and right-side action buttons. Supports the standard prop set: intent (info/success/warning/danger with tinted backgrounds), size, flat (border on `false`), rounded, fluid, transparent, customTheme, tooltip, disabled, effect / labelEffect / descriptionEffect, wrap (single-line ellipsis on `false`), optional strip-hide, and click handlers. |
 | **ReqoreSkeleton** | Animated skeleton/placeholder component for loading states with customizable dimensions. |
 | **ReqoreSlider** | Range slider component supporting single values or ranges with optional labels and customizable styling. |
 | **ReqoreSpacer** | Flexible spacing component that creates horizontal or vertical gaps with optional dividing lines. |

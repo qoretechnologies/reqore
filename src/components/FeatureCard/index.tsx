@@ -1,9 +1,10 @@
-import { forwardRef, memo, useMemo } from 'react';
 import { rgba } from 'polished';
+import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import {
   HEADER_SIZE_TO_NUMBER,
   PADDING_FROM_SIZE,
+  RADIUS_FROM_SIZE,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -28,6 +29,7 @@ import {
   IWithReqoreSize,
   IWithReqoreTooltip,
 } from '../../types/global';
+import { ButtonBadge, TReqoreBadge } from '../Button';
 import { IReqoreEffect, StyledEffect } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import { ReqoreP } from '../Paragraph';
@@ -46,19 +48,39 @@ export interface IReqoreFeatureCardProps
     IWithReqoreFluid,
     IWithReqoreSize,
     IWithReqoreTooltip {
+  /** Card heading. */
   label: React.ReactNode;
+  /** Effect applied to the label heading. */
   labelEffect?: IReqoreEffect;
+  /** Body copy under the label. */
   description?: React.ReactNode;
+  /** Effect applied to the description paragraph. */
   descriptionEffect?: IReqoreEffect;
+  /** Visual marker rendered above the label. */
   marker?: TReqoreFeatureCardMarker;
+  /** Used when `marker === 'number'`. */
   markerLabel?: string | number;
+  /** Effect applied to the marker label. */
   markerEffect?: IReqoreEffect;
+  /** Badge(s) shown next to the label, identical to other Reqore components. */
+  badge?: TReqoreBadge | TReqoreBadge[];
+  /** Round the card corners. Default `true`. */
   rounded?: boolean;
+  /** Marks the card as clickable; auto-detected from `onClick`. */
   interactive?: boolean;
+  /** Hide the card's tinted background. */
+  transparent?: boolean;
+  /**
+   * Whether the description wraps when it overflows.
+   * - `true` (default): wrap to multiple lines
+   * - `false`: single line with ellipsis
+   */
+  wrap?: boolean;
 }
 
-interface IStyledFeatureCardProps extends IReqoreFeatureCardProps {
+interface IStyledFeatureCardProps extends Omit<IReqoreFeatureCardProps, 'transparent'> {
   theme: IReqoreTheme;
+  $transparent?: boolean;
 }
 
 const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
@@ -68,7 +90,8 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
   padding: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size] * 3}px;
-  background-color: ${({ theme }) => changeDarkness(getMainBackgroundColor(theme), 0.03)};
+  background-color: ${({ theme, $transparent }) =>
+    $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
   border: ${({ theme, intent, flat }) =>
     flat
       ? 0
@@ -76,15 +99,13 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
-  border-radius: ${({ rounded }) => (rounded ? '8px' : 0)};
+  border-radius: ${({ rounded, size = 'normal' }) =>
+    rounded === false ? 0 : `${RADIUS_FROM_SIZE[size]}px`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
   position: relative;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
-  transition:
-    border-color 0.16s ease,
-    background-color 0.16s ease,
-    transform 0.16s ease;
+  transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
 
   ${({ disabled }) => disabled && DisabledElement}
 
@@ -130,8 +151,10 @@ const StyledFeatureCardMarker = styled.div<{
               : changeLightness(getMainBackgroundColor(theme), 0.22)};
             box-shadow: 0 0 22px
               ${rgba(
-                intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.22),
-                0.3
+                intent
+                  ? theme.intents[intent]
+                  : changeLightness(getMainBackgroundColor(theme), 0.22),
+                0.8
               )};
           }
         `
@@ -142,6 +165,34 @@ const StyledFeatureCardContent = styled.div`
   display: flex;
   flex-flow: column;
   gap: 12px;
+`;
+
+const StyledLabelRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+`;
+
+// Cascade ellipsis CSS into the inner ReqoreP — `text-overflow: ellipsis`
+// only takes effect on the actual text-bearing element.
+const StyledTextSlot = styled.div<{ $wrap: boolean }>`
+  min-width: 0;
+  ${({ $wrap }) =>
+    !$wrap &&
+    css`
+      flex: 1 1 auto;
+      overflow: hidden;
+
+      & > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+        max-width: 100%;
+      }
+    `}
 `;
 
 export const ReqoreFeatureCard = memo(
@@ -155,6 +206,7 @@ export const ReqoreFeatureCard = memo(
         marker = 'line',
         markerLabel,
         markerEffect,
+        badge,
         size = 'normal',
         customTheme,
         inheritCustomTheme,
@@ -165,7 +217,9 @@ export const ReqoreFeatureCard = memo(
         fixed,
         disabled,
         tooltip,
-        rounded,
+        rounded = true,
+        transparent = false,
+        wrap = true,
         effect,
         interactive,
         onClick,
@@ -174,12 +228,10 @@ export const ReqoreFeatureCard = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
-      const labelSize = useMemo(
-        () => HEADER_SIZE_TO_NUMBER[size] as 1 | 2 | 3 | 4 | 5 | 6,
-        [size]
-      );
+      const labelSize = useMemo(() => HEADER_SIZE_TO_NUMBER[size] as 1 | 2 | 3 | 4 | 5 | 6, [size]);
       const descriptionSize = useMemo(() => getOneLessSize(size), [size]);
       const isInteractive = interactive || !!onClick;
+      const hasBadge = badge !== undefined && badge !== null;
 
       return (
         <ReqoreTooltipComponent
@@ -196,6 +248,7 @@ export const ReqoreFeatureCard = memo(
           disabled={disabled}
           tooltip={tooltip}
           rounded={rounded}
+          $transparent={transparent}
           effect={{ interactive: isInteractive, ...effect }}
           interactive={isInteractive}
           onClick={onClick}
@@ -216,23 +269,30 @@ export const ReqoreFeatureCard = memo(
             </StyledFeatureCardMarker>
           )}
           <StyledFeatureCardContent className='reqore-feature-card-content'>
-            <ReqoreHeading
-              size={labelSize}
-              customTheme={theme}
-              effect={labelEffect}
-              className='reqore-feature-card-label'
-            >
-              {label}
-            </ReqoreHeading>
+            <StyledLabelRow className='reqore-feature-card-label-row'>
+              <StyledTextSlot $wrap={wrap}>
+                <ReqoreHeading
+                  size={labelSize}
+                  customTheme={theme}
+                  effect={labelEffect}
+                  className='reqore-feature-card-label'
+                >
+                  {label}
+                </ReqoreHeading>
+              </StyledTextSlot>
+              {hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
+            </StyledLabelRow>
             {description && (
-              <ReqoreP
-                size={descriptionSize}
-                customTheme={theme}
-                effect={{ opacity: 0.72, ...descriptionEffect }}
-                className='reqore-feature-card-description'
-              >
-                {description}
-              </ReqoreP>
+              <StyledTextSlot $wrap={wrap}>
+                <ReqoreP
+                  size={descriptionSize}
+                  customTheme={theme}
+                  effect={{ opacity: 0.72, ...descriptionEffect }}
+                  className='reqore-feature-card-description'
+                >
+                  {description}
+                </ReqoreP>
+              </StyledTextSlot>
             )}
           </StyledFeatureCardContent>
         </ReqoreTooltipComponent>
