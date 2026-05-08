@@ -7,9 +7,9 @@ import {
 } from '../src';
 
 const basicItems = [
-  { title: 'Item 1', content: 'Content 1' },
-  { title: 'Item 2', content: 'Content 2' },
-  { title: 'Item 3', content: 'Content 3' },
+  { label: 'Item 1', content: 'Content 1' },
+  { label: 'Item 2', content: 'Content 2' },
+  { label: 'Item 3', content: 'Content 3' },
 ];
 
 test('Renders <Accordion /> with items', () => {
@@ -76,8 +76,8 @@ test('Respects isOpen default state', () => {
         <ReqoreContent>
           <ReqoreAccordion
             items={[
-              { title: 'Open', content: 'Open content', isOpen: true },
-              { title: 'Closed', content: 'Closed content' },
+              { label: 'Open', content: 'Open content', isOpen: true },
+              { label: 'Closed', content: 'Closed content' },
             ]}
           />
         </ReqoreContent>
@@ -143,8 +143,8 @@ test('Renders with icons', () => {
         <ReqoreContent>
           <ReqoreAccordion
             items={[
-              { title: 'With icon', content: 'Content', icon: 'Settings3Line' },
-              { title: 'No icon', content: 'Content' },
+              { label: 'With icon', content: 'Content', icon: 'Settings3Line' },
+              { label: 'No icon', content: 'Content' },
             ]}
           />
         </ReqoreContent>
@@ -162,8 +162,8 @@ test('Renders with badges', () => {
         <ReqoreContent>
           <ReqoreAccordion
             items={[
-              { title: 'With badge', content: 'Content', badge: 5 },
-              { title: 'No badge', content: 'Content' },
+              { label: 'With badge', content: 'Content', badge: 5 },
+              { label: 'No badge', content: 'Content' },
             ]}
           />
         </ReqoreContent>
@@ -171,7 +171,7 @@ test('Renders with badges', () => {
     </ReqoreUIProvider>
   );
 
-  expect(document.querySelectorAll('.reqore-accordion-badge').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-button-badge').length).toBe(1);
 });
 
 test('Disabled items cannot be toggled', () => {
@@ -181,8 +181,8 @@ test('Disabled items cannot be toggled', () => {
         <ReqoreContent>
           <ReqoreAccordion
             items={[
-              { title: 'Disabled', content: 'Content', disabled: true },
-              { title: 'Normal', content: 'Content' },
+              { label: 'Disabled', content: 'Content', disabled: true },
+              { label: 'Normal', content: 'Content' },
             ]}
           />
         </ReqoreContent>
@@ -304,8 +304,8 @@ test('Renders with item-level intents', () => {
         <ReqoreContent>
           <ReqoreAccordion
             items={[
-              { title: 'Info', content: 'Content', intent: 'info' },
-              { title: 'Danger', content: 'Content', intent: 'danger' },
+              { label: 'Info', content: 'Content', intent: 'info' },
+              { label: 'Danger', content: 'Content', intent: 'danger' },
             ]}
           />
         </ReqoreContent>
@@ -352,7 +352,7 @@ test('Renders custom React content', () => {
           <ReqoreAccordion
             items={[
               {
-                title: 'Custom',
+                label: 'Custom',
                 content: <div className='custom-content'>Custom element</div>,
                 isOpen: true,
               },
