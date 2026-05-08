@@ -64,7 +64,7 @@ import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreErrorBoundary } from '../ErrorBoundary';
-import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreSkeleton } from '../Skeleton';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
@@ -356,7 +356,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
           cursor: pointer;
 
           &:hover {
-            ${StyledPanelTitle} ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
+            ${StyledPanelTitle} ${StyledPanelTitleHeaderContent} .reqore-panel-title-icon {
               transform: scale(${ACTIVE_ICON_SCALE});
             }
 
@@ -430,7 +430,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   flex: 0 0 auto;
   gap: ${GAP_FROM_SIZE.normal}px;
 
-  ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
+  ${StyledPanelTitleHeaderContent} .reqore-panel-title-icon {
     transform: scale(${INACTIVE_ICON_SCALE});
   }
 
@@ -439,7 +439,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     css`
       cursor: pointer;
       &:hover {
-        ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
+        ${StyledPanelTitleHeaderContent} .reqore-panel-title-icon {
           transform: scale(${ACTIVE_ICON_SCALE});
         }
 
