@@ -225,10 +225,15 @@ export const StyledPanelTitleHeaderContent = styled.div<{
   // visually centres the icon against the text row it shares a grid row
   // with — no font-metric guesswork.
   display: ${({ $hasOuterIcon }) => ($hasOuterIcon ? 'grid' : 'flex')};
-  ${({ $hasOuterIcon, iconSize, size, $iconVerticalAlign = 'center', $hasDescription }) =>
+  ${({ $hasOuterIcon, size, $iconVerticalAlign = 'center', $hasDescription }) =>
     $hasOuterIcon
       ? css`
-          grid-template-columns: ${iconSize}px minmax(0, 1fr);
+          // 'auto' lets the column grow to the icon's actual rendered size —
+          // important when consumers pass a custom 'iconProps.size' that does
+          // not match the default size derived from 'panelSize'/'labelSize'.
+          // 'iconSize' is still passed via 'min-width' below to ensure a
+          // sensible minimum reservation when the row is otherwise empty.
+          grid-template-columns: auto minmax(0, 1fr);
           grid-template-rows: ${$hasDescription ? 'auto auto' : 'auto'};
           column-gap: ${PADDING_FROM_SIZE[size || 'normal']}px;
           row-gap: 3px;
@@ -249,6 +254,16 @@ export const StyledPanelTitleHeaderContent = styled.div<{
             grid-column: 1;
             align-self: center;
             justify-self: start;
+            // Suppress 'vertical-align: super' that ReqoreIcon applies to its
+            // SVG for inline-text contexts. In our grid layout the wrapper is
+            // already vertically centred against the text row's line-box;
+            // 'display: block' takes the SVG out of inline flow entirely so
+            // baseline/super offsets cannot push it off-centre. The wrapper's
+            // own 'align-items: center' then centres the SVG within itself.
+            & svg {
+              display: block;
+              vertical-align: middle;
+            }
           }
 
           & > .reqore-panel-title-label-row {
@@ -1103,12 +1118,32 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   ) : icon || iconImage || label || badge ? (
                     (() => {
                       const hasPanelIcon = !!icon || !!iconImage || loading;
-                      // When the icon lives in the outer grid column, the grid
-                      // gap handles spacing between icon and text. When it's
-                      // inline with the label, keep `margin='right'` so the
-                      // ReqoreIcon adds its standard side-spacer.
-                      const iconMargin: 'right' | undefined =
-                        hasPanelIcon && !iconWithLabel ? undefined : 'right';
+
+                      // Layout decision:
+                      // - iconWithLabel=true → render the icon INSIDE the
+                      //   label-and-badge row (no outer icon column). The
+                      //   description sits flush-left under the icon+label.
+                      // - When there is NO description, fall back to the
+                      //   inline layout regardless of iconVerticalAlign — the
+                      //   outer grid only earns its keep when there is a
+                      //   description row to anchor against, and the inline
+                      //   layout aligns icon-to-text glyphs more naturally
+                      //   via the heading's own line-height.
+                      // - Otherwise → outer two-column grid where the icon
+                      //   sits in a reserved column. iconVerticalAlign places
+                      //   the icon in row 1 (label), row 2 (description), or
+                      //   spans both rows (center). The description always
+                      //   indents past the icon column.
+                      const inlineWithLabel =
+                        hasPanelIcon && (iconWithLabel || !description);
+                      const useOuterGrid = hasPanelIcon && !inlineWithLabel;
+
+                      // Outer grid → grid column-gap handles icon→label
+                      // spacing, so the icon itself takes no margin.
+                      // Inline → keep 'margin=right' so ReqoreIcon adds its
+                      // standard side-spacer between icon and label.
+                      const iconMargin: 'right' | undefined = useOuterGrid ? undefined : 'right';
+
                       const panelIcon = hasPanelIcon ? (
                         <ReqoreIcon
                           size={`${
@@ -1131,18 +1166,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                           className={`reqore-panel-title-icon ${iconProps?.className || ''}`.trim()}
                         />
                       ) : null;
-
-                      // Layout decision:
-                      // - iconWithLabel=true → render the icon INSIDE the
-                      //   label-and-badge row (no outer icon column). The
-                      //   description sits flush-left under the icon+label.
-                      // - otherwise → outer two-column grid where the icon
-                      //   sits in a reserved column. iconVerticalAlign places
-                      //   the icon in row 1 (label), row 2 (description), or
-                      //   spans both rows (center). The description always
-                      //   indents past the icon column.
-                      const inlineWithLabel = hasPanelIcon && iconWithLabel;
-                      const useOuterGrid = hasPanelIcon && !iconWithLabel;
 
                       const labelRow = (
                         <StyledPanelTitleHeaderLabelAndBadge className='reqore-panel-title-label-row'>
