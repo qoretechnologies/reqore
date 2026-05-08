@@ -28,19 +28,19 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { TReqoreBadge } from '../Button';
+import { ButtonBadge, TReqoreBadge } from '../Button';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
 import { ReqoreSpan } from '../Span';
-import ReqoreTag, { IReqoreTagProps } from '../Tag';
-import ReqoreTagGroup from '../Tag/group';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreAccordionItem {
   /** Unique identifier for the item */
   id?: string;
   /** Title displayed in the header */
-  title: string;
+  label: string;
+  labelEffect?: IReqoreEffect;
   /** Content displayed when expanded */
   content: React.ReactNode;
   /** Optional icon in the header */
@@ -161,7 +161,7 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
   display: flex;
   align-items: center;
   gap: ${() => GAP_FROM_SIZE.normal}px;
-  padding: ${({ size }) => `${PADDING_FROM_SIZE[size]}px ${PADDING_FROM_SIZE[size] * 1.5}px`};
+  padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 1.5}px ${PADDING_FROM_SIZE[size] * 1.5}px`};
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease-out;
@@ -191,12 +191,6 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
     `}
 `;
 
-const StyledAccordionHeaderTitle = styled.span`
-  flex: 1;
-  min-width: 0;
-  font-weight: 500;
-`;
-
 const StyledAccordionChevron = styled(StyledIconWrapper)<{ $isOpen?: boolean }>`
   transition: transform 0.2s ease-out !important;
   transform: rotate(${({ $isOpen }) => ($isOpen ? '180deg' : '0deg')}) !important;
@@ -214,50 +208,12 @@ const StyledAccordionContentInner = styled.div<{ theme: IReqoreTheme; size: TSiz
 `;
 
 const StyledAccordionContentBody = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
-  padding: ${({ size }) => `${PADDING_FROM_SIZE[size]}px ${PADDING_FROM_SIZE[size] * 1.5}px`};
+  padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 4.6}px`};
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   background-color: ${({ theme }) => rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
   border-top: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.05)};
 `;
-
-interface IBadgeProps {
-  content: TReqoreBadge | TReqoreBadge[];
-  size: TSizes;
-}
-
-const AccordionBadge = memo(({ size, content }: IBadgeProps) => {
-  const renderTag = useCallback(
-    (badge: TReqoreBadge, key: number) => (
-      <ReqoreTag
-        key={key}
-        size={getOneLessSize(size)}
-        asBadge
-        className='reqore-accordion-badge'
-        labelAlign='center'
-        minimal
-        {...(typeof badge === 'string' || typeof badge === 'number'
-          ? { label: badge }
-          : (badge as IReqoreTagProps))}
-      />
-    ),
-    [size]
-  );
-
-  if (!content && content !== 0) {
-    return null;
-  }
-
-  if (Array.isArray(content)) {
-    return (
-      <ReqoreTagGroup className='reqore-accordion-badges'>
-        {content.map((badge, index) => renderTag(badge, index))}
-      </ReqoreTagGroup>
-    );
-  }
-
-  return renderTag(content, 0);
-});
 
 interface IAccordionItemRendererProps {
   item: IReqoreAccordionItem;
@@ -336,15 +292,19 @@ const AccordionItemRenderer = memo(
           {item.icon && (
             <ReqoreIcon
               icon={item.icon}
-              size={size}
+              size={getOneLessSize(size)}
               color={item.iconColor}
               className='reqore-accordion-icon'
             />
           )}
-          <StyledAccordionHeaderTitle className='reqore-accordion-title'>
-            {item.title}
-          </StyledAccordionHeaderTitle>
-          {(item.badge || item.badge === 0) && <AccordionBadge content={item.badge} size={size} />}
+          <ReqoreHeading
+            size={getOneLessSize(size)}
+            effect={item.labelEffect}
+            className='reqore-accordion-title'
+          >
+            {item.label}
+          </ReqoreHeading>
+          {(item.badge || item.badge === 0) && <ButtonBadge content={item.badge} size={size} />}
         </StyledAccordionHeader>
         <StyledAccordionContentWrapper theme={theme} size={size} $isOpen={isOpen}>
           <StyledAccordionContentInner theme={theme} size={size}>

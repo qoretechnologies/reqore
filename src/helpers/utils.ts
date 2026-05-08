@@ -9,7 +9,7 @@ import {
   isUndefined,
 } from 'lodash';
 import { IReqorePanelAction, IReqorePanelSubAction } from '../components/Panel';
-import { NUMBER_TO_SIZE, SIZES, SIZE_TO_NUMBER, TSizes } from '../constants/sizes';
+import { NUMBER_TO_SIZE, PADDING_FROM_SIZE, SIZES, SIZE_TO_NUMBER, TSizes } from '../constants/sizes';
 import { TReqoreTooltipProp } from '../types/global';
 
 export const sleep = async (ms: number) => await new Promise((r) => setTimeout(r, ms));
@@ -106,6 +106,40 @@ export const getOneLessSize = (size: TSizes = 'normal'): TSizes => {
   const oneLessSizeNumber: number = initialSizeNumber - 1 === 0 ? 1 : initialSizeNumber - 1;
   // Get the size name from the number
   return NUMBER_TO_SIZE[oneLessSizeNumber];
+};
+
+export type TReqorePadded = boolean | 'horizontal' | 'vertical';
+
+/**
+ * Builds a CSS `padding` shorthand value for surface components that support
+ * the `padded` + `paddingSize` prop pair.
+ *
+ * - `padded={false}` → no padding
+ * - `padded='horizontal'` → only left/right padding
+ * - `padded='vertical'` → only top/bottom padding
+ * - `padded={true}` (default) → padding on both axes
+ *
+ * The base padding for each axis is `PADDING_FROM_SIZE[paddingSize] *
+ * <multiplier>`. Pass per-component multipliers (e.g. EntityRow uses `v=2,
+ * h=3`; Statistic uses `v=3, h=5`).
+ */
+export const resolvePadding = ({
+  padded,
+  paddingSize,
+  verticalMultiplier,
+  horizontalMultiplier,
+}: {
+  padded: TReqorePadded;
+  paddingSize: TSizes;
+  verticalMultiplier: number;
+  horizontalMultiplier: number;
+}): string => {
+  if (padded === false) return '0';
+  const v = PADDING_FROM_SIZE[paddingSize] * verticalMultiplier;
+  const h = PADDING_FROM_SIZE[paddingSize] * horizontalMultiplier;
+  if (padded === 'horizontal') return `0 ${h}px`;
+  if (padded === 'vertical') return `${v}px 0`;
+  return `${v}px ${h}px`;
 };
 
 export const getOneHigherSize = (size: TSizes): TSizes => {

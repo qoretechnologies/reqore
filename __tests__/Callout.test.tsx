@@ -311,3 +311,75 @@ test('Renders <Callout /> with raised effect', () => {
 
   expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
 });
+
+test('Renders <Callout /> with padded=false', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Unpadded' padded={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});
+
+test('Renders <Callout /> with padded="horizontal"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Horizontal' padded='horizontal' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});
+
+test('Renders <Callout /> with padded="vertical"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Vertical' padded='vertical' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});
+
+test('Renders <Callout /> with custom paddingSize', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Big, small padding' size='big' paddingSize='small' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});
+
+test('Renders <Callout /> with padded=false + accent reserves accentSize', () => {
+  // Even when padded={false} is set, the side that hosts the accent strip
+  // must reserve accentSize so content does not collide with the strip.
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Reserve' padded={false} accentPosition='top' accentSize={8} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+});

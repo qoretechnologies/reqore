@@ -259,3 +259,59 @@ test('Renders <FeatureCard /> with raised effect', () => {
 
   expect(document.querySelectorAll('.reqore-feature-card').length).toBe(1);
 });
+
+test('Renders <FeatureCard /> with padded=false', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreFeatureCard label='Unpadded' padded={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-feature-card').length).toBe(1);
+});
+
+test('Renders <FeatureCard /> with padded="horizontal"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreFeatureCard label='Horizontal' padded='horizontal' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-feature-card').length).toBe(1);
+});
+
+test('Renders <FeatureCard /> with padded="vertical"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreFeatureCard label='Vertical' padded='vertical' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-feature-card').length).toBe(1);
+});
+
+test('Renders <FeatureCard /> with custom paddingSize', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreFeatureCard label='Big size, small padding' size='big' paddingSize='small' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-feature-card').length).toBe(1);
+});

@@ -1,6 +1,7 @@
 import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import ReqoreStatistic from '../../components/Statistic';
+import ReqoreStatistic, { IReqoreStatisticProps } from '../../components/Statistic';
+import { TSizes } from '../../constants/sizes';
 import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
@@ -459,6 +460,63 @@ export const Raised: Story = {
         raised
         intent='info'
       />
+    </ReqoreControlGroup>
+  ),
+};
+
+const STATISTIC_SIZES: TSizes[] = ['tiny', 'small', 'normal', 'big', 'huge'];
+
+const renderStatisticMatrix = (variantArgs: Partial<IReqoreStatisticProps>) =>
+  STATISTIC_SIZES.map((size) => (
+    <ReqoreStatistic
+      key={size}
+      value='12,345'
+      label={`size=${size}`}
+      icon='UserLine'
+      rounded
+      size={size}
+      {...variantArgs}
+    />
+  ));
+
+export const Unpadded: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small'>
+      {renderStatisticMatrix({ padded: false })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedHorizontalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small'>
+      {renderStatisticMatrix({ padded: 'horizontal' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedVerticalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small'>
+      {renderStatisticMatrix({ padded: 'vertical' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const CustomPaddingSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small'>
+      {STATISTIC_SIZES.map((size) => (
+        <ReqoreStatistic
+          key={size}
+          value='12,345'
+          label={`size=${size}, paddingSize='small'`}
+          icon='UserLine'
+          rounded
+          size={size}
+          paddingSize='small'
+        />
+      ))}
     </ReqoreControlGroup>
   ),
 };

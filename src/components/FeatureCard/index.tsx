@@ -15,7 +15,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { getOneLessSize } from '../../helpers/utils';
+import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -82,12 +82,27 @@ export interface IReqoreFeatureCardProps
    * - `false`: single line with ellipsis
    */
   wrap?: boolean;
+  /**
+   * Controls which axes receive the card's outer padding.
+   * - `true` (default): padding on both axes
+   * - `false`: no padding (e.g. when nested inside another padded surface)
+   * - `'horizontal'`: only left/right padding
+   * - `'vertical'`: only top/bottom padding
+   */
+  padded?: TReqorePadded;
+  /**
+   * Size of the card's outer padding. Defaults to `size`. Use this to scale
+   * the padding independently from the card's text scale.
+   */
+  paddingSize?: TSizes;
 }
 
 interface IStyledFeatureCardProps extends Omit<IReqoreFeatureCardProps, 'transparent' | 'raised'> {
   theme: IReqoreTheme;
   $transparent?: boolean;
   $raised?: boolean;
+  $padded: TReqorePadded;
+  $paddingSize: TSizes;
 }
 
 const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
@@ -96,7 +111,13 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
   gap: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size]}px;
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
-  padding: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size] * 3}px;
+  padding: ${({ $padded, $paddingSize }) =>
+    resolvePadding({
+      padded: $padded,
+      paddingSize: $paddingSize,
+      verticalMultiplier: 3,
+      horizontalMultiplier: 3,
+    })};
   background-color: ${({ theme, $transparent }) =>
     $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
   border: ${({ theme, intent, flat }) =>
@@ -233,6 +254,8 @@ export const ReqoreFeatureCard = memo(
         effect,
         interactive,
         onClick,
+        padded = true,
+        paddingSize,
         ...rest
       },
       ref
@@ -260,6 +283,8 @@ export const ReqoreFeatureCard = memo(
           rounded={rounded}
           $transparent={transparent}
           $raised={raised}
+          $padded={padded}
+          $paddingSize={paddingSize ?? size}
           effect={{ interactive: isInteractive, ...effect }}
           interactive={isInteractive}
           onClick={onClick}

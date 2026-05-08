@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TEXT_FROM_SIZE } from '../../constants/sizes';
+import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
@@ -9,7 +9,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { getOneLessSize } from '../../helpers/utils';
+import { getOneLessSize, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -81,6 +81,23 @@ export interface IReqoreCalloutProps
    * when `flat={false}` because the border already provides surface definition.
    */
   raised?: boolean;
+  /**
+   * Controls which axes receive the callout's outer padding.
+   * - `true` (default): padding on both axes
+   * - `false`: no padding (e.g. when nested inside another padded surface)
+   * - `'horizontal'`: only left/right padding
+   * - `'vertical'`: only top/bottom padding
+   *
+   * Note: when an accent strip is rendered, the side adjacent to the strip
+   * still reserves room for the strip even when padding is disabled on that
+   * axis — otherwise the content would collide with the strip.
+   */
+  padded?: TReqorePadded;
+  /**
+   * Size of the callout's outer padding. Defaults to `size`. Use this to
+   * scale the padding independently from the callout's text scale.
+   */
+  paddingSize?: TSizes;
 }
 
 interface IStyledCalloutProps extends Omit<IReqoreCalloutProps, 'transparent' | 'raised'> {
@@ -88,6 +105,8 @@ interface IStyledCalloutProps extends Omit<IReqoreCalloutProps, 'transparent' | 
   $transparent?: boolean;
   $raised?: boolean;
   $hasContent?: boolean;
+  $padded: TReqorePadded;
+  $paddingSize: TSizes;
 }
 
 const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
@@ -97,14 +116,34 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
   gap: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size] * 2}px;
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
-  padding: ${({ size = 'normal', accentPosition = 'left', accentSize = 5 }) =>
-    accentPosition === 'left'
-      ? `${PADDING_FROM_SIZE[size] * 2.5}px ${PADDING_FROM_SIZE[size] * 3}px ${
-          PADDING_FROM_SIZE[size] * 2.5
-        }px ${PADDING_FROM_SIZE[size] * 3 + accentSize}px`
-      : `${PADDING_FROM_SIZE[size] * 3 + accentSize}px ${PADDING_FROM_SIZE[size] * 3}px ${
-          PADDING_FROM_SIZE[size] * 3
-        }px`};
+  padding: ${({ $padded, $paddingSize, accentPosition = 'left', accentSize = 5 }) => {
+    if ($padded === false) {
+      // Even with no padding requested, the side that hosts the accent strip
+      // must reserve `accentSize` so the content does not collide with it.
+      return accentPosition === 'left'
+        ? `0 0 0 ${accentSize}px`
+        : `${accentSize}px 0 0 0`;
+    }
+    const v2_5 = PADDING_FROM_SIZE[$paddingSize] * 2.5;
+    const v3 = PADDING_FROM_SIZE[$paddingSize] * 3;
+    const h3 = PADDING_FROM_SIZE[$paddingSize] * 3;
+    const horizontalOnly = $padded === 'horizontal';
+    const verticalOnly = $padded === 'vertical';
+    if (accentPosition === 'left') {
+      // top, right, bottom, left (left side hosts the strip)
+      const top = horizontalOnly ? 0 : v2_5;
+      const right = verticalOnly ? 0 : h3;
+      const bottom = horizontalOnly ? 0 : v2_5;
+      const left = verticalOnly ? accentSize : h3 + accentSize;
+      return `${top}px ${right}px ${bottom}px ${left}px`;
+    }
+    // accentPosition === 'top' — top side hosts the strip
+    const top = horizontalOnly ? accentSize : v3 + accentSize;
+    const right = verticalOnly ? 0 : h3;
+    const bottom = horizontalOnly ? 0 : v3;
+    const left = verticalOnly ? 0 : h3;
+    return `${top}px ${right}px ${bottom}px ${left}px`;
+  }};
   background-color: ${({ theme, $transparent }) =>
     $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
   border: ${({ theme, flat, intent }) =>
@@ -147,17 +186,18 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
 
   ${({ disabled }) => disabled && DisabledElement}
 
-  ${({ interactive, theme, intent }) =>
+  ${({ interactive, theme, intent, $transparent }) =>
     interactive
       ? css`
           cursor: pointer;
 
           &:hover {
             transform: translateY(-1px);
-            background-color: ${changeLightness(
-              intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-              -0.32
-            )};
+            background-color: ${intent
+              ? rgba(theme.intents[intent], $transparent ? 0.04 : 0.1)
+              : $transparent
+              ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
+              : changeLightness(getMainBackgroundColor(theme), -0.32)};
           }
         `
       : undefined}
@@ -223,6 +263,8 @@ export const ReqoreCallout = memo(
         onClick,
         accentPosition = 'left',
         accentSize = 5,
+        padded = true,
+        paddingSize,
         ...rest
       },
       ref
@@ -263,6 +305,8 @@ export const ReqoreCallout = memo(
           size={size}
           accentPosition={accentPosition}
           accentSize={accentSize}
+          $padded={padded}
+          $paddingSize={paddingSize ?? size}
           className={`${className || ''} reqore-callout`}
         >
           {hasIcon && (

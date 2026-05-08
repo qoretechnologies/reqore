@@ -1,6 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { IReqoreFeatureCardProps, ReqoreFeatureCard } from '../../components/FeatureCard';
+import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
@@ -276,4 +277,59 @@ export const Raised: Story = {
     flat: true,
     raised: true,
   },
+};
+
+const FEATURE_CARD_SIZES: TSizes[] = ['tiny', 'small', 'normal', 'big', 'huge'];
+
+const renderFeatureCardMatrix = (variantArgs: Partial<IReqoreFeatureCardProps>) =>
+  FEATURE_CARD_SIZES.map((size) => (
+    <ReqoreFeatureCard
+      key={size}
+      label={`size=${size}`}
+      description='Spotlight a feature with a marker, label and description.'
+      intent='info'
+      size={size}
+      {...variantArgs}
+    />
+  ));
+
+export const Unpadded: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderFeatureCardMatrix({ padded: false })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedHorizontalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderFeatureCardMatrix({ padded: 'horizontal' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedVerticalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderFeatureCardMatrix({ padded: 'vertical' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const CustomPaddingSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {FEATURE_CARD_SIZES.map((size) => (
+        <ReqoreFeatureCard
+          key={size}
+          label={`size=${size}, paddingSize='small'`}
+          description='Padding scales independently from text scale'
+          intent='info'
+          size={size}
+          paddingSize='small'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
 };

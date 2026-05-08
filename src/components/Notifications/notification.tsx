@@ -15,6 +15,7 @@ import {
   getReadableColor,
 } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { resolvePadding, TReqorePadded } from '../../helpers/utils';
 import {
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
@@ -48,6 +49,18 @@ export interface IReqoreNotificationProps
   flat?: boolean;
   size?: TSizes;
   blur?: number;
+  /**
+   * Controls which axes receive the notification's outer padding.
+   * - `true` (default): padding on both axes
+   * - `false`: no padding
+   * - `'horizontal'`: only left/right padding
+   * - `'vertical'`: only top/bottom padding
+   */
+  padded?: TReqorePadded;
+  /**
+   * Size of the notification's outer padding. Defaults to `size`.
+   */
+  paddingSize?: TSizes;
 }
 
 export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
@@ -65,6 +78,8 @@ export interface IReqoreNotificationStyle extends IWithReqoreOpaque {
   margin?: 'top' | 'bottom' | 'both' | 'none';
   backgroundBlur?: number;
   raised?: boolean;
+  $padded?: TReqorePadded;
+  $paddingSize?: TSizes;
 }
 
 const timeoutAnimation = keyframes`
@@ -220,7 +235,13 @@ export const StyledNotificationContentWrapper = styled.div<IReqoreNotificationSt
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: ${({ size = 'normal' }: IReqoreNotificationStyle) => `${PADDING_FROM_SIZE[size]}px`};
+  padding: ${({ size = 'normal', $padded = true, $paddingSize }: IReqoreNotificationStyle) =>
+    resolvePadding({
+      padded: $padded,
+      paddingSize: $paddingSize ?? size,
+      verticalMultiplier: 1,
+      horizontalMultiplier: 1,
+    })};
 `;
 
 export const StyledNotificationTitle = styled.h4`
@@ -275,6 +296,8 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       size = 'normal',
       customTheme,
         inheritCustomTheme,
+      padded = true,
+      paddingSize,
     },
     ref: any
   ) => {
@@ -338,7 +361,12 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             theme={theme}
             maxWidth='450px'
           >
-            <StyledNotificationContentWrapper size={size} theme={theme}>
+            <StyledNotificationContentWrapper
+              size={size}
+              theme={theme}
+              $padded={padded}
+              $paddingSize={paddingSize}
+            >
               {type || intent || icon ? (
                 <>
                   {intent === 'pending' || type === 'pending' ? (

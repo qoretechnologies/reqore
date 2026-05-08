@@ -344,3 +344,59 @@ test('Renders <SeverityRow /> with raised effect', () => {
 
   expect(document.querySelectorAll('.reqore-severity-row').length).toBe(1);
 });
+
+test('Renders <SeverityRow /> with padded=false', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow label='Unpadded' padded={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-severity-row').length).toBe(1);
+});
+
+test('Renders <SeverityRow /> with padded="horizontal"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow label='Horizontal' padded='horizontal' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-severity-row').length).toBe(1);
+});
+
+test('Renders <SeverityRow /> with padded="vertical"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow label='Vertical' padded='vertical' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-severity-row').length).toBe(1);
+});
+
+test('Renders <SeverityRow /> with custom paddingSize', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow label='Big size, small padding' size='big' paddingSize='small' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-severity-row').length).toBe(1);
+});

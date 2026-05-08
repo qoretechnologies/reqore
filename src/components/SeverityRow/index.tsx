@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
-import { getOneLessSize } from '../../helpers/utils';
+import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -71,6 +71,19 @@ export interface IReqoreSeverityRowProps
    * - `false`: single line with ellipsis
    */
   wrap?: boolean;
+  /**
+   * Controls which axes receive the row's outer padding.
+   * - `true` (default): padding on both axes
+   * - `false`: no padding (e.g. when nested inside another padded surface)
+   * - `'horizontal'`: only left/right padding
+   * - `'vertical'`: only top/bottom padding
+   */
+  padded?: TReqorePadded;
+  /**
+   * Size of the row's outer padding. Defaults to `size`. Use this to scale
+   * the padding independently from the row's text scale.
+   */
+  paddingSize?: TSizes;
 }
 
 interface IStyledRowProps {
@@ -84,6 +97,8 @@ interface IStyledRowProps {
   rounded?: boolean;
   disabled?: boolean;
   $raised?: boolean;
+  $padded: TReqorePadded;
+  $paddingSize: TSizes;
 }
 
 const stripColorFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
@@ -98,8 +113,13 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   display: grid;
   grid-template-columns: 4px 1fr auto;
   gap: ${({ size }) => PADDING_FROM_SIZE[size] * 2}px;
-  padding: ${({ size }) => PADDING_FROM_SIZE[size] * 2}px
-    ${({ size }) => PADDING_FROM_SIZE[size] * 3}px;
+  padding: ${({ $padded, $paddingSize }) =>
+    resolvePadding({
+      padded: $padded,
+      paddingSize: $paddingSize,
+      verticalMultiplier: 2,
+      horizontalMultiplier: 3,
+    })};
   border-radius: ${({ rounded, size }) => (rounded ? `${RADIUS_FROM_SIZE[size]}px` : '0')};
   background-color: ${({ theme, $intent, $transparent }) =>
     $transparent ? 'transparent' : tintedBgFor(theme, $intent)};
@@ -115,13 +135,15 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   transition: background-color 0.15s ease-out;
 
-  ${({ $clickable, theme, $intent }) =>
+  ${({ $clickable, theme, $intent, $transparent }) =>
     $clickable &&
     css`
       cursor: pointer;
       &:hover {
         background-color: ${$intent
-          ? rgba(theme.intents[$intent], 0.1)
+          ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
+          : $transparent
+          ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
           : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)};
       }
     `}
@@ -203,6 +225,8 @@ const ReqoreSeverityRow = memo(
         labelEffect,
         descriptionEffect,
         wrap = true,
+        padded = true,
+        paddingSize,
         className,
         ...rest
       },
@@ -230,6 +254,8 @@ const ReqoreSeverityRow = memo(
           rounded={rounded}
           $raised={raised}
           $clickable={interactive}
+          $padded={padded}
+          $paddingSize={paddingSize ?? size}
           disabled={disabled}
           effect={effect}
           className={`${className || ''} reqore-severity-row`}
