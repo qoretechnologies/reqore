@@ -234,3 +234,82 @@ test('Renders <Panel /> with raised effect', () => {
 
   expect(document.querySelectorAll('.reqore-panel').length).toBe(1);
 });
+
+test('Renders <Panel /> with iconWithLabel placing icon next to label', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqorePanel
+          icon='4kFill'
+          label='With label'
+          description='Description below'
+          iconWithLabel
+        >
+          Panel
+        </ReqorePanel>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // When iconWithLabel is true, the icon must live INSIDE the label+badge row
+  // — i.e. it sits next to the label rather than to the left of the whole stack.
+  const labelRow = document.querySelector(
+    '.reqore-panel-title .reqore-icon'
+  );
+  expect(labelRow).toBeTruthy();
+  expect(document.querySelectorAll('.reqore-panel-title').length).toBe(1);
+});
+
+test('Renders <Panel /> with iconVerticalAlign=top', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqorePanel
+          icon='4kFill'
+          label='Top aligned'
+          description='Description'
+          iconVerticalAlign='top'
+        >
+          Panel
+        </ReqorePanel>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-panel-title').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-icon').length).toBeGreaterThan(0);
+});
+
+test('Renders <Panel /> with iconVerticalAlign=bottom', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqorePanel
+          icon='4kFill'
+          label='Bottom aligned'
+          description='Description'
+          iconVerticalAlign='bottom'
+        >
+          Panel
+        </ReqorePanel>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-panel-title').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-icon').length).toBeGreaterThan(0);
+});
+
+test('Renders <Panel /> with default iconVerticalAlign=center', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqorePanel icon='4kFill' label='Centered' description='Description'>
+          Panel
+        </ReqorePanel>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-panel-title').length).toBe(1);
+});

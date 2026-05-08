@@ -1,6 +1,5 @@
 import { StoryObj } from '@storybook/react';
-import { ReqoreAccordion } from '../../components/Accordion';
-import { IReqoreAccordionItem } from '../../components/Accordion';
+import { IReqoreAccordionItem, ReqoreAccordion } from '../../components/Accordion';
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
@@ -24,17 +23,17 @@ type Story = StoryObj<typeof meta>;
 
 const basicItems: IReqoreAccordionItem[] = [
   {
-    title: 'What is ReQore?',
+    label: 'What is ReQore?',
     content:
       'ReQore is a highly theme-able and modular UI library for React, ' +
       'designed for the Qorus platform.',
   },
   {
-    title: 'How do I install it?',
+    label: 'How do I install it?',
     content: 'You can install ReQore via npm or yarn: yarn add @qoretechnologies/reqore',
   },
   {
-    title: 'Is it open source?',
+    label: 'Is it open source?',
     content: 'Yes! ReQore is open source and available on GitHub.',
   },
 ];
@@ -47,21 +46,13 @@ export const Basic: Story = {
 
 export const WithDefaultOpen: Story = {
   args: {
-    items: [
-      { ...basicItems[0], isOpen: true },
-      basicItems[1],
-      basicItems[2],
-    ],
+    items: [{ ...basicItems[0], isOpen: true }, basicItems[1], basicItems[2]],
   },
 };
 
 export const SingleExpand: Story = {
   args: {
-    items: [
-      { ...basicItems[0], isOpen: true },
-      basicItems[1],
-      basicItems[2],
-    ],
+    items: [{ ...basicItems[0], isOpen: true }, basicItems[1], basicItems[2]],
     allowMultiple: false,
   },
 };
@@ -70,18 +61,18 @@ export const WithIcons: Story = {
   args: {
     items: [
       {
-        title: 'Getting Started',
+        label: 'Getting Started',
         content: 'Install the package and wrap your app with ReqoreUIProvider.',
         icon: 'RocketLine',
         isOpen: true,
       },
       {
-        title: 'Theming',
+        label: 'Theming',
         content: 'Customize colors, fonts, and intents through the theme system.',
         icon: 'PaletteLine',
       },
       {
-        title: 'Components',
+        label: 'Components',
         content: 'Over 40 components available: buttons, tables, modals, and more.',
         icon: 'LayoutGridLine',
       },
@@ -93,14 +84,14 @@ export const WithBadges: Story = {
   args: {
     items: [
       {
-        title: 'Inbox',
+        label: 'Inbox',
         content: 'Your inbox messages appear here.',
         icon: 'InboxLine',
         badge: 12,
         isOpen: true,
       },
       {
-        title: 'Notifications',
+        label: 'Notifications',
         content: 'System notifications and alerts.',
         icon: 'Notification2Line',
         badge: [
@@ -109,7 +100,7 @@ export const WithBadges: Story = {
         ],
       },
       {
-        title: 'Archive',
+        label: 'Archive',
         content: 'Archived items are stored here.',
         icon: 'ArchiveLine',
         badge: 0,
@@ -124,26 +115,26 @@ export const WithIntents: Story = {
       {...args}
       items={[
         {
-          title: 'Info section',
+          label: 'Info section',
           content: 'This section has info intent.',
           icon: 'InformationLine',
           intent: 'info',
           isOpen: true,
         },
         {
-          title: 'Success section',
+          label: 'Success section',
           content: 'This section has success intent.',
           icon: 'CheckLine',
           intent: 'success',
         },
         {
-          title: 'Warning section',
+          label: 'Warning section',
           content: 'This section has warning intent.',
           icon: 'AlertLine',
           intent: 'warning',
         },
         {
-          title: 'Danger section',
+          label: 'Danger section',
           content: 'This section has danger intent.',
           icon: 'ErrorWarningLine',
           intent: 'danger',
@@ -174,13 +165,13 @@ export const Sizes: Story = {
               size={size}
               items={[
                 {
-                  title: `${size} accordion item`,
+                  label: `${size} accordion item`,
                   content: `This is content for the ${size} size.`,
                   icon: 'InformationLine',
                   isOpen: true,
                 },
                 {
-                  title: 'Another item',
+                  label: 'Another item',
                   content: 'More content here.',
                 },
               ]}
@@ -236,7 +227,7 @@ export const CustomContent: Story = {
       {...args}
       items={[
         {
-          title: 'With action buttons',
+          label: 'With action buttons',
           icon: 'Settings3Line',
           isOpen: true,
           content: (
@@ -252,7 +243,7 @@ export const CustomContent: Story = {
           ),
         },
         {
-          title: 'With a list',
+          label: 'With a list',
           icon: 'ListCheck2',
           content: (
             <ul style={{ margin: 0, paddingLeft: '20px' }}>
@@ -274,21 +265,21 @@ export const FAQExample: Story = {
       fluid
       items={[
         {
-          title: 'How do I reset my password?',
+          label: 'How do I reset my password?',
           icon: 'LockLine',
           content:
             'Go to the login page and click "Forgot password". ' +
             'You will receive an email with a reset link.',
         },
         {
-          title: 'Can I change my subscription plan?',
+          label: 'Can I change my subscription plan?',
           icon: 'ExchangeDollarLine',
           content:
             'Yes, you can upgrade or downgrade your plan at any time ' +
             'from the billing settings page.',
         },
         {
-          title: 'How do I contact support?',
+          label: 'How do I contact support?',
           icon: 'CustomerService2Line',
           content:
             'You can reach our support team via email at support@example.com ' +
@@ -296,7 +287,7 @@ export const FAQExample: Story = {
           isOpen: true,
         },
         {
-          title: 'Is there a free trial?',
+          label: 'Is there a free trial?',
           icon: 'GiftLine',
           content:
             'Yes! We offer a 14-day free trial with full access to all features. ' +
@@ -315,7 +306,7 @@ export const SettingsExample: Story = {
       allowMultiple={false}
       items={[
         {
-          title: 'General',
+          label: 'General',
           icon: 'Settings3Line',
           isOpen: true,
           content: (
@@ -328,7 +319,7 @@ export const SettingsExample: Story = {
           ),
         },
         {
-          title: 'Security',
+          label: 'Security',
           icon: 'ShieldLine',
           badge: { label: 'Action needed', intent: 'warning', icon: 'AlertLine' },
           content: (
@@ -341,12 +332,12 @@ export const SettingsExample: Story = {
           ),
         },
         {
-          title: 'Notifications',
+          label: 'Notifications',
           icon: 'Notification2Line',
           content: 'Configure email, push, and in-app notification preferences.',
         },
         {
-          title: 'Danger Zone',
+          label: 'Danger Zone',
           icon: 'ErrorWarningLine',
           intent: 'danger',
           content: (

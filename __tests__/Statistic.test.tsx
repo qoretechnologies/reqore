@@ -330,3 +330,65 @@ test('Renders <Statistic /> with raised effect', () => {
 
   expect(document.querySelectorAll('.reqore-statistic').length).toBe(1);
 });
+
+test('Renders <Statistic /> with padded=false', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreStatistic value={100} label='Unpadded' rounded padded={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-statistic').length).toBe(1);
+});
+
+test('Renders <Statistic /> with padded="horizontal"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreStatistic value={100} label='Horizontal' rounded padded='horizontal' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-statistic').length).toBe(1);
+});
+
+test('Renders <Statistic /> with padded="vertical"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreStatistic value={100} label='Vertical' rounded padded='vertical' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-statistic').length).toBe(1);
+});
+
+test('Renders <Statistic /> with custom paddingSize', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreStatistic
+            value={100}
+            label='Big size, small padding'
+            size='big'
+            paddingSize='small'
+            rounded
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-statistic').length).toBe(1);
+});

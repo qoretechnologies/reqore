@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
@@ -9,7 +9,13 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { alignToFlexAlign, getOneHigherSize, getOneLessSize } from '../../helpers/utils';
+import {
+  alignToFlexAlign,
+  getOneHigherSize,
+  getOneLessSize,
+  resolvePadding,
+  TReqorePadded,
+} from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, InactiveIconScale, RaisedElement, ScaleIconOnHover } from '../../styles';
 import {
@@ -87,6 +93,21 @@ export interface IReqoreStatisticProps
    * reads as a tactile card; the highlight is suppressed when `flat={false}`.
    */
   raised?: boolean;
+  /**
+   * Controls which axes receive the tile's outer padding (only applies when
+   * the tile has a background — i.e. when `effect`/`rounded`/`flat`/
+   * `transparent`/`opacity` is set or `raised` is true).
+   * - `true` (default): padding on both axes
+   * - `false`: no padding
+   * - `'horizontal'`: only left/right padding
+   * - `'vertical'`: only top/bottom padding
+   */
+  padded?: TReqorePadded;
+  /**
+   * Size of the tile's outer padding. Defaults to `size`. Use this to scale
+   * the padding independently from the tile's text/icon scale.
+   */
+  paddingSize?: TSizes;
 }
 
 interface IStyledStatisticWrapper {
@@ -102,6 +123,8 @@ interface IStyledStatisticWrapper {
   intent?: string;
   opacity?: number;
   $raised?: boolean;
+  $padded: TReqorePadded;
+  $paddingSize: TSizes;
 }
 
 const TREND_ICONS: Record<TReqoreStatisticTrendDirection, IReqoreIconName> = {
@@ -121,7 +144,17 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
   justify-content: ${({ $align }) => $align};
   width: ${({ $fluid }) => ($fluid ? '100%' : undefined)};
 
-  ${({ $hasBackground, theme, size, rounded, flat, intent, opacity = 1 }) =>
+  ${({
+    $hasBackground,
+    theme,
+    size,
+    rounded,
+    flat,
+    intent,
+    opacity = 1,
+    $padded,
+    $paddingSize,
+  }) =>
     $hasBackground &&
     css`
       background-color: ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
@@ -133,7 +166,12 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
             0.08
           )}`};
       color: ${getReadableColor(theme, undefined, undefined, true)};
-      padding: ${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 5}px;
+      padding: ${resolvePadding({
+        padded: $padded,
+        paddingSize: $paddingSize,
+        verticalMultiplier: 3,
+        horizontalMultiplier: 5,
+      })};
     `}
 
   ${({ $raised, $hasBackground, flat }) =>
@@ -195,6 +233,8 @@ const ReqoreStatistic = memo(
         transparent,
         opacity,
         raised,
+        padded = true,
+        paddingSize,
         className,
         ...rest
       },
@@ -256,6 +296,8 @@ const ReqoreStatistic = memo(
           intent={intent}
           opacity={transparent ? 0 : opacity}
           $raised={raised}
+          $padded={padded}
+          $paddingSize={paddingSize ?? size}
           effect={transformedEffect}
           className={`${className || ''} reqore-statistic`}
         >

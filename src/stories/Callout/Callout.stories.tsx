@@ -1,6 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { IReqoreCalloutProps, ReqoreCallout } from '../../components/Callout';
 import ReqoreControlGroup from '../../components/ControlGroup';
+import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
@@ -304,4 +305,61 @@ export const Raised: Story = {
     flat: true,
     raised: true,
   },
+};
+
+const CALLOUT_SIZES: TSizes[] = ['tiny', 'small', 'normal', 'big', 'huge'];
+
+const renderCalloutMatrix = (variantArgs: Partial<IReqoreCalloutProps>) =>
+  CALLOUT_SIZES.map((size) => (
+    <ReqoreCallout
+      key={size}
+      label={`size=${size}`}
+      description='No records match the current filters.'
+      icon='InformationLine'
+      intent='info'
+      size={size}
+      {...variantArgs}
+    />
+  ));
+
+export const Unpadded: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderCalloutMatrix({ padded: false })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedHorizontalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderCalloutMatrix({ padded: 'horizontal' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedVerticalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderCalloutMatrix({ padded: 'vertical' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const CustomPaddingSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {CALLOUT_SIZES.map((size) => (
+        <ReqoreCallout
+          key={size}
+          label={`size=${size}, paddingSize='small'`}
+          description='Padding scales independently from text scale'
+          icon='InformationLine'
+          intent='info'
+          size={size}
+          paddingSize='small'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
 };

@@ -64,7 +64,7 @@ import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreErrorBoundary } from '../ErrorBoundary';
-import ReqoreIcon, { IReqoreIconProps, StyledIconWrapper } from '../Icon';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreSkeleton } from '../Skeleton';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
@@ -117,6 +117,22 @@ export interface IReqorePanelProps
 
   icon?: IReqoreIconName;
   iconProps?: IReqoreIconProps;
+  /**
+   * When `true`, the leading icon is rendered inside the label/badge row so
+   * the description appears beneath both the icon and the label. When `false`
+   * (default), the icon sits to the left of the label+description stack and
+   * its vertical alignment is controlled by `iconVerticalAlign`.
+   */
+  iconWithLabel?: boolean;
+  /**
+   * Vertical alignment of the leading icon relative to the label+description
+   * stack. Only takes effect when `iconWithLabel={false}` (the default
+   * layout). Defaults to `'center'`.
+   * - `'top'`: icon aligns with the label line
+   * - `'center'`: icon centres against the whole label+description block
+   * - `'bottom'`: icon aligns with the description line
+   */
+  iconVerticalAlign?: 'top' | 'center' | 'bottom';
   label?: string | ReactElement<any>;
   badge?: TReqoreBadge | TReqoreBadge[];
   description?: string;
@@ -193,10 +209,79 @@ export const StyledPanelTitleHeader = styled.div`
   overflow: hidden;
 `;
 
-export const StyledPanelTitleHeaderContent = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+export const StyledPanelTitleHeaderContent = styled.div<{
+  iconSize?: number;
+  hasIcon?: boolean;
+  size?: TSizes;
+  $hasOuterIcon?: boolean;
+  $iconVerticalAlign?: 'top' | 'center' | 'bottom';
+  $hasDescription?: boolean;
+}>`
+  // When the icon lives in the outer container (iconVerticalAlign mode),
+  // we use a 2-column × N-row CSS Grid where the LABEL ROW and DESCRIPTION
+  // ROW are direct grid items — not wrapped inside a span-2 stack. That
+  // makes each row's auto-sized height equal to the actual text row's
+  // line-box height, so 'align-self: center' on the icon (in column 1)
+  // visually centres the icon against the text row it shares a grid row
+  // with — no font-metric guesswork.
+  display: ${({ $hasOuterIcon }) => ($hasOuterIcon ? 'grid' : 'flex')};
+  ${({ $hasOuterIcon, size, $iconVerticalAlign = 'center', $hasDescription }) =>
+    $hasOuterIcon
+      ? css`
+          // 'auto' lets the column grow to the icon's actual rendered size —
+          // important when consumers pass a custom 'iconProps.size' that does
+          // not match the default size derived from 'panelSize'/'labelSize'.
+          // 'iconSize' is still passed via 'min-width' below to ensure a
+          // sensible minimum reservation when the row is otherwise empty.
+          grid-template-columns: auto minmax(0, 1fr);
+          grid-template-rows: ${$hasDescription ? 'auto auto' : 'auto'};
+          column-gap: ${PADDING_FROM_SIZE[size || 'normal']}px;
+          row-gap: 3px;
+          align-items: start;
+
+          & > .reqore-panel-title-icon {
+            ${$iconVerticalAlign === 'top'
+              ? css`
+                  grid-row: 1;
+                `
+              : $iconVerticalAlign === 'bottom' && $hasDescription
+              ? css`
+                  grid-row: 2;
+                `
+              : css`
+                  grid-row: 1 / ${$hasDescription ? 3 : 2};
+                `}
+            grid-column: 1;
+            align-self: center;
+            justify-self: start;
+            // Suppress 'vertical-align: super' that ReqoreIcon applies to its
+            // SVG for inline-text contexts. In our grid layout the wrapper is
+            // already vertically centred against the text row's line-box;
+            // 'display: block' takes the SVG out of inline flow entirely so
+            // baseline/super offsets cannot push it off-centre. The wrapper's
+            // own 'align-items: center' then centres the SVG within itself.
+            & svg {
+              display: block;
+              vertical-align: middle;
+            }
+          }
+
+          & > .reqore-panel-title-label-row {
+            grid-column: 2;
+            grid-row: 1;
+            min-width: 0;
+          }
+
+          & > .reqore-panel-title-description {
+            grid-column: 2;
+            grid-row: 2;
+            min-width: 0;
+          }
+        `
+      : css`
+          justify-content: flex-start;
+          align-items: center;
+        `}
   flex: 0 1 auto;
   overflow: hidden;
   min-width: ${({ iconSize, hasIcon }) => {
@@ -220,6 +305,7 @@ export const StyledPanelTitleHeaderLabelAndDescription = styled.div`
 
 export const StyledPanelTitleHeaderLabelAndBadge = styled.div`
   display: inline-flex;
+  align-items: center;
   max-width: 100%;
 `;
 
@@ -270,7 +356,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
           cursor: pointer;
 
           &:hover {
-            ${StyledPanelTitle} ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
+            ${StyledPanelTitle} ${StyledPanelTitleHeaderContent} .reqore-panel-title-icon {
               transform: scale(${ACTIVE_ICON_SCALE});
             }
 
@@ -344,7 +430,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
   flex: 0 0 auto;
   gap: ${GAP_FROM_SIZE.normal}px;
 
-  ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
+  ${StyledPanelTitleHeaderContent} .reqore-panel-title-icon {
     transform: scale(${INACTIVE_ICON_SCALE});
   }
 
@@ -353,7 +439,7 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
     css`
       cursor: pointer;
       &:hover {
-        ${StyledPanelTitleHeaderContent} > ${StyledIconWrapper} {
+        ${StyledPanelTitleHeaderContent} .reqore-panel-title-icon {
           transform: scale(${ACTIVE_ICON_SCALE});
         }
 
@@ -487,6 +573,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       inheritCustomTheme,
       icon,
       iconImage,
+      iconWithLabel = false,
+      iconVerticalAlign = 'center',
       intent,
       className,
       flat,
@@ -1028,22 +1116,41 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       responsive
                     />
                   ) : icon || iconImage || label || badge ? (
-                    <StyledPanelTitleHeaderContent
-                      size={panelSize}
-                      {...labelProps}
-                      hasLabel={!!label}
-                      hasIcon={!!icon || !!iconImage || loading}
-                      iconSize={
-                        ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
-                      }
-                    >
-                      {icon || iconImage ? (
+                    (() => {
+                      const hasPanelIcon = !!icon || !!iconImage || loading;
+
+                      // Layout decision:
+                      // - iconWithLabel=true → render the icon INSIDE the
+                      //   label-and-badge row (no outer icon column). The
+                      //   description sits flush-left under the icon+label.
+                      // - When there is NO description, fall back to the
+                      //   inline layout regardless of iconVerticalAlign — the
+                      //   outer grid only earns its keep when there is a
+                      //   description row to anchor against, and the inline
+                      //   layout aligns icon-to-text glyphs more naturally
+                      //   via the heading's own line-height.
+                      // - Otherwise → outer two-column grid where the icon
+                      //   sits in a reserved column. iconVerticalAlign places
+                      //   the icon in row 1 (label), row 2 (description), or
+                      //   spans both rows (center). The description always
+                      //   indents past the icon column.
+                      const inlineWithLabel =
+                        hasPanelIcon && (iconWithLabel || !description);
+                      const useOuterGrid = hasPanelIcon && !inlineWithLabel;
+
+                      // Outer grid → grid column-gap handles icon→label
+                      // spacing, so the icon itself takes no margin.
+                      // Inline → keep 'margin=right' so ReqoreIcon adds its
+                      // standard side-spacer between icon and label.
+                      const iconMargin: 'right' | undefined = useOuterGrid ? undefined : 'right';
+
+                      const panelIcon = hasPanelIcon ? (
                         <ReqoreIcon
                           size={`${
                             ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
                           }px`}
                           image={loading ? undefined : iconImage}
-                          margin='right'
+                          margin={iconMargin}
                           color={iconColor}
                           tooltip={iconTooltip}
                           effect={{
@@ -1052,12 +1159,17 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                           {...iconProps}
                           animation={loading ? 'spin' : iconProps?.animation}
                           icon={
-                            loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
+                            loading
+                              ? `Loader${loadingIconType || ''}Line`
+                              : icon || iconProps?.icon
                           }
+                          className={`reqore-panel-title-icon ${iconProps?.className || ''}`.trim()}
                         />
-                      ) : null}
-                      <StyledPanelTitleHeaderLabelAndDescription>
-                        <StyledPanelTitleHeaderLabelAndBadge>
+                      ) : null;
+
+                      const labelRow = (
+                        <StyledPanelTitleHeaderLabelAndBadge className='reqore-panel-title-label-row'>
+                          {inlineWithLabel && panelIcon}
                           {typeof label === 'string' ? (
                             <LabelEditor
                               size={labelSize || panelSize}
@@ -1066,7 +1178,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                                 noWrap: true,
                                 ...labelEffect,
                               }}
-                              style={{ display: 'inline-flex', alignItems: 'center', minWidth: 0 }}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                minWidth: 0,
+                              }}
                               label={label}
                               onSubmit={onLabelEdit}
                               tooltip={showLabelTooltip ? customLabelTooltip || label : undefined}
@@ -1083,17 +1199,47 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                             />
                           ) : null}
                         </StyledPanelTitleHeaderLabelAndBadge>
-                        {description && (
-                          <ReqoreSpan
-                            size={labelSize ? NUMBER_TO_SIZE[labelSize] : panelSize}
-                            effect={{ opacity: 0.7, ...descriptionEffect }}
-                            intent={descriptionIntent}
-                          >
-                            {description}
-                          </ReqoreSpan>
-                        )}
-                      </StyledPanelTitleHeaderLabelAndDescription>
-                    </StyledPanelTitleHeaderContent>
+                      );
+
+                      const descriptionRow = description ? (
+                        <ReqoreSpan
+                          className='reqore-panel-title-description'
+                          size={labelSize ? NUMBER_TO_SIZE[labelSize] : panelSize}
+                          effect={{ opacity: 0.7, ...descriptionEffect }}
+                          intent={descriptionIntent}
+                        >
+                          {description}
+                        </ReqoreSpan>
+                      ) : null;
+
+                      return (
+                        <StyledPanelTitleHeaderContent
+                          size={panelSize}
+                          {...labelProps}
+                          hasLabel={!!label}
+                          hasIcon={useOuterGrid}
+                          iconSize={
+                            ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                          }
+                          $hasOuterIcon={useOuterGrid}
+                          $iconVerticalAlign={iconVerticalAlign}
+                          $hasDescription={!!description}
+                        >
+                          {useOuterGrid ? (
+                            <>
+                              {panelIcon}
+                              {labelRow}
+                              {descriptionRow}
+                            </>
+                          ) : (
+                            <StyledPanelTitleHeaderLabelAndDescription>
+                              {labelRow}
+                              {descriptionRow}
+                            </StyledPanelTitleHeaderLabelAndDescription>
+                          )}
+                        </StyledPanelTitleHeaderContent>
+                      );
+                    })()
                   ) : null}
                   {breadcrumbs && (badge || badge === 0) ? (
                     <ButtonBadge

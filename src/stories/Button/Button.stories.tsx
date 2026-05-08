@@ -493,3 +493,52 @@ export const Raised: Story = {
     raised: true,
   },
 };
+
+export const MinimalRaised: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
+      <ReqoreControlGroup>
+        <ReqoreButton minimal flat raised label='Minimal raised' icon='24HoursFill' />
+        <ReqoreButton minimal flat raised intent='info' label='Info' icon='InformationLine' />
+        <ReqoreButton minimal flat raised intent='success' label='Success' icon='CheckLine' />
+        <ReqoreButton minimal flat raised intent='warning' label='Warning' icon='AlertLine' />
+        <ReqoreButton minimal flat raised intent='danger' label='Danger' icon='ErrorWarningLine' />
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup>
+        <ReqoreButton minimal flat raised size='tiny' label='Tiny' icon='24HoursFill' />
+        <ReqoreButton minimal flat raised size='small' label='Small' icon='24HoursFill' />
+        <ReqoreButton minimal flat raised size='normal' label='Normal' icon='24HoursFill' />
+        <ReqoreButton minimal flat raised size='big' label='Big' icon='24HoursFill' />
+        <ReqoreButton minimal flat raised size='huge' label='Huge' icon='24HoursFill' />
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup>
+        <ReqoreButton minimal flat raised label='With badge' icon='24HoursFill' badge={3} />
+        <ReqoreButton
+          minimal
+          flat
+          raised
+          label='Right icon'
+          icon='24HoursFill'
+          rightIcon='ArrowRightLine'
+        />
+        <ReqoreButton minimal flat raised icon='24HoursFill' tooltip='Icon-only minimal raised' />
+        <ReqoreButton minimal flat raised label='Disabled' icon='24HoursFill' disabled />
+        <ReqoreButton minimal flat raised label='Active' icon='24HoursFill' active />
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup>
+        <ReqoreButton flat raised label='flat + raised (non-minimal)' icon='24HoursFill' />
+        <ReqoreButton
+          flat
+          raised
+          intent='info'
+          label='Solid info raised'
+          icon='InformationLine'
+        />
+        <ReqoreButton minimal flat raised={false} label='Minimal, raised={false}' icon='24HoursFill' />
+      </ReqoreControlGroup>
+    </div>
+  ),
+};

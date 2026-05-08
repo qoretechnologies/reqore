@@ -309,6 +309,127 @@ test('Renders <EntityRow /> with wrap=true by default', () => {
   expect(document.querySelectorAll('.reqore-entity-row-description').length).toBe(1);
 });
 
+test('Hides the icon tile by default when transparent', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Transparent' icon='PlayCircleLine' transparent />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // No tinted tile in transparent mode by default
+  expect(document.querySelectorAll('.reqore-entity-row-icon-tile').length).toBe(0);
+  // Bare icon is still rendered
+  expect(document.querySelectorAll('.reqore-entity-row-icon').length).toBe(1);
+});
+
+test('Shows the icon tile on a transparent row when iconHasBackground={true}', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow
+            label='Transparent + tile'
+            icon='PlayCircleLine'
+            transparent
+            iconHasBackground
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-entity-row-icon-tile').length).toBe(1);
+});
+
+test('Renders <EntityRow /> with iconHasBackground=false (bare icon, no tile)', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Bare' icon='PlayCircleLine' iconHasBackground={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-entity-row-icon-tile').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-entity-row-icon').length).toBe(1);
+});
+
+test('Renders <EntityRow /> with padded=false', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Unpadded' padded={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-entity-row').length).toBe(1);
+});
+
+test('Renders <EntityRow /> with padded="horizontal"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Horizontal only' padded='horizontal' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-entity-row').length).toBe(1);
+});
+
+test('Renders <EntityRow /> with padded="vertical"', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Vertical only' padded='vertical' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-entity-row').length).toBe(1);
+});
+
+test('Renders <EntityRow /> with custom paddingSize', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Big content, small padding' size='big' paddingSize='small' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-entity-row').length).toBe(1);
+});
+
+test('Renders <EntityRow /> with iconHasBackground=true by default (tile shown)', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Tiled' icon='PlayCircleLine' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-entity-row-icon-tile').length).toBe(1);
+});
+
 test('Renders <EntityRow /> with raised effect', () => {
   render(
     <ReqoreUIProvider>

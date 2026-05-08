@@ -1,6 +1,7 @@
 import { StoryObj } from '@storybook/react';
 import ReqoreControlGroup from '../../components/ControlGroup';
-import ReqoreEntityRow from '../../components/EntityRow';
+import ReqoreEntityRow, { IReqoreEntityRowProps } from '../../components/EntityRow';
+import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -205,10 +206,23 @@ export const NoWrap: Story = {
 export const Transparent: Story = {
   args: {
     label: 'Transparent entity row',
-    description: 'Even with intent set, the background stays transparent',
+    description:
+      'Even with intent set, the background stays transparent — the icon tile is hidden by default so the bare icon does not sit on a tinted square that fights transparency.',
     icon: 'SettingsLine',
     intent: 'info',
     transparent: true,
+    actions: [{ label: 'Open' }],
+  },
+};
+
+export const TransparentWithIconTile: Story = {
+  args: {
+    label: 'Transparent with explicit tile',
+    description: 'Pass `iconHasBackground` to force the tile back even on a transparent row.',
+    icon: 'SettingsLine',
+    intent: 'info',
+    transparent: true,
+    iconHasBackground: true,
     actions: [{ label: 'Open' }],
   },
 };
@@ -223,4 +237,68 @@ export const Raised: Story = {
     raised: true,
     actions: [{ label: 'Run', icon: 'PlayLine' }],
   },
+};
+
+const ENTITY_ROW_SIZES: TSizes[] = ['tiny', 'small', 'normal', 'big', 'huge'];
+
+const renderEntityRowMatrix = (variantArgs: Partial<IReqoreEntityRowProps>) =>
+  ENTITY_ROW_SIZES.map((size) => (
+    <ReqoreEntityRow
+      key={size}
+      label={`size=${size}`}
+      description='Compact summary line'
+      metadata='Last run: success · just now'
+      icon='PlayCircleLine'
+      size={size}
+      {...variantArgs}
+    />
+  ));
+
+export const IconWithoutBackground: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderEntityRowMatrix({ iconHasBackground: false })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const Unpadded: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderEntityRowMatrix({ padded: false })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedHorizontalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderEntityRowMatrix({ padded: 'horizontal' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedVerticalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderEntityRowMatrix({ padded: 'vertical' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const CustomPaddingSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {ENTITY_ROW_SIZES.map((size) => (
+        <ReqoreEntityRow
+          key={size}
+          label={`size=${size}, paddingSize='small'`}
+          description='Padding scales independently from text/icon size'
+          icon='PlayCircleLine'
+          size={size}
+          paddingSize='small'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
 };

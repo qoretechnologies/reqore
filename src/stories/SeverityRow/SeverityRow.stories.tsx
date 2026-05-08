@@ -1,7 +1,8 @@
 import { StoryObj } from '@storybook/react';
 import ReqoreControlGroup from '../../components/ControlGroup';
-import ReqoreSeverityRow from '../../components/SeverityRow';
+import ReqoreSeverityRow, { IReqoreSeverityRowProps } from '../../components/SeverityRow';
 import ReqoreTag from '../../components/Tag';
+import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -210,4 +211,61 @@ export const Raised: Story = {
     leading: <ReqoreTag size='tiny' intent='danger' label='Critical' />,
     actions: [{ label: 'Investigate', intent: 'danger' }],
   },
+};
+
+const SEVERITY_ROW_SIZES: TSizes[] = ['tiny', 'small', 'normal', 'big', 'huge'];
+
+const renderSeverityRowMatrix = (variantArgs: Partial<IReqoreSeverityRowProps>) =>
+  SEVERITY_ROW_SIZES.map((size) => (
+    <ReqoreSeverityRow
+      key={size}
+      label={`size=${size}`}
+      description='Threshold exceeded · just now'
+      intent='danger'
+      leading={<ReqoreTag size='tiny' intent='danger' label='Critical' />}
+      size={size}
+      {...variantArgs}
+    />
+  ));
+
+export const Unpadded: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderSeverityRowMatrix({ padded: false })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedHorizontalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderSeverityRowMatrix({ padded: 'horizontal' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const PaddedVerticalOnly: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {renderSeverityRowMatrix({ padded: 'vertical' })}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const CustomPaddingSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {SEVERITY_ROW_SIZES.map((size) => (
+        <ReqoreSeverityRow
+          key={size}
+          label={`size=${size}, paddingSize='small'`}
+          description='Padding scales independently from text scale'
+          intent='danger'
+          leading={<ReqoreTag size='tiny' intent='danger' label='Critical' />}
+          size={size}
+          paddingSize='small'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
 };

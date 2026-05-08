@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
-import { getOneLessSize } from '../../helpers/utils';
+import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -66,6 +66,29 @@ export interface IReqoreEntityRowProps
   /** Show the leading icon tile. Default `true` when icon/iconImage is provided. */
   showIcon?: boolean;
   /**
+   * Show the tinted/rounded background tile around the leading icon.
+   * - When the row is opaque (`transparent={false}`, the default), defaults
+   *   to `true`.
+   * - When the row is `transparent={true}`, defaults to `false` so the bare
+   *   icon does not sit on a tile that fights the transparent surface.
+   * - Pass an explicit boolean to override the default in either direction.
+   */
+  iconHasBackground?: boolean;
+  /**
+   * Controls which axes receive the row's outer padding.
+   * - `true` (default): padding on both axes
+   * - `false`: no padding (e.g. when nested inside another padded surface)
+   * - `'horizontal'`: only left/right padding
+   * - `'vertical'`: only top/bottom padding
+   */
+  padded?: TReqorePadded;
+  /**
+   * Size of the row's outer padding. Defaults to `size`. Use this to scale
+   * the padding independently from the row's text/icon scale (e.g. a `big`
+   * row with `paddingSize='small'` for a denser layout).
+   */
+  paddingSize?: TSizes;
+  /**
    * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
    * Best paired with `flat={true}` (no border); the highlight is suppressed
    * when `flat={false}` because the border already provides surface definition.
@@ -96,7 +119,10 @@ interface IStyledRowProps {
   rounded?: boolean;
   disabled?: boolean;
   $hasIcon?: boolean;
+  $iconHasBackground?: boolean;
   $raised?: boolean;
+  $padded: TReqorePadded;
+  $paddingSize: TSizes;
 }
 
 const ICON_TILE_SIZE_FROM_SIZE: Record<TSizes, number> = {
@@ -116,11 +142,18 @@ const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
 
 const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   display: grid;
-  grid-template-columns: ${({ $hasIcon, size }) =>
-    $hasIcon ? `${ICON_TILE_SIZE_FROM_SIZE[size]}px 1fr auto` : '1fr auto'};
+  grid-template-columns: ${({ $hasIcon, $iconHasBackground, size }) =>
+    $hasIcon
+      ? `${$iconHasBackground ? `${ICON_TILE_SIZE_FROM_SIZE[size]}px` : 'auto'} 1fr auto`
+      : '1fr auto'};
   gap: ${({ size }) => PADDING_FROM_SIZE[size] * 2}px;
-  padding: ${({ size }) => PADDING_FROM_SIZE[size] * 2}px
-    ${({ size }) => PADDING_FROM_SIZE[size] * 3}px;
+  padding: ${({ $padded, $paddingSize }) =>
+    resolvePadding({
+      padded: $padded,
+      paddingSize: $paddingSize,
+      verticalMultiplier: 2,
+      horizontalMultiplier: 3,
+    })};
   border-radius: ${({ rounded, size }) => (rounded ? `${RADIUS_FROM_SIZE[size]}px` : '0')};
   background-color: ${({ theme, $intent, $transparent }) =>
     $transparent ? 'transparent' : tintedBgFor(theme, $intent)};
@@ -136,13 +169,15 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   transition: background-color 0.15s ease-out;
 
-  ${({ $clickable, theme, $intent }) =>
+  ${({ $clickable, theme, $intent, $transparent }) =>
     $clickable &&
     css`
       cursor: pointer;
       &:hover {
         background-color: ${$intent
-          ? rgba(theme.intents[$intent], 0.1)
+          ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
+          : $transparent
+          ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
           : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)};
       }
     `}
@@ -226,6 +261,9 @@ const ReqoreEntityRow = memo(
         intent,
         transparent = false,
         showIcon,
+        iconHasBackground,
+        padded = true,
+        paddingSize,
         size = 'normal',
         flat = true,
         fluid = true,
@@ -251,6 +289,10 @@ const ReqoreEntityRow = memo(
       const hasIcon = (showIcon ?? (!!icon || !!iconImage)) && (!!icon || !!iconImage);
       const interactive = !!(rest.onClick || rest.onDoubleClick);
       const hasBadge = badge !== undefined && badge !== null;
+      // Default: tile follows opacity. Transparent rows hide the tile so the
+      // bare icon does not sit on a tinted square that fights transparency.
+      // Explicit prop overrides in either direction.
+      const resolvedIconHasBackground = iconHasBackground ?? !transparent;
 
       const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
         if (iconColor) return iconColor;
@@ -275,25 +317,38 @@ const ReqoreEntityRow = memo(
           $clickable={interactive}
           disabled={disabled}
           $hasIcon={hasIcon}
+          $iconHasBackground={resolvedIconHasBackground}
+          $padded={padded}
+          $paddingSize={paddingSize ?? size}
           effect={effect}
           className={`${className || ''} reqore-entity-row`}
         >
-          {hasIcon && (
-            <StyledIconTile
-              theme={theme}
-              $intent={intent}
-              $size={size}
-              className='reqore-entity-row-icon-tile'
-            >
+          {hasIcon &&
+            (resolvedIconHasBackground ? (
+              <StyledIconTile
+                theme={theme}
+                $intent={intent}
+                $size={size}
+                className='reqore-entity-row-icon-tile'
+              >
+                <ReqoreIcon
+                  {...iconProps}
+                  icon={icon}
+                  image={iconImage}
+                  size={size}
+                  color={resolvedIconColor}
+                />
+              </StyledIconTile>
+            ) : (
               <ReqoreIcon
                 {...iconProps}
                 icon={icon}
                 image={iconImage}
                 size={size}
                 color={resolvedIconColor}
+                className={`reqore-entity-row-icon ${iconProps?.className || ''}`.trim()}
               />
-            </StyledIconTile>
-          )}
+            ))}
           <StyledBody className='reqore-entity-row-body'>
             <StyledLabelLine $wrap={wrap} className='reqore-entity-row-label'>
               <StyledTextSlot $wrap={wrap}>

@@ -48,8 +48,8 @@ export class ErrorBoundary extends Component<IReqoreErrorBoundaryProps, IReqoreE
           icon='ErrorWarningLine'
           responsiveActions={false}
           responsiveTitle={false}
-          iconProps={{ size: '20px' }}
           customTheme={{ main: 'danger' }}
+          iconProps={{ size: '20px' }}
           {...omit(rest, ['onError'])}
           errorBoundaryOptions={{ doNotCatch: true }}
           actions={[

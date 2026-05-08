@@ -76,6 +76,7 @@ export { default as ReqoreTabsListItem } from './components/Tabs/item';
 export { default as ReqoreTabsList } from './components/Tabs/list';
 export { default as ReqoreTag } from './components/Tag';
 export { default as ReqoreTagGroup } from './components/Tag/group';
+export { default as ReqoreTestimonial } from './components/Testimonial';
 export { default as ReqoreTextarea } from './components/Textarea';
 export { ReqoreTier } from './components/Tier';
 export { TimeAgo as ReqoreTimeAgo } from './components/TimeAgo';

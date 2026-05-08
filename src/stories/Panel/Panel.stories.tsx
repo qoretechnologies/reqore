@@ -961,3 +961,47 @@ export const Raised: Story = {
     padded: true,
   },
 };
+
+const ICON_LAYOUT_SIZES: IReqorePanelProps['size'][] = ['tiny', 'small', 'normal', 'big', 'huge'];
+
+const renderIconLayoutMatrix = (
+  variantArgs: Partial<IReqorePanelProps>,
+  variantLabel: string
+): StoryFn<IReqorePanelProps> => {
+  return (args: IReqorePanelProps) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {ICON_LAYOUT_SIZES.map((size) => (
+        <ReqorePanel
+          key={size}
+          {...args}
+          {...variantArgs}
+          size={size}
+          icon='AlertLine'
+          label={`${variantLabel} · size=${size}`}
+          description='Unusual patterns we have noticed in your automation'
+          minimal
+          collapsible={false}
+        />
+      ))}
+    </div>
+  );
+};
+
+export const IconWithLabel: Story = {
+  render: renderIconLayoutMatrix({ iconWithLabel: true }, 'iconWithLabel'),
+};
+
+export const IconAlignTop: Story = {
+  render: renderIconLayoutMatrix({ iconVerticalAlign: 'top' }, "iconVerticalAlign='top'"),
+};
+
+export const IconAlignCenter: Story = {
+  render: renderIconLayoutMatrix(
+    { iconVerticalAlign: 'center' },
+    "iconVerticalAlign='center' (default)"
+  ),
+};
+
+export const IconAlignBottom: Story = {
+  render: renderIconLayoutMatrix({ iconVerticalAlign: 'bottom' }, "iconVerticalAlign='bottom'"),
+};
