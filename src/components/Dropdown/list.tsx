@@ -291,10 +291,12 @@ const ReqoreDropdownList = memo(
             handleItemClick(item, event as any);
           }
         } else if (key === 'ArrowRight') {
-          event.preventDefault();
+          // Only consume the event when there is actually a submenu to enter.
+          // Otherwise let it through so cursor movement in external inputs works.
           if (focusedItemIndex !== null && selectableItems[focusedItemIndex]) {
             const item = selectableItems[focusedItemIndex];
             if (size(item.items)) {
+              event.preventDefault();
               handleSelectItemAtLevel(item);
               setFocusedItemIndex(null);
             }
@@ -339,6 +341,23 @@ const ReqoreDropdownList = memo(
         // (the filter input or menu already handle these via their onKeyDown)
         if (menuRef && (event.target as HTMLElement)?.closest?.('.reqore-popover-content')) {
           return;
+        }
+
+        // When focus is in an editable element outside the dropdown, leave horizontal
+        // arrow keys alone so the caret can move. Vertical arrows and Enter still
+        // navigate the open list (matches typical combobox behavior).
+        if (key === 'ArrowLeft' || key === 'ArrowRight') {
+          const target = event.target as HTMLElement | null;
+          if (target) {
+            const tag = target.tagName;
+            if (
+              tag === 'INPUT' ||
+              tag === 'TEXTAREA' ||
+              target.isContentEditable
+            ) {
+              return;
+            }
+          }
         }
 
         handleKeyDown(event);

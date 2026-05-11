@@ -160,6 +160,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         disabled: (!size(items) && !readOnlyOnEmpty) || (rest as any).disabled,
         readOnly: (!size(items) && readOnlyOnEmpty) || (rest as any).readOnly,
         className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
+        transparent,
       } as T),
     [items, icon, rightIcon, buttonStyle, caretPosition, rest]
   );
