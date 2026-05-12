@@ -526,13 +526,13 @@ export const ReqoreCollection = memo(
                         className={`reqore-collection-group ${groupConfig?.className ?? ''}`.trim()}
                       >
                         <StyledCollectionWrapper
-                          columns={columns || (_showAs === 'grid' ? 'auto-fit' : 1)}
+                          columns={columns || (_showAs === 'grid' ? 'auto-fill' : 1)}
                           columnsGap={stacked ? '0px' : columnsGap}
                           rounded={rounded}
                           stacked={stacked}
                           alignItems={alignItems}
                           minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
-                          maxColumnWidth={maxColumnWidth}
+                          maxColumnWidth={maxColumnWidth || zoomToWidth[zoom]}
                           className='reqore-collection-group-content'
                         >
                           {itemsNodes}

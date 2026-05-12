@@ -312,11 +312,14 @@ export const WithTemplates: Story = {
 
 export const RadiusSize: Story = {
   render: () => (
+    // Use size='huge' so the larger radii aren't clamped by the textarea's
+    // height (clamping is correct CSS behaviour, just visually identical past
+    // half-height).
     <ReqoreControlGroup vertical gapSize='small'>
       {ALL_SIZES.map((rs) => (
         <ReqoreTextarea
           key={rs}
-          size='normal'
+          size='huge'
           radiusSize={rs}
           placeholder={`radiusSize="${rs}"`}
           rows={2}

@@ -246,11 +246,14 @@ export const Loading: Story = {
 
 export const RadiusSize: Story = {
   render: () => (
+    // size='huge' so the bigger radius values aren't clamped to half the
+    // input's height (which is what would happen at size='normal' for big /
+    // huge / massive). Use `pill` instead when you want a fully rounded input.
     <ReqoreControlGroup vertical gapSize='small'>
       {ALL_SIZES.map((rs) => (
         <ReqoreInput
           key={rs}
-          size='normal'
+          size='huge'
           radiusSize={rs}
           placeholder={`radiusSize="${rs}"`}
           icon='SearchLine'
