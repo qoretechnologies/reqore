@@ -11,7 +11,7 @@ import {
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
-  RADIUS_FROM_SIZE,
+  resolveRadius,
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
@@ -50,6 +50,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import {
+  getPrimaryGradient,
   IReqoreEffect,
   ReqoreTextEffect,
   StyledEffect,
@@ -109,6 +110,11 @@ export interface IReqoreButtonProps
   grow?: 0 | 1 | 2 | 3 | 4;
   shrink?: 0 | 1 | 2 | 3 | 4;
   rounded?: boolean;
+  /**
+   * Override the size used to derive the button's border-radius. Defaults to `size`.
+   * Useful for marketing-style buttons that want a generous radius with a normal text scale.
+   */
+  radiusSize?: TSizes;
 
   pill?: boolean;
   circle?: boolean;
@@ -132,8 +138,9 @@ const getButtonMainColor = (
   color?: TReqoreHexColor,
   effect?: IReqoreEffect
 ) => {
-  if (effect && effect.gradient) {
-    return getGradientMix(theme, effect.gradient.colors);
+  const primary = getPrimaryGradient(effect?.gradient);
+  if (primary) {
+    return getGradientMix(theme, primary.colors);
   }
 
   if (color) {
@@ -200,12 +207,12 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   flex-grow: ${({ grow }) => grow};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
-  border-radius: ${({ size, rounded, pill, circle }) =>
+  border-radius: ${({ size, radiusSize, rounded, pill, circle }) =>
     rounded === false
       ? undefined
       : circle
       ? '9999px'
-      : `${RADIUS_FROM_SIZE[size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
+      : `${resolveRadius(size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
 
   background-color: ${({ minimal, color, theme, transparent, effect }) => {
     if (transparent) {

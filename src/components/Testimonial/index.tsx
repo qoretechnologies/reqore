@@ -3,7 +3,7 @@ import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
+  resolveRadius,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -86,6 +86,10 @@ export interface IReqoreTestimonialProps
   showQuoteIcon?: boolean;
   /** Round the corners. Default `true`. */
   rounded?: boolean;
+  /**
+   * Override the size used to derive the testimonial's border-radius. Defaults to `size`.
+   */
+  radiusSize?: TSizes;
   /** Hide the tinted surface background. */
   transparent?: boolean;
   /**
@@ -126,6 +130,7 @@ interface IStyledTestimonialProps {
   $fixed?: boolean;
   flat?: boolean;
   rounded?: boolean;
+  radiusSize?: TSizes;
   disabled?: boolean;
   $raised?: boolean;
   $interactive?: boolean;
@@ -161,7 +166,8 @@ const StyledTestimonial = styled(StyledEffect)<IStyledTestimonialProps>`
           $intent ? theme.intents[$intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
-  border-radius: ${({ rounded, size }) => (rounded ? `${RADIUS_FROM_SIZE[size]}px` : '0')};
+  border-radius: ${({ rounded, size, radiusSize }) =>
+    rounded ? `${resolveRadius(size, radiusSize)}px` : '0'};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   flex: ${({ $fluid }) => ($fluid ? '1 auto' : '0 0 auto')};
   margin: 0;
@@ -249,6 +255,7 @@ const ReqoreTestimonial = memo(
         fluid = true,
         fixed,
         rounded = true,
+        radiusSize,
         raised,
         customTheme,
         inheritCustomTheme,
@@ -293,6 +300,7 @@ const ReqoreTestimonial = memo(
           $fixed={fixed}
           flat={flat}
           rounded={rounded}
+          radiusSize={radiusSize}
           $raised={raised}
           $interactive={isInteractive}
           $padded={padded}

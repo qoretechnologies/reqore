@@ -102,16 +102,33 @@ export interface IReqoreEffectFilters {
   saturate?: number;
 }
 
+export interface IReqoreEffectGradient {
+  type?: 'linear' | 'radial';
+  shape?: 'circle' | 'ellipse';
+  /**
+   * Radial-gradient size hint. Goes between the shape and the position in the
+   * generated CSS (e.g. `ellipse 90% 120% at 0% 50%`). Accepts CSS radial
+   * sizing keywords (`closest-side`, `farthest-corner`, …) or an explicit
+   * `<width> <height>` pair. Only applies when `type === 'radial'`.
+   */
+  size?: string;
+  colors: TReqoreEffectGradientColors;
+  direction?: string;
+  borderColor?: TReqoreEffectColor;
+  animate?: TReqoreEffectGradientAnimationTrigger;
+  animationSpeed?: 1 | 2 | 3 | 4 | 5;
+}
+
 export interface IReqoreEffect extends IReqoreEffectFilters {
-  gradient?: {
-    type?: 'linear' | 'radial';
-    shape?: 'circle' | 'ellipse';
-    colors: TReqoreEffectGradientColors;
-    direction?: string;
-    borderColor?: TReqoreEffectColor;
-    animate?: TReqoreEffectGradientAnimationTrigger;
-    animationSpeed?: 1 | 2 | 3 | 4 | 5;
-  };
+  /**
+   * Background gradient applied to the element. Accepts either a single gradient
+   * object or an array of gradient objects — when an array is provided the
+   * gradients are stacked as CSS `background-image` layers in the order given
+   * (first gradient on top). Border-image / readable-text-color logic and
+   * gradient animations are driven by the *first* gradient in the list, so put
+   * the gradient that should "lead" first.
+   */
+  gradient?: IReqoreEffectGradient | IReqoreEffectGradient[];
   noWrap?: boolean;
   spaced?: number;
 
@@ -169,76 +186,130 @@ const StyledGradientKeyframes = keyframes`
   }
 `;
 
+export const normalizeGradients = (
+  gradient?: IReqoreEffectGradient | IReqoreEffectGradient[]
+): IReqoreEffectGradient[] => {
+  if (!gradient) return [];
+  return Array.isArray(gradient) ? gradient : [gradient];
+};
+
+/**
+ * Returns the primary (first) gradient. Convenience for callers that only care
+ * about a single gradient's stops/colors/animation — preserves pre-array
+ * semantics.
+ */
+export const getPrimaryGradient = (
+  gradient?: IReqoreEffectGradient | IReqoreEffectGradient[]
+): IReqoreEffectGradient | undefined => normalizeGradients(gradient)[0];
+
+/**
+ * Returns a new gradient (or gradient list) with `patch` merged into the
+ * primary entry. Use this when a consumer needs to override e.g. `borderColor`
+ * from intent without losing the multi-gradient list shape.
+ */
+export const patchPrimaryGradient = (
+  gradient: IReqoreEffectGradient | IReqoreEffectGradient[] | undefined,
+  patch: Partial<IReqoreEffectGradient>
+): IReqoreEffectGradient | IReqoreEffectGradient[] | undefined => {
+  if (!gradient) return gradient;
+  if (Array.isArray(gradient)) {
+    if (gradient.length === 0) return gradient;
+    return [{ ...gradient[0], ...patch }, ...gradient.slice(1)];
+  }
+  return { ...gradient, ...patch };
+};
+
+const buildGradientLayer = (
+  g: IReqoreEffectGradient,
+  colorString: string,
+  box: 'padding-box' | 'border-box'
+): string => {
+  const type = g.type || 'linear';
+  const directionOrShape =
+    type === 'linear'
+      ? g.direction || 'to right'
+      : [g.shape || 'circle', g.size, g.direction || 'at center']
+          .filter(Boolean)
+          .join(' ');
+  return `${type}-gradient(${directionOrShape}${colorString}) ${box}`;
+};
+
 export const StyledEffect = styled.span`
   // If gradient was supplied
   ${({ effect, theme, minimal, active, transparent, isText }: IReqoreTextEffectProps) => {
-    if (!effect || !effect.gradient) {
+    const gradients = normalizeGradients(effect?.gradient);
+    if (!effect || gradients.length === 0) {
       return undefined;
     }
 
-    const gradientType: string = effect.gradient.type || 'linear';
-    const gradientColors = createEffectGradient(
-      theme,
-      effect.gradient.colors,
-      minimal ? 0.05 : 0,
-      !isText && minimal && !active,
-      false,
-      transparent
-    );
-    const gradientColorsActive = createEffectGradient(
-      theme,
-      effect.gradient.colors,
-      0.05,
-      minimal,
-      true,
-      transparent
-    );
+    // Build padding-box layers (the actual fill) for every gradient in the list.
+    const paddingLayers: string[] = [];
+    const paddingLayersActive: string[] = [];
+    gradients.forEach((g) => {
+      const colors = createEffectGradient(
+        theme,
+        g.colors,
+        minimal ? 0.05 : 0,
+        !isText && minimal && !active,
+        false,
+        transparent
+      );
+      const colorsActive = createEffectGradient(
+        theme,
+        g.colors,
+        0.05,
+        minimal,
+        true,
+        transparent
+      );
+      paddingLayers.push(buildGradientLayer(g, colors, 'padding-box'));
+      paddingLayersActive.push(buildGradientLayer(g, colorsActive, 'padding-box'));
+    });
 
-    const gradientDirectionOrShape =
-      gradientType === 'linear'
-        ? effect.gradient.direction || 'to right'
-        : `${effect.gradient.shape || 'circle'} ${effect.gradient.direction || 'at center'}`;
-    let gradient = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColors}) padding-box`;
-    let gradientActive = `${gradientType}-gradient(${gradientDirectionOrShape}${gradientColorsActive}) padding-box`;
+    // The first gradient drives readable-text, animation, and border behaviour
+    // (multi-gradient borders would visually fight each other; one is enough).
+    const primary = gradients[0];
 
-    // Determine the text color based on the gradient colors
+    // Determine the text color based on the primary gradient
     let color: TReqoreHexColor | undefined;
-    // Only works if there are 2 colors not more and color was not provided
     if (!effect.color) {
-      color = getGradientMix(theme, effect.gradient.colors);
+      color = getGradientMix(theme, primary.colors);
     }
 
     let borderColor: string;
     let borderHoverColor: string;
 
-    // The user provided a border color - we will use that
-    if (effect.gradient.borderColor) {
-      borderColor = `${getColorFromMaybeString(theme, effect.gradient.borderColor)}`;
+    if (primary.borderColor) {
+      borderColor = `${getColorFromMaybeString(theme, primary.borderColor)}`;
       borderHoverColor = `${changeLightness(
-        getColorFromMaybeString(theme, effect.gradient.borderColor),
+        getColorFromMaybeString(theme, primary.borderColor),
         0.15
       )}`;
     } else if (!isText) {
-      // We will use border-image and create a gradient border
       borderColor = 'transparent';
       borderHoverColor = 'transparent';
 
       const borderGradientColors: string = createEffectGradient(
         theme,
-        effect.gradient.colors,
+        primary.colors,
         0.15,
         minimal
       );
       const borderGradientColorsActive: string = createEffectGradient(
         theme,
-        effect.gradient.colors,
+        primary.colors,
         0.25,
         minimal
       );
 
-      gradient = `${gradient}, ${gradientType}-gradient(${gradientDirectionOrShape}${borderGradientColors}) border-box`;
-      gradientActive = `${gradientActive}, ${gradientType}-gradient(${gradientDirectionOrShape}${borderGradientColorsActive}) border-box`;
+      paddingLayers.push(buildGradientLayer(primary, borderGradientColors, 'border-box'));
+      paddingLayersActive.push(
+        buildGradientLayer(primary, borderGradientColorsActive, 'border-box')
+      );
     }
+
+    const gradient = paddingLayers.join(', ');
+    const gradientActive = paddingLayersActive.join(', ');
 
     return css`
       background: ${active ? gradientActive : gradient};
@@ -256,11 +327,10 @@ export const StyledEffect = styled.span`
           `
         : undefined}
 
-      ${effect.gradient.animate === 'always' || (effect.gradient.animate === 'active' && active)
+      ${primary.animate === 'always' || (primary.animate === 'active' && active)
         ? css`
             background-size: 200% 200%;
-            animation: ${StyledGradientKeyframes} ${effect.gradient.animationSpeed || 2}s linear
-              infinite;
+            animation: ${StyledGradientKeyframes} ${primary.animationSpeed || 2}s linear infinite;
           `
         : undefined}
 
@@ -274,12 +344,12 @@ export const StyledEffect = styled.span`
           background: ${gradientActive};
           border-color: ${borderHoverColor} !important;
 
-          ${effect.gradient.animate === 'hover' ||
-          (effect.gradient.animate === 'active' && active) ||
-          effect.gradient.animate === 'always'
+          ${primary.animate === 'hover' ||
+          (primary.animate === 'active' && active) ||
+          primary.animate === 'always'
             ? css`
                 background-size: 200% 200%;
-                animation: ${StyledGradientKeyframes} ${effect.gradient.animationSpeed || 2}s linear
+                animation: ${StyledGradientKeyframes} ${primary.animationSpeed || 2}s linear
                   infinite;
               `
             : undefined}

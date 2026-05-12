@@ -41,6 +41,11 @@ const CollectionGroupHeader = memo(({ name }: { name: string }) => (
 ));
 
 export type TReqoreCollectionActions = (IReqorePanelAction & { position?: 'left' | 'right' })[];
+
+export interface IReqoreCollectionGroup extends IReqorePanelProps {}
+
+export type TReqoreCollectionGroups = Record<string, IReqoreCollectionGroup>;
+
 export interface IReqoreCollectionProps
   extends IReqoreComponent,
     Omit<IReqorePanelProps, 'actions'>,
@@ -66,6 +71,10 @@ export interface IReqoreCollectionProps
 
   sortKeys?: Record<string, string>;
   sortByGroupFirst?: boolean;
+  /** Optional configuration for groups referenced by `item.groups[]`.
+   *  Keys match group names found on items. Groups without an entry render
+   *  with the default (flat header) styling for back-compat. */
+  groups?: TReqoreCollectionGroups;
 
   filterable?: boolean;
   sortable?: boolean;
@@ -149,6 +158,7 @@ export const ReqoreCollection = memo(
 
     sortKeys = {},
     sortByGroupFirst = true,
+    groups: groupsConfig,
 
     onQueryChange,
     contentRenderer = (children, _items, searchInput) => (
@@ -475,23 +485,61 @@ export const ReqoreCollection = memo(
                     }, {} as Record<string, IReqoreCollectionItemProps[]>);
 
                   // Render groups
-                  return Object.entries(orderedGrouped).map(([groupName, groupItems]) => (
-                    <React.Fragment key={groupName}>
-                      {groupName !== 'Ungrouped' && <CollectionGroupHeader name={groupName} />}
-                      {groupItems.map((item, index) => (
-                        <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
-                          <ReqoreCollectionItem
-                            size={zoomToSize[zoom]}
-                            responsiveTitle={false}
-                            {...item}
-                            icon={item.icon || (item.selected ? selectedIcon : undefined)}
-                            rounded={!stacked}
-                            maxContentHeight={maxItemHeight}
-                          />
-                        </ReqoreErrorBoundary>
-                      ))}
-                    </React.Fragment>
-                  ));
+                  return Object.entries(orderedGrouped).map(([groupName, groupItems]) => {
+                    const groupConfig = groupsConfig?.[groupName];
+                    const itemsNodes = groupItems.map((item, index) => (
+                      <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
+                        <ReqoreCollectionItem
+                          size={zoomToSize[zoom]}
+                          responsiveTitle={false}
+                          {...item}
+                          icon={item.icon || (item.selected ? selectedIcon : undefined)}
+                          rounded={!stacked}
+                          maxContentHeight={maxItemHeight}
+                        />
+                      </ReqoreErrorBoundary>
+                    ));
+
+                    if (groupName === 'Ungrouped') {
+                      return <React.Fragment key={groupName}>{itemsNodes}</React.Fragment>;
+                    }
+
+                    return (
+                      <ReqorePanel
+                        transparent
+                        flat
+                        minimal
+                        padded={false}
+                        size='small'
+                        label={groupName}
+                        {...groupConfig}
+                        labelEffect={{
+                          opacity: 0.8,
+                          uppercase: true,
+                          weight: 'bold',
+                          textSize: 'small',
+                          spaced: 1,
+                          ...groupConfig?.labelEffect,
+                        }}
+                        key={groupName}
+                        style={{ gridColumn: '1 / -1', ...groupConfig?.style }}
+                        className={`reqore-collection-group ${groupConfig?.className ?? ''}`.trim()}
+                      >
+                        <StyledCollectionWrapper
+                          columns={columns || (_showAs === 'grid' ? 'auto-fill' : 1)}
+                          columnsGap={stacked ? '0px' : columnsGap}
+                          rounded={rounded}
+                          stacked={stacked}
+                          alignItems={alignItems}
+                          minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
+                          maxColumnWidth={maxColumnWidth || zoomToWidth[zoom]}
+                          className='reqore-collection-group-content'
+                        >
+                          {itemsNodes}
+                        </StyledCollectionWrapper>
+                      </ReqorePanel>
+                    );
+                  });
                 })()}
               </StyledCollectionWrapper>
             )
@@ -527,6 +575,7 @@ export const ReqoreCollection = memo(
       selectedIcon,
       stacked,
       zoom,
+      groupsConfig,
     ]);
 
     const contentStyle = useMemo(

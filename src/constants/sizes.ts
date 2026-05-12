@@ -267,6 +267,38 @@ export const RADIUS_FROM_SIZE = {
   massive: 10,
 };
 
+/**
+ * Scale used when a component receives an explicit `radiusSize` prop.
+ * Decoupled from `RADIUS_FROM_SIZE` so consumers can opt into a more
+ * pronounced corner curve (marketing surfaces, hero cards, …) without
+ * changing the default look of every Reqore component.
+ */
+export const RADIUS_FROM_RADIUS_SIZE = {
+  micro: 3,
+  tiny: 5,
+  small: 8,
+  normal: 12,
+  big: 18,
+  huge: 26,
+  massive: 36,
+};
+
+/**
+ * Resolve the border-radius pixel value for a component.
+ * - When `radiusSize` is set, picks from the pronounced `radiusScale`.
+ * - Otherwise falls back to the default `sizeScale[size]`.
+ *
+ * Most components use `RADIUS_FROM_SIZE` + `RADIUS_FROM_RADIUS_SIZE`, but
+ * Tag/Badge ship their own scales (`TAG_RADIUS_FROM_*`, `BADGE_RADIUS_FROM_*`)
+ * and pass those in instead.
+ */
+export const resolveRadius = (
+  size: TSizes,
+  radiusSize: TSizes | undefined,
+  sizeScale: Record<TSizes, number> = RADIUS_FROM_SIZE,
+  radiusScale: Record<TSizes, number> = RADIUS_FROM_RADIUS_SIZE
+): number => (radiusSize ? radiusScale[radiusSize] : sizeScale[size]);
+
 export const TAG_RADIUS_FROM_SIZE = {
   micro: 1,
   tiny: 2,
@@ -277,6 +309,17 @@ export const TAG_RADIUS_FROM_SIZE = {
   massive: 11,
 };
 
+/** More pronounced radius for `radiusSize`-driven tag corners. */
+export const TAG_RADIUS_FROM_RADIUS_SIZE = {
+  micro: 2,
+  tiny: 4,
+  small: 6,
+  normal: 9,
+  big: 14,
+  huge: 20,
+  massive: 28,
+};
+
 export const BADGE_RADIUS_FROM_SIZE = {
   micro: 5,
   tiny: 6,
@@ -285,6 +328,17 @@ export const BADGE_RADIUS_FROM_SIZE = {
   big: 11,
   huge: 13,
   massive: 15,
+};
+
+/** More pronounced radius for `radiusSize`-driven badge corners. */
+export const BADGE_RADIUS_FROM_RADIUS_SIZE = {
+  micro: 6,
+  tiny: 8,
+  small: 12,
+  normal: 16,
+  big: 20,
+  huge: 26,
+  massive: 32,
 };
 
 export const GAP_FROM_SIZE = {

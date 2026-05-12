@@ -30,7 +30,13 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, ReqoreTextEffect, StyledEffect, StyledTextEffect } from '../Effect';
+import {
+  getPrimaryGradient,
+  IReqoreEffect,
+  ReqoreTextEffect,
+  StyledEffect,
+  StyledTextEffect,
+} from '../Effect';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
 import { ReqoreSpacer } from '../Spacer';
 
@@ -98,28 +104,28 @@ const StyledSwitchToggle = styled.div`
         45deg,
         ${rgba(
             parentEffect?.gradient
-              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 1), 0.1)
+              ? changeLightness(getNthGradientColor(theme, getPrimaryGradient(parentEffect.gradient)?.colors, 1), 0.1)
               : changeLightness(theme.main, 0.1),
             1
           )}
           0px,
         ${rgba(
             parentEffect?.gradient
-              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 2), 0.15)
+              ? changeLightness(getNthGradientColor(theme, getPrimaryGradient(parentEffect.gradient)?.colors, 2), 0.15)
               : changeLightness(theme.main, 0.15),
             1
           )}
           2px,
         ${rgba(
             parentEffect?.gradient
-              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 2), 0.15)
+              ? changeLightness(getNthGradientColor(theme, getPrimaryGradient(parentEffect.gradient)?.colors, 2), 0.15)
               : changeLightness(theme.main, 0.15),
             1
           )}
           4px,
         ${rgba(
             parentEffect?.gradient
-              ? changeLightness(getNthGradientColor(theme, parentEffect.gradient.colors, 1), 0.1)
+              ? changeLightness(getNthGradientColor(theme, getPrimaryGradient(parentEffect.gradient)?.colors, 1), 0.1)
               : changeLightness(theme.main, 0.1),
             1
           )}

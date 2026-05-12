@@ -4,7 +4,7 @@ import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
 import { ReqoreTag, ReqoreTagGroup, ReqoreVerticalSpacer } from '../../index';
 import { StoryMeta } from '../utils';
-import { SizeArg, argManager } from '../utils/args';
+import { ALL_SIZES, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
@@ -32,6 +32,7 @@ const meta = {
   },
   argTypes: {
     ...SizeArg,
+    ...RadiusSizeArg,
     ...createArg('columns', {
       name: 'Columns',
       description: 'Number of columns',
@@ -441,4 +442,14 @@ export const Effect = {
 export const Loading: Story = {
   render: Template,
   args: { loading: true },
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreTagGroup>
+      {ALL_SIZES.map((rs) => (
+        <ReqoreTag key={rs} size='normal' radiusSize={rs} label={`radiusSize="${rs}"`} />
+      ))}
+    </ReqoreTagGroup>
+  ),
 };

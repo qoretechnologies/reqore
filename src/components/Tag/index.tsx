@@ -6,11 +6,14 @@ import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
+  BADGE_RADIUS_FROM_RADIUS_SIZE,
   BADGE_RADIUS_FROM_SIZE,
   BADGE_SIZE_TO_PX,
   CONTROL_TEXT_FROM_SIZE,
+  resolveRadius,
   TAG_HORIZONTAL_PADDING_FROM_SIZE,
   TAG_ICON_FROM_SIZE,
+  TAG_RADIUS_FROM_RADIUS_SIZE,
   TAG_RADIUS_FROM_SIZE,
   TAG_SIZE_TO_PX,
   TAG_TEXT_FROM_SIZE,
@@ -86,6 +89,11 @@ export interface IReqoreCustomTagProps
   asBadge?: boolean;
   intent?: TReqoreIntent;
   wrap?: boolean;
+  rounded?: boolean;
+  /**
+   * Override the size used to derive the tag's border-radius. Defaults to `size`.
+   */
+  radiusSize?: TSizes;
   labelAlign?: 'left' | 'right' | 'center';
   labelEffect?: IReqoreEffect;
   labelKeyAlign?: 'left' | 'right' | 'center';
@@ -122,12 +130,12 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${({ theme, color, flat = true }) =>
     !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
-  border-radius: ${({ asBadge, size, rounded }) =>
+  border-radius: ${({ asBadge, size, radiusSize, rounded }) =>
     rounded === false
       ? undefined
       : asBadge
-      ? `${BADGE_RADIUS_FROM_SIZE[size]}px`
-      : `${TAG_RADIUS_FROM_SIZE[size]}px`};
+      ? `${resolveRadius(size, radiusSize, BADGE_RADIUS_FROM_SIZE, BADGE_RADIUS_FROM_RADIUS_SIZE)}px`
+      : `${resolveRadius(size, radiusSize, TAG_RADIUS_FROM_SIZE, TAG_RADIUS_FROM_RADIUS_SIZE)}px`};
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 

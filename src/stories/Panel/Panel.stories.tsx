@@ -8,7 +8,15 @@ import { ReqoreHorizontalSpacer, ReqoreVerticalSpacer } from '../../components/S
 import ReqoreTag from '../../components/Tag';
 import { IReqoreIconName } from '../../types/icons';
 import { StoryMeta } from '../utils';
-import { FlatArg, IconArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import {
+  ALL_SIZES,
+  FlatArg,
+  IconArg,
+  IntentArg,
+  RadiusSizeArg,
+  SizeArg,
+  argManager,
+} from '../utils/args';
 
 const { createArg } = argManager<IReqorePanelProps>();
 
@@ -36,6 +44,7 @@ const meta = {
     ...IntentArg,
     ...FlatArg,
     ...SizeArg,
+    ...RadiusSizeArg,
     ...createArg('padded', {
       type: 'boolean',
       defaultValue: true,
@@ -1004,4 +1013,79 @@ export const IconAlignCenter: Story = {
 
 export const IconAlignBottom: Story = {
   render: renderIconLayoutMatrix({ iconVerticalAlign: 'bottom' }, "iconVerticalAlign='bottom'"),
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {ALL_SIZES.map((radiusSize) => (
+        <ReqorePanel
+          key={radiusSize}
+          label={`radiusSize="${radiusSize}"`}
+          icon='LayoutLine'
+          size='normal'
+          radiusSize={radiusSize}
+          padded
+          collapsible={false}
+        >
+          Corner roundness scales independently from the panel size.
+        </ReqorePanel>
+      ))}
+    </div>
+  ),
+};
+
+export const MultipleGradients: Story = {
+  render: () => (
+    <ReqorePanel
+      label='Layered content gradient'
+      icon='PaintBrushLine'
+      size='big'
+      radiusSize='huge'
+      padded
+      minimal
+      collapsible={false}
+      contentEffect={{
+        gradient: [
+          // Small blue sphere whose right edge leaks in from the left
+          {
+            type: 'radial',
+            shape: 'circle',
+            size: '320px',
+            direction: 'at -30% 0%',
+            colors: {
+              0: '#0066ff:darken:1:0.95',
+              60: '#0066ff:darken:1:0.35',
+              100: '#0066ff:darken:1:0',
+            },
+          },
+          // Small magenta sphere leaking in from the right
+          {
+            type: 'radial',
+            shape: 'circle',
+            size: '320px',
+            direction: 'at 100% 250%',
+            colors: {
+              0: '#ff3da6:darken:1:0.95',
+              60: '#ff3da6:darken:1:0.35',
+              100: '#ff3da6:darken:1:0',
+            },
+          },
+          // Linear gradient base — purple-ish middle to dark edges
+          {
+            type: 'linear',
+            direction: 'to right',
+            colors: {
+              0: '#15151c',
+              50: '#241a2b',
+              100: '#15151c',
+            },
+          },
+        ],
+      }}
+    >
+      contentEffect.gradient accepts an array — each entry stacks as a CSS background-image layer in
+      order. Border-image / readable-text / animation behaviour is driven by the first entry.
+    </ReqorePanel>
+  ),
 };

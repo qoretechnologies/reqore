@@ -5,6 +5,7 @@ import {
   HEADER_SIZE_TO_NUMBER,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
+  resolveRadius,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -29,13 +30,15 @@ import {
   IWithReqoreSize,
   IWithReqoreTooltip,
 } from '../../types/global';
+import { IReqoreIconName } from '../../types/icons';
 import { ButtonBadge, TReqoreBadge } from '../Button';
-import { IReqoreEffect, StyledEffect } from '../Effect';
+import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
+import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreP } from '../Paragraph';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
-export type TReqoreFeatureCardMarker = 'line' | 'number' | 'none';
+export type TReqoreFeatureCardMarker = 'line' | 'number' | 'icon' | 'none';
 
 export interface IReqoreFeatureCardProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>,
@@ -62,10 +65,21 @@ export interface IReqoreFeatureCardProps
   markerLabel?: string | number;
   /** Effect applied to the marker label. */
   markerEffect?: IReqoreEffect;
+  /** Icon rendered when `marker === 'icon'`. */
+  icon?: IReqoreIconName;
+  /** Color for the marker icon (defaults to the marker's standard color). */
+  iconColor?: TReqoreEffectColor;
+  /** Additional props forwarded to the marker icon. */
+  iconProps?: Omit<IReqoreIconProps, 'icon' | 'color'>;
   /** Badge(s) shown next to the label, identical to other Reqore components. */
   badge?: TReqoreBadge | TReqoreBadge[];
   /** Round the card corners. Default `true`. */
   rounded?: boolean;
+  /**
+   * Override the size used to derive the card's border-radius. Defaults to `size`.
+   * Useful when the card's text/padding scale should differ from its corner roundness.
+   */
+  radiusSize?: TSizes;
   /** Marks the card as clickable; auto-detected from `onClick`. */
   interactive?: boolean;
   /** Hide the card's tinted background. */
@@ -127,8 +141,8 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
-  border-radius: ${({ rounded, size = 'normal' }) =>
-    rounded === false ? 0 : `${RADIUS_FROM_SIZE[size]}px`};
+  border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize }) =>
+    rounded === false ? 0 : `${resolveRadius(size, radiusSize)}px`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
   position: relative;
@@ -189,6 +203,33 @@ const StyledFeatureCardMarker = styled.div<{
           }
         `
       : undefined}
+
+  ${({ marker, size, theme, intent }) =>
+    marker === 'icon'
+      ? css`
+          align-items: center;
+          justify-content: center;
+          width: ${TEXT_FROM_SIZE[size] * 2.2}px;
+          height: ${TEXT_FROM_SIZE[size] * 2.2}px;
+          border-radius: ${RADIUS_FROM_SIZE[size]}px;
+          background: ${rgba(
+            intent
+              ? theme.intents[intent]
+              : changeLightness(getMainBackgroundColor(theme), 0.18),
+            0.18
+          )};
+          color: ${intent
+            ? theme.intents[intent]
+            : changeLightness(getMainBackgroundColor(theme), 0.6)};
+          box-shadow: inset 0 0 0 1px
+            ${rgba(
+              intent
+                ? theme.intents[intent]
+                : changeLightness(getMainBackgroundColor(theme), 0.22),
+              0.35
+            )};
+        `
+      : undefined}
 `;
 
 const StyledFeatureCardContent = styled.div`
@@ -233,9 +274,12 @@ export const ReqoreFeatureCard = memo(
         labelEffect,
         description,
         descriptionEffect,
-        marker = 'line',
+        marker: markerProp,
         markerLabel,
         markerEffect,
+        icon,
+        iconColor,
+        iconProps,
         badge,
         size = 'normal',
         customTheme,
@@ -265,6 +309,7 @@ export const ReqoreFeatureCard = memo(
       const descriptionSize = useMemo(() => getOneLessSize(size), [size]);
       const isInteractive = interactive || !!onClick;
       const hasBadge = badge !== undefined && badge !== null;
+      const marker: TReqoreFeatureCardMarker = markerProp ?? (icon ? 'icon' : 'line');
 
       return (
         <ReqoreTooltipComponent
@@ -301,6 +346,14 @@ export const ReqoreFeatureCard = memo(
             >
               {marker === 'number' && (
                 <StyledEffect effect={markerEffect}>{markerLabel}</StyledEffect>
+              )}
+              {marker === 'icon' && icon && (
+                <ReqoreIcon
+                  icon={icon}
+                  size={size}
+                  color={iconColor}
+                  {...iconProps}
+                />
               )}
             </StyledFeatureCardMarker>
           )}

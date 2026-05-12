@@ -29,7 +29,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { ButtonBadge, TReqoreBadge } from '../Button';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, patchPrimaryGradient, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
 import { ReqoreSpan } from '../Span';
@@ -130,13 +130,8 @@ const StyledAccordionWrapper = styled(StyledEffect)<IStyledAccordionWrapper>`
   width: ${({ $fluid }) => ($fluid ? '100%' : undefined)};
   border-radius: ${({ rounded, size }) => (rounded ? RADIUS_FROM_SIZE[size] : 0)}px;
   overflow: hidden;
-  border: ${({ flat, theme, intent }) =>
-    flat
-      ? undefined
-      : `1px solid ${changeLightness(
-          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-          0.08
-        )}`};
+  border: ${({ flat, theme }) =>
+    flat ? undefined : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
 
   ${({ disabled }) =>
     disabled &&
@@ -147,13 +142,8 @@ const StyledAccordionWrapper = styled(StyledEffect)<IStyledAccordionWrapper>`
 
 const StyledAccordionItem = styled.div<IStyledAccordionItem>`
   &:not(:first-child) {
-    border-top: ${({ flat, theme, intent }) =>
-      flat
-        ? undefined
-        : `1px solid ${changeLightness(
-            intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-            0.08
-          )}`};
+    border-top: ${({ flat, theme }) =>
+      flat ? undefined : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
   }
 `;
 
@@ -165,8 +155,12 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease-out;
-  background-color: ${({ theme, opacity = 1, minimal }) =>
-    minimal ? 'transparent' : rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+  background-color: ${({ theme, opacity = 1, minimal, intent }) => {
+    if (minimal) {
+      return intent ? rgba(theme.intents[intent], 0.1) : 'transparent';
+    }
+    return rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity);
+  }};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
@@ -176,8 +170,13 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
   }
 
   &:hover {
-    background-color: ${({ theme, opacity = 1, disabled }) =>
-      disabled ? undefined : rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
+    background-color: ${({ theme, opacity = 1, disabled, minimal, intent }) => {
+      if (disabled) return undefined;
+      if (minimal) {
+        return intent ? rgba(theme.intents[intent], 0.18) : 'transparent';
+      }
+      return rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity);
+    }};
 
     ${StyledIconWrapper} {
       transform: scale(${ACTIVE_ICON_SCALE});
@@ -394,7 +393,9 @@ export const ReqoreAccordion = memo(
         const newEffect: IReqoreEffect = { ...effect };
 
         if (newEffect.gradient && intent) {
-          newEffect.gradient.borderColor = theme.intents[intent];
+          newEffect.gradient = patchPrimaryGradient(newEffect.gradient, {
+            borderColor: theme.intents[intent] as TReqoreEffectColor,
+          });
         }
 
         return newEffect;

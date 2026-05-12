@@ -4,7 +4,7 @@ import ReqoreControlGroup from '../../components/ControlGroup';
 import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
-import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { ALL_SIZES, FlatArg, IntentArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreCalloutProps>();
 
@@ -23,6 +23,7 @@ const meta = {
     ...IntentArg,
     ...FlatArg,
     ...SizeArg,
+    ...RadiusSizeArg,
     ...createArg('children', {
       type: 'string',
       name: 'Content',
@@ -358,6 +359,24 @@ export const CustomPaddingSize: Story = {
           intent='info'
           size={size}
           paddingSize='small'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {ALL_SIZES.map((radiusSize) => (
+        <ReqoreCallout
+          key={radiusSize}
+          label={`radiusSize="${radiusSize}"`}
+          description='radiusSize lets the callout corner roundness scale independently from its size prop.'
+          icon='InformationLine'
+          intent='info'
+          radiusSize={radiusSize}
+          size='normal'
         />
       ))}
     </ReqoreControlGroup>

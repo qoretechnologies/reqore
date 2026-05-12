@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { resolveRadius, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
@@ -29,7 +29,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, patchPrimaryGradient, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreSpan } from '../Span';
@@ -83,6 +83,11 @@ export interface IReqoreStatisticProps
   align?: 'left' | 'center' | 'right';
   /** Rounded border corners */
   rounded?: boolean;
+  /**
+   * Override the size used to derive the tile's border-radius. Defaults to `size`.
+   * Lets you decouple corner roundness from the text/padding scale.
+   */
+  radiusSize?: TSizes;
   /** Transparent background */
   transparent?: boolean;
   /** Background opacity */
@@ -125,6 +130,7 @@ interface IStyledStatisticWrapper {
   $raised?: boolean;
   $padded: TReqorePadded;
   $paddingSize: TSizes;
+  radiusSize?: TSizes;
 }
 
 const TREND_ICONS: Record<TReqoreStatisticTrendDirection, IReqoreIconName> = {
@@ -149,6 +155,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
     theme,
     size,
     rounded,
+    radiusSize,
     flat,
     intent,
     opacity = 1,
@@ -158,7 +165,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
     $hasBackground &&
     css`
       background-color: ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
-      border-radius: ${rounded ? RADIUS_FROM_SIZE[size] : 0}px;
+      border-radius: ${rounded ? resolveRadius(size, radiusSize) : 0}px;
       border: ${flat
         ? undefined
         : `1px solid ${changeLightness(
@@ -230,6 +237,7 @@ const ReqoreStatistic = memo(
         disabled,
         tooltip,
         rounded,
+        radiusSize,
         transparent,
         opacity,
         raised,
@@ -272,7 +280,9 @@ const ReqoreStatistic = memo(
         const newEffect: IReqoreEffect = { ...effect };
 
         if (newEffect.gradient && intent) {
-          newEffect.gradient.borderColor = theme.intents[intent];
+          newEffect.gradient = patchPrimaryGradient(newEffect.gradient, {
+            borderColor: theme.intents[intent] as TReqoreEffectColor,
+          });
         }
 
         return newEffect;
@@ -292,6 +302,7 @@ const ReqoreStatistic = memo(
           $interactive={interactive}
           $align={flexAlign}
           rounded={rounded}
+          radiusSize={radiusSize}
           flat={flat}
           intent={intent}
           opacity={transparent ? 0 : opacity}

@@ -4,7 +4,7 @@ import { IReqoreFeatureCardProps, ReqoreFeatureCard } from '../../components/Fea
 import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
 import { StoryMeta } from '../utils';
-import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { ALL_SIZES, FlatArg, IntentArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreFeatureCardProps>();
 
@@ -26,6 +26,7 @@ const meta = {
     ...IntentArg,
     ...FlatArg,
     ...SizeArg,
+    ...RadiusSizeArg,
     ...createArg('label', {
       type: 'string',
       name: 'Label',
@@ -315,6 +316,63 @@ export const PaddedVerticalOnly: Story = {
       {renderFeatureCardMatrix({ padded: 'vertical' })}
     </ReqoreControlGroup>
   ),
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
+      {ALL_SIZES.map((radiusSize) => (
+        <ReqoreFeatureCard
+          key={radiusSize}
+          icon='StarLine'
+          marker='icon'
+          size='normal'
+          radiusSize={radiusSize}
+          label={`radiusSize="${radiusSize}"`}
+          description='radiusSize decouples corner roundness from the size prop.'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const MultipleGradients: Story = {
+  render: Template,
+  args: {
+    label: 'Layered gradients',
+    description:
+      'effect.gradient accepts an array — each entry is stacked as a CSS background-image layer in order.',
+    radiusSize: 'huge',
+    effect: {
+      gradient: [
+        {
+          type: 'radial',
+          shape: 'ellipse',
+          direction: 'at 0% 0%',
+          colors: {
+            0: '#0066ff:darken:1:0.6',
+            60: '#0066ff:darken:1:0',
+            100: '#0066ff:darken:1:0',
+          },
+        },
+        {
+          type: 'radial',
+          shape: 'ellipse',
+          direction: 'at 100% 100%',
+          colors: {
+            0: '#ff3da6:darken:1:0.55',
+            60: '#ff3da6:darken:1:0',
+            100: '#ff3da6:darken:1:0',
+          },
+        },
+        {
+          type: 'linear',
+          direction: '180deg',
+          colors: { 0: '#15151c', 100: '#0b0b10' },
+        },
+      ],
+    },
+  },
 };
 
 export const CustomPaddingSize: Story = {

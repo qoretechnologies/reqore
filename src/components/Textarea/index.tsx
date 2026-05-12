@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
   CONTROL_TEXT_FROM_SIZE,
-  RADIUS_FROM_SIZE,
+  resolveRadius,
   SIZE_TO_PX,
   TEXTAREA_PADDING_FROM_SIZE,
   TSizes,
@@ -53,6 +53,11 @@ export interface IReqoreTextareaProps
   rows?: number;
   cols?: number;
   rounded?: boolean;
+  /**
+   * Override the size used to derive the textarea's border-radius. Defaults to the
+   * textarea's size.
+   */
+  radiusSize?: TSizes;
   flat?: boolean;
   fixed?: boolean;
   onClearClick?: () => any;
@@ -78,8 +83,8 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   position: relative;
   overflow: hidden;
-  border-radius: ${({ minimal, rounded = true, _size = 'normal' }) =>
-    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
+  border-radius: ${({ minimal, rounded = true, _size = 'normal' as TSizes, radiusSize }) =>
+    minimal || !rounded ? 0 : resolveRadius(_size, radiusSize)}px;
 
   &:focus-within {
     .reqore-clear-input-button {
@@ -168,6 +173,7 @@ function Textarea<T>(
         inheritCustomTheme,
     intent,
     rounded = true,
+    radiusSize,
     wrapperStyle,
     value,
     onChange,
@@ -295,6 +301,8 @@ function Textarea<T>(
       fluid={fluid}
       fixed={fixed}
       _size={size}
+      radiusSize={radiusSize}
+      rounded={rounded}
       theme={theme}
       style={wrapperStyle}
       ref={targetRef}

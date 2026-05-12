@@ -366,3 +366,75 @@ test('Renders custom React content', () => {
   expect(document.querySelectorAll('.custom-content').length).toBe(1);
   expect(document.querySelector('.custom-content')!.textContent).toBe('Custom element');
 });
+
+test('Item separator border does not change color with item intent', () => {
+  const { container: noIntent, unmount } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreAccordion
+            items={[
+              { label: 'A', content: 'Content' },
+              { label: 'B', content: 'Content' },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const baseline = window.getComputedStyle(
+    noIntent.querySelectorAll('.reqore-accordion-item')[1]
+  ).borderTop;
+
+  unmount();
+
+  const { container: withIntent } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreAccordion
+            items={[
+              { label: 'A', content: 'Content', intent: 'danger' },
+              { label: 'B', content: 'Content', intent: 'danger' },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const intentBorder = window.getComputedStyle(
+    withIntent.querySelectorAll('.reqore-accordion-item')[1]
+  ).borderTop;
+
+  expect(intentBorder).toBe(baseline);
+});
+
+test('Minimal accordion with item intent renders a tinted header background', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreAccordion
+            minimal
+            items={[
+              { label: 'Plain', content: 'Content' },
+              { label: 'Danger', content: 'Content', intent: 'danger' },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const headers = document.querySelectorAll('.reqore-accordion-header');
+  const plainBg = window.getComputedStyle(headers[0]).backgroundColor;
+  const dangerBg = window.getComputedStyle(headers[1]).backgroundColor;
+
+  // The non-intent minimal header stays transparent.
+  expect(plainBg).toMatch(/transparent|rgba\(0, 0, 0, 0\)/);
+  // The intent minimal header gets a non-transparent tinted background.
+  expect(dangerBg).not.toBe(plainBg);
+  expect(dangerBg).not.toMatch(/transparent|rgba\(0, 0, 0, 0\)/);
+});
