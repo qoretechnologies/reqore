@@ -457,6 +457,53 @@ export const WithGroups: Story = {
   },
 };
 
+export const WithConfiguredGroups: Story = {
+  args: {
+    label: 'Integrations',
+    items: [
+      {
+        label: 'Send Email',
+        groups: ['Communication'],
+        content: 'Send an email through SMTP',
+      },
+      {
+        label: 'Send Slack Message',
+        groups: ['Communication'],
+        content: 'Post a message to a Slack channel',
+      },
+      {
+        label: 'Run Query',
+        groups: ['Database'],
+        content: 'Execute a SQL query',
+      },
+      {
+        label: 'Insert Row',
+        groups: ['Database'],
+        content: 'Insert a new row into a table',
+      },
+      {
+        label: 'Standalone Item',
+        content: 'No group assigned',
+      },
+    ],
+    groups: {
+      Communication: {
+        label: 'Communication channels',
+        description: 'Email, chat and notification integrations',
+        icon: 'ChatSmile2Line',
+      },
+      Database: {
+        label: 'Databases',
+        description: 'Read and write to data stores',
+        icon: 'Database2Line',
+        intent: 'success',
+        collapsible: true,
+        isCollapsed: true,
+      },
+    },
+  } as IReqoreCollectionProps,
+};
+
 export const SortByRelevanceAcrossGroups: Story = {
   args: {
     label: 'Search Results (sorted by relevance, not group)',

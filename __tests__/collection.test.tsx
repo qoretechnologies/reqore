@@ -243,6 +243,91 @@ test('<Collection /> has 2 paging controls', () => {
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(10);
 });
 
+test('<Collection /> renders every non-Ungrouped group inside a panel', () => {
+  const groupedItems: IReqoreCollectionItemProps[] = [
+    { label: 'In A', groups: ['Group A'] },
+    { label: 'In B', groups: ['Group B'] },
+    { label: 'No group' },
+  ];
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection items={groupedItems} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const groupPanels = document.querySelectorAll('.reqore-collection-group');
+  expect(groupPanels.length).toBe(2);
+
+  const labels = Array.from(groupPanels).map(
+    (panel) => panel.querySelector('.reqore-panel-title-label-row')?.textContent?.trim()
+  );
+  expect(labels).toEqual(expect.arrayContaining(['Group A', 'Group B']));
+
+  // All three items still render (Ungrouped item is not wrapped)
+  expect(document.querySelectorAll('.reqore-collection-item').length).toBe(3);
+});
+
+test('<Collection /> applies group config (label, description, icon, collapsible)', () => {
+  const groupedItems: IReqoreCollectionItemProps[] = [
+    { label: 'Send Email', groups: ['Communication'] },
+    { label: 'Run Query', groups: ['Database'] },
+  ];
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection
+          items={groupedItems}
+          groups={{
+            Communication: {
+              label: 'Communication channels',
+              description: 'Email, chat and notification integrations',
+              icon: 'ChatSmile2Line',
+              collapsible: true,
+            },
+            Database: {
+              label: 'Databases',
+              icon: 'Database2Line',
+              collapsible: true,
+              isCollapsed: true,
+            },
+          }}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const panels = document.querySelectorAll('.reqore-collection-group');
+  expect(panels.length).toBe(2);
+
+  // The configured `label` overrides the raw group name
+  const labels = Array.from(panels).map(
+    (panel) => panel.querySelector('.reqore-panel-title-label-row')?.textContent?.trim()
+  );
+  expect(labels).toEqual(expect.arrayContaining(['Communication channels', 'Databases']));
+
+  // The description is rendered for the group that defined it
+  const descriptions = Array.from(
+    document.querySelectorAll('.reqore-collection-group .reqore-panel-title-description')
+  ).map((el) => el.textContent);
+  expect(descriptions).toEqual(
+    expect.arrayContaining(['Email, chat and notification integrations'])
+  );
+
+  // Both configured groups render an icon in their header
+  expect(
+    document.querySelectorAll('.reqore-collection-group .reqore-panel-title-icon').length
+  ).toBe(2);
+
+  // The Database group is initially collapsed, so its item is not visible
+  expect(screen.queryByText('Run Query')).not.toBeInTheDocument();
+  // The other group is expanded
+  expect(screen.getByText('Send Email')).toBeInTheDocument();
+});
+
 test('<Collection /> sortByGroupFirst=false sorts by custom field before group', () => {
   const groupedItems: IReqoreCollectionItemProps[] = [
     {

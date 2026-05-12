@@ -213,6 +213,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       rightIconColor,
       flat,
       rounded,
+      radiusSize,
       minimal,
       readOnly,
       customTheme,
@@ -251,6 +252,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         flat={flat}
         theme={theme}
         rounded={rounded}
+        radiusSize={radiusSize}
         minimal={minimal}
         _size={size}
         ref={targetRef}

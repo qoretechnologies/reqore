@@ -173,6 +173,7 @@ function Textarea<T>(
         inheritCustomTheme,
     intent,
     rounded = true,
+    radiusSize,
     wrapperStyle,
     value,
     onChange,
@@ -300,6 +301,8 @@ function Textarea<T>(
       fluid={fluid}
       fixed={fixed}
       _size={size}
+      radiusSize={radiusSize}
+      rounded={rounded}
       theme={theme}
       style={wrapperStyle}
       ref={targetRef}
