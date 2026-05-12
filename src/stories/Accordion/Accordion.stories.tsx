@@ -197,6 +197,34 @@ export const Minimal: Story = {
   },
 };
 
+export const MinimalWithIntents: Story = {
+  args: {
+    minimal: true,
+    items: [
+      {
+        label: 'happy-path',
+        content: '3 failing',
+        intent: 'danger',
+      },
+      {
+        label: 'rejects-missing-customer',
+        content: '2 failing',
+        intent: 'danger',
+      },
+      {
+        label: 'info section',
+        content: 'Some info content',
+        intent: 'info',
+      },
+      {
+        label: 'success section',
+        content: 'Success content',
+        intent: 'success',
+      },
+    ],
+  },
+};
+
 export const Fluid: Story = {
   args: {
     items: basicItems.map((item, i) => ({ ...item, isOpen: i === 0 })),
