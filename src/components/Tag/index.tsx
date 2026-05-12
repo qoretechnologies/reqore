@@ -86,6 +86,11 @@ export interface IReqoreCustomTagProps
   asBadge?: boolean;
   intent?: TReqoreIntent;
   wrap?: boolean;
+  rounded?: boolean;
+  /**
+   * Override the size used to derive the tag's border-radius. Defaults to `size`.
+   */
+  radiusSize?: TSizes;
   labelAlign?: 'left' | 'right' | 'center';
   labelEffect?: IReqoreEffect;
   labelKeyAlign?: 'left' | 'right' | 'center';
@@ -122,12 +127,12 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${({ theme, color, flat = true }) =>
     !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
-  border-radius: ${({ asBadge, size, rounded }) =>
+  border-radius: ${({ asBadge, size, radiusSize, rounded }) =>
     rounded === false
       ? undefined
       : asBadge
-      ? `${BADGE_RADIUS_FROM_SIZE[size]}px`
-      : `${TAG_RADIUS_FROM_SIZE[size]}px`};
+      ? `${BADGE_RADIUS_FROM_SIZE[radiusSize || size]}px`
+      : `${TAG_RADIUS_FROM_SIZE[radiusSize || size]}px`};
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 

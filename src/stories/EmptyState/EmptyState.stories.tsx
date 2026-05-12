@@ -2,6 +2,7 @@ import { StoryObj } from '@storybook/react';
 import { ReqoreEmptyState } from '../../components/EmptyState';
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
+import { ALL_SIZES } from '../utils/args';
 
 const meta = {
   title: 'Display/Empty State/Stories',
@@ -238,4 +239,21 @@ export const Raised: Story = {
       'Subtle inset highlight gives the placeholder surface a tactile, slightly elevated feel.',
     raised: true,
   },
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small'>
+      {ALL_SIZES.map((rs) => (
+        <ReqoreEmptyState
+          key={rs}
+          icon='InboxLine'
+          title={`radiusSize="${rs}"`}
+          description='Corner roundness is independent of the size prop.'
+          rounded
+          radiusSize={rs}
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
 };

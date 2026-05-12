@@ -71,6 +71,10 @@ export interface IReqoreCalloutProps
   contentEffect?: IReqoreEffect;
   /** Round the corners. Default `true`. */
   rounded?: boolean;
+  /**
+   * Override the size used to derive the callout's border-radius. Defaults to `size`.
+   */
+  radiusSize?: TSizes;
   /** Marks the callout as clickable; auto-detected from `onClick`. */
   interactive?: boolean;
   /** Hide the tinted surface background. */
@@ -153,8 +157,8 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
-  border-radius: ${({ rounded, size = 'normal' }) =>
-    rounded === false ? 0 : `${RADIUS_FROM_SIZE[size]}px`};
+  border-radius: ${({ rounded, size = 'normal', radiusSize }) =>
+    rounded === false ? 0 : `${RADIUS_FROM_SIZE[radiusSize || size]}px`};
   overflow: hidden;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
   transition:

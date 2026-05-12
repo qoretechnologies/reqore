@@ -14,7 +14,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, patchPrimaryGradient, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreP } from '../Paragraph';
@@ -44,6 +44,11 @@ export interface IReqoreEmptyStateProps
   effect?: IReqoreEffect;
   /** Rounded border corners */
   rounded?: boolean;
+  /**
+   * Override the size used to derive the empty state's border-radius. Defaults to
+   * the underlying panel's normal size.
+   */
+  radiusSize?: TSizes;
   /** Transparent background */
   transparent?: boolean;
   /** Background opacity */
@@ -76,6 +81,7 @@ export const ReqoreEmptyState = memo(
         disabled,
         tooltip,
         rounded,
+        radiusSize,
         transparent,
         opacity,
         effect,
@@ -102,7 +108,9 @@ export const ReqoreEmptyState = memo(
         const newEffect: IReqoreEffect = { ...effect };
 
         if (newEffect.gradient && intent) {
-          newEffect.gradient.borderColor = theme.intents[intent];
+          newEffect.gradient = patchPrimaryGradient(newEffect.gradient, {
+            borderColor: theme.intents[intent] as TReqoreEffectColor,
+          });
         }
 
         return newEffect;
@@ -123,6 +131,7 @@ export const ReqoreEmptyState = memo(
           fluid={fluid}
           disabled={disabled}
           rounded={rounded}
+          radiusSize={radiusSize}
           intent={intent}
           contentEffect={transformedEffect}
           className={`${className || ''} reqore-empty-state`}

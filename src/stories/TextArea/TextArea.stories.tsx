@@ -6,7 +6,7 @@ import { IReqoreTextareaProps } from '../../components/Textarea';
 import { sleep } from '../../helpers/utils';
 import { ReqoreControlGroup, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
-import { DisabledArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { ALL_SIZES, DisabledArg, MinimalArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
 
@@ -22,6 +22,7 @@ const meta = {
     ...MinimalArg(),
     ...DisabledArg,
     ...SizeArg,
+    ...RadiusSizeArg,
     ...createArg('scaleWithContent', {
       name: 'Scale with content',
       description: 'Scale with content',
@@ -307,4 +308,20 @@ export const WithTemplates: Story = {
     await fireEvent.focusIn(document.querySelector('textarea'));
     await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
   },
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small'>
+      {ALL_SIZES.map((rs) => (
+        <ReqoreTextarea
+          key={rs}
+          size='normal'
+          radiusSize={rs}
+          placeholder={`radiusSize="${rs}"`}
+          rows={2}
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
 };

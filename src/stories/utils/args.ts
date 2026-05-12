@@ -2,6 +2,20 @@ import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';
 
+/**
+ * Canonical list of every TSizes value, in display order. Reuse this in
+ * matrix-style stories instead of redefining the list per file.
+ */
+export const ALL_SIZES: TSizes[] = [
+  'micro',
+  'tiny',
+  'small',
+  'normal',
+  'big',
+  'huge',
+  'massive',
+];
+
 export interface IArgData {
   description?: string;
   name?: string;
@@ -104,6 +118,23 @@ export const SizeArg = {
     defaultValue: 'normal' as TSizes,
     table: {
       defaultValue: { summary: 'normal' },
+    },
+  }),
+};
+
+export const RadiusSizeArg = {
+  ...argManager<any>().createArg('radiusSize', {
+    control: 'select',
+    description:
+      'Overrides the size used to derive the border-radius (defaults to the component size).',
+    options: [undefined, 'micro', 'tiny', 'small', 'normal', 'big', 'huge', 'massive'] as (
+      | TSizes
+      | undefined
+    )[],
+    name: 'Radius Size',
+    defaultValue: undefined,
+    table: {
+      defaultValue: { summary: 'inherits size' },
     },
   }),
 };

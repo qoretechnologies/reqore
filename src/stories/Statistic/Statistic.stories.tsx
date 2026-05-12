@@ -4,6 +4,7 @@ import ReqoreStatistic, { IReqoreStatisticProps } from '../../components/Statist
 import { TSizes } from '../../constants/sizes';
 import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
+import { ALL_SIZES } from '../utils/args';
 
 const meta = {
   title: 'Display/Statistic/Stories',
@@ -515,6 +516,24 @@ export const CustomPaddingSize: Story = {
           rounded
           size={size}
           paddingSize='small'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small'>
+      {ALL_SIZES.map((radiusSize) => (
+        <ReqoreStatistic
+          key={radiusSize}
+          value='12,345'
+          label={`radiusSize="${radiusSize}"`}
+          icon='UserLine'
+          rounded
+          radiusSize={radiusSize}
+          size='normal'
         />
       ))}
     </ReqoreControlGroup>

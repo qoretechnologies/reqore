@@ -3,6 +3,7 @@ import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreTestimonial, { IReqoreTestimonialProps } from '../../components/Testimonial';
 import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
+import { ALL_SIZES } from '../utils/args';
 
 const meta = {
   title: 'Display/Testimonial/Stories',
@@ -352,6 +353,25 @@ export const CustomPaddingSize: Story = {
           rating={4.5}
           size={size}
           paddingSize='small'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' style={{ width: 700 }}>
+      {ALL_SIZES.map((radiusSize) => (
+        <ReqoreTestimonial
+          key={radiusSize}
+          quote={`radiusSize="${radiusSize}" — ${SAMPLE_QUOTE}`}
+          author='Avery Chen'
+          role='Lead Engineer · Northwind'
+          avatarIcon='UserSmileLine'
+          radiusSize={radiusSize}
+          rating={5}
+          size='normal'
         />
       ))}
     </ReqoreControlGroup>

@@ -29,7 +29,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { ButtonBadge, TReqoreBadge } from '../Button';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, patchPrimaryGradient, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
 import { ReqoreSpan } from '../Span';
@@ -394,7 +394,9 @@ export const ReqoreAccordion = memo(
         const newEffect: IReqoreEffect = { ...effect };
 
         if (newEffect.gradient && intent) {
-          newEffect.gradient.borderColor = theme.intents[intent];
+          newEffect.gradient = patchPrimaryGradient(newEffect.gradient, {
+            borderColor: theme.intents[intent] as TReqoreEffectColor,
+          });
         }
 
         return newEffect;

@@ -53,6 +53,11 @@ export interface IReqoreTextareaProps
   rows?: number;
   cols?: number;
   rounded?: boolean;
+  /**
+   * Override the size used to derive the textarea's border-radius. Defaults to the
+   * textarea's size.
+   */
+  radiusSize?: TSizes;
   flat?: boolean;
   fixed?: boolean;
   onClearClick?: () => any;
@@ -78,8 +83,8 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   position: relative;
   overflow: hidden;
-  border-radius: ${({ minimal, rounded = true, _size = 'normal' }) =>
-    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[_size]}px;
+  border-radius: ${({ minimal, rounded = true, _size = 'normal', radiusSize }) =>
+    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[radiusSize || _size]}px;
 
   &:focus-within {
     .reqore-clear-input-button {

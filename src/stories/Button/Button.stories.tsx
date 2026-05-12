@@ -3,7 +3,7 @@ import { noop } from 'lodash';
 import ReqoreButton from '../../components/Button';
 import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
-import { IconArg, SizeArg } from '../utils/args';
+import { ALL_SIZES, IconArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
 const meta = {
   title: 'Form/Button/Stories',
@@ -12,6 +12,7 @@ const meta = {
     ...IconArg('icon', 'Icon'),
     ...IconArg('rightIcon', 'Right Icon'),
     ...SizeArg,
+    ...RadiusSizeArg,
   },
   args: {
     icon: '24HoursFill',
@@ -540,5 +541,54 @@ export const MinimalRaised: Story = {
         <ReqoreButton minimal flat raised={false} label='Minimal, raised={false}' icon='24HoursFill' />
       </ReqoreControlGroup>
     </div>
+  ),
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreControlGroup wrap>
+      {ALL_SIZES.map((rs) => (
+        <ReqoreButton key={rs} size='normal' radiusSize={rs} icon='RadarLine'>
+          radiusSize={rs}
+        </ReqoreButton>
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const MultipleGradients: Story = {
+  render: () => (
+    <ReqoreControlGroup wrap>
+      <ReqoreButton
+        size='big'
+        radiusSize='big'
+        icon='ArrowRightLine'
+        iconsAlign='center'
+        effect={{
+          gradient: [
+            {
+              type: 'radial',
+              shape: 'ellipse',
+              direction: 'at 0% 50%',
+              colors: {
+                0: '#ffffff:darken:1:0.4',
+                65: '#ffffff:darken:1:0',
+                100: '#ffffff:darken:1:0',
+              },
+            },
+            {
+              type: 'linear',
+              direction: 'to right',
+              colors: { 0: '#0066ff', 100: '#ff3da6' },
+              animate: 'hover',
+            },
+          ],
+          spaced: 1,
+          weight: 'bold',
+        }}
+      >
+        Layered button
+      </ReqoreButton>
+    </ReqoreControlGroup>
   ),
 };

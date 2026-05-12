@@ -22,7 +22,7 @@ import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreBreadcrumbItem } from '../Breadcrumbs';
 import { IReqoreButtonProps } from '../Button';
-import { TReqoreHexColor } from '../Effect';
+import { getPrimaryGradient, TReqoreHexColor } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { IReqoreMenuItemProps } from '../Menu/item';
 import { StyledPopover } from '../Popover';
@@ -242,7 +242,7 @@ const ReqoreTabsList = ({
   const currentTabColor: TReqoreHexColor =
     activeTabIntent || activeTabData?.intent
       ? theme.intents[activeTabIntent || activeTabData.intent]
-      : getNthGradientColor(theme, activeTabData?.effect?.gradient?.colors) ||
+      : getNthGradientColor(theme, getPrimaryGradient(activeTabData?.effect?.gradient)?.colors) ||
         getColorFromMaybeString(theme, activeTabData?.customTheme?.main || theme.main);
 
   const filteredItems = tabs.filter((item) => item.show !== false);

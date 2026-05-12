@@ -3,7 +3,7 @@ import { useState } from 'react';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
-import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
+import { ALL_SIZES, FlatArg, IconArg, MinimalArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
 const meta = {
   title: 'Form/Input/Stories',
@@ -12,6 +12,7 @@ const meta = {
     ...MinimalArg,
     ...FlatArg,
     ...SizeArg,
+    ...RadiusSizeArg,
     ...IconArg('icon', 'Icon'),
   },
   args: {
@@ -241,4 +242,20 @@ export const Loading: Story = {
   args: {
     loading: true,
   },
+};
+
+export const RadiusSize: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small'>
+      {ALL_SIZES.map((rs) => (
+        <ReqoreInput
+          key={rs}
+          size='normal'
+          radiusSize={rs}
+          placeholder={`radiusSize="${rs}"`}
+          icon='SearchLine'
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
 };

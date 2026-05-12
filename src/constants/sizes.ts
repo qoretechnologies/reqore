@@ -260,11 +260,11 @@ export const CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE = {
 export const RADIUS_FROM_SIZE = {
   micro: 3,
   tiny: 4,
-  small: 4,
-  normal: 5,
-  big: 6,
-  huge: 8,
-  massive: 10,
+  small: 6,
+  normal: 8,
+  big: 14,
+  huge: 22,
+  massive: 32,
 };
 
 export const TAG_RADIUS_FROM_SIZE = {

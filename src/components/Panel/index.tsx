@@ -62,7 +62,13 @@ import { StyledCollectionItemContent } from '../Collection/item';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import {
+  getPrimaryGradient,
+  IReqoreEffect,
+  patchPrimaryGradient,
+  StyledEffect,
+  TReqoreEffectColor,
+} from '../Effect';
 import { ReqoreErrorBoundary } from '../ErrorBoundary';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreSkeleton } from '../Skeleton';
@@ -151,6 +157,14 @@ export interface IReqorePanelProps
   closeButtonProps?: IReqoreButtonProps;
 
   rounded?: boolean;
+  /**
+   * Override the size used to derive the panel's border-radius. Defaults to `'normal'`,
+   * which preserves the legacy behaviour where the radius was independent of `size`.
+   * Useful when the panel's text/padding scale should differ from its corner roundness
+   * (e.g. a large hero card with a generous radius, or a small chip-style panel with
+   * a tight radius).
+   */
+  radiusSize?: TSizes;
   wrapperPadding?: 'top' | 'bottom' | 'both' | 'none';
 
   actions?: TReqorePanelActions;
@@ -322,7 +336,8 @@ export type TPanelStyle = React.FC<
 export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
-  border-radius: ${({ rounded }) => (rounded ? RADIUS_FROM_SIZE.normal : 0)}px;
+  border-radius: ${({ rounded, radiusSize }) =>
+    rounded ? RADIUS_FROM_SIZE[radiusSize || 'normal'] : 0}px;
   border: ${({ theme, flat, intent }) =>
     flat && !intent
       ? undefined
@@ -515,7 +530,10 @@ export const StyledFloatingActions = styled.div<{
           0.08
         )}`};
   border-bottom: none;
-  border-radius: ${({ size }) => RADIUS_FROM_SIZE[size]}px ${({ size }) => RADIUS_FROM_SIZE[size]}px
+  border-radius: ${({ radiusSize, size }) => RADIUS_FROM_SIZE[radiusSize || size]}px ${({
+      radiusSize,
+      size,
+    }) => RADIUS_FROM_SIZE[radiusSize || size]}px
     0 0;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
   pointer-events: auto;
@@ -617,11 +635,19 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     ref
   ) => {
     const [_isCollapsed, setIsCollapsed] = useState(isCollapsed || false);
+    const primaryContentGradient = getPrimaryGradient(contentEffect?.gradient);
+    const primaryContentColors: Record<number | string, unknown> | undefined =
+      primaryContentGradient && typeof primaryContentGradient.colors === 'object'
+        ? (primaryContentGradient.colors as Record<number | string, unknown>)
+        : undefined;
+    const firstContentGradientColor: TReqoreEffectColor | undefined = primaryContentColors
+      ? (Object.values(primaryContentColors)[0] as TReqoreEffectColor)
+      : undefined;
     const theme = useReqoreTheme(
       'main',
       customTheme ||
-        (contentEffect?.gradient && minimal
-          ? { main: Object.values(contentEffect.gradient.colors)[0] as TReqoreEffectColor }
+        (firstContentGradientColor && minimal
+          ? { main: firstContentGradientColor }
           : undefined),
       undefined,
       undefined,
@@ -984,10 +1010,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const transformedContentEffect: IReqoreEffect = useMemo(() => {
       const newContentEffect: IReqoreEffect = { ...contentEffect };
 
-      if (newContentEffect.gradient) {
-        newContentEffect.gradient.borderColor = intent
-          ? theme.intents[intent]
-          : newContentEffect.gradient.borderColor;
+      if (newContentEffect.gradient && intent) {
+        newContentEffect.gradient = patchPrimaryGradient(newContentEffect.gradient, {
+          borderColor: theme.intents[intent] as TReqoreEffectColor,
+        });
       }
 
       newContentEffect.interactive = interactive;

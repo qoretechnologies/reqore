@@ -56,6 +56,12 @@ export interface IReqoreInputProps
   flat?: boolean;
   transparent?: boolean;
   rounded?: boolean;
+  /**
+   * Override the size used to derive the input's border-radius. Defaults to the
+   * input's size. Useful when the input's text scale should differ from its corner
+   * roundness (e.g. a normal-size input with a generous pill-like radius).
+   */
+  radiusSize?: TSizes;
   type?: 'text' | 'password' | 'email' | 'number' | 'tel' | 'url';
   step?: number;
   wrapperStyle?: React.CSSProperties;
@@ -89,10 +95,10 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   position: relative;
   overflow: hidden;
-  border-radius: ${({ minimal, rounded, _size, pill }) =>
+  border-radius: ${({ minimal, rounded, _size, radiusSize, pill }) =>
     minimal || rounded === false
       ? 0
-      : RADIUS_FROM_SIZE[_size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+      : RADIUS_FROM_SIZE[radiusSize || _size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
   ${InactiveIconScale}
 

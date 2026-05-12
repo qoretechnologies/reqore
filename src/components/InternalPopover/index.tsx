@@ -23,17 +23,23 @@ import {
   getColorFromMaybeString,
   getNotificationIntent,
 } from '../../helpers/colors';
+import { getPrimaryGradient } from '../Effect';
 import ReqoreMessage from '../Message';
 import { IPopoverData } from '../Popover';
 
-const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
-  rgba(
-    effect
+const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) => {
+  const primary = getPrimaryGradient(effect?.gradient);
+  const primaryColorsRecord: Record<number | string, unknown> | undefined =
+    primary && typeof primary.colors === 'object'
+      ? (primary.colors as Record<number | string, unknown>)
+      : undefined;
+  const primaryFirstColor = primaryColorsRecord
+    ? (Object.values(primaryColorsRecord)[0] as any)
+    : undefined;
+  return rgba(
+    primary
       ? changeLightness(
-          getColorFromMaybeString(
-            theme,
-            effect.gradient.borderColor || Object.values(effect.gradient.colors)[0]
-          ),
+          getColorFromMaybeString(theme, primary.borderColor || primaryFirstColor),
           0.04
         )
       : intent
@@ -48,6 +54,7 @@ const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) =>
         ),
     dim ? 0.3 : 1
   );
+};
 
 const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   width: 10px;
