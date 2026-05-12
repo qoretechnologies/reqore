@@ -141,7 +141,7 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
-  border-radius: ${({ rounded, size = 'normal', radiusSize }) =>
+  border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize }) =>
     rounded === false ? 0 : `${resolveRadius(size, radiusSize)}px`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;

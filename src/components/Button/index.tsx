@@ -11,7 +11,6 @@ import {
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
-  RADIUS_FROM_SIZE,
   resolveRadius,
   SIZE_TO_PX,
   TSizes,

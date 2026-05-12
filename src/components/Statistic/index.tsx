@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE, resolveRadius, TSizes } from '../../constants/sizes';
+import { resolveRadius, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,

@@ -3,7 +3,6 @@ import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
   resolveRadius,
   TEXT_FROM_SIZE,
   TSizes,
@@ -163,7 +162,7 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
           intent ? theme.intents[intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
-  border-radius: ${({ rounded, size = 'normal', radiusSize }) =>
+  border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize }) =>
     rounded === false ? 0 : `${resolveRadius(size, radiusSize)}px`};
   overflow: hidden;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};

@@ -22,7 +22,6 @@ import {
   ICON_FROM_HEADER_SIZE,
   NUMBER_TO_SIZE,
   PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
   resolveRadius,
   TEXT_FROM_SIZE,
   TSizes,

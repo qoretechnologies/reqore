@@ -5,7 +5,6 @@ import styled, { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
   CONTROL_TEXT_FROM_SIZE,
-  RADIUS_FROM_SIZE,
   resolveRadius,
   SIZE_TO_PX,
   TEXTAREA_PADDING_FROM_SIZE,
@@ -84,7 +83,7 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
   position: relative;
   overflow: hidden;
-  border-radius: ${({ minimal, rounded = true, _size = 'normal', radiusSize }) =>
+  border-radius: ${({ minimal, rounded = true, _size = 'normal' as TSizes, radiusSize }) =>
     minimal || !rounded ? 0 : resolveRadius(_size, radiusSize)}px;
 
   &:focus-within {
