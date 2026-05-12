@@ -4,6 +4,7 @@ import styled, { css } from 'styled-components';
 import {
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
+  resolveRadius,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -167,7 +168,7 @@ const StyledTestimonial = styled(StyledEffect)<IStyledTestimonialProps>`
           0.08
         )}`};
   border-radius: ${({ rounded, size, radiusSize }) =>
-    rounded ? `${RADIUS_FROM_SIZE[radiusSize || size]}px` : '0'};
+    rounded ? `${resolveRadius(size, radiusSize)}px` : '0'};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   flex: ${({ $fluid }) => ($fluid ? '1 auto' : '0 0 auto')};
   margin: 0;

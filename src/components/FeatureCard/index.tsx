@@ -5,6 +5,7 @@ import {
   HEADER_SIZE_TO_NUMBER,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
+  resolveRadius,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -141,7 +142,7 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
           0.08
         )}`};
   border-radius: ${({ rounded, size = 'normal', radiusSize }) =>
-    rounded === false ? 0 : `${RADIUS_FROM_SIZE[radiusSize || size]}px`};
+    rounded === false ? 0 : `${resolveRadius(size, radiusSize)}px`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
   position: relative;

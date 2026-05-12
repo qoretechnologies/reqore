@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, resolveRadius, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
@@ -165,7 +165,7 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
     $hasBackground &&
     css`
       background-color: ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
-      border-radius: ${rounded ? RADIUS_FROM_SIZE[radiusSize || size] : 0}px;
+      border-radius: ${rounded ? resolveRadius(size, radiusSize) : 0}px;
       border: ${flat
         ? undefined
         : `1px solid ${changeLightness(

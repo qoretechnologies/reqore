@@ -6,6 +6,7 @@ import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
   CONTROL_TEXT_FROM_SIZE,
   RADIUS_FROM_SIZE,
+  resolveRadius,
   SIZE_TO_PX,
   TEXTAREA_PADDING_FROM_SIZE,
   TSizes,
@@ -84,7 +85,7 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   position: relative;
   overflow: hidden;
   border-radius: ${({ minimal, rounded = true, _size = 'normal', radiusSize }) =>
-    minimal || !rounded ? 0 : RADIUS_FROM_SIZE[radiusSize || _size]}px;
+    minimal || !rounded ? 0 : resolveRadius(_size, radiusSize)}px;
 
   &:focus-within {
     .reqore-clear-input-button {

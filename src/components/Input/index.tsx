@@ -8,6 +8,7 @@ import {
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
   RADIUS_FROM_SIZE,
+  resolveRadius,
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
@@ -98,7 +99,7 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   border-radius: ${({ minimal, rounded, _size, radiusSize, pill }) =>
     minimal || rounded === false
       ? 0
-      : RADIUS_FROM_SIZE[radiusSize || _size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+      : resolveRadius(_size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
 
   ${InactiveIconScale}
 

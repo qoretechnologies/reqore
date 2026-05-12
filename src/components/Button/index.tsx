@@ -12,6 +12,7 @@ import {
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
   RADIUS_FROM_SIZE,
+  resolveRadius,
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
@@ -212,7 +213,7 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
       ? undefined
       : circle
       ? '9999px'
-      : `${RADIUS_FROM_SIZE[radiusSize || size] * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
+      : `${resolveRadius(size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
 
   background-color: ${({ minimal, color, theme, transparent, effect }) => {
     if (transparent) {

@@ -23,6 +23,7 @@ import {
   NUMBER_TO_SIZE,
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
+  resolveRadius,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -337,7 +338,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded, radiusSize }) =>
-    rounded ? RADIUS_FROM_SIZE[radiusSize || 'normal'] : 0}px;
+    rounded ? resolveRadius('normal', radiusSize) : 0}px;
   border: ${({ theme, flat, intent }) =>
     flat && !intent
       ? undefined
@@ -530,10 +531,10 @@ export const StyledFloatingActions = styled.div<{
           0.08
         )}`};
   border-bottom: none;
-  border-radius: ${({ radiusSize, size }) => RADIUS_FROM_SIZE[radiusSize || size]}px ${({
+  border-radius: ${({ radiusSize, size }) => resolveRadius(size, radiusSize)}px ${({
       radiusSize,
       size,
-    }) => RADIUS_FROM_SIZE[radiusSize || size]}px
+    }) => resolveRadius(size, radiusSize)}px
     0 0;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
   pointer-events: auto;
