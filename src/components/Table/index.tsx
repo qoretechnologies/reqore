@@ -198,6 +198,17 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    */
   expandHeightButtonProps?: Partial<IReqoreButtonProps>;
 
+  /**
+   * Uniform pixel height for every body row. Overrides the size-derived default
+   * (e.g. `small` ⇒ 32px). Useful when a column renders multi-line content but
+   * you want to keep `virtualized` + `fill` working — set a value tall enough to
+   * fit your tallest cell and every row will render at that height.
+   *
+   * Mutually exclusive with table-level `wrap` / column-level `cell.wrap`, which
+   * disable virtualization and let rows grow to fit content individually.
+   */
+  rowHeight?: number;
+
   onRowClick?: IReqoreTableRowClick;
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
   rowComponent?: IReqoreTableRowOptions['rowComponent'];
@@ -295,6 +306,7 @@ const ReqoreTable = ({
   wrap,
   maxCellHeight,
   expandHeightButtonProps,
+  rowHeight,
   ...rest
 }: IReqoreTableProps) => {
   const mainTableRef = useRef<HTMLDivElement>(null);
@@ -838,6 +850,7 @@ const ReqoreTable = ({
           }}
           component={headerCellComponent}
           tableWidth={sizes.width}
+          minimal={rest.minimal}
         />
         {count(items) === 0 ? null : (
           <ReqoreTableBody
@@ -858,6 +871,7 @@ const ReqoreTable = ({
             wrap={wrap}
             maxCellHeight={maxCellHeight}
             expandHeightButtonProps={expandHeightButtonProps}
+            rowHeight={rowHeight}
             virtualized={shouldVirtualize}
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}

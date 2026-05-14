@@ -7,8 +7,10 @@ import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
 import { getReadableColor } from '../../helpers/colors';
+import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
+import { IReqoreEffect } from '../Effect';
 import { TColumnsUpdater } from './header';
 
 export interface IReqoreTableHeaderCellProps
@@ -21,6 +23,13 @@ export interface IReqoreTableHeaderCellProps
   onFilterChange?: (dataId: string, filter: string) => void;
   pinOffset?: number;
   pinEdge?: boolean;
+  /**
+   * Set by the parent `ReqoreTable` when its own `minimal` prop is enabled, so
+   * the resizer between columns can render as a hover-only, half-opacity line
+   * rather than the standard always-visible dashed border. Not part of the
+   * public column config — the table threads it through internally.
+   */
+  parentMinimal?: boolean;
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -31,7 +40,14 @@ export interface IReqoreTableHeaderStyle {
   interactive?: boolean;
 }
 
-export const StyledTableHeaderResize = styled.div`
+export const StyledTableHeaderResize = styled.div<{ $minimal?: boolean }>`
+  height: 100%;
+  /* Hover reveal is driven by the parent StyledHeaderResizable (its hover state
+     toggles opacity to 0.5). The handle is only 1px wide, so an inline hover
+     selector here would rarely fire. */
+  transition: opacity 0.15s ease-out;
+  opacity: ${({ $minimal }) => ($minimal ? 0 : 1)};
+
   &:before {
     content: '';
     position: absolute;
@@ -40,7 +56,8 @@ export const StyledTableHeaderResize = styled.div`
     transform: translateX(-50%) translateY(-50%);
     width: 0.5px;
     height: 100%;
-    border-left: 1px dashed ${({ theme }) => rgba(getReadableColor(theme), 0.4)};
+    border-left: 1px dashed
+      ${({ theme, $minimal }) => rgba(getReadableColor(theme), $minimal ? 0.5 : 0.4)};
   }
 `;
 
@@ -51,7 +68,16 @@ export const StyledSortIcon = styled(ReqoreIcon)`
 const StyledHeaderResizable = styled(Resizable)<{
   $pin?: 'left' | 'right';
   $pinEdge?: boolean;
+  $minimal?: boolean;
 }>`
+  ${({ $minimal }) =>
+    $minimal &&
+    css`
+      &:hover .reqore-table-header-resize {
+        opacity: 0.5;
+      }
+    `}
+
   ${({ $pin, $pinEdge }) =>
     $pin &&
     $pinEdge &&
@@ -106,6 +132,7 @@ export const ReqoreTableHeaderCell = memo(
     size,
     onFilterChange,
     actions,
+    parentMinimal,
     ...rest
   }: IReqoreTableHeaderCellProps) => {
     const items = useMemo(() => {
@@ -213,16 +240,37 @@ export const ReqoreTableHeaderCell = memo(
         }
       : {};
 
+    // Header text gets a consistent "label-y" typography by default. The
+    // `opacity: 0.7` is only added under `minimal` so the unbordered, washed
+    // surface stays cohesive — full-opacity headers on a tinted strip already
+    // read clearly. Per-column `header.effect` (carried in `rest.effect`)
+    // still wins via the spread below.
+    const baseHeaderEffect = useMemo<IReqoreEffect>(
+      () => ({
+        uppercase: true,
+        weight: 'thick',
+        textSize: getOneLessSize(size),
+        spaced: 1,
+        ...(parentMinimal ? { opacity: 0.7 } : {}),
+      }),
+      [size, parentMinimal]
+    );
+
     return (
       <StyledHeaderResizable
-        {...({ $pin: pin, $pinEdge: pinEdge } as any)}
+        {...({ $pin: pin, $pinEdge: pinEdge, $minimal: parentMinimal } as any)}
         minWidth={minWidth || width}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {
           onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
         }}
         handleComponent={{
-          right: <StyledTableHeaderResize />,
+          right: (
+            <StyledTableHeaderResize
+              className='reqore-table-header-resize'
+              $minimal={parentMinimal}
+            />
+          ),
         }}
         style={{
           overflow: 'hidden',
@@ -275,6 +323,7 @@ export const ReqoreTableHeaderCell = memo(
 
                     onClick?.(e);
                   }}
+                  labelEffect={baseHeaderEffect}
                   {...rest}
                   effect={{
                     glow: filter
@@ -316,6 +365,7 @@ export const ReqoreTableHeaderCell = memo(
                     onClick?.(e);
                   }}
                   {...rest}
+                  effect={{ ...baseHeaderEffect, ...rest.effect }}
                 />
               )}
             </>

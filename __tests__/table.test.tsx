@@ -426,6 +426,78 @@ test('Wrapped <Table /> renders rows with min-height instead of fixed height', (
   });
 });
 
+test('<Table /> with rowHeight override renders every virtualized row at that height', () => {
+  const data: IReqoreTableProps = {
+    ...tableData,
+    rowHeight: 80,
+    width: 500,
+    height: 400,
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const rows = document.querySelectorAll('.reqore-table-row');
+  expect(rows.length).toBeGreaterThan(0);
+  // react-window assigns inline style.height to each virtualized row from
+  // the FixedSizeList itemSize, which now reflects our `rowHeight` override.
+  rows.forEach((row) => {
+    expect((row as HTMLElement).style.height).toBe('80px');
+  });
+});
+
+test('<Table /> without rowHeight falls back to the size-derived row height', () => {
+  // size defaults to 'normal' (38px) and flat is undefined ⇒ rowHeight = 38 + 1 = 39px.
+  const data: IReqoreTableProps = {
+    ...tableData,
+    width: 500,
+    height: 400,
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const rows = document.querySelectorAll('.reqore-table-row');
+  expect(rows.length).toBeGreaterThan(0);
+  rows.forEach((row) => {
+    expect((row as HTMLElement).style.height).toBe('39px');
+  });
+});
+
+test('<Table /> rowHeight=0 is ignored (falls back to size-derived default)', () => {
+  // Guard against an accidental pass-through of `rowHeight: 0` collapsing every row.
+  const data: IReqoreTableProps = {
+    ...tableData,
+    rowHeight: 0,
+    width: 500,
+    height: 400,
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const rows = document.querySelectorAll('.reqore-table-row');
+  expect(rows.length).toBeGreaterThan(0);
+  rows.forEach((row) => {
+    expect((row as HTMLElement).style.height).toBe('39px');
+  });
+});
+
 test('<Table /> renders a single header wrapper even with pinned columns', () => {
   const data: IReqoreTableProps = {
     ...tableData,

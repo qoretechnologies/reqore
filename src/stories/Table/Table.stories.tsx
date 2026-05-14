@@ -831,3 +831,103 @@ export const CustomExpandHeightButton: Story = {
     },
   },
 };
+
+/**
+ * `minimal` strips the tinted background and the cell border from every header
+ * cell (each header becomes `transparent` + `flat`). Per-column `header.flat`
+ * or `header.transparent` still wins, so a single column can opt back into the
+ * bordered look while the rest of the table stays minimal.
+ */
+export const MinimalHeader: Story = {
+  args: {
+    minimal: true,
+    label: 'minimal header — no tinted background, no cell border',
+    data: longTextData,
+    columns: longTextColumns,
+    height: 400,
+  },
+};
+
+/**
+ * Same as `MinimalHeader`, but the Status column opts back into the default
+ * non-minimal look via `header: { flat: false, transparent: false }`. Confirms
+ * that per-column overrides win over the table-wide `minimal` defaults.
+ */
+export const MinimalHeaderWithOverride: Story = {
+  args: {
+    minimal: true,
+    label: 'minimal table with one bordered column',
+    data: longTextData,
+    columns: [
+      longTextColumns[0],
+      longTextColumns[1],
+      longTextColumns[2],
+      {
+        ...longTextColumns[3],
+        header: {
+          ...(longTextColumns[3].header || { label: 'Status' }),
+          flat: false,
+          transparent: false,
+        },
+      },
+    ],
+    height: 400,
+  },
+};
+
+/**
+ * `rowHeight` lets a virtualized table pin every row to a fixed pixel height
+ * larger than the size-derived default — useful when one column renders
+ * multi-line content (e.g. a name plus a row of metadata badges) and you want
+ * the table to keep virtualizing AND keep `fill` working. Pair with custom
+ * cell content that lays itself out vertically.
+ */
+export const RowHeight: Story = {
+  args: {
+    rowHeight: 72,
+    height: 400,
+    label: 'rowHeight=72 for stacked content',
+    data: longTextData,
+    columns: [
+      {
+        dataId: 'id',
+        header: { label: 'ID' },
+        width: 60,
+        align: 'center',
+        cell: { content: 'number' },
+      },
+      {
+        dataId: 'title',
+        header: { label: 'Title + description' },
+        grow: 3,
+        cell: {
+          padded: 'none',
+          content: ({ title, description }: { title: string; description: string }) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px' }}>
+              <span style={{ fontWeight: 500 }}>{title}</span>
+              <span
+                style={{
+                  opacity: 0.7,
+                  fontSize: 12,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: 'block',
+                  maxWidth: 320,
+                }}
+              >
+                {description}
+              </span>
+            </div>
+          ),
+        },
+      },
+      {
+        dataId: 'status',
+        header: { label: 'Status' },
+        width: 120,
+        cell: { content: 'tag:info' },
+      },
+    ],
+  },
+};

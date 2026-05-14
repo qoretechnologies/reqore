@@ -32,6 +32,7 @@ export interface IReqoreCustomHeaderCellProps
       | 'onFilterChange'
       | 'pinOffset'
       | 'pinEdge'
+      | 'parentMinimal'
     >,
     Omit<IReqoreTableColumn, 'cell' | 'header'>,
     Omit<IReqoreButtonProps, 'maxWidth' | 'content'> {
@@ -49,6 +50,13 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
   heightAsGroup?: boolean;
   bodyRef: React.RefObject<HTMLDivElement>;
   tableWidth: number;
+  /**
+   * When `true`, the rendered header cells default to `transparent` + `flat`,
+   * which removes the tinted background and the cell border. Mirrors the
+   * `minimal` prop on the parent `ReqoreTable`. Per-column `header.flat` or
+   * `header.transparent` still wins.
+   */
+  minimal?: boolean;
 }
 
 export interface IReqoreTableSectionStyle {
@@ -75,10 +83,6 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
           }
         `
       : ''}
-
-    ${({ theme }) => css`
-      background-color: ${theme.main};
-    `}
   `}
 `;
 
@@ -143,6 +147,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       heightAsGroup,
       bodyRef,
       tableWidth,
+      minimal,
     }: IReqoreTableSectionProps,
     ref
   ) => {
@@ -180,6 +185,13 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       [component]
     );
 
+    // Defaults applied BEFORE the caller's `header.*` props so per-column header
+    // settings (e.g. `header: { flat: false }`) still win over the table-wide
+    // `minimal` flag.
+    const minimalHeaderDefaults: { flat?: boolean; transparent?: boolean } = minimal
+      ? { flat: true, transparent: true }
+      : {};
+
     const renderLeafHeaderCell = (column: IReqoreTableColumn) => {
       const {
         grow,
@@ -190,6 +202,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       } = column;
       const pinInfo = pinOffsets[dataId];
       return renderHeaderCell(headerComponent, {
+        ...minimalHeaderDefaults,
         ...rest,
         ...omit(colRest, ['cell']),
         onClick,
@@ -203,6 +216,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         onFilterChange,
         pinOffset: pinInfo?.offset,
         pinEdge: pinInfo?.isEdge,
+        parentMinimal: minimal,
       });
     };
 
@@ -224,6 +238,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
           minWidth={subColumns.reduce((wid, col) => wid + col.minWidth, 0)}
         >
           {renderHeaderCell(headerComponent, {
+            ...minimalHeaderDefaults,
             ...rest,
             ...omit(colRest, ['cell']),
             dataId,
@@ -237,6 +252,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
             pinnable: false,
             hasColumns: true,
             grow: 1,
+            parentMinimal: minimal,
           })}
           <StyledColumnGroupHeaders className='reqore-table-headers'>
             {renderUnpinnedColumns(subColumns)}

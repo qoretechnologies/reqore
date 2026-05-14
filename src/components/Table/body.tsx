@@ -12,6 +12,11 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
   headerRef: React.RefObject<HTMLDivElement>;
   virtualized?: boolean;
   onScrollChange?: (isScrolled: boolean) => void;
+  /**
+   * Uniform pixel height for every body row. Overrides the size-derived
+   * default. See `IReqoreTableProps.rowHeight` for the public-facing docs.
+   */
+  rowHeight?: number;
 }
 
 const StyledList = styled(List)``;
@@ -39,16 +44,19 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       headerRef,
       virtualized = true,
       onScrollChange,
+      rowHeight: rowHeightOverride,
       ...rest
     }: IReqoreTableSectionBodyProps,
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
 
-    const rowHeight = useMemo(
-      () => (rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1),
-      [size, rest.flat]
-    );
+    const rowHeight = useMemo(() => {
+      if (typeof rowHeightOverride === 'number' && rowHeightOverride > 0) {
+        return rowHeightOverride;
+      }
+      return rest.flat ? TABLE_SIZE_TO_PX[size] : TABLE_SIZE_TO_PX[size] + 1;
+    }, [rowHeightOverride, size, rest.flat]);
 
     const itemCount = useMemo(() => count(data), [data]);
 
