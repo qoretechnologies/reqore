@@ -20,7 +20,6 @@ import {
   GAP_FROM_SIZE,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
-  NUMBER_TO_SIZE,
   PADDING_FROM_SIZE,
   resolveRadius,
   TEXT_FROM_SIZE,
@@ -530,11 +529,8 @@ export const StyledFloatingActions = styled.div<{
           0.08
         )}`};
   border-bottom: none;
-  border-radius: ${({ radiusSize, size }) => resolveRadius(size, radiusSize)}px ${({
-      radiusSize,
-      size,
-    }) => resolveRadius(size, radiusSize)}px
-    0 0;
+  border-radius: ${({ radiusSize, size }) => resolveRadius(size, radiusSize)}px
+    ${({ radiusSize, size }) => resolveRadius(size, radiusSize)}px 0 0;
   gap: ${({ size }) => GAP_FROM_SIZE[size]}px;
   pointer-events: auto;
 `;
@@ -646,9 +642,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const theme = useReqoreTheme(
       'main',
       customTheme ||
-        (firstContentGradientColor && minimal
-          ? { main: firstContentGradientColor }
-          : undefined),
+        (firstContentGradientColor && minimal ? { main: firstContentGradientColor } : undefined),
       undefined,
       undefined,
       inheritCustomTheme
@@ -1160,8 +1154,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       //   the icon in row 1 (label), row 2 (description), or
                       //   spans both rows (center). The description always
                       //   indents past the icon column.
-                      const inlineWithLabel =
-                        hasPanelIcon && (iconWithLabel || !description);
+                      const inlineWithLabel = hasPanelIcon && (iconWithLabel || !description);
                       const useOuterGrid = hasPanelIcon && !inlineWithLabel;
 
                       // Outer grid → grid column-gap handles icon→label
@@ -1185,9 +1178,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                           {...iconProps}
                           animation={loading ? 'spin' : iconProps?.animation}
                           icon={
-                            loading
-                              ? `Loader${loadingIconType || ''}Line`
-                              : icon || iconProps?.icon
+                            loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
                           }
                           className={`reqore-panel-title-icon ${iconProps?.className || ''}`.trim()}
                         />
