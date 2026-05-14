@@ -1227,10 +1227,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         </StyledPanelTitleHeaderLabelAndBadge>
                       );
 
+                      // Description size is driven by the panel size only —
+                      // explicitly NOT by `labelSize`. `NUMBER_TO_SIZE` maps
+                      // 1..6 → micro..huge, which means bumping `labelSize`
+                      // from 4 to 2 to grow the heading would inversely
+                      // shrink the description to `tiny`. That's the wrong
+                      // pairing: a bigger label should not make supporting
+                      // text smaller. Consumers that want to size the
+                      // description explicitly pass `descriptionEffect.textSize`.
                       const descriptionRow = description ? (
                         <ReqoreSpan
                           className='reqore-panel-title-description'
-                          size={labelSize ? NUMBER_TO_SIZE[labelSize] : panelSize}
+                          size={panelSize}
                           effect={{ opacity: 0.7, ...descriptionEffect }}
                           intent={descriptionIntent}
                         >
