@@ -1,4 +1,5 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
-  "deepscan.enable": true
+  "deepscan.enable": true,
+  "autoHide.autoHidePanel": false
 }
