@@ -184,7 +184,7 @@ export const DatePicker = <T extends TDateValue>({
 
   useEffect(() => {
     if (typeof window === 'undefined') {
-      return;
+      return undefined;
     }
 
     const updateTouchPrimaryInput = () => {

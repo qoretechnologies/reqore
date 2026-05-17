@@ -106,6 +106,9 @@ export const ReqoreMultiSelect = ({
   const [query, setQuery] = useState<string>('');
   const popoverData = useRef<IPopoverControls>(undefined);
   const [focused, setFocused] = useState<boolean>(false);
+  const isSelectorDisabled = Boolean(
+    disabled || selectorProps?.disabled || (!size(items) && !size(createdItems) && !canCreateItems)
+  );
 
   useEffect(() => {
     if (query && !popoverData.current?.isOpen()) {
@@ -283,11 +286,14 @@ export const ReqoreMultiSelect = ({
           placement='auto-start'
           placeholder={canCreateItems ? 'Type to search or create an item...' : 'Type to search...'}
           {...selectorProps}
-          disabled={disabled || selectorProps?.disabled}
+          disabled={isSelectorDisabled}
           multiSelect
           onFocus={() => {
             setFocused(true);
-            popoverData.current?.open();
+
+            if (!isSelectorDisabled) {
+              popoverData.current?.open();
+            }
           }}
           onBlur={() => setFocused(false)}
           passPopoverData={(data) => (popoverData.current = data)}
