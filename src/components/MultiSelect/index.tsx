@@ -279,12 +279,16 @@ export const ReqoreMultiSelect = ({
       <ReqoreControlGroup minimal={rest.minimal} flat={rest.flat} size={rest.size}>
         <ReqoreDropdown<IReqoreInputProps>
           useTargetWidth
-          handler='focus'
+          handler='click'
+          placement='auto-start'
           placeholder={canCreateItems ? 'Type to search or create an item...' : 'Type to search...'}
           {...selectorProps}
           disabled={disabled || selectorProps?.disabled}
           multiSelect
-          onFocus={() => setFocused(true)}
+          onFocus={() => {
+            setFocused(true);
+            popoverData.current?.open();
+          }}
           onBlur={() => setFocused(false)}
           passPopoverData={(data) => (popoverData.current = data)}
           component={ReqoreInput}
