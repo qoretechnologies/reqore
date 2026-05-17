@@ -146,9 +146,71 @@ const TREND_DEFAULT_INTENTS: Record<TReqoreStatisticTrendDirection, TReqoreInten
 };
 
 const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
-  display: inline-flex;
+  /* ---- Layout --------------------------------------------------------
+     The Statistic is rendered as a real div (see the as=div on the JSX)
+     rather than the default StyledEffect span. A span containing block
+     children (the value row and the trend group are both divs) is the
+     wrong content model and produced a box that did not establish a
+     proper containment context, so overflow + min-width did not hold
+     the inner text inside the tile. With a div root the wrapper can be
+     a proper flex column container. */
+  display: flex;
+  flex-direction: column;
+  align-items: ${({ $align }) =>
+    $align === 'center'
+      ? 'center'
+      : $align === 'flex-end'
+      ? 'flex-end'
+      : 'flex-start'};
   justify-content: ${({ $align }) => $align};
   width: ${({ $fluid }) => ($fluid ? '100%' : undefined)};
+  /* ---- Overflow safety ----------------------------------------------
+     Statistic tiles are commonly laid out inside flex or grid parents
+     (KPI strips, dashboards). Without bounding the tile intrinsic
+     width to its column, the widest unbreakable token in the value,
+     trend or label can push past the column edge and bleed into the
+     neighbouring tile. min-width 0 lets flex-shrink do its job,
+     max-width 100% caps the box at the column it lives in, and
+     overflow hidden clips any child that refuses to honour the cap.
+     With a div root these all behave as documented. */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  & .reqore-statistic-label,
+  & .reqore-statistic-value-row,
+  & .reqore-statistic-trend {
+    max-width: 100%;
+    min-width: 0;
+  }
+  /* The trend slot is a ReqoreControlGroup which defaults to
+     "flex: 0 0 auto" (ControlGroup/index.tsx). That kills flex-shrink
+     so the group keeps its intrinsic content width and would push the
+     tile past its grid track when the trend copy is long. Forcing the
+     group to shrink lets the text-leaf wrap rules below take effect. */
+  & .reqore-statistic-trend {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+  }
+  /* Wrap rather than ellipsis — KPI tiles benefit from the operator
+     seeing the whole sub-line rather than a clipped fragment.
+     overflow-wrap anywhere covers identifiers, URLs and long codes
+     with no natural break point. */
+  & .reqore-statistic-label,
+  & .reqore-statistic-value,
+  & .reqore-statistic-prefix,
+  & .reqore-statistic-suffix {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+  }
+  & .reqore-statistic-trend > span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
+    max-width: 100%;
+  }
 
   ${({
     $hasBackground,
@@ -291,6 +353,16 @@ const ReqoreStatistic = memo(
       return (
         <ReqoreTooltipComponent
           {...rest}
+          // Render as a real block-level `<div>`. The base styled
+          // element (`StyledEffect`) is a `<span>`, which is wrong
+          // here — Statistic's children are block-level (the value
+          // row is a `<div>`, the trend group is a `<div>`), and an
+          // inline-flex `<span>` containing block children breaks
+          // HTML's content model. Browsers tolerate it but the
+          // resulting box doesn't establish containment cleanly,
+          // which is why `overflow: hidden` + `min-width: 0` didn't
+          // hold their text inside the tile.
+          as='div'
           Component={StyledStatisticWrapper}
           tooltip={tooltip}
           ref={ref}

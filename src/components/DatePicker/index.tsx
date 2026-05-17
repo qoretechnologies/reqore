@@ -6,7 +6,7 @@ import {
   toZoned,
   ZonedDateTime,
 } from '@internationalized/date';
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Calendar,
@@ -81,6 +81,7 @@ export interface IDatePickerProps<T extends TDateValue>
 
   minValue?: TDateValue;
   maxValue?: TDateValue;
+  readOnlyInputOnTouch?: boolean;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
@@ -147,6 +148,7 @@ export const DatePicker = <T extends TDateValue>({
   yearMonthPickerProps,
   minValue,
   maxValue,
+  readOnlyInputOnTouch = true,
   dateType = 'iso',
   errorBoundaryOptions,
   ...props
@@ -165,6 +167,7 @@ export const DatePicker = <T extends TDateValue>({
   const [focusedValue, setFocusedValue] = useState(value);
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+  const [hasTouchPrimaryInput, setHasTouchPrimaryInput] = useState(false);
 
   const ref = useRef(null);
 
@@ -178,6 +181,36 @@ export const DatePicker = <T extends TDateValue>({
       isStringRef.current = typeof _value === 'string';
     }
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const updateTouchPrimaryInput = () => {
+      const hasCoarsePointer = window.matchMedia?.('(pointer: coarse)').matches;
+      const hasNoHover = window.matchMedia?.('(hover: none)').matches;
+      const hasTouchPoints =
+        typeof navigator !== 'undefined' && typeof navigator.maxTouchPoints === 'number'
+          ? navigator.maxTouchPoints > 0
+          : false;
+
+      setHasTouchPrimaryInput(Boolean(hasCoarsePointer || (hasNoHover && hasTouchPoints)));
+    };
+
+    updateTouchPrimaryInput();
+
+    const coarsePointerQuery = window.matchMedia?.('(pointer: coarse)');
+    const noHoverQuery = window.matchMedia?.('(hover: none)');
+
+    coarsePointerQuery?.addEventListener?.('change', updateTouchPrimaryInput);
+    noHoverQuery?.addEventListener?.('change', updateTouchPrimaryInput);
+
+    return () => {
+      coarsePointerQuery?.removeEventListener?.('change', updateTouchPrimaryInput);
+      noHoverQuery?.removeEventListener?.('change', updateTouchPrimaryInput);
+    };
+  }, []);
 
   const showTime = granularity === 'minute' || granularity === 'second' || granularity === 'hour';
 
@@ -260,6 +293,8 @@ export const DatePicker = <T extends TDateValue>({
             onClearClick: handleClearClick,
             fluid,
             value,
+            readOnly: readOnlyInputOnTouch && hasTouchPrimaryInput,
+            inputMode: readOnlyInputOnTouch && hasTouchPrimaryInput ? 'none' : undefined,
             rounded,
             size,
             pill,
@@ -276,7 +311,7 @@ export const DatePicker = <T extends TDateValue>({
           isReqoreComponent
           noWrapper
           handler='click'
-          placement='bottom-start'
+          placement='auto-start'
           noArrow
           onToggleChange={onToggleChange}
           {...popoverProps}
