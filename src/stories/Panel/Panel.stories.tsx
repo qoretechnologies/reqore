@@ -971,6 +971,16 @@ export const Raised: Story = {
   },
 };
 
+export const RaisedMinimalFlat: Story = {
+  args: {
+    label: 'Raised panel',
+    children: 'Subtle inset highlight on top + inset shadow on bottom — best paired with `flat`.',
+    flat: true,
+    raised: true,
+    minimal: true,
+  },
+};
+
 const ICON_LAYOUT_SIZES: IReqorePanelProps['size'][] = ['tiny', 'small', 'normal', 'big', 'huge'];
 
 const renderIconLayoutMatrix = (

@@ -1016,7 +1016,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }, [intent, theme, contentEffect, interactive]);
 
     const opacity = rest.transparent ? 0 : rest.opacity;
-    const noHorizontalPadding = opacity === 0 && flat && !intent;
+    const noHorizontalPadding = opacity === 0 && flat && !intent && !rest.raised;
 
     const showNonResponsiveGroup = useCallback((): boolean => {
       let show: boolean = false;
