@@ -12,6 +12,7 @@ export { ReqoreCommentFeed } from './components/CommentFeed';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreControlGroup } from './components/ControlGroup';
 export * from './components/DatePicker';
+export { ReqoreDescriptionList } from './components/DescriptionList';
 export { ReqoreDrawer } from './components/Drawer';
 export { ReqoreBackdrop } from './components/Drawer/backdrop';
 export { default as ReqoreDropdown } from './components/Dropdown';
