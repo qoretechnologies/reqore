@@ -1,12 +1,22 @@
 import { rgba } from 'polished';
-import { forwardRef, memo, ReactNode } from 'react';
+import { forwardRef, memo, ReactNode, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor } from '../../helpers/colors';
-import { getOneHigherSize } from '../../helpers/utils';
-import { ReqoreP } from '../Paragraph';
+import { getOneHigherSize, getOneLessSize } from '../../helpers/utils';
+import { IReqoreIconName } from '../../types/icons';
+import ReqoreIcon from '../Icon';
 import { IReqorePanelProps, ReqorePanel } from '../Panel';
+import { ReqoreP } from '../Paragraph';
+
+/**
+ * Default leading-icon for a row carrying an `intent`. A single
+ * filled circle is rendered for every intent — only the icon's
+ * colour shifts (driven by `<ReqoreIcon intent={row.intent} />`).
+ * Callers can swap the glyph per-row via `intentIcon`.
+ */
+export const DESCRIPTION_LIST_DEFAULT_INTENT_ICON: IReqoreIconName = 'CircleFill';
 
 export interface IReqoreDescriptionListRow {
   /** Stable React key + the row's logical identity. */
@@ -20,12 +30,23 @@ export interface IReqoreDescriptionListRow {
   /** Right-column content. Anything renderable. */
   content: ReactNode;
   /**
-   * Optional intent — paints the row's left gutter with a 3px strip
-   * tinted by the intent. Every row reserves the gutter width so
-   * intent and non-intent rows stay flush-aligned; the strip is only
-   * painted when an intent is set.
+   * Optional row intent — renders a filled circle icon
+   * (`CheckboxCircleFill` by default) to the left of the label,
+   * tinted with the intent colour. Every row reserves the icon
+   * gutter width so rows with and without an intent stay
+   * flush-aligned.
+   *
+   * `intent` only drives the leading icon; it does NOT tint the
+   * label or content text. Use `labelIntent` / `contentIntent` for
+   * that.
    */
   intent?: TReqoreIntent;
+  /** Swap the leading intent icon's glyph. Ignored when `intent` is unset. */
+  intentIcon?: IReqoreIconName;
+  /** Tints the label text with the given intent colour. Independent of `intent`. */
+  labelIntent?: TReqoreIntent;
+  /** Tints the content text with the given intent colour. Independent of `intent`. */
+  contentIntent?: TReqoreIntent;
   /**
    * When `true`, the label column reads as a `<dt>` eyebrow
    * (uppercase + tracked + bold + dimmed). Defaults to the
@@ -35,8 +56,7 @@ export interface IReqoreDescriptionListRow {
   uppercaseLabel?: boolean;
 }
 
-export interface IReqoreDescriptionListProps
-  extends Omit<IReqorePanelProps, 'children'> {
+export interface IReqoreDescriptionListProps extends Omit<IReqorePanelProps, 'children'> {
   /** Rows to render top-to-bottom. */
   items: IReqoreDescriptionListRow[];
   /**
@@ -66,7 +86,6 @@ export interface IReqoreDescriptionListProps
 
 interface IStyledRowProps {
   theme: IReqoreTheme;
-  $intent?: TReqoreIntent;
   $separatorOpacity: number;
   $isLast: boolean;
 }
@@ -76,31 +95,20 @@ interface IStyledLabelProps {
   $uppercase: boolean;
 }
 
+interface IStyledIconSlotProps {
+  $visible: boolean;
+}
+
 const StyledList = styled.div`
   display: flex;
   flex-flow: column;
   width: 100%;
 `;
 
-const stripColorFor = (
-  theme: IReqoreTheme,
-  intent?: TReqoreIntent
-): string =>
-  intent ? theme.intents[intent] : 'transparent';
-
-/** Outset distance for the intent strip. The strip is absolutely
- *  positioned just to the left of the row's content edge — when the
- *  parent `ReqorePanel` is padded, the strip lives inside that
- *  padding. When the panel is `padded={false}` the strip sits
- *  flush against the panel edge. Either way the row content stays
- *  flush-left so labels don't read as indented. */
-const STRIP_OUTSET = 8;
-
 const StyledRow = styled.div<IStyledRowProps>`
-  position: relative;
   display: flex;
-  align-items: baseline;
-  gap: 14px;
+  align-items: center;
+  gap: 8px;
   padding: 10px 0;
 
   ${({ $isLast, $separatorOpacity, theme }) =>
@@ -108,22 +116,21 @@ const StyledRow = styled.div<IStyledRowProps>`
     $separatorOpacity > 0 &&
     css`
       border-bottom: 1px solid
-        ${rgba(
-          changeLightness(getMainBackgroundColor(theme), 0.16),
-          $separatorOpacity
-        )};
+        ${rgba(changeLightness(getMainBackgroundColor(theme), 0.16), $separatorOpacity)};
     `}
+`;
 
-  &::before {
-    content: '';
-    position: absolute;
-    left: -${STRIP_OUTSET}px;
-    top: 8px;
-    bottom: 8px;
-    width: 3px;
-    border-radius: 2px;
-    background: ${({ $intent, theme }) => stripColorFor(theme, $intent)};
-  }
+/**
+ * Fixed-width slot for the leading intent icon. Reserves space even
+ * when a row has no intent so rows with and without an intent icon
+ * stay flush-aligned across the list.
+ */
+const StyledIconSlot = styled.div<IStyledIconSlotProps>`
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  visibility: ${({ $visible }) => ($visible ? 'visible' : 'hidden')};
 `;
 
 const StyledLabel = styled.div<IStyledLabelProps>`
@@ -163,9 +170,12 @@ const StyledContent = styled.div`
  * | `ReqoreDescriptionList` | A handful of labelled values the operator reads top-to-bottom (drawer lifecycle, panel metadata strip, document properties). No need for sort / filter / paging. |
  * | `ReqoreKeyValueTable` | A dataset the operator searches, sorts, exports, or paginates. Full table behaviour. |
  *
- * Every row reserves a left intent-strip gutter so labelled and
- * un-labelled rows stay vertically aligned; the strip lights up
- * when a row carries an `intent`.
+ * Per-row `intent` renders a filled circle to the left of the
+ * label, tinted with the intent colour. If any row in the list has
+ * an intent, every row reserves the icon gutter so the label column
+ * stays flush-aligned. The label / content text colour is
+ * independent — use `labelIntent` / `contentIntent` to tint either
+ * side.
  *
  * Because the component wraps `ReqorePanel`, every panel knob is
  * available via the spread props — `label`, `icon`, `badge`,
@@ -212,6 +222,10 @@ export const ReqoreDescriptionList = memo(
       // edge without callers having to size it manually. The caller
       // can still override with any `boolean | TSizes` value.
       const resolvedPadded = padded ?? getOneHigherSize(size);
+      // If any row carries an intent, every row reserves the icon
+      // gutter so the label column stays vertically aligned across
+      // rows with and without an intent.
+      const anyRowHasIntent = useMemo(() => items.some((row) => Boolean(row.intent)), [items]);
       return (
         <ReqorePanel
           {...panelRest}
@@ -223,30 +237,49 @@ export const ReqoreDescriptionList = memo(
           <StyledList className='reqore-description-list-body'>
             {items.map((row, index) => {
               const isLast = index === items.length - 1;
-              const labelUppercase =
-                row.uppercaseLabel ?? uppercaseLabels;
+              const labelUppercase = row.uppercaseLabel ?? uppercaseLabels;
+              const iconName = row.intent
+                ? row.intentIcon ?? DESCRIPTION_LIST_DEFAULT_INTENT_ICON
+                : undefined;
               return (
                 <StyledRow
                   key={row.key}
-                  $intent={row.intent}
                   $separatorOpacity={separatorOpacity}
                   $isLast={isLast}
-                  className='reqore-description-list-row reqore-description-list-row-strip'
+                  className='reqore-description-list-row'
                   data-key={row.key}
                 >
+                  {anyRowHasIntent ? (
+                    <StyledIconSlot
+                      $visible={Boolean(iconName)}
+                      className='reqore-description-list-intent-icon'
+                      aria-hidden={!iconName}
+                    >
+                      {iconName ? (
+                        <ReqoreIcon
+                          icon={iconName}
+                          intent={row.intent}
+                          size={getOneLessSize(size)}
+                        />
+                      ) : null}
+                    </StyledIconSlot>
+                  ) : null}
                   {row.label !== undefined ? (
                     <StyledLabel
                       $width={labelWidth}
                       $uppercase={labelUppercase}
                       className='reqore-description-list-label'
                     >
-                      <ReqoreP size={size}>{row.label}</ReqoreP>
+                      <ReqoreP size={size} intent={row.labelIntent}>
+                        {row.label}
+                      </ReqoreP>
                     </StyledLabel>
                   ) : null}
                   <StyledContent className='reqore-description-list-content'>
-                    {typeof row.content === 'string' ||
-                    typeof row.content === 'number' ? (
-                      <ReqoreP size={size}>{row.content}</ReqoreP>
+                    {typeof row.content === 'string' || typeof row.content === 'number' ? (
+                      <ReqoreP size={size} intent={row.contentIntent}>
+                        {row.content}
+                      </ReqoreP>
                     ) : (
                       row.content
                     )}

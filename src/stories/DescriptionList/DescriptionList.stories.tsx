@@ -78,6 +78,71 @@ export const WithIntents: Story = {
   },
 };
 
+export const WithLabelAndContentIntents: Story = {
+  args: {
+    label: 'Pages',
+    icon: 'FileTextLine',
+    description:
+      '`labelIntent` / `contentIntent` tint the text independently of the row `intent` (which only drives the leading icon).',
+    items: [
+      {
+        key: 'crawled',
+        label: 'Crawled',
+        content: '412 / 500 max',
+        intent: 'success',
+        contentIntent: 'success',
+      },
+      {
+        key: 'skipped',
+        label: 'Skipped',
+        content: '18',
+        labelIntent: 'info',
+        contentIntent: 'muted',
+      },
+      {
+        key: 'failed',
+        label: 'Failed',
+        content: '3',
+        intent: 'danger',
+        labelIntent: 'danger',
+        contentIntent: 'danger',
+      },
+      {
+        key: 'pending',
+        label: 'Pending',
+        content: '7',
+        intent: 'pending',
+        contentIntent: 'pending',
+      },
+    ],
+  },
+};
+
+export const CustomIntentIcon: Story = {
+  args: {
+    label: 'Pages',
+    icon: 'FileTextLine',
+    description:
+      '`intentIcon` swaps the per-row glyph (still tinted by `intent`).',
+    items: [
+      {
+        key: 'crawled',
+        label: 'Crawled',
+        content: '412 / 500 max',
+        intent: 'success',
+        intentIcon: 'ThumbUpFill',
+      },
+      {
+        key: 'failed',
+        label: 'Failed',
+        content: '3',
+        intent: 'danger',
+        intentIcon: 'ThumbDownFill',
+      },
+    ],
+  },
+};
+
 export const RowWithoutLabel: Story = {
   args: {
     label: 'Identity',
