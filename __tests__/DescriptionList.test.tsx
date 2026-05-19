@@ -59,7 +59,7 @@ test('renders each content cell inside .reqore-description-list-content', () => 
   );
 });
 
-test('reserves the intent strip on every row (one strip span per row)', () => {
+test('reserves the intent-icon gutter on every row when any row has an intent', () => {
   renderList({
     items: [
       ...baseItems,
@@ -71,12 +71,19 @@ test('reserves the intent strip on every row (one strip span per row)', () => {
       },
     ],
   });
-  // Every row reserves the strip — even rows without an intent — so
-  // intent + non-intent rows stay flush-aligned. Hence one strip
-  // span per row.
+  // When any row carries an intent, every row reserves the icon slot
+  // (hidden via visibility on non-intent rows) so the label column
+  // stays flush-aligned across the list.
   expect(
-    document.querySelectorAll('.reqore-description-list-row-strip').length
+    document.querySelectorAll('.reqore-description-list-intent-icon').length
   ).toBe(4);
+});
+
+test('omits the intent-icon gutter when no row has an intent', () => {
+  renderList();
+  expect(
+    document.querySelectorAll('.reqore-description-list-intent-icon').length
+  ).toBe(0);
 });
 
 test('renders a row without a label when label is omitted', () => {
