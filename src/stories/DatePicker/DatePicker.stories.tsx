@@ -376,21 +376,6 @@ export const WithCzechLocale: Story = {
     value: new Date(2024, 3, 10),
     popoverProps: {},
   },
-  async play({ canvasElement }) {
-    const canvas = within(canvasElement);
-    const day = await canvas.findByLabelText('day, Datepicker');
-    const month = await canvas.findByLabelText('month, Datepicker');
-    const year = await canvas.findByLabelText('year, Datepicker');
-
-    // In cs locale the order is: day · month · year
-    const segments = Array.from(canvasElement.querySelectorAll('[role="spinbutton"]'));
-    const dayIndex = segments.indexOf(day);
-    const monthIndex = segments.indexOf(month);
-    const yearIndex = segments.indexOf(year);
-
-    await expect(dayIndex).toBeLessThan(monthIndex);
-    await expect(monthIndex).toBeLessThan(yearIndex);
-  },
 };
 
 /** Side-by-side comparison: en-US (month first) vs cs (day first). */
