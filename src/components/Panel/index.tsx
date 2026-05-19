@@ -22,6 +22,7 @@ import {
   ICON_FROM_HEADER_SIZE,
   PADDING_FROM_SIZE,
   resolveRadius,
+  SPECIAL_PADDING_FROM_SIZE,
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
@@ -77,7 +78,7 @@ import { LabelEditor } from './LabelEditor';
 import { ReqorePanelNonResponsiveActions } from './NonResponsiveActions';
 
 const getPaddingSize = (padded: boolean | TSizes, size: TSizes): number =>
-  typeof padded === 'string' ? PADDING_FROM_SIZE[padded] : PADDING_FROM_SIZE[size];
+  typeof padded === 'string' ? SPECIAL_PADDING_FROM_SIZE[padded] : PADDING_FROM_SIZE[size];
 
 export interface IReqorePanelSubAction extends Omit<IReqoreDropdownItem, 'value'> {
   show?: boolean;

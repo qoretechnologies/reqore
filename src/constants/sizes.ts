@@ -217,6 +217,16 @@ export const PADDING_FROM_SIZE = {
   massive: 17,
 };
 
+export const SPECIAL_PADDING_FROM_SIZE = {
+  micro: 3,
+  tiny: 4,
+  small: 6,
+  normal: 8,
+  big: 15,
+  huge: 28,
+  massive: 40,
+};
+
 export const TEXTAREA_PADDING_FROM_SIZE = {
   micro: 1.5,
   tiny: 2,
