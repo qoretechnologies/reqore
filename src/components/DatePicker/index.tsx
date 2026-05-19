@@ -15,13 +15,12 @@ import {
   DateInput,
   DatePickerProps,
   DateSegment,
-  DatePicker as RADatePicker,
   I18nProvider,
+  DatePicker as RADatePicker,
   TimeField,
 } from 'react-aria-components';
 import styled from 'styled-components';
 import { ReqoreErrorBoundary, ReqorePanel, ReqorePopover } from '../..';
-import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { changeLightness } from '../../helpers/colors';
 import { formatDateToType, TDateFormat, toDate } from '../../helpers/dates';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
@@ -133,6 +132,50 @@ const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
   }
 `;
 
+interface ITriggerPopoverProps extends Partial<IReqoreButtonProps> {
+  buttonProps?: IReqoreButtonProps;
+  label?: React.HTMLAttributes<HTMLButtonElement>['children'];
+  closeOnOutsideClick: boolean;
+  passPopoverData: (data: IPopoverControls) => void;
+  onToggleChange?: (isOpen: boolean) => void;
+  popoverProps?: Partial<IReqorePopoverProps>;
+  calendarContent: JSX.Element | string;
+}
+
+const TriggerPopover = ({
+  buttonProps,
+  label,
+  closeOnOutsideClick,
+  passPopoverData,
+  onToggleChange,
+  popoverProps,
+  calendarContent,
+  // The rest are injected by ReqoreControlGroup (style, rounded, size, etc.)
+  // and forwarded into componentProps so they reach the inner ReqoreButton.
+  ...controlGroupProps
+}: ITriggerPopoverProps) => (
+  <ReqorePopover
+    component={ReqoreButton}
+    componentProps={{
+      icon: 'CalendarLine',
+      ...buttonProps,
+      ...controlGroupProps,
+      label,
+    }}
+    closeOnOutsideClick={closeOnOutsideClick}
+    closeOnAnyClick={false}
+    closeOnInsideClick={false}
+    passPopoverData={passPopoverData}
+    noWrapper
+    handler='click'
+    placement='auto-start'
+    noArrow
+    onToggleChange={onToggleChange}
+    {...popoverProps}
+    content={calendarContent}
+  />
+);
+
 export const DatePicker = <T extends TDateValue>({
   value: _value,
   onChange,
@@ -144,7 +187,7 @@ export const DatePicker = <T extends TDateValue>({
   pill,
   intent,
   customTheme,
-        inheritCustomTheme,
+  inheritCustomTheme,
   granularity = 'minute',
   hourCycle = 24,
   hideTimeZone = true,
@@ -435,58 +478,29 @@ export const DatePicker = <T extends TDateValue>({
   );
 
   if (selectOnly) {
-    const radius = rounded ? RADIUS_FROM_SIZE[size] : 0;
-
-    const triggerPopover = (
-      <ReqorePopover
-        component={ReqoreButton}
-        componentProps={{
-          icon: 'CalendarLine',
-          ...buttonProps,
-          fluid,
-          size,
-          intent,
-          flat,
-          minimal,
-          pill,
-          rounded,
-          label: formattedDate ?? placeholder ?? buttonProps?.label,
-          // Square off the right corners only when the clear button is visible
-          // (isClearable is true AND there is a value to clear).
-          style: isClearable && value
-            ? {
-                ...(buttonProps?.style ?? {}),
-                borderTopRightRadius: 0,
-                borderBottomRightRadius: 0,
-              }
-            : (buttonProps?.style ?? undefined),
-        }}
-        closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}
-        closeOnAnyClick={false}
-        closeOnInsideClick={false}
-        passPopoverData={(data) => (popoverData.current = data)}
-        noWrapper
-        handler='click'
-        placement='auto-start'
-        noArrow
-        onToggleChange={onToggleChange}
-        {...popoverProps}
-        content={calendarContent}
-      />
-    );
+    const triggerProps: ITriggerPopoverProps = {
+      buttonProps,
+      fluid,
+      size,
+      intent,
+      flat,
+      minimal,
+      pill,
+      rounded,
+      label: formattedDate ?? placeholder ?? buttonProps?.label,
+      closeOnOutsideClick: !isMonthDropdownOpen && !isYearDropdownOpen,
+      passPopoverData: (data) => (popoverData.current = data),
+      onToggleChange,
+      popoverProps,
+      calendarContent,
+    };
 
     return (
       <ReqoreErrorBoundary {...errorBoundaryOptions}>
         <I18nProvider locale={resolvedLocale}>
           {isClearable && value ? (
-            <div
-              style={{
-                display: 'flex',
-                flex: fluid ? '1 1 auto' : '0 0 auto',
-                width: fluid ? '100%' : undefined,
-              }}
-            >
-              {triggerPopover}
+            <ReqoreControlGroup fluid={fluid} size={size} stack>
+              <TriggerPopover {...triggerProps} />
               <ReqoreButton
                 fixed
                 icon='CloseLine'
@@ -496,17 +510,10 @@ export const DatePicker = <T extends TDateValue>({
                 minimal={minimal}
                 rounded={rounded}
                 onClick={handleClearClick}
-                style={{
-                  borderTopLeftRadius: 0,
-                  borderBottomLeftRadius: 0,
-                  borderTopRightRadius: radius,
-                  borderBottomRightRadius: radius,
-                  marginLeft: -1,
-                }}
               />
-            </div>
+            </ReqoreControlGroup>
           ) : (
-            triggerPopover
+            <TriggerPopover {...triggerProps} />
           )}
         </I18nProvider>
       </ReqoreErrorBoundary>
@@ -518,38 +525,38 @@ export const DatePicker = <T extends TDateValue>({
       <I18nProvider locale={resolvedLocale}>
         <Component {...finalProps}>
           <ReqorePopover
-          component={ReqoreInput}
-          componentProps={{
-            as: StyledDateInput,
-            onClearClick: handleClearClick,
-            fluid,
-            value,
-            readOnly: readOnlyInputOnTouch && hasTouchPrimaryInput,
-            inputMode: readOnlyInputOnTouch && hasTouchPrimaryInput ? 'none' : undefined,
-            rounded,
-            size,
-            pill,
-            minimal,
-            intent,
-            flat,
-            icon: 'CalendarLine',
-            ...inputProps,
-          }}
-          closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}
-          closeOnAnyClick={false}
-          closeOnInsideClick={false}
-          passPopoverData={(data) => (popoverData.current = data)}
-          isReqoreComponent
-          noWrapper
-          handler='click'
-          placement='auto-start'
-          noArrow
-          onToggleChange={onToggleChange}
-          {...popoverProps}
-          content={calendarContent}
-        >
-          {(segment) => <StyledDateSegment segment={segment} />}
-        </ReqorePopover>
+            component={ReqoreInput}
+            componentProps={{
+              as: StyledDateInput,
+              onClearClick: handleClearClick,
+              fluid,
+              value,
+              readOnly: readOnlyInputOnTouch && hasTouchPrimaryInput,
+              inputMode: readOnlyInputOnTouch && hasTouchPrimaryInput ? 'none' : undefined,
+              rounded,
+              size,
+              pill,
+              minimal,
+              intent,
+              flat,
+              icon: 'CalendarLine',
+              ...inputProps,
+            }}
+            closeOnOutsideClick={!isMonthDropdownOpen && !isYearDropdownOpen}
+            closeOnAnyClick={false}
+            closeOnInsideClick={false}
+            passPopoverData={(data) => (popoverData.current = data)}
+            isReqoreComponent
+            noWrapper
+            handler='click'
+            placement='auto-start'
+            noArrow
+            onToggleChange={onToggleChange}
+            {...popoverProps}
+            content={calendarContent}
+          >
+            {(segment) => <StyledDateSegment segment={segment} />}
+          </ReqorePopover>
         </Component>
       </I18nProvider>
     </ReqoreErrorBoundary>

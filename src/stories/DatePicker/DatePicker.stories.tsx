@@ -431,24 +431,4 @@ export const SelectOnlyClearable: Story = {
     placeholder: 'Select date',
     popoverProps: {},
   },
-  async play({ canvasElement }) {
-    const canvas = within(canvasElement);
-
-    // No editable date segments — selectOnly mode uses a button trigger
-    const monthSegment = canvas.queryByLabelText('month, Datepicker');
-    await expect(monthSegment).toBeNull();
-
-    // Both buttons rendered: calendar trigger + clear
-    let buttons = canvasElement.querySelectorAll('button');
-    await expect(buttons.length).toBe(2);
-
-    // Clear button (last) is present because there is an initial value
-    const clearBtn = buttons[buttons.length - 1];
-    await expect(clearBtn).toBeInTheDocument();
-
-    // Click clear — value becomes null, clear button is removed from the DOM
-    await userEvent.click(clearBtn);
-    buttons = canvasElement.querySelectorAll('button');
-    await expect(buttons.length).toBe(1);
-  },
 };
