@@ -366,3 +366,69 @@ export const ShouldSaveTimeWhenDateValueIsNull: Story = {
     await expect(minute).toHaveTextContent('15');
   },
 };
+
+/** Czech locale — segments should be ordered day / month / year (d.M.yyyy),
+ *  not month/day/year as in en-US. */
+export const WithCzechLocale: Story = {
+  args: {
+    locale: 'cs',
+    granularity: 'day',
+    value: new Date(2024, 3, 10),
+    popoverProps: {},
+  },
+};
+
+/** Side-by-side comparison: en-US (month first) vs cs (day first). */
+export const LocaleComparison: Story = {
+  parameters: {
+    chromatic: { disableSnapshot: true },
+  },
+  args: {
+    granularity: 'day',
+    value: new Date(2024, 3, 10),
+    popoverProps: {},
+  },
+  render(args) {
+    const [valueEn, setValueEn] = useState<Date | string>(args.value);
+    const [valueCs, setValueCs] = useState<Date | string>(args.value);
+    return (
+      <ReqoreControlGroup vertical gapSize='big'>
+        <DatePicker {...args} value={valueEn} onChange={setValueEn} locale='en-US' fluid={false} />
+        <DatePicker {...args} value={valueCs} onChange={setValueCs} locale='cs' fluid={false} />
+      </ReqoreControlGroup>
+    );
+  },
+};
+
+/** `selectOnly` — renders a button trigger; the date can only be picked from the calendar. */
+export const SelectOnly: Story = {
+  args: {
+    selectOnly: true,
+    granularity: 'day',
+    popoverProps: {},
+  },
+};
+
+/** `selectOnly` with no initial value — button shows placeholder until a date is picked. */
+export const SelectOnlyEmpty: Story = {
+  args: {
+    selectOnly: true,
+    granularity: 'day',
+    value: null,
+    placeholder: 'Select date',
+    popoverProps: {},
+  },
+};
+
+/** `selectOnly` with `isClearable` — the component renders its own clear button. */
+export const SelectOnlyClearable: Story = {
+  args: {
+    selectOnly: true,
+    granularity: 'day',
+    value: new Date(2024, 3, 10),
+    rounded: true,
+    isClearable: true,
+    placeholder: 'Select date',
+    popoverProps: {},
+  },
+};
