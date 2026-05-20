@@ -1,6 +1,7 @@
 export { ReqoreAccordion } from './components/Accordion';
 export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
+export { ReqoreBubble, ReqoreBubbleGroup } from './components/Bubble';
 export { default as ReqoreButton } from './components/Button';
 export { ReqoreCallout } from './components/Callout';
 export { default as ReqoreCheckbox } from './components/Checkbox';
@@ -33,6 +34,7 @@ export {
   ReqoreHeading,
 } from './components/Header';
 export { default as ReqoreIcon } from './components/Icon';
+export { ReqoreIconPicker } from './components/IconPicker';
 export { default as ReqoreInput } from './components/Input';
 export { ReqoreKeyValueTable } from './components/KeyValueTable';
 export * from './components/Label';

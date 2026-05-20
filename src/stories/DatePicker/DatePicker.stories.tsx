@@ -214,6 +214,12 @@ export const Minimal: Story = {
 export const Pill: Story = {
   args: { pill: true },
 };
+export const Fluid: Story = {
+  args: { fluid: true },
+};
+export const FluidWithSelect: Story = {
+  args: { fluid: true, selectOnly: true, placeholder: 'Select date' },
+};
 export const WithTooltip: Story = {
   args: {
     tooltip: {

@@ -469,7 +469,7 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     !padded || isCollapsed || !minimal
       ? `${getPaddingSize(padded, size)}px`
       : minimal
-      ? getPaddingSize(padded, size) / 2
+      ? `${getPaddingSize(padded, size) / 2}px`
       : 0};
   padding-top: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'bottom' || wrapperPadding === 'none'

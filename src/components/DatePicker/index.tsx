@@ -170,6 +170,7 @@ const TriggerPopover = ({
     handler='click'
     placement='auto-start'
     noArrow
+    isReqoreComponent
     onToggleChange={onToggleChange}
     {...popoverProps}
     content={calendarContent}
@@ -479,7 +480,15 @@ export const DatePicker = <T extends TDateValue>({
 
   if (selectOnly) {
     const triggerProps: ITriggerPopoverProps = {
-      buttonProps,
+      buttonProps: {
+        fluid,
+        size,
+        intent,
+        flat,
+        minimal,
+        rounded,
+        ...buttonProps,
+      },
       fluid,
       size,
       intent,
@@ -498,23 +507,25 @@ export const DatePicker = <T extends TDateValue>({
     return (
       <ReqoreErrorBoundary {...errorBoundaryOptions}>
         <I18nProvider locale={resolvedLocale}>
-          {isClearable && value ? (
-            <ReqoreControlGroup fluid={fluid} size={size} stack>
+          <ReqoreControlGroup fluid={fluid} size={size} stack>
+            {isClearable && value ? (
+              <>
+                <TriggerPopover {...triggerProps} />
+                <ReqoreButton
+                  fixed
+                  icon='CloseLine'
+                  size={size}
+                  intent={intent}
+                  flat={flat}
+                  minimal={minimal}
+                  rounded={rounded}
+                  onClick={handleClearClick}
+                />
+              </>
+            ) : (
               <TriggerPopover {...triggerProps} />
-              <ReqoreButton
-                fixed
-                icon='CloseLine'
-                size={size}
-                intent={intent}
-                flat={flat}
-                minimal={minimal}
-                rounded={rounded}
-                onClick={handleClearClick}
-              />
-            </ReqoreControlGroup>
-          ) : (
-            <TriggerPopover {...triggerProps} />
-          )}
+            )}
+          </ReqoreControlGroup>
         </I18nProvider>
       </ReqoreErrorBoundary>
     );
