@@ -466,7 +466,11 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
 
 export const StyledPanelTopBar = styled(StyledPanelTitle)`
   padding-bottom: ${({ padded, size, isCollapsed, minimal }: IStyledPanel) =>
-    !padded || isCollapsed || !minimal ? `${getPaddingSize(padded, size)}px` : 0};
+    !padded || isCollapsed || !minimal
+      ? `${getPaddingSize(padded, size)}px`
+      : minimal
+      ? getPaddingSize(padded, size) / 2
+      : 0};
   padding-top: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'bottom' || wrapperPadding === 'none'
       ? undefined
@@ -483,7 +487,11 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   padding-top: ${({ padded, size, minimal }: IStyledPanel) =>
-    !padded || !minimal ? `${getPaddingSize(padded, size)}px` : 0};
+    !padded || !minimal
+      ? `${getPaddingSize(padded, size)}px`
+      : minimal
+      ? getPaddingSize(padded, size) / 2
+      : 0};
   padding-bottom: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'top' || wrapperPadding === 'none'
       ? undefined
