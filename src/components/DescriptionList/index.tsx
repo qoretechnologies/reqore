@@ -138,7 +138,7 @@ const StyledLabel = styled.div<IStyledLabelProps>`
   width: ${({ $width }) => $width};
   min-width: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
 
   & > * {
     ${({ $uppercase }) =>
@@ -156,7 +156,7 @@ const StyledContent = styled.div`
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   font-variant-numeric: tabular-nums;
 `;
@@ -249,27 +249,28 @@ export const ReqoreDescriptionList = memo(
                   className='reqore-description-list-row'
                   data-key={row.key}
                 >
-                  {anyRowHasIntent ? (
-                    <StyledIconSlot
-                      $visible={Boolean(iconName)}
-                      className='reqore-description-list-intent-icon'
-                      aria-hidden={!iconName}
-                    >
-                      {iconName ? (
-                        <ReqoreIcon
-                          icon={iconName}
-                          intent={row.intent}
-                          size={getOneLessSize(size)}
-                        />
-                      ) : null}
-                    </StyledIconSlot>
-                  ) : null}
                   {row.label !== undefined ? (
                     <StyledLabel
                       $width={labelWidth}
                       $uppercase={labelUppercase}
                       className='reqore-description-list-label'
                     >
+                      {anyRowHasIntent ? (
+                        <StyledIconSlot
+                          $visible={Boolean(iconName)}
+                          className='reqore-description-list-intent-icon'
+                          aria-hidden={!iconName}
+                        >
+                          {iconName ? (
+                            <ReqoreIcon
+                              icon={iconName}
+                              intent={row.intent}
+                              size={getOneLessSize(getOneLessSize(size))}
+                              margin='right'
+                            />
+                          ) : null}
+                        </StyledIconSlot>
+                      ) : null}
                       <ReqoreP size={size} intent={row.labelIntent}>
                         {row.label}
                       </ReqoreP>

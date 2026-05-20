@@ -184,7 +184,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     isOpen,
     isHidden,
     customTheme,
-        inheritCustomTheme,
+    inheritCustomTheme,
     position = 'right',
     maxSize,
     minSize = '150px',
