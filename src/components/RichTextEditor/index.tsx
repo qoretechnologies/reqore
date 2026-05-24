@@ -53,6 +53,15 @@ export interface IReqoreRichTextEditorProps
     };
   };
   customRenderLeaf?: (props: RenderLeafProps) => JSX.Element;
+  /**
+   * Slate `decorate` function. Receives a `[Node, Path]` entry and returns
+   * `Range[]` with custom properties applied to each range. Each range's
+   * properties are then passed to `renderLeaf` / `customRenderLeaf` as leaf
+   * marks, which is the standard Slate way to overlay syntax highlighting,
+   * search highlights, error underlines, etc. on top of the document without
+   * mutating it.
+   */
+  decorate?: EditableProps['decorate'];
   getTagProps?: (tag: CustomElement) => IReqoreTagProps;
   onTagClick?: (tag: CustomElement) => void;
   tagsProps?: IReqoreTagProps;
@@ -213,6 +222,7 @@ export const ReqoreRichTextEditor = forwardRef<
       panelProps,
       actions,
       customRenderLeaf,
+      decorate,
       placeholder,
       placeholderProps,
       ...rest
@@ -429,10 +439,11 @@ export const ReqoreRichTextEditor = forwardRef<
             onChange?.(data as CustomElement[]);
           }}
         >
-          <ReqoreTextarea<Pick<EditableProps, 'renderElement' | 'renderLeaf'>>
+          <ReqoreTextarea<Pick<EditableProps, 'renderElement' | 'renderLeaf' | 'decorate'>>
             {...rest}
             renderElement={renderElement}
             renderLeaf={renderLeaf}
+            decorate={decorate}
             as={Editable}
             style={{
               lineHeight: 1.5,
