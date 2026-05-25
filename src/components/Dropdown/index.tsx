@@ -140,6 +140,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   onBeforeClose,
   onBeforeOpen,
   popoverId,
+  offsetX,
+  offsetY,
   ...rest
 }: IReqoreDropdownProps & T) {
   // Track the selected item at each navigation level
@@ -246,6 +248,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       onBeforeClose={onBeforeClose}
       onBeforeOpen={onBeforeOpen}
       id={popoverId}
+      offsetX={offsetX}
+      offsetY={offsetY}
     >
       {children || label}
     </ReqorePopover>
