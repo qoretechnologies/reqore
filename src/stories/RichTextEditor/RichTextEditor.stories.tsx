@@ -1,7 +1,8 @@
 import { expect, jest } from '@storybook/jest';
 import { StoryObj } from '@storybook/react';
 import { userEvent } from '@storybook/testing-library';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { NodeEntry, Range, Text } from 'slate';
 import { RenderLeafProps } from 'slate-react/dist/components/editable';
 import { ReqoreSpan } from '../../components/Span';
 import { useMount } from 'react-use';
@@ -350,6 +351,94 @@ export const UpdatesFromInside: Story = {
         children: [{ text: 'This is the default UPDATED text' }],
       },
     ]);
+  },
+};
+
+/**
+ * Demonstrates the `decorate` prop, used to overlay syntax-highlighting-style
+ * marks on top of the document without mutating it. The decorate function
+ * receives a `[Node, Path]` entry and returns `Range[]` with custom mark
+ * properties; those marks are then read by `customRenderLeaf` to apply
+ * styling. This is the standard Slate pattern for syntax highlighting,
+ * search highlights, error underlines, etc.
+ */
+export const WithDecorate: Story = {
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
+
+    // Highlight occurrences of "TODO" and "ERROR" — the classic
+    // syntax-highlighting-via-decorate pattern.
+    const decorate = useCallback(([node, path]: NodeEntry): Range[] => {
+      const ranges: Range[] = [];
+      if (!Text.isText(node)) {
+        return ranges;
+      }
+      const text = node.text;
+      const pattern = /\b(TODO|ERROR)\b/g;
+      let match: RegExpExecArray | null;
+      while ((match = pattern.exec(text)) !== null) {
+        ranges.push({
+          anchor: { path, offset: match.index },
+          focus: { path, offset: match.index + match[0].length },
+          highlight: match[1] === 'TODO' ? 'todo' : 'error',
+        } as Range & { highlight: string });
+      }
+      return ranges;
+    }, []);
+
+    const customRenderLeaf = useCallback(
+      ({ attributes, children, leaf }: RenderLeafProps & { leaf: { highlight?: string } }) => (
+        <ReqoreSpan
+          inline
+          {...attributes}
+          style={{
+            backgroundColor:
+              leaf.highlight === 'todo'
+                ? 'rgba(255, 217, 0, 0.25)'
+                : leaf.highlight === 'error'
+                ? 'rgba(255, 60, 60, 0.25)'
+                : undefined,
+            fontWeight: leaf.highlight ? 600 : undefined,
+          }}
+        >
+          {children}
+        </ReqoreSpan>
+      ),
+      []
+    );
+
+    return (
+      <ReqoreRichTextEditor
+        {...args}
+        value={value}
+        onChange={(val) => {
+          setValue(val);
+          args.onChange?.(val);
+        }}
+        decorate={decorate}
+        customRenderLeaf={customRenderLeaf}
+      />
+    );
+  },
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [{ text: 'TODO: ship this feature. ERROR if not done by Friday.' }],
+      },
+      {
+        type: 'paragraph',
+        children: [{ text: 'Plain second paragraph with no highlights.' }],
+      },
+    ],
+  },
+  play: async () => {
+    // Confirm the editor mounted and the document contains the source text;
+    // the decorate ranges are applied by Slate as React reconciles, so the
+    // text content survives intact.
+    await expect(document.querySelector('div[contenteditable]')).toBeInTheDocument();
+    await expect(document.querySelector('div[contenteditable]')).toHaveTextContent('TODO');
+    await expect(document.querySelector('div[contenteditable]')).toHaveTextContent('ERROR');
   },
 };
 
