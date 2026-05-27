@@ -314,7 +314,28 @@ export const ReqoreRichTextEditor = forwardRef<
             );
         }
       },
-      [isEmpty, placeholder, placeholderProps]
+      // All values read inside the callback must be listed here.
+      // `editor` is stable (created once via `useState` initializer)
+      // but listed for completeness. The callback-shaped props
+      // (`getTagProps`, `onTagClick`) and the `rest`-derived flags
+      // (`size`, `readOnly`, `disabled`) need to be tracked so the
+      // memo invalidates when the parent passes new ones — otherwise
+      // tag chips render with stale click handlers / sizes.
+      // Consumers that pass non-stable callbacks via inline arrow
+      // functions will cause re-memoization on every render; pass
+      // stable refs (`useCallback`) for best performance.
+      [
+        isEmpty,
+        placeholder,
+        placeholderProps,
+        editor,
+        getTagProps,
+        tagsProps,
+        onTagClick,
+        rest.size,
+        rest.readOnly,
+        rest.disabled,
+      ]
     );
 
     const renderLeaf = useCallback(
