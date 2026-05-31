@@ -217,7 +217,15 @@ function Textarea<T>(
 
   const handleBlur = useCallback(
     (e) => {
-      if (e.relatedTarget.closest(`#id-${uuid.current}`) === null) {
+      // `relatedTarget` is `null` when focus leaves the element without
+      // moving to another focusable element — e.g. clicking the
+      // background, switching tabs, pressing Escape, or focus loss to
+      // browser chrome. Without this guard, `.closest()` throws a
+      // TypeError and the popover never closes.
+      if (
+        !e.relatedTarget ||
+        e.relatedTarget.closest(`#id-${uuid.current}`) === null
+      ) {
         popoverData?.close();
       }
     },
