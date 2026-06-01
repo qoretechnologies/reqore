@@ -245,6 +245,12 @@ const StyledTableWrapper = styled.div`
   ${({ rounded, size = 'normal' }) => css`
     border-radius: ${rounded === false ? 0 : RADIUS_FROM_SIZE[size]}px;
   `}
+
+  > .reqore-table-header-wrapper:first-child {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+    overflow: hidden;
+  }
 `;
 
 export interface IReqoreTableExportModalProps {

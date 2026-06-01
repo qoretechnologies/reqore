@@ -408,8 +408,10 @@ export const GroupedColumns: Story = {
     label: 'Grouped columns',
   },
   play: async ({ canvasElement }) => {
-    await waitFor(() => {
-      expect(canvasElement.querySelectorAll('.reqore-table-column-group').length).toBeGreaterThan(
+    await waitFor(async () => {
+      await expect(
+        canvasElement.querySelectorAll('.reqore-table-column-group').length
+      ).toBeGreaterThan(
         0
       );
     });
@@ -423,7 +425,7 @@ export const GroupedColumns: Story = {
     ) as HTMLElement[];
     const leafHeaders: HTMLElement[] = [];
 
-    Array.from(headerRow.children).forEach((column) => {
+    for (const column of Array.from(headerRow.children)) {
       if (column.classList.contains('reqore-table-column-group')) {
         const groupHeader = column.firstElementChild as HTMLElement;
         const groupLeaves = Array.from(
@@ -436,27 +438,28 @@ export const GroupedColumns: Story = {
           0
         );
 
-        expect(groupRect.width).toBeGreaterThan(250);
-        expect(groupHeaderRect.width).toBeGreaterThan(250);
-        expect(Math.abs(groupHeaderRect.width - groupRect.width)).toBeLessThanOrEqual(1);
-        expect(Math.abs(groupLeavesWidth - groupRect.width)).toBeLessThanOrEqual(1);
+        await expect(groupRect.width).toBeGreaterThan(250);
+        await expect(groupHeaderRect.width).toBeGreaterThan(250);
+        await expect(Math.abs(groupHeaderRect.width - groupRect.width)).toBeLessThanOrEqual(1);
+        await expect(Math.abs(groupLeavesWidth - groupRect.width)).toBeLessThanOrEqual(1);
 
         leafHeaders.push(...groupLeaves);
       } else {
         leafHeaders.push(column as HTMLElement);
       }
-    });
+    }
 
-    expect(leafHeaders.length).toBe(rowCells.length);
+    await expect(leafHeaders.length).toBe(rowCells.length);
 
-    leafHeaders.forEach((header, index) => {
+    for (let index = 0; index < leafHeaders.length; index += 1) {
+      const header = leafHeaders[index];
       const headerRect = header.getBoundingClientRect();
       const rowRect = rowCells[index].getBoundingClientRect();
 
-      expect(headerRect.width).toBeGreaterThanOrEqual(40);
-      expect(Math.abs(rowRect.left - headerRect.left)).toBeLessThanOrEqual(1);
-      expect(Math.abs(rowRect.width - headerRect.width)).toBeLessThanOrEqual(1);
-    });
+      await expect(headerRect.width).toBeGreaterThanOrEqual(40);
+      await expect(Math.abs(rowRect.left - headerRect.left)).toBeLessThanOrEqual(1);
+      await expect(Math.abs(rowRect.width - headerRect.width)).toBeLessThanOrEqual(1);
+    }
   },
 };
 
@@ -553,8 +556,8 @@ export const CompactCenteredRuntimeColumns: Story = {
     ],
   },
   play: async ({ canvasElement }) => {
-    await waitFor(() => {
-      expect(canvasElement.querySelectorAll('.reqore-table-row').length).toBeGreaterThan(0);
+    await waitFor(async () => {
+      await expect(canvasElement.querySelectorAll('.reqore-table-row').length).toBeGreaterThan(0);
     });
 
     const headerCells = Array.from(
@@ -562,15 +565,16 @@ export const CompactCenteredRuntimeColumns: Story = {
     );
     const rowCells = Array.from(canvasElement.querySelector('.reqore-table-row')?.children ?? []);
 
-    expect(headerCells.length).toBe(rowCells.length);
+    await expect(headerCells.length).toBe(rowCells.length);
 
-    headerCells.forEach((header, index) => {
+    for (let index = 0; index < headerCells.length; index += 1) {
+      const header = headerCells[index];
       const headerRect = header.getBoundingClientRect();
       const rowRect = rowCells[index].getBoundingClientRect();
 
-      expect(Math.abs(rowRect.left - headerRect.left)).toBeLessThanOrEqual(1);
-      expect(Math.abs(rowRect.width - headerRect.width)).toBeLessThanOrEqual(1);
-    });
+      await expect(Math.abs(rowRect.left - headerRect.left)).toBeLessThanOrEqual(1);
+      await expect(Math.abs(rowRect.width - headerRect.width)).toBeLessThanOrEqual(1);
+    }
   },
 };
 

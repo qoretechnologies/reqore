@@ -95,7 +95,9 @@ export const ItemCanBeSelected: Story = {
     await sleep(200);
     await fireEvent.click(canvas.getAllByText('New message in discord')[0]);
 
-    await waitFor(() => expect(canvas.getAllByText('Author')[0]).toBeTruthy(), {
+    await waitFor(async () => {
+      await expect(canvas.getAllByText('Author')[0]).toBeTruthy();
+    }, {
       timeout: 5000,
     });
 

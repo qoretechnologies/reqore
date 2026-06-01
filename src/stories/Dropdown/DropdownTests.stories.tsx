@@ -131,7 +131,9 @@ export const ItemsCanBeTraversed: Story = {
 
     await WithChildItems.play({ canvasElement, ...rest });
 
-    await waitFor(() => expect(canvas.getAllByText('Test child 3')[0]).toBeTruthy(), {
+    await waitFor(async () => {
+      await expect(canvas.getAllByText('Test child 3')[0]).toBeTruthy();
+    }, {
       timeout: 5000,
     });
 
@@ -208,7 +210,9 @@ export const ItemIsAutomaticallySelected: Story = {
 
     await sleep(200);
 
-    await waitFor(() => expect(canvas.getAllByText('Test child 3')[0]).toBeTruthy(), {
+    await waitFor(async () => {
+      await expect(canvas.getAllByText('Test child 3')[0]).toBeTruthy();
+    }, {
       timeout: 5000,
     });
   },
@@ -366,7 +370,7 @@ export const KeyboardNavigationWithArrowKeys: Story = {
 
     // Get the input for keyboard events
     const filterInput = document.querySelector('.reqore-input');
-    expect(filterInput).toBeTruthy();
+    await expect(filterInput).toBeTruthy();
 
     // Press arrow down
     await fireEvent.keyDown(filterInput, { key: 'ArrowDown' });

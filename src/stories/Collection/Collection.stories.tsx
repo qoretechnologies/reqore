@@ -357,7 +357,9 @@ export const CustomSortKeysWithDefaultSort: Story = {
     await fireEvent.click(canvasElement.querySelector('.reqore-collection-sort'));
 
     await waitFor(
-      () => expect(document.querySelectorAll('.reqore-popover-content')).toHaveLength(1),
+      async () => {
+        await expect(document.querySelectorAll('.reqore-popover-content')).toHaveLength(1);
+      },
       {
         timeout: 5000,
       }
