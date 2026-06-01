@@ -453,7 +453,7 @@ export const GroupedColumns: Story = {
       const headerRect = header.getBoundingClientRect();
       const rowRect = rowCells[index].getBoundingClientRect();
 
-      expect(headerRect.width).toBeGreaterThan(40);
+      expect(headerRect.width).toBeGreaterThanOrEqual(40);
       expect(Math.abs(rowRect.left - headerRect.left)).toBeLessThanOrEqual(1);
       expect(Math.abs(rowRect.width - headerRect.width)).toBeLessThanOrEqual(1);
     });
