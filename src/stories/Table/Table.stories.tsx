@@ -400,6 +400,66 @@ export const Basic: Story = {
   },
 };
 
+export const GroupedColumns: Story = {
+  args: {
+    columns: defaultColumns,
+    data: tableData.data,
+    height: 320,
+    label: 'Grouped columns',
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      expect(canvasElement.querySelectorAll('.reqore-table-column-group').length).toBeGreaterThan(
+        0
+      );
+    });
+
+    const groups = Array.from(
+      canvasElement.querySelectorAll('.reqore-table-column-group')
+    ) as HTMLElement[];
+    const headerRow = groups[0].parentElement as HTMLElement;
+    const rowCells = Array.from(
+      canvasElement.querySelector('.reqore-table-row')?.children ?? []
+    ) as HTMLElement[];
+    const leafHeaders: HTMLElement[] = [];
+
+    Array.from(headerRow.children).forEach((column) => {
+      if (column.classList.contains('reqore-table-column-group')) {
+        const groupHeader = column.firstElementChild as HTMLElement;
+        const groupLeaves = Array.from(
+          column.querySelector('.reqore-table-headers')?.children ?? []
+        ) as HTMLElement[];
+        const groupRect = column.getBoundingClientRect();
+        const groupHeaderRect = groupHeader.getBoundingClientRect();
+        const groupLeavesWidth = groupLeaves.reduce(
+          (width, leaf) => width + leaf.getBoundingClientRect().width,
+          0
+        );
+
+        expect(groupRect.width).toBeGreaterThan(250);
+        expect(groupHeaderRect.width).toBeGreaterThan(250);
+        expect(Math.abs(groupHeaderRect.width - groupRect.width)).toBeLessThanOrEqual(1);
+        expect(Math.abs(groupLeavesWidth - groupRect.width)).toBeLessThanOrEqual(1);
+
+        leafHeaders.push(...groupLeaves);
+      } else {
+        leafHeaders.push(column as HTMLElement);
+      }
+    });
+
+    expect(leafHeaders.length).toBe(rowCells.length);
+
+    leafHeaders.forEach((header, index) => {
+      const headerRect = header.getBoundingClientRect();
+      const rowRect = rowCells[index].getBoundingClientRect();
+
+      expect(headerRect.width).toBeGreaterThan(40);
+      expect(Math.abs(rowRect.left - headerRect.left)).toBeLessThanOrEqual(1);
+      expect(Math.abs(rowRect.width - headerRect.width)).toBeLessThanOrEqual(1);
+    });
+  },
+};
+
 export const CompactCenteredRuntimeColumns: Story = {
   args: {
     selectable: true,

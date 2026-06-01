@@ -91,6 +91,8 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
 
 export interface IReqoreTableHeaderStyle {
   width?: number;
+  minWidth?: number;
+  maxWidth?: number;
   grow?: number;
   theme: IReqoreTheme;
   align?: 'center' | 'left' | 'right';
@@ -136,6 +138,26 @@ const StyledTableHeaderRow = styled.div<{ theme: IReqoreTheme }>`
     align-items: center;
   }
 `;
+
+const getColumnsRenderedWidth = (columns: IReqoreTableColumn[]): number =>
+  columns.reduce((width, column) => width + getColumnRenderedWidth(column), 0);
+
+const getColumnsGrow = (columns: IReqoreTableColumn[]): number | undefined => {
+  const grow = columns.reduce((total, column) => total + (column.grow ?? 0), 0);
+
+  return grow || undefined;
+};
+
+const getOptionalColumnsWidth = (
+  columns: IReqoreTableColumn[],
+  key: 'minWidth' | 'maxWidth'
+): number | undefined => {
+  const widths = columns
+    .map((column) => column[key])
+    .filter((width): width is number => typeof width === 'number');
+
+  return widths.length ? widths.reduce((total, width) => total + width, 0) : undefined;
+};
 
 const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
   (
@@ -233,12 +255,12 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
 
       return (
         <StyledColumnGroup
-          grow={subColumns.reduce((gr, col) => gr + col.grow, 0)}
+          grow={getColumnsGrow(subColumns)}
           key={dataId}
           className='reqore-table-column-group'
-          width={subColumns.reduce((wid, col) => wid + getColumnRenderedWidth(col), 0)}
-          maxWidth={subColumns.reduce((wid, col) => wid + col.maxWidth, 0)}
-          minWidth={subColumns.reduce((wid, col) => wid + col.minWidth, 0)}
+          width={getColumnsRenderedWidth(subColumns)}
+          maxWidth={getOptionalColumnsWidth(subColumns, 'maxWidth')}
+          minWidth={getOptionalColumnsWidth(subColumns, 'minWidth')}
         >
           {renderHeaderCell(headerComponent, {
             ...minimalHeaderDefaults,

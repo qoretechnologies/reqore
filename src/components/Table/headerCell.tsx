@@ -246,12 +246,19 @@ export const ReqoreTableHeaderCell = memo(
           zIndex: 2,
         }
       : {};
-    const renderedWidth = getColumnRenderedWidth({
-      width,
-      maxWidth,
-      minWidth,
-      resizedWidth,
-    } as IReqoreTableColumn);
+    const hasExplicitSizing =
+      width !== undefined ||
+      resizedWidth !== undefined ||
+      minWidth !== undefined ||
+      maxWidth !== undefined;
+    const renderedWidth = hasExplicitSizing
+      ? getColumnRenderedWidth({
+          width,
+          maxWidth,
+          minWidth,
+          resizedWidth,
+        } as IReqoreTableColumn)
+      : undefined;
 
     // Header text gets a consistent "label-y" typography by default. The
     // `opacity: 0.7` is only added under `minimal` so the unbordered, washed
@@ -272,7 +279,7 @@ export const ReqoreTableHeaderCell = memo(
     return (
       <StyledHeaderResizable
         {...({ $pin: pin, $pinEdge: pinEdge, $minimal: parentMinimal } as any)}
-        minWidth={minWidth || renderedWidth}
+        minWidth={minWidth ?? renderedWidth}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {
           onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
