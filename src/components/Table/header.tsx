@@ -68,7 +68,9 @@ export interface IReqoreTableSectionStyle {
 
 const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
   ${({ heightAsGroup, size, minWidth }) => css`
+    box-sizing: border-box;
     display: flex;
+    scrollbar-gutter: stable;
 
     overflow-x: hidden;
     overflow-y: hidden;

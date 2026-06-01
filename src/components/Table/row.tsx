@@ -312,7 +312,7 @@ const ReqoreTableRow = memo(
                   size,
                   striped,
                   tooltip,
-                  padded: cell?.padded,
+                  padded: cell?.padded ?? (cell?.actions ? 'none' : undefined),
                   disabled: data[index]._disabled,
                   selected: !!isSelected,
                   selectedIntent: selectedRowIntent,

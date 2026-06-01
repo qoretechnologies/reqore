@@ -19,11 +19,18 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
   rowHeight?: number;
 }
 
-const StyledList = styled(List)``;
+const StyledList = styled(List)`
+  box-sizing: border-box;
+  scrollbar-gutter: stable;
+  padding-inline-end: var(--reqore-table-scrollbar-gutter, 12px);
+`;
 
 const StyledNonVirtualizedBody = styled.div<{ height?: number; minWidth: number }>`
   ${({ height, minWidth }) => css`
+    box-sizing: border-box;
     overflow: auto;
+    scrollbar-gutter: stable;
+    padding-inline-end: var(--reqore-table-scrollbar-gutter, 12px);
     ${height || height === 0
       ? css`
           height: ${height}px;

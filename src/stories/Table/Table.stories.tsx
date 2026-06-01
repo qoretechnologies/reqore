@@ -400,6 +400,120 @@ export const Basic: Story = {
   },
 };
 
+export const CompactCenteredRuntimeColumns: Story = {
+  args: {
+    selectable: true,
+    size: 'small',
+    wrapperSize: 'small',
+    striped: true,
+    height: 180,
+    columns: [
+      {
+        dataId: 'name',
+        header: { label: 'Name' },
+        grow: 2,
+        minWidth: 240,
+        cell: { content: 'text' },
+      },
+      {
+        dataId: 'up',
+        align: 'center',
+        header: { label: 'Up' },
+        width: 40,
+        resizable: false,
+        sortable: true,
+        cell: {
+          content: ({ up }) => (
+            <ReqoreIcon
+              icon={up ? 'ArrowUpFill' : 'ArrowDownFill'}
+              intent={up ? 'success' : 'danger'}
+              size='tiny'
+            />
+          ),
+        },
+      },
+      {
+        dataId: 'open',
+        align: 'center',
+        header: { icon: 'ExternalLinkLine', tooltip: 'Open details' },
+        width: 25,
+        resizable: false,
+        cell: {
+          content: () => <ReqoreIcon icon='ExternalLinkLine' size='tiny' />,
+        },
+      },
+      {
+        dataId: 'authorization',
+        align: 'center',
+        header: { label: 'Authorization', icon: 'ShareBoxLine' },
+        width: 150,
+        resizable: false,
+      },
+      {
+        dataId: 'ping',
+        align: 'center',
+        pin: 'right',
+        header: { icon: 'SignalTowerLine', tooltip: 'Ping connection' },
+        width: 25,
+        resizable: false,
+        cell: {
+          actions: () => [{ icon: 'SignalTowerLine', tooltip: 'Ping connection', flat: true }],
+        },
+      },
+      {
+        dataId: 'settings',
+        align: 'center',
+        pin: 'right',
+        header: { icon: 'Settings2Line', tooltip: 'Available actions' },
+        width: 130,
+        resizable: false,
+        cell: {
+          actions: () => [
+            { icon: 'EditLine', tooltip: 'Edit', flat: true },
+            { icon: 'InformationLine', tooltip: 'Info', flat: true },
+            { icon: 'FileCopyLine', tooltip: 'Duplicate', flat: true },
+            { icon: 'DeleteBinLine', tooltip: 'Delete', flat: true },
+          ],
+        },
+      },
+    ],
+    data: [
+      { _selectId: 'voyage', name: 'AI Embeddings voyage', up: true },
+      { _selectId: 'bge', name: 'Bge M3 Embeddings', up: false },
+      { _selectId: 'gemini', name: 'Gemini', up: true },
+      { _selectId: 'supply-chain', name: 'Supply Chain', up: true },
+      { _selectId: 'openai', name: 'Openai', up: true },
+      { _selectId: 'qdrant', name: 'Qdrant', up: true },
+      { _selectId: 'qorus-api', name: 'Qorus Api', up: true },
+      { _selectId: 'paddle', name: 'Paddle Sandbox', up: true },
+      { _selectId: 'healthcare', name: 'Healthcare Vitalwear', up: true },
+      { _selectId: 'supply-chain-2', name: 'Supply Chain 2', up: false },
+      { _selectId: 'salesforce', name: 'Salesforce', up: true },
+      { _selectId: 'sap', name: 'SAP ERP', up: true },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      expect(canvasElement.querySelectorAll('.reqore-table-row').length).toBeGreaterThan(0);
+    });
+
+    const headerCells = Array.from(
+      canvasElement.querySelector('.reqore-table-header-wrapper > *')?.children ?? []
+    );
+    const rowCells = Array.from(canvasElement.querySelector('.reqore-table-row')?.children ?? []);
+
+    expect(headerCells.length).toBe(rowCells.length);
+
+    headerCells.forEach((header, index) => {
+      const headerRect = header.getBoundingClientRect();
+      const rowRect = rowCells[index].getBoundingClientRect();
+
+      expect(Math.abs(rowRect.left - headerRect.left)).toBeLessThanOrEqual(1);
+      expect(Math.abs(rowRect.width - headerRect.width)).toBeLessThanOrEqual(1);
+    });
+  },
+};
+
 export const WithDotNotation: Story = {
   args: {
     columns: [

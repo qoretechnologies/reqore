@@ -70,6 +70,12 @@ const StyledHeaderResizable = styled(Resizable)<{
   $pinEdge?: boolean;
   $minimal?: boolean;
 }>`
+  box-sizing: border-box;
+
+  * {
+    box-sizing: border-box;
+  }
+
   ${({ $minimal }) =>
     $minimal &&
     css`
