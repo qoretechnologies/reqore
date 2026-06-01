@@ -12,6 +12,7 @@ import { IReqoreButtonProps } from '../Button';
 import { IReqoreTableHeaderCellProps, ReqoreTableHeaderCell } from './headerCell';
 import {
   calculatePinOffsets,
+  getColumnRenderedWidth,
   getOnlyShownColumns,
   getTotalColumnsWidth,
   partitionPinnedColumns,
@@ -235,7 +236,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
           grow={subColumns.reduce((gr, col) => gr + col.grow, 0)}
           key={dataId}
           className='reqore-table-column-group'
-          width={subColumns.reduce((wid, col) => wid + (col.resizedWidth || col.width || 80), 0)}
+          width={subColumns.reduce((wid, col) => wid + getColumnRenderedWidth(col), 0)}
           maxWidth={subColumns.reduce((wid, col) => wid + col.maxWidth, 0)}
           minWidth={subColumns.reduce((wid, col) => wid + col.minWidth, 0)}
         >

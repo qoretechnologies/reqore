@@ -5,6 +5,7 @@ tsconfig.json
 yarn.lock
 node_modules
 yarn-error.log
+*.tgz
 .babel.config.js
 .eslintrc.js
 .github

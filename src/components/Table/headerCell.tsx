@@ -11,6 +11,7 @@ import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect } from '../Effect';
+import { getColumnRenderedWidth } from './helpers';
 import { TColumnsUpdater } from './header';
 
 export interface IReqoreTableHeaderCellProps
@@ -245,6 +246,12 @@ export const ReqoreTableHeaderCell = memo(
           zIndex: 2,
         }
       : {};
+    const renderedWidth = getColumnRenderedWidth({
+      width,
+      maxWidth,
+      minWidth,
+      resizedWidth,
+    } as IReqoreTableColumn);
 
     // Header text gets a consistent "label-y" typography by default. The
     // `opacity: 0.7` is only added under `minimal` so the unbordered, washed
@@ -265,7 +272,7 @@ export const ReqoreTableHeaderCell = memo(
     return (
       <StyledHeaderResizable
         {...({ $pin: pin, $pinEdge: pinEdge, $minimal: parentMinimal } as any)}
-        minWidth={minWidth || width}
+        minWidth={minWidth || renderedWidth}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {
           onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
@@ -284,7 +291,7 @@ export const ReqoreTableHeaderCell = memo(
           ...pinStyle,
         }}
         size={{
-          width: resizedWidth || width,
+          width: renderedWidth,
           height: undefined,
         }}
         enable={{

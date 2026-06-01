@@ -17,6 +17,7 @@ import { IReqoreButtonProps } from '../Button';
 import { IReqoreCustomTableBodyCell, ReqoreTableBodyCell } from './cell';
 import {
   calculatePinOffsets,
+  getColumnRenderedWidth,
   getReorderedLeaves,
   getTotalColumnsWidth,
   IColumnPinInfo,
@@ -283,7 +284,8 @@ const ReqoreTableRow = memo(
     const renderCells = useCallback(
       () =>
         reorderedLeaves.map(
-          ({ width, minWidth, maxWidth, resizedWidth, grow, dataId, cell, align, intent }) => {
+          (column) => {
+            const { minWidth, maxWidth, grow, dataId, cell, align, intent } = column;
             const datum = get(data[index], dataId);
 
             // Build the tooltip
@@ -304,7 +306,7 @@ const ReqoreTableRow = memo(
               <CellComponent
                 key={dataId}
                 {...({
-                  width: resizedWidth || width,
+                  width: getColumnRenderedWidth(column),
                   minWidth,
                   maxWidth,
                   grow,

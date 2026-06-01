@@ -245,6 +245,16 @@ export interface IColumnPinInfo {
   isEdge: boolean;
 }
 
+export const getColumnRenderedWidth = (column: IReqoreTableColumn): number => {
+  const requestedWidth = column.resizedWidth || column.width || 0;
+  const maxConstrainedWidth =
+    column.maxWidth === undefined ? requestedWidth : Math.min(requestedWidth, column.maxWidth);
+
+  return column.minWidth === undefined
+    ? maxConstrainedWidth
+    : Math.max(maxConstrainedWidth, column.minWidth);
+};
+
 export const calculatePinOffsets = (
   columns: IReqoreTableColumn[]
 ): Record<string, IColumnPinInfo> => {
@@ -258,7 +268,7 @@ export const calculatePinOffsets = (
   leaves.forEach((column) => {
     if (column.pin === 'left') {
       map[column.dataId] = { pin: 'left', offset: leftAcc, isEdge: false };
-      leftAcc += column.resizedWidth || column.width || 0;
+      leftAcc += getColumnRenderedWidth(column);
       lastLeftId = column.dataId;
     }
   });
@@ -272,7 +282,7 @@ export const calculatePinOffsets = (
     const column = leaves[i];
     if (column.pin === 'right') {
       map[column.dataId] = { pin: 'right', offset: rightAcc, isEdge: false };
-      rightAcc += column.resizedWidth || column.width || 0;
+      rightAcc += getColumnRenderedWidth(column);
       firstRightId = column.dataId;
     }
   }
@@ -286,7 +296,7 @@ export const calculatePinOffsets = (
 export const getTotalColumnsWidth = (columns: IReqoreTableColumn[]): number => {
   return flattenColumns(columns)
     .filter((column) => column.show !== false && column.enabled !== false)
-    .reduce((total, column) => total + (column.resizedWidth || column.width || 0), 0);
+    .reduce((total, column) => total + getColumnRenderedWidth(column), 0);
 };
 
 export const getOnlyShownColumns = (
