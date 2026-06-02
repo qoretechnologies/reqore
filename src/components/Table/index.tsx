@@ -352,6 +352,7 @@ const ReqoreTable = ({
   const [_internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
   const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
   const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
+  const [bodyScrollbarWidth, setBodyScrollbarWidth] = useState<number>(0);
   const theme = useReqoreTheme('main', rest.customTheme, intent);
 
   const addModal = useReqoreProperty('addModal');
@@ -856,6 +857,7 @@ const ReqoreTable = ({
           }}
           component={headerCellComponent}
           tableWidth={sizes.width}
+          scrollbarWidth={bodyScrollbarWidth}
           minimal={rest.minimal}
         />
         {count(items) === 0 ? null : (
@@ -882,6 +884,7 @@ const ReqoreTable = ({
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}
             tableWidth={sizes.width}
+            onScrollbarWidthChange={setBodyScrollbarWidth}
           />
         )}
       </StyledTableWrapper>

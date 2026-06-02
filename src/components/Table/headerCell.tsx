@@ -24,6 +24,7 @@ export interface IReqoreTableHeaderCellProps
   onFilterChange?: (dataId: string, filter: string) => void;
   pinOffset?: number;
   pinEdge?: boolean;
+  hasColumns?: boolean;
   /**
    * Set by the parent `ReqoreTable` when its own `minimal` prop is enabled, so
    * the resizer between columns can render as a hover-only, half-opacity line
@@ -72,6 +73,7 @@ const StyledHeaderResizable = styled(Resizable)<{
   $minimal?: boolean;
 }>`
   box-sizing: border-box;
+  flex-shrink: 0;
 
   * {
     box-sizing: border-box;
@@ -140,6 +142,7 @@ export const ReqoreTableHeaderCell = memo(
     onFilterChange,
     actions,
     parentMinimal,
+    hasColumns,
     ...rest
   }: IReqoreTableHeaderCellProps) => {
     const items = useMemo(() => {
@@ -279,6 +282,7 @@ export const ReqoreTableHeaderCell = memo(
     return (
       <StyledHeaderResizable
         {...({ $pin: pin, $pinEdge: pinEdge, $minimal: parentMinimal } as any)}
+        data-reqore-table-column-id={hasColumns ? undefined : dataId}
         minWidth={minWidth ?? renderedWidth}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {

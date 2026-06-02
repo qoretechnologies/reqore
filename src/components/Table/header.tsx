@@ -12,7 +12,9 @@ import { IReqoreButtonProps } from '../Button';
 import { IReqoreTableHeaderCellProps, ReqoreTableHeaderCell } from './headerCell';
 import {
   calculatePinOffsets,
-  getColumnRenderedWidth,
+  getColumnsMaxWidth,
+  getColumnsMinWidth,
+  getColumnsRenderedWidth,
   getOnlyShownColumns,
   getTotalColumnsWidth,
   partitionPinnedColumns,
@@ -51,6 +53,7 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
   heightAsGroup?: boolean;
   bodyRef: React.RefObject<HTMLDivElement>;
   tableWidth: number;
+  scrollbarWidth?: number;
   /**
    * When `true`, the rendered header cells default to `transparent` + `flat`,
    * which removes the tinted background and the cell border. Mirrors the
@@ -65,12 +68,14 @@ export interface IReqoreTableSectionStyle {
   heightAsGroup?: boolean;
   size?: TSizes;
   minWidth?: number;
+  scrollbarWidth?: number;
 }
 
 const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
-  ${({ heightAsGroup, size, minWidth }) => css`
+  ${({ heightAsGroup, size, minWidth, scrollbarWidth }) => css`
     box-sizing: border-box;
     display: flex;
+    padding-right: ${scrollbarWidth ? `${scrollbarWidth}px` : undefined};
 
     overflow-x: hidden;
     overflow-y: hidden;
@@ -138,24 +143,10 @@ const StyledTableHeaderRow = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
-const getColumnsRenderedWidth = (columns: IReqoreTableColumn[]): number =>
-  columns.reduce((width, column) => width + getColumnRenderedWidth(column), 0);
-
 const getColumnsGrow = (columns: IReqoreTableColumn[]): number | undefined => {
   const grow = columns.reduce((total, column) => total + (column.grow ?? 0), 0);
 
   return grow || undefined;
-};
-
-const getOptionalColumnsWidth = (
-  columns: IReqoreTableColumn[],
-  key: 'minWidth' | 'maxWidth'
-): number | undefined => {
-  const widths = columns
-    .map((column) => column[key])
-    .filter((width): width is number => typeof width === 'number');
-
-  return widths.length ? widths.reduce((total, width) => total + width, 0) : undefined;
 };
 
 const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
@@ -171,6 +162,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       heightAsGroup,
       bodyRef,
       tableWidth,
+      scrollbarWidth,
       minimal,
     }: IReqoreTableSectionProps,
     ref
@@ -257,9 +249,10 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
           grow={getColumnsGrow(subColumns)}
           key={dataId}
           className='reqore-table-column-group'
+          data-reqore-table-column-group-id={dataId}
           width={getColumnsRenderedWidth(subColumns)}
-          maxWidth={getOptionalColumnsWidth(subColumns, 'maxWidth')}
-          minWidth={getOptionalColumnsWidth(subColumns, 'minWidth')}
+          maxWidth={getColumnsMaxWidth(subColumns)}
+          minWidth={getColumnsMinWidth(subColumns)}
         >
           {renderHeaderCell(headerComponent, {
             ...minimalHeaderDefaults,
@@ -314,6 +307,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         heightAsGroup={heightAsGroup}
         size={size}
         minWidth={totalColumnsWidth}
+        scrollbarWidth={scrollbarWidth}
         ref={targetRef}
       >
         <StyledTableHeaderRow>{renderColumns(columns)}</StyledTableHeaderRow>

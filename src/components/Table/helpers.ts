@@ -255,6 +255,28 @@ export const getColumnRenderedWidth = (column: IReqoreTableColumn): number => {
     : Math.max(maxConstrainedWidth, column.minWidth);
 };
 
+export const getColumnsRenderedWidth = (columns: IReqoreTableColumn[]): number =>
+  flattenColumns(columns)
+    .filter((column) => column.show !== false && column.enabled !== false)
+    .reduce((width, column) => width + getColumnRenderedWidth(column), 0);
+
+export const getColumnsMinWidth = (columns: IReqoreTableColumn[]): number =>
+  flattenColumns(columns)
+    .filter((column) => column.show !== false && column.enabled !== false)
+    .reduce((width, column) => width + (column.minWidth ?? getColumnRenderedWidth(column)), 0);
+
+export const getColumnsMaxWidth = (columns: IReqoreTableColumn[]): number | undefined => {
+  const leaves = flattenColumns(columns).filter(
+    (column) => column.show !== false && column.enabled !== false
+  );
+
+  if (!leaves.length || leaves.some((column) => column.maxWidth === undefined)) {
+    return undefined;
+  }
+
+  return leaves.reduce((width, column) => width + getColumnRenderedWidth(column), 0);
+};
+
 export const calculatePinOffsets = (
   columns: IReqoreTableColumn[]
 ): Record<string, IColumnPinInfo> => {
@@ -294,9 +316,7 @@ export const calculatePinOffsets = (
 };
 
 export const getTotalColumnsWidth = (columns: IReqoreTableColumn[]): number => {
-  return flattenColumns(columns)
-    .filter((column) => column.show !== false && column.enabled !== false)
-    .reduce((total, column) => total + getColumnRenderedWidth(column), 0);
+  return getColumnsRenderedWidth(columns);
 };
 
 export const getOnlyShownColumns = (

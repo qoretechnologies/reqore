@@ -1,5 +1,5 @@
 import count from 'lodash/size';
-import { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
@@ -12,6 +12,7 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
   headerRef: React.RefObject<HTMLDivElement>;
   virtualized?: boolean;
   onScrollChange?: (isScrolled: boolean) => void;
+  onScrollbarWidthChange?: (width: number) => void;
   /**
    * Uniform pixel height for every body row. Overrides the size-derived
    * default. See `IReqoreTableProps.rowHeight` for the public-facing docs.
@@ -47,6 +48,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       headerRef,
       virtualized = true,
       onScrollChange,
+      onScrollbarWidthChange,
       rowHeight: rowHeightOverride,
       ...rest
     }: IReqoreTableSectionBodyProps,
@@ -90,6 +92,26 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       el.addEventListener('scroll', handleScroll, { passive: true });
       return () => el.removeEventListener('scroll', handleScroll);
     }, [headerRef, onScrollChange, targetRef]);
+
+    useLayoutEffect(() => {
+      const el = targetRef.current;
+      if (!el) {
+        return undefined;
+      }
+
+      const measure = () => {
+        onScrollbarWidthChange?.(Math.max(0, el.offsetWidth - el.clientWidth));
+      };
+
+      measure();
+      if (typeof ResizeObserver === 'undefined') {
+        return undefined;
+      }
+
+      const observer = new ResizeObserver(measure);
+      observer.observe(el);
+      return () => observer.disconnect();
+    }, [itemCount, onScrollbarWidthChange, targetRef, virtualized]);
 
     const measuredHeight = useMemo(() => {
       if ((!height && height !== 0) || height > itemCount * rowHeight) {

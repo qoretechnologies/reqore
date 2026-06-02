@@ -342,6 +342,7 @@ const ReqoreTableRow = memo(
                     }
                   },
                   className: 'reqore-table-cell',
+                  'data-reqore-table-column-id': dataId,
                 } as IReqoreTableCellStyle)}
               >
                 {renderContent(cell, data[index], dataId, align)}
