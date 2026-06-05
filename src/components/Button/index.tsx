@@ -650,6 +650,7 @@ const ReqoreButton = memo(
                     wrap={wrap}
                     effect={labelEffect}
                     className='reqore-button-text-content reqore-animated reqore-inactive'
+                    aria-hidden='true'
                   >
                     {_children}
                   </StyledInActiveContent>
@@ -659,6 +660,7 @@ const ReqoreButton = memo(
                     wrap={wrap}
                     effect={labelEffect}
                     className='reqore-button-text-content reqore-animated reqore-invisible'
+                    aria-hidden='true'
                   >
                     {_children}
                   </StyledInvisibleContent>
