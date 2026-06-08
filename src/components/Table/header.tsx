@@ -12,6 +12,9 @@ import { IReqoreButtonProps } from '../Button';
 import { IReqoreTableHeaderCellProps, ReqoreTableHeaderCell } from './headerCell';
 import {
   calculatePinOffsets,
+  getColumnsMaxWidth,
+  getColumnsMinWidth,
+  getColumnsRenderedWidth,
   getOnlyShownColumns,
   getTotalColumnsWidth,
   partitionPinnedColumns,
@@ -68,6 +71,7 @@ export interface IReqoreTableSectionStyle {
 
 const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
   ${({ heightAsGroup, size, minWidth }) => css`
+    box-sizing: border-box;
     display: flex;
 
     overflow-x: hidden;
@@ -88,6 +92,8 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
 
 export interface IReqoreTableHeaderStyle {
   width?: number;
+  minWidth?: number;
+  maxWidth?: number;
   grow?: number;
   theme: IReqoreTheme;
   align?: 'center' | 'left' | 'right';
@@ -133,6 +139,12 @@ const StyledTableHeaderRow = styled.div<{ theme: IReqoreTheme }>`
     align-items: center;
   }
 `;
+
+const getColumnsGrow = (columns: IReqoreTableColumn[]): number | undefined => {
+  const grow = columns.reduce((total, column) => total + (column.grow ?? 0), 0);
+
+  return grow || undefined;
+};
 
 const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
   (
@@ -230,12 +242,13 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
 
       return (
         <StyledColumnGroup
-          grow={subColumns.reduce((gr, col) => gr + col.grow, 0)}
+          grow={getColumnsGrow(subColumns)}
           key={dataId}
           className='reqore-table-column-group'
-          width={subColumns.reduce((wid, col) => wid + (col.resizedWidth || col.width || 80), 0)}
-          maxWidth={subColumns.reduce((wid, col) => wid + col.maxWidth, 0)}
-          minWidth={subColumns.reduce((wid, col) => wid + col.minWidth, 0)}
+          data-reqore-table-column-group-id={dataId}
+          width={getColumnsRenderedWidth(subColumns)}
+          maxWidth={getColumnsMaxWidth(subColumns)}
+          minWidth={getColumnsMinWidth(subColumns)}
         >
           {renderHeaderCell(headerComponent, {
             ...minimalHeaderDefaults,

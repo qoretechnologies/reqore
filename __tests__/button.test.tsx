@@ -31,6 +31,20 @@ test('Renders <Button /> using `label`', () => {
   expect(screen.getAllByText('Button label')).toBeTruthy();
 });
 
+test('Animated <Button /> exposes one accessible label', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton label='Animated label' animated />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(screen.getByRole('button', { name: 'Animated label' })).toBeTruthy();
+});
+
 test('Renders <Button /> with size properly', () => {
   render(
     <ReqoreUIProvider>

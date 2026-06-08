@@ -110,6 +110,7 @@ export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
       : undefined;
 
     return css`
+      box-sizing: border-box;
       display: flex;
       align-items: ${maxHeight ? 'flex-start' : 'center'};
       justify-content: ${align ? alignToFlexAlign(align) : 'flex-start'};

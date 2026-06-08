@@ -11,6 +11,7 @@ import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect } from '../Effect';
+import { getColumnRenderedWidth } from './helpers';
 import { TColumnsUpdater } from './header';
 
 export interface IReqoreTableHeaderCellProps
@@ -23,6 +24,7 @@ export interface IReqoreTableHeaderCellProps
   onFilterChange?: (dataId: string, filter: string) => void;
   pinOffset?: number;
   pinEdge?: boolean;
+  hasColumns?: boolean;
   /**
    * Set by the parent `ReqoreTable` when its own `minimal` prop is enabled, so
    * the resizer between columns can render as a hover-only, half-opacity line
@@ -70,6 +72,13 @@ const StyledHeaderResizable = styled(Resizable)<{
   $pinEdge?: boolean;
   $minimal?: boolean;
 }>`
+  box-sizing: border-box;
+  flex-shrink: 0;
+
+  * {
+    box-sizing: border-box;
+  }
+
   ${({ $minimal }) =>
     $minimal &&
     css`
@@ -133,6 +142,7 @@ export const ReqoreTableHeaderCell = memo(
     onFilterChange,
     actions,
     parentMinimal,
+    hasColumns,
     ...rest
   }: IReqoreTableHeaderCellProps) => {
     const items = useMemo(() => {
@@ -239,6 +249,19 @@ export const ReqoreTableHeaderCell = memo(
           zIndex: 2,
         }
       : {};
+    const hasExplicitSizing =
+      width !== undefined ||
+      resizedWidth !== undefined ||
+      minWidth !== undefined ||
+      maxWidth !== undefined;
+    const renderedWidth = hasExplicitSizing
+      ? getColumnRenderedWidth({
+          width,
+          maxWidth,
+          minWidth,
+          resizedWidth,
+        } as IReqoreTableColumn)
+      : undefined;
 
     // Header text gets a consistent "label-y" typography by default. The
     // `opacity: 0.7` is only added under `minimal` so the unbordered, washed
@@ -259,7 +282,8 @@ export const ReqoreTableHeaderCell = memo(
     return (
       <StyledHeaderResizable
         {...({ $pin: pin, $pinEdge: pinEdge, $minimal: parentMinimal } as any)}
-        minWidth={minWidth || width}
+        data-reqore-table-column-id={hasColumns ? undefined : dataId}
+        minWidth={minWidth ?? renderedWidth}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {
           onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
@@ -278,7 +302,7 @@ export const ReqoreTableHeaderCell = memo(
           ...pinStyle,
         }}
         size={{
-          width: resizedWidth || width,
+          width: renderedWidth,
           height: undefined,
         }}
         enable={{

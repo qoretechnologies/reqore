@@ -44,7 +44,7 @@ export const Throws: Story = {
     await _testsClickButton({ label: 'Throw error' });
     await _testsWaitForText('Something went wrong');
 
-    expect(args.onError).toHaveBeenCalled();
+    await expect(args.onError).toHaveBeenCalled();
   },
 };
 
@@ -66,7 +66,7 @@ export const WithCustomMessage: Story = {
     await _testsClickButton({ label: 'Throw error' });
     await _testsWaitForText('Ooooopsie doopsie, something went wrong!');
 
-    expect(args.onError).toHaveBeenCalled();
+    await expect(args.onError).toHaveBeenCalled();
   },
 };
 
@@ -83,7 +83,7 @@ export const WithCustomGlobalMessage: Story = {
     await _testsClickButton({ label: 'Throw error' });
     await _testsWaitForText('Ha! You thought you could break me! And you did! :D');
 
-    expect(args.onError).toHaveBeenCalled();
+    await expect(args.onError).toHaveBeenCalled();
   },
 };
 
