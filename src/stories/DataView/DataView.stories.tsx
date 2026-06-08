@@ -214,6 +214,131 @@ export const Sizes: Story = {
   },
 };
 
+// ---- Long-content regression stories (Chromatic) -----------------------
+//
+// These stories cover the layout edge cases that regressed in early
+// iterations: a long string value overflowing its column, a long key
+// chip blowing past the key column, and the combination of the two in
+// a single payload. They're authored as visual stories — open them in
+// Chromatic to confirm both keys AND values wrap cleanly inside their
+// row instead of overflowing horizontally.
+
+// A realistic HL7-ish pipe-delimited payload — exactly the shape that
+// triggered the original overflow bug.
+const HL7_PAYLOAD =
+  'MSH|^~\\&|VW-DEVICE|VITALSIM|EHR|HOSPITAL|2026-05-31 14:40:29.292347 Sun +02:00 (CEST)||ORU^R01|MSG-17669ff5-ce8f-4bd0-9903-4d207e193b83|P|2.5\rOBR|1|REQ-1005||VW-VITALS-FILL-1005|VW_PRESSURE_PANEL^VitalWear pressure panel^L OBX|1|NM|VW_SKIN_TEMP^Skin temperature^L|1|36.7|Cel|36.0-37.5|N|||F';
+
+export const LongStringValue: Story = {
+  args: {
+    label: 'Long string value',
+    description:
+      'A scalar that does not fit in a single line — wraps inside the chip rather than overflowing horizontally.',
+    collapsibleRoot: false,
+    data: {
+      message_id: 'MSG-17669ff5-ce8f-4bd0-9903-4d207e193b83',
+      payload_hash: 'sha256:5d0fce3e2ba8eb29df90a93fd35aa68e2eb0aa3ed5f',
+      payload: HL7_PAYLOAD,
+    },
+  },
+};
+
+export const LongKey: Story = {
+  args: {
+    label: 'Long key',
+    description:
+      'A key longer than the key column wraps inside its chip and never shoves the value off-screen.',
+    collapsibleRoot: false,
+    data: {
+      patient_ref: 'PAT-1005',
+      device_id: 'DEV-VW-1005',
+      normalized_observation_count: 2,
+      validated_against_local_terminology_dictionary: true,
+      escalated_to_downstream_clinical_decision_support: false,
+    },
+  },
+};
+
+export const MixedLongContent: Story = {
+  args: {
+    label: 'Mixed long keys + long values',
+    description:
+      'Both columns under pressure — keys *and* values wrap inside their chips, rows stay on one horizontal line per pair.',
+    collapsibleRoot: false,
+    defaultExpandDepth: 10,
+    data: {
+      message_control_id: 'VW-DEADLETTER-001-2079074b-0000-4eee-8b48-f9e3f4b1c2d8',
+      payload: HL7_PAYLOAD,
+      normalized_observation_count: 2,
+      downstream_processor_dispatcher_pipeline_route:
+        'cs:vital-signs/router/v2/dispatch?priority=high&ack=hl7-v2.5&tenant=eu-west-prod-eks-2',
+      observations: [
+        {
+          observation_id: 'OBS-024c8401-f649-4c82-b52f-7fc60853de3a',
+          message_id: 'MSG-17669ff5-ce8f-4bd0-9903-4d207e193b83',
+          message_control_id: 'VW-DEADLETTER-001-2079074b',
+          local_code: 'VW_SKIN_TEMP',
+          display: 'Skin temperature reading from VitalWear pressure panel',
+        },
+      ],
+    },
+  },
+};
+
+export const InNarrowContainer: Story = {
+  render: (args) => (
+    <div style={{ width: 300, border: '1px dashed rgba(255,255,255,0.2)', padding: 8 }}>
+      <ReqoreDataView {...args} />
+    </div>
+  ),
+  args: {
+    label: 'Narrow container (300px)',
+    description:
+      'Constrained by the parent — exercises the column shrink + wrap path. Keys and values both wrap inside their chips so neither overflows the row, and rows stay side-by-side. (A CSS @container query for stack-on-narrow was attempted but currently does not survive styled-components 5.x / stylis 3.x — JS-driven stacking is on the follow-up list.)',
+    collapsibleRoot: false,
+    defaultExpandDepth: 10,
+    data: {
+      patient_ref: 'PAT-1005',
+      normalized_observation_count: 2,
+      payload: HL7_PAYLOAD,
+    },
+  },
+};
+
+export const WidthComparison: Story = {
+  render: (args) => (
+    <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
+      {[260, 360, 480, 720].map((width) => (
+        <div
+          key={width}
+          style={{
+            width,
+            border: '1px dashed rgba(255,255,255,0.2)',
+            padding: 8,
+          }}
+        >
+          <ReqoreDataView {...args} label={`Container ${width}px`} />
+        </div>
+      ))}
+    </div>
+  ),
+  args: {
+    collapsibleRoot: false,
+    defaultExpandDepth: 10,
+    data: {
+      patient_ref: 'PAT-1005',
+      observation_count: 2,
+      payload: HL7_PAYLOAD,
+      observations: [
+        {
+          observation_id: 'OBS-024c8401',
+          local_code: 'VW_SKIN_TEMP',
+          value: 36.7,
+        },
+      ],
+    },
+  },
+};
+
 export const InteractionToggle: Story = {
   args: {
     label: 'Interaction',

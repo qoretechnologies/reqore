@@ -200,6 +200,47 @@ test('Honours a custom `keyIntent` and `null` (drops intent)', () => {
   ).toBeGreaterThan(0);
 });
 
+test('Renders a long string value without truncating its content', () => {
+  // Regression guard: an early iteration rendered the value chip with
+  // wrap=false, so a long string overflowed its column horizontally
+  // and parts of the text were lost off-screen. The chip must keep
+  // every character of the input.
+  const longValue =
+    'MSH|^~\\&|VW-DEVICE|VITALSIM|EHR|HOSPITAL|2026-05-31 14:40:29.292347 Sun +02:00 (CEST)||ORU^R01|MSG-17669ff5-ce8f-4bd0-9903-4d207e193b83|P|2.5';
+  render(
+    wrap(<ReqoreDataView data={{ payload: longValue }} collapsibleRoot={false} />)
+  );
+  // Whole string is in the DOM — wrap means it spans multiple lines
+  // visually but stays one continuous text node.
+  expect(document.body.textContent).toContain(longValue);
+});
+
+test('Renders a long key without dropping the row or the value next to it', () => {
+  // Regression guard: a long key chip used to be rendered with
+  // `fixed`, so it kept its content width and pushed the value chip
+  // sideways. Now the chip can wrap inside its column and the value
+  // stays in place.
+  render(
+    wrap(
+      <ReqoreDataView
+        data={{
+          validated_against_local_terminology_dictionary: true,
+          normalized_observation_count: 2,
+        }}
+        collapsibleRoot={false}
+      />
+    )
+  );
+  // Both rows present + both values rendered alongside their keys.
+  expect(document.querySelectorAll('.reqore-data-view-row').length).toBe(2);
+  expect(document.body.textContent).toContain(
+    'validated_against_local_terminology_dictionary'
+  );
+  expect(document.body.textContent).toContain('true');
+  expect(document.body.textContent).toContain('normalized_observation_count');
+  expect(document.body.textContent).toContain('2');
+});
+
 test('Renders at every size prop value', () => {
   for (const size of ['tiny', 'small', 'normal', 'big', 'huge'] as const) {
     const { unmount } = render(
