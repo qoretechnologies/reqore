@@ -255,21 +255,23 @@ const Row = styled.div<
       flex-direction: column;
     `}
 
-  /* When the row collapses to a single column (either because the
-     value is a record/array, or because the container ResizeObserver
-     flipped \`$stacked\` on), the grid's default \`justify-items: stretch\`
-     would expand the key chip to the full row width. Pin it back to
-     start + content-width so the chip stays compact and the value
-     drops into the next grid row below it. */
-  ${({ $complex, $stacked }) =>
-    ($complex || $stacked) &&
-    css`
-      & > .reqore-data-view-key {
-        justify-self: start;
-        width: fit-content;
-        max-width: 100%;
-      }
-    `}
+  /* The key chip's grid behaviour, applied universally — covers
+     two-column rows, complex-value rows AND stacked (narrow
+     container) rows in one set of rules:
+     - \`justify-self: start\` stops the grid's default
+       \`justify-items: stretch\` from expanding the chip to fill the
+       full grid cell. The chip sizes to its content instead, only
+       hitting the column cap when content actually needs it.
+     - \`min-width: 0\` releases ReqoreTag's intrinsic min-content size
+       (its longest unbreakable run) so the grid track can honour
+       its \`minmax(..., 220px)\` cap. Without this, snake_case keys
+       or UUIDs feed back into the track sizing and expand the
+       column past 220px. */
+  & > .reqore-data-view-key {
+    justify-self: start;
+    min-width: 0;
+    max-width: 100%;
+  }
 `;
 
 const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
