@@ -608,7 +608,7 @@ const RecordTable = memo(
 
     useLayoutEffect(() => {
       const node = shellRef.current;
-      if (!node || typeof ResizeObserver === 'undefined') return;
+      if (!node || typeof ResizeObserver === 'undefined') return undefined;
       const observer = new ResizeObserver((events) => {
         const entry = events[0];
         if (!entry) return;
