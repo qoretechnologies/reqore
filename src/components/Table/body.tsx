@@ -1,18 +1,18 @@
 import count from 'lodash/size';
-import { forwardRef, memo, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { getTotalColumnsWidth } from './helpers';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
+import { ReqoreTableScrollbar } from './scrollbar';
 
 export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
   height: number;
   headerRef: React.RefObject<HTMLDivElement>;
   virtualized?: boolean;
   onScrollChange?: (isScrolled: boolean) => void;
-  onScrollbarWidthChange?: (width: number) => void;
   /**
    * Uniform pixel height for every body row. Overrides the size-derived
    * default. See `IReqoreTableProps.rowHeight` for the public-facing docs.
@@ -20,14 +20,38 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
   rowHeight?: number;
 }
 
+// Wrapper that owns the overlay scrollbar's positioning context. The native
+// scroll container (`StyledList` / `StyledNonVirtualizedBody`) lives inside;
+// the overlay thumb is absolutely positioned over its right edge.
+const StyledBodyWrapper = styled.div`
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+`;
+
+// Hide the native scrollbar so the body's content area is always the full
+// container width. The header and body therefore align by construction —
+// nothing needs to measure the scrollbar at runtime. Scrolling still works
+// natively (wheel, trackpad, touch, keyboard); the overlay thumb above is a
+// purely visual cue + drag handle.
+const hideNativeScrollbar = css`
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+`;
+
 const StyledList = styled(List)`
   box-sizing: border-box;
+  ${hideNativeScrollbar}
 `;
 
 const StyledNonVirtualizedBody = styled.div<{ height?: number; minWidth: number }>`
   ${({ height, minWidth }) => css`
     box-sizing: border-box;
     overflow: auto;
+    ${hideNativeScrollbar}
     ${height || height === 0
       ? css`
           height: ${height}px;
@@ -48,7 +72,6 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       headerRef,
       virtualized = true,
       onScrollChange,
-      onScrollbarWidthChange,
       rowHeight: rowHeightOverride,
       ...rest
     }: IReqoreTableSectionBodyProps,
@@ -93,26 +116,6 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       return () => el.removeEventListener('scroll', handleScroll);
     }, [headerRef, onScrollChange, targetRef]);
 
-    useLayoutEffect(() => {
-      const el = targetRef.current;
-      if (!el) {
-        return undefined;
-      }
-
-      const measure = () => {
-        onScrollbarWidthChange?.(Math.max(0, el.offsetWidth - el.clientWidth));
-      };
-
-      measure();
-      if (typeof ResizeObserver === 'undefined') {
-        return undefined;
-      }
-
-      const observer = new ResizeObserver(measure);
-      observer.observe(el);
-      return () => observer.disconnect();
-    }, [itemCount, onScrollbarWidthChange, targetRef, virtualized]);
-
     const measuredHeight = useMemo(() => {
       if ((!height && height !== 0) || height > itemCount * rowHeight) {
         return itemCount * rowHeight;
@@ -132,29 +135,35 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       // height would force a vertical scrollbar. Only set a height when the caller explicitly
       // requested one — otherwise let the body grow to fit its content.
       return (
-        <StyledNonVirtualizedBody
-          className='reqore-table-body'
-          ref={targetRef}
-          height={height || height === 0 ? measuredHeight : undefined}
-          minWidth={totalColumnsWidth}
-        >
-          {data.map(renderNonVirtualizedRow)}
-        </StyledNonVirtualizedBody>
+        <StyledBodyWrapper>
+          <StyledNonVirtualizedBody
+            className='reqore-table-body'
+            ref={targetRef}
+            height={height || height === 0 ? measuredHeight : undefined}
+            minWidth={totalColumnsWidth}
+          >
+            {data.map(renderNonVirtualizedRow)}
+          </StyledNonVirtualizedBody>
+          <ReqoreTableScrollbar targetRef={targetRef} />
+        </StyledBodyWrapper>
       );
     }
 
     return (
-      <StyledList
-        outerRef={targetRef}
-        itemCount={itemCount}
-        height={measuredHeight}
-        className='reqore-table-body'
-        itemSize={rowHeight}
-        itemData={itemData}
-        width='100%'
-      >
-        {ReqoreTableRow}
-      </StyledList>
+      <StyledBodyWrapper>
+        <StyledList
+          outerRef={targetRef}
+          itemCount={itemCount}
+          height={measuredHeight}
+          className='reqore-table-body'
+          itemSize={rowHeight}
+          itemData={itemData}
+          width='100%'
+        >
+          {ReqoreTableRow}
+        </StyledList>
+        <ReqoreTableScrollbar targetRef={targetRef} />
+      </StyledBodyWrapper>
     );
   }
 );

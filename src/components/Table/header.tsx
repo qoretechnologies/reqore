@@ -53,7 +53,6 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
   heightAsGroup?: boolean;
   bodyRef: React.RefObject<HTMLDivElement>;
   tableWidth: number;
-  scrollbarWidth?: number;
   /**
    * When `true`, the rendered header cells default to `transparent` + `flat`,
    * which removes the tinted background and the cell border. Mirrors the
@@ -68,14 +67,12 @@ export interface IReqoreTableSectionStyle {
   heightAsGroup?: boolean;
   size?: TSizes;
   minWidth?: number;
-  scrollbarWidth?: number;
 }
 
 const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
-  ${({ heightAsGroup, size, minWidth, scrollbarWidth }) => css`
+  ${({ heightAsGroup, size, minWidth }) => css`
     box-sizing: border-box;
     display: flex;
-    padding-right: ${scrollbarWidth ? `${scrollbarWidth}px` : undefined};
 
     overflow-x: hidden;
     overflow-y: hidden;
@@ -162,7 +159,6 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       heightAsGroup,
       bodyRef,
       tableWidth,
-      scrollbarWidth,
       minimal,
     }: IReqoreTableSectionProps,
     ref
@@ -307,7 +303,6 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         heightAsGroup={heightAsGroup}
         size={size}
         minWidth={totalColumnsWidth}
-        scrollbarWidth={scrollbarWidth}
         ref={targetRef}
       >
         <StyledTableHeaderRow>{renderColumns(columns)}</StyledTableHeaderRow>

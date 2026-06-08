@@ -12,6 +12,23 @@ export { ReqoreComment } from './components/Comment';
 export { ReqoreCommentFeed } from './components/CommentFeed';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreControlGroup } from './components/ControlGroup';
+export type {
+  IReqoreDataViewEmbedded,
+  IReqoreDataViewEnvelope,
+  IReqoreDataViewProps,
+} from './components/DataView';
+export {
+  DEFAULT_ENVELOPE as ReqoreDataViewDefaultEnvelope,
+  ReqoreDataView,
+  reqoreDataValueIntent,
+  reqoreDataValueKind,
+  reqoreEnvelopeType,
+  reqoreFormatScalar,
+  reqoreHasStructuredValue,
+  reqoreIsEnvelope,
+  reqoreIsRecord,
+  reqoreUnwrapEnvelope,
+} from './components/DataView';
 export * from './components/DatePicker';
 export { ReqoreDescriptionList } from './components/DescriptionList';
 export { ReqoreDrawer } from './components/Drawer';
