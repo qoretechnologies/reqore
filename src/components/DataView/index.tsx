@@ -184,6 +184,14 @@ const Tree = styled.div<IStyledThemeProps>`
   .reqore-data-view-value .reqore-tag-content,
   .reqore-data-view-type .reqore-tag-content {
     font-family: ${MONO_FONT};
+    /* Long unbreakable identifiers (UUIDs, snake_case keys, HL7
+       payloads with no spaces) need an extra hint to break — the
+       tag's own \`wrap\` enables breaks at WHITESPACE, but these run
+       on continuously. \`overflow-wrap: anywhere\` is the
+       last-resort break point. Only applied here (inside the tag
+       content) so the chip's outer geometry isn't affected. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 `;
 
@@ -211,11 +219,17 @@ const TableShell = styled.div<IStyledThemeProps & { $nested?: boolean }>`
     $nested ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.15)'};
 `;
 
-const Row = styled.div<IStyledThemeProps & { $complex?: boolean; $odd?: boolean }>`
+
+const Row = styled.div<
+  IStyledThemeProps & { $complex?: boolean; $odd?: boolean; $stacked?: boolean }
+>`
   display: grid;
-  grid-template-columns:
-    ${({ $complex }) => ($complex ? 'minmax(0, 1fr)' : 'minmax(120px, min(34%, 220px)) minmax(0, 1fr)')};
-  gap: ${({ $size, $complex }) => ($complex ? GAP_FROM_SIZE[$size] : 8)}px;
+  grid-template-columns: ${({ $complex, $stacked }) =>
+    $complex || $stacked
+      ? 'minmax(0, 1fr)'
+      : 'minmax(120px, min(34%, 220px)) minmax(0, 1fr)'};
+  gap: ${({ $size, $complex, $stacked }) =>
+    $complex || $stacked ? GAP_FROM_SIZE[$size] : 8}px;
   align-items: start;
   min-width: 0;
   padding: ${({ $size }) => PADDING_FROM_SIZE[$size] / 2}px ${({ $size }) =>
@@ -240,6 +254,24 @@ const Row = styled.div<IStyledThemeProps & { $complex?: boolean; $odd?: boolean 
     css`
       flex-direction: column;
     `}
+
+  /* The key chip's grid behaviour, applied universally — covers
+     two-column rows, complex-value rows AND stacked (narrow
+     container) rows in one set of rules:
+     - \`justify-self: start\` stops the grid's default
+       \`justify-items: stretch\` from expanding the chip to fill the
+       full grid cell. The chip sizes to its content instead, only
+       hitting the column cap when content actually needs it.
+     - \`min-width: 0\` releases ReqoreTag's intrinsic min-content size
+       (its longest unbreakable run) so the grid track can honour
+       its \`minmax(..., 220px)\` cap. Without this, snake_case keys
+       or UUIDs feed back into the track sizing and expand the
+       column past 220px. */
+  & > .reqore-data-view-key {
+    justify-self: start;
+    min-width: 0;
+    max-width: 100%;
+  }
 `;
 
 const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
@@ -508,6 +540,12 @@ const renderScalar = (
       size={ctx.size}
       flat={false}
       minimal
+      // `wrap` is critical for the value chip — without it, a long
+      // string scalar (an HL7 payload, a stack trace, a UUID-heavy
+      // identifier) renders as a single non-wrapping pill that
+      // overflows its column horizontally. With `wrap`, ReqoreTag
+      // lets the label flow onto multiple lines inside the chip.
+      wrap
       label={scalar.display}
       intent={intent}
       effect={{
@@ -538,6 +576,111 @@ const renderScalar = (
     </ScalarRow>
   );
 };
+
+/** Width (in CSS px) below which a `RecordTable` switches its rows
+ *  from a two-column grid (key | value) to a single column (key on
+ *  top, value beneath). Tuned to the point where the 120px-min key
+ *  column + gap + the value column starts squeezing the value into a
+ *  useless sliver. */
+const STACK_BELOW_PX = 360;
+
+interface IRecordTableProps {
+  entries: Array<[string, unknown]>;
+  ctx: TRenderContext;
+  theme: IReqoreTheme;
+  depth: number;
+  path: string[];
+}
+
+/**
+ * Record renderer that observes its own width and switches the row
+ * layout to vertical (key above value) when narrower than
+ * `STACK_BELOW_PX`. The observer hooks the actual rendered
+ * `TableShell` so the layout responds to *the parent panel's* width,
+ * not the viewport — works inside narrow drawers on a wide monitor.
+ *
+ * Lives outside `renderTree` because `renderTree` is a pure function;
+ * this component is where the `useState` + `ResizeObserver` lifecycle
+ * live.
+ */
+const RecordTable = memo(
+  ({ entries, ctx, theme, depth, path }: IRecordTableProps) => {
+    const shellRef = useRef<HTMLDivElement | null>(null);
+    const [stacked, setStacked] = useState(false);
+
+    useLayoutEffect(() => {
+      const node = shellRef.current;
+      if (!node || typeof ResizeObserver === 'undefined') return undefined;
+      const observer = new ResizeObserver((events) => {
+        const entry = events[0];
+        if (!entry) return;
+        const width = entry.contentRect?.width ?? node.clientWidth;
+        setStacked(width > 0 && width < STACK_BELOW_PX);
+      });
+      observer.observe(node);
+      return () => observer.disconnect();
+    }, []);
+
+    return (
+      <TableShell
+        ref={shellRef}
+        $size={ctx.size}
+        $theme={theme}
+        $nested={depth > 0}
+        className='reqore-data-view-record'
+      >
+        {entries.map(([key, item], index) => {
+          const complex =
+            reqoreIsRecord(
+              ctx.envelope === false ? item : reqoreUnwrapEnvelope(item, ctx.envelope)
+            ) ||
+            (Array.isArray(
+              ctx.envelope === false ? item : reqoreUnwrapEnvelope(item, ctx.envelope)
+            ) &&
+              !(
+                ctx.inlineScalarArrays &&
+                (ctx.envelope === false
+                  ? (item as unknown[])
+                  : (reqoreUnwrapEnvelope(item, ctx.envelope) as unknown[])
+                ).every((entry) => isInlineableScalarValue(entry, ctx))
+              ));
+          return (
+            <Row
+              key={`${path.join('.')}-${key}`}
+              $size={ctx.size}
+              $theme={theme}
+              $complex={complex}
+              $odd={index % 2 === 0}
+              $stacked={stacked}
+              className='reqore-data-view-row'
+            >
+              <ReqoreTag
+                size={ctx.size}
+                flat={false}
+                minimal
+                wrap
+                intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
+                color={ctx.keyColor}
+                label={key}
+                effect={{ weight: 'bold' }}
+                className='reqore-data-view-key'
+              />
+              <ValueCell
+                $size={ctx.size}
+                $theme={theme}
+                $complex={complex}
+                className='reqore-data-view-value-cell'
+              >
+                {renderTree(item, ctx, theme, depth + 1, [...path, key])}
+              </ValueCell>
+            </Row>
+          );
+        })}
+      </TableShell>
+    );
+  }
+);
+RecordTable.displayName = 'ReqoreDataView.RecordTable';
 
 const renderTree = (
   value: unknown,
@@ -638,60 +781,13 @@ const renderTree = (
   if (reqoreIsRecord(unwrapped)) {
     const entries = Object.entries(unwrapped);
     const content = (
-      <TableShell
-        $size={ctx.size}
-        $theme={theme}
-        $nested={depth > 0}
-        className='reqore-data-view-record'
-      >
-        {entries.map(([key, item], index) => {
-          const complex =
-            reqoreIsRecord(
-              ctx.envelope === false ? item : reqoreUnwrapEnvelope(item, ctx.envelope)
-            ) ||
-            (Array.isArray(
-              ctx.envelope === false ? item : reqoreUnwrapEnvelope(item, ctx.envelope)
-            ) &&
-              !(
-                ctx.inlineScalarArrays &&
-                (ctx.envelope === false
-                  ? (item as unknown[])
-                  : (reqoreUnwrapEnvelope(item, ctx.envelope) as unknown[])
-                ).every((entry) => isInlineableScalarValue(entry, ctx))
-              ));
-          return (
-            <Row
-              key={`${path.join('.')}-${key}`}
-              $size={ctx.size}
-              $theme={theme}
-              $complex={complex}
-              $odd={index % 2 === 0}
-              className='reqore-data-view-row'
-            >
-              <ReqoreTag
-                size={ctx.size}
-                flat={false}
-                minimal
-                intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
-                color={ctx.keyColor}
-                label={key}
-                effect={{ weight: 'bold' }}
-                className='reqore-data-view-key'
-                fixed
-              />
-
-              <ValueCell
-                $size={ctx.size}
-                $theme={theme}
-                $complex={complex}
-                className='reqore-data-view-value-cell'
-              >
-                {renderTree(item, ctx, theme, depth + 1, [...path, key])}
-              </ValueCell>
-            </Row>
-          );
-        })}
-      </TableShell>
+      <RecordTable
+        entries={entries}
+        ctx={ctx}
+        theme={theme}
+        depth={depth}
+        path={path}
+      />
     );
 
     if (depth === 0) return content;
