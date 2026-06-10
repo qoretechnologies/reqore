@@ -1,5 +1,4 @@
 import { fireEvent, render } from '@testing-library/react';
-import React from 'react';
 import {
   ReqoreContent,
   ReqoreLayoutContent,
@@ -8,7 +7,7 @@ import {
 } from '../src';
 
 test('Renders <Checkbox /> properly', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>

@@ -35,7 +35,7 @@ test('Renders full <Tabs /> properly', () => {
 });
 
 test('Renders shortened <Tabs /> properly', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -137,7 +137,7 @@ test('Default active tab can be specified', () => {
 });
 
 test('Changes tab and runs callback', () => {
-  const cb = jest.fn();
+  const cb = vi.fn();
 
   act(() => {
     render(
@@ -172,7 +172,7 @@ test('Changes tab and runs callback', () => {
 });
 
 test('Does not change tab and run callback when disabled', () => {
-  const cb = jest.fn();
+  const cb = vi.fn();
 
   act(() => {
     render(
@@ -207,7 +207,7 @@ test('Does not change tab and run callback when disabled', () => {
 });
 
 test('Does not change tab when mounted and active tab is set', () => {
-  const cb = jest.fn();
+  const cb = vi.fn();
 
   act(() => {
     render(
@@ -239,7 +239,7 @@ test('Does not change tab when mounted and active tab is set', () => {
 });
 
 test('Changes tab programatically and runs callback', () => {
-  const cb = jest.fn();
+  const cb = vi.fn();
 
   const Component = () => {
     const [activeTab, setActiveTab] = useState('tab1');
@@ -282,7 +282,7 @@ test('Changes tab programatically and runs callback', () => {
 });
 
 test('Closable tab can be closed if not disabled', () => {
-  const cb = jest.fn();
+  const cb = vi.fn();
 
   act(() => {
     render(

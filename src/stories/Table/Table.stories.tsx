@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { fireEvent, userEvent, waitFor, within } from '@storybook/testing-library';
 import { noop, slice } from 'lodash';
 import { StyledEffect } from '../../components/Effect';
 import { ReqoreEmptyState } from '../../components/EmptyState';
@@ -1080,7 +1079,7 @@ export const RowHeight: Story = {
         grow: 3,
         cell: {
           padded: 'none',
-          content: ({ title, description }: { title: string; description: string }) => (
+          content: ({ title, description }) => (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '8px 12px' }}>
               <span style={{ fontWeight: 500 }}>{title}</span>
               <span

@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { useState } from 'react';
 import { useMount } from 'react-use';

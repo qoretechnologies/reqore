@@ -1,8 +1,7 @@
-import { expect } from '@storybook/jest';
+import { expect } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
+import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreTabsProps } from '../../components/Tabs';
-import { sleep } from '../../helpers/utils';
 import { ReqoreH3, ReqoreTabs, ReqoreTabsContent } from '../../index';
 import { StoryMeta } from '../utils';
 import { IntentArg, SizeArg, argManager } from '../utils/args';
@@ -397,6 +396,14 @@ export const WithSlowTab: Story = {
   args: {
     loadingIconType: 5,
   },
+  // This story relies on React's startTransition to keep the old tab visible while a
+  // slow tab renders. Storybook's jsxDecorator generates the dynamic "Show code" source
+  // via its addon-hooks (useEffect), which is not concurrent-safe and throws
+  // "Rendered more hooks than during the previous render" during the interrupted
+  // transition render. Using static source skips that hook path.
+  parameters: {
+    docs: { source: { type: 'code' } },
+  },
   render: (args) => {
     return (
       <ReqoreTabs
@@ -417,13 +424,19 @@ export const WithSlowTab: Story = {
       </ReqoreTabs>
     );
   },
-  play: async () => {
-    // Change the tab
-    await _testsClickButton({ nth: 1, selector: '.reqore-button' });
+  play: async ({ canvasElement }) => {
+    // Click with the raw DOM API: the instrumented fireEvent/userEvent helpers
+    // flush the whole pending transition before resolving, which would make the
+    // intermediate "old tab still visible" state unobservable.
+    canvasElement.querySelectorAll<HTMLElement>('.reqore-button')[1].click();
 
-    await sleep(500);
+    // Capture the visible content synchronously — the tab switch happens inside
+    // startTransition, so tab 1 must still be mounted right after the click while
+    // the slow tab renders in the background.
+    const visibleContent = canvasElement.querySelector('.reqore-tabs-content')?.textContent;
+    await expect(visibleContent).toBe('I am Tab 1');
 
-    // The first tab text should be still visible
-    await _testsWaitForText('I am Tab 1');
+    // Once the slow tab finishes rendering, it replaces tab 1
+    await _testsWaitForText('SlowTab');
   },
 };

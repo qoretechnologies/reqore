@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { userEvent } from '@storybook/testing-library';
+import { userEvent } from 'storybook/test';
 import { useEffect, useState } from 'react';
 import ReqoreProgress, { IReqoreProgressProps } from '../../components/Progress';
 import { ReqoreControlGroup } from '../../index';

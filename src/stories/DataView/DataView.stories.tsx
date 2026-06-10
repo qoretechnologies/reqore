@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { fireEvent } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import {

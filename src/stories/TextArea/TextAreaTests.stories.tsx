@@ -1,6 +1,5 @@
-import { expect, jest } from '@storybook/jest';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { fireEvent, userEvent, waitFor, within } from '@storybook/testing-library';
 import { IReqoreTextareaProps } from '../../components/Textarea';
 import { sleep } from '../../helpers/utils';
 import { ReqoreButton, ReqoreControlGroup, ReqoreTextarea } from '../../index';
@@ -17,7 +16,7 @@ const meta = {
     scaleWithContent: true,
     fluid: undefined,
     placeholder: 'Placeholder',
-    onChange: jest.fn(),
+    onChange: fn(),
   },
   argTypes: {
     ...MinimalArg(),

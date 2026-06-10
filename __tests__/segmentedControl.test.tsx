@@ -63,7 +63,7 @@ test('All enabled items are focusable', () => {
 });
 
 test('Calls onChange when clicking an item', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({ onChange });
 
   const items = document.querySelectorAll('.reqore-segmented-control-item');
@@ -72,7 +72,7 @@ test('Calls onChange when clicking an item', () => {
 });
 
 test('Does not call onChange when disabled', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({ onChange, disabled: true });
 
   const items = document.querySelectorAll('.reqore-segmented-control-item');
@@ -81,7 +81,7 @@ test('Does not call onChange when disabled', () => {
 });
 
 test('Does not call onChange when readOnly', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({ onChange, readOnly: true });
 
   const items = document.querySelectorAll('.reqore-segmented-control-item');
@@ -90,7 +90,7 @@ test('Does not call onChange when readOnly', () => {
 });
 
 test('Skips disabled items in keyboard navigation', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({
     onChange,
     items: [
@@ -108,7 +108,7 @@ test('Skips disabled items in keyboard navigation', () => {
 });
 
 test('Keyboard ArrowRight wraps to first item', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({ onChange, value: 'year' });
 
   const container = document.querySelector('.reqore-segmented-control')!;
@@ -117,7 +117,7 @@ test('Keyboard ArrowRight wraps to first item', () => {
 });
 
 test('Keyboard ArrowLeft wraps to last item', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({ onChange, value: 'day' });
 
   const container = document.querySelector('.reqore-segmented-control')!;
@@ -126,7 +126,7 @@ test('Keyboard ArrowLeft wraps to last item', () => {
 });
 
 test('Keyboard Home selects first enabled item', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({ onChange, value: 'month' });
 
   const container = document.querySelector('.reqore-segmented-control')!;
@@ -135,7 +135,7 @@ test('Keyboard Home selects first enabled item', () => {
 });
 
 test('Keyboard End selects last enabled item', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({ onChange, value: 'day' });
 
   const container = document.querySelector('.reqore-segmented-control')!;
@@ -144,7 +144,7 @@ test('Keyboard End selects last enabled item', () => {
 });
 
 test('allowDeselect clears value when clicking active item', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({ onChange, value: 'day', allowDeselect: true });
 
   const items = document.querySelectorAll('.reqore-segmented-control-item');
@@ -168,7 +168,7 @@ test('Renders with pill shape', () => {
 });
 
 test('Per-item disabled prevents clicking that item', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   renderControl({
     onChange,
     items: [

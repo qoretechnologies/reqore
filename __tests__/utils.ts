@@ -1,5 +1,4 @@
-import { expect } from '@storybook/jest';
-import { fireEvent, screen, waitFor } from '@storybook/testing-library';
+import { expect, fireEvent, screen, waitFor } from 'storybook/test';
 
 export async function _testsClickButton({
   label,

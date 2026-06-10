@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from '@storybook/testing-library';
+import { fireEvent } from 'storybook/test';
 import { noop } from 'lodash';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';

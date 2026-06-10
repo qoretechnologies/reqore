@@ -29,16 +29,16 @@ const renderPicker = (ui: React.ReactNode) =>
 const openPicker = () => {
   fireEvent.click(document.querySelector('.reqore-icon-picker')!);
   act(() => {
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 };
 
 beforeEach(() => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 });
 
 afterEach(() => {
-  jest.useRealTimers();
+  vi.useRealTimers();
 });
 
 test('Renders <IconPicker /> trigger button', () => {
@@ -83,7 +83,7 @@ test('Filters the icon grid by query', () => {
     fireEvent.change(document.querySelector('.reqore-icon-picker-filter')!, {
       target: { value: 'sun' },
     });
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   // Only 'SunLine' contains 'sun'
@@ -100,7 +100,7 @@ test('Shows the no-results message when nothing matches', () => {
     fireEvent.change(document.querySelector('.reqore-icon-picker-filter')!, {
       target: { value: 'zzzzznomatch' },
     });
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(document.querySelectorAll('.reqore-icon-picker-grid').length).toBe(0);
@@ -108,14 +108,14 @@ test('Shows the no-results message when nothing matches', () => {
 });
 
 test('Calls onPick with the chosen icon name', () => {
-  const handlePick = jest.fn();
+  const handlePick = vi.fn();
 
   renderPicker(<ReqoreIconPicker icons={WEATHER_ICONS} onPick={handlePick} />);
   openPicker();
 
   act(() => {
     fireEvent.click(document.querySelectorAll('.reqore-icon-picker-item')[0]);
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(handlePick).toHaveBeenCalledTimes(1);
@@ -123,14 +123,14 @@ test('Calls onPick with the chosen icon name', () => {
 });
 
 test('Closes the popover after an icon is picked', () => {
-  renderPicker(<ReqoreIconPicker icons={WEATHER_ICONS} onPick={jest.fn()} />);
+  renderPicker(<ReqoreIconPicker icons={WEATHER_ICONS} onPick={vi.fn()} />);
   openPicker();
 
   expect(document.querySelectorAll('.reqore-icon-picker-grid').length).toBe(1);
 
   act(() => {
     fireEvent.click(document.querySelectorAll('.reqore-icon-picker-item')[0]);
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(document.querySelectorAll('.reqore-icon-picker-grid').length).toBe(0);
@@ -166,7 +166,7 @@ test('Scrolling the virtualized grid reveals later icons (no paging dead-end)', 
 
   act(() => {
     fireEvent.scroll(grid);
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   // The first icon is now scrolled out of the mounted window, and the grid
@@ -241,20 +241,20 @@ test('Filters the grid in inline mode', () => {
     fireEvent.change(document.querySelector('.reqore-icon-picker-filter')!, {
       target: { value: 'moon' },
     });
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(document.querySelectorAll('.reqore-icon-picker-item').length).toBe(1);
 });
 
 test('Calls onPick in inline mode', () => {
-  const handlePick = jest.fn();
+  const handlePick = vi.fn();
 
   renderPicker(<ReqoreIconPicker inline icons={WEATHER_ICONS} onPick={handlePick} />);
 
   act(() => {
     fireEvent.click(document.querySelectorAll('.reqore-icon-picker-item')[0]);
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(handlePick).toHaveBeenCalledTimes(1);

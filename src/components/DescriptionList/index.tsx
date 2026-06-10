@@ -180,7 +180,7 @@ const StyledContent = styled.div`
  * Because the component wraps `ReqorePanel`, every panel knob is
  * available via the spread props — `label`, `icon`, `badge`,
  * `flat`, `raised`, `minimal`, `rounded`, `transparent`, `size`,
- * `customTheme`, `effect`, `contentEffect`, `intent`, etc. Pass
+ * `customTheme`, `contentEffect`, `intent`, etc. Pass
  * `transparent flat` (or `minimal flat`) when nesting inside an
  * already-padded surface so the panel chrome drops out and the
  * list rows align with the surrounding content.

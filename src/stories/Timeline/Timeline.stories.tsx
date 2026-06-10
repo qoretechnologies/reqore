@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, within } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { within } from '@storybook/testing-library';
 import { useCallback, useEffect, useState } from 'react';
 import { _testsClickButton } from '../../../__tests__/utils';
 import ReqoreTimeline, { IReqoreTimelineProps } from '../../components/Timeline';

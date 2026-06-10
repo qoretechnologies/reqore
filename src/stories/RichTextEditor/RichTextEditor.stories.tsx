@@ -1,6 +1,5 @@
-import { expect, jest } from '@storybook/jest';
+import { expect, fn, userEvent } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { userEvent } from '@storybook/testing-library';
 import { useCallback, useState } from 'react';
 import { NodeEntry, Range, Text } from 'slate';
 import { RenderLeafProps } from 'slate-react/dist/components/editable';
@@ -332,7 +331,7 @@ export const UpdatesFromInside: Story = {
         children: [{ text: 'This is the default text' }],
       },
     ],
-    onChange: jest.fn(),
+    onChange: fn(),
   },
   play: async ({ args }) => {
     await userEvent.click(document.querySelector('div[contenteditable]'));

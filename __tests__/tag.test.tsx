@@ -105,8 +105,8 @@ test('Renders <Tag /> without remove button if disabled', () => {
 });
 
 test('Fires onClick and onRemoveClick <Tag /> events', () => {
-  const clickFn = jest.fn();
-  const removeClickFn = jest.fn();
+  const clickFn = vi.fn();
+  const removeClickFn = vi.fn();
 
   render(
     <ReqoreUIProvider>

@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { useRef, useState } from 'react';
 import { _testsWaitForText } from '../../../__tests__/utils';
@@ -68,7 +67,7 @@ export const ListIsClosedWhenItemIsClicked: Story = {
       },
     ],
   },
-  play: async ({ canvasElement, ...rest }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await sleep(200);
@@ -107,7 +106,7 @@ export const ListIsClosedWhenItemActionIsClicked: Story = {
       },
     ],
   },
-  play: async ({ canvasElement, ...rest }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await sleep(200);
@@ -201,7 +200,7 @@ export const ItemIsAutomaticallySelected: Story = {
       },
     ],
   },
-  play: async ({ canvasElement, ...rest }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await sleep(200);
@@ -262,7 +261,7 @@ export const ItemIsNotAutomaticallySelectedWhenDisabled: Story = {
       },
     ],
   },
-  play: async ({ canvasElement, ...rest }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await sleep(200);
@@ -295,7 +294,7 @@ export const ItemIsNotAutomaticallySelectedWhenSubItemsAreEmpty: Story = {
       },
     ],
   },
-  play: async ({ canvasElement, ...rest }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await sleep(200);
@@ -324,7 +323,6 @@ export const BackButtonsWork: Story = {
 export const EmptySearch: Story = {
   ...BackButtonsWork,
   play: async ({ canvasElement, ...rest }) => {
-    const canvas = within(canvasElement);
 
     await BackButtonsWork.play({ canvasElement, ...rest });
 

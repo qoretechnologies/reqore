@@ -1,8 +1,7 @@
-import { expect, jest } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent, userEvent, within } from '@storybook/testing-library';
 import { useState } from 'react';
 import { useMount } from 'react-use';
+import { expect, fireEvent, fn, userEvent, within } from 'storybook/test';
 import { IReqorePopoverProps } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
 import {
@@ -498,7 +497,7 @@ export const ChangingElement: Story = {
 
 export const TooltipIsUpdatedWhenContentChanges: Story = {
   args: {
-    onUpdate: jest.fn(),
+    onUpdate: fn(),
   },
   render: (args) => {
     const [tooltip, setTooltip] = useState<IReqoreTooltip>({
@@ -543,7 +542,7 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
 
 export const TooltipIsRemovedWhenContentIsEmpty: Story = {
   args: {
-    onToggleChange: jest.fn(),
+    onToggleChange: fn(),
   },
   render: (args) => {
     const [tooltip, setTooltip] = useState<IReqoreTooltip>({
@@ -603,7 +602,7 @@ export const TooltipOffsetIsApplied: Story = {
           content: 'Offset tooltip 2',
           handler: 'hover',
           placement: 'bottom-start',
-          offsetX: -25,
+          offsetX: -95,
           offsetY: 25,
           openOnMount: true,
         }}
@@ -633,8 +632,8 @@ export const TooltipOffsetIsApplied: Story = {
     const popoverRect = popover.getBoundingClientRect();
     const xOffset = Math.round(popoverRect.left - buttonRect.left);
     const yOffset = Math.round(popoverRect.top - buttonRect.bottom);
-    await expect(Math.abs(xOffset - 20)).toBeLessThanOrEqual(2);
-    await expect(Math.abs(yOffset - 85)).toBeLessThanOrEqual(2);
+    await expect(Math.abs(xOffset - 45)).toBeLessThanOrEqual(2);
+    await expect(Math.abs(yOffset - 35)).toBeLessThanOrEqual(2);
   },
 };
 

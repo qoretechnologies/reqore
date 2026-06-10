@@ -148,7 +148,7 @@ test('Does not render actions when not provided', () => {
 });
 
 test('Calls onClick when card is clicked', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
   renderTestimonial(<ReqoreTestimonial quote='Quote' onClick={handleClick} />);
 
   fireEvent.click(document.querySelector('.reqore-testimonial')!);
@@ -222,7 +222,7 @@ test('Renders <Testimonial /> with effect / quoteEffect / authorEffect / roleEff
 });
 
 test('Renders <Testimonial /> disabled', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
   renderTestimonial(
     <ReqoreTestimonial quote='Disabled' disabled onClick={handleClick} />
   );

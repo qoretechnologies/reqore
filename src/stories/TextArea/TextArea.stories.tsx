@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from '@storybook/testing-library';
 import { useState } from 'react';
 import { IReqoreTextareaProps } from '../../components/Textarea';
 import { sleep } from '../../helpers/utils';

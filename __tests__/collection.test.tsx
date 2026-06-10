@@ -1,4 +1,3 @@
-import '@testing-library/jest-dom/extend-expect';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
 import { ReqoreCollection, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
@@ -19,8 +18,8 @@ test('Renders basic <Collection /> properly', () => {
 });
 
 test('<Collection /> items can be filtered', () => {
-  const fn = jest.fn();
-  jest.useFakeTimers();
+  const fn = vi.fn();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -37,7 +36,7 @@ test('<Collection /> items can be filtered', () => {
   expect(fn).not.toHaveBeenCalled();
 
   act(() => {
-    jest.advanceTimersByTime(500);
+    vi.advanceTimersByTime(500);
   });
 
   expect(fn).toHaveBeenCalledWith('I have');
@@ -49,7 +48,7 @@ test('<Collection /> items can be filtered', () => {
   });
 
   act(() => {
-    jest.runAllTimers();
+    vi.runAllTimers();
   });
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(0);
@@ -60,7 +59,7 @@ test('<Collection /> items can be filtered', () => {
   });
 
   act(() => {
-    jest.runAllTimers();
+    vi.runAllTimers();
   });
 
   expect(document.querySelectorAll('.reqore-collection-item').length).toBe(1);
@@ -68,8 +67,8 @@ test('<Collection /> items can be filtered', () => {
 });
 
 test('<Collection /> filter is properly removed by the clear button', () => {
-  const fn = jest.fn();
-  jest.useFakeTimers();
+  const fn = vi.fn();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -88,7 +87,7 @@ test('<Collection /> filter is properly removed by the clear button', () => {
   expect(fn).not.toHaveBeenCalled();
 
   act(() => {
-    jest.advanceTimersByTime(500);
+    vi.advanceTimersByTime(500);
   });
 
   expect(fn).toHaveBeenCalledWith('I have');
@@ -103,7 +102,7 @@ test('<Collection /> filter is properly removed by the clear button', () => {
 });
 
 test('<Collection /> filter is focused when a shortcut is pressed', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -191,7 +190,7 @@ test('<Collection /> has infinite paging', () => {
 });
 
 test('<Collection /> has custom paging', () => {
-  const onPageChange = jest.fn();
+  const onPageChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>

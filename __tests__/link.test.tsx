@@ -11,7 +11,7 @@ const renderLink = (ui: React.ReactNode) =>
   );
 
 test('Renders <Link /> as a button by default and fires onClick', () => {
-  const onClick = jest.fn();
+  const onClick = vi.fn();
   renderLink(<ReqoreLink onClick={onClick}>Open issue list</ReqoreLink>);
 
   const link = document.querySelector('button.reqore-link');
@@ -36,7 +36,7 @@ test('Renders <Link href> as an anchor with the URL + new-tab rel', () => {
 });
 
 test('Disabled <Link> renders a disabled button that does not fire onClick', () => {
-  const onClick = jest.fn();
+  const onClick = vi.fn();
   renderLink(
     <ReqoreLink onClick={onClick} disabled>
       Disabled

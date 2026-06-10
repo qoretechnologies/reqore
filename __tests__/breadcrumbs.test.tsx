@@ -49,7 +49,7 @@ test('Renders shortened <Breadcrumbs /> properly', () => {
 });
 
 test('Tooltip on <Breadcrumbs /> works', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -69,7 +69,7 @@ test('Tooltip on <Breadcrumbs /> works', () => {
 
   fireEvent.mouseEnter(document.querySelectorAll('.reqore-breadcrumbs-item')[1]);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

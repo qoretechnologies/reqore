@@ -1,4 +1,4 @@
-import { expect, jest } from '@storybook/jest';
+import { expect, fn } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
@@ -22,7 +22,7 @@ const meta = {
   title: 'Utilities/Error Boundary',
   component: ReqoreErrorBoundary,
   args: {
-    onError: jest.fn(),
+    onError: fn(),
   },
 } as StoryMeta<typeof ReqoreErrorBoundary>;
 

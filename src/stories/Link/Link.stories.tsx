@@ -1,6 +1,5 @@
-import { expect, jest } from '@storybook/jest';
+import { expect, fireEvent, fn, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { fireEvent, within } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import ReqoreLink from '../../components/Link';
 import { ReqoreControlGroup, ReqoreP } from '../../index';
@@ -14,7 +13,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const onClick = jest.fn();
+const onClick = fn();
 
 /** Default — given `href`, a real `<a>` is rendered (so middle-click /
  *  open-in-new-tab work). */

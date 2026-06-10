@@ -19,7 +19,7 @@ test('ReqoreErrorBoundary logs the caught error to the console', () => {
   // React also logs caught errors in jsdom/dev; mute the noise but capture calls
   // so we can assert our own log fired (in a production build React stays quiet,
   // which is exactly why the boundary must log itself).
-  const spy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   try {
     renderBoundary();
 
@@ -36,7 +36,7 @@ test('ReqoreErrorBoundary logs the caught error to the console', () => {
 });
 
 test('ReqoreErrorBoundary still renders a visible fallback when a child throws', () => {
-  const spy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   try {
     const { getByText } = renderBoundary();
     expect(getByText('Something went wrong')).toBeTruthy();

@@ -135,8 +135,8 @@ const ConfirmButtonFromModal = ({ confirmFn, cancelFn }) => {
 };
 
 test('Renders confirmation <Modal /> ', () => {
-  const confirmFn = jest.fn();
-  const cancelFn = jest.fn();
+  const confirmFn = vi.fn();
+  const cancelFn = vi.fn();
 
   act(() => {
     render(
@@ -172,8 +172,8 @@ test('Renders confirmation <Modal /> ', () => {
 });
 
 test('Always renders confirmation <Modal /> properly above a normal modal', () => {
-  const confirmFn = jest.fn();
-  const cancelFn = jest.fn();
+  const confirmFn = vi.fn();
+  const cancelFn = vi.fn();
 
   act(() => {
     render(

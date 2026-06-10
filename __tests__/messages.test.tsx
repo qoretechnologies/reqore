@@ -1,9 +1,8 @@
 import { act, fireEvent, render } from '@testing-library/react';
-import React from 'react';
 import { ReqoreMessage, ReqoreUIProvider } from '../src/index';
 
 beforeAll(() => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 });
 
 test('Renders <Message /> properly', async () => {
@@ -23,7 +22,7 @@ test('Renders <Message /> properly', async () => {
 });
 
 test('Runs onFinish on message after duration', async () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   act(() => {
     render(
@@ -36,13 +35,13 @@ test('Runs onFinish on message after duration', async () => {
     );
   });
 
-  act(() => jest.runAllTimers());
+  act(() => vi.runAllTimers());
 
   expect(fn).toHaveBeenCalled();
 });
 
 test('Runs onClose when closed', async () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   act(() => {
     render(
@@ -55,7 +54,7 @@ test('Runs onClose when closed', async () => {
     );
   });
 
-  act(() => jest.advanceTimersByTime(1000));
+  act(() => vi.advanceTimersByTime(1000));
 
   fireEvent.click(document.querySelector('.reqore-message-close'));
 
@@ -73,7 +72,7 @@ test('Tooltip on <Message /> works', async () => {
 
   fireEvent.mouseEnter(document.querySelectorAll('.reqore-message')[0]);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

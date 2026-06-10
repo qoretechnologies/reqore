@@ -50,6 +50,9 @@ export interface IReqoreLinkProps
   as?: string | React.ElementType;
   size?: TSizes | string;
   onClick?: (event: MouseEvent<HTMLElement>) => void;
+  /** Element-specific props for a custom `as` element (`to` for react-router,
+   *  etc.) are accepted and passed straight through to it. */
+  [elementProp: string]: any;
 }
 
 interface IReqoreLinkStyle {

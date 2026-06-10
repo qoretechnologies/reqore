@@ -1,4 +1,3 @@
-import '@testing-library/jest-dom/extend-expect';
 import { fireEvent, render } from '@testing-library/react';
 import { noop } from 'lodash';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
@@ -21,7 +20,7 @@ test('Renders <TextArea /> properly', () => {
 });
 
 test('Renders <TextArea /> with clear button properly', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -41,7 +40,7 @@ test('Renders <TextArea /> with clear button properly', () => {
 });
 
 test('Disabled <TextArea /> cannot be cleared', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -58,7 +57,7 @@ test('Disabled <TextArea /> cannot be cleared', () => {
 });
 
 test('Readonly <Textarea /> cannot be cleared', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -422,7 +421,7 @@ test('Disabled <Textarea /> does not get focused when shortcut is pressed', () =
 });
 
 test('<Textarea /> is cleared when focused', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>

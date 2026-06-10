@@ -166,9 +166,8 @@ test('honours customTheme on the wrapping panel', () => {
   ).toBeGreaterThanOrEqual(1);
 });
 
-test('renders combined panel and content effects', () => {
+test('renders content effects', () => {
   renderList({
-    effect: { gradient: { colors: { 0: 'main:lighten:5', 100: 'main' } } },
     contentEffect: {
       gradient: {
         colors: { 0: '#222', 100: '#0d0d0d' },

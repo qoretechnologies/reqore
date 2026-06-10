@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent, within } from '@storybook/testing-library';
+import { fireEvent, within } from 'storybook/test';
 import { IReqoreMenuProps } from '../../components/Menu';
 import { IReqoreMenuItemProps } from '../../components/Menu/item';
 import { ReqoreMenuSection } from '../../components/Menu/section';
@@ -350,7 +350,7 @@ export const Skeleton: Story = {
 
 export const SubmenuCanBeToggled: Story = {
   render: (args) => <MenuWithSubmenus {...args} />,
-  play: async ({ canvasElement, ...rest }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await fireEvent.click(canvas.queryAllByText('Submenu 2 active')[0]);

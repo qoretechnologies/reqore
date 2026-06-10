@@ -170,7 +170,7 @@ test('Renders <Timeline /> with item-level intents', () => {
 });
 
 test('Handles onClick on timeline items', () => {
-  const onClick = jest.fn();
+  const onClick = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -188,7 +188,7 @@ test('Handles onClick on timeline items', () => {
 });
 
 test('Does not call onClick when item is disabled', () => {
-  const onClick = jest.fn();
+  const onClick = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -206,7 +206,7 @@ test('Does not call onClick when item is disabled', () => {
 });
 
 test('Handles keyboard interaction on clickable items', () => {
-  const onClick = jest.fn();
+  const onClick = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -388,7 +388,7 @@ test('Controlled collapse: reads collapsed state from collapsedState prop', () =
 });
 
 test('Controlled collapse: onCollapseChange fires with correct args when toggled', () => {
-  const onCollapseChange = jest.fn();
+  const onCollapseChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -410,7 +410,7 @@ test('Controlled collapse: onCollapseChange fires with correct args when toggled
 });
 
 test('Controlled collapse: onCollapseChange fires with false when already collapsed', () => {
-  const onCollapseChange = jest.fn();
+  const onCollapseChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -432,7 +432,7 @@ test('Controlled collapse: onCollapseChange fires with false when already collap
 });
 
 test('Controlled collapse: items not in collapsedState map fall back to isCollapsed prop', () => {
-  const onCollapseChange = jest.fn();
+  const onCollapseChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -455,7 +455,7 @@ test('Controlled collapse: items not in collapsedState map fall back to isCollap
 });
 
 test('Uncontrolled collapse: onCollapseChange fires when internal state changes', () => {
-  const onCollapseChange = jest.fn();
+  const onCollapseChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>

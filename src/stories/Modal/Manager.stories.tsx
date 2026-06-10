@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { useEffect, useState } from 'react';
 import { ReqoreBackdrop } from '../../components/Drawer/backdrop';

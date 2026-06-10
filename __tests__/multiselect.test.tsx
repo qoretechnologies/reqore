@@ -5,8 +5,8 @@ import { IReqoreMultiSelectProps } from '../src/components/MultiSelect';
 import { MultiSelectItems } from '../src/mock/multiSelect';
 
 beforeAll(() => {
-  jest.setTimeout(30000);
-  jest.useFakeTimers();
+  vi.setConfig({ testTimeout: 30000 });
+  vi.useFakeTimers();
 });
 
 const MultiSelectItemsTestComponent = ({
@@ -35,7 +35,7 @@ test('Renders empty <ReqoreMultiSelect />', () => {
     render(<MultiSelectItemsTestComponent items={MultiSelectItems} />);
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(screen.getByText('No items selected')).toBeTruthy();
   expect(document.querySelectorAll('.reqore-input')?.length).toBe(1);
@@ -55,7 +55,7 @@ test('Renders <ReqoreMultiSelect /> with default value', () => {
     );
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-tag').length).toBe(2);
   expect(screen.getByText('Existing item 1')).toBeTruthy();
@@ -73,7 +73,7 @@ test('Renders <ReqoreMultiSelect /> with default value, items can be removed', (
     );
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   fireEvent.click(document.querySelectorAll('.reqore-tag-remove')[0]!);
 
@@ -99,7 +99,7 @@ test('Renders empty <ReqoreMultiSelect /> when items are empty and items CAN be 
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelector('.reqore-input')?.getAttribute('disabled')).toBe(null);
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -113,7 +113,7 @@ test('Renders <ReqoreMultiSelect /> and selects / deselects items from the list'
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   fireEvent.click(screen.getAllByText('Existing item 3')[1]);
 
@@ -143,7 +143,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched, opens up the list
     target: { value: 'Existing item' },
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   // 4 items + 1 button for clearable input
@@ -168,7 +168,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created, opens
     target: { value: 'Existing item 1' },
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   // 4 items + 1 button for clearable input
@@ -215,7 +215,7 @@ test('Renders <ReqoreMultiSelect /> and items can be searched and created using 
     target: { value: 'Existing item 1' },
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   // 4 items + 1 button for clearable input
@@ -276,7 +276,7 @@ test('Renders <ReqoreMultiSelect /> and does not create new item on ENTER when n
   // Blur the input
   fireEvent.blur(document.querySelector('.reqore-input')!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Try and create the item by pressing ENTER key
   fireEvent.keyDown(document.querySelector('.reqore-input')!, {
@@ -307,7 +307,7 @@ test('Renders <ReqoreMultiSelect /> and deselects an item using the ENTER key', 
     target: { value: 'Existing item 3' },
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Deselect the item by pressing ENTER key
   fireEvent.keyDown(document.querySelector('.reqore-input')!, {
@@ -319,7 +319,7 @@ test('Renders <ReqoreMultiSelect /> and deselects an item using the ENTER key', 
 });
 
 test('Renders <ReqoreMultiSelect /> and calls onValueChange when value changes', () => {
-  const onValueChange = jest.fn();
+  const onValueChange = vi.fn();
 
   act(() => {
     render(
@@ -342,7 +342,7 @@ test('Renders <ReqoreMultiSelect /> and calls onValueChange when value changes',
     target: { value: 'Existing item 3' },
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Deselect the item by pressing ENTER key
   fireEvent.keyDown(document.querySelector('.reqore-input')!, {
@@ -361,7 +361,7 @@ test('Renders <ReqoreMultiSelect /> and calls onValueChange when value changes',
 });
 
 test('Renders <ReqoreMultiSelect /> and calls onItemClick when an item is clicked', () => {
-  const onItemClick = jest.fn();
+  const onItemClick = vi.fn();
 
   act(() => {
     render(
@@ -389,7 +389,7 @@ test('Renders <ReqoreMultiSelect /> and calls onItemClick when an item is clicke
 });
 
 test('Renders <ReqoreMultiSelect /> and calls onItemAdded when an item is added', () => {
-  const onItemAdd = jest.fn();
+  const onItemAdd = vi.fn();
 
   act(() => {
     render(
@@ -409,7 +409,7 @@ test('Renders <ReqoreMultiSelect /> and calls onItemAdded when an item is added'
     target: { value: 'Existing item 3' },
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Select the item by pressing ENTER key
   fireEvent.keyDown(document.querySelector('.reqore-input')!, {
@@ -425,7 +425,7 @@ test('Renders <ReqoreMultiSelect /> and calls onItemAdded when an item is added'
     target: { value: 'Some new item' },
   });
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Create the item by clicking
   fireEvent.click(screen.getAllByText('Create new "Some new item"')[1]);
@@ -435,7 +435,7 @@ test('Renders <ReqoreMultiSelect /> and calls onItemAdded when an item is added'
 });
 
 test('Renders <ReqoreMultiSelect /> and calls onItemRemoved when an item is removed', () => {
-  const onItemRemove = jest.fn();
+  const onItemRemove = vi.fn();
 
   act(() => {
     render(

@@ -54,7 +54,7 @@ test('Renders the empty state when data is null / empty', () => {
 });
 
 test('Calls onItemClick when a leaf value is clicked', () => {
-  const handler = jest.fn();
+  const handler = vi.fn();
   render(
     wrap(
       <ReqoreDataView
@@ -296,7 +296,7 @@ test('Inlines scalar arrays as a chip row instead of an expanded list', () => {
 });
 
 test('Calls parseEmbedded for strings and renders the parsed shape', () => {
-  const parseEmbedded = jest.fn((value: string) => {
+  const parseEmbedded = vi.fn((value: string) => {
     if (value.startsWith('JSON:')) {
       return { data: JSON.parse(value.slice(5)) };
     }

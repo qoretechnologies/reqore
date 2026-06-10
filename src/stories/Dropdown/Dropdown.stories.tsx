@@ -1,9 +1,10 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent, within } from '@storybook/testing-library';
+import { fireEvent, within } from 'storybook/test';
 import { useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../../components/Button';
 import { IReqoreDropdownProps } from '../../components/Dropdown';
+import { IReqoreInputProps } from '../../components/Input';
 import { sleep } from '../../helpers/utils';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreInput } from '../../index';
 import { StoryMeta } from '../utils';
@@ -244,7 +245,9 @@ export const CustomComponent: Story = {
 
   args: {
     component: ReqoreInput,
-    placeholder: 'Custom component',
+    // `placeholder` belongs to the custom ReqoreInput and is passed through to
+    // it; the shared Story typing only knows the default button props.
+    ...({ placeholder: 'Custom component' } satisfies Partial<IReqoreInputProps> as object),
     label: undefined,
   },
 };

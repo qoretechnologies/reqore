@@ -36,7 +36,7 @@ test('Renders <Rating /> with custom max', () => {
 });
 
 test('Calls onChange when clicking a star', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -53,7 +53,7 @@ test('Calls onChange when clicking a star', () => {
 });
 
 test('Does not call onChange when disabled', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -70,7 +70,7 @@ test('Does not call onChange when disabled', () => {
 });
 
 test('Does not call onChange when readOnly', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -87,7 +87,7 @@ test('Does not call onChange when readOnly', () => {
 });
 
 test('Keyboard ArrowRight increments value', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -103,7 +103,7 @@ test('Keyboard ArrowRight increments value', () => {
 });
 
 test('Keyboard ArrowLeft decrements value', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -119,7 +119,7 @@ test('Keyboard ArrowLeft decrements value', () => {
 });
 
 test('Keyboard does not go below 0', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -135,7 +135,7 @@ test('Keyboard does not go below 0', () => {
 });
 
 test('Keyboard does not go above max', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -151,7 +151,7 @@ test('Keyboard does not go above max', () => {
 });
 
 test('allowClear resets value to 0 when clicking current value', () => {
-  const onChange = jest.fn();
+  const onChange = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -201,7 +201,7 @@ test('Has correct ARIA attributes', () => {
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreRating value={3} max={5} onChange={jest.fn()} />
+          <ReqoreRating value={3} max={5} onChange={vi.fn()} />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>

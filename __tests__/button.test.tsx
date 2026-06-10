@@ -137,7 +137,7 @@ test('Renders <Button /> with icon and right icon properly', () => {
 
 // A test that tests the onClick function of the button using fireEvent
 test('Renders <Button /> with onClick function', () => {
-  const onClick = jest.fn();
+  const onClick = vi.fn();
   const { getAllByText } = render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -154,8 +154,7 @@ test('Renders <Button /> with onClick function', () => {
 
 // A test that tests the onClick function of the button using fireEvent
 test('Renders <Button /> with a 0 badge', () => {
-  const onClick = jest.fn();
-  const { getAllByText } = render(
+  render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
@@ -183,7 +182,6 @@ test('Renders <Button /> with a string badge', () => {
 });
 
 test('Renders <Button /> with a Tag props badge', () => {
-  const onClick = jest.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -198,7 +196,6 @@ test('Renders <Button /> with a Tag props badge', () => {
 });
 
 test('Renders <Button /> with multiple badges', () => {
-  const onClick = jest.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -213,7 +210,7 @@ test('Renders <Button /> with multiple badges', () => {
 });
 
 test('Tooltip on <Button /> works', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -225,7 +222,7 @@ test('Tooltip on <Button /> works', () => {
 
   fireEvent.mouseEnter(document.querySelectorAll('.reqore-button')[0]);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

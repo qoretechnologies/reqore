@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, userEvent, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { userEvent, within } from '@storybook/testing-library';
 import { useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreControlGroup from '../../components/ControlGroup';
@@ -176,7 +175,7 @@ export const WithIntent: Story = {
         {Object.keys(DEFAULT_INTENTS)
           .filter((key) => !key.includes('custom'))
           .reverse()
-          .map((intent, index) =>
+          .map((intent) =>
             meta.render(
               {
                 ...args,

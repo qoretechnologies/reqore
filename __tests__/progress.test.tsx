@@ -223,7 +223,7 @@ test('Renders <Progress /> animated with stripes', () => {
 });
 
 test('Tooltip on <Progress /> works', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -235,7 +235,7 @@ test('Tooltip on <Progress /> works', () => {
 
   fireEvent.mouseEnter(document.querySelectorAll('.reqore-progress')[0]);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
