@@ -27,6 +27,13 @@ export class ErrorBoundary extends Component<IReqoreErrorBoundaryProps, IReqoreE
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    // React only auto-logs caught errors in development builds; in a
+    // production build a caught error otherwise produces no console output at
+    // all (only the visual fallback renders), which makes swallowed
+    // exceptions impossible to debug. Always log so the error stays visible.
+    // eslint-disable-next-line no-console
+    console.error('ReqoreErrorBoundary caught an error:', error, info?.componentStack);
+
     this.props.onError?.(error, info);
   }
 
