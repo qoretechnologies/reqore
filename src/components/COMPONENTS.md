@@ -33,6 +33,7 @@
 | **ReqoreKeyValueTable** | Table displaying key-value pairs with optional sorting, filtering, and custom renderers. |
 | **ReqoreLabel** | Label element wrapper that extends ReqoreTag for form field labels. |
 | **ReqoreLayoutWrapper** | Root layout container providing flex layout structure and theme context for the entire application. |
+| **ReqoreLink** | Inline, themeable, keyboard-accessible text link. Renders a real `<a href>` when given `href` (so middle-click / open-in-new-tab work; `external` adds `target="_blank"` + a safe `rel`) or a `<button type="button">` when given `onClick` — the same affordance whether the link navigates or triggers an in-app action. Flows `inline` by default (`inline={false}` for an `inline-flex` row with an icon child), `underline` toggles the underline, and it supports the standard prop set: `intent` (colours the text), `size`, `customTheme`, `effect`, `tooltip`, and `disabled` (dimmed + non-interactive; drops the `href`). Use it for clickable text inside a sentence or list where `ReqoreButton` (a block control) would break the line. |
 | **ReqoreMenu** | Vertical menu container with support for resizing, customizable item gaps, and menu styling. |
 | **ReqoreMessage** | Notification/alert message component with optional icon, title, auto-dismiss, and click handlers. Optional `raised` adds a subtle 3D inset highlight when paired with `flat` (suppressed for `minimal` messages). |
 | **ReqoreModal** | Modal dialog that extends Drawer with centered positioning and ESC key handling. |
