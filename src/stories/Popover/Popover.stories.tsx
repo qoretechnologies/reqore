@@ -1,7 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { useMount } from 'react-use';
-import { expect, fireEvent, fn, userEvent, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { IReqorePopoverProps } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
 import {
@@ -611,15 +611,28 @@ export const TooltipOffsetIsApplied: Story = {
   ),
   play: async ({ canvasElement }) => {
     const button = canvasElement.querySelector('button');
+    // The openOnMount popover mounts asynchronously (portal + popper
+    // positioning), so poll for it instead of querying right away — on slower
+    // environments (Chromatic's cloud browsers) play() can start before the
+    // portal exists.
+    await waitFor(
+      () => expect(document.querySelector('.reqore-popover-content')).toBeInTheDocument(),
+      { timeout: 10000 }
+    );
     const popover = document.querySelector('.reqore-popover-content') as HTMLElement;
-    await expect(popover).toBeInTheDocument();
-    const buttonRect = button.getBoundingClientRect();
-    const popoverRect = popover.getBoundingClientRect();
-    const xOffset = Math.round(popoverRect.left - buttonRect.left);
-    const yOffset = Math.round(popoverRect.top - buttonRect.bottom);
-    console.log('Calculated offsets:', { xOffset, yOffset });
-    await expect(Math.abs(xOffset + 12)).toBeLessThanOrEqual(2);
-    await expect(Math.abs(yOffset - 35)).toBeLessThanOrEqual(2);
+    // Poll the offsets too: the popover can be in the DOM a frame before
+    // popper has moved it into its final position.
+    await waitFor(
+      () => {
+        const buttonRect = button.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
+        const xOffset = Math.round(popoverRect.left - buttonRect.left);
+        const yOffset = Math.round(popoverRect.top - buttonRect.bottom);
+        expect(Math.abs(xOffset + 12)).toBeLessThanOrEqual(2);
+        expect(Math.abs(yOffset - 35)).toBeLessThanOrEqual(2);
+      },
+      { timeout: 10000 }
+    );
   },
 };
 
