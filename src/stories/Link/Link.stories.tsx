@@ -16,20 +16,35 @@ type Story = StoryObj<typeof meta>;
 
 const onClick = jest.fn();
 
-/** Button mode — no `href`, so an `onClick`-driven `<button>` is rendered. */
+/** Default — given `href`, a real `<a>` is rendered (so middle-click /
+ *  open-in-new-tab work). */
 export const Default: Story = {
+  render: () => (
+    <ReqoreLink href='https://reqore.qoretechnologies.com'>reqore docs</ReqoreLink>
+  ),
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByText('reqore docs') as HTMLAnchorElement;
+    await expect(link.tagName).toBe('A');
+    await expect(link.getAttribute('href')).toBe('https://reqore.qoretechnologies.com');
+  },
+};
+
+/** Button mode — with no `href` (and no custom `as`), an `onClick`-driven
+ *  `<button type="button">` is rendered, so the link triggers an in-app action
+ *  while still flowing as inline text. */
+export const LinkAsButton: Story = {
   render: () => <ReqoreLink onClick={onClick}>Open issue list →</ReqoreLink>,
   play: async ({ canvasElement }) => {
     onClick.mockClear();
-    const link = within(canvasElement).getByText('Open issue list →');
+    const link = within(canvasElement).getByText('Open issue list →') as HTMLButtonElement;
+    await expect(link.tagName).toBe('BUTTON');
     await fireEvent.click(link);
     await expect(onClick).toHaveBeenCalledTimes(1);
   },
 };
 
-/** Anchor mode — given `href`, a real `<a>` is rendered (`external` opens a
- *  new tab with a safe `rel`). */
-export const Anchor: Story = {
+/** External `href` opens a new tab with a safe `rel`. */
+export const External: Story = {
   render: () => (
     <ReqoreLink href='https://reqore.qoretechnologies.com' external>
       reqore docs
@@ -37,10 +52,26 @@ export const Anchor: Story = {
   ),
   play: async ({ canvasElement }) => {
     const link = within(canvasElement).getByText('reqore docs') as HTMLAnchorElement;
-    await expect(link.getAttribute('href')).toBe('https://reqore.qoretechnologies.com');
     await expect(link.getAttribute('target')).toBe('_blank');
     await expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   },
+};
+
+/** A leading `icon` renders before the text and centers with it. */
+export const WithIcon: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <ReqoreLink href='https://reqore.qoretechnologies.com' external icon='ExternalLinkLine'>
+        reqore docs
+      </ReqoreLink>
+      <ReqoreLink onClick={noop} icon='ArrowRightLine' intent='info'>
+        Open issue list
+      </ReqoreLink>
+      <ReqoreLink onClick={noop} icon='ArrowRightLine' intent='info' size='huge'>
+        Larger link — icon, text and gap all scale with size
+      </ReqoreLink>
+    </ReqoreControlGroup>
+  ),
 };
 
 /** Intents colour the link via the standard theme intents. */
@@ -84,4 +115,26 @@ export const Disabled: Story = {
       Disabled link
     </ReqoreLink>
   ),
+};
+
+/** Custom element via `as` — e.g. a router link. Here a stand-in component
+ *  receives a `to` prop, the same way `react-router`'s `<Link>` would. */
+const RouterLinkStub = ({ to, children, ...rest }: any) => (
+  <a href={to} data-router-link {...rest}>
+    {children}
+  </a>
+);
+
+export const AsRouterLink: Story = {
+  render: () => (
+    <ReqoreLink as={RouterLinkStub} to='/issues'>
+      Go to issues
+    </ReqoreLink>
+  ),
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByText('Go to issues') as HTMLAnchorElement;
+    await expect(link.tagName).toBe('A');
+    await expect(link.getAttribute('href')).toBe('/issues');
+    await expect(link.hasAttribute('data-router-link')).toBe(true);
+  },
 };

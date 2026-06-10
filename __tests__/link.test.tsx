@@ -61,3 +61,35 @@ test('Disabled <Link href> drops the href so it cannot navigate', () => {
   expect(link.getAttribute('href')).toBeNull();
   expect(link.getAttribute('aria-disabled')).toBe('true');
 });
+
+test('Renders a leading icon when `icon` is provided', () => {
+  renderLink(
+    <ReqoreLink href='https://example.com' icon='ExternalLinkLine'>
+      Docs
+    </ReqoreLink>
+  );
+
+  const link = document.querySelector('a.reqore-link') as HTMLAnchorElement;
+  expect(link).toBeTruthy();
+  expect(link.querySelector('.reqore-icon')).toBeTruthy();
+  expect(link.textContent).toContain('Docs');
+});
+
+test('Renders a custom element via `as` and passes element props through', () => {
+  const RouterLinkStub = ({ to, children, ...rest }: any) => (
+    <a href={to} data-router-link {...rest}>
+      {children}
+    </a>
+  );
+
+  renderLink(
+    <ReqoreLink as={RouterLinkStub} to='/issues'>
+      Issues
+    </ReqoreLink>
+  );
+
+  const link = document.querySelector('a.reqore-link') as HTMLAnchorElement;
+  expect(link).toBeTruthy();
+  expect(link.getAttribute('href')).toBe('/issues');
+  expect(link.hasAttribute('data-router-link')).toBe(true);
+});

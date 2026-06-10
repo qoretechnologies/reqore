@@ -557,7 +557,11 @@ ${({ effect }: IReqoreTextEffectProps) =>
     `};
 `;
 
-export const StyledTextEffect = styled(StyledEffect).attrs((props) => ({ ...props, isText: true }))`
+// `attrs` only needs to add `isText` — styled-components already forwards all
+// other props. Spreading `...props` here re-injects `className`, which styled-
+// components then concatenates on top of the prop className, duplicating any
+// custom class (e.g. `reqore-link` / `reqore-span`) on every text-effect element.
+export const StyledTextEffect = styled(StyledEffect).attrs({ isText: true })`
   display: ${({ inline, block }) => (inline ? 'inline' : block ? 'block' : 'inline-block')};
 
   ${({ effect }: IReqoreTextEffectProps) =>
