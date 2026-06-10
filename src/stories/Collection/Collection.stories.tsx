@@ -19,7 +19,7 @@ export interface IColumnsStoryArgs extends IReqoreColumnsProps {
 const { createArg, disableArgs } = argManager<IReqoreCollectionProps>();
 
 const meta = {
-  title: 'Collections/Collection/Stories',
+  title: 'Collections/Collection',
   component: ReqoreCollection,
   argTypes: {
     ...createArg('stacked', {

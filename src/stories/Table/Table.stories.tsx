@@ -325,7 +325,7 @@ const defaultColumnsWithCustomContentHeaders: IReqoreTableColumn[] = defaultColu
 );
 
 const meta = {
-  title: 'Collections/Table/Stories',
+  title: 'Collections/Table',
   component: ReqoreTable,
   args: {
     columns: defaultColumns,

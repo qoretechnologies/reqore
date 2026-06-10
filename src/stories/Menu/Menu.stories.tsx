@@ -17,7 +17,7 @@ import { IntentArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreMenuProps>();
 
 const meta = {
-  title: 'Navigation/Menu/Stories',
+  title: 'Navigation/Menu',
   component: ReqoreMenu,
   args: {
     width: '210px',

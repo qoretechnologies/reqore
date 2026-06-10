@@ -19,7 +19,7 @@ import { FlatArg, IntentArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreDrawerProps>();
 
 const meta = {
-  title: 'Dialogs/Drawer/Stories',
+  title: 'Dialogs/Drawer',
   component: ReqoreDrawer,
   parameters: {
     chromatic: {

@@ -9,7 +9,7 @@ import { ALL_SIZES, FlatArg, IntentArg, RadiusSizeArg, SizeArg, argManager } fro
 const { createArg } = argManager<IReqoreFeatureCardProps>();
 
 const meta = {
-  title: 'Display/Feature Card/Stories',
+  title: 'Display/Feature Card',
   component: ReqoreFeatureCard,
   parameters: {
     chromatic: {

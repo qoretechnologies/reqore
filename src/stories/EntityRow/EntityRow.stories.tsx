@@ -5,7 +5,7 @@ import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Display/Entity Row/Stories',
+  title: 'Display/Entity Row',
   component: ReqoreEntityRow,
 } as StoryMeta<typeof ReqoreEntityRow>;
 

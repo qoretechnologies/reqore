@@ -8,7 +8,7 @@ import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Utilities/Timeline/Stories',
+  title: 'Utilities/Timeline',
   component: ReqoreTimeline,
 } as StoryMeta<typeof ReqoreTimeline>;
 

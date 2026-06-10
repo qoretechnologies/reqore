@@ -7,7 +7,7 @@ import { StoryMeta } from '../utils';
 import { ALL_SIZES } from '../utils/args';
 
 const meta = {
-  title: 'Display/Statistic/Stories',
+  title: 'Display/Statistic',
   component: ReqoreStatistic,
 } as StoryMeta<typeof ReqoreStatistic>;
 

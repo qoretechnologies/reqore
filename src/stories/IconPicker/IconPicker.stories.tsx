@@ -6,7 +6,7 @@ import { IReqoreIconName } from '../../types/icons';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Form/Icon Picker/Stories',
+  title: 'Form/Icon Picker',
   component: ReqoreIconPicker,
 } as StoryMeta<typeof ReqoreIconPicker>;
 

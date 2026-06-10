@@ -19,7 +19,7 @@ import { FlatArg, IntentArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreModalProps>();
 
 const meta = {
-  title: 'Dialogs/Modal/Stories',
+  title: 'Dialogs/Modal',
   component: ReqoreModal,
   args: {
     isOpen: true,

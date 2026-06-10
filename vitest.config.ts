@@ -28,6 +28,9 @@ export default mergeConfig(
               enabled: true,
               provider: playwright({}),
               headless: true,
+              // Match the Chromatic snapshot viewport; the default (414px) is below
+              // responsive breakpoints like the Table's hideBelowWidth columns.
+              viewport: { width: 1440, height: 900 },
               instances: [{ browser: 'chromium' }],
             },
             setupFiles: ['./.storybook/vitest.setup.ts'],

@@ -4,7 +4,7 @@ import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Navigation/Accordion/Stories',
+  title: 'Navigation/Accordion',
   component: ReqoreAccordion,
   argTypes: {
     items: { control: false },

@@ -15,7 +15,7 @@ import { GapSizeArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreControlGroupProps>();
 
 const meta = {
-  title: 'Form/Control Group/Stories',
+  title: 'Form/Control Group',
   component: ReqoreControlGroup,
   argTypes: {
     ...SizeArg,

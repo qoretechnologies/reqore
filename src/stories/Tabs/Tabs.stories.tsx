@@ -112,7 +112,7 @@ const tabs = [
 const { createArg } = argManager<IReqoreTabsProps>();
 
 const meta = {
-  title: 'Navigation/Tabs/Stories',
+  title: 'Navigation/Tabs',
   component: ReqoreTabs,
   args: {
     flat: true,

@@ -7,7 +7,7 @@ import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Form/SegmentedControl/Stories',
+  title: 'Form/SegmentedControl',
   component: ReqoreSegmentedControl,
 } as StoryMeta<typeof ReqoreSegmentedControl>;
 

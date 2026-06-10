@@ -19,7 +19,7 @@ export interface IColumnsStoryArgs extends IReqoreColumnsProps {
 const { createArg, disableArgs } = argManager<IColumnsStoryArgs>();
 
 const meta = {
-  title: 'Layout/Columns/Stories',
+  title: 'Layout/Columns',
   component: ReqoreColumns,
   argTypes: {
     ...createArg('minColumnWidth', {

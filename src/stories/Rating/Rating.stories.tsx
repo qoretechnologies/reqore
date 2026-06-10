@@ -5,7 +5,7 @@ import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Form/Rating/Stories',
+  title: 'Form/Rating',
   component: ReqoreRating,
 } as StoryMeta<typeof ReqoreRating>;
 

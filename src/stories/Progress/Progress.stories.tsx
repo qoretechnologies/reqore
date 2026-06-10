@@ -6,7 +6,7 @@ import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Utilities/Progress/Stories',
+  title: 'Utilities/Progress',
   component: ReqoreProgress,
 } as StoryMeta<typeof ReqoreProgress>;
 

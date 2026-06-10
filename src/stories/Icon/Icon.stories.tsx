@@ -3,7 +3,7 @@ import { ReqoreControlGroup, ReqoreIcon, ReqorePanel, ReqoreUIProvider } from '.
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Other/Icon/Stories',
+  title: 'Other/Icon',
   component: ReqoreIcon,
 } as StoryMeta<typeof ReqoreIcon>;
 

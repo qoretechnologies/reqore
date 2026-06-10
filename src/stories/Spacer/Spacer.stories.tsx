@@ -9,7 +9,7 @@ import { ReqorePanel } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Utilities/Spacer/Stories',
+  title: 'Utilities/Spacer',
   component: ReqoreSpacer,
 } as StoryMeta<typeof ReqoreSpacer>;
 

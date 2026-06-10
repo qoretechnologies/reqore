@@ -6,7 +6,7 @@ import { ReqoreControlGroup, ReqoreP } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Navigation/Link/Stories',
+  title: 'Navigation/Link',
   component: ReqoreLink,
 } as StoryMeta<typeof ReqoreLink>;
 

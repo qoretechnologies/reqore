@@ -18,7 +18,7 @@ import { SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreTreeProps>();
 
 const meta: StoryMeta<typeof ReqoreTree> = {
-  title: 'Collections/Tree/Stories',
+  title: 'Collections/Tree',
   component: ReqoreTree,
   args: {
     withLabelCopy: true,

@@ -7,7 +7,7 @@ import { FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreMessageProps>();
 
 const meta = {
-  title: 'Other/Message/Stories',
+  title: 'Other/Message',
   component: ReqoreMessage,
   argTypes: {
     ...SizeArg,

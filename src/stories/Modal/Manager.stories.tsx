@@ -17,7 +17,7 @@ import { StoryMeta } from '../utils';
 const TIMEOUT = 2000;
 
 const meta = {
-  title: 'Utilities/Global Modal/Tests',
+  title: 'Utilities/Global Modal',
   component: ReqoreModal,
   render: ({ data, updateToData, options }) => {
     const addModal = useReqoreProperty('addModal');

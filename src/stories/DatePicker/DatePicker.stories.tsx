@@ -9,7 +9,7 @@ import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, MinimalArg, SizeArg } from '../utils/args';
 
 const meta = {
-  title: 'Form/DatePicker/Stories',
+  title: 'Form/DatePicker',
   component: DatePicker,
   argTypes: {
     ...MinimalArg,

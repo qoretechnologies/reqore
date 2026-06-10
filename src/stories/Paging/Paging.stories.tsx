@@ -7,7 +7,7 @@ import { TestTableItem, tableData } from '../../mock/tableData';
 import { StoryMeta, StoryRenderer } from '../utils';
 
 const meta = {
-  title: 'Collections/Paging/Stories',
+  title: 'Collections/Paging',
   component: ReqorePagination,
 } as StoryMeta<typeof ReqorePagination<TestTableItem>>;
 

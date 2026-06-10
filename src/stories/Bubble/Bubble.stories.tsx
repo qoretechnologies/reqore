@@ -6,7 +6,7 @@ import { FlatArg, IntentArg, MinimalArg, SizeArg, argManager } from '../utils/ar
 const { createArg } = argManager<IReqoreBubbleProps>();
 
 const meta = {
-  title: 'Other/Bubble/Stories',
+  title: 'Other/Bubble',
   component: ReqoreBubble,
   argTypes: {
     ...SizeArg,

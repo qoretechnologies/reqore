@@ -23,7 +23,7 @@ import { FlatArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqorePopoverProps>();
 
 const meta = {
-  title: 'Other/Popover/Stories',
+  title: 'Other/Popover',
   component: ReqorePopover,
   args: {
     content: 'This is a popover',

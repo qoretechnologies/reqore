@@ -5,7 +5,7 @@ import { StoryMeta } from '../utils';
 import { IntentArg } from '../utils/args';
 
 const meta = {
-  title: 'Other/Paragraph/Stories',
+  title: 'Other/Paragraph',
   component: ReqoreParagraph,
   argTypes: {
     ...IntentArg,

@@ -12,7 +12,7 @@ import { SizeArg, IntentArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreDataViewProps>();
 
 const meta: StoryMeta<typeof ReqoreDataView> = {
-  title: 'Collections/DataView/Stories',
+  title: 'Collections/DataView',
   component: ReqoreDataView,
   args: {
     label: 'Order payload',

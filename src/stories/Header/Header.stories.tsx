@@ -4,7 +4,7 @@ import { StoryMeta } from '../utils';
 import { IntentArg } from '../utils/args';
 
 const meta = {
-  title: 'Other/Heading/Stories',
+  title: 'Other/Heading',
   component: ReqoreHeading,
   argTypes: {
     ...IntentArg,

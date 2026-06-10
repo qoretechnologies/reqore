@@ -9,7 +9,7 @@ import { ALL_SIZES, FlatArg, IntentArg, RadiusSizeArg, SizeArg, argManager } fro
 const { createArg } = argManager<IReqoreCalloutProps>();
 
 const meta = {
-  title: 'Display/Callout/Stories',
+  title: 'Display/Callout',
   component: ReqoreCallout,
   parameters: {
     chromatic: {

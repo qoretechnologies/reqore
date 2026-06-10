@@ -4,7 +4,7 @@ import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Utilities/Spinner/Stories',
+  title: 'Utilities/Spinner',
   component: ReqoreSpinner,
 } as StoryMeta<typeof ReqoreSpinner>;
 

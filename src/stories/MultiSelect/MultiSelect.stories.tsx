@@ -9,7 +9,7 @@ import { FlatArg, IconArg, MinimalArg, SizeArg, argManager } from '../utils/args
 const { createArg } = argManager<IReqoreMultiSelectProps>();
 
 const meta = {
-  title: 'Form/Multi Select/Stories',
+  title: 'Form/Multi Select',
   component: ReqoreMultiSelect,
   parameters: {
     chromatic: {

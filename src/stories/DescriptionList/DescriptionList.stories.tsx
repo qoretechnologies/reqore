@@ -9,7 +9,7 @@ import ReqoreTag from '../../components/Tag';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Display/Description List/Stories',
+  title: 'Display/Description List',
   component: ReqoreDescriptionList,
 } as StoryMeta<typeof ReqoreDescriptionList>;
 

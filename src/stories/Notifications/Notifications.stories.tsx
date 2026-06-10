@@ -11,7 +11,7 @@ import { ReqoreUIProvider, useReqoreProperty } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta: StoryMeta<typeof ReqoreNotificationsWrapper> = {
-  title: 'Other/Notifications/Wrapper/Stories',
+  title: 'Other/Notifications/Wrapper',
   component: ReqoreNotificationsWrapper,
 };
 
