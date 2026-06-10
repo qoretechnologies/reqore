@@ -514,6 +514,11 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
       ? `${getPaddingSize(padded, size)}px 0`
       : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
   flex: 1;
+  /* A flex child's min-height defaults to its content size, so without this the
+     scrollable content can't shrink: a panel/drawer body taller than the panel
+     pushes the (flex: 0 0 auto) bottom-actions footer past the panel's clipped
+     edge and strands it, instead of scrolling. */
+  min-height: 0;
   overflow: auto;
   overflow-wrap: anywhere;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
