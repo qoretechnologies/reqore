@@ -313,3 +313,34 @@ test('Renders <Panel /> with default iconVerticalAlign=center', () => {
 
   expect(document.querySelectorAll('.reqore-panel-title').length).toBe(1);
 });
+
+test('Panel content area carries min-height:0 so a tall body scrolls instead of stranding the footer', () => {
+  render(
+    <div style={{ width: '1000px' }}>
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel label='Test' bottomActions={[{ label: 'Save', position: 'right' }]}>
+            Panel body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  const content = document.querySelector('.reqore-panel-content');
+  expect(content).toBeTruthy();
+
+  // styled-components (v5, test mode) injects readable CSS into <style> tags.
+  const css = Array.from(document.querySelectorAll('style'))
+    .map((style) => style.textContent || '')
+    .join('\n');
+
+  // One of the content element's styled-components classes must carry the
+  // `min-height: 0` declaration. Without it a flex child can't shrink below its
+  // content size, so a tall body pushes the (flex: 0 0 auto) bottom-actions
+  // footer past the panel's clipped edge instead of scrolling.
+  const hasMinHeightRule = Array.from(content!.classList).some((cls) =>
+    new RegExp(`\\.${cls}[^{}]*\\{[^}]*min-height:\\s*0`).test(css)
+  );
+  expect(hasMinHeightRule).toBe(true);
+});
