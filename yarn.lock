@@ -2979,6 +2979,11 @@
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
+"@qoretechnologies/qlip@^0.1.1-beta.20260608134900":
+  version "0.1.1-beta.20260608134900"
+  resolved "https://registry.yarnpkg.com/@qoretechnologies/qlip/-/qlip-0.1.1-beta.20260608134900.tgz#f4c75762f026a79aabfb467b9280eb4b07fcae71"
+  integrity sha512-2z5M8YhMqloz+KF4d+tyEf4Y1lTmm81R09AocpeldoJ373G54YRsuhVh2qPzaeYbWBMpYsJu/2CsZ6Fm8bNZuA==
+
 "@radix-ui/number@1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@radix-ui/number/-/number-1.1.1.tgz#7b2c9225fbf1b126539551f5985769d0048d9090"

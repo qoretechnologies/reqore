@@ -1,3 +1,4 @@
+import { qlipVitestPlugin } from '@qoretechnologies/qlip';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 import path from 'node:path';
@@ -17,6 +18,17 @@ export default mergeConfig(
         {
           extends: true,
           plugins: [
+            qlipVitestPlugin({
+              auto: false,
+              captureOnError: false,
+              disableAnimations: true,
+              pauseAnimationsAtEnd: true,
+              viewport: { width: 2560, height: 1440 },
+              upload: {
+                // serverUrl omitted — defaults to https://qlip.qoretechnologies.com
+                uploadToken: 'qlt_L5HfLmW8KqGTY5ap6OxBf0nfFBohS2PHzKgQBdyK',
+              },
+            }),
             storybookTest({
               configDir: path.join(dirname, '.storybook'),
               storybookScript: 'yarn storybook --no-open',

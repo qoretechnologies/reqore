@@ -44,6 +44,9 @@
   },
   "homepage": "https://github.com/qoretechnologies/reqore#readme",
   "devDependencies": {
+    "@docusaurus/core": "^3.6.0",
+    "@docusaurus/preset-classic": "^3.6.0",
+    "@qoretechnologies/qlip": "^0.1.1-beta.20260608134900",
     "@storybook/addon-docs": "^10.4.3",
     "@storybook/addon-links": "^10.4.3",
     "@storybook/addon-vitest": "^10.4.3",
@@ -61,6 +64,7 @@
     "@vitest/browser": "^4.1.8",
     "@vitest/browser-playwright": "^4.1.8",
     "chromatic": "^6.20.0",
+    "docusaurus-plugin-typedoc": "^1.0.4",
     "eslint": "^8.46.0",
     "eslint-plugin-react": "^7.33.1",
     "eslint-plugin-storybook": "10.4.3",
@@ -74,14 +78,11 @@
     "react-intersection-observer": "^9.4.2",
     "storybook": "^10.4.3",
     "ts-node": "^9.1.1",
+    "typedoc": "^0.26.6",
+    "typedoc-plugin-markdown": "^4.1.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.16",
-    "vitest": "^4.1.8",
-    "@docusaurus/core": "^3.6.0",
-    "@docusaurus/preset-classic": "^3.6.0",
-    "docusaurus-plugin-typedoc": "^1.0.4",
-    "typedoc": "^0.26.6",
-    "typedoc-plugin-markdown": "^4.1.0"
+    "vitest": "^4.1.8"
   },
   "peerDependencies": {
     "react": "^18.2.0",
