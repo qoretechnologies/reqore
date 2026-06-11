@@ -5,7 +5,7 @@ import { StoryMeta } from '../utils';
 import { SizeArg } from '../utils/args';
 
 const meta = {
-  title: 'Navigation/Breadcrumbs/Stories',
+  title: 'Navigation/Breadcrumbs',
   component: ReqoreBreadcrumbs,
   argTypes: {
     withTabs: {

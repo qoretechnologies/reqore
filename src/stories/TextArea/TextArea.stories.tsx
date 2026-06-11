@@ -1,17 +1,16 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from '@storybook/testing-library';
 import { useState } from 'react';
 import { IReqoreTextareaProps } from '../../components/Textarea';
 import { sleep } from '../../helpers/utils';
-import { ReqoreControlGroup, ReqoreTextarea } from '../../index';
+import { ReqoreButton, ReqoreControlGroup, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, DisabledArg, MinimalArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
 
 const meta = {
-  title: 'Form/TextArea/Stories',
+  title: 'Form/TextArea',
   component: ReqoreTextarea,
   args: {
     scaleWithContent: true,
@@ -327,4 +326,100 @@ export const RadiusSize: Story = {
       ))}
     </ReqoreControlGroup>
   ),
+};
+
+export const ItemCanBeSelected: Story = {
+  args: {
+    onChange: fn(),
+    templates: {
+      handler: 'focus',
+      useTargetWidth: true,
+      noWrapper: true,
+      items: [
+        {
+          label: 'New message in discord',
+          icon: 'DiscordLine',
+          description: 'When a new message in discord is received',
+          items: [
+            {
+              divider: true,
+              label: 'Discord',
+            },
+            {
+              label: 'Author',
+              description: 'Author of the message',
+              value: '$state:{1.field.author}',
+            },
+            {
+              label: 'Content',
+              description: 'Content of the message',
+              value: '$state:{1.field.content}',
+            },
+          ],
+        },
+        {
+          label: 'New event in Google Calendar',
+          icon: 'Calendar2Fill',
+          description: 'When a new event is created in Google Calendar',
+          items: [],
+        },
+      ],
+    },
+  },
+
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+
+    await sleep(200);
+    await fireEvent.focusIn(document.querySelector('textarea'));
+    await sleep(200);
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+    await sleep(200);
+    await fireEvent.click(canvas.getAllByText('New message in discord')[0]);
+
+    await waitFor(async () => {
+      await expect(canvas.getAllByText('Author')[0]).toBeTruthy();
+    }, {
+      timeout: 5000,
+    });
+
+    await fireEvent.click(canvas.getAllByText('Author')[0]);
+
+    await expect(canvas.getAllByText('$state:{1.field.author}')[0]).toBeTruthy();
+    await expect(args.onChange).toHaveBeenCalledWith({
+      target: { value: '$state:{1.field.author}' },
+    });
+  },
+};
+
+export const TemplatesAreNotClosedWhenFocusIsMovedToPopover: Story = {
+  ...WithTemplates,
+  play: async ({ canvasElement, args }) => {
+    // @ts-expect-error
+    await WithTemplates.play({ canvasElement, args });
+    await userEvent.click(document.querySelector('textarea'));
+    await sleep(500);
+    // Press the tab key to move focus to the button
+    await userEvent.keyboard('{Tab}');
+    await expect(document.querySelector('.reqore-popover-content')).toBeTruthy();
+  },
+};
+
+export const TemplatesAreClosedWhenFocusIsLost: Story = {
+  ...WithTemplates,
+  render: (args) => (
+    <ReqoreControlGroup>
+      <ReqoreTextarea {...args} />
+      <ReqoreButton>Test</ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement, args }) => {
+    // @ts-expect-error
+    await WithTemplates.play({ canvasElement, args });
+    await userEvent.click(document.querySelector('textarea'));
+    await sleep(500);
+    // Press the tab key to move focus to the button
+    await userEvent.keyboard('{Tab}');
+    await expect(document.querySelector('.reqore-popover-content')).toBeFalsy();
+  },
 };

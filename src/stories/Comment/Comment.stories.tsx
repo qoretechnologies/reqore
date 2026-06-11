@@ -7,7 +7,7 @@ import { argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreCommentFeedProps>();
 
 const meta = {
-  title: 'Other/Comments/Stories',
+  title: 'Other/Comments',
   component: ReqoreCommentFeed,
   argTypes: {
     ...createArg('gapSize', {

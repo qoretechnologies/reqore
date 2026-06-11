@@ -6,7 +6,7 @@ import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Display/Severity Row/Stories',
+  title: 'Display/Severity Row',
   component: ReqoreSeverityRow,
 } as StoryMeta<typeof ReqoreSeverityRow>;
 

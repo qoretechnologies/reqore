@@ -1,4 +1,4 @@
-import { ComponentStory, Meta, StoryFn } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
 import { IReqoreUIProviderProps } from '../containers/UIProvider';
 import { IReqorePagingOptions } from '../hooks/usePaging';
 import { TestTableItem } from '../mock/tableData';
@@ -11,7 +11,7 @@ import { TestTableItem } from '../mock/tableData';
  * @returns A function that is bound to an empty object.
  */
 export const buildTemplate = <T, C>(
-  template: ComponentStory<React.FC<T>>,
+  template: StoryFn<React.FC<T>>,
   props?: Partial<T> & C
 ) => {
   const result = template.bind({});

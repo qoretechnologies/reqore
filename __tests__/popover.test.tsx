@@ -30,7 +30,7 @@ const FullContent = (props: any) => {
 };
 
 beforeAll(() => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 });
 
 test('Shows popover on hover, hides on leave', async () => {
@@ -41,7 +41,7 @@ test('Shows popover on hover, hides on leave', async () => {
   );
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 
@@ -61,7 +61,7 @@ test('Shows popover on click, hides only on click away', async () => {
   });
 
   fireEvent.click(screen.getByText('Hover me'));
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 
@@ -84,7 +84,7 @@ test('Shows custom content', async () => {
   });
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('h1').length).toBe(1);
 
@@ -92,7 +92,7 @@ test('Shows custom content', async () => {
 });
 
 test('Runs callback function', async () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   act(() => {
     render(
@@ -103,7 +103,7 @@ test('Runs callback function', async () => {
   });
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(fn).toHaveBeenCalled();
 
@@ -120,13 +120,13 @@ test('Shows the popover after a local delay, ignoring global delay', async () =>
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
   act(() => {
-    jest.advanceTimersByTime(400);
+    vi.advanceTimersByTime(400);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -146,13 +146,13 @@ test('Shows the popover after a global delay', async () => {
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 
   act(() => {
-    jest.advanceTimersByTime(500);
+    vi.advanceTimersByTime(500);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
   act(() => {
-    jest.advanceTimersByTime(500);
+    vi.advanceTimersByTime(500);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -171,7 +171,7 @@ test('Shows the popover with blur', async () => {
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(document.querySelectorAll('.reqore-blur-wrapper').length).toBe(1);
@@ -193,19 +193,19 @@ test('Does not show the popover with delay if time not reached', async () => {
 
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 
-  jest.advanceTimersByTime(100);
+  vi.advanceTimersByTime(100);
 
   fireEvent.mouseLeave(screen.getByText('Hover me'));
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
-  jest.advanceTimersByTime(500);
+  vi.advanceTimersByTime(500);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 });
 
 test('Shows the hoverStay popover after a delay and stays, ', async () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -216,13 +216,13 @@ test('Shows the hoverStay popover after a delay and stays, ', async () => {
   fireEvent.mouseEnter(screen.getByText('Hover me'));
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 
   act(() => {
-    jest.advanceTimersByTime(400);
+    vi.advanceTimersByTime(400);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -233,7 +233,7 @@ test('Shows the hoverStay popover after a delay and stays, ', async () => {
 });
 
 test('Correctly passes popover data for non-opened popover', async () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -250,14 +250,14 @@ test('Correctly passes popover data for non-opened popover', async () => {
     </ReqoreUIProvider>
   );
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
   expect(fn).toHaveBeenCalledWith(false);
 });
 
 test('Correctly passes popover data for opened popover', async () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -275,14 +275,14 @@ test('Correctly passes popover data for opened popover', async () => {
     </ReqoreUIProvider>
   );
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(fn).toHaveBeenCalledWith(true);
 });
 
 test('Does not shows popover on click when onBeforeOpen returns false', async () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -301,14 +301,14 @@ test('Does not shows popover on click when onBeforeOpen returns false', async ()
     </ReqoreUIProvider>
   );
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
   expect(fn).toHaveBeenCalled();
 });
 
 test('Does not hide popover on click when onBeforeClose returns false', async () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -328,7 +328,7 @@ test('Does not hide popover on click when onBeforeClose returns false', async ()
     </ReqoreUIProvider>
   );
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 
@@ -338,7 +338,7 @@ test('Does not hide popover on click when onBeforeClose returns false', async ()
 });
 
 test('Keeps popover open when hovering over target or popover with keepOpenOnHover', async () => {
-  const onClickSpy = jest.fn();
+  const onClickSpy = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -360,7 +360,7 @@ test('Keeps popover open when hovering over target or popover with keepOpenOnHov
   // Hover over trigger to open popover
   fireEvent.mouseEnter(trigger);
   act(() => {
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -372,7 +372,7 @@ test('Keeps popover open when hovering over target or popover with keepOpenOnHov
   fireEvent.mouseEnter(popover);
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   // Popover should still be open
@@ -383,7 +383,7 @@ test('Keeps popover open when hovering over target or popover with keepOpenOnHov
   fireEvent.click(button);
 
   act(() => {
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   // Verify button click was registered
@@ -396,7 +396,7 @@ test('Keeps popover open when hovering over target or popover with keepOpenOnHov
   fireEvent.mouseLeave(popover);
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   // Now popover should close
@@ -404,7 +404,7 @@ test('Keeps popover open when hovering over target or popover with keepOpenOnHov
 });
 
 test('Clicking inside popover closes it when closeOnInsideClick is true', async () => {
-  const onClickSpy = jest.fn();
+  const onClickSpy = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -425,7 +425,7 @@ test('Clicking inside popover closes it when closeOnInsideClick is true', async 
   // Click trigger to open popover
   fireEvent.click(trigger);
   act(() => {
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -435,7 +435,7 @@ test('Clicking inside popover closes it when closeOnInsideClick is true', async 
   fireEvent.click(button);
 
   act(() => {
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   // Verify button click was registered
@@ -446,7 +446,7 @@ test('Clicking inside popover closes it when closeOnInsideClick is true', async 
 });
 
 test('Clicking inside popover does not close it when closeOnInsideClick is false', async () => {
-  const onClickSpy = jest.fn();
+  const onClickSpy = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -467,7 +467,7 @@ test('Clicking inside popover does not close it when closeOnInsideClick is false
   // Click trigger to open popover
   fireEvent.click(trigger);
   act(() => {
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -477,7 +477,7 @@ test('Clicking inside popover does not close it when closeOnInsideClick is false
   fireEvent.click(button);
 
   act(() => {
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   // Verify button click was registered

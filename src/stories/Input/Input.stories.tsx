@@ -6,7 +6,7 @@ import { StoryMeta } from '../utils';
 import { ALL_SIZES, FlatArg, IconArg, MinimalArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
 const meta = {
-  title: 'Form/Input/Stories',
+  title: 'Form/Input',
   component: ReqoreInput,
   argTypes: {
     ...MinimalArg,

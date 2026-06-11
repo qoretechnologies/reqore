@@ -1,5 +1,4 @@
 import { Globals } from '@react-spring/web';
-import '@testing-library/jest-dom/extend-expect';
 import { fireEvent, render } from '@testing-library/react';
 import { noop } from 'lodash';
 import { mockAllIsIntersecting } from 'react-intersection-observer/test-utils';
@@ -30,9 +29,9 @@ test('Renders <Input /> properly', () => {
 });
 
 test('Renders <Input /> with clear button properly', async () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -44,7 +43,7 @@ test('Renders <Input /> with clear button properly', async () => {
     </ReqoreUIProvider>
   );
 
-  jest.advanceTimersByTime(1000);
+  vi.advanceTimersByTime(1000);
 
   // No clear button
   expect(document.querySelectorAll('.reqore-clear-input-button').length).toBe(1);
@@ -55,7 +54,7 @@ test('Renders <Input /> with clear button properly', async () => {
 });
 
 test('Disabled <Input /> cannot be cleared', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -72,7 +71,7 @@ test('Disabled <Input /> cannot be cleared', () => {
 });
 
 test('Readonly <Input /> cannot be cleared', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -436,7 +435,7 @@ test('Disabled <Input /> does not get focused when shortcut is pressed', () => {
 });
 
 test('<Input /> is cleared when focused', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>

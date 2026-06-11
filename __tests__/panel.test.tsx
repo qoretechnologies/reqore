@@ -68,7 +68,7 @@ test('Renders basic <Panel /> that is collapsed by default and can be expanded',
 });
 
 test('Renders closable <Panel /> properly', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <div style={{ width: '1000px' }}>
@@ -96,7 +96,7 @@ test('Renders closable <Panel /> properly', () => {
 });
 
 test('Renders <Panel /> with actions', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -106,13 +106,13 @@ test('Renders <Panel /> with actions', () => {
           onClose={fn}
           actions={[
             { label: 'Test' },
-            { actions: [{ label: 'Deep', value: 'deep' }] },
+            { actions: [{ label: 'Deep' }] },
             { as: ReqoreInput },
             { label: 'hidden', show: false },
           ]}
           bottomActions={[
             { label: 'Test', position: 'left' },
-            { actions: [{ label: 'Deep', value: 'deep' }], position: 'right' },
+            { actions: [{ label: 'Deep' }], position: 'right' },
             { label: 'hidden', show: false },
           ]}
         >
@@ -129,8 +129,6 @@ test('Renders <Panel /> with actions', () => {
 });
 
 test('Renders <Panel /> without actions group if all actions are not shown', () => {
-  const fn = jest.fn();
-
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -138,7 +136,7 @@ test('Renders <Panel /> without actions group if all actions are not shown', () 
           label='Test'
           actions={[
             { label: 'Test', show: false },
-            { actions: [{ label: 'Deep', value: 'deep' }], show: false },
+            { actions: [{ label: 'Deep' }], show: false },
             { as: ReqoreInput, show: false },
             { label: 'hidden', show: false },
           ]}
@@ -162,7 +160,7 @@ test('Renders <Panel /> without title & bottom actions if all actions are not sh
         <ReqorePanel
           actions={[
             { label: 'Test', show: false },
-            { actions: [{ label: 'Deep', value: 'deep' }], show: false },
+            { actions: [{ label: 'Deep' }], show: false },
             { as: ReqoreInput, show: false },
             { label: 'hidden', show: false },
             {
@@ -175,7 +173,7 @@ test('Renders <Panel /> without title & bottom actions if all actions are not sh
           ]}
           bottomActions={[
             { label: 'Test', show: false },
-            { actions: [{ label: 'Deep', value: 'deep' }], show: false },
+            { actions: [{ label: 'Deep' }], show: false },
             { as: ReqoreInput, position: 'right', show: false },
             { label: 'hidden', show: false },
             {
@@ -203,8 +201,8 @@ test('Renders <Panel /> without title & bottom actions if all actions are not sh
 });
 
 test('Custom control props on <Panel />', () => {
-  jest.useFakeTimers();
-  const onClose = jest.fn();
+  vi.useFakeTimers();
+  const onClose = vi.fn();
 
   render(
     <ReqoreUIProvider>

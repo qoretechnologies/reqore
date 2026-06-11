@@ -1,3 +1,4 @@
+import { IReqoreTableColumn } from '../../src/components/Table';
 import {
   calculatePinOffsets,
   flattenColumns,
@@ -48,7 +49,7 @@ test('Filters out hidden columns', () => {
   expect(newColumns[1].dataId).toBe('address');
 });
 
-const pinTestColumns = () => [
+const pinTestColumns = (): IReqoreTableColumn[] => [
   { dataId: 'id', header: { label: 'ID' }, width: 50, align: 'center' as const },
   {
     dataId: 'name',

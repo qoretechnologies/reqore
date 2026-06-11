@@ -8,7 +8,7 @@ import { SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreTagGroup>();
 
 const meta = {
-  title: 'Form/Tag Group/Stories',
+  title: 'Form/Tag Group',
   component: ReqoreTagGroup,
   args: {
     onClick: noop,

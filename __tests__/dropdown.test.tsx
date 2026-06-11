@@ -11,13 +11,13 @@ import {
 import { IReqoreInputProps } from '../src/components/Input';
 
 beforeAll(() => {
-  jest.setTimeout(30000);
+  vi.setConfig({ testTimeout: 30000 });
 });
 
 test('Renders <Dropdown /> properly', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
   act(() => {
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
     render(
       <ReqoreUIProvider>
         <ReqoreLayoutContent>
@@ -53,7 +53,7 @@ test('Renders <Dropdown /> properly', () => {
   });
 
   fireEvent.click(document.querySelector('.reqore-button')!);
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelector('.reqore-button')?.getAttribute('disabled')).toBe(null);
   expect(document.querySelectorAll('.reqore-button').length).toBe(4);
@@ -62,7 +62,7 @@ test('Renders <Dropdown /> properly', () => {
 });
 
 test('Renders disabled <Dropdown /> when items are empty', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -81,7 +81,7 @@ test('Renders disabled <Dropdown /> when items are empty', () => {
 });
 
 test('Renders disabled <Dropdown /> when items are not empty & disabled prop is true', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -120,7 +120,7 @@ test('Renders disabled <Dropdown /> when items are not empty & disabled prop is 
 });
 
 test('Renders <Dropdown /> with custom component and custom handler', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -162,7 +162,7 @@ test('Renders <Dropdown /> with custom component and custom handler', () => {
 
   if (component) {
     fireEvent.focus(component);
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   }
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -170,7 +170,7 @@ test('Renders <Dropdown /> with custom component and custom handler', () => {
 });
 
 test('Renders <Dropdown /> is opened by default', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -207,7 +207,7 @@ test('Renders <Dropdown /> is opened by default', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
@@ -215,8 +215,8 @@ test('Renders <Dropdown /> is opened by default', () => {
 });
 
 test('Renders <Dropdown /> and calls a function on item click, closes the dropdown', () => {
-  jest.useFakeTimers();
-  const onClick = jest.fn();
+  vi.useFakeTimers();
+  const onClick = vi.fn();
 
   act(() => {
     render(
@@ -241,7 +241,7 @@ test('Renders <Dropdown /> and calls a function on item click, closes the dropdo
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   fireEvent.click(document.querySelector('.reqore-button')!);
@@ -267,7 +267,7 @@ test('Renders <Dropdown /> and calls a function on item click, closes the dropdo
 });
 
 test('Renders filterable <Dropdown /> and filters items correctly', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
   act(() => {
     render(
       <ReqoreUIProvider>
@@ -306,7 +306,7 @@ test('Renders filterable <Dropdown /> and filters items correctly', () => {
   });
 
   fireEvent.click(document.querySelector('.reqore-button')!);
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
   fireEvent.change(document.querySelector('.reqore-input')!, {
     target: { value: 'how' },
   });
@@ -362,7 +362,7 @@ const MultiSelectDropdown = ({ onChange }) => {
 };
 
 test('Renders <Dropdown /> and updates its items when state changes, does not close dropdown', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   act(() => {
     render(
@@ -392,8 +392,8 @@ test('Renders <Dropdown /> and updates its items when state changes, does not cl
 });
 
 test('Renders <Dropdown /> with nested items, closes only on leaf item click', () => {
-  jest.useFakeTimers();
-  const onItemSelect = jest.fn();
+  vi.useFakeTimers();
+  const onItemSelect = vi.fn();
 
   act(() => {
     render(
@@ -427,19 +427,19 @@ test('Renders <Dropdown /> with nested items, closes only on leaf item click', (
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   // Open the dropdown
   fireEvent.click(document.querySelector('.reqore-button')!);
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(document.querySelectorAll('.reqore-menu-item').length).toBe(2);
 
   // Click on parent item with sub-items - should NOT close
   fireEvent.click(document.querySelectorAll('.reqore-menu-item')[0]);
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(document.querySelectorAll('.reqore-menu-item').length).toBe(2);
@@ -450,7 +450,7 @@ test('Renders <Dropdown /> with nested items, closes only on leaf item click', (
 
   // Click on leaf item - should close
   fireEvent.click(document.querySelectorAll('.reqore-menu-item')[0]);
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(onItemSelect).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -463,8 +463,8 @@ test('Renders <Dropdown /> with nested items, closes only on leaf item click', (
 });
 
 test('Keyboard navigation with arrow keys works end-to-end', () => {
-  jest.useFakeTimers();
-  const onItemSelect = jest.fn();
+  vi.useFakeTimers();
+  const onItemSelect = vi.fn();
 
   act(() => {
     render(
@@ -496,7 +496,7 @@ test('Keyboard navigation with arrow keys works end-to-end', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
@@ -507,23 +507,23 @@ test('Keyboard navigation with arrow keys works end-to-end', () => {
 
   // Arrow down to first item
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Arrow down to second item
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Arrow up back to first item
   fireEvent.keyDown(filterInput, { key: 'ArrowUp' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Test wrapping: arrow up again should go to last item
   fireEvent.keyDown(filterInput, { key: 'ArrowUp' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Arrow down from last should go to first
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   menuItems = document.querySelectorAll('.reqore-menu-item');
   expect(menuItems.length).toBe(3);
@@ -531,8 +531,8 @@ test('Keyboard navigation with arrow keys works end-to-end', () => {
 });
 
 test('Keyboard navigation with enter key selects the correct item based on navigation', () => {
-  jest.useFakeTimers();
-  const onItemSelect = jest.fn();
+  vi.useFakeTimers();
+  const onItemSelect = vi.fn();
 
   act(() => {
     render(
@@ -564,7 +564,7 @@ test('Keyboard navigation with enter key selects the correct item based on navig
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
@@ -572,12 +572,12 @@ test('Keyboard navigation with enter key selects the correct item based on navig
 
   // Navigate to second item and select it
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   fireEvent.keyDown(filterInput, { key: 'Enter' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Should select Second Item, NOT First Item
   expect(onItemSelect).toHaveBeenCalledWith(
@@ -600,8 +600,8 @@ test('Keyboard navigation with enter key selects the correct item based on navig
 });
 
 test('Keyboard navigation skips disabled items correctly', () => {
-  jest.useFakeTimers();
-  const onItemSelect = jest.fn();
+  vi.useFakeTimers();
+  const onItemSelect = vi.fn();
 
   act(() => {
     render(
@@ -643,20 +643,20 @@ test('Keyboard navigation skips disabled items correctly', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
 
   // Navigate down twice - should skip disabled items
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Press enter - should select Enabled 2, skipping Disabled
   fireEvent.keyDown(filterInput, { key: 'Enter' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(onItemSelect).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -670,8 +670,8 @@ test('Keyboard navigation skips disabled items correctly', () => {
 });
 
 test('Keyboard navigation resets focus when filtering changes', () => {
-  jest.useFakeTimers();
-  const onItemSelect = jest.fn();
+  vi.useFakeTimers();
+  const onItemSelect = vi.fn();
 
   act(() => {
     render(
@@ -707,28 +707,28 @@ test('Keyboard navigation resets focus when filtering changes', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
 
   // Navigate down twice to reach Banana
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Type in filter - this should reset focus
   fireEvent.change(filterInput, { target: { value: 'a' } });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Now items are filtered to [Apple, Banana, Date]
   // Focus should be reset to null, so first down arrow goes to first item (Apple)
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   fireEvent.keyDown(filterInput, { key: 'Enter' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Should select Apple (first item in filtered list), not Banana
   expect(onItemSelect).toHaveBeenCalledWith(
@@ -741,7 +741,7 @@ test('Keyboard navigation resets focus when filtering changes', () => {
 });
 
 test('Keyboard navigation with submenu - arrow right opens submenu', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   act(() => {
     render(
@@ -778,7 +778,7 @@ test('Keyboard navigation with submenu - arrow right opens submenu', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
@@ -789,9 +789,9 @@ test('Keyboard navigation with submenu - arrow right opens submenu', () => {
 
   // Navigate to first item (Parent) and press right arrow
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
   fireEvent.keyDown(filterInput, { key: 'ArrowRight' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Now should see child items
   menuItems = document.querySelectorAll('.reqore-menu-item');
@@ -805,7 +805,7 @@ test('Keyboard navigation with submenu - arrow right opens submenu', () => {
 });
 
 test('Keyboard navigation with submenu - arrow left navigates back', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   act(() => {
     render(
@@ -838,16 +838,16 @@ test('Keyboard navigation with submenu - arrow left navigates back', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
 
   // Open submenu
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
   fireEvent.keyDown(filterInput, { key: 'ArrowRight' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Should now show children
   let menuItems = document.querySelectorAll('.reqore-menu-item');
@@ -856,7 +856,7 @@ test('Keyboard navigation with submenu - arrow left navigates back', () => {
 
   // Press left arrow to go back
   fireEvent.keyDown(filterInput, { key: 'ArrowLeft' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Should be back at parent level
   menuItems = document.querySelectorAll('.reqore-menu-item');
@@ -867,7 +867,7 @@ test('Keyboard navigation with submenu - arrow left navigates back', () => {
 });
 
 test('Auto-enter submenu resets after dropdown close', async () => {
-  jest.useRealTimers();
+  vi.useRealTimers();
 
   render(
     <ReqoreUIProvider>
@@ -904,8 +904,8 @@ test('Auto-enter submenu resets after dropdown close', async () => {
 });
 
 test('Keyboard navigation can be disabled completely', () => {
-  jest.useFakeTimers();
-  const onItemSelect = jest.fn();
+  vi.useFakeTimers();
+  const onItemSelect = vi.fn();
 
   act(() => {
     render(
@@ -933,7 +933,7 @@ test('Keyboard navigation can be disabled completely', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
@@ -941,11 +941,11 @@ test('Keyboard navigation can be disabled completely', () => {
 
   // Try arrow down - should do nothing with keyboard nav disabled
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Try enter - should not select anything
   fireEvent.keyDown(filterInput, { key: 'Enter' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(onItemSelect).not.toHaveBeenCalled();
 
@@ -954,8 +954,8 @@ test('Keyboard navigation can be disabled completely', () => {
 });
 
 test('Auto-selected parent item - clicking subitem selects subitem not parent', async () => {
-  jest.useRealTimers();
-  const onItemSelect = jest.fn();
+  vi.useRealTimers();
+  const onItemSelect = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -1009,8 +1009,8 @@ test('Auto-selected parent item - clicking subitem selects subitem not parent', 
 });
 
 test('Keyboard navigation skips disabled items and empty-items items', () => {
-  jest.useFakeTimers();
-  const onItemSelect = jest.fn();
+  vi.useFakeTimers();
+  const onItemSelect = vi.fn();
 
   act(() => {
     render(
@@ -1034,7 +1034,7 @@ test('Keyboard navigation skips disabled items and empty-items items', () => {
         </ReqoreLayoutContent>
       </ReqoreUIProvider>
     );
-    jest.advanceTimersByTime(1);
+    vi.advanceTimersByTime(1);
   });
 
   const filterInput = document.querySelector('.reqore-input') as HTMLInputElement;
@@ -1046,14 +1046,14 @@ test('Keyboard navigation skips disabled items and empty-items items', () => {
 
   // Press down once - should select Item 1
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Press down twice - should skip Disabled and Empty items, select Item 2
   fireEvent.keyDown(filterInput, { key: 'ArrowDown' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   fireEvent.keyDown(filterInput, { key: 'Enter' });
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   // Should have selected Item 2, NOT disabled or empty items
   expect(onItemSelect).toHaveBeenCalledWith(

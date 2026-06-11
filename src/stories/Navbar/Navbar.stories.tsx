@@ -18,7 +18,7 @@ import { StoryMeta } from '../utils';
 import { FlatArg, NoContentArg } from '../utils/args';
 
 const meta = {
-  title: 'Layout/Header & Footer/Stories',
+  title: 'Layout/Header & Footer',
   component: ReqoreHeader,
   args: {
     withoutContent: true,

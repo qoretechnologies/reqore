@@ -233,7 +233,7 @@ test('Renders <Pagination /> with custom number of items per page', () => {
 });
 
 test('Renders <Pagination /> as a list', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -251,13 +251,13 @@ test('Renders <Pagination /> as a list', () => {
 
   fireEvent.click(document.querySelectorAll('.reqore-dropdown-control')[0]!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-button').length).toBe(105);
 });
 
 test('Renders <Pagination /> with load more button and no load all button', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -280,7 +280,7 @@ test('Renders <Pagination /> with load more button and no load all button', () =
 
   fireEvent.click(document.querySelectorAll('.reqore-button')[0]!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
   // 21 because of the badge on the button
   expect(document.querySelectorAll('.reqore-tag').length).toBe(21);
   // Pagination should still be there
@@ -288,7 +288,7 @@ test('Renders <Pagination /> with load more button and no load all button', () =
 });
 
 test('Renders <Pagination /> with load all button', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -308,7 +308,7 @@ test('Renders <Pagination /> with load all button', () => {
 
   fireEvent.click(document.querySelectorAll('.reqore-button')[1]!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
   // 21 because of the badge on the button
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1000);
   // Pagination should still be there
@@ -342,7 +342,7 @@ test('Renders <Pagination /> with load more button and auto load', () => {
 });
 
 test('Renders <Pagination /> and changes pages with vertical scroll', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -361,7 +361,7 @@ test('Renders <Pagination /> and changes pages with vertical scroll', () => {
   });
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
@@ -371,7 +371,7 @@ test('Renders <Pagination /> and changes pages with vertical scroll', () => {
   });
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   expect(screen.getAllByText('Claudian Klosterman')).toBeTruthy();
@@ -381,14 +381,14 @@ test('Renders <Pagination /> and changes pages with vertical scroll', () => {
   });
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
 });
 
 test('Renders <Pagination /> and changes pages with horizontal scroll', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -408,7 +408,7 @@ test('Renders <Pagination /> and changes pages with horizontal scroll', () => {
   });
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   expect(screen.getAllByText('Rob Pooley')).toBeTruthy();
@@ -419,7 +419,7 @@ test('Renders <Pagination /> and changes pages with horizontal scroll', () => {
   });
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   expect(screen.getAllByText('Claudian Klosterman')).toBeTruthy();
@@ -430,7 +430,7 @@ test('Renders <Pagination /> and changes pages with horizontal scroll', () => {
   });
 
   act(() => {
-    jest.advanceTimersByTime(100);
+    vi.advanceTimersByTime(100);
   });
 
   expect(screen.getAllByText('Rob Pooley')).toBeTruthy();

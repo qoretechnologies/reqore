@@ -248,7 +248,7 @@ test('Keyboard: Space toggles item', () => {
 });
 
 test('Calls onItemToggle callback', () => {
-  const handleToggle = jest.fn();
+  const handleToggle = vi.fn();
 
   render(
     <ReqoreUIProvider>

@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import {
   ReqoreH1,
   ReqoreH2,
@@ -11,7 +10,7 @@ import {
 } from '../src';
 
 test('<Heading /> renders properly', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -40,7 +39,7 @@ test('<Heading /> renders properly', () => {
 });
 
 test('Tooltip on <Heading /> works', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -52,7 +51,7 @@ test('Tooltip on <Heading /> works', () => {
 
   fireEvent.mouseEnter(document.querySelectorAll('h3')[0]);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

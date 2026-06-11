@@ -137,7 +137,7 @@ test('Renders <SeverityRow /> with actions', () => {
 });
 
 test('Calls onClick when row is clicked', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -256,7 +256,7 @@ test('Renders <SeverityRow /> with effect/labelEffect/descriptionEffect', () => 
 });
 
 test('Renders <SeverityRow /> disabled', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
 
   render(
     <ReqoreUIProvider>

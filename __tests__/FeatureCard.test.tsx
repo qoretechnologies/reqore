@@ -53,7 +53,7 @@ test('Does not render <FeatureCard /> marker when marker is none', () => {
 });
 
 test('Calls <FeatureCard /> onClick handler', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -230,7 +230,7 @@ test('Renders <FeatureCard /> with wrap=false (single-line ellipsis)', () => {
 });
 
 test('Auto-detects interactive when onClick is provided', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
 
   render(
     <ReqoreUIProvider>

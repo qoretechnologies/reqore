@@ -9,7 +9,7 @@ import { ALL_SIZES, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreTagGroup & IReqoreTagProps>();
 
 const meta = {
-  title: 'Form/Tag/Stories',
+  title: 'Form/Tag',
   component: ReqoreTag,
   args: {
     onClick: noop,

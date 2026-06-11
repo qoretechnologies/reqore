@@ -5,8 +5,7 @@ import { IReqoreColumnsProps } from '../../components/Columns';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import items, { bigCollection, collectionWithGroups } from '../../mock/collectionData';
 
-import { expect } from '@storybook/jest';
-import { fireEvent } from '@storybook/testing-library';
+import { expect, fireEvent } from 'storybook/test';
 import { waitFor } from '@testing-library/react';
 import { noop } from 'lodash';
 import { sleep } from '../../helpers/utils';
@@ -20,7 +19,7 @@ export interface IColumnsStoryArgs extends IReqoreColumnsProps {
 const { createArg, disableArgs } = argManager<IReqoreCollectionProps>();
 
 const meta = {
-  title: 'Collections/Collection/Stories',
+  title: 'Collections/Collection',
   component: ReqoreCollection,
   argTypes: {
     ...createArg('stacked', {

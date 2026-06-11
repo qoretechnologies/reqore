@@ -3,7 +3,7 @@ import { ReqoreControlGroup, ReqoreIcon, ReqorePanel, ReqoreUIProvider } from '.
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Other/Icon/Stories',
+  title: 'Other/Icon',
   component: ReqoreIcon,
 } as StoryMeta<typeof ReqoreIcon>;
 
@@ -181,7 +181,7 @@ export const Glow: Story = {
         <ReqoreIcon icon='AlertLine' size='huge' intent='warning' glow />
         <ReqoreIcon icon='InformationLine' size='huge' color='#bd2ff6' glow />
         <ReqoreIcon
-          icon='Star2Line'
+          icon='StarLine'
           size='huge'
           intent='success'
           glow={{ color: 'success', blur: 16, opacity: 0.7 }}

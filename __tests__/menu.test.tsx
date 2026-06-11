@@ -20,7 +20,7 @@ test('Renders <Menu /> properly', () => {
 });
 
 test('<Menu /> item can be clicked', () => {
-  const itemCb = jest.fn();
+  const itemCb = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -40,8 +40,8 @@ test('<Menu /> item can be clicked', () => {
 });
 
 test('<Menu /> item has right clickable button', () => {
-  const iconCb = jest.fn();
-  const itemCb = jest.fn();
+  const iconCb = vi.fn();
+  const itemCb = vi.fn();
 
   render(
     <ReqoreUIProvider>

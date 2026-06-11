@@ -6,7 +6,7 @@ import { StoryMeta } from '../utils';
 import { ALL_SIZES, IconArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
 const meta = {
-  title: 'Form/Button/Stories',
+  title: 'Form/Button',
   component: ReqoreButton,
   argTypes: {
     ...IconArg('icon', 'Icon'),

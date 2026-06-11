@@ -256,4 +256,6 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   );
 }
 
-export default memo(ReqoreDropdown) as typeof ReqoreDropdown;
+// memo() erases the generic signature, so restore it for callers; the double
+// cast is required because the memoized and generic types don't overlap.
+export default memo(ReqoreDropdown) as unknown as typeof ReqoreDropdown;

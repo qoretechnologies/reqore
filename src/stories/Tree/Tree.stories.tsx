@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { fireEvent } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { ChangeEvent, useState } from 'react';
 import {
@@ -19,7 +18,7 @@ import { SizeArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreTreeProps>();
 
 const meta: StoryMeta<typeof ReqoreTree> = {
-  title: 'Collections/Tree/Stories',
+  title: 'Collections/Tree',
   component: ReqoreTree,
   args: {
     withLabelCopy: true,

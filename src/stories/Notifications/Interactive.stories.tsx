@@ -4,7 +4,7 @@ import { ReqoreUIProvider, useReqoreProperty } from '../../index';
 import { StoryMeta, StoryRenderer } from '../utils';
 
 const meta = {
-  title: 'Other/Notifications/Interactive/Stories',
+  title: 'Other/Notifications/Interactive',
   component: ReqoreNotification,
 } as StoryMeta<typeof ReqoreNotification>;
 

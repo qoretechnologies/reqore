@@ -5,7 +5,7 @@ import { StoryMeta } from '../utils';
 import { IntentArg } from '../utils/args';
 
 const meta = {
-  title: 'Other/Span/Stories',
+  title: 'Other/Span',
   component: ReqoreSpan,
   argTypes: {
     ...IntentArg,

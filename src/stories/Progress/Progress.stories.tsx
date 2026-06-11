@@ -1,12 +1,12 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { userEvent } from '@storybook/testing-library';
+import { userEvent } from 'storybook/test';
 import { useEffect, useState } from 'react';
 import ReqoreProgress, { IReqoreProgressProps } from '../../components/Progress';
 import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Utilities/Progress/Stories',
+  title: 'Utilities/Progress',
   component: ReqoreProgress,
 } as StoryMeta<typeof ReqoreProgress>;
 

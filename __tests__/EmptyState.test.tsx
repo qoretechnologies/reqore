@@ -134,7 +134,7 @@ test('Does not render actions when not provided', () => {
 });
 
 test('Action button is clickable', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
 
   render(
     <ReqoreUIProvider>

@@ -6,8 +6,8 @@ import { IReqoreTableColumn, IReqoreTableProps } from '../src/components/Table';
 import tableData from '../src/mock/tableData';
 
 beforeAll(() => {
-  jest.useFakeTimers();
-  jest.setTimeout(30000);
+  vi.useFakeTimers();
+  vi.setConfig({ testTimeout: 30000 });
 });
 
 test('Renders basic <Table /> properly', () => {
@@ -194,7 +194,6 @@ test('Renders <Table /> with predefined content', () => {
   const firstNameCell = firstRow!.querySelectorAll('.reqore-table-cell')[1];
   const lastNameCell = firstRow!.querySelectorAll('.reqore-table-cell')[2];
   const addressCell = firstRow!.querySelectorAll('.reqore-table-cell')[3];
-  const dateCell = firstRow!.querySelectorAll('.reqore-table-cell')[7];
 
   expect(idCell.querySelector('.reqore-tag')).toBeTruthy();
   expect(firstNameCell.querySelector('.reqore-tag')).toBeTruthy();
@@ -232,7 +231,7 @@ test('Sorting on <Table /> works properly', () => {
     },
   };
 
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -251,7 +250,7 @@ test('Sorting on <Table /> works properly', () => {
 
   fireEvent.click(lastNameHeaderCell);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   const sortButton = document.querySelectorAll('.reqore-menu-item')[0];
 
@@ -265,7 +264,7 @@ test('Sorting on <Table /> works properly', () => {
 
   fireEvent.click(document.querySelectorAll('.reqore-table-header-cell')[2]);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   const sortButtonAfter = document.querySelectorAll('.reqore-menu-item')[0];
 
@@ -282,7 +281,7 @@ test('Rows on <Table /> can be selected', () => {
     selectable: true,
   };
 
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -313,7 +312,7 @@ test('Rows on <Table /> can be selected, does not keep internal state', () => {
     selectable: true,
   };
 
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -344,7 +343,7 @@ test('Rows on <Table /> cannot be selected if _selectId is missing', () => {
     selectable: true,
   };
 
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -527,7 +526,7 @@ test('Rows on <Table /> are all selected/deselected when clicking on header', ()
     selectable: true,
   };
 
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -562,7 +561,7 @@ test('Rows on <Table /> are all selected/deselected when clicking on header', ()
 });
 
 test('Cells on <Table /> are interactive', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
   const data: IReqoreTableProps = {
     ...tableData,
     columns: [
@@ -751,8 +750,8 @@ const TestingTableWithState = () => {
 };
 
 test('Data on <Table /> headers are not reset when columns are updated', () => {
-  jest.useFakeTimers();
-  jest.setTimeout(30000);
+  vi.useFakeTimers();
+  vi.setConfig({ testTimeout: 30000 });
 
   act(() => {
     render(
@@ -768,7 +767,7 @@ test('Data on <Table /> headers are not reset when columns are updated', () => {
 
   fireEvent.click(document.querySelector('.reqore-table-header-cell-options')!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   fireEvent.click(document.querySelector('.reqore-table-header-hide')!);
 
@@ -781,8 +780,8 @@ test('Data on <Table /> headers are not reset when columns are updated', () => {
 });
 
 test('<Table /> is reset to default', () => {
-  jest.useFakeTimers();
-  jest.setTimeout(30000);
+  vi.useFakeTimers();
+  vi.setConfig({ testTimeout: 30000 });
 
   act(() => {
     render(
@@ -798,7 +797,7 @@ test('<Table /> is reset to default', () => {
 
   fireEvent.click(document.querySelector('.reqore-table-header-cell-options')!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   fireEvent.click(document.querySelector('.reqore-table-header-hide')!);
 
@@ -806,7 +805,7 @@ test('<Table /> is reset to default', () => {
 
   fireEvent.click(document.querySelector('.reqore-table-more')!);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   fireEvent.click(document.querySelector('.reqore-table-reset')!);
 

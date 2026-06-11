@@ -1,6 +1,17 @@
-import withMockdate from '@netsells/storybook-mockdate';
+import MockDate from 'mockdate';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import { ReqoreModalsWrapper } from '../src/components/GlobalModalsWrapper';
+
+// Minimal, hook-free replacement for the unmaintained @netsells/storybook-mockdate
+// decorator (incompatible with Storybook 10's concurrent-unsafe decorator hooks).
+// Stories opt in via `parameters.mockdate`.
+const withMockdate = (Story, { parameters }) => {
+  MockDate.reset();
+  if (parameters.mockdate) {
+    MockDate.set(parameters.mockdate);
+  }
+  return <Story />;
+};
 
 export const parameters = {
   actions: { argTypesRegex: '^on[A-Z].*' },

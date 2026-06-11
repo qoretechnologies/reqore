@@ -1,5 +1,4 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { ReqoreUIProvider, useReqoreProperty } from '../src/index';
 
 const AddButton = (props: any) => {
@@ -44,7 +43,7 @@ const UpdateButton = (props: any) => {
 };
 
 beforeAll(() => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 });
 
 test('Adds notifications and dismisses them automatically', async () => {
@@ -64,7 +63,7 @@ test('Adds notifications and dismisses them automatically', async () => {
 
   expect(document.querySelectorAll('.reqore-notification').length).toBe(5);
 
-  act(() => jest.runAllTimers());
+  act(() => vi.runAllTimers());
 
   expect(document.querySelectorAll('.reqore-notification').length).toBe(0);
 });
@@ -81,7 +80,7 @@ test('Adds a notification and updates it', async () => {
 
   fireEvent.click(screen.getByText('Add Notification'));
 
-  act(() => jest.advanceTimersByTime(1000));
+  act(() => vi.advanceTimersByTime(1000));
 
   expect(document.querySelectorAll('.reqore-notification').length).toBe(1);
 
@@ -89,13 +88,13 @@ test('Adds a notification and updates it', async () => {
 
   expect(document.querySelectorAll('.reqore-notification').length).toBe(1);
 
-  act(() => jest.runAllTimers());
+  act(() => vi.runAllTimers());
 
   expect(document.querySelectorAll('.reqore-notification').length).toBe(0);
 });
 
 test('Notification has a click event', async () => {
-  const clickFn = jest.fn();
+  const clickFn = vi.fn();
 
   act(() => {
     render(
@@ -107,7 +106,7 @@ test('Notification has a click event', async () => {
 
   fireEvent.click(screen.getByText('Add Notification'));
 
-  act(() => jest.advanceTimersByTime(1000));
+  act(() => vi.advanceTimersByTime(1000));
 
   fireEvent.click(document.querySelector('.reqore-notification'));
 
@@ -115,8 +114,8 @@ test('Notification has a click event', async () => {
 });
 
 test('Notification has a close event', async () => {
-  const closeFn = jest.fn();
-  const finishFn = jest.fn();
+  const closeFn = vi.fn();
+  const finishFn = vi.fn();
 
   act(() => {
     render(
@@ -128,7 +127,7 @@ test('Notification has a close event', async () => {
 
   fireEvent.click(screen.getByText('Add Notification'));
 
-  act(() => jest.advanceTimersByTime(1000));
+  act(() => vi.advanceTimersByTime(1000));
 
   fireEvent.click(document.querySelector('.reqore-notification-close'));
 
@@ -137,7 +136,7 @@ test('Notification has a close event', async () => {
 });
 
 test('Notification has a finish event', async () => {
-  const finishFn = jest.fn();
+  const finishFn = vi.fn();
 
   act(() => {
     render(
@@ -149,7 +148,7 @@ test('Notification has a finish event', async () => {
 
   fireEvent.click(screen.getByText('Add Notification'));
 
-  act(() => jest.runAllTimers());
+  act(() => vi.runAllTimers());
 
   expect(finishFn).toHaveBeenCalledWith('test');
 });

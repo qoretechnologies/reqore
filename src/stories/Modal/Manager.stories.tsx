@@ -1,6 +1,5 @@
-import { expect } from '@storybook/jest';
+import { expect, fireEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { fireEvent, waitFor, within } from '@storybook/testing-library';
 import { noop } from 'lodash';
 import { useEffect, useState } from 'react';
 import { ReqoreBackdrop } from '../../components/Drawer/backdrop';
@@ -18,7 +17,7 @@ import { StoryMeta } from '../utils';
 const TIMEOUT = 2000;
 
 const meta = {
-  title: 'Utilities/Global Modal/Tests',
+  title: 'Utilities/Global Modal',
   component: ReqoreModal,
   render: ({ data, updateToData, options }) => {
     const addModal = useReqoreProperty('addModal');

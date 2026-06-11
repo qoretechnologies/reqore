@@ -299,7 +299,7 @@ test('Renders <Statistic /> with flat background', () => {
 });
 
 test('Renders <Statistic /> as interactive when onClick is provided', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
 
   render(
     <ReqoreUIProvider>

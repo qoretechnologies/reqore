@@ -1,5 +1,4 @@
 import { fireEvent, render } from '@testing-library/react';
-import React from 'react';
 import { ReqoreContent, ReqoreIcon, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
 test('Renders <Icon /> properly', () => {
@@ -35,7 +34,7 @@ test('Renders empty <Icon /> if icon does not exist', () => {
 });
 
 test('Tooltip on <Icon /> works', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -47,7 +46,7 @@ test('Tooltip on <Icon /> works', () => {
 
   fireEvent.mouseEnter(document.querySelectorAll('.reqore-icon')[0]);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

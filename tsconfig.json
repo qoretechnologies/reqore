@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "lib": ["es2017", "es2018", "es2019", "es2020", "es2021", "DOM"],
-    "module": "commonjs",
+    "module": "esnext",
     "sourceMap": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "noUnusedLocals": true,
     "noImplicitAny": false,
@@ -18,7 +18,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "jsx": "react-jsx",
-    "types": ["node", "react", "react-dom", "jest"],
+    "types": ["node", "react", "react-dom", "vitest/globals"],
     "outDir": "dist",
     "allowJs": true
   },

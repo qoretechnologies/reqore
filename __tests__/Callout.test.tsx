@@ -20,7 +20,7 @@ test('Renders <Callout /> with content', () => {
 });
 
 test('Calls <Callout /> onClick handler', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -147,7 +147,7 @@ test('Renders <Callout /> with badge array', () => {
 });
 
 test('Renders <Callout /> with onClose and fires it', () => {
-  const handleClose = jest.fn();
+  const handleClose = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -166,8 +166,8 @@ test('Renders <Callout /> with onClose and fires it', () => {
 });
 
 test('Close button click does not bubble to onClick', () => {
-  const handleClick = jest.fn();
-  const handleClose = jest.fn();
+  const handleClick = vi.fn();
+  const handleClose = vi.fn();
 
   render(
     <ReqoreUIProvider>

@@ -10,7 +10,7 @@ import { ReqoreTag, ReqoreUIProvider } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta: StoryMeta<typeof ReqoreNotification> = {
-  title: 'Other/Notifications/Item/Stories',
+  title: 'Other/Notifications/Item',
   component: ReqoreNotification,
 };
 

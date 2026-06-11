@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import {
   ReqoreContent,
   ReqoreControlGroup,
@@ -106,7 +105,7 @@ test('Renders default <PaginationContainer /> with both control wrappers, one in
 });
 
 test('Renders default <PaginationContainer /> with onPageChange callback', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>

@@ -37,7 +37,7 @@ test('<Tree /> items can be expanded and collapsed', () => {
 });
 
 test('Renders <Tree /> with clickable items', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>

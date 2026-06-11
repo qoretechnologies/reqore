@@ -37,7 +37,7 @@ test('Renders opened <Drawer /> properly', () => {
 });
 
 test('Renders hidable <Drawer /> properly', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -67,7 +67,7 @@ test('Renders hidable <Drawer /> properly', () => {
 });
 
 test('Renders closable <Drawer /> properly', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>
@@ -90,7 +90,7 @@ test('Renders closable <Drawer /> properly', () => {
 });
 
 test('Renders <Drawer /> with interactive backdrop', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
 
   render(
     <ReqoreUIProvider>

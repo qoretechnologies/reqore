@@ -6,7 +6,7 @@ import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
 
 const meta = {
-  title: 'Form/Label/Stories',
+  title: 'Form/Label',
   component: ReqoreLabel,
   argTypes: {
     ...MinimalArg,

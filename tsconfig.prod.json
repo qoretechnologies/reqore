@@ -18,7 +18,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "jsx": "react-jsx",
-    "types": ["node", "react", "react-dom", "jest"],
+    "types": ["node", "react", "react-dom"],
     "outDir": "dist"
   },
   "exclude": ["node_modules", "./src/stories/*", "./src/mock/*", "__tests__/*"],

@@ -4,7 +4,7 @@ import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
 import styled, { css, keyframes } from 'styled-components';
-import { useReqoreTheme } from '../..';
+import { useReqoreTheme } from '../../hooks/useTheme';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';

@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
 import { ReqoreCheckbox, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 
 test('Renders <Checkbox /> properly', () => {
@@ -27,7 +26,7 @@ test('Renders <Checkbox /> properly', () => {
 });
 
 test('Tooltip on <Checkbox /> works', () => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
 
   render(
     <ReqoreUIProvider>
@@ -39,7 +38,7 @@ test('Tooltip on <Checkbox /> works', () => {
 
   fireEvent.mouseEnter(document.querySelectorAll('.reqore-checkbox')[0]);
 
-  jest.advanceTimersByTime(1);
+  vi.advanceTimersByTime(1);
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });

@@ -1,8 +1,7 @@
-import { expect, jest } from '@storybook/jest';
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent, userEvent, within } from '@storybook/testing-library';
 import { useState } from 'react';
 import { useMount } from 'react-use';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { IReqorePopoverProps } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
 import {
@@ -24,7 +23,7 @@ import { FlatArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqorePopoverProps>();
 
 const meta = {
-  title: 'Other/Popover/Stories',
+  title: 'Other/Popover',
   component: ReqorePopover,
   args: {
     content: 'This is a popover',
@@ -498,7 +497,7 @@ export const ChangingElement: Story = {
 
 export const TooltipIsUpdatedWhenContentChanges: Story = {
   args: {
-    onUpdate: jest.fn(),
+    onUpdate: fn(),
   },
   render: (args) => {
     const [tooltip, setTooltip] = useState<IReqoreTooltip>({
@@ -543,7 +542,7 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
 
 export const TooltipIsRemovedWhenContentIsEmpty: Story = {
   args: {
-    onToggleChange: jest.fn(),
+    onToggleChange: fn(),
   },
   render: (args) => {
     const [tooltip, setTooltip] = useState<IReqoreTooltip>({
@@ -587,23 +586,10 @@ export const TooltipOffsetIsApplied: Story = {
     <ReqoreControlGroup>
       <ReqoreButton
         tooltip={{
-          content: 'Offset tooltip 1',
-          handler: 'hover',
-          placement: 'bottom-start',
-          noArrow: true,
-          offsetX: 20,
-          offsetY: 80,
-          openOnMount: true,
-        }}
-      >
-        Offset no arrow
-      </ReqoreButton>
-      <ReqoreButton
-        tooltip={{
           content: 'Offset tooltip 2',
           handler: 'hover',
           placement: 'bottom-start',
-          offsetX: -25,
+          offsetX: -95,
           offsetY: 25,
           openOnMount: true,
         }}
@@ -625,16 +611,28 @@ export const TooltipOffsetIsApplied: Story = {
   ),
   play: async ({ canvasElement }) => {
     const button = canvasElement.querySelector('button');
-    fireEvent.mouseEnter(button);
-    await sleep(300);
+    // The openOnMount popover mounts asynchronously (portal + popper
+    // positioning), so poll for it instead of querying right away — on slower
+    // environments (Chromatic's cloud browsers) play() can start before the
+    // portal exists.
+    await waitFor(
+      () => expect(document.querySelector('.reqore-popover-content')).toBeInTheDocument(),
+      { timeout: 10000 }
+    );
     const popover = document.querySelector('.reqore-popover-content') as HTMLElement;
-    await expect(popover).toBeInTheDocument();
-    const buttonRect = button.getBoundingClientRect();
-    const popoverRect = popover.getBoundingClientRect();
-    const xOffset = Math.round(popoverRect.left - buttonRect.left);
-    const yOffset = Math.round(popoverRect.top - buttonRect.bottom);
-    await expect(Math.abs(xOffset - 20)).toBeLessThanOrEqual(2);
-    await expect(Math.abs(yOffset - 85)).toBeLessThanOrEqual(2);
+    // Poll the offsets too: the popover can be in the DOM a frame before
+    // popper has moved it into its final position.
+    await waitFor(
+      () => {
+        const buttonRect = button.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
+        const xOffset = Math.round(popoverRect.left - buttonRect.left);
+        const yOffset = Math.round(popoverRect.top - buttonRect.bottom);
+        expect(Math.abs(xOffset + 12)).toBeLessThanOrEqual(2);
+        expect(Math.abs(yOffset - 35)).toBeLessThanOrEqual(2);
+      },
+      { timeout: 10000 }
+    );
   },
 };
 

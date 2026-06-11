@@ -4,7 +4,7 @@ import { tableData } from '../../mock/tableData';
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Utilities/Export Modal/Stories',
+  title: 'Utilities/Export Modal',
   component: ReqoreExportModal,
 } as StoryMeta<typeof ReqoreExportModal>;
 

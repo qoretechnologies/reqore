@@ -56,9 +56,12 @@ export const testColumns: IReqoreTableProps['columns'] = [
 
 export default {
   columns: testColumns,
-  data: data.map((datum) => ({
+  data: data.map((datum, index) => ({
     ...datum,
-    date: Date.now(),
+    // Keep the dates in the past: a "just now" timestamp makes every `time-ago`
+    // cell schedule a re-render each second, which churns the whole table and
+    // can hang the story tests; hour-old dates only update hourly.
+    date: Date.now() - (index + 1) * 60 * 60 * 1000,
   })),
   height: 300,
 };

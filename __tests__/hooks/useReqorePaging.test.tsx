@@ -1,12 +1,11 @@
 import { renderHook } from '@testing-library/react';
-import React from 'react';
 import { act } from 'react-dom/test-utils';
 import { ReqoreUIProvider, useReqorePaging } from '../../src';
 import { IReqorePagingOptions } from '../../src/hooks/usePaging';
 import { tableData as data } from '../../src/mock/tableData';
 
 test('useReqorePaging returns all pages', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const { result } = renderHook(
     ({ items }) =>
@@ -24,7 +23,7 @@ test('useReqorePaging returns all pages', () => {
 });
 
 test('useReqorePaging with default start page', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const { result } = renderHook(
     ({ items }) =>
@@ -122,7 +121,7 @@ test('useReqorePaging returns items per page', () => {
 });
 
 test('useReqorePaging returns new items and pages when size of data change, current page is set to 1', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const { result, rerender } = renderHook(
     ({ itemsPerPage, items }) =>
@@ -177,7 +176,7 @@ test('useReqorePaging does not return new items and pages when data change', () 
 });
 
 test('useReqorePaging page navigation works correctly', () => {
-  const fn = jest.fn();
+  const fn = vi.fn();
   const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
   const { result } = renderHook(
     ({ itemsPerPage, items }: IReqorePagingOptions<any>) =>

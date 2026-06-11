@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from '@storybook/testing-library';
+import { fireEvent } from 'storybook/test';
 import { noop } from 'lodash';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
@@ -19,7 +19,7 @@ import { FlatArg, IntentArg, argManager } from '../utils/args';
 const { createArg } = argManager<IReqoreDrawerProps>();
 
 const meta = {
-  title: 'Dialogs/Drawer/Stories',
+  title: 'Dialogs/Drawer',
   component: ReqoreDrawer,
   parameters: {
     chromatic: {

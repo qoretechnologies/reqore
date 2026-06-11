@@ -1,5 +1,5 @@
 import { StoryObj } from '@storybook/react';
-import { fireEvent, userEvent, waitFor, within } from '@storybook/testing-library';
+import { fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { noop } from 'lodash';
 import ReqoreIcon from '../../components/Icon';
 import { IReqoreKeyValueTableProps, ReqoreKeyValueTable } from '../../components/KeyValueTable';
@@ -13,7 +13,7 @@ import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../uti
 const { createArg } = argManager<IReqoreKeyValueTableProps>();
 
 const meta = {
-  title: 'Collections/Key Value Table/Stories',
+  title: 'Collections/Key Value Table',
   component: ReqoreKeyValueTable,
   argTypes: {
     ...createArg('rounded', {

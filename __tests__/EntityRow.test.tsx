@@ -124,7 +124,7 @@ test('Renders <EntityRow /> with actions', () => {
 });
 
 test('Calls onClick when row is clicked', () => {
-  const handleClick = jest.fn();
+  const handleClick = vi.fn();
 
   render(
     <ReqoreUIProvider>

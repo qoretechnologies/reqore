@@ -6,7 +6,7 @@ import { StoryMeta } from '../utils';
 import { DisabledArg, IconArg, MinimalArg, SizeArg } from '../utils/args';
 
 const meta = {
-  title: 'Form/Slider/Stories',
+  title: 'Form/Slider',
   component: ReqoreSlider,
   argTypes: {
     ...MinimalArg,

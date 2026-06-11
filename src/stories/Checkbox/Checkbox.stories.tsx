@@ -5,7 +5,7 @@ import { ReqoreCheckbox, ReqoreControlGroup, ReqoreVerticalSpacer } from '../../
 import { StoryMeta } from '../utils';
 
 const meta = {
-  title: 'Form/Checkbox/Stories',
+  title: 'Form/Checkbox',
   component: ReqoreCheckbox,
   args: {
     onCheckClick: () => alert('Checked!'),

@@ -8,3 +8,4 @@ storybook-static
 build
 docs/api
 *.tgz
+qlip/

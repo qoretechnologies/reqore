@@ -6,7 +6,7 @@ import { StoryMeta } from '../utils';
 import { ALL_SIZES } from '../utils/args';
 
 const meta = {
-  title: 'Display/Testimonial/Stories',
+  title: 'Display/Testimonial',
   component: ReqoreTestimonial,
 } as StoryMeta<typeof ReqoreTestimonial>;
 
