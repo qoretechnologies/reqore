@@ -37,6 +37,36 @@ test('Renders basic <Panel /> with title properly', () => {
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(1);
 });
 
+test('Renders sticky minimal <Panel /> title with explicit sticky header paint', () => {
+  render(
+    <div style={{ width: '1000px' }}>
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Sticky'
+            minimal
+            stickyHeader
+            stickyHeaderOpacity={1}
+            stickyHeaderStyle={{
+              boxShadow: '0 10px 24px rgba(0, 0, 0, 0.28)',
+            }}
+          >
+            Panel
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  const title = document.querySelector('.reqore-panel-title') as HTMLElement;
+  const style = window.getComputedStyle(title);
+
+  expect(title).toBeTruthy();
+  expect(style.position).toBe('sticky');
+  expect(style.backgroundColor).not.toMatch(/transparent|rgba\(0, 0, 0, 0\)/);
+  expect(title.style.boxShadow).toBe('0 10px 24px rgba(0, 0, 0, 0.28)');
+});
+
 test('Renders basic <Panel /> that is collapsed by default and can be expanded', () => {
   render(
     <div style={{ width: '1000px' }}>

@@ -81,6 +81,12 @@ const meta = {
       name: 'Opacity',
       description: 'The opacity of the panel',
     }),
+    ...createArg('stickyHeaderOpacity', {
+      type: 'number',
+      defaultValue: undefined,
+      name: 'Sticky Header Opacity',
+      description: 'The opacity of the sticky header title bar',
+    }),
     ...createArg('labelSize', {
       type: 'string',
       defaultValue: undefined,
@@ -956,6 +962,54 @@ export const StickyHeaderOutsideScroll: Story = {
     }
 
     container.scrollTop = 960;
+    fireEvent.scroll(container);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  },
+};
+
+export const OpaqueStickyHeader: Story = {
+  parameters: {
+    chromatic: {
+      viewports: [600],
+    },
+  },
+  render: () => (
+    <div
+      style={{
+        maxHeight: '360px',
+        width: '600px',
+        overflow: 'auto',
+      }}
+      data-testid='opaque-sticky-scroll-container'
+    >
+      <ReqorePanel
+        label='Opaque sticky header'
+        description='Minimal panel with an opaque sticky title bar'
+        stickyHeader
+        stickyHeaderOpacity={1}
+        stickyHeaderStyle={{
+          boxShadow:
+            '0 10px 24px rgba(0, 0, 0, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.08)',
+        }}
+        icon='PushpinLine'
+        minimal
+        padded
+        fluid
+      >
+        {message}
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const container = canvasElement.querySelector(
+      '[data-testid="opaque-sticky-scroll-container"]'
+    );
+
+    if (!container) {
+      return;
+    }
+
+    container.scrollTop = 240;
     fireEvent.scroll(container);
     await new Promise((resolve) => setTimeout(resolve, 200));
   },

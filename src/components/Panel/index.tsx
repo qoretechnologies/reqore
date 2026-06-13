@@ -198,6 +198,14 @@ export interface IReqorePanelProps
   responsiveActionsWrapperProps?: Partial<IReqoreControlGroupProps>;
   stickyHeader?: boolean;
   stickyHeaderOffset?: number;
+  /**
+   * Override only the sticky title bar background opacity. This is useful for
+   * `minimal` panels, whose title bars are otherwise transparent, when sticky
+   * headers need an opaque surface while content scrolls underneath.
+   */
+  stickyHeaderOpacity?: number;
+  /** Inline styles applied to the title bar only while `stickyHeader` is enabled. */
+  stickyHeaderStyle?: React.CSSProperties;
   floatingActions?: boolean;
   /**
    * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
@@ -481,8 +489,11 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
   top: ${({ stickyHeader, stickyHeaderOffset = 0 }) =>
     stickyHeader ? `${stickyHeaderOffset}px` : undefined};
   z-index: ${({ stickyHeader }) => (stickyHeader ? 2 : undefined)};
-  background: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+  background: ${({ theme, opacity = 1, stickyHeader, stickyHeaderOpacity }: IStyledPanel) =>
+    rgba(
+      changeLightness(getMainBackgroundColor(theme), 0.03),
+      stickyHeader && stickyHeaderOpacity !== undefined ? stickyHeaderOpacity : opacity
+    )};
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`
@@ -1138,6 +1149,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               intent={intent}
               stickyHeader={rest.stickyHeader}
               stickyHeaderOffset={rest.stickyHeaderOffset}
+              stickyHeaderOpacity={rest.stickyHeaderOpacity}
+              style={rest.stickyHeader ? rest.stickyHeaderStyle : undefined}
             >
               {hasTitleHeader && (
                 <StyledPanelTitleHeader>
