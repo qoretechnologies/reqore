@@ -23,8 +23,14 @@ const LongContent = ({ lines = 6 }: { lines?: number }) => (
   </ReqoreControlGroup>
 );
 
+// Constrained column so paragraphs actually wrap and overflow on wide viewports — without this
+// the "tall content" branch never triggers in matrix stories.
+const ColumnWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div style={{ width: 720, maxWidth: '100%' }}>{children}</div>
+);
+
 const meta = {
-  title: 'Display/CollapsibleContent',
+  title: 'Display/Collapsible Content',
   component: ReqoreCollapsibleContent,
   parameters: {
     chromatic: {
@@ -50,6 +56,32 @@ const meta = {
       name: 'Reveal on',
       defaultValue: 'always',
     }),
+    ...createArg('buttonAlign', {
+      control: 'select',
+      options: ['left', 'center', 'right'],
+      name: 'Button align',
+      defaultValue: 'center',
+    }),
+    ...createArg('buttonFluid', {
+      type: 'boolean',
+      name: 'Button fluid',
+      defaultValue: false,
+    }),
+    ...createArg('animated', {
+      type: 'boolean',
+      name: 'Animated',
+      defaultValue: false,
+    }),
+    ...createArg('transparent', {
+      type: 'boolean',
+      name: 'Transparent (no fade)',
+      defaultValue: false,
+    }),
+    ...createArg('disabled', {
+      type: 'boolean',
+      name: 'Disabled',
+      defaultValue: false,
+    }),
     ...createArg('showMoreLabel', {
       type: 'string',
       name: 'Show more label',
@@ -60,10 +92,6 @@ const meta = {
       name: 'Show less label',
       defaultValue: 'Show less',
     }),
-    ...createArg('fadeColor', {
-      type: 'string',
-      name: 'Fade color',
-    }),
   },
 } as StoryMeta<typeof ReqoreCollapsibleContent>;
 
@@ -71,11 +99,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const Template: StoryFn<IReqoreCollapsibleContentProps> = (args) => (
-  <div style={{ width: 720, maxWidth: '100%' }}>
+  <ColumnWrapper>
     <ReqoreCollapsibleContent {...args}>
       <LongContent />
     </ReqoreCollapsibleContent>
-  </div>
+  </ColumnWrapper>
 );
 
 // Baseline clipped state: tall content clips behind the fade with a visible reveal button.
@@ -107,11 +135,11 @@ export const Expands: Story = {
 
 export const ShortContent: Story = {
   render: (args) => (
-    <div style={{ width: 720, maxWidth: '100%' }}>
+    <ColumnWrapper>
       <ReqoreCollapsibleContent {...args}>
         <ReqoreP>{PARAGRAPH}</ReqoreP>
       </ReqoreCollapsibleContent>
-    </div>
+    </ColumnWrapper>
   ),
 };
 
@@ -139,55 +167,35 @@ export const CustomLabels: Story = {
   },
 };
 
-// The card is darker than reqore's #333 surface, so the default fade ends in mid-grey and leaves
-// a visible band; matching fadeColor to the card removes it. Shown without vs with the prop.
-const CARD = '#0d0d0d';
-
-const FadeCard = ({ fadeColor }: { fadeColor?: string }) => (
-  <div style={{ background: CARD, padding: 16, borderRadius: 8 }}>
-    <ReqoreCollapsibleContent fadeColor={fadeColor} maxCollapsedHeight={160}>
-      <LongContent lines={4} />
-    </ReqoreCollapsibleContent>
-  </div>
-);
-
-export const CustomFadeColor: Story = {
-  render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}>
-      <ReqoreP effect={{ weight: 'bold' }}>Without fadeColor</ReqoreP>
-      <FadeCard />
-      <ReqoreP effect={{ weight: 'bold' }}>{`With fadeColor="${CARD}"`}</ReqoreP>
-      <FadeCard fadeColor={CARD} />
-    </div>
-  ),
-};
-
+// `intent` tints the fade gradient AND the buttons — the surface fades into the intent color
+// so the disclosure visually carries meaning (danger fades into red, success into green, etc.).
 export const Intents: Story = {
   render: (args) => (
-    <ReqoreControlGroup vertical fluid gapSize='big'>
+    <ReqoreControlGroup vertical gapSize='big' style={{ width: 720, maxWidth: '100%' }}>
       {Object.keys(DEFAULT_INTENTS).map((intent) => (
         <ReqoreCollapsibleContent
           key={intent}
           {...args}
           intent={intent as IReqoreCollapsibleContentProps['intent']}
-          maxCollapsedHeight={120}
+          maxCollapsedHeight={140}
         >
-          <LongContent lines={3} />
+          <LongContent lines={4} />
         </ReqoreCollapsibleContent>
       ))}
     </ReqoreControlGroup>
   ),
 };
 
+// `size` scales the buttons AND the fade height so each row is visibly distinct from the next.
 export const Sizes: Story = {
   render: (args) => {
     const sizes = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
     return (
-      <ReqoreControlGroup vertical fluid gapSize='big'>
+      <ReqoreControlGroup vertical gapSize='big' style={{ width: 720, maxWidth: '100%' }}>
         {sizes.map((size) => (
-          <ReqoreCollapsibleContent key={size} {...args} size={size} maxCollapsedHeight={120}>
-            <LongContent lines={3} />
+          <ReqoreCollapsibleContent key={size} {...args} size={size} maxCollapsedHeight={160}>
+            <LongContent lines={4} />
           </ReqoreCollapsibleContent>
         ))}
       </ReqoreControlGroup>
@@ -195,9 +203,100 @@ export const Sizes: Story = {
   },
 };
 
+// `customTheme.main` controls the fade's surface color — match it to the parent's background
+// for a seamless blend. This replaces the old bespoke `fadeColor` prop.
+export const CustomTheme: Story = {
+  render: () => {
+    const CARD = '#0d0d0d';
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}>
+        <ReqoreP effect={{ weight: 'bold' }}>Default theme</ReqoreP>
+        <div style={{ background: CARD, padding: 16, borderRadius: 8 }}>
+          <ReqoreCollapsibleContent maxCollapsedHeight={160}>
+            <LongContent lines={4} />
+          </ReqoreCollapsibleContent>
+        </div>
+        <ReqoreP effect={{ weight: 'bold' }}>{`customTheme={{ main: '${CARD}' }}`}</ReqoreP>
+        <div style={{ background: CARD, padding: 16, borderRadius: 8 }}>
+          <ReqoreCollapsibleContent customTheme={{ main: CARD }} maxCollapsedHeight={160}>
+            <LongContent lines={4} />
+          </ReqoreCollapsibleContent>
+        </div>
+      </div>
+    );
+  },
+};
+
+// `transparent` drops the fade gradient entirely while keeping the disclosure button — useful
+// when the content already has its own visual treatment that you don't want to wash out.
+export const Transparent: Story = {
+  render: Template,
+  args: {
+    transparent: true,
+  },
+};
+
+// `disabled` dims the surface and short-circuits both reveal and collapse handlers.
+export const Disabled: Story = {
+  render: Template,
+  args: {
+    disabled: true,
+  },
+};
+
+export const ButtonAlignLeft: Story = {
+  render: Template,
+  args: {
+    buttonAlign: 'left',
+  },
+};
+
+export const ButtonAlignRight: Story = {
+  render: Template,
+  args: {
+    buttonAlign: 'right',
+  },
+};
+
+// `buttonFluid` stretches the reveal button to the full width of the overlay — works correctly
+// because the fade overlay uses column-flex (so the button's cross-axis stretch is horizontal).
+export const ButtonFluid: Story = {
+  render: Template,
+  args: {
+    buttonFluid: true,
+  },
+};
+
+// `animated` smooths the expand / collapse with a `max-height` + opacity transition. Opt-in so
+// the disclosure stays instant by default; honours the global `animations.dialogs` toggle and
+// the OS `prefers-reduced-motion` preference automatically. Drives the reveal → "Show less"
+// cycle so the snapshot captures both the closed and open states across the transition.
+export const Animated: Story = {
+  render: Template,
+  args: {
+    animated: true,
+  },
+  play: async ({ canvasElement }) => {
+    const reveal = canvasElement.querySelector<HTMLButtonElement>(
+      '.reqore-collapsible-content-reveal'
+    );
+
+    await waitFor(() => expect(reveal).toBeTruthy());
+    await fireEvent.click(reveal!);
+
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-collapsible-content-collapse')).toBeTruthy()
+    );
+  },
+};
+
 export const Fluid: Story = {
   render: (args) => (
     <ReqoreCollapsibleContent {...args} fluid>
+      <LongContent />
+      <LongContent />
+      <LongContent />
       <LongContent />
     </ReqoreCollapsibleContent>
   ),
@@ -218,13 +317,6 @@ export const Tooltip: Story = {
   render: Template,
   args: {
     tooltip: 'Collapsible content exposes the same tooltip prop as every other Reqore component.',
-  },
-};
-
-export const CustomTheme: Story = {
-  render: Template,
-  args: {
-    customTheme: { main: '#1c1c2b' },
   },
 };
 

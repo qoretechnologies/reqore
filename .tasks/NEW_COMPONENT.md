@@ -497,7 +497,7 @@ Every new surface component should have these stories at minimum (under `src/sto
 - `Raised` — when supported (see A.11)
 - `NoWrap` (or `Truncated`) — when supported (with a narrow-width decorator so the ellipsis is visible)
 
-**Story title pattern**: `'Display/<Component>/Stories'` or `'Data Display/<Component>/Stories'`. Match the existing folder grouping.
+**Story title pattern**: `'Display/<Component>'` or `'Data Display/<Component>'`. Match the existing folder grouping. The repo used to suffix titles with `/Stories` but that was removed in commit `1b6c3cb` — don't reintroduce it; it creates a redundant `Stories` group in the sidebar under each component.
 
 ## A.15 Storybook layout pitfall
 

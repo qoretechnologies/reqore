@@ -140,6 +140,111 @@ test('Honours custom reveal / collapse labels', async () => {
   );
 });
 
+test('disabled short-circuits reveal and collapse handlers', async () => {
+  mockScrollHeight(1000);
+
+  renderContent(
+    <ReqoreCollapsibleContent maxCollapsedHeight={300} disabled>
+      <span>Locked body</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  // Disabled still renders the reveal button (it's a visual affordance), but clicks have no
+  // effect — the collapse button must never appear because we cannot expand.
+  await waitFor(() =>
+    expect(document.querySelector('.reqore-collapsible-content-reveal')).not.toBeNull()
+  );
+
+  fireEvent.click(document.querySelector('.reqore-collapsible-content-reveal')!);
+
+  // Wait a tick to let any (incorrectly-allowed) state update flush.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(document.querySelector('.reqore-collapsible-content-collapse')).toBeNull();
+  expect(document.querySelector('.reqore-collapsible-content-fade')).not.toBeNull();
+});
+
+test('transparent drops the fade gradient background but keeps the reveal button', async () => {
+  mockScrollHeight(1000);
+
+  renderContent(
+    <ReqoreCollapsibleContent maxCollapsedHeight={300} transparent>
+      <span>Tall body</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  await waitFor(() =>
+    expect(document.querySelector('.reqore-collapsible-content-reveal')).not.toBeNull()
+  );
+
+  const fade = document.querySelector<HTMLDivElement>('.reqore-collapsible-content-fade')!;
+  expect(fade).not.toBeNull();
+  // The transient $transparent prop drives `background: transparent`. Confirm it lands.
+  expect(getComputedStyle(fade).background).toMatch(/transparent|rgba\(0, 0, 0, 0\)/);
+});
+
+test('intent tints the fade — verified by passing through and rendering without error', async () => {
+  mockScrollHeight(1000);
+
+  renderContent(
+    <ReqoreCollapsibleContent maxCollapsedHeight={300} intent='danger'>
+      <span>Tall body</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  await waitFor(() =>
+    expect(document.querySelector('.reqore-collapsible-content-fade')).not.toBeNull()
+  );
+
+  // The fade's inline style includes `linear-gradient(... to <fade-color>)` — when intent is
+  // set the trailing color is the intent color, not the theme background. Sniff that the
+  // gradient string is present; the exact rgb depends on theme.intents.danger.
+  const fade = document.querySelector<HTMLDivElement>('.reqore-collapsible-content-fade')!;
+  expect(fade.style.background || getComputedStyle(fade).background).toContain('linear-gradient');
+});
+
+test('buttonAlign places the reveal button on the requested side', async () => {
+  mockScrollHeight(1000);
+
+  renderContent(
+    <ReqoreCollapsibleContent maxCollapsedHeight={300} buttonAlign='right'>
+      <span>Tall body</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  await waitFor(() =>
+    expect(document.querySelector('.reqore-collapsible-content-fade')).not.toBeNull()
+  );
+
+  const fade = document.querySelector<HTMLDivElement>('.reqore-collapsible-content-fade')!;
+  // `align-items: flex-end` is what places the reveal button on the right (column flex).
+  expect(getComputedStyle(fade).alignItems).toBe('flex-end');
+});
+
+test('animated keeps the fade mounted while expanded so the opacity can transition', async () => {
+  mockScrollHeight(1000);
+
+  renderContent(
+    <ReqoreCollapsibleContent maxCollapsedHeight={300} animated>
+      <span>Tall body</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  // Starts clipped — fade visible, reveal button mounted.
+  await waitFor(() =>
+    expect(document.querySelector('.reqore-collapsible-content-fade')).not.toBeNull()
+  );
+
+  fireEvent.click(document.querySelector('.reqore-collapsible-content-reveal')!);
+
+  // After expand: the fade stays in the DOM (so its opacity can transition to 0) while the
+  // collapse button appears below. Non-animated behavior unmounted the fade entirely — the new
+  // behavior is gated on `animated`.
+  await waitFor(() =>
+    expect(document.querySelector('.reqore-collapsible-content-collapse')).not.toBeNull()
+  );
+  expect(document.querySelector('.reqore-collapsible-content-fade')).not.toBeNull();
+});
+
 test('Renders without a ResizeObserver implementation', () => {
   const original = globalThis.ResizeObserver;
   // Simulate a non-DOM / older test environment.

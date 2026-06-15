@@ -2,29 +2,35 @@ import { forwardRef, memo, ReactNode, useCallback, useEffect, useMemo, useRef, u
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { getColorFromMaybeString, getMainBackgroundColor } from '../../helpers/colors';
+import { getMainBackgroundColor } from '../../helpers/colors';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { DisabledElement } from '../../styles';
 import {
+  IReqoreDisabled,
   IReqoreIntent,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
   IWithReqoreFluid,
   IWithReqoreSize,
   IWithReqoreTooltip,
+  IWithReqoreTransparent,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
-import { StyledEffect, TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, StyledEffect } from '../Effect';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreCollapsibleContentProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>,
+    IReqoreDisabled,
     IReqoreIntent,
     IWithReqoreCustomTheme,
     IWithReqoreEffect,
     IWithReqoreFluid,
     IWithReqoreSize,
-    IWithReqoreTooltip {
+    IWithReqoreTooltip,
+    IWithReqoreTransparent {
   /** Content to reveal. Always rendered; clipped behind the fade when taller than the threshold. */
   children: ReactNode;
   /**
@@ -51,11 +57,29 @@ export interface IReqoreCollapsibleContentProps
    */
   revealOn?: 'always' | 'hover';
   /**
-   * Surface colour the gradient fades into — should match whatever the content sits on so the
-   * fade is seamless. Accepts a hex colour or a Reqore colour shorthand (e.g. `'main:lighten:2'`).
-   * Defaults to the theme's main background.
+   * Horizontal alignment of the reveal / collapse buttons inside the fade overlay.
+   * @default 'center'
    */
-  fadeColor?: TReqoreEffectColor;
+  buttonAlign?: 'left' | 'center' | 'right';
+  /**
+   * Stretch the reveal button to the full width of the overlay (the collapse button below the
+   * content is already full-width because it owns its own row).
+   * @default false
+   */
+  buttonFluid?: boolean;
+  /**
+   * Animate the expand / collapse transition. Off by default — many surfaces want the
+   * disclosure to feel instant. The animation only runs when:
+   * 1. `animated` is `true`, AND
+   * 2. the global `animations.dialogs` flag isn't disabled in the `ReqoreUIProvider`, AND
+   * 3. the user isn't in `prefers-reduced-motion`.
+   *
+   * Powered by a `max-height` transition with the content's measured `scrollHeight` as the
+   * expand target — no `auto` → fixed-value broken animation. The fade overlay's opacity rides
+   * along so it doesn't pop.
+   * @default false
+   */
+  animated?: boolean;
   /** Extra props forwarded to both the reveal and collapse buttons. */
   buttonProps?: Partial<IReqoreButtonProps>;
 }
@@ -63,6 +87,7 @@ export interface IReqoreCollapsibleContentProps
 interface IStyledCollapsibleContentProps {
   theme: IReqoreTheme;
   $fluid?: boolean;
+  $disabled?: boolean;
 }
 
 const StyledCollapsibleContent = styled(StyledEffect)<IStyledCollapsibleContentProps>`
@@ -70,22 +95,39 @@ const StyledCollapsibleContent = styled(StyledEffect)<IStyledCollapsibleContentP
   flex-flow: column;
   width: ${({ $fluid }) => ($fluid ? '100%' : undefined)};
   max-width: 100%;
+
+  ${({ $disabled }) => $disabled && DisabledElement}
 `;
 
 interface IStyledClipProps {
   $collapsed: boolean;
   $maxHeight: number;
   $hoverReveal?: boolean;
+  $animated?: boolean;
+  /**
+   * Measured `scrollHeight` of the content — the animation target when expanding. Falls back to
+   * `$maxHeight` when not yet measured so the very first frame isn't `max-height: 0px`.
+   */
+  $expandedHeight?: number;
 }
 
 const StyledClip = styled.div<IStyledClipProps>`
   position: relative;
-  ${({ $collapsed, $maxHeight }) =>
-    $collapsed &&
-    css`
-      max-height: ${$maxHeight}px;
-      overflow: hidden;
-    `}
+
+  ${({ $animated, $collapsed, $maxHeight, $expandedHeight }) =>
+    $animated
+      ? css`
+          // Animating both directions — always control max-height + overflow so the transition
+          // has a concrete pair of values to interpolate between.
+          max-height: ${$collapsed ? $maxHeight : $expandedHeight ?? $maxHeight}px;
+          overflow: hidden;
+          transition: max-height 0.25s ease-out;
+        `
+      : $collapsed &&
+        css`
+          max-height: ${$maxHeight}px;
+          overflow: hidden;
+        `}
 
   ${({ $hoverReveal }) =>
     $hoverReveal &&
@@ -104,12 +146,20 @@ const StyledClip = styled.div<IStyledClipProps>`
 
 interface IStyledFadeOverlayProps {
   $fade: string;
+  $transparent?: boolean;
   $height: number;
   $padding: number;
+  $align: 'left' | 'center' | 'right';
+  /** Whether the overlay should be visible — false during the expanded state. */
+  $visible: boolean;
+  /** Whether opacity should transition rather than snap. */
+  $animated?: boolean;
 }
 
-// The reveal button floats centred at the bottom of the fade, matching the IDE's chat-bubble
-// disclosure. The gradient is click-through; only the button itself takes pointer events.
+// The reveal button anchors to the bottom of the fade. Using column-flex puts the main axis
+// vertical (so `justify-content: flex-end` parks the button at the bottom) and the cross axis
+// horizontal — that lets the button's `fluid` (stretch on cross-axis) actually do what the
+// caller expects, and `align-items` controls left/center/right placement.
 const StyledFadeOverlay = styled.div<IStyledFadeOverlayProps>`
   position: absolute;
   bottom: 0;
@@ -117,17 +167,37 @@ const StyledFadeOverlay = styled.div<IStyledFadeOverlayProps>`
   right: 0;
   z-index: 1;
   height: ${({ $height }) => $height}px;
-  background: linear-gradient(to bottom, transparent, ${({ $fade }) => $fade});
+  background: ${({ $transparent, $fade }) =>
+    $transparent ? 'transparent' : `linear-gradient(to bottom, transparent, ${$fade})`};
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: ${({ $padding }) => $padding}px;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: ${({ $align }) =>
+    $align === 'left' ? 'flex-start' : $align === 'right' ? 'flex-end' : 'center'};
+  padding: ${({ $padding }) => $padding}px;
   pointer-events: none;
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  ${({ $animated }) =>
+    $animated &&
+    css`
+      transition: opacity 0.2s ease-out;
+    `}
 
+  // When the overlay is hidden the button must also stop intercepting clicks so the content
+  // underneath stays interactive.
   & > * {
-    pointer-events: auto;
+    pointer-events: ${({ $visible }) => ($visible ? 'auto' : 'none')};
   }
 `;
+
+// Backdrop-blur the reveal / collapse buttons by default so they stay legible against whatever
+// content sits behind them — the fade alone leaves the button text fighting the half-faded
+// paragraphs. Consumers can override via `buttonProps.effect`.
+const DEFAULT_BUTTON_EFFECT: IReqoreEffect = { backgroundBlur: 12 };
+
+const mergeButtonEffect = (
+  consumerEffect: IReqoreButtonProps['effect']
+): IReqoreButtonProps['effect'] => ({ ...DEFAULT_BUTTON_EFFECT, ...consumerEffect });
 
 /**
  * Height-clipping "Show more" reveal: tall content clips behind a gradient fade with a reveal
@@ -145,13 +215,17 @@ export const ReqoreCollapsibleContent = memo(
         showMoreIcon = 'ArrowDownSLine',
         showLessIcon = 'ArrowUpSLine',
         revealOn = 'always',
-        fadeColor,
+        buttonAlign = 'center',
+        buttonFluid = false,
+        animated = false,
         buttonProps,
         size = 'normal',
         intent,
         customTheme,
         inheritCustomTheme,
         fluid,
+        transparent,
+        disabled,
         effect,
         tooltip,
         className,
@@ -159,11 +233,35 @@ export const ReqoreCollapsibleContent = memo(
       },
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+      // Drive theme.main and theme.intents off `customTheme` + `intent` so consumers control the
+      // fade and the button color through the standard contract — there is no separate
+      // `fadeColor` knob.
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const contentRef = useRef<HTMLDivElement>(null);
       const [isCollapsed, setIsCollapsed] = useState(!defaultExpanded);
       const [needsCollapse, setNeedsCollapse] = useState(false);
       const [hasMeasured, setHasMeasured] = useState(false);
+      // Measured `scrollHeight`; the expand-direction target for the max-height transition.
+      const [contentHeight, setContentHeight] = useState(0);
+
+      // Respect the global animations toggle from `ReqoreUIProvider` (same family as the Drawer
+      // — content panels share the `dialogs` flag) and the OS reduced-motion preference.
+      const animations = useReqoreProperty('animations');
+      const prefersReducedMotion = useMemo(
+        () =>
+          typeof window !== 'undefined' &&
+          typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        []
+      );
+      // Whether the consumer wants animation, after factoring the global toggle and OS pref.
+      // Drives the mount-vs-fade strategy (fade overlay stays mounted so its opacity can
+      // transition). Independent of whether we've measured yet.
+      const animationsEnabled =
+        animated && animations?.dialogs !== false && !prefersReducedMotion;
+      // Whether we're actually applying the CSS max-height transition. Needs the measured
+      // `scrollHeight` as the expand target — without it the transition would interpolate to 0.
+      const shouldAnimate = animationsEnabled && hasMeasured;
 
       // Measure regardless of collapse state: `needsCollapse` means "tall enough to collapse",
       // which an expanded start (`defaultExpanded`) still needs so it can show "Show less".
@@ -181,7 +279,9 @@ export const ReqoreCollapsibleContent = memo(
           typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
 
         function measure() {
-          setNeedsCollapse(node.scrollHeight > maxCollapsedHeight);
+          const measured = node.scrollHeight;
+          setContentHeight(measured);
+          setNeedsCollapse(measured > maxCollapsedHeight);
           setHasMeasured(true);
           // Observe the children, not just the wrapper: while clipped the wrapper's box never
           // resizes, only its (possibly late-mounting) children do. observe() is idempotent.
@@ -199,28 +299,50 @@ export const ReqoreCollapsibleContent = memo(
 
       // Clip until measured (avoids a flash of full content), then only when it overflows.
       const showCollapsed = isCollapsed && (!hasMeasured || needsCollapse);
+      // The fade is the surface — when `intent` is set we fade into the intent color so the
+      // hint reads visually (a danger intent fades into red, success into green). Otherwise the
+      // fade matches the resolved theme background (driven by `customTheme.main`).
       const fade = useMemo(
-        () => getColorFromMaybeString(theme, fadeColor) || getMainBackgroundColor(theme),
-        [theme, fadeColor]
+        () => (intent ? theme.intents[intent] : getMainBackgroundColor(theme)),
+        [theme, intent]
       );
-      // Fade height tracks the clip (≈⅔), capped at 200 like the IDE so a tall threshold
-      // doesn't produce an oversized gradient.
-      const fadeHeight = Math.max(40, Math.min(Math.round(maxCollapsedHeight * 0.66), 200));
+      // Fade height scales with `size` so a tiny picker doesn't get a hero-sized gradient and a
+      // huge one doesn't look weak. Still bounded by the clip height so the fade never overruns
+      // it. Multipliers tuned to keep the button vertically centred in the gradient.
+      const fadeHeight = useMemo(() => {
+        const target = PADDING_FROM_SIZE[size] * 12;
+        return Math.max(48, Math.min(target, Math.round(maxCollapsedHeight * 0.66), 220));
+      }, [size, maxCollapsedHeight]);
 
-      const handleExpand = useCallback((event: React.MouseEvent) => {
-        // A disclosure toggle should not activate an interactive row it sits inside.
-        event.stopPropagation();
-        // The click proves the content overflows — record it, covering the brief
-        // clip-before-measure window where the pending measure would otherwise be cancelled
-        // and the "Show less" button never appear.
-        setNeedsCollapse(true);
-        setIsCollapsed(false);
-      }, []);
+      const handleExpand = useCallback(
+        (event: React.MouseEvent) => {
+          if (disabled) return;
+          // A disclosure toggle should not activate an interactive row it sits inside.
+          event.stopPropagation();
+          // The click proves the content overflows — record it, covering the brief
+          // clip-before-measure window where the pending measure would otherwise be cancelled
+          // and the "Show less" button never appear.
+          setNeedsCollapse(true);
+          setIsCollapsed(false);
+          buttonProps?.onClick?.(event as React.MouseEvent<HTMLButtonElement>);
+        },
+        [disabled, buttonProps]
+      );
 
-      const handleCollapse = useCallback((event: React.MouseEvent) => {
-        event.stopPropagation();
-        setIsCollapsed(true);
-      }, []);
+      const handleCollapse = useCallback(
+        (event: React.MouseEvent) => {
+          if (disabled) return;
+          event.stopPropagation();
+          setIsCollapsed(true);
+          buttonProps?.onClick?.(event as React.MouseEvent<HTMLButtonElement>);
+        },
+        [disabled, buttonProps]
+      );
+
+      const mergedButtonEffect = useMemo(
+        () => mergeButtonEffect(buttonProps?.effect),
+        [buttonProps?.effect]
+      );
 
       return (
         <ReqoreTooltipComponent
@@ -233,6 +355,7 @@ export const ReqoreCollapsibleContent = memo(
           tooltip={tooltip}
           effect={effect}
           $fluid={fluid}
+          $disabled={disabled}
           className={`${className || ''} reqore-collapsible-content`.trim()}
         >
           <StyledClip
@@ -240,14 +363,28 @@ export const ReqoreCollapsibleContent = memo(
             $collapsed={showCollapsed}
             $maxHeight={maxCollapsedHeight}
             $hoverReveal={revealOn === 'hover'}
+            $animated={shouldAnimate}
+            $expandedHeight={contentHeight}
             className='reqore-collapsible-content-clip'
           >
             {children}
-            {showCollapsed && (
+            {/*
+              When animated, keep the overlay mounted whenever the content COULD overflow
+              (`needsCollapse`) and fade its opacity — otherwise the fade would pop in/out and
+              fight the smooth max-height transition. When not animated we still only mount it
+              while showing, so consumers without `animated` don't pay for a dormant overlay.
+              Uses `animationsEnabled` (not `shouldAnimate`) so the strategy doesn't flip when a
+              user clicks before the first measurement lands.
+             */}
+            {(animationsEnabled ? needsCollapse : showCollapsed) && (
               <StyledFadeOverlay
                 $fade={fade}
+                $transparent={transparent}
                 $height={fadeHeight}
                 $padding={PADDING_FROM_SIZE[size]}
+                $align={buttonAlign}
+                $visible={showCollapsed}
+                $animated={animationsEnabled}
                 className='reqore-collapsible-content-fade'
               >
                 <ReqoreButton
@@ -258,11 +395,14 @@ export const ReqoreCollapsibleContent = memo(
                   label={showMoreLabel}
                   minimal
                   flat={false}
+                  fluid={buttonFluid}
+                  disabled={disabled}
                   {...buttonProps}
+                  effect={mergedButtonEffect}
+                  onClick={handleExpand}
                   className={`reqore-collapsible-content-reveal ${
                     buttonProps?.className || ''
                   }`.trim()}
-                  onClick={handleExpand}
                 />
               </StyledFadeOverlay>
             )}
@@ -277,11 +417,13 @@ export const ReqoreCollapsibleContent = memo(
               minimal
               flat={false}
               fluid
+              disabled={disabled}
               {...buttonProps}
+              effect={mergedButtonEffect}
+              onClick={handleCollapse}
               className={`reqore-collapsible-content-collapse ${
                 buttonProps?.className || ''
               }`.trim()}
-              onClick={handleCollapse}
             />
           )}
         </ReqoreTooltipComponent>
