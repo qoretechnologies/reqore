@@ -483,6 +483,18 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
   z-index: ${({ stickyHeader }) => (stickyHeader ? 2 : undefined)};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+  // When the header is sticky AND the panel is minimal / transparent (opacity === 0), the
+  // header has no surface of its own — scrolling content slides straight under it and the
+  // label / actions become illegible. Apply a backdrop blur so the underlying content stays
+  // visible but is softened enough for the header text to read clearly. Idle (no overflow,
+  // nothing behind) the blur is a no-op so the static appearance is unchanged.
+  ${({ stickyHeader, opacity = 1 }: IStyledPanel) =>
+    stickyHeader &&
+    opacity === 0 &&
+    css`
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    `}
 `;
 
 export const StyledPanelBottomActions = styled(StyledPanelTitle)`

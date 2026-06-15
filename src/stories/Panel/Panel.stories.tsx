@@ -971,6 +971,62 @@ export const Raised: Story = {
   },
 };
 
+// `stickyHeader` + `minimal` / `transparent` previously left the header without any surface,
+// so scrolling content slid straight under the label and made it unreadable. The header now
+// auto-applies a backdrop blur in that combination — static appearance is unchanged, but
+// scrolling content beneath is softened enough for the title to stay legible.
+export const StickyHeaderTransparentBlur: Story = {
+  parameters: {
+    chromatic: {
+      viewports: [600],
+    },
+  },
+  render: () => {
+    const panels = new Array(5).fill(null);
+
+    return (
+      <div
+        style={{
+          maxHeight: '600px',
+          width: '600px',
+          overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+        }}
+        data-testid='sticky-minimal-scroll-container'
+      >
+        {panels.map((_, index) => (
+          <ReqorePanel
+            key={index}
+            label={`Minimal sticky panel ${index + 1}`}
+            stickyHeader
+            minimal
+            icon='PushpinLine'
+            padded
+            fluid
+          >
+            {message}
+          </ReqorePanel>
+        ))}
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const container = canvasElement.querySelector(
+      '[data-testid="sticky-minimal-scroll-container"]'
+    );
+
+    if (!container) {
+      return;
+    }
+
+    container.scrollTop = 720;
+    fireEvent.scroll(container);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  },
+};
+
 export const RaisedMinimalFlat: Story = {
   args: {
     label: 'Raised panel',
