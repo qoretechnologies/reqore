@@ -53,6 +53,12 @@ jobs:
       - name: Running tests & linters
         id: tests
         run: yarn precheck
+      - name: Install Playwright Chromium
+        id: install_playwright
+        run: yarn playwright install --with-deps chromium
+      - name: Running Storybook interaction tests
+        id: story_tests
+        run: yarn test:stories
       - name: Publish to Chromatic
         id: chromatic_publish
         uses: chromaui/action@v1
