@@ -492,8 +492,8 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     stickyHeader &&
     opacity === 0 &&
     css`
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
     `}
 `;
 
