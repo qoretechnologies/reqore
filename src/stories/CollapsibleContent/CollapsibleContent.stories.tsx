@@ -278,12 +278,18 @@ export const Animated: Story = {
     animated: true,
   },
   play: async ({ canvasElement }) => {
-    const reveal = canvasElement.querySelector<HTMLButtonElement>(
-      '.reqore-collapsible-content-reveal'
-    );
+    // Re-query inside waitFor so the loop actually retries until the reveal button is in the
+    // DOM — capturing the result outside would just re-check the same null reference forever
+    // and time out the first time mount happens after the first paint.
+    const reveal = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLButtonElement>(
+        '.reqore-collapsible-content-reveal'
+      );
+      expect(el).toBeTruthy();
+      return el!;
+    });
 
-    await waitFor(() => expect(reveal).toBeTruthy());
-    await fireEvent.click(reveal!);
+    await fireEvent.click(reveal);
 
     await waitFor(() =>
       expect(canvasElement.querySelector('.reqore-collapsible-content-collapse')).toBeTruthy()

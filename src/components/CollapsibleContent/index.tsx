@@ -375,8 +375,14 @@ export const ReqoreCollapsibleContent = memo(
               while showing, so consumers without `animated` don't pay for a dormant overlay.
               Uses `animationsEnabled` (not `shouldAnimate`) so the strategy doesn't flip when a
               user clicks before the first measurement lands.
+              Pre-measure (`!hasMeasured`) and `isCollapsed` we mount optimistically — same
+              "treat as overflowing until proven otherwise" rule the non-animated path applies
+              via `showCollapsed` — so the reveal button is in the DOM on first paint instead
+              of materializing after the first ResizeObserver tick.
              */}
-            {(animationsEnabled ? needsCollapse : showCollapsed) && (
+            {(animationsEnabled
+              ? needsCollapse || (!hasMeasured && isCollapsed)
+              : showCollapsed) && (
               <StyledFadeOverlay
                 $fade={fade}
                 $transparent={transparent}
