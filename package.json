@@ -20,7 +20,8 @@
     "build-storybook": "storybook build",
     "docs:dev": "docusaurus start",
     "docs:build": "docusaurus build",
-    "docs:api": "typedoc --options typedoc.json"
+    "docs:api": "typedoc --options typedoc.json",
+    "update-qlip": "yarn add @qoretechnologies/qlip@beta --dev"
   },
   "repository": {
     "type": "git",
@@ -46,7 +47,7 @@
   "devDependencies": {
     "@docusaurus/core": "^3.6.0",
     "@docusaurus/preset-classic": "^3.6.0",
-    "@qoretechnologies/qlip": "^0.1.1-beta.20260608134900",
+    "@qoretechnologies/qlip": "^0.1.2-beta.20260611135020",
     "@storybook/addon-docs": "^10.4.3",
     "@storybook/addon-links": "^10.4.3",
     "@storybook/addon-vitest": "^10.4.3",
