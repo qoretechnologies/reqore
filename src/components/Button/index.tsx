@@ -82,6 +82,7 @@ export interface IReqoreButtonProps
   tooltip?: TReqoreTooltipProp;
   fluid?: boolean;
   fixed?: boolean;
+  alignSelf?: React.CSSProperties['alignSelf'];
   active?: boolean;
   flat?: boolean;
   animated?: boolean;
@@ -205,7 +206,8 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   flex-shrink: ${({ shrink }) => shrink};
   flex-grow: ${({ grow }) => grow};
-  align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
+  align-self: ${({ alignSelf, fixed, fluid }) =>
+    alignSelf ?? (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
 
   border-radius: ${({ size, radiusSize, rounded, pill, circle }) =>
     rounded === false
@@ -485,6 +487,7 @@ const ReqoreButton = memo(
         className,
         fluid,
         fixed,
+        alignSelf,
         intent,
         active,
         flat,
@@ -564,6 +567,7 @@ const ReqoreButton = memo(
             theme,
             fluid,
             fixed,
+            alignSelf,
             maxWidth,
             minimal,
             transparent,
