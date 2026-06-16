@@ -2979,10 +2979,10 @@
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
-"@qoretechnologies/qlip@^0.1.2-beta.20260611135020":
-  version "0.1.2-beta.20260611135020"
-  resolved "https://registry.yarnpkg.com/@qoretechnologies/qlip/-/qlip-0.1.2-beta.20260611135020.tgz#667205bc621418c98e7313ac441b7e2e70bd563c"
-  integrity sha512-noIRneap53ZCj27ZdYJ5lNxpSxoY3IrVPWvKO5T/6uwKUSbtW9twrQUPWo6WGeqGdNcD2IeLbMa+cVYTupd1PA==
+"@qoretechnologies/qlip@0.1.3-beta.20260616230537":
+  version "0.1.3-beta.20260616230537"
+  resolved "https://registry.yarnpkg.com/@qoretechnologies/qlip/-/qlip-0.1.3-beta.20260616230537.tgz#b01fb9b7984a39d4c8eac9bc5125c7d949b6d3ed"
+  integrity sha512-VXTUnvlsF5TclWnfee0BRc7mMepgAdBDmn/xLgP6lpAJyPzHG5gcKhXP+Pz5qP3GXsHw6obv4x7oJTijCU+Mkw==
 
 "@radix-ui/number@1.1.1":
   version "1.1.1"
