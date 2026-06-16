@@ -96,6 +96,26 @@ yarn build              # TypeScript compilation
 - `pre-push` hook enforces same checks before push (see `package.json`)
 - Line length: 100 characters (enforced by eslint)
 
+### Pre-commit / pre-push audit (`/audit`)
+
+When the user asks the agent to commit OR push changes, the agent MUST first run the `/audit` skill on the pending diff and show the report — UNLESS `/audit` has already been run on the exact same set of changes in the current conversation (no new edits since). The audit catches the regressions `yarn precheck` cannot:
+
+- Standard prop contract declared but never wired (the headline bug — `intent` extended on the interface but never read, so `intent='danger'` paints nothing).
+- One-off raw HTML or styled wrappers where a Reqore primitive fits.
+- Matrix stories (`Sizes`, `Intents`, …) that render identical-looking rows because the prop isn't wired OR the matrix isn't constrained on a wide viewport.
+- Test coverage gaps against the standard prop matrix.
+- Helper duplication vs `src/helpers/`.
+- Appendix A drift vs `.tasks/NEW_COMPONENT.md`.
+
+Order of operations on a commit/push request:
+
+1. Run `/audit` (if not already clean for this exact diff).
+2. Show the report.
+3. Pause for the user to either fix findings or explicitly waive them.
+4. Only then proceed to `git commit` / `git push`.
+
+The audit never edits files and never invokes git — it reports; the user/agent decides what to fix. Skipping the audit on commit/push is a hard violation: the report is what makes the silent regressions visible.
+
 ### Testing Patterns
 
 - **Setup:** `__tests__/setup.js` disables console debug/info/error
