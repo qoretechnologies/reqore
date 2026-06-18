@@ -54,6 +54,18 @@ export {
 export { default as ReqoreIcon } from './components/Icon';
 export { ReqoreIconPicker } from './components/IconPicker';
 export { default as ReqoreInput } from './components/Input';
+export {
+  default as ReqoreKeyboardShortcut,
+  ReqoreKeyboardShortcut as ReqoreKeyboardShortcutComponent,
+} from './components/KeyboardShortcut';
+export type { IReqoreKeyboardShortcutProps } from './components/KeyboardShortcut';
+export {
+  formatShortcut,
+  formatShortcutCombo,
+  isMacOS,
+  shortcutHasModifier,
+} from './helpers/shortcuts';
+export type { TReqoreKeyboardShortcut } from './helpers/shortcuts';
 export { ReqoreKeyValueTable } from './components/KeyValueTable';
 export * from './components/Label';
 export { default as ReqoreLayoutContent } from './components/Layout/content';

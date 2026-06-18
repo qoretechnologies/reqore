@@ -1,6 +1,7 @@
 import { size } from 'lodash';
 import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
@@ -23,7 +24,9 @@ import {
   getReadableColorFrom,
   isAchromatic,
 } from '../../helpers/colors';
+import { shortcutHasModifier, TReqoreKeyboardShortcut } from '../../helpers/shortcuts';
 import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
+import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreEffect } from '../../hooks/useReqoreEffect';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -58,6 +61,7 @@ import {
   TReqoreHexColor,
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
@@ -94,6 +98,20 @@ export interface IReqoreButtonProps
   customTheme?: IReqoreCustomTheme;
   wrap?: boolean;
   badge?: TReqoreBadge | TReqoreBadge[];
+
+  /**
+   * Keyboard shortcut that triggers the button's `onClick`, following the
+   * `react-hotkeys-hook` syntax (e.g. `'mod+k'`, `'ctrl+shift+s'`, or an array
+   * of alternatives). The `mod` modifier maps to `⌘` on macOS and `Ctrl`
+   * elsewhere. Combos that include a modifier also fire while a form field is
+   * focused; bare single-key shortcuts do not, to avoid clashing with typing.
+   */
+  shortcut?: TReqoreKeyboardShortcut;
+  /**
+   * Whether to render the badge-style hint for `shortcut`. Defaults to `true`,
+   * unless globally disabled via the `shortcutHints` UI option.
+   */
+  shortcutHint?: boolean;
 
   description?: string | number;
   maxWidth?: string;
@@ -513,14 +531,37 @@ const ReqoreButton = memo(
         as,
         animated,
         loading,
+        shortcut,
+        shortcutHint,
         loadingIconType,
         ...rest
       }: IReqoreButtonProps,
       ref
     ) => {
       const animations = useReqoreProperty('animations');
+      const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
       const theme = useReqoreTheme('main', customTheme, intent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
+      const { targetRef } = useCombinedRefs(ref);
+
+      const shortcutEnabled = !!shortcut && !rest.disabled && !readOnly && !loading;
+
+      useHotkeys(
+        shortcut ?? [],
+        (event) => {
+          event.preventDefault();
+          (targetRef.current as HTMLButtonElement)?.click();
+        },
+        {
+          enabled: shortcutEnabled,
+          enableOnFormTags: shortcut ? shortcutHasModifier(shortcut) : false,
+          preventDefault: true,
+        },
+        [shortcut, shortcutEnabled]
+      );
+
+      const showShortcutHint =
+        !!shortcut && shortcutHint !== false && shortcutHintsEnabled !== false;
 
       // If color or intent was specified, set the color
       const customColor = useMemo(
@@ -585,7 +626,7 @@ const ReqoreButton = memo(
             tooltip,
           }}
           Component={StyledButton}
-          ref={ref}
+          ref={targetRef}
         >
           <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>
             {hasLeftIcon ? (
@@ -723,6 +764,12 @@ const ReqoreButton = memo(
                 />
               </>
             )}
+            {showShortcutHint ? (
+              <>
+                <ReqoreSpacer width={PADDING_FROM_SIZE[size] / 2} />
+                <ReqoreKeyboardShortcut shortcut={shortcut} size={size} compact={_compact} />
+              </>
+            ) : null}
           </StyledButtonContent>
 
           {description && (

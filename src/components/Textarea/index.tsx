@@ -14,6 +14,7 @@ import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import useAutosizeTextArea from '../../hooks/useTextareaAutoSize';
 import { DisabledElement, ReadOnlyElement } from '../../styles';
 import {
@@ -28,6 +29,7 @@ import { IReqoreDropdownProps } from '../Dropdown';
 import { StyledEffect } from '../Effect';
 import { IReqoreInputStyle } from '../Input';
 import ReqoreInputClearButton from '../InputClearButton';
+import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { IPopoverControls } from '../Popover';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -63,6 +65,11 @@ export interface IReqoreTextareaProps
   onClearClick?: () => any;
   wrapperStyle?: React.CSSProperties;
   focusRules?: IReqoreAutoFocusRules;
+  /**
+   * Whether to render a badge-style hint for the `focusRules` keyboard shortcut.
+   * Defaults to `true`, unless globally disabled via the `shortcutHints` UI option.
+   */
+  shortcutHint?: boolean;
   templates?: IReqoreFormTemplates;
   transparent?: boolean;
   as?: React.ElementType;
@@ -159,6 +166,15 @@ export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
   }
 `;
 
+const StyledTextareaShortcutWrapper = styled.div`
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+`;
+
 function Textarea<T>(
   {
     width,
@@ -179,6 +195,7 @@ function Textarea<T>(
     onChange,
     fixed,
     focusRules,
+    shortcutHint,
     templates,
     ...rest
   }: T & IReqoreTextareaProps,
@@ -187,6 +204,13 @@ function Textarea<T>(
   const { targetRef }: any = useCombinedRefs(ref);
   const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
   const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+  const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
+  const showShortcutHint =
+    !!focusRules?.shortcut &&
+    shortcutHint !== false &&
+    shortcutHintsEnabled !== false &&
+    !rest.readOnly &&
+    !rest.disabled;
   const [_value, setValue] = useState(value || '');
   const [popoverData, setPopoverData] = useState<IPopoverControls>(null);
   const uuid = useRef(nanoid());
@@ -267,6 +291,11 @@ function Textarea<T>(
           onClick={onClearClick}
           size={size}
         />
+        {showShortcutHint && (
+          <StyledTextareaShortcutWrapper>
+            <ReqoreKeyboardShortcut shortcut={focusRules.shortcut} size={size} compact />
+          </StyledTextareaShortcutWrapper>
+        )}
       </>
     );
   };
