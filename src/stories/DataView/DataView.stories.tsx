@@ -1,6 +1,7 @@
-import { expect, fireEvent } from 'storybook/test';
+import { expect, fireEvent, fn } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
+import { useState } from 'react';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import {
   IReqoreDataViewProps,
@@ -350,5 +351,333 @@ export const InteractionToggle: Story = {
     if (summary) fireEvent.click(summary);
     await _testsWaitForText('workflow_instanceid');
     await expect(canvasElement.querySelectorAll('.reqore-data-view-row').length).toBeGreaterThan(0);
+  },
+};
+
+/* ===========================================================
+ * Editable mode — click-to-edit JSON Schema builder primitives
+ * ===========================================================
+ *
+ * Every editable story below uses a tiny harness so the DataView
+ * stays fully controlled: the harness keeps the latest tree in
+ * `useState`, and every commit (value edit, key rename, row
+ * delete, add property / item) lands via `onDataChange(next)` then
+ * re-enters via `data`.
+ *
+ * The UX vocabulary the stories exercise:
+ *   - **Click a value chip** → swaps to an input, focused.
+ *     **Enter / blur** commits, **Esc** reverts.
+ *   - **Click a key chip** → same shape, but for the property name.
+ *     Duplicate keys are refused.
+ *   - **Hover a row** → reveals a danger-intent delete button on
+ *     the right.
+ *   - **Add property / Add item** lives at the bottom of every
+ *     object / array; click → expands into an inline form (key +
+ *     type picker) → submit → appends. The type picker supports
+ *     **string / number / boolean / object (hash) / array (list) /
+ *     null**.
+ *
+ *  This is the structural primitive layer. A schema-aware mode
+ *  (JSON Schema type picker per property, required toggles, enum
+ *  editor, $ref resolution) ships on top of these primitives —
+ *  see `.tasks/EDITABLE_DATAVIEW.md`.
+ */
+
+const OPENAPI_PET_SCHEMA = {
+  type: 'object',
+  description: 'A pet for sale in the pet store.',
+  required: ['id', 'name'],
+  properties: {
+    id: {
+      type: 'integer',
+      format: 'int64',
+      description: 'Unique pet identifier (read-only).',
+      example: 10,
+    },
+    name: {
+      type: 'string',
+      description: 'Pet display name.',
+      example: 'doggie',
+    },
+    category: {
+      type: 'object',
+      description: 'Owning category — referenced from /categories.',
+      properties: {
+        id: { type: 'integer', format: 'int64' },
+        name: { type: 'string', example: 'Dogs' },
+      },
+    },
+    photoUrls: {
+      type: 'array',
+      description: 'Public photo URLs.',
+      items: { type: 'string', format: 'uri' },
+    },
+    status: {
+      type: 'string',
+      description: 'Pet availability — drives the storefront filter.',
+      enum: ['available', 'pending', 'sold'],
+    },
+  },
+};
+
+const EditableHarness = (args: IReqoreDataViewProps) => {
+  const [tree, setTree] = useState<unknown>(args.data ?? {});
+  return (
+    <ReqoreDataView
+      {...args}
+      data={tree}
+      editable
+      onDataChange={(next) => {
+        setTree(next);
+        args.onDataChange?.(next);
+      }}
+    />
+  );
+};
+
+/**
+ * Realistic OpenAPI / JSON Schema fragment with nested objects, an
+ * array of strings (`photoUrls`), and an `enum` array. Demonstrates
+ * that the editor handles **complex, deeply nested shapes**, not just
+ * a flat key-value record.
+ *
+ * Try in the storybook:
+ *  - Click `pet for sale in the pet store.` to rewrite the
+ *    `description`.
+ *  - Click `doggie` to rename the pet's example.
+ *  - Hover the `name` row to expose the delete button.
+ *  - Click the `properties` key to rename it.
+ *  - Use `+ Add property` at the bottom of any object level to add a
+ *    new field. The type picker creates strings, numbers, booleans,
+ *    objects (hashes), arrays (lists), or null.
+ */
+export const EditableOpenApiSchema: Story = {
+  args: {
+    label: 'OpenAPI 3 — components.schemas.Pet',
+    icon: 'CodeLine',
+    data: OPENAPI_PET_SCHEMA,
+    defaultExpandDepth: 99,
+    collapsibleRoot: false,
+  },
+  render: (args) => <EditableHarness {...args} />,
+};
+
+/**
+ * Click-to-edit interaction — start by displaying the chip, click
+ * to switch to an input, edit, commit on Enter, observe the new
+ * value rendered as a chip again.
+ */
+export const ClickToEditScalar: Story = {
+  args: {
+    label: 'Click to edit a scalar',
+    icon: 'CursorLine',
+    data: { display_name: 'Customer', retries: 3, is_public: false },
+    defaultExpandDepth: 99,
+    collapsibleRoot: false,
+    onDataChange: fn(),
+  },
+  render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement, args }) => {
+    await _testsWaitForText('display_name');
+
+    const rows = Array.from(
+      canvasElement.querySelectorAll('.reqore-data-view-row')
+    );
+    const row = rows.find(
+      (r) => r.querySelector('.reqore-data-view-key')?.textContent === 'display_name'
+    )!;
+
+    // Step 1: chip is visible, no input yet.
+    await expect(
+      row.querySelector('input.reqore-data-view-edit')
+    ).toBeNull();
+    await expect(row.querySelector('.reqore-data-view-value')).toBeTruthy();
+
+    // Step 2: click the value chip → input appears.
+    const chip = row.querySelector('.reqore-data-view-value') as HTMLElement;
+    fireEvent.click(chip);
+    const input = row.querySelector(
+      'input.reqore-data-view-edit'
+    ) as HTMLInputElement;
+    await expect(input).toBeTruthy();
+
+    // Step 3: edit + commit on Enter.
+    fireEvent.change(input, { target: { value: 'Customer v2' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await expect(args.onDataChange).toHaveBeenCalled();
+    const last = (args.onDataChange as ReturnType<typeof fn>).mock.calls.at(-1)?.[0] as
+      | Record<string, unknown>
+      | undefined;
+    await expect(last?.display_name).toBe('Customer v2');
+  },
+};
+
+/**
+ * Build a JSON schema from scratch. The tree starts as an empty
+ * object — only the `+ Add property` affordance is visible. The
+ * play function expands the form, types a key (`type`), picks the
+ * `String` type, commits, and observes the new property in the
+ * tree.
+ */
+export const BuildFromEmptyHash: Story = {
+  args: {
+    label: 'Build from {} — Add property → fill out the form',
+    icon: 'AddBoxLine',
+    data: {},
+    defaultExpandDepth: 99,
+    collapsibleRoot: false,
+    onDataChange: fn(),
+  },
+  render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement, args }) => {
+    await _testsWaitForText('Add property');
+
+    // Click the trailing "Add property" button → form expands.
+    const addRow = canvasElement.querySelector(
+      '.reqore-data-view-add-row'
+    ) as HTMLElement;
+    const trigger = addRow.querySelector('button') as HTMLElement;
+    fireEvent.click(trigger);
+
+    // The expanded form has a key input + a type picker + commit /
+    // cancel buttons. We type a key + submit (default type =
+    // string).
+    const keyInput = addRow.querySelector(
+      'input.reqore-data-view-add-key'
+    ) as HTMLInputElement;
+    await expect(keyInput).toBeTruthy();
+    fireEvent.change(keyInput, { target: { value: 'type' } });
+    const commit = addRow.querySelector(
+      '.reqore-data-view-add-commit'
+    ) as HTMLElement;
+    fireEvent.click(commit);
+
+    // The tree now carries `type: ''` — string defaults to empty.
+    const last = (args.onDataChange as ReturnType<typeof fn>).mock.calls.at(-1)?.[0] as
+      | Record<string, unknown>
+      | undefined;
+    await expect(last).toEqual({ type: '' });
+  },
+};
+
+/**
+ * Array editing — start with a populated `enum`-style array, add a
+ * new item, delete an existing one. Shows the per-row delete +
+ * trailing `+ Add item` affordance.
+ */
+export const EditableArrayOps: Story = {
+  args: {
+    label: 'Array ops — pet status enum',
+    icon: 'ListUnordered',
+    data: { status_enum: ['available', 'pending', 'sold'] },
+    defaultExpandDepth: 99,
+    collapsibleRoot: false,
+    onDataChange: fn(),
+  },
+  render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement, args }) => {
+    await _testsWaitForText('status_enum');
+
+    // The array renders three items. In editable mode the inline
+    // chip-row shortcut is off, so each item gets its own row.
+    const arrayItems = canvasElement.querySelectorAll(
+      '.reqore-data-view-array-item'
+    );
+    await expect(arrayItems.length).toBe(3);
+
+    // Delete the second item (`pending`). Hover-reveal the action
+    // group; click the delete button.
+    const secondRow = arrayItems[1] as HTMLElement;
+    const deleteButton = secondRow.querySelector(
+      '.reqore-data-view-row-delete'
+    ) as HTMLElement;
+    await expect(deleteButton).toBeTruthy();
+    fireEvent.click(deleteButton);
+
+    const afterDelete = (args.onDataChange as ReturnType<typeof fn>).mock.calls.at(-1)?.[0] as
+      | Record<string, unknown>
+      | undefined;
+    await expect(afterDelete?.status_enum).toEqual(['available', 'sold']);
+  },
+};
+
+/**
+ * Switch the type of a value as part of editing it. Click the value
+ * chip to enter edit mode — the control group renders as
+ * `[input] [type ▾] [✓ Save] [✗ Cancel]`. The type picker shows the
+ * value's CURRENT kind and offers all six (string / number / boolean
+ * / object (hash) / array (list) / null). Picking a new kind
+ * coerces the current DRAFT (not the original value), so a user who
+ * has just typed `42` and realises the property should be a number
+ * keeps the `42` they typed — they don't lose their work.
+ *
+ * Coercion rules:
+ *   - string → number  → parse; falls back to 0 on a non-numeric source.
+ *   - string → boolean → 'true' / '1' / 'yes' → true; else false.
+ *   - any    → object  → replaces the scalar with `{}`.
+ *   - any    → array   → replaces the scalar with `[]`.
+ *
+ * Picking `string` or `number` keeps the cell in edit mode (the
+ * input type swaps to match the new kind, draft preserved). Picking
+ * `boolean` / `object` / `array` / `null` commits + exits so the
+ * right control takes over (checkbox / structural view / "—" chip).
+ *
+ * Row actions stay purely structural — only `delete` lives in the
+ * hover-revealed group; type-change is per-edit by design.
+ */
+export const EditableTypeChange: Story = {
+  args: {
+    label: 'Switch the type of an existing row',
+    icon: 'Repeat2Line',
+    data: { retries: '5', is_public: 'true', payload: 'inline' },
+    defaultExpandDepth: 99,
+    collapsibleRoot: false,
+    onDataChange: fn(),
+  },
+  render: (args) => <EditableHarness {...args} />,
+};
+
+/**
+ * Click-to-rename a key. Demonstrates that the key tag flips to an
+ * input on click, commits on Enter, and refuses duplicate keys.
+ */
+export const EditableKeyRename: Story = {
+  args: {
+    label: 'Rename a property key in place',
+    icon: 'EditBoxLine',
+    data: { display_name: 'Customer', retries: 3 },
+    defaultExpandDepth: 99,
+    collapsibleRoot: false,
+    onDataChange: fn(),
+  },
+  render: (args) => <EditableHarness {...args} />,
+  play: async ({ canvasElement, args }) => {
+    await _testsWaitForText('display_name');
+
+    const rows = Array.from(
+      canvasElement.querySelectorAll('.reqore-data-view-row')
+    );
+    const row = rows.find(
+      (r) => r.querySelector('.reqore-data-view-key')?.textContent === 'display_name'
+    )!;
+
+    // Click key chip → input appears.
+    const keyChip = row.querySelector('.reqore-data-view-key') as HTMLElement;
+    fireEvent.click(keyChip);
+    const keyInput = row.querySelector(
+      'input.reqore-data-view-key-edit'
+    ) as HTMLInputElement;
+    await expect(keyInput).toBeTruthy();
+
+    // Rename + Enter commits.
+    fireEvent.change(keyInput, { target: { value: 'label' } });
+    fireEvent.keyDown(keyInput, { key: 'Enter' });
+
+    const last = (args.onDataChange as ReturnType<typeof fn>).mock.calls.at(-1)?.[0] as
+      | Record<string, unknown>
+      | undefined;
+    await expect(Object.keys(last ?? {})).toEqual(['label', 'retries']);
+    await expect(last?.label).toBe('Customer');
   },
 };

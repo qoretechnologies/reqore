@@ -1,12 +1,18 @@
 import { fireEvent, render } from '@testing-library/react';
+import { useState } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import {
   ReqoreContent,
   ReqoreDataView,
   ReqoreLayoutContent,
   ReqoreUIProvider,
+  reqoreCoerceValueToKind,
+  reqoreDeleteAtPath,
   reqoreFormatScalar,
   reqoreHasStructuredValue,
   reqoreIsEnvelope,
+  reqoreRenameKeyAtPath,
+  reqoreSetAtPath,
   reqoreUnwrapEnvelope,
 } from '../src';
 
@@ -413,5 +419,555 @@ describe('reqoreHasStructuredValue', () => {
   it('unwraps envelopes before checking', () => {
     expect(reqoreHasStructuredValue({ type: 'list', value: [] })).toBe(false);
     expect(reqoreHasStructuredValue({ type: 'list', value: [1] })).toBe(true);
+  });
+});
+
+describe('reqoreSetAtPath', () => {
+  it('replaces the entire tree when the path is empty', () => {
+    expect(reqoreSetAtPath({ a: 1 }, [], 'x')).toBe('x');
+  });
+
+  it('sets a top-level record key', () => {
+    const before = { a: 1, b: 2 };
+    const after = reqoreSetAtPath(before, ['a'], 99);
+    expect(after).toEqual({ a: 99, b: 2 });
+    expect(after).not.toBe(before);
+  });
+
+  it('sets a nested record key', () => {
+    const before = { outer: { inner: { leaf: 'v1' } }, other: true };
+    const after = reqoreSetAtPath(before, ['outer', 'inner', 'leaf'], 'v2') as Record<
+      string,
+      any
+    >;
+    expect(after.outer.inner.leaf).toBe('v2');
+    expect(after.other).toBe(true);
+    expect(after.outer).not.toBe(before.outer);
+    expect(after.outer.inner).not.toBe(before.outer.inner);
+  });
+
+  it('sets an array index by string path', () => {
+    const before = { tags: ['a', 'b', 'c'] };
+    const after = reqoreSetAtPath(before, ['tags', '1'], 'B') as Record<string, any>;
+    expect(after.tags).toEqual(['a', 'B', 'c']);
+    expect(after.tags).not.toBe(before.tags);
+  });
+
+  it('extends an array when the index is past the end', () => {
+    const before: unknown[] = ['a'];
+    const after = reqoreSetAtPath(before, ['3'], 'd') as unknown[];
+    expect(after).toEqual(['a', undefined, undefined, 'd']);
+  });
+
+  it('creates intermediate containers when walking through a scalar', () => {
+    const before = { user: 'unset' };
+    const after = reqoreSetAtPath(before, ['user', 'name'], 'Ada') as Record<
+      string,
+      any
+    >;
+    expect(after.user).toEqual({ name: 'Ada' });
+  });
+
+  it('creates an intermediate array when the next segment is numeric', () => {
+    const before = { tags: 'unset' };
+    const after = reqoreSetAtPath(before, ['tags', '0'], 'first') as Record<
+      string,
+      any
+    >;
+    expect(after.tags).toEqual(['first']);
+  });
+});
+
+describe('reqoreDeleteAtPath', () => {
+  it('drops a top-level record key', () => {
+    const after = reqoreDeleteAtPath({ a: 1, b: 2 }, ['b']) as Record<string, any>;
+    expect(after).toEqual({ a: 1 });
+  });
+
+  it('splices an array index', () => {
+    const after = reqoreDeleteAtPath({ tags: ['a', 'b', 'c'] }, [
+      'tags',
+      '1',
+    ]) as Record<string, any>;
+    expect(after.tags).toEqual(['a', 'c']);
+  });
+
+  it('returns input unchanged when the path is not resolvable', () => {
+    const before = { a: 1 };
+    expect(reqoreDeleteAtPath(before, ['missing'])).toBe(before);
+  });
+
+  it('returns undefined when the path is empty', () => {
+    expect(reqoreDeleteAtPath({ a: 1 }, [])).toBeUndefined();
+  });
+});
+
+describe('reqoreCoerceValueToKind', () => {
+  it('keeps a string unchanged when coerced to string', () => {
+    expect(reqoreCoerceValueToKind('hello', 'string')).toBe('hello');
+  });
+  it('stringifies a number when coerced to string', () => {
+    expect(reqoreCoerceValueToKind(42, 'string')).toBe('42');
+  });
+  it('parses a numeric string to a number', () => {
+    expect(reqoreCoerceValueToKind('17', 'number')).toBe(17);
+  });
+  it('falls back to 0 when the source string is not numeric', () => {
+    expect(reqoreCoerceValueToKind('hello', 'number')).toBe(0);
+  });
+  it('maps true/1/yes string to a true boolean', () => {
+    expect(reqoreCoerceValueToKind('true', 'boolean')).toBe(true);
+    expect(reqoreCoerceValueToKind('1', 'boolean')).toBe(true);
+    expect(reqoreCoerceValueToKind('Yes', 'boolean')).toBe(true);
+  });
+  it('maps non-zero numbers to true', () => {
+    expect(reqoreCoerceValueToKind(5, 'boolean')).toBe(true);
+    expect(reqoreCoerceValueToKind(0, 'boolean')).toBe(false);
+  });
+  it('keeps an existing record when coerced to object', () => {
+    const existing = { a: 1 };
+    expect(reqoreCoerceValueToKind(existing, 'object')).toBe(existing);
+  });
+  it('returns an empty object when scalar coerced to object', () => {
+    expect(reqoreCoerceValueToKind('whatever', 'object')).toEqual({});
+  });
+  it('keeps an existing array when coerced to array', () => {
+    const existing = [1, 2];
+    expect(reqoreCoerceValueToKind(existing, 'array')).toBe(existing);
+  });
+  it('returns an empty array when scalar coerced to array', () => {
+    expect(reqoreCoerceValueToKind('x', 'array')).toEqual([]);
+  });
+  it('always returns null for null kind', () => {
+    expect(reqoreCoerceValueToKind('value', 'null')).toBeNull();
+  });
+});
+
+describe('reqoreRenameKeyAtPath', () => {
+  it('renames a top-level key preserving insertion order', () => {
+    const before = { a: 1, b: 2, c: 3 };
+    const after = reqoreRenameKeyAtPath(before, [], 'b', 'beta') as Record<
+      string,
+      unknown
+    >;
+    expect(Object.keys(after)).toEqual(['a', 'beta', 'c']);
+    expect(after.beta).toBe(2);
+  });
+
+  it('refuses to overwrite an existing key', () => {
+    const before = { a: 1, b: 2 };
+    const after = reqoreRenameKeyAtPath(before, [], 'a', 'b');
+    expect(after).toBe(before);
+  });
+
+  it('renames a nested key under an array path', () => {
+    const before = { items: [{ name: 'first' }, { name: 'second' }] };
+    const after = reqoreRenameKeyAtPath(before, ['items', '1'], 'name', 'label') as Record<
+      string,
+      any
+    >;
+    expect(after.items[0]).toEqual({ name: 'first' });
+    expect(after.items[1]).toEqual({ label: 'second' });
+  });
+
+  it('returns input unchanged when oldKey is missing', () => {
+    const before = { a: 1 };
+    expect(reqoreRenameKeyAtPath(before, [], 'missing', 'x')).toBe(before);
+  });
+});
+
+describe('editable DataView', () => {
+  const editableTree = {
+    display_name: 'Customer',
+    retries: 3,
+    is_public: false,
+  };
+
+  const Harness = ({
+    onCommit,
+    initial,
+  }: {
+    onCommit?: (next: unknown) => void;
+    initial?: unknown;
+  }) => {
+    const [tree, setTree] = useState<unknown>(initial ?? editableTree);
+    return (
+      <ReqoreDataView
+        data={tree}
+        editable
+        collapsibleRoot={false}
+        onDataChange={(next) => {
+          setTree(next);
+          onCommit?.(next);
+        }}
+      />
+    );
+  };
+
+  const findRow = (container: HTMLElement, keyName: string) => {
+    const rows = Array.from(
+      container.querySelectorAll('.reqore-data-view-row')
+    );
+    return rows.find(
+      (r) => r.querySelector('.reqore-data-view-key')?.textContent === keyName
+    ) as HTMLElement | undefined;
+  };
+
+  it('renders chips by default (no inputs until clicked)', () => {
+    const { container } = render(wrap(<Harness />));
+    // display_name + retries are scalars but render as chips, not
+    // inputs, until clicked.
+    expect(
+      container.querySelectorAll('input.reqore-data-view-edit').length
+    ).toBe(0);
+    expect(
+      container.querySelectorAll('.reqore-data-view-value').length
+    ).toBeGreaterThan(0);
+  });
+
+  it('swaps chip → input on click and commits the edit on Enter', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'display_name')!;
+    const chip = row.querySelector('.reqore-data-view-value') as HTMLElement;
+    fireEvent.click(chip);
+    const input = row.querySelector(
+      'input.reqore-data-view-edit'
+    ) as HTMLInputElement;
+    expect(input).toBeTruthy();
+    expect(input.value).toBe('Customer');
+    fireEvent.change(input, { target: { value: 'Customer 2' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.display_name).toBe('Customer 2');
+  });
+
+  it('commits via the visible Save button', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'display_name')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    const input = row.querySelector(
+      'input.reqore-data-view-edit'
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'Customer v2' } });
+    const commitBtn = row.querySelector(
+      '.reqore-data-view-edit-commit'
+    ) as HTMLElement;
+    expect(commitBtn).toBeTruthy();
+    // mousedown is the actual commit trigger so the input doesn't
+    // blur-commit before the button click resolves.
+    fireEvent.mouseDown(commitBtn);
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.display_name).toBe('Customer v2');
+  });
+
+  it('reverts via the visible Cancel button without firing onCommit', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'display_name')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    const input = row.querySelector(
+      'input.reqore-data-view-edit'
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'discarded' } });
+    const cancelBtn = row.querySelector(
+      '.reqore-data-view-edit-cancel'
+    ) as HTMLElement;
+    expect(cancelBtn).toBeTruthy();
+    fireEvent.mouseDown(cancelBtn);
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('reverts on Escape without firing onCommit', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'display_name')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    const input = row.querySelector(
+      'input.reqore-data-view-edit'
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'discarded' } });
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('commits a numeric edit as a Number, not a string', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'retries')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    const input = row.querySelector(
+      'input.reqore-data-view-edit'
+    ) as HTMLInputElement;
+    expect(input.type).toBe('number');
+    fireEvent.change(input, { target: { value: '7' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.retries).toBe(7);
+  });
+
+  it('renders a boolean as a chip in display mode (no inline checkbox)', () => {
+    const { container } = render(wrap(<Harness />));
+    const row = findRow(container, 'is_public')!;
+    // Display mode is consistent with other scalars — the chip
+    // shows the value; the editable affordances live in edit mode.
+    expect(row.querySelector('.reqore-data-view-value')).toBeTruthy();
+    expect(row.querySelector('input[type="checkbox"]')).toBeNull();
+  });
+
+  it('edits a boolean via chip → checkbox toggle → save', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'is_public')!;
+    // Step 1: click the chip → enter edit mode → checkbox appears.
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    const checkbox = row.querySelector(
+      '.reqore-data-view-edit-bool'
+    ) as HTMLElement;
+    expect(checkbox).toBeTruthy();
+    // Step 2: click checkbox → toggles the LOCAL draft, no commit yet.
+    fireEvent.click(checkbox);
+    expect(onCommit).not.toHaveBeenCalled();
+    // Step 3: click Save → commits the toggled draft (true).
+    fireEvent.mouseDown(
+      row.querySelector('.reqore-data-view-edit-commit') as HTMLElement
+    );
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.is_public).toBe(true);
+  });
+
+  it('discards a boolean toggle when Cancel is clicked', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'is_public')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    fireEvent.click(
+      row.querySelector('.reqore-data-view-edit-bool') as HTMLElement
+    );
+    fireEvent.mouseDown(
+      row.querySelector('.reqore-data-view-edit-cancel') as HTMLElement
+    );
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('shows the type picker when editing a boolean', () => {
+    const { container } = render(wrap(<Harness />));
+    const row = findRow(container, 'is_public')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    // The same picker that scalar cells use is reachable on booleans,
+    // since both kinds share the edit-mode control group.
+    expect(row.querySelector('.reqore-data-view-edit-type')).toBeTruthy();
+  });
+
+  it('renames a key via the inline key cell', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'display_name')!;
+    const keyChip = row.querySelector('.reqore-data-view-key') as HTMLElement;
+    fireEvent.click(keyChip);
+    const keyInput = row.querySelector(
+      'input.reqore-data-view-key-edit'
+    ) as HTMLInputElement;
+    expect(keyInput).toBeTruthy();
+    fireEvent.change(keyInput, { target: { value: 'label' } });
+    fireEvent.keyDown(keyInput, { key: 'Enter' });
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(Object.keys(last)).toEqual(['label', 'retries', 'is_public']);
+    expect(last.label).toBe('Customer');
+  });
+
+  it('refuses a duplicate key rename', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'display_name')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-key') as HTMLElement);
+    const keyInput = row.querySelector(
+      'input.reqore-data-view-key-edit'
+    ) as HTMLInputElement;
+    fireEvent.change(keyInput, { target: { value: 'retries' } });
+    fireEvent.keyDown(keyInput, { key: 'Enter' });
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('removes a row when the delete action fires', () => {
+    const onCommit = vi.fn();
+    const { container } = render(wrap(<Harness onCommit={onCommit} />));
+    const row = findRow(container, 'retries')!;
+    const deleteBtn = row.querySelector(
+      '.reqore-data-view-row-delete'
+    ) as HTMLElement;
+    expect(deleteBtn).toBeTruthy();
+    fireEvent.click(deleteBtn);
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect('retries' in last).toBe(false);
+    expect(last.display_name).toBe('Customer');
+  });
+
+  it('adds a new string property via the Add property affordance', () => {
+    const onCommit = vi.fn();
+    const { container } = render(
+      wrap(<Harness onCommit={onCommit} initial={{}} />)
+    );
+    const addRow = container.querySelector(
+      '.reqore-data-view-add-row'
+    ) as HTMLElement;
+    expect(addRow.getAttribute('data-state')).toBe('collapsed');
+    fireEvent.click(addRow.querySelector('button') as HTMLElement);
+    expect(
+      (
+        container.querySelector('.reqore-data-view-add-row') as HTMLElement
+      ).getAttribute('data-state')
+    ).toBe('expanded');
+    const keyInput = container.querySelector(
+      'input.reqore-data-view-add-key'
+    ) as HTMLInputElement;
+    fireEvent.change(keyInput, { target: { value: 'name' } });
+    const commit = container.querySelector(
+      '.reqore-data-view-add-commit'
+    ) as HTMLElement;
+    fireEvent.click(commit);
+    const last = onCommit.mock.calls.at(-1)?.[0];
+    expect(last).toEqual({ name: '' });
+  });
+
+  it('refuses an empty key from the Add property affordance', () => {
+    const onCommit = vi.fn();
+    const { container } = render(
+      wrap(<Harness onCommit={onCommit} initial={{}} />)
+    );
+    const addRow = container.querySelector(
+      '.reqore-data-view-add-row'
+    ) as HTMLElement;
+    fireEvent.click(addRow.querySelector('button') as HTMLElement);
+    const commit = container.querySelector(
+      '.reqore-data-view-add-commit'
+    ) as HTMLElement;
+    fireEvent.click(commit);
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('appends an item to an array via the Add item affordance', () => {
+    const onCommit = vi.fn();
+    const { container } = render(
+      wrap(<Harness onCommit={onCommit} initial={{ tags: ['a', 'b'] }} />)
+    );
+    // Find the array's Add affordance — it lives under the array
+    // stack, not the record's top-level affordance.
+    const arrayStack = container.querySelector(
+      '.reqore-data-view-array'
+    ) as HTMLElement;
+    const addRow = arrayStack.querySelector(
+      '.reqore-data-view-add-row'
+    ) as HTMLElement;
+    expect(addRow).toBeTruthy();
+    fireEvent.click(addRow.querySelector('button') as HTMLElement);
+    // No key input for arrays — only the type picker + commit.
+    expect(
+      addRow.querySelector('input.reqore-data-view-add-key')
+    ).toBeNull();
+    fireEvent.click(
+      addRow.querySelector('.reqore-data-view-add-commit') as HTMLElement
+    );
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.tags).toEqual(['a', 'b', '']);
+  });
+
+  it('exposes no type picker outside edit mode', () => {
+    const { container } = render(
+      wrap(<Harness initial={{ count: '7' }} />)
+    );
+    // No row-level type picker — type-changing is a per-edit
+    // concern, not a permanent row action.
+    expect(
+      container.querySelectorAll('.reqore-data-view-row-type-picker').length
+    ).toBe(0);
+  });
+
+  it('shows the type picker only while editing the value', () => {
+    const { container } = render(
+      wrap(<Harness initial={{ count: '7' }} />)
+    );
+    const row = findRow(container, 'count')!;
+    // Before entering edit mode there's no type picker.
+    expect(row.querySelector('.reqore-data-view-edit-type')).toBeNull();
+    // Click the chip → edit mode → picker is in the control group.
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    expect(row.querySelector('.reqore-data-view-edit-type')).toBeTruthy();
+  });
+
+  it('coerces a numeric-string draft to a Number when type-picking', () => {
+    const onCommit = vi.fn();
+    const { container } = render(
+      wrap(<Harness onCommit={onCommit} initial={{ count: '42' }} />)
+    );
+    const row = findRow(container, 'count')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    fireEvent.click(
+      row.querySelector('.reqore-data-view-edit-type') as HTMLElement
+    );
+    const numberItem = Array.from(
+      document.querySelectorAll('.reqore-menu-item')
+    ).find((item) => item.textContent?.includes('Number')) as HTMLElement;
+    expect(numberItem).toBeTruthy();
+    fireEvent.click(numberItem);
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.count).toBe(42);
+  });
+
+  it('falls back to 0 when type-picking Number from a non-numeric string', () => {
+    const onCommit = vi.fn();
+    const { container } = render(
+      wrap(<Harness onCommit={onCommit} initial={{ count: 'seven' }} />)
+    );
+    const row = findRow(container, 'count')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    fireEvent.click(
+      row.querySelector('.reqore-data-view-edit-type') as HTMLElement
+    );
+    const numberItem = Array.from(
+      document.querySelectorAll('.reqore-menu-item')
+    ).find((item) => item.textContent?.includes('Number')) as HTMLElement;
+    fireEvent.click(numberItem);
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.count).toBe(0);
+  });
+
+  it('converts a scalar to an empty object via the edit-mode type picker', () => {
+    const onCommit = vi.fn();
+    const { container } = render(
+      wrap(<Harness onCommit={onCommit} initial={{ payload: 'x' }} />)
+    );
+    const row = findRow(container, 'payload')!;
+    fireEvent.click(row.querySelector('.reqore-data-view-value') as HTMLElement);
+    fireEvent.click(
+      row.querySelector('.reqore-data-view-edit-type') as HTMLElement
+    );
+    const objectItem = Array.from(
+      document.querySelectorAll('.reqore-menu-item')
+    ).find((item) => item.textContent?.includes('Object')) as HTMLElement;
+    fireEvent.click(objectItem);
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.payload).toEqual({});
+  });
+
+  it('deletes an array item via the per-row action group', () => {
+    const onCommit = vi.fn();
+    const { container } = render(
+      wrap(
+        <Harness onCommit={onCommit} initial={{ tags: ['a', 'b', 'c'] }} />
+      )
+    );
+    const arrayItems = container.querySelectorAll(
+      '.reqore-data-view-array-item'
+    );
+    expect(arrayItems.length).toBe(3);
+    const second = arrayItems[1] as HTMLElement;
+    const deleteBtn = second.querySelector(
+      '.reqore-data-view-row-delete'
+    ) as HTMLElement;
+    fireEvent.click(deleteBtn);
+    const last = onCommit.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(last.tags).toEqual(['a', 'c']);
   });
 });
