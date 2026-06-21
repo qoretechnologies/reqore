@@ -21,6 +21,7 @@ export interface IReqoreOptions
     | 'customPortalId'
     | 'errorBoundaryOptions'
     | 'glowingIcons'
+    | 'shortcutHints'
   > {
   withSidebar?: boolean;
   uiScale?: number;

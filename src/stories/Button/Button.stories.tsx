@@ -1,7 +1,10 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
+import { useState } from 'react';
+import { expect, fireEvent } from 'storybook/test';
+import { _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton from '../../components/Button';
-import { ReqoreControlGroup } from '../../index';
+import { ReqoreControlGroup, ReqoreMessage, ReqoreVerticalSpacer } from '../../index';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, IconArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
@@ -554,6 +557,52 @@ export const RadiusSize: Story = {
       ))}
     </ReqoreControlGroup>
   ),
+};
+
+export const Shortcut: Story = {
+  render: () => {
+    const [count, setCount] = useState(0);
+
+    return (
+      <ReqoreControlGroup vertical>
+        <ReqoreMessage intent='info'>Pressed {count} time(s)</ReqoreMessage>
+        <ReqoreVerticalSpacer height={10} />
+        <ReqoreControlGroup wrap>
+          <ReqoreButton
+            icon='SearchLine'
+            shortcut='mod+k'
+            badge={3}
+            onClick={() => setCount((c) => c + 1)}
+            className='shortcut-button'
+          >
+            Search
+          </ReqoreButton>
+          <ReqoreButton icon='Save3Line' shortcut='mod+s' intent='success'>
+            Save
+          </ReqoreButton>
+          <ReqoreButton icon='DeleteBinLine' shortcut='mod+shift+backspace' intent='danger'>
+            Delete
+          </ReqoreButton>
+          <ReqoreButton icon='SettingsLine' shortcut='mod+,' shortcutHint={false}>
+            Settings (hidden hint)
+          </ReqoreButton>
+        </ReqoreControlGroup>
+      </ReqoreControlGroup>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    // The hint badge renders next to the button label
+    await expect(
+      canvasElement.querySelector('.shortcut-button .reqore-keyboard-shortcut')
+    ).toBeTruthy();
+
+    // `mod` is ⌘ on macOS and Ctrl elsewhere; press both so it matches on any
+    // platform (react-hotkeys-hook only checks the platform-appropriate one).
+    fireEvent.keyDown(document, { key: 'k', code: 'KeyK', metaKey: true, ctrlKey: true });
+
+    // waitFor the click handler's state update to flush before asserting
+    await _testsWaitForText('Pressed 1 time(s)');
+  },
 };
 
 export const MultipleGradients: Story = {

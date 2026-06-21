@@ -15,6 +15,7 @@ import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ActiveIconScale, DisabledElement, InactiveIconScale, ReadOnlyElement } from '../../styles';
 import {
@@ -30,6 +31,7 @@ import { IReqoreIconName } from '../../types/icons';
 import { StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
+import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreInputProps
@@ -68,6 +70,11 @@ export interface IReqoreInputProps
   iconColor?: TReqoreEffectColor;
   rightIconColor?: TReqoreEffectColor;
   focusRules?: IReqoreAutoFocusRules;
+  /**
+   * Whether to render a badge-style hint for the `focusRules` keyboard shortcut.
+   * Defaults to `true`, unless globally disabled via the `shortcutHints` UI option.
+   */
+  shortcutHint?: boolean;
 
   leftIconProps?: IReqoreIconProps;
   rightIconProps?: IReqoreIconProps;
@@ -83,6 +90,7 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
   _size?: TSizes;
   clearable?: boolean;
   hasIcon?: boolean;
+  hasShortcutHint?: boolean;
 }
 
 export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
@@ -125,19 +133,34 @@ const StyledIconWrapper = styled.div<IReqoreInputStyle>`
   align-items: center;
 `;
 
+const StyledShortcutWrapper = styled.div<{ _size: TSizes; offset: number }>`
+  position: absolute;
+  height: 100%;
+  top: 0;
+  right: ${({ offset }) => offset}px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+`;
+
 export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   height: 100%;
   width: 100%;
   flex: 1;
   margin: 0;
   padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px 7px;
-  padding-right: ${({ clearable, hasRightIcon, _size }) => {
+  padding-right: ${({ clearable, hasRightIcon, hasShortcutHint, _size }) => {
     let padding = 7;
 
     if (clearable || hasRightIcon) {
       padding = 0;
       padding += clearable ? SIZE_TO_PX[_size] : 0;
       padding += hasRightIcon ? SIZE_TO_PX[_size] : 0;
+    }
+
+    // Reserve room so typed text / placeholder doesn't slide under the hint badge.
+    if (hasShortcutHint) {
+      padding += SIZE_TO_PX[_size];
     }
 
     return padding;
@@ -221,6 +244,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       intent,
       wrapperStyle,
       focusRules,
+      shortcutHint,
       leftIconProps = {},
       rightIconProps = {},
       pill,
@@ -233,11 +257,22 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     const { targetRef } = useCombinedRefs(ref);
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+    const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
 
     useAutoFocus(inputRef, readOnly || rest.disabled ? undefined : focusRules, rest.onChange);
 
     const hasLeftIcon = icon || leftIconProps?.image;
     const hasRightIcon = rightIcon || rightIconProps?.image;
+    const clearable =
+      !rest?.disabled &&
+      !readOnly &&
+      !!(onClearClick && (rest.as || rest.children || rest?.onChange));
+    const showShortcutHint =
+      !!focusRules?.shortcut &&
+      shortcutHint !== false &&
+      shortcutHintsEnabled !== false &&
+      !readOnly &&
+      !rest.disabled;
     const leftIcon: IReqoreIconName = loading
       ? `Loader${loadingIconType || ''}Line`
       : icon || leftIconProps?.icon;
@@ -290,11 +325,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           rounded={rounded}
           hasIcon={!!icon}
           hasRightIcon={!!rightIcon}
-          clearable={
-            !rest?.disabled &&
-            !readOnly &&
-            !!(onClearClick && (rest.as || rest.children || rest?.onChange))
-          }
+          hasShortcutHint={showShortcutHint}
+          clearable={clearable}
           className={`${className || ''} reqore-control reqore-input`}
           readOnly={readOnly || loading}
           pill={pill}
@@ -302,11 +334,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           {rest?.children}
         </StyledInput>
         <ReqoreInputClearButton
-          enabled={
-            !readOnly &&
-            !rest?.disabled &&
-            !!(onClearClick && (rest.as || rest.children || rest?.onChange))
-          }
+          enabled={clearable}
           onClick={onClearClick}
           hasRightIcon={!!rightIcon}
           size={size}
@@ -322,6 +350,14 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
               {...rightIconProps}
             />
           </StyledIconWrapper>
+        )}
+        {showShortcutHint && (
+          <StyledShortcutWrapper
+            _size={size}
+            offset={(hasRightIcon ? SIZE_TO_PX[size] : 0) + (clearable ? SIZE_TO_PX[size] : 0) + 7}
+          >
+            <ReqoreKeyboardShortcut shortcut={focusRules.shortcut} size={size} compact />
+          </StyledShortcutWrapper>
         )}
       </ReqoreTooltipComponent>
     );

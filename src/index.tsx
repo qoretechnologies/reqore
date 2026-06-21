@@ -23,11 +23,15 @@ export {
   ReqoreDataView,
   reqoreDataValueIntent,
   reqoreDataValueKind,
+  reqoreCoerceValueToKind,
+  reqoreDeleteAtPath,
   reqoreEnvelopeType,
   reqoreFormatScalar,
   reqoreHasStructuredValue,
   reqoreIsEnvelope,
   reqoreIsRecord,
+  reqoreRenameKeyAtPath,
+  reqoreSetAtPath,
   reqoreUnwrapEnvelope,
 } from './components/DataView';
 export * from './components/DatePicker';
@@ -54,6 +58,18 @@ export {
 export { default as ReqoreIcon } from './components/Icon';
 export { ReqoreIconPicker } from './components/IconPicker';
 export { default as ReqoreInput } from './components/Input';
+export {
+  default as ReqoreKeyboardShortcut,
+  ReqoreKeyboardShortcut as ReqoreKeyboardShortcutComponent,
+} from './components/KeyboardShortcut';
+export type { IReqoreKeyboardShortcutProps } from './components/KeyboardShortcut';
+export {
+  formatShortcut,
+  formatShortcutCombo,
+  isMacOS,
+  shortcutHasModifier,
+} from './helpers/shortcuts';
+export type { TReqoreKeyboardShortcut } from './helpers/shortcuts';
 export { ReqoreKeyValueTable } from './components/KeyValueTable';
 export * from './components/Label';
 export { default as ReqoreLayoutContent } from './components/Layout/content';
@@ -87,6 +103,7 @@ export { ReqoreSlider } from './components/Slider';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
 export { ReqoreSpan } from './components/Span';
 export { ReqoreSpinner } from './components/Spinner';
+export { default as ReqoreStackedBar } from './components/StackedBar';
 export { default as ReqoreStatistic } from './components/Statistic';
 export { default as ReqoreTable } from './components/Table';
 export { ReqoreTableBodyCell } from './components/Table/cell';

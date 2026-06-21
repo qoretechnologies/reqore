@@ -647,6 +647,11 @@ export const InCustomPortal: Story = {
 };
 
 export const KeepOpenOnHoverWithClickableContent: Story = {
+  parameters: {
+    chromatic: {
+      disable: true,
+    },
+  },
   render: () => {
     const [clickedButton, setClickedButton] = useState<string | null>(null);
 

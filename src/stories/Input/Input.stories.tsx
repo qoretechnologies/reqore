@@ -1,5 +1,6 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
+import { expect } from 'storybook/test';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
@@ -261,4 +262,46 @@ export const RadiusSize: Story = {
       ))}
     </ReqoreControlGroup>
   ),
+};
+
+export const ShortcutHint: Story = {
+  render: () => {
+    const [value, setValue] = useState('Clearable value');
+
+    return (
+      <ReqoreControlGroup vertical fluid gapSize='small'>
+        <ReqoreInput
+          icon='SearchLine'
+          placeholder='Press / to focus'
+          focusRules={{ type: 'keypress', shortcut: '/', doNotInsertShortcut: true }}
+        />
+        {/* Clearable + value: the hint badge should sit to the left of the clear button */}
+        <ReqoreInput
+          value={value}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
+          onClearClick={() => setValue('')}
+          placeholder='Clearable, press k to focus'
+          focusRules={{ type: 'keypress', shortcut: 'k', doNotInsertShortcut: true }}
+        />
+        {/* Clearable + value + right icon: badge sits left of both */}
+        <ReqoreInput
+          value={value}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
+          onClearClick={() => setValue('')}
+          rightIcon='Calendar2Line'
+          placeholder='Clearable + right icon'
+          focusRules={{ type: 'keypress', shortcut: 'l', doNotInsertShortcut: true }}
+        />
+        <ReqoreInput
+          placeholder='Hint hidden via shortcutHint={false}'
+          shortcutHint={false}
+          focusRules={{ type: 'keypress', shortcut: 'j', doNotInsertShortcut: true }}
+        />
+      </ReqoreControlGroup>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    // Three of the four inputs render a hint (the last opts out)
+    await expect(canvasElement.querySelectorAll('.reqore-keyboard-shortcut').length).toBe(3);
+  },
 };

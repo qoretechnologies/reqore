@@ -139,6 +139,178 @@ export const reqoreHasStructuredValue = (
   return true;
 };
 
+/** Immutable set-at-path — walks the structural tree (`data`),
+ *  produces a new copy with the leaf at `path` replaced by `value`, and
+ *  returns it. Used by the editable mode to apply per-cell edits while
+ *  keeping the surrounding shape intact for diffing / undo / parent
+ *  re-renders.
+ *
+ *  Supports nested records and arrays. Numeric path segments are
+ *  interpreted as array indices when the parent at that level is an
+ *  array. Out-of-range array indices extend the array (pushes
+ *  `undefined` into the gap) — useful when an "add item" affordance
+ *  appends to a list. Setting a record key that does not yet exist
+ *  creates it. */
+export const reqoreSetAtPath = (
+  data: unknown,
+  path: ReadonlyArray<string>,
+  value: unknown
+): unknown => {
+  if (path.length === 0) return value;
+  const [head, ...rest] = path;
+  if (Array.isArray(data)) {
+    const index = Number.parseInt(head, 10);
+    if (Number.isNaN(index) || index < 0) return data;
+    const next = data.slice();
+    while (next.length <= index) next.push(undefined);
+    next[index] = reqoreSetAtPath(next[index], rest, value);
+    return next;
+  }
+  if (reqoreIsRecord(data)) {
+    return { ...data, [head]: reqoreSetAtPath((data as Record<string, unknown>)[head], rest, value) };
+  }
+  // Walking into a scalar — synthesize the missing container based on
+  // the next path segment (numeric → array, otherwise record).
+  const nextIsArray = /^\d+$/.test(head);
+  const container: unknown = nextIsArray ? [] : {};
+  return reqoreSetAtPath(container, path, value);
+};
+
+/** Coerce a value to a target value-kind, preserving the existing
+ *  content where reasonable. Powers the inline type-change picker —
+ *  when the operator flips a string to a number we try to parse it;
+ *  when they flip a number to a boolean we use the standard
+ *  zero-is-false rule; flips to an object or array discard the scalar
+ *  and yield an empty container ready to be filled in.
+ *
+ *  Returns sensible defaults when conversion isn't possible:
+ *    - string  → unchanged for string; `String(value)` for scalars; `''` for objects/arrays/null
+ *    - number  → parsed when possible; `0` otherwise; booleans → 0/1
+ *    - boolean → unchanged for boolean; `'true'`/`'1'` → true; numbers → !!value; else false
+ *    - object  → unchanged for record; `{}` otherwise
+ *    - array   → unchanged for array; `[]` otherwise
+ *    - null    → always `null`
+ */
+export const reqoreCoerceValueToKind = (
+  current: unknown,
+  kind: TReqoreDataValueKind
+): unknown => {
+  switch (kind) {
+    case 'string':
+      if (typeof current === 'string') return current;
+      if (typeof current === 'number' || typeof current === 'boolean') {
+        return String(current);
+      }
+      return '';
+    case 'number': {
+      if (typeof current === 'number') return current;
+      if (typeof current === 'boolean') return current ? 1 : 0;
+      if (typeof current === 'string') {
+        const trimmed = current.trim();
+        if (trimmed === '') return 0;
+        const parsed = Number(trimmed);
+        return Number.isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    }
+    case 'boolean':
+      if (typeof current === 'boolean') return current;
+      if (typeof current === 'number') return current !== 0;
+      if (typeof current === 'string') {
+        const lower = current.trim().toLowerCase();
+        return lower === 'true' || lower === '1' || lower === 'yes';
+      }
+      return false;
+    case 'object':
+      return reqoreIsRecord(current) ? current : {};
+    case 'array':
+      return Array.isArray(current) ? current : [];
+    case 'null':
+    default:
+      return null;
+  }
+};
+
+/** Immutable key-rename — locate the record at `path` and rename one
+ *  of its keys while preserving the insertion order of every other
+ *  key. Returns the input unchanged if the path doesn't resolve to a
+ *  record, if `oldKey` isn't a key on that record, or if `newKey` is
+ *  already taken (refuses to overwrite). */
+export const reqoreRenameKeyAtPath = (
+  data: unknown,
+  path: ReadonlyArray<string>,
+  oldKey: string,
+  newKey: string
+): unknown => {
+  if (oldKey === newKey) return data;
+  if (path.length === 0) {
+    if (!reqoreIsRecord(data)) return data;
+    if (!(oldKey in data) || newKey in data) return data;
+    const next: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      next[k === oldKey ? newKey : k] = v;
+    }
+    return next;
+  }
+  const [head, ...rest] = path;
+  if (Array.isArray(data)) {
+    const index = Number.parseInt(head, 10);
+    if (Number.isNaN(index) || index < 0 || index >= data.length) return data;
+    const arr = data.slice();
+    arr[index] = reqoreRenameKeyAtPath(arr[index], rest, oldKey, newKey);
+    return arr;
+  }
+  if (reqoreIsRecord(data)) {
+    return {
+      ...data,
+      [head]: reqoreRenameKeyAtPath(
+        (data as Record<string, unknown>)[head],
+        rest,
+        oldKey,
+        newKey
+      ),
+    };
+  }
+  return data;
+};
+
+/** Immutable delete-at-path — walks the structural tree (`data`),
+ *  produces a new copy with the leaf at `path` removed. For records,
+ *  the key is dropped; for arrays, the index is spliced out (so later
+ *  indices shift down). Returns the input unchanged if the path
+ *  doesn't resolve. */
+export const reqoreDeleteAtPath = (
+  data: unknown,
+  path: ReadonlyArray<string>
+): unknown => {
+  if (path.length === 0) return undefined;
+  const [head, ...rest] = path;
+  if (Array.isArray(data)) {
+    const index = Number.parseInt(head, 10);
+    if (Number.isNaN(index) || index < 0 || index >= data.length) return data;
+    if (rest.length === 0) {
+      const next = data.slice();
+      next.splice(index, 1);
+      return next;
+    }
+    const next = data.slice();
+    next[index] = reqoreDeleteAtPath(next[index], rest);
+    return next;
+  }
+  if (reqoreIsRecord(data)) {
+    if (!(head in data)) return data;
+    if (rest.length === 0) {
+      const { [head]: _dropped, ...remaining } = data as Record<string, unknown>;
+      return remaining;
+    }
+    return {
+      ...data,
+      [head]: reqoreDeleteAtPath((data as Record<string, unknown>)[head], rest),
+    };
+  }
+  return data;
+};
+
 /** The shape returned by a custom `parseEmbedded` hook — used by the
  *  view to swap an embedded structured string in-place for the parsed
  *  tree. The optional `prefix` lets the source string carry a leading

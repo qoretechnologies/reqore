@@ -45,6 +45,14 @@ export interface IReqoreContext {
    * @default false
    */
   readonly glowingIcons?: boolean;
+  /**
+   * When `true` (the default), buttons and inputs that declare a keyboard
+   * `shortcut` / `focusRules` shortcut render a badge-style hint. Set to `false`
+   * to hide all shortcut hints app-wide. Individual controls can still opt out
+   * with `shortcutHint={false}`.
+   * @default true
+   */
+  readonly shortcutHints?: boolean;
   readonly customPortalId?: string;
   readonly closePopoversOnEscPress?: boolean;
   readonly closeModalsOnEscPress?: boolean;
@@ -73,6 +81,7 @@ export default createContext<IReqoreContext>({
   },
   closePopoversOnEscPress: true,
   closeModalsOnEscPress: true,
+  shortcutHints: true,
   escClosableModals: [],
   addEscClosableModal: null,
   removeEscClosableModal: null,

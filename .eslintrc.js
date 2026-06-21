@@ -29,6 +29,9 @@ module.exports = {
     'react/prop-types': 'off',
     'no-extra-boolean-cast': 'off',
     'no-console': ['error', { allow: ['warn', 'error'] }],
+    // Allow the "omit a key" idiom — `const { dropped, ...rest } = obj` — where
+    // the destructured sibling is intentionally discarded.
+    '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
   },
   // Ignore storybook files
   ignorePatterns: ['**/stories/*', '**/mock/*'],
