@@ -46,7 +46,8 @@ import { YearMonthDropdowns } from './MonthYearDropdowns';
 
 export type TDateValue = string | Date | null;
 export interface IDatePickerProps<T extends TDateValue>
-  extends Omit<
+  extends
+    Omit<
       DatePickerProps<ZonedDateTime>,
       'value' | 'onChange' | 'defaultValue' | 'minValue' | 'maxValue'
     >,
@@ -349,7 +350,7 @@ export const DatePicker = <T extends TDateValue>({
   const resolvedLocale =
     locale ??
     (typeof navigator !== 'undefined'
-      ? navigator.languages?.find((l) => !l.startsWith('en')) ?? navigator.language
+      ? (navigator.languages?.find((l) => !l.startsWith('en')) ?? navigator.language)
       : undefined);
 
   const formattedDate = useMemo(() => {
@@ -550,6 +551,7 @@ export const DatePicker = <T extends TDateValue>({
               minimal,
               intent,
               flat,
+              customTheme: theme,
               icon: 'CalendarLine',
               ...inputProps,
             }}
