@@ -59,16 +59,6 @@ jobs:
       - name: Running Storybook interaction tests
         id: story_tests
         run: yarn test:stories
-      - name: Publish to Chromatic
-        id: chromatic_publish
-        uses: chromaui/action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-          exitZeroOnChanges: true
-          allowConsoleErrors: true
-          onlyChanged: true
-
       - name: Save release version to outputs
         id: save_release_version
         run: echo ::set-output name=version::$(node -pe "require('./package.json').version")
