@@ -342,6 +342,11 @@ const ReqoreTable = ({
   }, [wrap, hasColumnWrap, virtualized]);
 
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  // Live height of the header (column labels + the filter row when present). When
+  // the table `fill`s its container the virtualized body must leave room for this
+  // header; otherwise the body is sized to the whole container and its last rows
+  // overflow under the wrapper and get clipped (you can still scroll to them).
+  const [headerHeight, setHeaderHeight] = useState<number>(0);
   const [_data, setData] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort | undefined>(fixSort(sort));
   const [_selected, setSelected] = useState<(string | number)[]>(selected || []);
@@ -356,6 +361,21 @@ const ReqoreTable = ({
 
   const addModal = useReqoreProperty('addModal');
   const [wrapperRef, sizes] = useMeasure();
+
+  // Track the header's height so a filled body can subtract it (see `headerHeight`).
+  // A ResizeObserver keeps it correct when the filter row appears/disappears or
+  // the header wraps. Only needed while `fill` is on.
+  useEffect(() => {
+    const element = mainHeaderRef.current;
+    if (!fill || !element || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+    const measure = () => setHeaderHeight(element.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [fill]);
   const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
     filter.toString(),
     300,
@@ -864,7 +884,7 @@ const ReqoreTable = ({
             headerRef={mainHeaderRef}
             data={items}
             columns={finalColumns}
-            height={fill ? sizes.height : height}
+            height={fill ? Math.max(0, sizes.height - headerHeight) : height}
             selectable={selectable}
             onSelectClick={handleSelectClick}
             onRowClick={onRowClick}
