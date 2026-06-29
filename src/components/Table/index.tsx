@@ -365,6 +365,12 @@ const ReqoreTable = ({
   // Track the header's height so a filled body can subtract it (see `headerHeight`).
   // A ResizeObserver keeps it correct when the filter row appears/disappears or
   // the header wraps. Only needed while `fill` is on.
+  //
+  // `sizes.height` is in the deps on purpose: the header ref isn't always mounted
+  // on the first run (e.g. when the table is wrapped in a pagination container),
+  // so re-running once the container has been measured guarantees we pick the
+  // header up and set a non-zero height — otherwise the body keeps the full
+  // container height and its last rows scroll out of reach under the wrapper.
   useEffect(() => {
     const element = mainHeaderRef.current;
     if (!fill || !element || typeof ResizeObserver === 'undefined') {
@@ -375,7 +381,7 @@ const ReqoreTable = ({
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [fill]);
+  }, [fill, sizes.height]);
   const { query, preQuery, setQuery, setPreQuery } = useQueryWithDelay(
     filter.toString(),
     300,
