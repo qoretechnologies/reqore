@@ -605,6 +605,70 @@ export const Shortcut: Story = {
   },
 };
 
+export const Indicator: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <ReqoreControlGroup wrap>
+        <ReqoreButton icon='NotificationLine' indicator>
+          Default (danger)
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' indicator={{ intent: 'info' }}>
+          Info
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' indicator={{ intent: 'success' }}>
+          Success
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' indicator={{ intent: 'warning' }}>
+          Warning
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' indicator={{ color: '#a24bff' }}>
+          Custom color
+        </ReqoreButton>
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup wrap>
+        <ReqoreButton icon='NotificationLine' indicator={{ intent: 'danger', pulse: true }}>
+          Pulsing danger
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' indicator={{ intent: 'success', pulse: true }}>
+          Pulsing success
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' minimal indicator={{ intent: 'info', pulse: true }}>
+          Pulsing minimal
+        </ReqoreButton>
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup wrap>
+        <ReqoreButton icon='NotificationLine' indicator={{ position: 'top-right', pulse: true }}>
+          Top right
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' indicator={{ position: 'top-left', pulse: true }}>
+          Top left
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' indicator={{ position: 'bottom-right', pulse: true }}>
+          Bottom right
+        </ReqoreButton>
+        <ReqoreButton icon='NotificationLine' indicator={{ position: 'bottom-left', pulse: true }}>
+          Bottom left
+        </ReqoreButton>
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup wrap verticalAlign='center'>
+        {ALL_SIZES.map((size) => (
+          <ReqoreButton
+            key={size}
+            size={size}
+            icon='NotificationLine'
+            indicator={{ intent: 'danger', pulse: true }}
+          >
+            {size}
+          </ReqoreButton>
+        ))}
+      </ReqoreControlGroup>
+    </ReqoreControlGroup>
+  ),
+};
+
 export const MultipleGradients: Story = {
   render: () => (
     <ReqoreControlGroup wrap>

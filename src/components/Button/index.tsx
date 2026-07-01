@@ -2,7 +2,7 @@ import { size } from 'lodash';
 import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import styled, { css } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
@@ -10,13 +10,14 @@ import {
   CONTROL_VERTICAL_PADDING_FROM_SIZE,
   CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE,
   ICON_FROM_SIZE,
+  INDICATOR_SIZE_TO_PX,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
   resolveRadius,
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
-import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
+import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
   getGradientMix,
@@ -57,6 +58,7 @@ import {
   IReqoreEffect,
   ReqoreTextEffect,
   StyledEffect,
+  TReqoreColor,
   TReqoreEffectColor,
   TReqoreHexColor,
 } from '../Effect';
@@ -68,6 +70,78 @@ import ReqoreTagGroup from '../Tag/group';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export type TReqoreBadge = string | number | IReqoreTagProps;
+
+export type TReqoreButtonIndicatorPosition =
+  | 'top-right'
+  | 'top-left'
+  | 'bottom-right'
+  | 'bottom-left';
+
+export interface IReqoreButtonIndicatorProps {
+  /** Intent used to tint the dot. Resolved from the button's theme intents. Defaults to `danger`. */
+  intent?: TReqoreIntent;
+  /** Explicit color override. Takes precedence over `intent`. */
+  color?: TReqoreColor;
+  /** Animate the dot with an expanding, fading pulse ring. Defaults to `false` (static). */
+  pulse?: boolean;
+  /** Corner the dot is anchored to. Defaults to `top-right`. */
+  position?: TReqoreButtonIndicatorPosition;
+}
+
+const indicatorPulseKeyframes = keyframes`
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+`;
+
+export interface IReqoreButtonIndicatorStyle {
+  $color: TReqoreColor;
+  $diameter: number;
+  $offset: number;
+  $position: TReqoreButtonIndicatorPosition;
+  $pulse?: boolean;
+}
+
+export const StyledButtonIndicator = styled.span<IReqoreButtonIndicatorStyle>`
+  position: absolute;
+  z-index: 2;
+  width: ${({ $diameter }) => $diameter}px;
+  height: ${({ $diameter }) => $diameter}px;
+  border-radius: 50%;
+  background-color: ${({ $color }) => $color};
+  pointer-events: none;
+
+  ${({ $position, $offset }) => {
+    const [vertical, horizontal] = $position.split('-');
+
+    return css`
+      ${vertical}: ${$offset}px;
+      ${horizontal}: ${$offset}px;
+    `;
+  }}
+
+  ${({ $pulse, $color }) =>
+    $pulse
+      ? css`
+          &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background-color: ${$color};
+            animation: ${indicatorPulseKeyframes} 1.6s ease-out infinite;
+          }
+        `
+      : undefined};
+`;
 
 /**
  * Button props for the primary Reqore action component.
@@ -98,6 +172,17 @@ export interface IReqoreButtonProps
   customTheme?: IReqoreCustomTheme;
   wrap?: boolean;
   badge?: TReqoreBadge | TReqoreBadge[];
+
+  /**
+   * Renders a small dot in a corner of the button to signal importance or a
+   * pending event (unread items, a required action, a live status). Distinct
+   * from `badge`, which renders content tags inside the button.
+   *
+   * Pass `true` for a static, danger-tinted dot in the top-right corner, or an
+   * object to customize the `intent`/`color`, enable the `pulse` animation, and
+   * pick the `position`.
+   */
+  indicator?: boolean | IReqoreButtonIndicatorProps;
 
   /**
    * Keyboard shortcut that triggers the button's `onClick`, following the
@@ -514,6 +599,7 @@ const ReqoreButton = memo(
         wrap,
         readOnly,
         badge,
+        indicator,
         description,
         maxWidth,
         textAlign = 'left',
@@ -597,6 +683,23 @@ const ReqoreButton = memo(
         }),
         [fixedEffect, intent, readOnly, rest.disabled]
       );
+
+      const indicatorConfig = useMemo(() => {
+        if (!indicator) {
+          return undefined;
+        }
+
+        const config: IReqoreButtonIndicatorProps = indicator === true ? {} : indicator;
+        const diameter = INDICATOR_SIZE_TO_PX[size];
+
+        return {
+          color: config.color ?? theme.intents?.[config.intent ?? 'danger'] ?? theme.intents?.danger,
+          diameter,
+          offset: Math.round(diameter * 0.6),
+          position: config.position ?? 'top-right',
+          pulse: config.pulse ?? false,
+        };
+      }, [indicator, size, theme.intents]);
 
       return (
         <ReqoreTooltipComponent
@@ -784,6 +887,18 @@ const ReqoreButton = memo(
             >
               {description}
             </ReqoreTextEffect>
+          )}
+
+          {indicatorConfig && (
+            <StyledButtonIndicator
+              className='reqore-button-indicator'
+              $color={indicatorConfig.color}
+              $diameter={indicatorConfig.diameter}
+              $offset={indicatorConfig.offset}
+              $position={indicatorConfig.position}
+              $pulse={indicatorConfig.pulse}
+              aria-hidden='true'
+            />
           )}
         </ReqoreTooltipComponent>
       );

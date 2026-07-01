@@ -105,6 +105,17 @@ export const BADGE_SIZE_TO_PX = {
   massive: 44,
 };
 
+/** Diameter (px) of the button corner indicator dot per size. */
+export const INDICATOR_SIZE_TO_PX = {
+  micro: 5,
+  tiny: 6,
+  small: 7,
+  normal: 8,
+  big: 10,
+  huge: 12,
+  massive: 14,
+};
+
 export const TABS_SIZE_TO_PX = {
   micro: 16,
   tiny: 20,
