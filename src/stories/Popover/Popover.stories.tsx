@@ -736,3 +736,107 @@ export const KeepOpenOnHoverWithClickableContent: Story = {
     await expect(document.querySelector('.reqore-popover-content')).toBeInTheDocument();
   },
 };
+
+/**
+ * Regression: `ReqorePopover` used to swallow `customTheme` because
+ * the prop was never destructured — it type-checked (via the
+ * inherited `IReqoreComponent` chain) but never reached the trigger
+ * `component`. That broke the theme cascade in any container that
+ * relies on it (e.g. a themed `ReqorePanel`'s action slot, where
+ * every OTHER action picks up the panel's theme automatically).
+ *
+ * A themed minimal `ReqoreButton` paints its surface with a tint
+ * derived from the resolved theme's `main` colour, so its computed
+ * `background-color` is the observable signal that `customTheme`
+ * reached the trigger. We assert against a `plain` control (no
+ * theme): if forwarding works the themed trigger's background differs
+ * from the plain one; if the popover swallowed the theme they'd be
+ * identical.
+ *
+ * We also verify the caller can still override the theme per-trigger
+ * by passing a competing `componentProps.customTheme`.
+ */
+const POPOVER_THEME_ACCENT = '#8b3dff';
+const POPOVER_THEME_OVERRIDE = '#22aa55';
+
+export const CustomThemeForwardedToTrigger: Story = {
+  render: () => (
+    <ReqoreControlGroup gapSize='huge'>
+      <ReqorePopover
+        component={ReqoreButton}
+        componentProps={{
+          icon: 'Settings3Line',
+          minimal: true,
+          flat: true,
+          'data-testid': 'plain-trigger',
+        }}
+        handler='click'
+        content='No theme — the default surface.'
+      >
+        Plain trigger
+      </ReqorePopover>
+      <ReqorePopover
+        component={ReqoreButton}
+        componentProps={{
+          icon: 'Settings3Line',
+          minimal: true,
+          flat: true,
+          'data-testid': 'themed-trigger',
+        }}
+        customTheme={{ main: POPOVER_THEME_ACCENT }}
+        handler='click'
+        content='Trigger paints with the accent main colour.'
+      >
+        Themed trigger
+      </ReqorePopover>
+      <ReqorePopover
+        component={ReqoreButton}
+        componentProps={{
+          icon: 'Settings3Line',
+          minimal: true,
+          flat: true,
+          'data-testid': 'override-trigger',
+          // Caller wins — override should stick even though the
+          // popover also provides its own `customTheme`.
+          customTheme: { main: POPOVER_THEME_OVERRIDE },
+        }}
+        customTheme={{ main: POPOVER_THEME_ACCENT }}
+        handler='click'
+        content='componentProps.customTheme wins.'
+      >
+        Overridden trigger
+      </ReqorePopover>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    // Query inside waitFor so the assertion re-runs until the triggers
+    // have mounted and resolved their themed styles.
+    await waitFor(() => {
+      const plain = document.querySelector('[data-testid="plain-trigger"]') as HTMLElement | null;
+      const themed = document.querySelector('[data-testid="themed-trigger"]') as HTMLElement | null;
+      const overridden = document.querySelector(
+        '[data-testid="override-trigger"]'
+      ) as HTMLElement | null;
+
+      expect(plain).not.toBeNull();
+      expect(themed).not.toBeNull();
+      expect(overridden).not.toBeNull();
+
+      const plainBg = getComputedStyle(plain!).backgroundColor;
+      const themedBg = getComputedStyle(themed!).backgroundColor;
+      const overriddenBg = getComputedStyle(overridden!).backgroundColor;
+
+      // Every trigger's minimal surface tint must resolve to a real colour.
+      expect(plainBg).toBeTruthy();
+      expect(themedBg).toBeTruthy();
+      expect(overriddenBg).toBeTruthy();
+
+      // Forwarding works: the popover-level `customTheme` changed the
+      // trigger's surface away from the default (plain) one.
+      expect(themedBg).not.toBe(plainBg);
+      // Caller override works and is distinct from the popover theme.
+      expect(overriddenBg).not.toBe(plainBg);
+      expect(overriddenBg).not.toBe(themedBg);
+    });
+  },
+};

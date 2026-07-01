@@ -45,6 +45,52 @@ test('Animated <Button /> exposes one accessible label', () => {
   expect(screen.getByRole('button', { name: 'Animated label' })).toBeTruthy();
 });
 
+test('Renders <Button /> indicator when enabled', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton indicator>With indicator</ReqoreButton>
+          <ReqoreButton>Plain</ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-button-indicator').length).toBe(1);
+});
+
+test('Renders <Button /> indicator with a custom intent', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton indicator={{ intent: 'success', pulse: true }}>Success dot</ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const indicator = document.querySelector('.reqore-button-indicator');
+
+  expect(indicator).toBeTruthy();
+  expect(window.getComputedStyle(indicator!).backgroundColor).toBeTruthy();
+});
+
+test('Does not render <Button /> indicator by default', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton>No indicator</ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-button-indicator').length).toBe(0);
+});
+
 test('Renders <Button /> with size properly', () => {
   render(
     <ReqoreUIProvider>

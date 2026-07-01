@@ -8,6 +8,7 @@ import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import {
   IReqoreComponent,
   IReqoreIntent,
+  IWithReqoreCustomTheme,
   IWithReqoreEffect,
   IWithReqoreFlat,
   IWithReqoreMinimal,
@@ -15,7 +16,10 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import InternalPopover from '../InternalPopover';
 
-export interface IReqorePopoverProps extends IReqoreComponent, IPopoverOptions {
+export interface IReqorePopoverProps
+  extends IReqoreComponent,
+    IWithReqoreCustomTheme,
+    IPopoverOptions {
   component: any;
   componentProps?: any;
   children?: any;
@@ -139,6 +143,18 @@ export const ReqorePopover = memo(
         intent,
         id,
         backgroundBlur,
+        // `customTheme` is picked up so it can be forwarded to the
+        // trigger `Component` below. Historically the popover's own
+        // props were dropped on the floor, which meant a Popover
+        // rendered inside a panel/action slot with a themed context
+        // (e.g. an accent-themed toolbar) did NOT paint its trigger
+        // with the surrounding theme — the sibling buttons inherited
+        // the theme via `<Component customTheme={theme} />` in Panel,
+        // but Popover swallowed it. Forwarding it here lets Popover
+        // participate in the same theme cascade as every other
+        // panel-action item without callers having to duplicate the
+        // theme on `componentProps`.
+        customTheme,
       }: IReqorePopoverProps,
       ref
     ) => {
@@ -477,6 +493,10 @@ export const ReqorePopover = memo(
             )}
             {isOpen && blur ? <div className='reqore-blur-wrapper' /> : null}
             <Component
+              // Forward the popover's own `customTheme` to the trigger
+              // so it inherits the surrounding theme cascade. Caller
+                // wins if they already set one on `componentProps`.
+              customTheme={componentProps?.customTheme ?? customTheme}
               {...componentProps}
               className={`${isOpen && blur ? 'reqore-blur-z-index' : ''} ${
                 componentProps?.className || ''
@@ -528,7 +548,16 @@ export const ReqorePopover = memo(
             ref={handleRef}
             style={wrapperStyle}
           >
-            <Component {...componentProps}>{children}</Component>
+            <Component
+              // See comment on the mirroring path above — forward the
+              // popover's own `customTheme` to the trigger so it
+              // inherits the surrounding theme cascade. Caller wins
+              // if they already set one on `componentProps`.
+              customTheme={componentProps?.customTheme ?? customTheme}
+              {...componentProps}
+            >
+              {children}
+            </Component>
           </StyledPopover>
         </>
       );
