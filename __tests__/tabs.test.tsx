@@ -2,6 +2,31 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { ReqoreLayoutContent, ReqoreTabs, ReqoreTabsContent, ReqoreUIProvider } from '../src';
 
+// styled-components emits its rules into <style> tags / CSSOM rather than inline
+// styles, so to assert on generated CSS (max-height, overscroll) we read the
+// combined stylesheet text back out of the document.
+const getStyleText = () =>
+  Array.from(document.querySelectorAll('style'))
+    .map((s) => s.textContent || '')
+    .join('\n') +
+  Array.from(document.styleSheets)
+    .flatMap((sheet) => {
+      try {
+        return Array.from(sheet.cssRules).map((rule) => rule.cssText);
+      } catch {
+        return [];
+      }
+    })
+    .join('\n');
+
+const overflowingTabs = [
+  { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+  { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+  { label: 'Tab 3', icon: 'Home3Line', id: 'tab3' },
+  { label: 'Tab 4', icon: 'Home3Line', id: 'tab4' },
+  { label: 'Tab 5', icon: 'Home3Line', id: 'tab5' },
+] as const;
+
 test('Renders full <Tabs /> properly', () => {
   render(
     <div style={{ width: '1000px' }}>
@@ -318,4 +343,111 @@ test('Closable tab can be closed if not disabled', () => {
 
   expect(cb).toHaveBeenCalledWith('tab4');
   expect(screen.getByText('Tab 1 content')).toBeTruthy();
+});
+
+test('Overflow "More" menu is capped to a viewport-safe height by default', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs _testWidth={300} tabs={overflowingTabs as any}>
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
+
+  const overflowMenu = document.querySelector('.reqore-menu') as HTMLElement;
+  expect(overflowMenu).toBeTruthy();
+
+  // Overscroll containment is tied to the concrete menu element so a long
+  // overflow menu can't scroll the page behind it.
+  expect(getComputedStyle(overflowMenu).overscrollBehavior).toBe('contain');
+
+  // The generated rule caps the menu height to the viewport-safe default.
+  const styles = getStyleText();
+  expect(styles).toContain('min(520px');
+  expect(styles).toContain('calc(100vh - 96px)');
+});
+
+test('overflowMenuProps overrides the default overflow-menu height', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs
+            _testWidth={300}
+            tabs={overflowingTabs as any}
+            overflowMenuProps={{ maxHeight: '111px' }}
+          >
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
+
+  // Assert on the concrete element (not the module-global stylesheet, which
+  // accumulates the default rule from other tests): the caller's value wins
+  // over the built-in default.
+  const overflowMenu = document.querySelector('.reqore-menu') as HTMLElement;
+  expect(getComputedStyle(overflowMenu).maxHeight).toBe('111px');
+});
+
+test('overflowMenuProps.className is forwarded to the overflow menu', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs
+            _testWidth={300}
+            tabs={overflowingTabs as any}
+            overflowMenuProps={{ className: 'custom-overflow-menu' }}
+          >
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
+
+  const overflowMenu = document.querySelector('.custom-overflow-menu');
+  expect(overflowMenu).toBeTruthy();
+  expect(overflowMenu?.classList.contains('reqore-menu')).toBe(true);
+});
+
+test('overflowPopoverProps overrides the popover trigger behaviour', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs
+            _testWidth={300}
+            tabs={overflowingTabs as any}
+            overflowPopoverProps={{ handler: 'click' }}
+          >
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  const trigger = document.querySelector('.reqore-tabs-list-item-menu')!;
+
+  // Default handler is 'hoverStay'; overriding to 'click' means hovering must
+  // no longer open the menu.
+  fireEvent.mouseEnter(trigger);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  fireEvent.click(trigger);
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-menu').length).toBe(1);
 });

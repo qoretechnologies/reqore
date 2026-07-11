@@ -7,6 +7,8 @@ import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreComponent, IWithReqoreLoading } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
+import { IReqoreMenuProps } from '../Menu';
+import { IReqorePopoverProps } from '../Popover';
 import { TReqoreTabsContentPadding } from './content';
 import ReqoreTabsList from './list';
 
@@ -43,6 +45,19 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
   unMountOnTabChange?: boolean;
   loadingIconType?: IWithReqoreLoading['loadingIconType'];
   useReactTransition?: boolean;
+  /**
+   * Props forwarded to the `ReqoreMenu` that hosts tabs which overflowed into
+   * the `More` popover. Use this to override the viewport-safe default
+   * `maxHeight`, add a `width`, tweak `size`, etc. Overrides the built-in
+   * defaults when the same key is supplied.
+   */
+  overflowMenuProps?: Partial<IReqoreMenuProps>;
+  /**
+   * Props forwarded to the `ReqorePopover` that wraps the overflow `More`
+   * menu. Use this to change `placement`, `handler`, `maxHeight`, etc. Cannot
+   * replace the generated menu `content`, which is always derived from `tabs`.
+   */
+  overflowPopoverProps?: Partial<IReqorePopoverProps>;
   // Internal prop, ignore!
   _testWidth?: number;
 }
@@ -77,6 +92,8 @@ const ReqoreTabs = ({
   unMountOnTabChange = true,
   loadingIconType,
   useReactTransition = true,
+  overflowMenuProps,
+  overflowPopoverProps,
   errorBoundaryOptions,
   ...rest
 }: IReqoreTabsProps) => {
@@ -128,6 +145,8 @@ const ReqoreTabs = ({
           onTabChange={handleTabChange}
           loadingIconType={loadingIconType}
           useReactTransition={useReactTransition}
+          overflowMenuProps={overflowMenuProps}
+          overflowPopoverProps={overflowPopoverProps}
         />
         {React.Children.map(children, (child) =>
           child &&

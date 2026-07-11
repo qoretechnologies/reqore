@@ -1,4 +1,4 @@
-import { expect } from 'storybook/test';
+import { expect, fireEvent } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreTabsProps } from '../../components/Tabs';
@@ -438,5 +438,75 @@ export const WithSlowTab: Story = {
 
     // Once the slow tab finishes rendering, it replaces tab 1
     await _testsWaitForText('SlowTab');
+  },
+};
+
+// A narrow strip with many tabs so most of them collapse into the "More"
+// overflow menu — used to demonstrate (and regression-test) the viewport-safe
+// height cap and the `overflowMenuProps` / `overflowPopoverProps` escape hatches.
+const manyTabs = Array.from({ length: 16 }, (_, index) => ({
+  id: `tab${index + 1}`,
+  label: `Overflowing tab number ${index + 1}`,
+  icon: 'Home3Line' as const,
+})) satisfies IReqoreTabsProps['tabs'];
+
+export const OverflowMenuSizing: Story = {
+  parameters: {
+    docs: { source: { type: 'code' } },
+  },
+  render: (args) => {
+    return (
+      // A fixed-width strip forces the tabs to overflow into the "More" menu.
+      <div style={{ width: '360px' }}>
+        <ReqoreTabs {...args} _testWidth={360} tabs={manyTabs}>
+          {manyTabs.map((tab) => (
+            <ReqoreTabsContent tabId={tab.id} key={tab.id}>
+              <ReqoreH3>{tab.label}</ReqoreH3>
+            </ReqoreTabsContent>
+          ))}
+        </ReqoreTabs>
+      </div>
+    );
+  },
+  play: async () => {
+    // Open the overflow "More" menu.
+    fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
+
+    const overflowMenu = document.querySelector('.reqore-menu') as HTMLElement;
+    await expect(overflowMenu).toBeTruthy();
+
+    // The menu is capped and contains its own overscroll so it can't run off
+    // the bottom of the viewport or scroll the page behind it.
+    await expect(getComputedStyle(overflowMenu).overscrollBehavior).toBe('contain');
+    await expect(getComputedStyle(overflowMenu).overflowY).toBe('auto');
+  },
+};
+
+export const OverflowMenuCustomHeight: Story = {
+  parameters: {
+    docs: { source: { type: 'code' } },
+  },
+  args: {
+    overflowMenuProps: { maxHeight: '160px' },
+  },
+  render: (args) => {
+    return (
+      <div style={{ width: '360px' }}>
+        <ReqoreTabs {...args} _testWidth={360} tabs={manyTabs}>
+          {manyTabs.map((tab) => (
+            <ReqoreTabsContent tabId={tab.id} key={tab.id}>
+              <ReqoreH3>{tab.label}</ReqoreH3>
+            </ReqoreTabsContent>
+          ))}
+        </ReqoreTabs>
+      </div>
+    );
+  },
+  play: async () => {
+    fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
+
+    const overflowMenu = document.querySelector('.reqore-menu') as HTMLElement;
+    // The caller's explicit height overrides the built-in default.
+    await expect(getComputedStyle(overflowMenu).maxHeight).toBe('160px');
   },
 };

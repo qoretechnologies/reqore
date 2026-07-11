@@ -75,6 +75,14 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
   `}
 `;
 
+/**
+ * Viewport-safe default height cap for the overflow `More` menu. Without it a
+ * tab strip with many overflowed tabs renders a menu taller than the viewport,
+ * pushing its lower items off-screen with no way to reach them. `min(...)`
+ * keeps short menus compact while never exceeding the available height.
+ */
+export const DEFAULT_TABS_OVERFLOW_MENU_MAX_HEIGHT = 'min(520px, calc(100vh - 96px))';
+
 const isTabHidden = (items: IReqoreTabsListItem[], activeTab?: string | number) =>
   items.find((item) => item?.id === activeTab);
 
@@ -234,6 +242,8 @@ const ReqoreTabsList = ({
   padded,
   loadingIconType,
   useReactTransition,
+  overflowMenuProps,
+  overflowPopoverProps,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width }] = useMeasure();
@@ -296,8 +306,13 @@ const ReqoreTabsList = ({
                 isReqoreComponent
                 noWrapper
                 handler='hoverStay'
+                {...overflowPopoverProps}
                 content={
-                  <ReqoreMenu customTheme={theme}>
+                  <ReqoreMenu
+                    customTheme={theme}
+                    maxHeight={DEFAULT_TABS_OVERFLOW_MENU_MAX_HEIGHT}
+                    {...overflowMenuProps}
+                  >
                     {item.map(
                       ({
                         icon,
