@@ -1,5 +1,5 @@
 import { isArray, isObject } from 'lodash';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
@@ -226,6 +226,65 @@ const getTransformedItems = (
   return newItems.filter((i) => i);
 };
 
+type TReqoreTabListItemRendererProps = Pick<
+  IReqoreTabListItemProps,
+  | 'customTheme'
+  | 'fill'
+  | 'size'
+  | 'flat'
+  | 'padded'
+  | 'activeIntent'
+  | 'wrapTabNames'
+  | 'loadingIconType'
+  | 'useReactTransition'
+  | 'vertical'
+> & {
+  item: IReqoreTabsListItem;
+  active: IReqoreTabListItemProps['active'];
+  onTabChange?: (tabId: string | number) => any;
+};
+
+/**
+ * Renders a single (non-overflow) tab. Its click / close handlers are memoised
+ * with `useCallback` so they keep a stable identity across renders — passing an
+ * inline arrow straight to the memoised `ReqoreTabsListItem` would allocate a
+ * new function every render and defeat its memoisation. Hooks can't run inside
+ * the `.map()` in the list, hence a dedicated component per row.
+ */
+const ReqoreTabListItemRenderer = ({
+  item,
+  active,
+  onTabChange,
+  ...itemProps
+}: TReqoreTabListItemRendererProps) => {
+  const handleClick = useCallback(
+    (event: React.MouseEvent<any>) => {
+      if (!item.disabled) {
+        onTabChange?.(item.id);
+
+        if (item.props?.onClick) {
+          item.props.onClick(event);
+        }
+      }
+    },
+    [item, onTabChange]
+  );
+
+  const handleCloseClick = useCallback(() => {
+    item.onCloseClick?.(item.id);
+  }, [item]);
+
+  return (
+    <ReqoreTabsListItem
+      {...itemProps}
+      {...item}
+      active={active}
+      onClick={handleClick}
+      onCloseClick={item.onCloseClick ? handleCloseClick : undefined}
+    />
+  );
+};
+
 const ReqoreTabsList = ({
   tabs,
   onTabChange,
@@ -371,7 +430,10 @@ const ReqoreTabsList = ({
             </React.Fragment>
           ) : (
             <React.Fragment key={index}>
-              <ReqoreTabsListItem
+              <ReqoreTabListItemRenderer
+                item={item}
+                active={activeTab === item.id || item.props?.active}
+                onTabChange={onTabChange}
                 customTheme={theme}
                 fill={fill}
                 size={size}
@@ -381,26 +443,7 @@ const ReqoreTabsList = ({
                 wrapTabNames={wrapTabNames}
                 loadingIconType={loadingIconType}
                 useReactTransition={useReactTransition}
-                {...item}
-                key={index}
                 vertical={vertical}
-                active={activeTab === item.id || item.props?.active}
-                onClick={(event: React.MouseEvent<any>) => {
-                  if (!item.disabled) {
-                    onTabChange?.(item.id);
-
-                    if (item.props?.onClick) {
-                      item.props.onClick(event);
-                    }
-                  }
-                }}
-                onCloseClick={
-                  item.onCloseClick
-                    ? () => {
-                        item.onCloseClick?.(item.id);
-                      }
-                    : undefined
-                }
               />
             </React.Fragment>
           )
