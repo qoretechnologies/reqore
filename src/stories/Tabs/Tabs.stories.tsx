@@ -1,4 +1,4 @@
-import { expect, fireEvent } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreTabsProps } from '../../components/Tabs';
@@ -469,16 +469,24 @@ export const OverflowMenuSizing: Story = {
     );
   },
   play: async () => {
-    // Open the overflow "More" menu.
+    // Open the overflow "More" menu. The menu renders in a Popover portal
+    // (outside the story canvas), so it's queried on `document` — but we wait
+    // for it to mount before reading computed styles rather than asserting
+    // synchronously right after the event.
     fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
 
-    const overflowMenu = document.querySelector('.reqore-menu') as HTMLElement;
-    await expect(overflowMenu).toBeTruthy();
+    const overflowMenu = await waitFor(() => {
+      const menu = document.querySelector('.reqore-menu') as HTMLElement | null;
+      expect(menu).toBeTruthy();
+      return menu as HTMLElement;
+    });
 
     // The menu is capped and contains its own overscroll so it can't run off
     // the bottom of the viewport or scroll the page behind it.
-    await expect(getComputedStyle(overflowMenu).overscrollBehavior).toBe('contain');
-    await expect(getComputedStyle(overflowMenu).overflowY).toBe('auto');
+    await waitFor(() => {
+      expect(getComputedStyle(overflowMenu).overscrollBehavior).toBe('contain');
+      expect(getComputedStyle(overflowMenu).overflowY).toBe('auto');
+    });
   },
 };
 
@@ -503,10 +511,17 @@ export const OverflowMenuCustomHeight: Story = {
     );
   },
   play: async () => {
+    // The menu renders in a Popover portal (outside the story canvas), so it's
+    // queried on `document`; wait for it to mount before reading its height.
     fireEvent.mouseEnter(document.querySelector('.reqore-tabs-list-item-menu')!);
 
-    const overflowMenu = document.querySelector('.reqore-menu') as HTMLElement;
+    const overflowMenu = await waitFor(() => {
+      const menu = document.querySelector('.reqore-menu') as HTMLElement | null;
+      expect(menu).toBeTruthy();
+      return menu as HTMLElement;
+    });
+
     // The caller's explicit height overrides the built-in default.
-    await expect(getComputedStyle(overflowMenu).maxHeight).toBe('160px');
+    await waitFor(() => expect(getComputedStyle(overflowMenu).maxHeight).toBe('160px'));
   },
 };

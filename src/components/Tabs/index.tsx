@@ -49,15 +49,17 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
    * Props forwarded to the `ReqoreMenu` that hosts tabs which overflowed into
    * the `More` popover. Use this to override the viewport-safe default
    * `maxHeight`, add a `width`, tweak `size`, etc. Overrides the built-in
-   * defaults when the same key is supplied.
+   * defaults when the same key is supplied. `children` is omitted because the
+   * overflow menu content is always generated from `tabs`.
    */
-  overflowMenuProps?: Partial<IReqoreMenuProps>;
+  overflowMenuProps?: Partial<Omit<IReqoreMenuProps, 'children'>>;
   /**
    * Props forwarded to the `ReqorePopover` that wraps the overflow `More`
-   * menu. Use this to change `placement`, `handler`, `maxHeight`, etc. Cannot
-   * replace the generated menu `content`, which is always derived from `tabs`.
+   * menu. Use this to change `placement`, `handler`, `maxHeight`, etc. The
+   * structural props are omitted (`content`, `component`, `componentProps`)
+   * because the popover always renders the menu generated from `tabs`.
    */
-  overflowPopoverProps?: Partial<IReqorePopoverProps>;
+  overflowPopoverProps?: Partial<Omit<IReqorePopoverProps, 'content' | 'component' | 'componentProps'>>;
   // Internal prop, ignore!
   _testWidth?: number;
 }
