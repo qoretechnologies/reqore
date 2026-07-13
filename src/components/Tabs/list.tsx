@@ -1,5 +1,5 @@
 import { isArray, isObject } from 'lodash';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
@@ -74,6 +74,31 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
     }
   `}
 `;
+
+/** Absolute ceiling so the overflow menu stays compact even on a tall monitor. */
+const TABS_OVERFLOW_MENU_MAX_HEIGHT_PX = 520;
+/**
+ * Vertical space reserved above + below the menu so it never runs to the very
+ * edges of the viewport — roughly a top bar + the tab strip + a small gap (for
+ * scale, a `normal` tab is 40px and `big` 50px, see `TABS_SIZE_TO_PX`).
+ *
+ * NOTE: this is a heuristic, and the cap is viewport-relative, not
+ * trigger-relative. Popper flips the popover's placement when there's no room,
+ * but the height does not shrink to the exact space around the "More" button —
+ * so a tab strip nested very low in a tall, scrolling page can still want a
+ * taller menu than fits. Those cases should override via
+ * `overflowMenuProps={{ maxHeight }}` (a fully dynamic cap would need a Popper
+ * size modifier, which this component does not use).
+ */
+const TABS_OVERFLOW_MENU_VIEWPORT_MARGIN_PX = 96;
+
+/**
+ * Viewport-safe default height cap for the overflow `More` menu. Without it a
+ * tab strip with many overflowed tabs renders a menu taller than the viewport,
+ * pushing its lower items off-screen with no way to reach them. `min(...)`
+ * keeps short menus compact while never exceeding the available height.
+ */
+export const DEFAULT_TABS_OVERFLOW_MENU_MAX_HEIGHT = `min(${TABS_OVERFLOW_MENU_MAX_HEIGHT_PX}px, calc(100vh - ${TABS_OVERFLOW_MENU_VIEWPORT_MARGIN_PX}px))`;
 
 const isTabHidden = (items: IReqoreTabsListItem[], activeTab?: string | number) =>
   items.find((item) => item?.id === activeTab);
@@ -218,6 +243,70 @@ const getTransformedItems = (
   return newItems.filter((i) => i);
 };
 
+type TReqoreTabListItemRendererProps = Pick<
+  IReqoreTabListItemProps,
+  | 'customTheme'
+  | 'fill'
+  | 'size'
+  | 'flat'
+  | 'padded'
+  | 'activeIntent'
+  | 'wrapTabNames'
+  | 'loadingIconType'
+  | 'useReactTransition'
+  | 'vertical'
+> & {
+  item: IReqoreTabsListItem;
+  active: IReqoreTabListItemProps['active'];
+  onTabChange?: (tabId: string | number) => any;
+};
+
+/**
+ * Renders a single (non-overflow) tab. Its click / close handlers are memoised
+ * with `useCallback` so they keep a stable identity across renders — passing an
+ * inline arrow straight to the memoised `ReqoreTabsListItem` would allocate a
+ * new function every render and defeat its memoisation. Hooks can't run inside
+ * the `.map()` in the list, hence a dedicated component per row.
+ */
+const ReqoreTabListItemRenderer = ({
+  item,
+  active,
+  onTabChange,
+  // Pulled out of `itemProps` so it can be applied AFTER `{...item}` below —
+  // the tab-strip orientation is owned by the parent and must win over any
+  // stray `vertical` on the item, matching the pre-refactor prop order.
+  vertical,
+  ...itemProps
+}: TReqoreTabListItemRendererProps) => {
+  const handleClick = useCallback(
+    (event: React.MouseEvent<any>) => {
+      if (!item.disabled) {
+        onTabChange?.(item.id);
+
+        if (item.props?.onClick) {
+          item.props.onClick(event);
+        }
+      }
+    },
+    [item, onTabChange]
+  );
+
+  const handleCloseClick = useCallback(() => {
+    item.onCloseClick?.(item.id);
+  }, [item]);
+
+  return (
+    <ReqoreTabsListItem
+      {...itemProps}
+      {...item}
+      vertical={vertical}
+      active={active}
+      onClick={handleClick}
+      onCloseClick={item.onCloseClick ? handleCloseClick : undefined}
+    />
+  );
+};
+
 const ReqoreTabsList = ({
   tabs,
   onTabChange,
@@ -234,6 +323,8 @@ const ReqoreTabsList = ({
   padded,
   loadingIconType,
   useReactTransition,
+  overflowMenuProps,
+  overflowPopoverProps,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width }] = useMeasure();
@@ -296,8 +387,13 @@ const ReqoreTabsList = ({
                 isReqoreComponent
                 noWrapper
                 handler='hoverStay'
+                {...overflowPopoverProps}
                 content={
-                  <ReqoreMenu customTheme={theme}>
+                  <ReqoreMenu
+                    customTheme={theme}
+                    maxHeight={DEFAULT_TABS_OVERFLOW_MENU_MAX_HEIGHT}
+                    {...overflowMenuProps}
+                  >
                     {item.map(
                       ({
                         icon,
@@ -356,7 +452,10 @@ const ReqoreTabsList = ({
             </React.Fragment>
           ) : (
             <React.Fragment key={index}>
-              <ReqoreTabsListItem
+              <ReqoreTabListItemRenderer
+                item={item}
+                active={activeTab === item.id || item.props?.active}
+                onTabChange={onTabChange}
                 customTheme={theme}
                 fill={fill}
                 size={size}
@@ -366,26 +465,7 @@ const ReqoreTabsList = ({
                 wrapTabNames={wrapTabNames}
                 loadingIconType={loadingIconType}
                 useReactTransition={useReactTransition}
-                {...item}
-                key={index}
                 vertical={vertical}
-                active={activeTab === item.id || item.props?.active}
-                onClick={(event: React.MouseEvent<any>) => {
-                  if (!item.disabled) {
-                    onTabChange?.(item.id);
-
-                    if (item.props?.onClick) {
-                      item.props.onClick(event);
-                    }
-                  }
-                }}
-                onCloseClick={
-                  item.onCloseClick
-                    ? () => {
-                        item.onCloseClick?.(item.id);
-                      }
-                    : undefined
-                }
               />
             </React.Fragment>
           )

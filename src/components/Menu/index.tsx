@@ -56,6 +56,9 @@ const StyledReqoreMenu = styled(StyledEffect)<IReqoreMenuStyle>`
   padding: ${({ padded = true, _size }) =>
     padded ? `${HALF_PADDING_FROM_SIZE[_size]}px` : undefined};
   max-height: ${({ maxHeight }) => maxHeight || undefined};
+  /* When the menu is height-capped it becomes independently scrollable; keep
+     that scroll from chaining to the page/popover behind it. */
+  overscroll-behavior: ${({ maxHeight }) => (maxHeight ? 'contain' : undefined)};
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;

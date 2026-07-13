@@ -114,6 +114,7 @@ export { default as ReqoreTabs } from './components/Tabs';
 export { default as ReqoreTabsContent } from './components/Tabs/content';
 export { default as ReqoreTabsListItem } from './components/Tabs/item';
 export { default as ReqoreTabsList } from './components/Tabs/list';
+export { DEFAULT_TABS_OVERFLOW_MENU_MAX_HEIGHT } from './components/Tabs/list';
 export { default as ReqoreTag } from './components/Tag';
 export { default as ReqoreTagGroup } from './components/Tag/group';
 export { default as ReqoreTestimonial } from './components/Testimonial';

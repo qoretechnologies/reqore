@@ -7,6 +7,8 @@ import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreComponent, IWithReqoreLoading } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
+import { IReqoreMenuProps } from '../Menu';
+import { IReqorePopoverProps } from '../Popover';
 import { TReqoreTabsContentPadding } from './content';
 import ReqoreTabsList from './list';
 
@@ -43,6 +45,21 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
   unMountOnTabChange?: boolean;
   loadingIconType?: IWithReqoreLoading['loadingIconType'];
   useReactTransition?: boolean;
+  /**
+   * Props forwarded to the `ReqoreMenu` that hosts tabs which overflowed into
+   * the `More` popover. Use this to override the viewport-safe default
+   * `maxHeight`, add a `width`, tweak `size`, etc. Overrides the built-in
+   * defaults when the same key is supplied. `children` is omitted because the
+   * overflow menu content is always generated from `tabs`.
+   */
+  overflowMenuProps?: Partial<Omit<IReqoreMenuProps, 'children'>>;
+  /**
+   * Props forwarded to the `ReqorePopover` that wraps the overflow `More`
+   * menu. Use this to change `placement`, `handler`, `maxHeight`, etc. The
+   * structural props are omitted (`content`, `component`, `componentProps`)
+   * because the popover always renders the menu generated from `tabs`.
+   */
+  overflowPopoverProps?: Partial<Omit<IReqorePopoverProps, 'content' | 'component' | 'componentProps'>>;
   // Internal prop, ignore!
   _testWidth?: number;
 }
@@ -77,6 +94,8 @@ const ReqoreTabs = ({
   unMountOnTabChange = true,
   loadingIconType,
   useReactTransition = true,
+  overflowMenuProps,
+  overflowPopoverProps,
   errorBoundaryOptions,
   ...rest
 }: IReqoreTabsProps) => {
@@ -128,6 +147,8 @@ const ReqoreTabs = ({
           onTabChange={handleTabChange}
           loadingIconType={loadingIconType}
           useReactTransition={useReactTransition}
+          overflowMenuProps={overflowMenuProps}
+          overflowPopoverProps={overflowPopoverProps}
         />
         {React.Children.map(children, (child) =>
           child &&
