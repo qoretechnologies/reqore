@@ -116,6 +116,24 @@ Order of operations on a commit/push request:
 
 The audit never edits files and never invokes git — it reports; the user/agent decides what to fix. Skipping the audit on commit/push is a hard violation: the report is what makes the silent regressions visible.
 
+### Version bumps (required on every PR)
+
+Every PR to `develop` MUST bump `package.json`'s `version` field before it merges. This is load-bearing: `.github/workflows/beta_release.yml` runs on every push to `develop` and publishes to NPM using whatever version is in `package.json` at push time. If two PRs merge back-to-back without bumps, the second silently no-ops or fails (NPM refuses to re-publish an existing version).
+
+**Bump size rules:**
+
+- **New component** (a whole new `Reqore{Name}` in `src/components/` exported from `src/index.tsx`) → minor: `0.70.6` → `0.71.0`
+- **New prop on an existing component, bug fix, refactor, test-only, story-only** → patch: `0.70.6` → `0.70.7`
+- **Breaking change** (removed export, changed default behaviour, renamed prop without alias) → major: `0.70.6` → `1.0.0` — coordinate with the maintainer first; Reqore stays 0.x until 1.0 is intentional.
+
+**How to bump:**
+
+1. Edit `package.json` directly (`"version": "0.70.7"`) as part of the same PR as the change. Don't leave it for a post-merge follow-up — the workflow can't wait for a second push.
+2. Commit it in a dedicated `chore(release): bump version to X.Y.Z` commit OR fold the line into the feature commit; both are fine.
+3. If another PR bumps to the same version before yours merges, rebase and bump again — the version in `develop` on merge must be strictly greater than the previous merged version.
+
+**Where to look if you're not sure:** `git log --oneline -20 -- package.json` — every recent commit touching it shows the bump pattern.
+
 ### Testing Patterns
 
 - **Setup:** `__tests__/setup.js` disables console debug/info/error

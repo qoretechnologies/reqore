@@ -229,6 +229,20 @@ export interface IReqoreButtonProps
    * and suppressed when `transparent` since there is no surface to lift.
    */
   raised?: boolean;
+  /**
+   * Square chip mode — forces the button to render as a fixed-size square
+   * (width = height, both derived from the current `size`), and strips
+   * horizontal padding so single-character or icon-only content sits
+   * centred. Useful for grids of uniform toggle chips like day-of-week
+   * pickers (`M T W T F S S`) where every chip must occupy the same slot
+   * regardless of content width.
+   *
+   * Composes with `size` (drives the side length via `SIZE_TO_PX[size]`),
+   * `flat`, `minimal`, `raised`, `active`, `intent`, and `customTheme`.
+   * Overrides `fluid`, `grow`, `shrink`, and any inline width — the whole
+   * point is that neighbouring chips stay in a rigid grid.
+   */
+  square?: boolean;
 }
 
 export interface IReqoreButtonStyle extends IReqoreButtonProps {
@@ -281,12 +295,14 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
   vertical-align: middle;
   border: ${({ theme, color, flat, effect }) =>
     !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)}` : 0};
-  padding: ${({ size, compact, verticalPadding = 'normal' }) =>
+  padding: ${({ size, compact, verticalPadding = 'normal', square }) =>
     `${
       CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +
       CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding]
     }px ${
-      compact
+      square
+        ? 0
+        : compact
         ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
         : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
     }px`};
@@ -295,8 +311,23 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
 
   min-height: ${({ size, verticalPadding = 'normal' }) =>
     SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
-  min-width: ${({ size }) => SIZE_TO_PX[size]}px;
-  max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
+  min-width: ${({ size, square, verticalPadding = 'normal' }) =>
+    square
+      ? SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
+      : SIZE_TO_PX[size]}px;
+  ${({ square, size, verticalPadding = 'normal' }) =>
+    square
+      ? css`
+          width: ${SIZE_TO_PX[size] +
+          CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2}px;
+        `
+      : null}
+  max-width: ${({ square, maxWidth, fluid, fixed, size, verticalPadding = 'normal' }) =>
+    square
+      ? `${
+          SIZE_TO_PX[size] + CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE[verticalPadding] * 2
+        }px`
+      : maxWidth || (fluid && !fixed ? '100%' : undefined)};
 
   ${({ wrap, description }) =>
     !wrap && !description
@@ -602,18 +633,19 @@ const ReqoreButton = memo(
         indicator,
         description,
         maxWidth,
-        textAlign = 'left',
+        textAlign: textAlignProp,
         effect,
         labelEffect,
         descriptionEffect,
         leftIconColor,
         rightIconColor,
         iconColor,
-        iconsAlign,
+        iconsAlign: iconsAlignProp,
         leftIconProps,
         rightIconProps,
         label,
         compact,
+        square,
         as,
         animated,
         loading,
@@ -629,6 +661,14 @@ const ReqoreButton = memo(
       const theme = useReqoreTheme('main', customTheme, intent);
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
       const { targetRef } = useCombinedRefs(ref);
+
+      // Square chips have no horizontal padding, so the content would
+      // stick to the left edge if we kept `textAlign`'s usual `'left'`
+      // default. Default `textAlign` and `iconsAlign` to `'center'` for
+      // square buttons so text + icons sit in the middle of the chip.
+      // Consumer can still override both explicitly.
+      const textAlign = textAlignProp ?? (square ? 'center' : 'left');
+      const iconsAlign = iconsAlignProp ?? (square ? 'center' : undefined);
 
       const shortcutEnabled = !!shortcut && !rest.disabled && !readOnly && !loading;
 
@@ -726,6 +766,7 @@ const ReqoreButton = memo(
             description,
             className: `${className || ''} reqore-control reqore-button`,
             compact: _compact,
+            square,
             tooltip,
           }}
           Component={StyledButton}

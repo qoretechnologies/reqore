@@ -250,6 +250,51 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
       }
     }, [styles, attributes, state]);
 
+    // Stabilize the popover against ancestor CSS transitions that Popper's
+    // scroll/resize listeners can't observe. When a popover opens inside a
+    // Modal/Drawer that's still animating its `transform: scale(...)` in,
+    // the trigger's `getBoundingClientRect()` shifts frame-by-frame but
+    // fires no scroll/resize events, so the popover would stay anchored to
+    // the trigger's rect at open-time and end up visibly offset once the
+    // ancestor settles.
+    //
+    // Poll the trigger's rect for a short window after Popper attaches; if
+    // it moves, force a re-layout. Stop as soon as it's stable for 3
+    // consecutive frames, or after ~500ms — enough to cover typical
+    // Modal/Drawer scale-in / slide-in durations without polling forever.
+    useEffect(() => {
+      if (!targetElement || !state) return undefined;
+      let rafId: number | null = null;
+      let stableFrames = 0;
+      let elapsed = 0;
+      let lastKey = '';
+      const rectKey = (r: DOMRect) => `${r.x},${r.y},${r.width},${r.height}`;
+      lastKey = rectKey(targetElement.getBoundingClientRect());
+      const tick = (prev: number) => {
+        rafId = requestAnimationFrame((now) => {
+          const dt = now - prev;
+          elapsed += dt;
+          const key = rectKey(targetElement.getBoundingClientRect());
+          if (key === lastKey) {
+            stableFrames += 1;
+          } else {
+            lastKey = key;
+            stableFrames = 0;
+            forceUpdate();
+          }
+          if (stableFrames < 3 && elapsed < 500) {
+            tick(now);
+          } else {
+            rafId = null;
+          }
+        });
+      };
+      rafId = requestAnimationFrame((now) => tick(now));
+      return () => {
+        if (rafId !== null) cancelAnimationFrame(rafId);
+      };
+    }, [targetElement, !!state, forceUpdate]);
+
     useUnmount(() => {
       mutationObserber.current?.disconnect();
     });
