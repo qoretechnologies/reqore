@@ -4,7 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
-import { SPRING_CONFIG, SPRING_CONFIG_NO_ANIMATIONS } from '../../constants/animations';
+import { SPRING_CONFIG } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
@@ -252,7 +252,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
 
     const transitions = useTransition(isOpen, {
       ...getSpringConfig(_isModal, position, floating),
-      config: animations.dialogs ? SPRING_CONFIG : SPRING_CONFIG_NO_ANIMATIONS,
+      config: SPRING_CONFIG,
+      // A zero-tension spring never advances from its `from` state. When
+      // dialog animations are disabled, apply the entered / left styles
+      // immediately so drawers and modals remain visible and interactive.
+      immediate: animations.dialogs === false,
     });
 
     const zIndex = useMemo(

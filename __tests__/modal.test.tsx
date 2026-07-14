@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import {
   ReqoreButton,
@@ -36,6 +36,26 @@ test('Does not renders <Modal /> if its not open', () => {
   );
 
   expect(document.querySelectorAll('.reqore-modal').length).toBe(0);
+});
+
+test('Renders a visible <Modal /> immediately when dialog animations are disabled', async () => {
+  render(
+    <ReqoreUIProvider options={{ animations: { dialogs: false } }}>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreModal isOpen>Immediate modal</ReqoreModal>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const modal = document.querySelector<HTMLElement>('.reqore-modal');
+
+  await waitFor(() => {
+    expect(modal).not.toBeNull();
+    expect(modal).toHaveStyle({ opacity: '1', transform: 'scale(1)' });
+    expect(screen.getByText('Immediate modal')).toBeVisible();
+  });
 });
 
 test('Renders <Modal /> with custom dimensions', () => {
