@@ -225,6 +225,8 @@ export const ReqoreRichTextEditor = forwardRef<
       decorate,
       placeholder,
       placeholderProps,
+      onFocus,
+      onFocusCapture,
       ...rest
     }: IReqoreRichTextEditorProps,
     ref
@@ -336,6 +338,25 @@ export const ReqoreRichTextEditor = forwardRef<
         rest.readOnly,
         rest.disabled,
       ]
+    );
+
+    const handleFocus = useCallback(
+      (event) => {
+        // Firefox does not always create a DOM selection when an empty Slate
+        // editor contains an absolutely positioned, non-editable placeholder.
+        // Establish the corresponding Slate selection before the first key
+        // event so keyboard input is not discarded.
+        if (isEmpty && !editor.selection && !rest.readOnly && !rest.disabled) {
+          Transforms.select(editor, Editor.start(editor, []));
+        }
+        // Chain any consumer-provided focus handlers. Slate's `Editable`
+        // gates its internal `onFocus` wrapper behind editable-target/selection
+        // checks and does not reliably forward a passed-through `onFocus`, so
+        // both handlers are invoked explicitly here to guarantee they run.
+        onFocusCapture?.(event);
+        onFocus?.(event);
+      },
+      [editor, isEmpty, onFocus, onFocusCapture, rest.disabled, rest.readOnly]
     );
 
     const renderLeaf = useCallback(
@@ -465,6 +486,7 @@ export const ReqoreRichTextEditor = forwardRef<
             renderElement={renderElement}
             renderLeaf={renderLeaf}
             decorate={decorate}
+            onFocusCapture={handleFocus}
             as={Editable}
             style={{
               lineHeight: 1.5,
