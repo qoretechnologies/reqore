@@ -226,6 +226,7 @@ export const ReqoreRichTextEditor = forwardRef<
       placeholder,
       placeholderProps,
       onFocus,
+      onFocusCapture,
       ...rest
     }: IReqoreRichTextEditorProps,
     ref
@@ -348,9 +349,14 @@ export const ReqoreRichTextEditor = forwardRef<
         if (isEmpty && !editor.selection && !rest.readOnly && !rest.disabled) {
           Transforms.select(editor, Editor.start(editor, []));
         }
+        // Chain any consumer-provided focus handlers. Slate's `Editable`
+        // gates its internal `onFocus` wrapper behind editable-target/selection
+        // checks and does not reliably forward a passed-through `onFocus`, so
+        // both handlers are invoked explicitly here to guarantee they run.
+        onFocusCapture?.(event);
         onFocus?.(event);
       },
-      [editor, isEmpty, onFocus, rest.disabled, rest.readOnly]
+      [editor, isEmpty, onFocus, onFocusCapture, rest.disabled, rest.readOnly]
     );
 
     const renderLeaf = useCallback(

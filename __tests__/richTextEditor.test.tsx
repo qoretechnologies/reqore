@@ -18,6 +18,7 @@ const emptyValue = [
 test('establishes an empty-editor selection on focus for Firefox input', () => {
   const ref = createRef<TReqoreRichTextEditorRef>();
   const onFocus = vi.fn();
+  const onFocusCapture = vi.fn();
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
@@ -27,6 +28,7 @@ test('establishes an empty-editor selection on focus for Firefox input', () => {
             value={emptyValue}
             onChange={() => undefined}
             onFocus={onFocus}
+            onFocusCapture={onFocusCapture}
             placeholder='Ask a question…'
           />
         </ReqoreContent>
@@ -46,6 +48,9 @@ test('establishes an empty-editor selection on focus for Firefox input', () => {
   fireEvent.focusIn(editor!);
 
   expect(onFocus).toHaveBeenCalledOnce();
+  // A consumer-provided capture-phase handler must be chained, not swallowed
+  // by the internal focus handler wired to `onFocusCapture`.
+  expect(onFocusCapture).toHaveBeenCalledOnce();
   expect(ref.current?.selection).toEqual({
     anchor: { path: [0, 0], offset: 0 },
     focus: { path: [0, 0], offset: 0 },
