@@ -427,26 +427,25 @@ const ReqoreControlGroup = memo(
         let newProps: any = isIntrinsicElement
           ? {
               ...props,
-              key: props.reactKey || _index,
+              key: props?.reactKey || _index,
             }
           : {
               ...props,
-              key: props.reactKey || _index,
-              minimal: props?.minimal || props?.minimal === false ? props.minimal : minimal,
+              key: props?.reactKey || _index,
+              minimal: props?.minimal ?? minimal,
               size: props?.size || size,
-              flat: props?.flat || props?.flat === false ? props.flat : flat,
-              fluid: props?.fluid || props?.fluid === false ? props.fluid : fluid,
-              fixed: props?.fixed || props?.fixed === false ? props.fixed : fixed,
-              fill: props?.fill || props?.fill === false ? props.fill : fill,
-              spaceBetween:
-                props?.spaceBetween || props?.spaceBetween === false ? props.spaceBetween : false,
-              stack: props?.stack || props?.stack === false ? props.stack : isStack,
+              flat: props?.flat ?? flat,
+              fluid: props?.fluid ?? fluid,
+              fixed: props?.fixed ?? fixed,
+              fill: props?.fill ?? fill,
+              spaceBetween: props?.spaceBetween ?? false,
+              stack: props?.stack ?? isStack,
               intent: props?.intent || intent,
               customTheme: props?.customTheme || customTheme,
             };
 
         if (isStack) {
-          const childIsFlat = props?.flat || props?.flat === false ? props.flat : flat;
+          const childIsFlat = props?.flat ?? flat;
           const needsCollapse = !childIsFlat;
           const isFirstChild = index === 0;
 
