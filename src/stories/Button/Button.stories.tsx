@@ -705,3 +705,96 @@ export const MultipleGradients: Story = {
     </ReqoreControlGroup>
   ),
 };
+
+/**
+ * `square` — chip mode. The button becomes a fixed-size square (width =
+ * height) with no horizontal padding, so single-character or icon-only
+ * content sits centred inside a rigid slot. Ideal for grids of uniform
+ * toggle chips like day-of-week pickers (M T W T F S S) where every
+ * chip must occupy the same width regardless of content.
+ *
+ * Composes with `size`, `intent`, `active`, `flat`, `minimal`, `raised`,
+ * `customTheme`, `icon`, etc. Overrides `fluid`, `grow`, `shrink`, and
+ * any inline width so the grid stays rigid.
+ */
+export const Square: Story = {
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <ReqoreControlGroup wrap gapSize='small' verticalAlign='center'>
+        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((letter, i) => (
+          <ReqoreButton
+            key={`${letter}-${i}`}
+            size='small'
+            minimal
+            flat
+            square
+            active={i < 5}
+            intent={i < 5 ? 'info' : undefined}
+          >
+            {letter}
+          </ReqoreButton>
+        ))}
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup wrap gapSize='small' verticalAlign='center'>
+        {ALL_SIZES.map((size) => (
+          <ReqoreButton key={size} size={size} icon='PencilLine' square />
+        ))}
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup wrap gapSize='small' verticalAlign='center'>
+        <ReqoreButton size='small' square intent='danger' icon='DeleteBinLine' />
+        <ReqoreButton size='small' square intent='success' icon='CheckLine' />
+        <ReqoreButton size='small' square intent='warning' icon='AlarmWarningLine' />
+        <ReqoreButton size='small' square intent='info' icon='InformationLine' />
+        <ReqoreButton size='small' square intent='muted' icon='PauseLine' />
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup wrap gapSize='small' verticalAlign='center'>
+        {ALL_SIZES.map((size) => (
+          <ReqoreButton
+            key={size}
+            size={size}
+            square
+            raised
+            flat
+            active
+            intent='info'
+          >
+            {size[0].toUpperCase()}
+          </ReqoreButton>
+        ))}
+      </ReqoreControlGroup>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    // The active-day chips (first 5) all render at 32×32 regardless of
+    // the letter width — the point of the prop.
+    const chips = canvasElement.querySelectorAll('button.reqore-button');
+    if (chips.length === 0) throw new Error('no square buttons found');
+    const firstRow = Array.from(chips).slice(0, 7) as HTMLButtonElement[];
+    const widths = new Set(firstRow.map((c) => Math.round(c.getBoundingClientRect().width)));
+    // Every day chip is the same width (M, T, W, T, F, S, S) even
+    // though the letters have different intrinsic widths.
+    await expect(widths.size).toBe(1);
+    // Width equals the size='small' side length (SIZE_TO_PX.small = 32).
+    await expect([...widths][0]).toBe(32);
+
+    // Regression guard: without horizontal padding, unset `textAlign`
+    // defaults to 'left' and the letter sticks to the far left of the
+    // 32-px box. `square` must implicitly default `textAlign` to
+    // 'center' so single-character / icon-only content sits in the
+    // middle of the chip. Verified by checking that the visible letter
+    // is roughly horizontally centred inside its button (within ±4px
+    // of the button's midpoint).
+    for (const chip of firstRow) {
+      const label = chip.querySelector('.reqore-button-text-content');
+      if (!label) continue;
+      const chipBox = chip.getBoundingClientRect();
+      const labelBox = (label as HTMLElement).getBoundingClientRect();
+      const chipMid = chipBox.left + chipBox.width / 2;
+      const labelMid = labelBox.left + labelBox.width / 2;
+      await expect(Math.abs(labelMid - chipMid)).toBeLessThan(4);
+    }
+  },
+};
