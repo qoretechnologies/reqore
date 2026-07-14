@@ -13,7 +13,12 @@ export interface IReqoreBackdropProps extends React.HTMLAttributes<HTMLDivElemen
   opacity?: number;
 }
 
-export const StyledBackdrop = styled(animated.div)<
+const backdropStyleProps = new Set(['blur', 'closable', 'zIndex']);
+
+export const StyledBackdrop = styled(animated.div).withConfig({
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    !backdropStyleProps.has(prop) && defaultValidatorFn(prop),
+})<
   IReqoreDrawerStyle & { closable: boolean; zIndex?: number }
 >`
   position: fixed;
