@@ -4,7 +4,8 @@ export const useCloneThroughFragments = (
   propsMapper: (
     props: Record<string | number, any>,
     reactIndex: number,
-    realIndex: number
+    realIndex: number,
+    childType: React.ReactElement['type']
   ) => Record<string | number, any>,
   deps?: any[]
 ) => {
@@ -17,7 +18,7 @@ export const useCloneThroughFragments = (
           return clone(child.props.children);
         }
 
-        const props = propsMapper(child.props, reactIndex, realIndex);
+        const props = propsMapper(child.props, reactIndex, realIndex, child.type);
 
         /*
          * Because of the way React.Children.map works, we have to

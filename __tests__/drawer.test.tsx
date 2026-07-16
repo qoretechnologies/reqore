@@ -113,6 +113,20 @@ test('Renders <Drawer /> with interactive backdrop', () => {
   expect(fn).toHaveBeenCalled();
 });
 
+test('Does not forward backdrop styling props to the DOM', () => {
+  const { container } = render(
+    <ReqoreUIProvider>
+      <ReqoreDrawer isOpen hasBackdrop blur={4} />
+    </ReqoreUIProvider>
+  );
+
+  const backdrop = container.querySelector('.reqore-drawer-backdrop');
+  expect(backdrop).toBeTruthy();
+  expect(backdrop).not.toHaveAttribute('zIndex');
+  expect(backdrop).not.toHaveAttribute('blur');
+  expect(backdrop).not.toHaveAttribute('closable');
+});
+
 const CustomDrawer = () => {
   const [count, setCount] = React.useState(0);
 

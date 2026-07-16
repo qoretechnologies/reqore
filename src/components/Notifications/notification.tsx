@@ -91,7 +91,26 @@ const timeoutAnimation = keyframes`
   }
 `;
 
-export const StyledReqoreNotification = styled(StyledEffect)<IReqoreNotificationStyle>`
+const notificationStyleProps = new Set([
+  'asMessage',
+  'backgroundBlur',
+  'clickable',
+  'fill',
+  'fixed',
+  'flat',
+  'fluid',
+  'hasShadow',
+  'margin',
+  'raised',
+  'spaceBetween',
+  'stack',
+  'timeout',
+]);
+
+export const StyledReqoreNotification = styled(StyledEffect).withConfig({
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    !notificationStyleProps.has(prop) && defaultValidatorFn(prop),
+})<IReqoreNotificationStyle>`
   min-width: ${({ fluid }) => (!fluid ? '30px' : undefined)};
   max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};
   border-radius: 5px;

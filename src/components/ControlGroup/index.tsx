@@ -68,7 +68,24 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
   theme: IReqoreTheme;
 }
 
-export const StyledReqoreControlGroup = styled(StyledEffect)<IReqoreControlGroupStyle>`
+const controlGroupStyleProps = new Set([
+  'fill',
+  'fixed',
+  'fluid',
+  'gapSize',
+  'horizontalAlign',
+  'rounded',
+  'spaceBetween',
+  'stack',
+  'vertical',
+  'verticalAlign',
+  'wrap',
+]);
+
+export const StyledReqoreControlGroup = styled(StyledEffect).withConfig({
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    !controlGroupStyleProps.has(prop) && defaultValidatorFn(prop),
+})<IReqoreControlGroupStyle>`
   display: flex;
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? undefined : '0 0 auto')};
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
@@ -405,25 +422,30 @@ const ReqoreControlGroup = memo(
     };
 
     const { clone } = useCloneThroughFragments(
-      (props, _index, index) => {
-        let newProps: any = {
-          ...props,
-          key: props.reactKey || _index,
-          minimal: props?.minimal || props?.minimal === false ? props.minimal : minimal,
-          size: props?.size || size,
-          flat: props?.flat || props?.flat === false ? props.flat : flat,
-          fluid: props?.fluid || props?.fluid === false ? props.fluid : fluid,
-          fixed: props?.fixed || props?.fixed === false ? props.fixed : fixed,
-          fill: props?.fill || props?.fill === false ? props.fill : fill,
-          spaceBetween:
-            props?.spaceBetween || props?.spaceBetween === false ? props.spaceBetween : false,
-          stack: props?.stack || props?.stack === false ? props.stack : isStack,
-          intent: props?.intent || intent,
-          customTheme: props?.customTheme || customTheme,
-        };
+      (props, _index, index, childType) => {
+        const isIntrinsicElement = typeof childType === 'string';
+        let newProps: any = isIntrinsicElement
+          ? {
+              ...props,
+              key: props?.reactKey || _index,
+            }
+          : {
+              ...props,
+              key: props?.reactKey || _index,
+              minimal: props?.minimal ?? minimal,
+              size: props?.size || size,
+              flat: props?.flat ?? flat,
+              fluid: props?.fluid ?? fluid,
+              fixed: props?.fixed ?? fixed,
+              fill: props?.fill ?? fill,
+              spaceBetween: props?.spaceBetween ?? false,
+              stack: props?.stack ?? isStack,
+              intent: props?.intent || intent,
+              customTheme: props?.customTheme || customTheme,
+            };
 
         if (isStack) {
-          const childIsFlat = props?.flat || props?.flat === false ? props.flat : flat;
+          const childIsFlat = props?.flat ?? flat;
           const needsCollapse = !childIsFlat;
           const isFirstChild = index === 0;
 
@@ -447,21 +469,24 @@ const ReqoreControlGroup = memo(
               borderBottomRightRadius: getBorderBottomRightRadius(index, props?.rounded),
               ...(props?.style || {}),
             },
-            isChild: true,
-            rounded: isMasterGroupRounded === false ? false : !isStack,
-            isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
-            isInsideStackGroup: isStack,
-            isInsideVerticalGroup: isVertical,
-            isFirst: isChild ? getIsFirst(index) : undefined,
-            isLast: isChild ? getIsLast(index) : undefined,
-            isLastInFirstGroup: getIsLastInFirstGroup(index),
-            isLastInLastGroup: getIsLastInLastGroup(index),
-            isFirstInLastGroup: getIsFirstInLastGroup(index),
-            childrenCount: realChildCount,
-            childId: index + 1,
-
-            isFirstGroup: isChild ? isFirstGroup : index === 0,
-            isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
+            ...(!isIntrinsicElement
+              ? {
+                  isChild: true,
+                  rounded: isMasterGroupRounded === false ? false : !isStack,
+                  isMasterGroupRounded: isChild ? isMasterGroupRounded : rounded,
+                  isInsideStackGroup: isStack,
+                  isInsideVerticalGroup: isVertical,
+                  isFirst: isChild ? getIsFirst(index) : undefined,
+                  isLast: isChild ? getIsLast(index) : undefined,
+                  isLastInFirstGroup: getIsLastInFirstGroup(index),
+                  isLastInLastGroup: getIsLastInLastGroup(index),
+                  isFirstInLastGroup: getIsFirstInLastGroup(index),
+                  childrenCount: realChildCount,
+                  childId: index + 1,
+                  isFirstGroup: isChild ? isFirstGroup : index === 0,
+                  isLastGroup: isChild ? isLastGroup : index === realChildCount - 1,
+                }
+              : {}),
           };
         }
 
