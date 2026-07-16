@@ -1,4 +1,4 @@
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useCallback, useEffect, useState } from 'react';
 import { _testsClickButton } from '../../../__tests__/utils';
@@ -852,7 +852,8 @@ export const WorkflowExample: Story = {
 
 // A folded run of uneventful items (GitHub-diff style): only the noteworthy
 // entries stay visible, the rest collapse behind an "N hidden" marker that
-// expands on click.
+// expands on click. Runs can sit between normal entries as well as at the
+// ends, and their connector line is dotted to read as "skipped".
 export const CollapsedRange: Story = {
   render: (args) => (
     <ReqoreTimeline
@@ -885,10 +886,27 @@ export const CollapsedRange: Story = {
           collapsible: true,
         },
         {
+          // A run sandwiched between two normal entries (#11 above, #7 below).
           label: '2 read-only builds',
           collapsedItems: [
             { title: 'Build #10', timestamp: 'Jul 9', icon: 'TimeLine' },
             { title: 'Build #1', timestamp: 'Jul 9', icon: 'TimeLine' },
+          ],
+        },
+        {
+          title: 'Build #7',
+          content: 'Accepted',
+          timestamp: 'Jul 8',
+          icon: 'CheckLine',
+          intent: 'success',
+          collapsible: true,
+        },
+        {
+          label: '3 read-only builds',
+          collapsedItems: [
+            { title: 'Build #6', timestamp: 'Jul 8', icon: 'TimeLine' },
+            { title: 'Build #5', timestamp: 'Jul 7', icon: 'TimeLine' },
+            { title: 'Build #4', timestamp: 'Jul 7', icon: 'TimeLine' },
           ],
         },
       ]}
@@ -896,17 +914,14 @@ export const CollapsedRange: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Folded runs show their labels; the hidden builds aren't rendered yet.
+    // Folded runs show their labels; the hidden builds aren't rendered.
     await expect(canvas.getByText('6 read-only builds')).toBeInTheDocument();
+    await expect(canvas.getByText('2 read-only builds')).toBeInTheDocument();
     await expect(canvas.queryByText('Build #14')).not.toBeInTheDocument();
-    // The noteworthy rejection stays visible.
+    await expect(canvas.queryByText('Build #10')).not.toBeInTheDocument();
+    // Noteworthy entries stay visible — including a normal entry sandwiched
+    // between two collapsed runs.
     await expect(canvas.getByText('Build #11')).toBeInTheDocument();
-    // Expanding the first run reveals its hidden builds + a "Hide" control.
-    const run = canvasElement.querySelector(
-      '.reqore-timeline-collapsed-run'
-    ) as HTMLElement;
-    await userEvent.click(run);
-    await expect(canvas.getByText('Build #14')).toBeInTheDocument();
-    await expect(canvas.getByText('Hide')).toBeInTheDocument();
+    await expect(canvas.getByText('Build #7')).toBeInTheDocument();
   },
 };

@@ -149,6 +149,8 @@ export interface IReqoreTimelineItemStyle extends IReqoreTimelineStyle {
   disabled?: boolean;
   hasIntent?: boolean;
   isCollapsed?: boolean;
+  /** Render the connector line dotted (used around a collapsed run). */
+  dashed?: boolean;
 }
 
 // Size of the timeline marker (icon container) - made smaller
@@ -289,7 +291,22 @@ const StyledTimelineLine = styled.div<IReqoreTimelineItemStyle>`
   top: ${({ size }) => MARKER_SIZE_FROM_SIZE[size]}px;
   bottom: 0;
   width: ${({ size }) => LINE_WIDTH_FROM_SIZE[size]}px;
-  background-color: ${({ theme }) => rgba(changeLightness(theme.main, 0.1), 0.4)};
+
+  ${({ dashed, theme }) =>
+    dashed
+      ? css`
+          /* Dotted connector — signals the folded/skipped run boundary. */
+          background-image: linear-gradient(
+            to bottom,
+            ${rgba(changeLightness(theme.main, 0.2), 0.6)} 0 3px,
+            transparent 3px 7px
+          );
+          background-size: 100% 7px;
+          background-repeat: repeat-y;
+        `
+      : css`
+          background-color: ${rgba(changeLightness(theme.main, 0.1), 0.4)};
+        `}
 
   ${({ isLast }) =>
     isLast &&
@@ -388,6 +405,8 @@ interface ITimelineItemRendererProps {
   baseTheme: IReqoreTheme;
   isCollapsed: boolean;
   direction: 'vertical' | 'horizontal';
+  /** Draw this item's downward connector dotted (next to a collapsed run). */
+  lineDashed?: boolean;
   onToggle: (event: React.MouseEvent) => void;
   onItemClick: (item: IReqoreTimelineItem) => void;
   onKeyDown: (event: React.KeyboardEvent, item: IReqoreTimelineItem) => void;
@@ -403,6 +422,7 @@ const TimelineItemRenderer = memo(
     baseTheme,
     isCollapsed,
     direction,
+    lineDashed,
     onToggle,
     onItemClick,
     onKeyDown,
@@ -448,7 +468,12 @@ const TimelineItemRenderer = memo(
             )}
           </StyledTimelineMarker>
           {!isHorizontal && (
-            <StyledTimelineLine theme={baseTheme} size={size} isLast={isLast} />
+            <StyledTimelineLine
+              theme={baseTheme}
+              size={size}
+              isLast={isLast}
+              dashed={lineDashed}
+            />
           )}
         </StyledTimelineMarkerWrapper>
         <StyledTimelineContent theme={baseTheme} size={size} direction={direction}>
@@ -588,7 +613,9 @@ const CollapsedRunRenderer = memo(
               color={range.iconColor ?? mutedIconColor}
             />
           </StyledTimelineMarker>
-          {!isLast && <StyledTimelineLine theme={baseTheme} size={size} isLast={isLast} />}
+          {!isLast && (
+            <StyledTimelineLine theme={baseTheme} size={size} isLast={isLast} dashed />
+          )}
         </StyledTimelineMarkerWrapper>
         <StyledTimelineContent theme={baseTheme} size={size} direction='vertical'>
           <ReqoreControlGroup
@@ -830,6 +857,9 @@ const ReqoreTimeline = memo(
                 />
               );
             }
+            // A normal item's downward connector goes dotted when the next
+            // entry is a collapsed run — the dotted boundary reads as "folded".
+            const lineDashed = rows[rowIndex + 1]?.kind === 'run';
             return (
               <TimelineItemRenderer
                 key={row.key}
@@ -841,6 +871,7 @@ const ReqoreTimeline = memo(
                 baseTheme={baseTheme}
                 direction={direction}
                 isCollapsed={row.isCollapsed}
+                lineDashed={lineDashed}
                 onToggle={row.onToggle}
                 onItemClick={handleItemClick}
                 onKeyDown={handleKeyDown}
