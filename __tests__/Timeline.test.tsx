@@ -498,3 +498,82 @@ test('Renders <Timeline /> title-only items with connecting lines', () => {
   expect(document.querySelectorAll('.reqore-timeline-item').length).toBe(3);
   expect(document.querySelectorAll('.reqore-icon').length).toBe(3);
 });
+
+test('Collapsed range: folds items behind an "N hidden" marker until expanded', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            items={[
+              { title: 'Head', content: 'Head content' },
+              {
+                collapsedItems: [
+                  { title: 'Hidden A', content: 'A content' },
+                  { title: 'Hidden B', content: 'B content' },
+                ],
+              },
+              { title: 'Tail', content: 'Tail content' },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // The fold marker shows "2 hidden"; the hidden items are not rendered yet.
+  const run = document.querySelector('.reqore-timeline-collapsed-run')!;
+  expect(run).toBeTruthy();
+  expect(screen.getByText('2 hidden')).toBeTruthy();
+  expect(screen.queryByText('Hidden A')).toBeNull();
+  expect(screen.queryByText('Hidden B')).toBeNull();
+  // Head + Tail + the run marker = 3 timeline items.
+  expect(document.querySelectorAll('.reqore-timeline-item').length).toBe(3);
+
+  // Expanding the run reveals the hidden items inline.
+  fireEvent.click(run);
+  expect(screen.getByText('Hidden A')).toBeTruthy();
+  expect(screen.getByText('Hidden B')).toBeTruthy();
+  // Now shows a "Hide" control to re-fold.
+  expect(screen.getByText('Hide')).toBeTruthy();
+
+  // Re-folding hides them again.
+  fireEvent.click(document.querySelector('.reqore-timeline-collapsed-run')!);
+  expect(screen.queryByText('Hidden A')).toBeNull();
+});
+
+test('Collapsed range: custom label, defaultExpanded and onRangeToggle', () => {
+  const onRangeToggle = vi.fn();
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            onRangeToggle={onRangeToggle}
+            items={[
+              {
+                label: '3 read-only builds',
+                defaultExpanded: true,
+                collapsedItems: [
+                  { title: 'Build 3' },
+                  { title: 'Build 2' },
+                  { title: 'Build 1' },
+                ],
+              },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // defaultExpanded → the items render immediately and the control reads "Hide".
+  expect(screen.getByText('Build 2')).toBeTruthy();
+  expect(screen.getByText('Hide')).toBeTruthy();
+
+  // Re-folding fires onRangeToggle(index, false) and shows the custom label.
+  fireEvent.click(document.querySelector('.reqore-timeline-collapsed-run')!);
+  expect(onRangeToggle).toHaveBeenCalledWith(0, false);
+  expect(screen.getByText('3 read-only builds')).toBeTruthy();
+  expect(screen.queryByText('Build 2')).toBeNull();
+});
