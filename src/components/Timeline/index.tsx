@@ -66,6 +66,34 @@ export interface IReqoreTimelineItem extends IReqoreDisabled, IReqoreIntent {
   contentEffect?: IReqoreEffect;
 }
 
+/**
+ * A folded run of timeline items, rendered as a single compact "N hidden"
+ * marker that expands the hidden items inline on click (GitHub-diff style).
+ * Purely visual — the caller decides which consecutive items to fold and
+ * passes them here. Only honored in vertical mode.
+ */
+export interface IReqoreTimelineCollapsedRange {
+  /** The items hidden inside this run. */
+  collapsedItems: IReqoreTimelineItem[];
+  /** Text next to the dots; defaults to `${n} hidden`. */
+  label?: string;
+  /** Marker icon for the folded run; defaults to a vertical 3-dots. */
+  icon?: IReqoreIconName;
+  iconColor?: TReqoreEffectColor;
+  /** Start expanded. Defaults to `false` (folded). */
+  defaultExpanded?: boolean;
+}
+
+/** A timeline entry: either a normal item or a folded run of items. */
+export type TReqoreTimelineEntry = IReqoreTimelineItem | IReqoreTimelineCollapsedRange;
+
+/** Narrows a timeline entry to a folded run. */
+export function isReqoreTimelineCollapsedRange(
+  entry: TReqoreTimelineEntry
+): entry is IReqoreTimelineCollapsedRange {
+  return 'collapsedItems' in entry && Array.isArray(entry.collapsedItems);
+}
+
 export interface IReqoreTimelineProps
   extends Omit<React.HTMLAttributes<HTMLOListElement>, 'children'>,
     IReqoreComponent,
@@ -73,8 +101,12 @@ export interface IReqoreTimelineProps
     IReqoreIntent,
     IWithReqoreFluid,
     IWithReqoreSize {
-  /** Array of timeline items to display */
-  items: IReqoreTimelineItem[];
+  /**
+   * Array of timeline entries to display. An entry is either a normal
+   * `IReqoreTimelineItem` or an `IReqoreTimelineCollapsedRange` — a folded run
+   * of items shown as a single "N hidden" marker that expands on click.
+   */
+  items: TReqoreTimelineEntry[];
   /**
    * Layout direction. `'vertical'` stacks items top-to-bottom (default).
    * `'horizontal'` lays them out left-to-right with the connector line between markers.
@@ -97,6 +129,11 @@ export interface IReqoreTimelineProps
   collapsedState?: Record<number, boolean>;
   /** Callback fired when any item's collapsed state changes (click, keyboard, etc.) */
   onCollapseChange?: (index: number, isCollapsed: boolean) => void;
+  /**
+   * Callback fired when a folded run (`IReqoreTimelineCollapsedRange`) is
+   * expanded or re-folded. `index` is the entry's index in `items`.
+   */
+  onRangeToggle?: (index: number, isExpanded: boolean) => void;
 }
 
 export interface IReqoreTimelineStyle {
@@ -344,7 +381,6 @@ const TimelineBadge = memo(({ size, content }: IBadgeProps) => {
 
 interface ITimelineItemRendererProps {
   item: IReqoreTimelineItem;
-  index: number;
   isLast: boolean;
   size: TSizes;
   customTheme?: IReqoreTimelineProps['customTheme'];
@@ -352,7 +388,7 @@ interface ITimelineItemRendererProps {
   baseTheme: IReqoreTheme;
   isCollapsed: boolean;
   direction: 'vertical' | 'horizontal';
-  onToggleCollapse: (index: number, event: React.MouseEvent) => void;
+  onToggle: (event: React.MouseEvent) => void;
   onItemClick: (item: IReqoreTimelineItem) => void;
   onKeyDown: (event: React.KeyboardEvent, item: IReqoreTimelineItem) => void;
 }
@@ -360,7 +396,6 @@ interface ITimelineItemRendererProps {
 const TimelineItemRenderer = memo(
   ({
     item,
-    index,
     isLast,
     size,
     customTheme,
@@ -368,7 +403,7 @@ const TimelineItemRenderer = memo(
     baseTheme,
     isCollapsed,
     direction,
-    onToggleCollapse,
+    onToggle,
     onItemClick,
     onKeyDown,
   }: ITimelineItemRendererProps) => {
@@ -423,7 +458,7 @@ const TimelineItemRenderer = memo(
               horizontalAlign={isHorizontal ? 'center' : undefined}
               vertical={isHorizontal}
               gapSize={size}
-              onClick={showCollapsible ? (e) => onToggleCollapse(index, e) : undefined}
+              onClick={showCollapsible ? (e) => onToggle(e) : undefined}
               style={showCollapsible ? { cursor: 'pointer' } : undefined}
             >
               {showCollapsible && (
@@ -500,6 +535,81 @@ const TimelineItemRenderer = memo(
   }
 );
 
+interface ICollapsedRunRendererProps {
+  range: IReqoreTimelineCollapsedRange;
+  isLast: boolean;
+  size: TSizes;
+  baseTheme: IReqoreTheme;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+/**
+ * The folded "N hidden" marker for a collapsed run — one muted, clickable
+ * timeline node that stands in for the hidden items (or, when expanded, a
+ * "Hide" control that re-folds them). Vertical mode only.
+ */
+const CollapsedRunRenderer = memo(
+  ({ range, isLast, size, baseTheme, expanded, onToggle }: ICollapsedRunRendererProps) => {
+    const n = range.collapsedItems.length;
+    // Hex for the icon (ReqoreIcon `color` wants a TReqoreEffectColor); rgba for
+    // the label's plain CSS colour. Both muted to read as "skipped".
+    const mutedIconColor = changeLightness(baseTheme.main, 0.2);
+    const mutedTextColor = rgba(getReadableColor(baseTheme, undefined, undefined), 0.55);
+    const label = expanded ? 'Hide' : (range.label ?? `${n} hidden`);
+    return (
+      <StyledTimelineItem
+        theme={baseTheme}
+        size={size}
+        direction='vertical'
+        isClickable
+        isLast={isLast}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+        tabIndex={0}
+        role='listitem'
+        className='reqore-timeline-item reqore-timeline-collapsed-run'
+      >
+        <StyledTimelineMarkerWrapper theme={baseTheme} size={size} direction='vertical'>
+          <StyledTimelineMarker
+            theme={baseTheme}
+            size={size}
+            hasIntent={false}
+            className='reqore-timeline-marker'
+          >
+            <ReqoreIcon
+              icon={range.icon ?? (expanded ? 'ArrowUpSLine' : 'More2Line')}
+              size={getOneLessSize(getOneLessSize(size))}
+              color={range.iconColor ?? mutedIconColor}
+            />
+          </StyledTimelineMarker>
+          {!isLast && <StyledTimelineLine theme={baseTheme} size={size} isLast={isLast} />}
+        </StyledTimelineMarkerWrapper>
+        <StyledTimelineContent theme={baseTheme} size={size} direction='vertical'>
+          <ReqoreControlGroup
+            verticalAlign='center'
+            gapSize={size}
+            style={{ cursor: 'pointer' }}
+          >
+            <ReqoreSpan
+              size={size}
+              className='reqore-timeline-collapsed-run-label'
+              style={{ fontWeight: 500, color: mutedTextColor }}
+            >
+              {label}
+            </ReqoreSpan>
+          </ReqoreControlGroup>
+        </StyledTimelineContent>
+      </StyledTimelineItem>
+    );
+  }
+);
+
 const ReqoreTimeline = memo(
   forwardRef<HTMLOListElement, IReqoreTimelineProps>(
     (
@@ -515,6 +625,7 @@ const ReqoreTimeline = memo(
         responsive = true,
         collapsedState,
         onCollapseChange,
+        onRangeToggle,
         ...rest
       },
       ref
@@ -527,17 +638,34 @@ const ReqoreTimeline = memo(
       const direction =
         responsive && isMobile && directionProp === 'horizontal' ? 'vertical' : directionProp;
 
-      // Internal state used only in uncontrolled mode
+      // Internal collapse state for TOP-LEVEL items (uncontrolled mode). Folded
+      // runs are skipped here — they carry their own expand state below.
       const [internalCollapsedStates, setInternalCollapsedStates] = useState<
         Record<number, boolean>
       >(() =>
-        items.reduce((acc, item, index) => {
-          if (item.collapsible) {
-            acc[index] = item.isCollapsed ?? false;
+        items.reduce((acc, entry, index) => {
+          if (!isReqoreTimelineCollapsedRange(entry) && entry.collapsible) {
+            acc[index] = entry.isCollapsed ?? false;
           }
           return acc;
         }, {} as Record<number, boolean>)
       );
+
+      // Expand state per folded run (uncontrolled), seeded from `defaultExpanded`.
+      const [expandedRanges, setExpandedRanges] = useState<Record<number, boolean>>(() =>
+        items.reduce((acc, entry, index) => {
+          if (isReqoreTimelineCollapsedRange(entry)) {
+            acc[index] = entry.defaultExpanded ?? false;
+          }
+          return acc;
+        }, {} as Record<number, boolean>)
+      );
+
+      // Collapse state for items rendered INSIDE an expanded run, keyed by
+      // `${rangeIndex}-${nestedIndex}` (always uncontrolled).
+      const [nestedCollapsedStates, setNestedCollapsedStates] = useState<
+        Record<string, boolean>
+      >({});
 
       const isControlled = collapsedState !== undefined;
 
@@ -558,7 +686,10 @@ const ReqoreTimeline = memo(
         (index: number, event: React.MouseEvent) => {
           event.stopPropagation();
           if (isControlled) {
-            const currentCollapsed = collapsedState![index] ?? items[index]?.isCollapsed ?? false;
+            const entry = items[index];
+            const fallback =
+              entry && !isReqoreTimelineCollapsedRange(entry) ? entry.isCollapsed ?? false : false;
+            const currentCollapsed = collapsedState![index] ?? fallback;
             onCollapseChange?.(index, !currentCollapsed);
           } else {
             setInternalCollapsedStates((prev) => {
@@ -582,6 +713,97 @@ const ReqoreTimeline = memo(
         [isControlled, collapsedState, internalCollapsedStates]
       );
 
+      const getIsRangeExpanded = useCallback(
+        (range: IReqoreTimelineCollapsedRange, index: number): boolean =>
+          expandedRanges[index] ?? range.defaultExpanded ?? false,
+        [expandedRanges]
+      );
+
+      const toggleRange = useCallback(
+        (index: number, range: IReqoreTimelineCollapsedRange) => {
+          const next = !getIsRangeExpanded(range, index);
+          setExpandedRanges((prev) => ({ ...prev, [index]: next }));
+          onRangeToggle?.(index, next);
+        },
+        [getIsRangeExpanded, onRangeToggle]
+      );
+
+      const getNestedCollapsed = useCallback(
+        (item: IReqoreTimelineItem, key: string): boolean => {
+          if (!item.collapsible) return false;
+          return nestedCollapsedStates[key] ?? item.isCollapsed ?? false;
+        },
+        [nestedCollapsedStates]
+      );
+
+      const toggleNested = useCallback(
+        (key: string, item: IReqoreTimelineItem, event: React.MouseEvent) => {
+          event.stopPropagation();
+          setNestedCollapsedStates((prev) => ({
+            ...prev,
+            [key]: !(prev[key] ?? item.isCollapsed ?? false),
+          }));
+        },
+        []
+      );
+
+      // Flatten entries into the render sequence: normal items, plus a fold
+      // marker per collapsed run (followed by its items when expanded). `isLast`
+      // (the connector line) is computed over THIS flattened order so it never
+      // breaks across an expanded run.
+      type TRenderRow =
+        | {
+            kind: 'item';
+            item: IReqoreTimelineItem;
+            isCollapsed: boolean;
+            onToggle: (event: React.MouseEvent) => void;
+            key: string;
+          }
+        | {
+            kind: 'run';
+            range: IReqoreTimelineCollapsedRange;
+            expanded: boolean;
+            onToggle: () => void;
+            key: string;
+          };
+
+      const rows: TRenderRow[] = [];
+      items.forEach((entry, entryIndex) => {
+        if (!isReqoreTimelineCollapsedRange(entry)) {
+          rows.push({
+            kind: 'item',
+            item: entry,
+            isCollapsed: getIsCollapsed(entry, entryIndex),
+            onToggle: (event) => toggleCollapse(entryIndex, event),
+            key: `i${entryIndex}`,
+          });
+          return;
+        }
+        // A folded run. Horizontal mode has no fold affordance — inline the items.
+        const expanded = direction === 'horizontal' || getIsRangeExpanded(entry, entryIndex);
+        if (direction === 'vertical') {
+          rows.push({
+            kind: 'run',
+            range: entry,
+            expanded,
+            onToggle: () => toggleRange(entryIndex, entry),
+            key: `r${entryIndex}`,
+          });
+        }
+        if (expanded) {
+          entry.collapsedItems.forEach((nested, nestedIndex) => {
+            const nestedKey = `${entryIndex}-${nestedIndex}`;
+            rows.push({
+              kind: 'item',
+              item: nested,
+              isCollapsed: getNestedCollapsed(nested, nestedKey),
+              onToggle: (event) => toggleNested(nestedKey, nested, event),
+              key: `n${nestedKey}`,
+            });
+          });
+        }
+      });
+
       return (
         <StyledTimeline
           {...rest}
@@ -593,23 +815,38 @@ const ReqoreTimeline = memo(
           className={`${className || ''} reqore-timeline reqore-timeline-${direction}`}
           role='list'
         >
-          {items.map((item, index) => (
-            <TimelineItemRenderer
-              key={index}
-              item={item}
-              index={index}
-              isLast={index === items.length - 1}
-              size={size}
-              customTheme={customTheme}
-              intent={intent}
-              baseTheme={baseTheme}
-              direction={direction}
-              isCollapsed={getIsCollapsed(item, index)}
-              onToggleCollapse={toggleCollapse}
-              onItemClick={handleItemClick}
-              onKeyDown={handleKeyDown}
-            />
-          ))}
+          {rows.map((row, rowIndex) => {
+            const isLast = rowIndex === rows.length - 1;
+            if (row.kind === 'run') {
+              return (
+                <CollapsedRunRenderer
+                  key={row.key}
+                  range={row.range}
+                  isLast={isLast}
+                  size={size}
+                  baseTheme={baseTheme}
+                  expanded={row.expanded}
+                  onToggle={row.onToggle}
+                />
+              );
+            }
+            return (
+              <TimelineItemRenderer
+                key={row.key}
+                item={row.item}
+                isLast={isLast}
+                size={size}
+                customTheme={customTheme}
+                intent={intent}
+                baseTheme={baseTheme}
+                direction={direction}
+                isCollapsed={row.isCollapsed}
+                onToggle={row.onToggle}
+                onItemClick={handleItemClick}
+                onKeyDown={handleKeyDown}
+              />
+            );
+          })}
         </StyledTimeline>
       );
     }
