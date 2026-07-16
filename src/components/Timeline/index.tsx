@@ -614,7 +614,12 @@ const CollapsedRunRenderer = memo(
             />
           </StyledTimelineMarker>
           {!isLast && (
-            <StyledTimelineLine theme={baseTheme} size={size} isLast={isLast} dashed />
+            <StyledTimelineLine
+              theme={baseTheme}
+              size={size}
+              isLast={isLast}
+              dashed={!expanded}
+            />
           )}
         </StyledTimelineMarkerWrapper>
         <StyledTimelineContent theme={baseTheme} size={size} direction='vertical'>
@@ -858,8 +863,11 @@ const ReqoreTimeline = memo(
               );
             }
             // A normal item's downward connector goes dotted when the next
-            // entry is a collapsed run — the dotted boundary reads as "folded".
-            const lineDashed = rows[rowIndex + 1]?.kind === 'run';
+            // entry is a *folded* run — the dotted boundary reads as "hidden".
+            // An expanded run reveals its items, so that line stays solid.
+            const nextRow = rows[rowIndex + 1];
+            const lineDashed =
+              nextRow !== undefined && nextRow.kind === 'run' && !nextRow.expanded;
             return (
               <TimelineItemRenderer
                 key={row.key}

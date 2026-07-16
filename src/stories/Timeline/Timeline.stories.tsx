@@ -866,7 +866,10 @@ export const CollapsedRange: Story = {
           intent: 'info',
         },
         {
+          // Expanded to show both states in one view: this run reveals its
+          // items + a "Hide" control; the later runs stay folded.
           label: '6 read-only builds',
+          defaultExpanded: true,
           collapsedItems: [
             { title: 'Build #17', timestamp: 'Jul 15', icon: 'TimeLine' },
             { title: 'Build #16', timestamp: 'Jul 15', icon: 'TimeLine' },
@@ -914,10 +917,12 @@ export const CollapsedRange: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // Folded runs show their labels; the hidden builds aren't rendered.
-    await expect(canvas.getByText('6 read-only builds')).toBeInTheDocument();
+    // The first run is expanded (defaultExpanded): its items render inline
+    // with a "Hide" control.
+    await expect(canvas.getByText('Hide')).toBeInTheDocument();
+    await expect(canvas.getByText('Build #14')).toBeInTheDocument();
+    // The later runs stay folded — labels show, their hidden builds don't.
     await expect(canvas.getByText('2 read-only builds')).toBeInTheDocument();
-    await expect(canvas.queryByText('Build #14')).not.toBeInTheDocument();
     await expect(canvas.queryByText('Build #10')).not.toBeInTheDocument();
     // Noteworthy entries stay visible — including a normal entry sandwiched
     // between two collapsed runs.
