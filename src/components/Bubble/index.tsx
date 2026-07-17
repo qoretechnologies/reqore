@@ -5,6 +5,7 @@ import {
   isValidElement,
   memo,
   useMemo,
+  type CSSProperties,
   type HTMLAttributes,
   type ReactElement,
   type ReactNode,
@@ -327,6 +328,15 @@ export const ReqoreBubble = memo(
         [labelEffect]
       );
 
+      // The wrappers are memoised ControlGroups, so their `style` has to keep a
+      // stable identity between renders. The stack carries the width cap (and can
+      // shrink); the row just lets its children shrink past the aligned edge.
+      const stackStyle = useMemo<CSSProperties>(
+        () => ({ minWidth: 0, maxWidth, ...(avatar ? undefined : style) }),
+        [maxWidth, avatar, style]
+      );
+      const rowStyle = useMemo<CSSProperties>(() => ({ minWidth: 0, ...style }), [style]);
+
       const bubble = (
         <StyledBubble
           {...rest}
@@ -409,7 +419,7 @@ export const ReqoreBubble = memo(
           vertical
           gapSize='tiny'
           horizontalAlign={align === 'right' ? 'flex-end' : 'flex-start'}
-          style={{ minWidth: 0, maxWidth, ...(avatar ? undefined : style) }}
+          style={stackStyle}
           className='reqore-bubble-stack'
         >
           {bubble}
@@ -428,7 +438,7 @@ export const ReqoreBubble = memo(
           verticalAlign='flex-start'
           gapSize={size}
           // let the stack/bubble shrink instead of pushing off the aligned edge
-          style={{ minWidth: 0, ...style }}
+          style={rowStyle}
           horizontalAlign={align === 'right' ? 'flex-end' : 'flex-start'}
           className='reqore-bubble-row'
         >
