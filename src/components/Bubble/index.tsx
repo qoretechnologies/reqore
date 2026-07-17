@@ -4,6 +4,7 @@ import {
   forwardRef,
   isValidElement,
   memo,
+  useMemo,
   type HTMLAttributes,
   type ReactElement,
   type ReactNode,
@@ -313,6 +314,18 @@ export const ReqoreBubble = memo(
       const bubbleEffect: IReqoreEffect | undefined =
         onClick || effect ? { interactive: !!onClick, ...effect } : undefined;
 
+      // The header's spans are memoised components, so their merged effect has to
+      // keep its identity between renders — a fresh literal would re-render them
+      // on every parent render. The caller's effect still wins on conflicts.
+      const resolvedTitleEffect = useMemo<IReqoreEffect>(
+        () => ({ weight: 'bold', ...titleEffect }),
+        [titleEffect]
+      );
+      const resolvedDetailEffect = useMemo<IReqoreEffect>(
+        () => ({ opacity: 0.5, ...detailEffect }),
+        [detailEffect]
+      );
+
       const bubble = (
         <StyledBubble
           {...rest}
@@ -346,7 +359,7 @@ export const ReqoreBubble = memo(
                 <ReqoreSpan
                   className='reqore-bubble-title'
                   size={size}
-                  effect={{ weight: 'bold', ...titleEffect }}
+                  effect={resolvedTitleEffect}
                 >
                   {title}
                 </ReqoreSpan>
@@ -355,7 +368,7 @@ export const ReqoreBubble = memo(
                 <ReqoreSpan
                   className='reqore-bubble-detail'
                   size={getOneLessSize(size)}
-                  effect={{ opacity: 0.5, ...detailEffect }}
+                  effect={resolvedDetailEffect}
                 >
                   {detail}
                 </ReqoreSpan>
