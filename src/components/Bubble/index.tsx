@@ -128,6 +128,8 @@ interface IStyledBubbleProps {
   $hasGradient?: boolean;
   /** Whether a wrapper (avatar row / timestamp stack) owns the alignment. */
   $wrapped?: boolean;
+  /** Whether a timestamp stack wraps the bubble and carries the width cap. */
+  $stacked?: boolean;
 }
 
 // Border radius per group position: a run of same-side bubbles tightens the
@@ -156,7 +158,9 @@ function groupRadius(
 export const StyledBubble = styled(StyledEffect)<IStyledBubbleProps>`
   display: block;
   width: fit-content;
-  max-width: ${({ $maxWidth }) => $maxWidth};
+  /* Inside a timestamp stack the wrapper carries the cap and the bubble fills it;
+     standalone (or directly in the avatar row) the bubble carries it. */
+  max-width: ${({ $stacked, $maxWidth }) => ($stacked ? '100%' : $maxWidth)};
   /* Standalone, the bubble aligns itself; once wrapped, the wrapper does. */
   margin-left: ${({ $align, $wrapped }) => (!$wrapped && $align === 'right' ? 'auto' : 0)};
   margin-right: ${({ $align, $wrapped }) => (!$wrapped && $align === 'left' ? 'auto' : 0)};
@@ -348,6 +352,7 @@ export const ReqoreBubble = memo(
           $coloured={coloured}
           $hasGradient={!!effect?.gradient}
           $wrapped={wrapped}
+          $stacked={showTimestamp}
           className={`${className || ''} reqore-bubble`.trim()}
         >
           {isSet(label) && (
@@ -396,13 +401,15 @@ export const ReqoreBubble = memo(
       ) : null;
 
       // The time hangs off the bubble, not off the row — otherwise it lines up
-      // under the avatar instead of under the message it belongs to.
+      // under the avatar instead of under the message it belongs to. The stack
+      // carries the width cap (the bubble fills it at 100%) and can shrink
+      // (`min-width: 0`), so a capped bubble still wraps rather than overflowing.
       const stack = showTimestamp ? (
         <ReqoreControlGroup
           vertical
           gapSize='tiny'
           horizontalAlign={align === 'right' ? 'flex-end' : 'flex-start'}
-          style={avatar ? undefined : style}
+          style={{ minWidth: 0, maxWidth, ...(avatar ? undefined : style) }}
           className='reqore-bubble-stack'
         >
           {bubble}
@@ -420,8 +427,9 @@ export const ReqoreBubble = memo(
         <ReqoreControlGroup
           verticalAlign='flex-start'
           gapSize={size}
+          // let the stack/bubble shrink instead of pushing off the aligned edge
+          style={{ minWidth: 0, ...style }}
           horizontalAlign={align === 'right' ? 'flex-end' : 'flex-start'}
-          style={style}
           className='reqore-bubble-row'
         >
           {align === 'left' && avatarNode}

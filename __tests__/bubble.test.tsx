@@ -63,6 +63,26 @@ test('Renders <Bubble /> without an avatar row when no avatar is given', () => {
   expect(document.querySelector('.reqore-bubble').closest('.reqore-bubble-row')).toBeNull();
 });
 
+// A `maxWidth` bubble that gets a timestamp is wrapped in a stack. The cap has to
+// move onto that stack (with the bubble filling it) and the stack must be able to
+// shrink — otherwise the cap resolves against a content-sized wrapper and the
+// bubble runs off-screen at narrow widths instead of wrapping.
+test('Caps the timestamp stack, not the bubble, so a capped bubble can still wrap', () => {
+  renderBubbles(
+    <ReqoreBubble timestamp='2h ago' maxWidth='76%'>
+      Hello
+    </ReqoreBubble>
+  );
+
+  const stack = document.querySelector('.reqore-bubble-stack');
+  const bubble = stack.querySelector('.reqore-bubble');
+
+  expect(getComputedStyle(stack).maxWidth).toBe('76%');
+  expect(getComputedStyle(stack).minWidth).toBe('0px');
+  // the bubble no longer carries the cap itself — it fills the capped stack
+  expect(getComputedStyle(bubble).maxWidth).toBe('100%');
+});
+
 // The avatar leads on the left and trails on the right, so it always sits on the
 // transcript's outer edge instead of between the two columns of text.
 test('Renders the <Bubble /> avatar on the side the bubble hugs', () => {
