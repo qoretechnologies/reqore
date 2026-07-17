@@ -1,7 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { ReqoreBubble, ReqoreBubbleGroup, IReqoreBubbleProps } from '../../components/Bubble';
 import { StoryMeta } from '../utils';
-import { FlatArg, IntentArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { FlatArg, IntentArg, MinimalArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreBubbleProps>();
 
@@ -13,6 +13,7 @@ const meta = {
     ...FlatArg,
     ...MinimalArg,
     ...IntentArg,
+    ...RadiusSizeArg,
     ...createArg('align', {
       defaultValue: 'left',
       name: 'Align',
@@ -114,6 +115,75 @@ export const WithTimestamp: Story = {
   args: {
     timestamp: '10:45 AM',
   },
+};
+
+export const WithHeader: Story = {
+  render: Template,
+  args: {
+    title: 'Ada Lovelace',
+    detail: '2h ago',
+    flat: false,
+    minimal: true,
+  },
+};
+
+export const WithAvatar: Story = {
+  render: Template,
+  args: {
+    avatar: { icon: 'User3Line' },
+    title: 'Ada Lovelace',
+    detail: '2h ago',
+    flat: false,
+    minimal: true,
+  },
+};
+
+/**
+ * A comment feed: an avatar + a bordered, accent-tinted card per message, each
+ * side hugging its own edge. `customTheme` tints the border, the fill and the
+ * avatar together, so the pair reads as one object under any app's theme.
+ */
+export const AvatarFeed: Story = {
+  render: () => (
+    <ReqoreBubbleGroup>
+      <ReqoreBubble
+        align='left'
+        avatar={{ icon: 'User3Line' }}
+        title='ops@acme.io'
+        detail='2h ago'
+        customTheme={{ main: '#3b2d63' }}
+        maxWidth='76%'
+        flat={false}
+        minimal
+      >
+        Our nightly transfer times out after ~30s since the 3.2 upgrade.
+      </ReqoreBubble>
+      <ReqoreBubble
+        align='right'
+        avatar={{ icon: 'CustomerService2Line' }}
+        title='Support'
+        detail='1h ago'
+        customTheme={{ main: '#3b2d63' }}
+        maxWidth='76%'
+        flat={false}
+        minimal
+      >
+        Reproduced — a fix is in review. Can you confirm the pool size?
+      </ReqoreBubble>
+      <ReqoreBubble
+        align='right'
+        avatar={{ icon: 'EyeOffLine' }}
+        title='Internal note'
+        detail='35m ago'
+        intent='warning'
+        maxWidth='76%'
+        flat={false}
+        minimal
+      >
+        The pool default dropped from 4 to 1 in the 3.2 migration.
+      </ReqoreBubble>
+    </ReqoreBubbleGroup>
+  ),
 };
 
 export const Clickable: Story = {

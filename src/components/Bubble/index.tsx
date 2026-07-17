@@ -10,9 +10,20 @@ import {
 } from 'react';
 import { rgba } from 'polished';
 import styled, { css } from 'styled-components';
-import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  BUBBLE_AVATAR_RADIUS_FROM_SIZE,
+  BUBBLE_RADIUS_FROM_RADIUS_SIZE,
+  BUBBLE_RADIUS_FROM_SIZE,
+  PADDING_FROM_SIZE,
+  RADIUS_FROM_SIZE,
+  resolveRadius,
+  SIZE_TO_PX,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { RaisedElement } from '../../styles';
 import {
@@ -23,13 +34,23 @@ import {
   IWithReqoreMinimal,
   IWithReqoreSize,
 } from '../../types/global';
+import { IReqoreIconName } from '../../types/icons';
 import { IReqoreEffect, ReqoreEffect, StyledEffect } from '../Effect';
+import ReqoreIcon from '../Icon';
+import { ReqoreSpan } from '../Span';
 
 export type TReqoreBubbleAlign = 'left' | 'right';
 export type TReqoreBubbleGroupPosition = 'single' | 'first' | 'middle' | 'last';
 
+export interface IReqoreBubbleAvatar {
+  /** Icon glyph shown in the avatar. Ignored when `image` is set. */
+  icon?: IReqoreIconName;
+  /** Image shown in the avatar — a user photo, an app logo, … */
+  image?: string;
+}
+
 export interface IReqoreBubbleProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, 'color'>,
+  extends Omit<HTMLAttributes<HTMLDivElement>, 'color' | 'title'>,
     IWithReqoreCustomTheme,
     IWithReqoreEffect,
     IWithReqoreSize,
@@ -43,6 +64,12 @@ export interface IReqoreBubbleProps
   /** Whether the bubble has rounded corners. Defaults to `true`. */
   rounded?: boolean;
   /**
+   * Opts the corners onto the pronounced `radiusSize` scale instead of deriving
+   * them from `size` — for both the bubble and its `avatar`. Ignored when
+   * `rounded={false}`.
+   */
+  radiusSize?: TSizes;
+  /**
    * Position within a run of same-side bubbles — controls which corners are
    * tightened so a group reads as one cluster. Usually set automatically by
    * `ReqoreBubbleGroup`. Defaults to `'single'`.
@@ -53,6 +80,24 @@ export interface IReqoreBubbleProps
    * Applied only on a borderless (`flat`), non-`intent` bubble.
    */
   raised?: boolean;
+  /**
+   * Avatar rendered *outside* the bubble, on the side the bubble hugs, tinted
+   * with the bubble's own colour and top-aligned with it. Give it an `icon` or
+   * an `image`. Adding one wraps the bubble in a row that takes over the
+   * alignment, so the avatar and the bubble travel to the aligned side together.
+   */
+  avatar?: IReqoreBubbleAvatar;
+  /** Bold lead-in on the bubble's first line — typically the author's name. */
+  title?: ReactNode;
+  /**
+   * Muted text beside `title` — typically a time. Unlike `timestamp`, which sits
+   * at the bubble's bottom-right, this reads inline with the author.
+   */
+  detail?: ReactNode;
+  /** Effect applied to `title` — merged over its bold default. */
+  titleEffect?: IReqoreEffect;
+  /** Effect applied to `detail` — merged over its muted default. */
+  detailEffect?: IReqoreEffect;
   /** Optional muted timestamp rendered at the bottom of the bubble. */
   timestamp?: ReactNode;
   /** Effect applied to the bubble's content (e.g. gradient or coloured text). */
@@ -71,12 +116,15 @@ interface IStyledBubbleProps {
   $minimal?: boolean;
   $flat?: boolean;
   $rounded?: boolean;
+  $radiusSize?: TSizes;
   $raised?: boolean;
   $clickable?: boolean;
   /** Whether the bubble carries an intent or customTheme — i.e. its own colour. */
   $coloured?: boolean;
   /** Whether an `effect` gradient paints the background (then no solid fill). */
   $hasGradient?: boolean;
+  /** Whether an avatar row wraps the bubble and owns the alignment. */
+  $inRow?: boolean;
 }
 
 // Border radius per group position: a run of same-side bubbles tightens the
@@ -106,8 +154,9 @@ export const StyledBubble = styled(StyledEffect)<IStyledBubbleProps>`
   display: block;
   width: fit-content;
   max-width: ${({ $maxWidth }) => $maxWidth};
-  margin-left: ${({ $align }) => ($align === 'right' ? 'auto' : 0)};
-  margin-right: ${({ $align }) => ($align === 'left' ? 'auto' : 0)};
+  /* Standalone, the bubble aligns itself; inside an avatar row the row does. */
+  margin-left: ${({ $align, $inRow }) => (!$inRow && $align === 'right' ? 'auto' : 0)};
+  margin-right: ${({ $align, $inRow }) => (!$inRow && $align === 'left' ? 'auto' : 0)};
   padding: ${({ $size }) =>
     `${Math.round(PADDING_FROM_SIZE[$size] * 1.3)}px ${Math.round(
       PADDING_FROM_SIZE[$size] * 1.85
@@ -117,10 +166,17 @@ export const StyledBubble = styled(StyledEffect)<IStyledBubbleProps>`
   word-break: break-word;
   cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
   transition: background-color 0.15s ease-out, filter 0.15s ease-out;
-  border-radius: ${({ $size, $rounded, $groupPosition, $align }) =>
+  border-radius: ${({ $size, $rounded, $radiusSize, $groupPosition, $align }) =>
     $rounded === false
       ? 0
-      : groupRadius($groupPosition, $align, RADIUS_FROM_SIZE[$size] * 3, RADIUS_FROM_SIZE[$size])};
+      : groupRadius(
+          $groupPosition,
+          $align,
+          resolveRadius($size, $radiusSize, BUBBLE_RADIUS_FROM_SIZE, BUBBLE_RADIUS_FROM_RADIUS_SIZE),
+          // the seam a cluster tightens to stays small whatever the outer curve —
+          // that contrast is what makes a run read as one bubble.
+          RADIUS_FROM_SIZE[$size]
+        )};
 
   ${({ theme, $minimal, $flat, $coloured, $hasGradient }) => {
     // A coloured bubble (intent / customTheme) tints its own colour; a plain one
@@ -165,14 +221,56 @@ const StyledTimestamp = styled.div<{ $size: TSizes }>`
   text-align: right;
 `;
 
+// Only rendered when there's an avatar: holds the avatar and the bubble side by
+// side and takes over the alignment, so both hug the same edge as one unit.
+export const StyledBubbleRow = styled.div<{ $align: TReqoreBubbleAlign; $size: TSizes }>`
+  display: flex;
+  align-items: flex-start;
+  gap: ${({ $size }) => PADDING_FROM_SIZE[$size]}px;
+  justify-content: ${({ $align }) => ($align === 'right' ? 'flex-end' : 'flex-start')};
+`;
+
+// The avatar echoes the bubble's own colour at the same strength a `minimal`
+// bubble uses, so the pair reads as one object whatever the bubble is themed to.
+export const StyledBubbleAvatar = styled.div<{
+  theme: IReqoreTheme;
+  $size: TSizes;
+  $radiusSize?: TSizes;
+  $coloured?: boolean;
+}>`
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: ${({ $size }) => SIZE_TO_PX[$size]}px;
+  height: ${({ $size }) => SIZE_TO_PX[$size]}px;
+  border-radius: ${({ $size, $radiusSize }) =>
+    resolveRadius($size, $radiusSize, BUBBLE_AVATAR_RADIUS_FROM_SIZE)}px;
+  background-color: ${({ theme, $coloured }) =>
+    $coloured ? rgba(theme.main, 0.16) : rgba(changeLightness(theme.main, 0.5), 0.1)};
+  color: ${({ theme }) => getReadableColor(theme)};
+`;
+
+const StyledBubbleHeader = styled.div<{ $size: TSizes }>`
+  display: flex;
+  align-items: baseline;
+  gap: ${({ $size }) => PADDING_FROM_SIZE[$size]}px;
+  margin-bottom: 4px;
+`;
+
 /**
  * A lightweight, themeable chat-style bubble. It sizes to its content (capped
  * by `maxWidth`) and hugs the left or right edge of its container via `align`.
  *
  * Like other Reqore surfaces it accepts `intent`, `customTheme`, `effect`
- * (including gradients), `flat`, `minimal` and `raised` — but carries none of
- * the avatar / title / action weight of `ReqoreComment`. Stack a column of
- * these (see `ReqoreBubbleGroup`) for a chat transcript.
+ * (including gradients), `flat`, `minimal` and `raised`. Stack a column of these
+ * (see `ReqoreBubbleGroup`) for a chat transcript.
+ *
+ * An optional `avatar` sits outside the bubble on the aligned side, and optional
+ * `title` / `detail` render as an inline header — enough for a comment feed
+ * without reaching for `ReqoreComment`, which is a full-width panel with room
+ * for actions rather than an aligned, content-width bubble.
  */
 export const ReqoreBubble = memo(
   forwardRef<HTMLDivElement, IReqoreBubbleProps>(
@@ -186,14 +284,21 @@ export const ReqoreBubble = memo(
         minimal,
         flat = true,
         rounded = true,
+        radiusSize,
         groupPosition = 'single',
         raised,
+        avatar,
+        title,
+        detail,
+        titleEffect,
+        detailEffect,
         timestamp,
         size = 'normal',
         effect,
         contentEffect,
         onClick,
         className,
+        style,
         children,
         ...rest
       },
@@ -201,11 +306,14 @@ export const ReqoreBubble = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const showRaised = !!raised && flat !== false && !intent;
+      const coloured = !!intent || !!customTheme;
+      const isSet = (value: ReactNode) => value != null && value !== '';
+      const hasHeader = isSet(title) || isSet(detail);
 
       const bubbleEffect: IReqoreEffect | undefined =
         onClick || effect ? { interactive: !!onClick, ...effect } : undefined;
 
-      return (
+      const bubble = (
         <StyledBubble
           {...rest}
           as='div'
@@ -213,6 +321,10 @@ export const ReqoreBubble = memo(
           onClick={onClick}
           theme={theme}
           effect={bubbleEffect}
+          // Standalone, the bubble carries the caller's style; inside an avatar
+          // row the row carries it, so a group's spacing offsets the whole pair
+          // rather than sliding the bubble out of line with its avatar.
+          style={avatar ? undefined : style}
           $size={size}
           $align={align}
           $maxWidth={maxWidth}
@@ -220,17 +332,71 @@ export const ReqoreBubble = memo(
           $minimal={minimal}
           $flat={flat}
           $rounded={rounded}
+          $radiusSize={radiusSize}
           $raised={showRaised}
           $clickable={!!onClick}
-          $coloured={!!intent || !!customTheme}
+          $coloured={coloured}
           $hasGradient={!!effect?.gradient}
+          $inRow={!!avatar}
           className={`${className || ''} reqore-bubble`.trim()}
         >
+          {hasHeader && (
+            <StyledBubbleHeader $size={size} className='reqore-bubble-header'>
+              {isSet(title) && (
+                <ReqoreSpan
+                  className='reqore-bubble-title'
+                  size={size}
+                  effect={{ weight: 'bold', ...titleEffect }}
+                >
+                  {title}
+                </ReqoreSpan>
+              )}
+              {isSet(detail) && (
+                <ReqoreSpan
+                  className='reqore-bubble-detail'
+                  size={getOneLessSize(size)}
+                  effect={{ opacity: 0.5, ...detailEffect }}
+                >
+                  {detail}
+                </ReqoreSpan>
+              )}
+            </StyledBubbleHeader>
+          )}
           {contentEffect ? <ReqoreEffect effect={contentEffect}>{children}</ReqoreEffect> : children}
           {timestamp != null && timestamp !== '' && (
             <StyledTimestamp $size={size}>{timestamp}</StyledTimestamp>
           )}
         </StyledBubble>
+      );
+
+      if (!avatar) {
+        return bubble;
+      }
+
+      const avatarNode = (
+        <StyledBubbleAvatar
+          theme={theme}
+          $size={size}
+          $radiusSize={radiusSize}
+          $coloured={coloured}
+          className='reqore-bubble-avatar'
+        >
+          <ReqoreIcon
+            icon={avatar.icon}
+            image={avatar.image}
+            size={size}
+            // an image fills the avatar box; a glyph keeps its natural size, centred
+            wrapperSize={avatar.image ? `${SIZE_TO_PX[size]}px` : undefined}
+          />
+        </StyledBubbleAvatar>
+      );
+
+      return (
+        <StyledBubbleRow $align={align} $size={size} style={style} className='reqore-bubble-row'>
+          {align === 'left' && avatarNode}
+          {bubble}
+          {align === 'right' && avatarNode}
+        </StyledBubbleRow>
       );
     }
   )
