@@ -120,10 +120,14 @@ export const WithTimestamp: Story = {
 export const WithHeader: Story = {
   render: Template,
   args: {
-    title: 'Ada Lovelace',
-    detail: '2h ago',
+    label: 'Ada Lovelace',
+    timestamp: '2h ago',
     flat: false,
     minimal: true,
+    // wash the body a step below the bold label — `contentEffect` hits only the
+    // children, so the label stays at full strength.
+    contentEffect: { opacity: 0.72 },
+    children: 'Adept programmer of the Analytical Engine, author of the first algorithm.',
   },
 };
 
@@ -131,17 +135,22 @@ export const WithAvatar: Story = {
   render: Template,
   args: {
     avatar: { icon: 'User3Line' },
-    title: 'Ada Lovelace',
-    detail: '2h ago',
+    label: 'Ada Lovelace',
+    timestamp: '2h ago',
     flat: false,
     minimal: true,
+    contentEffect: { opacity: 0.72 },
+    children: 'Adept programmer of the Analytical Engine, author of the first algorithm.',
   },
 };
 
 /**
- * A comment feed: an avatar + a bordered, accent-tinted card per message, each
- * side hugging its own edge. `customTheme` tints the border, the fill and the
- * avatar together, so the pair reads as one object under any app's theme.
+ * A comment feed: an avatar + a bordered, accent-tinted card per message, each side
+ * hugging its own edge. `customTheme` tints the border, the fill and the avatar
+ * together, so the pair reads as one object under any app's theme. All three bubbles
+ * carry a `timestamp`, but the two right-side ones form a run — so only the last of
+ * them prints a time. `contentEffect={{ opacity }}` washes each body a step below its
+ * bold label (the label sits outside `contentEffect`, so it stays bright).
  */
 export const AvatarFeed: Story = {
   render: () => (
@@ -149,8 +158,9 @@ export const AvatarFeed: Story = {
       <ReqoreBubble
         align='left'
         avatar={{ icon: 'User3Line' }}
-        title='ops@acme.io'
-        detail='2h ago'
+        label='ops@acme.io'
+        timestamp='2h ago'
+        contentEffect={{ opacity: 0.72 }}
         customTheme={{ main: '#3b2d63' }}
         maxWidth='76%'
         flat={false}
@@ -161,8 +171,9 @@ export const AvatarFeed: Story = {
       <ReqoreBubble
         align='right'
         avatar={{ icon: 'CustomerService2Line' }}
-        title='Support'
-        detail='1h ago'
+        label='Support'
+        timestamp='1h ago'
+        contentEffect={{ opacity: 0.72 }}
         customTheme={{ main: '#3b2d63' }}
         maxWidth='76%'
         flat={false}
@@ -173,8 +184,9 @@ export const AvatarFeed: Story = {
       <ReqoreBubble
         align='right'
         avatar={{ icon: 'EyeOffLine' }}
-        title='Internal note'
-        detail='35m ago'
+        label='Internal note'
+        timestamp='35m ago'
+        contentEffect={{ opacity: 0.72 }}
         intent='warning'
         maxWidth='76%'
         flat={false}

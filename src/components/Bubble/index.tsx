@@ -36,9 +36,14 @@ import {
   IWithReqoreSize,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, ReqoreEffect, StyledEffect } from '../Effect';
 import ReqoreIcon from '../Icon';
 import { ReqoreSpan } from '../Span';
+
+// Hoisted so the memoised timestamp span keeps a stable `effect` identity.
+// 0.35 matches Qonsole's timestamp — fainter than the label, clearly secondary.
+const TIMESTAMP_EFFECT: IReqoreEffect = { opacity: 0.35 };
 
 export type TReqoreBubbleAlign = 'left' | 'right';
 export type TReqoreBubbleGroupPosition = 'single' | 'first' | 'middle' | 'last';
@@ -51,7 +56,7 @@ export interface IReqoreBubbleAvatar {
 }
 
 export interface IReqoreBubbleProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, 'color' | 'title'>,
+  extends Omit<HTMLAttributes<HTMLDivElement>, 'color'>,
     IWithReqoreCustomTheme,
     IWithReqoreEffect,
     IWithReqoreSize,
@@ -89,17 +94,14 @@ export interface IReqoreBubbleProps
    */
   avatar?: IReqoreBubbleAvatar;
   /** Bold lead-in on the bubble's first line — typically the author's name. */
-  title?: ReactNode;
+  label?: ReactNode;
+  /** Effect applied to `label` — merged over its bold default. */
+  labelEffect?: IReqoreEffect;
   /**
-   * Muted text beside `title` — typically a time. Unlike `timestamp`, which sits
-   * at the bubble's bottom-right, this reads inline with the author.
+   * Muted timestamp rendered *below* the bubble, hugging the same side. Inside a
+   * `ReqoreBubbleGroup` only the last bubble of a same-side run renders it, so a
+   * cluster of messages reads as one moment rather than repeating the time.
    */
-  detail?: ReactNode;
-  /** Effect applied to `title` — merged over its bold default. */
-  titleEffect?: IReqoreEffect;
-  /** Effect applied to `detail` — merged over its muted default. */
-  detailEffect?: IReqoreEffect;
-  /** Optional muted timestamp rendered at the bottom of the bubble. */
   timestamp?: ReactNode;
   /** Effect applied to the bubble's content (e.g. gradient or coloured text). */
   contentEffect?: IReqoreEffect;
@@ -124,8 +126,8 @@ interface IStyledBubbleProps {
   $coloured?: boolean;
   /** Whether an `effect` gradient paints the background (then no solid fill). */
   $hasGradient?: boolean;
-  /** Whether an avatar row wraps the bubble and owns the alignment. */
-  $inRow?: boolean;
+  /** Whether a wrapper (avatar row / timestamp stack) owns the alignment. */
+  $wrapped?: boolean;
 }
 
 // Border radius per group position: a run of same-side bubbles tightens the
@@ -155,9 +157,9 @@ export const StyledBubble = styled(StyledEffect)<IStyledBubbleProps>`
   display: block;
   width: fit-content;
   max-width: ${({ $maxWidth }) => $maxWidth};
-  /* Standalone, the bubble aligns itself; inside an avatar row the row does. */
-  margin-left: ${({ $align, $inRow }) => (!$inRow && $align === 'right' ? 'auto' : 0)};
-  margin-right: ${({ $align, $inRow }) => (!$inRow && $align === 'left' ? 'auto' : 0)};
+  /* Standalone, the bubble aligns itself; once wrapped, the wrapper does. */
+  margin-left: ${({ $align, $wrapped }) => (!$wrapped && $align === 'right' ? 'auto' : 0)};
+  margin-right: ${({ $align, $wrapped }) => (!$wrapped && $align === 'left' ? 'auto' : 0)};
   padding: ${({ $size }) =>
     `${Math.round(PADDING_FROM_SIZE[$size] * 1.3)}px ${Math.round(
       PADDING_FROM_SIZE[$size] * 1.85
@@ -215,22 +217,6 @@ export const StyledBubble = styled(StyledEffect)<IStyledBubbleProps>`
     `}
 `;
 
-const StyledTimestamp = styled.div<{ $size: TSizes }>`
-  margin-top: 4px;
-  font-size: ${({ $size }) => Math.max(TEXT_FROM_SIZE[$size] - 4, 9)}px;
-  opacity: 0.55;
-  text-align: right;
-`;
-
-// Only rendered when there's an avatar: holds the avatar and the bubble side by
-// side and takes over the alignment, so both hug the same edge as one unit.
-export const StyledBubbleRow = styled.div<{ $align: TReqoreBubbleAlign; $size: TSizes }>`
-  display: flex;
-  align-items: flex-start;
-  gap: ${({ $size }) => PADDING_FROM_SIZE[$size]}px;
-  justify-content: ${({ $align }) => ($align === 'right' ? 'flex-end' : 'flex-start')};
-`;
-
 // The avatar echoes the bubble's own colour at the same strength a `minimal`
 // bubble uses, so the pair reads as one object whatever the bubble is themed to.
 export const StyledBubbleAvatar = styled.div<{
@@ -260,6 +246,15 @@ const StyledBubbleHeader = styled.div<{ $size: TSizes }>`
   margin-bottom: 4px;
 `;
 
+// The below-bubble timestamp, styled the way Qonsole treats its own: a small
+// inset so it doesn't sit hard against the bubble's edge, and non-selectable so
+// dragging across the transcript skips the clock. `padding`/`user-select` aren't
+// ReqoreSpan props, which is why this is a styled wrapper rather than props.
+const StyledBubbleTimestamp = styled(ReqoreSpan)`
+  padding: 2px 4px;
+  user-select: none;
+`;
+
 /**
  * A lightweight, themeable chat-style bubble. It sizes to its content (capped
  * by `maxWidth`) and hugs the left or right edge of its container via `align`.
@@ -268,10 +263,12 @@ const StyledBubbleHeader = styled.div<{ $size: TSizes }>`
  * (including gradients), `flat`, `minimal` and `raised`. Stack a column of these
  * (see `ReqoreBubbleGroup`) for a chat transcript.
  *
- * An optional `avatar` sits outside the bubble on the aligned side, and optional
- * `title` / `detail` render as an inline header — enough for a comment feed
- * without reaching for `ReqoreComment`, which is a full-width panel with room
- * for actions rather than an aligned, content-width bubble.
+ * An optional `avatar` sits outside the bubble on the aligned side and an optional
+ * `label` reads as a bold lead-in — enough for a comment feed without reaching for
+ * `ReqoreComment`, which is a full-width panel with room for actions rather than an
+ * aligned, content-width bubble. A `timestamp` prints below the bubble, and inside
+ * a `ReqoreBubbleGroup` only the last bubble of a same-side run shows one, so a
+ * cluster reads as a single moment.
  */
 export const ReqoreBubble = memo(
   forwardRef<HTMLDivElement, IReqoreBubbleProps>(
@@ -289,10 +286,8 @@ export const ReqoreBubble = memo(
         groupPosition = 'single',
         raised,
         avatar,
-        title,
-        detail,
-        titleEffect,
-        detailEffect,
+        label,
+        labelEffect,
         timestamp,
         size = 'normal',
         effect,
@@ -309,21 +304,23 @@ export const ReqoreBubble = memo(
       const showRaised = !!raised && flat !== false && !intent;
       const coloured = !!intent || !!customTheme;
       const isSet = (value: ReactNode) => value != null && value !== '';
-      const hasHeader = isSet(title) || isSet(detail);
+      // A run of same-side bubbles shares one time, printed under its last one —
+      // the way conversational UIs read a cluster as a single moment.
+      const showTimestamp =
+        isSet(timestamp) && (groupPosition === 'single' || groupPosition === 'last');
+      // Only the timestamp needs the bubble stacked under something; an avatar
+      // needs it beside one. Either way a wrapper owns the alignment from here.
+      const wrapped = !!avatar || showTimestamp;
 
       const bubbleEffect: IReqoreEffect | undefined =
         onClick || effect ? { interactive: !!onClick, ...effect } : undefined;
 
-      // The header's spans are memoised components, so their merged effect has to
-      // keep its identity between renders — a fresh literal would re-render them
-      // on every parent render. The caller's effect still wins on conflicts.
-      const resolvedTitleEffect = useMemo<IReqoreEffect>(
-        () => ({ weight: 'bold', ...titleEffect }),
-        [titleEffect]
-      );
-      const resolvedDetailEffect = useMemo<IReqoreEffect>(
-        () => ({ opacity: 0.5, ...detailEffect }),
-        [detailEffect]
+      // The label is a memoised component, so its merged effect has to keep its
+      // identity between renders — a fresh literal would re-render it on every
+      // parent render. The caller's effect still wins on conflicts.
+      const resolvedLabelEffect = useMemo<IReqoreEffect>(
+        () => ({ weight: 'bold', ...labelEffect }),
+        [labelEffect]
       );
 
       const bubble = (
@@ -334,10 +331,10 @@ export const ReqoreBubble = memo(
           onClick={onClick}
           theme={theme}
           effect={bubbleEffect}
-          // Standalone, the bubble carries the caller's style; inside an avatar
-          // row the row carries it, so a group's spacing offsets the whole pair
-          // rather than sliding the bubble out of line with its avatar.
-          style={avatar ? undefined : style}
+          // Standalone, the bubble carries the caller's style; once wrapped, the
+          // wrapper carries it, so a group's spacing offsets the whole unit
+          // rather than sliding the bubble out of line with its avatar or time.
+          style={wrapped ? undefined : style}
           $size={size}
           $align={align}
           $maxWidth={maxWidth}
@@ -350,43 +347,37 @@ export const ReqoreBubble = memo(
           $clickable={!!onClick}
           $coloured={coloured}
           $hasGradient={!!effect?.gradient}
-          $inRow={!!avatar}
+          $wrapped={wrapped}
           className={`${className || ''} reqore-bubble`.trim()}
         >
-          {hasHeader && (
+          {isSet(label) && (
             <StyledBubbleHeader $size={size} className='reqore-bubble-header'>
-              {isSet(title) && (
-                <ReqoreSpan
-                  className='reqore-bubble-title'
-                  size={size}
-                  effect={resolvedTitleEffect}
-                >
-                  {title}
-                </ReqoreSpan>
-              )}
-              {isSet(detail) && (
-                <ReqoreSpan
-                  className='reqore-bubble-detail'
-                  size={getOneLessSize(size)}
-                  effect={resolvedDetailEffect}
-                >
-                  {detail}
-                </ReqoreSpan>
-              )}
+              <ReqoreSpan className='reqore-bubble-label' size={size} effect={resolvedLabelEffect}>
+                {label}
+              </ReqoreSpan>
             </StyledBubbleHeader>
           )}
           {contentEffect ? <ReqoreEffect effect={contentEffect}>{children}</ReqoreEffect> : children}
-          {timestamp != null && timestamp !== '' && (
-            <StyledTimestamp $size={size}>{timestamp}</StyledTimestamp>
-          )}
         </StyledBubble>
       );
 
-      if (!avatar) {
+      const timestampNode = showTimestamp ? (
+        <StyledBubbleTimestamp
+          className='reqore-bubble-timestamp'
+          size={getOneLessSize(size)}
+          effect={TIMESTAMP_EFFECT}
+        >
+          {timestamp}
+        </StyledBubbleTimestamp>
+      ) : null;
+
+      // Nothing to hang off the bubble — render it bare, exactly as it did before
+      // `avatar` and the below-bubble timestamp existed.
+      if (!wrapped) {
         return bubble;
       }
 
-      const avatarNode = (
+      const avatarNode = avatar ? (
         <StyledBubbleAvatar
           theme={theme}
           $size={size}
@@ -402,14 +393,41 @@ export const ReqoreBubble = memo(
             wrapperSize={avatar.image ? `${SIZE_TO_PX[size]}px` : undefined}
           />
         </StyledBubbleAvatar>
+      ) : null;
+
+      // The time hangs off the bubble, not off the row — otherwise it lines up
+      // under the avatar instead of under the message it belongs to.
+      const stack = showTimestamp ? (
+        <ReqoreControlGroup
+          vertical
+          gapSize='tiny'
+          horizontalAlign={align === 'right' ? 'flex-end' : 'flex-start'}
+          style={avatar ? undefined : style}
+          className='reqore-bubble-stack'
+        >
+          {bubble}
+          {timestampNode}
+        </ReqoreControlGroup>
+      ) : (
+        bubble
       );
 
+      if (!avatar) {
+        return stack;
+      }
+
       return (
-        <StyledBubbleRow $align={align} $size={size} style={style} className='reqore-bubble-row'>
+        <ReqoreControlGroup
+          verticalAlign='flex-start'
+          gapSize={size}
+          horizontalAlign={align === 'right' ? 'flex-end' : 'flex-start'}
+          style={style}
+          className='reqore-bubble-row'
+        >
           {align === 'left' && avatarNode}
-          {bubble}
+          {stack}
           {align === 'right' && avatarNode}
-        </StyledBubbleRow>
+        </ReqoreControlGroup>
       );
     }
   )

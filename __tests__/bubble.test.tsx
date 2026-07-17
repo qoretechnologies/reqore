@@ -1,5 +1,11 @@
 import { render } from '@testing-library/react';
-import { ReqoreBubble, ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+import {
+  ReqoreBubble,
+  ReqoreBubbleGroup,
+  ReqoreContent,
+  ReqoreLayoutContent,
+  ReqoreUIProvider,
+} from '../src';
 
 const renderBubbles = (children: React.ReactNode) =>
   render(
@@ -21,22 +27,29 @@ test('Renders <Bubble /> properly', () => {
   expect(document.querySelectorAll('.reqore-bubble').length).toBe(2);
 });
 
-test('Renders <Bubble /> title and detail', () => {
-  renderBubbles(
-    <ReqoreBubble title='Ada Lovelace' detail='2h ago'>
-      Hello
-    </ReqoreBubble>
-  );
+test('Renders <Bubble /> label', () => {
+  renderBubbles(<ReqoreBubble label='Ada Lovelace'>Hello</ReqoreBubble>);
 
   expect(document.querySelectorAll('.reqore-bubble-header').length).toBe(1);
-  expect(document.querySelector('.reqore-bubble-title').textContent).toBe('Ada Lovelace');
-  expect(document.querySelector('.reqore-bubble-detail').textContent).toBe('2h ago');
+  expect(document.querySelector('.reqore-bubble-label').textContent).toBe('Ada Lovelace');
 });
 
-test('Renders no <Bubble /> header when neither title nor detail is given', () => {
+test('Renders no <Bubble /> header when no label is given', () => {
   renderBubbles(<ReqoreBubble>Hello</ReqoreBubble>);
 
   expect(document.querySelector('.reqore-bubble-header')).toBeNull();
+});
+
+// The time belongs under the bubble, not inside it — the way conversational UIs
+// print it. Inside the box it reads as part of the message.
+test('Renders the <Bubble /> timestamp below the bubble, not within it', () => {
+  renderBubbles(<ReqoreBubble timestamp='2h ago'>Hello</ReqoreBubble>);
+
+  const stamp = document.querySelector('.reqore-bubble-timestamp');
+
+  expect(stamp.textContent).toBe('2h ago');
+  expect(document.querySelector('.reqore-bubble').contains(stamp)).toBe(false);
+  expect(stamp.closest('.reqore-bubble-stack')).not.toBeNull();
 });
 
 // Only an `avatar` introduces the row wrapper. Bubbles that predate the prop must
@@ -66,11 +79,13 @@ test('Renders the <Bubble /> avatar on the side the bubble hugs', () => {
 
   const rows = document.querySelectorAll('.reqore-bubble-row');
 
+  // `classList.contains` rather than a substring match on className — the latter
+  // would happily pass on `reqore-bubble-stack` and prove nothing.
   expect(rows.length).toBe(2);
-  expect(rows[0].firstElementChild.className).toContain('reqore-bubble-avatar');
-  expect(rows[0].lastElementChild.className).toContain('reqore-bubble');
-  expect(rows[1].firstElementChild.className).toContain('reqore-bubble');
-  expect(rows[1].lastElementChild.className).toContain('reqore-bubble-avatar');
+  expect(rows[0].firstElementChild.classList.contains('reqore-bubble-avatar')).toBe(true);
+  expect(rows[0].lastElementChild.classList.contains('reqore-bubble')).toBe(true);
+  expect(rows[1].firstElementChild.classList.contains('reqore-bubble')).toBe(true);
+  expect(rows[1].lastElementChild.classList.contains('reqore-bubble-avatar')).toBe(true);
 });
 
 // `radiusSize` opts both the bubble and its avatar onto the pronounced scale.
@@ -99,6 +114,31 @@ test('Renders <Bubble /> corners from radiusSize when given, from size otherwise
   expect(bySize.avatar).toBe('8px');
   expect(byRadiusSize.bubble).toBe('70px');
   expect(byRadiusSize.avatar).toBe('36px');
+});
+
+// A run of same-side bubbles is one moment: only its last bubble prints a time,
+// so a burst of messages doesn't repeat the clock. Matches Qonsole's rule.
+test('Renders one timestamp per same-side run inside a <BubbleGroup />', () => {
+  renderBubbles(
+    <ReqoreBubbleGroup>
+      <ReqoreBubble align='right' timestamp='10:40 AM'>
+        Two messages…
+      </ReqoreBubble>
+      <ReqoreBubble align='right' timestamp='10:41 AM'>
+        …sent together
+      </ReqoreBubble>
+      <ReqoreBubble align='left' timestamp='10:42 AM'>
+        A reply
+      </ReqoreBubble>
+    </ReqoreBubbleGroup>
+  );
+
+  const stamps = [...document.querySelectorAll('.reqore-bubble-timestamp')].map(
+    (node) => node.textContent
+  );
+
+  // the right-side run collapses onto its last time; the lone left bubble keeps its own
+  expect(stamps).toEqual(['10:41 AM', '10:42 AM']);
 });
 
 test('Renders an image <Bubble /> avatar', () => {
