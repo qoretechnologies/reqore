@@ -332,8 +332,14 @@ export const ReqoreBubble = memo(
       // stable identity between renders. The stack carries the width cap (and can
       // shrink); the row just lets its children shrink past the aligned edge.
       const stackStyle = useMemo<CSSProperties>(
-        () => ({ minWidth: 0, maxWidth, ...(avatar ? undefined : style) }),
-        [maxWidth, avatar, style]
+        () => ({
+          minWidth: 0,
+          maxWidth,
+          ...(avatar
+            ? undefined
+            : { alignSelf: align === 'right' ? 'flex-end' : 'flex-start', ...style }),
+        }),
+        [maxWidth, avatar, align, style]
       );
       const rowStyle = useMemo<CSSProperties>(() => ({ minWidth: 0, ...style }), [style]);
 

@@ -161,6 +161,27 @@ test('Renders one timestamp per same-side run inside a <BubbleGroup />', () => {
   expect(stamps).toEqual(['10:41 AM', '10:42 AM']);
 });
 
+// A timestamped bubble is capped, so it can't stretch to hug the group's edge —
+// it must align itself. Without this a right-aligned timestamped bubble drifts to
+// the middle while its bare siblings hug the right, breaking the transcript.
+test('Aligns a stacked (timestamped) bubble to its own side inside a group', () => {
+  renderBubbles(
+    <ReqoreBubbleGroup>
+      <ReqoreBubble align='right' timestamp='10:41 AM'>
+        outbound
+      </ReqoreBubble>
+      <ReqoreBubble align='left' timestamp='10:42 AM'>
+        inbound
+      </ReqoreBubble>
+    </ReqoreBubbleGroup>
+  );
+
+  const stacks = [...document.querySelectorAll('.reqore-bubble-stack')];
+
+  expect(getComputedStyle(stacks[0]).alignSelf).toBe('flex-end');
+  expect(getComputedStyle(stacks[1]).alignSelf).toBe('flex-start');
+});
+
 test('Renders an image <Bubble /> avatar', () => {
   renderBubbles(
     <ReqoreBubble avatar={{ image: 'https://example.com/logo.png' }}>Hello</ReqoreBubble>
