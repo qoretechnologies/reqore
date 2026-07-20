@@ -12,6 +12,8 @@ import { IReqorePopoverProps } from '../Popover';
 import { TReqoreTabsContentPadding } from './content';
 import ReqoreTabsList from './list';
 
+export type TReqoreTabsActiveMarker = 'fill' | 'line';
+
 export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
   label?: string | number;
   as?: any;
@@ -34,6 +36,13 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
   fillParent?: boolean;
   vertical?: boolean;
   activeTabIntent?: TReqoreIntent;
+  /**
+   * How the active tab is marked. `fill` (the default) tints the whole tab, the
+   * way Reqore tabs have always looked. `line` leaves the tab transparent and
+   * draws a bar along the list's edge instead — the quieter "underline" tab
+   * treatment, for dense surfaces where a filled tab would shout.
+   */
+  activeTabMarker?: TReqoreTabsActiveMarker;
   padded?: boolean;
   tabsPadding?: TReqoreTabsContentPadding;
   wrapTabNames?: boolean;
@@ -83,6 +92,7 @@ const ReqoreTabs = ({
   _testWidth,
   vertical,
   activeTabIntent,
+  activeTabMarker = 'fill',
   flat = true,
   size = 'normal',
   width,
@@ -142,6 +152,7 @@ const ReqoreTabs = ({
           activeTab={_activeTab}
           wrapTabNames={wrapTabNames}
           activeTabIntent={activeTabIntent}
+          activeTabMarker={activeTabMarker}
           customTheme={customTheme}
           intent={intent}
           onTabChange={handleTabChange}

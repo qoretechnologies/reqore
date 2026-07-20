@@ -2,7 +2,7 @@ import { omit } from 'lodash';
 import { forwardRef, memo, useState, useTransition } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { IReqoreTabsListItem } from '.';
+import { IReqoreTabsListItem, TReqoreTabsActiveMarker } from '.';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -14,6 +14,8 @@ import ReqoreControlGroup from '../ControlGroup';
 export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqoreFlat {
   active?: boolean;
   vertical?: boolean;
+  /** How the active tab is marked — see `IReqoreTabsProps.activeTabMarker`. */
+  activeTabMarker?: TReqoreTabsActiveMarker;
   onCloseClick?: any;
   customTheme?: IReqoreCustomTheme;
   size?: TSizes;
@@ -31,7 +33,16 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ disabled, vertical, fill, fixed, padded }: IReqoreTabListItemStyle) => {
+  ${({
+    disabled,
+    vertical,
+    fill,
+    fixed,
+    padded,
+    active,
+    activeTabMarker,
+    activeColor,
+  }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       flex-shrink: 0;
@@ -94,6 +105,22 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
           opacity: 0.5;
         }
       `}
+
+      ${activeTabMarker === 'line' &&
+      css`
+        /* The tab itself stays transparent — the active one is marked by a bar
+           along the list's edge instead of a filled background. */
+        ${StyledButton} {
+          background-color: transparent !important;
+          border-radius: 0 !important;
+        }
+
+        ${active &&
+        css`
+          box-shadow: inset ${vertical ? '-2px 0 0 0' : '0 -2px 0 0'}
+            ${activeColor || 'currentColor'};
+        `}
+      `}
     `;
   }}
 
@@ -120,6 +147,7 @@ const ReqoreTabsListItem = memo(
         vertical,
         onClick,
         activeIntent,
+        activeTabMarker,
         onCloseClick,
         fill,
         intent,
@@ -140,6 +168,10 @@ const ReqoreTabsListItem = memo(
       const [loadingTimer, setLoadingTimer] = useState(null);
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme, undefined);
+      // The `line` marker takes the active intent's colour when there is one, and
+      // otherwise inherits the tab's own text colour via `currentColor`.
+      const markerIntent = activeIntent || intent;
+      const activeColor = markerIntent ? theme.intents[markerIntent] : undefined;
 
       useUpdateEffect(() => {
         if (isPending) {
@@ -207,6 +239,8 @@ const ReqoreTabsListItem = memo(
           fill={fill}
           fixed={rest.fixed}
           padded={padded}
+          activeTabMarker={activeTabMarker}
+          activeColor={activeColor}
         >
           {!onCloseClick || disabled ? (
             renderButton()

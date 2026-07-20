@@ -251,6 +251,7 @@ type TReqoreTabListItemRendererProps = Pick<
   | 'flat'
   | 'padded'
   | 'activeIntent'
+  | 'activeTabMarker'
   | 'wrapTabNames'
   | 'loadingIconType'
   | 'useReactTransition'
@@ -315,6 +316,7 @@ const ReqoreTabsList = ({
   fill,
   vertical,
   activeTabIntent,
+  activeTabMarker,
   customTheme,
   wrapTabNames,
   flat,
@@ -462,6 +464,7 @@ const ReqoreTabsList = ({
                 flat={flat}
                 padded={padded}
                 activeIntent={activeTabIntent}
+                activeTabMarker={activeTabMarker}
                 wrapTabNames={wrapTabNames}
                 loadingIconType={loadingIconType}
                 useReactTransition={useReactTransition}

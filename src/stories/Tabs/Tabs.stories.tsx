@@ -317,6 +317,39 @@ export const NotFlat: Story = {
   },
 };
 
+/** `activeTabMarker='line'` leaves the tab transparent and marks the active one
+ *  with a bar on the list's edge — the quieter treatment for dense surfaces. */
+export const ActiveTabMarkerLine: Story = {
+  render: Template,
+
+  args: {
+    activeTabMarker: 'line',
+    flat: false,
+  },
+};
+
+/** The `line` marker takes the active intent's colour when one is set. */
+export const ActiveTabMarkerLineWithIntent: Story = {
+  render: Template,
+
+  args: {
+    activeTabMarker: 'line',
+    activeTabIntent: 'info',
+    flat: false,
+  },
+};
+
+/** Vertical tabs move the `line` marker to the strip's trailing edge. */
+export const ActiveTabMarkerLineVertical: Story = {
+  render: Template,
+
+  args: {
+    activeTabMarker: 'line',
+    vertical: true,
+    flat: false,
+  },
+};
+
 export const WithPadding: Story = {
   render: Template,
 
