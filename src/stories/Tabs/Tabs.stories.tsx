@@ -339,6 +339,17 @@ export const ActiveTabMarkerLineWithIntent: Story = {
   },
 };
 
+/** `activeTabMarkerColor` gives the bar an accent the label doesn't carry —
+ *  the usual underline-tab treatment (bright label, coloured bar). */
+export const ActiveTabMarkerLineColor: Story = {
+  render: Template,
+
+  args: {
+    activeTabMarker: 'line',
+    activeTabMarkerColor: 'main:lighten:8',
+  },
+};
+
 /** Vertical tabs move the `line` marker to the strip's trailing edge. */
 export const ActiveTabMarkerLineVertical: Story = {
   render: Template,

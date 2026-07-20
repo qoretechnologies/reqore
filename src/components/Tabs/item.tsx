@@ -5,17 +5,25 @@ import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, TReqoreTabsActiveMarker } from '.';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getMainBackgroundColor,
+} from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreFlat } from '../../types/global';
 import ReqoreButton, { StyledButton } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import { TReqoreEffectColor } from '../Effect';
 
 export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqoreFlat {
   active?: boolean;
   vertical?: boolean;
   /** How the active tab is marked — see `IReqoreTabsProps.activeTabMarker`. */
   activeTabMarker?: TReqoreTabsActiveMarker;
+  /** Explicit colour for the `line` marker — see `IReqoreTabsProps`. */
+  activeTabMarkerColor?: TReqoreEffectColor;
   onCloseClick?: any;
   customTheme?: IReqoreCustomTheme;
   size?: TSizes;
@@ -34,6 +42,7 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
   ${({
+    theme,
     disabled,
     vertical,
     fill,
@@ -109,10 +118,36 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
       ${activeTabMarker === 'line' &&
       css`
         /* The tab itself stays transparent — the active one is marked by a bar
-           along the list's edge instead of a filled background. */
+           along the list's edge, not a filled background, so the button's own
+           active fill has to go. The square corners are for the hover wash
+           below: a rounded wash would read as a pill sitting in the strip.
+           (The border needs no handling: a line marker forces the button flat,
+           which already zeroes its width.) */
         ${StyledButton} {
           background-color: transparent !important;
           border-radius: 0 !important;
+        }
+
+        /* A button draws a 2px outline on :hover, :focus and :active. On an
+           underline tab each of those reads as a boxed button fighting the bar,
+           and the :focus one OUTLASTS the interaction — it survives until you
+           click something else, which is what makes a freshly-picked tab look
+           wrong until you move on. Drop all three and give hover a wash instead. */
+        ${StyledButton}:hover,
+        ${StyledButton}:focus,
+        ${StyledButton}:active {
+          outline: none !important;
+        }
+
+        ${StyledButton}:hover {
+          background-color: ${changeLightness(getMainBackgroundColor(theme), 0.1)} !important;
+        }
+
+        /* Keyboard users still need to see where they are; :focus-visible only
+           matches keyboard focus, so this never returns on a mouse click. */
+        ${StyledButton}:focus-visible {
+          outline: 2px solid ${activeColor || changeLightness(getMainBackgroundColor(theme), 0.4)} !important;
+          outline-offset: -2px;
         }
 
         ${active &&
@@ -148,6 +183,7 @@ const ReqoreTabsListItem = memo(
         onClick,
         activeIntent,
         activeTabMarker,
+        activeTabMarkerColor,
         onCloseClick,
         fill,
         intent,
@@ -168,10 +204,17 @@ const ReqoreTabsListItem = memo(
       const [loadingTimer, setLoadingTimer] = useState(null);
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme, undefined);
-      // The `line` marker takes the active intent's colour when there is one, and
-      // otherwise inherits the tab's own text colour via `currentColor`.
+      // Marker colour, most specific first: an explicit colour, then the active
+      // intent's, and failing both the tab's own text colour via `currentColor`.
+      // The explicit one is resolved through the theme — `TReqoreEffectColor`
+      // accepts semantic values ('info', 'main:lighten:8') that are not valid CSS
+      // on their own, and dropping one straight into a box-shadow kills the rule.
       const markerIntent = activeIntent || intent;
-      const activeColor = markerIntent ? theme.intents[markerIntent] : undefined;
+      const activeColor = activeTabMarkerColor
+        ? getColorFromMaybeString(theme, activeTabMarkerColor)
+        : markerIntent
+        ? theme.intents[markerIntent]
+        : undefined;
 
       useUpdateEffect(() => {
         if (isPending) {
@@ -202,9 +245,14 @@ const ReqoreTabsListItem = memo(
         });
       };
 
+      // A `line` marker owns the active indicator, so the tab itself is always
+      // flat: a non-flat list still wants its edge rule, but boxing each tab
+      // would compete with the bar and read as a button, not a tab.
+      const isLineMarker = activeTabMarker === 'line';
+
       const renderButton = () => (
         <ReqoreButton
-          flat={intent ? false : flat}
+          flat={isLineMarker ? true : intent ? false : flat}
           fluid={fill || vertical}
           icon={icon}
           minimal
@@ -250,7 +298,7 @@ const ReqoreTabsListItem = memo(
               {onCloseClick && !disabled ? (
                 <ReqoreButton
                   fixed
-                  flat={intent ? false : flat}
+                  flat={isLineMarker ? true : intent ? false : flat}
                   icon={closeIcon || 'CloseLine'}
                   intent={active ? activeIntent || intent : intent}
                   minimal

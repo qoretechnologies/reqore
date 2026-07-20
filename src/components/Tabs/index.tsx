@@ -7,6 +7,7 @@ import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreComponent, IWithReqoreLoading } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
+import { TReqoreEffectColor } from '../Effect';
 import { IReqoreMenuProps } from '../Menu';
 import { IReqorePopoverProps } from '../Popover';
 import { TReqoreTabsContentPadding } from './content';
@@ -43,6 +44,12 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
    * treatment, for dense surfaces where a filled tab would shout.
    */
   activeTabMarker?: TReqoreTabsActiveMarker;
+  /**
+   * Colour of the `line` marker. Defaults to the active intent's colour, and
+   * failing that the tab's own text colour — set this when the bar should carry
+   * an accent the label doesn't, which is the usual underline-tab treatment.
+   */
+  activeTabMarkerColor?: TReqoreEffectColor;
   padded?: boolean;
   tabsPadding?: TReqoreTabsContentPadding;
   wrapTabNames?: boolean;
@@ -93,6 +100,7 @@ const ReqoreTabs = ({
   vertical,
   activeTabIntent,
   activeTabMarker = 'fill',
+  activeTabMarkerColor,
   flat = true,
   size = 'normal',
   width,
@@ -153,6 +161,7 @@ const ReqoreTabs = ({
           wrapTabNames={wrapTabNames}
           activeTabIntent={activeTabIntent}
           activeTabMarker={activeTabMarker}
+          activeTabMarkerColor={activeTabMarkerColor}
           customTheme={customTheme}
           intent={intent}
           onTabChange={handleTabChange}
