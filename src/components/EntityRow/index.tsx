@@ -43,6 +43,19 @@ export interface IReqoreEntityRowAction extends Omit<IReqoreButtonProps, 'childr
   actionsProps?: IReqoreDropdownProps;
 }
 
+/**
+ * Opening a row's overflow menu must not also fire the row underneath it.
+ *
+ * Defined at module scope rather than inline: `ReqoreDropdown` is memoised, and a
+ * fresh arrow on every render is a new prop identity that defeats the memo. This
+ * handler closes over nothing, so one shared instance is all that is ever needed —
+ * `useCallback` would still allocate one per row.
+ */
+const stopRowClick = (event: React.MouseEvent<HTMLElement>) => event.stopPropagation();
+
+/** Same reasoning: a stable predicate instead of a new closure per render. */
+const isSubActionShown = ({ show }: IReqorePanelSubAction) => show !== false;
+
 export interface IReqoreEntityRowProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>,
     IReqoreDisabled,
@@ -414,8 +427,8 @@ const ReqoreEntityRow = memo(
                     intent={action.intent ?? intent}
                     {...action}
                     {...actionsProps}
-                    items={subActions.filter(({ show }) => show !== false)}
-                    onClick={(event: React.MouseEvent<HTMLElement>) => event.stopPropagation()}
+                    items={subActions.filter(isSubActionShown)}
+                    onClick={stopRowClick}
                   />
                 ) : (
                   <ReqoreButton key={idx} size={size} intent={action.intent ?? intent} {...action}>
