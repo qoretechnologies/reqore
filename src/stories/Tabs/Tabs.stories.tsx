@@ -346,7 +346,7 @@ export const ActiveTabMarkerLineColor: Story = {
 
   args: {
     activeTabMarker: 'line',
-    activeTabMarkerColor: 'main:lighten:8',
+    activeTabMarkerColor: 'info:lighten:8',
   },
 };
 
