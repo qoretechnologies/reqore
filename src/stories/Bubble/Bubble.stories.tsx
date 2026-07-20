@@ -145,6 +145,24 @@ export const WithAvatar: Story = {
 };
 
 /**
+ * `avatar.circle` swaps the default squircle for a circle — conventional for a
+ * person, where the squircle reads as an app tile. The image is clipped to the
+ * new shape, so a photo works as well as a glyph.
+ */
+export const WithCircleAvatar: Story = {
+  render: Template,
+  args: {
+    avatar: { icon: 'User3Line', circle: true },
+    label: 'Ada Lovelace',
+    timestamp: '2h ago',
+    flat: false,
+    minimal: true,
+    contentEffect: { opacity: 0.72 },
+    children: 'Adept programmer of the Analytical Engine, author of the first algorithm.',
+  },
+};
+
+/**
  * A comment feed: an avatar + a bordered, accent-tinted card per message, each side
  * hugging its own edge. `customTheme` tints the border, the fill and the avatar
  * together, so the pair reads as one object under any app's theme. All three bubbles

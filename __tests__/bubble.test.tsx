@@ -192,3 +192,20 @@ test('Renders an image <Bubble /> avatar', () => {
     'https://example.com/logo.png'
   );
 });
+
+// A circle is purely a style, so this asserts the radius against the default
+// squircle rather than in isolation: it fails both if `circle` stops rounding
+// and if the default silently becomes round.
+test('Renders a circular <Bubble /> avatar when `avatar.circle` is set', () => {
+  renderBubbles(
+    <>
+      <ReqoreBubble avatar={{ icon: 'User3Line' }}>Squircle</ReqoreBubble>
+      <ReqoreBubble avatar={{ icon: 'User3Line', circle: true }}>Circle</ReqoreBubble>
+    </>
+  );
+
+  const [squircle, circle] = document.querySelectorAll('.reqore-bubble-avatar');
+
+  expect(getComputedStyle(circle).borderRadius).toBe('9999px');
+  expect(getComputedStyle(squircle).borderRadius).not.toBe('9999px');
+});

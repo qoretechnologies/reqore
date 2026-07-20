@@ -54,6 +54,11 @@ export interface IReqoreBubbleAvatar {
   icon?: IReqoreIconName;
   /** Image shown in the avatar — a user photo, an app logo, … */
   image?: string;
+  /**
+   * Render the avatar as a circle instead of the default squircle. Conventional
+   * for people — a photo or initials — where the squircle reads as an app tile.
+   */
+  circle?: boolean;
 }
 
 export interface IReqoreBubbleProps
@@ -229,6 +234,7 @@ export const StyledBubbleAvatar = styled.div<{
   $size: TSizes;
   $radiusSize?: TSizes;
   $coloured?: boolean;
+  $circle?: boolean;
 }>`
   flex: 0 0 auto;
   display: flex;
@@ -237,8 +243,10 @@ export const StyledBubbleAvatar = styled.div<{
   overflow: hidden;
   width: ${({ $size }) => SIZE_TO_PX[$size]}px;
   height: ${({ $size }) => SIZE_TO_PX[$size]}px;
-  border-radius: ${({ $size, $radiusSize }) =>
-    resolveRadius($size, $radiusSize, BUBBLE_AVATAR_RADIUS_FROM_SIZE)}px;
+  border-radius: ${({ $size, $radiusSize, $circle }) =>
+    $circle
+      ? '9999px'
+      : `${resolveRadius($size, $radiusSize, BUBBLE_AVATAR_RADIUS_FROM_SIZE)}px`};
   background-color: ${({ theme, $coloured }) =>
     $coloured ? rgba(theme.main, 0.16) : rgba(changeLightness(theme.main, 0.5), 0.1)};
   color: ${({ theme }) => getReadableColor(theme)};
@@ -404,6 +412,7 @@ export const ReqoreBubble = memo(
           $size={size}
           $radiusSize={radiusSize}
           $coloured={coloured}
+          $circle={avatar.circle}
           className='reqore-bubble-avatar'
         >
           <ReqoreIcon
