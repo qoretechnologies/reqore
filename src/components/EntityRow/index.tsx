@@ -20,8 +20,10 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { IReqorePanelSubAction } from '../Panel';
 import { ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
@@ -29,6 +31,16 @@ import { ReqoreTooltipComponent } from '../TooltipComponent';
 export interface IReqoreEntityRowAction extends Omit<IReqoreButtonProps, 'children'> {
   /** Visible button label. */
   label?: string;
+  /**
+   * Turns this action into an overflow menu instead of a plain button — the row
+   * equivalent of `IReqorePanelAction.actions`, and named to match it.
+   *
+   * Typical use is a "three dots" menu: `{ icon: 'More2Line', actions: [...] }`.
+   * Entries with `show: false` are dropped.
+   */
+  actions?: IReqorePanelSubAction[];
+  /** Extra props for the dropdown rendered when `actions` is set. */
+  actionsProps?: IReqoreDropdownProps;
 }
 
 export interface IReqoreEntityRowProps
@@ -389,16 +401,28 @@ const ReqoreEntityRow = memo(
           </StyledBody>
           {actions && actions.length > 0 && (
             <ReqoreControlGroup gapSize='small' className='reqore-entity-row-actions'>
-              {actions.map((action, idx) => (
-                <ReqoreButton
-                  key={idx}
-                  size={size}
-                  intent={action.intent ?? intent}
-                  {...action}
-                >
-                  {action.label}
-                </ReqoreButton>
-              ))}
+              {actions.map(({ actions: subActions, actionsProps, ...action }, idx) =>
+                subActions?.length ? (
+                  // An action carrying sub-actions is a menu, not a button — same
+                  // contract as ReqorePanel. The click is stopped here because the row
+                  // itself is commonly clickable: opening the menu must not also
+                  // trigger the row.
+                  <ReqoreDropdown
+                    key={idx}
+                    fixed
+                    size={size}
+                    intent={action.intent ?? intent}
+                    {...action}
+                    {...actionsProps}
+                    items={subActions.filter(({ show }) => show !== false)}
+                    onClick={(event: React.MouseEvent<HTMLElement>) => event.stopPropagation()}
+                  />
+                ) : (
+                  <ReqoreButton key={idx} size={size} intent={action.intent ?? intent} {...action}>
+                    {action.label}
+                  </ReqoreButton>
+                )
+              )}
             </ReqoreControlGroup>
           )}
         </ReqoreTooltipComponent>

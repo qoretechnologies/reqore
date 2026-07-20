@@ -302,3 +302,35 @@ export const CustomPaddingSize: Story = {
     </ReqoreControlGroup>
   ),
 };
+
+/**
+ * An action carrying `actions` becomes an overflow menu rather than a button — the
+ * same contract as `ReqorePanel`'s actions. This is how a row gets a "three dots"
+ * menu without the consumer hand-rolling a dropdown next to the row.
+ *
+ * The menu stops its own click, so a row that is itself clickable does not fire when
+ * the menu is opened.
+ */
+export const WithOverflowMenu: Story = {
+  args: {
+    label: 'order-sync:1.0',
+    description: 'Referenced in the ticket description',
+    metadata: 'workflow',
+    icon: 'GitBranchLine',
+    actions: [
+      { icon: 'ArrowRightUpLine', tooltip: 'Open' },
+      {
+        icon: 'More2Line',
+        tooltip: 'More actions',
+        actions: [
+          { label: 'Show in chat', icon: 'Chat1Line' },
+          { label: 'Copy name', icon: 'FileCopyLine' },
+          { divider: true, line: true },
+          { label: 'Remove reference', icon: 'DeleteBinLine', intent: 'danger' },
+          // entries can be hidden without the consumer filtering the array itself
+          { label: 'Never rendered', show: false },
+        ],
+      },
+    ],
+  },
+};
