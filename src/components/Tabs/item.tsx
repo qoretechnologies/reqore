@@ -9,6 +9,7 @@ import {
   changeLightness,
   getColorFromMaybeString,
   getMainBackgroundColor,
+  getReadableColor,
 } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -117,13 +118,12 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
 
       ${activeTabMarker === 'line' &&
       css`
-        /* Inactive tabs still have their minimal wash suppressed here — this clears
-           background-COLOR only, so a tab carrying a gradient effect keeps it (a
-           gradient is a background-image). The ACTIVE tab needs no entry: it is passed
-           the transparent prop, which the button now honours in its active state
-           instead of painting a fill and deriving the label colour from it.
-           The square corners are for the hover wash below: a rounded wash would read
-           as a pill sitting in the strip. */
+        /* The tab itself stays transparent — the active one is marked by a bar
+           along the list's edge, not a filled background, so the button's own
+           active fill has to go. The square corners are for the hover wash
+           below: a rounded wash would read as a pill sitting in the strip.
+           (The border needs no handling: a line marker forces the button flat,
+           which already zeroes its width.) */
         ${StyledButton} {
           background-color: transparent !important;
           border-radius: 0 !important;
@@ -155,6 +155,27 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
         css`
           box-shadow: inset ${vertical ? '-2px 0 0 0' : '0 -2px 0 0'}
             ${activeColor || 'currentColor'};
+
+          /* The label has to be re-coloured wherever the background is overridden.
+             An active button derives its text colour FROM the fill it paints, so
+             suppressing that fill above leaves a colour chosen for a surface that is
+             no longer there — and with an intent the fill is light, so the label
+             resolves to near-black and disappears against the page.
+
+             Do not "fix" this by making the button honour transparent in its active
+             state: a selected menu item is transparent + active precisely so the
+             active fill can show the selection (Menu/item.tsx), and removing it there
+             makes every dropdown selection invisible. The pairing is intentional
+             elsewhere; the tab is the one place the fill is unwanted, so the tab is
+             where it is undone.
+
+             The label takes the theme's readable colour, NOT the marker colour:
+             activeTabMarkerColor exists so the bar can be coloured independently of
+             the label (a white label under a brand-coloured bar), and tinting the
+             label with it would collapse that distinction. */
+          ${StyledButton} {
+            color: ${getReadableColor(theme, undefined, undefined, false)} !important;
+          }
         `}
       `}
     `;
@@ -257,11 +278,6 @@ const ReqoreTabsListItem = memo(
           fluid={fill || vertical}
           icon={icon}
           minimal
-          /* Only the ACTIVE tab is made transparent, and only for a line marker.
-             That is the one state that paints a fill and derives its label colour from
-             it — the bug this fixes. Applying it to every tab also suppresses a tab's
-             own gradient effect, which consumers explicitly opt into. */
-          transparent={isLineMarker && active}
           wrap={wrapTabNames}
           intent={active ? activeIntent || intent : intent}
           active={active}
