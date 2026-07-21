@@ -439,16 +439,37 @@ export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
         `
       : undefined};
 
-  ${({ active, flat, theme, color, effect }: IReqoreButtonStyle) => {
+  ${({ active, flat, transparent, theme, color, effect }: IReqoreButtonStyle) => {
     if (active) {
+      /*
+       * A transparent button stays transparent when active.
+       *
+       * The active state paints a fill and derives its label colour FROM that fill, so
+       * on a transparent button it produced an opaque background the consumer never
+       * asked for — and, for anyone suppressing that background in CSS, a label colour
+       * computed for a background that is no longer there. With an intent the phantom
+       * fill is light, so the label resolves to near-black and disappears against a
+       * dark surface.
+       *
+       * Deliberately NOT extended to `minimal`: a minimal button going solid when
+       * active is long-standing, intended emphasis (active menu items, table headers,
+       * segmented controls all rely on it). Only `transparent` — which is an explicit
+       * request for no background — is honoured here.
+       */
+      const solidBackground = changeLightness(getButtonMainColor(theme, color, effect), 0.1);
+
       return css`
         cursor: pointer;
-        background-color: ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
-        color: ${getReadableColor(
-          { main: changeLightness(getButtonMainColor(theme, color, effect), 0.1) },
-          undefined,
-          undefined
-        )};
+        background-color: ${transparent ? 'transparent' : solidBackground};
+        color: ${transparent
+          ? isAchromatic(getButtonMainColor(theme, color, effect))
+            ? /* undimmed, unlike the resting state: an active label should read as the
+                 brightest thing in the group, not the same as its neighbours */
+              getReadableColorFrom(theme.originalMain)
+            : /* a tint of the intent — legible on the page's own surface, and it echoes
+                 whatever marks the active item */
+              saturate(1, tint(0.8, getButtonMainColor(theme, color, effect)))
+          : getReadableColor({ main: solidBackground }, undefined, undefined)};
         border-color: ${flat
           ? undefined
           : changeLightness(getButtonMainColor(theme, color, effect), 0.175)};

@@ -117,12 +117,13 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
 
       ${activeTabMarker === 'line' &&
       css`
-        /* The tab itself stays transparent — the active one is marked by a bar
-           along the list's edge, not a filled background, so the button's own
-           active fill has to go. The square corners are for the hover wash
-           below: a rounded wash would read as a pill sitting in the strip.
-           (The border needs no handling: a line marker forces the button flat,
-           which already zeroes its width.) */
+        /* Inactive tabs still have their minimal wash suppressed here — this clears
+           background-COLOR only, so a tab carrying a gradient effect keeps it (a
+           gradient is a background-image). The ACTIVE tab needs no entry: it is passed
+           the transparent prop, which the button now honours in its active state
+           instead of painting a fill and deriving the label colour from it.
+           The square corners are for the hover wash below: a rounded wash would read
+           as a pill sitting in the strip. */
         ${StyledButton} {
           background-color: transparent !important;
           border-radius: 0 !important;
@@ -256,6 +257,11 @@ const ReqoreTabsListItem = memo(
           fluid={fill || vertical}
           icon={icon}
           minimal
+          /* Only the ACTIVE tab is made transparent, and only for a line marker.
+             That is the one state that paints a fill and derives its label colour from
+             it — the bug this fixes. Applying it to every tab also suppresses a tab's
+             own gradient effect, which consumers explicitly opt into. */
+          transparent={isLineMarker && active}
           wrap={wrapTabNames}
           intent={active ? activeIntent || intent : intent}
           active={active}
