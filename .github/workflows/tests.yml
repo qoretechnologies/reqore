@@ -58,6 +58,11 @@ jobs:
         run: yarn playwright install --with-deps chromium
       - name: Running Storybook interaction tests
         id: story_tests
+        # qlip publishes the visual build only when this is set, so uploads happen
+        # here and never from a developer's machine. Repository secret, not org —
+        # each project uploads under its own token.
+        env:
+          QLIP_UPLOAD_TOKEN: ${{ secrets.QLIP_UPLOAD_TOKEN }}
         run: yarn test:stories
       - name: Save release version to outputs
         id: save_release_version

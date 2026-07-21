@@ -147,6 +147,27 @@ Every PR to `develop` MUST bump `package.json`'s `version` field before it merge
 - **Pattern:** ArgTypes for props, canvas controls, visual testing via Chromatic
 - **Command:** `yarn build-storybook` builds static site
 
+### Verifying a visual fix locally with Qlip (IMPORTANT)
+
+Before claiming a Qlip-flagged snapshot is fixed, **capture the story locally with Qlip and Read the PNG**. Text-based "the code says X" reasoning has repeatedly missed cases where the code change didn't actually reach the pixels (a prop that turned out to be a no-op, a rule beaten on specificity, a styled override the component ignored). The reviewer has ~870 snapshots per build to review; do not waste that time on "fixed" claims that didn't actually change the render.
+
+**How to capture one story locally without triggering upload:**
+
+```bash
+yarn test:stories src/stories/Tabs/Tabs.stories.tsx > /tmp/qlip-verify.log 2>&1
+```
+
+Then `Read` the specific PNG under `qlip/screenshots/<timestamp>/stories/auto/<Story__Id>.png` and inspect it as an image (Read supports PNGs). To prove the fix actually moved the pixels, compare the `md5` of that PNG against the same story in the previous capture directory — identical hashes mean the render did not change, whatever the diff says.
+
+**Rules of the road (violate these and you'll publish local screenshots to the shared review dashboard or mislead yourself with a stale capture):**
+
+- **NEVER set `QLIP_UPLOAD_TOKEN` locally.** `vitest.config.ts` attaches qlip's `upload` block only when that variable is present, and CI supplies it from the repository secret in `.github/workflows/tests.yml`. With it set, **every** `yarn test:stories` publishes a build the whole team then sees in review. This is not hypothetical: the token was hardcoded here until July 2026 and local runs posted four unwanted builds in a single session.
+- **Check for the upload line.** qlip prints `[qlip] uploaded build <id> … → https://qlip.qoretechnologies.com` when it publishes. If a local run prints that, the gate is broken — stop and fix it before continuing.
+- **NEVER run `yarn vitest run` with no `--project`** — it includes the storybook project and captures the whole ~870-snapshot suite, which will slow the machine to a crawl (and upload it, if the gate is broken). For unit tests use `yarn test` (`--project unit`), which captures nothing; for stories, one story file at a time.
+- **Delete the previous capture directory BEFORE you re-capture.** Qlip's file naming is `<StoryId>.png` — a re-capture overwrites, but a story that no longer exists (renamed, deleted, skipped) leaves its old PNG behind and will mislead you into reviewing a render that is no longer produced.
+
+Attempts that don't include a Qlip capture + PNG read are "I *think* I fixed it" — not "I fixed it". For visual reviews, the render is the source of truth.
+
 ## Code Patterns & Conventions
 
 ### Component Prop Interfaces
