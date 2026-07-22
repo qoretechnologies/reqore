@@ -1,4 +1,4 @@
-import { expect, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useCallback, useEffect, useState } from 'react';
 import { _testsClickButton } from '../../../__tests__/utils';
@@ -928,5 +928,44 @@ export const CollapsedRange: Story = {
     // between two collapsed runs.
     await expect(canvas.getByText('Build #11')).toBeInTheDocument();
     await expect(canvas.getByText('Build #7')).toBeInTheDocument();
+  },
+};
+
+// Icon markers with no title/content/timestamp — a compact "section rail". The
+// `spacing` prop is what keeps the connector line visible here; without it every
+// row collapses to the marker height and the line vanishes.
+const onOverviewClick = fn();
+const iconOnlyItems: IReqoreTimelineProps['items'] = [
+  { icon: 'FlagLine', tooltip: 'Overview', onClick: onOverviewClick },
+  { icon: 'ShoppingCartLine', tooltip: 'Orders', onClick: fn() },
+  { icon: 'BankCardLine', tooltip: 'Billing', onClick: fn() },
+  { icon: 'TruckLine', tooltip: 'Shipping', onClick: fn() },
+  { icon: 'CheckboxCircleLine', tooltip: 'Done', onClick: fn() },
+];
+
+export const IconsOnlyVertical: Story = {
+  render: Template,
+  args: {
+    direction: 'vertical',
+    size: 'small',
+    spacing: 'normal',
+    items: iconOnlyItems,
+  },
+  play: async ({ canvasElement }) => {
+    // Every marker renders even though the rows carry no text.
+    const markers = canvasElement.querySelectorAll('.reqore-timeline-marker');
+    await expect(markers.length).toBe(iconOnlyItems.length);
+
+    // The connector line has real length thanks to `spacing`. Without the prop
+    // an icons-only vertical timeline collapses each row to the marker height,
+    // so the line is 0px tall — this assertion is the regression guard.
+    const line = canvasElement.querySelector('.reqore-timeline-line') as HTMLElement;
+    await expect(line).toBeTruthy();
+    await expect(line.getBoundingClientRect().height).toBeGreaterThan(0);
+
+    // Icon markers are clickable — the section-switcher use case relies on it.
+    const firstItem = canvasElement.querySelector('.reqore-timeline-item') as HTMLElement;
+    await userEvent.click(firstItem);
+    await expect(onOverviewClick).toHaveBeenCalled();
   },
 };
