@@ -64,6 +64,6 @@
 | **ReqoreTextarea** | Multi-line text input with optional auto-sizing, clear button, and template variable support. Accepts an optional `radiusSize` (`TSizes`) that overrides the `size`-derived corner roundness using the pronounced `RADIUS_FROM_RADIUS_SIZE` scale. |
 | **ReqoreTier** | Pricing/feature tier card component with highlighted states, price display, and feature lists. |
 | **TimeAgo** | Relative time display component (e.g., "2 hours ago") that updates periodically. |
-| **ReqoreTimeline** | Vertical timeline component displaying chronological events with optional icons, timestamps, and collapsible content. |
+| **ReqoreTimeline** | Vertical timeline component displaying chronological events with optional icons, timestamps, and collapsible content. Supports folding a run of items into a single "N hidden" marker (`IReqoreTimelineCollapsedRange`) that expands on click, GitHub-diff style. |
 | **ReqoreTooltipComponent** | Wrapper component that attaches tooltips to other components via Popover. |
 | **ReqoreTree** | Hierarchical tree view component for displaying nested data structures with optional editing and expansion controls. |

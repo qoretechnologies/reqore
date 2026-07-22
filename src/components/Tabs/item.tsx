@@ -2,18 +2,29 @@ import { omit } from 'lodash';
 import { forwardRef, memo, useState, useTransition } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
-import { IReqoreTabsListItem } from '.';
+import { IReqoreTabsListItem, TReqoreTabsActiveMarker } from '.';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getMainBackgroundColor,
+  getReadableColor,
+} from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreFlat } from '../../types/global';
 import ReqoreButton, { StyledButton } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import { TReqoreEffectColor } from '../Effect';
 
 export interface IReqoreTabListItemProps extends IReqoreTabsListItem, IWithReqoreFlat {
   active?: boolean;
   vertical?: boolean;
+  /** How the active tab is marked — see `IReqoreTabsProps.activeTabMarker`. */
+  activeTabMarker?: TReqoreTabsActiveMarker;
+  /** Explicit colour for the `line` marker — see `IReqoreTabsProps`. */
+  activeTabMarkerColor?: TReqoreEffectColor;
   onCloseClick?: any;
   customTheme?: IReqoreCustomTheme;
   size?: TSizes;
@@ -31,7 +42,17 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
 }
 
 export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
-  ${({ disabled, vertical, fill, fixed, padded }: IReqoreTabListItemStyle) => {
+  ${({
+    theme,
+    disabled,
+    vertical,
+    fill,
+    fixed,
+    padded,
+    active,
+    activeTabMarker,
+    activeColor,
+  }: IReqoreTabListItemStyle) => {
     return css`
       display: flex;
       flex-shrink: 0;
@@ -94,6 +115,69 @@ export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
           opacity: 0.5;
         }
       `}
+
+      ${activeTabMarker === 'line' &&
+      css`
+        /* The tab itself stays transparent — the active one is marked by a bar
+           along the list's edge, not a filled background, so the button's own
+           active fill has to go. The square corners are for the hover wash
+           below: a rounded wash would read as a pill sitting in the strip.
+           (The border needs no handling: a line marker forces the button flat,
+           which already zeroes its width.) */
+        ${StyledButton} {
+          background-color: transparent !important;
+          border-radius: 0 !important;
+        }
+
+        /* A button draws a 2px outline on :hover, :focus and :active. On an
+           underline tab each of those reads as a boxed button fighting the bar,
+           and the :focus one OUTLASTS the interaction — it survives until you
+           click something else, which is what makes a freshly-picked tab look
+           wrong until you move on. Drop all three and give hover a wash instead. */
+        ${StyledButton}:hover,
+        ${StyledButton}:focus,
+        ${StyledButton}:active {
+          outline: none !important;
+        }
+
+        ${StyledButton}:hover {
+          background-color: ${changeLightness(getMainBackgroundColor(theme), 0.1)} !important;
+        }
+
+        /* Keyboard users still need to see where they are; :focus-visible only
+           matches keyboard focus, so this never returns on a mouse click. */
+        ${StyledButton}:focus-visible {
+          outline: 2px solid ${activeColor || changeLightness(getMainBackgroundColor(theme), 0.4)} !important;
+          outline-offset: -2px;
+        }
+
+        ${active &&
+        css`
+          box-shadow: inset ${vertical ? '-2px 0 0 0' : '0 -2px 0 0'}
+            ${activeColor || 'currentColor'};
+
+          /* The label has to be re-coloured wherever the background is overridden.
+             An active button derives its text colour FROM the fill it paints, so
+             suppressing that fill above leaves a colour chosen for a surface that is
+             no longer there — and with an intent the fill is light, so the label
+             resolves to near-black and disappears against the page.
+
+             Do not "fix" this by making the button honour transparent in its active
+             state: a selected menu item is transparent + active precisely so the
+             active fill can show the selection (Menu/item.tsx), and removing it there
+             makes every dropdown selection invisible. The pairing is intentional
+             elsewhere; the tab is the one place the fill is unwanted, so the tab is
+             where it is undone.
+
+             The label takes the theme's readable colour, NOT the marker colour:
+             activeTabMarkerColor exists so the bar can be coloured independently of
+             the label (a white label under a brand-coloured bar), and tinting the
+             label with it would collapse that distinction. */
+          ${StyledButton} {
+            color: ${getReadableColor(theme, undefined, undefined, false)} !important;
+          }
+        `}
+      `}
     `;
   }}
 
@@ -120,6 +204,8 @@ const ReqoreTabsListItem = memo(
         vertical,
         onClick,
         activeIntent,
+        activeTabMarker,
+        activeTabMarkerColor,
         onCloseClick,
         fill,
         intent,
@@ -140,6 +226,17 @@ const ReqoreTabsListItem = memo(
       const [loadingTimer, setLoadingTimer] = useState(null);
       const { targetRef } = useCombinedRefs(ref);
       const theme = useReqoreTheme('main', customTheme, undefined);
+      // Marker colour, most specific first: an explicit colour, then the active
+      // intent's, and failing both the tab's own text colour via `currentColor`.
+      // The explicit one is resolved through the theme — `TReqoreEffectColor`
+      // accepts semantic values ('info', 'main:lighten:8') that are not valid CSS
+      // on their own, and dropping one straight into a box-shadow kills the rule.
+      const markerIntent = activeIntent || intent;
+      const activeColor = activeTabMarkerColor
+        ? getColorFromMaybeString(theme, activeTabMarkerColor)
+        : markerIntent
+        ? theme.intents[markerIntent]
+        : undefined;
 
       useUpdateEffect(() => {
         if (isPending) {
@@ -170,9 +267,14 @@ const ReqoreTabsListItem = memo(
         });
       };
 
+      // A `line` marker owns the active indicator, so the tab itself is always
+      // flat: a non-flat list still wants its edge rule, but boxing each tab
+      // would compete with the bar and read as a button, not a tab.
+      const isLineMarker = activeTabMarker === 'line';
+
       const renderButton = () => (
         <ReqoreButton
-          flat={intent ? false : flat}
+          flat={isLineMarker ? true : intent ? false : flat}
           fluid={fill || vertical}
           icon={icon}
           minimal
@@ -207,6 +309,8 @@ const ReqoreTabsListItem = memo(
           fill={fill}
           fixed={rest.fixed}
           padded={padded}
+          activeTabMarker={activeTabMarker}
+          activeColor={activeColor}
         >
           {!onCloseClick || disabled ? (
             renderButton()
@@ -216,7 +320,7 @@ const ReqoreTabsListItem = memo(
               {onCloseClick && !disabled ? (
                 <ReqoreButton
                   fixed
-                  flat={intent ? false : flat}
+                  flat={isLineMarker ? true : intent ? false : flat}
                   icon={closeIcon || 'CloseLine'}
                   intent={active ? activeIntent || intent : intent}
                   minimal

@@ -16,6 +16,7 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
   changeLightness,
   getColorFromMaybeString,
+  getMainBackgroundColor,
   getNthGradientColor,
 } from '../../helpers/colors';
 import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils';
@@ -42,7 +43,7 @@ export interface IReqoreTabsListStyle extends Omit<IReqoreTabsListProps, 'tabs'>
 }
 
 export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
-  ${({ fill, vertical, size, padded, flat, currentTabColor, width }) => css`
+  ${({ theme, fill, vertical, size, padded, flat, activeTabMarker, currentTabColor, width }) => css`
     height: ${vertical ? '100%' : undefined};
     width: ${vertical ? width || '200px' : '100%'};
     flex-flow: ${vertical ? 'column' : 'row'};
@@ -56,9 +57,20 @@ export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
       padding: 0 ${PADDING_FROM_SIZE[size]}px;
     `}
 
-    ${!flat &&
+    ${/* A `line` marker always wants the strip's edge rule for the bar to sit on,
+        even when the tabs themselves are flat — that pairing IS the underline
+        tab. Boxing each tab (`flat={false}`) would fight the bar instead.
+
+        With a `line` marker the rule stays a NEUTRAL hairline off the background:
+        it spans every tab, so tinting it with the active tab's intent would repaint
+        the whole strip on each selection. Only the active tab's bar carries colour. */
+    (!flat || activeTabMarker === 'line') &&
     css`
-    border-${vertical ? 'right' : 'bottom'}: 1px solid ${changeLightness(currentTabColor, 0.175)};
+    border-${vertical ? 'right' : 'bottom'}: 1px solid ${
+      activeTabMarker === 'line'
+        ? changeLightness(getMainBackgroundColor(theme), 0.16)
+        : changeLightness(currentTabColor, 0.175)
+    };
     `}
 
 
@@ -251,6 +263,8 @@ type TReqoreTabListItemRendererProps = Pick<
   | 'flat'
   | 'padded'
   | 'activeIntent'
+  | 'activeTabMarker'
+  | 'activeTabMarkerColor'
   | 'wrapTabNames'
   | 'loadingIconType'
   | 'useReactTransition'
@@ -315,6 +329,8 @@ const ReqoreTabsList = ({
   fill,
   vertical,
   activeTabIntent,
+  activeTabMarker,
+  activeTabMarkerColor,
   customTheme,
   wrapTabNames,
   flat,
@@ -355,6 +371,7 @@ const ReqoreTabsList = ({
         className={`${rest.className || ''} reqore-tabs-list`}
         ref={ref}
         flat={flat}
+        activeTabMarker={activeTabMarker}
         theme={theme}
         currentTabColor={currentTabColor}
       >
@@ -462,6 +479,8 @@ const ReqoreTabsList = ({
                 flat={flat}
                 padded={padded}
                 activeIntent={activeTabIntent}
+                activeTabMarker={activeTabMarker}
+                activeTabMarkerColor={activeTabMarkerColor}
                 wrapTabNames={wrapTabNames}
                 loadingIconType={loadingIconType}
                 useReactTransition={useReactTransition}

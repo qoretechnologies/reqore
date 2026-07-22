@@ -443,3 +443,46 @@ test('Renders <EntityRow /> with raised effect', () => {
 
   expect(document.querySelectorAll('.reqore-entity-row').length).toBe(1);
 });
+
+test('Renders an action with sub-actions as an overflow menu, not a button', () => {
+  const onRowClick = vi.fn();
+  const onShowInChat = vi.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow
+            label='order-sync:1.0'
+            onClick={onRowClick}
+            actions={[
+              {
+                icon: 'More2Line',
+                actions: [
+                  { label: 'Show in chat', onClick: onShowInChat },
+                  { label: 'Hidden entry', show: false },
+                ],
+              },
+            ]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // closed menu: the items do not exist yet
+  expect(document.querySelectorAll('.reqore-menu-item').length).toBe(0);
+
+  fireEvent.click(document.querySelector('.reqore-entity-row-actions .reqore-button')!);
+
+  // `show: false` entries are dropped, so only the one item is offered
+  const items = document.querySelectorAll('.reqore-menu-item');
+  expect(items.length).toBe(1);
+  expect(items[0].textContent).toContain('Show in chat');
+
+  // opening the menu must not also trigger the (clickable) row
+  expect(onRowClick).not.toHaveBeenCalled();
+
+  fireEvent.click(items[0]);
+  expect(onShowInChat).toHaveBeenCalledTimes(1);
+});

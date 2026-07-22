@@ -362,6 +362,45 @@ export const BADGE_RADIUS_FROM_RADIUS_SIZE = {
   massive: 32,
 };
 
+/**
+ * Chat bubbles carry a far rounder corner than a general surface — the curve is
+ * what reads as "speech" rather than "panel", so they get their own scale.
+ */
+export const BUBBLE_RADIUS_FROM_SIZE = {
+  micro: 9,
+  tiny: 12,
+  small: 12,
+  normal: 15,
+  big: 18,
+  huge: 24,
+  massive: 30,
+};
+
+/** More pronounced radius for `radiusSize`-driven bubble corners. */
+export const BUBBLE_RADIUS_FROM_RADIUS_SIZE = {
+  micro: 14,
+  tiny: 20,
+  small: 24,
+  normal: 30,
+  big: 40,
+  huge: 52,
+  massive: 70,
+};
+
+/**
+ * The bubble's avatar tile — squarer than the bubble it sits beside, so it reads
+ * as a distinct object rather than a second bubble.
+ */
+export const BUBBLE_AVATAR_RADIUS_FROM_SIZE = {
+  micro: 5,
+  tiny: 6,
+  small: 6,
+  normal: 8,
+  big: 10,
+  huge: 13,
+  massive: 16,
+};
+
 export const GAP_FROM_SIZE = {
   micro: 0.5,
   tiny: 1,

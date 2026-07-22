@@ -849,3 +849,84 @@ export const WorkflowExample: Story = {
     />
   ),
 };
+
+// A folded run of uneventful items (GitHub-diff style): only the noteworthy
+// entries stay visible, the rest collapse behind an "N hidden" marker that
+// expands on click. Runs can sit between normal entries as well as at the
+// ends, and their connector line is dotted to read as "skipped".
+export const CollapsedRange: Story = {
+  render: (args) => (
+    <ReqoreTimeline
+      {...args}
+      items={[
+        {
+          title: 'Build #18 · reviewing now',
+          timestamp: 'Jul 15',
+          icon: 'TimeLine',
+          intent: 'info',
+        },
+        {
+          // Expanded to show both states in one view: this run reveals its
+          // items + a "Hide" control; the later runs stay folded.
+          label: '6 read-only builds',
+          defaultExpanded: true,
+          collapsedItems: [
+            { title: 'Build #17', timestamp: 'Jul 15', icon: 'TimeLine' },
+            { title: 'Build #16', timestamp: 'Jul 15', icon: 'TimeLine' },
+            { title: 'Build #15', timestamp: 'Jul 15', icon: 'TimeLine' },
+            { title: 'Build #14', timestamp: 'Jul 15', icon: 'TimeLine' },
+            { title: 'Build #13', timestamp: 'Jul 14', icon: 'TimeLine' },
+            { title: 'Build #12', timestamp: 'Jul 14', icon: 'TimeLine' },
+          ],
+        },
+        {
+          title: 'Build #11',
+          content: 'Rejected — empty render.',
+          timestamp: 'Jul 9',
+          icon: 'CloseCircleLine',
+          intent: 'danger',
+          badge: [{ label: '1', icon: 'Chat1Line' }],
+          collapsible: true,
+        },
+        {
+          // A run sandwiched between two normal entries (#11 above, #7 below).
+          label: '2 read-only builds',
+          collapsedItems: [
+            { title: 'Build #10', timestamp: 'Jul 9', icon: 'TimeLine' },
+            { title: 'Build #1', timestamp: 'Jul 9', icon: 'TimeLine' },
+          ],
+        },
+        {
+          title: 'Build #7',
+          content: 'Accepted',
+          timestamp: 'Jul 8',
+          icon: 'CheckLine',
+          intent: 'success',
+          collapsible: true,
+        },
+        {
+          label: '3 read-only builds',
+          collapsedItems: [
+            { title: 'Build #6', timestamp: 'Jul 8', icon: 'TimeLine' },
+            { title: 'Build #5', timestamp: 'Jul 7', icon: 'TimeLine' },
+            { title: 'Build #4', timestamp: 'Jul 7', icon: 'TimeLine' },
+          ],
+        },
+      ]}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The first run is expanded (defaultExpanded): its items render inline
+    // with a "Hide" control.
+    await expect(canvas.getByText('Hide')).toBeInTheDocument();
+    await expect(canvas.getByText('Build #14')).toBeInTheDocument();
+    // The later runs stay folded — labels show, their hidden builds don't.
+    await expect(canvas.getByText('2 read-only builds')).toBeInTheDocument();
+    await expect(canvas.queryByText('Build #10')).not.toBeInTheDocument();
+    // Noteworthy entries stay visible — including a normal entry sandwiched
+    // between two collapsed runs.
+    await expect(canvas.getByText('Build #11')).toBeInTheDocument();
+    await expect(canvas.getByText('Build #7')).toBeInTheDocument();
+  },
+};

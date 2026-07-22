@@ -1,7 +1,12 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, ReactNode, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import { TSizes } from '../../constants/sizes';
+import {
+  CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
+  PADDING_FROM_SIZE,
+  SIZE_TO_PX,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor } from '../../helpers/colors';
 import { getOneHigherSize, getOneLessSize } from '../../helpers/utils';
@@ -56,6 +61,14 @@ export interface IReqoreDescriptionListRow {
   uppercaseLabel?: boolean;
 }
 
+interface IStyledContentProps {
+  $controlSize?: TSizes;
+}
+
+/** The vertical padding rows have always had. Kept as the default so existing lists
+ *  are untouched — `rowPadding` opts into the size scale instead. */
+const DEFAULT_ROW_PADDING = 10;
+
 export interface IReqoreDescriptionListProps extends Omit<IReqorePanelProps, 'children'> {
   /** Rows to render top-to-bottom. */
   items: IReqoreDescriptionListRow[];
@@ -82,6 +95,36 @@ export interface IReqoreDescriptionListProps extends Omit<IReqorePanelProps, 'ch
    * to the wrapping `ReqorePanel`. Defaults to `'normal'`.
    */
   size?: TSizes;
+  /**
+   * Size the content column for CONTROLS rather than for text.
+   *
+   * Every row then reserves a control of this size's height, and any content that
+   * isn't itself a control is inset by that size's horizontal padding — so a list
+   * mixing plain values with buttons, dropdowns and tags keeps one left edge and one
+   * row rhythm. Omitted (the default) leaves each row sized by its own content, which
+   * is what an all-text list wants.
+   */
+  contentSize?: TSizes;
+  /**
+   * Size the LABEL column's text independently of the content.
+   *
+   * Labels are reference furniture — a list can want them quieter and smaller than
+   * the values they name, and a fixed `labelWidth` has to fit them. Defaults to
+   * `size`, so a list that doesn't ask keeps both columns at one scale.
+   *
+   * Named `labelTextSize`, not `labelSize`: the panel this extends already has a
+   * `labelSize`, and it means the heading LEVEL of the panel's own label. Different
+   * thing, and worth keeping.
+   */
+  labelTextSize?: TSizes;
+  /**
+   * Vertical padding on each row, from the size scale — the list's density.
+   *
+   * Omitted, rows keep the padding they have always had. Set it when the list has to
+   * sit on a rhythm something else is measured against (a tab strip below it, a
+   * sibling list), where the row height has to be predictable rather than comfortable.
+   */
+  rowPadding?: TSizes;
 }
 
 interface IStyledRowProps {
@@ -109,13 +152,20 @@ const StyledRow = styled.div<IStyledRowProps>`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 0;
+  padding: ${({ $rowPadding }) => $rowPadding}px 0;
 
+  /*
+   * The separator is drawn, not laid out. As a border it added its 1px to the row's
+   * box, so every row except the last stood 1px taller and a list whose rows should
+   * read as one rhythm was measurably ragged — which matters as soon as anything is
+   * aligned to a row's height. An inset shadow paints the same hairline without
+   * participating in layout.
+   */
   ${({ $isLast, $separatorOpacity, theme }) =>
     !$isLast &&
     $separatorOpacity > 0 &&
     css`
-      border-bottom: 1px solid
+      box-shadow: inset 0 -1px 0
         ${rgba(changeLightness(getMainBackgroundColor(theme), 0.16), $separatorOpacity)};
     `}
 `;
@@ -152,13 +202,41 @@ const StyledLabel = styled.div<IStyledLabelProps>`
   }
 `;
 
-const StyledContent = styled.div`
+const StyledContent = styled.div<IStyledContentProps>`
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
   font-variant-numeric: tabular-nums;
+
+  ${({ $controlSize }) =>
+    $controlSize &&
+    css`
+      /*
+       * Reserve a control's height on every row, whether or not the row holds one:
+       * a row of buttons is 32px while a row of text is 14-18px, so left to their
+       * content the rows differ by half their height and the list reads as ragged
+       * rather than tabular.
+       */
+      min-height: ${SIZE_TO_PX[$controlSize]}px;
+
+      /*
+       * And give bare content the inset a control applies to its own. A control
+       * insets its content by its horizontal padding, so a button's label sits ~12px
+       * into the column while plain text starts at 0, and the two columns of values
+       * never line up. Handing the inset to whatever ISN'T a control means a new
+       * plain value cannot be added misaligned.
+       *
+       * Both shapes of control are excluded: Reqore renders the button AS the value
+       * (ReqoreButton, ReqoreDropdown with a string label) or nests one inside a
+       * wrapper, and matching only the nested case leaves the root-button rows
+       * picking up this inset on top of their own.
+       */
+      > *:not(.reqore-button):not(:has(.reqore-button)) {
+        padding-left: ${CONTROL_HORIZONTAL_PADDING_FROM_SIZE[$controlSize]}px;
+      }
+    `}
 `;
 
 /**
@@ -211,6 +289,9 @@ export const ReqoreDescriptionList = memo(
         uppercaseLabels = true,
         separatorOpacity = 0.06,
         size = 'normal',
+        contentSize,
+        labelTextSize,
+        rowPadding,
         padded,
         className,
         ...panelRest
@@ -226,6 +307,8 @@ export const ReqoreDescriptionList = memo(
       // gutter so the label column stays vertically aligned across
       // rows with and without an intent.
       const anyRowHasIntent = useMemo(() => items.some((row) => Boolean(row.intent)), [items]);
+      const resolvedRowPadding = rowPadding ? PADDING_FROM_SIZE[rowPadding] : DEFAULT_ROW_PADDING;
+      const resolvedLabelSize = labelTextSize ?? size;
       return (
         <ReqorePanel
           {...panelRest}
@@ -246,6 +329,7 @@ export const ReqoreDescriptionList = memo(
                   key={row.key}
                   $separatorOpacity={separatorOpacity}
                   $isLast={isLast}
+                  $rowPadding={resolvedRowPadding}
                   className='reqore-description-list-row'
                   data-key={row.key}
                 >
@@ -271,12 +355,15 @@ export const ReqoreDescriptionList = memo(
                           ) : null}
                         </StyledIconSlot>
                       ) : null}
-                      <ReqoreP size={size} intent={row.labelIntent}>
+                      <ReqoreP size={resolvedLabelSize} intent={row.labelIntent}>
                         {row.label}
                       </ReqoreP>
                     </StyledLabel>
                   ) : null}
-                  <StyledContent className='reqore-description-list-content'>
+                  <StyledContent
+                    $controlSize={contentSize}
+                    className='reqore-description-list-content'
+                  >
                     {typeof row.content === 'string' || typeof row.content === 'number' ? (
                       <ReqoreP size={size} intent={row.contentIntent}>
                         {row.content}
