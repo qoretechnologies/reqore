@@ -967,5 +967,10 @@ export const IconsOnlyVertical: Story = {
     const firstItem = canvasElement.querySelector('.reqore-timeline-item') as HTMLElement;
     await userEvent.click(firstItem);
     await expect(onOverviewClick).toHaveBeenCalled();
+
+    // Release focus so the story doesn't end with the item's focus-visible
+    // outline lingering as a rectangle over the timeline (Storybook captures
+    // the story after `play` runs).
+    firstItem.blur();
   },
 };
