@@ -142,6 +142,7 @@ export const ReqorePopover = memo(
         minimal,
         intent,
         id,
+        updater,
         backgroundBlur,
         // `customTheme` is picked up so it can be forwarded to the
         // trigger `Component` below. Historically the popover's own
@@ -492,6 +493,7 @@ export const ReqorePopover = memo(
                 onPopperClose={close}
                 onPopperUpdate={handlePopperUpdate}
                 id={id}
+                updater={updater}
                 handler={handler}
                 backgroundBlur={backgroundBlur}
                 onPopoverMouseEnter={keepOpenOnHover ? handlePopoverMouseEnter : undefined}
@@ -542,6 +544,7 @@ export const ReqorePopover = memo(
               onPopperUpdate={handlePopperUpdate}
               closePopover={close}
               id={id}
+              updater={updater}
               handler={handler}
               backgroundBlur={backgroundBlur}
               onPopoverMouseEnter={keepOpenOnHover ? handlePopoverMouseEnter : undefined}
