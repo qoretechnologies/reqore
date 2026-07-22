@@ -1,7 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { ReqoreBubble, ReqoreBubbleGroup, IReqoreBubbleProps } from '../../components/Bubble';
 import { StoryMeta } from '../utils';
-import { FlatArg, IntentArg, MinimalArg, SizeArg, argManager } from '../utils/args';
+import { FlatArg, IntentArg, MinimalArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreBubbleProps>();
 
@@ -13,6 +13,7 @@ const meta = {
     ...FlatArg,
     ...MinimalArg,
     ...IntentArg,
+    ...RadiusSizeArg,
     ...createArg('align', {
       defaultValue: 'left',
       name: 'Align',
@@ -114,6 +115,105 @@ export const WithTimestamp: Story = {
   args: {
     timestamp: '10:45 AM',
   },
+};
+
+export const WithHeader: Story = {
+  render: Template,
+  args: {
+    label: 'Ada Lovelace',
+    timestamp: '2h ago',
+    flat: false,
+    minimal: true,
+    // wash the body a step below the bold label — `contentEffect` hits only the
+    // children, so the label stays at full strength.
+    contentEffect: { opacity: 0.72 },
+    children: 'Adept programmer of the Analytical Engine, author of the first algorithm.',
+  },
+};
+
+export const WithAvatar: Story = {
+  render: Template,
+  args: {
+    avatar: { icon: 'User3Line' },
+    label: 'Ada Lovelace',
+    timestamp: '2h ago',
+    flat: false,
+    minimal: true,
+    contentEffect: { opacity: 0.72 },
+    children: 'Adept programmer of the Analytical Engine, author of the first algorithm.',
+  },
+};
+
+/**
+ * `avatar.circle` swaps the default squircle for a circle — conventional for a
+ * person, where the squircle reads as an app tile. The image is clipped to the
+ * new shape, so a photo works as well as a glyph.
+ */
+export const WithCircleAvatar: Story = {
+  render: Template,
+  args: {
+    avatar: { icon: 'User3Line', circle: true },
+    label: 'Ada Lovelace',
+    timestamp: '2h ago',
+    flat: false,
+    minimal: true,
+    contentEffect: { opacity: 0.72 },
+    children: 'Adept programmer of the Analytical Engine, author of the first algorithm.',
+  },
+};
+
+/**
+ * A comment feed: an avatar + a bordered, accent-tinted card per message, each side
+ * hugging its own edge. `customTheme` tints the border, the fill and the avatar
+ * together, so the pair reads as one object under any app's theme. All three bubbles
+ * carry a `timestamp`, but the two right-side ones form a run — so only the last of
+ * them prints a time. `contentEffect={{ opacity }}` washes each body a step below its
+ * bold label (the label sits outside `contentEffect`, so it stays bright).
+ */
+export const AvatarFeed: Story = {
+  render: () => (
+    <ReqoreBubbleGroup>
+      <ReqoreBubble
+        align='left'
+        avatar={{ icon: 'User3Line' }}
+        label='ops@acme.io'
+        timestamp='2h ago'
+        contentEffect={{ opacity: 0.72 }}
+        customTheme={{ main: '#3b2d63' }}
+        maxWidth='76%'
+        flat={false}
+        minimal
+      >
+        Our nightly transfer times out after ~30s since the 3.2 upgrade.
+      </ReqoreBubble>
+      <ReqoreBubble
+        align='right'
+        avatar={{ icon: 'CustomerService2Line' }}
+        label='Support'
+        timestamp='1h ago'
+        contentEffect={{ opacity: 0.72 }}
+        customTheme={{ main: '#3b2d63' }}
+        maxWidth='76%'
+        flat={false}
+        minimal
+      >
+        Reproduced — a fix is in review. Can you confirm the pool size?
+      </ReqoreBubble>
+      <ReqoreBubble
+        align='right'
+        avatar={{ icon: 'EyeOffLine' }}
+        label='Internal note'
+        timestamp='35m ago'
+        contentEffect={{ opacity: 0.72 }}
+        intent='warning'
+        maxWidth='76%'
+        flat={false}
+        minimal
+      >
+        The pool default dropped from 4 to 1 in the 3.2 migration.
+      </ReqoreBubble>
+    </ReqoreBubbleGroup>
+  ),
 };
 
 export const Clickable: Story = {

@@ -1,4 +1,5 @@
 import { StoryObj } from '@storybook/react';
+import { expect } from 'storybook/test';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import {
   IReqoreDescriptionListProps,
@@ -6,6 +7,7 @@ import {
 } from '../../components/DescriptionList';
 import { ReqoreSpan } from '../../components/Span';
 import ReqoreTag from '../../components/Tag';
+import { ReqoreButton, ReqoreDropdown } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -324,5 +326,107 @@ export const LeadingTagInContent: Story = {
         content: <ReqoreTag size='small' minimal label='text-embedding-3-small' />,
       },
     ],
+  },
+};
+
+/*
+ * A list whose values are a mix of plain text and controls. `contentSize` sizes the
+ * content column for controls, which is what keeps such a list tabular: without it a
+ * text row is ~18px and a button row 32px, and a button insets its own label by its
+ * horizontal padding while bare text starts at the column edge — so the rows differ
+ * in height AND the values never share a left edge.
+ */
+const mixedItems: IReqoreDescriptionListProps['items'] = [
+  {
+    key: 'status',
+    label: 'Status',
+    content: (
+      <ReqoreDropdown
+        size='small'
+        minimal
+        flat
+        label='Open'
+        showCaret={false}
+        rightIcon='ArrowDownSLine'
+        items={[{ label: 'Open', selected: true }, { label: 'Resolved' }]}
+      />
+    ),
+  },
+  { key: 'owner', label: 'Owner', content: 'nick.m@acme.io' },
+  { key: 'scope', label: 'Scope', content: 'account:1' },
+  {
+    key: 'links',
+    label: 'Links',
+    content: (
+      <ReqoreButton size='small' minimal flat icon='GitBranchLine'>
+        5 references
+      </ReqoreButton>
+    ),
+  },
+];
+
+export const WithControlContent: Story = {
+  args: {
+    label: 'Ticket',
+    flat: true,
+    size: 'small',
+    contentSize: 'small',
+    labelTextSize: 'tiny',
+    rowPadding: 'tiny',
+    labelWidth: '84px',
+    items: mixedItems,
+  },
+  play: async ({ canvasElement }) => {
+    const rows = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('.reqore-description-list-row')
+    );
+    await expect(rows.length).toBe(4);
+
+    /* Where the value's CONTENT starts, not where its box does. The inset is padding
+       and it lands on the value itself — the button on a control row, the paragraph on
+       a text row — so measure that child's padded edge. Measuring the column instead
+       reads the same number for every row and proves nothing. */
+    const contentLeft = (row: HTMLElement) => {
+      const column = row.querySelector<HTMLElement>('.reqore-description-list-content')!;
+      const value = (column.firstElementChild as HTMLElement | null) ?? column;
+      return Math.round(
+        value.getBoundingClientRect().left + parseFloat(getComputedStyle(value).paddingLeft)
+      );
+    };
+
+    const lefts = rows.map(contentLeft);
+    await expect(new Set(lefts).size, `value content starts at: ${lefts.join(', ')}`).toBe(1);
+
+    const heights = rows.map((row) => Math.round(row.getBoundingClientRect().height));
+    await expect(new Set(heights).size, `row heights: ${heights.join(', ')}`).toBe(1);
+    // `rowPadding` makes that height predictable: a small control plus tiny padding
+    // either side. A list a tab strip is aligned to needs to be able to state this.
+    await expect(heights[0]).toBe(32 + 4 * 2);
+
+    // `labelTextSize` keeps the longest label on one line inside `labelWidth`
+    const labels = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('.reqore-description-list-label')
+    );
+    const labelHeights = labels.map((l) => Math.round(l.getBoundingClientRect().height));
+    await expect(new Set(labelHeights).size, `label heights: ${labelHeights.join(', ')}`).toBe(1);
+  },
+};
+
+/**
+ * The separator is painted, not laid out — so every row is the same height, including
+ * the last one, which carries no separator at all.
+ */
+export const SeparatorDoesNotChangeRowHeight: Story = {
+  args: {
+    label: 'Lifecycle',
+    flat: true,
+    items: lifecycleItems,
+  },
+  play: async ({ canvasElement }) => {
+    const heights = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('.reqore-description-list-row')
+    ).map((row) => Math.round(row.getBoundingClientRect().height));
+    await expect(heights.length).toBeGreaterThan(1);
+    await expect(new Set(heights).size, `row heights: ${heights.join(', ')}`).toBe(1);
   },
 };

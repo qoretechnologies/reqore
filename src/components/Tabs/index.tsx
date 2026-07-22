@@ -7,10 +7,13 @@ import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { IReqoreComponent, IWithReqoreLoading } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
+import { TReqoreEffectColor } from '../Effect';
 import { IReqoreMenuProps } from '../Menu';
 import { IReqorePopoverProps } from '../Popover';
 import { TReqoreTabsContentPadding } from './content';
 import ReqoreTabsList from './list';
+
+export type TReqoreTabsActiveMarker = 'fill' | 'line';
 
 export interface IReqoreTabsListItem extends Omit<IReqoreButtonProps, 'id'> {
   label?: string | number;
@@ -34,6 +37,19 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
   fillParent?: boolean;
   vertical?: boolean;
   activeTabIntent?: TReqoreIntent;
+  /**
+   * How the active tab is marked. `fill` (the default) tints the whole tab, the
+   * way Reqore tabs have always looked. `line` leaves the tab transparent and
+   * draws a bar along the list's edge instead — the quieter "underline" tab
+   * treatment, for dense surfaces where a filled tab would shout.
+   */
+  activeTabMarker?: TReqoreTabsActiveMarker;
+  /**
+   * Colour of the `line` marker. Defaults to the active intent's colour, and
+   * failing that the tab's own text colour — set this when the bar should carry
+   * an accent the label doesn't, which is the usual underline-tab treatment.
+   */
+  activeTabMarkerColor?: TReqoreEffectColor;
   padded?: boolean;
   tabsPadding?: TReqoreTabsContentPadding;
   wrapTabNames?: boolean;
@@ -83,6 +99,8 @@ const ReqoreTabs = ({
   _testWidth,
   vertical,
   activeTabIntent,
+  activeTabMarker = 'fill',
+  activeTabMarkerColor,
   flat = true,
   size = 'normal',
   width,
@@ -142,6 +160,8 @@ const ReqoreTabs = ({
           activeTab={_activeTab}
           wrapTabNames={wrapTabNames}
           activeTabIntent={activeTabIntent}
+          activeTabMarker={activeTabMarker}
+          activeTabMarkerColor={activeTabMarkerColor}
           customTheme={customTheme}
           intent={intent}
           onTabChange={handleTabChange}

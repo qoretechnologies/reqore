@@ -7,6 +7,7 @@ import { defineConfig, mergeConfig } from 'vitest/config';
 import viteConfig from './vite.config';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+const qlipUploadToken = process.env.QLIP_UPLOAD_TOKEN;
 
 export default mergeConfig(
   viteConfig,
@@ -24,10 +25,8 @@ export default mergeConfig(
               disableAnimations: true,
               pauseAnimationsAtEnd: true,
               viewport: { width: 1920, height: 1080 },
-              upload: {
-                // serverUrl omitted — defaults to https://qlip.qoretechnologies.com
-                uploadToken: 'qlt_L5HfLmW8KqGTY5ap6OxBf0nfFBohS2PHzKgQBdyK',
-              },
+              // serverUrl omitted — defaults to https://qlip.qoretechnologies.com
+              ...(qlipUploadToken ? { upload: { uploadToken: qlipUploadToken } } : {}),
             }),
             storybookTest({
               configDir: path.join(dirname, '.storybook'),
