@@ -121,6 +121,16 @@ export interface IReqoreTimelineProps
    */
   responsive?: boolean;
   /**
+   * Minimum vertical gap between markers — i.e. the length of the connector
+   * line — in `direction='vertical'`. A `TSizes` maps to a sensible pixel value;
+   * a `number` is used as raw pixels. Without it an icons-only timeline (items
+   * with no `title`, `content` or `timestamp`) collapses every row to the marker
+   * height, so the connector line has zero length and disappears — set `spacing`
+   * to keep the line visible. Acts as a floor: rows that are already taller (rich
+   * content) are unaffected. Ignored for `direction='horizontal'`.
+   */
+  spacing?: TSizes | number;
+  /**
    * Controlled collapsed state — map of item index to collapsed boolean.
    * When provided, the component becomes controlled for those indices.
    * Items not in the map fall back to their own `isCollapsed` prop.
@@ -151,6 +161,8 @@ export interface IReqoreTimelineItemStyle extends IReqoreTimelineStyle {
   isCollapsed?: boolean;
   /** Render the connector line dotted (used around a collapsed run). */
   dashed?: boolean;
+  /** Minimum connector length (px) below this marker; vertical mode only. */
+  spacing?: number;
 }
 
 // Size of the timeline marker (icon container) - made smaller
@@ -162,6 +174,19 @@ const MARKER_SIZE_FROM_SIZE: Record<TSizes, number> = {
   big: 32,
   huge: 40,
   massive: 50,
+};
+
+// Default connector-line length (vertical gap between markers) for
+// `spacing='<size>'`. Chosen so an icons-only timeline reads as a clear
+// line-with-dots at every size.
+const SPACING_FROM_SIZE: Record<TSizes, number> = {
+  micro: 8,
+  tiny: 10,
+  small: 14,
+  normal: 18,
+  big: 24,
+  huge: 32,
+  massive: 44,
 };
 
 // Line width for the connector
@@ -219,6 +244,16 @@ const StyledTimelineItem = styled.li<IReqoreTimelineItemStyle>`
           display: none;
         `}
       }
+    `}
+
+  ${({ direction, spacing, isLast, size }) =>
+    direction !== 'horizontal' &&
+    spacing !== undefined &&
+    !isLast &&
+    css`
+      /* Floor the row height so the connector line (which runs from the marker
+         to the item's bottom edge) has length even when the row has no content. */
+      min-height: ${MARKER_SIZE_FROM_SIZE[size] + spacing}px;
     `}
 
   ${({ disabled }) =>
@@ -405,6 +440,8 @@ interface ITimelineItemRendererProps {
   baseTheme: IReqoreTheme;
   isCollapsed: boolean;
   direction: 'vertical' | 'horizontal';
+  /** Minimum connector length (px) below this marker; vertical mode only. */
+  spacing?: number;
   /** Draw this item's downward connector dotted (next to a collapsed run). */
   lineDashed?: boolean;
   onToggle: (event: React.MouseEvent) => void;
@@ -422,6 +459,7 @@ const TimelineItemRenderer = memo(
     baseTheme,
     isCollapsed,
     direction,
+    spacing,
     lineDashed,
     onToggle,
     onItemClick,
@@ -440,6 +478,7 @@ const TimelineItemRenderer = memo(
         theme={itemTheme}
         size={size}
         direction={direction}
+        spacing={spacing}
         isClickable={isClickable}
         isLast={isLast}
         disabled={item.disabled}
@@ -473,6 +512,7 @@ const TimelineItemRenderer = memo(
               size={size}
               isLast={isLast}
               dashed={lineDashed}
+              className='reqore-timeline-line'
             />
           )}
         </StyledTimelineMarkerWrapper>
@@ -566,6 +606,8 @@ interface ICollapsedRunRendererProps {
   size: TSizes;
   baseTheme: IReqoreTheme;
   expanded: boolean;
+  /** Minimum connector length (px) below the marker; vertical mode only. */
+  spacing?: number;
   onToggle: () => void;
 }
 
@@ -575,7 +617,7 @@ interface ICollapsedRunRendererProps {
  * "Hide" control that re-folds them). Vertical mode only.
  */
 const CollapsedRunRenderer = memo(
-  ({ range, isLast, size, baseTheme, expanded, onToggle }: ICollapsedRunRendererProps) => {
+  ({ range, isLast, size, baseTheme, expanded, spacing, onToggle }: ICollapsedRunRendererProps) => {
     const n = range.collapsedItems.length;
     // Hex for the icon (ReqoreIcon `color` wants a TReqoreEffectColor); rgba for
     // the label's plain CSS colour. Both muted to read as "skipped".
@@ -587,6 +629,7 @@ const CollapsedRunRenderer = memo(
         theme={baseTheme}
         size={size}
         direction='vertical'
+        spacing={spacing}
         isClickable
         isLast={isLast}
         onClick={onToggle}
@@ -619,6 +662,7 @@ const CollapsedRunRenderer = memo(
               size={size}
               isLast={isLast}
               dashed={!expanded}
+              className='reqore-timeline-line'
             />
           )}
         </StyledTimelineMarkerWrapper>
@@ -655,6 +699,7 @@ const ReqoreTimeline = memo(
         className,
         direction: directionProp = 'vertical',
         responsive = true,
+        spacing,
         collapsedState,
         onCollapseChange,
         onRangeToggle,
@@ -669,6 +714,15 @@ const ReqoreTimeline = memo(
       // mobile unless the caller explicitly opts out via `responsive={false}`.
       const direction =
         responsive && isMobile && directionProp === 'horizontal' ? 'vertical' : directionProp;
+
+      // Resolve `spacing` (TSizes | number | undefined) to a pixel connector
+      // length once, then hand it to every row.
+      const resolvedSpacing =
+        spacing === undefined
+          ? undefined
+          : typeof spacing === 'number'
+            ? spacing
+            : SPACING_FROM_SIZE[spacing];
 
       // Internal collapse state for TOP-LEVEL items (uncontrolled mode). Folded
       // runs are skipped here — they carry their own expand state below.
@@ -858,6 +912,7 @@ const ReqoreTimeline = memo(
                   size={size}
                   baseTheme={baseTheme}
                   expanded={row.expanded}
+                  spacing={resolvedSpacing}
                   onToggle={row.onToggle}
                 />
               );
@@ -878,6 +933,7 @@ const ReqoreTimeline = memo(
                 intent={intent}
                 baseTheme={baseTheme}
                 direction={direction}
+                spacing={resolvedSpacing}
                 isCollapsed={row.isCollapsed}
                 lineDashed={lineDashed}
                 onToggle={row.onToggle}
