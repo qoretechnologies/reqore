@@ -39,6 +39,22 @@ test('Renders <Tag /> properly', () => {
   expect(document.querySelectorAll('.reqore-tag').length).toBe(3);
 });
 
+test('Does not forward tag layout props to DOM elements', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreTagGroup wrap fluid align='center' gapSize='small'>
+        <ReqoreTag label='Wrapped tag' wrap width='180px' />
+      </ReqoreTagGroup>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('[wrap]')).toBeNull();
+  expect(document.querySelector('[haswidth]')).toBeNull();
+  expect(document.querySelector('[gapsize]')).toBeNull();
+  expect(document.querySelector('[fluid]')).toBeNull();
+  expect(document.querySelector('[align]')).toBeNull();
+});
+
 test('Renders <Tag /> group properly', () => {
   render(
     <ReqoreUIProvider>

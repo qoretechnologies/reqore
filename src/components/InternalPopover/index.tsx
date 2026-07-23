@@ -189,6 +189,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     flat = true,
     effect,
     backgroundBlur,
+    updater,
     id,
     onPopperUpdate,
     onPopperClose,
@@ -203,6 +204,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     const [arrowElement, setArrowElement] = useState(null);
     const popperRef: MutableRefObject<any> = useRef(null);
     const mutationObserber: MutableRefObject<any> = useRef(null);
+    const resizeObserver = useRef<ResizeObserver | null>(null);
     const baseOffsetY = noArrow ? 5 : 10;
     const { styles, attributes, forceUpdate, state } = usePopper(targetElement, popperElement, {
       placement,
@@ -249,6 +251,32 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         mutationObserber.current = observer;
       }
     }, [styles, attributes, state]);
+
+    // Popover content commonly changes size after opening (for example when
+    // an async preview replaces its skeleton). Popper's event listeners track
+    // viewport and target movement, but not intrinsic content-size changes.
+    // Recalculate deterministically whenever the rendered popover resizes so
+    // flip/preventOverflow can keep the whole surface inside the viewport.
+    useEffect(() => {
+      resizeObserver.current?.disconnect();
+      resizeObserver.current = null;
+      if (!popperElement || typeof ResizeObserver === 'undefined') return undefined;
+
+      const observer = new ResizeObserver(() => forceUpdate?.());
+      observer.observe(popperElement);
+      resizeObserver.current = observer;
+
+      return () => {
+        observer.disconnect();
+        if (resizeObserver.current === observer) resizeObserver.current = null;
+      };
+    }, [forceUpdate, popperElement]);
+
+    // Preserve the documented explicit update contract as a fallback for
+    // content changes that do not affect the content box dimensions.
+    useUpdateEffect(() => {
+      forceUpdate?.();
+    }, [updater]);
 
     // Stabilize the popover against ancestor CSS transitions that Popper's
     // scroll/resize listeners can't observe. When a popover opens inside a
@@ -297,6 +325,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
 
     useUnmount(() => {
       mutationObserber.current?.disconnect();
+      resizeObserver.current?.disconnect();
     });
 
     useEffect(() => {
