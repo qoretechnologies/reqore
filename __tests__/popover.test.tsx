@@ -33,6 +33,18 @@ beforeAll(() => {
   vi.useFakeTimers();
 });
 
+test('Does not forward customTheme to a native trigger', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqorePopover component='span' content='Preview' customTheme={{ main: '#123456' }}>
+        Native trigger
+      </ReqorePopover>
+    </ReqoreUIProvider>
+  );
+
+  expect(screen.getByText('Native trigger')).not.toHaveAttribute('customTheme');
+});
+
 test('Shows popover on hover, hides on leave', async () => {
   render(
     <ReqoreUIProvider>

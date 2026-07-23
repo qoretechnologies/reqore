@@ -52,17 +52,15 @@ import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreTagAction
-  extends IWithReqoreTooltip,
-    IReqoreDisabled,
-    IReqoreIntent,
-    HTMLAttributes<HTMLSpanElement> {
+  extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent, HTMLAttributes<HTMLSpanElement> {
   icon: IReqoreIconName;
   show?: boolean | 'hover';
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 export interface IReqoreCustomTagProps
-  extends IWithReqoreTooltip,
+  extends
+    IWithReqoreTooltip,
     IReqoreDisabled,
     IWithReqoreMinimal,
     IWithReqoreFluid,
@@ -102,7 +100,8 @@ export interface IReqoreCustomTagProps
   compact?: boolean;
 }
 export interface IReqoreTagProps
-  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children' | 'color'>,
+  extends
+    Omit<React.HTMLAttributes<HTMLSpanElement>, 'children' | 'color'>,
     IReqoreCustomTagProps {}
 
 export interface IReqoreTagStyle extends IReqoreTagProps {
@@ -110,6 +109,8 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   removable?: boolean;
   interactive?: boolean;
   color?: TReqoreColor;
+  $wrap?: boolean;
+  $hasWidth?: boolean;
 }
 
 export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
@@ -134,8 +135,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     rounded === false
       ? undefined
       : asBadge
-      ? `${resolveRadius(size, radiusSize, BADGE_RADIUS_FROM_SIZE, BADGE_RADIUS_FROM_RADIUS_SIZE)}px`
-      : `${resolveRadius(size, radiusSize, TAG_RADIUS_FROM_SIZE, TAG_RADIUS_FROM_RADIUS_SIZE)}px`};
+        ? `${resolveRadius(size, radiusSize, BADGE_RADIUS_FROM_SIZE, BADGE_RADIUS_FROM_RADIUS_SIZE)}px`
+        : `${resolveRadius(size, radiusSize, TAG_RADIUS_FROM_SIZE, TAG_RADIUS_FROM_RADIUS_SIZE)}px`};
   width: ${({ width }) => width || undefined};
   transition: all 0.2s ease-out;
 
@@ -161,8 +162,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
 
   ${InactiveIconScale};
 
-  ${({ wrap, hasWidth }) =>
-    wrap || hasWidth
+  ${({ $wrap, $hasWidth }) =>
+    $wrap || $hasWidth
       ? css`
           min-height: ${({ size, asBadge }) =>
             asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
@@ -182,8 +183,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       color: ${minimal && color && color !== 'transparent' && !isAchromatic(color)
         ? saturate(1, tint(0.8, color))
         : color && color !== 'transparent'
-        ? getReadableColorFrom(color)
-        : getReadableColorFrom(changeLightness(theme.main, 0.1))};
+          ? getReadableColorFrom(color)
+          : getReadableColorFrom(changeLightness(theme.main, 0.1))};
 
       ${StyledTagKeyWrapper} {
         background-color: ${labelKey ? rgba('#000000', minimal ? 0.1 : 0.3) : undefined};
@@ -211,8 +212,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
               color: ${minimal
                 ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
                 : color
-                ? getReadableColorFrom(color)
-                : getReadableColor(theme, undefined, undefined)};
+                  ? getReadableColorFrom(color)
+                  : getReadableColor(theme, undefined, undefined)};
             `}
           }
         `
@@ -240,7 +241,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   }
 `;
 
-const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
+const StyledTagKeyWrapper = styled.span<{ size: TSizes; $wrap?: boolean; $hasWidth?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -252,7 +253,11 @@ const StyledTagKeyWrapper = styled.span<{ size: TSizes }>`
     padOnRight && `${TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px`};
 `;
 
-const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
+const StyledTagContentWrapper = styled.span<{
+  size: TSizes;
+  $wrap?: boolean;
+  $hasWidth?: boolean;
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -261,7 +266,11 @@ const StyledTagContentWrapper = styled.span<{ size: TSizes }>`
   min-height: 100%;
 `;
 
-const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
+const StyledTagContent = styled(StyledTextEffect)<{
+  size: TSizes;
+  $wrap?: boolean;
+  $hasWidth?: boolean;
+}>`
   padding: 4px ${({ size }) => TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px;
   min-height: 100%;
   display: flex;
@@ -272,12 +281,12 @@ const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
     justify-content: ${labelAlign === 'left'
       ? 'flex-start'
       : labelAlign === 'right'
-      ? 'flex-end'
-      : 'center'};
+        ? 'flex-end'
+        : 'center'};
   `}
 
-  ${({ wrap, hasWidth }) =>
-    !wrap && !hasWidth
+  ${({ $wrap, $hasWidth }) =>
+    !$wrap && !$hasWidth
       ? css`
           overflow: hidden;
           text-overflow: ellipsis;
@@ -291,8 +300,8 @@ const StyledTagContent = styled(StyledTextEffect)<{ size: TSizes }>`
 const StyledTagContentKey = styled(StyledTagContent)`
   flex: 1;
 
-  ${({ wrap, hasWidth }) =>
-    !wrap && !hasWidth
+  ${({ $wrap, $hasWidth }) =>
+    !$wrap && !$hasWidth
       ? undefined
       : css`
           word-break: break-word;
@@ -343,7 +352,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       color,
       minimal,
       customTheme,
-        inheritCustomTheme,
+      inheritCustomTheme,
       wrap = false,
       width,
       leftIconColor,
@@ -362,7 +371,13 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     }: IReqoreTagProps,
     ref
   ) => {
-    const theme: IReqoreTheme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+    const theme: IReqoreTheme = useReqoreTheme(
+      'main',
+      customTheme,
+      undefined,
+      undefined,
+      inheritCustomTheme
+    );
 
     // If color or intent was specified, set the color
     const getCustomColor = useCallback(
@@ -414,16 +429,16 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         removable={!!onRemoveClick}
         interactive={!!onClick && !rest.disabled}
         tabIndex={onClick && !rest.disabled ? 0 : undefined}
-        wrap={wrap}
-        hasWidth={!!width}
+        $wrap={wrap}
+        $hasWidth={!!width}
       >
         {labelKey || hasLeftIcon ? (
           <StyledTagKeyWrapper
             size={size}
             className='reqore-tag-key-content'
             onClick={rest.disabled ? undefined : onClick}
-            wrap={wrap}
-            hasWidth={!!width}
+            $wrap={wrap}
+            $hasWidth={!!width}
             hasKey={!!labelKey}
             hasIcon={hasLeftIcon}
             padOnRight={!label && !labelKey && !hasRightIcon}
@@ -444,8 +459,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             ) : null}
             {labelKey && (
               <StyledTagContentKey
-                wrap={wrap}
-                hasWidth={!!width}
+                $wrap={wrap}
+                $hasWidth={!!width}
                 size={size}
                 labelAlign={labelKeyAlign}
                 compact={compact}
@@ -466,16 +481,16 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             size={size}
             className='reqore-tag-content'
             onClick={rest.disabled ? undefined : onClick}
-            wrap={wrap}
-            hasWidth={!!width}
+            $wrap={wrap}
+            $hasWidth={!!width}
             hasKey={!!labelKey}
             fixed={rest.fixed}
           >
             {label || label === 0 ? (
               <StyledTagContent
                 size={size}
-                wrap={wrap}
-                hasWidth={!!width}
+                $wrap={wrap}
+                $hasWidth={!!width}
                 labelAlign={labelAlign || (labelKey ? 'left' : 'center')}
                 compact={compact}
                 effect={

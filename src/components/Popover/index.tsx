@@ -142,6 +142,7 @@ export const ReqorePopover = memo(
         minimal,
         intent,
         id,
+        updater,
         backgroundBlur,
         // `customTheme` is picked up so it can be forwarded to the
         // trigger `Component` below. Historically the popover's own
@@ -458,6 +459,13 @@ export const ReqorePopover = memo(
         targetRef.current = r;
       }, []);
 
+      // Theme props are meaningful to Reqore/custom components, but React
+      // warns if they are forwarded to a native trigger such as `span`.
+      const triggerThemeProps =
+        typeof Component === 'string'
+          ? {}
+          : { customTheme: componentProps?.customTheme ?? customTheme };
+
       if (isReqoreComponent) {
         return (
           <>
@@ -485,6 +493,7 @@ export const ReqorePopover = memo(
                 onPopperClose={close}
                 onPopperUpdate={handlePopperUpdate}
                 id={id}
+                updater={updater}
                 handler={handler}
                 backgroundBlur={backgroundBlur}
                 onPopoverMouseEnter={keepOpenOnHover ? handlePopoverMouseEnter : undefined}
@@ -495,8 +504,8 @@ export const ReqorePopover = memo(
             <Component
               // Forward the popover's own `customTheme` to the trigger
               // so it inherits the surrounding theme cascade. Caller
-                // wins if they already set one on `componentProps`.
-              customTheme={componentProps?.customTheme ?? customTheme}
+              // wins if they already set one on `componentProps`.
+              {...triggerThemeProps}
               {...componentProps}
               className={`${isOpen && blur ? 'reqore-blur-z-index' : ''} ${
                 componentProps?.className || ''
@@ -535,6 +544,7 @@ export const ReqorePopover = memo(
               onPopperUpdate={handlePopperUpdate}
               closePopover={close}
               id={id}
+              updater={updater}
               handler={handler}
               backgroundBlur={backgroundBlur}
               onPopoverMouseEnter={keepOpenOnHover ? handlePopoverMouseEnter : undefined}
@@ -553,7 +563,7 @@ export const ReqorePopover = memo(
               // popover's own `customTheme` to the trigger so it
               // inherits the surrounding theme cascade. Caller wins
               // if they already set one on `componentProps`.
-              customTheme={componentProps?.customTheme ?? customTheme}
+              {...triggerThemeProps}
               {...componentProps}
             >
               {children}
