@@ -116,6 +116,23 @@ export const WithDefaultISOValue: Story = {
     value: '2024-04-10T08:00:00.000Z',
   },
 };
+export const WithCustomDateTimeSeparator: Story = {
+  args: {
+    value: new Date(2024, 3, 10, 8, 0, 0),
+    locale: 'en-CA',
+    dateTimeSeparator: ' ',
+    popoverProps: {},
+  },
+  async play({ canvasElement }) {
+    const { day } = await getDateElements(canvasElement);
+    const dateInput = day.parentElement;
+
+    await expect(dateInput).not.toHaveTextContent(',');
+    await expect(dateInput?.textContent?.replace(/[\u200e\u200f\u2066-\u2069]/g, '')).toContain(
+      '2024-04-10 08:00'
+    );
+  },
+};
 export const WithAM_PM: Story = {
   args: {
     hourCycle: 12,
