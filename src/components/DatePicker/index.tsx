@@ -96,6 +96,10 @@ export interface IDatePickerProps<T extends TDateValue>
   placeholder?: string;
   /** Props for the button trigger. Only used when `selectOnly` is true. */
   buttonProps?: IReqoreButtonProps;
+  /** Overrides the locale-provided punctuation between the date and time.
+   * Pass a single space to render an ISO-style date and time without a comma.
+   * The locale-provided separator is preserved when this prop is undefined. */
+  dateTimeSeparator?: string;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
@@ -132,6 +136,94 @@ const StyledCalendarCell: typeof CalendarCell = styled(CalendarCell)`
     outline: none;
   }
 `;
+
+const DATE_SEGMENT_TYPES = new Set(['day', 'month', 'year']);
+const TIME_SEGMENT_TYPES = new Set(['dayPeriod', 'hour', 'minute', 'second', 'timeZoneName']);
+const DIRECTIONAL_FORMATTING_CHARACTERS = /[\u200e\u200f\u2066-\u2069]/g;
+
+const hasVisibleCharacters = (value: string): boolean =>
+  value.replace(DIRECTIONAL_FORMATTING_CHARACTERS, '').length > 0;
+
+const createDateSegmentRenderer = (
+  dateTimeSeparator?: string
+): React.ComponentProps<typeof DateInput>['children'] => {
+  const renderedDateSegmentTypes = new Set<string>();
+  let replaceNextVisibleLiteral = false;
+
+  return (segment) => {
+    if (DATE_SEGMENT_TYPES.has(segment.type)) {
+      if (renderedDateSegmentTypes.has(segment.type)) {
+        renderedDateSegmentTypes.clear();
+      }
+
+      renderedDateSegmentTypes.add(segment.type);
+      replaceNextVisibleLiteral = renderedDateSegmentTypes.size === DATE_SEGMENT_TYPES.size;
+    } else if (TIME_SEGMENT_TYPES.has(segment.type)) {
+      renderedDateSegmentTypes.clear();
+      replaceNextVisibleLiteral = false;
+    }
+
+    if (
+      dateTimeSeparator !== undefined &&
+      segment.type === 'literal' &&
+      replaceNextVisibleLiteral &&
+      hasVisibleCharacters(segment.text)
+    ) {
+      replaceNextVisibleLiteral = false;
+
+      return <StyledDateSegment segment={segment}>{dateTimeSeparator}</StyledDateSegment>;
+    }
+
+    return <StyledDateSegment segment={segment} />;
+  };
+};
+
+const formatDateWithSeparator = (
+  date: Date,
+  locale: string | undefined,
+  options: Intl.DateTimeFormatOptions,
+  dateTimeSeparator?: string
+): string => {
+  const formatter = new Intl.DateTimeFormat(locale, options);
+
+  if (dateTimeSeparator === undefined || options.hour === undefined) {
+    return formatter.format(date);
+  }
+
+  const parts = formatter.formatToParts(date);
+  let lastDatePart = -1;
+
+  parts.forEach((part, index) => {
+    if (DATE_SEGMENT_TYPES.has(part.type)) {
+      lastDatePart = index;
+    }
+  });
+
+  const firstTimePart = parts.findIndex(
+    (part, index) => index > lastDatePart && TIME_SEGMENT_TYPES.has(part.type)
+  );
+  let separatorRendered = false;
+
+  return parts
+    .map((part, index) => {
+      if (
+        index > lastDatePart &&
+        index < firstTimePart &&
+        part.type === 'literal' &&
+        hasVisibleCharacters(part.value)
+      ) {
+        if (separatorRendered) {
+          return '';
+        }
+
+        separatorRendered = true;
+        return dateTimeSeparator;
+      }
+
+      return part.value;
+    })
+    .join('');
+};
 
 interface ITriggerPopoverProps extends Partial<IReqoreButtonProps> {
   buttonProps?: IReqoreButtonProps;
@@ -215,6 +307,7 @@ export const DatePicker = <T extends TDateValue>({
   selectOnly,
   placeholder,
   buttonProps,
+  dateTimeSeparator,
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -360,8 +453,13 @@ export const DatePicker = <T extends TDateValue>({
       granularity === 'day'
         ? { year: 'numeric', month: 'short', day: 'numeric' }
         : { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Intl.DateTimeFormat(resolvedLocale, options).format(dateObj);
-  }, [value, granularity, resolvedLocale]);
+    return formatDateWithSeparator(dateObj, resolvedLocale, options, dateTimeSeparator);
+  }, [value, granularity, resolvedLocale, dateTimeSeparator]);
+
+  const renderDateSegment = useMemo(
+    () => createDateSegmentRenderer(dateTimeSeparator),
+    [dateTimeSeparator]
+  );
 
   const calendarContent = useMemo(
     () => (
@@ -568,7 +666,7 @@ export const DatePicker = <T extends TDateValue>({
             {...popoverProps}
             content={calendarContent}
           >
-            {(segment) => <StyledDateSegment segment={segment} />}
+            {renderDateSegment}
           </ReqorePopover>
         </Component>
       </I18nProvider>
