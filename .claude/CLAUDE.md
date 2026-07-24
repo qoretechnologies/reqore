@@ -1,86 +1,105 @@
-# ReQore AI Coding Agent Instructions
+@~/Projects/instruction-files/CLAUDE.md
+@~/Projects/instruction-files/stacks/frontend/FRONTEND.md
 
-## Project Overview
+# ReQore — Claude entry point
 
-ReQore is a **themeable React component library** for the Qorus platform. It provides 40+ UI components (Button, Table, Modal, Drawer, etc.) that share a unified design system with consistent theming, sizing, and effect systems.
+## Shared Qore rules (READ FIRST)
 
-**Key Facts:**
+The two `@`-imports above load the shared rules from the **instruction-files**
+repo: the org-wide baseline (`CLAUDE.md`) and the frontend ruleset
+(`stacks/frontend/FRONTEND.md`) — git safety, commit conventions, CI
+monitoring, `/audit`, the Reqore-first rule, the Storybook + Qlip visual-change
+flow, story descriptions, and more. Those files point on to
+`stacks/frontend/BRAND_DESIGN.md` for brand / UI-design decisions (read it
+before building any visual surface). **Everything below this section is
+specific to ReQore.**
+
+**If the imports above did not load** — you don't see the shared rules because
+this repo is cloned somewhere other than `~/Projects/instruction-files` — find
+the shared repo before doing any frontend work:
+
+1. Check for a gitignored **`.instruction-files-path`** file at this repo's
+   root. If it exists, read the path `P` from it, then read `P/CLAUDE.md` and
+   `P/stacks/frontend/FRONTEND.md` (+ `P/stacks/frontend/BRAND_DESIGN.md` for
+   UI work) and follow them.
+2. Otherwise locate the `instruction-files` repo on disk (try
+   `~/Projects/instruction-files`, then your other project roots). If found at
+   `P`, write `P` into `.instruction-files-path` (create it — it's gitignored)
+   so future sessions skip the search, then read the files above.
+3. If it isn't cloned anywhere, **STOP and ask the user to clone it**:
+   `git clone git@github.com:qoretechnologies/instruction-files.git ~/Projects/instruction-files`
+   Do not proceed with frontend work until the shared rules are loaded.
+
+# ReQore — project-specific rules
+
+ReQore is a **themeable React component library** for the Qorus platform. It provides
+40+ UI components (Button, Table, Modal, Drawer, etc.) sharing one design system with
+consistent theming, sizing, and effect systems. **reqore is the UI primitive library
+itself** — rules here are about how to build and publish reqore's own components.
+
+## Key Facts
 
 - **Framework:** React 18 + TypeScript (strict mode)
 - **Build:** TypeScript compilation to `/dist`, exports both `.js` and `.d.ts`
 - **Styling:** styled-components with theme-driven values (no CSS modules)
-- **State Management:** zustand + React Context (use-context-selector)
+- **State:** zustand + React Context (use-context-selector)
 - **Testing:** Jest + React Testing Library (tests in `__tests__/`)
-- **Documentation:** Storybook (dev stories in `src/stories/`) + Docusaurus (docs site)
+- **Docs:** Storybook (dev stories in `src/stories/`) + Docusaurus (docs site)
+- **Priority:** user experience and performance first; complexity/tech debt secondary.
+
+## Perf conventions that OVERRIDE the frontend default
+
+Reqore is a hot-path primitive library, so it inverts the general
+"don't memoize by default" guidance:
+
+- Always wrap components in `memo()` unless there's a specific reason not to.
+- Always wrap callbacks in `useCallback()` unless there's a specific reason not to.
+- Always memoize computed values in `useMemo()` unless there's a specific reason not to.
 
 ## Architecture Essentials
 
-### General Development Practices
-
-# General
-
-- Focus is first on user experience and performance, complexity and tech debt secondary
-- Follow existing code patterns for new components; refer to similar components for guidance
-- Check if a helper or utility already exists before writing a new one
-
-# TypeScript
-
-- Use TypeScript with strict typing; define prop interfaces for each component with `I` prefix for interfaces and `T` prefix for types
-
-# UI / UX
-
-- Always make sure to create reusable components
-- Always use named exports for React components
-- There can be multiple React components in one file if it makes sense
-- Use styled-components for styling; define style interfaces for styled components
-- Always componentize styles with styled-components; avoid inline styles except for dynamic cases
-- Use functional components with React hooks
-- For React, always wrap components in `memo()` unless there's a specific reason not to
-- For React, always wrap callbacks in `useCallback()` unless there's a specific reason not to
-- For React, always memoize computed values in `useMemo()` unless there's a specific reason not to
-
-# Testing
-
-- Run tests after changes, run `yarn precheck` after feature completions
-- Write a unit test if it makes sense for the change you have made, but Storybook tests will always have higher priority
-
 ### Component Structure
-
-- **Folder:** `src/components/{ComponentName}/` contains only `index.tsx` (and occasionally `backdrop.tsx` for overlay components)
-- **Pattern:** Each component is a `memo()` wrapped functional component with TypeScript interfaces
-- **Exports:** Named exports (e.g., `export const ReqoreButton`) from component files; re-exported in `src/index.tsx`
+- **Folder:** `src/components/{ComponentName}/` contains only `index.tsx` (and
+  occasionally `backdrop.tsx` for overlay components).
+- **Pattern:** each component is a `memo()`-wrapped functional component with TS interfaces.
+- **Exports:** named exports (e.g. `export const ReqoreButton`); re-exported in `src/index.tsx`.
 
 ### Theme System (`src/constants/theme.ts` + hooks)
-
-- **Global theming:** `useReqoreTheme()` hook provides `IReqoreTheme` (colors, text, main background, intents)
-- **Dynamic theming:** Components read theme via hooks, enabling runtime theme switching
-- **Intents:** Type-safe intent system (e.g., `'primary' | 'secondary' | 'success' | 'danger'`) maps to theme colors
-- **Custom themes:** Merge with `DEFAULT_THEME`; see `ThemeProvider.tsx`
-- **Custom theme inheritance:** Components automatically inherit `customTheme` from ancestor components via `CustomThemeContext`. The `useReqoreTheme()` hook checks this context when no explicit `customTheme` prop is passed. Components can opt out with `inheritCustomTheme={false}` (available on components extending `IWithReqoreCustomTheme`). Components that wrap children and set a custom theme must pass `customTheme` to `ReqoreThemeProvider` so descendants can inherit it.
+- **Global theming:** `useReqoreTheme()` provides `IReqoreTheme` (colors, text, main
+  background, intents).
+- **Dynamic theming:** components read theme via hooks, enabling runtime switching.
+- **Intents:** type-safe intent system (`'primary' | 'secondary' | 'success' | 'danger'`)
+  maps to theme colors.
+- **Custom themes:** merge with `DEFAULT_THEME`; see `ThemeProvider.tsx`.
+- **Custom theme inheritance:** components inherit `customTheme` from ancestors via
+  `CustomThemeContext`. `useReqoreTheme()` checks this context when no explicit
+  `customTheme` prop is passed. Opt out with `inheritCustomTheme={false}` (on components
+  extending `IWithReqoreCustomTheme`). Components that wrap children and set a custom theme
+  must pass `customTheme` to `ReqoreThemeProvider` so descendants can inherit it.
 
 ### Sizing System (`src/constants/sizes.ts`)
-
-- **Size types:** `'micro' | 'tiny' | 'small' | 'normal' | 'big' | 'huge' | 'massive'`
-- **Pattern:** Maps like `SIZE_TO_PX`, `SIZE_TO_NUMBER`, `CONTROL_TEXT_FROM_SIZE` convert size enums to pixel/CSS values
-- **Usage:** Most interactive components accept `size?: TSizes` prop; pass through to nested styled components
+- **Size types:** `'micro' | 'tiny' | 'small' | 'normal' | 'big' | 'huge' | 'massive'`.
+- **Pattern:** maps like `SIZE_TO_PX`, `SIZE_TO_NUMBER`, `CONTROL_TEXT_FROM_SIZE` convert
+  size enums to pixel/CSS values.
+- **Usage:** most interactive components accept `size?: TSizes`; pass through to nested
+  styled components.
 
 ### Effect System (`src/components/Effect/`)
-
-- **Purpose:** Provides gradient, blur, shadow effects applied via `StyledTextEffect`
-- **Props:** `IWithReqoreEffect` mixin (gradient, blur, shadow, opacity) on interactive components
-- **Color types:** `TReqoreHexColor`, `TReqoreRgbaColor`, `TReqoreMultiTypeColor` used consistently
+- **Purpose:** gradient, blur, shadow effects applied via `StyledTextEffect`.
+- **Props:** `IWithReqoreEffect` mixin (gradient, blur, shadow, opacity).
+- **Color types:** `TReqoreHexColor`, `TReqoreRgbaColor`, `TReqoreMultiTypeColor`.
 
 ### Global Context (`src/context/ReqoreContext.tsx` + `ReqoreProvider.tsx`)
-
-- **Manages:** Modals, notifications, z-index stack, mobile breakpoints, animations toggle, tooltips
-- **Methods:** `addModal()`, `removeModal()`, `addNotification()`, `confirmAction()` (confirmation dialog)
-- **Mobile detection:** `isMobile`, `isTablet`, `isMobileOrTablet` flags from `useMedia()` hook
-- **ESC handling:** Modals/popovers close on ESC via `escClosableModals` stack; `closeModalsOnEscPress` toggle
+- **Manages:** modals, notifications, z-index stack, mobile breakpoints, animations toggle,
+  tooltips.
+- **Methods:** `addModal()`, `removeModal()`, `addNotification()`, `confirmAction()`.
+- **Mobile detection:** `isMobile`, `isTablet`, `isMobileOrTablet` from `useMedia()`.
+- **ESC handling:** modals/popovers close on ESC via `escClosableModals` stack;
+  `closeModalsOnEscPress` toggle.
 
 ## Development Workflows
 
 ### Quick Start
-
 ```bash
 yarn install
 yarn storybook          # Dev mode on http://localhost:6007
@@ -91,100 +110,107 @@ yarn build              # TypeScript compilation
 ```
 
 ### Pre-commit Checks
+- `yarn precheck` runs: lint → test → build (production).
+- `pre-push` hook enforces the same checks before push (see `package.json`).
+- Line length: 100 characters (enforced by eslint).
 
-- `yarn precheck` runs: lint → test → build (production)
-- `pre-push` hook enforces same checks before push (see `package.json`)
-- Line length: 100 characters (enforced by eslint)
-
-### Pre-commit / pre-push audit (`/audit`)
-
-When the user asks the agent to commit OR push changes, the agent MUST first run the `/audit` skill on the pending diff and show the report — UNLESS `/audit` has already been run on the exact same set of changes in the current conversation (no new edits since). The audit catches the regressions `yarn precheck` cannot:
-
-- Standard prop contract declared but never wired (the headline bug — `intent` extended on the interface but never read, so `intent='danger'` paints nothing).
+### What reqore's `/audit` uniquely catches
+(The general "run `/audit` before every commit/push, show the report, pause for
+fix-or-waive" flow is the frontend baseline — this is what reqore's audit adds on top.)
+- Standard prop contract declared but never wired (the headline bug — `intent` extended on
+  the interface but never read, so `intent='danger'` paints nothing).
 - One-off raw HTML or styled wrappers where a Reqore primitive fits.
-- Matrix stories (`Sizes`, `Intents`, …) that render identical-looking rows because the prop isn't wired OR the matrix isn't constrained on a wide viewport.
+- Matrix stories (`Sizes`, `Intents`, …) rendering identical-looking rows because the prop
+  isn't wired OR the matrix isn't constrained on a wide viewport.
 - Test coverage gaps against the standard prop matrix.
 - Helper duplication vs `src/helpers/`.
 - Appendix A drift vs `.tasks/NEW_COMPONENT.md`.
 
-Order of operations on a commit/push request:
-
-1. Run `/audit` (if not already clean for this exact diff).
-2. Show the report.
-3. Pause for the user to either fix findings or explicitly waive them.
-4. Only then proceed to `git commit` / `git push`.
-
-The audit never edits files and never invokes git — it reports; the user/agent decides what to fix. Skipping the audit on commit/push is a hard violation: the report is what makes the silent regressions visible.
-
 ### Version bumps (required on every PR)
 
-Every PR to `develop` MUST bump `package.json`'s `version` field before it merges. This is load-bearing: `.github/workflows/beta_release.yml` runs on every push to `develop` and publishes to NPM using whatever version is in `package.json` at push time. If two PRs merge back-to-back without bumps, the second silently no-ops or fails (NPM refuses to re-publish an existing version).
+Every PR to `develop` MUST bump `package.json`'s `version` field before it merges. This is
+load-bearing: `.github/workflows/beta_release.yml` runs on every push to `develop` and
+publishes to NPM using whatever version is in `package.json` at push time. If two PRs merge
+back-to-back without bumps, the second silently no-ops or fails (NPM refuses to re-publish
+an existing version).
 
 **Bump size rules:**
-
-- **New component** (a whole new `Reqore{Name}` in `src/components/` exported from `src/index.tsx`) → minor: `0.70.6` → `0.71.0`
-- **New prop on an existing component, bug fix, refactor, test-only, story-only** → patch: `0.70.6` → `0.70.7`
-- **Breaking change** (removed export, changed default behaviour, renamed prop without alias) → major: `0.70.6` → `1.0.0` — coordinate with the maintainer first; Reqore stays 0.x until 1.0 is intentional.
+- **New component** (a whole new `Reqore{Name}` in `src/components/` exported from
+  `src/index.tsx`) → minor: `0.70.6` → `0.71.0`
+- **New prop on an existing component, bug fix, refactor, test-only, story-only** →
+  patch: `0.70.6` → `0.70.7`
+- **Breaking change** (removed export, changed default behaviour, renamed prop without
+  alias) → major: `0.70.6` → `1.0.0` — coordinate with the maintainer first; Reqore stays
+  0.x until 1.0 is intentional.
 
 **How to bump:**
+1. Edit `package.json` directly (`"version": "0.70.7"`) as part of the same PR. Don't leave
+   it for a post-merge follow-up — the workflow can't wait for a second push.
+2. Commit it in a dedicated `chore(release): bump version to X.Y.Z` commit OR fold the line
+   into the feature commit; both are fine.
+3. If another PR bumps to the same version before yours merges, rebase and bump again — the
+   version in `develop` on merge must be strictly greater than the previous merged version.
 
-1. Edit `package.json` directly (`"version": "0.70.7"`) as part of the same PR as the change. Don't leave it for a post-merge follow-up — the workflow can't wait for a second push.
-2. Commit it in a dedicated `chore(release): bump version to X.Y.Z` commit OR fold the line into the feature commit; both are fine.
-3. If another PR bumps to the same version before yours merges, rebase and bump again — the version in `develop` on merge must be strictly greater than the previous merged version.
-
-**Where to look if you're not sure:** `git log --oneline -20 -- package.json` — every recent commit touching it shows the bump pattern.
+**Where to look if unsure:** `git log --oneline -20 -- package.json`.
 
 ### Testing Patterns
-
-- **Setup:** `__tests__/setup.js` disables console debug/info/error
-- **Wrapper:** Always wrap tests with `<ReqoreUIProvider><ReqoreLayoutContent><ReqoreContent>...</ReqoreContent></ReqoreLayoutContent></ReqoreUIProvider>`
-- **Selectors:** Use CSS classes like `.reqore-button`, `.reqore-icon` (added via `className` prop)
-- **Example:** See [button.test.tsx](__tests__/button.test.tsx)
+- **Setup:** `__tests__/setup.js` disables console debug/info/error.
+- **Wrapper:** always wrap tests with
+  `<ReqoreUIProvider><ReqoreLayoutContent><ReqoreContent>...</ReqoreContent></ReqoreLayoutContent></ReqoreUIProvider>`.
+- **Selectors:** use CSS classes like `.reqore-button`, `.reqore-icon` (added via
+  `className` prop).
+- **Example:** see `__tests__/button.test.tsx`.
 
 ### Storybook Stories
+- **Location:** `src/stories/` (e.g. `Collection.stories.tsx`).
+- **Pattern:** ArgTypes for props, canvas controls, visual testing via Chromatic.
+- **Command:** `yarn build-storybook` builds the static site.
 
-- **Location:** `src/stories/` (e.g., `Collection.stories.tsx`)
-- **Pattern:** ArgTypes for props, canvas controls, visual testing via Chromatic
-- **Command:** `yarn build-storybook` builds static site
+### Verifying a visual fix locally with Qlip — reqore mechanics
 
-### Verifying a visual fix locally with Qlip (IMPORTANT)
+(The principle — capture the story locally and Read the PNG before claiming a Qlip-flagged
+snapshot is fixed — is the frontend baseline. These are reqore's specific mechanics and
+guardrails.)
 
-Before claiming a Qlip-flagged snapshot is fixed, **capture the story locally with Qlip and Read the PNG**. Text-based "the code says X" reasoning has repeatedly missed cases where the code change didn't actually reach the pixels (a prop that turned out to be a no-op, a rule beaten on specificity, a styled override the component ignored). The reviewer has ~870 snapshots per build to review; do not waste that time on "fixed" claims that didn't actually change the render.
-
-**How to capture one story locally without triggering upload:**
-
+Capture one story without triggering upload:
 ```bash
 yarn test:stories src/stories/Tabs/Tabs.stories.tsx > /tmp/qlip-verify.log 2>&1
 ```
+Then `Read` the PNG under `qlip/screenshots/<timestamp>/stories/auto/<Story__Id>.png`.
+To prove the fix moved the pixels, compare the `md5` of that PNG against the same story in
+the previous capture directory — identical hashes mean the render did not change.
 
-Then `Read` the specific PNG under `qlip/screenshots/<timestamp>/stories/auto/<Story__Id>.png` and inspect it as an image (Read supports PNGs). To prove the fix actually moved the pixels, compare the `md5` of that PNG against the same story in the previous capture directory — identical hashes mean the render did not change, whatever the diff says.
-
-**Rules of the road (violate these and you'll publish local screenshots to the shared review dashboard or mislead yourself with a stale capture):**
-
-- **NEVER set `QLIP_UPLOAD_TOKEN` locally.** `vitest.config.ts` attaches qlip's `upload` block only when that variable is present, and CI supplies it from the repository secret in `.github/workflows/tests.yml`. With it set, **every** `yarn test:stories` publishes a build the whole team then sees in review. This is not hypothetical: the token was hardcoded here until July 2026 and local runs posted four unwanted builds in a single session.
-- **Check for the upload line.** qlip prints `[qlip] uploaded build <id> … → https://qlip.qoretechnologies.com` when it publishes. If a local run prints that, the gate is broken — stop and fix it before continuing.
-- **NEVER run `yarn vitest run` with no `--project`** — it includes the storybook project and captures the whole ~870-snapshot suite, which will slow the machine to a crawl (and upload it, if the gate is broken). For unit tests use `yarn test` (`--project unit`), which captures nothing; for stories, one story file at a time.
-- **Delete the previous capture directory BEFORE you re-capture.** Qlip's file naming is `<StoryId>.png` — a re-capture overwrites, but a story that no longer exists (renamed, deleted, skipped) leaves its old PNG behind and will mislead you into reviewing a render that is no longer produced.
-
-Attempts that don't include a Qlip capture + PNG read are "I *think* I fixed it" — not "I fixed it". For visual reviews, the render is the source of truth.
+**Guardrails:**
+- **NEVER set `QLIP_UPLOAD_TOKEN` locally.** `vitest.config.ts` attaches qlip's `upload`
+  block only when that variable is present, and CI supplies it from the repo secret in
+  `.github/workflows/tests.yml`. With it set, **every** `yarn test:stories` publishes a
+  build the whole team then sees in review (the token was hardcoded here until July 2026 and
+  local runs posted four unwanted builds in one session).
+- **Check for the upload line.** qlip prints
+  `[qlip] uploaded build <id> … → https://qlip.qoretechnologies.com` when it publishes. If a
+  local run prints that, the gate is broken — stop and fix it before continuing.
+- **NEVER run `yarn vitest run` with no `--project`** — it includes the storybook project
+  and captures the whole ~870-snapshot suite (and uploads it if the gate is broken). Use
+  `yarn test` (`--project unit`) for unit tests; one story file at a time for stories.
+- **Delete the previous capture directory BEFORE re-capturing.** Qlip names files
+  `<StoryId>.png`; a renamed/deleted/skipped story leaves its old PNG behind and will
+  mislead you into reviewing a render that is no longer produced.
 
 ## Code Patterns & Conventions
 
 ### Component Prop Interfaces
-
-- **Extend mixins:** `IWithReqoreSize`, `IWithReqoreEffect`, `IWithReqoreLoading`, `IWithReqoreReadOnly`, `IWithReqoreCustomTheme`
-- **Naming:** Props interface is `IReqore{ComponentName}Props`; style interface is `IReqore{ComponentName}Style`
-- **Optional theme:** Style interfaces accept `theme: IReqoreTheme` for styled-components access
-- **Readonly context:** Use `readonly` keyword on context properties (immutability)
+- **Extend mixins:** `IWithReqoreSize`, `IWithReqoreEffect`, `IWithReqoreLoading`,
+  `IWithReqoreReadOnly`, `IWithReqoreCustomTheme`.
+- **Naming:** props interface is `IReqore{ComponentName}Props`; style interface is
+  `IReqore{ComponentName}Style`.
+- **Optional theme:** style interfaces accept `theme: IReqoreTheme` for styled-components access.
+- **Readonly context:** use the `readonly` keyword on context properties (immutability).
 
 ### Styled Components Pattern
-
 ```tsx
 const StyledButton = styled.button<IReqoreButtonStyle>`
-  // Use props.theme from ReqoreTheme
   background: ${({ theme, intent }) => theme.intents?.[intent]?.color};
   color: ${({ theme }) => getReadableColor(theme)};
-  // Conditional styles via css helper
   ${({ disabled }) =>
     disabled &&
     css`
@@ -194,96 +220,89 @@ const StyledButton = styled.button<IReqoreButtonStyle>`
 ```
 
 ### Hooks Usage
-
-- **Theme:** `useReqoreTheme(element?, customTheme?, intent?, intentsKey?, inheritCustomTheme?)` returns `IReqoreTheme`. Pass `customTheme` and `inheritCustomTheme` from component props to support custom theme inheritance.
-- **Context props:** `useReqoreProperty('propertyName')` for context values (avoids consuming entire context)
-- **Local refs:** `useCombinedRefs()` for forwarding + internal refs; `useOutsideClick()` for popover clicks
-- **Auto-focus:** `useAutoFocus()` for modal/drawer focus management
+- **Theme:** `useReqoreTheme(element?, customTheme?, intent?, intentsKey?, inheritCustomTheme?)`
+  returns `IReqoreTheme`. Pass `customTheme` and `inheritCustomTheme` from props to support
+  custom theme inheritance.
+- **Context props:** `useReqoreProperty('propertyName')` (avoids consuming the whole context).
+- **Local refs:** `useCombinedRefs()` for forwarding + internal refs; `useOutsideClick()`
+  for popover clicks.
+- **Auto-focus:** `useAutoFocus()` for modal/drawer focus management.
 
 ### Color Helpers (`src/helpers/colors.ts`)
-
-- **Text contrast:** `getReadableColor(theme)` returns light or dark based on theme.main
-- **Gradients:** `getGradientMix()` blends multiple colors for effect gradients
-- **Hex↔RGBA:** `hexAToRGBA()`, `getRGBAFromHex()` for color space conversions
-- **Lightness:** `changeLightness()`, `changeDarkness()` for theme-aware color adjustments
+- **Text contrast:** `getReadableColor(theme)` returns light or dark based on `theme.main`.
+- **Gradients:** `getGradientMix()` blends multiple colors for effect gradients.
+- **Hex↔RGBA:** `hexAToRGBA()`, `getRGBAFromHex()`.
+- **Lightness:** `changeLightness()`, `changeDarkness()` for theme-aware adjustments.
 
 ### Animation Config
-
-- **Spring:** `SPRING_CONFIG` for bounce/smooth animations (via `@react-spring/web`)
-- **Disabled:** `SPRING_CONFIG_NO_ANIMATIONS` when `animations.buttons: false`
-- **Usage:** Wrap animated components with `<animated>` from react-spring
+- **Spring:** `SPRING_CONFIG` for bounce/smooth animations (via `@react-spring/web`).
+- **Disabled:** `SPRING_CONFIG_NO_ANIMATIONS` when `animations.buttons: false`.
+- **Usage:** wrap animated components with `<animated>` from react-spring.
 
 ## Key Integration Points
 
 ### Modal & Notification Flow
-
-1. **Add modal:** `context.addModal(modalElement, id?)` returns modal ID
-2. **Close:** `context.removeModal(id)` + optional confirmation dialog
-3. **Notifications:** `context.addNotification({...})` queues toast; auto-removes after `duration`
-4. **Portal:** All modals/notifications render via `customPortalId` or default DOM portal
+1. **Add modal:** `context.addModal(modalElement, id?)` returns modal ID.
+2. **Close:** `context.removeModal(id)` + optional confirmation dialog.
+3. **Notifications:** `context.addNotification({...})` queues a toast; auto-removes after `duration`.
+4. **Portal:** modals/notifications render via `customPortalId` or default DOM portal.
 
 ### Responsive Breakpoints
-
-- **Mobile:** `isMobile` (width ≤ 480px)
-- **Tablet:** `isTablet` (width ≤ 1024px)
-- **Usage:** Conditional rendering in components; affects dropdown/menu positioning
+- **Mobile:** `isMobile` (width ≤ 480px).
+- **Tablet:** `isTablet` (width ≤ 1024px).
+- **Usage:** conditional rendering; affects dropdown/menu positioning.
 
 ### Icon System (`src/types/icons.ts`)
-
-- **Type:** `IReqoreIconName` (string literal of all icon names)
-- **Render:** `<ReqoreIcon name="iconNameHere" />` or component prop `icon="iconNameHere"`
-- **Sizing:** Icon size auto-scales with component size via `ICON_FROM_SIZE`
+- **Type:** `IReqoreIconName` (string literal of all icon names).
+- **Render:** `<ReqoreIcon name="iconNameHere" />` or component prop `icon="iconNameHere"`.
+- **Sizing:** icon size auto-scales with component size via `ICON_FROM_SIZE`.
 
 ### Collections & Paging
-
-- **Collection:** Renders arrays with optional sorting/filtering; used in Table, MultiSelect
-- **Paging:** `useReqorePaging()` hook handles offset/limit; `<ReqorePaging>` component for controls
-- **Pattern:** See [Collection.tsx](src/components/Collection/) and [Paging.tsx](src/containers/Paging.tsx)
+- **Collection:** renders arrays with optional sorting/filtering; used in Table, MultiSelect.
+- **Paging:** `useReqorePaging()` handles offset/limit; `<ReqorePaging>` for controls.
+- **Pattern:** see `src/components/Collection/` and `src/containers/Paging.tsx`.
 
 ## Common Pitfalls & Solutions
 
-| Issue                                  | Solution                                                                                     |
-| -------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Styled component props not typed       | Add `<IComponentStyle>` generic; ensure mixin interfaces extend properly                     |
-| Theme not applying                     | Verify `ReqoreUIProvider` wraps component tree; check `useReqoreTheme()` call                |
-| ESC key ignored in modal               | Ensure `closeModalsOnEscPress: true` in provider; modal must be in `escClosableModals` stack |
-| Icon not rendering                     | Verify icon name in `IReqoreIconName`; check icon imports in `Icon/` component               |
-| Tests fail with "React is not defined" | Verify `setup.js` is loaded; jsx: "react-jsx" in tsconfig.json                               |
-| Animation janky on slow devices        | Offer `animations.buttons: false` toggle in theme/context; use `SPRING_CONFIG_NO_ANIMATIONS` |
+| Issue | Solution |
+| --- | --- |
+| Styled component props not typed | Add `<IComponentStyle>` generic; ensure mixin interfaces extend properly |
+| Theme not applying | Verify `ReqoreUIProvider` wraps the tree; check `useReqoreTheme()` call |
+| ESC key ignored in modal | Ensure `closeModalsOnEscPress: true`; modal must be in `escClosableModals` stack |
+| Icon not rendering | Verify icon name in `IReqoreIconName`; check icon imports in `Icon/` |
+| Tests fail with "React is not defined" | Verify `setup.js` is loaded; `jsx: "react-jsx"` in tsconfig.json |
+| Animation janky on slow devices | Offer `animations.buttons: false`; use `SPRING_CONFIG_NO_ANIMATIONS` |
 
 ## File Reference
 
-| Path              | Purpose                                                         |
-| ----------------- | --------------------------------------------------------------- |
-| `src/index.tsx`   | Main export barrel; re-exports all public components            |
-| `src/constants/`  | Global enums, size maps, theme defaults, animation configs      |
-| `src/helpers/`    | Color math, utility functions (no React)                        |
-| `src/hooks/`      | Custom React hooks (theme, context, DOM utilities)              |
+| Path | Purpose |
+| --- | --- |
+| `src/index.tsx` | Main export barrel; re-exports all public components |
+| `src/constants/` | Global enums, size maps, theme defaults, animation configs |
+| `src/helpers/` | Color math, utility functions (no React) |
+| `src/hooks/` | Custom React hooks (theme, context, DOM utilities) |
 | `src/containers/` | Provider components (ReqoreProvider, ThemeProvider, UIProvider) |
-| `src/context/`    | Context definitions (ReqoreContext, ThemeContext)               |
-| `src/types/`      | Global TypeScript interfaces (icons, global prop mixins)        |
-| `__tests__/`      | Jest tests; mirrors `src/` structure                            |
-| `src/stories/`    | Storybook stories for visual development                        |
+| `src/context/` | Context definitions (ReqoreContext, ThemeContext) |
+| `src/types/` | Global TypeScript interfaces (icons, global prop mixins) |
+| `__tests__/` | Jest tests; mirrors `src/` structure |
+| `src/stories/` | Storybook stories for visual development |
 
 ## When Adding New Components
-
-1. **Create folder:** `src/components/{ComponentName}/index.tsx`
-2. **Define interfaces:** `IReqore{ComponentName}Props` + `IReqore{ComponentName}Style`
-3. **Use mixins:** Extend `IWithReqoreEffect`, `IWithReqoreSize`, `IWithReqoreCustomTheme` as needed
-4. **Apply theme:** Use `useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme)` — destructure both `customTheme` and `inheritCustomTheme` from props so the component supports custom theme inheritance from ancestor components
-5. **Propagate theme to children:** If the component wraps children with `ReqoreThemeProvider`, pass both the resolved `theme` and raw `customTheme` prop: `<ReqoreThemeProvider theme={theme} customTheme={customTheme}>` — this enables descendant components to inherit the custom theme via `CustomThemeContext`
-6. **Export:** Add named export to `src/index.tsx`
-7. **Test:** Add test file in `__tests__/{ComponentName}.test.tsx` with UIProvider wrapper
-8. **Story:** Create `src/stories/{ComponentName}.stories.tsx` with argTypes
+1. **Create folder:** `src/components/{ComponentName}/index.tsx`.
+2. **Define interfaces:** `IReqore{ComponentName}Props` + `IReqore{ComponentName}Style`.
+3. **Use mixins:** extend `IWithReqoreEffect`, `IWithReqoreSize`, `IWithReqoreCustomTheme` as needed.
+4. **Apply theme:** `useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme)`
+   — destructure both `customTheme` and `inheritCustomTheme` from props.
+5. **Propagate theme to children:** if wrapping children with `ReqoreThemeProvider`, pass
+   both the resolved `theme` and raw `customTheme` prop so descendants inherit via
+   `CustomThemeContext`.
+6. **Export:** add named export to `src/index.tsx`.
+7. **Test:** add `__tests__/{ComponentName}.test.tsx` with the UIProvider wrapper.
+8. **Story:** create `src/stories/{ComponentName}.stories.tsx` with argTypes.
+   (Also follow `.tasks/NEW_COMPONENT.md` — Appendix A is what `/audit` checks against.)
 
 ## Documentation
-
-- **Storybook:** Run `yarn storybook` for interactive component playground
-- **Docusaurus:** Run `yarn docs:dev` for user guides + API docs
-- **TypeDoc:** `yarn docs:api` generates API reference from JSDoc comments
-- **Inline:** Use JSDoc comments on public props/methods for IDE tooltips
-
-## Other
-
-- You may need to source zsh to get some commands (like gh) working
-- If there is an issue, always start the branch with the issue number e.g. `feature/1234_new-component`
+- **Storybook:** `yarn storybook` for the interactive playground.
+- **Docusaurus:** `yarn docs:dev` for user guides + API docs.
+- **TypeDoc:** `yarn docs:api` generates API reference from JSDoc comments.
+- **Inline:** JSDoc comments on public props/methods for IDE tooltips.

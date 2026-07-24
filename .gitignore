@@ -9,3 +9,6 @@ build
 docs/api
 *.tgz
 qlip/
+
+# Local cache of the instruction-files repo path (per-dev, not committed)
+.instruction-files-path
