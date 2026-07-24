@@ -39,10 +39,26 @@ const Template: StoryFn<IReqoreUIProviderProps & IReqoreNotificationsWrapperProp
 );
 
 export const Top: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders NotificationsWrapper at the top position.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Bottom: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders NotificationsWrapper at the bottom position.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -51,6 +67,14 @@ export const Bottom: Story = {
 };
 
 export const TopLeft: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders NotificationsWrapper in the top-left position.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -59,6 +83,14 @@ export const TopLeft: Story = {
 };
 
 export const TopRight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders NotificationsWrapper in the top-right position.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -67,6 +99,14 @@ export const TopRight: Story = {
 };
 
 export const BottomLeft: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders NotificationsWrapper in the bottom-left position.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -75,6 +115,14 @@ export const BottomLeft: Story = {
 };
 
 export const BottomRight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders NotificationsWrapper in the bottom-right position.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -106,6 +154,14 @@ const MultiplePositionsTemplate = () => {
 };
 
 export const MultiplePositionsAtOnce: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders NotificationsWrapper with multiple positions active simultaneously.',
+      },
+    },
+  },
   render: () => {
     return (
       <ReqoreUIProvider>

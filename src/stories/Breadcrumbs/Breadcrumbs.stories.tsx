@@ -21,11 +21,51 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
-export const WithTabs: Story = { args: { items: [...breadcrumbs, breadcrumbsTabs] } };
-export const Flat: Story = { args: { flat: true } };
-export const Special: Story = { args: { items: specialbreadcrumbs } };
+export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Breadcrumbs in its default configuration.',
+      },
+    },
+  },};
+export const WithTabs: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Breadcrumbs with tabs rendered inside.',
+      },
+    },
+  }, args: { items: [...breadcrumbs, breadcrumbsTabs] } };
+export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Breadcrumbs in its flat variant.',
+      },
+    },
+  }, args: { flat: true } };
+export const Special: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Breadcrumbs in a special configuration.',
+      },
+    },
+  }, args: { items: specialbreadcrumbs } };
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Breadcrumbs with a custom theme override applied.',
+      },
+    },
+  },
   args: {
     items: breadcrumbs,
     customTheme: {

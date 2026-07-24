@@ -56,10 +56,26 @@ const Template: StoryFn<IReqoreCalloutProps> = (args) => (
 );
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const TopAccent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a top accent line.',
+      },
+    },
+  },
   render: Template,
   args: {
     accentPosition: 'top',
@@ -68,6 +84,14 @@ export const TopAccent: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout in its flat variant.',
+      },
+    },
+  },
   render: Template,
   args: {
     flat: true,
@@ -75,10 +99,26 @@ export const Flat: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: (args) => <ReqoreCallout {...args} fluid />,
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical fluid gapSize='normal'>
       {Object.keys(DEFAULT_INTENTS).map((intent) => (
@@ -96,6 +136,14 @@ export const Intents: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => {
     const sizes = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
@@ -112,6 +160,14 @@ export const Sizes: Story = {
 };
 
 export const Frosted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with the frosted (translucent + blur) effect.',
+      },
+    },
+  },
   render: Template,
   args: {
     children: 'Important context can use the frosted text effect.',
@@ -122,6 +178,14 @@ export const Frosted: Story = {
 };
 
 export const BackgroundEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a background effect.',
+      },
+    },
+  },
   render: Template,
   args: {
     children: 'Container effects apply to the callout surface.',
@@ -138,6 +202,14 @@ export const BackgroundEffect: Story = {
 };
 
 export const ContentEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a visual effect on the content.',
+      },
+    },
+  },
   render: Template,
   args: {
     children: 'Content effects apply only to the callout text.',
@@ -150,6 +222,14 @@ export const ContentEffect: Story = {
 };
 
 export const WithLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a label.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Configuration required',
@@ -160,6 +240,14 @@ export const WithLabel: Story = {
 };
 
 export const WithIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with an icon.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Heads up',
@@ -170,6 +258,14 @@ export const WithIcon: Story = {
 };
 
 export const WithBadge: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a badge.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'New release available',
@@ -181,6 +277,14 @@ export const WithBadge: Story = {
 };
 
 export const WithMultipleBadges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with multiple badges.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Pending approvals',
@@ -192,6 +296,14 @@ export const WithMultipleBadges: Story = {
 };
 
 export const Closable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout in a closable mode.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Cookie notice',
@@ -203,6 +315,14 @@ export const Closable: Story = {
 };
 
 export const Bordered: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a border applied.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Bordered callout',
@@ -214,6 +334,14 @@ export const Bordered: Story = {
 };
 
 export const Square: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout in square (chip) mode — a fixed-size slot with no horizontal padding.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Square corners',
@@ -223,6 +351,14 @@ export const Square: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a transparent background.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Transparent surface',
@@ -234,6 +370,14 @@ export const Transparent: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout in a clickable variant so hover and press states are exercised.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Whole-callout click',
@@ -245,6 +389,14 @@ export const Clickable: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout in its disabled state.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Disabled callout',
@@ -255,6 +407,14 @@ export const Disabled: Story = {
 };
 
 export const Tooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a tooltip attached.',
+      },
+    },
+  },
   render: Template,
   args: {
     children: 'Hover me to see a tooltip.',
@@ -263,6 +423,14 @@ export const Tooltip: Story = {
 };
 
 export const Fixed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout in a fixed-position layout.',
+      },
+    },
+  },
   render: (args) => <ReqoreCallout {...args} fixed />,
   args: {
     label: 'Fixed width callout',
@@ -273,6 +441,14 @@ export const Fixed: Story = {
 };
 
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a custom theme override applied.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Branded callout',
@@ -283,6 +459,14 @@ export const CustomTheme: Story = {
 };
 
 export const FullyComposed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout in a fully composed configuration.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'New deploy ready · staging',
@@ -297,6 +481,14 @@ export const FullyComposed: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with the raised effect.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Raised callout',
@@ -324,6 +516,14 @@ const renderCalloutMatrix = (variantArgs: Partial<IReqoreCalloutProps>) =>
   ));
 
 export const Unpadded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with no padding.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderCalloutMatrix({ padded: false })}
@@ -332,6 +532,14 @@ export const Unpadded: Story = {
 };
 
 export const PaddedHorizontalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with padding only on the horizontal axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderCalloutMatrix({ padded: 'horizontal' })}
@@ -340,6 +548,14 @@ export const PaddedHorizontalOnly: Story = {
 };
 
 export const PaddedVerticalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with padding only on the vertical axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderCalloutMatrix({ padded: 'vertical' })}
@@ -348,6 +564,14 @@ export const PaddedVerticalOnly: Story = {
 };
 
 export const CustomPaddingSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a custom padding size.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {CALLOUT_SIZES.map((size) => (
@@ -366,6 +590,14 @@ export const CustomPaddingSize: Story = {
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {ALL_SIZES.map((radiusSize) => (

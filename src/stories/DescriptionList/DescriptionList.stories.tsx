@@ -42,6 +42,14 @@ const lifecycleItems: IReqoreDescriptionListProps['items'] = [
 ];
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList in its default configuration.',
+      },
+    },
+  },
   args: {
     label: 'Lifecycle',
     icon: 'TimeLine',
@@ -50,6 +58,14 @@ export const Basic: Story = {
 };
 
 export const WithIntents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList across a set of intents.',
+      },
+    },
+  },
   args: {
     label: 'Pages',
     icon: 'FileTextLine',
@@ -81,6 +97,14 @@ export const WithIntents: Story = {
 };
 
 export const WithLabelAndContentIntents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with distinct intents applied to the label and content.',
+      },
+    },
+  },
   args: {
     label: 'Pages',
     icon: 'FileTextLine',
@@ -121,6 +145,14 @@ export const WithLabelAndContentIntents: Story = {
 };
 
 export const CustomIntentIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with a custom icon for one of the intents.',
+      },
+    },
+  },
   args: {
     label: 'Pages',
     icon: 'FileTextLine',
@@ -146,6 +178,14 @@ export const CustomIntentIcon: Story = {
 };
 
 export const RowWithoutLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with a row that has no label.',
+      },
+    },
+  },
   args: {
     label: 'Identity',
     items: [
@@ -164,6 +204,14 @@ export const RowWithoutLabel: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='normal' style={{ width: 560 }}>
       {(['tiny', 'small', 'normal', 'big'] as const).map((size) => (
@@ -179,6 +227,14 @@ export const Sizes: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='normal' style={{ width: 560 }}>
       {(['info', 'success', 'warning', 'danger', 'pending', 'muted'] as const).map((intent) => (
@@ -194,6 +250,14 @@ export const Intents: Story = {
 };
 
 export const Bordered: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with a border applied.',
+      },
+    },
+  },
   args: {
     label: 'Bordered',
     description: 'flat={false} renders the standard panel border.',
@@ -203,6 +267,14 @@ export const Bordered: Story = {
 };
 
 export const Square: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList in square (chip) mode — a fixed-size slot with no horizontal padding.',
+      },
+    },
+  },
   args: {
     label: 'Square',
     description: 'rounded={false} drops corner radius.',
@@ -212,6 +284,14 @@ export const Square: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with a transparent background.',
+      },
+    },
+  },
   args: {
     label: 'Transparent',
     transparent: true,
@@ -221,6 +301,14 @@ export const Transparent: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with the raised effect.',
+      },
+    },
+  },
   args: {
     label: 'Raised',
     raised: true,
@@ -230,6 +318,14 @@ export const Raised: Story = {
 };
 
 export const NoChrome: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList without its surrounding chrome.',
+      },
+    },
+  },
   args: {
     transparent: true,
     flat: true,
@@ -246,6 +342,14 @@ export const NoChrome: Story = {
 };
 
 export const WithBadgeAndActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with a badge and inline actions.',
+      },
+    },
+  },
   args: {
     label: 'Lifecycle',
     icon: 'TimeLine',
@@ -263,6 +367,14 @@ export const WithBadgeAndActions: Story = {
 };
 
 export const PlainTextLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with plain-text (non-styled) labels.',
+      },
+    },
+  },
   args: {
     label: 'Plain-text labels (uppercaseLabels=false)',
     uppercaseLabels: false,
@@ -271,6 +383,14 @@ export const PlainTextLabels: Story = {
 };
 
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with a custom theme override applied.',
+      },
+    },
+  },
   args: {
     label: 'Custom theme',
     customTheme: { main: '#1c1c2b' },
@@ -279,6 +399,14 @@ export const CustomTheme: Story = {
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with a visual effect applied.',
+      },
+    },
+  },
   args: {
     items: lifecycleItems,
     minimal: true,
@@ -298,6 +426,14 @@ export const WithEffect: Story = {
 };
 
 export const NoSeparators: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList without separator lines.',
+      },
+    },
+  },
   args: {
     label: 'No separators',
     separatorOpacity: 0,
@@ -306,6 +442,14 @@ export const NoSeparators: Story = {
 };
 
 export const LeadingTagInContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with a leading tag inside the content.',
+      },
+    },
+  },
   args: {
     label: 'Identity',
     icon: 'BookOpenLine',
@@ -366,6 +510,14 @@ const mixedItems: IReqoreDescriptionListProps['items'] = [
 ];
 
 export const WithControlContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList with control content rendered.',
+      },
+    },
+  },
   args: {
     label: 'Ticket',
     flat: true,
@@ -417,6 +569,14 @@ export const WithControlContent: Story = {
  * the last one, which carries no separator at all.
  */
 export const SeparatorDoesNotChangeRowHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DescriptionList and proves that adding a separator does not change the row height.',
+      },
+    },
+  },
   args: {
     label: 'Lifecycle',
     flat: true,

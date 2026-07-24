@@ -17,6 +17,14 @@ const SAMPLE_QUOTE =
   'Reqore lets our team ship dashboards in hours instead of days — the theming and effect system alone has saved us weeks of CSS work.';
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial in its default configuration.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -27,6 +35,14 @@ export const Basic: Story = {
 };
 
 export const WithAvatarImage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with an avatar image.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Mira Patel',
@@ -38,6 +54,14 @@ export const WithAvatarImage: Story = {
 };
 
 export const WithBadge: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with a badge.',
+      },
+    },
+  },
   args: {
     quote: 'The migration story is solid — drop-in components, predictable theming.',
     author: 'Jonas Weber',
@@ -49,6 +73,14 @@ export const WithBadge: Story = {
 };
 
 export const WithActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with action buttons attached.',
+      },
+    },
+  },
   args: {
     quote: 'Best component library decision we made this year.',
     author: 'Priya Raman',
@@ -63,6 +95,14 @@ export const WithActions: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       <ReqoreTestimonial
@@ -106,6 +146,14 @@ export const Intents: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       <ReqoreTestimonial
@@ -141,6 +189,14 @@ export const Sizes: Story = {
 };
 
 export const Bordered: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with a border applied.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -152,6 +208,14 @@ export const Bordered: Story = {
 };
 
 export const Square: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial in square (chip) mode — a fixed-size slot with no horizontal padding.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -163,6 +227,14 @@ export const Square: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with a transparent background.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -174,6 +246,14 @@ export const Transparent: Story = {
 };
 
 export const NoQuoteIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial without the quote icon.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -184,6 +264,14 @@ export const NoQuoteIcon: Story = {
 };
 
 export const NoRating: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial without an initial rating.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -193,12 +281,28 @@ export const NoRating: Story = {
 };
 
 export const QuoteOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial showing only the quote line.',
+      },
+    },
+  },
   args: {
     quote: 'Ship faster. Stay consistent. Reqore.',
   },
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial in its disabled state.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -210,6 +314,14 @@ export const Disabled: Story = {
 };
 
 export const Tooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with a tooltip attached.',
+      },
+    },
+  },
   args: {
     quote: 'Hover the card to see the tooltip.',
     author: 'Avery Chen',
@@ -220,6 +332,14 @@ export const Tooltip: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial in a clickable variant so hover and press states are exercised.',
+      },
+    },
+  },
   args: {
     quote: 'Click anywhere on the card to read the full story.',
     author: 'Avery Chen',
@@ -231,6 +351,14 @@ export const Clickable: Story = {
 };
 
 export const WithEffects: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with a set of visual effects applied to different items.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -251,6 +379,14 @@ export const WithEffects: Story = {
 };
 
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with a custom theme override applied.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -262,6 +398,14 @@ export const CustomTheme: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with the raised effect.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -273,6 +417,14 @@ export const Raised: Story = {
 };
 
 export const NoWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with content forced onto a single line.',
+      },
+    },
+  },
   args: {
     quote:
       'A very long quote that would normally span multiple lines but here is forced onto a single line and ellipsized at the boundary of the available width.',
@@ -291,6 +443,14 @@ export const NoWrap: Story = {
 };
 
 export const Fixed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial in a fixed-position layout.',
+      },
+    },
+  },
   args: {
     quote: SAMPLE_QUOTE,
     author: 'Avery Chen',
@@ -317,6 +477,14 @@ const renderTestimonialMatrix = (variantArgs: Partial<IReqoreTestimonialProps>) 
   ));
 
 export const Unpadded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with no padding.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 700 }}>
       {renderTestimonialMatrix({ padded: false })}
@@ -325,6 +493,14 @@ export const Unpadded: Story = {
 };
 
 export const PaddedHorizontalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with padding only on the horizontal axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 700 }}>
       {renderTestimonialMatrix({ padded: 'horizontal' })}
@@ -333,6 +509,14 @@ export const PaddedHorizontalOnly: Story = {
 };
 
 export const PaddedVerticalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with padding only on the vertical axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 700 }}>
       {renderTestimonialMatrix({ padded: 'vertical' })}
@@ -341,6 +525,14 @@ export const PaddedVerticalOnly: Story = {
 };
 
 export const CustomPaddingSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial with a custom padding size.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 700 }}>
       {TESTIMONIAL_SIZES.map((size) => (
@@ -360,6 +552,14 @@ export const CustomPaddingSize: Story = {
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Testimonial at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 700 }}>
       {ALL_SIZES.map((radiusSize) => (

@@ -79,6 +79,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection in its default configuration.',
+      },
+    },
+  },
   args: {
     label: 'Config Items',
     items,
@@ -91,6 +99,14 @@ export const Basic: Story = {
 };
 
 export const WithHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with a fixed height applied.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     height: '600px',
@@ -103,6 +119,14 @@ export const WithHeight: Story = {
 };
 
 export const Stacked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection in a stacked layout.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     stacked: true,
@@ -115,6 +139,14 @@ export const Stacked: Story = {
 };
 
 export const Fill: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection filling the available space.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     fill: true,
@@ -127,6 +159,14 @@ export const Fill: Story = {
 };
 
 export const NoSorting: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with sorting disabled.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     items,
@@ -136,6 +176,14 @@ export const NoSorting: Story = {
 };
 
 export const SelectedFirst: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with the selected item pinned to the top.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     items,
@@ -145,6 +193,14 @@ export const SelectedFirst: Story = {
 };
 
 export const WithoutLayoutActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection without the layout action controls.',
+      },
+    },
+  },
   args: {
     filterable: false,
     sortable: false,
@@ -156,6 +212,14 @@ export const WithoutLayoutActions: Story = {
 };
 
 export const Zoomable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with zooming controls enabled.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     items,
@@ -164,6 +228,14 @@ export const Zoomable: Story = {
 };
 
 export const WithDefaultZoom: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with defaultZoom set so the collection mounts at a zoom level above the default.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     items,
@@ -174,6 +246,14 @@ export const WithDefaultZoom: Story = {
 };
 
 export const CustomColumnsData: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with data shaped for a custom column set.',
+      },
+    },
+  },
   args: {
     columns: 2,
     columnsGap: '50px',
@@ -185,6 +265,14 @@ export const CustomColumnsData: Story = {
 };
 
 export const WithStretchedItems: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with the items stretched to fill the row.',
+      },
+    },
+  },
   args: {
     label: 'Collection with stretched items',
     items: [
@@ -211,6 +299,14 @@ export const WithStretchedItems: Story = {
 };
 
 export const CustomPropsAndTexts: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with custom props and text overrides.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     items,
@@ -227,6 +323,14 @@ export const CustomPropsAndTexts: Story = {
 };
 
 export const ChildrenBeforeAndAfter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with children slotted before and after the main content.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     padded: false,
@@ -261,6 +365,14 @@ export const ChildrenBeforeAndAfter: Story = {
 };
 
 export const FilteringSearchingPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with filtering, searching, and paging all wired in.',
+      },
+    },
+  },
   args: {
     inputProps: {
       fluid: true,
@@ -284,6 +396,14 @@ export const FilteringSearchingPaging: Story = {
 };
 
 export const CustomFilteringSearchingPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with custom filter, search, and paging controls wired in.',
+      },
+    },
+  },
   args: {
     inputProps: {
       fluid: true,
@@ -312,6 +432,14 @@ export const CustomFilteringSearchingPaging: Story = {
 };
 
 export const DefaultFilter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with a default filter applied.',
+      },
+    },
+  },
   args: {
     inputProps: {
       fluid: true,
@@ -337,6 +465,14 @@ export const DefaultFilter: Story = {
 };
 
 export const CustomSortKeysWithDefaultSort: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with custom sort keys and a default sort applied.',
+      },
+    },
+  },
   args: {
     label: 'Posts',
     items: items.map((item) => ({
@@ -367,12 +503,28 @@ export const CustomSortKeysWithDefaultSort: Story = {
 };
 
 export const Skeleton: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection in its skeleton loading state.',
+      },
+    },
+  },
   args: {
     skeleton: true,
   },
 };
 
 export const WithGroups: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection split into groups.',
+      },
+    },
+  },
   args: {
     items: [
       {
@@ -459,6 +611,14 @@ export const WithGroups: Story = {
 };
 
 export const WithConfiguredGroups: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with configured group definitions.',
+      },
+    },
+  },
   args: {
     label: 'Integrations',
     items: [
@@ -506,6 +666,14 @@ export const WithConfiguredGroups: Story = {
 };
 
 export const SortByRelevanceAcrossGroups: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with results sorted by relevance across groups.',
+      },
+    },
+  },
   args: {
     label: 'Search Results (sorted by relevance, not group)',
     sortByGroupFirst: false,
@@ -582,6 +750,14 @@ export const SortByRelevanceAcrossGroups: Story = {
 };
 
 export const ItemIsInMultipleGroups: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Collection with an item that appears in multiple groups.',
+      },
+    },
+  },
   args: {
     items: [
       {

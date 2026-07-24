@@ -180,10 +180,26 @@ const Template: StoryFn<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps)
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RadioGroup in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Horizontal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RadioGroup laid out horizontally.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -192,6 +208,14 @@ export const Horizontal: Story = {
 };
 
 export const Switch: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RadioGroup in switch mode.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -200,6 +224,14 @@ export const Switch: Story = {
 };
 
 export const WithoutMargin: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RadioGroup with margin removed.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -208,6 +240,14 @@ export const WithoutMargin: Story = {
 };
 
 export const WithTexts: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RadioGroup with text overrides for the items.',
+      },
+    },
+  },
   render: Template,
 
   args: {

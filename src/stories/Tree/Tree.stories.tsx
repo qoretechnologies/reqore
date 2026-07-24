@@ -58,27 +58,67 @@ const meta: StoryMeta<typeof ReqoreTree> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Basic: Story = {};
+export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree in its default configuration.',
+      },
+    },
+  },};
 
 export const TextView: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree in text-view mode.',
+      },
+    },
+  },
   args: {
     mode: 'copy',
   },
 };
 
 export const NoControls: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree without controls.',
+      },
+    },
+  },
   args: {
     showControls: false,
   },
 };
 
 export const Zoomable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree with zooming controls enabled.',
+      },
+    },
+  },
   args: {
     zoomable: true,
   },
 };
 
 export const Exportable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree with the export controls enabled.',
+      },
+    },
+  },
   args: {
     zoomable: true,
     exportable: true,
@@ -86,12 +126,28 @@ export const Exportable: Story = {
 };
 
 export const Empty: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree in its empty state.',
+      },
+    },
+  },
   args: {
     data: {},
   },
 };
 
 export const EmptyEditable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree in an empty editable state.',
+      },
+    },
+  },
   args: {
     data: [],
     editable: true,
@@ -99,6 +155,14 @@ export const EmptyEditable: Story = {
 };
 
 export const EditableArray: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree with an editable array.',
+      },
+    },
+  },
   render: (args) => {
     const [data, setData] = useState(args.data);
 
@@ -119,6 +183,14 @@ export const EditableArray: Story = {
 };
 
 export const EditableObject: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree with an editable object.',
+      },
+    },
+  },
   render: (args) => {
     const [data, setData] = useState(args.data);
 
@@ -177,6 +249,14 @@ export const EditableObject: Story = {
 };
 
 export const Object: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree rendering an object value.',
+      },
+    },
+  },
   args: {
     exportable: true,
     data: {
@@ -221,6 +301,14 @@ export const Object: Story = {
 };
 
 export const WithDefaultZoom: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree with defaultZoom set so the tree mounts at a zoom level above the default.',
+      },
+    },
+  },
   args: {
     label: 'Collection of items',
     zoomable: true,
@@ -230,6 +318,14 @@ export const WithDefaultZoom: Story = {
 };
 
 export const NewArrayItemCanBeAdded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree and adds a new array item.',
+      },
+    },
+  },
   ...EditableArray,
   play: async () => {
     await expect(document.querySelectorAll('.reqore-tree-item').length).toBe(8);
@@ -247,6 +343,14 @@ export const NewArrayItemCanBeAdded: Story = {
 };
 
 export const NewArrayItemCanBeEdited: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree, adds a new array item, and edits it.',
+      },
+    },
+  },
   ...NewArrayItemCanBeAdded,
   play: async (args) => {
     await NewArrayItemCanBeAdded.play(args);
@@ -262,6 +366,14 @@ export const NewArrayItemCanBeEdited: Story = {
 };
 
 export const NewObjectItemCanBeAdded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree and adds a new object item.',
+      },
+    },
+  },
   ...EditableObject,
   play: async () => {
     await expect(document.querySelectorAll('.reqore-tree-item').length).toBe(22);
@@ -283,6 +395,14 @@ export const NewObjectItemCanBeAdded: Story = {
 };
 
 export const ObjectItemCanBeEdited: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree and edits an object item.',
+      },
+    },
+  },
   ...EditableObject,
   play: async () => {
     await _testsClickButton({ selector: '.reqore-tree-edit', nth: 19 });
@@ -299,6 +419,14 @@ export const ObjectItemCanBeEdited: Story = {
 };
 
 export const ItemsCanBeDeleted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree and deletes items via the item controls.',
+      },
+    },
+  },
   ...EditableObject,
   play: async () => {
     await _testsClickButton({ selector: '.reqore-tree-delete', nth: 4 });
@@ -308,6 +436,14 @@ export const ItemsCanBeDeleted: Story = {
 };
 
 export const CustomRenderers: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tree with custom cell renderers.',
+      },
+    },
+  },
   ...EditableObject,
   args: {
     ...EditableObject.args,

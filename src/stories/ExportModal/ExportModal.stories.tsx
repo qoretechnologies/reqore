@@ -12,6 +12,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ExportModal in its default configuration.',
+      },
+    },
+  },
   args: {
     data: tableData,
   },

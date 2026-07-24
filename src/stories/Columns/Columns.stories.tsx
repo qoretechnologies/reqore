@@ -128,10 +128,26 @@ const Template = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Columns in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const MultipleColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Columns with multiple columns.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -140,6 +156,14 @@ export const MultipleColumns: Story = {
 };
 
 export const CustomAlignment: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Columns with a custom alignment applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -149,6 +173,14 @@ export const CustomAlignment: Story = {
 };
 
 export const WithMinimumWidth = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Columns with a minimum width applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {

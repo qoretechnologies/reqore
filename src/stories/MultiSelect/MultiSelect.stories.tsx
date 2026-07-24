@@ -66,6 +66,14 @@ const Template: StoryFn<IReqoreMultiSelectProps> = (args: IReqoreMultiSelectProp
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect in its default configuration.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -74,6 +82,14 @@ export const Basic: Story = {
 };
 
 export const Empty: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect in its empty state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -82,6 +98,14 @@ export const Empty: Story = {
 };
 
 export const AutoOpen: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect that opens automatically on mount.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -90,6 +114,14 @@ export const AutoOpen: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect in its flat variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -98,6 +130,14 @@ export const Flat: Story = {
 };
 
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect in its minimal variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -106,6 +146,14 @@ export const Minimal: Story = {
 };
 
 export const WithoutNoItemsMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect without the no-items message override.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -115,6 +163,14 @@ export const WithoutNoItemsMessage: Story = {
 };
 
 export const WithCustomNoItemsMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect with a custom no-items message.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -125,6 +181,14 @@ export const WithCustomNoItemsMessage: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect in a clickable variant so hover and press states are exercised.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -134,6 +198,14 @@ export const Clickable: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect in its disabled state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -144,6 +216,14 @@ export const Disabled: Story = {
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders MultiSelect with a visual effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {

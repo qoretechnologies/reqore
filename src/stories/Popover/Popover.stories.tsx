@@ -373,10 +373,26 @@ const Template: StoryFn<IReqorePopoverProps & { insideModal?: boolean }> = (
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const NoAnimation: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover without animation.',
+      },
+    },
+  },
   render: Template,
   args: {
     options: {
@@ -388,6 +404,14 @@ export const NoAnimation: Story = {
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -396,6 +420,14 @@ export const NotFlat: Story = {
 };
 
 export const CustomContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover with custom React content passed in.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -412,6 +444,14 @@ export const CustomContent: Story = {
 };
 
 export const Blurred: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover with a blur effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -429,6 +469,14 @@ export const Blurred: Story = {
 };
 
 export const BlurredBackground: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover with a blurred background.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -449,6 +497,14 @@ export const BlurredBackground: Story = {
 };
 
 export const BlurredInsideModal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover with a blur effect applied inside a modal.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -460,6 +516,14 @@ export const BlurredInsideModal: Story = {
 };
 
 export const ChangingElement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover while the target element changes.',
+      },
+    },
+  },
   render: (args) => {
     return <ReqoreTextarea scaleWithContent tooltip={args} />;
   },
@@ -496,6 +560,14 @@ export const ChangingElement: Story = {
 };
 
 export const TooltipIsUpdatedWhenContentChanges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover and proves the tooltip updates when its content changes.',
+      },
+    },
+  },
   args: {
     onUpdate: fn(),
   },
@@ -541,6 +613,14 @@ export const TooltipIsUpdatedWhenContentChanges: Story = {
 };
 
 export const TooltipIsRemovedWhenContentIsEmpty: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover and proves the tooltip is removed when its content becomes empty.',
+      },
+    },
+  },
   args: {
     onToggleChange: fn(),
   },
@@ -582,6 +662,14 @@ export const TooltipIsRemovedWhenContentIsEmpty: Story = {
 };
 
 export const TooltipOffsetIsApplied: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover and proves that the tooltip offset is applied.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup>
       <ReqoreButton
@@ -637,6 +725,14 @@ export const TooltipOffsetIsApplied: Story = {
 };
 
 export const InCustomPortal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover mounted inside a custom portal.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -648,6 +744,12 @@ export const InCustomPortal: Story = {
 
 export const KeepOpenOnHoverWithClickableContent: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover configured to stay open on hover when the content is clickable.',
+      },
+    },
     chromatic: {
       disable: true,
     },
@@ -760,6 +862,14 @@ const POPOVER_THEME_ACCENT = '#8b3dff';
 const POPOVER_THEME_OVERRIDE = '#22aa55';
 
 export const CustomThemeForwardedToTrigger: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Popover and forwards the custom theme through to the trigger.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup gapSize='huge'>
       <ReqorePopover

@@ -30,12 +30,28 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ErrorBoundary in its default configuration.',
+      },
+    },
+  },
   args: {
     children: 'This component does not throw any error',
   },
 };
 
 export const Throws: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ErrorBoundary in a mode that throws — used to exercise the error boundary.',
+      },
+    },
+  },
   args: {
     children: <ThrowsError />,
     doNotCatch: false,
@@ -49,6 +65,14 @@ export const Throws: Story = {
 };
 
 export const ShowDetails: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ErrorBoundary with the details view visible.',
+      },
+    },
+  },
   ...Throws,
   play: async (args) => {
     await Throws.play(args);
@@ -58,6 +82,14 @@ export const ShowDetails: Story = {
 };
 
 export const WithCustomMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ErrorBoundary with a custom message rendered inside.',
+      },
+    },
+  },
   args: {
     children: <ThrowsError />,
     errorMessage: 'Ooooopsie doopsie, something went wrong!',
@@ -71,6 +103,14 @@ export const WithCustomMessage: Story = {
 };
 
 export const WithCustomGlobalMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ErrorBoundary with a custom global message.',
+      },
+    },
+  },
   args: {
     children: <ThrowsError />,
     options: {
@@ -88,6 +128,14 @@ export const WithCustomGlobalMessage: Story = {
 };
 
 export const Resets: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ErrorBoundary and exercises its reset flow.',
+      },
+    },
+  },
   ...Throws,
   play: async (args) => {
     await Throws.play(args);

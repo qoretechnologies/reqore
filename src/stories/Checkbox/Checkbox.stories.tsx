@@ -184,10 +184,26 @@ const Template: StoryFn<typeof Checkbox> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Checkbox in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const BasicUnchecked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Checkbox in the basic unchecked state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -196,6 +212,14 @@ export const BasicUnchecked: Story = {
 };
 
 export const BasicChecked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Checkbox in the basic checked state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -204,6 +228,14 @@ export const BasicChecked: Story = {
 };
 
 export const SwitchUnset: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Checkbox as a switch in the unset state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -212,6 +244,14 @@ export const SwitchUnset: Story = {
 };
 
 export const SwitchUnchecked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Checkbox as a switch in the unchecked state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -221,6 +261,14 @@ export const SwitchUnchecked: Story = {
 };
 
 export const SwitchChecked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Checkbox as a switch in the checked state.',
+      },
+    },
+  },
   render: Template,
 
   args: {

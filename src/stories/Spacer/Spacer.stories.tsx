@@ -103,5 +103,13 @@ const Template: StoryFn<IReqoreSpacerProps> = () => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Spacer in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };

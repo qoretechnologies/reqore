@@ -19,6 +19,14 @@ const InteractiveTemplate: StoryFn<IReqoreRatingProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating in its default configuration.',
+      },
+    },
+  },
   render: InteractiveTemplate,
   args: {
     value: 3,
@@ -26,6 +34,14 @@ export const Basic: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => {
     const [values, setValues] = useState<Record<string, number>>({});
     const sizes = ['micro', 'tiny', 'small', 'normal', 'big', 'huge', 'massive'] as const;
@@ -48,6 +64,14 @@ export const Sizes: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big'>
       <ReqoreRating {...args} value={4} label='Default' />
@@ -62,6 +86,14 @@ export const Intents: Story = {
 };
 
 export const HalfStars: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating with half-star precision enabled.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState(2.5);
 
@@ -72,6 +104,14 @@ export const HalfStars: Story = {
 };
 
 export const CustomIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating with custom icons on the items.',
+      },
+    },
+  },
   render: (args) => {
     const [hearts, setHearts] = useState(3);
     const [thumbs, setThumbs] = useState(2);
@@ -104,6 +144,14 @@ export const CustomIcons: Story = {
 };
 
 export const ReadOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating in its read-only state.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big'>
       <ReqoreRating {...args} value={4} label='Default' readOnly />
@@ -121,6 +169,14 @@ export const ReadOnly: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating in its disabled state.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big'>
       <ReqoreRating {...args} value={3} label='Default' disabled />
@@ -130,6 +186,14 @@ export const Disabled: Story = {
 };
 
 export const CustomMax: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating with a custom maximum value.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState(7);
 
@@ -146,6 +210,14 @@ export const CustomMax: Story = {
 };
 
 export const NoLabelAndRatingValue: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating without the label or rating value.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState(7);
 
@@ -154,6 +226,14 @@ export const NoLabelAndRatingValue: Story = {
 };
 
 export const WithIconProps: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating with custom icon props applied.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState(4);
 
@@ -181,6 +261,14 @@ export const WithIconProps: Story = {
 };
 
 export const AllowClear: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Rating with a clear button available.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState(3);
 

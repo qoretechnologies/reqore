@@ -287,10 +287,26 @@ const Template: StoryFn<typeof ReqoreControlGroup> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup in its minimal variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -299,6 +315,14 @@ export const Minimal: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -307,6 +331,14 @@ export const Fluid: Story = {
 };
 
 export const Fill: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup filling the available space.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -315,6 +347,14 @@ export const Fill: Story = {
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -323,6 +363,14 @@ export const NotFlat: Story = {
 };
 
 export const Vertical: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup laid out vertically.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -331,6 +379,14 @@ export const Vertical: Story = {
 };
 
 export const VerticalFluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup in a vertical layout with fluid sizing.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -340,6 +396,14 @@ export const VerticalFluid: Story = {
 };
 
 export const VerticalStackedFluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup in a vertical stacked layout with fluid sizing.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -350,6 +414,14 @@ export const VerticalStackedFluid: Story = {
 };
 
 export const Stacked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup in a stacked layout.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -358,6 +430,14 @@ export const Stacked: Story = {
 };
 
 export const StackedButtonsOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup in the stacked-buttons-only variant.',
+      },
+    },
+  },
   render: () => {
     return (
       <ReqoreControlGroup stack wrap>
@@ -391,6 +471,14 @@ export const StackedButtonsOnly: Story = {
 };
 
 export const BigGapSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with a big gap between items.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -399,6 +487,14 @@ export const BigGapSize: Story = {
 };
 
 export const NoWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with content forced onto a single line.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -407,6 +503,14 @@ export const NoWrap: Story = {
 };
 
 export const HorizontalAlign: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with horizontal alignment applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -416,6 +520,14 @@ export const HorizontalAlign: Story = {
 };
 
 export const VerticalAlign: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with vertical alignment applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -424,6 +536,14 @@ export const VerticalAlign: Story = {
 };
 
 export const Responsive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup in a responsive layout.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -432,6 +552,14 @@ export const Responsive: Story = {
 };
 
 export const StackedBorders: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with stacked borders.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup {...args} stack>
       <ReqoreButton flat={false}>First</ReqoreButton>
@@ -443,6 +571,14 @@ export const StackedBorders: Story = {
 };
 
 export const StackedBordersVertical: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with stacked borders in a vertical layout.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup {...args} stack vertical>
       <ReqoreButton flat={false}>First</ReqoreButton>
@@ -453,6 +589,14 @@ export const StackedBordersVertical: Story = {
 };
 
 export const StackedBordersWithIntents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with stacked borders and intents on the segments.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup {...args} stack>
       <ReqoreButton flat={false}>Default</ReqoreButton>
@@ -473,6 +617,14 @@ export const StackedBordersWithIntents: Story = {
 };
 
 export const StackedBordersWrapping: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with stacked borders that wrap onto multiple lines.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ width: '400px', border: '1px dashed gray', padding: '8px' }}>
       <ReqoreControlGroup {...args} stack wrap>
@@ -490,6 +642,14 @@ export const StackedBordersWrapping: Story = {
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders ControlGroup with a visual effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
