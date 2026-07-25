@@ -230,10 +230,26 @@ const Template: StoryFn<typeof ReqoreDropdown<IReqoreButtonProps>> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const CustomListTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with a custom theme applied to the list.',
+      },
+    },
+  },
   render: Template,
   args: {
     listCustomTheme: {
@@ -243,6 +259,14 @@ export const CustomListTheme: Story = {
 };
 
 export const CustomComponent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown composed with a custom component.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -255,6 +279,14 @@ export const CustomComponent: Story = {
 };
 
 export const ScrollToSelectedItem: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and scrolls to the selected item on mount.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -264,6 +296,14 @@ export const ScrollToSelectedItem: Story = {
 };
 
 export const WithCustomFilter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with a custom filter control.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -277,6 +317,14 @@ export const WithCustomFilter: Story = {
 };
 
 export const WithPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with paging controls visible.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -289,6 +337,14 @@ export const WithPaging: Story = {
 };
 
 export const WithLoadMore: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with a load-more control at the end of the list.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -305,6 +361,14 @@ export const WithLoadMore: Story = {
 };
 
 export const WithCustomPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with a custom paging control.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -335,6 +399,14 @@ export const WithCustomPaging: Story = {
 };
 
 export const WithChildItems: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with nested child items.',
+      },
+    },
+  },
   render: (args) => {
     const [val, setVal] = useState<any>(args.label);
 
@@ -408,6 +480,14 @@ export const WithChildItems: Story = {
 };
 
 export const ItemWithItemsCanBeSelected: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown — an item that has sub-items can itself be selected.',
+      },
+    },
+  },
   ...WithChildItems,
   play: async ({ canvasElement, ...rest }) => {
     await WithChildItems.play({ canvasElement, ...rest });
@@ -421,6 +501,14 @@ export const ItemWithItemsCanBeSelected: Story = {
 };
 
 export const WithChildItemsAndCustomTheme = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with nested child items and a custom theme.',
+      },
+    },
+  },
   ...WithChildItems,
   args: {
     ...WithChildItems.args,
@@ -431,6 +519,14 @@ export const WithChildItemsAndCustomTheme = {
 };
 
 export const WithCustomElements: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with custom elements slotted in.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -448,6 +544,14 @@ export const WithCustomElements: Story = {
   },
 };
 export const WithKeyboardNavigation: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with keyboard navigation exercised.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -463,6 +567,14 @@ export const WithKeyboardNavigation: Story = {
 };
 
 export const ListIsClosedWhenItemIsClicked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown — clicking an item closes the list.',
+      },
+    },
+  },
   args: {
     label: 'Default dropdown',
     onItemSelect: noop,
@@ -496,6 +608,14 @@ export const ListIsClosedWhenItemIsClicked: Story = {
 };
 
 export const ListIsClosedWhenItemActionIsClicked: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown — clicking an item action closes the list.',
+      },
+    },
+  },
   args: {
     label: 'Default dropdown',
     onItemSelect: noop,
@@ -535,6 +655,14 @@ export const ListIsClosedWhenItemActionIsClicked: Story = {
 };
 
 export const ItemsCanBeTraversed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and traverses items via the keyboard.',
+      },
+    },
+  },
   ...WithChildItems,
   play: async ({ canvasElement, ...rest }) => {
     const canvas = within(canvasElement);
@@ -554,6 +682,14 @@ export const ItemsCanBeTraversed: Story = {
 };
 
 export const ItemsCanBeTraversedViaTags: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and traverses items via the tag chips.',
+      },
+    },
+  },
   ...ItemsCanBeTraversed,
   play: async ({ canvasElement, ...rest }) => {
     const canvas = within(canvasElement);
@@ -569,6 +705,14 @@ export const ItemsCanBeTraversedViaTags: Story = {
 };
 
 export const ItemIsAutomaticallySelected: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown — an item is automatically selected on mount.',
+      },
+    },
+  },
   ...WithChildItems,
   args: {
     label: 'Dropdown with a single child item',
@@ -629,6 +773,14 @@ export const ItemIsAutomaticallySelected: Story = {
 };
 
 export const ItemIsNotAutomaticallySelectedWhenDisabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown — a disabled item is not automatically selected.',
+      },
+    },
+  },
   ...WithChildItems,
   args: {
     label: 'Dropdown with a single child item',
@@ -686,6 +838,14 @@ export const ItemIsNotAutomaticallySelectedWhenDisabled: Story = {
 };
 
 export const ItemIsNotAutomaticallySelectedWhenSubItemsAreEmpty: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown — an item is not auto-selected when its sub-items array is empty.',
+      },
+    },
+  },
   ...WithChildItems,
   args: {
     label: 'Dropdown with a single child item',
@@ -719,6 +879,14 @@ export const ItemIsNotAutomaticallySelectedWhenSubItemsAreEmpty: Story = {
 };
 
 export const BackButtonsWork: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and proves the back navigation buttons work.',
+      },
+    },
+  },
   ...ItemsCanBeTraversed,
   play: async ({ canvasElement, ...rest }) => {
     const canvas = within(canvasElement);
@@ -732,6 +900,14 @@ export const BackButtonsWork: Story = {
 };
 
 export const EmptySearch: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown when the current search has no results.',
+      },
+    },
+  },
   ...BackButtonsWork,
   play: async ({ canvasElement, ...rest }) => {
 
@@ -745,6 +921,14 @@ export const EmptySearch: Story = {
   },
 };
 export const KeyboardNavigationWithArrowKeys: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and navigates using the arrow keys.',
+      },
+    },
+  },
   args: {
     component: ReqoreTextarea,
     items: [
@@ -802,6 +986,14 @@ export const KeyboardNavigationWithArrowKeys: Story = {
 };
 
 export const KeyboardNavigationWithEnter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and activates an item with the Enter key.',
+      },
+    },
+  },
   args: {
     label: 'Keyboard Enter Test',
     items: [
@@ -842,6 +1034,14 @@ export const KeyboardNavigationWithEnter: Story = {
 };
 
 export const KeyboardNavigationWithArrowRightOpenSubmenu: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and opens a submenu with the right-arrow key.',
+      },
+    },
+  },
   args: {
     label: 'Keyboard Submenu Test',
     items: [
@@ -892,6 +1092,14 @@ export const KeyboardNavigationWithArrowRightOpenSubmenu: Story = {
 };
 
 export const KeyboardNavigationWithLeftArrowNavigatesBack: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and navigates back using the left-arrow key.',
+      },
+    },
+  },
   args: {
     label: 'Keyboard Left Arrow Test',
     items: [
@@ -944,6 +1152,14 @@ export const KeyboardNavigationWithLeftArrowNavigatesBack: Story = {
 };
 
 export const KeyboardNavigationCanBeDisabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown with keyboard navigation disabled to prove the opt-out works.',
+      },
+    },
+  },
   args: {
     label: 'Keyboard Disabled Test',
     items: [
@@ -975,6 +1191,14 @@ export const KeyboardNavigationCanBeDisabled: Story = {
 };
 
 export const EnterOnUnrelatedInputIsNotSwallowed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Dropdown and proves that pressing Enter on an unrelated input is not swallowed by the component.',
+      },
+    },
+  },
   render: (args) => {
     const popoverData = useRef<IPopoverControls>(null);
     const [inputValue, setInputValue] = useState('');

@@ -47,10 +47,26 @@ const Template: StoryFn<IReqoreMessageProps> = (args: IReqoreMessageProps) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const NoTitle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message without a title.',
+      },
+    },
+  },
   render: Template,
   args: {
     icon: 'InformationFill',
@@ -61,6 +77,14 @@ export const NoTitle: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message in its flat variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -70,6 +94,14 @@ export const Flat: Story = {
 };
 
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message in its minimal variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -80,6 +112,14 @@ export const Minimal: Story = {
 };
 
 export const WithIconColor: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with a custom icon color.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -90,6 +130,14 @@ export const WithIconColor: Story = {
 };
 
 export const NonOpaque: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with a non-opaque background.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -99,6 +147,14 @@ export const NonOpaque: Story = {
 };
 
 export const Pending: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with intent="pending".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -108,6 +164,14 @@ export const Pending: Story = {
 };
 
 export const Muted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with intent="muted".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -117,6 +181,14 @@ export const Muted: Story = {
 };
 
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with a custom theme override applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -127,6 +199,14 @@ export const CustomTheme: Story = {
 };
 
 export const WithMargin: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with margin applied.',
+      },
+    },
+  },
   render: () => (
     <>
       <ReqoreMessage margin='both' title='Bottom & top margin'>
@@ -152,6 +232,14 @@ export const WithMargin: Story = {
 };
 
 export const Effect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with a gradient/typography effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -167,6 +255,14 @@ export const Effect: Story = {
 };
 
 export const WithBackgroundBlur: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with a blurred background.',
+      },
+    },
+  },
   render: (args) => (
     <>
       <ReqoreMessage {...args}>
@@ -185,6 +281,14 @@ export const WithBackgroundBlur: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Message with the raised effect.',
+      },
+    },
+  },
   args: {
     title: 'Raised message',
     children: 'Subtle inset highlight on top + inset shadow on bottom for a tactile surface.',

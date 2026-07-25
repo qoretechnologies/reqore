@@ -90,9 +90,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Basic: Story = {};
+export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable in its default configuration.',
+      },
+    },
+  },};
 
 export const NoLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable without a label.',
+      },
+    },
+  },
   args: {
     label: undefined,
     onRowClick: noop,
@@ -100,6 +116,14 @@ export const NoLabel: Story = {
 };
 
 export const InteractiveRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with interactive rows.',
+      },
+    },
+  },
   args: {
     onRowClick: noop,
   },
@@ -109,30 +133,70 @@ export const InteractiveRows: Story = {
 };
 
 export const CustomWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom width.',
+      },
+    },
+  },
   args: {
     width: 400,
   },
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   args: {
     flat: false,
   },
 };
 
 export const NoHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable without an intrinsic height.',
+      },
+    },
+  },
   args: {
     height: undefined,
   },
 };
 
 export const Striped: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with striped rows.',
+      },
+    },
+  },
   args: {
     striped: true,
   },
 };
 
 export const Exportable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with the export controls enabled.',
+      },
+    },
+  },
   args: {
     exportable: true,
     zoomable: true,
@@ -144,18 +208,42 @@ export const Exportable: Story = {
 };
 
 export const Sortable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with sorting enabled.',
+      },
+    },
+  },
   args: {
     sortable: true,
   },
 };
 
 export const Filterable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with filter controls enabled.',
+      },
+    },
+  },
   args: {
     filterable: true,
   },
 };
 
 export const DefaultFilter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a default filter applied.',
+      },
+    },
+  },
   args: {
     filterable: true,
     filter: 'Mach',
@@ -163,12 +251,28 @@ export const DefaultFilter: Story = {
 };
 
 export const DefaultValueFilter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a default value filter applied.',
+      },
+    },
+  },
   args: {
     defaultValueFilter: 80,
   },
 };
 
 export const AllFiltersActive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with every filter turned on to prove all filter states render together.',
+      },
+    },
+  },
   args: {
     filterable: true,
     filter: 1,
@@ -177,6 +281,14 @@ export const AllFiltersActive: Story = {
 };
 
 export const WithActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with action buttons attached.',
+      },
+    },
+  },
   args: {
     rowActions: {
       width: 120,
@@ -198,6 +310,14 @@ export const WithActions: Story = {
 };
 
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom theme override applied.',
+      },
+    },
+  },
   args: {
     customTheme: { main: '#ff0000' },
     flat: false,
@@ -206,6 +326,14 @@ export const CustomTheme: Story = {
 };
 
 export const NoDataMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom no-data message.',
+      },
+    },
+  },
   args: {
     filterable: true,
     filter: 'asjkghakshgjkashg',
@@ -213,18 +341,42 @@ export const NoDataMessage: Story = {
 };
 
 export const Zoomable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with zooming controls enabled.',
+      },
+    },
+  },
   args: {
     zoomable: true,
   },
 };
 
 export const FillParent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable filling its parent container.',
+      },
+    },
+  },
   args: {
     fill: true,
   },
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   args: {
     size: 'small',
     filterable: true,
@@ -233,12 +385,28 @@ export const Sizes: Story = {
 };
 
 export const DefaultPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with the default paging control.',
+      },
+    },
+  },
   args: {
     paging: 'buttons',
   },
 };
 
 export const KeyTooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a tooltip attached to the key.',
+      },
+    },
+  },
   args: {
     keyTooltip: (key) => `Tooltip for ${key}`,
   },
@@ -250,6 +418,14 @@ export const KeyTooltip: Story = {
 };
 
 export const ValueTooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a tooltip attached to the value.',
+      },
+    },
+  },
   args: {
     valueTooltip: (value) => ({
       content: `${JSON.stringify(value || 'No value')}`,
@@ -267,6 +443,14 @@ export const ValueTooltip: Story = {
 };
 
 export const CustomColumnWidths: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with custom column widths applied.',
+      },
+    },
+  },
   args: {
     minValueWidth: 500,
     maxKeyWidth: 100,
@@ -274,12 +458,28 @@ export const CustomColumnWidths: Story = {
 };
 
 export const CustomKeyIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom intent applied to keys.',
+      },
+    },
+  },
   args: {
     keyColumnIntent: 'success',
   },
 };
 
 export const CustomAlign: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom alignment applied.',
+      },
+    },
+  },
   args: {
     keyAlign: 'right',
     valueAlign: 'center',
@@ -287,6 +487,14 @@ export const CustomAlign: Story = {
 };
 
 export const CustomPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom paging control.',
+      },
+    },
+  },
   args: {
     paging: {
       fluid: true,
@@ -299,12 +507,28 @@ export const CustomPaging: Story = {
 };
 
 export const CustomKeyRenderer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom key renderer.',
+      },
+    },
+  },
   args: {
     keyRenderer: (label) => `${label}_custom`,
   },
 };
 
 export const CustomValueRenderer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom value renderer.',
+      },
+    },
+  },
   args: {
     valueRenderer: ({ value, tableKey }, Component): TReqoreTableColumnContent | JSX.Element => {
       switch (tableKey) {
@@ -324,6 +548,14 @@ export const CustomValueRenderer: Story = {
 };
 
 export const CustomExportMapper: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with a custom export mapper that shapes the exported data.',
+      },
+    },
+  },
   args: {
     exportable: true,
     exportMapper: (data) => {
@@ -346,6 +578,14 @@ export const CustomExportMapper: Story = {
 };
 
 export const NonVirtualizedWrapped: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyValueTable with virtualization disabled and wrapping enabled.',
+      },
+    },
+  },
   args: {
     wrap: true,
     height: 500,

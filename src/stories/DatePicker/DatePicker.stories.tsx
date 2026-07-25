@@ -88,6 +88,14 @@ const getPopoverElements = async (canvasElement: HTMLElement) => {
 };
 export default meta;
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker in its default configuration.',
+      },
+    },
+  },
   args: {
     value: new Date(2024, 4, 10, 8, 0, 0),
   },
@@ -109,14 +117,38 @@ export const Default: Story = {
   },
 };
 export const WithMinMaxValue: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with explicit min and max values.',
+      },
+    },
+  },
   args: { minValue: new Date(2000, 0, 1), maxValue: new Date(2030, 11, 31) },
 };
 export const WithDefaultISOValue: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with a default ISO-formatted value pre-set.',
+      },
+    },
+  },
   args: {
     value: '2024-04-10T08:00:00.000Z',
   },
 };
 export const WithCustomDateTimeSeparator: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with a custom separator between date and time.',
+      },
+    },
+  },
   args: {
     value: new Date(2024, 3, 10, 8, 0, 0),
     locale: 'en-CA',
@@ -134,6 +166,14 @@ export const WithCustomDateTimeSeparator: Story = {
   },
 };
 export const WithAM_PM: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker in 12-hour mode with AM/PM markers.',
+      },
+    },
+  },
   args: {
     hourCycle: 12,
   },
@@ -145,6 +185,14 @@ export const WithAM_PM: Story = {
   },
 };
 export const WithoutDefaultValue: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker without a default value pre-selected.',
+      },
+    },
+  },
   args: {
     value: null,
     popoverProps: {},
@@ -165,6 +213,14 @@ export const WithoutDefaultValue: Story = {
 };
 
 export const WithoutTimePicker: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker without the time picker portion.',
+      },
+    },
+  },
   args: {
     granularity: 'day',
     popoverProps: { openOnMount: true },
@@ -181,6 +237,14 @@ export const WithoutTimePicker: Story = {
   },
 };
 export const WithIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with an intent applied.',
+      },
+    },
+  },
   args: {
     popoverProps: {
       openOnMount: false,
@@ -213,6 +277,14 @@ export const WithIntent: Story = {
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with a visual effect applied.',
+      },
+    },
+  },
   args: {
     intent: 'muted',
     pickerProps: {
@@ -225,18 +297,58 @@ export const WithEffect: Story = {
   },
 };
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker in its minimal variant.',
+      },
+    },
+  },
   args: { minimal: true },
 };
 export const Pill: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker in its pill shape.',
+      },
+    },
+  },
   args: { pill: true },
 };
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   args: { fluid: true },
 };
 export const FluidWithSelect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker in a fluid layout with a select control.',
+      },
+    },
+  },
   args: { fluid: true, selectOnly: true, placeholder: 'Select date' },
 };
 export const WithTooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with a tooltip attached.',
+      },
+    },
+  },
   args: {
     tooltip: {
       content: `Tooltip content`,
@@ -248,6 +360,12 @@ export const WithTooltip: Story = {
 
 export const ValueCanBeCleared: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker and clears the value via the clear control.',
+      },
+    },
     chromatic: { disableSnapshot: true },
   },
 
@@ -265,6 +383,12 @@ export const ValueCanBeCleared: Story = {
 };
 export const ValueCanBeChosenFromPopover: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker and picks a value from the popover.',
+      },
+    },
     chromatic: { disableSnapshot: true },
   },
   args: {
@@ -291,6 +415,14 @@ export const ValueCanBeChosenFromPopover: Story = {
   },
 };
 export const YearMonthShouldBeDisabledIfOutOfRange: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker and proves the year/month controls are disabled when the value is out of range.',
+      },
+    },
+  },
   args: {
     popoverProps: {},
     minValue: new Date(2000, 1, 1),
@@ -312,6 +444,12 @@ export const YearMonthShouldBeDisabledIfOutOfRange: Story = {
 };
 export const CurrentCalendarMonthCanBeChanged: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker and changes the current calendar month via the picker controls.',
+      },
+    },
     chromatic: { disableSnapshot: true },
   },
   args: {
@@ -341,6 +479,14 @@ export const CurrentCalendarMonthCanBeChanged: Story = {
 };
 
 export const TimeCanBeChangedFromPopover: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker and changes the time from the popover controls.',
+      },
+    },
+  },
   args: {
     popoverProps: {},
   },
@@ -358,6 +504,12 @@ export const TimeCanBeChangedFromPopover: Story = {
 };
 export const ShouldSaveTimeWhenDateValueIsNull: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker and proves that time is preserved when the date value becomes null.',
+      },
+    },
     chromatic: { disableSnapshot: true },
   },
   args: {
@@ -392,6 +544,14 @@ export const ShouldSaveTimeWhenDateValueIsNull: Story = {
 /** Czech locale — segments should be ordered day / month / year (d.M.yyyy),
  *  not month/day/year as in en-US. */
 export const WithCzechLocale: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker with the Czech locale applied to prove locale switching works.',
+      },
+    },
+  },
   args: {
     locale: 'cs',
     granularity: 'day',
@@ -403,6 +563,12 @@ export const WithCzechLocale: Story = {
 /** Side-by-side comparison: en-US (month first) vs cs (day first). */
 export const LocaleComparison: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker at two locales side by side for comparison.',
+      },
+    },
     chromatic: { disableSnapshot: true },
   },
   args: {
@@ -424,6 +590,14 @@ export const LocaleComparison: Story = {
 
 /** `selectOnly` — renders a button trigger; the date can only be picked from the calendar. */
 export const SelectOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker in select-only mode.',
+      },
+    },
+  },
   args: {
     selectOnly: true,
     granularity: 'day',
@@ -433,6 +607,14 @@ export const SelectOnly: Story = {
 
 /** `selectOnly` with no initial value — button shows placeholder until a date is picked. */
 export const SelectOnlyEmpty: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker in select-only mode with no items.',
+      },
+    },
+  },
   args: {
     selectOnly: true,
     granularity: 'day',
@@ -444,6 +626,14 @@ export const SelectOnlyEmpty: Story = {
 
 /** `selectOnly` with `isClearable` — the component renders its own clear button. */
 export const SelectOnlyClearable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DatePicker in select-only mode with a clear control.',
+      },
+    },
+  },
   args: {
     selectOnly: true,
     granularity: 'day',

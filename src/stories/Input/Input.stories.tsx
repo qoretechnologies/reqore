@@ -147,10 +147,26 @@ const Template: StoryFn<typeof ReqoreInput> = (args: IReqoreInputProps) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Info: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input with intent="info".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -159,6 +175,14 @@ export const Info: Story = {
 };
 
 export const Success: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input with intent="success".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -167,6 +191,14 @@ export const Success: Story = {
 };
 
 export const Warning: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input with intent="warning".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -175,6 +207,14 @@ export const Warning: Story = {
 };
 
 export const Danger: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input with intent="danger".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -183,6 +223,14 @@ export const Danger: Story = {
 };
 
 export const Pending: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input with intent="pending".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -191,6 +239,14 @@ export const Pending: Story = {
 };
 
 export const Muted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input with intent="muted".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -199,6 +255,14 @@ export const Muted: Story = {
 };
 
 export const Effect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input with a gradient/typography effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -214,6 +278,14 @@ export const Effect: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input with a transparent background.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -230,6 +302,14 @@ export const Transparent: Story = {
 };
 
 export const Pill: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input in its pill shape.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -238,6 +318,14 @@ export const Pill: Story = {
 };
 
 export const Loading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input in its loading state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -246,6 +334,14 @@ export const Loading: Story = {
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     // size='huge' so the bigger radius values aren't clamped to half the
     // input's height (which is what would happen at size='normal' for big /
@@ -265,6 +361,14 @@ export const RadiusSize: Story = {
 };
 
 export const ShortcutHint: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Input showing the keyboard-shortcut hint.',
+      },
+    },
+  },
   render: () => {
     const [value, setValue] = useState('Clearable value');
 

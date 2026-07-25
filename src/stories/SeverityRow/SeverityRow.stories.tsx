@@ -14,6 +14,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow in its default configuration.',
+      },
+    },
+  },
   args: {
     label: 'Payment Processing · stripe-webhook-receiver',
     description: 'Avg duration 4.7s exceeded 3.5s threshold · just now',
@@ -27,6 +35,14 @@ export const Basic: Story = {
 };
 
 export const WithBadge: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with a badge.',
+      },
+    },
+  },
   args: {
     label: 'Payment Processing',
     description: 'Three open detector flags from the last summary cycle',
@@ -37,6 +53,14 @@ export const WithBadge: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       <ReqoreSeverityRow
@@ -74,6 +98,14 @@ export const Intents: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       <ReqoreSeverityRow
@@ -105,6 +137,14 @@ export const Sizes: Story = {
 };
 
 export const Bordered: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with a border applied.',
+      },
+    },
+  },
   args: {
     label: 'Bordered row',
     description: 'flat={false} renders an intent-coloured border',
@@ -115,6 +155,14 @@ export const Bordered: Story = {
 };
 
 export const Square: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow in square (chip) mode — a fixed-size slot with no horizontal padding.',
+      },
+    },
+  },
   args: {
     label: 'Square row',
     description: 'rounded={false} removes the corner radius',
@@ -125,6 +173,14 @@ export const Square: Story = {
 };
 
 export const WithEffects: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with a set of visual effects applied to different items.',
+      },
+    },
+  },
   args: {
     label: 'Effects on label and description',
     description: 'Description with custom effect',
@@ -142,6 +198,14 @@ export const WithEffects: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow in a clickable variant so hover and press states are exercised.',
+      },
+    },
+  },
   args: {
     label: 'Customer Support · zendesk-ticket-sync',
     description: 'Avg duration scored 3.2 (threshold 3.0)',
@@ -152,6 +216,14 @@ export const Clickable: Story = {
 };
 
 export const NoStrip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow without the strip decoration.',
+      },
+    },
+  },
   args: {
     label: 'Customer Onboarding · onboard-new-customer',
     description: 'No issues — operating within baseline',
@@ -162,6 +234,14 @@ export const NoStrip: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with a transparent background.',
+      },
+    },
+  },
   args: {
     label: 'Inventory Management · stock-sync',
     description: 'Operating normally — strip only, no tinted background',
@@ -172,6 +252,14 @@ export const Transparent: Story = {
 };
 
 export const NoWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with content forced onto a single line.',
+      },
+    },
+  },
   args: {
     label: 'Payment Processing · stripe-webhook-receiver-fallback',
     description:
@@ -191,6 +279,14 @@ export const NoWrap: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow in its disabled state.',
+      },
+    },
+  },
   args: {
     label: 'Disabled row',
     description: 'No actions allowed',
@@ -202,6 +298,14 @@ export const Disabled: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with the raised effect.',
+      },
+    },
+  },
   args: {
     label: 'Raised severity row',
     description:
@@ -229,6 +333,14 @@ const renderSeverityRowMatrix = (variantArgs: Partial<IReqoreSeverityRowProps>) 
   ));
 
 export const Unpadded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with no padding.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderSeverityRowMatrix({ padded: false })}
@@ -237,6 +349,14 @@ export const Unpadded: Story = {
 };
 
 export const PaddedHorizontalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with padding only on the horizontal axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderSeverityRowMatrix({ padded: 'horizontal' })}
@@ -245,6 +365,14 @@ export const PaddedHorizontalOnly: Story = {
 };
 
 export const PaddedVerticalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with padding only on the vertical axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderSeverityRowMatrix({ padded: 'vertical' })}
@@ -253,6 +381,14 @@ export const PaddedVerticalOnly: Story = {
 };
 
 export const CustomPaddingSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SeverityRow with a custom padding size.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {SEVERITY_ROW_SIZES.map((size) => (

@@ -61,10 +61,26 @@ const Template: StoryFn<IReqoreSpinnerProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Spinner in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const WithLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Spinner with a label.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -73,6 +89,14 @@ export const WithLabel: Story = {
 };
 
 export const Centered: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Spinner centered.',
+      },
+    },
+  },
   render: Template,
 
   args: {

@@ -39,18 +39,42 @@ const basicItems: IReqoreAccordionItem[] = [
 ];
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion in its default configuration.',
+      },
+    },
+  },
   args: {
     items: basicItems,
   },
 };
 
 export const WithDefaultOpen: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion with the first item open by default.',
+      },
+    },
+  },
   args: {
     items: [{ ...basicItems[0], isOpen: true }, basicItems[1], basicItems[2]],
   },
 };
 
 export const SingleExpand: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion in single-expand mode — only one item can be open at a time.',
+      },
+    },
+  },
   args: {
     items: [{ ...basicItems[0], isOpen: true }, basicItems[1], basicItems[2]],
     allowMultiple: false,
@@ -58,6 +82,14 @@ export const SingleExpand: Story = {
 };
 
 export const WithIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion with icons on the items.',
+      },
+    },
+  },
   args: {
     items: [
       {
@@ -81,6 +113,14 @@ export const WithIcons: Story = {
 };
 
 export const WithBadges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion with multiple badges.',
+      },
+    },
+  },
   args: {
     items: [
       {
@@ -110,6 +150,14 @@ export const WithBadges: Story = {
 };
 
 export const WithIntents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion across a set of intents.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreAccordion
       {...args}
@@ -145,6 +193,14 @@ export const WithIntents: Story = {
 };
 
 export const GlobalIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion with an intent applied globally.',
+      },
+    },
+  },
   args: {
     items: basicItems.map((item, i) => ({ ...item, isOpen: i === 0 })),
     intent: 'info',
@@ -152,6 +208,14 @@ export const GlobalIntent: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => {
     const sizes = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
@@ -184,6 +248,14 @@ export const Sizes: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion in its flat variant.',
+      },
+    },
+  },
   args: {
     items: basicItems.map((item, i) => ({ ...item, isOpen: i === 0 })),
     flat: true,
@@ -191,6 +263,14 @@ export const Flat: Story = {
 };
 
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion in its minimal variant.',
+      },
+    },
+  },
   args: {
     items: basicItems.map((item, i) => ({ ...item, isOpen: i === 0 })),
     minimal: true,
@@ -198,6 +278,14 @@ export const Minimal: Story = {
 };
 
 export const MinimalWithIntents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion in the minimal variant across a set of intents.',
+      },
+    },
+  },
   args: {
     minimal: true,
     items: [
@@ -226,6 +314,14 @@ export const MinimalWithIntents: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   args: {
     items: basicItems.map((item, i) => ({ ...item, isOpen: i === 0 })),
     fluid: true,
@@ -233,6 +329,14 @@ export const Fluid: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion in its disabled state.',
+      },
+    },
+  },
   args: {
     items: basicItems,
     disabled: true,
@@ -240,6 +344,14 @@ export const Disabled: Story = {
 };
 
 export const DisabledItems: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion with individual items marked disabled.',
+      },
+    },
+  },
   args: {
     items: [
       { ...basicItems[0], isOpen: true },
@@ -250,6 +362,14 @@ export const DisabledItems: Story = {
 };
 
 export const CustomContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Accordion with custom React content passed in.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreAccordion
       {...args}
@@ -287,6 +407,14 @@ export const CustomContent: Story = {
 };
 
 export const FAQExample: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a FAQ-style composition using Accordion.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreAccordion
       {...args}
@@ -327,6 +455,14 @@ export const FAQExample: Story = {
 };
 
 export const SettingsExample: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a settings-page composition using Accordion — general, security, notifications, and a danger zone.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreAccordion
       {...args}

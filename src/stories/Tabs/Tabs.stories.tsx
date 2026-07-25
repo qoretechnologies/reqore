@@ -248,6 +248,14 @@ const Template: StoryFn<IReqoreTabsProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs in its default configuration.',
+      },
+    },
+  },
   render: Template,
 
   play: async () => {
@@ -256,6 +264,14 @@ export const Basic: Story = {
 };
 
 export const Small: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs at the small size.',
+      },
+    },
+  },
   render: Template,
   args: {
     size: 'small',
@@ -266,6 +282,14 @@ export const Small: Story = {
 };
 
 export const Fill: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs filling the available space.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -274,6 +298,14 @@ export const Fill: Story = {
 };
 
 export const FillWithFixedItem: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs filling the space with one fixed-size item.',
+      },
+    },
+  },
   render: () => {
     return (
       <ReqoreTabs
@@ -301,6 +333,14 @@ export const FillWithFixedItem: Story = {
 };
 
 export const CustomActiveIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with a custom intent for the active state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -310,6 +350,14 @@ export const CustomActiveIntent: Story = {
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -320,6 +368,14 @@ export const NotFlat: Story = {
 /** `activeTabMarker='line'` leaves the tab transparent and marks the active one
  *  with a bar on the list's edge — the quieter treatment for dense surfaces. */
 export const ActiveTabMarkerLine: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with a marker line on the active tab.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -330,6 +386,14 @@ export const ActiveTabMarkerLine: Story = {
 
 /** The `line` marker takes the active intent's colour when one is set. */
 export const ActiveTabMarkerLineWithIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with a marker line on the active tab that uses an intent color.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -342,6 +406,14 @@ export const ActiveTabMarkerLineWithIntent: Story = {
 /** `activeTabMarkerColor` gives the bar an accent the label doesn't carry —
  *  the usual underline-tab treatment (bright label, coloured bar). */
 export const ActiveTabMarkerLineColor: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with a coloured marker line on the active tab.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -352,6 +424,14 @@ export const ActiveTabMarkerLineColor: Story = {
 
 /** Vertical tabs move the `line` marker to the strip's trailing edge. */
 export const ActiveTabMarkerLineVertical: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with a vertical marker line on the active tab.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -362,6 +442,14 @@ export const ActiveTabMarkerLineVertical: Story = {
 };
 
 export const WithPadding: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with padding applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -370,6 +458,14 @@ export const WithPadding: Story = {
 };
 
 export const Vertical: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs laid out vertically.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -379,6 +475,14 @@ export const Vertical: Story = {
 };
 
 export const VerticalNoTabsPadding: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs in a vertical layout without tabs padding.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -388,6 +492,14 @@ export const VerticalNoTabsPadding: Story = {
 };
 
 export const VerticalWithWrapping: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs laid out vertically with wrapping enabled.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -398,6 +510,14 @@ export const VerticalWithWrapping: Story = {
 };
 
 export const VerticalCustomWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs in a vertical layout with a custom width.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -408,6 +528,14 @@ export const VerticalCustomWidth: Story = {
 };
 
 export const CustomTabsPadding: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with custom padding inside the tabs.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -416,6 +544,14 @@ export const CustomTabsPadding: Story = {
 };
 
 export const DontUnMountInactiveTabs: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with inactive tabs preserved (not unmounted) so their state persists.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -446,7 +582,11 @@ export const WithSlowTab: Story = {
   // "Rendered more hooks than during the previous render" during the interrupted
   // transition render. Using static source skips that hook path.
   parameters: {
-    docs: { source: { type: 'code' } },
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with one tab that mounts slowly to exercise the loading path.',
+      }, source: { type: 'code' } },
   },
   render: (args) => {
     return (
@@ -496,7 +636,11 @@ const manyTabs = Array.from({ length: 16 }, (_, index) => ({
 
 export const OverflowMenuSizing: Story = {
   parameters: {
-    docs: { source: { type: 'code' } },
+    docs: {
+      description: {
+        story:
+          'Renders Tabs showing the overflow-menu sizing behaviour.',
+      }, source: { type: 'code' } },
   },
   render: (args) => {
     return (
@@ -536,7 +680,11 @@ export const OverflowMenuSizing: Story = {
 
 export const OverflowMenuCustomHeight: Story = {
   parameters: {
-    docs: { source: { type: 'code' } },
+    docs: {
+      description: {
+        story:
+          'Renders Tabs with a custom overflow-menu height.',
+      }, source: { type: 'code' } },
   },
   args: {
     overflowMenuProps: { maxHeight: '160px' },

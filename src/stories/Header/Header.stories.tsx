@@ -43,10 +43,26 @@ const Template: StoryFn<typeof ReqoreHeading> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Heading in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Success: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Heading with intent="success".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -55,6 +71,14 @@ export const Success: Story = {
 };
 
 export const Danger: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Heading with intent="danger".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -63,6 +87,14 @@ export const Danger: Story = {
 };
 
 export const Warning: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Heading with intent="warning".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -71,6 +103,14 @@ export const Warning: Story = {
 };
 
 export const Info: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Heading with intent="info".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -79,6 +119,14 @@ export const Info: Story = {
 };
 
 export const Pending: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Heading with intent="pending".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -87,6 +135,14 @@ export const Pending: Story = {
 };
 
 export const Muted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Heading with intent="muted".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -95,6 +151,14 @@ export const Muted: Story = {
 };
 
 export const Effect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Heading with a gradient/typography effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {

@@ -29,6 +29,14 @@ const Template: StoryFn<IReqoreStackedBarProps> = (args) => (
 );
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar in its default configuration.',
+      },
+    },
+  },
   render: Template,
   args: {
     fluid: true,
@@ -37,6 +45,14 @@ export const Basic: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '420px' }}>
       <ReqoreStackedBar {...args} size='tiny' />
@@ -50,6 +66,14 @@ export const Sizes: Story = {
 };
 
 export const WithValues: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with values applied.',
+      },
+    },
+  },
   render: Template,
   args: { fluid: true, showValues: true, items: STATUS_ITEMS },
 };
@@ -57,12 +81,28 @@ export const WithValues: Story = {
 /** `showLabels` stacks each segment's label under its value, in a smaller
  *  uppercase, letter-spaced style — the bar grows taller to fit both lines. */
 export const WithLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with labels applied.',
+      },
+    },
+  },
   render: Template,
   args: { fluid: true, showValues: true, showLabels: true, items: STATUS_ITEMS },
 };
 
 /** `flat={false}` draws a border around the track. */
 export const WithBorder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with a border applied.',
+      },
+    },
+  },
   render: Template,
   args: { fluid: true, flat: false, showValues: true, items: STATUS_ITEMS },
 };
@@ -70,6 +110,14 @@ export const WithBorder: Story = {
 /** `raised` adds the subtle inset 3D treatment (top highlight + bottom
  *  shadow) shared with Panel, Bubble, and friends. */
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with the raised effect.',
+      },
+    },
+  },
   render: Template,
   args: { fluid: true, raised: true, showValues: true, items: STATUS_ITEMS },
 };
@@ -77,6 +125,14 @@ export const Raised: Story = {
 /** The standard `effect` prop works as it does on every Reqore surface —
  *  here a glow. */
 export const WithGlow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with a glow effect applied.',
+      },
+    },
+  },
   render: Template,
   args: {
     fluid: true,
@@ -90,6 +146,14 @@ export const WithGlow: Story = {
  *  *unfilled* remainder — give the bar a `total` well above the sum and
  *  the gradient reads clearly to the right of the segments. */
 export const WithGradient: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with a gradient effect.',
+      },
+    },
+  },
   render: Template,
   args: {
     fluid: true,
@@ -102,24 +166,56 @@ export const WithGradient: Story = {
 
 /** `transparent` drops the tinted empty track. */
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with a transparent background.',
+      },
+    },
+  },
   render: Template,
   args: { fluid: true, transparent: true, total: 220, showValues: true, items: STATUS_ITEMS },
 };
 
 /** `rounded={false}` squares the corners. */
 export const NotRounded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with rounded corners disabled.',
+      },
+    },
+  },
   render: Template,
   args: { fluid: true, rounded: false, showValues: true, items: STATUS_ITEMS },
 };
 
 /** `disabled` dims the bar and blocks interaction. */
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar in its disabled state.',
+      },
+    },
+  },
   render: Template,
   args: { fluid: true, disabled: true, showValues: true, items: STATUS_ITEMS },
 };
 
 /** A bar-level `tooltip` (in addition to the per-segment tooltips). */
 export const WithTooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with a tooltip attached.',
+      },
+    },
+  },
   render: Template,
   args: {
     fluid: true,
@@ -134,11 +230,27 @@ export const WithTooltip: Story = {
 
 /** Non-fluid bars fall back to the default fixed width. */
 export const FixedWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with a fixed width.',
+      },
+    },
+  },
   render: (args) => <ReqoreStackedBar {...args} />,
   args: { showValues: true, items: STATUS_ITEMS },
 };
 
 export const CustomColors: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with custom colors overridden.',
+      },
+    },
+  },
   render: Template,
   args: {
     fluid: true,
@@ -151,6 +263,14 @@ export const CustomColors: Story = {
 };
 
 export const PartialOfTotal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar showing a partial value relative to the total.',
+      },
+    },
+  },
   render: Template,
   args: {
     fluid: true,
@@ -164,6 +284,14 @@ export const PartialOfTotal: Story = {
 };
 
 export const Empty: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar in its empty state.',
+      },
+    },
+  },
   render: Template,
   args: {
     fluid: true,
@@ -177,6 +305,14 @@ export const Empty: Story = {
 /** Tiny values still render at the minimum segment width so they stay
  *  visible and clickable. */
 export const TinySegmentsStayVisible: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with tiny segments that still stay visible above a minimum threshold.',
+      },
+    },
+  },
   render: Template,
   args: {
     fluid: true,
@@ -191,6 +327,14 @@ export const TinySegmentsStayVisible: Story = {
 /** Each segment is clickable; the play test confirms a segment click
  *  fires the handler and that zero-value statuses are not rendered. */
 export const ClickableSegments: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders StackedBar with clickable segments.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '420px' }}>
       <ReqoreStackedBar {...args} />

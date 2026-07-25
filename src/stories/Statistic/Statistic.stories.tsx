@@ -15,12 +15,28 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic in its default configuration.',
+      },
+    },
+  },
   args: {
     value: 12345,
   },
 };
 
 export const WithLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with a label.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='huge'>
       <ReqoreStatistic {...args} value='12,345' label='Total Users' />
@@ -31,6 +47,14 @@ export const WithLabel: Story = {
 };
 
 export const WithIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with an icon.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='huge'>
       <ReqoreStatistic {...args} value='12,345' label='Total Users' icon='UserLine' />
@@ -53,6 +77,14 @@ export const WithIcon: Story = {
 };
 
 export const WithPrefixAndSuffix: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with prefix and suffix content.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='huge'>
       <ReqoreStatistic {...args} value='1,200' label='Revenue' prefix='$' />
@@ -64,6 +96,14 @@ export const WithPrefixAndSuffix: Story = {
 };
 
 export const WithTrend: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with a trend indicator.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='huge'>
       <ReqoreStatistic
@@ -92,6 +132,14 @@ export const WithTrend: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => {
     const sizes = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
@@ -114,6 +162,14 @@ export const Sizes: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreStatistic {...args} value={100} label='Default' icon='InformationLine' />
@@ -134,6 +190,14 @@ export const Intents: Story = {
 };
 
 export const Alignment: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with alignment options exercised.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big'>
       <div style={{ width: '300px', border: '1px dashed gray', padding: '16px' }}>
@@ -150,6 +214,14 @@ export const Alignment: Story = {
 };
 
 export const WithValueEffects: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with a visual effect applied to the values.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='huge'>
       <ReqoreStatistic
@@ -174,6 +246,14 @@ export const WithValueEffects: Story = {
 };
 
 export const WithBackground: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with a background image or color set.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreStatistic
@@ -214,6 +294,14 @@ export const WithBackground: Story = {
 };
 
 export const WithBackgroundFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with the flat background variant.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreStatistic {...args} value='12,345' label='Total Users' icon='UserLine' rounded flat />
@@ -240,6 +328,14 @@ export const WithBackgroundFlat: Story = {
 };
 
 export const WithGradientBackground: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with a gradient applied to its background.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreStatistic
@@ -294,6 +390,14 @@ export const WithGradientBackground: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic in its disabled state.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='huge'>
       <ReqoreStatistic {...args} value='12,345' label='Users' icon='UserLine' disabled />
@@ -310,6 +414,14 @@ export const Disabled: Story = {
 };
 
 export const Interactive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic in its interactive configuration.',
+      },
+    },
+  },
   render: (args) => {
     const [selected, setSelected] = useState<string | null>(null);
 
@@ -357,6 +469,14 @@ export const Interactive: Story = {
 };
 
 export const DashboardExample: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a full dashboard-style composition using Statistic.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreStatistic
@@ -401,6 +521,14 @@ export const DashboardExample: Story = {
 };
 
 export const StackedStatistics: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with stacked statistics.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup {...args} stack fluid>
       <ReqoreStatistic
@@ -442,6 +570,14 @@ export const StackedStatistics: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with the raised effect.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup gapSize='huge'>
       <ReqoreStatistic value='12,345' label='Total Users' icon='UserLine' rounded raised />
@@ -481,6 +617,14 @@ const renderStatisticMatrix = (variantArgs: Partial<IReqoreStatisticProps>) =>
   ));
 
 export const Unpadded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with no padding.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small'>
       {renderStatisticMatrix({ padded: false })}
@@ -489,6 +633,14 @@ export const Unpadded: Story = {
 };
 
 export const PaddedHorizontalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with padding only on the horizontal axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small'>
       {renderStatisticMatrix({ padded: 'horizontal' })}
@@ -497,6 +649,14 @@ export const PaddedHorizontalOnly: Story = {
 };
 
 export const PaddedVerticalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with padding only on the vertical axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small'>
       {renderStatisticMatrix({ padded: 'vertical' })}
@@ -505,6 +665,14 @@ export const PaddedVerticalOnly: Story = {
 };
 
 export const CustomPaddingSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with a custom padding size.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small'>
       {STATISTIC_SIZES.map((size) => (
@@ -523,6 +691,14 @@ export const CustomPaddingSize: Story = {
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small'>
       {ALL_SIZES.map((radiusSize) => (

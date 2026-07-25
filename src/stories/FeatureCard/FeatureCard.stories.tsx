@@ -62,10 +62,26 @@ const Template: StoryFn<IReqoreFeatureCardProps> = (args) => (
 );
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Numbered: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with items numbered.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Define the goal',
@@ -77,6 +93,14 @@ export const Numbered: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup wrap gapSize='normal'>
       {Object.keys(DEFAULT_INTENTS).map((intent) => (
@@ -95,6 +119,14 @@ export const Intents: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => {
     const sizes = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
@@ -117,6 +149,14 @@ export const Sizes: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard in its flat variant.',
+      },
+    },
+  },
   render: Template,
   args: {
     flat: true,
@@ -124,10 +164,26 @@ export const Flat: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: (args) => <ReqoreFeatureCard {...args} fluid />,
 };
 
 export const FrostedLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with a frosted-effect label.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Glass label treatment',
@@ -140,6 +196,14 @@ export const FrostedLabel: Story = {
 };
 
 export const Bordered: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with a border applied.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Bordered card',
@@ -150,6 +214,14 @@ export const Bordered: Story = {
 };
 
 export const Square: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard in square (chip) mode — a fixed-size slot with no horizontal padding.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Square corners',
@@ -159,6 +231,14 @@ export const Square: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with a transparent background.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Transparent surface',
@@ -169,6 +249,14 @@ export const Transparent: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard in a clickable variant so hover and press states are exercised.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Clickable card',
@@ -178,6 +266,14 @@ export const Clickable: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard in its disabled state.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Disabled card',
@@ -190,6 +286,14 @@ export const Disabled: Story = {
 };
 
 export const Tooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with a tooltip attached.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'With tooltip',
@@ -199,6 +303,14 @@ export const Tooltip: Story = {
 };
 
 export const Fixed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard in a fixed-position layout.',
+      },
+    },
+  },
   render: (args) => <ReqoreFeatureCard {...args} fixed />,
   args: {
     label: 'Fixed width card',
@@ -207,6 +319,14 @@ export const Fixed: Story = {
 };
 
 export const WithBadge: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with a badge.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Just shipped',
@@ -217,6 +337,14 @@ export const WithBadge: Story = {
 };
 
 export const WithMultipleBadges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with multiple badges.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Pricing tier',
@@ -229,6 +357,14 @@ export const WithMultipleBadges: Story = {
 };
 
 export const NoWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with content forced onto a single line.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ width: 320 }}>
       <ReqoreFeatureCard {...args} />
@@ -243,6 +379,14 @@ export const NoWrap: Story = {
 };
 
 export const WithEffects: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with a set of visual effects applied to different items.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Effects everywhere',
@@ -260,6 +404,14 @@ export const WithEffects: Story = {
 };
 
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with a custom theme override applied.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Branded card',
@@ -269,6 +421,14 @@ export const CustomTheme: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with the raised effect.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Raised card',
@@ -295,6 +455,14 @@ const renderFeatureCardMatrix = (variantArgs: Partial<IReqoreFeatureCardProps>) 
   ));
 
 export const Unpadded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with no padding.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderFeatureCardMatrix({ padded: false })}
@@ -303,6 +471,14 @@ export const Unpadded: Story = {
 };
 
 export const PaddedHorizontalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with padding only on the horizontal axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderFeatureCardMatrix({ padded: 'horizontal' })}
@@ -311,6 +487,14 @@ export const PaddedHorizontalOnly: Story = {
 };
 
 export const PaddedVerticalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with padding only on the vertical axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderFeatureCardMatrix({ padded: 'vertical' })}
@@ -319,6 +503,14 @@ export const PaddedVerticalOnly: Story = {
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {ALL_SIZES.map((radiusSize) => (
@@ -337,6 +529,14 @@ export const RadiusSize: Story = {
 };
 
 export const MultipleGradients: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with layered gradient effects.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Layered gradients',
@@ -376,6 +576,14 @@ export const MultipleGradients: Story = {
 };
 
 export const CustomPaddingSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders FeatureCard with a custom padding size.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {FEATURE_CARD_SIZES.map((size) => (

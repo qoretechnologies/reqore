@@ -39,13 +39,37 @@ const meta = {
 type Story = StoryObj<typeof meta>;
 
 export default meta;
-export const Empty: Story = {};
+export const Empty: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor in its empty state.',
+      },
+    },
+  },};
 export const WithPlaceholder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor with a placeholder set.',
+      },
+    },
+  },
   args: {
     placeholder: 'Type something here...',
   },
 };
 export const WithDefaultValue: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor with a default value pre-set.',
+      },
+    },
+  },
   args: {
     value: [
       {
@@ -71,6 +95,14 @@ export const WithDefaultValue: Story = {
 };
 
 export const WithCustomStyle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor with custom inline styling.',
+      },
+    },
+  },
   args: {
     ...WithDefaultValue.args,
     size: 'small',
@@ -80,6 +112,14 @@ export const WithCustomStyle: Story = {
 };
 
 export const Readonly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor in its read-only state.',
+      },
+    },
+  },
   args: {
     ...WithDefaultValue.args,
     readOnly: true,
@@ -87,6 +127,14 @@ export const Readonly: Story = {
 };
 
 export const WithCustomTags: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor with custom tag content.',
+      },
+    },
+  },
   args: {
     actions: {
       styling: true,
@@ -236,6 +284,14 @@ export const WithCustomTags: Story = {
 };
 
 export const ListWithCustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor list with a custom theme applied.',
+      },
+    },
+  },
   ...WithCustomTags,
   args: {
     ...WithCustomTags.args,
@@ -252,6 +308,14 @@ export const ListWithCustomTheme: Story = {
 };
 
 export const ListWithCustomIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor list with a custom intent.',
+      },
+    },
+  },
   ...WithCustomTags,
   args: {
     ...WithCustomTags.args,
@@ -266,6 +330,14 @@ export const ListWithCustomIntent: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor in its disabled state.',
+      },
+    },
+  },
   args: {
     ...WithCustomTags.args,
     disabled: true,
@@ -273,6 +345,14 @@ export const Disabled: Story = {
 };
 
 export const WithActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor with action buttons attached.',
+      },
+    },
+  },
   args: {
     actions: {
       styling: true,
@@ -305,6 +385,14 @@ export const WithActions: Story = {
 };
 
 export const WithStyling: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor with additional inline styling.',
+      },
+    },
+  },
   args: {
     actions: {
       styling: true,
@@ -324,6 +412,14 @@ export const WithStyling: Story = {
 };
 
 export const UpdatesFromInside: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor and updates it from inside the component.',
+      },
+    },
+  },
   args: {
     value: [
       {
@@ -362,6 +458,14 @@ export const UpdatesFromInside: Story = {
  * search highlights, error underlines, etc.
  */
 export const WithDecorate: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor with the decorate transform applied.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState(args.value);
 
@@ -442,6 +546,14 @@ export const WithDecorate: Story = {
 };
 
 export const WithCustomRenderLeaf: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor with a custom leaf renderer for the rich-text editor.',
+      },
+    },
+  },
   args: {
     value: [
       {
@@ -476,6 +588,14 @@ export const WithCustomRenderLeaf: Story = {
 };
 
 export const UpdatesFromOutside: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders RichTextEditor and updates it from outside via the ref/props.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState(args.value);
 

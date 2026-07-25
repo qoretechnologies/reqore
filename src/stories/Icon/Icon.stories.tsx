@@ -11,6 +11,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Icon in its default configuration.',
+      },
+    },
+  },
   render: () => {
     return (
       <>
@@ -172,6 +180,14 @@ export const Basic: Story = {
 };
 
 export const Glow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Icon with a glow effect applied.',
+      },
+    },
+  },
   render: () => (
     <ReqorePanel padded>
       <ReqoreControlGroup gapSize='huge' verticalAlign='center'>

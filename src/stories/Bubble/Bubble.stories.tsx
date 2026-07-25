@@ -57,10 +57,26 @@ const Template: StoryFn<IReqoreBubbleProps> = (args: IReqoreBubbleProps) => (
 );
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble in its minimal variant.',
+      },
+    },
+  },
   render: Template,
   args: {
     minimal: true,
@@ -68,6 +84,14 @@ export const Minimal: Story = {
 };
 
 export const WithBorder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble with a border applied.',
+      },
+    },
+  },
   render: Template,
   args: {
     flat: false,
@@ -75,6 +99,14 @@ export const WithBorder: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble with the raised effect.',
+      },
+    },
+  },
   render: Template,
   args: {
     raised: true,
@@ -82,6 +114,14 @@ export const Raised: Story = {
 };
 
 export const Intent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble at a specific intent.',
+      },
+    },
+  },
   render: Template,
   args: {
     intent: 'info',
@@ -90,6 +130,14 @@ export const Intent: Story = {
 };
 
 export const WithGradient: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble with a gradient effect.',
+      },
+    },
+  },
   render: Template,
   args: {
     align: 'right',
@@ -101,6 +149,14 @@ export const WithGradient: Story = {
 };
 
 export const WithContentEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble with an effect applied to the content only.',
+      },
+    },
+  },
   render: Template,
   args: {
     contentEffect: {
@@ -111,6 +167,14 @@ export const WithContentEffect: Story = {
 };
 
 export const WithTimestamp: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble with a timestamp visible.',
+      },
+    },
+  },
   render: Template,
   args: {
     timestamp: '10:45 AM',
@@ -118,6 +182,14 @@ export const WithTimestamp: Story = {
 };
 
 export const WithHeader: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble with a header row visible.',
+      },
+    },
+  },
   render: Template,
   args: {
     label: 'Ada Lovelace',
@@ -132,6 +204,14 @@ export const WithHeader: Story = {
 };
 
 export const WithAvatar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble with an avatar.',
+      },
+    },
+  },
   render: Template,
   args: {
     avatar: { icon: 'User3Line' },
@@ -150,6 +230,14 @@ export const WithAvatar: Story = {
  * new shape, so a photo works as well as a glyph.
  */
 export const WithCircleAvatar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble with a circular avatar.',
+      },
+    },
+  },
   render: Template,
   args: {
     avatar: { icon: 'User3Line', circle: true },
@@ -171,6 +259,14 @@ export const WithCircleAvatar: Story = {
  * bold label (the label sits outside `contentEffect`, so it stays bright).
  */
 export const AvatarFeed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble as a compact avatar feed.',
+      },
+    },
+  },
   render: () => (
     <ReqoreBubbleGroup>
       <ReqoreBubble
@@ -217,6 +313,14 @@ export const AvatarFeed: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble in a clickable variant so hover and press states are exercised.',
+      },
+    },
+  },
   render: Template,
   args: {
     onClick: () => alert('Bubble clicked'),
@@ -225,6 +329,14 @@ export const Clickable: Story = {
 };
 
 export const Group: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Bubble rendered inside a group.',
+      },
+    },
+  },
   render: () => (
     <ReqoreBubbleGroup>
       <ReqoreBubble align='left' minimal timestamp='10:40 AM'>

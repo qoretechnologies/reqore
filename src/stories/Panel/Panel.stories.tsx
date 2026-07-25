@@ -307,6 +307,14 @@ const Template: StoryFn<IReqorePanelProps> = (args: IReqorePanelProps) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in its default configuration.',
+      },
+    },
+  },
   render: Template,
   args: {
     customTheme: { main: '#333' },
@@ -314,6 +322,14 @@ export const Basic: Story = {
 };
 
 export const NoPadding: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel without padding.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -322,6 +338,14 @@ export const NoPadding: Story = {
 };
 
 export const HugePadding: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with a huge padding size.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -330,6 +354,14 @@ export const HugePadding: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in its flat variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -338,6 +370,14 @@ export const Flat: Story = {
 };
 
 export const NoBars: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel without the bars visible.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -370,6 +410,14 @@ export const NoBars: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with a transparent background.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -378,6 +426,14 @@ export const Transparent: Story = {
 };
 
 export const Intent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel at a specific intent.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -389,6 +445,14 @@ export const Intent: Story = {
 };
 
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in its minimal variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -398,6 +462,14 @@ export const Minimal: Story = {
 };
 
 export const MinimalCollapsed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in the minimal collapsed variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -408,6 +480,14 @@ export const MinimalCollapsed: Story = {
 };
 
 export const MinimalOnlyContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with only the content region visible.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -441,6 +521,14 @@ export const MinimalOnlyContent: Story = {
 };
 
 export const MinimalOnlyTopBar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with only the top bar visible.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -464,6 +552,14 @@ export const MinimalOnlyTopBar: Story = {
 };
 
 export const MinimalOnlyBottomBar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with only the bottom bar visible.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -486,6 +582,14 @@ export const MinimalOnlyBottomBar: Story = {
 };
 
 export const MinimalWithIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in the minimal variant with an intent applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -497,6 +601,14 @@ export const MinimalWithIntent: Story = {
 };
 
 export const WithOpacity: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with reduced opacity applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -505,6 +617,14 @@ export const WithOpacity: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in its disabled state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -513,6 +633,14 @@ export const Disabled: Story = {
 };
 
 export const NonResponsiveActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with actions rendered in a non-responsive layout.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -548,6 +676,14 @@ export const NonResponsiveActions: Story = {
 };
 
 export const ActionsShownOnHover: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with row actions that appear only on hover.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -578,6 +714,12 @@ export const ActionsShownOnHover: Story = {
 export const FloatingActions: Story = {
   render: Template,
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with floating actions shown next to the row.',
+      },
+    },
     chromatic: {
       disable: true,
     },
@@ -624,6 +766,12 @@ export const FloatingActionsInScrollableContainer: Story = {
   ),
 
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with floating actions inside a scrollable container.',
+      },
+    },
     chromatic: {
       disable: true,
     },
@@ -635,6 +783,14 @@ export const FloatingActionsInScrollableContainer: Story = {
 };
 
 export const ActionsShownOnlyWhenExpanded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with actions that appear only when the row is expanded.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup verticalAlign='flex-start'>
       <ReqorePanel {...args} isCollapsed fluid />
@@ -661,6 +817,14 @@ export const ActionsShownOnlyWhenExpanded: Story = {
 };
 
 export const TransparentFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with both transparent and flat set.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -671,6 +835,14 @@ export const TransparentFlat: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -679,6 +851,14 @@ export const Fluid: Story = {
 };
 
 export const Size: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel at a specific size.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -687,6 +867,14 @@ export const Size: Story = {
 };
 
 export const NoActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel without action buttons.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -698,6 +886,14 @@ export const NoActions: Story = {
 };
 
 export const NoLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel without a label.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -718,6 +914,14 @@ export const NoLabel: Story = {
 };
 
 export const ImageAsIconLinkAsHeader: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel using an image as the icon and a link as the header.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -735,6 +939,14 @@ export const ImageAsIconLinkAsHeader: Story = {
 };
 
 export const ContentSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel sized to its content.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -743,6 +955,14 @@ export const ContentSize: Story = {
 };
 
 export const WithTooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with a tooltip attached.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -754,6 +974,14 @@ export const WithTooltip: Story = {
 };
 
 export const WithBreadcrumbs: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with breadcrumbs mounted.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -773,6 +1001,14 @@ export const WithBreadcrumbs: Story = {
 };
 
 export const WithBreadcrumbsAndTabs: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with both breadcrumbs and tabs mounted.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -809,6 +1045,14 @@ export const WithBreadcrumbsAndTabs: Story = {
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with a visual effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -838,6 +1082,14 @@ export const WithEffect: Story = {
 };
 
 export const Resizable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in a resizable configuration.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -853,6 +1105,14 @@ export const Resizable: Story = {
 };
 
 export const EditableLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with an editable label.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -865,6 +1125,14 @@ export const EditableLabel: Story = {
 };
 
 export const Loading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in its loading state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -873,6 +1141,14 @@ export const Loading: Story = {
 };
 
 export const Skeleton: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in its skeleton loading state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -881,6 +1157,14 @@ export const Skeleton: Story = {
 };
 
 export const CollapsedSkeleton: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in its collapsed skeleton loading state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -890,6 +1174,14 @@ export const CollapsedSkeleton: Story = {
 };
 
 export const WithDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with a description under the label.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -898,6 +1190,14 @@ export const WithDescription: Story = {
 };
 
 export const WithLongDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with a long description that exercises wrapping.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -914,6 +1214,12 @@ export const WithLongDescription: Story = {
 
 export const StickyHeaderOutsideScroll: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with a sticky header that stays visible outside the scroll region.',
+      },
+    },
     chromatic: {
       viewports: [600],
     },
@@ -962,6 +1268,14 @@ export const StickyHeaderOutsideScroll: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with the raised effect.',
+      },
+    },
+  },
   args: {
     label: 'Raised panel',
     children: 'Subtle inset highlight on top + inset shadow on bottom — best paired with `flat`.',
@@ -977,6 +1291,12 @@ export const Raised: Story = {
 // scrolling content beneath is softened enough for the title to stay legible.
 export const StickyHeaderTransparentBlur: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with a sticky, transparent, blurred header.',
+      },
+    },
     chromatic: {
       viewports: [600],
     },
@@ -1028,6 +1348,14 @@ export const StickyHeaderTransparentBlur: Story = {
 };
 
 export const RaisedMinimalFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel in the raised + minimal + flat variant combination.',
+      },
+    },
+  },
   args: {
     label: 'Raised panel',
     children: 'Subtle inset highlight on top + inset shadow on bottom — best paired with `flat`.',
@@ -1063,14 +1391,38 @@ const renderIconLayoutMatrix = (
 };
 
 export const IconWithLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with an icon paired with a label.',
+      },
+    },
+  },
   render: renderIconLayoutMatrix({ iconWithLabel: true }, 'iconWithLabel'),
 };
 
 export const IconAlignTop: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with the icon aligned to the top.',
+      },
+    },
+  },
   render: renderIconLayoutMatrix({ iconVerticalAlign: 'top' }, "iconVerticalAlign='top'"),
 };
 
 export const IconAlignCenter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with the icon aligned to the middle.',
+      },
+    },
+  },
   render: renderIconLayoutMatrix(
     { iconVerticalAlign: 'center' },
     "iconVerticalAlign='center' (default)"
@@ -1078,10 +1430,26 @@ export const IconAlignCenter: Story = {
 };
 
 export const IconAlignBottom: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with the icon aligned to the bottom.',
+      },
+    },
+  },
   render: renderIconLayoutMatrix({ iconVerticalAlign: 'bottom' }, "iconVerticalAlign='bottom'"),
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {ALL_SIZES.map((radiusSize) => (
@@ -1102,6 +1470,14 @@ export const RadiusSize: Story = {
 };
 
 export const MultipleGradients: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Panel with layered gradient effects.',
+      },
+    },
+  },
   render: () => (
     <ReqorePanel
       label='Layered content gradient'
