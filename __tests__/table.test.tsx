@@ -306,6 +306,35 @@ test('Rows on <Table /> can be selected', () => {
   expect(fn).toHaveBeenLastCalledWith([1, 2]);
 });
 
+test('Controlled <Table /> selection follows props without echoing stale values', () => {
+  const data = {
+    ...tableData,
+    selectable: true,
+  };
+  const fn = vi.fn();
+  const renderTable = (selected: (string | number)[]) => (
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} selected={selected} onSelectedChange={fn} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  const { rerender } = render(renderTable([1]));
+
+  fn.mockClear();
+  rerender(renderTable([]));
+
+  expect(fn).not.toHaveBeenCalled();
+
+  const secondRow = document.querySelectorAll('.reqore-table-row')[1];
+  const secondCheckCell = secondRow.querySelector('.reqore-table-cell');
+
+  fireEvent.click(secondCheckCell!);
+
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith([2]);
+});
+
 test('Rows on <Table /> can be selected, does not keep internal state', () => {
   const data = {
     ...tableData,
