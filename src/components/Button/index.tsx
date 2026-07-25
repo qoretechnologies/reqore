@@ -285,7 +285,13 @@ export const StyledAnimatedTextWrapper = styled.span`
   align-items: ${({ textAlign }) => alignToFlexAlign(textAlign)};
 `;
 
-export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
+export const StyledButton = styled(StyledEffect).withConfig({
+  // A containing ControlGroup can propagate its `fill` layout flag through
+  // polymorphic controls such as Dropdown. The flag is meaningful to the
+  // group, but it is not a valid boolean attribute for the rendered button.
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    prop !== 'fill' && defaultValidatorFn(prop),
+})<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
   justify-content: center;

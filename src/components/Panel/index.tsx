@@ -333,7 +333,11 @@ export type TPanelStyle = React.FC<
     }
 >;
 
-export const StyledPanel: TPanelStyle = styled(StyledEffect)<IStyledPanel>`
+export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
+  // `fill` controls panel layout and must not become a boolean DOM attribute.
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    prop !== 'fill' && defaultValidatorFn(prop),
+})<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded, radiusSize }) =>

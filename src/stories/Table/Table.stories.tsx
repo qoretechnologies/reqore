@@ -324,6 +324,30 @@ const defaultColumnsWithCustomContentHeaders: IReqoreTableColumn[] = defaultColu
   }
 );
 
+const fillPagingColumns: IReqoreTableColumn[] = [
+  {
+    dataId: 'id',
+    header: { label: 'ID', content: 'ID' },
+    width: 80,
+    cell: { content: 'number' },
+  },
+  {
+    dataId: 'firstName',
+    header: { label: 'First name', content: 'First name' },
+    grow: 1,
+  },
+  {
+    dataId: 'address',
+    header: { label: 'Address', content: 'Address' },
+    grow: 2,
+  },
+  {
+    dataId: 'occupation',
+    header: { label: 'Occupation', content: 'Occupation' },
+    grow: 1,
+  },
+];
+
 const meta = {
   title: 'Collections/Table',
   component: ReqoreTable,
@@ -769,6 +793,48 @@ export const Exportable: Story = {
 export const FillParent: Story = {
   args: {
     fill: true,
+  },
+};
+
+export const FillParentWithBottomPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table that fills its panel above bottom paging controls. The scrollable body ' +
+          'stays fully visible instead of extending behind the controls.',
+      },
+    },
+  },
+  args: {
+    columns: fillPagingColumns,
+    fill: true,
+    height: undefined,
+    withoutContent: true,
+    paging: {
+      itemsPerPage: 100,
+      showLabels: true,
+    } as TReqorePaginationType<IReqoreTableRowData>,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(async () => {
+      const body = canvasElement.querySelector('.reqore-table-body');
+      const wrapper = canvasElement.querySelector('.reqore-table-wrapper');
+      const pagingControls = canvasElement.querySelector('.reqore-pagination-wrapper');
+
+      await expect(body).toBeTruthy();
+      await expect(wrapper).toBeTruthy();
+      await expect(pagingControls).toBeTruthy();
+      await expect(body.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        wrapper.getBoundingClientRect().bottom + 1
+      );
+      await expect(wrapper.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        pagingControls.getBoundingClientRect().top + 1
+      );
+      await expect(pagingControls.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        canvasElement.getBoundingClientRect().bottom + 1
+      );
+    });
   },
 };
 

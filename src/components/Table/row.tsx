@@ -68,7 +68,12 @@ export interface IReqoreTableRowStyle {
   minWidth?: number;
 }
 
-export const StyledTableRow = styled.div<IReqoreTableRowStyle>`
+const tableRowStyleProps = new Set(['wrap']);
+
+export const StyledTableRow = styled.div.withConfig({
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    !tableRowStyleProps.has(prop) && defaultValidatorFn(prop),
+})<IReqoreTableRowStyle>`
   ${({ size, wrap, minWidth }) => css`
     display: flex;
     ${wrap

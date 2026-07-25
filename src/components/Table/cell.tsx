@@ -28,7 +28,10 @@ export interface IReqoreTableBodyCellProps
   expandHeightButtonProps?: Partial<IReqoreButtonProps>;
 }
 
-export const StyledTableCell = styled.div<IReqoreTableCellStyle>`
+export const StyledTableCell = styled.div.withConfig({
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    prop !== 'wrap' && defaultValidatorFn(prop),
+})<IReqoreTableCellStyle>`
   ${({ width, minWidth, maxWidth, grow }) =>
     css`
       width: ${width}px;

@@ -360,7 +360,11 @@ const ReqoreTable = ({
   const theme = useReqoreTheme('main', rest.customTheme, intent);
 
   const addModal = useReqoreProperty('addModal');
-  const [wrapperRef, sizes] = useMeasure();
+  // Measure only the table wrapper, not the full panel content. Pagination
+  // controls are siblings of this wrapper and consume their own flex space;
+  // measuring the panel would include them and make a filled body overflow
+  // behind the controls.
+  const [wrapperRef, sizes] = useMeasure<HTMLDivElement>();
 
   // Track the header's height so a filled body can subtract it (see `headerHeight`).
   // A ResizeObserver keeps it correct when the filter row appears/disappears or
@@ -864,6 +868,7 @@ const ReqoreTable = ({
 
     return (
       <StyledTableWrapper
+        ref={wrapperRef}
         className='reqore-table-wrapper'
         rounded={rest.rounded !== false && rest.flat !== false}
         size={rest.flat === false ? wrapperSize : zoomToSize[zoom]}
@@ -933,7 +938,6 @@ const ReqoreTable = ({
         fill={fill}
         className={`${className || ''} reqore-table`}
         style={{ width, ...(rest.style || {}) }}
-        getContentRef={wrapperRef}
         badge={badge}
       >
         <ReqoreThemeProvider theme={theme} customTheme={rest.customTheme}>

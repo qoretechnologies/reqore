@@ -419,6 +419,7 @@ test('Wrapped <Table /> renders rows with min-height instead of fixed height', (
 
   const rows = document.querySelectorAll('.reqore-table-row');
   expect(rows.length).toBe(3);
+  expect(document.querySelectorAll('.reqore-table-cell[wrap]').length).toBe(0);
   rows.forEach((row) => {
     const inline = (row as HTMLElement).style.minHeight;
     expect(inline === '' || inline.endsWith('px')).toBe(true);
