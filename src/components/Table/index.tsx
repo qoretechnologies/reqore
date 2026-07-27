@@ -317,7 +317,6 @@ const ReqoreTable = ({
 }: IReqoreTableProps) => {
   const mainTableRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
-  const transformedDataRef = useRef<IReqoreTableData>(data || []);
 
   const hasColumnWrap = useMemo(() => {
     const walk = (cols: IReqoreTableColumn[]): boolean =>
@@ -392,18 +391,80 @@ const ReqoreTable = ({
   );
   const normalizedQuery = useMemo(() => query.toString().toLowerCase(), [query]);
 
+  // Column filters live in `columnModifiers` once the user edits them, and on the column
+  // itself when supplied as config — `prepareColumns` merges the two, modifier winning.
+  //
+  // This deliberately walks `_internalColumns` rather than `finalColumns`: the selectbox
+  // column `finalColumns` injects is `filterable: false` and carries no filter, so it cannot
+  // contribute here, and reading `finalColumns` would make the filtered data depend on the
+  // select-all icon — a cycle, since the icon is derived from the filtered data.
+  const filters: { [key: string]: string } = useMemo(() => {
+    const getFilters = (columnsToTransform: IReqoreTableColumn[]) =>
+      columnsToTransform.reduce((filterObject, column) => {
+        if (column.header?.columns) {
+          return {
+            ...filterObject,
+            ...getFilters(column.header.columns),
+          };
+        }
+
+        const filter = columnModifiers?.[column.dataId]?.filter ?? column.filter;
+
+        if (filter) {
+          return {
+            ...filterObject,
+            [column.dataId]: filter,
+          };
+        }
+
+        return filterObject;
+      }, {});
+
+    return getFilters(_internalColumns);
+  }, [_internalColumns, columnModifiers]);
+
+  const normalizedFilters = useMemo(
+    () =>
+      Object.entries(filters).map(([filterKey, filterValue]) => [
+        filterKey,
+        filterValue.toString().toLowerCase(),
+      ]),
+    [filters]
+  );
+
+  const transformedData = useMemo(() => {
+    const hasQuery = normalizedQuery.length > 0;
+
+    // Filter by global query
+    let filteredData = hasQuery
+      ? _data.filter((datum) => JSON.stringify(datum).toLowerCase().includes(normalizedQuery))
+      : _data;
+
+    // Filter by column filters
+    filteredData = filteredData.filter((datum) => {
+      return normalizedFilters.every(([filterKey, filterValue]) => {
+        const datumValue = datum[filterKey as string];
+
+        return datumValue?.toString().toLowerCase().includes(filterValue);
+      });
+    });
+
+    return _sort ? sortTableData(filteredData, _sort) : filteredData;
+  }, [_data, _sort, normalizedFilters, normalizedQuery]);
+
+  const selectableData = useMemo(
+    () => transformedData.filter((datum) => datum._selectId ?? false),
+    [transformedData]
+  );
+
   const activeSelected = selected ?? _selected;
   const selectedQuant = useMemo<'all' | 'none' | 'some'>(() => {
-    const selectableCount = transformedDataRef.current.filter(
-      (datum) => datum._selectId ?? false
-    ).length;
-
     if (!activeSelected.length) {
       return 'none';
     }
 
-    return activeSelected.length === selectableCount ? 'all' : 'some';
-  }, [activeSelected]);
+    return activeSelected.length === count(selectableData) ? 'all' : 'some';
+  }, [activeSelected, selectableData]);
   const selectedIcon = useMemo(() => {
     switch (selectedQuant) {
       case 'all':
@@ -471,7 +532,7 @@ const ReqoreTable = ({
       switch (selectedQuant) {
         case 'none':
         case 'some': {
-          const selectableData: (string | number)[] = transformedDataRef.current
+          const nextSelected: (string | number)[] = selectableData
             .filter((datum) => {
               // If the user held down the meta key, we will reverse the selection
               if (e.metaKey) {
@@ -485,11 +546,11 @@ const ReqoreTable = ({
                 }
               }
 
-              return datum._selectId ?? false;
+              return true;
             })
             .map((datum) => datum._selectId);
 
-          updateSelected(selectableData);
+          updateSelected(nextSelected);
           break;
         }
         default: {
@@ -498,7 +559,7 @@ const ReqoreTable = ({
         }
       }
     },
-    [activeSelected, selectedQuant, updateSelected]
+    [activeSelected, selectableData, selectedQuant, updateSelected]
   );
 
   const finalColumns = useMemo(() => {
@@ -553,62 +614,6 @@ const ReqoreTable = ({
     activeSelected,
     handleToggleSelectClick,
   ]);
-
-  const filters: { [key: string]: string } = useMemo(() => {
-    const getFilters = (columnsToTransform: IReqoreTableColumn[]) =>
-      columnsToTransform.reduce((filterObject, column) => {
-        if (column.header?.columns) {
-          return {
-            ...filterObject,
-            ...getFilters(column.header.columns),
-          };
-        }
-
-        if (column.filter) {
-          return {
-            ...filterObject,
-            [column.dataId]: column.filter,
-          };
-        }
-
-        return filterObject;
-      }, {});
-
-    return getFilters(finalColumns);
-  }, [finalColumns]);
-
-  const normalizedFilters = useMemo(
-    () =>
-      Object.entries(filters).map(([filterKey, filterValue]) => [
-        filterKey,
-        filterValue.toString().toLowerCase(),
-      ]),
-    [filters]
-  );
-
-  const transformedData = useMemo(() => {
-    const hasQuery = normalizedQuery.length > 0;
-
-    // Filter by global query
-    let filteredData = hasQuery
-      ? _data.filter((datum) => JSON.stringify(datum).toLowerCase().includes(normalizedQuery))
-      : _data;
-
-    // Filter by column filters
-    filteredData = filteredData.filter((datum) => {
-      return normalizedFilters.every(([filterKey, filterValue]) => {
-        const datumValue = datum[filterKey as string];
-
-        return datumValue?.toString().toLowerCase().includes(filterValue);
-      });
-    });
-
-    return _sort ? sortTableData(filteredData, _sort) : filteredData;
-  }, [_data, _sort, normalizedFilters, normalizedQuery]);
-
-  useEffect(() => {
-    transformedDataRef.current = transformedData;
-  }, [transformedData]);
 
   useUpdateEffect(() => {
     if (onSortChange) {

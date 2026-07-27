@@ -898,6 +898,25 @@ export const PreselectedRows: Story = {
   },
 };
 
+export const PreselectedRowsWithActiveFilter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with rows pre-selected while a global filter narrows the visible rows. ' +
+          'The select-all header toggle reads the filtered row set, so it shows the ' +
+          'indeterminate icon rather than claiming everything is selected.',
+      },
+    },
+  },
+  args: {
+    selected: ['274', '280'],
+    selectable: true,
+    filterable: true,
+    filter: 'Road',
+  },
+};
+
 export const Zoomable: Story = {
   parameters: {
     docs: {
