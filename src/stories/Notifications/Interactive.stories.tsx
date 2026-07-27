@@ -74,10 +74,26 @@ const Template: StoryRenderer<typeof meta> = ({ theme, ...args }) => (
 );
 
 export const Adding: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification while a new item is being added.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Updating: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification while its content is updating.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -86,6 +102,14 @@ export const Updating: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification in a clickable variant so hover and press states are exercised.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -96,6 +120,14 @@ export const Clickable: Story = {
 };
 
 export const CloseCallback: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification with a close callback wired in.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -106,6 +138,14 @@ export const CloseCallback: Story = {
 };
 
 export const FinishCallback: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification with a finish callback wired in.',
+      },
+    },
+  },
   render: Template,
 
   args: {

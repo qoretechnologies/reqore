@@ -108,11 +108,27 @@ const Template: StoryFn<IReqoreCollapsibleContentProps> = (args) => (
 
 // Baseline clipped state: tall content clips behind the fade with a visible reveal button.
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 // Drives the reveal → "Show less" → reveal cycle; also the state Chromatic snapshots last.
 export const Expands: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent and exercises its expand flow.',
+      },
+    },
+  },
   render: Template,
   play: async ({ canvasElement }) => {
     const reveal = canvasElement.querySelector<HTMLButtonElement>(
@@ -134,6 +150,14 @@ export const Expands: Story = {
 };
 
 export const ShortContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with a small amount of content.',
+      },
+    },
+  },
   render: (args) => (
     <ColumnWrapper>
       <ReqoreCollapsibleContent {...args}>
@@ -144,6 +168,14 @@ export const ShortContent: Story = {
 };
 
 export const DefaultExpanded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent expanded by default.',
+      },
+    },
+  },
   render: Template,
   args: {
     defaultExpanded: true,
@@ -151,6 +183,14 @@ export const DefaultExpanded: Story = {
 };
 
 export const CustomThreshold: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with a custom threshold value.',
+      },
+    },
+  },
   render: Template,
   args: {
     maxCollapsedHeight: 140,
@@ -158,6 +198,14 @@ export const CustomThreshold: Story = {
 };
 
 export const CustomLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with custom labels on the elements.',
+      },
+    },
+  },
   render: Template,
   args: {
     showMoreLabel: 'Read full notes',
@@ -170,6 +218,14 @@ export const CustomLabels: Story = {
 // `intent` tints the fade gradient AND the buttons — the surface fades into the intent color
 // so the disclosure visually carries meaning (danger fades into red, success into green, etc.).
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: 720, maxWidth: '100%' }}>
       {Object.keys(DEFAULT_INTENTS).map((intent) => (
@@ -188,6 +244,14 @@ export const Intents: Story = {
 
 // `size` scales the buttons AND the fade height so each row is visibly distinct from the next.
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => {
     const sizes = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
@@ -206,6 +270,14 @@ export const Sizes: Story = {
 // `customTheme.main` controls the fade's surface color — match it to the parent's background
 // for a seamless blend. This replaces the old bespoke `fadeColor` prop.
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with a custom theme override applied.',
+      },
+    },
+  },
   render: () => {
     const CARD = '#0d0d0d';
 
@@ -231,6 +303,14 @@ export const CustomTheme: Story = {
 // `transparent` drops the fade gradient entirely while keeping the disclosure button — useful
 // when the content already has its own visual treatment that you don't want to wash out.
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with a transparent background.',
+      },
+    },
+  },
   render: Template,
   args: {
     transparent: true,
@@ -239,6 +319,14 @@ export const Transparent: Story = {
 
 // `disabled` dims the surface and short-circuits both reveal and collapse handlers.
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent in its disabled state.',
+      },
+    },
+  },
   render: Template,
   args: {
     disabled: true,
@@ -246,6 +334,14 @@ export const Disabled: Story = {
 };
 
 export const ButtonAlignLeft: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with the button aligned to the left.',
+      },
+    },
+  },
   render: Template,
   args: {
     buttonAlign: 'left',
@@ -253,6 +349,14 @@ export const ButtonAlignLeft: Story = {
 };
 
 export const ButtonAlignRight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with the button aligned to the right.',
+      },
+    },
+  },
   render: Template,
   args: {
     buttonAlign: 'right',
@@ -262,6 +366,14 @@ export const ButtonAlignRight: Story = {
 // `buttonFluid` stretches the reveal button to the full width of the overlay — works correctly
 // because the fade overlay uses column-flex (so the button's cross-axis stretch is horizontal).
 export const ButtonFluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with a fluid button.',
+      },
+    },
+  },
   render: Template,
   args: {
     buttonFluid: true,
@@ -273,6 +385,14 @@ export const ButtonFluid: Story = {
 // the OS `prefers-reduced-motion` preference automatically. Drives the reveal → "Show less"
 // cycle so the snapshot captures both the closed and open states across the transition.
 export const Animated: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with animations enabled.',
+      },
+    },
+  },
   render: Template,
   args: {
     animated: true,
@@ -298,6 +418,14 @@ export const Animated: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreCollapsibleContent {...args} fluid>
       <LongContent />
@@ -309,6 +437,14 @@ export const Fluid: Story = {
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with a visual effect applied.',
+      },
+    },
+  },
   render: Template,
   args: {
     effect: {
@@ -320,6 +456,14 @@ export const WithEffect: Story = {
 };
 
 export const Tooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with a tooltip attached.',
+      },
+    },
+  },
   render: Template,
   args: {
     tooltip: 'Collapsible content exposes the same tooltip prop as every other Reqore component.',
@@ -329,6 +473,14 @@ export const Tooltip: Story = {
 // Opt-in ambient style: the button hides until hover / focus. The play focuses it so the
 // revealed state is captured — without an interaction it would snapshot as a bare fade.
 export const RevealOnHover: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CollapsibleContent with elements that reveal on hover.',
+      },
+    },
+  },
   render: Template,
   args: {
     revealOn: 'hover',

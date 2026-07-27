@@ -13,6 +13,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow in its default configuration.',
+      },
+    },
+  },
   args: {
     label: 'Process Incoming Order',
     description: 'Routes incoming Shopify orders into the warehouse pipeline',
@@ -23,6 +31,14 @@ export const Basic: Story = {
 };
 
 export const WithBadge: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with a badge.',
+      },
+    },
+  },
   args: {
     label: 'Reconcile Payments',
     description: 'Daily reconciliation between Stripe and the ledger',
@@ -35,6 +51,14 @@ export const WithBadge: Story = {
 };
 
 export const WithMultipleBadges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with multiple badges.',
+      },
+    },
+  },
   args: {
     label: 'Process Incoming Order',
     description: 'Routes incoming Shopify orders into the warehouse pipeline',
@@ -50,6 +74,14 @@ export const WithMultipleBadges: Story = {
 };
 
 export const WithIntents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow across a set of intents.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       <ReqoreEntityRow
@@ -85,6 +117,14 @@ export const WithIntents: Story = {
 };
 
 export const WithImage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with an image asset.',
+      },
+    },
+  },
   args: {
     label: 'Stripe payment integration',
     description: 'OAuth2 connected · Last sync 5 minutes ago',
@@ -94,6 +134,14 @@ export const WithImage: Story = {
 };
 
 export const WithoutIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow without an icon.',
+      },
+    },
+  },
   args: {
     label: 'Plain row, no icon tile',
     description: 'Useful for very compact lists where the entity speaks for itself',
@@ -103,6 +151,14 @@ export const WithoutIcon: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {(['tiny', 'small', 'normal', 'big'] as const).map((size) => (
@@ -122,6 +178,14 @@ export const Sizes: Story = {
 };
 
 export const Bordered: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with a border applied.',
+      },
+    },
+  },
   args: {
     label: 'Bordered entity row',
     description: 'flat={false} renders an intent-coloured border',
@@ -133,6 +197,14 @@ export const Bordered: Story = {
 };
 
 export const Square: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow in square (chip) mode — a fixed-size slot with no horizontal padding.',
+      },
+    },
+  },
   args: {
     label: 'Square entity row',
     description: 'rounded={false} removes the corner radius',
@@ -144,6 +216,14 @@ export const Square: Story = {
 };
 
 export const WithEffects: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with a set of visual effects applied to different items.',
+      },
+    },
+  },
   args: {
     label: 'Effects on label, description, metadata',
     description: 'Description with custom italic effect',
@@ -163,6 +243,14 @@ export const WithEffects: Story = {
 };
 
 export const Clickable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow in a clickable variant so hover and press states are exercised.',
+      },
+    },
+  },
   args: {
     label: 'Inventory Reorder Trigger',
     description: 'Watches stock thresholds and fires reorder workflows',
@@ -174,6 +262,14 @@ export const Clickable: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow in its disabled state.',
+      },
+    },
+  },
   args: {
     label: 'Archived integration',
     description: 'This automation has been archived',
@@ -184,6 +280,14 @@ export const Disabled: Story = {
 };
 
 export const NoWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with content forced onto a single line.',
+      },
+    },
+  },
   args: {
     label: 'Process Incoming Order',
     description:
@@ -204,6 +308,14 @@ export const NoWrap: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with a transparent background.',
+      },
+    },
+  },
   args: {
     label: 'Transparent entity row',
     description:
@@ -216,6 +328,14 @@ export const Transparent: Story = {
 };
 
 export const TransparentWithIconTile: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow in the transparent variant with an icon tile.',
+      },
+    },
+  },
   args: {
     label: 'Transparent with explicit tile',
     description: 'Pass `iconHasBackground` to force the tile back even on a transparent row.',
@@ -228,6 +348,14 @@ export const TransparentWithIconTile: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with the raised effect.',
+      },
+    },
+  },
   args: {
     label: 'Raised entity row',
     description: 'Inset top highlight + bottom shadow give the surface tactile depth.',
@@ -255,6 +383,14 @@ const renderEntityRowMatrix = (variantArgs: Partial<IReqoreEntityRowProps>) =>
   ));
 
 export const IconWithoutBackground: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with an icon rendered without a background.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderEntityRowMatrix({ iconHasBackground: false })}
@@ -263,6 +399,14 @@ export const IconWithoutBackground: Story = {
 };
 
 export const Unpadded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with no padding.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderEntityRowMatrix({ padded: false })}
@@ -271,6 +415,14 @@ export const Unpadded: Story = {
 };
 
 export const PaddedHorizontalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with padding only on the horizontal axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderEntityRowMatrix({ padded: 'horizontal' })}
@@ -279,6 +431,14 @@ export const PaddedHorizontalOnly: Story = {
 };
 
 export const PaddedVerticalOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with padding only on the vertical axis.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {renderEntityRowMatrix({ padded: 'vertical' })}
@@ -287,6 +447,14 @@ export const PaddedVerticalOnly: Story = {
 };
 
 export const CustomPaddingSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with a custom padding size.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small' style={{ width: 600 }}>
       {ENTITY_ROW_SIZES.map((size) => (
@@ -312,6 +480,14 @@ export const CustomPaddingSize: Story = {
  * the menu is opened.
  */
 export const WithOverflowMenu: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EntityRow with the overflow menu enabled.',
+      },
+    },
+  },
   args: {
     label: 'order-sync:1.0',
     description: 'Referenced in the ticket description',

@@ -158,10 +158,26 @@ const Template: StoryFn<IReqoreTextareaProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Info: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with intent="info".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -170,6 +186,14 @@ export const Info: Story = {
 };
 
 export const Success: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with intent="success".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -178,6 +202,14 @@ export const Success: Story = {
 };
 
 export const Warning: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with intent="warning".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -186,6 +218,14 @@ export const Warning: Story = {
 };
 
 export const Danger: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with intent="danger".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -194,6 +234,14 @@ export const Danger: Story = {
 };
 
 export const Pending: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with intent="pending".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -202,6 +250,14 @@ export const Pending: Story = {
 };
 
 export const Muted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with intent="muted".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -210,6 +266,14 @@ export const Muted: Story = {
 };
 
 export const Custom: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with a custom theme applied to the main color.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -220,6 +284,14 @@ export const Custom: Story = {
 };
 
 export const Effect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with a gradient/typography effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -241,6 +313,14 @@ export const Effect: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with a transparent background.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -263,6 +343,14 @@ export const Transparent: Story = {
 };
 
 export const WithTemplates: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea with template placeholders wired in.',
+      },
+    },
+  },
   render: (args) => <ReqoreTextarea {...args} />,
 
   args: {
@@ -310,6 +398,14 @@ export const WithTemplates: Story = {
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     // Use size='huge' so the larger radii aren't clamped by the textarea's
     // height (clamping is correct CSS behaviour, just visually identical past
@@ -329,6 +425,14 @@ export const RadiusSize: Story = {
 };
 
 export const ItemCanBeSelected: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea and selects an item.',
+      },
+    },
+  },
   args: {
     onChange: fn(),
     templates: {
@@ -393,6 +497,14 @@ export const ItemCanBeSelected: Story = {
 };
 
 export const TemplatesAreNotClosedWhenFocusIsMovedToPopover: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea — the templates popover stays open when focus moves into it.',
+      },
+    },
+  },
   ...WithTemplates,
   play: async ({ canvasElement, args }) => {
     // @ts-expect-error
@@ -406,6 +518,14 @@ export const TemplatesAreNotClosedWhenFocusIsMovedToPopover: Story = {
 };
 
 export const TemplatesAreClosedWhenFocusIsLost: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Textarea — the templates popover closes when focus leaves the input.',
+      },
+    },
+  },
   ...WithTemplates,
   render: (args) => (
     <ReqoreControlGroup>

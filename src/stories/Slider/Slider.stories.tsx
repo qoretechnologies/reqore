@@ -55,20 +55,52 @@ const meta = {
 type Story = StoryObj<typeof meta>;
 
 export default meta;
-export const Default: Story = {};
+export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider in its default configuration.',
+      },
+    },
+  },};
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider in its disabled state.',
+      },
+    },
+  },
   args: {
     disabled: true,
   },
 };
 
 export const WithIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider with icons on the items.',
+      },
+    },
+  },
   args: {
     icon: 'VolumeDownLine',
     rightIcon: 'VolumeUpLine',
   },
 };
 export const WithIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider with an intent applied.',
+      },
+    },
+  },
   args: {
     intent: 'success',
   },
@@ -93,17 +125,41 @@ export const WithIntent: Story = {
   },
 };
 export const WithLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider with labels applied.',
+      },
+    },
+  },
   args: {
     showLabels: true,
   },
 };
 export const WithLabelsBelow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider with labels positioned below the elements.',
+      },
+    },
+  },
   args: {
     showLabels: true,
     labelsPosition: 'bottom',
   },
 };
 export const WithLabelsAndIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider with both labels and icons.',
+      },
+    },
+  },
   args: {
     ...WithLabels.args,
     ...WithIcons.args,
@@ -111,6 +167,14 @@ export const WithLabelsAndIcons: Story = {
 };
 
 export const WithCurrentValueOverThumb: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider with the current value shown over the thumb.',
+      },
+    },
+  },
   args: {
     ...WithLabels.args,
     ...WithIcons.args,
@@ -119,6 +183,14 @@ export const WithCurrentValueOverThumb: Story = {
 };
 
 export const WithSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider with a specific size applied.',
+      },
+    },
+  },
   args: {
     ...WithLabels.args,
     ...WithIcons.args,
@@ -127,6 +199,14 @@ export const WithSize: Story = {
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Slider with a visual effect applied.',
+      },
+    },
+  },
   args: {
     showLabels: true,
     effect: {

@@ -48,8 +48,24 @@ type Story = StoryObj<typeof meta>;
 
 export default meta;
 
-export const Default: Story = {};
+export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tier in its default configuration.',
+      },
+    },
+  },};
 export const Group: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tier rendered inside a group.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreColumns minColumnWidth='300px' columnsGap='15px' style={{ maxWidth: '1100px' }}>
       <ReqoreTier {...args} style={{}} />

@@ -40,10 +40,26 @@ const Template: StoryRenderer<StoryType> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const NoPageButtons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination without numbered page buttons.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -52,6 +68,14 @@ export const NoPageButtons: Story = {
 };
 
 export const NoControlButtons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination without control buttons.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -60,6 +84,14 @@ export const NoControlButtons: Story = {
 };
 
 export const ShowSomePages: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination showing only a slice of the page buttons.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -70,6 +102,14 @@ export const ShowSomePages: Story = {
 };
 
 export const AsList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination in its list variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -81,6 +121,14 @@ export const AsList: Story = {
 };
 
 export const WithStyling: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination with additional inline styling.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -113,6 +161,14 @@ export const WithStyling: Story = {
 };
 
 export const ListWithStyling: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination list with additional inline styling.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -153,6 +209,14 @@ export const ListWithStyling: Story = {
 };
 
 export const WithLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination with labels applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -168,6 +232,14 @@ export const WithLabels: Story = {
 };
 
 export const NextPageOnVerticalScroll: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination and advances to the next page on vertical scroll.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -176,6 +248,14 @@ export const NextPageOnVerticalScroll: Story = {
 };
 
 export const NextPageOnHorizontalScroll: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination and advances to the next page on horizontal scroll.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -184,6 +264,14 @@ export const NextPageOnHorizontalScroll: Story = {
 };
 
 export const ScrollToTop: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination with a scroll-to-top control.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -196,6 +284,14 @@ export const ScrollToTop: Story = {
 };
 
 export const Infinite: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination with infinite scroll enabled.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -212,6 +308,14 @@ export const Infinite: Story = {
 };
 
 export const InfiniteWithAutoScroll: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination with infinite scroll and auto-scroll enabled.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -235,6 +339,14 @@ export const InfiniteWithAutoScroll: Story = {
 };
 
 export const InfiniteWithAutoLoad: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Pagination with infinite scroll and auto-load enabled.',
+      },
+    },
+  },
   render: Template,
 
   args: {

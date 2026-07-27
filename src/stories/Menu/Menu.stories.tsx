@@ -268,10 +268,26 @@ const Template: StoryFn<IReqoreMenuProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const WrappedText: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu with text wrapping enabled.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -280,6 +296,14 @@ export const WrappedText: Story = {
 };
 
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu in its minimal variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -288,6 +312,14 @@ export const Minimal: Story = {
 };
 
 export const NoPadding: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu without padding.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -296,6 +328,14 @@ export const NoPadding: Story = {
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -304,6 +344,14 @@ export const NotFlat: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu with a transparent background.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -312,6 +360,14 @@ export const Transparent: Story = {
 };
 
 export const Positioned: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu with an explicit position applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -323,6 +379,14 @@ export const Positioned: Story = {
 };
 
 export const Small: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu at the small size.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -333,6 +397,14 @@ export const Small: Story = {
 };
 
 export const BigGapSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu with a big gap between items.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -341,6 +413,14 @@ export const BigGapSize: Story = {
 };
 
 export const Skeleton: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu in its skeleton loading state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -349,6 +429,14 @@ export const Skeleton: Story = {
 };
 
 export const SubmenuCanBeToggled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu and toggles a submenu open and closed.',
+      },
+    },
+  },
   render: (args) => <MenuWithSubmenus {...args} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -359,6 +447,14 @@ export const SubmenuCanBeToggled: Story = {
 };
 
 export const Resizable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu in a resizable configuration.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -377,6 +473,14 @@ export const Resizable: Story = {
 };
 
 export const ResizableBothSidesWithBorder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu resizable on both sides with a border.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -391,6 +495,14 @@ export const ResizableBothSidesWithBorder: Story = {
 };
 
 export const WithCustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu with a custom theme.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -399,6 +511,14 @@ export const WithCustomTheme: Story = {
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Menu with a visual effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {

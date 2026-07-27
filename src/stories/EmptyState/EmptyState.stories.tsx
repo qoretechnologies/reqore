@@ -13,6 +13,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState in its default configuration.',
+      },
+    },
+  },
   args: {
     icon: 'InboxLine',
     title: 'No data',
@@ -21,6 +29,14 @@ export const Basic: Story = {
 };
 
 export const WithActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState with action buttons attached.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreEmptyState
       {...args}
@@ -40,6 +56,14 @@ export const WithActions: Story = {
 };
 
 export const IconOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState showing only an icon (no label).',
+      },
+    },
+  },
   args: {
     icon: 'SearchLine',
     title: 'No results found',
@@ -47,12 +71,28 @@ export const IconOnly: Story = {
 };
 
 export const DescriptionOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState showing only a description.',
+      },
+    },
+  },
   args: {
     description: 'This section is empty. Content will appear here once available.',
   },
 };
 
 export const WithBackground: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState with a background image or color set.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreEmptyState
@@ -83,6 +123,14 @@ export const WithBackground: Story = {
 };
 
 export const WithBackgroundFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState with the flat background variant.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreEmptyState
@@ -107,6 +155,14 @@ export const WithBackgroundFlat: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup gapSize='big' wrap>
       <ReqoreEmptyState {...args} icon='InformationLine' title='Info' intent='info' rounded />
@@ -120,6 +176,14 @@ export const Intents: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => {
     const sizes = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
@@ -142,6 +206,14 @@ export const Sizes: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreEmptyState
       {...args}
@@ -155,6 +227,14 @@ export const Fluid: Story = {
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   args: {
     title: 'Not Flat',
     description: 'This section is currently not flat.',
@@ -164,6 +244,14 @@ export const NotFlat: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState in its disabled state.',
+      },
+    },
+  },
   args: {
     icon: 'ForbidLine',
     title: 'Unavailable',
@@ -174,6 +262,14 @@ export const Disabled: Story = {
 };
 
 export const CustomDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState with a custom description.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreEmptyState
       {...args}
@@ -192,6 +288,14 @@ export const CustomDescription: Story = {
 };
 
 export const WithGradientBackground: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState with a gradient applied to its background.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreEmptyState
       {...args}
@@ -215,6 +319,14 @@ export const WithGradientBackground: Story = {
 };
 
 export const SearchNoResults: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState after a search that yielded no results.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreEmptyState
       {...args}
@@ -232,6 +344,14 @@ export const SearchNoResults: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState with the raised effect.',
+      },
+    },
+  },
   args: {
     icon: 'InboxLine',
     title: 'Raised empty state',
@@ -242,6 +362,14 @@ export const Raised: Story = {
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders EmptyState at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='small'>
       {ALL_SIZES.map((rs) => (

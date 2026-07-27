@@ -132,5 +132,13 @@ const Template = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders CommentFeed in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };

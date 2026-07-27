@@ -18,6 +18,14 @@ const onClick = fn();
 /** Default — given `href`, a real `<a>` is rendered (so middle-click /
  *  open-in-new-tab work). */
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link in its default configuration.',
+      },
+    },
+  },
   render: () => (
     <ReqoreLink href='https://reqore.qoretechnologies.com'>reqore docs</ReqoreLink>
   ),
@@ -32,6 +40,14 @@ export const Default: Story = {
  *  `<button type="button">` is rendered, so the link triggers an in-app action
  *  while still flowing as inline text. */
 export const LinkAsButton: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link with the link styled as a button.',
+      },
+    },
+  },
   render: () => <ReqoreLink onClick={onClick}>Open issue list →</ReqoreLink>,
   play: async ({ canvasElement }) => {
     onClick.mockClear();
@@ -44,6 +60,14 @@ export const LinkAsButton: Story = {
 
 /** External `href` opens a new tab with a safe `rel`. */
 export const External: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link in a mode where it points to an external destination.',
+      },
+    },
+  },
   render: () => (
     <ReqoreLink href='https://reqore.qoretechnologies.com' external>
       reqore docs
@@ -58,6 +82,14 @@ export const External: Story = {
 
 /** A leading `icon` renders before the text and centers with it. */
 export const WithIcon: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link with an icon.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical>
       <ReqoreLink href='https://reqore.qoretechnologies.com' external icon='ExternalLinkLine'>
@@ -75,6 +107,14 @@ export const WithIcon: Story = {
 
 /** Intents colour the link via the standard theme intents. */
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical>
       <ReqoreLink onClick={noop}>Default link</ReqoreLink>
@@ -99,6 +139,14 @@ export const Intents: Story = {
 
 /** Flows inline inside running text. */
 export const InProse: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link embedded inside prose text.',
+      },
+    },
+  },
   render: () => (
     <ReqoreP>
       Previewing 8 of 12 active issues ·{' '}
@@ -109,6 +157,14 @@ export const InProse: Story = {
 
 /** Disabled — dimmed and non-interactive. */
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link in its disabled state.',
+      },
+    },
+  },
   render: () => (
     <ReqoreLink disabled onClick={noop}>
       Disabled link
@@ -125,6 +181,14 @@ const RouterLinkStub = ({ to, children, ...rest }: any) => (
 );
 
 export const AsRouterLink: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link rendered as a router link.',
+      },
+    },
+  },
   render: () => (
     <ReqoreLink as={RouterLinkStub} to='/issues'>
       Go to issues

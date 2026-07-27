@@ -255,10 +255,26 @@ const Template: StoryFn<
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const ConfirmationModal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal with the confirmation modal wired in.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -267,6 +283,14 @@ export const ConfirmationModal: Story = {
 };
 
 export const BasicWithConfirmationOnClose: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal with a confirmation dialog on close.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -289,6 +313,14 @@ export const BasicWithConfirmationOnClose: Story = {
 };
 
 export const CustomZIndex: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal with a custom z-index applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -298,6 +330,14 @@ export const CustomZIndex: Story = {
 };
 
 export const CustomZIndexOnConfirmationDialog: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal with a custom z-index applied to the confirmation dialog.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -314,6 +354,12 @@ export const CustomZIndexOnConfirmationDialog: Story = {
 export const CanBeClosedWithEscKey: Story = {
   ...Basic,
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal and closes it via the Escape key.',
+      },
+    },
     chromatic: { disable: true },
   },
   play: async ({ canvasElement }) => {
@@ -331,6 +377,12 @@ export const CanBeClosedWithEscKeyWithConfirmation: Story = {
     confirmOnClose: true,
   },
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal and closes it via Escape with a confirmation prompt.',
+      },
+    },
     chromatic: { disable: true },
   },
   play: async ({ canvasElement }) => {
@@ -344,6 +396,14 @@ export const CanBeClosedWithEscKeyWithConfirmation: Story = {
 };
 
 export const EscKeyClosestOnlyTopModal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal in a modal stack — Escape closes only the top-most modal.',
+      },
+    },
+  },
   render: (args) => {
     const [isOpen, setIsOpen] = useState(true);
     const [secondIsOpen, setSecondIsOpen] = useState(true);
@@ -563,6 +623,12 @@ export const EscKeyClosestOnlyTopModal: Story = {
 export const EscKeyClosestOnlyTopModalWithConfirmation: Story = {
   ...EscKeyClosestOnlyTopModal,
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal in a modal stack — Escape closes only the top-most modal, with a confirmation prompt.',
+      },
+    },
     chromatic: { disable: true },
   },
   args: BasicWithConfirmationOnClose.args,
@@ -584,6 +650,12 @@ export const EscKeyClosestOnlyTopModalWithConfirmation: Story = {
 export const CanNotBeClosedWithEscKeyIfUnclosable: Story = {
   ...ConfirmationModal,
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal in unclosable mode — Escape does not close it.',
+      },
+    },
     chromatic: { disable: true },
   },
   play: async ({ canvasElement }) => {
@@ -605,6 +677,12 @@ export const EscClosingDisabled: Story = {
     closeOnEscPress: false,
   },
   parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal with the Escape-closes behaviour disabled.',
+      },
+    },
     chromatic: { disable: true },
   },
   play: async ({ canvasElement, ...rest }) => {

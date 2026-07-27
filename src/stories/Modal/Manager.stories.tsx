@@ -50,6 +50,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const FromObject: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal built from an object shape.',
+      },
+    },
+  },
   args: {
     data: {
       label: 'Test modal',
@@ -101,6 +109,14 @@ const ModalWithState = (props) => {
 };
 
 export const FromElement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal built from an existing element reference.',
+      },
+    },
+  },
   args: {
     data: (<ModalWithState label='Test modal' />) as any,
   },
@@ -110,6 +126,14 @@ export const FromElement: Story = {
 };
 
 export const FromCustomElement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal built from a custom element reference.',
+      },
+    },
+  },
   args: {
     data: (
       <>
@@ -141,6 +165,14 @@ export const FromCustomElement: Story = {
 };
 
 export const CanBeClosed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal and closes it — proves the close flow works.',
+      },
+    },
+  },
   ...FromObject,
   play: async ({ canvasElement, ...rest }) => {
     await FromObject.play({ canvasElement, ...rest });
@@ -151,6 +183,14 @@ export const CanBeClosed: Story = {
 };
 
 export const CanBeClosedManually: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal and closes it via the manual control.',
+      },
+    },
+  },
   ...FromElement,
   play: async ({ canvasElement, ...rest }) => {
     const canvas = within(canvasElement);
@@ -162,6 +202,14 @@ export const CanBeClosedManually: Story = {
 };
 
 export const CannotBeClosed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal in a mode where it cannot be closed.',
+      },
+    },
+  },
   args: {
     data: {
       children: 'I cannot be closed',
@@ -176,6 +224,14 @@ export const CannotBeClosed: Story = {
 };
 
 export const CanBeUpdated: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Modal and updates it — proves the update flow works.',
+      },
+    },
+  },
   args: {
     data: (<ModalWithState label='Test modal' />) as any,
     updateToData: (<ModalWithState label='Updated modal' intent='info' />) as any,

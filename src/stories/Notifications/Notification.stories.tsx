@@ -133,10 +133,26 @@ const SingleTemplate: StoryFn<IReqoreNotificationProps & IReqoreUIProviderProps>
 );
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const CustomColors: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification with custom colors overridden.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -153,6 +169,14 @@ export const CustomColors: Story = {
 };
 
 export const CustomColors2: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification with an alternate set of custom colors.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -169,6 +193,14 @@ export const CustomColors2: Story = {
 };
 
 export const WithTimeout: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification with a timeout applied.',
+      },
+    },
+  },
   render: SingleTemplate,
 
   args: {
@@ -205,6 +237,14 @@ const UpdateTemplate: StoryFn<IReqoreNotificationProps & IReqoreUIProviderProps>
 };
 
 export const WithUpdate: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Notification and exercises its update flow.',
+      },
+    },
+  },
   render: UpdateTemplate,
 
   args: {

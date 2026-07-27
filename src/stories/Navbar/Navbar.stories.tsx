@@ -115,10 +115,26 @@ const Template: StoryFn<IReqoreNavbarProps> = (args: IReqoreNavbarProps) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Header in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const WithEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Header with a visual effect applied.',
+      },
+    },
+  },
   render: Template,
   args: {
     effect: {

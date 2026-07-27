@@ -394,12 +394,28 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table in its default configuration.',
+      },
+    },
+  },
   args: {
     showHelp: true,
   },
 };
 
 export const GroupedColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with grouped column headers.',
+      },
+    },
+  },
   args: {
     columns: defaultColumns,
     data: tableData.data,
@@ -463,6 +479,14 @@ export const GroupedColumns: Story = {
 };
 
 export const CompactCenteredRuntimeColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table in a compact, centered layout with runtime-derived columns.',
+      },
+    },
+  },
   args: {
     selectable: true,
     size: 'small',
@@ -578,6 +602,14 @@ export const CompactCenteredRuntimeColumns: Story = {
 };
 
 export const WithDotNotation: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with dot-notation keys.',
+      },
+    },
+  },
   args: {
     columns: [
       {
@@ -617,12 +649,28 @@ export const WithDotNotation: Story = {
 };
 
 export const NoLabel: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table without a label.',
+      },
+    },
+  },
   args: {
     label: undefined,
   },
 };
 
 export const CustomWidth: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a custom width.',
+      },
+    },
+  },
   args: {
     width: 400,
   },
@@ -633,12 +681,28 @@ export const CustomWidth: Story = {
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   args: {
     flat: false,
   },
 };
 
 export const NoHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table without an intrinsic height.',
+      },
+    },
+  },
   args: {
     height: undefined,
     data: slice(tableData.data, 0, 150),
@@ -646,6 +710,14 @@ export const NoHeight: Story = {
 };
 
 export const InteractiveRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with interactive rows.',
+      },
+    },
+  },
   args: {
     onRowClick: noop,
   },
@@ -655,18 +727,42 @@ export const InteractiveRows: Story = {
 };
 
 export const Striped: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with striped rows.',
+      },
+    },
+  },
   args: {
     striped: true,
   },
 };
 
 export const Filterable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with filter controls enabled.',
+      },
+    },
+  },
   args: {
     filterable: true,
   },
 };
 
 export const DefaultFilter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a default filter applied.',
+      },
+    },
+  },
   args: {
     filterable: true,
     filter: 'Village',
@@ -674,6 +770,14 @@ export const DefaultFilter: Story = {
 };
 
 export const EmptyData: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with no data so the empty state is visible.',
+      },
+    },
+  },
   args: {
     columns: [{ dataId: 'id', header: { label: 'ID' } }],
     data: [],
@@ -688,6 +792,14 @@ export const EmptyData: Story = {
 };
 
 export const NoDataMessage: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a custom no-data message.',
+      },
+    },
+  },
   args: {
     filterable: true,
     filter: 'asjkghakshgjkashg',
@@ -695,12 +807,28 @@ export const NoDataMessage: Story = {
 };
 
 export const FilterableColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with filter controls on the columns.',
+      },
+    },
+  },
   args: {
     columns: defaultColumnsWithFilters,
   },
 };
 
 export const AllFiltersActive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with every filter turned on to prove all filter states render together.',
+      },
+    },
+  },
   args: {
     filterable: true,
     filter: 'Road',
@@ -709,6 +837,14 @@ export const AllFiltersActive: Story = {
 };
 
 export const HiddenColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with some columns hidden.',
+      },
+    },
+  },
   args: {
     showColumnsOptions: true,
     columns: defaultColumnsWithHiddenColumns,
@@ -716,6 +852,14 @@ export const HiddenColumns: Story = {
 };
 
 export const PinnedColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with pinned columns.',
+      },
+    },
+  },
   args: {
     columns: defaultColumnsWithPinnedColumns,
     zoomable: true,
@@ -725,6 +869,14 @@ export const PinnedColumns: Story = {
 };
 
 export const Selectable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with selection enabled.',
+      },
+    },
+  },
   args: {
     selectable: true,
     striped: true,
@@ -732,6 +884,14 @@ export const Selectable: Story = {
 };
 
 export const PreselectedRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with rows pre-selected.',
+      },
+    },
+  },
   args: {
     selected: ['274', '280'],
     selectable: true,
@@ -739,6 +899,14 @@ export const PreselectedRows: Story = {
 };
 
 export const Zoomable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with zooming controls enabled.',
+      },
+    },
+  },
   args: {
     zoomable: true,
   },
@@ -752,6 +920,14 @@ export const Zoomable: Story = {
 };
 
 export const Exportable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with the export controls enabled.',
+      },
+    },
+  },
   args: {
     exportable: true,
     filterable: true,
@@ -767,6 +943,14 @@ export const Exportable: Story = {
 };
 
 export const FillParent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table filling its parent container.',
+      },
+    },
+  },
   args: {
     fill: true,
   },
@@ -818,6 +1002,14 @@ export const FillParentWithBottomPaging: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   args: {
     size: 'small',
     filterable: true,
@@ -827,12 +1019,28 @@ export const Sizes: Story = {
 };
 
 export const DefaultPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with the default paging control.',
+      },
+    },
+  },
   args: {
     paging: 'buttons',
   },
 };
 
 export const CustomPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a custom paging control.',
+      },
+    },
+  },
   args: {
     paging: {
       fluid: true,
@@ -845,6 +1053,14 @@ export const CustomPaging: Story = {
 };
 
 export const CustomHeaderContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with custom content in the header.',
+      },
+    },
+  },
   args: {
     columns: defaultColumnsWithCustomContentHeaders,
   },
@@ -876,6 +1092,14 @@ const CustomRow = (props: IReqoreCustomTableRowProps) => {
 };
 
 export const CustomCellsAndRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with custom cell and row renderers.',
+      },
+    },
+  },
   args: {
     headerCellComponent: CustomHeaderCell,
     bodyCellComponent: CustomCell,
@@ -884,6 +1108,14 @@ export const CustomCellsAndRows: Story = {
 };
 
 export const CustomEmptyState: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a custom empty-state message.',
+      },
+    },
+  },
   args: {
     data: [],
     flat: false,
@@ -958,6 +1190,14 @@ const longTextData = [
 ];
 
 export const NonVirtualized: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with virtualization disabled.',
+      },
+    },
+  },
   args: {
     virtualized: false,
     data: longTextData,
@@ -968,6 +1208,14 @@ export const NonVirtualized: Story = {
 };
 
 export const Wrapped: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with content wrapping enabled.',
+      },
+    },
+  },
   args: {
     wrap: true,
     data: longTextData,
@@ -978,6 +1226,14 @@ export const Wrapped: Story = {
 };
 
 export const WrappedWithPinnedColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with content wrapping and pinned columns.',
+      },
+    },
+  },
   args: {
     wrap: true,
     data: longTextData,
@@ -994,6 +1250,14 @@ export const WrappedWithPinnedColumns: Story = {
 };
 
 export const PerColumnWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with wrapping configured on specific columns.',
+      },
+    },
+  },
   args: {
     virtualized: false,
     data: longTextData,
@@ -1009,6 +1273,14 @@ export const PerColumnWrap: Story = {
 };
 
 export const WrappedWithMaxCellHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with content wrapping and a max cell height.',
+      },
+    },
+  },
   args: {
     wrap: true,
     maxCellHeight: 80,
@@ -1020,6 +1292,14 @@ export const WrappedWithMaxCellHeight: Story = {
 };
 
 export const PerColumnMaxHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a max height configured on specific columns.',
+      },
+    },
+  },
   args: {
     virtualized: false,
     data: longTextData,
@@ -1038,6 +1318,14 @@ export const PerColumnMaxHeight: Story = {
 };
 
 export const CustomExpandHeightButton: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a custom expand-height button.',
+      },
+    },
+  },
   args: {
     wrap: true,
     maxCellHeight: 80,
@@ -1061,6 +1349,14 @@ export const CustomExpandHeightButton: Story = {
  * bordered look while the rest of the table stays minimal.
  */
 export const MinimalHeader: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a minimal header.',
+      },
+    },
+  },
   args: {
     minimal: true,
     label: 'minimal header — no tinted background, no cell border',
@@ -1076,6 +1372,14 @@ export const MinimalHeader: Story = {
  * that per-column overrides win over the table-wide `minimal` defaults.
  */
 export const MinimalHeaderWithOverride: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a minimal header plus an override applied.',
+      },
+    },
+  },
   args: {
     minimal: true,
     label: 'minimal table with one bordered column',
@@ -1105,6 +1409,14 @@ export const MinimalHeaderWithOverride: Story = {
  * cell content that lays itself out vertically.
  */
 export const RowHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Table with a specific row-height applied.',
+      },
+    },
+  },
   args: {
     rowHeight: 72,
     height: 400,

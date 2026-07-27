@@ -29,6 +29,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyboardShortcut in its default configuration.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical>
       <ReqoreKeyboardShortcut {...args} shortcut='mod+k' />
@@ -41,6 +49,14 @@ export const Default: Story = {
 };
 
 export const OnButtons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyboardShortcut attached to buttons.',
+      },
+    },
+  },
   render: () => {
     const [count, setCount] = useState(0);
 
@@ -86,6 +102,14 @@ export const OnButtons: Story = {
 };
 
 export const OnInputs: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders KeyboardShortcut attached to inputs.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical fluid>
       <ReqoreInput

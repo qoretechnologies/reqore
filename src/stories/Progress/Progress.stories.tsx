@@ -81,6 +81,14 @@ const LiveUpdateTemplate: StoryFn<IReqoreProgressProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress in its default configuration.',
+      },
+    },
+  },
   render: Template,
   args: {
     value: 0,
@@ -88,6 +96,14 @@ export const Basic: Story = {
 };
 
 export const WithLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with labels applied.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress {...args} value={45} label='Uploading files...' showValue />
@@ -99,6 +115,14 @@ export const WithLabels: Story = {
 };
 
 export const WithIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with icons on the items.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress {...args} value={65} label='Downloading...' showValue icon='DownloadLine' />
@@ -132,6 +156,14 @@ export const WithIcons: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: SizesTemplate,
   args: {
     value: 65,
@@ -139,6 +171,14 @@ export const Sizes: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: IntentsTemplate,
   args: {
     value: 70,
@@ -146,6 +186,14 @@ export const Intents: Story = {
 };
 
 export const Indeterminate: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress in an indeterminate state.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress {...args} indeterminate label='Loading...' />
@@ -171,6 +219,14 @@ export const Indeterminate: Story = {
 };
 
 export const AnimatedStripes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with animated stripes.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress {...args} value={50} animated label='Default animated' showValue />
@@ -206,10 +262,26 @@ export const AnimatedStripes: Story = {
 };
 
 export const LiveUpdate: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with values that update live.',
+      },
+    },
+  },
   render: LiveUpdateTemplate,
 };
 
 export const WithTooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with a tooltip attached.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress
@@ -241,6 +313,14 @@ export const WithTooltip: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big'>
       <ReqoreProgress {...args} value={50} fluid label='Full width progress' showValue />
@@ -259,6 +339,14 @@ export const Fluid: Story = {
 };
 
 export const WithBorder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with a border applied.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress {...args} value={50} flat={false} label='With border' showValue />
@@ -283,6 +371,14 @@ export const WithBorder: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress in its disabled state.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress {...args} value={50} disabled label='Disabled progress' showValue />
@@ -292,6 +388,14 @@ export const Disabled: Story = {
 };
 
 export const WithTargetMarker: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with a target marker rendered on the bar.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px', paddingTop: '24px' }}>
       <ReqoreProgress
@@ -340,6 +444,14 @@ export const WithTargetMarker: Story = {
 };
 
 export const NotRounded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Progress with rounded corners disabled.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' style={{ width: '400px' }}>
       <ReqoreProgress {...args} value={50} rounded={false} label='Square corners' showValue />

@@ -87,12 +87,28 @@ const sampleOrder = {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView in its default configuration.',
+      },
+    },
+  },
   args: {
     data: sampleOrder,
   },
 };
 
 export const FlatRoot: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with a flat structure at the root.',
+      },
+    },
+  },
   args: {
     data: sampleOrder,
     collapsibleRoot: false,
@@ -101,6 +117,14 @@ export const FlatRoot: Story = {
 };
 
 export const WithTypeChips: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with type chips visible next to each key/value.',
+      },
+    },
+  },
   args: {
     data: sampleOrder,
     showTypes: true,
@@ -109,6 +133,14 @@ export const WithTypeChips: Story = {
 };
 
 export const ExpandedByDefault: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView expanded by default.',
+      },
+    },
+  },
   args: {
     data: sampleOrder,
     defaultExpandDepth: 99,
@@ -117,6 +149,14 @@ export const ExpandedByDefault: Story = {
 };
 
 export const ArrayRoot: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with an array at the root.',
+      },
+    },
+  },
   args: {
     label: 'Recent events',
     data: [
@@ -129,6 +169,14 @@ export const ArrayRoot: Story = {
 };
 
 export const ScalarRoot: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with a scalar value at the root.',
+      },
+    },
+  },
   args: {
     label: 'Single value',
     data: 'just a plain string',
@@ -136,6 +184,14 @@ export const ScalarRoot: Story = {
 };
 
 export const Empty: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView in its empty state.',
+      },
+    },
+  },
   args: {
     label: 'Empty payload',
     data: {},
@@ -144,6 +200,14 @@ export const Empty: Story = {
 };
 
 export const Envelope: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView wrapped in its default envelope.',
+      },
+    },
+  },
   args: {
     label: 'Typed envelope',
     data: {
@@ -156,6 +220,14 @@ export const Envelope: Story = {
 };
 
 export const CustomEnvelope: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with a custom envelope wrapper.',
+      },
+    },
+  },
   args: {
     label: 'Custom envelope keys',
     envelope: { typeKey: '__t', valueKey: '__v' },
@@ -168,6 +240,14 @@ export const CustomEnvelope: Story = {
 };
 
 export const Intent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView at a specific intent.',
+      },
+    },
+  },
   args: {
     intent: 'success',
     label: 'Run finished — success intent on the panel',
@@ -176,6 +256,14 @@ export const Intent: Story = {
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   args: {
     label: 'Non-flat panel — tags inherit the border treatment',
     flat: false,
@@ -184,6 +272,14 @@ export const NotFlat: Story = {
 };
 
 export const CustomKeyColor: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with a custom color applied to keys.',
+      },
+    },
+  },
   args: {
     label: 'Key chips in a custom colour',
     data: sampleOrder,
@@ -195,6 +291,14 @@ export const CustomKeyColor: Story = {
 const SIZES = ['tiny', 'small', 'normal', 'big', 'huge'] as const;
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
       {SIZES.map((size) => (
@@ -229,6 +333,14 @@ const HL7_PAYLOAD =
   'MSH|^~\\&|VW-DEVICE|VITALSIM|EHR|HOSPITAL|2026-05-31 14:40:29.292347 Sun +02:00 (CEST)||ORU^R01|MSG-17669ff5-ce8f-4bd0-9903-4d207e193b83|P|2.5\rOBR|1|REQ-1005||VW-VITALS-FILL-1005|VW_PRESSURE_PANEL^VitalWear pressure panel^L OBX|1|NM|VW_SKIN_TEMP^Skin temperature^L|1|36.7|Cel|36.0-37.5|N|||F';
 
 export const LongStringValue: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with an unusually long string value.',
+      },
+    },
+  },
   args: {
     label: 'Long string value',
     description:
@@ -243,6 +355,14 @@ export const LongStringValue: Story = {
 };
 
 export const LongKey: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with an unusually long key.',
+      },
+    },
+  },
   args: {
     label: 'Long key',
     description:
@@ -259,6 +379,14 @@ export const LongKey: Story = {
 };
 
 export const MixedLongContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with a mixed set of short and long content to prove wrapping is stable.',
+      },
+    },
+  },
   args: {
     label: 'Mixed long keys + long values',
     description:
@@ -285,6 +413,14 @@ export const MixedLongContent: Story = {
 };
 
 export const InNarrowContainer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView inside a narrow container.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ width: 300, border: '1px dashed rgba(255,255,255,0.2)', padding: 8 }}>
       <ReqoreDataView {...args} />
@@ -305,6 +441,14 @@ export const InNarrowContainer: Story = {
 };
 
 export const WidthComparison: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView at two widths side by side for comparison.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
       {[260, 360, 480, 720].map((width) => (
@@ -340,6 +484,14 @@ export const WidthComparison: Story = {
 };
 
 export const InteractionToggle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with an interaction toggle exercised.',
+      },
+    },
+  },
   args: {
     label: 'Interaction',
     data: sampleOrder,
@@ -452,6 +604,14 @@ const EditableHarness = (args: IReqoreDataViewProps) => {
  *    objects (hashes), arrays (lists), or null.
  */
 export const EditableOpenApiSchema: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView editing an OpenAPI schema.',
+      },
+    },
+  },
   args: {
     label: 'OpenAPI 3 — components.schemas.Pet',
     icon: 'CodeLine',
@@ -468,6 +628,14 @@ export const EditableOpenApiSchema: Story = {
  * value rendered as a chip again.
  */
 export const ClickToEditScalar: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView and edits a scalar value via click-to-edit.',
+      },
+    },
+  },
   args: {
     label: 'Click to edit a scalar',
     icon: 'CursorLine',
@@ -521,6 +689,14 @@ export const ClickToEditScalar: Story = {
  * tree.
  */
 export const BuildFromEmptyHash: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView built from an empty hash to prove the initial-empty path.',
+      },
+    },
+  },
   args: {
     label: 'Build from {} — Add property → fill out the form',
     icon: 'AddBoxLine',
@@ -567,6 +743,14 @@ export const BuildFromEmptyHash: Story = {
  * trailing `+ Add item` affordance.
  */
 export const EditableArrayOps: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView exercising the editable array operations (add, edit, remove).',
+      },
+    },
+  },
   args: {
     label: 'Array ops — pet status enum',
     icon: 'ListUnordered',
@@ -627,6 +811,14 @@ export const EditableArrayOps: Story = {
  * hover-revealed group; type-change is per-edit by design.
  */
 export const EditableTypeChange: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView with an editable type change.',
+      },
+    },
+  },
   args: {
     label: 'Switch the type of an existing row',
     icon: 'Repeat2Line',
@@ -643,6 +835,14 @@ export const EditableTypeChange: Story = {
  * input on click, commits on Enter, and refuses duplicate keys.
  */
 export const EditableKeyRename: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders DataView and renames a key inline.',
+      },
+    },
+  },
   args: {
     label: 'Rename a property key in place',
     icon: 'EditBoxLine',

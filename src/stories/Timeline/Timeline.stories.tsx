@@ -81,6 +81,14 @@ const SizesTemplate: StoryFn<IReqoreTimelineProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline in its default configuration.',
+      },
+    },
+  },
   render: Template,
   args: {
     items: basicItems,
@@ -88,6 +96,14 @@ export const Basic: Story = {
 };
 
 export const WithoutIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline without icons.',
+      },
+    },
+  },
   render: Template,
   args: {
     items: [
@@ -111,6 +127,14 @@ export const WithoutIcons: Story = {
 };
 
 export const WithBadges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with multiple badges.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreTimeline
       {...args}
@@ -147,6 +171,14 @@ export const WithBadges: Story = {
 };
 
 export const WithRelativeTime: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with a relative-time timestamp.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreTimeline
       {...args}
@@ -187,6 +219,14 @@ export const WithRelativeTime: Story = {
 };
 
 export const Collapsible: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline in its collapsible variant.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreTimeline
       {...args}
@@ -229,6 +269,14 @@ export const Collapsible: Story = {
 };
 
 export const WithIntents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline across a set of intents.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreTimeline
       {...args}
@@ -280,6 +328,14 @@ export const WithIntents: Story = {
 };
 
 export const GlobalIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with an intent applied globally.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big'>
       <div>
@@ -311,6 +367,14 @@ export const GlobalIntent: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: SizesTemplate,
   args: {
     items: [
@@ -336,6 +400,14 @@ export const Sizes: Story = {
 };
 
 export const Interactive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline in its interactive configuration.',
+      },
+    },
+  },
   render: (args) => {
     const [selected, setSelected] = useState<number | null>(null);
 
@@ -381,6 +453,14 @@ export const Interactive: Story = {
 };
 
 export const WithTooltips: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with tooltips on the items.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreTimeline
       {...args}
@@ -407,6 +487,14 @@ export const WithTooltips: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ width: '100%', border: '1px dashed gray', padding: '16px' }}>
       <ReqoreTimeline {...args} fluid />
@@ -418,6 +506,14 @@ export const Fluid: Story = {
 };
 
 export const SingleItem: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with a single item.',
+      },
+    },
+  },
   render: Template,
   args: {
     items: [
@@ -433,6 +529,14 @@ export const SingleItem: Story = {
 };
 
 export const TitleOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline showing only the title.',
+      },
+    },
+  },
   render: Template,
   args: {
     items: [
@@ -472,10 +576,26 @@ const customContentItems: IReqoreTimelineProps['items'] = [
 ];
 
 export const CustomContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with custom React content passed in.',
+      },
+    },
+  },
   render: (args) => <ReqoreTimeline {...args} items={customContentItems} />,
 };
 
 export const DynamicItemCount: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with a dynamic item count.',
+      },
+    },
+  },
   render: (args) => {
     const fiveItems: IReqoreTimelineProps['items'] = Array.from({ length: 5 }, (_, i) => ({
       title: `Event ${i + 1}`,
@@ -528,6 +648,14 @@ const largeCollapsibleItems: IReqoreTimelineProps['items'] = [
 ];
 
 export const LargeCollapsibleContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with a large amount of collapsible content.',
+      },
+    },
+  },
   render: Template,
   args: {
     items: largeCollapsibleItems,
@@ -535,6 +663,14 @@ export const LargeCollapsibleContent: Story = {
 };
 
 export const ControlledCollapse: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with the collapse state fully controlled.',
+      },
+    },
+  },
   render: (args) => {
     const collapsibleItems: IReqoreTimelineProps['items'] = [
       {
@@ -660,6 +796,14 @@ const horizontalProgressItems: IReqoreTimelineProps['items'] = [
 ];
 
 export const Horizontal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline laid out horizontally.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ width: '100%', padding: '24px 0' }}>
       <ReqoreTimeline {...args} direction='horizontal' items={horizontalProgressItems} />
@@ -668,6 +812,14 @@ export const Horizontal: Story = {
 };
 
 export const HorizontalWithBadges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline in a horizontal layout with badges.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ width: '100%', padding: '24px 0' }}>
       <ReqoreTimeline
@@ -707,6 +859,14 @@ export const HorizontalWithBadges: Story = {
 };
 
 export const HorizontalSizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline at every size laid out horizontally.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big' fluid>
       <div>
@@ -733,6 +893,14 @@ export const HorizontalSizes: Story = {
 };
 
 export const HorizontalInteractive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline laid out horizontally in an interactive configuration.',
+      },
+    },
+  },
   render: (args) => {
     const [step, setStep] = useState(1);
 
@@ -759,6 +927,14 @@ export const HorizontalInteractive: Story = {
 };
 
 export const HorizontalIgnoresContentAndCollapse: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline horizontally to prove content and collapse states are handled.',
+      },
+    },
+  },
   render: (args) => (
     <div style={{ width: '100%', padding: '24px 0' }}>
       <ReqoreTimeline
@@ -793,6 +969,14 @@ export const HorizontalIgnoresContentAndCollapse: Story = {
 };
 
 export const WorkflowExample: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline in a workflow-oriented example composition.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreTimeline
       {...args}
@@ -855,6 +1039,14 @@ export const WorkflowExample: Story = {
 // expands on click. Runs can sit between normal entries as well as at the
 // ends, and their connector line is dotted to read as "skipped".
 export const CollapsedRange: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline showing a collapsed range.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreTimeline
       {...args}
@@ -944,6 +1136,14 @@ const iconOnlyItems: IReqoreTimelineProps['items'] = [
 ];
 
 export const IconsOnlyVertical: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Timeline with icon-only items laid out vertically.',
+      },
+    },
+  },
   render: Template,
   args: {
     direction: 'vertical',

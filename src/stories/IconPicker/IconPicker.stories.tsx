@@ -14,12 +14,28 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker in its default configuration.',
+      },
+    },
+  },
   args: {
     onPick: (icon) => console.log('Picked', icon),
   },
 };
 
 export const Controlled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker in a controlled configuration.',
+      },
+    },
+  },
   render: () => {
     const [icon, setIcon] = useState<IReqoreIconName>('SunLine');
 
@@ -28,6 +44,14 @@ export const Controlled: Story = {
 };
 
 export const Inline: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker in its inline variant.',
+      },
+    },
+  },
   args: {
     inline: true,
     onPick: (icon) => console.log('Picked', icon),
@@ -35,6 +59,14 @@ export const Inline: Story = {
 };
 
 export const InlineControlled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker inline in a fully controlled configuration.',
+      },
+    },
+  },
   render: () => {
     const [icon, setIcon] = useState<IReqoreIconName>('SunLine');
 
@@ -43,6 +75,14 @@ export const InlineControlled: Story = {
 };
 
 export const InlineFluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker inline with fluid sizing.',
+      },
+    },
+  },
   render: () => {
     const [icon, setIcon] = useState<IReqoreIconName>('SparklingLine');
 
@@ -63,6 +103,14 @@ export const InlineFluid: Story = {
 };
 
 export const InlineWithSelectedPreview: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker inline with a selected-item preview shown next to it.',
+      },
+    },
+  },
   render: () => {
     const [icon, setIcon] = useState<IReqoreIconName>('Heart3Line');
 
@@ -74,6 +122,14 @@ export const InlineWithSelectedPreview: Story = {
 };
 
 export const InlineSelectedPreviewNoFilter: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker inline with a selected-item preview and the filter hidden.',
+      },
+    },
+  },
   render: () => {
     const [icon, setIcon] = useState<IReqoreIconName>('StarLine');
 
@@ -106,6 +162,14 @@ export const InlineSelectedPreviewNoFilter: Story = {
 };
 
 export const InlineRestricted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker inline in a width-restricted layout.',
+      },
+    },
+  },
   args: {
     inline: true,
     filterable: false,
@@ -126,6 +190,14 @@ export const InlineRestricted: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup>
       <ReqoreIconPicker size='tiny' label='Tiny' />
@@ -138,6 +210,14 @@ export const Sizes: Story = {
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup>
       <ReqoreIconPicker intent='info' label='Info' />
@@ -149,6 +229,14 @@ export const Intents: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker in its flat variant.',
+      },
+    },
+  },
   args: {
     flat: true,
     label: 'Flat trigger',
@@ -156,6 +244,14 @@ export const Flat: Story = {
 };
 
 export const CustomColumns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker with a custom column set.',
+      },
+    },
+  },
   args: {
     columns: 5,
     gridHeight: 260,
@@ -165,6 +261,14 @@ export const CustomColumns: Story = {
 };
 
 export const RestrictedIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker with a restricted icon set.',
+      },
+    },
+  },
   args: {
     label: 'Weather icons only',
     icons: [
@@ -186,6 +290,14 @@ export const RestrictedIcons: Story = {
 };
 
 export const NotFilterable: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker with filtering disabled.',
+      },
+    },
+  },
   args: {
     label: 'No filter input',
     filterable: false,
@@ -194,6 +306,14 @@ export const NotFilterable: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker in its disabled state.',
+      },
+    },
+  },
   args: {
     label: 'Disabled',
     disabled: true,
@@ -201,6 +321,14 @@ export const Disabled: Story = {
 };
 
 export const Tooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker with a tooltip attached.',
+      },
+    },
+  },
   args: {
     label: 'Hover me',
     tooltip: 'Pick an icon for this item',
@@ -208,6 +336,14 @@ export const Tooltip: Story = {
 };
 
 export const CustomTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker with a custom theme override applied.',
+      },
+    },
+  },
   args: {
     label: 'Custom theme',
     customTheme: { main: '#2c1a4d' },
@@ -216,6 +352,14 @@ export const CustomTheme: Story = {
 };
 
 export const FullyCustomized: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker in a fully customized configuration.',
+      },
+    },
+  },
   args: {
     label: 'Customized parts',
     isDefaultOpen: true,
@@ -228,6 +372,14 @@ export const FullyCustomized: Story = {
 };
 
 export const DefaultOpen: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders IconPicker open by default.',
+      },
+    },
+  },
   args: {
     label: 'Opened on mount',
     isDefaultOpen: true,

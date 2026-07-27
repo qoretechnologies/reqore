@@ -347,10 +347,26 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
 };
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Info: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with intent="info".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -359,6 +375,14 @@ export const Info: Story = {
 };
 
 export const Success: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with intent="success".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -367,6 +391,14 @@ export const Success: Story = {
 };
 
 export const Warning: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with intent="warning".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -375,6 +407,14 @@ export const Warning: Story = {
 };
 
 export const Pending: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with intent="pending".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -383,6 +423,14 @@ export const Pending: Story = {
 };
 
 export const Danger: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with intent="danger".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -391,6 +439,14 @@ export const Danger: Story = {
 };
 
 export const Muted: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with intent="muted".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -399,6 +455,14 @@ export const Muted: Story = {
 };
 
 export const Black: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with intent="black".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -407,6 +471,14 @@ export const Black: Story = {
 };
 
 export const White: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with intent="white".',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -415,6 +487,14 @@ export const White: Story = {
 };
 
 export const CustomIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with a custom intent registered on the theme.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -428,6 +508,14 @@ export const CustomIntent: Story = {
 };
 
 export const Effect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with a gradient/typography effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -446,6 +534,14 @@ export const Effect: Story = {
 };
 
 export const GlobalEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with an effect set globally on the theme.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -463,6 +559,14 @@ export const GlobalEffect: Story = {
 };
 
 export const GlobalCompact: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with the compact variant enabled globally on the theme.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -475,6 +579,14 @@ export const GlobalCompact: Story = {
 };
 
 export const Pill: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button in its pill shape.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -483,6 +595,14 @@ export const Pill: Story = {
 };
 
 export const Loading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button in its loading state.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -491,6 +611,14 @@ export const Loading: Story = {
 };
 
 export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with the raised effect.',
+      },
+    },
+  },
   args: {
     label: 'Raised button',
     flat: true,
@@ -499,6 +627,14 @@ export const Raised: Story = {
 };
 
 export const MinimalRaised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button in the minimal + raised variant.',
+      },
+    },
+  },
   render: () => (
     <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
       <ReqoreControlGroup>
@@ -548,6 +684,14 @@ export const MinimalRaised: Story = {
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup wrap>
       {ALL_SIZES.map((rs) => (
@@ -560,6 +704,14 @@ export const RadiusSize: Story = {
 };
 
 export const Shortcut: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with a keyboard shortcut wired in.',
+      },
+    },
+  },
   render: () => {
     const [count, setCount] = useState(0);
 
@@ -606,6 +758,14 @@ export const Shortcut: Story = {
 };
 
 export const Indicator: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with an indicator badge.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='big'>
       <ReqoreControlGroup wrap>
@@ -670,6 +830,14 @@ export const Indicator: Story = {
 };
 
 export const MultipleGradients: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button with layered gradient effects.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup wrap>
       <ReqoreButton
@@ -718,6 +886,14 @@ export const MultipleGradients: Story = {
  * any inline width so the grid stays rigid.
  */
 export const Square: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Button in square (chip) mode — a fixed-size slot with no horizontal padding.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup vertical gapSize='big'>
       <ReqoreControlGroup wrap gapSize='small' verticalAlign='center'>

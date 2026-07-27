@@ -283,25 +283,65 @@ const Template: StoryFn<IReqoreTagGroup> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders TagGroup in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const BigGapSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders TagGroup with a big gap between items.',
+      },
+    },
+  },
   render: Template,
   args: { gapSize: 'big' },
 };
 
 export const NoWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders TagGroup with content forced onto a single line.',
+      },
+    },
+  },
   render: Template,
   args: { wrap: false },
 };
 
 export const CenterAlign: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders TagGroup centered horizontally.',
+      },
+    },
+  },
   render: Template,
   args: { align: 'center' },
 };
 
 export const RightAlign: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders TagGroup aligned to the right.',
+      },
+    },
+  },
   render: Template,
   args: { align: 'right' },
 };

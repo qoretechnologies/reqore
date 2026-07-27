@@ -260,10 +260,26 @@ const Template: StoryFn<typeof ReqoreDrawer> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const BasicWithConfirmationOnClose: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer with a confirmation dialog on close.',
+      },
+    },
+  },
   render: Template,
   args: {
     confirmOnClose: {
@@ -278,6 +294,14 @@ export const BasicWithConfirmationOnClose: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer in its flat variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -286,6 +310,14 @@ export const Flat: Story = {
 };
 
 export const Floating: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer in its floating variant.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -294,6 +326,14 @@ export const Floating: Story = {
 };
 
 export const Transparent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer with a transparent background.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -302,6 +342,14 @@ export const Transparent: Story = {
 };
 
 export const WithSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer with a specific size applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -310,6 +358,14 @@ export const WithSize: Story = {
 };
 
 export const WithBackgroundBlur: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Drawer with a blurred background.',
+      },
+    },
+  },
   render: Template,
 
   args: {

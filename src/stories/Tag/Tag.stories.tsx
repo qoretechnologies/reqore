@@ -393,35 +393,91 @@ const Template: StoryFn<IReqoreTagProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag in its default configuration.',
+      },
+    },
+  },
   render: Template,
 };
 
 export const Badge: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag with a badge attached.',
+      },
+    },
+  },
   render: Template,
   args: { asBadge: true },
 };
 
 export const Wrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag with content wrapping enabled.',
+      },
+    },
+  },
   render: Template,
   args: { wrap: true },
 };
 
 export const Minimal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag in its minimal variant.',
+      },
+    },
+  },
   render: Template,
   args: { minimal: true },
 };
 
 export const NotFlat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag with flat={false} so the elevated look is applied.',
+      },
+    },
+  },
   render: Template,
   args: { flat: false },
 };
 
 export const WithTextAligns: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag with different text alignments across the items.',
+      },
+    },
+  },
   render: Template,
   args: { labelAlign: 'right', labelKeyAlign: 'center' },
 };
 
 export const Effect = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag with a gradient/typography effect applied.',
+      },
+    },
+  },
   render: Template,
 
   args: {
@@ -440,11 +496,27 @@ export const Effect = {
 };
 
 export const Loading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag in its loading state.',
+      },
+    },
+  },
   render: Template,
   args: { loading: true },
 };
 
 export const RadiusSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag at every radius size to show the border-radius scale.',
+      },
+    },
+  },
   render: () => (
     <ReqoreTagGroup>
       {ALL_SIZES.map((rs) => (

@@ -35,6 +35,14 @@ const InteractiveTemplate: StoryFn<IReqoreSegmentedControlProps> = (args) => {
 };
 
 export const Basic: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl in its default configuration.',
+      },
+    },
+  },
   render: InteractiveTemplate,
   args: {
     value: 'day',
@@ -43,6 +51,14 @@ export const Basic: Story = {
 };
 
 export const Pill: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl in its pill shape.',
+      },
+    },
+  },
   render: InteractiveTemplate,
   args: {
     value: 'day',
@@ -52,6 +68,14 @@ export const Pill: Story = {
 };
 
 export const Flat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl in its flat variant.',
+      },
+    },
+  },
   render: InteractiveTemplate,
   args: {
     value: 'day',
@@ -61,6 +85,14 @@ export const Flat: Story = {
 };
 
 export const Fluid: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl with fluid set so it fills the available horizontal space.',
+      },
+    },
+  },
   render: InteractiveTemplate,
   args: {
     value: 'day',
@@ -70,6 +102,14 @@ export const Fluid: Story = {
 };
 
 export const WithIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl with icons on the items.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState('list');
 
@@ -89,6 +129,14 @@ export const WithIcons: Story = {
 };
 
 export const IconOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl showing only an icon (no label).',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState('list');
 
@@ -108,6 +156,14 @@ export const IconOnly: Story = {
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl at every size (tiny through huge) so the size scale is visible side by side.',
+      },
+    },
+  },
   render: (args) => {
     const sizes = ['micro', 'tiny', 'small', 'normal', 'big', 'huge', 'massive'] as const;
 
@@ -142,6 +198,14 @@ const SizeDemo = ({
 };
 
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl at every intent (info, success, warning, danger, pending, muted) so the intent palette is visible side by side.',
+      },
+    },
+  },
   render: (args) => (
     <ReqoreControlGroup vertical gapSize='big'>
       <IntentDemo args={args} />
@@ -174,6 +238,14 @@ const IntentDemo = ({
 };
 
 export const ActiveIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl with an intent applied to the active state.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState('day');
 
@@ -190,6 +262,14 @@ export const ActiveIntent: Story = {
 };
 
 export const PerItemActiveIntent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl with a per-item active intent.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState('success');
 
@@ -209,6 +289,14 @@ export const PerItemActiveIntent: Story = {
 };
 
 export const DisabledItems: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl with individual items marked disabled.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState('day');
 
@@ -229,6 +317,14 @@ export const DisabledItems: Story = {
 };
 
 export const FullyDisabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl fully disabled.',
+      },
+    },
+  },
   render: InteractiveTemplate,
   args: {
     value: 'day',
@@ -238,6 +334,14 @@ export const FullyDisabled: Story = {
 };
 
 export const AllowDeselect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl where the selected option can be deselected.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState<string | undefined>('day');
 
@@ -254,6 +358,14 @@ export const AllowDeselect: Story = {
 };
 
 export const WithBadges: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl with multiple badges.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState('inbox');
 
@@ -273,6 +385,14 @@ export const WithBadges: Story = {
 };
 
 export const Responsive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders SegmentedControl in a responsive layout.',
+      },
+    },
+  },
   render: (args) => {
     const [value, setValue] = useState('overview');
     const manyItems = [
