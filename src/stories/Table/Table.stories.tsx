@@ -324,30 +324,6 @@ const defaultColumnsWithCustomContentHeaders: IReqoreTableColumn[] = defaultColu
   }
 );
 
-const fillPagingColumns: IReqoreTableColumn[] = [
-  {
-    dataId: 'id',
-    header: { label: 'ID', content: 'ID' },
-    width: 80,
-    cell: { content: 'number' },
-  },
-  {
-    dataId: 'firstName',
-    header: { label: 'First name', content: 'First name' },
-    grow: 1,
-  },
-  {
-    dataId: 'address',
-    header: { label: 'Address', content: 'Address' },
-    grow: 2,
-  },
-  {
-    dataId: 'occupation',
-    header: { label: 'Occupation', content: 'Occupation' },
-    grow: 1,
-  },
-];
-
 const meta = {
   title: 'Collections/Table',
   component: ReqoreTable,
@@ -807,9 +783,12 @@ export const FillParentWithBottomPaging: Story = {
     },
   },
   args: {
-    columns: fillPagingColumns,
     fill: true,
     height: undefined,
+    // The default story decorator wraps children in `ReqoreContent`, which is `height: 100%`
+    // with an inline `padding: 20px` and no `border-box`, so it always overflows its parent by
+    // 40px. Other table stories never notice because they pin an explicit `height`; this one
+    // measures against the viewport, so it renders without that wrapper.
     withoutContent: true,
     paging: {
       itemsPerPage: 100,
