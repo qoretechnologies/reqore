@@ -283,7 +283,8 @@ export const ScrollToSelectedItem: Story = {
     docs: {
       description: {
         story:
-          'Renders Dropdown and scrolls to the selected item on mount.',
+          'Renders an open Dropdown of 130 items that scrolls the selected item (`Item 55`) into ' +
+          'view on mount, leaving it centred in the list with no horizontal scroll.',
       },
     },
   },
@@ -292,6 +293,40 @@ export const ScrollToSelectedItem: Story = {
   args: {
     scrollToSelected: true,
     label: 'Dropdown that scrolls to selected item',
+    // Turn the popover animations off so the scroll lands instantly instead of easing into
+    // place. A smooth scroll is an animation, and snapshotting mid-animation made this story
+    // oscillate between two renders on every build.
+    options: { animations: { popovers: false } },
+  },
+
+  play: async () => {
+    await waitFor(
+      () => {
+        const items = document.querySelectorAll('.reqore-menu-item');
+
+        expect(items.length).toBe(130);
+
+        // Item 55 is the selected one. Matched by position rather than text because a
+        // ReqoreButton renders its label several times over for the hover animation.
+        const selectedItem = items[55];
+
+        expect(selectedItem.textContent).toContain('Item 55');
+
+        const list = selectedItem.closest('.reqore-menu');
+
+        expect(list).toBeTruthy();
+
+        const itemRect = selectedItem.getBoundingClientRect();
+        const listRect = list!.getBoundingClientRect();
+
+        // The point of `scrollToSelected`: the selected item sits inside the visible list.
+        expect(itemRect.top).toBeGreaterThanOrEqual(listRect.top - 1);
+        expect(itemRect.bottom).toBeLessThanOrEqual(listRect.bottom + 1);
+        // `inline: 'nearest'` must not drag a vertical list sideways.
+        expect(list!.scrollLeft).toBe(0);
+      },
+      { timeout: 10000 }
+    );
   },
 };
 

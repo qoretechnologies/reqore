@@ -1,7 +1,8 @@
-import React, { forwardRef, memo, useCallback, useEffect, useState } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { ReqoreButton, ReqoreControlGroup } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
 
@@ -79,6 +80,19 @@ const ReqoreMenuItem = memo(
       const { targetRef } = useCombinedRefs<HTMLButtonElement>(ref);
       const [itemRef, setItemRef] = useState<HTMLButtonElement | null>(null);
 
+      // Respect the global animations toggle from `ReqoreUIProvider` (popovers — menus are
+      // rendered inside them) and the OS reduced-motion preference.
+      const animations = useReqoreProperty('animations');
+      const prefersReducedMotion = useMemo(
+        () =>
+          typeof window !== 'undefined' &&
+          typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        []
+      );
+      const scrollBehavior: ScrollBehavior =
+        animations?.popovers === false || prefersReducedMotion ? 'auto' : 'smooth';
+
       const handleClick = useCallback(
         (event: React.MouseEvent<HTMLButtonElement>) => {
           event.persist();
@@ -110,9 +124,20 @@ const ReqoreMenuItem = memo(
 
       useEffect(() => {
         if (scrollIntoView && itemRef) {
-          itemRef.scrollIntoView?.({ behavior: 'smooth', block: 'center', inline: 'center' });
+          itemRef.scrollIntoView?.({
+            // A smooth scroll is an animation, so the final offset depends on when the caller
+            // looks. Honour the global toggle and the OS reduced-motion preference (same
+            // pattern as CollapsibleContent) so consumers that turn animations off — snapshot
+            // suites included — land on the settled position immediately and deterministically.
+            behavior: scrollBehavior,
+            block: 'center',
+            // `nearest`, not `center`: this is a vertical list, and horizontally centring the
+            // item scrolls the container sideways whenever any sibling is wider than the
+            // viewport, which surfaces a horizontal scrollbar and shifts every row.
+            inline: 'nearest',
+          });
         }
-      }, [itemRef, scrollIntoView]);
+      }, [itemRef, scrollIntoView, scrollBehavior]);
 
       return (
         <ReqoreControlGroup stack={stackWithActions} fluid fill responsive={false}>

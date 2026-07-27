@@ -66,3 +66,64 @@ test('<Menu /> item has right clickable button', () => {
   expect(iconCb).toHaveBeenCalled();
   expect(itemCb).not.toHaveBeenCalled();
 });
+
+describe('<MenuItem /> scrollIntoView', () => {
+  const renderWithScrollSpy = (options?: Record<string, any>) => {
+    const scrollIntoView = vi.fn();
+
+    // jsdom does not implement scrollIntoView, so there is nothing to restore afterwards
+    // beyond the spy itself.
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    render(
+      <ReqoreUIProvider options={options}>
+        <ReqoreMenu>
+          <ReqoreMenuItem label='Item 1' />
+          <ReqoreMenuItem label='Item 2' selected scrollIntoView />
+        </ReqoreMenu>
+      </ReqoreUIProvider>
+    );
+
+    return scrollIntoView;
+  };
+
+  test('centres the item vertically without dragging a vertical list sideways', () => {
+    const scrollIntoView = renderWithScrollSpy();
+
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView).toHaveBeenCalledWith(
+      expect.objectContaining({ block: 'center', inline: 'nearest' })
+    );
+  });
+
+  test('animates the scroll by default', () => {
+    const scrollIntoView = renderWithScrollSpy();
+
+    expect(scrollIntoView).toHaveBeenCalledWith(
+      expect.objectContaining({ behavior: 'smooth' })
+    );
+  });
+
+  test('jumps straight to the item when popover animations are disabled', () => {
+    const scrollIntoView = renderWithScrollSpy({ animations: { popovers: false } });
+
+    expect(scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ behavior: 'auto' }));
+  });
+
+  test('does not scroll items that are not marked for it', () => {
+    const scrollIntoView = vi.fn();
+
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    render(
+      <ReqoreUIProvider>
+        <ReqoreMenu>
+          <ReqoreMenuItem label='Item 1' />
+          <ReqoreMenuItem label='Item 2' selected />
+        </ReqoreMenu>
+      </ReqoreUIProvider>
+    );
+
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+});
