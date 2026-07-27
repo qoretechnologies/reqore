@@ -842,3 +842,106 @@ test('<Table /> is reset to default', () => {
   // The column is still hidden even after columns data have changed
   expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(9);
 });
+
+const selectionColumns: IReqoreTableColumn[] = [
+  { dataId: 'id', header: { label: 'ID' }, width: 50 },
+  { dataId: 'name', header: { label: 'Name' }, width: 150 },
+];
+
+const selectionRows = (count: number) =>
+  Array.from({ length: count }, (_, index) => ({
+    id: index + 1,
+    name: `Row ${index + 1}`,
+    _selectId: index + 1,
+  }));
+
+test('<Table /> select-all toggle reflects the current row set, not a stale count', () => {
+  // Referentially stable on purpose: the selection itself never changes, only the data does.
+  // A `selectedQuant` keyed solely on the selection would never recompute here.
+  const selected = [1, 2];
+  const fn = vi.fn();
+  const renderTable = (rows: ReturnType<typeof selectionRows>) => (
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          columns={selectionColumns}
+          data={rows}
+          selectable
+          selected={selected}
+          onSelectedChange={fn}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // Both selectable rows are selected -> "all".
+  const { rerender } = render(renderTable(selectionRows(2)));
+
+  // Two more selectable rows appear, selection is untouched -> must become "some".
+  rerender(renderTable(selectionRows(4)));
+
+  fn.mockClear();
+  fireEvent.click(document.querySelectorAll('.reqore-table-header-cell')[0]!);
+
+  // "some" -> selecting all. A stale "all" would have cleared the selection instead.
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith([1, 2, 3, 4]);
+});
+
+test('<Table /> select-all toggle only selects rows left by an active column filter', () => {
+  const fn = vi.fn();
+  const renderTable = (filter?: string) => (
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          columns={[
+            selectionColumns[0],
+            { ...selectionColumns[1], filterable: true, filter },
+          ]}
+          data={selectionRows(4)}
+          selectable
+          onSelectedChange={fn}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const { rerender } = render(renderTable());
+
+  expect(document.querySelectorAll('.reqore-table-row').length).toBe(4);
+
+  rerender(renderTable('Row 3'));
+
+  expect(document.querySelectorAll('.reqore-table-row').length).toBe(1);
+
+  fn.mockClear();
+  fireEvent.click(document.querySelectorAll('.reqore-table-header-cell')[0]!);
+
+  expect(fn).toHaveBeenCalledWith([3]);
+});
+
+test('<Table /> applies a filter declared on a nested (grouped) column', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          columns={[
+            {
+              dataId: 'group',
+              header: {
+                label: 'Group',
+                columns: [
+                  selectionColumns[0],
+                  { ...selectionColumns[1], filterable: true, filter: 'Row 2' },
+                ],
+              },
+            },
+          ]}
+          data={selectionRows(4)}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-table-row').length).toBe(1);
+});
