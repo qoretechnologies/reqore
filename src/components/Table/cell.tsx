@@ -5,6 +5,7 @@ import { IReqoreTableColumn } from '.';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreTooltip } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
@@ -29,8 +30,8 @@ export interface IReqoreTableBodyCellProps
 }
 
 export const StyledTableCell = styled.div.withConfig({
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    prop !== 'wrap' && defaultValidatorFn(prop),
+  // `wrap` drives the cell's white-space rule; it is not a DOM attribute.
+  shouldForwardProp: omitStyleProps('wrap'),
 })<IReqoreTableCellStyle>`
   ${({ width, minWidth, maxWidth, grow }) =>
     css`

@@ -33,6 +33,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { getOneHigherSize, isActionShown } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -335,8 +336,7 @@ export type TPanelStyle = React.FC<
 
 export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   // `fill` controls panel layout and must not become a boolean DOM attribute.
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    prop !== 'fill' && defaultValidatorFn(prop),
+  shouldForwardProp: omitStyleProps('fill'),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};

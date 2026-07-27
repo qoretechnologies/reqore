@@ -6,6 +6,7 @@ import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
 import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
+import { omitStyleProps } from '../../helpers/styled';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { TReqoreHexColor } from '../Effect';
@@ -68,11 +69,9 @@ export interface IReqoreTableRowStyle {
   minWidth?: number;
 }
 
-const tableRowStyleProps = new Set(['wrap']);
-
 export const StyledTableRow = styled.div.withConfig({
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    !tableRowStyleProps.has(prop) && defaultValidatorFn(prop),
+  // `wrap` drives the row's flex-wrap rule; it is not a DOM attribute.
+  shouldForwardProp: omitStyleProps('wrap'),
 })<IReqoreTableRowStyle>`
   ${({ size, wrap, minWidth }) => css`
     display: flex;

@@ -8,6 +8,7 @@ import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { fadeIn } from '../../helpers/animations';
+import { omitStyleProps } from '../../helpers/styled';
 import {
   changeDarkness,
   changeLightness,
@@ -91,25 +92,22 @@ const timeoutAnimation = keyframes`
   }
 `;
 
-const notificationStyleProps = new Set([
-  'asMessage',
-  'backgroundBlur',
-  'clickable',
-  'fill',
-  'fixed',
-  'flat',
-  'fluid',
-  'hasShadow',
-  'margin',
-  'raised',
-  'spaceBetween',
-  'stack',
-  'timeout',
-]);
-
 export const StyledReqoreNotification = styled(StyledEffect).withConfig({
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    !notificationStyleProps.has(prop) && defaultValidatorFn(prop),
+  shouldForwardProp: omitStyleProps(
+    'asMessage',
+    'backgroundBlur',
+    'clickable',
+    'fill',
+    'fixed',
+    'flat',
+    'fluid',
+    'hasShadow',
+    'margin',
+    'raised',
+    'spaceBetween',
+    'stack',
+    'timeout'
+  ),
 })<IReqoreNotificationStyle>`
   min-width: ${({ fluid }) => (!fluid ? '30px' : undefined)};
   max-width: ${({ maxWidth, fluid, fixed }) => maxWidth || (fluid && !fixed ? '100%' : undefined)};

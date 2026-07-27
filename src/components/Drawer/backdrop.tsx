@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { IReqoreDrawerStyle } from '.';
 import { useReqoreProperty } from '../..';
 import { getMainBackgroundColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 
 export interface IReqoreBackdropProps extends React.HTMLAttributes<HTMLDivElement> {
   zIndex?: number;
@@ -13,11 +14,8 @@ export interface IReqoreBackdropProps extends React.HTMLAttributes<HTMLDivElemen
   opacity?: number;
 }
 
-const backdropStyleProps = new Set(['blur', 'closable', 'zIndex']);
-
 export const StyledBackdrop = styled(animated.div).withConfig({
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    !backdropStyleProps.has(prop) && defaultValidatorFn(prop),
+  shouldForwardProp: omitStyleProps('blur', 'closable', 'zIndex'),
 })<
   IReqoreDrawerStyle & { closable: boolean; zIndex?: number }
 >`
