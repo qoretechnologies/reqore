@@ -3,6 +3,7 @@ import {
   ReqoreButton,
   ReqoreContent,
   ReqoreControlGroup,
+  ReqoreDropdown,
   ReqoreInput,
   ReqoreLayoutContent,
   ReqoreMessage,
@@ -85,4 +86,26 @@ test('Does not clone Reqore styling props onto intrinsic children', () => {
   expect(list).not.toHaveAttribute('spaceBetween');
   expect(list).not.toHaveAttribute('customTheme');
   expect(warnings).not.toMatch(/fluid|spaceBetween|customTheme/);
+});
+
+test('Does not forward a propagated fill flag through a dropdown button', () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  const { container } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreControlGroup fill>
+            <ReqoreDropdown items={[{ label: 'First option' }]} />
+          </ReqoreControlGroup>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const button = container.querySelector('.reqore-dropdown-control');
+  const warnings = consoleError.mock.calls.flat().join(' ');
+  consoleError.mockRestore();
+  expect(button).toBeTruthy();
+  expect(button).not.toHaveAttribute('fill');
+  expect(warnings).not.toMatch(/non-boolean attribute [`'"]?fill/i);
 });

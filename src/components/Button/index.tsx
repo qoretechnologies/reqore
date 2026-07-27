@@ -26,6 +26,7 @@ import {
   isAchromatic,
 } from '../../helpers/colors';
 import { shortcutHasModifier, TReqoreKeyboardShortcut } from '../../helpers/shortcuts';
+import { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign, getOneLessSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -285,7 +286,12 @@ export const StyledAnimatedTextWrapper = styled.span`
   align-items: ${({ textAlign }) => alignToFlexAlign(textAlign)};
 `;
 
-export const StyledButton = styled(StyledEffect)<IReqoreButtonStyle>`
+export const StyledButton = styled(StyledEffect).withConfig({
+  // A containing ControlGroup can propagate its `fill` layout flag through
+  // polymorphic controls such as Dropdown. The flag is meaningful to the
+  // group, but it is not a valid boolean attribute for the rendered button.
+  shouldForwardProp: omitStyleProps('fill'),
+})<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
   justify-content: center;

@@ -956,6 +956,51 @@ export const FillParent: Story = {
   },
 };
 
+export const FillParentWithBottomPaging: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table that fills its panel above bottom paging controls. The scrollable body ' +
+          'stays fully visible instead of extending behind the controls.',
+      },
+    },
+  },
+  args: {
+    fill: true,
+    height: undefined,
+    // The default story decorator wraps children in `ReqoreContent`, which is `height: 100%`
+    // with an inline `padding: 20px` and no `border-box`, so it always overflows its parent by
+    // 40px. Other table stories never notice because they pin an explicit `height`; this one
+    // measures against the viewport, so it renders without that wrapper.
+    withoutContent: true,
+    paging: {
+      itemsPerPage: 100,
+      showLabels: true,
+    } as TReqorePaginationType<IReqoreTableRowData>,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(async () => {
+      const body = canvasElement.querySelector('.reqore-table-body');
+      const wrapper = canvasElement.querySelector('.reqore-table-wrapper');
+      const pagingControls = canvasElement.querySelector('.reqore-pagination-wrapper');
+
+      await expect(body).toBeTruthy();
+      await expect(wrapper).toBeTruthy();
+      await expect(pagingControls).toBeTruthy();
+      await expect(body.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        wrapper.getBoundingClientRect().bottom + 1
+      );
+      await expect(wrapper.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        pagingControls.getBoundingClientRect().top + 1
+      );
+      await expect(pagingControls.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        canvasElement.getBoundingClientRect().bottom + 1
+      );
+    });
+  },
+};
+
 export const Sizes: Story = {
   parameters: {
     docs: {

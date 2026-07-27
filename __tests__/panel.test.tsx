@@ -1,5 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { ReqoreInput, ReqoreLayoutContent, ReqorePanel, ReqoreUIProvider } from '../src';
+import {
+  ReqoreContent,
+  ReqoreInput,
+  ReqoreLayoutContent,
+  ReqorePanel,
+  ReqoreUIProvider,
+} from '../src';
 
 test('Renders basic <Panel /> properly', () => {
   render(
@@ -15,6 +21,26 @@ test('Renders basic <Panel /> properly', () => {
   expect(document.querySelectorAll('.reqore-panel').length).toBe(1);
   expect(document.querySelectorAll('.reqore-panel-content').length).toBe(1);
   expect(document.querySelectorAll('.reqore-panel-title').length).toBe(0);
+});
+
+test('Does not forward the Panel fill layout flag to the DOM', () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  const { container } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqorePanel fill>Filled panel</ReqorePanel>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const panel = container.querySelector('.reqore-panel');
+  const warnings = consoleError.mock.calls.flat().join(' ');
+  consoleError.mockRestore();
+  expect(panel).toBeTruthy();
+  expect(panel).not.toHaveAttribute('fill');
+  expect(warnings).not.toMatch(/non-boolean attribute [`'"]?fill/i);
 });
 
 test('Renders basic <Panel /> with title properly', () => {

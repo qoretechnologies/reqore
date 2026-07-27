@@ -5,6 +5,7 @@ import styled, { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
+import { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import {
   IReqoreIntent,
@@ -68,23 +69,20 @@ export interface IReqoreControlGroupStyle extends IReqoreControlGroupProps {
   theme: IReqoreTheme;
 }
 
-const controlGroupStyleProps = new Set([
-  'fill',
-  'fixed',
-  'fluid',
-  'gapSize',
-  'horizontalAlign',
-  'rounded',
-  'spaceBetween',
-  'stack',
-  'vertical',
-  'verticalAlign',
-  'wrap',
-]);
-
 export const StyledReqoreControlGroup = styled(StyledEffect).withConfig({
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    !controlGroupStyleProps.has(prop) && defaultValidatorFn(prop),
+  shouldForwardProp: omitStyleProps(
+    'fill',
+    'fixed',
+    'fluid',
+    'gapSize',
+    'horizontalAlign',
+    'rounded',
+    'spaceBetween',
+    'stack',
+    'vertical',
+    'verticalAlign',
+    'wrap'
+  ),
 })<IReqoreControlGroupStyle>`
   display: flex;
   flex: ${({ fluid, fixed }) => (fixed ? '0 0 auto' : fluid ? undefined : '0 0 auto')};

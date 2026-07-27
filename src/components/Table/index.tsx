@@ -158,7 +158,7 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   defaultZoom?: number;
 
   selectable?: boolean;
-  selected?: string[];
+  selected?: (string | number)[];
   selectedRowIntent?: TReqoreIntent;
   onSelectedChange?: (selected?: any[]) => void;
   onSelectClick?: (dataId: string | number) => void;
@@ -350,7 +350,6 @@ const ReqoreTable = ({
   const [_data, setData] = useState<IReqoreTableData>(data || []);
   const [_sort, setSort] = useState<IReqoreTableSort | undefined>(fixSort(sort));
   const [_selected, setSelected] = useState<(string | number)[]>(selected || []);
-  const [_selectedQuant, setSelectedQuant] = useState<'all' | 'none' | 'some'>('none');
   const [columnModifiers, setColumnModifiers] = useState<{
     [dataId: string]: { [modifier: string]: any };
   }>({});
@@ -360,7 +359,11 @@ const ReqoreTable = ({
   const theme = useReqoreTheme('main', rest.customTheme, intent);
 
   const addModal = useReqoreProperty('addModal');
-  const [wrapperRef, sizes] = useMeasure();
+  // Measure only the table wrapper, not the full panel content. Pagination
+  // controls are siblings of this wrapper and consume their own flex space;
+  // measuring the panel would include them and make a filled body overflow
+  // behind the controls.
+  const [wrapperRef, sizes] = useMeasure<HTMLDivElement>();
 
   // Track the header's height so a filled body can subtract it (see `headerHeight`).
   // A ResizeObserver keeps it correct when the filter row appears/disappears or
@@ -389,8 +392,20 @@ const ReqoreTable = ({
   );
   const normalizedQuery = useMemo(() => query.toString().toLowerCase(), [query]);
 
+  const activeSelected = selected ?? _selected;
+  const selectedQuant = useMemo<'all' | 'none' | 'some'>(() => {
+    const selectableCount = transformedDataRef.current.filter(
+      (datum) => datum._selectId ?? false
+    ).length;
+
+    if (!activeSelected.length) {
+      return 'none';
+    }
+
+    return activeSelected.length === selectableCount ? 'all' : 'some';
+  }, [activeSelected]);
   const selectedIcon = useMemo(() => {
-    switch (_selectedQuant) {
+    switch (selectedQuant) {
       case 'all':
         return 'CheckboxCircleLine';
       case 'some':
@@ -398,7 +413,23 @@ const ReqoreTable = ({
       default:
         return 'CheckboxBlankCircleLine';
     }
-  }, [_selectedQuant]);
+  }, [selectedQuant]);
+
+  const updateSelected = useCallback(
+    (
+      next:
+        | (string | number)[]
+        | ((current: (string | number)[]) => (string | number)[])
+    ) => {
+      const nextSelected = typeof next === 'function' ? next(activeSelected) : next;
+
+      if (selected === undefined) {
+        setSelected(nextSelected);
+      }
+      onSelectedChange?.(nextSelected);
+    },
+    [activeSelected, onSelectedChange, selected]
+  );
 
   const handleSortChange = useCallback((by: string) => {
     setSort((currentSort: IReqoreTableSort) => {
@@ -419,7 +450,7 @@ const ReqoreTable = ({
         return;
       }
 
-      setSelected((current) => {
+      updateSelected((current) => {
         let newSelected = [...current];
         const isSelected = newSelected.find((selected) => selectId === selected);
 
@@ -432,12 +463,12 @@ const ReqoreTable = ({
         return newSelected;
       });
     },
-    [onSelectClick]
+    [onSelectClick, updateSelected]
   );
 
   const handleToggleSelectClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      switch (_selectedQuant) {
+      switch (selectedQuant) {
         case 'none':
         case 'some': {
           const selectableData: (string | number)[] = transformedDataRef.current
@@ -445,7 +476,9 @@ const ReqoreTable = ({
               // If the user held down the meta key, we will reverse the selection
               if (e.metaKey) {
                 // Check if the datum is selected
-                const isSelected = _selected.find((selectId) => selectId === datum._selectId);
+                const isSelected = activeSelected.find(
+                  (selectId) => selectId === datum._selectId
+                );
                 // If it is selected, we will remove it from the selected array
                 if (isSelected) {
                   return false;
@@ -456,16 +489,16 @@ const ReqoreTable = ({
             })
             .map((datum) => datum._selectId);
 
-          setSelected(selectableData);
+          updateSelected(selectableData);
           break;
         }
         default: {
-          setSelected([]);
+          updateSelected([]);
           break;
         }
       }
     },
-    [_selected, _selectedQuant]
+    [activeSelected, selectedQuant, updateSelected]
   );
 
   const finalColumns = useMemo(() => {
@@ -498,7 +531,7 @@ const ReqoreTable = ({
               transparent: true,
               icon: !_selectId
                 ? 'Forbid2Line'
-                : _selected?.find((s) => s.toString() === _selectId.toString())
+                : activeSelected?.find((s) => s.toString() === _selectId.toString())
                 ? 'CheckboxCircleLine'
                 : 'CheckboxBlankCircleLine',
               intent: !_selectId ? 'muted' : undefined,
@@ -517,7 +550,7 @@ const ReqoreTable = ({
     selectable,
     selectedIcon,
     selectToggleTooltip,
-    _selected,
+    activeSelected,
     handleToggleSelectClick,
   ]);
 
@@ -590,32 +623,6 @@ const ReqoreTable = ({
   useUpdateEffect(() => {
     setData(data);
   }, [data]);
-
-  useUpdateEffect(() => {
-    if (selectable && selected) {
-      setSelected(selected);
-    }
-  }, [selected]);
-
-  useUpdateEffect(() => {
-    if (onSelectedChange) {
-      onSelectedChange(_selected);
-    }
-
-    const selectableData: IReqoreTableData = transformedDataRef.current.filter(
-      (datum) => datum._selectId ?? false
-    );
-
-    if (count(_selected)) {
-      if (count(_selected) === count(selectableData)) {
-        setSelectedQuant('all');
-      } else {
-        setSelectedQuant('some');
-      }
-    } else {
-      setSelectedQuant('none');
-    }
-  }, [_selected]);
 
   const handleScrollChange = useCallback((isScrolled: boolean) => setIsScrolled(isScrolled), []);
 
@@ -864,6 +871,7 @@ const ReqoreTable = ({
 
     return (
       <StyledTableWrapper
+        ref={wrapperRef}
         className='reqore-table-wrapper'
         rounded={rest.rounded !== false && rest.flat !== false}
         size={rest.flat === false ? wrapperSize : zoomToSize[zoom]}
@@ -933,7 +941,6 @@ const ReqoreTable = ({
         fill={fill}
         className={`${className || ''} reqore-table`}
         style={{ width, ...(rest.style || {}) }}
-        getContentRef={wrapperRef}
         badge={badge}
       >
         <ReqoreThemeProvider theme={theme} customTheme={rest.customTheme}>
