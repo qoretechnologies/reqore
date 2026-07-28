@@ -82,6 +82,13 @@ export { ReqoreMenuSection } from './components/Menu/section';
 export { default as ReqoreMessage } from './components/Message';
 export { ReqoreModal } from './components/Modal';
 export { ReqoreMultiSelect } from './components/MultiSelect';
+export { default as ReqoreNavRail } from './components/NavRail';
+export type {
+  IReqoreNavRailItem,
+  IReqoreNavRailProps,
+  IReqoreNavRailSubItem,
+  TReqoreNavRailPosition,
+} from './components/NavRail';
 export { ReqoreFooter, ReqoreHeader } from './components/Navbar';
 export { default as ReqoreNavbarDivider } from './components/Navbar/divider';
 export { default as ReqoreNavbarGroup } from './components/Navbar/group';
