@@ -118,6 +118,18 @@ export const Inline: Story = {
   },
 };
 
+/** NO SECTIONS — an active page without sub-items renders a plain mark, and the
+ *  rail stays exactly the same width as when the active page has sections
+ *  (compare with Inline). */
+export const NoSections: Story = {
+  args: { items: ITEMS, position: 'static', defaultActiveId: 'reports' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('navigation')).toBeInTheDocument();
+    await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
+  },
+};
+
 /** IN GUTTER — floating in the left gutter of a page, over scrolling content. */
 export const InGutter: Story = {
   args: { items: ITEMS, floating: true, position: 'left', defaultActiveId: 'dashboard' },
@@ -174,6 +186,7 @@ export const Effects: Story = {
           position='static'
           defaultActiveId='dashboard'
           effect={{ gradient: { colors: { 0: '#2e1a47', 100: '#160c24' }, direction: 'to bottom' } }}
+          activeEffect={{ gradient: { colors: { 0: '#7c46c8', 100: '#3f2472' }, direction: 'to bottom' } }}
         />
       </Labeled>
       <Labeled label='glow'>
@@ -220,6 +233,39 @@ export const IdleReveal: Story = {
       <ReqoreNavRail {...args} />
     </Backdrop>
   ),
+  play: async ({ canvasElement }) => {
+    const nav = canvasElement.querySelector('.reqore-nav-rail') as HTMLElement;
+    // Rests dimmed…
+    await expect(getComputedStyle(nav).opacity).toBe('0.34');
+    // …fades fully in when approached…
+    await userEvent.hover(nav);
+    await waitFor(() => expect(getComputedStyle(nav).opacity).toBe('1'));
+    // …and dims again once the mouse leaves.
+    await userEvent.unhover(nav);
+    await waitFor(() => expect(getComputedStyle(nav).opacity).toBe('0.34'));
+  },
+};
+
+/** IDLE · RESTING — the default idle appearance with NO interaction: `idleReveal`
+ *  leaves the rail dimmed until approached. This story just captures that resting
+ *  dim state (the play only asserts it — it does not hover). */
+export const IdleResting: Story = {
+  args: {
+    items: ITEMS,
+    floating: true,
+    position: 'left',
+    idleReveal: true,
+    defaultActiveId: 'dashboard',
+  },
+  render: (args: IReqoreNavRailProps) => (
+    <Backdrop>
+      <ReqoreNavRail {...args} />
+    </Backdrop>
+  ),
+  play: async ({ canvasElement }) => {
+    const nav = canvasElement.querySelector('.reqore-nav-rail') as HTMLElement;
+    await expect(getComputedStyle(nav).opacity).toBe('0.34');
+  },
 };
 
 /** COLLAPSED — a short viewport folds each group's extras into a `⋮` flyout that
@@ -237,6 +283,28 @@ export const Collapsed: Story = {
       <ReqoreNavRail {...args} />
     </Backdrop>
   ),
+};
+
+/** OVERFLOW MENU — the collapsed `⋮` opens a floating menu of the hidden items.
+ *  This story opens it (play) so the flyout is captured in every Qlip build. */
+export const OverflowMenu: Story = {
+  args: {
+    items: ITEMS,
+    floating: true,
+    position: 'left',
+    maxHeight: 280,
+    defaultActiveId: 'dashboard',
+  },
+  render: (args: IReqoreNavRailProps) => (
+    <Backdrop height={320}>
+      <ReqoreNavRail {...args} />
+    </Backdrop>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'More items' }));
+    await waitFor(() => expect(document.body.textContent).toContain('Settings'));
+  },
 };
 
 /** TALL CONTENT — clicking a section scrolls the page to it (and `scrollSpy`
@@ -260,9 +328,18 @@ export const TallContent: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const scroller = canvasElement.querySelector('#nav-scroll') as HTMLElement;
-    await expect(scroller.scrollTop).toBe(0);
-    // Click a section further down the page.
-    await userEvent.click(canvas.getByRole('button', { name: 'Billing' }));
+    // scroll-spy: the first section is current at the top…
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-current', 'location')
+    );
+    // …and the current section follows the scroll position.
+    scroller.scrollTop = scroller.scrollHeight;
+    fireEvent.scroll(scroller);
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: 'History' })).toHaveAttribute('aria-current', 'location')
+    );
+    // click-to-scroll: clicking a section scrolls the page to it.
+    await userEvent.click(canvas.getByRole('button', { name: 'Health' }));
     await waitFor(() => expect(scroller.scrollTop).toBeGreaterThan(0));
   },
 };

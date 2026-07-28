@@ -19,7 +19,7 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getMainBackgroundColor } from '../../helpers/colors';
+import { changeLightness, getColorFromMaybeString, getMainBackgroundColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { RaisedElement } from '../../styles';
@@ -41,6 +41,7 @@ import { IReqoreEffect, StyledEffect } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
 import { ReqorePopover } from '../Popover';
+import { ReqoreVerticalSpacer } from '../Spacer';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -123,6 +124,10 @@ export interface IReqoreNavRailProps
   raised?: boolean;
   opacity?: number;
   blur?: number;
+  /** Effect applied to the active page's group container AND its active marks
+   *  (e.g. a coordinated gradient to pair with the rail's own `effect`). Falls
+   *  back to the intent tint when omitted. */
+  activeEffect?: IReqoreEffect;
   /** Rendered above the items (e.g. an open-sidebar control or a logo). */
   header?: ReactNode;
   /** Rendered below the items. */
@@ -195,9 +200,40 @@ const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
     $revealMode &&
     css`
       opacity: ${$shown ? 1 : $restOpacity};
-      pointer-events: ${$shown ? 'auto' : 'none'};
+      /* Only truly-hidden (revealOnScroll, restOpacity 0) blocks pointer events;
+         a dimmed idle rail must stay hoverable so it can reveal itself. */
+      pointer-events: ${$shown || $restOpacity > 0 ? 'auto' : 'none'};
       transition: opacity 220ms ease;
     `}
+`;
+
+// The active page's "expanded" container. Built on StyledEffect so an
+// `activeEffect` gradient paints it (like the outer rail); the intent tint is
+// the fallback when no gradient is given.
+const ActiveGroupSurface = styled(StyledEffect)<{
+  theme: IReqoreTheme;
+  $gap: number;
+  $padBottom: number;
+  $radiusTop: number;
+  $radiusBottom: number;
+  $ring: string;
+  $tint?: string;
+}>`
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  gap: ${({ $gap }) => $gap}px;
+  padding: 0 0 ${({ $padBottom }) => $padBottom}px;
+  /* Top cap hugs the (larger) page mark, bottom cap hugs the (smaller) section
+     mark — so both ends sit flush instead of the bottom bulging. */
+  border-radius: ${({ $radiusTop, $radiusBottom }) =>
+    `${$radiusTop}px ${$radiusTop}px ${$radiusBottom}px ${$radiusBottom}px`};
+  ${({ $tint }) =>
+    $tint &&
+    css`
+      background-color: ${$tint};
+    `}
+  box-shadow: inset 0 0 0 1px ${({ $ring }) => $ring};
 `;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -267,6 +303,7 @@ const NavRailOverflow = memo(
         flat: true,
         minimal: true,
         circle: true,
+        raised: true,
         'aria-label': ariaLabel,
         className: 'reqore-nav-rail-overflow',
         tooltip: { content: `${items.length} more`, placement },
@@ -275,6 +312,7 @@ const NavRailOverflow = memo(
       placement={placement}
       closeOnInsideClick
       noArrow
+      noWrapper
       onToggleChange={onOpenChange}
       content={
         <ReqoreMenu rounded padded width='210px'>
@@ -327,6 +365,7 @@ export const ReqoreNavRail = memo(
     size = 'small',
     intent,
     effect,
+    activeEffect,
     flat = false,
     minimal,
     transparent,
@@ -343,7 +382,10 @@ export const ReqoreNavRail = memo(
     className,
     style,
   }: IReqoreNavRailProps) => {
-    const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+    // NB: `intent` is deliberately NOT fed to the theme here — it must not
+    // recolour the whole rail surface; it only drives the active accent + the
+    // active group's tint (see `activeIntent` / `renderActiveGroup`).
+    const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
     const subSize = getOneLessSize(size);
     const tipSide: 'left' | 'right' = position === 'right' ? 'left' : 'right';
     const activeIntent: TReqoreIntent = intent ?? 'info';
@@ -373,6 +415,24 @@ export const ReqoreNavRail = memo(
     const budgetOn = !!floating || typeof maxHeight === 'number';
     const availHeight = useAncestorHeight(budgetOn, maxHeight, railRef);
 
+    // Idle-reveal hover uses NATIVE mouseenter/leave on the rail element, not
+    // React's — React routes enter/leave through the React tree, so a portalled
+    // child (a mark's tooltip) counts as "inside" and the leave never fires when
+    // a tooltip is up. Native DOM events use real subtree containment instead.
+    useEffect(() => {
+      if (!idleReveal) return undefined;
+      const el = railRef.current;
+      if (!el) return undefined;
+      const enter = () => setHovered(true);
+      const leave = () => setHovered(false);
+      el.addEventListener('mouseenter', enter);
+      el.addEventListener('mouseleave', leave);
+      return () => {
+        el.removeEventListener('mouseenter', enter);
+        el.removeEventListener('mouseleave', leave);
+      };
+    }, [idleReveal]);
+
     // Budget marks to the height; sections get ~40% (min 2), pages the rest.
     const markH = SIZE_TO_PX[size] + GAP_FROM_SIZE[size];
     const reserve = markH * 2 + 44; // header/footer/sub-capsule chrome
@@ -394,8 +454,8 @@ export const ReqoreNavRail = memo(
     const { shown: itemsShown, hidden: itemsHidden } = splitAroundActive(items, activeItemId, itemMax);
     const { shown: subsShown, hidden: subsHidden } = splitAroundActive(subItems, activeSubItemId, subMax);
     const activeAt = itemsShown.findIndex((i) => i.id === activeItemId);
-    const before = itemsShown.slice(0, activeAt + 1); // includes the active item
-    const after = itemsShown.slice(activeAt + 1);
+    const before = activeAt >= 0 ? itemsShown.slice(0, activeAt) : itemsShown; // before active
+    const after = activeAt >= 0 ? itemsShown.slice(activeAt + 1) : []; // after active
 
     const selectItem = useCallback(
       (item: IReqoreNavRailItem) => {
@@ -425,26 +485,33 @@ export const ReqoreNavRail = memo(
       [activeSubId, onSubClick]
     );
 
-    // Scroll-spy: follow the scroll position when the sub-item isn't controlled.
+    // Scroll-spy: as the user scrolls, highlight the last section whose top has
+    // passed a threshold below the container's top (when the sub-item isn't
+    // controlled). A plain scroll listener + getBoundingClientRect is used
+    // rather than IntersectionObserver, whose callback only reports the entries
+    // that *changed* — unreliable for "which section is current right now".
     useEffect(() => {
       if (!scrollSpy || activeSubId !== undefined) return undefined;
-      const pairs = subItems
-        .map((s) => (s.scrollTargetId ? [document.getElementById(s.scrollTargetId), s.id] : null))
-        .filter((p): p is [HTMLElement, string] => !!p && !!p[0]);
-      if (!pairs.length) return undefined;
-      const byEl = new Map(pairs);
-      const io = new IntersectionObserver(
-        (entries) => {
-          const top = entries
-            .filter((e) => e.isIntersecting)
-            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-          const id = top && byEl.get(top.target as HTMLElement);
-          if (id) setInternalSubId(id);
-        },
-        { root: scrollContainer?.current ?? null, rootMargin: '0px 0px -55% 0px', threshold: [0, 0.25, 0.5, 1] }
-      );
-      pairs.forEach(([el]) => io.observe(el));
-      return () => io.disconnect();
+      const targeted = subItems.filter((s) => s.scrollTargetId);
+      if (!targeted.length) return undefined;
+      const container = scrollContainer?.current ?? null;
+      const scrollTarget: HTMLElement | Window = container ?? window;
+      const compute = () => {
+        const containerTop = container ? container.getBoundingClientRect().top : 0;
+        const viewport = container ? container.clientHeight : window.innerHeight;
+        const threshold = containerTop + Math.min(viewport * 0.3, 140);
+        let current = targeted[0].id;
+        for (const s of targeted) {
+          const el = document.getElementById(s.scrollTargetId as string);
+          if (!el) continue;
+          if (el.getBoundingClientRect().top <= threshold) current = s.id;
+          else break;
+        }
+        setInternalSubId(current);
+      };
+      compute();
+      scrollTarget.addEventListener('scroll', compute, { passive: true });
+      return () => scrollTarget.removeEventListener('scroll', compute);
     }, [scrollSpy, activeSubId, subItems, scrollContainer]);
 
     // Reveal-on-scroll (mobile): show while scrolling, hide after a quiet delay.
@@ -485,12 +552,14 @@ export const ReqoreNavRail = memo(
           size={size}
           icon={item.icon}
           flat
-          minimal={!active}
-          active={active}
+          minimal
+          raised
           disabled={item.disabled}
+          effect={active ? (activeEffect as IReqoreEffect) : undefined}
           intent={active ? item.intent ?? activeIntent : item.intent}
           className='reqore-nav-rail-item'
           aria-label={item.label}
+          aria-current={active ? 'page' : undefined}
           tooltip={{ content: item.label, placement: tipSide } as TReqoreTooltipProp}
           onClick={() => selectItem(item)}
         />
@@ -506,15 +575,73 @@ export const ReqoreNavRail = memo(
           size={subSize}
           icon={sub.icon}
           flat
-          minimal={!active}
-          active={active}
+          minimal
+          raised
           disabled={sub.disabled}
+          effect={active ? (activeEffect as IReqoreEffect) : undefined}
           intent={active ? sub.intent ?? activeIntent : sub.intent}
           className='reqore-nav-rail-subitem'
           aria-label={sub.label}
+          aria-current={active ? 'location' : undefined}
           tooltip={{ content: sub.label, placement: tipSide } as TReqoreTooltipProp}
           onClick={() => selectSub(sub)}
         />
+      );
+    };
+
+    // The active page's mark "expands" into the sub-rail: its own icon, a line
+    // separator, then its section marks — all inside one grouped container.
+    const renderActiveGroup = (item: IReqoreNavRailItem) => {
+      if (!subsShown.length) return renderItem(item);
+      // Tint the wrapping container with the active mark's own intent colour so
+      // the sub-rail reads as one coloured "you are here" unit.
+      const groupColor = getColorFromMaybeString(theme, item.intent ?? activeIntent);
+      // One mark wide (inset-shadow "border", no horizontal padding) so the rail
+      // never changes width; the top mark sits flush in the pill cap and a little
+      // bottom padding keeps the last section off the edge.
+      return (
+        <ActiveGroupSurface
+          as='div'
+          effect={activeEffect as IReqoreEffect}
+          key={item.id}
+          role='group'
+          aria-label={`${item.label} sections`}
+          className='reqore-nav-rail-active'
+          theme={theme}
+          $gap={GAP_FROM_SIZE[subSize]}
+          $padBottom={2}
+          $radiusTop={pill ? Math.round(SIZE_TO_PX[size] / 2) : radius}
+          $radiusBottom={pill ? Math.round(SIZE_TO_PX[subSize] / 2) : radius}
+          $ring={rgba(groupColor, 0.42)}
+          $tint={activeEffect?.gradient ? undefined : rgba(groupColor, 0.16)}
+        >
+          {renderItem(item)}
+          <ReqoreVerticalSpacer
+            height={GAP_FROM_SIZE[size]}
+            width={`${Math.round(SIZE_TO_PX[subSize] * 0.5)}px`}
+            lineSize='tiny'
+            intent={item.intent ?? activeIntent}
+          />
+          {subsShown.map(renderSub)}
+          {subsHidden.length ? (
+            <NavRailOverflow
+              items={subsHidden.map((s) => ({
+                id: s.id,
+                label: s.label,
+                icon: s.icon,
+                active: s.id === activeSubItemId,
+              }))}
+              size={subSize}
+              placement={tipSide}
+              ariaLabel='More sections'
+              onSelect={(id) => {
+                const sub = subItems.find((s) => s.id === id);
+                if (sub) selectSub(sub);
+              }}
+              onOpenChange={onMenuToggle}
+            />
+          ) : null}
+        </ActiveGroupSurface>
       );
     };
 
@@ -545,64 +672,11 @@ export const ReqoreNavRail = memo(
           $revealMode={revealMode}
           $shown={shown}
           $restOpacity={restOpacity}
-          onMouseEnter={idleReveal ? () => setHovered(true) : undefined}
-          onMouseLeave={idleReveal ? () => setHovered(false) : undefined}
         >
           <ReqoreControlGroup vertical gapSize={size} horizontalAlign='center'>
             {header}
             {before.map(renderItem)}
-
-            {subsShown.length ? (
-              <>
-                <div
-                  aria-hidden
-                  style={{
-                    width: 2,
-                    height: 7,
-                    borderRadius: 2,
-                    background: rgba(changeLightness(getMainBackgroundColor(theme), 0.4), 0.85),
-                  }}
-                />
-                <NavRailSurface
-                  role='group'
-                  aria-label={activeItem ? `${activeItem.label} sections` : 'Sections'}
-                  className='reqore-nav-rail-sub'
-                  theme={theme}
-                  $gap={GAP_FROM_SIZE[subSize]}
-                  $padding={Math.max(2, pad - 2)}
-                  $radius={radius}
-                  $pill={pill}
-                  $flat={false}
-                  $raised={false}
-                  $transparent={false}
-                  $opacity={1}
-                  $blur={0}
-                  $bgLightness={0.16}
-                  $borderLightness={0.32}
-                >
-                  {subsShown.map(renderSub)}
-                  {subsHidden.length ? (
-                    <NavRailOverflow
-                      items={subsHidden.map((s) => ({
-                        id: s.id,
-                        label: s.label,
-                        icon: s.icon,
-                        active: s.id === activeSubItemId,
-                      }))}
-                      size={subSize}
-                      placement={tipSide}
-                      ariaLabel='More sections'
-                      onSelect={(id) => {
-                        const sub = subItems.find((s) => s.id === id);
-                        if (sub) selectSub(sub);
-                      }}
-                      onOpenChange={onMenuToggle}
-                    />
-                  ) : null}
-                </NavRailSurface>
-              </>
-            ) : null}
-
+            {activeAt >= 0 && activeItem ? renderActiveGroup(activeItem) : null}
             {after.map(renderItem)}
             {itemsHidden.length ? (
               <NavRailOverflow
