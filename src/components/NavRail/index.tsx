@@ -11,20 +11,33 @@ import {
   useState,
 } from 'react';
 import styled, { css } from 'styled-components';
-import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, SIZE_TO_PX, TSizes } from '../../constants/sizes';
+import {
+  GAP_FROM_SIZE,
+  HALF_PADDING_FROM_SIZE,
+  resolveRadius,
+  SIZE_TO_PX,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { RaisedElement } from '../../styles';
 import {
   IReqoreComponent,
+  IReqoreIntent,
   IWithReqoreCustomTheme,
+  IWithReqoreEffect,
+  IWithReqoreFlat,
+  IWithReqoreMinimal,
   IWithReqoreSize,
+  IWithReqoreTransparent,
   TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import { IReqoreEffect, StyledEffect } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem from '../Menu/item';
 import { ReqorePopover } from '../Popover';
@@ -38,7 +51,7 @@ export interface IReqoreNavRailItem {
   /** Human label — the tooltip on the mark and the text in the overflow menu. */
   label: string;
   icon?: IReqoreIconName;
-  /** Tints the mark when active (defaults to `info`). */
+  /** Tints this mark when active (falls back to the rail's `intent`, then `info`). */
   intent?: TReqoreIntent;
   disabled?: boolean;
   /** Sub-items shown nested directly beneath this item while it is active. */
@@ -63,7 +76,12 @@ export type TReqoreNavRailPosition = 'left' | 'right' | 'static';
 export interface IReqoreNavRailProps
   extends IReqoreComponent,
     IWithReqoreSize,
-    IWithReqoreCustomTheme {
+    IWithReqoreCustomTheme,
+    IWithReqoreEffect,
+    IWithReqoreFlat,
+    IWithReqoreMinimal,
+    IWithReqoreTransparent,
+    IReqoreIntent {
   /** Primary destinations (the "master" rail). */
   items: IReqoreNavRailItem[];
   /** Controlled active primary item. Omit to run uncontrolled. */
@@ -82,6 +100,10 @@ export interface IReqoreNavRailProps
   /** Rest at `idleOpacity` and fade fully in on approach (or while a menu is open). */
   idleReveal?: boolean;
   idleOpacity?: number;
+  /** Mobile pattern: stay hidden, appear while the user scrolls, hide when they
+   *  stop (after `scrollHideDelay`). Takes precedence over `idleReveal`. */
+  revealOnScroll?: boolean;
+  scrollHideDelay?: number;
   /** Distance from the gutter edge when floating. */
   offset?: number;
   /** Scroll container the sub-items scroll within / are observed against. */
@@ -91,6 +113,16 @@ export interface IReqoreNavRailProps
   /** Cap used to fold overflow into the `⋮` menu. A number is taken as px; when
    *  omitted and `floating`, the positioned ancestor's height is measured. */
   maxHeight?: number;
+  /** Surface radius. Round (pill, matching the circular marks) by default;
+   *  `radiusSize` overrides with a fixed size; `rounded={false}` squares it. */
+  rounded?: boolean;
+  radiusSize?: TSizes;
+  /** Inner padding. */
+  padded?: boolean | TSizes;
+  /** Subtle 3D "raised" surface (paired with `flat`). */
+  raised?: boolean;
+  opacity?: number;
+  blur?: number;
   /** Rendered above the items (e.g. an open-sidebar control or a logo). */
   header?: ReactNode;
   /** Rendered below the items. */
@@ -99,30 +131,53 @@ export interface IReqoreNavRailProps
   style?: CSSProperties;
 }
 
-// ── Styled ──────────────────────────────────────────────────────────────────
+// ── Styled surface ────────────────────────────────────────────────────────────
 
-interface IStyledRail {
+interface ISurfaceStyle {
   theme: IReqoreTheme;
-  $position: TReqoreNavRailPosition;
-  $floating?: boolean;
-  $reveal?: boolean;
-  $shown?: boolean;
-  $idleOpacity: number;
-  $offset: number;
   $gap: number;
+  $padding: number;
   $radius: number;
+  $pill: boolean;
+  $flat: boolean;
+  $raised: boolean;
+  $transparent: boolean;
+  $opacity: number;
+  $blur: number;
+  $bgLightness: number;
+  $borderLightness: number;
+  // Positioning / reveal (outer surface only)
+  $position?: TReqoreNavRailPosition;
+  $floating?: boolean;
+  $offset?: number;
+  $revealMode?: boolean;
+  $shown?: boolean;
+  $restOpacity?: number;
 }
 
-const StyledNavRail = styled.div<IStyledRail>`
+const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
   display: inline-flex;
   flex-flow: column nowrap;
   align-items: center;
+  width: fit-content;
   gap: ${({ $gap }) => $gap}px;
-  padding: 5px;
-  border-radius: ${({ $radius }) => $radius}px;
-  background: ${({ theme }) => rgba(getMainBackgroundColor(theme), 0.92)};
-  border: 1px solid ${({ theme }) => rgba(changeLightness(getMainBackgroundColor(theme), 0.12), 0.7)};
-  backdrop-filter: blur(4px);
+  padding: ${({ $padding }) => $padding}px;
+  border-radius: ${({ $pill, $radius }) => ($pill ? '9999px' : `${$radius}px`)};
+
+  background-color: ${({ theme, $transparent, $opacity, $bgLightness }) =>
+    $transparent
+      ? 'transparent'
+      : rgba(changeLightness(getMainBackgroundColor(theme), $bgLightness), $opacity)};
+  border: ${({ $flat, theme, $borderLightness }) =>
+    $flat
+      ? 'none'
+      : `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), $borderLightness), 0.7)}`};
+  ${({ $blur, $opacity }) =>
+    $blur && $opacity < 1 &&
+    css`
+      backdrop-filter: blur(${$blur}px);
+    `}
+  ${({ $raised, $flat }) => $raised && $flat && RaisedElement}
 
   ${({ $floating, $position, $offset }) =>
     $floating &&
@@ -136,31 +191,13 @@ const StyledNavRail = styled.div<IStyledRail>`
       max-height: calc(100% - 8px);
     `}
 
-  ${({ $reveal, $shown, $idleOpacity }) =>
-    $reveal &&
+  ${({ $revealMode, $shown, $restOpacity }) =>
+    $revealMode &&
     css`
-      opacity: ${$shown ? 1 : $idleOpacity};
-      transition: opacity 200ms ease;
+      opacity: ${$shown ? 1 : $restOpacity};
+      pointer-events: ${$shown ? 'auto' : 'none'};
+      transition: opacity 220ms ease;
     `}
-`;
-
-const StyledNavRailSub = styled.div<{ theme: IReqoreTheme; $gap: number; $radius: number }>`
-  align-self: stretch;
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
-  gap: ${({ $gap }) => $gap}px;
-  padding: 5px 2px;
-  border-radius: ${({ $radius }) => $radius}px;
-  background: ${({ theme }) => rgba(changeLightness(getMainBackgroundColor(theme), 0.16), 0.9)};
-  border: 1px solid ${({ theme }) => rgba(changeLightness(getMainBackgroundColor(theme), 0.32), 0.75)};
-`;
-
-const StyledConnector = styled.div<{ theme: IReqoreTheme }>`
-  width: 2px;
-  height: 7px;
-  border-radius: 2px;
-  background: ${({ theme }) => rgba(changeLightness(getMainBackgroundColor(theme), 0.4), 0.85)};
 `;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -202,6 +239,12 @@ function useAncestorHeight(
   }, [enabled, maxHeight, ref]);
   return height;
 }
+
+const resolvePadding = (padded: boolean | TSizes | undefined, size: TSizes): number => {
+  if (padded === false) return 0;
+  if (padded === undefined || padded === true) return HALF_PADDING_FROM_SIZE[size];
+  return HALF_PADDING_FROM_SIZE[padded];
+};
 
 // ── Overflow flyout ─────────────────────────────────────────────────────────
 
@@ -258,8 +301,9 @@ const NavRailOverflow = memo(
  * A compact navigation rail: a thin column of circular marks for primary
  * destinations, with the active destination's sub-items nested directly beneath
  * it in a distinct sub-capsule. Overflow folds into a `⋮` flyout; it can pin to
- * a gutter and rest dimmed until approached; and its sub-items can drive (and
- * follow) page scroll via `scrollSpy` + `scrollTargetId`.
+ * a gutter and rest dimmed until approached (or, for mobile, stay hidden and
+ * appear only while scrolling); and its sub-items can drive and follow page
+ * scroll via `scrollSpy` + `scrollTargetId`.
  */
 export const ReqoreNavRail = memo(
   ({
@@ -274,21 +318,37 @@ export const ReqoreNavRail = memo(
     floating,
     idleReveal,
     idleOpacity = 0.34,
+    revealOnScroll,
+    scrollHideDelay = 1100,
     offset = 14,
     scrollContainer,
     scrollSpy,
     maxHeight,
-    header,
-    footer,
     size = 'small',
+    intent,
+    effect,
+    flat = false,
+    minimal,
+    transparent,
+    rounded = true,
+    radiusSize,
+    padded = true,
+    raised,
+    opacity = 1,
+    blur = 4,
     customTheme,
     inheritCustomTheme,
+    header,
+    footer,
     className,
     style,
   }: IReqoreNavRailProps) => {
-    const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+    const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
     const subSize = getOneLessSize(size);
     const tipSide: 'left' | 'right' = position === 'right' ? 'left' : 'right';
+    const activeIntent: TReqoreIntent = intent ?? 'info';
+    const isTransparent = !!(transparent || minimal);
+    const isFlat = !!(flat || minimal);
 
     const [internalId, setInternalId] = useState(defaultActiveId ?? items[0]?.id);
     const activeItemId = activeId ?? internalId;
@@ -302,6 +362,7 @@ export const ReqoreNavRail = memo(
     const activeSubItemId = activeSubId ?? internalSubId ?? subItems[0]?.id;
 
     const [hovered, setHovered] = useState(false);
+    const [scrolling, setScrolling] = useState(false);
     const [openMenus, setOpenMenus] = useState(0);
     const onMenuToggle = useCallback(
       (open: boolean) => setOpenMenus((c) => Math.max(0, c + (open ? 1 : -1))),
@@ -314,7 +375,7 @@ export const ReqoreNavRail = memo(
 
     // Budget marks to the height; sections get ~40% (min 2), pages the rest.
     const markH = SIZE_TO_PX[size] + GAP_FROM_SIZE[size];
-    const reserve = markH * 2 + 44; // header/footer/sub-tray chrome
+    const reserve = markH * 2 + 44; // header/footer/sub-capsule chrome
     const slots =
       availHeight === undefined
         ? Number.POSITIVE_INFINITY
@@ -386,7 +447,34 @@ export const ReqoreNavRail = memo(
       return () => io.disconnect();
     }, [scrollSpy, activeSubId, subItems, scrollContainer]);
 
-    const shown = !idleReveal || hovered || openMenus > 0;
+    // Reveal-on-scroll (mobile): show while scrolling, hide after a quiet delay.
+    useEffect(() => {
+      if (!revealOnScroll) return undefined;
+      const target: HTMLElement | Window = scrollContainer?.current ?? window;
+      let timer: ReturnType<typeof setTimeout>;
+      const onScroll = () => {
+        setScrolling(true);
+        clearTimeout(timer);
+        timer = setTimeout(() => setScrolling(false), scrollHideDelay);
+      };
+      target.addEventListener('scroll', onScroll, { passive: true });
+      return () => {
+        target.removeEventListener('scroll', onScroll);
+        clearTimeout(timer);
+      };
+    }, [revealOnScroll, scrollContainer, scrollHideDelay]);
+
+    const revealMode = !!idleReveal || !!revealOnScroll;
+    const shown = revealOnScroll
+      ? scrolling || openMenus > 0
+      : idleReveal
+        ? hovered || openMenus > 0
+        : true;
+    const restOpacity = revealOnScroll ? 0 : idleOpacity;
+
+    const pill = rounded && !radiusSize;
+    const radius = resolveRadius(size, radiusSize);
+    const pad = resolvePadding(padded, size);
 
     const renderItem = (item: IReqoreNavRailItem) => {
       const active = item.id === activeItemId;
@@ -400,7 +488,7 @@ export const ReqoreNavRail = memo(
           minimal={!active}
           active={active}
           disabled={item.disabled}
-          intent={active ? item.intent ?? 'info' : item.intent}
+          intent={active ? item.intent ?? activeIntent : item.intent}
           className='reqore-nav-rail-item'
           aria-label={item.label}
           tooltip={{ content: item.label, placement: tipSide } as TReqoreTooltipProp}
@@ -421,7 +509,7 @@ export const ReqoreNavRail = memo(
           minimal={!active}
           active={active}
           disabled={sub.disabled}
-          intent={active ? sub.intent ?? 'info' : sub.intent}
+          intent={active ? sub.intent ?? activeIntent : sub.intent}
           className='reqore-nav-rail-subitem'
           aria-label={sub.label}
           tooltip={{ content: sub.label, placement: tipSide } as TReqoreTooltipProp}
@@ -432,20 +520,31 @@ export const ReqoreNavRail = memo(
 
     return (
       <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
-        <StyledNavRail
+        <NavRailSurface
+          as='nav'
           ref={railRef}
+          effect={effect as IReqoreEffect}
           role='navigation'
           className={`${className ?? ''} reqore-nav-rail`.trim()}
           style={style}
           theme={theme}
+          $gap={GAP_FROM_SIZE[size]}
+          $padding={pad}
+          $radius={radius}
+          $pill={pill}
+          $flat={isFlat}
+          $raised={!!raised}
+          $transparent={isTransparent}
+          $opacity={opacity}
+          $blur={blur}
+          $bgLightness={0.02}
+          $borderLightness={0.14}
           $position={position}
           $floating={floating}
-          $reveal={idleReveal}
-          $shown={shown}
-          $idleOpacity={idleOpacity}
           $offset={offset}
-          $gap={GAP_FROM_SIZE[size]}
-          $radius={RADIUS_FROM_SIZE[size]}
+          $revealMode={revealMode}
+          $shown={shown}
+          $restOpacity={restOpacity}
           onMouseEnter={idleReveal ? () => setHovered(true) : undefined}
           onMouseLeave={idleReveal ? () => setHovered(false) : undefined}
         >
@@ -455,14 +554,31 @@ export const ReqoreNavRail = memo(
 
             {subsShown.length ? (
               <>
-                <StyledConnector aria-hidden theme={theme} />
-                <StyledNavRailSub
+                <div
+                  aria-hidden
+                  style={{
+                    width: 2,
+                    height: 7,
+                    borderRadius: 2,
+                    background: rgba(changeLightness(getMainBackgroundColor(theme), 0.4), 0.85),
+                  }}
+                />
+                <NavRailSurface
                   role='group'
                   aria-label={activeItem ? `${activeItem.label} sections` : 'Sections'}
                   className='reqore-nav-rail-sub'
                   theme={theme}
                   $gap={GAP_FROM_SIZE[subSize]}
-                  $radius={RADIUS_FROM_SIZE[size]}
+                  $padding={Math.max(2, pad - 2)}
+                  $radius={radius}
+                  $pill={pill}
+                  $flat={false}
+                  $raised={false}
+                  $transparent={false}
+                  $opacity={1}
+                  $blur={0}
+                  $bgLightness={0.16}
+                  $borderLightness={0.32}
                 >
                   {subsShown.map(renderSub)}
                   {subsHidden.length ? (
@@ -483,7 +599,7 @@ export const ReqoreNavRail = memo(
                       onOpenChange={onMenuToggle}
                     />
                   ) : null}
-                </StyledNavRailSub>
+                </NavRailSurface>
               </>
             ) : null}
 
@@ -503,7 +619,7 @@ export const ReqoreNavRail = memo(
             ) : null}
             {footer}
           </ReqoreControlGroup>
-        </StyledNavRail>
+        </NavRailSurface>
       </ReqoreThemeProvider>
     );
   }

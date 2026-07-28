@@ -83,3 +83,47 @@ test('Honours a controlled activeId', () => {
   expect(screen.getByRole('group', { name: 'Team sections' })).toBeInTheDocument();
   expect(screen.queryByRole('group', { name: 'Dashboard sections' })).not.toBeInTheDocument();
 });
+
+test('Renders with the standard prop contract (size/intent/effect/flat/raised/radiusSize)', () => {
+  renderRail(
+    <ReqoreNavRail
+      items={ITEMS}
+      defaultActiveId='dashboard'
+      size='big'
+      intent='success'
+      flat
+      raised
+      radiusSize='small'
+      padded='small'
+      effect={{ gradient: { colors: { 0: '#222222', 100: '#000000' } } }}
+    />
+  );
+
+  expect(screen.getByRole('navigation')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Dashboard' })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'Dashboard sections' })).toBeInTheDocument();
+});
+
+test('Clicking a sub-item with a scrollTargetId scrolls to that element', () => {
+  const scrollIntoView = vi.fn();
+  Element.prototype.scrollIntoView = scrollIntoView;
+  const items: IReqoreNavRailItem[] = [
+    {
+      id: 'a',
+      label: 'A',
+      icon: 'DashboardLine',
+      items: [{ id: 's1', label: 'Section one', icon: 'InformationLine', scrollTargetId: 'target-s1' }],
+    },
+  ];
+
+  renderRail(
+    <>
+      <div id='target-s1'>target</div>
+      <ReqoreNavRail items={items} defaultActiveId='a' />
+    </>
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Section one' }));
+
+  expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+});

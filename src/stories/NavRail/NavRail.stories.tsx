@@ -1,11 +1,11 @@
 import { StoryObj } from '@storybook/react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { ReactNode, useRef } from 'react';
 import ReqoreNavRail, {
   IReqoreNavRailItem,
   IReqoreNavRailProps,
 } from '../../components/NavRail';
-import { ReqoreControlGroup, ReqoreH2, ReqoreP, ReqorePanel } from '../../index';
+import { ReqoreControlGroup, ReqoreP, ReqorePanel, ReqoreTag } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -55,38 +55,59 @@ const ITEMS: IReqoreNavRailItem[] = [
 /** A believable page backdrop so a floating rail can be judged in context. */
 const Backdrop = ({
   height = 520,
+  width,
   scrollRef,
+  scrollId,
+  repeat = 1,
   children,
 }: {
   height?: number;
+  width?: number;
   scrollRef?: React.RefObject<HTMLDivElement>;
+  scrollId?: string;
+  repeat?: number;
   children: ReactNode;
 }) => (
   <div
     style={{
       position: 'relative',
       height,
+      width,
+      margin: width ? '0 auto' : undefined,
       borderRadius: 10,
       overflow: 'hidden',
       border: '1px solid rgba(255,255,255,0.08)',
     }}
   >
-    <div ref={scrollRef} style={{ position: 'absolute', inset: 0, overflow: 'auto', padding: '18px 72px' }}>
+    <div
+      ref={scrollRef}
+      id={scrollId}
+      style={{ position: 'absolute', inset: 0, overflow: 'auto', padding: '18px 72px' }}
+    >
       <ReqoreControlGroup vertical gapSize='big' fluid>
-        {DASHBOARD_SECTIONS!.map((s) => (
-          <ReqorePanel key={s.id} label={s.label} icon={s.icon} rounded flat id={s.scrollTargetId}>
-            <ReqoreP style={{ minHeight: 120 }}>
-              Content for the {s.label} section. Scroll to move the rail&apos;s highlight.
-            </ReqoreP>
-          </ReqorePanel>
-        ))}
+        {Array.from({ length: repeat }).flatMap((_, r) =>
+          DASHBOARD_SECTIONS!.map((s) => (
+            <ReqorePanel key={`${r}-${s.id}`} label={s.label} icon={s.icon} rounded flat id={r === 0 ? s.scrollTargetId : undefined}>
+              <ReqoreP style={{ minHeight: 120 }}>
+                Content for the {s.label} section. Scroll to move the rail&apos;s highlight.
+              </ReqoreP>
+            </ReqorePanel>
+          ))
+        )}
       </ReqoreControlGroup>
     </div>
     {children}
   </div>
 );
 
-/** INLINE — the rail on its own (position='static'): a thin column of circular
+const Labeled = ({ label, children }: { label: string; children: ReactNode }) => (
+  <ReqoreControlGroup vertical gapSize='small' horizontalAlign='center'>
+    <ReqoreTag label={label} size='small' minimal />
+    {children}
+  </ReqoreControlGroup>
+);
+
+/** INLINE — the rail on its own (position='static'): a thin pill of circular
  *  page marks with the active page's sections nested in the sub-capsule. */
 export const Inline: Story = {
   args: { items: ITEMS, position: 'static', defaultActiveId: 'dashboard' },
@@ -117,9 +138,83 @@ export const RightGutter: Story = {
   ),
 };
 
+/** SIZES — the standard `size` scale drives the marks, spacing and pill radius. */
+export const Sizes: Story = {
+  render: () => (
+    <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
+      {(['tiny', 'small', 'normal', 'big'] as const).map((size) => (
+        <Labeled key={size} label={size}>
+          <ReqoreNavRail items={ITEMS} position='static' size={size} defaultActiveId='dashboard' />
+        </Labeled>
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+/** INTENTS — `intent` sets the active-mark accent (per-item `intent` overrides). */
+export const Intents: Story = {
+  render: () => (
+    <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
+      {(['info', 'success', 'warning', 'danger', 'muted'] as const).map((intent) => (
+        <Labeled key={intent} label={intent}>
+          <ReqoreNavRail items={ITEMS} position='static' intent={intent} defaultActiveId='dashboard' />
+        </Labeled>
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+/** EFFECTS — the standard `effect` prop paints the rail surface. */
+export const Effects: Story = {
+  render: () => (
+    <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
+      <Labeled label='gradient'>
+        <ReqoreNavRail
+          items={ITEMS}
+          position='static'
+          defaultActiveId='dashboard'
+          effect={{ gradient: { colors: { 0: '#2e1a47', 100: '#160c24' }, direction: 'to bottom' } }}
+        />
+      </Labeled>
+      <Labeled label='glow'>
+        <ReqoreNavRail
+          items={ITEMS}
+          position='static'
+          intent='info'
+          defaultActiveId='dashboard'
+          effect={{ glow: { color: '#2e6bff', size: 2, blur: 6 } }}
+        />
+      </Labeled>
+    </ReqoreControlGroup>
+  ),
+};
+
+/** FLAT & RAISED — `flat` drops the border, `raised` adds the 3D inset. */
+export const FlatAndRaised: Story = {
+  render: () => (
+    <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
+      <Labeled label='bordered (default)'>
+        <ReqoreNavRail items={ITEMS} position='static' defaultActiveId='dashboard' />
+      </Labeled>
+      <Labeled label='flat'>
+        <ReqoreNavRail items={ITEMS} position='static' flat defaultActiveId='dashboard' />
+      </Labeled>
+      <Labeled label='flat + raised'>
+        <ReqoreNavRail items={ITEMS} position='static' flat raised defaultActiveId='dashboard' />
+      </Labeled>
+    </ReqoreControlGroup>
+  ),
+};
+
 /** IDLE REVEAL — rests dim, fades fully in on approach (hover the gutter). */
 export const IdleReveal: Story = {
-  args: { items: ITEMS, floating: true, position: 'left', idleReveal: true, defaultActiveId: 'dashboard' },
+  args: {
+    items: ITEMS,
+    floating: true,
+    position: 'left',
+    idleReveal: true,
+    defaultActiveId: 'dashboard',
+  },
   render: (args: IReqoreNavRailProps) => (
     <Backdrop>
       <ReqoreNavRail {...args} />
@@ -127,28 +222,80 @@ export const IdleReveal: Story = {
   ),
 };
 
-/** OVERFLOW — a tight height cap folds each group's extras into a `⋮` flyout
- *  that never widens the rail. */
-export const Overflow: Story = {
-  args: { items: ITEMS, floating: true, position: 'left', maxHeight: 300, defaultActiveId: 'dashboard' },
+/** COLLAPSED — a short viewport folds each group's extras into a `⋮` flyout that
+ *  never widens the rail. */
+export const Collapsed: Story = {
+  args: {
+    items: ITEMS,
+    floating: true,
+    position: 'left',
+    maxHeight: 280,
+    defaultActiveId: 'dashboard',
+  },
   render: (args: IReqoreNavRailProps) => (
-    <Backdrop height={340}>
+    <Backdrop height={320}>
       <ReqoreNavRail {...args} />
     </Backdrop>
   ),
 };
 
-/** SCROLL-SPY — the sub-items carry `scrollTargetId`s; clicking scrolls to a
- *  section and scrolling highlights the current one automatically. */
-export const ScrollSpy: Story = {
-  args: { items: ITEMS, floating: true, position: 'left', scrollSpy: true, defaultActiveId: 'dashboard' },
+/** TALL CONTENT — clicking a section scrolls the page to it (and `scrollSpy`
+ *  highlights the section you scroll to). */
+export const TallContent: Story = {
+  args: {
+    items: ITEMS,
+    floating: true,
+    position: 'left',
+    scrollSpy: true,
+    defaultActiveId: 'dashboard',
+  },
   render: (args: IReqoreNavRailProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     return (
-      <Backdrop scrollRef={scrollRef}>
+      <Backdrop height={620} repeat={2} scrollRef={scrollRef} scrollId='nav-scroll'>
         <ReqoreNavRail {...args} scrollContainer={scrollRef} />
       </Backdrop>
     );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const scroller = canvasElement.querySelector('#nav-scroll') as HTMLElement;
+    await expect(scroller.scrollTop).toBe(0);
+    // Click a section further down the page.
+    await userEvent.click(canvas.getByRole('button', { name: 'Billing' }));
+    await waitFor(() => expect(scroller.scrollTop).toBeGreaterThan(0));
+  },
+};
+
+/** MOBILE — hidden by default; appears while the user scrolls, then hides again
+ *  after they stop. (This story keeps it revealed after one scroll so the frame
+ *  is stable; the live default hides ~1.1s after scrolling stops.) */
+export const Mobile: Story = {
+  args: {
+    items: ITEMS,
+    floating: true,
+    position: 'right',
+    revealOnScroll: true,
+    scrollHideDelay: 60000,
+    defaultActiveId: 'dashboard',
+  },
+  render: (args: IReqoreNavRailProps) => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    return (
+      <Backdrop width={390} height={560} repeat={2} scrollRef={scrollRef} scrollId='mobile-scroll'>
+        <ReqoreNavRail {...args} scrollContainer={scrollRef} />
+      </Backdrop>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const nav = canvasElement.querySelector('.reqore-nav-rail') as HTMLElement;
+    // Hidden at rest.
+    await expect(getComputedStyle(nav).opacity).toBe('0');
+    // Scrolling reveals it.
+    const scroller = canvasElement.querySelector('#mobile-scroll') as HTMLElement;
+    scroller.scrollTop = 120;
+    fireEvent.scroll(scroller);
+    await waitFor(() => expect(getComputedStyle(nav).opacity).toBe('1'));
   },
 };
 
