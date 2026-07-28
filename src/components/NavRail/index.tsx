@@ -39,7 +39,7 @@ import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect } from '../Effect';
 import ReqoreMenu from '../Menu';
-import ReqoreMenuItem from '../Menu/item';
+import ReqoreMenuItem, { TReqoreMenuItemEventHandler } from '../Menu/item';
 import { ReqorePopover } from '../Popover';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
@@ -294,10 +294,11 @@ interface IOverflowProps {
 }
 
 const NavRailOverflow = memo(
-  ({ items, size, placement, ariaLabel, onSelect, onOpenChange }: IOverflowProps) => (
-    <ReqorePopover
-      component={ReqoreButton}
-      componentProps={{
+  ({ items, size, placement, ariaLabel, onSelect, onOpenChange }: IOverflowProps) => {
+    // Memoised so the memo'd ReqorePopover/ReqoreMenuItem children get stable
+    // props (no new object/closure per render).
+    const componentProps = useMemo(
+      () => ({
         icon: 'More2Line' as IReqoreIconName,
         size,
         flat: true,
@@ -307,30 +308,95 @@ const NavRailOverflow = memo(
         'aria-label': ariaLabel,
         className: 'reqore-nav-rail-overflow',
         tooltip: { content: `${items.length} more`, placement },
-      }}
-      handler='click'
-      placement={placement}
-      closeOnInsideClick
-      noArrow
-      noWrapper
-      onToggleChange={onOpenChange}
-      content={
+      }),
+      [size, ariaLabel, placement, items.length]
+    );
+    const handleItemClick = useCallback<TReqoreMenuItemEventHandler>(
+      (_event, itemId) => {
+        if (itemId) onSelect(itemId);
+      },
+      [onSelect]
+    );
+    const content = useMemo(
+      () => (
         <ReqoreMenu rounded padded width='210px'>
           {items.map((it) => (
             <ReqoreMenuItem
               key={it.id}
+              itemId={it.id}
               icon={it.icon}
               selected={it.active}
               intent={it.active ? 'info' : undefined}
-              onClick={() => onSelect(it.id)}
+              onClick={handleItemClick}
             >
               {it.label}
             </ReqoreMenuItem>
           ))}
         </ReqoreMenu>
-      }
-    />
-  )
+      ),
+      [items, handleItemClick]
+    );
+    return (
+      <ReqorePopover
+        component={ReqoreButton}
+        componentProps={componentProps}
+        handler='click'
+        placement={placement}
+        closeOnInsideClick
+        noArrow
+        noWrapper
+        onToggleChange={onOpenChange}
+        content={content}
+      />
+    );
+  }
+);
+
+// ── Mark (page / section) ────────────────────────────────────────────────────
+
+interface INavRailMarkProps {
+  id: string;
+  label: string;
+  icon?: IReqoreIconName;
+  size: TSizes;
+  intent?: TReqoreIntent;
+  effect?: IReqoreEffect;
+  disabled?: boolean;
+  tipSide: 'left' | 'right';
+  className: string;
+  ariaCurrent?: 'page' | 'location';
+  onSelect: (id: string) => void;
+}
+
+// One circular mark. Kept as its own memo'd component so its `tooltip` object
+// and `onClick` closure are stabilised (useMemo/useCallback) rather than created
+// inline in a `.map()` and passed to the memo'd ReqoreButton every render.
+const NavRailMark = memo(
+  ({ id, label, icon, size, intent, effect, disabled, tipSide, className, ariaCurrent, onSelect }: INavRailMarkProps) => {
+    const tooltip = useMemo(
+      () => ({ content: label, placement: tipSide }) as TReqoreTooltipProp,
+      [label, tipSide]
+    );
+    const handleClick = useCallback(() => onSelect(id), [onSelect, id]);
+    return (
+      <ReqoreButton
+        circle
+        size={size}
+        icon={icon}
+        flat
+        minimal
+        raised
+        disabled={disabled}
+        intent={intent}
+        effect={effect as IReqoreEffect}
+        className={className}
+        aria-label={label}
+        aria-current={ariaCurrent}
+        tooltip={tooltip}
+        onClick={handleClick}
+      />
+    );
+  }
 );
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -485,6 +551,23 @@ export const ReqoreNavRail = memo(
       [activeSubId, onSubClick]
     );
 
+    // Stable id-based select callbacks so the memo'd mark / overflow children
+    // don't receive a fresh closure each render.
+    const onItemSelect = useCallback(
+      (id: string) => {
+        const item = items.find((i) => i.id === id);
+        if (item) selectItem(item);
+      },
+      [items, selectItem]
+    );
+    const onSubSelect = useCallback(
+      (id: string) => {
+        const sub = subItems.find((s) => s.id === id);
+        if (sub) selectSub(sub);
+      },
+      [subItems, selectSub]
+    );
+
     // Scroll-spy: as the user scrolls, highlight the last section whose top has
     // passed a threshold below the container's top (when the sub-item isn't
     // controlled). A plain scroll listener + getBoundingClientRect is used
@@ -546,22 +629,19 @@ export const ReqoreNavRail = memo(
     const renderItem = (item: IReqoreNavRailItem) => {
       const active = item.id === activeItemId;
       return (
-        <ReqoreButton
+        <NavRailMark
           key={item.id}
-          circle
-          size={size}
+          id={item.id}
+          label={item.label}
           icon={item.icon}
-          flat
-          minimal
-          raised
+          size={size}
           disabled={item.disabled}
-          effect={active ? (activeEffect as IReqoreEffect) : undefined}
+          effect={active ? activeEffect : undefined}
           intent={active ? item.intent ?? activeIntent : item.intent}
           className='reqore-nav-rail-item'
-          aria-label={item.label}
-          aria-current={active ? 'page' : undefined}
-          tooltip={{ content: item.label, placement: tipSide } as TReqoreTooltipProp}
-          onClick={() => selectItem(item)}
+          ariaCurrent={active ? 'page' : undefined}
+          tipSide={tipSide}
+          onSelect={onItemSelect}
         />
       );
     };
@@ -569,22 +649,19 @@ export const ReqoreNavRail = memo(
     const renderSub = (sub: IReqoreNavRailSubItem) => {
       const active = sub.id === activeSubItemId;
       return (
-        <ReqoreButton
+        <NavRailMark
           key={sub.id}
-          circle
-          size={subSize}
+          id={sub.id}
+          label={sub.label}
           icon={sub.icon}
-          flat
-          minimal
-          raised
+          size={subSize}
           disabled={sub.disabled}
-          effect={active ? (activeEffect as IReqoreEffect) : undefined}
+          effect={active ? activeEffect : undefined}
           intent={active ? sub.intent ?? activeIntent : sub.intent}
           className='reqore-nav-rail-subitem'
-          aria-label={sub.label}
-          aria-current={active ? 'location' : undefined}
-          tooltip={{ content: sub.label, placement: tipSide } as TReqoreTooltipProp}
-          onClick={() => selectSub(sub)}
+          ariaCurrent={active ? 'location' : undefined}
+          tipSide={tipSide}
+          onSelect={onSubSelect}
         />
       );
     };
@@ -634,10 +711,7 @@ export const ReqoreNavRail = memo(
               size={subSize}
               placement={tipSide}
               ariaLabel='More sections'
-              onSelect={(id) => {
-                const sub = subItems.find((s) => s.id === id);
-                if (sub) selectSub(sub);
-              }}
+              onSelect={onSubSelect}
               onOpenChange={onMenuToggle}
             />
           ) : null}
@@ -684,10 +758,7 @@ export const ReqoreNavRail = memo(
                 size={size}
                 placement={tipSide}
                 ariaLabel='More items'
-                onSelect={(id) => {
-                  const item = items.find((i) => i.id === id);
-                  if (item) selectItem(item);
-                }}
+                onSelect={onItemSelect}
                 onOpenChange={onMenuToggle}
               />
             ) : null}
