@@ -307,6 +307,25 @@ export const OverflowMenu: Story = {
   },
 };
 
+/** MAX ITEMS — a hard cap on how many primary marks show at once (here 4),
+ *  independent of viewport height; the rest fold into the `⋮` menu. Opening the
+ *  menu (play) reveals a capped-out page. */
+export const MaxItems: Story = {
+  args: {
+    items: ITEMS,
+    position: 'static',
+    maxItems: 4,
+    defaultActiveId: 'dashboard',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // A capped-out page is absent from the rail until the ⋮ menu is opened.
+    await expect(canvas.queryByRole('button', { name: 'Settings' })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'More items' }));
+    await waitFor(() => expect(document.body.textContent).toContain('Settings'));
+  },
+};
+
 /** TALL CONTENT — clicking a section scrolls the page to it (and `scrollSpy`
  *  highlights the section you scroll to). */
 export const TallContent: Story = {

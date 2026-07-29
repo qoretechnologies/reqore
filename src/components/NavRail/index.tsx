@@ -114,6 +114,11 @@ export interface IReqoreNavRailProps
   /** Cap used to fold overflow into the `⋮` menu. A number is taken as px; when
    *  omitted and `floating`, the positioned ancestor's height is measured. */
   maxHeight?: number;
+  /** Hard cap on the number of primary marks shown at once — the rest fold into
+   *  the `⋮` menu regardless of available height. Combines with `maxHeight`
+   *  (the lower of the two wins), so a short viewport can still show fewer. Does
+   *  not cap the active page's sub-items. */
+  maxItems?: number;
   /** Surface radius. Round (pill, matching the circular marks) by default;
    *  `radiusSize` overrides with a fixed size; `rounded={false}` squares it. */
   rounded?: boolean;
@@ -428,6 +433,7 @@ export const ReqoreNavRail = memo(
     scrollContainer,
     scrollSpy,
     maxHeight,
+    maxItems,
     size = 'small',
     intent,
     effect,
@@ -515,6 +521,11 @@ export const ReqoreNavRail = memo(
       subMax = Number.isFinite(slots)
         ? Math.min(subItems.length, Math.max(2, slots - itemMax))
         : subItems.length;
+    }
+    // Hard count cap: the lower of the height budget and `maxItems` wins, so a
+    // short viewport can still show fewer than the cap.
+    if (typeof maxItems === 'number') {
+      itemMax = Math.min(itemMax, Math.max(1, Math.floor(maxItems)));
     }
 
     const { shown: itemsShown, hidden: itemsHidden } = splitAroundActive(items, activeItemId, itemMax);
