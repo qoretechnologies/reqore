@@ -111,6 +111,14 @@ const Labeled = ({ label, children }: { label: string; children: ReactNode }) =>
  *  page marks with the active page's sections nested in the sub-capsule. */
 export const Inline: Story = {
   args: { items: ITEMS, position: 'static', defaultActiveId: 'dashboard' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the rail on its own (`position='static'`) — a thin pill of circular page marks with the Dashboard page active and its sections nested in the sub-capsule directly beneath it.",
+      },
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('navigation')).toBeInTheDocument();
@@ -123,6 +131,14 @@ export const Inline: Story = {
  *  (compare with Inline). */
 export const NoSections: Story = {
   args: { items: ITEMS, position: 'static', defaultActiveId: 'reports' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the inline rail with an active page (Reports) that has no sub-items, so no sub-capsule appears — yet the rail stays exactly the same width as when the active page has sections (compare with Inline).',
+      },
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('navigation')).toBeInTheDocument();
@@ -133,6 +149,14 @@ export const NoSections: Story = {
 /** IN GUTTER — floating in the left gutter of a page, over scrolling content. */
 export const InGutter: Story = {
   args: { items: ITEMS, floating: true, position: 'left', defaultActiveId: 'dashboard' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the rail floating in the left gutter of a page (`floating`, `position='left'`) over scrolling content, Dashboard active.",
+      },
+    },
+  },
   render: (args: IReqoreNavRailProps) => (
     <Backdrop>
       <ReqoreNavRail {...args} />
@@ -143,6 +167,14 @@ export const InGutter: Story = {
 /** RIGHT GUTTER — the same rail pinned to the right gutter. */
 export const RightGutter: Story = {
   args: { items: ITEMS, floating: true, position: 'right', defaultActiveId: 'dashboard' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the same floating rail pinned to the right gutter (`position='right'`), Dashboard active.",
+      },
+    },
+  },
   render: (args: IReqoreNavRailProps) => (
     <Backdrop>
       <ReqoreNavRail {...args} />
@@ -152,6 +184,14 @@ export const RightGutter: Story = {
 
 /** SIZES — the standard `size` scale drives the marks, spacing and pill radius. */
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the rail at each `size` in the standard scale (tiny, small, normal, big) side by side, showing how size drives the marks, spacing and pill radius.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
       {(['tiny', 'small', 'normal', 'big'] as const).map((size) => (
@@ -165,6 +205,14 @@ export const Sizes: Story = {
 
 /** INTENTS — `intent` sets the active-mark accent (per-item `intent` overrides). */
 export const Intents: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the rail at each `intent` (info, success, warning, danger, muted) side by side, showing how intent sets the active-mark accent (a per-item `intent` would override it).',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
       {(['info', 'success', 'warning', 'danger', 'muted'] as const).map((intent) => (
@@ -178,6 +226,14 @@ export const Intents: Story = {
 
 /** EFFECTS — the standard `effect` prop paints the rail surface. */
 export const Effects: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the rail with the standard `effect` prop painting the surface — a gradient variant (paired with a coordinated `activeEffect` on the active group) and a glow variant.',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
       <Labeled label='gradient'>
@@ -204,6 +260,14 @@ export const Effects: Story = {
 
 /** FLAT & RAISED — `flat` drops the border, `raised` adds the 3D inset. */
 export const FlatAndRaised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the rail in three surface treatments side by side — bordered (default), `flat` (border dropped), and `flat` + `raised` (the 3D inset).',
+      },
+    },
+  },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
       <Labeled label='bordered (default)'>
@@ -227,6 +291,14 @@ export const IdleReveal: Story = {
     position: 'left',
     idleReveal: true,
     defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the floating rail with `idleReveal`. The play function asserts the full behaviour: it rests dimmed (opacity 0.34), fades fully in when the gutter is hovered, and dims again when the mouse leaves.',
+      },
+    },
   },
   render: (args: IReqoreNavRailProps) => (
     <Backdrop>
@@ -257,6 +329,14 @@ export const IdleResting: Story = {
     idleReveal: true,
     defaultActiveId: 'dashboard',
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the floating `idleReveal` rail with NO interaction, capturing its resting dimmed state (opacity 0.34) — the play only asserts the dim, it never hovers.',
+      },
+    },
+  },
   render: (args: IReqoreNavRailProps) => (
     <Backdrop>
       <ReqoreNavRail {...args} />
@@ -278,6 +358,14 @@ export const Collapsed: Story = {
     maxHeight: 280,
     defaultActiveId: 'dashboard',
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the floating rail in a short viewport (`maxHeight: 280`) so each group folds its extras into a `⋮` flyout that never widens the rail.',
+      },
+    },
+  },
   render: (args: IReqoreNavRailProps) => (
     <Backdrop height={320}>
       <ReqoreNavRail {...args} />
@@ -295,6 +383,14 @@ export const OverflowMenu: Story = {
     maxHeight: 280,
     defaultActiveId: 'dashboard',
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the collapsed rail and opens its `⋮` flyout (play), capturing the floating menu of hidden items — ending with 'Settings' visible in the menu.",
+      },
+    },
+  },
   render: (args: IReqoreNavRailProps) => (
     <Backdrop height={320}>
       <ReqoreNavRail {...args} />
@@ -302,6 +398,33 @@ export const OverflowMenu: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'More items' }));
+    await waitFor(() => expect(document.body.textContent).toContain('Settings'));
+  },
+};
+
+/** MAX ITEMS — a hard cap on how many primary marks show at once (here 4),
+ *  independent of viewport height; the rest fold into the `⋮` menu. Opening the
+ *  menu (play) reveals a capped-out page. */
+export const MaxItems: Story = {
+  args: {
+    items: ITEMS,
+    position: 'static',
+    maxItems: 4,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the inline rail with `maxItems={4}`, capping it to four primary marks (Dashboard active, its sections nested beneath) regardless of viewport height. The remaining three pages — Automations, Integrations, Settings — fold into the ⋮ overflow menu, which the play function opens so they appear in the snapshot.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // A capped-out page is absent from the rail until the ⋮ menu is opened.
+    await expect(canvas.queryByRole('button', { name: 'Settings' })).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'More items' }));
     await waitFor(() => expect(document.body.textContent).toContain('Settings'));
   },
@@ -316,6 +439,14 @@ export const TallContent: Story = {
     position: 'left',
     scrollSpy: true,
     defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the floating rail with `scrollSpy` over tall (doubled) content. The play asserts the current section follows the scroll position and that clicking a section scrolls the page to it.',
+      },
+    },
   },
   render: (args: IReqoreNavRailProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -356,6 +487,14 @@ export const Mobile: Story = {
     scrollHideDelay: 60000,
     defaultActiveId: 'dashboard',
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the floating rail with `revealOnScroll` in a phone-width frame — hidden at rest (opacity 0), revealed while the user scrolls. The play asserts both states.',
+      },
+    },
+  },
   render: (args: IReqoreNavRailProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     return (
@@ -379,6 +518,14 @@ export const Mobile: Story = {
 /** INTERACTION — navigating a primary item swaps its nested section sub-capsule. */
 export const Interaction: Story = {
   args: { items: ITEMS, position: 'static', defaultActiveId: 'dashboard' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the inline rail and navigates from Dashboard to Team (play), asserting the nested section sub-capsule swaps to the Team sections.',
+      },
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('group', { name: 'Dashboard sections' })).toBeInTheDocument();

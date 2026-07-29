@@ -104,6 +104,25 @@ test('Renders with the standard prop contract (size/intent/effect/flat/raised/ra
   expect(screen.getByRole('group', { name: 'Dashboard sections' })).toBeInTheDocument();
 });
 
+test('maxItems caps the visible primary marks and folds the rest into the ⋮ menu', () => {
+  renderRail(<ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' maxItems={2} />);
+
+  // Only the first two marks show; the third folds away behind the overflow.
+  expect(screen.getByRole('button', { name: 'Dashboard' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Team' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Settings' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'More items' })).toBeInTheDocument();
+});
+
+test('maxItems keeps the active mark visible by windowing around it', () => {
+  // Active 'settings' (index 2) is outside the first two — the window slides so
+  // it stays visible and an earlier mark folds away instead.
+  renderRail(<ReqoreNavRail items={ITEMS} activeId='settings' maxItems={2} />);
+
+  expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Dashboard' })).not.toBeInTheDocument();
+});
+
 test('Clicking a sub-item with a scrollTargetId scrolls to that element', () => {
   const scrollIntoView = vi.fn();
   Element.prototype.scrollIntoView = scrollIntoView;
