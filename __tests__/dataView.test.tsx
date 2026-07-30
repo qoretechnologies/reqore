@@ -241,13 +241,35 @@ test('Renders multiline strings as bounded monospace data blocks', () => {
     '.reqore-data-view-multiline-value'
   ) as HTMLElement;
   expect(block).not.toBeNull();
-  expect(block.textContent).toBe(value);
+  // \r\n is normalized to \n for display — \n is the only line ending
+  // every browser guarantees to honor as a hard break under
+  // `white-space: pre-wrap`.
+  expect(block.textContent).toBe(value.replace(/\r\n/g, '\n'));
   expect(getComputedStyle(block).fontFamily).toContain('monospace');
   expect(getComputedStyle(block).whiteSpace).toBe('pre-wrap');
   expect(getComputedStyle(block).overflow).toBe('auto');
 
   fireEvent.keyDown(block, { key: 'Enter' });
   expect(onItemClick).toHaveBeenCalledWith(value, ['body']);
+});
+
+test('Normalizes lone-CR line endings (HL7 segment separators) to real line breaks', () => {
+  // Regression guard: HL7 v2 payloads separate segments with a bare \r
+  // (no \n). Chromium's `white-space: pre-wrap` does not treat a lone
+  // \r as a forced break — it renders as a zero-width no-op and fuses
+  // the two segments together (e.g. `2.5` + \r + `OBR` renders as the
+  // unreadable `2.5OBR`). The display text must normalize every \r to
+  // \n so the break is guaranteed regardless of source line-ending style.
+  const value = 'MSH|^~\\&|VITALSIM|P|2.5\rOBR|1|REQ-1005||VW-VITALS';
+  render(wrap(<ReqoreDataView data={{ payload: value }} collapsibleRoot={false} />));
+
+  const block = document.querySelector(
+    '.reqore-data-view-multiline-value'
+  ) as HTMLElement;
+  expect(block).not.toBeNull();
+  expect(block.textContent).toBe(value.replace(/\r/g, '\n'));
+  expect(block.textContent).not.toContain('\r');
+  expect(block.textContent).toContain('2.5\nOBR');
 });
 
 test('Applies monospace data styling directly to scalar tag content', () => {

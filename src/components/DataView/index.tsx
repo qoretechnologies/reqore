@@ -1423,6 +1423,15 @@ const renderScalar = (
     kind === 'string' && /[\r\n]/.test(scalar.display);
 
   if (multiline) {
+    // `white-space: pre-wrap` reliably forces a line break on \n in every
+    // browser, but a *lone* \r (the actual HL7 v2 segment separator, and
+    // old-Mac-style line endings generally) is not guaranteed to — Chromium
+    // renders it as a zero-width no-op, silently fusing the two segments
+    // together (`...P|2.5` + \r + `OBR|1...` becomes the unreadable
+    // `2.5OBR`). Normalize every line-ending style to \n before display so
+    // the break is spec-guaranteed regardless of the source payload's
+    // original convention.
+    const displayText = scalar.display.replace(/\r\n?/g, '\n');
     const block = (
       <MultilineValue
         $size={ctx.size}
@@ -1446,7 +1455,7 @@ const renderScalar = (
             : undefined
         }
       >
-        {scalar.display}
+        {displayText}
       </MultilineValue>
     );
 
