@@ -332,19 +332,19 @@ export const Sizes: Story = {
 const HL7_PAYLOAD =
   'MSH|^~\\&|VW-DEVICE|VITALSIM|EHR|HOSPITAL|2026-05-31 14:40:29.292347 Sun +02:00 (CEST)||ORU^R01|MSG-17669ff5-ce8f-4bd0-9903-4d207e193b83|P|2.5\rOBR|1|REQ-1005||VW-VITALS-FILL-1005|VW_PRESSURE_PANEL^VitalWear pressure panel^L OBX|1|NM|VW_SKIN_TEMP^Skin temperature^L|1|36.7|Cel|36.0-37.5|N|||F';
 
-export const LongStringValue: Story = {
+export const MultilineValue: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders DataView with an unusually long string value.',
+          'Renders DataView with a multiline text payload in a bounded, scrollable monospace data block.',
       },
     },
   },
   args: {
-    label: 'Long string value',
+    label: 'Multiline value',
     description:
-      'A scalar that does not fit in a single line — wraps inside the chip rather than overflowing horizontally.',
+      'Single-line scalar values remain compact chips; multiline payloads preserve whitespace in a bounded data block.',
     collapsibleRoot: false,
     data: {
       message_id: 'MSG-17669ff5-ce8f-4bd0-9903-4d207e193b83',

@@ -51,7 +51,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { TReqoreEffectColor } from '../Effect';
-import { getReadableColor } from '../../helpers/colors';
+import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
 import ReqoreCheckbox from '../Checkbox';
@@ -209,6 +209,7 @@ const SECTION_LABEL = (kind: 'Object' | 'List', count: number): string => {
 };
 
 type TRenderContext = {
+  theme: IReqoreTheme;
   envelope: IReqoreDataViewEnvelope | false;
   parseEmbedded?: (value: string) => IReqoreDataViewEmbedded | undefined;
   showTypes: boolean;
@@ -269,10 +270,18 @@ const Tree = styled.div<IStyledThemeProps>`
      values and type labels — so the tree reads like one consistent
      data-view material rather than a row of disconnected chips.
      Override via the tag's own \`effect.textSize\` if you need to
-     dial it back. */
-  .reqore-data-view-key .reqore-tag-content,
-  .reqore-data-view-value .reqore-tag-content,
-  .reqore-data-view-type .reqore-tag-content {
+     dial it back. \`&&\` (not \`!important\`) beats \`StyledTag\`'s
+     \`font-family: system-ui\` — both are one generated class deep, so
+     without the specificity boost the winner is just whichever
+     styled-component happens to mount last. \`!important\` here would
+     tax every downstream consumer trying to override this from their
+     own \`customTheme\` / \`effect\`. */
+  && .reqore-data-view-key,
+  && .reqore-data-view-key .reqore-tag-content,
+  && .reqore-data-view-value,
+  && .reqore-data-view-value .reqore-tag-content,
+  && .reqore-data-view-type,
+  && .reqore-data-view-type .reqore-tag-content {
     font-family: ${MONO_FONT};
     /* Long unbreakable identifiers (UUIDs, snake_case keys, HL7
        payloads with no spaces) need an extra hint to break — the
@@ -417,6 +426,50 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
     css`
       margin-top: 4px;
       padding-left: ${PADDING_FROM_SIZE[$size] + 6}px;
+    `}
+`;
+
+/** Multiline strings are data documents, not compact scalar labels. Rendering
+ *  them inside a tag creates a very tall pill and makes large text/plain
+ *  payloads difficult to inspect. Keep their original whitespace in a
+ *  bounded, scrollable data surface instead — but keep the same border /
+ *  background language as the neutral (no-intent) value chip in
+ *  `renderScalar` below (a plain `ReqoreTag` with `minimal flat={false}`
+ *  and no `color`) so the block reads as the same value-chip family, just
+ *  taller and pre-formatted, rather than an unrelated visual element. Only
+ *  the font, wrapping and scroll behaviour are new. */
+const MultilineValue = styled.pre<IStyledThemeProps & { $interactive?: boolean }>`
+  box-sizing: border-box;
+  flex: 1 1 300px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(320px, 45vh);
+  margin: 0;
+  padding: ${({ $size }) => PADDING_FROM_SIZE[$size]}px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  tab-size: 2;
+  border: 1px solid ${({ $theme }) => changeLightness($theme.main, 0.2)};
+  border-radius: ${({ $size }) => RADIUS_FROM_SIZE[$size]}px;
+  background: ${rgba(changeLightness('#000000', 0.05), 0.3)};
+  color: ${({ $theme }) => getReadableColorFrom(changeLightness($theme.main, 0.1))};
+  font-family: ${MONO_FONT};
+  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
+  font-variant-ligatures: none;
+  line-height: 1.45;
+  cursor: ${({ $interactive }) => ($interactive ? 'pointer' : 'text')};
+
+  ${({ $interactive, $theme }) =>
+    $interactive &&
+    css`
+      &:hover,
+      &:focus-visible {
+        border-color: ${changeLightness($theme.main, 0.35)};
+        outline: none;
+      }
     `}
 `;
 
@@ -1373,6 +1426,63 @@ const renderScalar = (
     );
   }
 
+  const multiline =
+    kind === 'string' && /[\r\n]/.test(scalar.display);
+
+  if (multiline) {
+    // `white-space: pre-wrap` reliably forces a line break on \n in every
+    // browser, but a *lone* \r (the actual HL7 v2 segment separator, and
+    // old-Mac-style line endings generally) is not guaranteed to — Chromium
+    // renders it as a zero-width no-op, silently fusing the two segments
+    // together (`...P|2.5` + \r + `OBR|1...` becomes the unreadable
+    // `2.5OBR`). Normalize every line-ending style to \n before display so
+    // the break is spec-guaranteed regardless of the source payload's
+    // original convention.
+    const displayText = scalar.display.replace(/\r\n?/g, '\n');
+    const block = (
+      <MultilineValue
+        $size={ctx.size}
+        $theme={ctx.theme}
+        $interactive={Boolean(ctx.onItemClick)}
+        className='reqore-data-view-value reqore-data-view-multiline-value'
+        role={ctx.onItemClick ? 'button' : undefined}
+        tabIndex={ctx.onItemClick ? 0 : undefined}
+        onClick={
+          ctx.onItemClick
+            ? () => ctx.onItemClick!(value, path)
+            : undefined
+        }
+        onKeyDown={
+          ctx.onItemClick
+            ? (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                ctx.onItemClick!(value, path);
+              }
+            : undefined
+        }
+      >
+        {displayText}
+      </MultilineValue>
+    );
+
+    if (!ctx.showTypes || !displayType) return block;
+
+    return (
+      <ScalarRow gapSize='tiny' verticalAlign='top' size={ctx.size} fluid>
+        {block}
+        <ReqoreTag
+          size={ctx.size}
+          flat
+          minimal
+          label={displayType}
+          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          className='reqore-data-view-type'
+        />
+      </ScalarRow>
+    );
+  }
+
   // Value chip: minimal + intent-tinted (so the type is colour-coded
   // without shouting), weight bold. We always render with a border
   // (flat={false}) — the panel's own `flat` prop affects the outer
@@ -1847,6 +1957,7 @@ export const ReqoreDataView = memo(
       );
 
       const ctx: TRenderContext = {
+        theme,
         envelope,
         parseEmbedded,
         showTypes,

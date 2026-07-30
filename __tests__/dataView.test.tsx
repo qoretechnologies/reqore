@@ -219,6 +219,83 @@ test('Renders a long string value without truncating its content', () => {
   // Whole string is in the DOM — wrap means it spans multiple lines
   // visually but stays one continuous text node.
   expect(document.body.textContent).toContain(longValue);
+  expect(
+    document.querySelector('.reqore-data-view-multiline-value')
+  ).toBeNull();
+});
+
+test('Renders multiline strings as bounded monospace data blocks', () => {
+  const value = 'room_id;start;end\r\n13496;07:00;18:00\r\n9755;08:00;18:00';
+  const onItemClick = vi.fn();
+  render(
+    wrap(
+      <ReqoreDataView
+        data={{ body: value }}
+        collapsibleRoot={false}
+        onItemClick={onItemClick}
+      />
+    )
+  );
+
+  const block = document.querySelector(
+    '.reqore-data-view-multiline-value'
+  ) as HTMLElement;
+  expect(block).not.toBeNull();
+  // \r\n is normalized to \n for display — \n is the only line ending
+  // every browser guarantees to honor as a hard break under
+  // `white-space: pre-wrap`.
+  expect(block.textContent).toBe(value.replace(/\r\n/g, '\n'));
+  expect(getComputedStyle(block).fontFamily).toContain('monospace');
+  expect(getComputedStyle(block).whiteSpace).toBe('pre-wrap');
+  expect(getComputedStyle(block).overflow).toBe('auto');
+
+  fireEvent.keyDown(block, { key: 'Enter' });
+  expect(onItemClick).toHaveBeenCalledWith(value, ['body']);
+});
+
+test('Normalizes lone-CR line endings (HL7 segment separators) to real line breaks', () => {
+  // Regression guard: HL7 v2 payloads separate segments with a bare \r
+  // (no \n). Chromium's `white-space: pre-wrap` does not treat a lone
+  // \r as a forced break — it renders as a zero-width no-op and fuses
+  // the two segments together (e.g. `2.5` + \r + `OBR` renders as the
+  // unreadable `2.5OBR`). The display text must normalize every \r to
+  // \n so the break is guaranteed regardless of source line-ending style.
+  const value = 'MSH|^~\\&|VITALSIM|P|2.5\rOBR|1|REQ-1005||VW-VITALS';
+  render(wrap(<ReqoreDataView data={{ payload: value }} collapsibleRoot={false} />));
+
+  const block = document.querySelector(
+    '.reqore-data-view-multiline-value'
+  ) as HTMLElement;
+  expect(block).not.toBeNull();
+  expect(block.textContent).toBe(value.replace(/\r/g, '\n'));
+  expect(block.textContent).not.toContain('\r');
+  expect(block.textContent).toContain('2.5\nOBR');
+});
+
+test('Applies monospace data styling directly to scalar tag content', () => {
+  render(
+    wrap(
+      <ReqoreDataView
+        data={{ content_type: 'text/plain' }}
+        collapsibleRoot={false}
+        showTypes
+      />
+    )
+  );
+
+  const key = document.querySelector(
+    '.reqore-data-view-key .reqore-tag-content'
+  ) as HTMLElement;
+  const value = document.querySelector(
+    '.reqore-data-view-value .reqore-tag-content'
+  ) as HTMLElement;
+  const type = document.querySelector(
+    '.reqore-data-view-type .reqore-tag-content'
+  ) as HTMLElement;
+
+  expect(getComputedStyle(key).fontFamily).toContain('monospace');
+  expect(getComputedStyle(value).fontFamily).toContain('monospace');
+  expect(getComputedStyle(type).fontFamily).toContain('monospace');
 });
 
 test('Renders a long key without dropping the row or the value next to it', () => {
