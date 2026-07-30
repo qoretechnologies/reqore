@@ -485,6 +485,22 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
   top: ${({ stickyHeader, stickyHeaderOffset = 0 }) =>
     stickyHeader ? `${stickyHeaderOffset}px` : undefined};
   z-index: ${({ stickyHeader }) => (stickyHeader ? 2 : undefined)};
+  // A sticky header forces the panel wrapper to overflow visible (so the
+  // header can stick), which stops the wrapper from clipping the header's top
+  // corners — so without this the panel reads as square-topped even at rest.
+  // Round the header's own top corners to the panel's inner radius instead, so
+  // the panel keeps its radius; a stuck header pinned at the scroll-area top
+  // still reads as a clean rounded panel top. Inset 1px past a visible border
+  // so the corner matches the wrapper's inner curve (flat, border-less panels
+  // need no inset).
+  border-top-left-radius: ${({ stickyHeader, rounded, radiusSize, flat, intent }: IStyledPanel) =>
+    stickyHeader && rounded
+      ? `${Math.max(0, resolveRadius('normal', radiusSize) - (flat && !intent ? 0 : 1))}px`
+      : undefined};
+  border-top-right-radius: ${({ stickyHeader, rounded, radiusSize, flat, intent }: IStyledPanel) =>
+    stickyHeader && rounded
+      ? `${Math.max(0, resolveRadius('normal', radiusSize) - (flat && !intent ? 0 : 1))}px`
+      : undefined};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   // When the header is sticky AND the panel is minimal / transparent (opacity === 0), the
@@ -1152,6 +1168,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               padded={padded}
               wrapperPadding={wrapperPadding}
               intent={intent}
+              rounded={rounded}
+              radiusSize={rest.radiusSize}
               stickyHeader={rest.stickyHeader}
               stickyHeaderOffset={rest.stickyHeaderOffset}
             >
