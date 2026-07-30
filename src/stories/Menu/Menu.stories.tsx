@@ -446,6 +446,65 @@ export const SubmenuCanBeToggled: Story = {
   },
 };
 
+const MenuWithActionDropdown = (args: IReqoreMenuProps) => (
+  <ReqoreMenu {...args} width='260px'>
+    <ReqoreMenuItem
+      icon='GitBranchLine'
+      onClick={() => alert('Open Workflows Hub')}
+      rightAction={{
+        icon: 'AddLine',
+        tooltip: { content: 'Workflow shortcuts' },
+        actions: [
+          { divider: true, label: 'Browse', dividerAlign: 'left' },
+          { icon: 'ListOrdered', label: 'Show all workflows', onClick: () => alert('all workflows') },
+          { icon: 'StickyNoteLine', label: 'Show all steps', onClick: () => alert('all steps') },
+          { icon: 'FileList2Line', label: 'Show workflow orders', onClick: () => alert('orders') },
+          { divider: true, label: 'Create', dividerAlign: 'left' },
+          { icon: 'AddLine', label: 'Create workflow', onClick: () => alert('create workflow') },
+          { icon: 'AddLine', label: 'Create step', onClick: () => alert('create step') },
+        ],
+      }}
+    >
+      Workflows Hub
+    </ReqoreMenuItem>
+    <ReqoreMenuItem
+      icon='DashboardLine'
+      onClick={() => alert('Open Automation Hub')}
+      rightAction={{
+        icon: 'AddLine',
+        tooltip: { content: 'Automation shortcuts' },
+        actions: [
+          { divider: true, label: 'Browse', dividerAlign: 'left' },
+          { icon: 'DashboardLine', label: 'Show all Qogs', onClick: () => alert('all qogs') },
+          { icon: 'CloudLine', label: 'Automation templates', onClick: () => alert('templates') },
+          { icon: 'Apps2Fill', label: 'Explore apps', onClick: () => alert('apps') },
+          { divider: true, label: 'Create', dividerAlign: 'left' },
+          { icon: 'AddLine', label: 'Create Qog', onClick: () => alert('create qog') },
+        ],
+      }}
+    >
+      Automation Hub
+    </ReqoreMenuItem>
+  </ReqoreMenu>
+);
+
+export const ItemActionDropdown: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A menu item whose right action is a dropdown. The row navigates on click, while the trailing `+` opens a popover of grouped shortcuts — `divider` items form the groups (Browse / Create). Set `rightAction={{ icon, actions: [...] }}`; tune the popover (placement, caret, filtering) via `actionsProps`. This is what backs the qorus-ide sidebar's Workflows Hub / Automation Hub entries.",
+      },
+    },
+  },
+  render: (args) => <MenuWithActionDropdown {...args} />,
+  play: async ({ canvasElement }) => {
+    // Open the first row's action dropdown so the grouped shortcuts render.
+    await fireEvent.click(canvasElement.querySelectorAll('.reqore-menu-item-right-action')[0]);
+    await within(document.body).findByText('Show all workflows');
+  },
+};
+
 export const Resizable: Story = {
   parameters: {
     docs: {
