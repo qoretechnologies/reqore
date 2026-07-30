@@ -157,6 +157,18 @@ test('dividerAfter draws a separator after the marked item (and none without it)
   expect(plain.querySelectorAll('.reqore-nav-rail .reqore-spacer').length).toBe(0);
 });
 
+test("dividerAfter='space' still reserves breathing room (a line-less separator)", () => {
+  const items: IReqoreNavRailItem[] = [
+    { ...ITEMS[0], dividerAfter: 'space' },
+    ITEMS[1],
+    ITEMS[2],
+  ];
+  const { container } = renderRail(<ReqoreNavRail items={items} activeId='settings' />);
+  // The space-only divider is still a spacer (breathing room), just without a
+  // visible line — the render doesn't throw and the separator is present.
+  expect(container.querySelectorAll('.reqore-nav-rail .reqore-spacer').length).toBe(1);
+});
+
 test('Clicking a sub-item with a scrollTargetId scrolls to that element', () => {
   const scrollIntoView = vi.fn();
   Element.prototype.scrollIntoView = scrollIntoView;

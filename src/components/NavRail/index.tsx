@@ -60,10 +60,11 @@ export interface IReqoreNavRailItem {
    *  `ReqoreButton`s, so this is the button's `effect`. Takes precedence over the
    *  rail's `activeEffect` when the item is active. */
   effect?: IReqoreEffect;
-  /** Draw a separator after this mark — extra vertical space plus a short line —
-   *  to group items with breathing room. Only applies to shown primary marks
-   *  (not ones folded into the `⋮` menu). */
-  dividerAfter?: boolean;
+  /** Draw a separator after this mark to group items with breathing room. Only
+   *  applies to shown primary marks (not ones folded into the `⋮` menu):
+   *  - `true` / `'line'` — extra vertical space plus a short line.
+   *  - `'space'` — the breathing room only, no line (a quieter break). */
+  dividerAfter?: boolean | 'line' | 'space';
   /** Sub-items shown nested directly beneath this item while it is active. */
   items?: IReqoreNavRailSubItem[];
   onClick?: () => void;
@@ -672,22 +673,25 @@ export const ReqoreNavRail = memo(
     };
 
     // A neutral separator drawn after a mark (item.dividerAfter) to give groups
-    // of items breathing room: extra vertical space (≈2.5× the mark gap) with a
-    // short centred line so the break reads as intentional, not as a glitch or an
-    // accidental gap. Untinted; the rail never widens for it.
-    const renderDivider = (key: string) => (
+    // of items breathing room: extra vertical space (≈2.5× the mark gap), with a
+    // short centred line (`withLine`) so the break reads as intentional, or just
+    // the space (`'space'`) for a quieter break. Untinted; the rail never widens.
+    const renderDivider = (key: string, withLine: boolean) => (
       <ReqoreVerticalSpacer
         key={`${key}-divider`}
-        height={Math.round(GAP_FROM_SIZE[size] * 2.5)}
+        // A line-less break needs a touch more space to register on its own.
+        height={Math.round(GAP_FROM_SIZE[size] * (withLine ? 2.5 : 3.5))}
         width={`${Math.round(SIZE_TO_PX[size] * 0.66)}px`}
-        lineSize='small'
+        lineSize={withLine ? 'small' : 'none'}
       />
     );
 
     // A primary mark plus its optional trailing divider (React flattens the
-    // returned array; every child carries a key).
+    // returned array; every child carries a key). `'space'` draws no line.
     const renderPrimary = (item: IReqoreNavRailItem) =>
-      item.dividerAfter ? [renderItem(item), renderDivider(item.id)] : renderItem(item);
+      item.dividerAfter
+        ? [renderItem(item), renderDivider(item.id, item.dividerAfter !== 'space')]
+        : renderItem(item);
 
     const renderSub = (sub: IReqoreNavRailSubItem) => {
       const active = sub.id === activeSubItemId;

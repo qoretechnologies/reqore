@@ -615,6 +615,37 @@ export const Dividers: Story = {
   },
 };
 
+/** SPACE DIVIDER — `dividerAfter: 'space'` gives the same breathing room WITHOUT
+ *  a line, for a quieter break between groups. */
+export const SpaceDivider: Story = {
+  args: {
+    position: 'static',
+    defaultActiveId: 'team',
+    items: [
+      { ...ITEMS[0], dividerAfter: 'space' }, // Dashboard ⟂ (space only)
+      ITEMS[1], // Projects
+      ITEMS[2], // Team (active)
+      { ...ITEMS[3], dividerAfter: 'space' }, // Reports ⟂ (space only)
+      ITEMS[4], // Automations
+      ITEMS[5], // Integrations
+      ITEMS[6], // Settings
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the rail with `dividerAfter: 'space'` on Dashboard and Reports — the same grouping as Dividers but the separation is pure breathing room, with no line drawn (a quieter break). Compare with Dividers (which draws the line).",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('navigation')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Dashboard' })).toBeInTheDocument();
+  },
+};
+
 /** OVERFLOW CAPPED — with many hidden pages the `⋮` menu would run off the
  *  viewport, so it is height-capped (`min(70vh, 480px)`) and scrolls. The play
  *  opens it; in a real viewport the long list is clipped to the cap. */
