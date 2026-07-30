@@ -67,6 +67,57 @@ test('<Menu /> item has right clickable button', () => {
   expect(itemCb).not.toHaveBeenCalled();
 });
 
+test('<Menu /> item action with `actions` opens a dropdown of grouped shortcuts', () => {
+  const itemCb = vi.fn();
+  const showAllCb = vi.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreMenu>
+        <ReqoreMenuItem
+          onClick={itemCb}
+          rightAction={{
+            icon: 'AddLine',
+            actions: [
+              { divider: true, label: 'Browse' },
+              { icon: 'ListOrdered', label: 'Show all workflows', onClick: showAllCb },
+              { divider: true, label: 'Create' },
+              { icon: 'AddLine', label: 'Create workflow' },
+            ],
+          }}
+        >
+          Workflows Hub
+        </ReqoreMenuItem>
+      </ReqoreMenu>
+    </ReqoreUIProvider>
+  );
+
+  // The dropdown control reuses the plain right-action class, so existing
+  // selectors keep matching it.
+  const control = document.querySelector('.reqore-menu-item-right-action');
+  expect(control).toBeTruthy();
+  // Closed by default.
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
+
+  fireEvent.click(control!);
+
+  // Opening the dropdown must not trigger the row's own click (navigation).
+  expect(itemCb).not.toHaveBeenCalled();
+  // The popover lists the two shortcut items (dividers group them).
+  expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
+  const dropdownItems = document.querySelectorAll(
+    '.reqore-popover-content .reqore-menu-item'
+  );
+  expect(dropdownItems.length).toBe(2);
+
+  // Clicking a shortcut fires its handler.
+  const showAll = [...dropdownItems].find((node) =>
+    node.textContent?.includes('Show all workflows')
+  );
+  fireEvent.click(showAll!);
+  expect(showAllCb).toHaveBeenCalled();
+});
+
 describe('<MenuItem /> scrollIntoView', () => {
   const renderWithScrollSpy = (options?: Record<string, any>) => {
     const scrollIntoView = vi.fn();

@@ -1,10 +1,16 @@
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { ReqoreButton, ReqoreControlGroup } from '../..';
+import { ReqoreButton, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
+// Type-only imports — erased at build time, so the Menu ↔ Dropdown reference
+// (Dropdown already imports Menu types) stays a type-level cycle, never a
+// runtime one. The `ReqoreDropdown` value comes from the same `../..` barrel
+// `ReqoreButton` already does, and is only touched at render time.
+import type { IReqoreDropdownProps } from '../Dropdown';
+import type { TReqoreDropdownItems } from '../Dropdown/list';
 
 export type TReqoreMenuItemEventHandler = (
   event: React.MouseEvent<HTMLElement>,
@@ -24,6 +30,18 @@ export type TReqoreMenuItemActionEventHandler<
 export type TReqoreMenuItemAction<Metadata extends Record<string, any> = Record<string, any>> =
   Omit<IReqoreButtonProps, 'onClick'> & {
     onClick?: TReqoreMenuItemActionEventHandler<Metadata>;
+    /**
+     * Turns the action into a dropdown: clicking it opens a popover menu of
+     * these items — supporting `divider` items to group them — instead of
+     * firing `onClick`. Lets a menu row offer a cluster of related shortcuts
+     * (e.g. "Show all / Create / …") without leaving the row.
+     */
+    actions?: TReqoreDropdownItems;
+    /**
+     * Extra props forwarded to the underlying `ReqoreDropdown` when `actions`
+     * is set — e.g. `placement`, `showCaret`, `filterable`, `label`.
+     */
+    actionsProps?: Partial<IReqoreDropdownProps>;
   };
 
 export interface IReqoreMenuItemProps<Metadata extends Record<string, any> = Record<string, any>>
@@ -139,24 +157,66 @@ const ReqoreMenuItem = memo(
         }
       }, [itemRef, scrollIntoView, scrollBehavior]);
 
-      return (
-        <ReqoreControlGroup stack={stackWithActions} fluid fill responsive={false}>
-          {leftAction ? (
-            <ReqoreButton
+      // Render a left/right action either as a plain button or, when it carries
+      // `actions`, as a ReqoreDropdown whose control button keeps the exact same
+      // styling. Shared by both slots so the two stay in lockstep.
+      const renderAction = (
+        action: TReqoreMenuItemAction | undefined,
+        className: string,
+        handleActionClick: (event: React.MouseEvent<HTMLSpanElement>) => void
+      ) => {
+        if (!action) return null;
+
+        const { actions, actionsProps, onClick: _onClick, ...buttonProps } = action;
+        const transparent = rest.transparent === false ? false : !rest.effect;
+
+        if (actions?.length) {
+          return (
+            <ReqoreDropdown
+              component={ReqoreButton}
               flat={flat}
               verticalPadding='small'
               fixed
               compact
-              transparent={rest.transparent === false ? false : !rest.effect}
+              transparent={transparent}
               minimal={rest.minimal}
               customTheme={rest.customTheme}
-              className='reqore-menu-item-left-action'
+              className={className}
               intent={intent}
               active={selected}
-              {...leftAction}
-              onClick={handleLeftActionClick}
+              // A menu row's action opens beside the row, not over the list
+              // below it; consumers can override via `actionsProps`. No caret so
+              // the control keeps the action's own icon (e.g. a bare `+`).
+              showCaret={false}
+              placement='right-start'
+              {...buttonProps}
+              items={actions}
+              {...actionsProps}
             />
-          ) : null}
+          );
+        }
+
+        return (
+          <ReqoreButton
+            flat={flat}
+            verticalPadding='small'
+            fixed
+            compact
+            transparent={transparent}
+            minimal={rest.minimal}
+            customTheme={rest.customTheme}
+            className={className}
+            intent={intent}
+            active={selected}
+            {...buttonProps}
+            onClick={handleActionClick}
+          />
+        );
+      };
+
+      return (
+        <ReqoreControlGroup stack={stackWithActions} fluid fill responsive={false}>
+          {renderAction(leftAction, 'reqore-menu-item-left-action', handleLeftActionClick)}
           <ReqoreButton
             as={as}
             transparent={!rest.effect}
@@ -180,22 +240,7 @@ const ReqoreMenuItem = memo(
           >
             {label || children}
           </ReqoreButton>
-          {rightAction ? (
-            <ReqoreButton
-              flat={flat}
-              verticalPadding='small'
-              fixed
-              compact
-              transparent={rest.transparent === false ? false : !rest.effect}
-              minimal={rest.minimal}
-              customTheme={rest.customTheme}
-              className='reqore-menu-item-right-action'
-              intent={intent}
-              active={selected}
-              {...rightAction}
-              onClick={handleRightActionClick}
-            />
-          ) : null}
+          {renderAction(rightAction, 'reqore-menu-item-right-action', handleRightActionClick)}
         </ReqoreControlGroup>
       );
     }
