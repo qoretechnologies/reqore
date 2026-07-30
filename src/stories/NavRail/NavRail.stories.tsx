@@ -604,7 +604,7 @@ export const Dividers: Story = {
     docs: {
       description: {
         story:
-          'Renders the inline rail with `dividerAfter` on two items (Dashboard and Reports), drawing a subtle separator beneath each to group the marks with breathing room. Team is the active page, so its section sub-capsule sits between the two divided groups.',
+          'Renders the inline rail with `dividerAfter` on two items (Dashboard and Reports), drawing a separator beneath each — extra vertical space plus a short line — to group the marks with breathing room. Team is the active page, so its section sub-capsule sits between the two divided groups.',
       },
     },
   },
