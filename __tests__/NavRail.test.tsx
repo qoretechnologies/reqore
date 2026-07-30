@@ -123,6 +123,52 @@ test('maxItems keeps the active mark visible by windowing around it', () => {
   expect(screen.queryByRole('button', { name: 'Dashboard' })).not.toBeInTheDocument();
 });
 
+test('A per-item effect paints the mark regardless of active state', () => {
+  const items: IReqoreNavRailItem[] = [
+    ITEMS[0],
+    {
+      id: 'special',
+      label: 'Special',
+      icon: 'Sparkling2Line',
+      effect: { gradient: { colors: { 0: '#7b3ff2', 100: '#ff5db1' } } },
+    },
+  ];
+
+  renderRail(<ReqoreNavRail items={items} defaultActiveId='dashboard' />);
+
+  // 'special' is NOT the active item, yet it renders as a mark — its own effect
+  // paints it independently of the active accent (Dashboard is active here).
+  expect(screen.getByRole('button', { name: 'Special' })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: 'Dashboard sections' })).toBeInTheDocument();
+});
+
+test('dividerAfter draws a separator after the marked item (and none without it)', () => {
+  // Active 'settings' has no sections, so the only spacer in the rail would be a
+  // requested divider — making the count an exact assertion.
+  const withDivider: IReqoreNavRailItem[] = [
+    { ...ITEMS[0], dividerAfter: true },
+    ITEMS[1],
+    ITEMS[2],
+  ];
+  const { container } = renderRail(<ReqoreNavRail items={withDivider} activeId='settings' />);
+  expect(container.querySelectorAll('.reqore-nav-rail .reqore-spacer').length).toBe(1);
+
+  const { container: plain } = renderRail(<ReqoreNavRail items={ITEMS} activeId='settings' />);
+  expect(plain.querySelectorAll('.reqore-nav-rail .reqore-spacer').length).toBe(0);
+});
+
+test("dividerAfter='space' still reserves breathing room (a line-less separator)", () => {
+  const items: IReqoreNavRailItem[] = [
+    { ...ITEMS[0], dividerAfter: 'space' },
+    ITEMS[1],
+    ITEMS[2],
+  ];
+  const { container } = renderRail(<ReqoreNavRail items={items} activeId='settings' />);
+  // The space-only divider is still a spacer (breathing room), just without a
+  // visible line — the render doesn't throw and the separator is present.
+  expect(container.querySelectorAll('.reqore-nav-rail .reqore-spacer').length).toBe(1);
+});
+
 test('Clicking a sub-item with a scrollTargetId scrolls to that element', () => {
   const scrollIntoView = vi.fn();
   Element.prototype.scrollIntoView = scrollIntoView;

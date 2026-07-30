@@ -55,6 +55,16 @@ export interface IReqoreNavRailItem {
   /** Tints this mark when active (falls back to the rail's `intent`, then `info`). */
   intent?: TReqoreIntent;
   disabled?: boolean;
+  /** Paints this mark with its own gradient/effect regardless of active state —
+   *  for a "special" destination that should always stand out. Marks ARE
+   *  `ReqoreButton`s, so this is the button's `effect`. Takes precedence over the
+   *  rail's `activeEffect` when the item is active. */
+  effect?: IReqoreEffect;
+  /** Draw a separator after this mark to group items with breathing room. Only
+   *  applies to shown primary marks (not ones folded into the `⋮` menu):
+   *  - `true` / `'line'` — extra vertical space plus a short line.
+   *  - `'space'` — the breathing room only, no line (a quieter break). */
+  dividerAfter?: boolean | 'line' | 'space';
   /** Sub-items shown nested directly beneath this item while it is active. */
   items?: IReqoreNavRailSubItem[];
   onClick?: () => void;
@@ -322,9 +332,12 @@ const NavRailOverflow = memo(
       },
       [onSelect]
     );
+    // Height-capped so a long overflow list (many hidden pages) never runs off
+    // the viewport — sensible on mobile too (70vh, never past 480px); it scrolls
+    // past that (ReqoreMenu is overflow-y:auto).
     const content = useMemo(
       () => (
-        <ReqoreMenu rounded padded width='210px'>
+        <ReqoreMenu rounded padded width='210px' maxHeight='min(70vh, 480px)'>
           {items.map((it) => (
             <ReqoreMenuItem
               key={it.id}
@@ -647,7 +660,9 @@ export const ReqoreNavRail = memo(
           icon={item.icon}
           size={size}
           disabled={item.disabled}
-          effect={active ? activeEffect : undefined}
+          // A per-item effect (a "special" mark) wins and always paints; else the
+          // active mark takes the shared activeEffect, inactive marks none.
+          effect={item.effect ?? (active ? activeEffect : undefined)}
           intent={active ? item.intent ?? activeIntent : item.intent}
           className='reqore-nav-rail-item'
           ariaCurrent={active ? 'page' : undefined}
@@ -656,6 +671,27 @@ export const ReqoreNavRail = memo(
         />
       );
     };
+
+    // A neutral separator drawn after a mark (item.dividerAfter) to give groups
+    // of items breathing room: extra vertical space (≈2.5× the mark gap), with a
+    // short centred line (`withLine`) so the break reads as intentional, or just
+    // the space (`'space'`) for a quieter break. Untinted; the rail never widens.
+    const renderDivider = (key: string, withLine: boolean) => (
+      <ReqoreVerticalSpacer
+        key={`${key}-divider`}
+        // A line-less break needs a touch more space to register on its own.
+        height={Math.round(GAP_FROM_SIZE[size] * (withLine ? 2.5 : 3.5))}
+        width={`${Math.round(SIZE_TO_PX[size] * 0.66)}px`}
+        lineSize={withLine ? 'small' : 'none'}
+      />
+    );
+
+    // A primary mark plus its optional trailing divider (React flattens the
+    // returned array; every child carries a key). `'space'` draws no line.
+    const renderPrimary = (item: IReqoreNavRailItem) =>
+      item.dividerAfter
+        ? [renderItem(item), renderDivider(item.id, item.dividerAfter !== 'space')]
+        : renderItem(item);
 
     const renderSub = (sub: IReqoreNavRailSubItem) => {
       const active = sub.id === activeSubItemId;
@@ -760,9 +796,9 @@ export const ReqoreNavRail = memo(
         >
           <ReqoreControlGroup vertical gapSize={size} horizontalAlign='center'>
             {header}
-            {before.map(renderItem)}
+            {before.map(renderPrimary)}
             {activeAt >= 0 && activeItem ? renderActiveGroup(activeItem) : null}
-            {after.map(renderItem)}
+            {after.map(renderPrimary)}
             {itemsHidden.length ? (
               <NavRailOverflow
                 items={itemsHidden.map((i) => ({ id: i.id, label: i.label, icon: i.icon }))}

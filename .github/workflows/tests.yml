@@ -63,7 +63,32 @@ jobs:
         # each project uploads under its own token.
         env:
           QLIP_UPLOAD_TOKEN: ${{ secrets.QLIP_UPLOAD_TOKEN }}
-        run: yarn test:stories
+        run: |
+          set -o pipefail
+          yarn test:stories 2>&1 | tee qlip-output.log
+
+      # qlip prints one line after uploading visual snapshots, e.g.:
+      #   [qlip] uploaded build 20260629-123456 (12 fragments, …) → https://qlip.qoretechnologies.com
+      # The buildId is server-assigned (a timestamp, NOT github.run_id), so we
+      # scrape it here and expose the dashboard link for the Discord message —
+      # this replaces the old dead Storybook/Chromatic links. Runs even on test
+      # failure (qlip captures-on-error, so the build still exists).
+      - name: Resolve qlip build link
+        id: qlip
+        if: always()
+        run: |
+          # Strip any ANSI colour codes so the scraped URL/id stay clean.
+          LINE=$(grep -aE '\[qlip\] uploaded build ' qlip-output.log | tail -1 | sed -E 's/\x1b\[[0-9;]*m//g' || true)
+          BUILD_ID=$(printf '%s' "$LINE" | sed -nE 's/.*uploaded build ([^ ]+) .*/\1/p')
+          SERVER=$(printf '%s' "$LINE" | sed -nE 's/.* → (https?:[^ ]+).*/\1/p')
+          SERVER=${SERVER:-https://qlip.qoretechnologies.com}
+          echo "Resolved qlip build='${BUILD_ID:-<none>}' server='${SERVER}'"
+          if [ -n "$BUILD_ID" ]; then
+            echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+            # Dashboard builds are global (no project): /builds/<buildId>.
+            echo "url=$SERVER/builds/$BUILD_ID" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Save release version to outputs
         id: save_release_version
         run: echo ::set-output name=version::$(node -pe "require('./package.json').version")
@@ -82,7 +107,7 @@ jobs:
           color: 0x00FF00
           description: |
             :white_check_mark: PR checks for [PR](${{ github.event.pull_request.html_url }}) triggered by `${{ github.triggering_actor }}`` *succeeded*.
-            [Action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) | [Storybook](${{ steps.chromatic_publish.outputs.storybookUrl }}) | [Chromatic Tests](${{ steps.chromatic_publish.outputs.buildUrl }})
+            [Action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) | [Qlip visual tests](${{ steps.qlip.outputs.url }})
 
       # Notify discord if failure
       - name: Discord notification failure
@@ -98,4 +123,4 @@ jobs:
           color: 0xFF0000
           description: |
             :exclamation: PR checks for [PR](${{ github.event.pull_request.html_url }}) triggered by `${{ github.triggering_actor }}`` *failed*.
-            [Action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) | [Chromatic Tests](${{ steps.chromatic_publish.outputs.buildUrl }})
+            [Action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) | [Qlip visual tests](${{ steps.qlip.outputs.url }})

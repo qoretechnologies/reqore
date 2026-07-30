@@ -52,6 +52,17 @@ const ITEMS: IReqoreNavRailItem[] = [
   { id: 'settings', label: 'Settings', icon: 'Settings3Line' },
 ];
 
+/** A long list so the `⋮` overflow menu has enough items to exceed its height
+ *  cap and become scrollable (see OverflowCapped). */
+const MANY_ITEMS: IReqoreNavRailItem[] = [
+  ITEMS[0],
+  ...Array.from({ length: 22 }, (_, i) => ({
+    id: `page-${i}`,
+    label: `Page ${i + 1}`,
+    icon: 'File2Line' as const,
+  })),
+];
+
 /** A believable page backdrop so a floating rail can be judged in context. */
 const Backdrop = ({
   height = 520,
@@ -532,5 +543,130 @@ export const Interaction: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Team' }));
     await expect(canvas.getByRole('group', { name: 'Team sections' })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'Members' })).toBeInTheDocument();
+  },
+};
+
+/** SPECIAL ITEM — a single item painted with its own `effect` (a purple→pink
+ *  gradient). Unlike the rail-wide `effect`/`activeEffect`, a per-item `effect`
+ *  paints that one mark regardless of active state, so a "special" destination
+ *  always stands out among the neutral marks. */
+export const SpecialItem: Story = {
+  args: {
+    position: 'static',
+    defaultActiveId: 'dashboard',
+    items: [
+      ITEMS[0],
+      {
+        id: 'assistant',
+        label: 'Assistant',
+        icon: 'Sparkling2Line',
+        effect: {
+          gradient: {
+            colors: { 0: '#7b3ff2', 50: '#b83fd6', 100: '#ff5db1' },
+            direction: 'to bottom right',
+          },
+        },
+      },
+      ...ITEMS.slice(1),
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the inline rail with one item (Assistant) carrying its own `effect` — a purple→pink gradient that paints the mark regardless of active state, so a "special" destination stands out among the neutral marks (Dashboard is the active page here, Assistant is not).',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Assistant' })).toBeInTheDocument();
+  },
+};
+
+/** DIVIDERS — `dividerAfter` on an item draws a subtle separator beneath its
+ *  mark to group items with a little breathing room. */
+export const Dividers: Story = {
+  args: {
+    position: 'static',
+    defaultActiveId: 'team',
+    items: [
+      { ...ITEMS[0], dividerAfter: true }, // Dashboard ──
+      ITEMS[1], // Projects
+      ITEMS[2], // Team (active)
+      { ...ITEMS[3], dividerAfter: true }, // Reports ──
+      ITEMS[4], // Automations
+      ITEMS[5], // Integrations
+      ITEMS[6], // Settings
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the inline rail with `dividerAfter` on two items (Dashboard and Reports), drawing a separator beneath each — extra vertical space plus a short line — to group the marks with breathing room. Team is the active page, so its section sub-capsule sits between the two divided groups.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('navigation')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Dashboard' })).toBeInTheDocument();
+  },
+};
+
+/** SPACE DIVIDER — `dividerAfter: 'space'` gives the same breathing room WITHOUT
+ *  a line, for a quieter break between groups. */
+export const SpaceDivider: Story = {
+  args: {
+    position: 'static',
+    defaultActiveId: 'team',
+    items: [
+      { ...ITEMS[0], dividerAfter: 'space' }, // Dashboard ⟂ (space only)
+      ITEMS[1], // Projects
+      ITEMS[2], // Team (active)
+      { ...ITEMS[3], dividerAfter: 'space' }, // Reports ⟂ (space only)
+      ITEMS[4], // Automations
+      ITEMS[5], // Integrations
+      ITEMS[6], // Settings
+    ],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the rail with `dividerAfter: 'space'` on Dashboard and Reports — the same grouping as Dividers but the separation is pure breathing room, with no line drawn (a quieter break). Compare with Dividers (which draws the line).",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('navigation')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Dashboard' })).toBeInTheDocument();
+  },
+};
+
+/** OVERFLOW CAPPED — with many hidden pages the `⋮` menu would run off the
+ *  viewport, so it is height-capped (`min(70vh, 480px)`) and scrolls. The play
+ *  opens it; in a real viewport the long list is clipped to the cap. */
+export const OverflowCapped: Story = {
+  args: {
+    items: MANY_ITEMS,
+    position: 'static',
+    maxItems: 4,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the inline rail with a long item list capped to `maxItems={4}`, folding ~19 pages into the `⋮` menu. The play opens the menu; because the list exceeds the menu's height cap (`min(70vh, 480px)`) it clips and scrolls rather than running off the viewport — the safeguard for long overflow lists on short / mobile screens.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'More items' }));
+    await waitFor(() => expect(document.body.textContent).toContain('Page 22'));
   },
 };
