@@ -209,6 +209,7 @@ const SECTION_LABEL = (kind: 'Object' | 'List', count: number): string => {
 };
 
 type TRenderContext = {
+  theme: IReqoreTheme;
   envelope: IReqoreDataViewEnvelope | false;
   parseEmbedded?: (value: string) => IReqoreDataViewEmbedded | undefined;
   showTypes: boolean;
@@ -270,10 +271,16 @@ const Tree = styled.div<IStyledThemeProps>`
      data-view material rather than a row of disconnected chips.
      Override via the tag's own \`effect.textSize\` if you need to
      dial it back. */
+  .reqore-data-view-key,
   .reqore-data-view-key .reqore-tag-content,
+  .reqore-data-view-key .reqore-tag-content > *,
+  .reqore-data-view-value,
   .reqore-data-view-value .reqore-tag-content,
-  .reqore-data-view-type .reqore-tag-content {
-    font-family: ${MONO_FONT};
+  .reqore-data-view-value .reqore-tag-content > *,
+  .reqore-data-view-type,
+  .reqore-data-view-type .reqore-tag-content,
+  .reqore-data-view-type .reqore-tag-content > * {
+    font-family: ${MONO_FONT} !important;
     /* Long unbreakable identifiers (UUIDs, snake_case keys, HL7
        payloads with no spaces) need an extra hint to break — the
        tag's own \`wrap\` enables breaks at WHITESPACE, but these run
@@ -417,6 +424,45 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
     css`
       margin-top: 4px;
       padding-left: ${PADDING_FROM_SIZE[$size] + 6}px;
+    `}
+`;
+
+/** Multiline strings are data documents, not compact scalar labels. Rendering
+ *  them inside a tag creates a very tall pill and makes large text/plain
+ *  payloads difficult to inspect. Keep their original whitespace in a
+ *  bounded, scrollable data surface instead. */
+const MultilineValue = styled.pre<IStyledThemeProps & { $interactive?: boolean }>`
+  box-sizing: border-box;
+  flex: 1 1 300px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: min(320px, 45vh);
+  margin: 0;
+  padding: ${({ $size }) => PADDING_FROM_SIZE[$size]}px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  tab-size: 2;
+  border: 1px solid ${({ $theme }) => rgba(getReadableColor($theme), 0.16)};
+  border-radius: ${({ $size }) => RADIUS_FROM_SIZE[$size]}px;
+  background: ${({ $theme }) => rgba(getReadableColor($theme), 0.06)};
+  color: ${({ $theme }) => getReadableColor($theme)};
+  font-family: ${MONO_FONT} !important;
+  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
+  font-variant-ligatures: none;
+  line-height: 1.45;
+  cursor: ${({ $interactive }) => ($interactive ? 'pointer' : 'text')};
+
+  ${({ $interactive, $theme }) =>
+    $interactive &&
+    css`
+      &:hover,
+      &:focus-visible {
+        border-color: ${rgba(getReadableColor($theme), 0.35)};
+        outline: none;
+      }
     `}
 `;
 
@@ -1373,6 +1419,54 @@ const renderScalar = (
     );
   }
 
+  const multiline =
+    kind === 'string' && /[\r\n]/.test(scalar.display);
+
+  if (multiline) {
+    const block = (
+      <MultilineValue
+        $size={ctx.size}
+        $theme={ctx.theme}
+        $interactive={Boolean(ctx.onItemClick)}
+        className='reqore-data-view-value reqore-data-view-multiline-value'
+        role={ctx.onItemClick ? 'button' : undefined}
+        tabIndex={ctx.onItemClick ? 0 : undefined}
+        onClick={
+          ctx.onItemClick
+            ? () => ctx.onItemClick!(value, path)
+            : undefined
+        }
+        onKeyDown={
+          ctx.onItemClick
+            ? (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                ctx.onItemClick!(value, path);
+              }
+            : undefined
+        }
+      >
+        {scalar.display}
+      </MultilineValue>
+    );
+
+    if (!ctx.showTypes || !displayType) return block;
+
+    return (
+      <ScalarRow gapSize='tiny' verticalAlign='top' size={ctx.size} fluid>
+        {block}
+        <ReqoreTag
+          size={ctx.size}
+          flat
+          minimal
+          label={displayType}
+          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          className='reqore-data-view-type'
+        />
+      </ScalarRow>
+    );
+  }
+
   // Value chip: minimal + intent-tinted (so the type is colour-coded
   // without shouting), weight bold. We always render with a border
   // (flat={false}) — the panel's own `flat` prop affects the outer
@@ -1847,6 +1941,7 @@ export const ReqoreDataView = memo(
       );
 
       const ctx: TRenderContext = {
+        theme,
         envelope,
         parseEmbedded,
         showTypes,

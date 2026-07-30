@@ -219,6 +219,61 @@ test('Renders a long string value without truncating its content', () => {
   // Whole string is in the DOM — wrap means it spans multiple lines
   // visually but stays one continuous text node.
   expect(document.body.textContent).toContain(longValue);
+  expect(
+    document.querySelector('.reqore-data-view-multiline-value')
+  ).toBeNull();
+});
+
+test('Renders multiline strings as bounded monospace data blocks', () => {
+  const value = 'room_id;start;end\r\n13496;07:00;18:00\r\n9755;08:00;18:00';
+  const onItemClick = vi.fn();
+  render(
+    wrap(
+      <ReqoreDataView
+        data={{ body: value }}
+        collapsibleRoot={false}
+        onItemClick={onItemClick}
+      />
+    )
+  );
+
+  const block = document.querySelector(
+    '.reqore-data-view-multiline-value'
+  ) as HTMLElement;
+  expect(block).not.toBeNull();
+  expect(block.textContent).toBe(value);
+  expect(getComputedStyle(block).fontFamily).toContain('monospace');
+  expect(getComputedStyle(block).whiteSpace).toBe('pre-wrap');
+  expect(getComputedStyle(block).overflow).toBe('auto');
+
+  fireEvent.keyDown(block, { key: 'Enter' });
+  expect(onItemClick).toHaveBeenCalledWith(value, ['body']);
+});
+
+test('Applies monospace data styling directly to scalar tag content', () => {
+  render(
+    wrap(
+      <ReqoreDataView
+        data={{ content_type: 'text/plain' }}
+        collapsibleRoot={false}
+        showTypes
+      />
+    )
+  );
+
+  const key = document.querySelector(
+    '.reqore-data-view-key .reqore-tag-content'
+  ) as HTMLElement;
+  const value = document.querySelector(
+    '.reqore-data-view-value .reqore-tag-content'
+  ) as HTMLElement;
+  const type = document.querySelector(
+    '.reqore-data-view-type .reqore-tag-content'
+  ) as HTMLElement;
+
+  expect(getComputedStyle(key).fontFamily).toContain('monospace');
+  expect(getComputedStyle(value).fontFamily).toContain('monospace');
+  expect(getComputedStyle(type).fontFamily).toContain('monospace');
 });
 
 test('Renders a long key without dropping the row or the value next to it', () => {
