@@ -270,17 +270,19 @@ const Tree = styled.div<IStyledThemeProps>`
      values and type labels — so the tree reads like one consistent
      data-view material rather than a row of disconnected chips.
      Override via the tag's own \`effect.textSize\` if you need to
-     dial it back. */
-  .reqore-data-view-key,
-  .reqore-data-view-key .reqore-tag-content,
-  .reqore-data-view-key .reqore-tag-content > *,
-  .reqore-data-view-value,
-  .reqore-data-view-value .reqore-tag-content,
-  .reqore-data-view-value .reqore-tag-content > *,
-  .reqore-data-view-type,
-  .reqore-data-view-type .reqore-tag-content,
-  .reqore-data-view-type .reqore-tag-content > * {
-    font-family: ${MONO_FONT} !important;
+     dial it back. \`&&\` (not \`!important\`) beats \`StyledTag\`'s
+     \`font-family: system-ui\` — both are one generated class deep, so
+     without the specificity boost the winner is just whichever
+     styled-component happens to mount last. \`!important\` here would
+     tax every downstream consumer trying to override this from their
+     own \`customTheme\` / \`effect\`. */
+  && .reqore-data-view-key,
+  && .reqore-data-view-key .reqore-tag-content,
+  && .reqore-data-view-value,
+  && .reqore-data-view-value .reqore-tag-content,
+  && .reqore-data-view-type,
+  && .reqore-data-view-type .reqore-tag-content {
+    font-family: ${MONO_FONT};
     /* Long unbreakable identifiers (UUIDs, snake_case keys, HL7
        payloads with no spaces) need an extra hint to break — the
        tag's own \`wrap\` enables breaks at WHITESPACE, but these run
@@ -454,7 +456,7 @@ const MultilineValue = styled.pre<IStyledThemeProps & { $interactive?: boolean }
   border-radius: ${({ $size }) => RADIUS_FROM_SIZE[$size]}px;
   background: ${rgba(changeLightness('#000000', 0.05), 0.3)};
   color: ${({ $theme }) => getReadableColorFrom(changeLightness($theme.main, 0.1))};
-  font-family: ${MONO_FONT} !important;
+  font-family: ${MONO_FONT};
   font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
   font-variant-ligatures: none;
   line-height: 1.45;
