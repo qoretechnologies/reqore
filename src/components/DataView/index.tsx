@@ -51,7 +51,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { TReqoreEffectColor } from '../Effect';
-import { getReadableColor } from '../../helpers/colors';
+import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
 import ReqoreCheckbox from '../Checkbox';
@@ -430,7 +430,12 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
 /** Multiline strings are data documents, not compact scalar labels. Rendering
  *  them inside a tag creates a very tall pill and makes large text/plain
  *  payloads difficult to inspect. Keep their original whitespace in a
- *  bounded, scrollable data surface instead. */
+ *  bounded, scrollable data surface instead — but keep the same border /
+ *  background language as the neutral (no-intent) value chip in
+ *  `renderScalar` below (a plain `ReqoreTag` with `minimal flat={false}`
+ *  and no `color`) so the block reads as the same value-chip family, just
+ *  taller and pre-formatted, rather than an unrelated visual element. Only
+ *  the font, wrapping and scroll behaviour are new. */
 const MultilineValue = styled.pre<IStyledThemeProps & { $interactive?: boolean }>`
   box-sizing: border-box;
   flex: 1 1 300px;
@@ -445,10 +450,10 @@ const MultilineValue = styled.pre<IStyledThemeProps & { $interactive?: boolean }
   overflow-wrap: anywhere;
   word-break: break-word;
   tab-size: 2;
-  border: 1px solid ${({ $theme }) => rgba(getReadableColor($theme), 0.16)};
+  border: 1px solid ${({ $theme }) => changeLightness($theme.main, 0.2)};
   border-radius: ${({ $size }) => RADIUS_FROM_SIZE[$size]}px;
-  background: ${({ $theme }) => rgba(getReadableColor($theme), 0.06)};
-  color: ${({ $theme }) => getReadableColor($theme)};
+  background: ${rgba(changeLightness('#000000', 0.05), 0.3)};
+  color: ${({ $theme }) => getReadableColorFrom(changeLightness($theme.main, 0.1))};
   font-family: ${MONO_FONT} !important;
   font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
   font-variant-ligatures: none;
@@ -460,7 +465,7 @@ const MultilineValue = styled.pre<IStyledThemeProps & { $interactive?: boolean }
     css`
       &:hover,
       &:focus-visible {
-        border-color: ${rgba(getReadableColor($theme), 0.35)};
+        border-color: ${changeLightness($theme.main, 0.35)};
         outline: none;
       }
     `}
