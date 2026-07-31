@@ -1212,48 +1212,50 @@ export const WithLongDescription: Story = {
   },
 };
 
+// Shared render for the two sticky-outside-scroll stories: stacked sticky-header
+// panels in an outer scroll container. One story scrolls it (headers pinned →
+// square corners), the other leaves it at rest (headers rounded) — so the two
+// radius states are covered by reusing the exact same content.
+const renderStickyOutsideScroll = () => (
+  <div
+    style={{
+      maxHeight: '600px',
+      width: '600px',
+      overflow: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+    }}
+    data-testid='sticky-scroll-container'
+  >
+    {new Array(6).fill(null).map((_, index) => (
+      <ReqorePanel
+        key={index}
+        label={`Sticky panel ${index + 1}`}
+        stickyHeader
+        icon='PushpinLine'
+        padded
+        fluid
+      >
+        {message}
+      </ReqorePanel>
+    ))}
+  </div>
+);
+
 export const StickyHeaderOutsideScroll: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders Panel with a sticky header that stays visible outside the scroll region.',
+          'Renders Panel with a sticky header that stays visible outside the scroll region. Scrolled in the play, so a header is pinned (stuck) — its top corners go square while it moves with the scroll.',
       },
     },
     chromatic: {
       viewports: [600],
     },
   },
-  render: () => {
-    const panels = new Array(6).fill(null);
-
-    return (
-      <div
-        style={{
-          maxHeight: '600px',
-          width: '600px',
-          overflow: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-        data-testid='sticky-scroll-container'
-      >
-        {panels.map((_, index) => (
-          <ReqorePanel
-            key={index}
-            label={`Sticky panel ${index + 1}`}
-            stickyHeader
-            icon='PushpinLine'
-            padded
-            fluid
-          >
-            {message}
-          </ReqorePanel>
-        ))}
-      </div>
-    );
-  },
+  render: renderStickyOutsideScroll,
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector('[data-testid="sticky-scroll-container"]');
 
@@ -1267,50 +1269,23 @@ export const StickyHeaderOutsideScroll: Story = {
   },
 };
 
-// The sticky-header radius fix, verifiable at rest. `stickyHeader` forces the
-// panel wrapper to `overflow: visible` so the header can stick — which also
-// stops the wrapper from clipping the header's square top corners, so the panel
-// used to render square-topped even when nothing was scrolled. It now rounds the
-// header's own top corners to the panel's inner radius. This story is NOT
-// scrolled, so the rounded top corners are directly visible.
-export const StickyHeaderRestRadius: Story = {
+// Same content as StickyHeaderOutsideScroll, but at rest (no scroll) — the
+// headers sit un-pinned so their top corners stay rounded. The counterpart to
+// the scrolled, stuck-and-square StickyHeaderOutsideScroll; together they cover
+// both radius states. Scroll it by hand to watch a header go square as it pins.
+export const StickyHeaderOutsideScrollAtRest: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Sticky-header panels AT REST (nothing scrolled) keep their top border-radius. Flat, bordered, and intent variants all show rounded top corners matching the panel — the header only loses the radius once it detaches and scrolls (see StickyHeaderOutsideScroll).',
+          'The same stacked sticky-header panels as StickyHeaderOutsideScroll, but at rest (no scroll). Each header keeps its rounded top corners; scroll the container by hand to watch them go square once a header pins.',
       },
     },
+    chromatic: {
+      viewports: [600],
+    },
   },
-  render: () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '520px' }}>
-      <ReqorePanel
-        label='Flat sticky header'
-        icon='PushpinLine'
-        flat
-        rounded
-        stickyHeader
-        padded
-        fluid
-      >
-        Flat panel — the top corners stay rounded at rest.
-      </ReqorePanel>
-      <ReqorePanel label='Bordered sticky header' icon='PushpinLine' rounded stickyHeader padded fluid>
-        Bordered panel — the border traces a rounded top at rest.
-      </ReqorePanel>
-      <ReqorePanel
-        label='Intent sticky header'
-        icon='PushpinLine'
-        intent='info'
-        rounded
-        stickyHeader
-        padded
-        fluid
-      >
-        Intent panel — the intent border curves around the rounded top at rest.
-      </ReqorePanel>
-    </div>
-  ),
+  render: renderStickyOutsideScroll,
 };
 
 export const Raised: Story = {
