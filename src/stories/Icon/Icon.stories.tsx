@@ -265,7 +265,7 @@ export const GlobalGlowingIconsInheritedColor: Story = {
               glow now reads the painted colour off the element and glows THAT. */}
           <ReqoreControlGroup gapSize='huge' verticalAlign='center'>
             <span style={{ color: '#3b82f6' }}>
-              <ReqoreIcon icon='SparklingLine' size='huge' />
+              <ReqoreIcon icon='SparklingLine' size='huge' data-testid='inherited-glow' />
             </span>
             <span style={{ color: '#22c55e' }}>
               <ReqoreIcon icon='StarLine' size='huge' />
@@ -297,13 +297,13 @@ export const GlobalGlowingIconsInheritedColor: Story = {
     },
   },
   play: async ({ canvasElement }) => {
-    // In a real browser the inherited-colour glow resolves after mount — at least
-    // the coloured bare icons should end up with a drop-shadow filter.
+    // The inherited (currentColor) glow uses OKLCH relative-colour syntax. Assert
+    // the browser actually ACCEPTS it — a rejected filter value computes to 'none',
+    // so a resolved `drop-shadow(...)` proves the CSS is valid + applied.
+    const el = canvasElement.querySelector('[data-testid="inherited-glow"]') as HTMLElement;
     await waitFor(() => {
-      const glowing = Array.from(canvasElement.querySelectorAll('.reqore-icon')).filter((el) =>
-        (el as HTMLElement).style.filter.includes('drop-shadow')
-      );
-      expect(glowing.length).toBeGreaterThan(0);
+      expect(el).toBeTruthy();
+      expect(getComputedStyle(el).filter).toContain('drop-shadow');
     });
   },
 };

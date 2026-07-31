@@ -1,5 +1,5 @@
-import { parseToHsl, rgba } from 'polished';
-import React, { forwardRef, memo, useEffect, useMemo, useState } from 'react';
+import { rgba } from 'polished';
+import React, { forwardRef, memo, useMemo } from 'react';
 import { IconContext } from 'react-icons';
 import { IconBaseProps, IconType } from 'react-icons/lib';
 import * as RemixIcons from 'react-icons/ri';
@@ -8,7 +8,6 @@ import { useReqoreTheme } from '../../hooks/useTheme';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
-import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { IReqoreIntent, IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -54,11 +53,13 @@ export interface IReqoreGlowConfig {
 }
 
 // When the app-wide `glowingIcons` default glows an icon by its *inherited*
-// (painted) colour, skip colours too close to white or black: a white halo reads
-// as a grey smudge and a black one is invisible — neither is the intended accent.
-// Only mid-range painted colours get the glow.
-const GLOW_MAX_LIGHTNESS = 0.85;
-const GLOW_MIN_LIGHTNESS = 0.15;
+// (`currentColor`) colour, the glow's alpha fades to 0 as the colour approaches
+// white — a white halo reads as a grey smudge, not an accent. Done in pure CSS
+// via OKLCH relative-colour syntax so there's no runtime colour read: the alpha
+// is `opacity * (FADE_FROM - L) / FADE_SPAN` (clamped to [0,1]), where L is the
+// origin colour's OKLCH lightness (0 black … 1 white). At L ≥ FADE_FROM → 0.
+const GLOW_INHERIT_FADE_FROM = 0.85;
+const GLOW_INHERIT_FADE_SPAN = 0.25;
 
 const SpinKeyframes = keyframes`
   0% {
@@ -141,9 +142,6 @@ const ReqoreIcon = memo(
     ) => {
       const theme = useReqoreTheme();
       const glowingIconsDefault = useReqoreProperty('glowingIcons');
-      // A ref to the rendered wrapper (merged with the forwarded one) so the glow
-      // can read the icon's *painted* colour after mount — see `inheritedGlowFilter`.
-      const { _innerRef, targetRef } = useCombinedRefs(ref);
       const Icon: IconType = RemixIcons[`Ri${icon}`];
       const finalColor: string | undefined = useMemo(
         () => (intent ? theme.intents[intent] : getColorFromMaybeString(theme, color)),
@@ -167,7 +165,7 @@ const ReqoreIcon = memo(
       const effectiveGlow =
         glow === undefined ? (image ? false : glowingIconsDefault) : glow;
 
-      const glowShape = useMemo(() => {
+      const glowFilter = useMemo(() => {
         if (!effectiveGlow) return undefined;
         const config: IReqoreGlowConfig =
           typeof effectiveGlow === 'boolean'
@@ -178,48 +176,25 @@ const ReqoreIcon = memo(
         // The glow's own colour: explicit glow.color → the icon's intent/color prop
         // → (for an explicitly-requested glow) a theme-readable colour. Undefined
         // means the icon has no colour of its own and paints via inherited
-        // `currentColor` — handled by `inheritedGlowFilter` below.
+        // `currentColor`.
         const explicit = glow !== undefined;
         const ownColor =
           (config.color ? (getColorFromMaybeString(theme, config.color) as string) : undefined) ??
           finalColor ??
           (explicit ? getReadableColor(theme, undefined, undefined, true) : undefined);
-        return { ownColor, blur: config.blur ?? 5, opacity: config.opacity ?? 0.8 };
+        const blur = config.blur ?? 5;
+        const opacity = config.opacity ?? 0.8;
+        // Own colour → a plain, well-supported rgba glow.
+        if (ownColor) {
+          return `drop-shadow(0 0 ${blur}px ${rgba(ownColor, opacity)})`;
+        }
+        // No colour of its own (the app-wide default on an inheritance-coloured
+        // icon, e.g. a button glyph): glow the *painted* `currentColor` in pure CSS
+        // — no runtime read, no re-render — fading the alpha out towards white via
+        // OKLCH relative-colour syntax. Browsers without relative-colour support
+        // simply render no glow here (graceful — same as the old behaviour).
+        return `drop-shadow(0 0 ${blur}px oklch(from currentColor l c h / calc(${opacity} * (${GLOW_INHERIT_FADE_FROM} - l) / ${GLOW_INHERIT_FADE_SPAN})))`;
       }, [effectiveGlow, glow, finalColor, theme]);
-
-      // Icon with a colour of its own → a clean, pure glow of that colour (synchronous).
-      const ownGlowFilter =
-        glowShape?.ownColor &&
-        `drop-shadow(0 0 ${glowShape.blur}px ${rgba(glowShape.ownColor, glowShape.opacity)})`;
-
-      // No colour of its own — the app-wide default on an icon coloured only by
-      // inheritance (e.g. a button's `currentColor` text colour). Read the painted
-      // colour off the mounted wrapper and glow THAT, so inheritance-coloured icons
-      // still glow; shades of white/near-black are skipped (see the thresholds).
-      const [inheritedGlowFilter, setInheritedGlowFilter] = useState<string | undefined>(undefined);
-      useEffect(() => {
-        const el = _innerRef as HTMLElement | null;
-        if (!glowShape || glowShape.ownColor || !el) {
-          setInheritedGlowFilter(undefined);
-          return;
-        }
-        const painted = getComputedStyle(el).color;
-        let lightness: number | undefined;
-        try {
-          lightness = parseToHsl(painted).lightness;
-        } catch {
-          lightness = undefined;
-        }
-        setInheritedGlowFilter(
-          lightness === undefined ||
-            lightness >= GLOW_MAX_LIGHTNESS ||
-            lightness <= GLOW_MIN_LIGHTNESS
-            ? undefined
-            : `drop-shadow(0 0 ${glowShape.blur}px ${rgba(painted, glowShape.opacity)})`
-        );
-      }, [_innerRef, glowShape]);
-
-      const glowFilter = ownGlowFilter || inheritedGlowFilter;
 
       const finalStyle = useMemo(
         () => ({
@@ -237,7 +212,7 @@ const ReqoreIcon = memo(
             {...rest}
             Component={StyledIconWrapper}
             as={wrapperElement}
-            ref={targetRef}
+            ref={ref}
             size={size}
             margin={margin}
             marginSize={finalMarginSize}
@@ -255,7 +230,7 @@ const ReqoreIcon = memo(
             {...rest}
             Component={StyledIconWrapper}
             as={wrapperElement}
-            ref={targetRef}
+            ref={ref}
             size={size}
             margin={margin}
             marginSize={finalMarginSize}
@@ -270,7 +245,7 @@ const ReqoreIcon = memo(
           {...rest}
           Component={StyledIconWrapper}
           as={wrapperElement}
-          ref={targetRef}
+          ref={ref}
           margin={margin}
           size={size}
           marginSize={finalMarginSize}
