@@ -745,35 +745,50 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Runtime stuck-detection for the sticky header: a 0-height sentinel sits at
-    // the very top of the panel, above the header. When the panel scrolls up
-    // inside its scroll container, the sentinel crosses (and passes above) the
-    // sticky line — at which point the header is pinned and should shed its top
-    // radius. Only wired when `stickyHeader` is on, so ordinary panels pay
-    // nothing. Observing the sentinel (not the header) means the panel's OWN
-    // content scroll never triggers it — only the outer container scrolling does.
+    // the very top of the panel, directly above the header. The header is
+    // "stuck" once that sentinel has scrolled up to (or past) the sticky line of
+    // its scroll container — at which point the header is pinned and sheds its
+    // top radius. Positions are read with getBoundingClientRect on scroll
+    // (rAF-throttled), NOT an IntersectionObserver: the observer's edge-of-root
+    // behaviour falsely reported "stuck" for panels that sit flush at their
+    // scroll container's top at rest. A document-level *capture* scroll listener
+    // catches scrolling in ANY ancestor container (page or a nested overflow
+    // box), so it works regardless of where the scroll lives; measuring the
+    // sentinel (not the header) means the panel's OWN content scroll never
+    // triggers it. Only wired when `stickyHeader` is on, so ordinary panels pay
+    // nothing.
     const stickySentinelRef = useRef<HTMLDivElement>(null);
     const [isHeaderStuck, setIsHeaderStuck] = useState(false);
 
     useEffect(() => {
-      if (!rest.stickyHeader || typeof IntersectionObserver === 'undefined') {
+      if (!rest.stickyHeader) {
         setIsHeaderStuck(false);
         return undefined;
       }
       const sentinel = stickySentinelRef.current;
       if (!sentinel) return undefined;
       const offset = rest.stickyHeaderOffset ?? 0;
-      const observer = new IntersectionObserver(
-        ([entry]) => setIsHeaderStuck(!entry.isIntersecting),
-        {
-          root: getScrollableAncestor(sentinel),
-          // Shift the top edge down past the sticky line so the sentinel leaves
-          // the observed area exactly as the header pins.
-          rootMargin: `-${offset + 1}px 0px 0px 0px`,
-          threshold: [0],
-        }
-      );
-      observer.observe(sentinel);
-      return () => observer.disconnect();
+      const scrollParent = getScrollableAncestor(sentinel);
+      let frame = 0;
+      const measure = () => {
+        frame = 0;
+        const sentinelTop = sentinel.getBoundingClientRect().top;
+        const rootTop = scrollParent ? scrollParent.getBoundingClientRect().top : 0;
+        // 1px deadzone so the exact at-rest position (sentinel flush against the
+        // top) never reads as stuck.
+        setIsHeaderStuck(sentinelTop < rootTop + offset - 1);
+      };
+      const onScroll = () => {
+        if (!frame) frame = requestAnimationFrame(measure);
+      };
+      measure();
+      document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+      return () => {
+        document.removeEventListener('scroll', onScroll, true);
+        window.removeEventListener('resize', onScroll);
+        if (frame) cancelAnimationFrame(frame);
+      };
     }, [rest.stickyHeader, rest.stickyHeaderOffset]);
 
     useUpdateEffect(() => {
