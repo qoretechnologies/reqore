@@ -397,6 +397,10 @@ interface INavRailMarkProps {
   intent?: TReqoreIntent;
   effect?: IReqoreEffect;
   disabled?: boolean;
+  /** The current mark. Rendered solid + `active` (a lifted, highlighted pill)
+   *  instead of the ghost/minimal resting state, so "you are here" reads clearly
+   *  even against the active group's own tinted surface. */
+  active?: boolean;
   tipSide: 'left' | 'right';
   className: string;
   ariaCurrent?: 'page' | 'location';
@@ -417,6 +421,7 @@ const NavRailMark = memo(
     intent,
     effect,
     disabled,
+    active,
     tipSide,
     className,
     ariaCurrent,
@@ -448,7 +453,10 @@ const NavRailMark = memo(
         icon={icon}
         leftIconProps={leftIconProps}
         flat
-        minimal
+        // Active marks fill in (solid + the `active` highlight) so they lift out
+        // of the rail / the active group's surface; resting marks stay minimal.
+        minimal={!active}
+        active={active}
         raised
         disabled={disabled}
         intent={intent}
@@ -707,6 +715,7 @@ export const ReqoreNavRail = memo(
           iconImage={item.iconImage}
           size={size}
           disabled={item.disabled}
+          active={active}
           // A per-item effect (a "special" mark) wins and always paints; else the
           // active mark takes the shared activeEffect, inactive marks none.
           effect={item.effect ?? (active ? activeEffect : undefined)}
@@ -752,6 +761,7 @@ export const ReqoreNavRail = memo(
           iconImage={sub.iconImage}
           size={subSize}
           disabled={sub.disabled}
+          active={active}
           effect={active ? activeEffect : undefined}
           intent={active ? sub.intent ?? activeIntent : sub.intent}
           className='reqore-nav-rail-subitem'
