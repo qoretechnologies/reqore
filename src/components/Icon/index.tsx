@@ -153,7 +153,13 @@ const ReqoreIcon = memo(
       // When the local `glow` prop is undefined, fall back to the global
       // `glowingIcons` UI option so a single switch can turn glows on app-wide.
       // Pass `glow={false}` explicitly to opt a single icon out.
-      const effectiveGlow = glow === undefined ? glowingIconsDefault : glow;
+      //
+      // Images (a logo/photo — `image`) are exempt from the app-wide default: a
+      // coloured drop-shadow around an arbitrary raster/SVG reads as an unwanted
+      // halo, not an accent. An explicit `glow` prop still applies, so a caller
+      // can opt an image back in deliberately.
+      const effectiveGlow =
+        glow === undefined ? (image ? false : glowingIconsDefault) : glow;
       const glowFilter = useMemo(() => {
         if (!effectiveGlow) return undefined;
         const config: IReqoreGlowConfig =
