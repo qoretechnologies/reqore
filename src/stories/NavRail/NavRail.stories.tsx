@@ -157,6 +157,52 @@ export const NoSections: Story = {
   },
 };
 
+/** A tiny self-contained logo (a rounded square + a letter) as a `data:` URI, so
+ *  the story needs no external asset. */
+const logo = (bg: string, letter: string) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='${bg}'/><text x='12' y='17' font-size='13' font-family='sans-serif' text-anchor='middle' fill='white'>${letter}</text></svg>`
+  )}`;
+
+/** A mark can render an image instead of a font icon (`iconImage`), and `props`
+ *  forwards any extra `ReqoreButton` prop to a mark. */
+const IMAGE_ITEMS: IReqoreNavRailItem[] = [
+  {
+    id: 'qogs',
+    label: 'Qogs',
+    iconImage: logo('#7b3ff2', 'Q'),
+    items: [
+      { id: 'flows', label: 'Flows', icon: 'FlowChart' },
+      { id: 'runs', label: 'Runs', icon: 'RhythmLine' },
+    ],
+  },
+  { id: 'apps', label: 'Apps', iconImage: logo('#ff5db1', 'A'), dividerAfter: true },
+  { id: 'reports', label: 'Reports', icon: 'BarChartBoxLine', props: { badge: '3' } },
+  { id: 'settings', label: 'Settings', icon: 'Settings3Line' },
+];
+
+/** IMAGE MARKS — a mark's glyph can be an image (a logo/`data:` URI) via
+ *  `iconImage`, and `props` reaches any other `ReqoreButton` prop (marks ARE
+ *  buttons) — here a `badge` on Reports. */
+export const ImageMarks: Story = {
+  args: { items: IMAGE_ITEMS, position: 'static', defaultActiveId: 'qogs' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A mark renders an image instead of a font icon via `iconImage` (Qogs / Apps show logo images from `data:` URIs), and `props` forwards any extra `ReqoreButton` prop onto a mark — here a `badge` on Reports. Marks ARE `ReqoreButton`s, so anything the button accepts is reachable; the rail keeps its own shape, selection, tooltip and active effect.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('navigation')).toBeInTheDocument();
+    // The two `iconImage` marks render <img> in the mark's icon slot (decorative
+    // alt='' keeps them out of the a11y tree, so query the DOM directly).
+    await expect(canvasElement.querySelectorAll('img').length).toBeGreaterThanOrEqual(2);
+  },
+};
+
 /** IN GUTTER — floating in the left gutter of a page, over scrolling content. */
 export const InGutter: Story = {
   args: { items: ITEMS, floating: true, position: 'left', defaultActiveId: 'dashboard' },
