@@ -5,7 +5,7 @@ import ReqoreNavRail, {
   IReqoreNavRailItem,
   IReqoreNavRailProps,
 } from '../../components/NavRail';
-import { ReqoreControlGroup, ReqoreP, ReqorePanel, ReqoreTag } from '../../index';
+import { ReqoreControlGroup, ReqoreP, ReqorePanel, ReqoreTag, ReqoreUIProvider } from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -61,6 +61,44 @@ const MANY_ITEMS: IReqoreNavRailItem[] = [
     label: `Page ${i + 1}`,
     icon: 'File2Line' as const,
   })),
+];
+
+/** A fully-themed item set: per-item effects on the first two marks + a page with
+ *  sections — used by the Effects story to show the active page + section marks
+ *  against a branded surface. */
+const THEMED_ITEMS: IReqoreNavRailItem[] = [
+  {
+    id: 'qonsole',
+    label: 'Qonsole',
+    icon: 'Chat3Line',
+    effect: {
+      gradient: { colors: { 0: '#7b3ff2', 50: '#b83fd6', 100: '#ff5db1' }, direction: 'to bottom right' },
+    },
+  },
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: 'DashboardLine',
+    effect: { gradient: { colors: { 0: '#5a3f86', 100: '#2e2247' }, direction: 'to bottom right' } },
+    dividerAfter: true,
+  },
+  {
+    id: 'autohub',
+    label: 'Automation Hub',
+    icon: 'FlowChart',
+    items: [
+      { id: 'sec-health', label: 'Health', icon: 'HeartPulseLine', scrollTargetId: 's1' },
+      { id: 'sec-conns', label: 'Connections', icon: 'Plug2Line', scrollTargetId: 's2' },
+      { id: 'sec-runs', label: 'Recent runs', icon: 'RhythmLine', scrollTargetId: 's3' },
+      { id: 'sec-states', label: 'States', icon: 'NodeTree', scrollTargetId: 's4' },
+    ],
+  },
+  { id: 'wfhub', label: 'Workflows Hub', icon: 'GitBranchLine' },
+  { id: 'connections', label: 'Connections', icon: 'Plug2Line', dividerAfter: true },
+  { id: 'alerts', label: 'Alerts', icon: 'AlarmWarningLine' },
+  { id: 'issues', label: 'Outstanding Issues', icon: 'ErrorWarningLine', dividerAfter: true },
+  { id: 'jobs', label: 'Jobs', icon: 'CalendarLine' },
+  { id: 'services', label: 'Services', icon: 'ServerLine', dividerAfter: true },
 ];
 
 /** A believable page backdrop so a floating rail can be judged in context. */
@@ -157,6 +195,52 @@ export const NoSections: Story = {
   },
 };
 
+/** A tiny self-contained logo (a rounded square + a letter) as a `data:` URI, so
+ *  the story needs no external asset. */
+const logo = (bg: string, letter: string) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='${bg}'/><text x='12' y='17' font-size='13' font-family='sans-serif' text-anchor='middle' fill='white'>${letter}</text></svg>`
+  )}`;
+
+/** A mark can render an image instead of a font icon (`iconImage`), and `props`
+ *  forwards any extra `ReqoreButton` prop to a mark. */
+const IMAGE_ITEMS: IReqoreNavRailItem[] = [
+  {
+    id: 'qogs',
+    label: 'Qogs',
+    iconImage: logo('#7b3ff2', 'Q'),
+    items: [
+      { id: 'flows', label: 'Flows', icon: 'FlowChart' },
+      { id: 'runs', label: 'Runs', icon: 'RhythmLine' },
+    ],
+  },
+  { id: 'apps', label: 'Apps', iconImage: logo('#ff5db1', 'A'), dividerAfter: true },
+  { id: 'reports', label: 'Reports', icon: 'BarChartBoxLine', props: { badge: '3' } },
+  { id: 'settings', label: 'Settings', icon: 'Settings3Line' },
+];
+
+/** IMAGE MARKS — a mark's glyph can be an image (a logo/`data:` URI) via
+ *  `iconImage`, and `props` reaches any other `ReqoreButton` prop (marks ARE
+ *  buttons) — here a `badge` on Reports. */
+export const ImageMarks: Story = {
+  args: { items: IMAGE_ITEMS, position: 'static', defaultActiveId: 'qogs' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A mark renders an image instead of a font icon via `iconImage` (Qogs / Apps show logo images from `data:` URIs), and `props` forwards any extra `ReqoreButton` prop onto a mark — here a `badge` on Reports. Marks ARE `ReqoreButton`s, so anything the button accepts is reachable; the rail keeps its own shape, selection, tooltip and active effect.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('navigation')).toBeInTheDocument();
+    // The two `iconImage` marks render <img> in the mark's icon slot (decorative
+    // alt='' keeps them out of the a11y tree, so query the DOM directly).
+    await expect(canvasElement.querySelectorAll('img').length).toBeGreaterThanOrEqual(2);
+  },
+};
+
 /** IN GUTTER — floating in the left gutter of a page, over scrolling content. */
 export const InGutter: Story = {
   args: { items: ITEMS, floating: true, position: 'left', defaultActiveId: 'dashboard' },
@@ -241,32 +325,42 @@ export const Effects: Story = {
     docs: {
       description: {
         story:
-          'Renders the rail with the standard `effect` prop painting the surface — a gradient variant (paired with a coordinated `activeEffect` on the active group) and a glow variant.',
+          "A fully-themed rail showing the effect system end to end: per-item `effect` gradients on the first two marks, a surface `effect` gradient, a coordinated `activeEffect` gradient + glow, a custom `intent`, a `customTheme` surface, and flat + raised. The active page and its current section render solid + `active` (a lifted, highlighted pill) so they read clearly against the active group's own tinted surface, taking their colour from `activeEffect` / `intent`.",
       },
     },
   },
   render: () => (
-    <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
-      <Labeled label='gradient'>
+    <ReqoreUIProvider
+      theme={{ main: '#121212', intents: { success: '#4a7110', custom1: '#762f7e', custom2: '#b34e1d' } }}
+      options={{ glowingIcons: true }}
+    >
+      <div style={{ padding: 24, background: '#0e0b16', minHeight: 380, display: 'flex' }}>
         <ReqoreNavRail
-          items={ITEMS}
+          items={THEMED_ITEMS}
+          defaultActiveId='autohub'
+          defaultActiveSubId='sec-health'
           position='static'
-          defaultActiveId='dashboard'
-          effect={{ gradient: { colors: { 0: '#2e1a47', 100: '#160c24' }, direction: 'to bottom' } }}
-          activeEffect={{ gradient: { colors: { 0: '#7c46c8', 100: '#3f2472' }, direction: 'to bottom' } }}
+          flat
+          raised
+          intent='custom1'
+          activeEffect={{
+            gradient: { colors: { 0: '#8257e6', 100: '#44287f' }, direction: 'to bottom' },
+            glow: { color: '#8257e6', blur: 10, opacity: 0.55 },
+          }}
+          customTheme={{ main: '#161222' }}
+          effect={{ gradient: { colors: { 0: '#2a1e40', 100: '#161222' }, direction: 'to bottom' } }}
         />
-      </Labeled>
-      <Labeled label='glow'>
-        <ReqoreNavRail
-          items={ITEMS}
-          position='static'
-          intent='info'
-          defaultActiveId='dashboard'
-          effect={{ glow: { color: '#2e6bff', size: 2, blur: 6 } }}
-        />
-      </Labeled>
-    </ReqoreControlGroup>
+      </div>
+    </ReqoreUIProvider>
   ),
+  play: async ({ canvasElement }) => {
+    // The active page + active section marks render (aria-current); the qlip
+    // snapshot guards their solid, lifted look.
+    await waitFor(() => {
+      expect(canvasElement.querySelector('[aria-current="page"]')).toBeInTheDocument();
+      expect(canvasElement.querySelector('[aria-current="location"]')).toBeInTheDocument();
+    });
+  },
 };
 
 /** FLAT & RAISED — `flat` drops the border, `raised` adds the 3D inset. */
@@ -670,3 +764,5 @@ export const OverflowCapped: Story = {
     await waitFor(() => expect(document.body.textContent).toContain('Page 22'));
   },
 };
+
+

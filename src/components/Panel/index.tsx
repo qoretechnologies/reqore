@@ -213,7 +213,24 @@ export interface IStyledPanel extends IReqorePanelProps {
   theme: IReqoreTheme;
   noHorizontalPadding?: boolean;
   stickyHeaderOffset?: number;
+  /** True once a sticky header has pinned to its scroll container (detected at
+   *  runtime). The header drops its top radius while stuck so it reads as a
+   *  full-width bar, and regains it at rest. */
+  isStuck?: boolean;
 }
+
+/** Nearest scrollable ancestor of `node` (the element a `position: sticky`
+ *  header actually pins to), or `null` for the viewport. Used to scope the
+ *  stuck-detection observer to the right scroll container. */
+const getScrollableAncestor = (node: HTMLElement | null): HTMLElement | null => {
+  let el = node?.parentElement ?? null;
+  while (el) {
+    const overflowY = getComputedStyle(el).overflowY;
+    if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') return el;
+    el = el.parentElement;
+  }
+  return null;
+};
 
 export const StyledPanelTitleHeader = styled.div`
   display: flex;
@@ -485,6 +502,41 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
   top: ${({ stickyHeader, stickyHeaderOffset = 0 }) =>
     stickyHeader ? `${stickyHeaderOffset}px` : undefined};
   z-index: ${({ stickyHeader }) => (stickyHeader ? 2 : undefined)};
+  // A sticky header forces the panel wrapper to overflow visible (so the
+  // header can stick), which stops the wrapper from clipping the header's top
+  // corners — so without this the panel reads as square-topped even at rest.
+  // AT REST, round the header's own top corners to the panel's inner radius so
+  // the panel keeps its radius (inset 1px past a visible border to match the
+  // wrapper's inner curve; flat border-less panels need no inset). ONCE STUCK
+  // (pinned to the scroll container, detected at runtime via isStuck), drop the
+  // radius to 0 so the pinned header reads as a full-width bar and only loses
+  // its corners while it is actually moving with the scroll.
+  border-top-left-radius: ${({
+    stickyHeader,
+    rounded,
+    radiusSize,
+    flat,
+    intent,
+    isStuck,
+  }: IStyledPanel) =>
+    stickyHeader && rounded
+      ? isStuck
+        ? '0px'
+        : `${Math.max(0, resolveRadius('normal', radiusSize) - (flat && !intent ? 0 : 1))}px`
+      : undefined};
+  border-top-right-radius: ${({
+    stickyHeader,
+    rounded,
+    radiusSize,
+    flat,
+    intent,
+    isStuck,
+  }: IStyledPanel) =>
+    stickyHeader && rounded
+      ? isStuck
+        ? '0px'
+        : `${Math.max(0, resolveRadius('normal', radiusSize) - (flat && !intent ? 0 : 1))}px`
+      : undefined};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   // When the header is sticky AND the panel is minimal / transparent (opacity === 0), the
@@ -691,6 +743,38 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const floatingActionsRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Runtime stuck-detection for the sticky header: a 0-height sentinel sits at
+    // the very top of the panel, above the header. When the panel scrolls up
+    // inside its scroll container, the sentinel crosses (and passes above) the
+    // sticky line — at which point the header is pinned and should shed its top
+    // radius. Only wired when `stickyHeader` is on, so ordinary panels pay
+    // nothing. Observing the sentinel (not the header) means the panel's OWN
+    // content scroll never triggers it — only the outer container scrolling does.
+    const stickySentinelRef = useRef<HTMLDivElement>(null);
+    const [isHeaderStuck, setIsHeaderStuck] = useState(false);
+
+    useEffect(() => {
+      if (!rest.stickyHeader || typeof IntersectionObserver === 'undefined') {
+        setIsHeaderStuck(false);
+        return undefined;
+      }
+      const sentinel = stickySentinelRef.current;
+      if (!sentinel) return undefined;
+      const offset = rest.stickyHeaderOffset ?? 0;
+      const observer = new IntersectionObserver(
+        ([entry]) => setIsHeaderStuck(!entry.isIntersecting),
+        {
+          root: getScrollableAncestor(sentinel),
+          // Shift the top edge down past the sticky line so the sentinel leaves
+          // the observed area exactly as the header pins.
+          rootMargin: `-${offset + 1}px 0px 0px 0px`,
+          threshold: [0],
+        }
+      );
+      observer.observe(sentinel);
+      return () => observer.disconnect();
+    }, [rest.stickyHeader, rest.stickyHeaderOffset]);
 
     useUpdateEffect(() => {
       setIsCollapsed(!!isCollapsed);
@@ -1116,6 +1200,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
+          {/* Stuck-detection sentinel — 0-height marker at the very top of the
+              panel, above the sticky header. See the observer effect above. */}
+          {rest.stickyHeader ? (
+            <div ref={stickySentinelRef} aria-hidden='true' style={{ height: 0 }} />
+          ) : null}
           {_isHovered &&
             size(floatingActionsList) > 0 &&
             createPortal(
@@ -1152,8 +1241,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               padded={padded}
               wrapperPadding={wrapperPadding}
               intent={intent}
+              rounded={rounded}
+              radiusSize={rest.radiusSize}
               stickyHeader={rest.stickyHeader}
               stickyHeaderOffset={rest.stickyHeaderOffset}
+              isStuck={isHeaderStuck}
             >
               {hasTitleHeader && (
                 <StyledPanelTitleHeader>

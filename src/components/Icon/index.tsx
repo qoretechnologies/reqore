@@ -52,6 +52,17 @@ export interface IReqoreGlowConfig {
   opacity?: number;
 }
 
+// When the app-wide `glowingIcons` default glows an icon by its *inherited*
+// (`currentColor`) colour, the glow fades out for near-neutral colours — a shade
+// of white/grey/black is what shouldn't glow (a white halo reads as a grey
+// smudge), and "neutral" is low *chroma*, NOT high lightness (a light-but-vivid
+// green must still glow). Done in pure CSS via OKLCH relative-colour syntax, so
+// there's no runtime read: alpha = `opacity * (C - FLOOR) / SPAN` (clamped to
+// [0,1]), where C is the origin colour's OKLCH chroma (0 = neutral). Below FLOOR
+// (off-whites/greys) → 0; FLOOR+SPAN and up → full.
+const GLOW_INHERIT_CHROMA_FLOOR = 0.02;
+const GLOW_INHERIT_CHROMA_SPAN = 0.06;
+
 const SpinKeyframes = keyframes`
   0% {
     rotate: 0deg;
@@ -148,12 +159,14 @@ const ReqoreIcon = memo(
         ? PADDING_FROM_SIZE[marginSize]
         : marginSize;
 
-      // Resolve the glow shorthand into a `filter: drop-shadow(...)` value so
-      // the glow follows the SVG outline rather than the wrapper's bounding box.
-      // When the local `glow` prop is undefined, fall back to the global
-      // `glowingIcons` UI option so a single switch can turn glows on app-wide.
-      // Pass `glow={false}` explicitly to opt a single icon out.
-      const effectiveGlow = glow === undefined ? glowingIconsDefault : glow;
+      // Resolve the glow into a `filter: drop-shadow(...)` so it follows the SVG
+      // outline. `glow` undefined falls back to the global `glowingIcons` UI option
+      // (one switch, app-wide); `glow={false}` opts a single icon out. Images are
+      // exempt from the app-wide default — a coloured halo around a logo/photo reads
+      // as noise, not an accent — but an explicit `glow` still applies.
+      const effectiveGlow =
+        glow === undefined ? (image ? false : glowingIconsDefault) : glow;
+
       const glowFilter = useMemo(() => {
         if (!effectiveGlow) return undefined;
         const config: IReqoreGlowConfig =
@@ -162,20 +175,28 @@ const ReqoreIcon = memo(
             : typeof effectiveGlow === 'string'
             ? { color: effectiveGlow }
             : effectiveGlow;
-        // Resolution order: explicit glow.color → icon's intent/color prop.
-        // When the prop was set explicitly (not via the global `glowingIcons`
-        // option), fall back to a theme-readable colour so a plain icon still
-        // glows. The global flag intentionally does NOT force-glow uncoloured
-        // icons — it only enhances icons that already have an intent/colour.
+        // The glow's own colour: explicit glow.color → the icon's intent/color prop
+        // → (for an explicitly-requested glow) a theme-readable colour. Undefined
+        // means the icon has no colour of its own and paints via inherited
+        // `currentColor`.
         const explicit = glow !== undefined;
-        const resolved =
+        const ownColor =
           (config.color ? (getColorFromMaybeString(theme, config.color) as string) : undefined) ??
           finalColor ??
           (explicit ? getReadableColor(theme, undefined, undefined, true) : undefined);
-        if (!resolved) return undefined;
         const blur = config.blur ?? 5;
         const opacity = config.opacity ?? 0.8;
-        return `drop-shadow(0 0 ${blur}px ${rgba(resolved, opacity)})`;
+        // Own colour → a plain, well-supported rgba glow.
+        if (ownColor) {
+          return `drop-shadow(0 0 ${blur}px ${rgba(ownColor, opacity)})`;
+        }
+        // No colour of its own (the app-wide default on an inheritance-coloured
+        // icon, e.g. a button glyph): glow the *painted* `currentColor` in pure CSS
+        // — no runtime read, no re-render — with the alpha keyed on the colour's
+        // OKLCH chroma so near-neutral (white/grey/black) icons don't halo but
+        // light-but-vivid ones still glow. Browsers without relative-colour support
+        // simply render no glow here (graceful — same as the old behaviour).
+        return `drop-shadow(0 0 ${blur}px oklch(from currentColor l c h / calc(${opacity} * (c - ${GLOW_INHERIT_CHROMA_FLOOR}) / ${GLOW_INHERIT_CHROMA_SPAN})))`;
       }, [effectiveGlow, glow, finalColor, theme]);
 
       const finalStyle = useMemo(

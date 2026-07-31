@@ -1212,48 +1212,50 @@ export const WithLongDescription: Story = {
   },
 };
 
+// Shared render for the two sticky-outside-scroll stories: stacked sticky-header
+// panels in an outer scroll container. One story scrolls it (headers pinned →
+// square corners), the other leaves it at rest (headers rounded) — so the two
+// radius states are covered by reusing the exact same content.
+const renderStickyOutsideScroll = () => (
+  <div
+    style={{
+      maxHeight: '600px',
+      width: '600px',
+      overflow: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+    }}
+    data-testid='sticky-scroll-container'
+  >
+    {new Array(6).fill(null).map((_, index) => (
+      <ReqorePanel
+        key={index}
+        label={`Sticky panel ${index + 1}`}
+        stickyHeader
+        icon='PushpinLine'
+        padded
+        fluid
+      >
+        {message}
+      </ReqorePanel>
+    ))}
+  </div>
+);
+
 export const StickyHeaderOutsideScroll: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders Panel with a sticky header that stays visible outside the scroll region.',
+          'Renders Panel with a sticky header that stays visible outside the scroll region. Scrolled in the play, so a header is pinned (stuck) — its top corners go square while it moves with the scroll.',
       },
     },
     chromatic: {
       viewports: [600],
     },
   },
-  render: () => {
-    const panels = new Array(6).fill(null);
-
-    return (
-      <div
-        style={{
-          maxHeight: '600px',
-          width: '600px',
-          overflow: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-        data-testid='sticky-scroll-container'
-      >
-        {panels.map((_, index) => (
-          <ReqorePanel
-            key={index}
-            label={`Sticky panel ${index + 1}`}
-            stickyHeader
-            icon='PushpinLine'
-            padded
-            fluid
-          >
-            {message}
-          </ReqorePanel>
-        ))}
-      </div>
-    );
-  },
+  render: renderStickyOutsideScroll,
   play: async ({ canvasElement }) => {
     const container = canvasElement.querySelector('[data-testid="sticky-scroll-container"]');
 
@@ -1265,6 +1267,25 @@ export const StickyHeaderOutsideScroll: Story = {
     fireEvent.scroll(container);
     await new Promise((resolve) => setTimeout(resolve, 200));
   },
+};
+
+// Same content as StickyHeaderOutsideScroll, but at rest (no scroll) — the
+// headers sit un-pinned so their top corners stay rounded. The counterpart to
+// the scrolled, stuck-and-square StickyHeaderOutsideScroll; together they cover
+// both radius states. Scroll it by hand to watch a header go square as it pins.
+export const StickyHeaderOutsideScrollAtRest: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same stacked sticky-header panels as StickyHeaderOutsideScroll, but at rest (no scroll). Each header keeps its rounded top corners; scroll the container by hand to watch them go square once a header pins.',
+      },
+    },
+    chromatic: {
+      viewports: [600],
+    },
+  },
+  render: renderStickyOutsideScroll,
 };
 
 export const Raised: Story = {

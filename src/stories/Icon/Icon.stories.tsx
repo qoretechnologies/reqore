@@ -1,5 +1,12 @@
 import { StoryObj } from '@storybook/react';
-import { ReqoreControlGroup, ReqoreIcon, ReqorePanel, ReqoreUIProvider } from '../../index';
+import { expect, waitFor } from 'storybook/test';
+import {
+  ReqoreButton,
+  ReqoreControlGroup,
+  ReqoreIcon,
+  ReqorePanel,
+  ReqoreUIProvider,
+} from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -229,5 +236,87 @@ export const GlobalGlowingIcons: Story = {
           'Setting `glowingIcons: true` on the UI provider applies the glow to every ReqoreIcon by default. Individual icons can opt out with `glow={false}`.',
       },
     },
+  },
+};
+
+export const GlobalGlowingIconsInheritedColor: Story = {
+  render: () => (
+    <ReqoreUIProvider options={{ glowingIcons: true }}>
+      <ReqorePanel padded>
+        <ReqoreControlGroup vertical gapSize='huge'>
+          {/* Buttons: the glyph inherits the button's text colour. A minimal/flat
+              button paints its icon the intent colour → it glows; a solid button
+              paints a readable near-white icon → skipped (a white halo is noise). */}
+          <ReqoreControlGroup gapSize='big' verticalAlign='center'>
+            <ReqoreButton icon='InformationLine' intent='info' minimal flat>
+              Info
+            </ReqoreButton>
+            <ReqoreButton icon='CheckDoubleLine' intent='success' minimal flat>
+              Success
+            </ReqoreButton>
+            <ReqoreButton icon='AlarmWarningLine' intent='danger' minimal flat>
+              Danger
+            </ReqoreButton>
+            <ReqoreButton icon='SparklingLine' intent='info'>
+              Solid
+            </ReqoreButton>
+          </ReqoreControlGroup>
+          {/* Bare icons coloured only by an ancestor's `color` (currentColor): the
+              glow now reads the painted colour off the element and glows THAT. */}
+          <ReqoreControlGroup gapSize='huge' verticalAlign='center'>
+            <span style={{ color: '#3b82f6' }}>
+              <ReqoreIcon icon='SparklingLine' size='huge' data-testid='inherited-glow' />
+            </span>
+            <span style={{ color: '#22c55e' }}>
+              <ReqoreIcon icon='StarLine' size='huge' />
+            </span>
+            <span style={{ color: '#f59e0b' }}>
+              <ReqoreIcon icon='AlertLine' size='huge' />
+            </span>
+            {/* A shade of white → no glow (would read as a grey smudge). */}
+            <span style={{ color: '#f5f5f5' }}>
+              <ReqoreIcon icon='InformationLine' size='huge' />
+            </span>
+          </ReqoreControlGroup>
+          {/* Images are never haloed by the global default. */}
+          <ReqoreIcon
+            image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
+            size='huge'
+            intent='info'
+          />
+        </ReqoreControlGroup>
+      </ReqorePanel>
+    </ReqoreUIProvider>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `glowingIcons: true`, an icon that has no colour of its own — it paints via inherited `currentColor` (a button glyph, an icon inside a coloured container) — now glows that *painted* colour, read off the mounted element. Shades of white/near-black are skipped (a white halo reads as a grey smudge), and image icons are never haloed.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    // Alpha of the resolved OKLCH glow. `NaN` when there's no drop-shadow at all;
+    // a fully-opaque alpha (1) is omitted by the browser, so a present-but-alpha-
+    // less drop-shadow counts as 1.
+    const alphaOf = (el: HTMLElement) => {
+      const f = getComputedStyle(el).filter;
+      if (!f.includes('drop-shadow')) return NaN;
+      const m = f.match(/\/\s*([0-9.]+)\s*\)/);
+      return m ? parseFloat(m[1]) : 1;
+    };
+    await waitFor(() => {
+      // A vivid inherited-colour icon glows (chroma keyed → alpha > 0)...
+      const blue = canvasElement.querySelector('[data-testid="inherited-glow"]') as HTMLElement;
+      expect(alphaOf(blue)).toBeGreaterThan(0);
+      // ...coloured button glyphs (light-but-saturated) glow too, but the neutral
+      // white 'Solid' glyph (near-zero chroma) does not.
+      const btnAlphas = (
+        Array.from(canvasElement.querySelectorAll('.reqore-button .reqore-icon')) as HTMLElement[]
+      ).map(alphaOf);
+      expect(btnAlphas.filter((a) => a > 0).length).toBeGreaterThanOrEqual(2);
+      expect(btnAlphas[btnAlphas.length - 1]).toBeLessThan(0.05);
+    });
   },
 };

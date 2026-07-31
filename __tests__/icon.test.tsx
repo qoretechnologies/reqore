@@ -161,3 +161,35 @@ test('Does not apply glow when glowingIcons option is disabled', () => {
   const wrapper = document.querySelector('.reqore-icon') as HTMLElement;
   expect(wrapper.style.filter).toBe('');
 });
+
+test('Image icons are exempt from the global glowingIcons glow', () => {
+  render(
+    <ReqoreUIProvider options={{ glowingIcons: true }}>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreIcon image='https://example.com/logo.png' intent='info' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const wrapper = document.querySelector('.reqore-icon') as HTMLElement;
+  expect(wrapper.querySelector('img')).toBeInTheDocument();
+  // No coloured drop-shadow halo around the logo from the app-wide default.
+  expect(wrapper.style.filter).toBe('');
+});
+
+test('An explicit glow still applies to an image icon', () => {
+  render(
+    <ReqoreUIProvider options={{ glowingIcons: true }}>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreIcon image='https://example.com/logo.png' glow='info' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const wrapper = document.querySelector('.reqore-icon') as HTMLElement;
+  expect(wrapper.style.filter).toContain('drop-shadow');
+});

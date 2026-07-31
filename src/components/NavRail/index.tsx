@@ -35,7 +35,7 @@ import {
   TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import ReqoreButton from '../Button';
+import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect } from '../Effect';
 import ReqoreMenu from '../Menu';
@@ -52,9 +52,19 @@ export interface IReqoreNavRailItem {
   /** Human label — the tooltip on the mark and the text in the overflow menu. */
   label: string;
   icon?: IReqoreIconName;
+  /** Render an image (any `img` src — a URL, a `data:` URI, an imported asset) in
+   *  the mark instead of a font `icon` — e.g. a product/brand logo. Shortcut for
+   *  `props={{ leftIconProps: { image } }}`. */
+  iconImage?: string;
   /** Tints this mark when active (falls back to the rail's `intent`, then `info`). */
   intent?: TReqoreIntent;
   disabled?: boolean;
+  /** Escape hatch — extra `ReqoreButton` props merged onto the mark (marks ARE
+   *  `ReqoreButton`s), so anything the button accepts (badge, `customTheme`,
+   *  `leftIconProps`, `wrap`, …) is reachable. The rail's own structural /
+   *  behavioural props (circle shape, selection `onClick`, tooltip, active
+   *  effect, aria) still take precedence, so a mark can't break the rail. */
+  props?: Partial<IReqoreButtonProps>;
   /** Paints this mark with its own gradient/effect regardless of active state —
    *  for a "special" destination that should always stand out. Marks ARE
    *  `ReqoreButton`s, so this is the button's `effect`. Takes precedence over the
@@ -74,11 +84,17 @@ export interface IReqoreNavRailSubItem {
   id: string;
   label: string;
   icon?: IReqoreIconName;
+  /** Render an image in the sub-mark instead of a font `icon` (see the primary
+   *  item's `iconImage`). */
+  iconImage?: string;
   intent?: TReqoreIntent;
   disabled?: boolean;
   /** DOM id of the element this sub-item scrolls to / is tracked against.
    *  With `scrollSpy` the active sub-item follows the scroll position. */
   scrollTargetId?: string;
+  /** Extra `ReqoreButton` props merged onto the sub-mark (see the primary item's
+   *  `props`). */
+  props?: Partial<IReqoreButtonProps>;
   onClick?: () => void;
 }
 
@@ -376,33 +392,71 @@ interface INavRailMarkProps {
   id: string;
   label: string;
   icon?: IReqoreIconName;
+  iconImage?: string;
   size: TSizes;
   intent?: TReqoreIntent;
   effect?: IReqoreEffect;
   disabled?: boolean;
+  /** The current mark. Rendered solid + `active` (a lifted, highlighted pill)
+   *  instead of the ghost/minimal resting state, so "you are here" reads clearly
+   *  even against the active group's own tinted surface. */
+  active?: boolean;
   tipSide: 'left' | 'right';
   className: string;
   ariaCurrent?: 'page' | 'location';
   onSelect: (id: string) => void;
+  buttonProps?: Partial<IReqoreButtonProps>;
 }
 
 // One circular mark. Kept as its own memo'd component so its `tooltip` object
 // and `onClick` closure are stabilised (useMemo/useCallback) rather than created
 // inline in a `.map()` and passed to the memo'd ReqoreButton every render.
 const NavRailMark = memo(
-  ({ id, label, icon, size, intent, effect, disabled, tipSide, className, ariaCurrent, onSelect }: INavRailMarkProps) => {
+  ({
+    id,
+    label,
+    icon,
+    iconImage,
+    size,
+    intent,
+    effect,
+    disabled,
+    active,
+    tipSide,
+    className,
+    ariaCurrent,
+    onSelect,
+    buttonProps,
+  }: INavRailMarkProps) => {
     const tooltip = useMemo(
       () => ({ content: label, placement: tipSide }) as TReqoreTooltipProp,
       [label, tipSide]
     );
     const handleClick = useCallback(() => onSelect(id), [onSelect, id]);
+    // An image mark renders through the button's left-icon slot; merge with any
+    // caller-supplied leftIconProps so `iconImage` and `props.leftIconProps`
+    // coexist (the image wins the `image` key).
+    const leftIconProps = useMemo(
+      () =>
+        iconImage
+          ? { ...buttonProps?.leftIconProps, image: iconImage }
+          : buttonProps?.leftIconProps,
+      [iconImage, buttonProps]
+    );
     return (
       <ReqoreButton
+        // Escape hatch first, so the rail's own structural / behavioural props
+        // below always win (the mark can be tuned but never broken).
+        {...buttonProps}
         circle
         size={size}
         icon={icon}
+        leftIconProps={leftIconProps}
         flat
-        minimal
+        // Active marks fill in (solid + the `active` highlight) so they lift out
+        // of the rail / the active group's surface; resting marks stay minimal.
+        minimal={!active}
+        active={active}
         raised
         disabled={disabled}
         intent={intent}
@@ -658,8 +712,10 @@ export const ReqoreNavRail = memo(
           id={item.id}
           label={item.label}
           icon={item.icon}
+          iconImage={item.iconImage}
           size={size}
           disabled={item.disabled}
+          active={active}
           // A per-item effect (a "special" mark) wins and always paints; else the
           // active mark takes the shared activeEffect, inactive marks none.
           effect={item.effect ?? (active ? activeEffect : undefined)}
@@ -668,6 +724,7 @@ export const ReqoreNavRail = memo(
           ariaCurrent={active ? 'page' : undefined}
           tipSide={tipSide}
           onSelect={onItemSelect}
+          buttonProps={item.props}
         />
       );
     };
@@ -701,14 +758,17 @@ export const ReqoreNavRail = memo(
           id={sub.id}
           label={sub.label}
           icon={sub.icon}
+          iconImage={sub.iconImage}
           size={subSize}
           disabled={sub.disabled}
+          active={active}
           effect={active ? activeEffect : undefined}
           intent={active ? sub.intent ?? activeIntent : sub.intent}
           className='reqore-nav-rail-subitem'
           ariaCurrent={active ? 'location' : undefined}
           tipSide={tipSide}
           onSelect={onSubSelect}
+          buttonProps={sub.props}
         />
       );
     };
