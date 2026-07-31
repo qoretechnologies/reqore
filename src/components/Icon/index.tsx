@@ -53,13 +53,15 @@ export interface IReqoreGlowConfig {
 }
 
 // When the app-wide `glowingIcons` default glows an icon by its *inherited*
-// (`currentColor`) colour, the glow's alpha fades to 0 as the colour approaches
-// white — a white halo reads as a grey smudge, not an accent. Done in pure CSS
-// via OKLCH relative-colour syntax so there's no runtime colour read: the alpha
-// is `opacity * (FADE_FROM - L) / FADE_SPAN` (clamped to [0,1]), where L is the
-// origin colour's OKLCH lightness (0 black … 1 white). At L ≥ FADE_FROM → 0.
-const GLOW_INHERIT_FADE_FROM = 0.85;
-const GLOW_INHERIT_FADE_SPAN = 0.25;
+// (`currentColor`) colour, the glow fades out for near-neutral colours — a shade
+// of white/grey/black is what shouldn't glow (a white halo reads as a grey
+// smudge), and "neutral" is low *chroma*, NOT high lightness (a light-but-vivid
+// green must still glow). Done in pure CSS via OKLCH relative-colour syntax, so
+// there's no runtime read: alpha = `opacity * (C - FLOOR) / SPAN` (clamped to
+// [0,1]), where C is the origin colour's OKLCH chroma (0 = neutral). Below FLOOR
+// (off-whites/greys) → 0; FLOOR+SPAN and up → full.
+const GLOW_INHERIT_CHROMA_FLOOR = 0.02;
+const GLOW_INHERIT_CHROMA_SPAN = 0.06;
 
 const SpinKeyframes = keyframes`
   0% {
@@ -190,10 +192,11 @@ const ReqoreIcon = memo(
         }
         // No colour of its own (the app-wide default on an inheritance-coloured
         // icon, e.g. a button glyph): glow the *painted* `currentColor` in pure CSS
-        // — no runtime read, no re-render — fading the alpha out towards white via
-        // OKLCH relative-colour syntax. Browsers without relative-colour support
+        // — no runtime read, no re-render — with the alpha keyed on the colour's
+        // OKLCH chroma so near-neutral (white/grey/black) icons don't halo but
+        // light-but-vivid ones still glow. Browsers without relative-colour support
         // simply render no glow here (graceful — same as the old behaviour).
-        return `drop-shadow(0 0 ${blur}px oklch(from currentColor l c h / calc(${opacity} * (${GLOW_INHERIT_FADE_FROM} - l) / ${GLOW_INHERIT_FADE_SPAN})))`;
+        return `drop-shadow(0 0 ${blur}px oklch(from currentColor l c h / calc(${opacity} * (c - ${GLOW_INHERIT_CHROMA_FLOOR}) / ${GLOW_INHERIT_CHROMA_SPAN})))`;
       }, [effectiveGlow, glow, finalColor, theme]);
 
       const finalStyle = useMemo(

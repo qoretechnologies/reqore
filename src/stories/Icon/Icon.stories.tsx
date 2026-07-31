@@ -297,13 +297,26 @@ export const GlobalGlowingIconsInheritedColor: Story = {
     },
   },
   play: async ({ canvasElement }) => {
-    // The inherited (currentColor) glow uses OKLCH relative-colour syntax. Assert
-    // the browser actually ACCEPTS it — a rejected filter value computes to 'none',
-    // so a resolved `drop-shadow(...)` proves the CSS is valid + applied.
-    const el = canvasElement.querySelector('[data-testid="inherited-glow"]') as HTMLElement;
+    // Alpha of the resolved OKLCH glow. `NaN` when there's no drop-shadow at all;
+    // a fully-opaque alpha (1) is omitted by the browser, so a present-but-alpha-
+    // less drop-shadow counts as 1.
+    const alphaOf = (el: HTMLElement) => {
+      const f = getComputedStyle(el).filter;
+      if (!f.includes('drop-shadow')) return NaN;
+      const m = f.match(/\/\s*([0-9.]+)\s*\)/);
+      return m ? parseFloat(m[1]) : 1;
+    };
     await waitFor(() => {
-      expect(el).toBeTruthy();
-      expect(getComputedStyle(el).filter).toContain('drop-shadow');
+      // A vivid inherited-colour icon glows (chroma keyed → alpha > 0)...
+      const blue = canvasElement.querySelector('[data-testid="inherited-glow"]') as HTMLElement;
+      expect(alphaOf(blue)).toBeGreaterThan(0);
+      // ...coloured button glyphs (light-but-saturated) glow too, but the neutral
+      // white 'Solid' glyph (near-zero chroma) does not.
+      const btnAlphas = (
+        Array.from(canvasElement.querySelectorAll('.reqore-button .reqore-icon')) as HTMLElement[]
+      ).map(alphaOf);
+      expect(btnAlphas.filter((a) => a > 0).length).toBeGreaterThanOrEqual(2);
+      expect(btnAlphas[btnAlphas.length - 1]).toBeLessThan(0.05);
     });
   },
 };
