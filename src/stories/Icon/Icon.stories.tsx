@@ -1,5 +1,12 @@
 import { StoryObj } from '@storybook/react';
-import { ReqoreControlGroup, ReqoreIcon, ReqorePanel, ReqoreUIProvider } from '../../index';
+import { expect, waitFor } from 'storybook/test';
+import {
+  ReqoreButton,
+  ReqoreControlGroup,
+  ReqoreIcon,
+  ReqorePanel,
+  ReqoreUIProvider,
+} from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -229,5 +236,74 @@ export const GlobalGlowingIcons: Story = {
           'Setting `glowingIcons: true` on the UI provider applies the glow to every ReqoreIcon by default. Individual icons can opt out with `glow={false}`.',
       },
     },
+  },
+};
+
+export const GlobalGlowingIconsInheritedColor: Story = {
+  render: () => (
+    <ReqoreUIProvider options={{ glowingIcons: true }}>
+      <ReqorePanel padded>
+        <ReqoreControlGroup vertical gapSize='huge'>
+          {/* Buttons: the glyph inherits the button's text colour. A minimal/flat
+              button paints its icon the intent colour → it glows; a solid button
+              paints a readable near-white icon → skipped (a white halo is noise). */}
+          <ReqoreControlGroup gapSize='big' verticalAlign='center'>
+            <ReqoreButton icon='InformationLine' intent='info' minimal flat>
+              Info
+            </ReqoreButton>
+            <ReqoreButton icon='CheckDoubleLine' intent='success' minimal flat>
+              Success
+            </ReqoreButton>
+            <ReqoreButton icon='AlarmWarningLine' intent='danger' minimal flat>
+              Danger
+            </ReqoreButton>
+            <ReqoreButton icon='SparklingLine' intent='info'>
+              Solid
+            </ReqoreButton>
+          </ReqoreControlGroup>
+          {/* Bare icons coloured only by an ancestor's `color` (currentColor): the
+              glow now reads the painted colour off the element and glows THAT. */}
+          <ReqoreControlGroup gapSize='huge' verticalAlign='center'>
+            <span style={{ color: '#3b82f6' }}>
+              <ReqoreIcon icon='SparklingLine' size='huge' />
+            </span>
+            <span style={{ color: '#22c55e' }}>
+              <ReqoreIcon icon='StarLine' size='huge' />
+            </span>
+            <span style={{ color: '#f59e0b' }}>
+              <ReqoreIcon icon='AlertLine' size='huge' />
+            </span>
+            {/* A shade of white → no glow (would read as a grey smudge). */}
+            <span style={{ color: '#f5f5f5' }}>
+              <ReqoreIcon icon='InformationLine' size='huge' />
+            </span>
+          </ReqoreControlGroup>
+          {/* Images are never haloed by the global default. */}
+          <ReqoreIcon
+            image='https://avatars.githubusercontent.com/u/44835090?s=400&u=371120ce0755102d2e432f11ad9aa0378c871b45&v=4'
+            size='huge'
+            intent='info'
+          />
+        </ReqoreControlGroup>
+      </ReqorePanel>
+    </ReqoreUIProvider>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `glowingIcons: true`, an icon that has no colour of its own — it paints via inherited `currentColor` (a button glyph, an icon inside a coloured container) — now glows that *painted* colour, read off the mounted element. Shades of white/near-black are skipped (a white halo reads as a grey smudge), and image icons are never haloed.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    // In a real browser the inherited-colour glow resolves after mount — at least
+    // the coloured bare icons should end up with a drop-shadow filter.
+    await waitFor(() => {
+      const glowing = Array.from(canvasElement.querySelectorAll('.reqore-icon')).filter((el) =>
+        (el as HTMLElement).style.filter.includes('drop-shadow')
+      );
+      expect(glowing.length).toBeGreaterThan(0);
+    });
   },
 };
