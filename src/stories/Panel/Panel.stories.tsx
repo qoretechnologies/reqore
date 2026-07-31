@@ -1267,6 +1267,52 @@ export const StickyHeaderOutsideScroll: Story = {
   },
 };
 
+// The sticky-header radius fix, verifiable at rest. `stickyHeader` forces the
+// panel wrapper to `overflow: visible` so the header can stick — which also
+// stops the wrapper from clipping the header's square top corners, so the panel
+// used to render square-topped even when nothing was scrolled. It now rounds the
+// header's own top corners to the panel's inner radius. This story is NOT
+// scrolled, so the rounded top corners are directly visible.
+export const StickyHeaderRestRadius: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Sticky-header panels AT REST (nothing scrolled) keep their top border-radius. Flat, bordered, and intent variants all show rounded top corners matching the panel — the header only loses the radius once it detaches and scrolls (see StickyHeaderOutsideScroll).',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '520px' }}>
+      <ReqorePanel
+        label='Flat sticky header'
+        icon='PushpinLine'
+        flat
+        rounded
+        stickyHeader
+        padded
+        fluid
+      >
+        Flat panel — the top corners stay rounded at rest.
+      </ReqorePanel>
+      <ReqorePanel label='Bordered sticky header' icon='PushpinLine' rounded stickyHeader padded fluid>
+        Bordered panel — the border traces a rounded top at rest.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Intent sticky header'
+        icon='PushpinLine'
+        intent='info'
+        rounded
+        stickyHeader
+        padded
+        fluid
+      >
+        Intent panel — the intent border curves around the rounded top at rest.
+      </ReqorePanel>
+    </div>
+  ),
+};
+
 export const Raised: Story = {
   parameters: {
     docs: {
