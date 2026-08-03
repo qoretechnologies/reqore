@@ -80,6 +80,25 @@ test('Renders disabled <Dropdown /> when items are empty', () => {
   expect(document.querySelector('.reqore-button')?.getAttribute('disabled')).toBe('');
 });
 
+test('Renders enabled <Dropdown /> when items are empty but customElements are provided', () => {
+  vi.useFakeTimers();
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDropdown customElements={[<span key='custom'>Custom content</span>]} />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  // `customElements` render in the list, so the trigger must stay interactive
+  // even though `items` is empty.
+  expect(document.querySelector('.reqore-button')?.getAttribute('disabled')).toBe(null);
+});
+
 test('Renders disabled <Dropdown /> when items are not empty & disabled prop is true', () => {
   vi.useFakeTimers();
   act(() => {
