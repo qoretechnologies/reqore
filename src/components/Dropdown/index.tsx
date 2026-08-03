@@ -159,12 +159,17 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
             ? icon || (showCaret ? 'ArrowDownSFill' : undefined)
             : rightIcon,
         style: buttonStyle || rest.style,
-        disabled: (!size(items) && !readOnlyOnEmpty) || (rest as any).disabled,
-        readOnly: (!size(items) && readOnlyOnEmpty) || (rest as any).readOnly,
+        // `customElements` render in the list alongside `items` (see
+        // `popoverContent` below), so a dropdown that has them is interactive
+        // even with no `items` — it must not disable/readonly itself as empty.
+        disabled:
+          (!size(items) && !size(customElements) && !readOnlyOnEmpty) || (rest as any).disabled,
+        readOnly:
+          (!size(items) && !size(customElements) && readOnlyOnEmpty) || (rest as any).readOnly,
         className: `${(rest as any)?.className || ''} reqore-dropdown-control`,
         transparent,
       } as T),
-    [items, icon, rightIcon, buttonStyle, caretPosition, rest]
+    [items, customElements, icon, rightIcon, buttonStyle, caretPosition, rest]
   );
 
   // Handle navigation to a specific submenu level via breadcrumb click
