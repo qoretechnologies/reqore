@@ -351,9 +351,54 @@ export type TPanelStyle = React.FC<
     }
 >;
 
+// re-resizable's props are spread onto the panel element only when it renders as
+// a `Resizable` (see `_resizable` + `as` below). Many of them (`enable`,
+// `handleStyles`, `defaultSize`, `minHeight`, the `onResize*` callbacks, …) are
+// not valid HTML attributes, so the default styled-components prop filter
+// (`isPropValid`, applied via `omitStyleProps`) would strip them before they
+// reach re-resizable — which then falls back to its all-directions default and
+// makes the panel resizable from every edge/corner regardless of `enable`.
+// Forward them explicitly so the caller's `resizable` config is honoured.
+// (`size` is intentionally excluded: it is a reqore panel prop, not
+// re-resizable's controlled `size`.) Regression from the `omitStyleProps`
+// prop-filter change.
+const RESIZABLE_PASSTHROUGH_PROPS = new Set<string>([
+  'enable',
+  'handleStyles',
+  'handleClasses',
+  'handleComponent',
+  'handleWrapperClass',
+  'handleWrapperStyle',
+  'defaultSize',
+  'minWidth',
+  'minHeight',
+  'maxWidth',
+  'maxHeight',
+  'grid',
+  'gridGap',
+  'snap',
+  'snapGap',
+  'bounds',
+  'boundsByDirection',
+  'lockAspectRatio',
+  'lockAspectRatioExtraWidth',
+  'lockAspectRatioExtraHeight',
+  'resizeRatio',
+  'scale',
+  'onResizeStart',
+  'onResize',
+  'onResizeStop',
+]);
+
+const forwardBasePanelProp = omitStyleProps('fill');
+
 export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
-  // `fill` controls panel layout and must not become a boolean DOM attribute.
-  shouldForwardProp: omitStyleProps('fill'),
+  // `fill` controls panel layout and must not become a boolean DOM attribute;
+  // re-resizable's props are forwarded through so a resizable panel honours its
+  // `enable` / size / handle config (see RESIZABLE_PASSTHROUGH_PROPS).
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    RESIZABLE_PASSTHROUGH_PROPS.has(prop as string) ||
+    forwardBasePanelProp(prop, defaultValidatorFn),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
@@ -900,24 +945,14 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
 
     const _resizable: ResizableProps = useMemo(() => {
-      const disabledProps: ResizableProps = {
-        enable: {
-          top: false,
-          right: false,
-          bottom: false,
-          left: false,
-          topRight: false,
-          bottomRight: false,
-          bottomLeft: false,
-          topLeft: false,
-        },
-      };
-
-      if (_isCollapsed || disabled) {
-        return disabledProps;
-      }
-
-      return resizable || disabledProps;
+      // Only carry re-resizable's props when the panel actually renders as a
+      // `Resizable` (the same condition the `as` below uses). Otherwise the
+      // element is a plain `div`, and — now that these props are forwarded
+      // through the panel — spreading `enable` / `defaultSize` / … onto a div
+      // would emit invalid-DOM-attribute warnings. A non-resizable (or
+      // collapsed / disabled) panel therefore carries no resizable props.
+      const isResizableElement = !!resizable && !disabled && !_isCollapsed;
+      return isResizableElement && resizable ? resizable : {};
     }, [resizable, _isCollapsed, disabled]);
 
     // Return true if the card has a title bar, otherwise return false.

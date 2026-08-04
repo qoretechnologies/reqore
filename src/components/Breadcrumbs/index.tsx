@@ -100,6 +100,12 @@ const StyledBreadcrumbsTabsWrapper = styled.div`
 `;
 
 const arrowSize = 50;
+// Space kept between the collapsing item row and a right-hand element so they
+// never touch when the row is reserved its budget.
+const RIGHT_ELEMENT_GAP = 16;
+// The last crumb never truncates below this, so its icon + a few characters +
+// badge always stay legible even in the tightest reserved budget.
+const MIN_LEAF_WIDTH = 80;
 
 const getBreadcrumbsLength = (
   items: (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[],
@@ -140,6 +146,14 @@ const getTransformedItems = (
   let newItems = [...items];
 
   while (getBreadcrumbsLength(newItems, size) > width && !stop) {
+    // Never fold the last (leaf) crumb away — it's the current page. Once only
+    // the collapsed group + the leaf remain, stop collapsing; the leaf then
+    // truncates with an ellipsis (see the leaf `maxWidth` in the component)
+    // instead of disappearing into the "…" group.
+    if (newItems.length <= 2) {
+      break;
+    }
+
     if (isArray(newItems[0])) {
       newItems[0].push(newItems[1] as IReqoreBreadcrumbItem);
       newItems[1] = undefined!;
@@ -170,11 +184,42 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const [ref, { width }] = useMeasure();
+  // Measure the right-hand element so the responsive collapse can RESERVE room
+  // for it. Without this the items are laid out as if they owned the full bar
+  // width, so the last crumb overruns / clips mid-word into the right element
+  // (e.g. a page's action rail).
+  const [rightRef, { width: rightWidth }] = useMeasure();
   const theme = useReqoreTheme('breadcrumbs', customTheme, undefined);
+
+  const measuredWidth = _testWidth || width;
+  // The budget the item row actually gets once the right element (+ a small gap)
+  // is reserved — this is what drives how aggressively ancestors collapse.
+  const itemsWidth =
+    measuredWidth && rightElement
+      ? Math.max(0, measuredWidth - rightWidth - RIGHT_ELEMENT_GAP)
+      : measuredWidth;
+
   const transformedItems = useMemo(
-    () => (responsive ? getTransformedItems(items, _testWidth || width, size) : items),
-    [items, width, _testWidth, size]
+    () => (responsive ? getTransformedItems(items, itemsWidth, size) : items),
+    [items, itemsWidth, size, responsive]
   );
+
+  // Cap the last (leaf) crumb so a long label truncates with an ellipsis inside
+  // the reserved budget instead of clipping into the right element — the leaf is
+  // the one item the collapse never folds, so it's the only one that can overrun.
+  // Icon + badge stay; only the text ellipsises. Self-adjusting: when there's
+  // room the cap is large enough never to bite. Only applied when a right
+  // element is actually reserving space.
+  const lastIndex = transformedItems.length - 1;
+  const leafMaxWidth =
+    responsive && rightElement && measuredWidth && lastIndex >= 0
+      ? Math.max(
+          MIN_LEAF_WIDTH,
+          (itemsWidth || 0) -
+            getBreadcrumbsLength(transformedItems.slice(0, lastIndex), size) -
+            lastIndex * arrowSize
+        )
+      : undefined;
 
   const renderItem = (
     itemOrItems: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[],
@@ -235,7 +280,15 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         {index !== 0 && (
           <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
         )}
-        <ReqoreBreadcrumbsItem customTheme={customTheme} {...item} key={index} size={size} />
+        <ReqoreBreadcrumbsItem
+          customTheme={customTheme}
+          {...item}
+          {...(index === lastIndex && leafMaxWidth != null
+            ? { maxWidth: `${leafMaxWidth}px` }
+            : {})}
+          key={index}
+          size={size}
+        />
       </React.Fragment>
     );
   };
@@ -257,7 +310,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
               renderItem(item, index)
           )}
         </div>
-        {rightElement && <div>{rightElement}</div>}
+        {rightElement && <div ref={rightRef}>{rightElement}</div>}
       </StyledReqoreBreadcrumbs>
     </ReqoreErrorBoundary>
   );

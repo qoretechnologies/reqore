@@ -73,3 +73,30 @@ test('Tooltip on <Breadcrumbs /> works', () => {
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
+
+test('Never collapses the last (leaf) crumb away, even at a tiny width', () => {
+  // Regression: at very tight widths the responsive collapse used to fold the
+  // current-page (leaf) crumb into the "…" group too. It must stay visible (and
+  // truncate) so the user always sees where they are.
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreBreadcrumbs
+            _testWidth={40}
+            items={[
+              { label: 'Ancestor 1', icon: 'Home3Line' },
+              { label: 'Ancestor 2', icon: 'Home3Line' },
+              { label: 'The Current Page', icon: 'Home3Line' },
+            ]}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  // The leaf remains as a single visible crumb; the ancestors fold into one
+  // "…" dropdown.
+  expect(document.querySelectorAll('.reqore-breadcrumbs-item').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(1);
+});
