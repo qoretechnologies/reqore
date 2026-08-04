@@ -1,4 +1,5 @@
 import { StoryObj } from '@storybook/react';
+import { expect, waitFor } from 'storybook/test';
 import { ReqoreBreadcrumbs, ReqoreButton, ReqoreControlGroup } from '../../index';
 import breadcrumbs, { breadcrumbsTabs, specialbreadcrumbs } from '../../mock/breadcrumbs';
 import { StoryMeta } from '../utils';
@@ -114,4 +115,71 @@ export const WithReservedRightElement: Story = {
       />
     </div>
   ),
+};
+
+// Regression guard for the no-overlap invariant: in a width-constrained bar the
+// trail and the right-hand element (an action rail) must never overlap, at any
+// width. The trail collapses ancestors into the "…" menu and truncates the
+// current page; the right element keeps its full width. The play asserts, via
+// `getBoundingClientRect`, that the trail's right edge never crosses into the
+// right element — the core guarantee of the flex layout.
+export const NoOverlapWithRightElement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The trail (breadcrumbs) and a right-hand action rail share a narrow bar. They must never overlap: the trail collapses + truncates, the right element stays fully visible. The play asserts trail.right <= rightElement.left.',
+      },
+    },
+  },
+  render: (args) => (
+    <div style={{ width: '480px', border: '1px dashed #555', padding: '4px' }}>
+      <ReqoreBreadcrumbs
+        {...args}
+        items={[
+          { label: 'Interfaces', icon: 'Home3Line' },
+          { label: 'Jobs', icon: 'CalendarLine', badge: [128] },
+          {
+            label: 'A New Scheduled Job With A Rather Long Name',
+            icon: 'CalendarLine',
+            readOnly: true,
+            badge: [{ label: 'Saved', icon: 'CheckLine', intent: 'success' }],
+          },
+        ]}
+        rightElement={
+          <ReqoreControlGroup>
+            <ReqoreButton icon='EditLine' minimal flat />
+            <ReqoreButton icon='FileCopyLine' minimal flat />
+            <ReqoreButton icon='DeleteBinLine' intent='danger' minimal flat />
+            <ReqoreButton icon='CheckLine' intent='success'>
+              Submit
+            </ReqoreButton>
+          </ReqoreControlGroup>
+        }
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    // Wait until the overflow measurement has run — the "…" menu appears once
+    // the ancestors collapse, which only happens after a real layout pass.
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-dropdown-control')).toBeInTheDocument()
+    );
+
+    const trail = canvasElement.querySelector('.reqore-breadcrumbs-trail') as HTMLElement;
+    const right = canvasElement.querySelector('.reqore-breadcrumbs-right') as HTMLElement;
+    await expect(trail).toBeInTheDocument();
+    await expect(right).toBeInTheDocument();
+
+    // The invariant: the trail never crosses into the right element (1px slack
+    // for sub-pixel rounding). This is impossible to violate with the flex
+    // `flex-shrink: 0` right region — the guard makes regressions loud.
+    const trailRect = trail.getBoundingClientRect();
+    const rightRect = right.getBoundingClientRect();
+    await expect(trailRect.right).toBeLessThanOrEqual(rightRect.left + 1);
+
+    // The current page stays reachable — its icon/label (or the truncated stub)
+    // is present in the trail, not folded away.
+    await expect(canvasElement.querySelector('.reqore-breadcrumbs-item')).toBeInTheDocument();
+  },
 };
