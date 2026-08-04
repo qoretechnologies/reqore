@@ -106,6 +106,10 @@ const RIGHT_ELEMENT_GAP = 16;
 // The last crumb never truncates below this, so its icon + a few characters +
 // badge always stay legible even in the tightest reserved budget.
 const MIN_LEAF_WIDTH = 80;
+// Below this the leaf can't show enough of its label to be useful, so instead
+// of a one-character stub we fold the WHOLE trail into a single dropdown
+// labelled with the current page (ancestors move into its menu).
+const MIN_READABLE_LEAF = 150;
 
 const getBreadcrumbsLength = (
   items: (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[],
@@ -211,21 +215,78 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   // room the cap is large enough never to bite. Only applied when a right
   // element is actually reserving space.
   const lastIndex = transformedItems.length - 1;
+  // Width already taken by everything BEFORE the leaf (the collapsed "…" group
+  // and/or any still-shown ancestors). `getBreadcrumbsLength` already estimates
+  // those generously (a collapsed group counts as 120px, which covers its
+  // trailing arrow too), so we do NOT subtract `arrowSize` again — doing so
+  // double-counted the separator and forced the leaf down to its floor width.
+  const nonLeafWidth =
+    lastIndex > 0 ? getBreadcrumbsLength(transformedItems.slice(0, lastIndex), size) : 0;
   const leafMaxWidth =
     responsive && rightElement && measuredWidth && lastIndex >= 0
-      ? Math.max(
-          MIN_LEAF_WIDTH,
-          (itemsWidth || 0) -
-            getBreadcrumbsLength(transformedItems.slice(0, lastIndex), size) -
-            lastIndex * arrowSize
-        )
+      ? Math.max(MIN_LEAF_WIDTH, (itemsWidth || 0) - nonLeafWidth)
       : undefined;
+
+  // When even the reserved budget can't show the current-page (leaf) label
+  // readably next to a collapsed "…" group, fold the WHOLE trail into a single
+  // dropdown labelled with the current page — its ancestors move into the menu.
+  // Keeps the user's location legible instead of degrading to a one-character
+  // stub, and reads well beside a wide right-hand action rail.
+  const trueLeaf = items.length ? (items[items.length - 1] as IReqoreBreadcrumbItem) : undefined;
+  const collapseAllToLeaf =
+    responsive &&
+    !!rightElement &&
+    !!measuredWidth &&
+    lastIndex >= 1 &&
+    !isArray(transformedItems[lastIndex]) &&
+    !(transformedItems[lastIndex] as IReqoreBreadcrumbItem)?.withTabs &&
+    leafMaxWidth != null &&
+    leafMaxWidth < MIN_READABLE_LEAF;
+
+  const displayItems: (IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[])[] = collapseAllToLeaf
+    ? [transformedItems.flatMap((entry) => (isArray(entry) ? entry : [entry]))]
+    : transformedItems;
+
+  // The label cap for that single collapsed current-page dropdown: the whole
+  // reserved budget minus room for its icon + caret + hidden-count badge.
+  const collapsedLeafMaxWidth = Math.max(MIN_LEAF_WIDTH, (itemsWidth || 0) - 72);
 
   const renderItem = (
     itemOrItems: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[],
     index: number
   ) => {
     if (isArray(itemOrItems) && count(itemOrItems) > 1) {
+      const groupLeaf = last(itemOrItems);
+      // Full-trail collapse: this group ends with the real current page, so the
+      // dropdown reads as "<current page> ⌄" (label + caret) with the ancestors
+      // in its menu and a small badge for how many are hidden — rather than a
+      // bare "…" that hides where the user is.
+      const isCurrentPageCollapse = collapseAllToLeaf && groupLeaf === trueLeaf;
+      if (isCurrentPageCollapse) {
+        // Single "current page" dropdown: the leaf's icon + label (truncating
+        // with an ellipsis via `buttonStyle` — `maxWidth` on the dropdown sizes
+        // the MENU, not the trigger), a badge for how many ancestors are hidden,
+        // and the whole trail in its menu. `caretPosition='left'` + no caret
+        // keeps `icon` as the trigger's left content icon rather than a chevron.
+        return (
+          <React.Fragment key={index}>
+            <ReqoreDropdown
+              key={`dropdown-${index}`}
+              icon={groupLeaf?.icon}
+              leftIconProps={groupLeaf?.leftIconProps}
+              caretPosition='left'
+              showCaret={false}
+              label={groupLeaf?.label}
+              buttonStyle={{ maxWidth: `${collapsedLeafMaxWidth}px`, minWidth: 0 }}
+              handler='hoverStay'
+              delay={500}
+              size={size}
+              badge={[count(itemOrItems) - 1]}
+              items={itemOrItems as IReqoreDropdownItem[]}
+            />
+          </React.Fragment>
+        );
+      }
       return (
         <React.Fragment key={index}>
           <ReqoreDropdown
@@ -261,7 +322,13 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     if (item.withTabs) {
       return (
         <StyledBreadcrumbsTabsWrapper key={index}>
-          <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
+          <ReqoreIcon
+            icon='ArrowRightSLine'
+            size={size}
+            key={'icon' + index}
+            margin='both'
+            effect={{ opacity: 0.5 }}
+          />
           <ReqoreTabsList
             tabs={item.withTabs.tabs}
             onTabChange={item.withTabs.onTabChange}
@@ -278,7 +345,13 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     return (
       <React.Fragment key={index}>
         {index !== 0 && (
-          <ReqoreIcon icon='ArrowRightSLine' size={size} key={'icon' + index} margin='both' />
+          <ReqoreIcon
+            icon='ArrowRightSLine'
+            size={size}
+            key={'icon' + index}
+            margin='both'
+            effect={{ opacity: 0.5 }}
+          />
         )}
         <ReqoreBreadcrumbsItem
           customTheme={customTheme}
@@ -305,7 +378,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         responsive={responsive}
       >
         <div key='reqore-breadcrumbs-left-wrapper'>
-          {transformedItems.map(
+          {displayItems.map(
             (item: IReqoreBreadcrumbItem | IReqoreBreadcrumbItem[], index: number) =>
               renderItem(item, index)
           )}

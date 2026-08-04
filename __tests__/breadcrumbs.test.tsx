@@ -100,3 +100,30 @@ test('Never collapses the last (leaf) crumb away, even at a tiny width', () => {
   expect(document.querySelectorAll('.reqore-breadcrumbs-item').length).toBe(1);
   expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(1);
 });
+
+test('Collapses the whole trail into a single current-page dropdown when a right element leaves too little room', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreBreadcrumbs
+            _testWidth={200}
+            rightElement={<div>rail</div>}
+            items={[
+              { label: 'Ancestor 1', icon: 'Home3Line' },
+              { label: 'Ancestor 2', icon: 'Home3Line' },
+              { label: 'The Current Page', icon: 'Home3Line' },
+            ]}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+
+  // The trail folds into ONE dropdown (the current page) — no standalone crumbs.
+  expect(document.querySelectorAll('.reqore-dropdown-control').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-breadcrumbs-item').length).toBe(0);
+  // The current-page label is the dropdown's trigger label (truncated in CSS, so
+  // the text is still present in the DOM).
+  expect(document.body.textContent).toContain('The Current Page');
+});
