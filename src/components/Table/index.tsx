@@ -210,6 +210,15 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   rowHeight?: number;
 
   onRowClick?: IReqoreTableRowClick;
+
+  /**
+   * Called whenever the body's scroll position crosses the top: `true` once the
+   * user scrolls down from the top, `false` again when they return to it. Lets a
+   * host collapse surrounding chrome (page header, KPI tiles) while scrolling and
+   * restore it at the top. The table already tracks this internally for its
+   * "scroll to top" button; this just surfaces the same signal.
+   */
+  onScrollChange?: (isScrolled: boolean) => void;
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
   rowComponent?: IReqoreTableRowOptions['rowComponent'];
   bodyCellComponent?: IReqoreTableRowOptions['cellComponent'];
@@ -286,6 +295,7 @@ const ReqoreTable = ({
   onSelectedChange,
   selectToggleTooltip,
   onRowClick,
+  onScrollChange,
   striped,
   selectedRowIntent = 'info',
   size = 'normal',
@@ -629,7 +639,13 @@ const ReqoreTable = ({
     setData(data);
   }, [data]);
 
-  const handleScrollChange = useCallback((isScrolled: boolean) => setIsScrolled(isScrolled), []);
+  const handleScrollChange = useCallback(
+    (isScrolled: boolean) => {
+      setIsScrolled(isScrolled);
+      onScrollChange?.(isScrolled);
+    },
+    [onScrollChange]
+  );
 
   const handleColumnsUpdate = useCallback(
     <T extends keyof IReqoreTableColumn>(id: string, key: T, value: IReqoreTableColumn[T]) => {
