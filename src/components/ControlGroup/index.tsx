@@ -461,10 +461,15 @@ const ReqoreControlGroup = memo(
             ...newProps,
             style: {
               ...collapseMargin,
-              borderTopLeftRadius: getBorderTopLeftRadius(index, props?.rounded),
-              borderBottomLeftRadius: getBorderBottomLeftRadius(index, props?.rounded),
-              borderTopRightRadius: getBorderTopRightRadius(index, props?.rounded),
-              borderBottomRightRadius: getBorderBottomRightRadius(index, props?.rounded),
+              // Squared corners are injected as an explicit `0` (not `undefined`)
+              // so the inline style wins over a child's own border-radius — most
+              // importantly `pill`, whose large styled-components radius otherwise
+              // survives the stack and scallops the row into "teeth". End caps
+              // still round to the group radius; only the joined edges go square.
+              borderTopLeftRadius: getBorderTopLeftRadius(index, props?.rounded) ?? 0,
+              borderBottomLeftRadius: getBorderBottomLeftRadius(index, props?.rounded) ?? 0,
+              borderTopRightRadius: getBorderTopRightRadius(index, props?.rounded) ?? 0,
+              borderBottomRightRadius: getBorderBottomRightRadius(index, props?.rounded) ?? 0,
               ...(props?.style || {}),
             },
             ...(!isIntrinsicElement

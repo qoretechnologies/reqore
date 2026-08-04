@@ -1,5 +1,6 @@
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
+import { useState } from 'react';
 import { noop, slice } from 'lodash';
 import { StyledEffect } from '../../components/Effect';
 import { ReqoreEmptyState } from '../../components/EmptyState';
@@ -404,6 +405,52 @@ export const Basic: Story = {
   },
   args: {
     showHelp: true,
+  },
+};
+
+export const ScrollChange: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The `onScrollChange` callback fires `true` once the body scrolls down from the top and `false` when it returns to the top — letting a host collapse surrounding chrome (page header, KPI tiles) while scrolling and restore it at the top. The tag reflects the latest value.',
+      },
+    },
+  },
+  args: {
+    height: 200,
+    label: 'Scroll me',
+  },
+  render: (args) => {
+    const [scrolled, setScrolled] = useState(false);
+    return (
+      <>
+        <ReqoreTag
+          className='scroll-state'
+          label={scrolled ? 'Scrolled: yes' : 'Scrolled: no'}
+          intent={scrolled ? 'warning' : 'success'}
+        />
+        <ReqoreTable {...args} onScrollChange={setScrolled} />
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const body = await waitFor(() => {
+      const el = canvasElement.querySelector('.reqore-table-body') as HTMLElement;
+      if (!el) throw new Error('table body not rendered');
+      return el;
+    });
+    const state = () => canvasElement.querySelector('.scroll-state')?.textContent ?? '';
+    // At the top the host is told it is not scrolled.
+    await waitFor(() => expect(state()).toContain('Scrolled: no'));
+    // Scrolling down from the top fires `onScrollChange(true)`.
+    Object.defineProperty(body, 'scrollTop', { value: 120, configurable: true });
+    fireEvent.scroll(body);
+    await waitFor(() => expect(state()).toContain('Scrolled: yes'));
+    // Returning to the top fires `onScrollChange(false)` — this drives restore-at-top.
+    Object.defineProperty(body, 'scrollTop', { value: 0, configurable: true });
+    fireEvent.scroll(body);
+    await waitFor(() => expect(state()).toContain('Scrolled: no'));
   },
 };
 

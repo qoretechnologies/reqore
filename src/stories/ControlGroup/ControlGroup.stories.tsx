@@ -663,3 +663,34 @@ export const WithEffect: Story = {
     },
   },
 };
+
+export const StackedPills: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A stacked group of `pill` buttons and dropdowns reads as one connected bar — rounded end caps, squared joined edges — not a scalloped row of pills. The squared corners are injected as an explicit `0`, so `pill`'s own radius no longer survives the stack.",
+      },
+    },
+  },
+  render: (args) => (
+    <ReqoreControlGroup {...args} stack>
+      <ReqoreDropdown
+        label='Overview'
+        icon='DashboardLine'
+        items={[{ label: 'Overview' }, { label: 'Improvements' }]}
+      />
+      <ReqoreButton pill icon='Filter3Line' rightIcon='ArrowDownSLine'>
+        Filters
+      </ReqoreButton>
+      <ReqoreButton pill icon='Robot2Line'>
+        Remediation
+      </ReqoreButton>
+      <ReqoreDropdown
+        label='Today'
+        icon='TimeLine'
+        items={[{ label: 'Hour' }, { label: 'Today' }, { label: '7d' }, { label: '30d' }]}
+      />
+    </ReqoreControlGroup>
+  ),
+};
