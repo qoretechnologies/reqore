@@ -158,7 +158,6 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       ? getReadableColorFrom(theme.breadcrumbs.main, true)
       : getReadableColor(theme, undefined, undefined, true));
 
-  const firstItem = items[0];
   const leafItem = items[items.length - 1];
 
   const renderArrow = (key: string) => (
@@ -172,18 +171,25 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   );
 
   // `OverflowList` calls this for every VISIBLE crumb (collapsed ancestors go to
-  // `renderOverflow` instead). The separator precedes every crumb except the
-  // very first one still shown — identified by object identity, so a crumb that
-  // becomes the first visible after its ancestors collapse still gets a "›"
-  // after the "…" group.
-  const renderItem = (item: IReqoreBreadcrumbItem) => {
-    const key = `crumb-${items.indexOf(item)}`;
-    const isFirst = item === firstItem;
+  // `renderOverflow` instead), passing the crumb's POSITION. Both the React key
+  // and the separator are derived from that position — NOT from the item's
+  // identity or `items.indexOf(item)`. This matters because on a re-render with a
+  // new `items` array, OverflowList briefly maps over its previous (stale) item
+  // objects; `indexOf` would return -1 for them, collapsing every crumb onto the
+  // same key `crumb--1` and making React accumulate DOM (a new crumb appended on
+  // every render). A positional key is always valid and unique.
+  //
+  // The separator precedes every visible crumb except the one at position 0. When
+  // ancestors collapse, `renderOverflow` emits the "…" group followed by its own
+  // trailing "›", so the first visible crumb (position 0, no leading separator)
+  // still connects to it.
+  const renderItem = (item: IReqoreBreadcrumbItem, index: number) => {
+    const key = `crumb-${index}`;
 
     if (item.withTabs) {
       return (
         <StyledBreadcrumbsTabsWrapper key={key}>
-          {!isFirst && renderArrow(`${key}-arrow`)}
+          {index !== 0 && renderArrow(`${key}-arrow`)}
           <ReqoreTabsList
             tabs={item.withTabs.tabs}
             onTabChange={item.withTabs.onTabChange}
@@ -205,7 +211,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     // labelled with it (see below), so it's always legible somewhere.
     return (
       <React.Fragment key={key}>
-        {!isFirst && renderArrow(`${key}-arrow`)}
+        {index !== 0 && renderArrow(`${key}-arrow`)}
         {/* Pass the RAW breadcrumbs `customTheme` (e.g. `{ main: '#ff69b4' }`),
             not the fully-resolved theme. The crumb is a minimal-flat button that
             derives its readable text + intent shades from `theme.main`; handing
@@ -231,7 +237,10 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       return null;
     }
 
-    const isFullyCollapsed = overflowItems[overflowItems.length - 1] === leafItem;
+    // Count-based, not identity-based: everything collapsed ⇒ the overflow holds
+    // as many crumbs as the trail has. (Identity would break when OverflowList
+    // maps over stale item objects during a re-render.)
+    const isFullyCollapsed = count(overflowItems) >= count(items);
 
     if (isFullyCollapsed) {
       return (
@@ -260,19 +269,25 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       );
     }
 
+    // Ancestors only: the compact "…" group, then its OWN trailing "›" so the
+    // first still-visible crumb (which renders at position 0 with no leading
+    // separator) connects to it as "… › current page".
     return (
-      <ReqoreDropdown
-        key='reqore-breadcrumbs-overflow'
-        handler='hoverStay'
-        delay={500}
-        size={size}
-        customTheme={customTheme}
-        showCaret={false}
-        badge={count(overflowItems)}
-        items={overflowItems as IReqoreDropdownItem[]}
-      >
-        <ReqoreIcon icon='MoreLine' effect={{ opacity: CONTROL_ICON_OPACITY }} />
-      </ReqoreDropdown>
+      <React.Fragment key='reqore-breadcrumbs-overflow'>
+        <ReqoreDropdown
+          key='reqore-breadcrumbs-overflow-menu'
+          handler='hoverStay'
+          delay={500}
+          size={size}
+          customTheme={customTheme}
+          showCaret={false}
+          badge={count(overflowItems)}
+          items={overflowItems as IReqoreDropdownItem[]}
+        >
+          <ReqoreIcon icon='MoreLine' effect={{ opacity: CONTROL_ICON_OPACITY }} />
+        </ReqoreDropdown>
+        {renderArrow('reqore-breadcrumbs-overflow-arrow')}
+      </React.Fragment>
     );
   };
 

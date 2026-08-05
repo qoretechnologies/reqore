@@ -1,4 +1,5 @@
 import { StoryObj } from '@storybook/react';
+import { useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 import { ReqoreBreadcrumbs, ReqoreButton, ReqoreControlGroup } from '../../index';
 import breadcrumbs, { breadcrumbsTabs, specialbreadcrumbs } from '../../mock/breadcrumbs';
@@ -184,5 +185,53 @@ export const NoOverlapWithRightElement: Story = {
     await expect(
       canvasElement.querySelector('.reqore-breadcrumbs-overflow-current, .reqore-breadcrumbs-item')
     ).toBeInTheDocument();
+  },
+};
+
+// Regression guard: re-rendering with a NEW `items` array identity (as an
+// unstable upstream `useMemo` would) must NOT accumulate crumbs. The bug was a
+// key derived from `items.indexOf(item)`, which returned -1 for the stale item
+// objects OverflowList maps over during a re-render — collapsing every crumb
+// onto one key so React appended a fresh (duplicate) crumb on every render. The
+// play re-renders repeatedly and asserts the crumb count stays put.
+const ReRenderStress = () => {
+  const [n, setN] = useState(0);
+  // Deliberately a new array + new objects every render.
+  const items = [
+    { icon: 'Home3Line' as const },
+    { label: 'Current Page', icon: 'CalendarLine' as const, badge: [9] },
+  ];
+  return (
+    <div>
+      <ReqoreButton data-testid='rerender' onClick={() => setN(n + 1)}>
+        re-render ({n})
+      </ReqoreButton>
+      <div style={{ width: '700px', marginTop: '10px' }}>
+        <ReqoreBreadcrumbs items={items} />
+      </div>
+    </div>
+  );
+};
+
+export const StableAcrossReRenders: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Re-rendering with a fresh items array must not accumulate crumbs (a keying regression once appended a new crumb on every render). The play re-renders 8 times and asserts the crumb count is unchanged.',
+      },
+    },
+  },
+  render: () => <ReRenderStress />,
+  play: async ({ canvasElement }) => {
+    const btn = canvasElement.querySelector('[data-testid="rerender"]') as HTMLElement;
+    for (let i = 0; i < 8; i++) {
+      btn.click();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+    }
+    // Two crumbs in, two crumbs out — never a growing pile.
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.reqore-breadcrumbs-item').length).toBe(2)
+    );
   },
 };
