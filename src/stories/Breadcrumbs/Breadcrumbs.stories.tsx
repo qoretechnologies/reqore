@@ -255,7 +255,7 @@ export const CollapsedAdoptsLeafTheme: Story = {
       <ReqoreBreadcrumbs
         {...args}
         items={[
-          { label: 'Home', icon: 'Home4Fill', customTheme: { main: '#1b101b' }, raised: true, minimal: true, flat: true },
+          { menuLabel: 'Home', icon: 'Home4Fill', customTheme: { main: '#1b101b' }, raised: true, minimal: true, flat: true },
           {
             label: 'Jobs',
             icon: 'CalendarLine',
