@@ -250,7 +250,14 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           handler='hoverStay'
           delay={500}
           size={size}
-          customTheme={customTheme}
+          // This button STANDS IN for the current-page crumb, so it must read as
+          // that crumb: adopt the leaf's OWN customTheme + effect (e.g. an
+          // uppercase/spaced treatment) + icon + badge, falling back to the
+          // breadcrumbs-level customTheme when the leaf carries none. Otherwise a
+          // per-item-themed trail (each crumb themed individually, no top-level
+          // customTheme) collapses into an unthemed, plain-cased button.
+          customTheme={leafItem?.customTheme ?? customTheme}
+          effect={leafItem?.effect}
           fluid
           minimal
           flat
@@ -259,6 +266,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           rightIcon='ArrowDownSLine'
           intent={leafItem?.intent}
           label={leafItem?.label}
+          badge={leafItem?.badge}
           // A floor so the current page always keeps a few readable characters —
           // never just an icon — however tight the bar gets. This can't cause an
           // overlap: the trail is `min-width: 0; overflow: hidden`, so it clips
