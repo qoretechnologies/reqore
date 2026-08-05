@@ -26,6 +26,13 @@ export interface IReqoreBreadcrumbItemTabs {
 
 export interface IReqoreBreadcrumbItem extends IReqoreButtonProps {
   label?: string;
+  /**
+   * Label to use ONLY when this crumb is shown inside the collapse ("…" / current
+   * page) menu — not in the trail. Lets an icon-only trail crumb (e.g. a Home
+   * that is just a house icon in the bar) still read as a proper labelled row in
+   * the menu (e.g. "Home"). Falls back to `label` when unset.
+   */
+  menuLabel?: string;
   as?: any;
   props?: Record<string, any>;
   withTabs?: IReqoreBreadcrumbItemTabs;
@@ -161,6 +168,7 @@ const MENU_OMIT_KEYS = [
   'size',
   'fluid',
   'fixed',
+  'menuLabel',
 ];
 const toMenuItems = (crumbs: IReqoreBreadcrumbItem[]): IReqoreDropdownItem[] =>
   crumbs.map((crumb) => {
@@ -170,6 +178,11 @@ const toMenuItems = (crumbs: IReqoreBreadcrumbItem[]): IReqoreDropdownItem[] =>
         item[key] = (crumb as Record<string, any>)[key];
       }
     });
+    // A crumb can carry a menu-only label (an icon-only trail crumb that should
+    // still read as a labelled row here); prefer it over the trail `label`.
+    if (crumb.menuLabel != null) {
+      item.label = crumb.menuLabel;
+    }
     return item as IReqoreDropdownItem;
   });
 
