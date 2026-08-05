@@ -72,6 +72,11 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
   }
 `;
 
+/** Gutter kept between a popover and each viewport edge, so a clamped surface
+ *  never sits flush against the side of the screen. */
+const VIEWPORT_EDGE_GUTTER = 20;
+const VIEWPORT_MAX_WIDTH = `calc(100vw - ${VIEWPORT_EDGE_GUTTER}px)`;
+
 export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   ${({ animate }) =>
     animate &&
@@ -79,7 +84,15 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
       animation: 0.2s ${fadeIn} ease-out;
     `}
 
-  max-width: ${({ maxWidth }) => maxWidth};
+  /* Never wider than the viewport, whatever the caller asks for.
+     Popper can flip or shift a surface but it cannot shrink one, so a popover
+     wider than the screen — a long dropdown, a menu of descriptive rows — hangs
+     off both edges with its content unreachable. Clamp to the viewport less a
+     small gutter so it always has breathing room at the sides; an explicit
+     maxWidth still wins whenever it is the smaller of the two.
+     (No backticks in here: this comment lives inside a template literal.) */
+  max-width: ${({ maxWidth }) =>
+    maxWidth ? `min(${maxWidth}, ${VIEWPORT_MAX_WIDTH})` : VIEWPORT_MAX_WIDTH};
   min-width: ${({ minWidth }) => minWidth};
   max-height: ${({ maxHeight }) => maxHeight};
   z-index: 999999;
@@ -225,7 +238,9 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         {
           name: 'preventOverflow',
           options: {
-            padding: 8,
+            // Half the clamp's gutter on each side, so a surface shifted away
+            // from an edge lands where the max-width already implies it should.
+            padding: VIEWPORT_EDGE_GUTTER / 2,
           },
         },
         {

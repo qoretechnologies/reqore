@@ -950,3 +950,42 @@ export const CustomThemeForwardedToTrigger: Story = {
     });
   },
 };
+
+/**
+ * A popover can be asked for more width than the screen has — a long dropdown,
+ * a menu of descriptive rows, a wide table. Popper can flip or shift a surface
+ * but it cannot shrink one, so before this was clamped the popover simply hung
+ * off both edges with its content unreachable.
+ *
+ * The surface is capped at `calc(100vw - 20px)`, leaving a gutter at each side.
+ * An explicit `maxWidth` still wins whenever it is the smaller of the two, so
+ * this only ever takes effect when a popover would otherwise overflow.
+ */
+export const ClampedToViewport: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a popover whose requested width far exceeds the viewport, to show it clamped inside the screen with a gutter rather than overflowing both edges.',
+      },
+    },
+    viewport: { defaultViewport: 'mobile1' },
+  },
+  args: {
+    maxWidth: '2000px',
+    content:
+      'This popover asks for 2000px of width. It is clamped to the viewport instead of hanging off both edges, so every word stays reachable no matter how narrow the screen is.',
+  },
+  render: Template,
+  play: async ({ canvasElement }) => {
+    const trigger = canvasElement.querySelector('.reqore-button') as HTMLElement;
+    await userEvent.hover(trigger);
+
+    await waitFor(async () => {
+      const popover = document.querySelector('.reqore-popover-content') as HTMLElement;
+      await expect(popover).toBeTruthy();
+      // Never wider than the viewport it is rendered into.
+      await expect(popover.getBoundingClientRect().width).toBeLessThanOrEqual(window.innerWidth);
+    });
+  },
+};
