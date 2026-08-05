@@ -235,3 +235,56 @@ export const StableAcrossReRenders: Story = {
     );
   },
 };
+
+// A per-item-themed trail (each crumb its OWN customTheme + uppercase effect +
+// icon + badge; NO top-level breadcrumbs customTheme — the shape a host like a
+// page-header builds) squeezed until it fully collapses. The single current-page
+// dropdown must READ AS the leaf crumb: adopt its customTheme, effect, icon and
+// badge — not fall back to a plain, unthemed, normal-cased button.
+export const CollapsedAdoptsLeafTheme: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'When a per-item-themed trail collapses fully, the single current-page dropdown adopts the leaf crumb’s own customTheme, effect (e.g. uppercase), icon and badge instead of rendering as a plain button.',
+      },
+    },
+  },
+  render: (args) => (
+    <div style={{ width: '320px', border: '1px dashed #555', padding: '4px' }}>
+      <ReqoreBreadcrumbs
+        {...args}
+        items={[
+          { icon: 'Home4Fill', customTheme: { main: '#1b101b' }, raised: true, minimal: true, flat: true },
+          {
+            label: 'Jobs',
+            icon: 'CalendarLine',
+            customTheme: { main: '#100b10' },
+            effect: { uppercase: true, spaced: 1, textSize: 'small' },
+            raised: true,
+            minimal: true,
+            flat: true,
+          },
+          {
+            label: 'Bbm Data Provider Create Processor Test',
+            icon: 'CalendarLine',
+            badge: ['#50'],
+            customTheme: { main: '#100b10' },
+            effect: { uppercase: true, spaced: 1, textSize: 'small' },
+            active: true,
+          },
+        ]}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-breadcrumbs-overflow-current')).toBeInTheDocument()
+    );
+    const btn = canvasElement.querySelector('.reqore-breadcrumbs-overflow-current');
+    // The leaf's label, badge and an icon all flow through to the collapsed button.
+    await expect(btn?.textContent).toContain('Bbm');
+    await expect(btn?.textContent).toContain('#50');
+    await expect(btn?.querySelector('svg')).toBeInTheDocument();
+  },
+};
