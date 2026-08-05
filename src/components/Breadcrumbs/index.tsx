@@ -104,6 +104,17 @@ const StyledTrail = styled.div<{ $color: string }>`
   .reqore-breadcrumbs-overflow-list {
     align-items: center;
   }
+
+  /* Force the readable item colour onto the crumbs + collapsed dropdowns, as the
+     original did with a descendant selector. A minimal/flat button sets its OWN
+     text colour directly on the element — for a chromatic custom theme that
+     resolves to a near-white tint (saturate(tint(0.8, main))) — which beats the
+     trail's merely-inherited colour. Overriding it here keeps the labels legible
+     (readable-dark on a light themed bar) instead of washing out to white. */
+  .reqore-breadcrumbs-item,
+  .reqore-dropdown-control {
+    color: ${({ $color }) => $color};
+  }
 `;
 
 // The right element NEVER shrinks — this is what makes overlap with the trail
@@ -195,7 +206,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
     return (
       <React.Fragment key={key}>
         {!isFirst && renderArrow(`${key}-arrow`)}
-        <ReqoreBreadcrumbsItem customTheme={theme} {...item} size={size} />
+        {/* Pass the RAW breadcrumbs `customTheme` (e.g. `{ main: '#ff69b4' }`),
+            not the fully-resolved theme. The crumb is a minimal-flat button that
+            derives its readable text + intent shades from `theme.main`; handing
+            it the resolved theme (whose `.main` is the base dark colour, not the
+            breadcrumbs colour) turned the text white and shifted the pills. */}
+        <ReqoreBreadcrumbsItem customTheme={customTheme} {...item} size={size} />
       </React.Fragment>
     );
   };
@@ -225,6 +241,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           handler='hoverStay'
           delay={500}
           size={size}
+          customTheme={customTheme}
           fluid
           minimal
           flat
@@ -249,6 +266,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         handler='hoverStay'
         delay={500}
         size={size}
+        customTheme={customTheme}
         showCaret={false}
         badge={count(overflowItems)}
         items={overflowItems as IReqoreDropdownItem[]}
