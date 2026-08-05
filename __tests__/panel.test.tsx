@@ -368,3 +368,51 @@ test('Panel content area carries min-height:0 so a tall body scrolls instead of 
   );
   expect(hasMinHeightRule).toBe(true);
 });
+
+// Collect the re-resizable handle cursors currently in the document. re-resizable
+// renders each handle as an absolutely-positioned div whose inline `cursor` ends
+// in `-resize` (e.g. `row-resize`, `col-resize`, `nw-resize`).
+const getResizeHandleCursors = () =>
+  Array.from(document.querySelectorAll<HTMLElement>('*'))
+    .filter((el) => /-resize$/.test(el.style?.cursor || ''))
+    .map((el) => el.style.cursor);
+
+test('Forwards re-resizable `enable` so a resizable <Panel /> honours it', () => {
+  // Regression: the panel's `shouldForwardProp` (isPropValid, via
+  // `omitStyleProps`) used to strip `enable` before it reached re-resizable, so
+  // the panel became resizable from every edge/corner regardless of `enable`.
+  render(
+    <div style={{ width: '600px', height: '400px' }}>
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Resizable'
+            resizable={{
+              enable: { top: true },
+              defaultSize: { height: 200, width: '100%' },
+            }}
+          >
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  // Only the single enabled (top) handle renders — not all 8.
+  expect(getResizeHandleCursors()).toEqual(['row-resize']);
+});
+
+test('A non-resizable <Panel /> renders no resize handles', () => {
+  render(
+    <div style={{ width: '600px' }}>
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel label='Static'>Body</ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  expect(getResizeHandleCursors()).toHaveLength(0);
+});
