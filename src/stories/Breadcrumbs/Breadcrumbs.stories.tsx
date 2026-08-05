@@ -1,6 +1,6 @@
 import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import { ReqoreBreadcrumbs, ReqoreButton, ReqoreControlGroup } from '../../index';
 import breadcrumbs, { breadcrumbsTabs, specialbreadcrumbs } from '../../mock/breadcrumbs';
 import { StoryMeta } from '../utils';
@@ -246,7 +246,7 @@ export const CollapsedAdoptsLeafTheme: Story = {
     docs: {
       description: {
         story:
-          'When a per-item-themed trail collapses fully, the single current-page dropdown adopts the leaf crumb’s own customTheme, effect (e.g. uppercase), icon and badge instead of rendering as a plain button.',
+          'When a per-item-themed trail collapses fully, the single current-page dropdown reads as the leaf CRUMB — it adopts the leaf’s customTheme, effect (e.g. uppercase), icon, badge AND its chip styling (an active leaf ⇒ a solid active chip). Its menu presents the crumbs as a clean navigation list (left-aligned labelled rows), not a stack of breadcrumb pills. The play opens the menu to check the rows.',
       },
     },
   },
@@ -255,7 +255,7 @@ export const CollapsedAdoptsLeafTheme: Story = {
       <ReqoreBreadcrumbs
         {...args}
         items={[
-          { icon: 'Home4Fill', customTheme: { main: '#1b101b' }, raised: true, minimal: true, flat: true },
+          { label: 'Home', icon: 'Home4Fill', customTheme: { main: '#1b101b' }, raised: true, minimal: true, flat: true },
           {
             label: 'Jobs',
             icon: 'CalendarLine',
@@ -278,13 +278,26 @@ export const CollapsedAdoptsLeafTheme: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() =>
-      expect(canvasElement.querySelector('.reqore-breadcrumbs-overflow-current')).toBeInTheDocument()
-    );
-    const btn = canvasElement.querySelector('.reqore-breadcrumbs-overflow-current');
-    // The leaf's label, badge and an icon all flow through to the collapsed button.
-    await expect(btn?.textContent).toContain('Bbm');
-    await expect(btn?.textContent).toContain('#50');
-    await expect(btn?.querySelector('svg')).toBeInTheDocument();
+    const control = await waitFor(() => {
+      const el = canvasElement.querySelector('.reqore-breadcrumbs-overflow-current');
+      if (!el) throw new Error('trail has not collapsed yet');
+      return el;
+    });
+    // The collapsed button carries the leaf's label, badge and an icon.
+    await expect(control.textContent).toContain('Bbm');
+    await expect(control.textContent).toContain('#50');
+    await expect(control.querySelector('svg')).toBeInTheDocument();
+
+    // Its menu is a clean navigation list: every crumb is a labelled row —
+    // including the Home crumb (a label-less icon would render as a lone,
+    // centred icon; here it reads "Home").
+    fireEvent.mouseEnter(control);
+    await waitFor(() => expect(document.querySelector('.reqore-menu')).toBeTruthy());
+    await waitFor(() => {
+      const menuText = document.querySelector('.reqore-menu')?.textContent ?? '';
+      expect(menuText).toContain('Home');
+      expect(menuText).toContain('Jobs');
+      expect(menuText).toContain('Bbm');
+    });
   },
 };

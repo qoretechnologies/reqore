@@ -139,6 +139,40 @@ const StyledBreadcrumbsTabsWrapper = styled.div`
   min-width: 0;
 `;
 
+// The overflow dropdowns present the collapsed crumbs as a NAVIGATION MENU, so
+// each crumb must render as a clean left-aligned menu row — not as the pill/chip
+// it is in the trail. Strip the crumb's trail-only layout treatment (raised /
+// active chips, the uppercase/spaced `effect`, the polymorphic `as` + its
+// `props`, tab payloads, inline `style`, size overrides) and keep only what a
+// menu row needs: icon, label, badge, intent, per-item theme, tooltip and the
+// click handler. Without this a label-less crumb (e.g. an icon-only Home) shows
+// up as a lone, centered icon and themed crumbs look like stacked pills.
+const MENU_OMIT_KEYS = [
+  'active',
+  'raised',
+  'flat',
+  'minimal',
+  'transparent',
+  'effect',
+  'as',
+  'props',
+  'withTabs',
+  'style',
+  'size',
+  'fluid',
+  'fixed',
+];
+const toMenuItems = (crumbs: IReqoreBreadcrumbItem[]): IReqoreDropdownItem[] =>
+  crumbs.map((crumb) => {
+    const item: Record<string, any> = {};
+    Object.keys(crumb).forEach((key) => {
+      if (!MENU_OMIT_KEYS.includes(key)) {
+        item[key] = (crumb as Record<string, any>)[key];
+      }
+    });
+    return item as IReqoreDropdownItem;
+  });
+
 const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   items,
   rightElement,
@@ -259,8 +293,15 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           customTheme={leafItem?.customTheme ?? customTheme}
           effect={leafItem?.effect}
           fluid
-          minimal
-          flat
+          // Look like the current-page CRUMB itself: adopt its chip styling.
+          // When the leaf is the active crumb (a solid, highlighted chip) the
+          // collapsed button IS that same solid chip; a minimal leaf stays
+          // minimal. Mirrors ReqoreBreadcrumbsItem (minimal + flat defaults,
+          // overridden by the item's own active/minimal/flat).
+          active={leafItem?.active}
+          minimal={leafItem?.minimal ?? true}
+          flat={leafItem?.flat ?? true}
+          raised={leafItem?.raised}
           showCaret={false}
           icon={leafItem?.icon}
           rightIcon='ArrowDownSLine'
@@ -272,7 +313,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           // overlap: the trail is `min-width: 0; overflow: hidden`, so it clips
           // this button before it could ever reach the fixed right element.
           style={{ minWidth: '5em' }}
-          items={overflowItems as IReqoreDropdownItem[]}
+          items={toMenuItems(overflowItems)}
         />
       );
     }
@@ -290,7 +331,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           customTheme={customTheme}
           showCaret={false}
           badge={count(overflowItems)}
-          items={overflowItems as IReqoreDropdownItem[]}
+          items={toMenuItems(overflowItems)}
         >
           <ReqoreIcon icon='MoreLine' effect={{ opacity: CONTROL_ICON_OPACITY }} />
         </ReqoreDropdown>
