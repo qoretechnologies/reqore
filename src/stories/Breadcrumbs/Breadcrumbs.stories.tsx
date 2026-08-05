@@ -178,8 +178,11 @@ export const NoOverlapWithRightElement: Story = {
     const rightRect = right.getBoundingClientRect();
     await expect(trailRect.right).toBeLessThanOrEqual(rightRect.left + 1);
 
-    // The current page stays reachable — its icon/label (or the truncated stub)
-    // is present in the trail, not folded away.
-    await expect(canvasElement.querySelector('.reqore-breadcrumbs-item')).toBeInTheDocument();
+    // The current page stays reachable — either as an inline crumb (wider bars)
+    // or, once the bar is this tight, as the single dropdown LABELLED with it.
+    // Never folded away to nothing.
+    await expect(
+      canvasElement.querySelector('.reqore-breadcrumbs-overflow-current, .reqore-breadcrumbs-item')
+    ).toBeInTheDocument();
   },
 };

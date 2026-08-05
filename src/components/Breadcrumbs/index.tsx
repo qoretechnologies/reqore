@@ -96,6 +96,14 @@ const StyledTrail = styled.div<{ $color: string }>`
     flex: 1 1 auto;
     min-width: 0;
   }
+
+  /* The OverflowList container sets only display/flexWrap/minWidth inline (no
+     align-items), so without this its crumbs top-align against the tallest one
+     — e.g. a crumb carrying a two-line description. Center them so the row
+     reads as a single baseline, matching the static trail. */
+  .reqore-breadcrumbs-overflow-list {
+    align-items: center;
+  }
 `;
 
 // The right element NEVER shrinks — this is what makes overlap with the trail
@@ -160,7 +168,6 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   const renderItem = (item: IReqoreBreadcrumbItem) => {
     const key = `crumb-${items.indexOf(item)}`;
     const isFirst = item === firstItem;
-    const isLast = item === leafItem;
 
     if (item.withTabs) {
       return (
@@ -179,30 +186,64 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       );
     }
 
+    // Every crumb (including the current page) keeps its natural width and does
+    // NOT shrink — a crumb is either shown in full and readable, or it collapses
+    // into the overflow dropdown. That is what stops the current page from being
+    // squeezed down to an unreadable icon + single letter. When even the current
+    // page can't fit, `renderOverflow` folds the whole trail into one dropdown
+    // labelled with it (see below), so it's always legible somewhere.
     return (
       <React.Fragment key={key}>
         {!isFirst && renderArrow(`${key}-arrow`)}
-        <ReqoreBreadcrumbsItem
-          customTheme={theme}
-          {...item}
-          size={size}
-          // The current page (last crumb) shrinks + ellipsises so it never
-          // overruns the trail; ancestors collapse into the "…" menu instead.
-          // A small `min-width` floor keeps its icon + an ellipsis legible even
-          // in the tightest budget (the trail clips the overflow — it still
-          // can't reach the fixed right element), so the current page never
-          // vanishes entirely.
-          style={isLast ? { minWidth: '2.75em', flexShrink: 1, ...(item.style || {}) } : item.style}
-        />
+        <ReqoreBreadcrumbsItem customTheme={theme} {...item} size={size} />
       </React.Fragment>
     );
   };
 
-  // The collapsed ancestors, folded into a single "…" dropdown at the start of
-  // the trail. Its menu is the ancestor crumbs (newest last), with a badge for
-  // how many are hidden.
-  const renderOverflow = (overflowItems: IReqoreBreadcrumbItem[]) =>
-    count(overflowItems) ? (
+  // The collapsed crumbs, folded into a dropdown at the start of the trail.
+  // Two shapes, because collapse happens from the start (`collapseFrom:'start'`):
+  //
+  //  - Only ancestors collapsed → a compact "…" with a hidden-count badge; the
+  //    current page stays inline (in full) to its right.
+  //  - The current page ALSO collapsed (there wasn't room for it either) → the
+  //    whole trail becomes ONE dropdown LABELLED with the current page (icon +
+  //    label, ellipsised to fit), with every crumb in its menu. This is the
+  //    "one button that reads as the current page instead of just …" behaviour,
+  //    and it guarantees the current page is always legible however tight it gets.
+  const renderOverflow = (overflowItems: IReqoreBreadcrumbItem[]) => {
+    if (!count(overflowItems)) {
+      return null;
+    }
+
+    const isFullyCollapsed = overflowItems[overflowItems.length - 1] === leafItem;
+
+    if (isFullyCollapsed) {
+      return (
+        <ReqoreDropdown
+          key='reqore-breadcrumbs-overflow'
+          className='reqore-breadcrumbs-overflow-current'
+          handler='hoverStay'
+          delay={500}
+          size={size}
+          fluid
+          minimal
+          flat
+          showCaret={false}
+          icon={leafItem?.icon}
+          rightIcon='ArrowDownSLine'
+          intent={leafItem?.intent}
+          label={leafItem?.label}
+          // A floor so the current page always keeps a few readable characters —
+          // never just an icon — however tight the bar gets. This can't cause an
+          // overlap: the trail is `min-width: 0; overflow: hidden`, so it clips
+          // this button before it could ever reach the fixed right element.
+          style={{ minWidth: '5em' }}
+          items={overflowItems as IReqoreDropdownItem[]}
+        />
+      );
+    }
+
+    return (
       <ReqoreDropdown
         key='reqore-breadcrumbs-overflow'
         handler='hoverStay'
@@ -214,7 +255,8 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       >
         <ReqoreIcon icon='MoreLine' effect={{ opacity: CONTROL_ICON_OPACITY }} />
       </ReqoreDropdown>
-    ) : null;
+    );
+  };
 
   return (
     <ReqoreErrorBoundary {...errorBoundaryOptions}>
@@ -232,7 +274,11 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
               className='reqore-breadcrumbs-overflow-list'
               items={items}
               collapseFrom='start'
-              minVisibleItems={1}
+              // 0, not 1: when even the current page can't fit, it must be
+              // allowed to collapse too so `renderOverflow` can fold the trail
+              // into the single current-page-labelled dropdown. Keeping 1 here is
+              // what forced the leaf to stay and shrink to an unreadable stub.
+              minVisibleItems={0}
               itemRenderer={renderItem}
               overflowRenderer={renderOverflow}
             />
