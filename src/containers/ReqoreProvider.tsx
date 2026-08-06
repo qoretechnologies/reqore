@@ -137,6 +137,14 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       ? false
       : useMedia('(min-width: 480px) and (max-width: 1200px)');
   const isMobileOrTablet = isMobile || isTablet;
+  // Pointer CAPABILITY, not viewport width — the two disagree often enough to
+  // matter (a narrow desktop window hovers; a large tablet does not). Defaults to
+  // `true` when the query cannot be evaluated so hover-gated UI keeps its desktop
+  // behaviour instead of degrading.
+  const isHoverCapable =
+    process.env.NODE_ENV === 'test'
+      ? true
+      : useMedia('(hover: hover) and (pointer: fine)', true);
 
   const getAndIncreaseZIndex = useCallback((): number => {
     latestZIndex.current += 1;
@@ -282,6 +290,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         isMobile,
         isTablet,
         isMobileOrTablet,
+        isHoverCapable,
         latestZIndex: latestZIndex.current,
         getAndIncreaseZIndex,
         animations: resolvedOptions.animations,
@@ -309,6 +318,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       isMobile,
       isTablet,
       isMobileOrTablet,
+      isHoverCapable,
       latestZIndex,
       getAndIncreaseZIndex,
       resolvedOptions,

@@ -23,6 +23,20 @@ export interface IReqoreContext {
   readonly isMobile?: boolean;
   readonly isTablet?: boolean;
   readonly isMobileOrTablet?: boolean;
+  /**
+   * Whether the primary pointer can hover — `true` for a mouse, `false` for touch.
+   *
+   * Distinct from `isMobile`, which is a WIDTH question: a narrow desktop window
+   * still hovers, and a large tablet still does not. Any affordance revealed on
+   * `:hover` needs this instead, because a touch device never fires `:hover` and
+   * the control would be permanently unreachable there — move it into a menu (or
+   * show it unconditionally) when this is `false`.
+   *
+   * Defaults to `true` where the query cannot be evaluated (SSR, tests), so
+   * hover-gated UI keeps its desktop behaviour rather than degrading.
+   * @default true
+   */
+  readonly isHoverCapable?: boolean;
   readonly getAndIncreaseZIndex?: () => number;
   readonly uiScale?: number;
   readonly animations?: {
