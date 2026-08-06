@@ -494,3 +494,47 @@ export const RevealOnHover: Story = {
     reveal!.focus();
   },
 };
+
+
+/**
+ * `revealOn='hover'` must not become the only way to expand the content. The
+ * fade-in is gated on hover capability, so on touch the reveal button stays
+ * visible — and while hidden it is not hit-testable, so it can never fire as an
+ * invisible target.
+ */
+export const HoverRevealReachableWithoutHover: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders CollapsibleContent with `revealOn='hover'`. On a hovering pointer the reveal button is transparent and not clickable at rest; the whole gate lives inside a `(hover: hover) and (pointer: fine)` query, so a touch device shows the button normally.",
+      },
+    },
+  },
+  render: Template,
+  args: {
+    revealOn: 'hover',
+  },
+  play: async ({ canvasElement }) => {
+    const reveal = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLButtonElement>(
+        '.reqore-collapsible-content-reveal'
+      );
+      expect(el).toBeTruthy();
+      return el!;
+    });
+
+    // Hidden AND inert at rest on desktop — an opacity:0 button that still took
+    // clicks would be a control firing from nowhere.
+    expect(getComputedStyle(reveal).opacity).toBe('0');
+    expect(getComputedStyle(reveal).pointerEvents).toBe('none');
+
+    // Focus is the reveal path a test can drive; it also proves the keyboard
+    // route works, since a synthetic mouse event never triggers CSS :hover.
+    reveal.focus();
+    await waitFor(() => {
+      expect(getComputedStyle(reveal).opacity).toBe('1');
+      expect(getComputedStyle(reveal).pointerEvents).toBe('auto');
+    });
+  },
+};

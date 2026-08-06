@@ -421,9 +421,16 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   max-width: 100%;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
 
-  &:not(:hover) {
-    .reqore-panel-action-hidden {
-      display: none;
+  /* Hover-hiding applies ONLY where the pointer can hover. A touch device never
+     fires :hover, so without this gate a \`show: 'hover'\` action is display:none
+     forever — not merely invisible but absent from the layout, with nothing on
+     screen hinting it exists. Where hover is unavailable the action stays
+     visible; losing the tidiness beats losing the action. */
+  @media (hover: hover) and (pointer: fine) {
+    &:not(:hover) {
+      .reqore-panel-action-hidden {
+        display: none;
+      }
     }
   }
 

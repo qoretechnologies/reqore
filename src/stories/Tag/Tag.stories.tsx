@@ -1,4 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { expect, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
 import { IReqoreTagProps } from '../../components/Tag';
 import { IReqoreTagGroup } from '../../components/Tag/group';
@@ -524,4 +525,51 @@ export const RadiusSize: Story = {
       ))}
     </ReqoreTagGroup>
   ),
+};
+
+
+/**
+ * Same guard as ReqorePanel: a tag action declared `show: 'hover'` is hidden
+ * only where the pointer can hover. On touch it stays visible, because
+ * `display: none` there would leave no route to the action at all.
+ */
+export const HoverActionReachableWithoutHover: Story = {
+  args: {
+    label: 'Tag with a hover action',
+    actions: [{ icon: 'DeleteBinLine', show: 'hover', className: 'hover-gated-tag-action' }],
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a tag whose delete action is declared `show: 'hover'`. Hidden at rest on a hovering pointer; the hover-hiding rule sits inside a `(hover: hover) and (pointer: fine)` query so touch devices render it visible instead of unreachable.",
+      },
+    },
+  },
+  play: async () => {
+    const action = await waitFor(() => {
+      const el = document.querySelector('.hover-gated-tag-action') as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    // Desktop still hides it at rest — catches an inverted or mistyped query.
+    expect(getComputedStyle(action).display).toBe('none');
+
+    const gated = Array.from(document.styleSheets).some((sheet) => {
+      let rules: CSSRuleList;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        return false;
+      }
+      return Array.from(rules).some(
+        (rule) =>
+          rule instanceof CSSMediaRule &&
+          rule.conditionText.includes('hover') &&
+          rule.cssText.includes('reqore-tag-action-hidden')
+      );
+    });
+    expect(gated).toBe(true);
+  },
 };

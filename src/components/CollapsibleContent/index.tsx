@@ -132,14 +132,23 @@ const StyledClip = styled.div<IStyledClipProps>`
   ${({ $hoverReveal }) =>
     $hoverReveal &&
     css`
-      .reqore-collapsible-content-reveal {
-        opacity: 0;
-        transition: opacity 0.15s ease;
-      }
+      /* Hover-reveal is a desktop-only nicety: gated on the pointer actually
+         being able to hover, so on touch the reveal button simply stays visible
+         rather than becoming an unreachable way to expand the content. */
+      @media (hover: hover) and (pointer: fine) {
+        .reqore-collapsible-content-reveal {
+          opacity: 0;
+          /* Not hit-testable while invisible — an opacity:0 button still takes
+             clicks, which reads as a control firing out of nowhere. */
+          pointer-events: none;
+          transition: opacity 0.15s ease;
+        }
 
-      &:hover .reqore-collapsible-content-reveal,
-      &:focus-within .reqore-collapsible-content-reveal {
-        opacity: 1;
+        &:hover .reqore-collapsible-content-reveal,
+        &:focus-within .reqore-collapsible-content-reveal {
+          opacity: 1;
+          pointer-events: auto;
+        }
       }
     `}
 `;
