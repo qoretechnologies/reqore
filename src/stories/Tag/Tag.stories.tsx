@@ -539,6 +539,11 @@ export const HoverActionReachableWithoutHover: Story = {
     actions: [{ icon: 'DeleteBinLine', show: 'hover', className: 'hover-gated-tag-action' }],
   },
   parameters: {
+    // No snapshot — same reasoning as the ReqorePanel story: the action is
+    // hidden at rest on a hovering pointer, so the capture shows a bare tag and
+    // reviews as empty. The play test still runs in CI and is the real coverage.
+    // (Requested by Foxhoundn on qlip build #174.)
+    qlip: { skip: true },
     docs: {
       description: {
         story:

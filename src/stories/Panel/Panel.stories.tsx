@@ -1567,6 +1567,12 @@ export const HoverActionReachableWithoutHover: Story = {
     children: 'The Edit action hides until hover — but only where hover exists.',
   },
   parameters: {
+    // No snapshot: the whole point of the story is that the action is HIDDEN at
+    // rest on a hovering pointer, so the capture is a plain panel with nothing
+    // to review — noise on the dashboard. The play test below is the real
+    // coverage and still runs in CI; only the screenshot is skipped.
+    // (Requested by Foxhoundn on qlip build #174.)
+    qlip: { skip: true },
     docs: {
       description: {
         story:
