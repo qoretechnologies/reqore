@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
@@ -1551,4 +1551,63 @@ export const MultipleGradients: Story = {
       order. Border-image / readable-text / animation behaviour is driven by the first entry.
     </ReqorePanel>
   ),
+};
+
+
+/**
+ * A `show: 'hover'` action is a desktop nicety, never the only route to the
+ * action: the hover-hiding rule is gated on the pointer actually being able to
+ * hover, so on a touch device the action stays visible instead of being
+ * `display: none` with nothing on screen hinting it exists.
+ */
+export const HoverActionReachableWithoutHover: Story = {
+  args: {
+    label: 'Hover-gated action',
+    actions: [{ label: 'Edit', icon: 'EditLine', show: 'hover', className: 'hover-gated-action' }],
+    children: 'The Edit action hides until hover — but only where hover exists.',
+  },
+  parameters: {
+    // No snapshot: the whole point of the story is that the action is HIDDEN at
+    // rest on a hovering pointer, so the capture is a plain panel with nothing
+    // to review — noise on the dashboard. The play test below is the real
+    // coverage and still runs in CI; only the screenshot is skipped.
+    // (Requested by Foxhoundn on qlip build #174.)
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          "Renders a panel whose Edit action is declared `show: 'hover'`. On a hovering pointer it is hidden at rest; the hover-hiding rule is wrapped in a `(hover: hover) and (pointer: fine)` query, so a touch device renders it visible rather than unreachable.",
+      },
+    },
+  },
+  play: async () => {
+    const action = await waitFor(() => {
+      const el = document.querySelector('.hover-gated-action') as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    // Desktop (this runner hovers): still hidden at rest. Guards the query from
+    // being inverted or mistyped — a broken gate shows the action here.
+    expect(getComputedStyle(action).display).toBe('none');
+
+    // And the rule that hides it is inside the capability query, which is what
+    // keeps it visible on touch. Asserted from the stylesheet because a
+    // hovering runner cannot emulate a coarse pointer.
+    const gated = Array.from(document.styleSheets).some((sheet) => {
+      let rules: CSSRuleList;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        return false;
+      }
+      return Array.from(rules).some(
+        (rule) =>
+          rule instanceof CSSMediaRule &&
+          rule.conditionText.includes('hover') &&
+          rule.cssText.includes('reqore-panel-action-hidden')
+      );
+    });
+    expect(gated).toBe(true);
+  },
 };

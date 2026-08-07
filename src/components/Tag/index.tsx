@@ -228,9 +228,14 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       cursor: not-allowed;
     `}
 
-  &:not(:hover) {
-    .reqore-tag-action-hidden {
-      display: none;
+  /* Only gate on hover where hover exists — see the same guard on ReqorePanel.
+     On touch a \`show: 'hover'\` tag action would otherwise be display:none with
+     no route to it at all. */
+  @media (hover: hover) and (pointer: fine) {
+    &:not(:hover) {
+      .reqore-tag-action-hidden {
+        display: none;
+      }
     }
   }
 
@@ -521,20 +526,25 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         {_size(actions)
           ? actions
               .filter((action) => action.show !== false)
-              .map(({ intent, onClick, icon, tooltip, ...action }, index) => (
+              .map(({ intent, onClick, icon, tooltip, className, ...action }, index) => (
                 <React.Fragment key={index}>
                   <ReqorePopover
                     component={StyledButtonWrapper}
                     componentProps={{
                       size,
                       color: getCustomColor(intent),
-                      className: classNames(
-                        'reqore-tag-action',
-                        action.show === 'hover' ? 'reqore-tag-action-hidden' : ''
-                      ),
                       onClick: onClick,
                       effect: rest.effect,
                       ...action,
+                      // MERGED, not replaced, and after the spread: a consumer
+                      // passing `className` used to clobber `reqore-tag-action`
+                      // and `reqore-tag-action-hidden`, so a `show: 'hover'`
+                      // action with a custom class silently stopped hiding.
+                      className: classNames(
+                        'reqore-tag-action',
+                        action.show === 'hover' ? 'reqore-tag-action-hidden' : '',
+                        className
+                      ),
                     }}
                     {...(tooltip
                       ? typeof tooltip === 'string'
