@@ -103,7 +103,11 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   }
 `;
 
-export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
+export const StyledTextarea = styled(StyledEffect).withConfig({
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    prop !== 'hasClearButton' &&
+    (['decorate', 'renderElement', 'renderLeaf'].includes(String(prop)) || defaultValidatorFn(prop)),
+})<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;
   max-height: 100%;
@@ -281,7 +285,7 @@ function Textarea<T>(
           rounded={rounded}
           rows={1}
           value={_value}
-          readonly={rest?.readOnly}
+          readOnly={rest?.readOnly}
           tabIndex={rest?.disabled ? -1 : 0}
           hasClearButton={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
         />

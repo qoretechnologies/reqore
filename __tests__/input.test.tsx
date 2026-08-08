@@ -30,6 +30,7 @@ test('Renders <Input /> properly', () => {
 
 test('Renders <Input /> with clear button properly', async () => {
   vi.useFakeTimers();
+  vi.mocked(console.error).mockClear();
 
   const fn = vi.fn();
 
@@ -47,6 +48,9 @@ test('Renders <Input /> with clear button properly', async () => {
 
   // No clear button
   expect(document.querySelectorAll('.reqore-clear-input-button').length).toBe(1);
+  expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toMatch(
+    /hasRightIcon|marginSize|show/
+  );
 
   fireEvent.click(document.querySelector('.reqore-clear-input-button')!);
 

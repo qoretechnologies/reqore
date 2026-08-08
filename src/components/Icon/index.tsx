@@ -7,6 +7,7 @@ import styled, { css, keyframes } from 'styled-components';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { IReqoreIntent, IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
@@ -72,7 +73,17 @@ const SpinKeyframes = keyframes`
   }
 `;
 
-export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left' | 'both' }>`
+export const StyledIconWrapper = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'animation',
+    'compact',
+    'interactive',
+    'margin',
+    'marginSize',
+    'rotation',
+    'rounded'
+  ),
+})<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-flex;
   flex: 0 0 auto;
   justify-content: center;

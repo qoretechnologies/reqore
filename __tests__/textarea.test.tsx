@@ -21,6 +21,7 @@ test('Renders <TextArea /> properly', () => {
 
 test('Renders <TextArea /> with clear button properly', () => {
   const fn = vi.fn();
+  vi.mocked(console.error).mockClear();
 
   render(
     <ReqoreUIProvider>
@@ -33,6 +34,9 @@ test('Renders <TextArea /> with clear button properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-clear-input-button').length).toBe(1);
+  expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toMatch(
+    /hasClearButton|marginSize|readonly|show/
+  );
 
   fireEvent.click(document.querySelector('.reqore-clear-input-button')!);
 
@@ -58,6 +62,7 @@ test('Disabled <TextArea /> cannot be cleared', () => {
 
 test('Readonly <Textarea /> cannot be cleared', () => {
   const fn = vi.fn();
+  vi.mocked(console.error).mockClear();
 
   render(
     <ReqoreUIProvider>
@@ -71,6 +76,8 @@ test('Readonly <Textarea /> cannot be cleared', () => {
 
   // No clear button
   expect(document.querySelectorAll('.reqore-clear-input-button').length).toBe(0);
+  expect(document.querySelector('.reqore-textarea')).toHaveAttribute('readonly');
+  expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain('readonly');
 });
 
 test('<Textarea /> gets automatically focused', () => {
