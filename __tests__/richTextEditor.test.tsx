@@ -56,3 +56,26 @@ test('establishes an empty-editor selection on focus for Firefox input', () => {
     focus: { path: [0, 0], offset: 0 },
   });
 });
+
+test('does not pass a React ref to Slate Editable', () => {
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreRichTextEditor value={emptyValue} onChange={() => undefined} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('[contenteditable="true"]')).not.toBeNull();
+  expect(
+    consoleError.mock.calls.some(([message]) =>
+      String(message).includes('Function components cannot be given refs')
+    )
+  ).toBe(false);
+
+  consoleError.mockRestore();
+});

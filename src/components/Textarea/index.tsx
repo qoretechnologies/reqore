@@ -12,6 +12,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -103,7 +104,13 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   }
 `;
 
-export const StyledTextarea = styled(StyledEffect)<IReqoreTextareaStyle>`
+export const StyledTextarea = styled(StyledEffect).withConfig({
+  // `hasClearButton` drives padding only and must never reach the DOM. Everything else
+  // follows styled-components' own rule, so a polymorphic `as` component — Slate's
+  // editable in `ReqoreRichTextEditor` — still receives `renderElement` / `renderLeaf` /
+  // `decorate`, which are component props rather than HTML attributes.
+  shouldForwardProp: omitStyleProps('hasClearButton'),
+})<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;
   max-height: 100%;
@@ -281,7 +288,7 @@ function Textarea<T>(
           rounded={rounded}
           rows={1}
           value={_value}
-          readonly={rest?.readOnly}
+          readOnly={rest?.readOnly}
           tabIndex={rest?.disabled ? -1 : 0}
           hasClearButton={!rest?.readOnly && !rest?.disabled && !!(onClearClick && onChange)}
         />

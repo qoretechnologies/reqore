@@ -93,9 +93,15 @@ const timeoutAnimation = keyframes`
 `;
 
 export const StyledReqoreNotification = styled(StyledEffect).withConfig({
+  // The notification renders as `animated.div` (see `as` below), so styled-components
+  // treats it as a component target and forwards everything not listed here — react-spring
+  // then spreads the leftovers onto the real `<div>`. Every styling-only prop the css
+  // blocks read must therefore be named explicitly; the DOM-attribute validator does not
+  // apply to a component target and cannot catch them.
   shouldForwardProp: omitStyleProps(
     'asMessage',
     'backgroundBlur',
+    'blur',
     'clickable',
     'fill',
     'fixed',
@@ -103,6 +109,9 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
     'fluid',
     'hasShadow',
     'margin',
+    'maxWidth',
+    'minimal',
+    'opaque',
     'raised',
     'spaceBetween',
     'stack',

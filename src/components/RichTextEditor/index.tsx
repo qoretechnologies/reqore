@@ -201,6 +201,23 @@ const insertTag = (
 
 export type TReqoreRichTextEditorRef = BaseEditor & ReactEditor & HistoryEditor;
 
+/**
+ * `ReqoreTextarea` is polymorphic and attaches an input ref to its rendered component. Slate's
+ * `Editable` owns its DOM node through `ReactEditor` and intentionally does not accept a React
+ * ref. Present a ref-capable boundary to the polymorphic textarea while leaving Slate in charge
+ * of its DOM mapping; rich-text focus and selection are handled through `ReactEditor` below.
+ */
+const RefSafeSlateEditable = memo(
+  forwardRef<HTMLDivElement, EditableProps>((props, ref) => {
+    // Accept the polymorphic input's DOM-ref contract without passing it to
+    // Slate's function component. Slate owns this element through ReactEditor.
+    void ref;
+    return <Editable {...props} />;
+  })
+);
+
+RefSafeSlateEditable.displayName = 'RefSafeSlateEditable';
+
 export const ReqoreRichTextEditor = forwardRef<
   TReqoreRichTextEditorRef,
   IReqoreRichTextEditorProps
@@ -487,7 +504,7 @@ export const ReqoreRichTextEditor = forwardRef<
             renderLeaf={renderLeaf}
             decorate={decorate}
             onFocusCapture={handleFocus}
-            as={Editable}
+            as={RefSafeSlateEditable}
             style={{
               lineHeight: 1.5,
               outline: 'none',

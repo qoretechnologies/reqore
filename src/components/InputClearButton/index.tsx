@@ -2,6 +2,7 @@ import { animated, useTransition } from '@react-spring/web';
 import styled from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { SIZE_TO_PX } from '../../constants/sizes';
+import { omitStyleProps } from '../../helpers/styled';
 import { IReqoreButtonProps } from '../Button';
 import ReqoreIcon from '../Icon';
 
@@ -11,7 +12,9 @@ export interface IReqoreInputClearButtonProps extends IReqoreButtonProps {
   hasRightIcon?: boolean;
 }
 
-export const StyledInputClearButton = styled(ReqoreIcon)<{ show?: boolean }>`
+export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
+  shouldForwardProp: omitStyleProps('hasRightIcon', 'show'),
+})<{ hasRightIcon?: boolean; show?: boolean }>`
   position: absolute;
   right: ${({ size, hasRightIcon }) => (hasRightIcon ? SIZE_TO_PX[size] : 0)}px;
   top: 0;

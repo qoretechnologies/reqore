@@ -7,6 +7,7 @@ import styled, { css, keyframes } from 'styled-components';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { IReqoreIntent, IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
@@ -78,7 +79,25 @@ const SpinKeyframes = keyframes`
   }
 `;
 
-export const StyledIconWrapper = styled(StyledEffect)<{ margin: 'right' | 'left' | 'both' }>`
+// `wrapperElement` makes this polymorphic: the input clear button renders it as
+// react-spring's `animated.span`, a component target that styled-components forwards
+// everything to and that spreads the leftovers onto a real `<span>`. Name every
+// styling-only prop here — the DOM-attribute validator only guards tag targets, so it
+// cannot catch them. (Omitting a prop still leaves it readable by the css blocks below
+// and by the folded `StyledEffect` styles; only the rendered element is affected.)
+export const StyledIconWrapper = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'animation',
+    'compact',
+    'effect',
+    'interactive',
+    'margin',
+    'marginSize',
+    'rotation',
+    'rounded',
+    'tooltip'
+  ),
+})<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-flex;
   flex: 0 0 auto;
   justify-content: center;
