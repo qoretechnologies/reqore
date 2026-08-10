@@ -57,6 +57,12 @@ export interface IReqoreControlGroupComponentProps
   isLastGroup?: boolean;
   fill?: boolean;
   overflowButtonProps?: IReqoreButtonProps;
+  /**
+   * Label for the drawer that lists the group's hidden overflow items.
+   * Defaults to `'Hidden items'`. Override to translate the drawer heading
+   * shown when a responsive control group collapses items into a menu.
+   */
+  hiddenItemsLabel?: string;
 }
 
 export interface IReqoreControlGroupProps
@@ -201,6 +207,7 @@ const ReqoreControlGroup = memo(
     horizontalAlign = 'flex-start',
     responsive,
     overflowButtonProps,
+    hiddenItemsLabel = 'Hidden items',
     ...rest
   }, externalRef) => {
     const isStack = stack || isInsideStackGroup;
@@ -571,7 +578,7 @@ const ReqoreControlGroup = memo(
             minimal
             position='bottom'
             hasBackdrop={false}
-            label='Hidden items'
+            label={hiddenItemsLabel}
             minSize='100px'
             size='auto'
           ></ReqoreDrawer>

@@ -66,6 +66,19 @@ export interface IReqoreDropdownListProps
   onFilterChange?: (query: string) => void;
   filter?: string | number;
   filterPlaceholder?: string;
+  /**
+   * Builder for the filter input's placeholder when `filterPlaceholder` is
+   * not provided. Receives the count of filterable items (dividers excluded)
+   * and must return the placeholder string. Defaults to
+   * ``(count) => `Search ${count} items...` ``. Override to translate the
+   * default placeholder.
+   */
+  filterPlaceholderBuilder?: (count: number) => string;
+  /**
+   * Message rendered inside the list when a filter query yields no matches.
+   * Defaults to `'No items found'`. Override to translate.
+   */
+  noItemsFoundText?: string;
 
   onItemSelect?: TDropdownItemOnClick;
   inputProps?: IReqoreInputProps;
@@ -107,6 +120,8 @@ const ReqoreDropdownList = memo(
     paging,
     onFilterChange,
     filterPlaceholder,
+    filterPlaceholderBuilder = (count) => `Search ${count} items...`,
+    noItemsFoundText = 'No items found',
     filter,
     customElements,
     customTheme,
@@ -467,7 +482,7 @@ const ReqoreDropdownList = memo(
                   onChange={handleQueryChange}
                   placeholder={
                     filterPlaceholder ||
-                    `Search ${size(_items.filter((item) => !item.divider))} items...`
+                    filterPlaceholderBuilder(size(_items.filter((item) => !item.divider)))
                   }
                   onClearClick={() => (onFilterChange ? onFilterChange('') : setQuery(''))}
                   customTheme={theme}
@@ -533,7 +548,7 @@ const ReqoreDropdownList = memo(
                   <ReqoreControlGroup horizontalAlign='center'>
                     <ReqoreP intent='muted'>
                       <ReqoreIcon icon='ForbidLine' intent='muted' margin='right' />
-                      No items found
+                      {noItemsFoundText}
                     </ReqoreP>
                   </ReqoreControlGroup>
                 ) : null}

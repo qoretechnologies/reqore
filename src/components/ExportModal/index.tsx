@@ -10,21 +10,57 @@ export interface IReqoreExportModalProps extends IReqoreModalProps {
   data: { [key: string]: unknown } | unknown[];
   sendNotificationOnCopy?: boolean;
   tabsOptions?: Omit<IReqoreTabsProps, 'tabs'>;
+  /**
+   * Label for the CSV format tab. Defaults to English `'CSV'` — override for
+   * locales that transliterate format acronyms.
+   */
+  csvTabLabel?: string;
+  /**
+   * Label for the JSON format tab. Defaults to English `'JSON'` — override for
+   * locales that transliterate format acronyms.
+   */
+  jsonTabLabel?: string;
+  /**
+   * Label for the YAML format tab. Defaults to English `'YAML'` — override for
+   * locales that transliterate format acronyms.
+   */
+  yamlTabLabel?: string;
+  /**
+   * Label for the "Copy" bottom action button. Defaults to English `'Copy'` —
+   * override to translate the button copy.
+   */
+  copyLabel?: string;
+  /**
+   * Label for the "Copy and close" bottom action button. Defaults to English
+   * `'Copy and close'` — override to translate the button copy.
+   */
+  copyAndCloseLabel?: string;
+  /**
+   * Content shown in the notification fired when data is copied to the clipboard.
+   * Defaults to English `'Data copied to clipboard'` — override to translate.
+   */
+  copyNotificationContent?: string;
 }
 
 export const ReqoreExportModal = ({
   data,
   sendNotificationOnCopy = true,
   tabsOptions = {},
+  csvTabLabel = 'CSV',
+  jsonTabLabel = 'JSON',
+  yamlTabLabel = 'YAML',
+  copyLabel = 'Copy',
+  copyAndCloseLabel = 'Copy and close',
+  copyNotificationContent = 'Data copied to clipboard',
   ...rest
 }: IReqoreExportModalProps) => {
   const addNotification = useReqoreProperty('addNotification');
   const isArray = Array.isArray(data);
   const [tab, setTab] = useState<string>(isArray ? 'csv' : 'json');
   const tabs: IReqoreTabsProps['tabs'] = [
-    { label: 'CSV', id: 'csv', disabled: !isArray },
-    { label: 'JSON', id: 'json' },
-    { label: 'YAML', id: 'yaml' },
+    { label: csvTabLabel, id: 'csv', disabled: !isArray },
+    { label: jsonTabLabel, id: 'json' },
+    { label: yamlTabLabel, id: 'yaml' },
   ];
 
   const dataToExport = useMemo(() => {
@@ -45,12 +81,12 @@ export const ReqoreExportModal = ({
 
     if (sendNotificationOnCopy) {
       addNotification({
-        content: 'Data copied to clipboard',
+        content: copyNotificationContent,
         intent: 'success',
         duration: 3000,
       });
     }
-  }, [sendNotificationOnCopy, dataToExport]);
+  }, [sendNotificationOnCopy, dataToExport, copyNotificationContent]);
 
   return (
     <ReqoreModal
@@ -61,7 +97,7 @@ export const ReqoreExportModal = ({
       bottomActions={[
         {
           position: 'right',
-          label: 'Copy',
+          label: copyLabel,
           icon: 'ClipboardLine',
           onClick: () => {
             handleCopyClick();
@@ -69,7 +105,7 @@ export const ReqoreExportModal = ({
         },
         {
           position: 'right',
-          label: 'Copy and close',
+          label: copyAndCloseLabel,
           icon: 'ClipboardFill',
           onClick: () => {
             handleCopyClick();

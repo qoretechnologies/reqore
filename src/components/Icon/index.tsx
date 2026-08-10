@@ -31,6 +31,12 @@ export interface IReqoreIconProps
   marginSize?: TSizes | string | number;
 
   image?: string;
+  /**
+   * Alternative text for the `image` (used as the `<img>` `alt` attribute).
+   * Defaults to `''` so screen readers treat the image as decorative — override
+   * with a translated description whenever the image conveys meaning.
+   */
+  imageAlt?: string;
   rounded?: boolean;
   rotation?: number;
   animation?: 'spin' | 'heartbeat';
@@ -156,6 +162,7 @@ const ReqoreIcon = memo(
         iconProps,
         intent,
         image,
+        imageAlt = '',
         glow,
         ...rest
       }: IReqoreIconProps,
@@ -241,7 +248,7 @@ const ReqoreIcon = memo(
             className={`${className || ''} reqore-icon`}
             style={finalStyle}
           >
-            <img src={image} alt='' />
+            <img src={image} alt={imageAlt} />
           </ReqoreTooltipComponent>
         );
       }

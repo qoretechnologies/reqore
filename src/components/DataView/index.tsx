@@ -80,6 +80,71 @@ import {
   reqoreUnwrapEnvelope,
 } from './helpers';
 
+/**
+ * Bag of user-visible strings the DataView renders. Every entry is optional;
+ * anything omitted falls back to the built-in English default so consumers
+ * can override just the strings they need. Grouped as one prop so a
+ * translated dictionary can be passed in a single place instead of via
+ * dozens of separate string props.
+ */
+export interface IReqoreDataViewLabels {
+  /** Section summary for an object (record). Defaults to
+   *  `Object · N field(s)`. */
+  objectSection?: (count: number) => string;
+  /** Section summary for a list (array). Defaults to `List · N item(s)`. */
+  listSection?: (count: number) => string;
+  /** Root section fallback label for a bare scalar value. Defaults to
+   *  `'Value'`. */
+  scalarSection?: string;
+  /** `aria-label` on a click-to-edit scalar cell. Defaults to
+   *  `'Edit value'`. */
+  editValue?: string;
+  /** `aria-label` on a click-to-edit key cell. Defaults to `'Rename key'`. */
+  renameKey?: string;
+  /** Tooltip for the delete affordance on a record row. Defaults to
+   *  ``(key) => `Remove ${key}` ``. */
+  removeProperty?: (key: string) => string;
+  /** Tooltip for the delete affordance on an array item. Defaults to
+   *  ``(index) => `Remove item ${index}` `` (index is 1-based). */
+  removeItem?: (indexOneBased: number) => string;
+  /** Tooltip on the inline type-picker dropdown. Defaults to
+   *  `'Change type'`. */
+  changeType?: string;
+  /** Tooltip on the scalar-edit commit button. Defaults to
+   *  `'Save (Enter)'`. */
+  saveValueTooltip?: string;
+  /** Tooltip on the scalar-edit cancel button. Defaults to
+   *  `'Cancel (Esc)'`. */
+  cancelValueTooltip?: string;
+  /** Tooltip on the key-rename commit button. Defaults to
+   *  `'Rename (Enter)'`. */
+  renameCommitTooltip?: string;
+  /** Tooltip on the key-rename cancel button. Defaults to
+   *  `'Cancel (Esc)'`. */
+  renameCancelTooltip?: string;
+  /** Label on the `+ Add property` affordance for records. Defaults to
+   *  `'Add property'`. */
+  addPropertyLabel?: string;
+  /** Label on the `+ Add item` affordance for arrays. Defaults to
+   *  `'Add item'`. */
+  addItemLabel?: string;
+  /** Label on the add-entry commit button. Defaults to `'Add'`. */
+  addCommitLabel?: string;
+  /** Tooltip on the add-entry cancel button. Defaults to `'Cancel'`. */
+  addCancelTooltip?: string;
+  /** Placeholder for the property-name input in the add-entry form.
+   *  Defaults to `'property name'`. */
+  propertyNamePlaceholder?: string;
+  /** Value-kind labels for the type picker. Each defaults to the English
+   *  label used before this prop existed. */
+  typeStringLabel?: string;
+  typeNumberLabel?: string;
+  typeBooleanLabel?: string;
+  typeObjectLabel?: string;
+  typeArrayLabel?: string;
+  typeNullLabel?: string;
+}
+
 export interface IReqoreDataViewProps
   extends Omit<IReqorePanelProps, 'children'>,
     IReqoreDataViewScalarOptions {
@@ -88,6 +153,15 @@ export interface IReqoreDataViewProps
 
   /** Empty-state copy when `data` carries no meaningful content. */
   emptyText?: string;
+
+  /**
+   * Overrides for user-visible strings the DataView renders (section
+   * summaries, edit affordances, add-entry form). Every field is optional
+   * and falls back to a built-in English default. Grouped as one prop so a
+   * consumer app can pass a single translated dictionary instead of many
+   * individual `*Label` props.
+   */
+  labels?: IReqoreDataViewLabels;
 
   /** When `true` (default), the root container shows a collapsible
    *  summary that the operator can click to fold the whole tree away

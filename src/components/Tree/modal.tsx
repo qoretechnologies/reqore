@@ -21,6 +21,20 @@ export interface IReqoreTreeManagementDialog
     value: any;
     originalData?: { key?: string; value?: any };
   }) => void;
+  /** Label used when the dialog is opened for adding a new item. Defaults to `'Adding new item'`. */
+  addItemDialogLabel?: string;
+  /** Label builder used when the dialog is opened for editing an existing item at `path`. */
+  updateItemDialogLabel?: (path: string) => string;
+  /** Save-button label. Defaults to `'Save'`. */
+  saveLabel?: string;
+  /** "Key" field label. Defaults to `'Key'`. */
+  keyLabel?: string;
+  /** "Value" field label. Defaults to `'Value'`. */
+  valueLabel?: string;
+  /** Placeholder for the key input. Defaults to `'Key'`. */
+  keyPlaceholder?: string;
+  /** Placeholder for the value input. Defaults to `'Value'`. */
+  valuePlaceholder?: string;
 }
 
 export const ReqoreTreeManagementDialog = ({
@@ -32,6 +46,13 @@ export const ReqoreTreeManagementDialog = ({
   onSave,
   KeyRenderer,
   ValueRenderer,
+  addItemDialogLabel = 'Adding new item',
+  updateItemDialogLabel = (p: string) => `Updating "${p}"`,
+  saveLabel = 'Save',
+  keyLabel = 'Key',
+  valueLabel = 'Value',
+  keyPlaceholder = 'Key',
+  valuePlaceholder = 'Value',
 }: IReqoreTreeManagementDialog) => {
   const [key, setKey] = useState(data?.key);
   const [value, setValue] = useState<any>(data?.value);
@@ -39,7 +60,7 @@ export const ReqoreTreeManagementDialog = ({
   return (
     <ReqoreModal
       isOpen
-      label={path ? `Updating "${path}"` : 'Adding new item'}
+      label={path ? updateItemDialogLabel(path) : addItemDialogLabel}
       onClose={onClose}
       minimal
       panelSize='small'
@@ -48,7 +69,7 @@ export const ReqoreTreeManagementDialog = ({
           intent: 'success',
           className: 'reqore-tree-save',
           disabled: type === 'object' ? !key || !value : !value,
-          label: 'Save',
+          label: saveLabel,
           icon: 'CheckLine',
           onClick: () => {
             onSave({
@@ -64,7 +85,7 @@ export const ReqoreTreeManagementDialog = ({
       <ReqoreControlGroup vertical>
         {type === 'object' || (data?.key && parentType !== 'array') ? (
           <ReqoreControlGroup fluid vertical>
-            <ReqoreTag fixed width='100px' label='Key' />
+            <ReqoreTag fixed width='100px' label={keyLabel} />
             {KeyRenderer ? (
               <KeyRenderer value={key} isEditing onChange={(newKey) => setKey(newKey)} />
             ) : (
@@ -72,7 +93,7 @@ export const ReqoreTreeManagementDialog = ({
                 disabled={data && parentType === 'array'}
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
-                placeholder='Key'
+                placeholder={keyPlaceholder}
                 fluid
               />
             )}
@@ -80,7 +101,7 @@ export const ReqoreTreeManagementDialog = ({
         ) : null}
         {typeof data?.value !== 'object' && (
           <ReqoreControlGroup fluid verticalAlign='flex-start' vertical>
-            <ReqoreTag fixed width='100px' label='Value' />
+            <ReqoreTag fixed width='100px' label={valueLabel} />
             <ReqoreControlGroup stack fluid>
               {ValueRenderer ? (
                 <ValueRenderer
@@ -93,7 +114,7 @@ export const ReqoreTreeManagementDialog = ({
                   value={value}
                   scaleWithContent
                   onChange={(e: any) => setValue(e.target.value)}
-                  placeholder='Value'
+                  placeholder={valuePlaceholder}
                   fluid
                   disabled={value === '[]' || value === '{}'}
                 />

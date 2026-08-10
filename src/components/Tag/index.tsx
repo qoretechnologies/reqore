@@ -98,6 +98,11 @@ export interface IReqoreCustomTagProps
   labelKeyEffect?: IReqoreEffect;
   as?: string | React.ElementType;
   compact?: boolean;
+  /**
+   * Tooltip shown on the remove ("X") affordance rendered when `onRemoveClick`
+   * is set. Defaults to `'Remove'`.
+   */
+  removeTooltip?: string;
 }
 export interface IReqoreTagProps
   extends
@@ -372,6 +377,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       loading,
       loadingIconType,
       compact,
+      removeTooltip = 'Remove',
       ...rest
     }: IReqoreTagProps,
     ref
@@ -575,7 +581,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               effect: rest.effect,
             }}
             isReqoreComponent
-            content='Remove'
+            content={removeTooltip}
           >
             <ReqoreIcon icon='CloseLine' size={size} />
           </ReqorePopover>

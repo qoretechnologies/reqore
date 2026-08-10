@@ -18,6 +18,12 @@ export interface IReqorePanelNonResponsiveActionsProps
   closeButtonProps?: IReqorePanelProps['closeButtonProps'];
   collapseButtonProps?: IReqorePanelProps['collapseButtonProps'];
   isSmall: boolean;
+  /** Tooltip for the collapse control when the panel is expanded. Defaults to `'Collapse'`. */
+  collapseTooltip?: string;
+  /** Tooltip for the collapse control when the panel is collapsed. Defaults to `'Expand'`. */
+  expandTooltip?: string;
+  /** Tooltip for the close (`×`) control. Defaults to `'Close'`. */
+  closeTooltip?: string;
 }
 
 export const ReqorePanelNonResponsiveActions = memo(
@@ -33,6 +39,9 @@ export const ReqorePanelNonResponsiveActions = memo(
     collapseButtonProps,
     closeButtonProps,
     isSmall,
+    collapseTooltip = 'Collapse',
+    expandTooltip = 'Expand',
+    closeTooltip = 'Close',
     ...rest
   }: IReqorePanelNonResponsiveActionsProps) => {
     if (!show || (!size(children) && !showControlButtons)) {
@@ -56,7 +65,7 @@ export const ReqorePanelNonResponsiveActions = memo(
               e.stopPropagation();
               onCollapseClick();
             }}
-            tooltip={isCollapsed ? 'Expand' : 'Collapse'}
+            tooltip={isCollapsed ? expandTooltip : collapseTooltip}
             fixed
             {...collapseButtonProps}
           />
@@ -70,7 +79,7 @@ export const ReqorePanelNonResponsiveActions = memo(
               e.stopPropagation();
               onCloseClick();
             }}
-            tooltip='Close'
+            tooltip={closeTooltip}
             {...closeButtonProps}
           />
         ) : null}

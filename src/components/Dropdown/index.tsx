@@ -25,6 +25,18 @@ export interface IReqoreDropdownProps
   onFilterChange?: (query: string) => void;
   filter?: string | number;
   filterPlaceholder?: string;
+  /**
+   * Builder for the filter input's placeholder when `filterPlaceholder` is
+   * not provided. Receives the filterable-item count and returns the
+   * placeholder string. Defaults to
+   * ``(count) => `Search ${count} items...` ``. Override to translate.
+   */
+  filterPlaceholderBuilder?: (count: number) => string;
+  /**
+   * Message rendered inside the list when a filter query yields no matches.
+   * Defaults to `'No items found'`. Override to translate.
+   */
+  noItemsFoundText?: string;
   label?: any;
   children?: any;
   listWidth?: string;
@@ -102,6 +114,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   filterable,
   onFilterChange,
   filterPlaceholder,
+  filterPlaceholderBuilder,
+  noItemsFoundText,
   filter,
   icon,
   rightIcon,
@@ -210,6 +224,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         paging={paging}
         onFilterChange={onFilterChange}
         filterPlaceholder={filterPlaceholder}
+        filterPlaceholderBuilder={filterPlaceholderBuilder}
+        noItemsFoundText={noItemsFoundText}
         filter={filter}
         customElements={customElements}
         wrapperProps={wrapperProps}

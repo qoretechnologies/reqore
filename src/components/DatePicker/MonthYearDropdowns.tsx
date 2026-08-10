@@ -12,6 +12,16 @@ export interface IYearMonthDropdownsProps extends IReqoreButtonProps {
   setIsYearDropdownOpen(open: boolean): void;
   minValue: TDateValue;
   maxValue: TDateValue;
+  /**
+   * Localised month names shown in the month dropdown (12 entries,
+   * January-first). Defaults to the built-in English month names.
+   */
+  monthNames?: string[];
+  /**
+   * Fallback label shown on the month trigger when no month is selected.
+   * Defaults to `'Month'`.
+   */
+  monthLabel?: string;
 }
 export const YearMonthDropdowns = ({
   value: _value,
@@ -20,6 +30,8 @@ export const YearMonthDropdowns = ({
   setIsMonthDropdownOpen,
   minValue: _minValue = new Date(1970, 0, 1),
   maxValue: _maxValue = new Date(new Date().getFullYear() + 5, 11, 31),
+  monthNames,
+  monthLabel = 'Month',
   ...rest
 }: IYearMonthDropdownsProps) => {
   const value = _value ?? toDate(new Date());
@@ -28,6 +40,7 @@ export const YearMonthDropdowns = ({
   const maxValue = toDate(_maxValue);
   const currentYear = new Date().getFullYear();
   const years = getPreviousYears(minValue.year, maxValue.year);
+  const resolvedMonthNames = monthNames && monthNames.length === 12 ? monthNames : months;
 
   return (
     <ReqoreControlGroup gapSize='small'>
@@ -36,7 +49,7 @@ export const YearMonthDropdowns = ({
         compact
         filterable
         caretPosition='right'
-        label={months[value?.month - 1] ?? 'Month'}
+        label={resolvedMonthNames[value?.month - 1] ?? monthLabel}
         inputProps={{
           focusRules: {
             type: 'auto',
@@ -44,7 +57,7 @@ export const YearMonthDropdowns = ({
         }}
         {...rest}
         scrollToSelected
-        items={months.map((month, index) => ({
+        items={resolvedMonthNames.map((month, index) => ({
           value: month,
           selected: index === value?.month - 1,
           disabled:
@@ -52,7 +65,10 @@ export const YearMonthDropdowns = ({
             value.set({ month: index + 1 }).compare(maxValue) > 1,
         }))}
         onItemSelect={(item) =>
-          onValueChange(value.set({ month: months.findIndex((m) => m === item.value) + 1 }), false)
+          onValueChange(
+            value.set({ month: resolvedMonthNames.findIndex((m) => m === item.value) + 1 }),
+            false
+          )
         }
         onToggleChange={setIsMonthDropdownOpen}
       />

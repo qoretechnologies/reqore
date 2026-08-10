@@ -98,6 +98,12 @@ export interface IReqoreCollectionProps
   sortButtonTooltip?: (sort?: 'asc' | 'desc') => string;
   displayButtonTooltip?: (display?: 'list' | 'grid') => string;
   inputPlaceholder?: (items?: IReqoreCollectionItemProps[]) => string;
+  /**
+   * Label for the "Sort by" divider that heads the sort menu. Defaults to
+   * `'Sort by'`. Override to translate the sort menu heading — the sort-key
+   * options themselves are already consumer-supplied via `sortKeys`.
+   */
+  sortByLabel?: string;
 
   paging?: TReqorePaginationType<IReqoreCollectionItemProps>;
 }
@@ -173,6 +179,7 @@ export const ReqoreCollection = memo(
     sortButtonTooltip = (sort) => (sort === 'desc' ? 'Sort ascending' : 'Sort descending'),
     displayButtonTooltip = (display) => (display === 'grid' ? 'Show as list' : 'Show as grid'),
     inputPlaceholder = (items) => `Search in ${size(items)} items`,
+    sortByLabel = 'Sort by',
     paging,
     height,
 
@@ -338,7 +345,7 @@ export const ReqoreCollection = memo(
           actions: [
             {
               divider: true,
-              label: 'Sort by',
+              label: sortByLabel,
               dividerAlign: 'left',
               minimal: true,
               dividerPadded: 'bottom',

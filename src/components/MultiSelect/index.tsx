@@ -34,6 +34,26 @@ export interface IReqoreMultiSelectProps
 
   showNoItemsMessage?: boolean;
   noItemsMessageProps?: IReqoreTagProps;
+
+  /** Label for the tag shown when no items are selected. Defaults to `'No items selected'`. */
+  noItemsSelectedLabel?: string;
+  /** Label shown in the dropdown when the query matches no existing items. Defaults to `'No existing items found'`. */
+  noMatchingItemsLabel?: string;
+  /** Label shown in the dropdown when there are no items at all (and `canCreateItems` is true). Defaults to `'No items exist'`. */
+  noItemsAvailableLabel?: string;
+  /** Divider label preceding the user-created items section. Defaults to `'Custom Items'`. */
+  customItemsDividerLabel?: string;
+  /** Divider label preceding items that match the current query (shown when `canCreateItems` is true). Defaults to `'Items matching your query'`. */
+  matchingItemsDividerLabel?: string;
+  /**
+   * Prefix used to build the "create new" option label. Rendered as `${createItemLabelPrefix} "${query}"`.
+   * Defaults to `'Create new'`.
+   */
+  createItemLabelPrefix?: string;
+  /** Placeholder for the search input when items cannot be created. Defaults to `'Type to search...'`. */
+  searchPlaceholder?: string;
+  /** Placeholder for the search input when `canCreateItems` is true. Defaults to `'Type to search or create an item...'`. */
+  createItemPlaceholder?: string;
 }
 
 export interface IReqoreMultiSelectItemProps
@@ -100,6 +120,14 @@ export const ReqoreMultiSelect = ({
   disabled,
   showNoItemsMessage = true,
   noItemsMessageProps = {},
+  noItemsSelectedLabel = 'No items selected',
+  noMatchingItemsLabel = 'No existing items found',
+  noItemsAvailableLabel = 'No items exist',
+  customItemsDividerLabel = 'Custom Items',
+  matchingItemsDividerLabel = 'Items matching your query',
+  createItemLabelPrefix = 'Create new',
+  searchPlaceholder = 'Type to search...',
+  createItemPlaceholder = 'Type to search or create an item...',
   ...rest
 }: IReqoreMultiSelectProps) => {
   const [createdItems, setCreatedItems] = useState<TReqoreMultiSelectItem[]>([]);
@@ -165,7 +193,7 @@ export const ReqoreMultiSelect = ({
     */
   const allItems: TReqoreMultiSelectItem[] = useMemo(() => {
     const customItems: TReqoreMultiSelectItem[] = size(createdItems)
-      ? [{ divider: true, label: 'Custom Items' }, ...createdItems]
+      ? [{ divider: true, label: customItemsDividerLabel }, ...createdItems]
       : [];
 
     let filteredItems: TReqoreMultiSelectItem[] = [...items, ...customItems].filter((item) =>
@@ -184,7 +212,7 @@ export const ReqoreMultiSelect = ({
 
     if (query && !size(filteredItems)) {
       filteredItems = [
-        { label: 'No existing items found', readOnly: true, minimal: true, icon: 'ForbidLine' },
+        { label: noMatchingItemsLabel, readOnly: true, minimal: true, icon: 'ForbidLine' },
       ];
     }
 
@@ -197,7 +225,7 @@ export const ReqoreMultiSelect = ({
     ) {
       filteredItems = [
         {
-          label: `Create new "${query}"`,
+          label: `${createItemLabelPrefix} "${query}"`,
           value: query,
           isNew: true,
           icon: 'AddCircleLine',
@@ -212,13 +240,22 @@ export const ReqoreMultiSelect = ({
             },
           },
         },
-        { divider: true, label: 'Items matching your query' },
+        { divider: true, label: matchingItemsDividerLabel },
         ...filteredItems,
       ];
     }
 
     return filteredItems;
-  }, [items, createdItems, query, value]);
+  }, [
+    items,
+    createdItems,
+    query,
+    value,
+    customItemsDividerLabel,
+    noMatchingItemsLabel,
+    matchingItemsDividerLabel,
+    createItemLabelPrefix,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -273,7 +310,7 @@ export const ReqoreMultiSelect = ({
           <ReqoreTag
             color='transparent'
             icon='ForbidLine'
-            label='No items selected'
+            label={noItemsSelectedLabel}
             {...noItemsMessageProps}
           />
         </ReqoreTagGroup>
@@ -284,7 +321,7 @@ export const ReqoreMultiSelect = ({
           useTargetWidth
           handler='click'
           placement='auto-start'
-          placeholder={canCreateItems ? 'Type to search or create an item...' : 'Type to search...'}
+          placeholder={canCreateItems ? createItemPlaceholder : searchPlaceholder}
           {...selectorProps}
           disabled={isSelectorDisabled}
           multiSelect
@@ -307,7 +344,7 @@ export const ReqoreMultiSelect = ({
             size(allItems)
               ? allItems
               : canCreateItems
-              ? [{ label: 'No items exist', readOnly: true, minimal: true, icon: 'ForbidLine' }]
+              ? [{ label: noItemsAvailableLabel, readOnly: true, minimal: true, icon: 'ForbidLine' }]
               : []
           }
         />
