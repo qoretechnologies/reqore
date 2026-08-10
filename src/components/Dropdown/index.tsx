@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import { ReqorePanel, ReqorePopover } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
@@ -143,7 +143,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   offsetX,
   offsetY,
   ...rest
-}: IReqoreDropdownProps & T) {
+}: IReqoreDropdownProps & T, ref: React.ForwardedRef<HTMLElement>) {
   // Track the selected item at each navigation level
   // selectedItems[0] is the root level item, selectedItems[1] is the first submenu item, etc.
   const [selectedItems, setSelectedItems] = useState<Array<IReqoreDropdownItem | undefined>>([]);
@@ -227,6 +227,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
 
   return (
     <ReqorePopover
+      ref={ref}
       closeOnOutsideClick={closeOnOutsideClick}
       closeOnInsideClick={closeOnInsideClick ?? false}
       closeOnTargetClick={closeOnTargetClick}
@@ -261,6 +262,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   );
 }
 
-// memo() erases the generic signature, so restore it for callers; the double
-// cast is required because the memoized and generic types don't overlap.
-export default memo(ReqoreDropdown) as unknown as typeof ReqoreDropdown;
+// forwardRef() and memo() erase the generic signature, so restore it for callers; the double
+// cast is required because the wrapped and generic types don't overlap.
+export default memo(forwardRef(ReqoreDropdown as any)) as unknown as <T = IReqoreButtonProps>(
+  props: IReqoreDropdownProps & T & React.RefAttributes<HTMLElement>
+) => JSX.Element;

@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react';
-import { useEffect, useState } from 'react';
+import { createRef, useEffect, useState } from 'react';
 import { act } from 'react-dom/test-utils';
 import {
   ReqoreContent,
@@ -59,6 +59,18 @@ test('Renders <Dropdown /> properly', () => {
   expect(document.querySelectorAll('.reqore-button').length).toBe(4);
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(document.querySelectorAll('.reqore-menu-item').length).toBe(3);
+});
+
+test('Forwards its ref to the rendered trigger', () => {
+  const ref = createRef<HTMLElement>();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreDropdown ref={ref} items={[{ label: 'Hello', value: 'hello' }]} />
+    </ReqoreUIProvider>
+  );
+
+  expect(ref.current).toBe(document.querySelector('.reqore-button'));
 });
 
 test('Renders disabled <Dropdown /> when items are empty', () => {
