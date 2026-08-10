@@ -32,6 +32,22 @@ export interface IReqoreTableHeaderCellProps
    * public column config — the table threads it through internally.
    */
   parentMinimal?: boolean;
+  /** See `IReqoreTableProps.sortAscendingLabel`. */
+  sortAscendingLabel?: string;
+  /** See `IReqoreTableProps.sortDescendingLabel`. */
+  sortDescendingLabel?: string;
+  /** See `IReqoreTableProps.pinLeftLabel`. */
+  pinLeftLabel?: string;
+  /** See `IReqoreTableProps.pinRightLabel`. */
+  pinRightLabel?: string;
+  /** See `IReqoreTableProps.hideColumnLabel`. */
+  hideColumnLabel?: string;
+  /** See `IReqoreTableProps.resetSizeLabel`. */
+  resetSizeLabel?: string;
+  /** See `IReqoreTableProps.otherActionsLabel`. */
+  otherActionsLabel?: string;
+  /** See `IReqoreTableProps.columnFilterPlaceholder`. */
+  columnFilterPlaceholder?: string;
 }
 
 export interface IReqoreTableHeaderStyle {
@@ -143,6 +159,14 @@ export const ReqoreTableHeaderCell = memo(
     actions,
     parentMinimal,
     hasColumns,
+    sortAscendingLabel = 'Sort ascending',
+    sortDescendingLabel = 'Sort descending',
+    pinLeftLabel = 'Pin left',
+    pinRightLabel = 'Pin Right',
+    hideColumnLabel = 'Hide column',
+    resetSizeLabel = 'Reset size',
+    otherActionsLabel = 'Other',
+    columnFilterPlaceholder = 'Filter by this column...',
     ...rest
   }: IReqoreTableHeaderCellProps) => {
     const items = useMemo(() => {
@@ -151,7 +175,7 @@ export const ReqoreTableHeaderCell = memo(
       if (resizable || hideable || pinnable || sortable) {
         if (sortable) {
           _items.push({
-            label: `Sort ${sortData?.direction === 'desc' ? 'ascending' : 'descending'}`,
+            label: sortData?.direction === 'desc' ? sortAscendingLabel : sortDescendingLabel,
             icon: sortData.direction === 'desc' ? 'ArrowDownFill' : 'ArrowUpFill',
             flat: sortData?.by === dataId ? false : undefined,
             transparent: sortData?.by === dataId ? false : undefined,
@@ -168,7 +192,7 @@ export const ReqoreTableHeaderCell = memo(
           }
 
           _items.push({
-            label: 'Pin left',
+            label: pinLeftLabel,
             icon: 'SkipBackLine',
             flat: pin === 'left' ? false : undefined,
             transparent: pin === 'left' ? false : undefined,
@@ -180,7 +204,7 @@ export const ReqoreTableHeaderCell = memo(
           });
 
           _items.push({
-            label: 'Pin Right',
+            label: pinRightLabel,
             icon: 'SkipForwardLine',
             minimal: true,
             flat: pin === 'right' ? false : undefined,
@@ -198,7 +222,7 @@ export const ReqoreTableHeaderCell = memo(
           }
 
           _items.push({
-            label: 'Hide column',
+            label: hideColumnLabel,
             transparent: false,
             minimal: true,
             icon: 'EyeCloseLine',
@@ -213,7 +237,7 @@ export const ReqoreTableHeaderCell = memo(
           _items.push({
             transparent: false,
             minimal: true,
-            label: 'Reset size',
+            label: resetSizeLabel,
             icon: 'HistoryLine',
             disabled: !resizedWidth || width === resizedWidth,
             onClick: () => {
@@ -224,7 +248,7 @@ export const ReqoreTableHeaderCell = memo(
       }
 
       if (actions) {
-        _items = [..._items, { divider: true, label: 'Other' }, ...actions];
+        _items = [..._items, { divider: true, label: otherActionsLabel }, ...actions];
       }
 
       return _items;
@@ -240,6 +264,13 @@ export const ReqoreTableHeaderCell = memo(
       pinnable,
       sortable,
       pin,
+      sortAscendingLabel,
+      sortDescendingLabel,
+      pinLeftLabel,
+      pinRightLabel,
+      hideColumnLabel,
+      resetSizeLabel,
+      otherActionsLabel,
     ]);
 
     const pinStyle: React.CSSProperties = pin
@@ -323,7 +354,7 @@ export const ReqoreTableHeaderCell = memo(
                   size={size}
                   rounded={false}
                   filterable={filterable}
-                  filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
+                  filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
                   filter={filter}
                   onFilterChange={(value) => {
                     onFilterChange?.(dataId, value);
@@ -410,7 +441,7 @@ export const ReqoreTableHeaderCell = memo(
               rounded={false}
               intent={filter || sortData.by === dataId ? 'info' : rest.intent}
               filterable={filterable}
-              filterPlaceholder={filterPlaceholder || 'Filter by this column...'}
+              filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
               filter={filter}
               inputProps={{ intent: filter ? 'info' : undefined }}
               onFilterChange={(value) => {

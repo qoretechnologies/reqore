@@ -165,6 +165,28 @@ export interface IReqoreNavRailProps
   footer?: ReactNode;
   className?: string;
   style?: CSSProperties;
+
+  /**
+   * ARIA label for the overflow (`⋮`) trigger that folds hidden primary
+   * destinations. Defaults to `'More items'`.
+   */
+  moreItemsLabel?: string;
+  /**
+   * ARIA label for the overflow (`⋮`) trigger that folds hidden sub-items of
+   * the active destination. Defaults to `'More sections'`.
+   */
+  moreSectionsLabel?: string;
+  /**
+   * Suffix used to build the overflow-trigger tooltip content — rendered as
+   * `${hidden.length} ${overflowTooltipSuffix}`. Defaults to `'more'`.
+   */
+  overflowTooltipSuffix?: string;
+  /**
+   * Suffix used to label the active destination's expanded group container,
+   * rendered as `${activeItem.label} ${activeGroupAriaLabelSuffix}` on the
+   * grouping element's `aria-label`. Defaults to `'sections'`.
+   */
+  activeGroupAriaLabelSuffix?: string;
 }
 
 // ── Styled surface ────────────────────────────────────────────────────────────
@@ -320,12 +342,25 @@ interface IOverflowProps {
   size: TSizes;
   placement: 'left' | 'right';
   ariaLabel: string;
+  /**
+   * Suffix appended to the overflow tooltip content — rendered as
+   * `${items.length} ${tooltipSuffix}`. Defaults to `'more'`.
+   */
+  tooltipSuffix?: string;
   onSelect: (id: string) => void;
   onOpenChange: (open: boolean) => void;
 }
 
 const NavRailOverflow = memo(
-  ({ items, size, placement, ariaLabel, onSelect, onOpenChange }: IOverflowProps) => {
+  ({
+    items,
+    size,
+    placement,
+    ariaLabel,
+    tooltipSuffix = 'more',
+    onSelect,
+    onOpenChange,
+  }: IOverflowProps) => {
     // Memoised so the memo'd ReqorePopover/ReqoreMenuItem children get stable
     // props (no new object/closure per render).
     const componentProps = useMemo(
@@ -338,9 +373,9 @@ const NavRailOverflow = memo(
         raised: true,
         'aria-label': ariaLabel,
         className: 'reqore-nav-rail-overflow',
-        tooltip: { content: `${items.length} more`, placement },
+        tooltip: { content: `${items.length} ${tooltipSuffix}`, placement },
       }),
-      [size, ariaLabel, placement, items.length]
+      [size, ariaLabel, placement, items.length, tooltipSuffix]
     );
     const handleItemClick = useCallback<TReqoreMenuItemEventHandler>(
       (_event, itemId) => {
@@ -520,6 +555,10 @@ export const ReqoreNavRail = memo(
     footer,
     className,
     style,
+    moreItemsLabel = 'More items',
+    moreSectionsLabel = 'More sections',
+    overflowTooltipSuffix = 'more',
+    activeGroupAriaLabelSuffix = 'sections',
   }: IReqoreNavRailProps) => {
     // NB: `intent` is deliberately NOT fed to the theme here — it must not
     // recolour the whole rail surface; it only drives the active accent + the
@@ -789,7 +828,7 @@ export const ReqoreNavRail = memo(
           effect={activeEffect as IReqoreEffect}
           key={item.id}
           role='group'
-          aria-label={`${item.label} sections`}
+          aria-label={`${item.label} ${activeGroupAriaLabelSuffix}`}
           className='reqore-nav-rail-active'
           theme={theme}
           $gap={GAP_FROM_SIZE[subSize]}
@@ -817,7 +856,8 @@ export const ReqoreNavRail = memo(
               }))}
               size={subSize}
               placement={tipSide}
-              ariaLabel='More sections'
+              ariaLabel={moreSectionsLabel}
+              tooltipSuffix={overflowTooltipSuffix}
               onSelect={onSubSelect}
               onOpenChange={onMenuToggle}
             />
@@ -864,7 +904,8 @@ export const ReqoreNavRail = memo(
                 items={itemsHidden.map((i) => ({ id: i.id, label: i.label, icon: i.icon }))}
                 size={size}
                 placement={tipSide}
-                ariaLabel='More items'
+                ariaLabel={moreItemsLabel}
+                tooltipSuffix={overflowTooltipSuffix}
                 onSelect={onItemSelect}
                 onOpenChange={onMenuToggle}
               />

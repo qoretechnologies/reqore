@@ -9,6 +9,31 @@ export interface IReqoreErrorBoundaryProps extends Omit<IReqorePanelProps, 'onEr
   doNotCatch?: boolean;
   errorMessage?: string;
   onError?: (error: Error, info: ErrorInfo) => void;
+  /**
+   * Label for the "Reset" action rendered on the built-in fallback panel.
+   * Defaults to English `'Reset'` — override this to translate the button copy.
+   */
+  resetActionLabel?: string;
+  /**
+   * Label for the "Details" toggle action rendered on the built-in fallback panel.
+   * Defaults to English `'Details'` — override this to translate the button copy.
+   */
+  detailsActionLabel?: string;
+  /**
+   * Label used as the "Name" row header inside the details tree.
+   * Defaults to English `'Name'` — override this to translate the tree row label.
+   */
+  errorNameLabel?: string;
+  /**
+   * Label used as the "Message" row header inside the details tree.
+   * Defaults to English `'Message'` — override this to translate the tree row label.
+   */
+  errorDetailsMessageLabel?: string;
+  /**
+   * Label used as the "Stack" row header inside the details tree.
+   * Defaults to English `'Stack'` — override this to translate the tree row label.
+   */
+  errorStackLabel?: string;
 }
 
 export interface IReqoreErrorBoundaryState {
@@ -38,7 +63,18 @@ export class ErrorBoundary extends Component<IReqoreErrorBoundaryProps, IReqoreE
   }
 
   render() {
-    const { doNotCatch, fallback, errorMessage, children, ...rest } = this.props;
+    const {
+      doNotCatch,
+      fallback,
+      errorMessage,
+      children,
+      resetActionLabel = 'Reset',
+      detailsActionLabel = 'Details',
+      errorNameLabel = 'Name',
+      errorDetailsMessageLabel = 'Message',
+      errorStackLabel = 'Stack',
+      ...rest
+    } = this.props;
 
     if (this.state.error && !doNotCatch) {
       if (fallback) {
@@ -62,7 +98,7 @@ export class ErrorBoundary extends Component<IReqoreErrorBoundaryProps, IReqoreE
           actions={[
             ...(rest.actions || []),
             {
-              label: 'Reset',
+              label: resetActionLabel,
               icon: 'RefreshLine',
               size: 'tiny',
               compact: true,
@@ -70,7 +106,7 @@ export class ErrorBoundary extends Component<IReqoreErrorBoundaryProps, IReqoreE
               onClick: () => this.setState({ error: undefined }),
             },
             {
-              label: 'Details',
+              label: detailsActionLabel,
               icon: 'InformationLine',
               size: 'tiny',
               compact: true,
@@ -85,9 +121,9 @@ export class ErrorBoundary extends Component<IReqoreErrorBoundaryProps, IReqoreE
               showControls={false}
               size='small'
               data={{
-                Name: this.state.error.name,
-                Message: this.state.error.message,
-                Stack: this.state.error.stack,
+                [errorNameLabel]: this.state.error.name,
+                [errorDetailsMessageLabel]: this.state.error.message,
+                [errorStackLabel]: this.state.error.stack,
               }}
             />
           )}

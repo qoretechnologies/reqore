@@ -76,6 +76,14 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
    * because the popover always renders the menu generated from `tabs`.
    */
   overflowPopoverProps?: Partial<Omit<IReqorePopoverProps, 'content' | 'component' | 'componentProps'>>;
+  /**
+   * Label shown on the "More" overflow tab when some tabs don't fit. Defaults
+   * to `'More'`. Override to translate (e.g. `'Plus'`, `'Mehr'`). Only applies
+   * when the currently active tab is visible in the strip — an overflowed
+   * active tab keeps showing its own label so the user can see which tab is
+   * selected.
+   */
+  overflowLabel?: string | number;
   // Internal prop, ignore!
   _testWidth?: number;
 }
@@ -114,6 +122,7 @@ const ReqoreTabs = ({
   useReactTransition = true,
   overflowMenuProps,
   overflowPopoverProps,
+  overflowLabel,
   errorBoundaryOptions,
   ...rest
 }: IReqoreTabsProps) => {
@@ -169,6 +178,7 @@ const ReqoreTabs = ({
           useReactTransition={useReactTransition}
           overflowMenuProps={overflowMenuProps}
           overflowPopoverProps={overflowPopoverProps}
+          overflowLabel={overflowLabel}
         />
         {React.Children.map(children, (child) =>
           child &&

@@ -119,6 +119,13 @@ export interface IReqoreTestimonialProps
    * the padding independently from the card's text scale.
    */
   paddingSize?: TSizes;
+  /**
+   * Accessible label for the rating widget. Called with the current `rating`
+   * and `maxRating` when a `rating` is supplied. Defaults to
+   * ``(rating, max) => `Rating: ${rating} out of ${max}` `` — override to
+   * translate or reword the announcement.
+   */
+  ratingAriaLabel?: (rating: number, maxRating: number) => string;
 }
 
 interface IStyledTestimonialProps {
@@ -268,6 +275,7 @@ const ReqoreTestimonial = memo(
         padded = true,
         paddingSize,
         className,
+        ratingAriaLabel = (r, max) => `Rating: ${r} out of ${max}`,
         ...rest
       },
       ref
@@ -329,7 +337,7 @@ const ReqoreTestimonial = memo(
               intent={intent}
               readOnly
               allowHalf
-              aria-label={`Rating: ${rating} out of ${maxRating}`}
+              aria-label={ratingAriaLabel(rating, maxRating)}
             />
           )}
           {quoteContent && (

@@ -30,6 +30,16 @@ export interface IReqoreTierProps extends Omit<IReqorePanelProps, 'description'>
   featureList?: IReqoreTierFeature[];
   highlight?: boolean;
   active?: boolean;
+  /**
+   * Label rendered on the action button when the tier is `active`.
+   * Defaults to `'Active'`. Overridden by `actionButtonProps.label`.
+   */
+  activeActionLabel?: string;
+  /**
+   * Label rendered on the action button when the tier is not `active`.
+   * Defaults to `'Get Started'`. Overridden by `actionButtonProps.label`.
+   */
+  actionLabel?: string;
 }
 
 export const ReqoreTier = memo(
@@ -47,6 +57,8 @@ export const ReqoreTier = memo(
     highlight,
     salePrice,
     active,
+    activeActionLabel = 'Active',
+    actionLabel = 'Get Started',
     ...rest
   }: IReqoreTierProps) => {
     const style = useMemo(() => {
@@ -149,7 +161,7 @@ export const ReqoreTier = memo(
               size='big'
               fluid
               pill
-              label={active ? 'Active' : 'Get Started'}
+              label={active ? activeActionLabel : actionLabel}
               icon={active ? 'CheckLine' : undefined}
               {...actionButtonProps}
               readOnly={active}

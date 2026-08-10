@@ -115,12 +115,16 @@ export const DEFAULT_TABS_OVERFLOW_MENU_MAX_HEIGHT = `min(${TABS_OVERFLOW_MENU_M
 const isTabHidden = (items: IReqoreTabsListItem[], activeTab?: string | number) =>
   items.find((item) => item?.id === activeTab);
 
-const getMoreLabel = (items: IReqoreTabsListItem[], activeTab?: string | number) => {
+const getMoreLabel = (
+  items: IReqoreTabsListItem[],
+  activeTab?: string | number,
+  overflowLabel: string | number = 'More'
+) => {
   if (isTabHidden(items, activeTab)) {
     return isTabHidden(items, activeTab)?.label;
   }
 
-  return 'More';
+  return overflowLabel;
 };
 
 const getBadgeLength = (badge: IReqoreButtonProps['badge'], tabsSize: TSizes = 'normal') => {
@@ -341,6 +345,7 @@ const ReqoreTabsList = ({
   useReactTransition,
   overflowMenuProps,
   overflowPopoverProps,
+  overflowLabel,
   ...rest
 }: IReqoreTabsListProps) => {
   const [ref, { width }] = useMeasure();
@@ -385,7 +390,7 @@ const ReqoreTabsList = ({
                   {
                     icon: 'ArrowDownSLine',
                     id: 'showMore',
-                    label: getMoreLabel(item, activeTab),
+                    label: getMoreLabel(item, activeTab, overflowLabel),
                     active: !!isTabHidden(item, activeTab),
                     activeIntent: activeTabIntent,
                     intent: !!isTabHidden(item, activeTab) ? activeTabData?.intent : undefined,

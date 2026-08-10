@@ -77,6 +77,11 @@ export interface IReqoreTimelineCollapsedRange {
   collapsedItems: IReqoreTimelineItem[];
   /** Text next to the dots; defaults to `${n} hidden`. */
   label?: string;
+  /**
+   * Text shown next to the dots when the run is expanded (i.e. the "re-fold"
+   * affordance). Defaults to `'Hide'`.
+   */
+  expandedLabel?: string;
   /** Marker icon for the folded run; defaults to a vertical 3-dots. */
   icon?: IReqoreIconName;
   iconColor?: TReqoreEffectColor;
@@ -623,7 +628,9 @@ const CollapsedRunRenderer = memo(
     // the label's plain CSS colour. Both muted to read as "skipped".
     const mutedIconColor = changeLightness(baseTheme.main, 0.2);
     const mutedTextColor = rgba(getReadableColor(baseTheme, undefined, undefined), 0.55);
-    const label = expanded ? 'Hide' : (range.label ?? `${n} hidden`);
+    const label = expanded
+      ? (range.expandedLabel ?? 'Hide')
+      : (range.label ?? `${n} hidden`);
     return (
       <StyledTimelineItem
         theme={baseTheme}

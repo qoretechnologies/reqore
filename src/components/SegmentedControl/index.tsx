@@ -87,6 +87,14 @@ export interface IReqoreSegmentedControlProps
   allowDeselect?: boolean;
   /** Intent applied to the selected item */
   activeIntent?: TReqoreIntent;
+  /**
+   * Label shown on the overflow ("More") button that appears when the control
+   * runs out of horizontal space and folds trailing items into a menu. Defaults
+   * to `'More'` — override to translate. When a hidden item is currently
+   * selected, its own label wins over this default so the selection stays
+   * visible.
+   */
+  overflowLabel?: string;
   /** Override width for testing responsive behavior */
   _testWidth?: number;
 }
@@ -214,15 +222,16 @@ const estimateItemWidth = (
 const getItemsLength = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
   itemSize: TSizes = 'normal',
-  selectedValue?: string
+  selectedValue?: string,
+  overflowLabel: string = 'More'
 ): number =>
   items.reduce((len, item) => {
     if (Array.isArray(item)) {
       // "More" group — estimate the More button width
       const isSelectedHidden = item.some((i) => i.value === selectedValue);
       const moreLabel = isSelectedHidden
-        ? item.find((i) => i.value === selectedValue)?.label ?? 'More'
-        : 'More';
+        ? item.find((i) => i.value === selectedValue)?.label ?? overflowLabel
+        : overflowLabel;
       const hPad = CONTROL_HORIZONTAL_PADDING_FROM_SIZE[itemSize];
       const iconWidth = ICON_FROM_SIZE[itemSize] + PADDING_FROM_SIZE[itemSize] / 2;
       const labelWidth = calculateStringSizeInPixels(
@@ -244,7 +253,8 @@ const getTransformedItems = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
   availableWidth: number,
   itemSize: TSizes = 'normal',
-  selectedValue?: string
+  selectedValue?: string,
+  overflowLabel: string = 'More'
 ): (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[] => {
   if (!availableWidth) {
     return items;
@@ -253,7 +263,7 @@ const getTransformedItems = (
   let newItems = [...items];
 
   while (
-    getItemsLength(newItems, itemSize, selectedValue) > availableWidth &&
+    getItemsLength(newItems, itemSize, selectedValue, overflowLabel) > availableWidth &&
     newItems.length > 1
   ) {
     const last = newItems[newItems.length - 1];
@@ -293,6 +303,7 @@ const ReqoreSegmentedControl = memo(
         inheritCustomTheme,
         fluid,
         className,
+        overflowLabel = 'More',
         _testWidth,
         ...rest
       },
@@ -328,8 +339,8 @@ const ReqoreSegmentedControl = memo(
 
       // Transform items using the Tabs-style width estimation approach
       const transformedItems = useMemo(
-        () => getTransformedItems(items, availableWidth, size, _value),
-        [items, availableWidth, size, _value]
+        () => getTransformedItems(items, availableWidth, size, _value, overflowLabel),
+        [items, availableWidth, size, _value, overflowLabel]
       );
 
       // Split into visible items and hidden items (the More group)
@@ -363,10 +374,10 @@ const ReqoreSegmentedControl = memo(
       const moreLabel = useMemo(() => {
         if (isSelectedHidden) {
           const hidden = hiddenItems.find((item) => item.value === _value);
-          return hidden?.label ?? 'More';
+          return hidden?.label ?? overflowLabel;
         }
-        return 'More';
-      }, [isSelectedHidden, hiddenItems, _value]);
+        return overflowLabel;
+      }, [isSelectedHidden, hiddenItems, _value, overflowLabel]);
 
       // Calculate indicator position
       useLayoutEffect(() => {
