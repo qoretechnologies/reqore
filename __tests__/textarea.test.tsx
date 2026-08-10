@@ -34,6 +34,8 @@ test('Renders <TextArea /> with clear button properly', () => {
   );
 
   expect(document.querySelectorAll('.reqore-clear-input-button').length).toBe(1);
+  // The button is an icon: it must actually paint its glyph, not just occupy the slot.
+  expect(document.querySelector('.reqore-clear-input-button svg')).toBeTruthy();
   expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toMatch(
     /hasClearButton|marginSize|readonly|show/
   );

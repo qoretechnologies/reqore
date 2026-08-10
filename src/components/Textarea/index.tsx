@@ -12,6 +12,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -104,9 +105,11 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
 `;
 
 export const StyledTextarea = styled(StyledEffect).withConfig({
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    prop !== 'hasClearButton' &&
-    (['decorate', 'renderElement', 'renderLeaf'].includes(String(prop)) || defaultValidatorFn(prop)),
+  // `hasClearButton` drives padding only and must never reach the DOM. Everything else
+  // follows styled-components' own rule, so a polymorphic `as` component — Slate's
+  // editable in `ReqoreRichTextEditor` — still receives `renderElement` / `renderLeaf` /
+  // `decorate`, which are component props rather than HTML attributes.
+  shouldForwardProp: omitStyleProps('hasClearButton'),
 })<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;

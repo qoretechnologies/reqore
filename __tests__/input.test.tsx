@@ -48,6 +48,10 @@ test('Renders <Input /> with clear button properly', async () => {
 
   // No clear button
   expect(document.querySelectorAll('.reqore-clear-input-button').length).toBe(1);
+  // The button is an icon: it must actually paint its glyph, not just occupy the slot.
+  // Prop filtering that reaches `styled(ReqoreIcon)` can strip `icon` and leave an
+  // empty span behind, which a presence-only assertion happily passes.
+  expect(document.querySelector('.reqore-clear-input-button svg')).toBeTruthy();
   expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toMatch(
     /hasRightIcon|marginSize|show/
   );
