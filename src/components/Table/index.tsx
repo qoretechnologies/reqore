@@ -282,6 +282,16 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   headerCellComponent?: IReqoreCustomHeaderCellComponent;
   rowComponent?: IReqoreTableRowOptions['rowComponent'];
   bodyCellComponent?: IReqoreTableRowOptions['cellComponent'];
+  /**
+   * Per-row attribute mapper. Called for each rendered body row with its
+   * data + row index; return `className` / `style` / `data-*` / event
+   * handlers to spread onto the row `<div>`. Reqore's own baseline
+   * `className: 'reqore-table-row'` and its react-window absolute-position
+   * `style` are merged in — anything else you return replaces or extends
+   * them. Use this instead of `.reqore-table-row:has(...)` selectors when
+   * a consumer needs to key row appearance off a data condition.
+   */
+  getRowProps?: IReqoreTableRowOptions['getRowProps'];
 
   exportMapper?:
     | TReqoreKeyValueTableExportMapper
@@ -372,6 +382,7 @@ const ReqoreTable = ({
   headerCellComponent,
   rowComponent,
   bodyCellComponent,
+  getRowProps,
   onSelectClick,
   paging,
   exportable,
@@ -1032,6 +1043,7 @@ const ReqoreTable = ({
             virtualized={shouldVirtualize}
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}
+            getRowProps={getRowProps}
             tableWidth={sizes.width}
           />
         )}

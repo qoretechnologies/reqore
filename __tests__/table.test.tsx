@@ -945,3 +945,32 @@ test('<Table /> applies a filter declared on a nested (grouped) column', () => {
 
   expect(document.querySelectorAll('.reqore-table-row').length).toBe(1);
 });
+
+test('getRowProps merges className, style, and data-* attributes onto every body row', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          {...tableData}
+          getRowProps={(row, index) => ({
+            className: index === 0 ? 'qorus-tombstone' : undefined,
+            style: index === 0 ? { opacity: 0.55 } : undefined,
+            'data-qorus-row-id': `row-${(row as { id: number }).id}`,
+          })}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const rows = document.querySelectorAll('.reqore-table-row');
+  expect(rows.length).toBeGreaterThan(0);
+  // Reqore's own class survives the merge — every row still carries it.
+  rows.forEach((row) => expect(row.classList.contains('reqore-table-row')).toBe(true));
+  // The consumer's className is spread onto the first row only.
+  expect(rows[0].classList.contains('qorus-tombstone')).toBe(true);
+  expect(rows[1].classList.contains('qorus-tombstone')).toBe(false);
+  // The consumer's style extends (does not replace) Reqore's own row style.
+  expect((rows[0] as HTMLElement).style.opacity).toBe('0.55');
+  // Arbitrary data-* attributes reach the DOM so downstream CSS or tests can hook them.
+  expect(rows[0].getAttribute('data-qorus-row-id')).toBeTruthy();
+});
