@@ -163,11 +163,71 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   onSelectedChange?: (selected?: any[]) => void;
   onSelectClick?: (dataId: string | number) => void;
   selectToggleTooltip?: string;
+  /**
+   * Tooltip on the header select-all/none affordance. Defaults to
+   * `'Toggle selection on all data'`.
+   */
+  selectToggleAllTooltip?: string;
 
   striped?: boolean;
   emptyMessage?: string;
   showHelp?: boolean;
   showColumnsOptions?: boolean;
+
+  /**
+   * Divider label at the top of the "show / hide columns" dropdown.
+   * Defaults to `'Show / hide columns'`.
+   */
+  columnsToggleLabel?: string;
+  /**
+   * Placeholder rendered on the global filter input. Accepts either a plain
+   * string or a builder `(matchedRows) => string`. Defaults to
+   * `` (n) => `Search in ${n} items...` ``.
+   */
+  filterPlaceholder?: string | ((matchedRows: number) => string);
+  /** Tooltip on the "scroll to top" action. Defaults to `'Scroll to top'`. */
+  scrollToTopTooltip?: string;
+  /** Label of the "Reset all" more-menu action. Defaults to `'Reset all'`. */
+  resetAllLabel?: string;
+  /** Label of the "Help" more-menu action. Defaults to `'Help'`. */
+  helpLabel?: string;
+  /** Label of the help modal opened by the "Help" action. Defaults to `'Table help'`. */
+  helpModalLabel?: string;
+  /**
+   * Custom body for the help modal opened by the "Help" action. Defaults to
+   * the built-in three-bullet English help copy.
+   */
+  helpContent?: React.ReactNode;
+
+  /**
+   * Label of the per-column "Sort ascending" dropdown item. Shown when the
+   * column is currently sorted descending. Defaults to `'Sort ascending'`.
+   */
+  sortAscendingLabel?: string;
+  /**
+   * Label of the per-column "Sort descending" dropdown item. Shown when the
+   * column is currently sorted ascending. Defaults to `'Sort descending'`.
+   */
+  sortDescendingLabel?: string;
+  /** Label of the per-column "Pin left" dropdown item. Defaults to `'Pin left'`. */
+  pinLeftLabel?: string;
+  /** Label of the per-column "Pin right" dropdown item. Defaults to `'Pin Right'`. */
+  pinRightLabel?: string;
+  /** Label of the per-column "Hide column" dropdown item. Defaults to `'Hide column'`. */
+  hideColumnLabel?: string;
+  /** Label of the per-column "Reset size" dropdown item. Defaults to `'Reset size'`. */
+  resetSizeLabel?: string;
+  /**
+   * Divider label before user-supplied header actions in the per-column dropdown.
+   * Defaults to `'Other'`.
+   */
+  otherActionsLabel?: string;
+  /**
+   * Fallback placeholder for the per-column filter input inside the header
+   * dropdown, used when a column doesn't set `filterPlaceholder` of its own.
+   * Defaults to `'Filter by this column...'`.
+   */
+  columnFilterPlaceholder?: string;
 
   /**
    * When `false`, the table renders every row in the DOM instead of virtualizing via react-window.
@@ -323,6 +383,22 @@ const ReqoreTable = ({
   maxCellHeight,
   expandHeightButtonProps,
   rowHeight,
+  selectToggleAllTooltip = 'Toggle selection on all data',
+  columnsToggleLabel = 'Show / hide columns',
+  filterPlaceholder,
+  scrollToTopTooltip = 'Scroll to top',
+  resetAllLabel = 'Reset all',
+  helpLabel = 'Help',
+  helpModalLabel = 'Table help',
+  helpContent,
+  sortAscendingLabel = 'Sort ascending',
+  sortDescendingLabel = 'Sort descending',
+  pinLeftLabel = 'Pin left',
+  pinRightLabel = 'Pin Right',
+  hideColumnLabel = 'Hide column',
+  resetSizeLabel = 'Reset size',
+  otherActionsLabel = 'Other',
+  columnFilterPlaceholder = 'Filter by this column...',
   ...rest
 }: IReqoreTableProps) => {
   const mainTableRef = useRef<HTMLDivElement>(null);
@@ -589,7 +665,7 @@ const ReqoreTable = ({
 
         header: {
           icon: selectedIcon,
-          tooltip: 'Toggle selection on all data',
+          tooltip: selectToggleAllTooltip,
           onClick: handleToggleSelectClick,
         },
 
@@ -621,6 +697,7 @@ const ReqoreTable = ({
     selectable,
     selectedIcon,
     selectToggleTooltip,
+    selectToggleAllTooltip,
     activeSelected,
     handleToggleSelectClick,
   ]);
@@ -697,12 +774,12 @@ const ReqoreTable = ({
     if (count(_columnsList)) {
       _columnsList.unshift({
         divider: true,
-        label: 'Show / hide columns',
+        label: columnsToggleLabel,
       });
     }
 
     return _columnsList;
-  }, [finalColumns]);
+  }, [finalColumns, columnsToggleLabel]);
 
   const handleScrollToTop = () => {
     mainTableRef.current?.scrollTo({
@@ -738,12 +815,17 @@ const ReqoreTable = ({
     }
 
     if (filterable) {
+      const resolvedFilterPlaceholder =
+        typeof filterPlaceholder === 'function'
+          ? filterPlaceholder(count(transformedData))
+          : filterPlaceholder ?? `Search in ${count(transformedData)} items...`;
+
       finalActions.push({
         as: ReqoreInput,
         props: {
           key: 'search',
           fixed: false,
-          placeholder: `Search in ${count(transformedData)} items...`,
+          placeholder: resolvedFilterPlaceholder,
           onClearClick: () => {
             setQuery('');
             setPreQuery('');
@@ -761,7 +843,7 @@ const ReqoreTable = ({
     if (isScrolled) {
       finalActions.push({
         icon: 'ArrowUpSFill',
-        tooltip: 'Scroll to top',
+        tooltip: scrollToTopTooltip,
         className: 'reqore-table-columns-scroll-top',
         responsive: true,
         onClick: handleScrollToTop,
@@ -797,7 +879,7 @@ const ReqoreTable = ({
         moreActionsWrapper.actions = [
           ...moreActions,
           {
-            label: 'Reset all',
+            label: resetAllLabel,
             icon: 'RestartLine',
             className: 'reqore-table-reset',
             onClick: () => {
@@ -812,16 +894,16 @@ const ReqoreTable = ({
 
       if (showHelp) {
         moreActionsWrapper.actions.push({
-          label: 'Help',
+          label: helpLabel,
           icon: 'QuestionLine',
           className: 'reqore-table-help',
           onClick: () => {
             addModal({
-              label: 'Table help',
+              label: helpModalLabel,
               icon: 'QuestionLine',
               minimal: true,
               panelSize: 'small',
-              children: (
+              children: helpContent ?? (
                 <ReqoreMessage intent='info' opaque={false} size='small'>
                   <ReqoreControlGroup vertical>
                     <ReqoreP size='small'>
@@ -856,6 +938,7 @@ const ReqoreTable = ({
     exportable,
     filterProps,
     filterable,
+    filterPlaceholder,
     handlePreQueryChange,
     handleScrollToTop,
     isScrolled,
@@ -869,6 +952,11 @@ const ReqoreTable = ({
     transformedData,
     zoom,
     zoomable,
+    scrollToTopTooltip,
+    resetAllLabel,
+    helpLabel,
+    helpModalLabel,
+    helpContent,
   ]);
 
   const badge = useMemo(() => {
@@ -912,6 +1000,14 @@ const ReqoreTable = ({
           component={headerCellComponent}
           tableWidth={sizes.width}
           minimal={rest.minimal}
+          sortAscendingLabel={sortAscendingLabel}
+          sortDescendingLabel={sortDescendingLabel}
+          pinLeftLabel={pinLeftLabel}
+          pinRightLabel={pinRightLabel}
+          hideColumnLabel={hideColumnLabel}
+          resetSizeLabel={resetSizeLabel}
+          otherActionsLabel={otherActionsLabel}
+          columnFilterPlaceholder={columnFilterPlaceholder}
         />
         {count(items) === 0 ? null : (
           <ReqoreTableBody

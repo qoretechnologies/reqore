@@ -14,6 +14,7 @@ import {
   IWithReqoreFluid,
   IWithReqoreSize,
   IWithReqoreTooltip,
+  TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
@@ -85,12 +86,25 @@ export interface IReqoreIconPickerProps
   gridHeight?: number;
   /** Trigger button label. Defaults to the selected icon name or "Pick an icon". */
   label?: React.ReactNode;
+  /**
+   * Fallback label used on the trigger button when no `value` is selected and no
+   * `label` / `buttonProps.label` was supplied. Defaults to English
+   * `'Pick an icon'` — override to translate the CTA.
+   */
+  pickIconLabel?: React.ReactNode;
   /** Icon shown on the trigger button when no `value` is selected. Default `'AppsLine'`. */
   placeholderIcon?: IReqoreIconName;
   /** Placeholder text for the filter input. */
   filterPlaceholder?: string;
   /** Message shown when no icon matches the filter. */
   noResultsLabel?: string;
+  /**
+   * Formats the tooltip shown on the "selected icon" preview button. Receives
+   * the icon name and returns the tooltip content — a plain string or a
+   * `TReqoreTooltipProp` config. Defaults to `` (name) => `Selected: ${name}` ``
+   * — override to translate the prefix.
+   */
+  selectedIconTooltip?: (name: IReqoreIconName) => TReqoreTooltipProp;
   /** Whether to show the filter input. Default `true`. */
   filterable?: boolean;
   /**
@@ -137,6 +151,7 @@ interface IReqoreIconPickerContentProps {
   fluid: boolean;
   filterPlaceholder: string;
   noResultsLabel: string;
+  selectedIconTooltip: (name: IReqoreIconName) => TReqoreTooltipProp;
   inputProps?: Partial<IReqoreInputProps>;
   panelProps?: Partial<IReqorePanelProps>;
   iconButtonProps?: Partial<IReqoreButtonProps>;
@@ -178,6 +193,7 @@ export const ReqoreIconPickerContent = memo(
     fluid,
     filterPlaceholder,
     noResultsLabel,
+    selectedIconTooltip,
     inputProps,
     panelProps,
     iconButtonProps,
@@ -303,7 +319,7 @@ export const ReqoreIconPickerContent = memo(
         fixed
         readOnly
         customTheme={customTheme}
-        tooltip={`Selected: ${value}`}
+        tooltip={selectedIconTooltip(value)}
         className='reqore-icon-picker-selected'
       />
     ) : null;
@@ -379,6 +395,8 @@ export const ReqoreIconPickerContent = memo(
   }
 );
 
+const defaultSelectedIconTooltip = (name: IReqoreIconName): string => `Selected: ${name}`;
+
 export const ReqoreIconPicker = memo(
   ({
     value,
@@ -387,9 +405,11 @@ export const ReqoreIconPicker = memo(
     columns = 8,
     gridHeight = 320,
     label,
+    pickIconLabel = 'Pick an icon',
     placeholderIcon = 'AppsLine',
     filterPlaceholder = 'Filter icons...',
     noResultsLabel = 'No icons match your filter',
+    selectedIconTooltip = defaultSelectedIconTooltip,
     filterable = true,
     inline = false,
     fluid = false,
@@ -418,7 +438,7 @@ export const ReqoreIconPicker = memo(
         customTheme,
         rightIcon: 'ArrowDownSLine',
         ...buttonProps,
-        label: label ?? buttonProps?.label ?? value ?? 'Pick an icon',
+        label: label ?? buttonProps?.label ?? value ?? pickIconLabel,
         className: `reqore-icon-picker ${buttonProps?.className || ''}`.trim(),
       }),
       [
@@ -431,6 +451,7 @@ export const ReqoreIconPicker = memo(
         tooltip,
         customTheme,
         label,
+        pickIconLabel,
         buttonProps,
       ]
     );
@@ -452,6 +473,7 @@ export const ReqoreIconPicker = memo(
           fluid={inline && fluid}
           filterPlaceholder={filterPlaceholder}
           noResultsLabel={noResultsLabel}
+          selectedIconTooltip={selectedIconTooltip}
           inputProps={inputProps}
           // In inline mode the content panel is the picker root, so it carries
           // the `.reqore-icon-picker` class hook (in popover mode that hook
@@ -478,6 +500,7 @@ export const ReqoreIconPicker = memo(
         fluid,
         filterPlaceholder,
         noResultsLabel,
+        selectedIconTooltip,
         inputProps,
         panelProps,
         iconButtonProps,

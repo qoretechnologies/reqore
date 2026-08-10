@@ -200,6 +200,12 @@ export interface IReqorePanelProps
   stickyHeader?: boolean;
   stickyHeaderOffset?: number;
   floatingActions?: boolean;
+  /** Tooltip for the collapse control when the panel is expanded. Defaults to `'Collapse'`. */
+  collapseTooltip?: string;
+  /** Tooltip for the collapse control when the panel is collapsed. Defaults to `'Expand'`. */
+  expandTooltip?: string;
+  /** Tooltip for the close (`×`) control. Defaults to `'Close'`. */
+  closeTooltip?: string;
   /**
    * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow.
    * Best paired with `flat={true}` (no border); the highlight is suppressed
@@ -760,6 +766,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       skeleton,
       errorBoundaryOptions,
       floatingActions,
+      collapseTooltip = 'Collapse',
+      expandTooltip = 'Expand',
+      closeTooltip = 'Close',
       ...rest
     }: IReqorePanelProps,
     ref
@@ -1465,6 +1474,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     onCloseClick={onClose}
                     closeButtonProps={closeButtonProps}
                     collapseButtonProps={collapseButtonProps}
+                    collapseTooltip={collapseTooltip}
+                    expandTooltip={expandTooltip}
+                    closeTooltip={closeTooltip}
                     fluid={false}
                     style={{ marginLeft: 'auto' }}
                   />
@@ -1494,6 +1506,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 onCloseClick={onClose}
                 closeButtonProps={closeButtonProps}
                 collapseButtonProps={collapseButtonProps}
+                collapseTooltip={collapseTooltip}
+                expandTooltip={expandTooltip}
+                closeTooltip={closeTooltip}
                 fluid={!hasTitleHeader || isSmall}
               >
                 {nonFloatingActions.map(renderNonResponsiveActions())}

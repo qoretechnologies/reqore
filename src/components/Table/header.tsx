@@ -36,6 +36,14 @@ export interface IReqoreCustomHeaderCellProps
       | 'pinOffset'
       | 'pinEdge'
       | 'parentMinimal'
+      | 'sortAscendingLabel'
+      | 'sortDescendingLabel'
+      | 'pinLeftLabel'
+      | 'pinRightLabel'
+      | 'hideColumnLabel'
+      | 'resetSizeLabel'
+      | 'otherActionsLabel'
+      | 'columnFilterPlaceholder'
     >,
     Omit<IReqoreTableColumn, 'cell' | 'header'>,
     Omit<IReqoreButtonProps, 'maxWidth' | 'content'> {
@@ -60,6 +68,22 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
    * `header.transparent` still wins.
    */
   minimal?: boolean;
+  /** See `IReqoreTableProps.sortAscendingLabel`. */
+  sortAscendingLabel?: string;
+  /** See `IReqoreTableProps.sortDescendingLabel`. */
+  sortDescendingLabel?: string;
+  /** See `IReqoreTableProps.pinLeftLabel`. */
+  pinLeftLabel?: string;
+  /** See `IReqoreTableProps.pinRightLabel`. */
+  pinRightLabel?: string;
+  /** See `IReqoreTableProps.hideColumnLabel`. */
+  hideColumnLabel?: string;
+  /** See `IReqoreTableProps.resetSizeLabel`. */
+  resetSizeLabel?: string;
+  /** See `IReqoreTableProps.otherActionsLabel`. */
+  otherActionsLabel?: string;
+  /** See `IReqoreTableProps.columnFilterPlaceholder`. */
+  columnFilterPlaceholder?: string;
 }
 
 export interface IReqoreTableSectionStyle {
@@ -160,6 +184,14 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       bodyRef,
       tableWidth,
       minimal,
+      sortAscendingLabel,
+      sortDescendingLabel,
+      pinLeftLabel,
+      pinRightLabel,
+      hideColumnLabel,
+      resetSizeLabel,
+      otherActionsLabel,
+      columnFilterPlaceholder,
     }: IReqoreTableSectionProps,
     ref
   ) => {
@@ -229,6 +261,14 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         pinOffset: pinInfo?.offset,
         pinEdge: pinInfo?.isEdge,
         parentMinimal: minimal,
+        sortAscendingLabel,
+        sortDescendingLabel,
+        pinLeftLabel,
+        pinRightLabel,
+        hideColumnLabel,
+        resetSizeLabel,
+        otherActionsLabel,
+        columnFilterPlaceholder,
       });
     };
 

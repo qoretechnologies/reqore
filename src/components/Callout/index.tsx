@@ -27,6 +27,7 @@ import {
   IWithReqoreFluid,
   IWithReqoreSize,
   IWithReqoreTooltip,
+  TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
@@ -68,6 +69,13 @@ export interface IReqoreCalloutProps
   onClose?: () => void;
   /** Override props for the close button. */
   closeButtonProps?: Partial<IReqoreButtonProps>;
+  /**
+   * Tooltip for the close button, exposed as a dedicated prop so consumers can
+   * translate it without spreading `closeButtonProps`. Ignored when
+   * `closeButtonProps.tooltip` is set (that keeps its precedence). Defaults to
+   * `'Dismiss'`.
+   */
+  closeTooltip?: TReqoreTooltipProp;
   /** Where the accent strip is rendered. */
   accentPosition?: 'left' | 'top';
   /** Thickness of the accent strip in pixels. */
@@ -253,6 +261,7 @@ export const ReqoreCallout = memo(
         badge,
         onClose,
         closeButtonProps,
+        closeTooltip = 'Dismiss',
         size = 'normal',
         customTheme,
         inheritCustomTheme,
@@ -374,7 +383,7 @@ export const ReqoreCallout = memo(
               <ReqoreButton
                 {...closeButtonProps}
                 icon={closeButtonProps?.icon ?? 'CloseLine'}
-                tooltip={closeButtonProps?.tooltip ?? 'Dismiss'}
+                tooltip={closeButtonProps?.tooltip ?? closeTooltip}
                 minimal={closeButtonProps?.minimal ?? true}
                 flat={closeButtonProps?.flat ?? true}
                 size={closeButtonProps?.size ?? size}

@@ -59,6 +59,48 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   // Components provided here must be valid JSX components
   KeyRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
   ValueRenderer?: React.ComponentType<IReqoreTreeCustomRendererProps>;
+
+  /** Label of the "Expand all" panel action. Defaults to `'Expand all'`. */
+  expandAllLabel?: string;
+  /** Label of the "Collapse all" panel action. Defaults to `'Collapse all'`. */
+  collapseAllLabel?: string;
+  /** Label of the "Show types" panel action. Defaults to `'Show types'`. */
+  showTypesLabel?: string;
+  /**
+   * Rendered when `data` is nullish. Defaults to a `<p>` containing `'No data'`.
+   */
+  noDataContent?: React.ReactNode;
+  /**
+   * Notification text shown when the "copy value" affordance succeeds.
+   * Defaults to `'Successfuly copied to clipboard'`.
+   */
+  copySuccessMessage?: string;
+  /**
+   * Formatter for the collapsed-object item count (e.g. `"3 items"` when a
+   * collapsed object has three entries). Defaults to `` (n) => `${n} items` ``.
+   */
+  itemCountLabel?: (count: number) => string;
+
+  /**
+   * Label for the tree-edit dialog when adding a new item.
+   * Defaults to `'Adding new item'`.
+   */
+  addItemDialogLabel?: string;
+  /**
+   * Label builder for the tree-edit dialog when editing an existing item at `path`.
+   * Defaults to `` (path) => `Updating "${path}"` ``.
+   */
+  updateItemDialogLabel?: (path: string) => string;
+  /** Save-button label in the tree-edit dialog. Defaults to `'Save'`. */
+  dialogSaveLabel?: string;
+  /** "Key" field label in the tree-edit dialog. Defaults to `'Key'`. */
+  dialogKeyLabel?: string;
+  /** "Value" field label in the tree-edit dialog. Defaults to `'Value'`. */
+  dialogValueLabel?: string;
+  /** Placeholder for the key input in the tree-edit dialog. Defaults to `'Key'`. */
+  dialogKeyPlaceholder?: string;
+  /** Placeholder for the value input in the tree-edit dialog. Defaults to `'Value'`. */
+  dialogValuePlaceholder?: string;
 }
 
 export interface ITreeStyle {
@@ -100,6 +142,19 @@ export const ReqoreTree = ({
   errorBoundaryOptions,
   KeyRenderer,
   ValueRenderer,
+  expandAllLabel = 'Expand all',
+  collapseAllLabel = 'Collapse all',
+  showTypesLabel = 'Show types',
+  noDataContent,
+  copySuccessMessage = 'Successfuly copied to clipboard',
+  itemCountLabel = (n: number) => `${n} items`,
+  addItemDialogLabel = 'Adding new item',
+  updateItemDialogLabel = (path: string) => `Updating "${path}"`,
+  dialogSaveLabel = 'Save',
+  dialogKeyLabel = 'Key',
+  dialogValueLabel = 'Value',
+  dialogKeyPlaceholder = 'Key',
+  dialogValuePlaceholder = 'Value',
   ...rest
 }: IReqoreTreeProps) => {
   const [items, setItems] = useState({});
@@ -307,7 +362,7 @@ export const ReqoreTree = ({
               >
                 {isArray(_data[key]) ? '[' : '{'}
                 {!isExpandable && (isArray(_data[key]) ? '...]' : '...}')}{' '}
-                {!isExpandable && `${lodashSize(_data[key])} items`}
+                {!isExpandable && itemCountLabel(lodashSize(_data[key]))}
               </ReqoreSpan>
               {_showTypes && (
                 <ReqoreSpan
@@ -371,7 +426,7 @@ export const ReqoreTree = ({
                     try {
                       navigator.clipboard.writeText(JSON.stringify(_data[key]));
                       addNotification({
-                        content: 'Successfuly copied to clipboard',
+                        content: copySuccessMessage,
                         id: Date.now().toString(),
                         type: 'success',
                         duration: 3000,
@@ -420,7 +475,7 @@ export const ReqoreTree = ({
           icon: 'ArrowDownFill',
           onClick: handleExpandClick,
           show: !!(isDeep() && !allExpanded),
-          label: 'Expand all',
+          label: expandAllLabel,
         },
         {
           show: !!(isDeep() && (allExpanded || lodashSize(items) > 0)),
@@ -428,14 +483,14 @@ export const ReqoreTree = ({
           icon: 'ArrowUpFill',
           onClick: handleCollapseClick,
 
-          label: 'Collapse all',
+          label: collapseAllLabel,
         },
         {
           className: 'reqore-tree-show-types',
           icon: 'CodeBoxFill',
           active: _showTypes,
           onClick: handleTypesClick,
-          label: 'Show types',
+          label: showTypesLabel,
         },
       ];
     }
@@ -466,10 +521,20 @@ export const ReqoreTree = ({
     }
 
     return _actions;
-  }, [allExpanded, items, showControls, _showTypes, isDeep(), zoom]);
+  }, [
+    allExpanded,
+    items,
+    showControls,
+    _showTypes,
+    isDeep(),
+    zoom,
+    expandAllLabel,
+    collapseAllLabel,
+    showTypesLabel,
+  ]);
 
   if (!data) {
-    return <p>No data</p>;
+    return <>{noDataContent ?? <p>No data</p>}</>;
   }
 
   return (
@@ -482,6 +547,13 @@ export const ReqoreTree = ({
           {...managementDialog}
           KeyRenderer={KeyRenderer}
           ValueRenderer={ValueRenderer}
+          addItemDialogLabel={addItemDialogLabel}
+          updateItemDialogLabel={updateItemDialogLabel}
+          saveLabel={dialogSaveLabel}
+          keyLabel={dialogKeyLabel}
+          valueLabel={dialogValueLabel}
+          keyPlaceholder={dialogKeyPlaceholder}
+          valuePlaceholder={dialogValuePlaceholder}
           onClose={() => setManagementDialog({ open: false })}
           onSave={({ key, value, originalData }) => {
             const modifiedValue =

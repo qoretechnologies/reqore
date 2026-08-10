@@ -100,6 +100,27 @@ export interface IDatePickerProps<T extends TDateValue>
    * Pass a single space to render an ISO-style date and time without a comma.
    * The locale-provided separator is preserved when this prop is undefined. */
   dateTimeSeparator?: string;
+  /**
+   * `aria-label` for the date input. Defaults to `'Date'`. Override to
+   * translate the accessibility label read to assistive tech users.
+   */
+  dateAriaLabel?: string;
+  /**
+   * `aria-label` for the time field inside the calendar popover. Defaults to
+   * `'Time'`. Override to translate the accessibility label.
+   */
+  timeAriaLabel?: string;
+  /**
+   * Localised month names shown in the month dropdown of the year/month
+   * header (12 entries, January-first). Defaults to the built-in English
+   * month names.
+   */
+  monthNames?: string[];
+  /**
+   * Fallback label for the month dropdown trigger when no month is selected.
+   * Defaults to `'Month'`. Override to translate.
+   */
+  monthLabel?: string;
 }
 
 const StyledRADatePicker: typeof RADatePicker = styled(RADatePicker)`
@@ -308,6 +329,10 @@ export const DatePicker = <T extends TDateValue>({
   placeholder,
   buttonProps,
   dateTimeSeparator,
+  dateAriaLabel = 'Date',
+  timeAriaLabel = 'Time',
+  monthNames,
+  monthLabel = 'Month',
   ...props
 }: IDatePickerProps<T>) => {
   const value = useMemo(() => (_value ? toDate(_value) : null), [_value]);
@@ -431,7 +456,7 @@ export const DatePicker = <T extends TDateValue>({
       shouldForceLeadingZeros,
       hourCycle,
       'data-fluid': fluid,
-      'aria-label': 'Date',
+      'aria-label': dateAriaLabel,
       minValue: toDate(minValue),
       maxValue: toDate(maxValue),
       ...props,
@@ -487,6 +512,8 @@ export const DatePicker = <T extends TDateValue>({
               maxValue={maxValue}
               intent={intent}
               customTheme={theme}
+              monthNames={monthNames}
+              monthLabel={monthLabel}
               {...yearMonthPickerProps}
             />
           }
@@ -550,7 +577,7 @@ export const DatePicker = <T extends TDateValue>({
                 hideTimeZone={hideTimeZone}
                 shouldForceLeadingZeros={shouldForceLeadingZeros}
                 hourCycle={hourCycle}
-                aria-label='Time'
+                aria-label={timeAriaLabel}
                 {...timeFieldProps}
               >
                 <ReqoreInput
