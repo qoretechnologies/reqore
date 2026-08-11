@@ -39,6 +39,66 @@ const Chips = ({ count = TAGS.length }: { count?: number }) => (
   </>
 );
 
+/* Wider, card-shaped row of KPI stats — used by both custom-surface stories
+   (CustomFadeColor, CustomTheme) so the fade-into-plum / fade-into-forest
+   dissolve reads as an obvious transition through the cards, not the "chips
+   ambiguously fading to something" render an early Qlip pass flagged.
+   Each card is min 140px wide so 5 × 140 > any of the container widths the
+   stories use, guaranteeing the overflow the fade needs to demonstrate. */
+const KpiCards = () => (
+  <>
+    <ReqoreStatistic
+      label='Orders'
+      value='12,438'
+      icon='ShoppingCart2Line'
+      flat={false}
+      padded
+      rounded
+      style={{ minWidth: 140 }}
+    />
+    <ReqoreStatistic
+      label='Success rate'
+      value='99.4'
+      suffix='%'
+      intent='success'
+      icon='CheckLine'
+      flat={false}
+      padded
+      rounded
+      style={{ minWidth: 140 }}
+    />
+    <ReqoreStatistic
+      label='Errors'
+      value='74'
+      intent='danger'
+      icon='AlertLine'
+      flat={false}
+      padded
+      rounded
+      style={{ minWidth: 140 }}
+    />
+    <ReqoreStatistic
+      label='Avg duration'
+      value='1.2s'
+      icon='TimerLine'
+      flat={false}
+      padded
+      rounded
+      style={{ minWidth: 140 }}
+    />
+    <ReqoreStatistic
+      label='In flight'
+      value='9'
+      intent='info'
+      icon='LoaderLine'
+      flat={false}
+      padded
+      rounded
+      style={{ minWidth: 140 }}
+    />
+  </>
+);
+
 const meta = {
   title: 'Layout/Fade Scroller',
   component: ReqoreFadeScroller,
@@ -187,55 +247,7 @@ export const CustomFadeColor: Story = {
   render: (args) => (
     <div style={{ background: '#2a1a2e', padding: 16, width: 480 }}>
       <ReqoreFadeScroller {...args} fadeColor='#2a1a2e' gapSize='normal'>
-        <ReqoreStatistic
-          label='Orders'
-          value='12,438'
-          icon='ShoppingCart2Line'
-          flat={false}
-          padded
-          rounded
-          style={{ minWidth: 140 }}
-        />
-        <ReqoreStatistic
-          label='Success rate'
-          value='99.4'
-          suffix='%'
-          intent='success'
-          icon='CheckLine'
-          flat={false}
-          padded
-          rounded
-          style={{ minWidth: 140 }}
-        />
-        <ReqoreStatistic
-          label='Errors'
-          value='74'
-          intent='danger'
-          icon='AlertLine'
-          flat={false}
-          padded
-          rounded
-          style={{ minWidth: 140 }}
-        />
-        <ReqoreStatistic
-          label='Avg duration'
-          value='1.2s'
-          icon='TimerLine'
-          flat={false}
-          padded
-          rounded
-          style={{ minWidth: 140 }}
-        />
-        <ReqoreStatistic
-          label='In flight'
-          value='9'
-          intent='info'
-          icon='LoaderLine'
-          flat={false}
-          padded
-          rounded
-          style={{ minWidth: 140 }}
-        />
+        <KpiCards />
       </ReqoreFadeScroller>
     </div>
   ),
@@ -292,14 +304,14 @@ export const CustomTheme: Story = {
     docs: {
       description: {
         story:
-          'Renders the scroller with a customTheme, so the fade dissolves into that theme\'s main colour instead of the app background.',
+          "Renders a row of KPI cards with a `customTheme`, so the fade dissolves into that theme's `main` colour instead of the app background. Same shape as `CustomFadeColor` — the difference is that `customTheme` also colours the cards and any of the scroller's own affordances, where `fadeColor` colours only the fade.",
       },
     },
   },
   render: (args) => (
-    <div style={{ background: '#1d3b2a', padding: 12, width: 384 }}>
-      <ReqoreFadeScroller {...args} customTheme={{ main: '#1d3b2a' }}>
-        <Chips />
+    <div style={{ background: '#1d3b2a', padding: 16, width: 480 }}>
+      <ReqoreFadeScroller {...args} customTheme={{ main: '#1d3b2a' }} gapSize='normal'>
+        <KpiCards />
       </ReqoreFadeScroller>
     </div>
   ),
