@@ -187,16 +187,16 @@ export const NonRigidChildren: Story = {
     docs: {
       description: {
         story:
-          'Renders the row with `rigid` off. The cards drop their `minWidth` (via the `flexible` variant of the KPI row) so the flex system can share the container width across them instead of overflowing at their natural size.',
+          'Renders the row with `rigid` off. The cards drop their `minWidth` (via the `flexible` variant of the KPI row) so the flex system can share the container width across them instead of overflowing at their natural size. Container is 500px (wider than the other stories) so each of the three shrunk cards still renders its value legibly — narrow enough that `rigid={false}` visibly shares width, wide enough that the value doesn\'t wrap.',
       },
     },
   },
   render: (args) => (
-    <NarrowWrapper>
+    <div style={{ width: 500, maxWidth: '100%' }}>
       <ReqoreFadeScroller {...args} rigid={false}>
         <KpiCards count={3} flexible />
       </ReqoreFadeScroller>
-    </NarrowWrapper>
+    </div>
   ),
 };
 
