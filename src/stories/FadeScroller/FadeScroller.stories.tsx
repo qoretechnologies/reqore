@@ -180,24 +180,62 @@ export const CustomFadeColor: Story = {
     docs: {
       description: {
         story:
-          'Renders a row of `ReqoreStatistic` cards over a non-default surface with `fadeColor` matched to it, so the overflow dissolves into the background instead of fading to a mismatched colour. Statistic cards are large enough that the fade reads as an obvious dissolve into the plum surface — the effect is easy to miss when the overflowing content is small (chips, tags).',
+          'Renders a row of `ReqoreStatistic` cards — each with its own background so the fade dissolving *between and past* the cards into the plum surface is unmistakable — over a non-default background with `fadeColor` matched to it. The effect is easy to miss when the overflowing content is small (chips, tags), so the demo is intentionally KPI-sized.',
       },
     },
   },
   render: (args) => (
-    <div style={{ background: '#2a1a2e', padding: 12, width: 480 }}>
-      <ReqoreFadeScroller {...args} fadeColor='#2a1a2e'>
-        <ReqoreStatistic label='Orders' value='12,438' icon='ShoppingCart2Line' />
+    <div style={{ background: '#2a1a2e', padding: 16, width: 480 }}>
+      <ReqoreFadeScroller {...args} fadeColor='#2a1a2e' gapSize='normal'>
+        <ReqoreStatistic
+          label='Orders'
+          value='12,438'
+          icon='ShoppingCart2Line'
+          flat={false}
+          padded
+          rounded
+          style={{ minWidth: 140 }}
+        />
         <ReqoreStatistic
           label='Success rate'
           value='99.4'
           suffix='%'
           intent='success'
           icon='CheckLine'
+          flat={false}
+          padded
+          rounded
+          style={{ minWidth: 140 }}
         />
-        <ReqoreStatistic label='Errors' value='74' intent='danger' icon='AlertLine' />
-        <ReqoreStatistic label='Avg duration' value='1.2s' icon='TimerLine' />
-        <ReqoreStatistic label='In flight' value='9' intent='info' icon='LoaderLine' />
+        <ReqoreStatistic
+          label='Errors'
+          value='74'
+          intent='danger'
+          icon='AlertLine'
+          flat={false}
+          padded
+          rounded
+          style={{ minWidth: 140 }}
+        />
+        <ReqoreStatistic
+          label='Avg duration'
+          value='1.2s'
+          icon='TimerLine'
+          flat={false}
+          padded
+          rounded
+          style={{ minWidth: 140 }}
+        />
+        <ReqoreStatistic
+          label='In flight'
+          value='9'
+          intent='info'
+          icon='LoaderLine'
+          flat={false}
+          padded
+          rounded
+          style={{ minWidth: 140 }}
+        />
       </ReqoreFadeScroller>
     </div>
   ),
