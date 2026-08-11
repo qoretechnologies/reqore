@@ -2,7 +2,12 @@ import { StoryFn, StoryObj } from '@storybook/react';
 import { expect, waitFor } from 'storybook/test';
 import { IReqoreFadeScrollerProps } from '../../components/FadeScroller';
 import { DEFAULT_INTENTS, TReqoreIntent } from '../../constants/theme';
-import { ReqoreControlGroup, ReqoreFadeScroller, ReqoreTag } from '../../index';
+import {
+  ReqoreControlGroup,
+  ReqoreFadeScroller,
+  ReqoreStatistic,
+  ReqoreTag,
+} from '../../index';
 import { StoryMeta } from '../utils';
 import { GapSizeArg, IntentArg, argManager } from '../utils/args';
 
@@ -175,14 +180,24 @@ export const CustomFadeColor: Story = {
     docs: {
       description: {
         story:
-          'Renders the scroller over a non-default surface with `fadeColor` matched to it, so the overflow dissolves into the background instead of fading to a mismatched colour.',
+          'Renders a row of `ReqoreStatistic` cards over a non-default surface with `fadeColor` matched to it, so the overflow dissolves into the background instead of fading to a mismatched colour. Statistic cards are large enough that the fade reads as an obvious dissolve into the plum surface — the effect is easy to miss when the overflowing content is small (chips, tags).',
       },
     },
   },
   render: (args) => (
-    <div style={{ background: '#2a1a2e', padding: 12, width: 384 }}>
+    <div style={{ background: '#2a1a2e', padding: 12, width: 480 }}>
       <ReqoreFadeScroller {...args} fadeColor='#2a1a2e'>
-        <Chips />
+        <ReqoreStatistic label='Orders' value='12,438' icon='ShoppingCart2Line' />
+        <ReqoreStatistic
+          label='Success rate'
+          value='99.4'
+          suffix='%'
+          intent='success'
+          icon='CheckLine'
+        />
+        <ReqoreStatistic label='Errors' value='74' intent='danger' icon='AlertLine' />
+        <ReqoreStatistic label='Avg duration' value='1.2s' icon='TimerLine' />
+        <ReqoreStatistic label='In flight' value='9' intent='info' icon='LoaderLine' />
       </ReqoreFadeScroller>
     </div>
   ),
@@ -255,6 +270,10 @@ export const CustomTheme: Story = {
 /** Every component takes a tooltip. */
 export const Tooltip: Story = {
   parameters: {
+    // Tooltip only becomes visible on hover — the static Qlip capture would
+    // just re-photograph the Default story's overflowing row, so opt this
+    // story out of visual regression.
+    qlip: { skip: true },
     docs: {
       description: {
         story:
