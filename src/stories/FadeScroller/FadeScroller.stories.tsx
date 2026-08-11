@@ -13,17 +13,6 @@ import { GapSizeArg, IntentArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreFadeScrollerProps>();
 
-const TAGS = [
-  'order-sync:1.2',
-  'invoice-export:2.0',
-  'partner-recon:1.1',
-  'nightly-recon',
-  'sla-report',
-  'sftp-partner',
-  'salesforce-prod',
-  'csv-to-order',
-];
-
 /* A narrow column, so the row genuinely overflows and the right-hand fade appears.
    At full width the same row fits and both fades stay hidden — which is the point
    of measuring rather than always painting them. */
@@ -31,71 +20,48 @@ const NarrowWrapper = ({ children }: { children: React.ReactNode }) => (
   <div style={{ width: 360, maxWidth: '100%' }}>{children}</div>
 );
 
-const Chips = ({ count = TAGS.length }: { count?: number }) => (
-  <>
-    {TAGS.slice(0, count).map((label) => (
-      <ReqoreTag key={label} label={label} size='small' />
-    ))}
-  </>
-);
+/* Card-shaped row of KPI stats — the standard scroller payload across every
+   story so the demos read as one coherent artefact instead of a mix of chips
+   and cards. Each card is min 140px wide by default, so 5 × 140 = 700px
+   overflows any of the 360-480px containers below — that overflow is what
+   makes the fade visible. `count` trims the row for the "fits" demo;
+   `flexible` drops the minWidth so `rigid={false}` can actually share width. */
+const ALL_CARDS: Array<{
+  label: string;
+  value: string;
+  suffix?: string;
+  icon: any;
+  intent?: TReqoreIntent;
+}> = [
+  { label: 'Orders', value: '12,438', icon: 'ShoppingCart2Line' },
+  { label: 'Success rate', value: '99.4', suffix: '%', intent: 'success', icon: 'CheckLine' },
+  { label: 'Errors', value: '74', intent: 'danger', icon: 'AlertLine' },
+  { label: 'Avg duration', value: '1.2s', icon: 'TimerLine' },
+  { label: 'In flight', value: '9', intent: 'info', icon: 'LoaderLine' },
+];
 
-/* Wider, card-shaped row of KPI stats — used by both custom-surface stories
-   (CustomFadeColor, CustomTheme) so the fade-into-plum / fade-into-forest
-   dissolve reads as an obvious transition through the cards, not the "chips
-   ambiguously fading to something" render an early Qlip pass flagged.
-   Each card is min 140px wide so 5 × 140 > any of the container widths the
-   stories use, guaranteeing the overflow the fade needs to demonstrate. */
-const KpiCards = () => (
+const KpiCards = ({
+  count = ALL_CARDS.length,
+  flexible = false,
+}: {
+  count?: number;
+  flexible?: boolean;
+}) => (
   <>
-    <ReqoreStatistic
-      label='Orders'
-      value='12,438'
-      icon='ShoppingCart2Line'
-      flat={false}
-      padded
-      rounded
-      style={{ minWidth: 140 }}
-    />
-    <ReqoreStatistic
-      label='Success rate'
-      value='99.4'
-      suffix='%'
-      intent='success'
-      icon='CheckLine'
-      flat={false}
-      padded
-      rounded
-      style={{ minWidth: 140 }}
-    />
-    <ReqoreStatistic
-      label='Errors'
-      value='74'
-      intent='danger'
-      icon='AlertLine'
-      flat={false}
-      padded
-      rounded
-      style={{ minWidth: 140 }}
-    />
-    <ReqoreStatistic
-      label='Avg duration'
-      value='1.2s'
-      icon='TimerLine'
-      flat={false}
-      padded
-      rounded
-      style={{ minWidth: 140 }}
-    />
-    <ReqoreStatistic
-      label='In flight'
-      value='9'
-      intent='info'
-      icon='LoaderLine'
-      flat={false}
-      padded
-      rounded
-      style={{ minWidth: 140 }}
-    />
+    {ALL_CARDS.slice(0, count).map((card) => (
+      <ReqoreStatistic
+        key={card.label}
+        label={card.label}
+        value={card.value}
+        suffix={card.suffix}
+        intent={card.intent}
+        icon={card.icon}
+        flat={false}
+        padded
+        rounded
+        style={flexible ? undefined : { minWidth: 140 }}
+      />
+    ))}
   </>
 );
 
@@ -140,18 +106,18 @@ type Story = StoryObj<typeof meta>;
 const Template: StoryFn<IReqoreFadeScrollerProps> = (args) => (
   <NarrowWrapper>
     <ReqoreFadeScroller {...args}>
-      <Chips />
+      <KpiCards />
     </ReqoreFadeScroller>
   </NarrowWrapper>
 );
 
-/** More chips than fit: one row, scrolled to the start, fading on the right only. */
+/** More cards than fit: one row, scrolled to the start, fading on the right only. */
 export const Default: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders a row of chips wider than its container. The row stays on one line and fades on the right, where the remaining chips are scrolled out of view.',
+          'Renders a row of KPI cards wider than its container. The row stays on one line and fades on the right, where the remaining cards are scrolled out of view.',
       },
     },
   },
@@ -196,14 +162,14 @@ export const FitsWithoutScrolling: Story = {
     docs: {
       description: {
         story:
-          'Renders a row short enough to fit its container — nothing is out of view, so neither edge shows a fade.',
+          'Renders a row short enough to fit its container (two cards inside a 360px column) — nothing is out of view, so neither edge shows a fade.',
       },
     },
   },
   render: (args) => (
     <NarrowWrapper>
       <ReqoreFadeScroller {...args}>
-        <Chips count={2} />
+        <KpiCards count={2} />
       </ReqoreFadeScroller>
     </NarrowWrapper>
   ),
@@ -221,14 +187,14 @@ export const NonRigidChildren: Story = {
     docs: {
       description: {
         story:
-          'Renders the row with `rigid` off, so self-sizing children (a stat rail, grow-tiles) keep their own flex behaviour and share the width rather than overflowing at their natural size.',
+          'Renders the row with `rigid` off. The cards drop their `minWidth` (via the `flexible` variant of the KPI row) so the flex system can share the container width across them instead of overflowing at their natural size.',
       },
     },
   },
   render: (args) => (
     <NarrowWrapper>
       <ReqoreFadeScroller {...args} rigid={false}>
-        <Chips count={3} />
+        <KpiCards count={3} flexible />
       </ReqoreFadeScroller>
     </NarrowWrapper>
   ),
@@ -240,7 +206,7 @@ export const CustomFadeColor: Story = {
     docs: {
       description: {
         story:
-          'Renders a row of `ReqoreStatistic` cards — each with its own background so the fade dissolving *between and past* the cards into the plum surface is unmistakable — over a non-default background with `fadeColor` matched to it. The effect is easy to miss when the overflowing content is small (chips, tags), so the demo is intentionally KPI-sized.',
+          'Renders the standard KPI-card row over a non-default background with `fadeColor` matched to it, so the overflow dissolves into the surface instead of fading to a mismatched colour.',
       },
     },
   },
@@ -262,7 +228,7 @@ export const Intents: Story = {
     docs: {
       description: {
         story:
-          'Renders the same overflowing row once per intent. The fade is the only surface the component paints, so the intent colours the gradient the content dissolves into.',
+          'Renders the same overflowing KPI-card row once per intent. The fade is the only surface the component paints, so the intent colours the gradient the content dissolves into.',
       },
     },
   },
@@ -272,7 +238,7 @@ export const Intents: Story = {
         <NarrowWrapper key={intent}>
           <ReqoreTag label={intent} size='tiny' intent={intent as TReqoreIntent} />
           <ReqoreFadeScroller {...args} intent={intent as TReqoreIntent}>
-            <Chips />
+            <KpiCards />
           </ReqoreFadeScroller>
         </NarrowWrapper>
       ))}
@@ -304,7 +270,7 @@ export const CustomTheme: Story = {
     docs: {
       description: {
         story:
-          "Renders a row of KPI cards with a `customTheme`, so the fade dissolves into that theme's `main` colour instead of the app background. Same shape as `CustomFadeColor` — the difference is that `customTheme` also colours the cards and any of the scroller's own affordances, where `fadeColor` colours only the fade.",
+          "Renders the standard KPI-card row with a `customTheme`, so the fade dissolves into that theme's `main` colour instead of the app background. Same shape as `CustomFadeColor` — the difference is that `customTheme` also colours the cards and any of the scroller's own affordances, where `fadeColor` colours only the fade.",
       },
     },
   },
@@ -334,7 +300,7 @@ export const Tooltip: Story = {
   render: (args) => (
     <NarrowWrapper>
       <ReqoreFadeScroller {...args} tooltip='Scroll sideways for the rest'>
-        <Chips />
+        <KpiCards />
       </ReqoreFadeScroller>
     </NarrowWrapper>
   ),
@@ -354,7 +320,7 @@ export const NonFluidBesideContent: Story = {
     <ReqoreControlGroup verticalAlign='center' gapSize='small'>
       <ReqoreTag label='References' size='small' />
       <ReqoreFadeScroller {...args} fluid={false}>
-        <Chips count={4} />
+        <KpiCards count={4} />
       </ReqoreFadeScroller>
     </ReqoreControlGroup>
   ),
