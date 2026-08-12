@@ -1,6 +1,6 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import styled, { createGlobalStyle, css } from 'styled-components';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
@@ -124,6 +124,39 @@ const StyledContainer = styled.div<{ $fluid: boolean }>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
 `;
 
+/* Below ~640px of the WRAPPER's own width there isn't enough room for
+   the actions column to sit next to the label without either shrinking
+   the description to one-character columns (long unbroken tokens render
+   as vertical caterpillars) or pushing the label off-screen. Rewrite
+   the grid so the actions wrap into their own row underneath the body,
+   spanning the label column, and left-align them so they read as a
+   follow-up strip rather than as right-side controls.
+
+   Delivered as a `createGlobalStyle` block rather than a nested
+   `@container` inside `StyledRow`'s own styled template because
+   styled-components 5.3.11 ships stylis 4.0.13, whose at-rule parser
+   silently mangles the `&` selector inside a nested `@container` — the
+   rule emits to the DOM but never matches. `createGlobalStyle` bypasses
+   that code path; the rule is emitted as-authored and container queries
+   match. Same behaviour every consumer needs — no opt-in prop; the
+   alternative was every panel wrapping the row in its own styled shim
+   (see qorus-ide's earlier `SeverityRowShell` hack). */
+const SeverityRowResponsiveStyle = createGlobalStyle`
+  @container reqore-severity-row (max-width: 640px) {
+    .reqore-severity-row {
+      grid-template-columns: 4px 1fr;
+      grid-auto-rows: max-content;
+    }
+    .reqore-severity-row > .reqore-severity-row-actions {
+      grid-column: 2 / -1;
+      grid-row: 2;
+      max-width: 100%;
+      justify-content: flex-start;
+      padding-top: 4px;
+    }
+  }
+`;
+
 const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   display: grid;
   grid-template-columns: 4px 1fr auto;
@@ -149,29 +182,6 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   transition: background-color 0.15s ease-out;
-
-  /* Below ~640px of the WRAPPER's own width there isn't enough room for
-     the actions column to sit next to the label without either shrinking
-     the description to one-character columns (long unbroken tokens render
-     as vertical caterpillars) or pushing the label off-screen. Rewrite
-     the grid so the actions wrap into their own row underneath the body,
-     spanning the label column, and left-align them so they read as a
-     follow-up strip rather than as right-side controls. Same behaviour
-     every consumer needs — no opt-in prop; the alternative was every
-     panel wrapping the row in its own styled shim (see qorus-ide's
-     earlier \`SeverityRowShell\` hack). */
-  @container reqore-severity-row (max-width: 640px) {
-    grid-template-columns: 4px 1fr;
-    grid-auto-rows: max-content;
-
-    & > .reqore-severity-row-actions {
-      grid-column: 2 / -1;
-      grid-row: 2;
-      max-width: 100%;
-      justify-content: flex-start;
-      padding-top: 4px;
-    }
-  }
 
   ${({ $clickable, theme, $intent, $transparent }) =>
     $clickable &&
@@ -279,6 +289,7 @@ const ReqoreSeverityRow = memo(
 
       return (
         <StyledContainer $fluid={fluid} className='reqore-severity-row-container'>
+          <SeverityRowResponsiveStyle />
           <ReqoreTooltipComponent
             {...rest}
             Component={StyledRow}
