@@ -84,6 +84,17 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
    * selected.
    */
   overflowLabel?: string | number;
+  /**
+   * When true the tab strip is not rendered at all — the tabs component
+   * behaves as a bare content switcher driven only by `activeTab`. Use this
+   * for preview / read-only surfaces that reuse a full ReqoreTabs
+   * configuration (with all its tab metadata and validation intents) but
+   * want to display only one tab's content without the user-facing
+   * navigation chrome. Consumers previously reached the same effect by
+   * `display: none` on the `.reqore-tabs-list` selector — that violated
+   * Reqore's "never hide built-in chrome via CSS" contract.
+   */
+  hideTabsList?: boolean;
   // Internal prop, ignore!
   _testWidth?: number;
 }
@@ -123,6 +134,7 @@ const ReqoreTabs = ({
   overflowMenuProps,
   overflowPopoverProps,
   overflowLabel,
+  hideTabsList,
   errorBoundaryOptions,
   ...rest
 }: IReqoreTabsProps) => {
@@ -157,29 +169,31 @@ const ReqoreTabs = ({
         vertical={vertical}
         className={`${className || ''} reqore-tabs`}
       >
-        <ReqoreTabsList
-          tabs={tabs}
-          padded={padded}
-          flat={flat}
-          fill={fill}
-          size={size}
-          width={width}
-          vertical={vertical}
-          _testWidth={_testWidth}
-          activeTab={_activeTab}
-          wrapTabNames={wrapTabNames}
-          activeTabIntent={activeTabIntent}
-          activeTabMarker={activeTabMarker}
-          activeTabMarkerColor={activeTabMarkerColor}
-          customTheme={customTheme}
-          intent={intent}
-          onTabChange={handleTabChange}
-          loadingIconType={loadingIconType}
-          useReactTransition={useReactTransition}
-          overflowMenuProps={overflowMenuProps}
-          overflowPopoverProps={overflowPopoverProps}
-          overflowLabel={overflowLabel}
-        />
+        {hideTabsList ? null : (
+          <ReqoreTabsList
+            tabs={tabs}
+            padded={padded}
+            flat={flat}
+            fill={fill}
+            size={size}
+            width={width}
+            vertical={vertical}
+            _testWidth={_testWidth}
+            activeTab={_activeTab}
+            wrapTabNames={wrapTabNames}
+            activeTabIntent={activeTabIntent}
+            activeTabMarker={activeTabMarker}
+            activeTabMarkerColor={activeTabMarkerColor}
+            customTheme={customTheme}
+            intent={intent}
+            onTabChange={handleTabChange}
+            loadingIconType={loadingIconType}
+            useReactTransition={useReactTransition}
+            overflowMenuProps={overflowMenuProps}
+            overflowPopoverProps={overflowPopoverProps}
+            overflowLabel={overflowLabel}
+          />
+        )}
         {React.Children.map(children, (child) =>
           child &&
           tabs.find((tab) => tab.id === child.props?.tabId)?.show !== false &&

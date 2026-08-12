@@ -2,7 +2,12 @@
 import { get, isFunction, isString } from 'lodash';
 import React, { ReactElement, memo, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowClick } from '.';
+import {
+  IReqoreTableColumn,
+  IReqoreTableData,
+  IReqoreTableRowClick,
+  IReqoreTableRowData,
+} from '.';
 import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -24,6 +29,24 @@ import {
   IColumnPinInfo,
 } from './helpers';
 
+/**
+ * Per-row escape hatch handed to the RowComponent as extra HTML attributes.
+ * Consumers use this to stamp a row-level `className`, `style`, or
+ * `data-*` attribute keyed on the row's data — e.g. to mark a
+ * soft-deleted row so a downstream stylesheet can strike-through all of
+ * its cells without reaching for `:has()` on `.reqore-table-*` classes.
+ *
+ * The returned object is spread onto the row div AFTER Reqore's own
+ * `style` / `className` / `interactive` etc., so callers can add data
+ * attributes freely but should merge (not replace) the built-in
+ * className / style when they want to preserve Reqore's baseline
+ * (e.g. `className: \`${reqoreClass} qorus-tombstone\``).
+ */
+export type IReqoreTableRowPropsMapper = (
+  row: IReqoreTableRowData,
+  index: number
+) => Partial<React.HTMLAttributes<HTMLDivElement>> | undefined;
+
 export interface IReqoreTableRowOptions {
   columns: IReqoreTableColumn[];
   data: IReqoreTableData;
@@ -42,6 +65,7 @@ export interface IReqoreTableRowOptions {
   rowComponent?: IReqoreCustomTableRow;
   setHoveredRow?: (index: number) => void;
   tableWidth: number;
+  getRowProps?: IReqoreTableRowPropsMapper;
 }
 export interface IReqoreCustomTableRowProps extends IReqoreTableRowOptions {
   style?: React.CSSProperties;
@@ -133,6 +157,7 @@ const ReqoreTableRow = memo(
       cellComponent,
       rowComponent,
       tableWidth,
+      getRowProps,
     },
 
     style,
@@ -375,10 +400,22 @@ const ReqoreTableRow = memo(
       ]
     );
 
+    // Consumer-supplied per-row attributes. Merge className / style so
+    // Reqore's baseline "reqore-table-row" class + the react-window
+    // absolute-position style survive; anything else the consumer returns
+    // is spread as-is (data-*, aria-*, event handlers, etc.).
+    const consumerRowProps = getRowProps?.(data[index], index);
+    const mergedClassName = consumerRowProps?.className
+      ? `reqore-table-row ${consumerRowProps.className}`
+      : 'reqore-table-row';
+    const mergedStyle = consumerRowProps?.style ? { ...style, ...consumerRowProps.style } : style;
+    const { className: _c, style: _s, ...consumerAttrs } = consumerRowProps ?? {};
+
     return (
       <RowComponent
-        style={style}
-        className='reqore-table-row'
+        {...consumerAttrs}
+        style={mergedStyle}
+        className={mergedClassName}
         interactive={!!onRowClick && !data[index]._disabled}
         size={size}
         wrap={rowWrap}

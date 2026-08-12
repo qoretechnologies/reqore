@@ -451,3 +451,37 @@ test('overflowPopoverProps overrides the popover trigger behaviour', () => {
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
   expect(document.querySelectorAll('.reqore-menu').length).toBe(1);
 });
+
+test('hideTabsList suppresses the strip while still rendering the active tab content', () => {
+  render(
+    <div style={{ width: '600px' }}>
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTabs
+            hideTabsList
+            activeTab='tab2'
+            tabs={[
+              { label: 'Tab 1', icon: 'Home3Line', id: 'tab1' },
+              { label: 'Tab 2', icon: 'Home3Line', id: 'tab2' },
+            ]}
+          >
+            <ReqoreTabsContent tabId='tab1'>Tab 1 content</ReqoreTabsContent>
+            <ReqoreTabsContent tabId='tab2'>Tab 2 content</ReqoreTabsContent>
+          </ReqoreTabs>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  // The strip and every list item are gone — hideTabsList short-circuits the
+  // whole list render, not just its visibility (so `display: none`-style CSS
+  // hacks in consumers are unnecessary).
+  expect(document.querySelectorAll('.reqore-tabs-list').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-tabs-list-item').length).toBe(0);
+  // The active tab's content is still rendered exactly as if the strip were
+  // there, so consumers can drive the active tab from a parent state.
+  expect(screen.getByText('Tab 2 content')).toBeTruthy();
+  // The outer container class is preserved so height / flex rules on
+  // `.reqore-tabs` still apply.
+  expect(document.querySelectorAll('.reqore-tabs').length).toBe(1);
+});

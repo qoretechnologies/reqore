@@ -44,6 +44,7 @@ export { ReqoreDropdownDivider, ReqoreDropdownItem } from './components/Dropdown
 export { ReqoreEffect, ReqoreTextEffect } from './components/Effect';
 export { ReqoreEmptyState } from './components/EmptyState';
 export { ReqoreErrorBoundary } from './components/ErrorBoundary';
+export { ReqoreFadeScroller } from './components/FadeScroller';
 export { ReqoreFeatureCard } from './components/FeatureCard';
 export { ReqoreModalsWrapper } from './components/GlobalModalsWrapper';
 export {
