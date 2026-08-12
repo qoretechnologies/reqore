@@ -135,6 +135,36 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   transition: background-color 0.15s ease-out;
 
+  /* Register the row as a container so children can respond to the row's
+     OWN width instead of the viewport's. A row can sit in a 320px drawer on
+     a 1920px display; a viewport media query would still see a "wide" screen
+     and leave the actions squeezed alongside the label. Container queries
+     adapt to the actual box the row renders in. */
+  container-type: inline-size;
+  container-name: reqore-severity-row;
+
+  /* Below ~640px of container width there isn't enough room for the actions
+     column to sit next to the label without either shrinking the description
+     to one-character columns (long unbroken tokens render as vertical
+     caterpillars) or pushing the label off-screen. Rewrite the grid so the
+     actions wrap into their own row underneath the body, spanning the label
+     column, and left-align them so they read as a follow-up strip rather
+     than as right-side controls. Same behaviour every consumer needs — no
+     opt-in prop; the alternative was every panel wrapping the row in its
+     own styled shim (see qorus-ide's earlier \`SeverityRowShell\` hack). */
+  @container reqore-severity-row (max-width: 640px) {
+    grid-template-columns: 4px 1fr;
+    grid-auto-rows: max-content;
+
+    & > .reqore-severity-row-actions {
+      grid-column: 2 / -1;
+      grid-row: 2;
+      max-width: 100%;
+      justify-content: flex-start;
+      padding-top: 4px;
+    }
+  }
+
   ${({ $clickable, theme, $intent, $transparent }) =>
     $clickable &&
     css`

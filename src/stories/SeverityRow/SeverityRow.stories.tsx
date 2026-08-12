@@ -1,4 +1,5 @@
 import { StoryObj } from '@storybook/react';
+import { expect, waitFor } from 'storybook/test';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreSeverityRow, { IReqoreSeverityRowProps } from '../../components/SeverityRow';
 import ReqoreTag from '../../components/Tag';
@@ -403,5 +404,161 @@ export const CustomPaddingSize: Story = {
         />
       ))}
     </ReqoreControlGroup>
+  ),
+};
+
+/**
+ * The row responds to the width of its OWN container, not the viewport — a
+ * SeverityRow sitting in a 320px drawer on a 1920px display still has to
+ * wrap its actions under the label. The container query fires below ~640px
+ * of container width; above it the actions sit next to the label as usual.
+ */
+export const NarrowContainerActionsWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the same row twice, once in a 720px container (actions sit to the right of the label, as they always have) and once in a 400px container (actions wrap into their own row underneath the label, without any viewport / media-query involvement). This is the responsive behaviour every SeverityRow needs — a drawer / sidebar / split-panel host can be narrow on any screen size, so the row keys its layout off `container-type: inline-size` rather than the window width. Below the row of KPI cards the fade-scroller uses, this is the second place in the library where a component's own container width drives its layout.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div style={{ width: 720, maxWidth: '100%' }}>
+        <ReqoreSeverityRow
+          label='Payment Processing · stripe-webhook-receiver'
+          description='Avg duration 4.7s exceeded 3.5s threshold · just now'
+          intent='danger'
+          leading={<ReqoreTag size='tiny' intent='danger' label='Critical' />}
+          fluid
+          actions={[
+            { label: 'Investigate', intent: 'danger', compact: true, size: 'small' },
+            {
+              icon: 'CloseLine',
+              tooltip: 'Dismiss',
+              minimal: true,
+              flat: true,
+              compact: true,
+              size: 'small',
+            },
+          ]}
+        />
+      </div>
+      <div style={{ width: 400, maxWidth: '100%' }}>
+        <ReqoreSeverityRow
+          label='Payment Processing · stripe-webhook-receiver'
+          description='Avg duration 4.7s exceeded 3.5s threshold · just now'
+          intent='danger'
+          leading={<ReqoreTag size='tiny' intent='danger' label='Critical' />}
+          fluid
+          actions={[
+            { label: 'Investigate', intent: 'danger', compact: true, size: 'small' },
+            {
+              icon: 'CloseLine',
+              tooltip: 'Dismiss',
+              minimal: true,
+              flat: true,
+              compact: true,
+              size: 'small',
+            },
+          ]}
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    // Two rows both render; the play test asserts the layout switch by
+    // reading `getBoundingClientRect().top` on the actions element — in the
+    // wide container the actions sit on the same visual row as the body
+    // (top matches within a few pixels); in the narrow container they sit
+    // below (top strictly greater than the body's).
+    const rows = canvasElement.querySelectorAll('.reqore-severity-row');
+    await waitFor(() => expect(rows.length).toBe(2));
+
+    const [wide, narrow] = Array.from(rows);
+    const wideBody = wide.querySelector('.reqore-severity-row-body') as HTMLElement;
+    const wideActions = wide.querySelector('.reqore-severity-row-actions') as HTMLElement;
+    const narrowBody = narrow.querySelector('.reqore-severity-row-body') as HTMLElement;
+    const narrowActions = narrow.querySelector('.reqore-severity-row-actions') as HTMLElement;
+
+    await waitFor(() => {
+      expect(wideBody).toBeTruthy();
+      expect(wideActions).toBeTruthy();
+      expect(narrowBody).toBeTruthy();
+      expect(narrowActions).toBeTruthy();
+    });
+
+    const wideBodyTop = wideBody.getBoundingClientRect().top;
+    const wideActionsTop = wideActions.getBoundingClientRect().top;
+    // Wide: actions inline with the body — tops line up within a small px slop.
+    await expect(Math.abs(wideActionsTop - wideBodyTop)).toBeLessThan(24);
+
+    const narrowBodyTop = narrowBody.getBoundingClientRect().top;
+    const narrowActionsTop = narrowActions.getBoundingClientRect().top;
+    // Narrow: actions sit below the body — top strictly greater than the body's.
+    await expect(narrowActionsTop).toBeGreaterThan(narrowBodyTop);
+  },
+};
+
+/**
+ * A concrete narrow-container use case: a "sidebar of incidents". Same rows
+ * a dashboard shows at full width, but the sidebar container is narrow —
+ * the container query moves the actions under the label so the sidebar
+ * never squeezes the incident text into a one-character caterpillar.
+ */
+export const NarrowSidebarList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a list of SeverityRows inside a 320px sidebar container. Every row's actions wrap under its label — regardless of how wide the surrounding viewport is — because the container query keys on the sidebar's width, not the window's.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 320, maxWidth: '100%' }}>
+      <ReqoreControlGroup vertical gapSize='small' fluid>
+        {[
+          {
+            label: 'Payment Processing · stripe-webhook-receiver',
+            description: 'Avg duration 4.7s exceeded 3.5s threshold · just now',
+            intent: 'danger' as const,
+            leadingLabel: 'Critical',
+          },
+          {
+            label: 'Order fulfillment · warehouse-sync',
+            description: 'Retry rate 12% over the last hour',
+            intent: 'warning' as const,
+            leadingLabel: 'High',
+          },
+          {
+            label: 'Invoice export · billing-adapter',
+            description: 'Recovered on its own · 6 minutes ago',
+            intent: 'success' as const,
+            leadingLabel: 'Cleared',
+          },
+        ].map((row, idx) => (
+          <ReqoreSeverityRow
+            key={idx}
+            label={row.label}
+            description={row.description}
+            intent={row.intent}
+            leading={<ReqoreTag size='tiny' intent={row.intent} label={row.leadingLabel} />}
+            fluid
+            actions={[
+              { label: 'Open', compact: true, size: 'small', intent: row.intent },
+              {
+                icon: 'CloseLine',
+                tooltip: 'Dismiss',
+                minimal: true,
+                flat: true,
+                compact: true,
+                size: 'small',
+              },
+            ]}
+          />
+        ))}
+      </ReqoreControlGroup>
+    </div>
   ),
 };
