@@ -109,6 +109,21 @@ const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
     ? rgba(theme.intents[intent], 0.06)
     : rgba(changeLightness(getMainBackgroundColor(theme), 0.04), 1);
 
+/* Container-query wrapper. `container-type: inline-size` registers this
+   div as a query container; the row inside can then respond to THIS
+   div's width via `@container`. Must be a real ancestor: `@container`
+   queries look for the nearest ANCESTOR container matching the name,
+   and an element cannot query itself. Without this wrapper the row's
+   own `@container` rule silently never matches — the fix is DOM-level,
+   not just a CSS one. `width` follows the row's `fluid` prop so a
+   `fluid={false}` row (nested in a flex parent that wants it to shrink
+   to content) still shrinks — the container width tracks the row's. */
+const StyledContainer = styled.div<{ $fluid: boolean }>`
+  container-type: inline-size;
+  container-name: reqore-severity-row;
+  width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
+`;
+
 const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   display: grid;
   grid-template-columns: 4px 1fr auto;
@@ -135,23 +150,16 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   transition: background-color 0.15s ease-out;
 
-  /* Register the row as a container so children can respond to the row's
-     OWN width instead of the viewport's. A row can sit in a 320px drawer on
-     a 1920px display; a viewport media query would still see a "wide" screen
-     and leave the actions squeezed alongside the label. Container queries
-     adapt to the actual box the row renders in. */
-  container-type: inline-size;
-  container-name: reqore-severity-row;
-
-  /* Below ~640px of container width there isn't enough room for the actions
-     column to sit next to the label without either shrinking the description
-     to one-character columns (long unbroken tokens render as vertical
-     caterpillars) or pushing the label off-screen. Rewrite the grid so the
-     actions wrap into their own row underneath the body, spanning the label
-     column, and left-align them so they read as a follow-up strip rather
-     than as right-side controls. Same behaviour every consumer needs — no
-     opt-in prop; the alternative was every panel wrapping the row in its
-     own styled shim (see qorus-ide's earlier \`SeverityRowShell\` hack). */
+  /* Below ~640px of the WRAPPER's own width there isn't enough room for
+     the actions column to sit next to the label without either shrinking
+     the description to one-character columns (long unbroken tokens render
+     as vertical caterpillars) or pushing the label off-screen. Rewrite
+     the grid so the actions wrap into their own row underneath the body,
+     spanning the label column, and left-align them so they read as a
+     follow-up strip rather than as right-side controls. Same behaviour
+     every consumer needs — no opt-in prop; the alternative was every
+     panel wrapping the row in its own styled shim (see qorus-ide's
+     earlier \`SeverityRowShell\` hack). */
   @container reqore-severity-row (max-width: 640px) {
     grid-template-columns: 4px 1fr;
     grid-auto-rows: max-content;
@@ -270,79 +278,81 @@ const ReqoreSeverityRow = memo(
       const hasBadge = badge !== undefined && badge !== null;
 
       return (
-        <ReqoreTooltipComponent
-          {...rest}
-          Component={StyledRow}
-          tooltip={tooltip}
-          ref={ref}
-          theme={theme}
-          $intent={intent}
-          $transparent={transparent}
-          size={size}
-          $fluid={fluid}
-          flat={flat}
-          rounded={rounded}
-          $raised={raised}
-          $clickable={interactive}
-          $padded={padded}
-          $paddingSize={paddingSize ?? size}
-          disabled={disabled}
-          effect={effect}
-          className={`${className || ''} reqore-severity-row`}
-        >
-          {showStrip ? (
-            <StyledStrip
-              theme={theme}
-              $intent={intent}
-              className='reqore-severity-row-strip'
-              aria-hidden
-            />
-          ) : (
-            <span aria-hidden style={{ width: 4 }} />
-          )}
-          <StyledBody className='reqore-severity-row-body'>
-            <StyledLabelLine $wrap={wrap} className='reqore-severity-row-label'>
-              {leading}
-              <StyledTextSlot $wrap={wrap}>
-                <ReqoreSpan size={size} effect={labelEffect}>
-                  {label}
-                </ReqoreSpan>
-              </StyledTextSlot>
-              {hasBadge && (
-                <ButtonBadge
-                  size={size}
-                  content={badge}
-                  margin='none'
-                />
-              )}
-            </StyledLabelLine>
-            {description && (
-              <StyledTextSlot $wrap={wrap}>
-                <ReqoreP
-                  size={secondarySize}
-                  effect={{ opacity: 0.6, ...descriptionEffect }}
-                  className='reqore-severity-row-description'
-                >
-                  {description}
-                </ReqoreP>
-              </StyledTextSlot>
+        <StyledContainer $fluid={fluid} className='reqore-severity-row-container'>
+          <ReqoreTooltipComponent
+            {...rest}
+            Component={StyledRow}
+            tooltip={tooltip}
+            ref={ref}
+            theme={theme}
+            $intent={intent}
+            $transparent={transparent}
+            size={size}
+            $fluid={fluid}
+            flat={flat}
+            rounded={rounded}
+            $raised={raised}
+            $clickable={interactive}
+            $padded={padded}
+            $paddingSize={paddingSize ?? size}
+            disabled={disabled}
+            effect={effect}
+            className={`${className || ''} reqore-severity-row`}
+          >
+            {showStrip ? (
+              <StyledStrip
+                theme={theme}
+                $intent={intent}
+                className='reqore-severity-row-strip'
+                aria-hidden
+              />
+            ) : (
+              <span aria-hidden style={{ width: 4 }} />
             )}
-          </StyledBody>
-          {actions && actions.length > 0 && (
-            <ReqoreControlGroup gapSize='small' className='reqore-severity-row-actions'>
-              {actions.map((action, idx) => (
-                <ReqoreButton
-                  key={idx}
-                  size={size}
-                  intent={action.intent ?? intent}
-                  {...action}
-                >
-                  {action.label}
-                </ReqoreButton>
-              ))}
-            </ReqoreControlGroup>
-          )}
-        </ReqoreTooltipComponent>
+            <StyledBody className='reqore-severity-row-body'>
+              <StyledLabelLine $wrap={wrap} className='reqore-severity-row-label'>
+                {leading}
+                <StyledTextSlot $wrap={wrap}>
+                  <ReqoreSpan size={size} effect={labelEffect}>
+                    {label}
+                  </ReqoreSpan>
+                </StyledTextSlot>
+                {hasBadge && (
+                  <ButtonBadge
+                    size={size}
+                    content={badge}
+                    margin='none'
+                  />
+                )}
+              </StyledLabelLine>
+              {description && (
+                <StyledTextSlot $wrap={wrap}>
+                  <ReqoreP
+                    size={secondarySize}
+                    effect={{ opacity: 0.6, ...descriptionEffect }}
+                    className='reqore-severity-row-description'
+                  >
+                    {description}
+                  </ReqoreP>
+                </StyledTextSlot>
+              )}
+            </StyledBody>
+            {actions && actions.length > 0 && (
+              <ReqoreControlGroup gapSize='small' className='reqore-severity-row-actions'>
+                {actions.map((action, idx) => (
+                  <ReqoreButton
+                    key={idx}
+                    size={size}
+                    intent={action.intent ?? intent}
+                    {...action}
+                  >
+                    {action.label}
+                  </ReqoreButton>
+                ))}
+              </ReqoreControlGroup>
+            )}
+          </ReqoreTooltipComponent>
+        </StyledContainer>
       );
     }
   )
