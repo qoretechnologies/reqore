@@ -153,6 +153,25 @@ an existing version).
 
 **Where to look if unsure:** `git log --oneline -20 -- package.json`.
 
+**Once per PR, not per commit.** The rule is about the version at MERGE TIME, not per push
+to the PR branch. `beta_release.yml` fires on push to `develop`, so intermediate versions
+on a feature branch never publish. Bump ONCE — at the first commit of the PR or when
+opening it — and then LEAVE `package.json` alone through follow-up commits (Qlip feedback
+fixes, review responses, iteration on the same branch). Re-bump ONLY when both of these
+are true:
+
+- `develop` moved during your PR (`git fetch origin && git log HEAD..origin/develop --oneline` is non-empty)
+- Your current branch version is now taken on npm
+  (`npm view @qoretechnologies/reqore@$(jq -r .version package.json)` resolves — either
+  because a parallel PR shipped the same version, or because the maintainer cut a release
+  onto that number)
+
+If either check comes back empty, keep the current version. Bumping "just in case" on
+every follow-up commit inflates the version history (a single iterative PR ending up as
+`0.72.5` instead of the correct `0.72.0`) without any release-mechanics benefit — every
+intermediate `0.72.1-0.72.4` was only ever a git tag on a feature branch, never a
+release on npm.
+
 ### Testing Patterns
 - **Setup:** `__tests__/setup.js` disables console debug/info/error.
 - **Wrapper:** always wrap tests with
