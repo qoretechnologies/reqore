@@ -467,29 +467,48 @@ export const NarrowContainerActionsWrap: Story = {
     </ReqoreControlGroup>
   ),
   play: async ({ canvasElement }) => {
-    // Both rows render; assert the layout switch strictly by reading each
-    // row's COMPUTED `grid-template-columns`. If the container query fires
-    // the narrow row resolves to two tracks (strip + label); if it doesn't
-    // it stays at three (strip + label + auto actions column). This is a
-    // stronger check than pixel-position offsets, which can pass on the
-    // wrong reason (a few px of padding between body and actions still
-    // reads as "actions below body" without any actual layout switch).
     const containers = canvasElement.querySelectorAll('.reqore-severity-row-container');
     await waitFor(() => expect(containers.length).toBe(2));
 
     const rows = canvasElement.querySelectorAll('.reqore-severity-row');
     await waitFor(() => expect(rows.length).toBe(2));
 
+    const [wideContainer, narrowContainer] = Array.from(containers) as HTMLElement[];
     const [wide, narrow] = Array.from(rows) as HTMLElement[];
 
-    // Count the tracks in `grid-template-columns` — 3 = actions inline;
-    // 2 = actions wrapped to row 2.
+    // Debug: log container measurements + container-type/name so a failure
+    // tells us WHY it failed (container-type not applied? container-name
+    // missing? width computed wrong? @container rule not emitted?).
+    const wideContainerStyle = getComputedStyle(wideContainer);
+    const narrowContainerStyle = getComputedStyle(narrowContainer);
+    // eslint-disable-next-line no-console
+    console.log(
+      '[SeverityRow container-query debug]',
+      JSON.stringify(
+        {
+          wide: {
+            containerWidth: wideContainer.getBoundingClientRect().width,
+            containerType: wideContainerStyle.containerType,
+            containerName: wideContainerStyle.containerName,
+            rowGridTemplateColumns: getComputedStyle(wide).gridTemplateColumns,
+          },
+          narrow: {
+            containerWidth: narrowContainer.getBoundingClientRect().width,
+            containerType: narrowContainerStyle.containerType,
+            containerName: narrowContainerStyle.containerName,
+            rowGridTemplateColumns: getComputedStyle(narrow).gridTemplateColumns,
+          },
+        },
+        null,
+        2
+      )
+    );
+
     const wideTracks = getComputedStyle(wide).gridTemplateColumns.split(/\s+/).length;
     const narrowTracks = getComputedStyle(narrow).gridTemplateColumns.split(/\s+/).length;
     await expect(wideTracks).toBe(3);
     await expect(narrowTracks).toBe(2);
 
-    // Actions element on the narrow row lands on grid row 2.
     const narrowActions = narrow.querySelector('.reqore-severity-row-actions') as HTMLElement;
     await waitFor(() => expect(narrowActions).toBeTruthy());
     await expect(getComputedStyle(narrowActions).gridRowStart).toBe('2');
