@@ -143,11 +143,16 @@ const StyledContainer = styled.div<{ $fluid: boolean }>`
    (see qorus-ide's earlier `SeverityRowShell` hack). */
 const SeverityRowResponsiveStyle = createGlobalStyle`
   @container reqore-severity-row (max-width: 640px) {
-    .reqore-severity-row {
+    /* Bump specificity via the wrapper class so the global override
+       wins the cascade tie against StyledRow's own grid-template-columns
+       rule (both are class selectors at 0,1,0, and styled-components 5
+       injects component styles AFTER global ones — so the component
+       wins ties without this extra selector level). */
+    .reqore-severity-row-container > .reqore-severity-row {
       grid-template-columns: 4px 1fr;
       grid-auto-rows: max-content;
     }
-    .reqore-severity-row > .reqore-severity-row-actions {
+    .reqore-severity-row-container > .reqore-severity-row > .reqore-severity-row-actions {
       grid-column: 2 / -1;
       grid-row: 2;
       max-width: 100%;
