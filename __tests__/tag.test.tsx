@@ -237,3 +237,60 @@ test('Renders <Tag /> raised, and not raised when it already has a border', () =
 
   expect(getComputedStyle(document.querySelector('.reqore-tag')).boxShadow).not.toContain('inset');
 });
+
+test('Renders <Tag /> with configurable vertical padding', () => {
+  const { rerender } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // The default reproduces the 4px the tag hardcoded before this was configurable, so
+  // no existing consumer moves.
+  const content = () => document.querySelector('.reqore-tag-content > *') as HTMLElement;
+
+  expect(getComputedStyle(content()).paddingTop).toBe('4px');
+  expect(getComputedStyle(content()).paddingBottom).toBe('4px');
+
+  rerender(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' paddingSize='micro' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(getComputedStyle(content()).paddingTop).toBe('0px');
+});
+
+test('Renders <Tag /> aligned to the text baseline on request', () => {
+  const { rerender } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(getComputedStyle(document.querySelector('.reqore-tag')).verticalAlign).toBe('middle');
+
+  rerender(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' verticalAlign='baseline' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(getComputedStyle(document.querySelector('.reqore-tag')).verticalAlign).toBe('baseline');
+});

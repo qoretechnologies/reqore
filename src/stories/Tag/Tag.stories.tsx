@@ -528,6 +528,24 @@ export const MonospaceFontFamily: Story = {
   args: { effect: { fontFamily: 'mono' } },
 };
 
+export const InlineInProse: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A tag sized to sit inside a sentence: `paddingSize` takes the vertical ' +
+          'padding below the 4px the tag used to hardcode, and `verticalAlign=\'baseline\'` ' +
+          'puts its label on the text baseline instead of centring the box on the ' +
+          "line's midline. Note that `size` alone cannot do this — with `wrap` set the " +
+          'tag uses `min-height`, so the box grows to its label and every size renders ' +
+          'the same height.',
+      },
+    },
+  },
+  render: Template,
+  args: { size: 'small', paddingSize: 'micro', verticalAlign: 'baseline', wrap: true },
+};
+
 export const Loading: Story = {
   parameters: {
     docs: {
