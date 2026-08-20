@@ -173,3 +173,67 @@ test('Renders <Tag /> with the label key', () => {
   // Get the label key by text from screen
   expect(screen.getByText('label key')).toBeTruthy();
 });
+
+test('Renders <Tag /> with a monospace font family from the effect', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='data.items[0].sku' effect={{ fontFamily: 'mono' }} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // The tag declares `font-family: system-ui` of its own, so this asserts the effect
+  // actually wins the cascade — the reason ReqoreDataView had to reach for a
+  // descendant override before this existed.
+  const tag = document.querySelector('.reqore-tag');
+
+  expect(getComputedStyle(tag).fontFamily).toContain('ui-monospace');
+  expect(getComputedStyle(tag).fontFamily).not.toContain('system-ui');
+});
+
+test('Renders <Tag /> with its own font family when the effect asks for none', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(getComputedStyle(document.querySelector('.reqore-tag')).fontFamily).toContain(
+    'system-ui'
+  );
+});
+
+test('Renders <Tag /> raised, and not raised when it already has a border', () => {
+  const { rerender } = render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' raised />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(getComputedStyle(document.querySelector('.reqore-tag')).boxShadow).toContain('inset');
+
+  // `flat={false}` draws a real border, and the inset highlight is a second way of
+  // drawing the same edge — the guard every other RaisedElement consumer applies.
+  rerender(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' raised flat={false} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(getComputedStyle(document.querySelector('.reqore-tag')).boxShadow).not.toContain('inset');
+});

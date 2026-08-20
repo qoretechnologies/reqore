@@ -2,6 +2,7 @@ import { rgba } from 'polished';
 import { HTMLAttributes } from 'react';
 import styled, { css, keyframes } from 'styled-components';
 import { Colors } from '../../constants/colors';
+import { getFontFamily, TReqoreFontFamilyShorthand } from '../../constants/fonts';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
@@ -139,6 +140,16 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
   color?: TReqoreEffectColor;
 
   uppercase?: boolean;
+  /**
+   * Font family for the text. Accepts the `'mono'` / `'system'` shorthands — which
+   * resolve to Reqore's own stacks — or any raw CSS font stack.
+   *
+   * Applied with `!important`, like the other text effects here, because several
+   * components declare a `font-family` of their own further down the cascade
+   * (`ReqoreTag`, `ReqoreKeyboardShortcut`); without it, whether the effect wins
+   * would depend on which styled-component happened to mount last.
+   */
+  fontFamily?: TReqoreFontFamilyShorthand | string;
   textSize?: TSizes | string;
   textAlign?: 'left' | 'center' | 'right';
   glow?: {
@@ -480,6 +491,13 @@ ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.color
       ? css`
           color: ${getColorFromMaybeString(theme, effect.color)} !important;
+        `
+      : undefined}
+
+  ${({ effect }: IReqoreTextEffectProps) =>
+    effect && effect.fontFamily
+      ? css`
+          font-family: ${getFontFamily(effect.fontFamily)} !important;
         `
       : undefined}
 

@@ -5,6 +5,7 @@ import React, { forwardRef, HTMLAttributes, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
+import { SYSTEM_FONT } from '../../constants/fonts';
 import {
   BADGE_RADIUS_FROM_RADIUS_SIZE,
   BADGE_RADIUS_FROM_SIZE,
@@ -27,7 +28,7 @@ import {
   getReadableColorFrom,
   isAchromatic,
 } from '../../helpers/colors';
-import { ActiveIconScale, InactiveIconScale } from '../../styles';
+import { ActiveIconScale, InactiveIconScale, RaisedElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
@@ -97,6 +98,12 @@ export interface IReqoreCustomTagProps
   labelKeyAlign?: 'left' | 'right' | 'center';
   labelKeyEffect?: IReqoreEffect;
   as?: string | React.ElementType;
+  /**
+   * Subtle 3D "raised" effect — inset top highlight + inset bottom shadow. The same
+   * `RaisedElement` used by Panel, Button, Callout and EntityRow, so a raised tag sits
+   * in the same material as the raised surfaces around it.
+   */
+  raised?: boolean;
   compact?: boolean;
   /**
    * Tooltip shown on the remove ("X") affordance rendered when `onRemoveClick`
@@ -123,7 +130,16 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   justify-content: center;
   flex-shrink: 0;
   align-items: stretch;
-  font-family: system-ui;
+  /* Only when the caller has not asked for a family. StyledTag extends StyledEffect,
+     so an unconditional declaration here always won the cascade over effect.fontFamily
+     — which is why ReqoreDataView had to force monospace back on with a specificity-
+     boosted descendant override instead of just setting the effect.
+     NO BACKTICKS in this comment: it lives inside a template literal and they end it. */
+  ${({ effect }: IReqoreTagStyle) =>
+    !effect?.fontFamily &&
+    css`
+      font-family: ${SYSTEM_FONT};
+    `}
   overflow: hidden;
   vertical-align: middle;
   font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
@@ -136,6 +152,10 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
   border: ${({ theme, color, flat = true }) =>
     !flat ? `1px solid ${changeLightness(color || theme.main, 0.2)}` : 0};
+  /* Same flat !== false guard as EntityRow / FeatureCard / Callout: the inset
+     highlight and the border are two ways of drawing the same edge, so a tag that
+     already has a border does not also get the raised shading. */
+  ${({ raised, flat = true }) => raised && flat !== false && RaisedElement}
   border-radius: ${({ asBadge, size, radiusSize, rounded }) =>
     rounded === false
       ? undefined

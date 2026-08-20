@@ -49,6 +49,7 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { MONO_FONT } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { TReqoreEffectColor } from '../Effect';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
@@ -327,9 +328,6 @@ interface IStyledThemeProps {
   $size: TSizes;
 }
 
-// Shared monospace stack — picks the system mono on every platform.
-const MONO_FONT =
-  "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
 
 const Tree = styled.div<IStyledThemeProps>`
   display: flex;
@@ -349,7 +347,11 @@ const Tree = styled.div<IStyledThemeProps>`
      without the specificity boost the winner is just whichever
      styled-component happens to mount last. \`!important\` here would
      tax every downstream consumer trying to override this from their
-     own \`customTheme\` / \`effect\`. */
+     own \`customTheme\` / \`effect\`. 
+     Prefer \`effect={{ fontFamily: 'mono' }}\` on new code — \`StyledTag\` now only
+     declares its own family when the effect does not, so a tag can simply ask for
+     mono. This block stays because the classes below are set on tags this component
+     does not own the props of; migrating them is a separate change. */
   && .reqore-data-view-key,
   && .reqore-data-view-key .reqore-tag-content,
   && .reqore-data-view-value,
