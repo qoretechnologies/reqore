@@ -107,13 +107,19 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
 
         // Only auto-focus if focus is not already inside the container
         if (!focusAlreadyInside) {
+          // preventScroll everywhere a focus is programmatic housekeeping rather than
+          // user navigation: this fires inside a rAF, and by then the page may have
+          // re-laid out (an option committing re-groups its form) — a scrolling focus
+          // yanks the container to wherever the target landed, mid-interaction. Tab
+          // cycling (handleKeyDown above) deliberately keeps the default scroll: a
+          // keyboard user needs the element they tabbed to brought into view.
           const focusableElements = getFocusableElements();
           if (focusableElements.length > 0) {
-            focusableElements[0].focus();
+            focusableElements[0].focus({ preventScroll: true });
           } else {
             // If no focusable elements, focus the container itself
             containerRef.current.setAttribute('tabindex', '-1');
-            containerRef.current.focus();
+            containerRef.current.focus({ preventScroll: true });
           }
         }
       });
@@ -127,13 +133,21 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
 
       // Restore focus to the previously focused element
       if (restoreFocus && previouslyFocusedRef.current) {
+        const target = previouslyFocusedRef.current;
+        previouslyFocusedRef.current = null;
         // Use requestAnimationFrame to ensure the element is still in the DOM
         requestAnimationFrame(() => {
-          if (previouslyFocusedRef.current && document.body.contains(previouslyFocusedRef.current)) {
-            previouslyFocusedRef.current.focus();
+          // By this frame the user may already have focused something else (clicked a
+          // field, opened another surface) — restoring would steal it. Only restore
+          // when focus fell back to the body, and never let the restore scroll: the
+          // saved element may have been re-laid out while the trap was up, and a
+          // scrolling focus teleports the page to its new position.
+          const current = document.activeElement;
+          const focusIsUnclaimed = !current || current === document.body;
+          if (focusIsUnclaimed && document.body.contains(target)) {
+            target.focus({ preventScroll: true });
           }
         });
-        previouslyFocusedRef.current = null;
       }
     };
   }, [active, autoFocus, restoreFocus, containerRef, getFocusableElements, handleKeyDown]);
