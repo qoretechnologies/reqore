@@ -132,6 +132,7 @@ export { TimeAgo as ReqoreTimeAgo } from './components/TimeAgo';
 export { default as ReqoreTimeline } from './components/Timeline';
 export { ReqoreTree } from './components/Tree';
 export { Colors as ReqoreColors } from './constants/colors';
+export { FONT_FAMILY_SHORTHANDS as ReqoreFonts } from './constants/fonts';
 export { ReqoreSizes } from './constants/sizes';
 export { ReqoreIntents } from './constants/theme';
 export { ReqorePaginationContainer } from './containers/Paging';

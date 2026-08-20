@@ -496,6 +496,38 @@ export const Effect = {
   },
 };
 
+export const Raised: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Tag with the shared raised treatment — the same inset highlight and ' +
+          'shadow Panel, Button, Callout and EntityRow use, so a raised tag sits in the ' +
+          'same material as the raised surfaces around it. Suppressed when the tag is ' +
+          'not flat, because the border already draws that edge.',
+      },
+    },
+  },
+  render: Template,
+  args: { raised: true },
+};
+
+export const MonospaceFontFamily: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders Tag with effect.fontFamily set to the 'mono' shorthand. A tag showing " +
+          'a literal value — an id, a data path, an error code — reads better in ' +
+          'monospace, and until now the tag hardcoded system-ui, so consumers had to ' +
+          'override it with a descendant selector. The effect wins instead.',
+      },
+    },
+  },
+  render: Template,
+  args: { effect: { fontFamily: 'mono' } },
+};
+
 export const Loading: Story = {
   parameters: {
     docs: {
