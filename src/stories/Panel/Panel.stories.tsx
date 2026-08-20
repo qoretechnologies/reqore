@@ -600,6 +600,62 @@ export const MinimalWithIntent: Story = {
   },
 };
 
+export const AccentStrip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders panels with the accent strip instead of a full intent border — the intent paints a single edge (left or top) while the border stays neutral (or disappears on flat panels). The quiet "severity rail" look for accordions and stacked sections.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical fluid gapSize='big'>
+      <ReqorePanel
+        label='Left accent — danger, flat + minimal (the accordion look)'
+        icon='PlugLine'
+        intent='danger'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+        badge={2}
+      >
+        A blocked prerequisite: the strip carries the severity, the border stays out of the way.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Left accent — warning, flat + minimal'
+        icon='Settings3Line'
+        intent='warning'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+        badge={3}
+      >
+        Attention wanted, nothing broken.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Left accent on a bordered panel'
+        intent='info'
+        accentPosition='left'
+        accentSize={3}
+        size='small'
+      >
+        With `flat` unset the panel keeps a neutral border; the intent lives only in the 3px strip.
+      </ReqorePanel>
+      <ReqorePanel label='Top accent — success' intent='success' accentPosition='top' size='small'>
+        The `top` flavor, mirroring ReqoreCallout&apos;s `accentPosition`.
+      </ReqorePanel>
+      <ReqorePanel label='Accent with no intent' accentPosition='left' size='small'>
+        Without an intent the strip renders as a neutral highlight.
+      </ReqorePanel>
+    </ReqoreControlGroup>
+  ),
+};
+
 export const WithOpacity: Story = {
   parameters: {
     docs: {

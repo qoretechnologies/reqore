@@ -213,6 +213,16 @@ export interface IReqorePanelProps
    * because the border already provides surface definition.
    */
   raised?: boolean;
+  /**
+   * Renders the intent color (or a neutral highlight when no intent is set) as a
+   * single accent strip on one edge instead of tinting the whole border — the
+   * quiet "severity rail" treatment, mirroring `ReqoreCallout`'s accent API.
+   * When set, the panel's own border drops the intent tint (and is omitted
+   * entirely on `flat` panels) so the strip carries the color alone.
+   */
+  accentPosition?: 'left' | 'top';
+  /** Thickness of the accent strip in pixels. Defaults to `5`. */
+  accentSize?: number;
 }
 
 export interface IStyledPanel extends IReqorePanelProps {
@@ -368,14 +378,43 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded, radiusSize }) =>
     rounded ? resolveRadius('normal', radiusSize) : 0}px;
-  border: ${({ theme, flat, intent }) =>
-    flat && !intent
+  border: ${({ theme, flat, intent, accentPosition }) =>
+    flat && (!intent || accentPosition)
       ? undefined
       : `1px solid ${changeLightness(
-          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+          intent && !accentPosition ? theme.intents[intent] : getMainBackgroundColor(theme),
           0.08
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  ${({ accentPosition, accentSize = 5, theme, intent }) =>
+    accentPosition &&
+    css`
+      position: relative;
+      /* Reserve the strip's thickness so the title bar and content never sit
+         under it — the same reservation ReqoreCallout makes. */
+      padding-${accentPosition === 'left' ? 'left' : 'top'}: ${accentSize}px;
+
+      &::before {
+        content: '';
+        position: absolute;
+        ${accentPosition === 'left'
+          ? css`
+              top: 0;
+              bottom: 0;
+              left: 0;
+              width: ${accentSize}px;
+            `
+          : css`
+              top: 0;
+              right: 0;
+              left: 0;
+              height: ${accentSize}px;
+            `}
+        background-color: ${intent
+          ? theme.intents[intent]
+          : changeLightness(getMainBackgroundColor(theme), 0.22)};
+      }
+    `}
   overflow: ${({ stickyHeader }) => (stickyHeader ? 'visible' : 'hidden')};
   display: flex;
   flex-flow: column;
