@@ -46,8 +46,20 @@ jobs:
         with:
           node-version: 22.19.0
 
+      # --frozen-lockfile so the published artifact is built from the exact dependency
+      # tree the PR committed, not whatever the range happens to resolve to today.
       - name: Install modules
-        run: yarn install
+        run: yarn install --frozen-lockfile
+
+      # Gate the publish on the same checks the PR itself must pass. Without this a red
+      # PR still ships an installable package, and a consumer pinning it inherits the
+      # breakage with nothing on the tin to warn them. `beta_release.yml` gates on
+      # `yarn test:ci` for the same reason.
+      - name: Lint
+        run: yarn lint
+
+      - name: Test
+        run: yarn test
 
       - name: Build
         run: yarn build

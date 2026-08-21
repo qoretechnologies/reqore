@@ -2,7 +2,6 @@ import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import {
-  ACCENT_SIZE_TO_PX,
   PADDING_FROM_SIZE,
   resolveRadius,
   TEXT_FROM_SIZE,
@@ -15,7 +14,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { getOneLessSize, isStringSize, TReqorePadded } from '../../helpers/utils';
+import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -81,7 +80,7 @@ export interface IReqoreCalloutProps
   accentPosition?: 'left' | 'top';
   /**
    * Thickness of the accent strip — a raw pixel number, or a `TSizes` name
-   * resolved through `ACCENT_SIZE_TO_PX` (`'normal'` equals the default 5px).
+   * resolved through `ACCENT_SIZE_TO_PX`. Defaults to `'normal'` (5px).
    */
   accentSize?: number | TSizes;
   /** Effect applied to the legacy `children` slot. */
@@ -288,7 +287,7 @@ export const ReqoreCallout = memo(
         interactive,
         onClick,
         accentPosition = 'left',
-        accentSize = 5,
+        accentSize,
         padded = true,
         paddingSize,
         ...rest
@@ -298,11 +297,9 @@ export const ReqoreCallout = memo(
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
       const isInteractive = interactive || !!onClick;
       const descriptionSize = useMemo(() => getOneLessSize(size), [size]);
-      // Resolve TSizes names to pixels ONCE, here — the styles do arithmetic with
-      // the value (padding reservation), so they must only ever see a number.
-      const accentSizePx = isStringSize(accentSize)
-        ? ACCENT_SIZE_TO_PX[accentSize as TSizes]
-        : (accentSize as number);
+      // Resolved ONCE, here — the styles do arithmetic with the value (padding
+      // reservation), so they must only ever see a number. Shared with ReqorePanel.
+      const accentSizePx = useMemo(() => resolveAccentSize(accentSize), [accentSize]);
       const hasBadge = badge !== undefined && badge !== null;
       const hasIcon = !!icon || !!iconProps?.image;
       const hasStructuredContent = !!label || !!description;
