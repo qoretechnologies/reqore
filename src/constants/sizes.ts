@@ -138,6 +138,25 @@ export const TABS_PADDING_TO_PX = {
   massive: 5,
 };
 
+/**
+ * A tag's VERTICAL padding, which is a different scale from its horizontal one.
+ *
+ * A tag is a inline object sitting on a line of text, so its vertical padding competes
+ * with the line height around it while its horizontal padding only competes with the
+ * words either side. `normal` is 4px — the value the tag hardcoded before this was
+ * configurable — so an explicit `paddingSize='normal'` reproduces the old rendering
+ * exactly, and the smaller steps exist for tags used inline in prose.
+ */
+export const TAG_VERTICAL_PADDING_FROM_SIZE = {
+  micro: 0,
+  tiny: 1,
+  small: 2,
+  normal: 4,
+  big: 6,
+  huge: 8,
+  massive: 10,
+};
+
 export const TAG_HORIZONTAL_PADDING_FROM_SIZE = {
   micro: 2,
   tiny: 3,
