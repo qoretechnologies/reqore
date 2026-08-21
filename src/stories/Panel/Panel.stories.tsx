@@ -760,6 +760,18 @@ export const AccentStrip: Story = {
       >
         Explicit 8px.
       </ReqorePanel>
+      <ReqorePanel
+        label="accentSize='big' — TSizes name"
+        intent='info'
+        accentPosition='left'
+        accentSize='big'
+        minimal
+        flat
+        size='small'
+      >
+        String sizes resolve through ACCENT_SIZE_TO_PX — &apos;big&apos; is 7px,
+        &apos;normal&apos; equals the 5px default.
+      </ReqorePanel>
 
       {/* Bordered (flat unset) and the top flavor */}
       <ReqorePanel label='Bordered panel' intent='info' accentPosition='left' size='small'>

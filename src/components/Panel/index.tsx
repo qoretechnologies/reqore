@@ -17,6 +17,7 @@ import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
+  ACCENT_SIZE_TO_PX,
   GAP_FROM_SIZE,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
@@ -34,7 +35,7 @@ import {
   getReadableColor,
 } from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
-import { getOneHigherSize, isActionShown } from '../../helpers/utils';
+import { getOneHigherSize, isActionShown, isStringSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -221,14 +222,20 @@ export interface IReqorePanelProps
    * entirely on `flat` panels) so the strip carries the color alone.
    */
   accentPosition?: 'left' | 'top';
-  /** Thickness of the accent strip in pixels. Defaults to `5`. */
-  accentSize?: number;
+  /**
+   * Thickness of the accent strip — a raw pixel number, or a `TSizes` name
+   * resolved through `ACCENT_SIZE_TO_PX` (`'normal'` equals the default 5px).
+   */
+  accentSize?: number | TSizes;
 }
 
-export interface IStyledPanel extends IReqorePanelProps {
+export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   theme: IReqoreTheme;
   noHorizontalPadding?: boolean;
   stickyHeaderOffset?: number;
+  /** Always a resolved pixel number — the component maps `TSizes` names before
+   *  it reaches the styles, so the css (which interpolates px) never sees a string. */
+  $accentSize?: number;
   /** True once a sticky header has pinned to its scroll container (detected at
    *  runtime). The header drops its top radius while stuck so it reads as a
    *  full-width bar, and regains it at rest. */
@@ -386,13 +393,13 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
           0.08
         )}`};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  ${({ accentPosition, accentSize = 5, theme, intent }) =>
+  ${({ accentPosition, $accentSize = 5, theme, intent }) =>
     accentPosition &&
     css`
       position: relative;
       /* Reserve the strip's thickness so the title bar and content never sit
          under it — the same reservation ReqoreCallout makes. */
-      padding-${accentPosition === 'left' ? 'left' : 'top'}: ${accentSize}px;
+      padding-${accentPosition === 'left' ? 'left' : 'top'}: ${$accentSize}px;
 
       &::before {
         content: '';
@@ -402,13 +409,13 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
               top: 0;
               bottom: 0;
               left: 0;
-              width: ${accentSize}px;
+              width: ${$accentSize}px;
             `
           : css`
               top: 0;
               right: 0;
               left: 0;
-              height: ${accentSize}px;
+              height: ${$accentSize}px;
             `}
         background-color: ${intent
           ? theme.intents[intent]
@@ -766,10 +773,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       collapseTooltip = 'Collapse',
       expandTooltip = 'Expand',
       closeTooltip = 'Close',
+      accentSize = 5,
       ...rest
     }: IReqorePanelProps,
     ref
   ) => {
+    // Resolve TSizes names to pixels ONCE, here — the accent styles interpolate
+    // px and reserve padding, so they must only ever see a number.
+    const accentSizePx = isStringSize(accentSize)
+      ? ACCENT_SIZE_TO_PX[accentSize as TSizes]
+      : (accentSize as number);
     const [_isCollapsed, setIsCollapsed] = useState(isCollapsed || false);
     const primaryContentGradient = getPrimaryGradient(contentEffect?.gradient);
     const primaryContentColors: Record<number | string, unknown> | undefined =
@@ -1246,6 +1259,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           rounded={rounded}
           flat={flat}
           intent={intent}
+          $accentSize={accentSizePx}
           className={`${className || ''} reqore-panel${
             _isHovered && size(floatingActionsList) > 0 ? ' reqore-panel-floating-active' : ''
           }`}

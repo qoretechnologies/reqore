@@ -440,6 +440,19 @@ export const RATING_GAP_FROM_SIZE = {
   massive: 12,
 };
 
+/** Accent-strip thickness (Callout + Panel `accentSize`) in px. `normal` MUST stay
+ *  equal to the prop's numeric default (5) so `accentSize='normal'` and the
+ *  default render identically. */
+export const ACCENT_SIZE_TO_PX = {
+  micro: 2,
+  tiny: 3,
+  small: 4,
+  normal: 5,
+  big: 7,
+  huge: 9,
+  massive: 12,
+};
+
 export const ICON_FROM_HEADER_SIZE = {
   1: 23,
   2: 20,

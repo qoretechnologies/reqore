@@ -416,3 +416,33 @@ test('A non-resizable <Panel /> renders no resize handles', () => {
 
   expect(getResizeHandleCursors()).toHaveLength(0);
 });
+
+test('Panel accent strip reserves accentSize and accepts TSizes names', () => {
+  // The accent block reserves the strip's thickness as container padding.
+  // 'big' maps to 7px via ACCENT_SIZE_TO_PX; 'normal' must equal the numeric
+  // default (5px) so the string and number forms never drift apart.
+  render(
+    <div style={{ width: '600px' }}>
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel label='Numeric' intent='danger' accentPosition='left' accentSize={8}>
+            Body
+          </ReqorePanel>
+          <ReqorePanel label='Big' intent='danger' accentPosition='left' accentSize='big'>
+            Body
+          </ReqorePanel>
+          <ReqorePanel label='Default' intent='danger' accentPosition='left'>
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    </div>
+  );
+
+  const [numeric, big, byDefault] = Array.from(
+    document.querySelectorAll('.reqore-panel')
+  ) as HTMLElement[];
+  expect(getComputedStyle(numeric).paddingLeft).toBe('8px');
+  expect(getComputedStyle(big).paddingLeft).toBe('7px');
+  expect(getComputedStyle(byDefault).paddingLeft).toBe('5px');
+});

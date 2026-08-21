@@ -382,4 +382,31 @@ test('Renders <Callout /> with padded=false + accent reserves accentSize', () =>
   );
 
   expect(document.querySelectorAll('.reqore-callout').length).toBe(1);
+  // The reservation must survive as a real computed style — a half-resolved
+  // accentSize would produce `NaNpx` / garbage here, not `8px`.
+  const callout = document.querySelector('.reqore-callout') as HTMLElement;
+  expect(getComputedStyle(callout).paddingTop).toBe('8px');
+});
+
+test('Callout accentSize accepts TSizes names resolved through ACCENT_SIZE_TO_PX', () => {
+  // 'big' maps to 7px; 'normal' must be indistinguishable from the numeric
+  // default (5px) so the string and number forms never drift apart.
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Big' padded={false} accentPosition='top' accentSize='big' />
+          <ReqoreCallout label='Normal' padded={false} accentPosition='top' accentSize='normal' />
+          <ReqoreCallout label='Default' padded={false} accentPosition='top' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const [big, normal, byDefault] = Array.from(
+    document.querySelectorAll('.reqore-callout')
+  ) as HTMLElement[];
+  expect(getComputedStyle(big).paddingTop).toBe('7px');
+  expect(getComputedStyle(normal).paddingTop).toBe('5px');
+  expect(getComputedStyle(byDefault).paddingTop).toBe('5px');
 });
