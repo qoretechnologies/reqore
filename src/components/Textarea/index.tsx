@@ -53,6 +53,8 @@ export interface IReqoreTextareaProps
   minimal?: boolean;
   fluid?: boolean;
   value?: string;
+  /** Minimum visible line count. With `scaleWithContent` the textarea starts at
+   * this many rows and grows with the content (never shrinking below it). */
   rows?: number;
   cols?: number;
   rounded?: boolean;
@@ -204,6 +206,7 @@ function Textarea<T>(
     focusRules,
     shortcutHint,
     templates,
+    rows = 1,
     ...rest
   }: T & IReqoreTextareaProps,
   ref
@@ -286,7 +289,7 @@ function Textarea<T>(
           ref={(ref) => setInputRef(ref)}
           theme={theme}
           rounded={rounded}
-          rows={1}
+          rows={rows}
           value={_value}
           readOnly={rest?.readOnly}
           tabIndex={rest?.disabled ? -1 : 0}

@@ -455,3 +455,21 @@ test('<Textarea /> is cleared when focused', () => {
   expect(fn).toHaveBeenNthCalledWith(1, { target: { value: '' } });
   expect(document.querySelectorAll('.reqore-textarea')[0]).toHaveFocus();
 });
+
+test('<TextArea /> forwards `rows` so scaleWithContent keeps it as the floor', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTextarea scaleWithContent rows={3} />
+          <ReqoreTextarea />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const [withRows, withoutRows] = Array.from(document.querySelectorAll('textarea'));
+  expect(withRows.getAttribute('rows')).toBe('3');
+  // default stays 1 — existing consumers keep their exact markup
+  expect(withoutRows.getAttribute('rows')).toBe('1');
+});
