@@ -670,8 +670,18 @@ export const AccentStrip: Story = {
       >
         De-emphasized but still railed.
       </ReqorePanel>
-      <ReqorePanel label='No intent' accentPosition='left' size='small'>
-        Without an intent the strip renders as a neutral highlight — same default 5px width.
+      <ReqorePanel
+        label='No intent — flat + minimal'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        Without an intent the strip renders as a neutral highlight. Styled exactly like the
+        intent rows above so the widths are directly comparable — a bordered panel insets its
+        strip by the border, which reads as a different width (see &quot;Bordered panel&quot;
+        below).
       </ReqorePanel>
 
       {/* States: collapsed + disabled */}
@@ -843,7 +853,7 @@ export const AccentStripStates: Story = {
       </ReqorePanel>
 
       {/* stickyHeader — wrapper overflow goes visible, so the strip must round itself */}
-      <div style={{ height: '160px', overflow: 'auto' }}>
+      <div style={{ height: '160px', width: '460px', maxWidth: '100%', overflow: 'auto' }}>
         <ReqorePanel
           label='Sticky header — the strip keeps the panel corners'
           icon='PushpinLine'
