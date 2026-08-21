@@ -605,14 +605,15 @@ export const AccentStrip: Story = {
     docs: {
       description: {
         story:
-          'Renders panels with the accent strip instead of a full intent border — the intent paints a single edge (left or top) while the border stays neutral (or disappears on flat panels). The quiet "severity rail" look for accordions and stacked sections.',
+          'Renders panels with the accent strip instead of a full intent border — the intent paints a single edge (left or top) while the border stays neutral (or disappears on flat panels). The quiet "severity rail" look for accordions and stacked sections. Every strip uses the default 5px width except the explicitly-labelled accentSize comparison row.',
       },
     },
   },
   render: () => (
     <ReqoreControlGroup vertical fluid gapSize='big'>
+      {/* Every intent, identical panels — the strips must all render the same width */}
       <ReqorePanel
-        label='Left accent — danger, flat + minimal (the accordion look)'
+        label='Danger — flat + minimal (the accordion look)'
         icon='PlugLine'
         intent='danger'
         accentPosition='left'
@@ -625,7 +626,7 @@ export const AccentStrip: Story = {
         A blocked prerequisite: the strip carries the severity, the border stays out of the way.
       </ReqorePanel>
       <ReqorePanel
-        label='Left accent — warning, flat + minimal'
+        label='Warning — flat + minimal'
         icon='Settings3Line'
         intent='warning'
         accentPosition='left'
@@ -638,19 +639,134 @@ export const AccentStrip: Story = {
         Attention wanted, nothing broken.
       </ReqorePanel>
       <ReqorePanel
-        label='Left accent on a bordered panel'
+        label='Info — flat + minimal'
+        intent='info'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        Same default 5px strip as every other intent.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Success — flat + minimal'
+        intent='success'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        Done and healthy.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Pending — flat + minimal'
+        intent='pending'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        Waiting on something.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Muted — flat + minimal'
+        intent='muted'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        De-emphasized but still railed.
+      </ReqorePanel>
+      <ReqorePanel label='No intent' accentPosition='left' size='small'>
+        Without an intent the strip renders as a neutral highlight — same default 5px width.
+      </ReqorePanel>
+
+      {/* States: collapsed + disabled */}
+      <ReqorePanel
+        label='Collapsed — the strip spans just the header'
+        icon='PlugLine'
+        intent='danger'
+        accentPosition='left'
+        collapsible
+        isCollapsed
+        minimal
+        flat
+        size='small'
+        badge={2}
+      >
+        Hidden while collapsed.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Collapsed — top accent'
+        intent='warning'
+        accentPosition='top'
+        collapsible
+        isCollapsed
+        minimal
+        flat
+        size='small'
+      >
+        Hidden while collapsed.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Disabled — the strip dims with the panel'
+        icon='ForbidLine'
+        intent='warning'
+        accentPosition='left'
+        disabled
+        minimal
+        flat
+        size='small'
+      >
+        Not interactive right now.
+      </ReqorePanel>
+
+      {/* Panel sizes — the strip width stays constant while the panel scales */}
+      <ReqorePanel label='Small panel' intent='info' accentPosition='left' minimal flat size='small'>
+        size=&quot;small&quot;, default 5px strip.
+      </ReqorePanel>
+      <ReqorePanel label='Normal panel' intent='info' accentPosition='left' minimal flat>
+        size=&quot;normal&quot;, default 5px strip.
+      </ReqorePanel>
+      <ReqorePanel label='Big panel' intent='info' accentPosition='left' minimal flat size='big'>
+        size=&quot;big&quot;, default 5px strip.
+      </ReqorePanel>
+
+      {/* accentSize — the ONLY panels with a non-default strip width, labelled as such */}
+      <ReqorePanel
+        label='accentSize={3} — thinner strip'
         intent='info'
         accentPosition='left'
         accentSize={3}
+        minimal
+        flat
         size='small'
       >
-        With `flat` unset the panel keeps a neutral border; the intent lives only in the 3px strip.
+        Explicit 3px.
+      </ReqorePanel>
+      <ReqorePanel
+        label='accentSize={8} — thicker strip'
+        intent='info'
+        accentPosition='left'
+        accentSize={8}
+        minimal
+        flat
+        size='small'
+      >
+        Explicit 8px.
+      </ReqorePanel>
+
+      {/* Bordered (flat unset) and the top flavor */}
+      <ReqorePanel label='Bordered panel' intent='info' accentPosition='left' size='small'>
+        With `flat` unset the panel keeps a neutral border; the intent lives only in the strip.
       </ReqorePanel>
       <ReqorePanel label='Top accent — success' intent='success' accentPosition='top' size='small'>
         The `top` flavor, mirroring ReqoreCallout&apos;s `accentPosition`.
-      </ReqorePanel>
-      <ReqorePanel label='Accent with no intent' accentPosition='left' size='small'>
-        Without an intent the strip renders as a neutral highlight.
       </ReqorePanel>
     </ReqoreControlGroup>
   ),
