@@ -13,6 +13,7 @@ import {
   CONTROL_TEXT_FROM_SIZE,
   resolveRadius,
   TAG_HORIZONTAL_PADDING_FROM_SIZE,
+  TAG_VERTICAL_PADDING_FROM_SIZE,
   TAG_ICON_FROM_SIZE,
   TAG_RADIUS_FROM_RADIUS_SIZE,
   TAG_RADIUS_FROM_SIZE,
@@ -104,6 +105,26 @@ export interface IReqoreCustomTagProps
    * in the same material as the raised surfaces around it.
    */
   raised?: boolean;
+  /**
+   * Size of the tag's vertical padding. Defaults to `'normal'` (4px), the value the
+   * tag used before this was configurable.
+   *
+   * Worth knowing when sizing a tag down: with `wrap` set the tag uses `min-height`
+   * rather than a fixed height, so the box grows to its label and `size` stops
+   * governing the height — the label's own text size and this padding are what
+   * remain. Scaling it independently is what lets a tag sit inline in prose without
+   * pushing the line apart.
+   */
+  paddingSize?: TSizes;
+  /**
+   * How the tag aligns against surrounding text. Defaults to `'middle'`, which centres
+   * the box on the text's midline and is right for a tag standing on its own.
+   *
+   * `'baseline'` instead sits the tag's own label on the text baseline, which is what
+   * you want for a tag used inline in a sentence — the label lines up with the words
+   * either side rather than the box floating between them.
+   */
+  verticalAlign?: 'baseline' | 'middle' | 'top' | 'bottom';
   compact?: boolean;
   /**
    * Tooltip shown on the remove ("X") affordance rendered when `onRemoveClick`
@@ -141,7 +162,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       font-family: ${SYSTEM_FONT};
     `}
   overflow: hidden;
-  vertical-align: middle;
+  vertical-align: ${({ verticalAlign = 'middle' }) => verticalAlign};
   font-size: ${({ size }) => TAG_TEXT_FROM_SIZE[size]}px;
   line-height: 1.1;
 
@@ -298,10 +319,12 @@ const StyledTagContentWrapper = styled.span<{
 
 const StyledTagContent = styled(StyledTextEffect)<{
   size: TSizes;
+  $paddingSize?: TSizes;
   $wrap?: boolean;
   $hasWidth?: boolean;
 }>`
-  padding: 4px ${({ size }) => TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px;
+  padding: ${({ $paddingSize = 'normal' }) => TAG_VERTICAL_PADDING_FROM_SIZE[$paddingSize]}px
+    ${({ size }) => TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px;
   min-height: 100%;
   display: flex;
   align-items: center;
@@ -375,6 +398,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       className,
       onClick,
       size = 'normal',
+      paddingSize,
       onRemoveClick,
       actions,
       asBadge,
@@ -493,6 +517,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 $wrap={wrap}
                 $hasWidth={!!width}
                 size={size}
+                $paddingSize={paddingSize}
                 labelAlign={labelKeyAlign}
                 compact={compact}
                 effect={
@@ -520,6 +545,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             {label || label === 0 ? (
               <StyledTagContent
                 size={size}
+                $paddingSize={paddingSize}
                 $wrap={wrap}
                 $hasWidth={!!width}
                 labelAlign={labelAlign || (labelKey ? 'left' : 'center')}
