@@ -37,11 +37,19 @@ export default mergeConfig(
             name: 'storybook',
             browser: {
               enabled: true,
-              provider: playwright({}),
+              // Vitest 4's @vitest/browser-playwright no longer applies
+              // `browser.viewport` to the Playwright context (the line is
+              // commented out in the provider), so the context silently falls
+              // back to Playwright's 1280×720 default and every capture is
+              // clamped to it — while the manifest still records qlip's
+              // 1920×1080, yielding blurry, mislabeled snapshots. Pass the
+              // viewport through the provider's `contextOptions` (which IS
+              // applied) so the browser window matches qlip's capture viewport
+              // 1:1 and screenshots come out at their true resolution.
+              provider: playwright({
+                contextOptions: { viewport: { width: 1920, height: 1080 } },
+              }),
               headless: true,
-              // Match the Chromatic snapshot viewport; the default (414px) is below
-              // responsive breakpoints like the Table's hideBelowWidth columns.
-              viewport: { width: 1440, height: 900 },
               instances: [{ browser: 'chromium' }],
             },
             setupFiles: ['./.storybook/vitest.setup.ts'],
