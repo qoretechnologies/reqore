@@ -294,3 +294,35 @@ test('Renders <Tag /> aligned to the text baseline on request', () => {
 
   expect(getComputedStyle(document.querySelector('.reqore-tag')).verticalAlign).toBe('baseline');
 });
+
+test('Renders <Tag /> aligning on its label, not its icon, when baseline-aligned', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' icon='24HoursLine' verticalAlign='baseline' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // A tag is inline-flex, so `vertical-align: baseline` resolves against its first
+  // flex item. With a leading icon that is the icon, which has no text baseline, and
+  // the tag is placed off it. `align-items: baseline` makes the label the baseline the
+  // box reports.
+  expect(getComputedStyle(document.querySelector('.reqore-tag')).alignItems).toBe('baseline');
+});
+
+test('Renders <Tag /> stretched when not baseline-aligned', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='Label' icon='24HoursLine' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(getComputedStyle(document.querySelector('.reqore-tag')).alignItems).toBe('stretch');
+});

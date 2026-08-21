@@ -150,7 +150,14 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   display: inline-flex;
   justify-content: center;
   flex-shrink: 0;
-  align-items: stretch;
+  /* stretch normally, but baseline when the tag is asked to sit on a text baseline.
+     A tag is an inline-flex box, so vertical-align: baseline resolves against its
+     FIRST FLEX ITEM. With a leading icon that item is the icon, which carries no text
+     baseline, and the whole tag is placed off it — measured at 2.59px too high for an
+     icon-bearing tag next to an identical one without. align-items: baseline makes the
+     label the baseline the box reports, which is the one the caller meant.
+     Only under baseline, so nothing using the default middle alignment moves. */
+  align-items: ${({ verticalAlign }) => (verticalAlign === 'baseline' ? 'baseline' : 'stretch')};
   /* Only when the caller has not asked for a family. StyledTag extends StyledEffect,
      so an unconditional declaration here always won the cascade over effect.fontFamily
      — which is why ReqoreDataView had to force monospace back on with a specificity-
