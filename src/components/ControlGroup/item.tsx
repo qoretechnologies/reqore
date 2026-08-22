@@ -11,7 +11,11 @@ export interface IReqoreControlGroupItemProps
   children?: ReactNode;
   /** Lay the item's own children out in a row instead of a column. */
   horizontal?: boolean;
-  /** Gap between the item's own children; defaults to the item's `size`. */
+  /**
+   * Gap between the item's own children. Defaults to NO gap: the item stands in
+   * for a single child, so it must not inject spacing the wrapped elements did
+   * not already have. Pass a size to opt in.
+   */
   gapSize?: TSizes;
   /** Do not grow — the group leaves the item at its content width. */
   fixed?: boolean;
@@ -51,7 +55,7 @@ export const StyledReqoreControlGroupItem = styled.div.withConfig({
 })<IReqoreControlGroupItemProps>`
   display: flex;
   flex-flow: ${({ horizontal }) => (horizontal ? 'row' : 'column')};
-  gap: ${({ gapSize, size }) => `${GAP_FROM_SIZE[gapSize || size || 'normal']}px`};
+  gap: ${({ gapSize }) => (gapSize ? `${GAP_FROM_SIZE[gapSize]}px` : undefined)};
 
   /* Mirrors StyledReqoreControlGroup's own child sizing so the item occupies
      the slot exactly as the single child it stands in for would have. */
