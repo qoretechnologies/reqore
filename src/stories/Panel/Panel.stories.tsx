@@ -1,9 +1,10 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect, fireEvent, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
+import { ReqoreP } from '../../components/Paragraph';
 import { ReqoreHorizontalSpacer, ReqoreVerticalSpacer } from '../../components/Spacer';
 import ReqoreTag from '../../components/Tag';
 import { IReqoreIconName } from '../../types/icons';
@@ -310,8 +311,7 @@ export const Basic: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in its default configuration.',
+        story: 'Renders Panel in its default configuration.',
       },
     },
   },
@@ -325,8 +325,7 @@ export const NoPadding: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel without padding.',
+        story: 'Renders Panel without padding.',
       },
     },
   },
@@ -341,8 +340,7 @@ export const HugePadding: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with a huge padding size.',
+        story: 'Renders Panel with a huge padding size.',
       },
     },
   },
@@ -357,8 +355,7 @@ export const Flat: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in its flat variant.',
+        story: 'Renders Panel in its flat variant.',
       },
     },
   },
@@ -373,8 +370,7 @@ export const NoBars: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel without the bars visible.',
+        story: 'Renders Panel without the bars visible.',
       },
     },
   },
@@ -413,8 +409,7 @@ export const Transparent: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with a transparent background.',
+        story: 'Renders Panel with a transparent background.',
       },
     },
   },
@@ -429,8 +424,7 @@ export const Intent: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel at a specific intent.',
+        story: 'Renders Panel at a specific intent.',
       },
     },
   },
@@ -448,8 +442,7 @@ export const Minimal: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in its minimal variant.',
+        story: 'Renders Panel in its minimal variant.',
       },
     },
   },
@@ -465,8 +458,7 @@ export const MinimalCollapsed: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in the minimal collapsed variant.',
+        story: 'Renders Panel in the minimal collapsed variant.',
       },
     },
   },
@@ -483,8 +475,7 @@ export const MinimalOnlyContent: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with only the content region visible.',
+        story: 'Renders Panel with only the content region visible.',
       },
     },
   },
@@ -524,8 +515,7 @@ export const MinimalOnlyTopBar: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with only the top bar visible.',
+        story: 'Renders Panel with only the top bar visible.',
       },
     },
   },
@@ -555,8 +545,7 @@ export const MinimalOnlyBottomBar: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with only the bottom bar visible.',
+        story: 'Renders Panel with only the bottom bar visible.',
       },
     },
   },
@@ -585,8 +574,7 @@ export const MinimalWithIntent: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in the minimal variant with an intent applied.',
+        story: 'Renders Panel in the minimal variant with an intent applied.',
       },
     },
   },
@@ -600,12 +588,310 @@ export const MinimalWithIntent: Story = {
   },
 };
 
-export const WithOpacity: Story = {
+export const AccentStrip: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Renders Panel with reduced opacity applied.',
+          'Renders panels with the accent strip instead of a full intent border — the intent paints a single edge (left or top) while the border stays neutral (or disappears on flat panels). The quiet "severity rail" look for accordions and stacked sections. Every strip uses the default 5px width except the explicitly-labelled accentSize comparison row.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical fluid gapSize='big'>
+      {/* Every intent, identical panels — the strips must all render the same width */}
+      <ReqorePanel
+        label='Danger — flat + minimal (the accordion look)'
+        icon='PlugLine'
+        intent='danger'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+        badge={2}
+      >
+        A blocked prerequisite: the strip carries the severity, the border stays out of the way.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Warning — flat + minimal'
+        icon='Settings3Line'
+        intent='warning'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+        badge={3}
+      >
+        Attention wanted, nothing broken.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Info — flat + minimal'
+        intent='info'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        Same default 5px strip as every other intent.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Success — flat + minimal'
+        intent='success'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        Done and healthy.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Pending — flat + minimal'
+        intent='pending'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        Waiting on something.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Muted — flat + minimal'
+        intent='muted'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        De-emphasized but still railed.
+      </ReqorePanel>
+      <ReqorePanel
+        label='No intent — flat + minimal'
+        accentPosition='left'
+        collapsible
+        minimal
+        flat
+        size='small'
+      >
+        Without an intent the strip renders as a neutral highlight. Styled exactly like the
+        intent rows above so the widths are directly comparable — a bordered panel insets its
+        strip by the border, which reads as a different width (see &quot;Bordered panel&quot;
+        below).
+      </ReqorePanel>
+
+      {/* States: collapsed + disabled */}
+      <ReqorePanel
+        label='Collapsed — the strip spans just the header'
+        icon='PlugLine'
+        intent='danger'
+        accentPosition='left'
+        collapsible
+        isCollapsed
+        minimal
+        flat
+        size='small'
+        badge={2}
+      >
+        Hidden while collapsed.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Collapsed — top accent'
+        intent='warning'
+        accentPosition='top'
+        collapsible
+        isCollapsed
+        minimal
+        flat
+        size='small'
+      >
+        Hidden while collapsed.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Disabled — the strip dims with the panel'
+        icon='ForbidLine'
+        intent='warning'
+        accentPosition='left'
+        disabled
+        minimal
+        flat
+        size='small'
+      >
+        Not interactive right now.
+      </ReqorePanel>
+
+      {/* Panel sizes — the strip width stays constant while the panel scales */}
+      <ReqorePanel
+        label='Small panel'
+        intent='info'
+        accentPosition='left'
+        minimal
+        flat
+        size='small'
+      >
+        size=&quot;small&quot;, default 5px strip.
+      </ReqorePanel>
+      <ReqorePanel label='Normal panel' intent='info' accentPosition='left' minimal flat>
+        size=&quot;normal&quot;, default 5px strip.
+      </ReqorePanel>
+      <ReqorePanel label='Big panel' intent='info' accentPosition='left' minimal flat size='big'>
+        size=&quot;big&quot;, default 5px strip.
+      </ReqorePanel>
+
+      {/* accentSize — the ONLY panels with a non-default strip width, labelled as such */}
+      <ReqorePanel
+        label='accentSize={3} — thinner strip'
+        intent='info'
+        accentPosition='left'
+        accentSize={3}
+        minimal
+        flat
+        size='small'
+      >
+        Explicit 3px.
+      </ReqorePanel>
+      <ReqorePanel
+        label='accentSize={8} — thicker strip'
+        intent='info'
+        accentPosition='left'
+        accentSize={8}
+        minimal
+        flat
+        size='small'
+      >
+        Explicit 8px.
+      </ReqorePanel>
+      <ReqorePanel
+        label="accentSize='big' — TSizes name"
+        intent='info'
+        accentPosition='left'
+        accentSize='big'
+        minimal
+        flat
+        size='small'
+      >
+        String sizes resolve through ACCENT_SIZE_TO_PX — &apos;big&apos; is 7px, &apos;normal&apos;
+        equals the 5px default.
+      </ReqorePanel>
+
+      {/* Bordered (flat unset) and the top flavor */}
+      <ReqorePanel label='Bordered panel' intent='info' accentPosition='left' size='small'>
+        With `flat` unset the panel keeps a neutral border; the intent lives only in the strip.
+      </ReqorePanel>
+      <ReqorePanel label='Top accent — success' intent='success' accentPosition='top' size='small'>
+        The `top` flavor, mirroring ReqoreCallout&apos;s `accentPosition`.
+      </ReqorePanel>
+    </ReqoreControlGroup>
+  ),
+};
+
+export const AccentStripStates: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The accent-strip combinations the main AccentStrip story does not reach, each of ' +
+          'which used to render wrong. A clickable panel: hover must leave the border neutral, ' +
+          'because the intent belongs to the strip alone. `raised`: it applies on an accent ' +
+          'panel, which draws no border for the highlight to compete with, and is still ' +
+          'suppressed once a border is present. `stickyHeader`: it forces the wrapper to stop ' +
+          'clipping, so the strip rounds its own corners instead of poking out past the panel.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical fluid gapSize='big'>
+      {/* Interactive — the hover border must stay neutral, never the intent */}
+      <ReqorePanel
+        label='Clickable — hover keeps the border neutral'
+        icon='PlugLine'
+        intent='danger'
+        accentPosition='left'
+        onClick={noop}
+        size='small'
+      >
+        `onClick` makes the panel interactive. Hovering derives the border from the neutral
+        surface, never from the intent — the strip carries the severity on its own.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Clickable + flat — no border to tint at all'
+        icon='Settings3Line'
+        intent='warning'
+        accentPosition='left'
+        onClick={noop}
+        minimal
+        flat
+        size='small'
+      >
+        A flat accent panel draws no border, so hover has nothing to repaint.
+      </ReqorePanel>
+
+      {/* raised — gated on "no border is drawn", which an accent panel satisfies */}
+      <ReqorePanel
+        label='Raised + flat — the inset highlight applies'
+        intent='info'
+        accentPosition='left'
+        flat
+        raised
+        size='small'
+      >
+        With `accentPosition` the panel has no border, so `raised` is free to add its subtle 3D
+        inset highlight.
+      </ReqorePanel>
+      <ReqorePanel
+        label='Raised + bordered — highlight suppressed'
+        intent='info'
+        accentPosition='left'
+        raised
+        size='small'
+      >
+        A visible border already defines the surface, so `raised` stays out of the way.
+      </ReqorePanel>
+
+      {/* stickyHeader — wrapper overflow goes visible, so the strip must round itself */}
+      <div style={{ height: '160px', width: '460px', maxWidth: '100%', overflow: 'auto' }}>
+        <ReqorePanel
+          label='Sticky header — the strip keeps the panel corners'
+          icon='PushpinLine'
+          intent='success'
+          accentPosition='left'
+          stickyHeader
+          size='small'
+        >
+          <ReqoreP>Scroll this panel: the header pins to the top of its container.</ReqoreP>
+          <ReqoreP>
+            A sticky header forces the wrapper to `overflow: visible` so the header can escape,
+            which also stops the wrapper clipping the accent strip.
+          </ReqoreP>
+          <ReqoreP>
+            The strip therefore carries its own corner radius here — inset by the border width so
+            it lands on the wrapper&apos;s inner curve — instead of showing square corners poking
+            out past the panel.
+          </ReqoreP>
+          <ReqoreP>
+            The header stays pinned while these lines scroll underneath it, which is the whole
+            reason the wrapper cannot clip its own children here.
+          </ReqoreP>
+          <ReqoreP>More content, so there is genuinely something to scroll.</ReqoreP>
+          <ReqoreP>Still more, to push the panel well past its container height.</ReqoreP>
+          <ReqoreP>And more again.</ReqoreP>
+          <ReqoreP>Nearly there.</ReqoreP>
+          <ReqoreP>The last line — by now the header has been pinned for a while.</ReqoreP>
+        </ReqorePanel>
+      </div>
+    </ReqoreControlGroup>
+  ),
+};
+
+export const WithOpacity: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Renders Panel with reduced opacity applied.',
       },
     },
   },
@@ -620,8 +906,7 @@ export const Disabled: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in its disabled state.',
+        story: 'Renders Panel in its disabled state.',
       },
     },
   },
@@ -636,8 +921,7 @@ export const NonResponsiveActions: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with actions rendered in a non-responsive layout.',
+        story: 'Renders Panel with actions rendered in a non-responsive layout.',
       },
     },
   },
@@ -679,8 +963,7 @@ export const ActionsShownOnHover: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with row actions that appear only on hover.',
+        story: 'Renders Panel with row actions that appear only on hover.',
       },
     },
   },
@@ -716,8 +999,7 @@ export const FloatingActions: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with floating actions shown next to the row.',
+        story: 'Renders Panel with floating actions shown next to the row.',
       },
     },
     chromatic: {
@@ -768,8 +1050,7 @@ export const FloatingActionsInScrollableContainer: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with floating actions inside a scrollable container.',
+        story: 'Renders Panel with floating actions inside a scrollable container.',
       },
     },
     chromatic: {
@@ -786,8 +1067,7 @@ export const ActionsShownOnlyWhenExpanded: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with actions that appear only when the row is expanded.',
+        story: 'Renders Panel with actions that appear only when the row is expanded.',
       },
     },
   },
@@ -820,8 +1100,7 @@ export const TransparentFlat: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with both transparent and flat set.',
+        story: 'Renders Panel with both transparent and flat set.',
       },
     },
   },
@@ -838,8 +1117,7 @@ export const Fluid: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with fluid set so it fills the available horizontal space.',
+        story: 'Renders Panel with fluid set so it fills the available horizontal space.',
       },
     },
   },
@@ -854,8 +1132,7 @@ export const Size: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel at a specific size.',
+        story: 'Renders Panel at a specific size.',
       },
     },
   },
@@ -870,8 +1147,7 @@ export const NoActions: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel without action buttons.',
+        story: 'Renders Panel without action buttons.',
       },
     },
   },
@@ -889,8 +1165,7 @@ export const NoLabel: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel without a label.',
+        story: 'Renders Panel without a label.',
       },
     },
   },
@@ -917,8 +1192,7 @@ export const ImageAsIconLinkAsHeader: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel using an image as the icon and a link as the header.',
+        story: 'Renders Panel using an image as the icon and a link as the header.',
       },
     },
   },
@@ -942,8 +1216,7 @@ export const ContentSize: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel sized to its content.',
+        story: 'Renders Panel sized to its content.',
       },
     },
   },
@@ -958,8 +1231,7 @@ export const WithTooltip: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with a tooltip attached.',
+        story: 'Renders Panel with a tooltip attached.',
       },
     },
   },
@@ -977,8 +1249,7 @@ export const WithBreadcrumbs: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with breadcrumbs mounted.',
+        story: 'Renders Panel with breadcrumbs mounted.',
       },
     },
   },
@@ -1004,8 +1275,7 @@ export const WithBreadcrumbsAndTabs: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with both breadcrumbs and tabs mounted.',
+        story: 'Renders Panel with both breadcrumbs and tabs mounted.',
       },
     },
   },
@@ -1048,8 +1318,7 @@ export const WithEffect: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with a visual effect applied.',
+        story: 'Renders Panel with a visual effect applied.',
       },
     },
   },
@@ -1085,8 +1354,7 @@ export const Resizable: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in a resizable configuration.',
+        story: 'Renders Panel in a resizable configuration.',
       },
     },
   },
@@ -1108,8 +1376,7 @@ export const EditableLabel: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with an editable label.',
+        story: 'Renders Panel with an editable label.',
       },
     },
   },
@@ -1128,8 +1395,7 @@ export const Loading: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in its loading state.',
+        story: 'Renders Panel in its loading state.',
       },
     },
   },
@@ -1144,8 +1410,7 @@ export const Skeleton: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in its skeleton loading state.',
+        story: 'Renders Panel in its skeleton loading state.',
       },
     },
   },
@@ -1160,8 +1425,7 @@ export const CollapsedSkeleton: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in its collapsed skeleton loading state.',
+        story: 'Renders Panel in its collapsed skeleton loading state.',
       },
     },
   },
@@ -1177,8 +1441,7 @@ export const WithDescription: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with a description under the label.',
+        story: 'Renders Panel with a description under the label.',
       },
     },
   },
@@ -1193,8 +1456,7 @@ export const WithLongDescription: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with a long description that exercises wrapping.',
+        story: 'Renders Panel with a long description that exercises wrapping.',
       },
     },
   },
@@ -1292,8 +1554,7 @@ export const Raised: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with the raised effect.',
+        story: 'Renders Panel with the raised effect.',
       },
     },
   },
@@ -1314,8 +1575,7 @@ export const StickyHeaderTransparentBlur: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with a sticky, transparent, blurred header.',
+        story: 'Renders Panel with a sticky, transparent, blurred header.',
       },
     },
     chromatic: {
@@ -1372,8 +1632,7 @@ export const RaisedMinimalFlat: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel in the raised + minimal + flat variant combination.',
+        story: 'Renders Panel in the raised + minimal + flat variant combination.',
       },
     },
   },
@@ -1415,8 +1674,7 @@ export const IconWithLabel: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with an icon paired with a label.',
+        story: 'Renders Panel with an icon paired with a label.',
       },
     },
   },
@@ -1427,8 +1685,7 @@ export const IconAlignTop: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with the icon aligned to the top.',
+        story: 'Renders Panel with the icon aligned to the top.',
       },
     },
   },
@@ -1439,8 +1696,7 @@ export const IconAlignCenter: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with the icon aligned to the middle.',
+        story: 'Renders Panel with the icon aligned to the middle.',
       },
     },
   },
@@ -1454,8 +1710,7 @@ export const IconAlignBottom: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with the icon aligned to the bottom.',
+        story: 'Renders Panel with the icon aligned to the bottom.',
       },
     },
   },
@@ -1466,8 +1721,7 @@ export const RadiusSize: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel at every radius size to show the border-radius scale.',
+        story: 'Renders Panel at every radius size to show the border-radius scale.',
       },
     },
   },
@@ -1494,8 +1748,7 @@ export const MultipleGradients: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders Panel with layered gradient effects.',
+        story: 'Renders Panel with layered gradient effects.',
       },
     },
   },
@@ -1552,7 +1805,6 @@ export const MultipleGradients: Story = {
     </ReqorePanel>
   ),
 };
-
 
 /**
  * A `show: 'hover'` action is a desktop nicety, never the only route to the

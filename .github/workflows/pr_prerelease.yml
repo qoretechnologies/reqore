@@ -1,0 +1,123 @@
+# Prerelease publish for open PRs to develop. Ported verbatim from reqraft's
+# pr_prerelease.yml (toolkit-react 452d4d3), package name adjusted.
+#
+# On every push to a PR that targets `develop`, build the package, stamp a unique
+# prerelease version (`<version>-pr.<PR#>.g<short-sha>`) and publish it to npm under
+# the `pr` dist-tag — NOT `latest`/`beta`, so ordinary installs are never affected.
+# A sticky PR comment carries the exact install command.
+#
+# Why: it lets consumers (qorus-ide, reqraft, admin-portal) install a real, permanent
+# reqore build of an UNMERGED PR — a durable bridge until the PR merges and
+# `beta_release` publishes the real version. Repoint consumers back to the released
+# version on merge.
+#
+# Restricted to same-repo PRs so the org NPM_TOKEN is never exposed to forks.
+
+name: PR prerelease
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - develop
+
+# Supersede in-flight runs when the PR gets a newer commit.
+concurrency:
+  group: pr-prerelease-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  Prerelease:
+    # Never run for PRs opened from forks — the org NPM_TOKEN must not be exposed.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the PR head exactly, so the build matches the stamped sha.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+
+      # --frozen-lockfile so the published artifact is built from the exact dependency
+      # tree the PR committed, not whatever the range happens to resolve to today.
+      - name: Install modules
+        run: yarn install --frozen-lockfile
+
+      # Gate the publish on the same checks the PR itself must pass. Without this a red
+      # PR still ships an installable package, and a consumer pinning it inherits the
+      # breakage with nothing on the tin to warn them. `beta_release.yml` gates on
+      # `yarn test:ci` for the same reason.
+      - name: Lint
+        run: yarn lint
+
+      - name: Test
+        run: yarn test
+
+      - name: Build
+        run: yarn build
+
+      # Stamp a unique, valid-semver prerelease of the NEXT patch (so it sorts above
+      # the current release, not below it). The sha identifier is prefixed with `g`
+      # (git-describe style) so an all-digit short sha can never become an invalid
+      # leading-zero numeric identifier.
+      - name: Stamp prerelease version
+        id: version
+        run: |
+          NEXT=$(node -p "(v => [v[0], v[1], +v[2] + 1].join('.'))(require('./package.json').version.split('-')[0].split('.'))")
+          SHA=$(printf '%s' "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          VER="${NEXT}-pr.${{ github.event.pull_request.number }}.g${SHA}"
+          npm pkg set version="$VER"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "Publishing $VER"
+
+      - name: Publish prerelease to npm (pr tag)
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          tag: pr
+          access: public
+
+      - name: Comment install command on the PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = ${{ toJSON(steps.version.outputs.version) }};
+            const marker = '<!-- reqore-pr-prerelease -->';
+            const body = [
+              marker,
+              '📦 **Prerelease published** for this PR:',
+              '',
+              '```',
+              `@qoretechnologies/reqore@${version}`,
+              '```',
+              '',
+              'Install it in a consumer (updates `package.json` + lockfile):',
+              '',
+              '```bash',
+              `yarn add @qoretechnologies/reqore@${version}`,
+              '```',
+              '',
+              '_Published under the `pr` dist-tag — `latest`/`beta` are untouched. '
+                + 'Repoint consumers to the released version once this PR merges._',
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

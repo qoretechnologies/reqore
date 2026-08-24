@@ -440,6 +440,19 @@ export const RATING_GAP_FROM_SIZE = {
   massive: 12,
 };
 
+/** Accent-strip thickness (Callout + Panel `accentSize`) in px. `normal` IS the default:
+ *  `resolveAccentSize` falls back to it, so neither component declares a numeric default of
+ *  its own and the string and number forms cannot drift apart. */
+export const ACCENT_SIZE_TO_PX = {
+  micro: 2,
+  tiny: 3,
+  small: 4,
+  normal: 5,
+  big: 7,
+  huge: 9,
+  massive: 12,
+};
+
 export const ICON_FROM_HEADER_SIZE = {
   1: 23,
   2: 20,

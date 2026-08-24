@@ -9,7 +9,14 @@ import {
   isUndefined,
 } from 'lodash';
 import { IReqorePanelAction, IReqorePanelSubAction } from '../components/Panel';
-import { NUMBER_TO_SIZE, PADDING_FROM_SIZE, SIZES, SIZE_TO_NUMBER, TSizes } from '../constants/sizes';
+import {
+  ACCENT_SIZE_TO_PX,
+  NUMBER_TO_SIZE,
+  PADDING_FROM_SIZE,
+  SIZES,
+  SIZE_TO_NUMBER,
+  TSizes,
+} from '../constants/sizes';
 import { TReqoreTooltipProp } from '../types/global';
 
 export const sleep = async (ms: number) => await new Promise((r) => setTimeout(r, ms));
@@ -98,6 +105,20 @@ export const calculateStringSizeInPixels = (
 export const isStringSize = (value: TSizes | string | number) => {
   return SIZES.includes(value as TSizes);
 };
+
+/**
+ * Resolves an accent-strip thickness (`ReqoreCallout` / `ReqorePanel` `accentSize`) to pixels.
+ *
+ * Accepts a raw pixel number or a `TSizes` name looked up in `ACCENT_SIZE_TO_PX`. `'normal'` is
+ * the default, which makes that map the SINGLE source of the default thickness — components must
+ * NOT re-declare a numeric default of their own, or the string and number forms drift apart.
+ *
+ * Resolution happens once, at the component level, because the accent styles interpolate the
+ * result into `px` and do arithmetic with it (the padding reservation) — so the css must never
+ * see a string.
+ */
+export const resolveAccentSize = (accentSize: number | TSizes = 'normal'): number =>
+  isStringSize(accentSize) ? ACCENT_SIZE_TO_PX[accentSize as TSizes] : (accentSize as number);
 
 export const getOneLessSize = (size: TSizes = 'normal'): TSizes => {
   // Get the initial sizes number

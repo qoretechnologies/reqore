@@ -8,8 +8,12 @@ const useAutosizeTextArea = (
 ) => {
   useEffect(() => {
     if (textAreaRef && scaleWithContent) {
-      // We need to reset the height momentarily to get the correct scrollHeight for the textarea
-      textAreaRef.style.height = '0px';
+      // Reset to the intrinsic (auto) height momentarily so scrollHeight is
+      // measured against the `rows` attribute: scrollHeight = max(rows height,
+      // content height), which makes `rows` the floor the textarea never
+      // shrinks below. (A '0px' reset measured content alone, so a consumer's
+      // `rows` was ignored the moment scaleWithContent was on.)
+      textAreaRef.style.height = '';
       const scrollHeight = textAreaRef.scrollHeight;
 
       // We then set the height directly, outside of the render loop

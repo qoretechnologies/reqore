@@ -14,7 +14,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { getOneLessSize, TReqorePadded } from '../../helpers/utils';
+import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -78,8 +78,11 @@ export interface IReqoreCalloutProps
   closeTooltip?: TReqoreTooltipProp;
   /** Where the accent strip is rendered. */
   accentPosition?: 'left' | 'top';
-  /** Thickness of the accent strip in pixels. */
-  accentSize?: number;
+  /**
+   * Thickness of the accent strip — a raw pixel number, or a `TSizes` name
+   * resolved through `ACCENT_SIZE_TO_PX`. Defaults to `'normal'` (5px).
+   */
+  accentSize?: number | TSizes;
   /** Effect applied to the legacy `children` slot. */
   contentEffect?: IReqoreEffect;
   /** Round the corners. Default `true`. */
@@ -117,13 +120,17 @@ export interface IReqoreCalloutProps
   paddingSize?: TSizes;
 }
 
-interface IStyledCalloutProps extends Omit<IReqoreCalloutProps, 'transparent' | 'raised'> {
+interface IStyledCalloutProps
+  extends Omit<IReqoreCalloutProps, 'transparent' | 'raised' | 'accentSize'> {
   theme: IReqoreTheme;
   $transparent?: boolean;
   $raised?: boolean;
   $hasContent?: boolean;
   $padded: TReqorePadded;
   $paddingSize: TSizes;
+  /** Always a resolved pixel number — the component maps `TSizes` names before
+   *  it reaches the styles, so no css lambda ever sees a string. */
+  $accentSize: number;
 }
 
 const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
@@ -133,13 +140,13 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
   gap: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size] * 2}px;
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
-  padding: ${({ $padded, $paddingSize, accentPosition = 'left', accentSize = 5 }) => {
+  padding: ${({ $padded, $paddingSize, accentPosition = 'left', $accentSize }) => {
     if ($padded === false) {
       // Even with no padding requested, the side that hosts the accent strip
       // must reserve `accentSize` so the content does not collide with it.
       return accentPosition === 'left'
-        ? `0 0 0 ${accentSize}px`
-        : `${accentSize}px 0 0 0`;
+        ? `0 0 0 ${$accentSize}px`
+        : `${$accentSize}px 0 0 0`;
     }
     const v2_5 = PADDING_FROM_SIZE[$paddingSize] * 2.5;
     const v3 = PADDING_FROM_SIZE[$paddingSize] * 3;
@@ -151,11 +158,11 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
       const top = horizontalOnly ? 0 : v2_5;
       const right = verticalOnly ? 0 : h3;
       const bottom = horizontalOnly ? 0 : v2_5;
-      const left = verticalOnly ? accentSize : h3 + accentSize;
+      const left = verticalOnly ? $accentSize : h3 + $accentSize;
       return `${top}px ${right}px ${bottom}px ${left}px`;
     }
     // accentPosition === 'top' — top side hosts the strip
-    const top = horizontalOnly ? accentSize : v3 + accentSize;
+    const top = horizontalOnly ? $accentSize : v3 + $accentSize;
     const right = verticalOnly ? 0 : h3;
     const bottom = horizontalOnly ? 0 : v3;
     const left = verticalOnly ? 0 : h3;
@@ -181,19 +188,19 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
   &::before {
     content: '';
     position: absolute;
-    ${({ accentPosition = 'left', accentSize = 5 }) =>
+    ${({ accentPosition = 'left', $accentSize }) =>
       accentPosition === 'left'
         ? css`
             top: 0;
             bottom: 0;
             left: 0;
-            width: ${accentSize}px;
+            width: ${$accentSize}px;
           `
         : css`
             top: 0;
             right: 0;
             left: 0;
-            height: ${accentSize}px;
+            height: ${$accentSize}px;
           `}
     background-color: ${({ theme, intent }) =>
       intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.22)};
@@ -280,7 +287,7 @@ export const ReqoreCallout = memo(
         interactive,
         onClick,
         accentPosition = 'left',
-        accentSize = 5,
+        accentSize,
         padded = true,
         paddingSize,
         ...rest
@@ -290,6 +297,9 @@ export const ReqoreCallout = memo(
       const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
       const isInteractive = interactive || !!onClick;
       const descriptionSize = useMemo(() => getOneLessSize(size), [size]);
+      // Resolved ONCE, here — the styles do arithmetic with the value (padding
+      // reservation), so they must only ever see a number. Shared with ReqorePanel.
+      const accentSizePx = useMemo(() => resolveAccentSize(accentSize), [accentSize]);
       const hasBadge = badge !== undefined && badge !== null;
       const hasIcon = !!icon || !!iconProps?.image;
       const hasStructuredContent = !!label || !!description;
@@ -322,7 +332,7 @@ export const ReqoreCallout = memo(
           onClick={onClick}
           size={size}
           accentPosition={accentPosition}
-          accentSize={accentSize}
+          $accentSize={accentSizePx}
           $padded={padded}
           $paddingSize={paddingSize ?? size}
           className={`${className || ''} reqore-callout`}
