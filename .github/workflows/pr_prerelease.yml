@@ -64,21 +64,56 @@ jobs:
       - name: Build
         run: yarn build
 
-      # Stamp a unique, valid-semver prerelease of the NEXT patch (so it sorts above
-      # the current release, not below it). The sha identifier is prefixed with `g`
-      # (git-describe style) so an all-digit short sha can never become an invalid
-      # leading-zero numeric identifier.
+      # Stamp a prerelease OF THE VERSION THIS PR IS RELEASING — the one already in
+      # package.json, which every PR is required to bump.
+      #
+      # This used to increment the patch first, so a PR targeting 0.73.1 published
+      # 0.73.2-pr.N. That is wrong twice over: the prerelease previews a version that
+      # is not the one being merged, and it sorts ABOVE the release it precedes, so
+      # the real 0.73.1 lands *below* its own preview and a consumer pinned to the
+      # prerelease never moves forward on `yarn upgrade`.
+      #
+      # Taking package.json as-is gives the ordering the old code was reaching for
+      # anyway. Semver puts a prerelease below its release and above the previous one:
+      #
+      #   0.73.0  <  0.73.1-pr.42.gabc123  <  0.73.1
+      #
+      # so it already sorts above the current release without inventing a version
+      # nobody intends to ship.
+      #
+      # The sha identifier is prefixed with `g` (git-describe style) so an all-digit
+      # short sha can never become an invalid leading-zero numeric identifier.
       - name: Stamp prerelease version
         id: version
         run: |
-          NEXT=$(node -p "(v => [v[0], v[1], +v[2] + 1].join('.'))(require('./package.json').version.split('-')[0].split('.'))")
+          BASE=$(node -p "require('./package.json').version.split('-')[0]")
           SHA=$(printf '%s' "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
-          VER="${NEXT}-pr.${{ github.event.pull_request.number }}.g${SHA}"
+          VER="${BASE}-pr.${{ github.event.pull_request.number }}.g${SHA}"
+
+          # Publish only when package.json names a version that is not on npm yet.
+          #
+          # If it is already published, this PR has not bumped — either because it does
+          # not need to (a CI-, docs- or test-only change) or because it forgot. Cutting
+          # a prerelease of an already-released version would sort BELOW that release
+          # and hand consumers something older than they have, so it is skipped rather
+          # than published.
+          #
+          # Skipped, not failed: a workflow-only PR has nothing to preview and should
+          # not go red for it. A PR that genuinely forgot its bump is still caught at
+          # merge, where the release job cannot publish over an existing version.
+          if npm view "$(node -p "require('./package.json').name")@${BASE}" version >/dev/null 2>&1; then
+            echo "::notice::package.json is at ${BASE}, which is already published — no prerelease cut. Bump the version if this PR is meant to ship one."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           npm pkg set version="$VER"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
           echo "Publishing $VER"
 
       - name: Publish prerelease to npm (pr tag)
+        if: steps.version.outputs.publish == 'true'
         uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
@@ -86,6 +121,7 @@ jobs:
           access: public
 
       - name: Comment install command on the PR
+        if: steps.version.outputs.publish == 'true'
         uses: actions/github-script@v7
         with:
           script: |
