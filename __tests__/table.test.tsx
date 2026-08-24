@@ -5,6 +5,14 @@ import { ReqoreLayoutContent, ReqoreTable, ReqoreUIProvider } from '../src';
 import { IReqoreTableColumn, IReqoreTableProps } from '../src/components/Table';
 import tableData from '../src/mock/tableData';
 
+/** `n` rows of the mock fixture, cycled so the ids stay unique. */
+const makeRows = (n: number) =>
+  Array.from({ length: n }, (_, index) => ({
+    ...(tableData.data as any[])[index % (tableData.data as any[]).length],
+    id: index + 1,
+    _selectId: index + 1,
+  }));
+
 beforeAll(() => {
   vi.useFakeTimers();
   vi.setConfig({ testTimeout: 30000 });
@@ -21,7 +29,12 @@ test('Renders basic <Table /> properly', () => {
 
   expect(document.querySelectorAll('.reqore-table-column-group-header').length).toBe(2);
   expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(10);
-  expect(document.querySelectorAll('.reqore-table-row').length).toBe(10);
+  // 8 rows fit the default body height; the rest are overscan. This asserted 10
+  // when the body ran on react-window's default overscan of 2 — i.e. it pinned
+  // the behaviour that made a fast scroll go blank. The default is now a
+  // viewport of rows in each direction, floored at 8, so a table parked at the
+  // top renders 8 visible + 8 below.
+  expect(document.querySelectorAll('.reqore-table-row').length).toBe(16);
 });
 
 test('Renders <Table /> with grouped columns properly', () => {
@@ -973,4 +986,60 @@ test('getRowProps merges className, style, and data-* attributes onto every body
   expect((rows[0] as HTMLElement).style.opacity).toBe('0.55');
   // Arbitrary data-* attributes reach the DOM so downstream CSS or tests can hook them.
   expect(rows[0].getAttribute('data-qorus-row-id')).toBeTruthy();
+});
+
+// The overscan is what stops a fast scroll from showing blank strips.
+//
+// react-window advances its window from a `setState` in a passive scroll
+// handler, so the browser paints the scrolled container BEFORE React commits
+// the rows that belong there. Whatever the overscan does not already cover is
+// empty space the user sees for a frame or more. react-window's default of 2
+// rows is about 66px of cover; one trackpad flick moves several hundred, so on
+// a real table every moving frame was blank. The default here is one viewport
+// of rows in each direction, which is more travel than a single frame can
+// consume.
+test('<Table /> renders a viewport of overscan rows by default', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          {...tableData}
+          data={makeRows(200)}
+          height={400}
+          rowHeight={40}
+          virtualized
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // 400px / 40px = 10 visible rows. The default overscan adds a viewport in
+  // each direction, so a table parked at the top renders the visible band plus
+  // one viewport below it — comfortably more than the 12 react-window would
+  // give us on its own.
+  const rendered = document.querySelectorAll('.reqore-table-row').length;
+  expect(rendered).toBeGreaterThan(15);
+});
+
+test('<Table /> honours an explicit overscanRowCount', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          {...tableData}
+          data={makeRows(200)}
+          height={400}
+          rowHeight={40}
+          virtualized
+          overscanRowCount={0}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // With the overscan opted out of, only the visible band is rendered — the
+  // trade a caller makes when each row is expensive and they would rather have
+  // the smaller DOM.
+  const rendered = document.querySelectorAll('.reqore-table-row').length;
+  expect(rendered).toBeLessThanOrEqual(12);
 });

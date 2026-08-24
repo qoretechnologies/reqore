@@ -237,6 +237,24 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   virtualized?: boolean;
 
   /**
+   * How many rows to render beyond the visible band, above and below, while
+   * virtualized.
+   *
+   * Defaults to **one viewport's worth of rows** (minimum 8), which is what it
+   * takes for the table not to go blank during a fast scroll. react-window
+   * updates its window from a `setState` in a passive scroll handler, so React
+   * commits the new rows *after* the browser has already painted the scrolled
+   * container. Whatever the overscan does not cover, the user sees as empty
+   * space that fills in a frame later. react-window's own default of 2 rows is
+   * ~66px of cover; a single trackpad flick moves several hundred.
+   *
+   * Raise it if your rows are cheap and you scroll fast; lower it (or pass a
+   * small number) if each row is expensive to render and you would rather trade
+   * the occasional blank strip for a smaller DOM.
+   */
+  overscanRowCount?: number;
+
+  /**
    * When `true`, every cell allows natural text flow (no ellipsis truncation) and rows grow to fit
    * the tallest cell. Individual columns can override with `cell.wrap`. Setting this implicitly
    * disables virtualization unless `virtualized` is explicitly set.
@@ -394,6 +412,7 @@ const ReqoreTable = ({
   maxCellHeight,
   expandHeightButtonProps,
   rowHeight,
+  overscanRowCount,
   selectToggleAllTooltip = 'Toggle selection on all data',
   columnsToggleLabel = 'Show / hide columns',
   filterPlaceholder,
@@ -1040,6 +1059,7 @@ const ReqoreTable = ({
             maxCellHeight={maxCellHeight}
             expandHeightButtonProps={expandHeightButtonProps}
             rowHeight={rowHeight}
+            overscanRowCount={overscanRowCount}
             virtualized={shouldVirtualize}
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}

@@ -1531,3 +1531,27 @@ export const RowHeight: Story = {
     ],
   },
 };
+
+export const OverscanRowCount: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a scrollable table with the overscan pinned to a single row, so the ' +
+          'blank strip a fast scroll leaves at the leading edge is visible on purpose. ' +
+          'Left unset, the table renders one viewport of rows beyond the visible band in ' +
+          'each direction and no strip appears.',
+      },
+    },
+  },
+  args: {
+    // One row of cover is deliberately far too little: react-window advances its
+    // window from a `setState` in a passive scroll handler, so the browser paints
+    // the scrolled container before React commits the rows that belong there.
+    // Anything the overscan does not already cover is empty space for a frame.
+    // This story is the control for the default, which is `max(8, one viewport)`.
+    overscanRowCount: 1,
+    height: 400,
+    label: 'Overscan pinned to one row',
+  },
+};

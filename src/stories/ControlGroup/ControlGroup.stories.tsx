@@ -4,8 +4,10 @@ import {
   ReqoreButton,
   ReqoreCheckbox,
   ReqoreControlGroup,
+  ReqoreControlGroupItem,
   ReqoreDropdown,
   ReqoreInput,
+  ReqorePanel,
   ReqoreTag,
   ReqoreVerticalSpacer,
 } from '../../index';
@@ -692,5 +694,43 @@ export const StackedPills: Story = {
         items={[{ label: 'Hour' }, { label: 'Today' }, { label: '7d' }, { label: '30d' }]}
       />
     </ReqoreControlGroup>
+  ),
+};
+
+export const MultiElementItem: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A control group sizes each child individually, so a consumer that renders several elements into it — a React fragment is transparent in the DOM — gets them laid out side by side, and a full-width leading element that cannot shrink pushes the rest outside the group. `ReqoreControlGroupItem` makes them count as ONE child: the top row shows the parts competing for width, the bottom row the same parts grouped into a single slot beside the trailing button. See reqore#632.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 640 }}>
+      <ReqoreControlGroup fluid>
+        <ReqorePanel label='Schema type' flat minimal style={{ width: '100%' }}>
+          Loose parts — pushed out of the group
+        </ReqorePanel>
+        <ReqorePanel label='Provider options' flat minimal>
+          400px minimum
+        </ReqorePanel>
+        <ReqoreButton icon='More2Line' fixed />
+      </ReqoreControlGroup>
+
+      <ReqoreVerticalSpacer height={20} />
+
+      <ReqoreControlGroup fluid>
+        <ReqoreControlGroupItem fluid>
+          <ReqorePanel label='Schema type' flat minimal style={{ width: '100%' }}>
+            Grouped into one slot — stacked, nothing clipped
+          </ReqorePanel>
+          <ReqorePanel label='Provider options' flat minimal>
+            400px minimum
+          </ReqorePanel>
+        </ReqoreControlGroupItem>
+        <ReqoreButton icon='More2Line' fixed />
+      </ReqoreControlGroup>
+    </div>
   ),
 };

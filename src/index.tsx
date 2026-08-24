@@ -13,6 +13,7 @@ export { ReqoreComment } from './components/Comment';
 export { ReqoreCommentFeed } from './components/CommentFeed';
 export { default as ReqoreContent } from './components/Content';
 export { default as ReqoreControlGroup } from './components/ControlGroup';
+export { default as ReqoreControlGroupItem } from './components/ControlGroup/item';
 export type {
   IReqoreDataViewEmbedded,
   IReqoreDataViewEnvelope,

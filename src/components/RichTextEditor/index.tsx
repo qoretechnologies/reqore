@@ -1,3 +1,4 @@
+import isPropValid from '@emotion/is-prop-valid';
 import { map, size } from 'lodash';
 import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
@@ -202,17 +203,70 @@ const insertTag = (
 export type TReqoreRichTextEditorRef = BaseEditor & ReactEditor & HistoryEditor;
 
 /**
+ * Slate props that are not DOM attributes and must survive the filter below.
+ *
+ * `isPropValid` only knows HTML/SVG attributes, so without this list the very
+ * props that make the editor work -- the renderers, the decorator -- would be
+ * dropped along with Reqore's styling props.
+ */
+const SLATE_EDITABLE_PROPS = new Set<string>([
+  'as',
+  'decorate',
+  'disableDefaultStyles',
+  'onDOMBeforeInput',
+  'renderElement',
+  'renderLeaf',
+  'renderPlaceholder',
+  'scrollSelectionIntoView',
+]);
+
+/**
+ * Props that survive `isPropValid` but that Slate's editable cannot use.
+ *
+ * `EditableProps` widens to `TextareaHTMLAttributes`, so `rows` / `cols` /
+ * `value` read as valid DOM props -- but the element underneath is a
+ * contenteditable `div`, where the first two mean nothing and `value` writes
+ * the entire serialized document into an attribute on every keystroke.
+ * Reqore's `fill` (a flex instruction a control group injects into every child)
+ * survives for a different reason: it is a real SVG paint attribute, and this
+ * element is not an SVG.
+ */
+const NON_EDITABLE_PROPS = new Set<string>(['cols', 'fill', 'rows', 'value']);
+
+/**
  * `ReqoreTextarea` is polymorphic and attaches an input ref to its rendered component. Slate's
  * `Editable` owns its DOM node through `ReactEditor` and intentionally does not accept a React
  * ref. Present a ref-capable boundary to the polymorphic textarea while leaving Slate in charge
  * of its DOM mapping; rich-text focus and selection are handled through `ReactEditor` below.
+ *
+ * The boundary also filters props, because this is the one place where Reqore's
+ * styling props reach an element Reqore does not render. `omitStyleProps`
+ * deliberately forwards everything when the styled target is a component rather
+ * than a tag -- that is what keeps `renderElement` / `renderLeaf` / `decorate`
+ * working -- but `Editable` is a pass-through: whatever it does not recognise
+ * lands on its `div`. So `transparent`, `flat`, `rounded` and `spaceBetween`
+ * reached the DOM and React warned about each one on every mount, while
+ * `theme`, `effect`, `_size` and the serialized Slate `value` were written out
+ * silently. Apply the same rule styled-components applies for a tag target,
+ * plus the Slate props it has no way to know about.
  */
 const RefSafeSlateEditable = memo(
   forwardRef<HTMLDivElement, EditableProps>((props, ref) => {
     // Accept the polymorphic input's DOM-ref contract without passing it to
     // Slate's function component. Slate owns this element through ReactEditor.
     void ref;
-    return <Editable {...props} />;
+
+    // Not memoised: `memo` above already skips the re-render when the props are
+    // shallow-equal, so every render that reaches here has new props to filter.
+    const editableProps = Object.keys(props).reduce<Record<string, unknown>>((acc, key) => {
+      if (!NON_EDITABLE_PROPS.has(key) && (SLATE_EDITABLE_PROPS.has(key) || isPropValid(key))) {
+        acc[key] = props[key];
+      }
+
+      return acc;
+    }, {});
+
+    return <Editable {...editableProps} />;
   })
 );
 
