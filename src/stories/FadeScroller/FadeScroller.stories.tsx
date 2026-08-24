@@ -1,10 +1,12 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect, waitFor } from 'storybook/test';
+import { useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 import { IReqoreFadeScrollerProps } from '../../components/FadeScroller';
 import { DEFAULT_INTENTS, TReqoreIntent } from '../../constants/theme';
 import {
   ReqoreControlGroup,
   ReqoreFadeScroller,
+  ReqoreP,
   ReqoreStatistic,
   ReqoreTag,
 } from '../../index';
@@ -43,9 +45,14 @@ const ALL_CARDS: Array<{
 const KpiCards = ({
   count = ALL_CARDS.length,
   flexible = false,
+  onCardClick,
 }: {
   count?: number;
   flexible?: boolean;
+  /* Makes each card interactive. Only the drag story passes it: the click/drag
+     pairing is the thing that needs a clickable target to be exercised against,
+     and the other stories are about fades, not about what a card does. */
+  onCardClick?: (label: string) => void;
 }) => (
   <>
     {ALL_CARDS.slice(0, count).map((card) => (
@@ -59,11 +66,37 @@ const KpiCards = ({
         flat={false}
         padded
         rounded
+        onClick={onCardClick ? () => onCardClick(card.label) : undefined}
         style={flexible ? undefined : { minWidth: 140 }}
       />
     ))}
   </>
 );
+
+/* The drag story's payload: the same KPI rail, but every card is clickable and the
+   last click is displayed. That readout is the point — the interesting behaviour
+   here is a PAIR (a drag must not activate a card, a plain click must), and
+   without somewhere for a click to show up, only one half of it can be checked by
+   hand. It doubles as the target for the story's own play assertions. */
+const DragToScrollDemo = (args: IReqoreFadeScrollerProps) => {
+  const [clicked, setClicked] = useState<string | undefined>(undefined);
+
+  return (
+    <NarrowWrapper>
+      <ReqoreFadeScroller {...args}>
+        <KpiCards onCardClick={setClicked} />
+      </ReqoreFadeScroller>
+      <ReqoreP
+        size='small'
+        className='fade-scroller-click-readout'
+        style={{ marginTop: 12 }}
+        data-clicked={clicked ?? ''}
+      >
+        {clicked ? `Clicked: ${clicked}` : 'Click a card — dragging past one must not count.'}
+      </ReqoreP>
+    </NarrowWrapper>
+  );
+};
 
 const meta = {
   title: 'Layout/Fade Scroller',
@@ -153,6 +186,99 @@ export const ScrolledToTheMiddle: Story = {
 
     await waitFor(() => expect(scroller.scrollLeft).toBeGreaterThan(0));
     await expect(scroller.scrollLeft + scroller.clientWidth).toBeLessThan(scroller.scrollWidth);
+  },
+};
+
+/** `dragToScroll`: grab the row and pull it sideways. */
+export const DragToScroll: Story = {
+  parameters: {
+    /* No visual snapshot: a drag is a gesture, and a single still frame of one
+       carries no information — the row simply sits at whatever scroll offset the
+       play function last left it, which is not a design decision anyone reviews.
+       What matters here is behavioural and is asserted below and in
+       `__tests__/fadeScroller-drag.test.tsx`. */
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'Renders an overflowing row of CLICKABLE KPI cards with `dragToScroll` — pressing anywhere on it and pulling sideways scrolls it, and the cursor reads `grab` (then `grabbing`) while there is somewhere to go. A mouse has no horizontal axis, so without this the row is reachable only by shift+wheel or a trackpad gesture. The cards are interactive on purpose: the readout underneath shows the last one clicked, because the behaviour worth checking is a PAIR — pulling past a card must NOT activate it, while a plain press-and-release must. Selecting text is preserved: hold **Shift** and drag to select, and on touch the drag never engages so native panning and long-press-to-select both apply unchanged. The drag also survives the pointer leaving the row, and ends even if the button comes up outside the window.',
+      },
+    },
+  },
+  args: { dragToScroll: true },
+  render: (args) => <DragToScrollDemo {...args} />,
+  play: async ({ canvasElement }) => {
+    /* Queried INSIDE waitFor, not before it: capturing the result once and then
+       asserting on it cannot recover from a delayed mount, because the null is
+       already in hand. */
+    const find = async <T extends HTMLElement>(root: ParentNode, selector: string): Promise<T> =>
+      waitFor(() => {
+        const node = root.querySelector(selector) as T | null;
+        expect(node).toBeTruthy();
+        return node as T;
+      });
+
+    const scroller = await find<HTMLElement>(canvasElement, '.reqore-fade-scroller-content');
+
+    // The drag is a no-op on a row that fits, so the story has to overflow.
+    await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+    await expect(getComputedStyle(scroller).cursor).toBe('grab');
+
+    const readout = await find<HTMLElement>(canvasElement, '.fade-scroller-click-readout');
+    const card = await find<HTMLElement>(scroller, '.reqore-statistic');
+
+    const rect = scroller.getBoundingClientRect();
+    const y = rect.top + rect.height / 2;
+    const from = rect.left + rect.width - 20;
+    /* `buttons` is the bitmask of what is held right now, and the component reads
+       it to notice a release it never saw. A move without it is a drag with
+       nothing held down — impossible, and the component correctly ignores it. */
+    const event = (target: EventTarget, type: string, x: number, buttons: number) =>
+      target.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          clientX: x,
+          clientY: y,
+          pointerId: 1,
+          pointerType: 'mouse',
+          button: 0,
+          buttons,
+        })
+      );
+
+    // 1. A real drag scrolls the row...
+    event(scroller, 'pointerdown', from, 1);
+    event(scroller, 'pointermove', from - 120, 1);
+
+    await waitFor(() => expect(scroller.scrollLeft).toBeGreaterThan(0));
+    // Held down, the row is the control rather than selectable text.
+    await expect(getComputedStyle(scroller).cursor).toBe('grabbing');
+
+    event(scroller, 'pointerup', from - 120, 0);
+    await waitFor(() => expect(getComputedStyle(scroller).cursor).toBe('grab'));
+
+    /* 2. A release the page never saw — the button coming up outside the window —
+       must not leave the row stuck to the pointer. `buttons: 0` on a move is the
+       tell: during a drag it can only be non-zero. */
+    event(scroller, 'pointerdown', from, 1);
+    event(scroller, 'pointermove', from - 60, 1);
+    await expect(getComputedStyle(scroller).cursor).toBe('grabbing');
+
+    const frozenAt = scroller.scrollLeft;
+
+    event(scroller, 'pointermove', from - 200, 0);
+
+    await waitFor(() => expect(getComputedStyle(scroller).cursor).toBe('grab'));
+    await expect(scroller.scrollLeft).toBe(frozenAt);
+
+    /* 3. The cards are genuinely clickable, which is what makes the readout — and
+       hand-testing the click/drag pairing — possible at all. The other half of
+       that pairing (a drag must NOT activate the card it ends on) is asserted in
+       `__tests__/fadeScroller-drag.test.tsx`, where a click can be driven exactly
+       and in isolation rather than through a real browser's event sequencing. */
+    await userEvent.click(card);
+    await waitFor(() => expect(readout.getAttribute('data-clicked')).not.toBe(''));
   },
 };
 
