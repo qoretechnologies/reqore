@@ -64,16 +64,41 @@ jobs:
       - name: Build
         run: yarn build
 
-      # Stamp a unique, valid-semver prerelease of the NEXT patch (so it sorts above
-      # the current release, not below it). The sha identifier is prefixed with `g`
-      # (git-describe style) so an all-digit short sha can never become an invalid
-      # leading-zero numeric identifier.
+      # Stamp a prerelease OF THE VERSION THIS PR IS RELEASING — the one already in
+      # package.json, which every PR is required to bump.
+      #
+      # This used to increment the patch first, so a PR targeting 0.73.1 published
+      # 0.73.2-pr.N. That is wrong twice over: the prerelease previews a version that
+      # is not the one being merged, and it sorts ABOVE the release it precedes, so
+      # the real 0.73.1 lands *below* its own preview and a consumer pinned to the
+      # prerelease never moves forward on `yarn upgrade`.
+      #
+      # Taking package.json as-is gives the ordering the old code was reaching for
+      # anyway. Semver puts a prerelease below its release and above the previous one:
+      #
+      #   0.73.0  <  0.73.1-pr.42.gabc123  <  0.73.1
+      #
+      # so it already sorts above the current release without inventing a version
+      # nobody intends to ship.
+      #
+      # The sha identifier is prefixed with `g` (git-describe style) so an all-digit
+      # short sha can never become an invalid leading-zero numeric identifier.
       - name: Stamp prerelease version
         id: version
         run: |
-          NEXT=$(node -p "(v => [v[0], v[1], +v[2] + 1].join('.'))(require('./package.json').version.split('-')[0].split('.'))")
+          BASE=$(node -p "require('./package.json').version.split('-')[0]")
           SHA=$(printf '%s' "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
-          VER="${NEXT}-pr.${{ github.event.pull_request.number }}.g${SHA}"
+          VER="${BASE}-pr.${{ github.event.pull_request.number }}.g${SHA}"
+
+          # A PR that forgot its version bump would otherwise publish a prerelease of a
+          # version already on npm — which sorts BELOW that release and quietly gives
+          # consumers something older than what they have. Fail loudly instead; the
+          # bump is required by this repo's own release rules.
+          if npm view "$(node -p "require('./package.json').name")@${BASE}" version >/dev/null 2>&1; then
+            echo "::error::package.json is still at ${BASE}, which is already published. Bump the version in this PR before a prerelease can be cut."
+            exit 1
+          fi
+
           npm pkg set version="$VER"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           echo "Publishing $VER"
