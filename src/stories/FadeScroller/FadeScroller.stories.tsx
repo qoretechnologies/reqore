@@ -156,6 +156,54 @@ export const ScrolledToTheMiddle: Story = {
   },
 };
 
+/** `dragToScroll`: grab the row and pull it sideways. */
+export const DragToScroll: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an overflowing row with `dragToScroll` — pressing anywhere on it and pulling sideways scrolls it, and the cursor reads `grab` (then `grabbing`) while there is somewhere to go. A mouse has no horizontal axis, so without this the row is reachable only by shift+wheel or a trackpad gesture. Selecting text inside the row is preserved: hold **Shift** and drag to select, and on touch the drag never engages so native panning and long-press-to-select both apply unchanged. A drag also swallows the click that would otherwise follow, so pulling past a clickable card does not activate it — while a plain click still does.',
+      },
+    },
+  },
+  args: { dragToScroll: true },
+  render: Template,
+  play: async ({ canvasElement }) => {
+    const scroller = canvasElement.querySelector('.reqore-fade-scroller-content') as HTMLElement;
+
+    await waitFor(() => expect(scroller).toBeTruthy());
+    // The drag is a no-op on a row that fits, so the story has to overflow.
+    await expect(scroller.scrollWidth).toBeGreaterThan(scroller.clientWidth);
+    await expect(getComputedStyle(scroller).cursor).toBe('grab');
+
+    const rect = scroller.getBoundingClientRect();
+    const y = rect.top + rect.height / 2;
+    const from = rect.left + rect.width - 20;
+    const event = (type: string, x: number) =>
+      scroller.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          clientX: x,
+          clientY: y,
+          pointerId: 1,
+          pointerType: 'mouse',
+          button: 0,
+        })
+      );
+
+    event('pointerdown', from);
+    event('pointermove', from - 120);
+
+    await waitFor(() => expect(scroller.scrollLeft).toBeGreaterThan(0));
+    // Held down, the row is the control rather than selectable text.
+    await expect(getComputedStyle(scroller).cursor).toBe('grabbing');
+
+    event('pointerup', from - 120);
+    await waitFor(() => expect(getComputedStyle(scroller).cursor).toBe('grab'));
+  },
+};
+
 /** Content that fits: no overflow, so neither edge fades. */
 export const FitsWithoutScrolling: Story = {
   parameters: {

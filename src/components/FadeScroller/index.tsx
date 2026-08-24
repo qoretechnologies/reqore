@@ -68,7 +68,48 @@ export interface IReqoreFadeScrollerProps
    * @default true
    */
   fade?: boolean;
+  /**
+   * Let the row be scrolled by grabbing it and pulling sideways.
+   *
+   * A mouse has no horizontal axis, so a row that overflows is reachable only by
+   * shift+wheel or a trackpad gesture — neither discoverable, and the first
+   * unavailable on a plain wheel mouse. Dragging is the gesture a rail of peers
+   * already looks like it should accept.
+   *
+   * Selecting text inside the row is preserved rather than traded away: hold
+   * **Shift** and drag to select on a pointer device, and on touch the drag
+   * never engages at all, so native panning and long-press-to-select both apply
+   * unchanged.
+   *
+   * Opt-in, because it changes what a press-and-move does on an existing row.
+   * @default false
+   */
+  dragToScroll?: boolean;
 }
+
+/**
+ * How far the pointer must travel before a press becomes a drag.
+ *
+ * Zero would make every click a one-pixel drag and swallow it; too large and the
+ * row feels stuck before it moves. Four pixels is the usual hysteresis for
+ * distinguishing a click from a drag.
+ */
+const DRAG_THRESHOLD = 4;
+
+/**
+ * Elements a drag must never start on.
+ *
+ * Deliberately NOT "anything interactive". The rows this is built for are made
+ * OF interactive things — a rail of clickable KPI tiles is the motivating case —
+ * so excluding buttons would leave nowhere to grab and the feature would do
+ * nothing. Their clicks are protected instead by suppressing the click that
+ * follows a real drag, which is what makes press-and-release still activate a
+ * tile while press-and-pull scrolls past it.
+ *
+ * What IS excluded is text entry, where a press-and-move already means
+ * "select within this value" and there is no other way to ask for it.
+ */
+const NON_DRAGGABLE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
 
 interface IStyledFadeScrollerProps {
   $fadeLeft?: boolean;
@@ -158,6 +199,35 @@ const StyledFadeScrollerContent = styled.div<IStyledScrollProps>`
       flex: 0 0 auto;
     }
   `}
+
+  /* Drag state is carried by CLASSES, not by props, because it is not React
+     state: a drag is a transient pointer interaction, and routing it through
+     setState would re-render every child on every drag — on the rail this was
+     built for, that is a whole row of memoized tiles, mid-gesture.
+
+     The grab cursor appears only when there is somewhere to go: an idle "grab"
+     on a row that already fits is a promise the row cannot keep. The class is
+     toggled by the same measurement that draws the fades, so the cursor and the
+     fade can never disagree about whether the row overflows. */
+  &.reqore-fade-scroller-draggable {
+    cursor: grab;
+  }
+
+  /* While dragging, the whole row is the control: suppress selection so pulling
+     across a tile drags it instead of highlighting its label, and keep the
+     grabbing cursor even as the pointer passes over children that set their own
+     (a clickable tile sets the pointer cursor). */
+  &.reqore-fade-scroller-dragging {
+    cursor: grabbing;
+    user-select: none;
+    -webkit-user-select: none;
+
+    & * {
+      cursor: grabbing !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+    }
+  }
 `;
 
 /**
@@ -185,6 +255,7 @@ export const ReqoreFadeScroller = memo(
         rigid = true,
         fadeColor,
         fade = true,
+        dragToScroll = false,
         fluid = true,
         intent,
         customTheme,
@@ -202,6 +273,11 @@ export const ReqoreFadeScroller = memo(
         right: false,
       });
 
+      // Read inside `update`, which is deliberately dependency-free so it can be
+      // handed to listeners and observers once and never rebuilt.
+      const dragToScrollRef = useRef(dragToScroll);
+      dragToScrollRef.current = dragToScroll;
+
       const update = useCallback(() => {
         const element = scrollRef.current;
 
@@ -211,6 +287,14 @@ export const ReqoreFadeScroller = memo(
 
         const left = element.scrollLeft > 1;
         const right = element.scrollLeft + element.clientWidth < element.scrollWidth - 1;
+
+        // The cursor follows the measurement, not the render: toggling a class
+        // here keeps "can this be dragged?" answered by the same pass that
+        // decides which edges fade, without a state round-trip.
+        element.classList.toggle(
+          'reqore-fade-scroller-draggable',
+          dragToScrollRef.current && element.scrollWidth > element.clientWidth
+        );
 
         // Only commit a real change — this runs after every render (below), and an
         // unconditional setState would loop.
@@ -242,6 +326,131 @@ export const ReqoreFadeScroller = memo(
           observer?.disconnect();
         };
       }, [update]);
+
+      useEffect(() => {
+        const element = scrollRef.current;
+
+        if (!dragToScroll || !element) {
+          return undefined;
+        }
+
+        let activePointer: number | undefined;
+        let startX = 0;
+        let startScrollLeft = 0;
+        let engaged = false;
+        // Set when a drag actually moved the row, and consumed by the click that
+        // the browser fires next. Without it, pulling the row sideways and
+        // letting go on top of a clickable tile ALSO activates that tile.
+        let swallowNextClick = false;
+
+        const onPointerDown = (event: PointerEvent) => {
+          // Touch already pans natively and long-press already selects; taking
+          // the gesture over would replace two working behaviours with one.
+          if (event.pointerType === 'touch') {
+            return;
+          }
+          // Middle/right are paste and context menu.
+          if (event.button !== 0) {
+            return;
+          }
+          // Shift is the documented escape hatch to "select instead of drag".
+          if (event.shiftKey) {
+            return;
+          }
+          if ((event.target as HTMLElement | null)?.closest?.(NON_DRAGGABLE)) {
+            return;
+          }
+          // Nothing to scroll: leave the press alone entirely so a click on a
+          // row that happens to fit behaves exactly as it did before.
+          if (element.scrollWidth <= element.clientWidth) {
+            return;
+          }
+
+          activePointer = event.pointerId;
+          startX = event.clientX;
+          startScrollLeft = element.scrollLeft;
+          engaged = false;
+        };
+
+        const onPointerMove = (event: PointerEvent) => {
+          if (activePointer === undefined || event.pointerId !== activePointer) {
+            return;
+          }
+
+          const distance = event.clientX - startX;
+
+          if (!engaged) {
+            // Below the threshold this is still a click, so do nothing at all —
+            // not even preventDefault, which would break focus on the target.
+            if (Math.abs(distance) < DRAG_THRESHOLD) {
+              return;
+            }
+            engaged = true;
+            swallowNextClick = true;
+            element.classList.add('reqore-fade-scroller-dragging');
+            // Capture so the drag survives the pointer leaving the row, which it
+            // does constantly at the edges — that is where you are pulling to.
+            try {
+              element.setPointerCapture(event.pointerId);
+            } catch {
+              // Capture is a nicety; without it the drag simply ends at the edge.
+            }
+          }
+
+          // Stops the browser starting a native text/image drag mid-pull.
+          event.preventDefault();
+          element.scrollLeft = startScrollLeft - distance;
+        };
+
+        const endDrag = (event: PointerEvent) => {
+          if (activePointer === undefined || event.pointerId !== activePointer) {
+            return;
+          }
+          if (element.hasPointerCapture?.(event.pointerId)) {
+            element.releasePointerCapture(event.pointerId);
+          }
+          activePointer = undefined;
+          if (engaged) {
+            engaged = false;
+            element.classList.remove('reqore-fade-scroller-dragging');
+          }
+        };
+
+        const onClickCapture = (event: MouseEvent) => {
+          if (!swallowNextClick) {
+            return;
+          }
+          swallowNextClick = false;
+          event.preventDefault();
+          event.stopPropagation();
+        };
+
+        // A native drag beats pointer events to the punch on links and images.
+        const onDragStart = (event: DragEvent) => {
+          if (engaged) {
+            event.preventDefault();
+          }
+        };
+
+        element.addEventListener('pointerdown', onPointerDown);
+        element.addEventListener('pointermove', onPointerMove);
+        element.addEventListener('pointerup', endDrag);
+        element.addEventListener('pointercancel', endDrag);
+        element.addEventListener('dragstart', onDragStart);
+        // Capture phase: the click has to be stopped before it reaches the tile.
+        element.addEventListener('click', onClickCapture, true);
+
+        return () => {
+          element.removeEventListener('pointerdown', onPointerDown);
+          element.removeEventListener('pointermove', onPointerMove);
+          element.removeEventListener('pointerup', endDrag);
+          element.removeEventListener('pointercancel', endDrag);
+          element.removeEventListener('dragstart', onDragStart);
+          element.removeEventListener('click', onClickCapture, true);
+          element.classList.remove('reqore-fade-scroller-dragging');
+          element.classList.remove('reqore-fade-scroller-draggable');
+        };
+      }, [dragToScroll]);
 
       /* An intent tints the fade, because the fade IS this component's only
          surface — there is no border or background for an intent to colour
