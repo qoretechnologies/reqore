@@ -169,6 +169,20 @@ export const Basic: Story = {
   render: Template,
 };
 
+export const ScaleWithMinimumRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'With `scaleWithContent`, `rows` is the floor: the empty textarea starts at 3 visible lines and grows with the content instead of collapsing to one line.',
+      },
+    },
+  },
+  render: (args) => (
+    <ReqoreTextarea {...args} placeholder='Starts at three rows…' scaleWithContent rows={3} />
+  ),
+};
+
 export const Info: Story = {
   parameters: {
     docs: {

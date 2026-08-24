@@ -17,6 +17,7 @@ import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
+  ACCENT_SIZE_TO_PX,
   GAP_FROM_SIZE,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
@@ -34,7 +35,7 @@ import {
   getReadableColor,
 } from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
-import { getOneHigherSize, isActionShown } from '../../helpers/utils';
+import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -213,12 +214,28 @@ export interface IReqorePanelProps
    * because the border already provides surface definition.
    */
   raised?: boolean;
+  /**
+   * Renders the intent color (or a neutral highlight when no intent is set) as a
+   * single accent strip on one edge instead of tinting the whole border — the
+   * quiet "severity rail" treatment, mirroring `ReqoreCallout`'s accent API.
+   * When set, the panel's own border drops the intent tint (and is omitted
+   * entirely on `flat` panels) so the strip carries the color alone.
+   */
+  accentPosition?: 'left' | 'top';
+  /**
+   * Thickness of the accent strip — a raw pixel number, or a `TSizes` name
+   * resolved through `ACCENT_SIZE_TO_PX`. Defaults to `'normal'` (5px).
+   */
+  accentSize?: number | TSizes;
 }
 
-export interface IStyledPanel extends IReqorePanelProps {
+export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   theme: IReqoreTheme;
   noHorizontalPadding?: boolean;
   stickyHeaderOffset?: number;
+  /** Always a resolved pixel number — the component maps `TSizes` names before
+   *  it reaches the styles, so the css (which interpolates px) never sees a string. */
+  $accentSize?: number;
   /** True once a sticky header has pinned to its scroll container (detected at
    *  runtime). The header drops its top radius while stuck so it reads as a
    *  full-width bar, and regains it at rest. */
@@ -357,25 +374,126 @@ export type TPanelStyle = React.FC<
     }
 >;
 
+/**
+ * Does the panel wrapper draw its 1px border?
+ *
+ * `accentPosition` moves the intent onto the edge strip, so an accent panel never tints its
+ * border — and a `flat` one draws no border at all, leaving the strip to carry the colour alone.
+ *
+ * This lives in one place because FOUR style rules branch on it — the border itself, the
+ * interactive hover border, the `raised` inset highlight, and the sticky header's radius inset.
+ * They were four separate copies of `flat && !intent`, and only the first was taught about
+ * `accentPosition`, so hover repainted the intent border the strip had just removed and `raised`
+ * silently vanished on accent panels.
+ */
+const hasPanelBorder = ({
+  flat,
+  intent,
+  accentPosition,
+}: Pick<IStyledPanel, 'flat' | 'intent' | 'accentPosition'>): boolean =>
+  !(flat && (!intent || accentPosition));
+
+/** The colour the panel border (and its hover variant) is derived from. With `accentPosition`
+ *  the intent belongs to the strip, so the border falls back to the neutral surface colour. */
+const getPanelBorderBaseColor = (
+  theme: IReqoreTheme,
+  { intent, accentPosition }: Pick<IStyledPanel, 'intent' | 'accentPosition'>
+) => (intent && !accentPosition ? theme.intents[intent] : getMainBackgroundColor(theme));
+
 export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
-  // `fill` controls panel layout and must not become a boolean DOM attribute.
-  // Everything else follows styled-components' own rule, so when the panel renders
-  // as a `Resizable` (see `_resizable` + `as` below) re-resizable still receives its
+  // `fill` controls panel layout and must not become a boolean DOM attribute. Neither must
+  // `accentPosition`: when the panel renders as a `Resizable` (a COMPONENT target) the rule
+  // below forwards everything, and re-resizable spreads the leftovers onto its wrapper div.
+  // Filtering here still leaves the styled-component's own interpolations reading the prop.
+  // Everything else follows styled-components' own rule, so re-resizable still receives its
   // `enable` / size / handle config — those are component props, not HTML attributes.
-  shouldForwardProp: omitStyleProps('fill'),
+  shouldForwardProp: omitStyleProps('fill', 'accentPosition'),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded, radiusSize }) =>
     rounded ? resolveRadius('normal', radiusSize) : 0}px;
-  border: ${({ theme, flat, intent }) =>
-    flat && !intent
-      ? undefined
-      : `1px solid ${changeLightness(
-          intent ? theme.intents[intent] : getMainBackgroundColor(theme),
+  border: ${({ theme, flat, intent, accentPosition }) =>
+    hasPanelBorder({ flat, intent, accentPosition })
+      ? `1px solid ${changeLightness(
+          getPanelBorderBaseColor(theme, { intent, accentPosition }),
           0.08
-        )}`};
+        )}`
+      : undefined};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  ${({
+    accentPosition,
+    $accentSize = ACCENT_SIZE_TO_PX.normal,
+    theme,
+    intent,
+    flat,
+    rounded,
+    radiusSize,
+    stickyHeader,
+  }) => {
+    if (!accentPosition) {
+      return undefined;
+    }
+    // The wrapper normally clips the strip into its rounded corners via `overflow: hidden`
+    // (see the `overflow` rule below) — EXCEPT with a sticky header, which forces
+    // `overflow: visible` so the header can escape. Unclipped, a square strip pokes out past
+    // the panel's corners, so in THAT CASE ONLY the strip carries its own matching radius.
+    //
+    // Deliberately not applied unconditionally: where the wrapper already clips, a redundant
+    // radius re-renders the strip as a rounded box that is then clipped to the same curve —
+    // identical shape, but a different antialiasing blend along the whole edge, which shows up
+    // as a diff on every existing accent snapshot for no visual gain.
+    //
+    // The strip sits in the padding box, inside any border, so inset by the border width to
+    // land on the wrapper's INNER curve — the same adjustment StyledPanelTopBar makes.
+    const stripRadius =
+      stickyHeader && rounded
+        ? Math.max(
+            0,
+            resolveRadius('normal', radiusSize) -
+              (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
+          )
+        : 0;
+
+    return css`
+      position: relative;
+      /* Reserve the strip's thickness so the title bar and content never sit
+         under it — the same reservation ReqoreCallout makes. */
+      padding-${accentPosition === 'left' ? 'left' : 'top'}: ${$accentSize}px;
+
+      &::before {
+        content: '';
+        position: absolute;
+        ${accentPosition === 'left'
+          ? css`
+              top: 0;
+              bottom: 0;
+              left: 0;
+              width: ${$accentSize}px;
+            `
+          : css`
+              top: 0;
+              right: 0;
+              left: 0;
+              height: ${$accentSize}px;
+            `}
+        ${stripRadius
+          ? accentPosition === 'left'
+            ? css`
+                border-top-left-radius: ${stripRadius}px;
+                border-bottom-left-radius: ${stripRadius}px;
+              `
+            : css`
+                border-top-left-radius: ${stripRadius}px;
+                border-top-right-radius: ${stripRadius}px;
+              `
+          : undefined}
+        background-color: ${intent
+          ? theme.intents[intent]
+          : changeLightness(getMainBackgroundColor(theme), 0.22)};
+      }
+    `;
+  }}
   overflow: ${({ stickyHeader }) => (stickyHeader ? 'visible' : 'hidden')};
   display: flex;
   flex-flow: column;
@@ -402,7 +520,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
     border-top-right-radius: 0;
   }
 
-  ${({ interactive, theme, opacity = 1, flat, intent }) =>
+  ${({ interactive, theme, opacity = 1, flat, intent, accentPosition }) =>
     interactive
       ? css`
           cursor: pointer;
@@ -419,12 +537,9 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
                   opacity
                 )};
 
-            border-color: ${flat && !intent
-              ? undefined
-              : `${changeLightness(
-                  intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-                  0.25
-                )}`};
+            border-color: ${hasPanelBorder({ flat, intent, accentPosition })
+              ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25)
+              : undefined};
 
             ${opacity !== 0 &&
             css`
@@ -447,7 +562,8 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
         `
       : undefined}
 
-  ${({ raised, flat, intent }) => raised && flat && !intent && RaisedElement}
+  ${({ raised, flat, intent, accentPosition }) =>
+    raised && !hasPanelBorder({ flat, intent, accentPosition }) && RaisedElement}
 
   ${({ fill, isCollapsed }) =>
     !isCollapsed && fill
@@ -533,12 +649,17 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     radiusSize,
     flat,
     intent,
+    accentPosition,
     isStuck,
   }: IStyledPanel) =>
     stickyHeader && rounded
       ? isStuck
         ? '0px'
-        : `${Math.max(0, resolveRadius('normal', radiusSize) - (flat && !intent ? 0 : 1))}px`
+        : `${Math.max(
+            0,
+            resolveRadius('normal', radiusSize) -
+              (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
+          )}px`
       : undefined};
   border-top-right-radius: ${({
     stickyHeader,
@@ -546,12 +667,17 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     radiusSize,
     flat,
     intent,
+    accentPosition,
     isStuck,
   }: IStyledPanel) =>
     stickyHeader && rounded
       ? isStuck
         ? '0px'
-        : `${Math.max(0, resolveRadius('normal', radiusSize) - (flat && !intent ? 0 : 1))}px`
+        : `${Math.max(
+            0,
+            resolveRadius('normal', radiusSize) -
+              (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
+          )}px`
       : undefined};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
@@ -727,10 +853,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       collapseTooltip = 'Collapse',
       expandTooltip = 'Expand',
       closeTooltip = 'Close',
+      accentPosition,
+      accentSize,
       ...rest
     }: IReqorePanelProps,
     ref
   ) => {
+    // Resolved ONCE, here — the accent styles interpolate px and reserve padding,
+    // so they must only ever see a number. Shared with ReqoreCallout.
+    const accentSizePx = useMemo(() => resolveAccentSize(accentSize), [accentSize]);
     const [_isCollapsed, setIsCollapsed] = useState(isCollapsed || false);
     const primaryContentGradient = getPrimaryGradient(contentEffect?.gradient);
     const primaryContentColors: Record<number | string, unknown> | undefined =
@@ -1207,6 +1338,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           rounded={rounded}
           flat={flat}
           intent={intent}
+          accentPosition={accentPosition}
+          $accentSize={accentSizePx}
           className={`${className || ''} reqore-panel${
             _isHovered && size(floatingActionsList) > 0 ? ' reqore-panel-floating-active' : ''
           }`}

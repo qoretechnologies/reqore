@@ -38,6 +38,7 @@ const meta = {
     ...createArg('accentSize', {
       type: 'number',
       name: 'Accent size',
+      description: "Pixels, or a TSizes name ('normal' = the 5px default)",
       defaultValue: 5,
     }),
     ...createArg('contentEffect', {
