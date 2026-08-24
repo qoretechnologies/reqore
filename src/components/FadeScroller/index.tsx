@@ -259,13 +259,14 @@ export const ReqoreFadeScroller = memo(
         fluid = true,
         intent,
         customTheme,
+        inheritCustomTheme,
         tooltip,
         className,
         ...rest
       }: IReqoreFadeScrollerProps,
       ref
     ) => {
-      const theme = useReqoreTheme('main', customTheme, intent);
+      const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const scrollRef = useRef<HTMLDivElement>(null);
       const { targetRef } = useCombinedRefs<HTMLDivElement>(ref);
       const [edges, setEdges] = useState<{ left: boolean; right: boolean }>({
@@ -343,7 +344,120 @@ export const ReqoreFadeScroller = memo(
         // letting go on top of a clickable tile ALSO activates that tile.
         let swallowNextClick = false;
 
+        /* The live gesture is tracked on the WINDOW, not on the row.
+         *
+         * A pull leaves the row almost immediately — the edges are where you are
+         * pulling TO — and the release can land anywhere, including outside the
+         * browser window entirely. Listening on the row alone meant a release it
+         * never saw left `activePointer` set: the next move over the row resumed
+         * the drag with no button held, and there was no way to let go, because
+         * the only thing that could have ended it was a pointerup on the row that
+         * was never coming.
+         *
+         * Pointer capture alone does not cover this — it is taken only once the
+         * drag ENGAGES, and a fast pull can be past the row's edge before the
+         * first qualifying move arrives.
+         *
+         * Bound per-gesture rather than permanently, so an idle scroller adds no
+         * global pointermove listener. */
+        const stopTracking = () => {
+          window.removeEventListener('pointermove', onPointerMove);
+          window.removeEventListener('pointerup', onPointerEnd);
+          window.removeEventListener('pointercancel', onPointerEnd);
+          window.removeEventListener('lostpointercapture', onPointerEnd);
+          window.removeEventListener('blur', endGesture);
+        };
+
+        const startTracking = () => {
+          window.addEventListener('pointermove', onPointerMove);
+          window.addEventListener('pointerup', onPointerEnd);
+          window.addEventListener('pointercancel', onPointerEnd);
+          window.addEventListener('lostpointercapture', onPointerEnd);
+          // Alt-tabbing mid-pull: the release happens in another window.
+          window.addEventListener('blur', endGesture);
+        };
+
+        /* Ends the gesture however it got here — a normal release, a release the
+         * page never saw, a cancelled pointer, or the window losing focus.
+         * Idempotent: `activePointer` is cleared before the capture is released,
+         * so the `lostpointercapture` our own release fires re-enters and returns. */
+        const endGesture = () => {
+          if (activePointer === undefined) {
+            return;
+          }
+
+          const pointerId = activePointer;
+
+          activePointer = undefined;
+          stopTracking();
+
+          if (element.hasPointerCapture?.(pointerId)) {
+            element.releasePointerCapture(pointerId);
+          }
+
+          if (engaged) {
+            engaged = false;
+            element.classList.remove('reqore-fade-scroller-dragging');
+          }
+        };
+
+        const onPointerEnd = (event: PointerEvent) => {
+          if (activePointer === undefined || event.pointerId !== activePointer) {
+            return;
+          }
+          endGesture();
+        };
+
+        const onPointerMove = (event: PointerEvent) => {
+          if (activePointer === undefined || event.pointerId !== activePointer) {
+            return;
+          }
+
+          /* Nothing is held down, so the button came up somewhere this page could
+           * never observe it — off the edge of the window, the usual way. Recover
+           * on the first move back rather than wait for a pointerup that is never
+           * coming; `buttons` is a bitmask of what is CURRENTLY pressed, so during
+           * a real drag it can only be non-zero. */
+          if (event.buttons === 0) {
+            endGesture();
+            return;
+          }
+
+          const distance = event.clientX - startX;
+
+          if (!engaged) {
+            // Below the threshold this is still a click, so do nothing at all —
+            // not even preventDefault, which would break focus on the target.
+            if (Math.abs(distance) < DRAG_THRESHOLD) {
+              return;
+            }
+            engaged = true;
+            swallowNextClick = true;
+            element.classList.add('reqore-fade-scroller-dragging');
+            // Capture keeps the moves addressed to the row while the pointer is
+            // over other elements. The window listeners are what make the drag
+            // survive leaving it; this is what keeps hover states elsewhere quiet.
+            try {
+              element.setPointerCapture(event.pointerId);
+            } catch {
+              // Capture is a nicety, not the mechanism.
+            }
+          }
+
+          // Stops the browser starting a native text/image drag mid-pull.
+          event.preventDefault();
+          element.scrollLeft = startScrollLeft - distance;
+        };
+
         const onPointerDown = (event: PointerEvent) => {
+          /* Before any guard. A previous gesture whose click never arrived —
+           * released off-window, so nothing followed it — leaves this armed, and
+           * the next genuine click would be eaten. A fresh press always makes the
+           * previous gesture's click moot, INCLUDING a press this handler goes on
+           * to decline: pressing an input or holding shift must not inherit a
+           * swallow from a drag that ended somewhere the page never saw. */
+          swallowNextClick = false;
+
           // Touch already pans natively and long-press already selects; taking
           // the gesture over would replace two working behaviours with one.
           if (event.pointerType === 'touch') {
@@ -370,50 +484,7 @@ export const ReqoreFadeScroller = memo(
           startX = event.clientX;
           startScrollLeft = element.scrollLeft;
           engaged = false;
-        };
-
-        const onPointerMove = (event: PointerEvent) => {
-          if (activePointer === undefined || event.pointerId !== activePointer) {
-            return;
-          }
-
-          const distance = event.clientX - startX;
-
-          if (!engaged) {
-            // Below the threshold this is still a click, so do nothing at all —
-            // not even preventDefault, which would break focus on the target.
-            if (Math.abs(distance) < DRAG_THRESHOLD) {
-              return;
-            }
-            engaged = true;
-            swallowNextClick = true;
-            element.classList.add('reqore-fade-scroller-dragging');
-            // Capture so the drag survives the pointer leaving the row, which it
-            // does constantly at the edges — that is where you are pulling to.
-            try {
-              element.setPointerCapture(event.pointerId);
-            } catch {
-              // Capture is a nicety; without it the drag simply ends at the edge.
-            }
-          }
-
-          // Stops the browser starting a native text/image drag mid-pull.
-          event.preventDefault();
-          element.scrollLeft = startScrollLeft - distance;
-        };
-
-        const endDrag = (event: PointerEvent) => {
-          if (activePointer === undefined || event.pointerId !== activePointer) {
-            return;
-          }
-          if (element.hasPointerCapture?.(event.pointerId)) {
-            element.releasePointerCapture(event.pointerId);
-          }
-          activePointer = undefined;
-          if (engaged) {
-            engaged = false;
-            element.classList.remove('reqore-fade-scroller-dragging');
-          }
+          startTracking();
         };
 
         const onClickCapture = (event: MouseEvent) => {
@@ -433,20 +504,16 @@ export const ReqoreFadeScroller = memo(
         };
 
         element.addEventListener('pointerdown', onPointerDown);
-        element.addEventListener('pointermove', onPointerMove);
-        element.addEventListener('pointerup', endDrag);
-        element.addEventListener('pointercancel', endDrag);
         element.addEventListener('dragstart', onDragStart);
         // Capture phase: the click has to be stopped before it reaches the tile.
         element.addEventListener('click', onClickCapture, true);
 
         return () => {
           element.removeEventListener('pointerdown', onPointerDown);
-          element.removeEventListener('pointermove', onPointerMove);
-          element.removeEventListener('pointerup', endDrag);
-          element.removeEventListener('pointercancel', endDrag);
           element.removeEventListener('dragstart', onDragStart);
           element.removeEventListener('click', onClickCapture, true);
+          // A gesture live at unmount would otherwise leave window listeners behind.
+          stopTracking();
           element.classList.remove('reqore-fade-scroller-dragging');
           element.classList.remove('reqore-fade-scroller-draggable');
         };
