@@ -90,20 +90,30 @@ jobs:
           SHA=$(printf '%s' "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
           VER="${BASE}-pr.${{ github.event.pull_request.number }}.g${SHA}"
 
-          # A PR that forgot its version bump would otherwise publish a prerelease of a
-          # version already on npm — which sorts BELOW that release and quietly gives
-          # consumers something older than what they have. Fail loudly instead; the
-          # bump is required by this repo's own release rules.
+          # Publish only when package.json names a version that is not on npm yet.
+          #
+          # If it is already published, this PR has not bumped — either because it does
+          # not need to (a CI-, docs- or test-only change) or because it forgot. Cutting
+          # a prerelease of an already-released version would sort BELOW that release
+          # and hand consumers something older than they have, so it is skipped rather
+          # than published.
+          #
+          # Skipped, not failed: a workflow-only PR has nothing to preview and should
+          # not go red for it. A PR that genuinely forgot its bump is still caught at
+          # merge, where the release job cannot publish over an existing version.
           if npm view "$(node -p "require('./package.json').name")@${BASE}" version >/dev/null 2>&1; then
-            echo "::error::package.json is still at ${BASE}, which is already published. Bump the version in this PR before a prerelease can be cut."
-            exit 1
+            echo "::notice::package.json is at ${BASE}, which is already published — no prerelease cut. Bump the version if this PR is meant to ship one."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           npm pkg set version="$VER"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
           echo "Publishing $VER"
 
       - name: Publish prerelease to npm (pr tag)
+        if: steps.version.outputs.publish == 'true'
         uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
@@ -111,6 +121,7 @@ jobs:
           access: public
 
       - name: Comment install command on the PR
+        if: steps.version.outputs.publish == 'true'
         uses: actions/github-script@v7
         with:
           script: |
