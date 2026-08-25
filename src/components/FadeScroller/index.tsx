@@ -7,7 +7,6 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react';
 import styled from 'styled-components';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
@@ -112,8 +111,6 @@ const DRAG_THRESHOLD = 4;
 const NON_DRAGGABLE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
 
 interface IStyledFadeScrollerProps {
-  $fadeLeft?: boolean;
-  $fadeRight?: boolean;
   $fadeColor: string;
   $fluid?: boolean;
   theme: IReqoreTheme;
@@ -149,13 +146,27 @@ const StyledFadeScrollerWrapper = styled.div<IStyledFadeScrollerProps>`
   &::before {
     left: 0;
     background: linear-gradient(to right, ${({ $fadeColor }) => $fadeColor}, transparent);
-    opacity: ${({ $fadeLeft }) => ($fadeLeft ? 1 : 0)};
+    opacity: 0;
   }
 
   &::after {
     right: 0;
     background: linear-gradient(to left, ${({ $fadeColor }) => $fadeColor}, transparent);
-    opacity: ${({ $fadeRight }) => ($fadeRight ? 1 : 0)};
+    opacity: 0;
+  }
+
+  /* Which edges fade is a MEASUREMENT, so it is carried by classes rather than
+     by props — the same reasoning that already puts the grab cursor on a class.
+     Routing it through state meant a layout effect that ran after every render
+     and called setState, guarded only by comparing the two booleans: correct
+     while the measurement is stable, and an unbreakable render loop the moment
+     it is not. Toggling a class cannot re-enter the render at all. */
+  &.reqore-fade-scroller-fade-left::before {
+    opacity: 1;
+  }
+
+  &.reqore-fade-scroller-fade-right::after {
+    opacity: 1;
   }
 `;
 
@@ -269,15 +280,12 @@ export const ReqoreFadeScroller = memo(
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const scrollRef = useRef<HTMLDivElement>(null);
       const { targetRef } = useCombinedRefs<HTMLDivElement>(ref);
-      const [edges, setEdges] = useState<{ left: boolean; right: boolean }>({
-        left: false,
-        right: false,
-      });
-
       // Read inside `update`, which is deliberately dependency-free so it can be
       // handed to listeners and observers once and never rebuilt.
       const dragToScrollRef = useRef(dragToScroll);
       dragToScrollRef.current = dragToScroll;
+      const fadeRef = useRef(fade);
+      fadeRef.current = fade;
 
       const update = useCallback(() => {
         const element = scrollRef.current;
@@ -297,15 +305,18 @@ export const ReqoreFadeScroller = memo(
           dragToScrollRef.current && element.scrollWidth > element.clientWidth
         );
 
-        // Only commit a real change — this runs after every render (below), and an
-        // unconditional setState would loop.
-        setEdges((current) =>
-          current.left === left && current.right === right ? current : { left, right }
-        );
-      }, []);
+        // Same for the fades: the wrapper's edge gradients are driven by classes,
+        // so this whole pass writes to the DOM and never re-enters the render.
+        const wrapper = targetRef.current;
+
+        wrapper?.classList.toggle('reqore-fade-scroller-fade-left', fadeRef.current && left);
+        wrapper?.classList.toggle('reqore-fade-scroller-fade-right', fadeRef.current && right);
+      }, [targetRef]);
 
       // After every render, because the children can change width without the
-      // scroller resizing (a chip's label loads, an item is removed).
+      // scroller resizing (a chip's label loads, an item is removed). Safe to run
+      // unconditionally now that it only writes classes: there is no state for it
+      // to feed back into.
       useLayoutEffect(update);
 
       useEffect(() => {
@@ -536,8 +547,6 @@ export const ReqoreFadeScroller = memo(
           theme={theme}
           className={`${className || ''} reqore-fade-scroller`.trim()}
           $fadeColor={resolvedFadeColor}
-          $fadeLeft={fade && edges.left}
-          $fadeRight={fade && edges.right}
           $fluid={fluid}
         >
           <StyledFadeScrollerContent
