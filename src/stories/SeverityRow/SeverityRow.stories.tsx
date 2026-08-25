@@ -1,5 +1,6 @@
 import { StoryObj } from '@storybook/react';
-import { expect, waitFor } from 'storybook/test';
+import { useState } from 'react';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreSeverityRow, { IReqoreSeverityRowProps } from '../../components/SeverityRow';
 import ReqoreTag from '../../components/Tag';
@@ -216,6 +217,86 @@ export const Clickable: Story = {
   },
 };
 
+/**
+ * The disclosure shape every consumer builds by hand: the whole row toggles a
+ * body, and a caret on the right toggles the same state. Before the actions
+ * stopped propagating, clicking the caret ran BOTH handlers, the two toggles
+ * cancelled, and the caret looked dead while the row worked — so the branch
+ * with the affordance was the branch nothing tested.
+ */
+const DisclosureRow = ({ actions, ...rest }: IReqoreSeverityRowProps) => {
+  const [expanded, setExpanded] = useState(false);
+  const toggle = () => setExpanded((previous) => !previous);
+
+  return (
+    <div style={{ width: '100%' }}>
+      <ReqoreSeverityRow
+        {...rest}
+        onClick={toggle}
+        actions={[
+          {
+            icon: expanded ? 'ArrowUpSLine' : 'ArrowDownSLine',
+            tooltip: expanded ? 'Collapse' : 'Expand',
+            minimal: true,
+            flat: true,
+            className: 'disclosure-caret',
+            onClick: toggle,
+          },
+        ]}
+      />
+      {expanded && (
+        <div className='disclosure-body' style={{ padding: '8px 12px', opacity: 0.7 }}>
+          Bound to :::7443 · TLS · listener 10
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const ActionTogglesDisclosure: Story = {
+  parameters: {
+    /* No snapshot: the point is that the caret and the row toggle one disclosure
+       WITHOUT cancelling each other out, which only exists across a sequence of
+       clicks. A still frame of the end state carries none of it — the play test
+       and __tests__/SeverityRow.test.tsx do. */
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'Renders a row whose caret action and row body toggle the same disclosure. The caret opens the body, clicking the row closes it again, and the caret leaves it open.',
+      },
+    },
+  },
+  args: {
+    label: 'svc-qorus-saas-10',
+    description: 'listening on ipv6[::]:7443 (dedicated)',
+    intent: 'info',
+    showStrip: true,
+    size: 'small',
+  },
+  render: (args) => <DisclosureRow {...args} />,
+  play: async ({ canvasElement }) => {
+    const caret = () => canvasElement.querySelector('.disclosure-caret')!;
+    const body = () => canvasElement.querySelector('.disclosure-body');
+
+    // The caret opens it. This is the assertion the fix exists for: the click
+    // used to run the action AND the row, and two toggles left the row exactly
+    // as it was.
+    fireEvent.click(caret());
+    await waitFor(() => expect(body()).toBeTruthy());
+
+    // The row still closes it — stopping propagation must not cost the row
+    // its own click.
+    fireEvent.click(canvasElement.querySelector('.reqore-severity-row-body')!);
+    await waitFor(() => expect(body()).toBeFalsy());
+
+    // Left open so the snapshot carries the expanded state; a frame of the
+    // collapsed row proves nothing about the affordance under test.
+    fireEvent.click(caret());
+    await waitFor(() => expect(body()).toBeTruthy());
+  },
+};
+
 export const NoStrip: Story = {
   parameters: {
     docs: {
@@ -418,7 +499,7 @@ export const NarrowContainerActionsWrap: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row twice, once in a 720px container (actions sit to the right of the label, as they always have) and once in a 400px container (actions wrap into their own row underneath the label, without any viewport / media-query involvement). This is the responsive behaviour every SeverityRow needs — a drawer / sidebar / split-panel host can be narrow on any screen size, so the row keys its layout off `container-type: inline-size` rather than the window width. Below the row of KPI cards the fade-scroller uses, this is the second place in the library where a component's own container width drives its layout.",
+          "Renders the same row twice, once in a 720px container (actions sit to the right of the label, as they always have) and once in a 400px container (actions wrap into their own row underneath the label, without any viewport / media-query involvement). This is the responsive behaviour every SeverityRow needs — a drawer / sidebar / split-panel host can be narrow on any screen size, so the row measures its own container with a `ResizeObserver` and stamps `data-narrow` on itself rather than keying off the window width. (Not a CSS container query: styled-components' stylis emits `@container` but the rule never matches.) Below the row of KPI cards the fade-scroller uses, this is the second place in the library where a component's own container width drives its layout.",
       },
     },
   },
@@ -476,42 +557,36 @@ export const NarrowContainerActionsWrap: Story = {
     const [wideContainer, narrowContainer] = Array.from(containers) as HTMLElement[];
     const [wide, narrow] = Array.from(rows) as HTMLElement[];
 
+    // The narrow layout is stamped on the row as `data-narrow` by its own
+    // ResizeObserver, which the browser runs AFTER layout — so nothing about
+    // the grid can be read synchronously here. Settle on that attribute
+    // first; everything below then describes a layout that has finished
+    // happening rather than one that is still on its way.
+    await waitFor(() => expect(narrow.getAttribute('data-narrow')).toBe('true'));
+
     // Debug: log container measurements + container-type/name so a failure
     // tells us WHY it failed (container-type not applied? container-name
     // missing? width computed wrong? @container rule not emitted?).
-    const wideContainerStyle = getComputedStyle(wideContainer);
-    const narrowContainerStyle = getComputedStyle(narrowContainer);
-    // eslint-disable-next-line no-console
-    console.log(
-      '[SeverityRow container-query debug]',
-      JSON.stringify(
-        {
-          wide: {
-            containerWidth: wideContainer.getBoundingClientRect().width,
-            containerType: wideContainerStyle.containerType,
-            containerName: wideContainerStyle.containerName,
-            rowGridTemplateColumns: getComputedStyle(wide).gridTemplateColumns,
-          },
-          narrow: {
-            containerWidth: narrowContainer.getBoundingClientRect().width,
-            containerType: narrowContainerStyle.containerType,
-            containerName: narrowContainerStyle.containerName,
-            rowGridTemplateColumns: getComputedStyle(narrow).gridTemplateColumns,
-          },
-        },
-        null,
-        2
-      )
+    // Re-read the computed style inside `waitFor`. Capturing the track count
+    // into a const first and then `await expect(count)` asserts on a number
+    // that was already frozen — there is nothing left to retry, so a read
+    // that landed before the observer ran failed permanently. That is what
+    // made this story fail on roughly one run in two, and why it only ever
+    // showed up when something else on the page shifted the timing.
+    await waitFor(() =>
+      expect(getComputedStyle(wide).gridTemplateColumns.split(/\s+/).length).toBe(3)
+    );
+    await waitFor(() =>
+      expect(getComputedStyle(narrow).gridTemplateColumns.split(/\s+/).length).toBe(2)
     );
 
-    const wideTracks = getComputedStyle(wide).gridTemplateColumns.split(/\s+/).length;
-    const narrowTracks = getComputedStyle(narrow).gridTemplateColumns.split(/\s+/).length;
-    await expect(wideTracks).toBe(3);
-    await expect(narrowTracks).toBe(2);
-
-    const narrowActions = narrow.querySelector('.reqore-severity-row-actions') as HTMLElement;
-    await waitFor(() => expect(narrowActions).toBeTruthy());
-    await expect(getComputedStyle(narrowActions).gridRowStart).toBe('2');
+    // Query inside `waitFor` rather than capturing the node first — a capture
+    // that ran before the element mounted can never resolve on a retry.
+    await waitFor(() => {
+      const narrowActions = narrow.querySelector('.reqore-severity-row-actions') as HTMLElement;
+      expect(narrowActions).toBeTruthy();
+      expect(getComputedStyle(narrowActions).gridRowStart).toBe('2');
+    });
   },
 };
 

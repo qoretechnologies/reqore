@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import {
   ReqoreContent,
   ReqoreFadeScroller,
@@ -16,12 +16,12 @@ const Chips = () => (
 );
 
 /*
- * Two things are out of reach here and are covered by the browser story tests
- * instead: jsdom reports every layout measurement as 0, so `scrollWidth >
- * clientWidth` never becomes true and the fade can't be triggered; and the fades
- * themselves live on `::before` / `::after`, which jsdom does not compute. What IS
- * assertable here is everything the props drive on real elements — the row rules,
- * the gap, the widths, the class hooks and the standard prop contract.
+ * jsdom reports every layout measurement as 0, so nothing overflows on its own and
+ * the metrics have to be stated outright (see `setMetrics`). The gradients live on
+ * `::before` / `::after`, which jsdom does not compute — but WHICH edge fades is
+ * carried by a class on the wrapper, and that is plain DOM. So the decision is
+ * assertable here even though the paint is not; the browser story tests cover how
+ * it actually looks.
  */
 const mount = (node: React.ReactNode) =>
   render(
@@ -187,4 +187,103 @@ test('Renders <FadeScroller /> with a tooltip', () => {
 
   expect(document.querySelectorAll('.reqore-fade-scroller').length).toBe(1);
   expect(document.querySelectorAll('.reqore-tag').length).toBe(3);
+});
+
+/*
+ * Which edges fade.
+ *
+ * The component measures the scroll box and toggles a class per edge; the class is
+ * what the gradient's opacity hangs off. jsdom has no layout, so state the metrics
+ * and fire the scroll event the component already listens for.
+ */
+
+const setMetrics = (
+  element: HTMLElement,
+  { scrollLeft = 0, clientWidth = 500, scrollWidth = 2000 } = {}
+) => {
+  Object.defineProperty(element, 'clientWidth', { value: clientWidth, configurable: true });
+  Object.defineProperty(element, 'scrollWidth', { value: scrollWidth, configurable: true });
+  Object.defineProperty(element, 'scrollLeft', {
+    value: scrollLeft,
+    configurable: true,
+    writable: true,
+  });
+  fireEvent.scroll(element);
+};
+
+const fades = () => ({
+  left: wrapper().classList.contains('reqore-fade-scroller-fade-left'),
+  right: wrapper().classList.contains('reqore-fade-scroller-fade-right'),
+});
+
+test('Fades only the right edge at the start of an overflowing row', () => {
+  mount(
+    <ReqoreFadeScroller>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+  setMetrics(content(), { scrollLeft: 0 });
+
+  // Nothing is hidden to the left yet, everything past the viewport is to the right.
+  expect(fades()).toEqual({ left: false, right: true });
+});
+
+test('Fades both edges in the middle of an overflowing row', () => {
+  mount(
+    <ReqoreFadeScroller>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+  setMetrics(content(), { scrollLeft: 700 });
+
+  expect(fades()).toEqual({ left: true, right: true });
+});
+
+test('Fades only the left edge at the end of an overflowing row', () => {
+  mount(
+    <ReqoreFadeScroller>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+  setMetrics(content(), { scrollLeft: 1500 });
+
+  expect(fades()).toEqual({ left: true, right: false });
+});
+
+test('Fades neither edge when the row fits', () => {
+  mount(
+    <ReqoreFadeScroller>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+  setMetrics(content(), { scrollLeft: 0, clientWidth: 500, scrollWidth: 500 });
+
+  // A row with nothing out of view must not advertise that there is more.
+  expect(fades()).toEqual({ left: false, right: false });
+});
+
+test('Fades neither edge with fade={false}, even while overflowing', () => {
+  mount(
+    <ReqoreFadeScroller fade={false}>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+  setMetrics(content(), { scrollLeft: 700 });
+
+  expect(fades()).toEqual({ left: false, right: false });
+});
+
+test('Stops fading once a row that overflowed no longer does', () => {
+  mount(
+    <ReqoreFadeScroller>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+  setMetrics(content(), { scrollLeft: 700 });
+  expect(fades()).toEqual({ left: true, right: true });
+
+  // The class has to be REMOVED as well as added — a toggle that only ever adds
+  // leaves a fade advertising content that is no longer there.
+  setMetrics(content(), { scrollLeft: 0, clientWidth: 500, scrollWidth: 500 });
+  expect(fades()).toEqual({ left: false, right: false });
 });

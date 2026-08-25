@@ -254,3 +254,26 @@ export function buildTooltipForComponents(tooltip: TReqoreTooltipProp) {
 
   return tooltip;
 }
+
+/**
+ * Wraps a click handler so the click stops at the element that owns it.
+ *
+ * Row-shaped components (`ReqoreSeverityRow`, `ReqoreEntityRow`) and
+ * `ReqorePanel` all render their actions *inside* a surface that may carry its
+ * own `onClick`. Without this the two handlers both run, and where they do the
+ * same thing — the common "the row and its caret toggle one disclosure" shape —
+ * they cancel out and the action reads as dead.
+ *
+ * The wrapper is what each of those components applies to every action it
+ * renders, so a consumer never has to remember. An action that genuinely wants
+ * the surface to react as well calls the surface's handler itself: explicit, at
+ * one call site, rather than implicit at all of them.
+ *
+ * Call with no argument for a pure stopper (`onClick={withStoppedPropagation()}`).
+ */
+export const withStoppedPropagation =
+  <T extends HTMLElement>(onClick?: (event: React.MouseEvent<T>) => void) =>
+  (event: React.MouseEvent<T>) => {
+    event.stopPropagation();
+    onClick?.(event);
+  };

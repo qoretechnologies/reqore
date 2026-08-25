@@ -1,6 +1,9 @@
 import { StoryObj } from '@storybook/react';
+import { useState } from 'react';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreEntityRow, { IReqoreEntityRowProps } from '../../components/EntityRow';
+import { ReqoreP } from '../../components/Paragraph';
 import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
 
@@ -16,8 +19,7 @@ export const Basic: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow in its default configuration.',
+        story: 'Renders EntityRow in its default configuration.',
       },
     },
   },
@@ -34,8 +36,7 @@ export const WithBadge: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with a badge.',
+        story: 'Renders EntityRow with a badge.',
       },
     },
   },
@@ -54,8 +55,7 @@ export const WithMultipleBadges: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with multiple badges.',
+        story: 'Renders EntityRow with multiple badges.',
       },
     },
   },
@@ -77,8 +77,7 @@ export const WithIntents: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow across a set of intents.',
+        story: 'Renders EntityRow across a set of intents.',
       },
     },
   },
@@ -120,8 +119,7 @@ export const WithImage: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with an image asset.',
+        story: 'Renders EntityRow with an image asset.',
       },
     },
   },
@@ -137,8 +135,7 @@ export const WithoutIcon: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow without an icon.',
+        story: 'Renders EntityRow without an icon.',
       },
     },
   },
@@ -181,8 +178,7 @@ export const Bordered: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with a border applied.',
+        story: 'Renders EntityRow with a border applied.',
       },
     },
   },
@@ -219,8 +215,7 @@ export const WithEffects: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with a set of visual effects applied to different items.',
+        story: 'Renders EntityRow with a set of visual effects applied to different items.',
       },
     },
   },
@@ -246,8 +241,7 @@ export const Clickable: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow in a clickable variant so hover and press states are exercised.',
+        story: 'Renders EntityRow in a clickable variant so hover and press states are exercised.',
       },
     },
   },
@@ -265,8 +259,7 @@ export const Disabled: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow in its disabled state.',
+        story: 'Renders EntityRow in its disabled state.',
       },
     },
   },
@@ -284,35 +277,42 @@ export const NoWrap: Story = {
     docs: {
       description: {
         story:
-          'Renders EntityRow with content forced onto a single line.',
+          'The same long content in the same 360px column, with `wrap` off and on, because the truncation only makes sense next to the thing it is opting out of. `wrap` defaults to **true**: description and metadata flow onto as many lines as they need, which is what the second row shows. Passing `wrap={false}` trades that for a fixed row height and an ellipsis — right for a dense list where every row must be the same height, wrong when the text is the point. Nothing else has to change to get the wrapped version; it is the default.',
       },
     },
   },
-  args: {
-    label: 'Process Incoming Order',
-    description:
-      'Routes incoming Shopify orders into the warehouse pipeline with full validation against the SKU registry',
-    metadata: 'Last run: success · just now · 384ms · attempt 1 of 3',
-    icon: 'PlayCircleLine',
-    intent: 'success',
-    wrap: false,
-    actions: [{ label: 'Run', icon: 'PlayLine' }],
-  },
-  decorators: [
-    (Story) => (
-      <div style={{ width: 360 }}>
-        <Story />
-      </div>
-    ),
-  ],
+  render: () => (
+    <div style={{ width: 360 }}>
+      <ReqoreControlGroup vertical gapSize='big'>
+        <ReqoreP size='small'>wrap={'{false}'} — one line each, ellipsis</ReqoreP>
+        <ReqoreEntityRow
+          label='Process Incoming Order'
+          description='Routes incoming Shopify orders into the warehouse pipeline with full validation against the SKU registry'
+          metadata='Last run: success · just now · 384ms · attempt 1 of 3'
+          icon='PlayCircleLine'
+          intent='success'
+          wrap={false}
+          actions={[{ label: 'Run', icon: 'PlayLine' }]}
+        />
+        <ReqoreP size='small'>wrap (default) — flows onto as many lines as it needs</ReqoreP>
+        <ReqoreEntityRow
+          label='Process Incoming Order'
+          description='Routes incoming Shopify orders into the warehouse pipeline with full validation against the SKU registry'
+          metadata='Last run: success · just now · 384ms · attempt 1 of 3'
+          icon='PlayCircleLine'
+          intent='success'
+          actions={[{ label: 'Run', icon: 'PlayLine' }]}
+        />
+      </ReqoreControlGroup>
+    </div>
+  ),
 };
 
 export const Transparent: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with a transparent background.',
+        story: 'Renders EntityRow with a transparent background.',
       },
     },
   },
@@ -331,8 +331,7 @@ export const TransparentWithIconTile: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow in the transparent variant with an icon tile.',
+        story: 'Renders EntityRow in the transparent variant with an icon tile.',
       },
     },
   },
@@ -351,8 +350,7 @@ export const Raised: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with the raised effect.',
+        story: 'Renders EntityRow with the raised effect.',
       },
     },
   },
@@ -386,8 +384,7 @@ export const IconWithoutBackground: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with an icon rendered without a background.',
+        story: 'Renders EntityRow with an icon rendered without a background.',
       },
     },
   },
@@ -402,8 +399,7 @@ export const Unpadded: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with no padding.',
+        story: 'Renders EntityRow with no padding.',
       },
     },
   },
@@ -418,8 +414,7 @@ export const PaddedHorizontalOnly: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with padding only on the horizontal axis.',
+        story: 'Renders EntityRow with padding only on the horizontal axis.',
       },
     },
   },
@@ -434,8 +429,7 @@ export const PaddedVerticalOnly: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with padding only on the vertical axis.',
+        story: 'Renders EntityRow with padding only on the vertical axis.',
       },
     },
   },
@@ -450,8 +444,7 @@ export const CustomPaddingSize: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with a custom padding size.',
+        story: 'Renders EntityRow with a custom padding size.',
       },
     },
   },
@@ -483,8 +476,7 @@ export const WithOverflowMenu: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          'Renders EntityRow with the overflow menu enabled.',
+        story: 'Renders EntityRow with the overflow menu enabled.',
       },
     },
   },
@@ -508,5 +500,146 @@ export const WithOverflowMenu: Story = {
         ],
       },
     ],
+  },
+};
+
+/* The same row twice, at 720px and 400px. Below 480px the actions leave the
+   right-hand column and take their own row under the label. */
+const WrapDemoRow = () => (
+  <ReqoreEntityRow
+    label='Process Incoming Order · order-intake-workflow'
+    description='Last run 4m ago · 1,204 executions today'
+    metadata='workflow'
+    icon='GitBranchLine'
+    fluid
+    actions={[
+      { label: 'Run', icon: 'PlayLine', compact: true, size: 'small' },
+      {
+        icon: 'More2Line',
+        tooltip: 'More',
+        minimal: true,
+        flat: true,
+        compact: true,
+        size: 'small',
+      },
+    ]}
+  />
+);
+
+export const NarrowContainerActionsWrap: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same row in a 720px container (actions sit to the right of the label, as they always have) and a 400px one (actions wrap onto their own row under the label). The row measures its OWN container with a `ResizeObserver` and stamps `data-narrow` on itself — not a media query, because the case this exists for is a narrow drawer / sidebar / split panel on a wide screen, where the viewport is the wrong box to ask. The threshold is 480px, the Reqore mobile width, rather than the 640px `ReqoreSeverityRow` uses: that row fits a severity strip, a leading tag, a label and a description in before its actions, so it is out of room sooner. Wrapping should mean there was no room, not that the container was under some number.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <div style={{ width: 720, maxWidth: '100%' }}>
+        <WrapDemoRow />
+      </div>
+      <div style={{ width: 400, maxWidth: '100%' }}>
+        <WrapDemoRow />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    /* Queried inside waitFor throughout: the attribute is stamped by a
+       ResizeObserver, which the browser runs AFTER layout, so nothing here can
+       be read synchronously. Settling on `data-narrow` first means every
+       assertion below describes a layout that has finished happening. */
+    const rows = await waitFor(() => {
+      const found = canvasElement.querySelectorAll('.reqore-entity-row');
+      expect(found.length).toBe(2);
+      return Array.from(found) as HTMLElement[];
+    });
+    const [wide, narrow] = rows;
+
+    await waitFor(() => expect(narrow.getAttribute('data-narrow')).toBe('true'));
+    await expect(wide.getAttribute('data-narrow')).toBeNull();
+
+    // Wide keeps its actions column; narrow drops it and gives them a row.
+    await waitFor(() =>
+      expect(getComputedStyle(wide).gridTemplateColumns.split(/\s+/).length).toBe(3)
+    );
+    await waitFor(() =>
+      expect(getComputedStyle(narrow).gridTemplateColumns.split(/\s+/).length).toBe(2)
+    );
+    await waitFor(() => {
+      const narrowActions = narrow.querySelector('.reqore-entity-row-actions') as HTMLElement;
+      expect(narrowActions).toBeTruthy();
+      expect(getComputedStyle(narrowActions).gridRowStart).toBe('2');
+    });
+  },
+};
+
+export const ActionDoesNotFireTheRow: Story = {
+  parameters: {
+    /* No snapshot: what this story demonstrates is what happens ACROSS two
+       clicks, and a still frame of the counters afterwards tells a reviewer
+       nothing. The behaviour is asserted by the play test below and by
+       __tests__/EntityRow.test.tsx. */
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'The row and its actions are both clickable, and a click on an action must not read as a click on the row. Both counters below are wired: pressing **Run** increments only the action, pressing the row itself increments only the row. Without the guard both fire, and an action that toggles what the row toggles cancels itself out — which is what made a disclosure caret look dead in the Qorus IDE. Applied even to an action with no handler of its own.',
+      },
+    },
+  },
+  render: () => {
+    const [rowClicks, setRowClicks] = useState(0);
+    const [actionClicks, setActionClicks] = useState(0);
+
+    return (
+      <div style={{ width: 560, maxWidth: '100%' }}>
+        <ReqoreEntityRow
+          label='Process Incoming Order'
+          description='Click the row, then click Run — each counts once, and only once.'
+          icon='GitBranchLine'
+          fluid
+          onClick={() => setRowClicks((count) => count + 1)}
+          actions={[
+            {
+              label: 'Run',
+              icon: 'PlayLine',
+              compact: true,
+              size: 'small',
+              onClick: () => setActionClicks((count) => count + 1),
+            },
+            { label: 'Inert', compact: true, size: 'small' },
+          ]}
+        />
+        <ReqoreP size='small' className='entity-row-click-readout' style={{ marginTop: 12 }}>
+          row: <span data-row-clicks={rowClicks}>{rowClicks}</span> · action:{' '}
+          <span data-action-clicks={actionClicks}>{actionClicks}</span>
+        </ReqoreP>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const find = async <T extends HTMLElement>(selector: string): Promise<T> =>
+      waitFor(() => {
+        const node = canvasElement.querySelector(selector) as T | null;
+        expect(node).toBeTruthy();
+        return node as T;
+      });
+
+    const readout = await find<HTMLElement>('.entity-row-click-readout');
+    const counts = () => ({
+      row: readout.querySelector('[data-row-clicks]')!.getAttribute('data-row-clicks'),
+      action: readout.querySelector('[data-action-clicks]')!.getAttribute('data-action-clicks'),
+    });
+
+    // The action runs, the row underneath it does not.
+    fireEvent.click(await find<HTMLElement>('.reqore-entity-row-actions .reqore-button'));
+    await waitFor(() => expect(counts()).toEqual({ row: '0', action: '1' }));
+
+    // ...and the row still works on its own, so the guard has not simply
+    // broken clicking altogether.
+    fireEvent.click(await find<HTMLElement>('.reqore-entity-row-label'));
+    await waitFor(() => expect(counts()).toEqual({ row: '1', action: '1' }));
   },
 };
