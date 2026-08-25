@@ -276,27 +276,36 @@ export const NoWrap: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders EntityRow with content forced onto a single line.',
+        story:
+          'The same long content in the same 360px column, with `wrap` off and on, because the truncation only makes sense next to the thing it is opting out of. `wrap` defaults to **true**: description and metadata flow onto as many lines as they need, which is what the second row shows. Passing `wrap={false}` trades that for a fixed row height and an ellipsis — right for a dense list where every row must be the same height, wrong when the text is the point. Nothing else has to change to get the wrapped version; it is the default.',
       },
     },
   },
-  args: {
-    label: 'Process Incoming Order',
-    description:
-      'Routes incoming Shopify orders into the warehouse pipeline with full validation against the SKU registry',
-    metadata: 'Last run: success · just now · 384ms · attempt 1 of 3',
-    icon: 'PlayCircleLine',
-    intent: 'success',
-    wrap: false,
-    actions: [{ label: 'Run', icon: 'PlayLine' }],
-  },
-  decorators: [
-    (Story) => (
-      <div style={{ width: 360 }}>
-        <Story />
-      </div>
-    ),
-  ],
+  render: () => (
+    <div style={{ width: 360 }}>
+      <ReqoreControlGroup vertical gapSize='big'>
+        <ReqoreP size='small'>wrap={'{false}'} — one line each, ellipsis</ReqoreP>
+        <ReqoreEntityRow
+          label='Process Incoming Order'
+          description='Routes incoming Shopify orders into the warehouse pipeline with full validation against the SKU registry'
+          metadata='Last run: success · just now · 384ms · attempt 1 of 3'
+          icon='PlayCircleLine'
+          intent='success'
+          wrap={false}
+          actions={[{ label: 'Run', icon: 'PlayLine' }]}
+        />
+        <ReqoreP size='small'>wrap (default) — flows onto as many lines as it needs</ReqoreP>
+        <ReqoreEntityRow
+          label='Process Incoming Order'
+          description='Routes incoming Shopify orders into the warehouse pipeline with full validation against the SKU registry'
+          metadata='Last run: success · just now · 384ms · attempt 1 of 3'
+          icon='PlayCircleLine'
+          intent='success'
+          actions={[{ label: 'Run', icon: 'PlayLine' }]}
+        />
+      </ReqoreControlGroup>
+    </div>
+  ),
 };
 
 export const Transparent: Story = {
@@ -568,6 +577,11 @@ export const NarrowContainerActionsWrap: Story = {
 
 export const ActionDoesNotFireTheRow: Story = {
   parameters: {
+    /* No snapshot: what this story demonstrates is what happens ACROSS two
+       clicks, and a still frame of the counters afterwards tells a reviewer
+       nothing. The behaviour is asserted by the play test below and by
+       __tests__/EntityRow.test.tsx. */
+    qlip: { skip: true },
     docs: {
       description: {
         story:

@@ -255,6 +255,11 @@ const DisclosureRow = ({ actions, ...rest }: IReqoreSeverityRowProps) => {
 
 export const ActionTogglesDisclosure: Story = {
   parameters: {
+    /* No snapshot: the point is that the caret and the row toggle one disclosure
+       WITHOUT cancelling each other out, which only exists across a sequence of
+       clicks. A still frame of the end state carries none of it — the play test
+       and __tests__/SeverityRow.test.tsx do. */
+    qlip: { skip: true },
     docs: {
       description: {
         story:
