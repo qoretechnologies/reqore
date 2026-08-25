@@ -4,7 +4,12 @@ import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
-import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
+import {
+  getOneLessSize,
+  resolvePadding,
+  TReqorePadded,
+  withStoppedPropagation,
+} from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -391,6 +396,14 @@ const ReqoreSeverityRow = memo(
                     size={size}
                     intent={action.intent ?? intent}
                     {...action}
+                    // After the spread: `action` carries the consumer's raw
+                    // handler and this has to be the one that wins. Applied
+                    // even when the action has no handler of its own — an
+                    // action button is a control, and a click that lands on
+                    // one should never read as a click on the row. Without it
+                    // an action and the row both fire, and a caret that
+                    // toggles what the row toggles cancels itself out.
+                    onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
                   >
                     {action.label}
                   </ReqoreButton>

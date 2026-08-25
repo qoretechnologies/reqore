@@ -4,7 +4,12 @@ import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
-import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
+import {
+  getOneLessSize,
+  resolvePadding,
+  TReqorePadded,
+  withStoppedPropagation,
+} from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -51,7 +56,7 @@ export interface IReqoreEntityRowAction extends Omit<IReqoreButtonProps, 'childr
  * handler closes over nothing, so one shared instance is all that is ever needed —
  * `useCallback` would still allocate one per row.
  */
-const stopRowClick = (event: React.MouseEvent<HTMLElement>) => event.stopPropagation();
+const stopRowClick = withStoppedPropagation<HTMLElement>();
 
 /** Same reasoning: a stable predicate instead of a new closure per render. */
 const isSubActionShown = ({ show }: IReqorePanelSubAction) => show !== false;

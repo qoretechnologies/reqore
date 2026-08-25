@@ -153,6 +153,71 @@ test('Calls onClick when row is clicked', () => {
   expect(handleClick).toHaveBeenCalledTimes(1);
 });
 
+test('Clicking an action does not also fire the row onClick', () => {
+  const handleRowClick = vi.fn();
+  const handleActionClick = vi.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow
+            label='Issue'
+            onClick={handleRowClick}
+            actions={[{ icon: 'ArrowDownSLine', onClick: handleActionClick }]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(document.querySelector('.reqore-severity-row-actions .reqore-button')!);
+
+  // The action runs exactly once and the row underneath it does not run at
+  // all. Both firing is what made a caret that toggled the same state as the
+  // row look dead: two toggles, no net change.
+  expect(handleActionClick).toHaveBeenCalledTimes(1);
+  expect(handleRowClick).not.toHaveBeenCalled();
+});
+
+test('Clicking an action with no handler of its own does not fire the row onClick', () => {
+  const handleRowClick = vi.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow label='Issue' onClick={handleRowClick} actions={[{ label: 'Inert' }]} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(document.querySelector('.reqore-severity-row-actions .reqore-button')!);
+  expect(handleRowClick).not.toHaveBeenCalled();
+});
+
+test('Clicking the row body still fires onClick when actions are present', () => {
+  const handleRowClick = vi.fn();
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSeverityRow
+            label='Issue'
+            onClick={handleRowClick}
+            actions={[{ label: 'Investigate' }]}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  fireEvent.click(document.querySelector('.reqore-severity-row-body')!);
+  expect(handleRowClick).toHaveBeenCalledTimes(1);
+});
+
 test('Renders <SeverityRow /> with intents', () => {
   render(
     <ReqoreUIProvider>
