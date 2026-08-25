@@ -974,3 +974,44 @@ export const Square: Story = {
     }
   },
 };
+
+export const BorderStyle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders Button with each `borderStyle`. A dashed or dotted border reads as \"this is a slot, not a thing\" — the convention for an *add* affordance, where the button stands in for content that does not exist yet. It only applies when a border is drawn, so `flat` buttons are unaffected; the last row shows that. Because it is a prop rather than a separate variant, it composes with size, intent and every other button treatment.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
+      <ReqoreControlGroup>
+        <ReqoreButton label='Solid (default)' icon='AddLine' />
+        <ReqoreButton borderStyle='dashed' label='Dashed' icon='AddLine' />
+        <ReqoreButton borderStyle='dotted' label='Dotted' icon='AddLine' />
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup>
+        <ReqoreButton borderStyle='dashed' intent='info' label='Info' icon='AddLine' />
+        <ReqoreButton borderStyle='dashed' intent='success' label='Success' icon='AddLine' />
+        <ReqoreButton borderStyle='dashed' minimal label='Minimal' icon='AddLine' />
+        <ReqoreButton borderStyle='dashed' size='small' label='Small' icon='AddLine' />
+      </ReqoreControlGroup>
+
+      {/* `flat` draws no border at all, so there is nothing for the style
+          to apply to — the prop is inert rather than wrong. */}
+      <ReqoreControlGroup>
+        <ReqoreButton flat borderStyle='dashed' label='Flat — no border to style' icon='AddLine' />
+      </ReqoreControlGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const dashed = canvasElement.querySelector('button:nth-of-type(2)');
+    await expect(dashed).toBeTruthy();
+    await expect(getComputedStyle(dashed as HTMLElement).borderStyle).toBe('dashed');
+
+    const solid = canvasElement.querySelector('button:nth-of-type(1)');
+    await expect(getComputedStyle(solid as HTMLElement).borderStyle).toBe('solid');
+  },
+};
