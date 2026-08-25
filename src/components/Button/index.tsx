@@ -169,18 +169,6 @@ export interface IReqoreButtonProps
   compact?: boolean;
   verticalPadding?: TSizes;
 
-  /**
-   * The button's border style. Only meaningful when a border is drawn —
-   * `flat={false}`, which is the default.
-   *
-   * `'dashed'` / `'dotted'` read as "this is a slot, not a thing": the
-   * convention for an *add* affordance, where the button stands in for
-   * content that does not exist yet. Keeping it a prop rather than a
-   * separate variant means it composes with every other button treatment
-   * (size, intent, minimal, badge) instead of forking them.
-   */
-  borderStyle?: 'solid' | 'dashed' | 'dotted';
-
   rightIcon?: IReqoreIconName;
   customTheme?: IReqoreCustomTheme;
   wrap?: boolean;
@@ -302,9 +290,7 @@ export const StyledButton = styled(StyledEffect).withConfig({
   // A containing ControlGroup can propagate its `fill` layout flag through
   // polymorphic controls such as Dropdown. The flag is meaningful to the
   // group, but it is not a valid boolean attribute for the rendered button.
-  // `borderStyle` is a valid CSS property name, so React would happily
-  // forward it to the DOM and let it fight the rule below.
-  shouldForwardProp: omitStyleProps('fill', 'borderStyle'),
+  shouldForwardProp: omitStyleProps('fill'),
 })<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
@@ -313,10 +299,8 @@ export const StyledButton = styled(StyledEffect).withConfig({
   position: relative;
   overflow: hidden;
   vertical-align: middle;
-  border: ${({ theme, color, flat, effect, borderStyle = 'solid' }) =>
-    !flat
-      ? `1px ${borderStyle} ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)}`
-      : 0};
+  border: ${({ theme, color, flat, effect }) =>
+    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)}` : 0};
   padding: ${({ size, compact, verticalPadding = 'normal', square }) =>
     `${
       CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +
