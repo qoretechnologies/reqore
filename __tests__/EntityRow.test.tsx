@@ -486,3 +486,126 @@ test('Renders an action with sub-actions as an overflow menu, not a button', () 
   fireEvent.click(items[0]);
   expect(onShowInChat).toHaveBeenCalledTimes(1);
 });
+
+/*
+ * An action lives INSIDE a row that is commonly clickable itself, so without a
+ * guard both handlers run. Where the two do the same thing — the "row and its
+ * caret toggle one disclosure" shape — they cancel and the action reads as dead.
+ * Matches ReqoreSeverityRow.
+ */
+
+const renderRowWithActions = (props: Record<string, unknown>) =>
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreEntityRow label='Process Incoming Order' {...props} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+const firstActionButton = () =>
+  document.querySelector('.reqore-entity-row-actions .reqore-button') as HTMLElement;
+
+test('Clicking an action does not also fire the row onClick', () => {
+  const handleRowClick = vi.fn();
+  const handleActionClick = vi.fn();
+
+  renderRowWithActions({
+    onClick: handleRowClick,
+    actions: [{ icon: 'ArrowDownSLine', onClick: handleActionClick }],
+  });
+
+  fireEvent.click(firstActionButton());
+
+  // The action runs exactly once and the row underneath does not run at all.
+  expect(handleActionClick).toHaveBeenCalledTimes(1);
+  expect(handleRowClick).not.toHaveBeenCalled();
+});
+
+test('Clicking an action with no handler of its own does not fire the row onClick', () => {
+  const handleRowClick = vi.fn();
+
+  renderRowWithActions({ onClick: handleRowClick, actions: [{ label: 'Inert' }] });
+  fireEvent.click(firstActionButton());
+
+  // An action button is a control: a click landing on one never reads as a click
+  // on the row, even when the action does nothing itself.
+  expect(handleRowClick).not.toHaveBeenCalled();
+});
+
+test('Clicking a sub-action menu does not fire the row onClick', () => {
+  const handleRowClick = vi.fn();
+
+  renderRowWithActions({
+    onClick: handleRowClick,
+    actions: [{ label: 'Menu', actions: [{ label: 'One' }] }],
+  });
+  fireEvent.click(firstActionButton());
+
+  expect(handleRowClick).not.toHaveBeenCalled();
+});
+
+/*
+ * Narrow containers. The row measures its own wrapper, not the viewport, so a
+ * narrow drawer on a wide screen wraps its actions under the label.
+ */
+
+class NarrowResizeObserver {
+  static width = 400;
+  readonly disconnect = vi.fn();
+  constructor(readonly callback: ResizeObserverCallback) {}
+  observe(target: Element) {
+    this.callback(
+      [{ target, contentRect: { width: NarrowResizeObserver.width } } as ResizeObserverEntry],
+      this as unknown as ResizeObserver
+    );
+  }
+}
+
+const withResizeObserver = (impl: unknown, run: () => void) => {
+  const original = globalThis.ResizeObserver;
+  (globalThis as Record<string, unknown>).ResizeObserver = impl;
+  try {
+    run();
+  } finally {
+    globalThis.ResizeObserver = original;
+  }
+};
+
+test('Wraps its actions under the label in a narrow container', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({ actions: [{ label: 'Investigate' }] });
+
+    // The attribute is the whole mechanism: an attribute selector on the row
+    // rewrites the grid so the actions take their own row.
+    expect(document.querySelector('.reqore-entity-row')!.getAttribute('data-narrow')).toBe('true');
+  });
+});
+
+test('Keeps its actions beside the label in a wide container', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 900;
+    renderRowWithActions({ actions: [{ label: 'Investigate' }] });
+
+    expect(document.querySelector('.reqore-entity-row')!.getAttribute('data-narrow')).toBeNull();
+  });
+});
+
+test('Renders without a ResizeObserver implementation', () => {
+  const original = globalThis.ResizeObserver;
+  // @ts-expect-error — deliberately removing it to exercise the guard.
+  delete globalThis.ResizeObserver;
+
+  try {
+    renderRowWithActions({ actions: [{ label: 'Investigate' }] });
+
+    // Degrades to the wide layout rather than guessing.
+    expect(document.querySelectorAll('.reqore-entity-row').length).toBe(1);
+    expect(document.querySelector('.reqore-entity-row')!.getAttribute('data-narrow')).toBeNull();
+  } finally {
+    globalThis.ResizeObserver = original;
+  }
+});

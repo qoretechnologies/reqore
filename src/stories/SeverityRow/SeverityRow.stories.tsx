@@ -494,7 +494,7 @@ export const NarrowContainerActionsWrap: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row twice, once in a 720px container (actions sit to the right of the label, as they always have) and once in a 400px container (actions wrap into their own row underneath the label, without any viewport / media-query involvement). This is the responsive behaviour every SeverityRow needs — a drawer / sidebar / split-panel host can be narrow on any screen size, so the row keys its layout off `container-type: inline-size` rather than the window width. Below the row of KPI cards the fade-scroller uses, this is the second place in the library where a component's own container width drives its layout.",
+          "Renders the same row twice, once in a 720px container (actions sit to the right of the label, as they always have) and once in a 400px container (actions wrap into their own row underneath the label, without any viewport / media-query involvement). This is the responsive behaviour every SeverityRow needs — a drawer / sidebar / split-panel host can be narrow on any screen size, so the row measures its own container with a `ResizeObserver` and stamps `data-narrow` on itself rather than keying off the window width. (Not a CSS container query: styled-components' stylis emits `@container` but the rule never matches.) Below the row of KPI cards the fade-scroller uses, this is the second place in the library where a component's own container width drives its layout.",
       },
     },
   },
@@ -562,31 +562,6 @@ export const NarrowContainerActionsWrap: Story = {
     // Debug: log container measurements + container-type/name so a failure
     // tells us WHY it failed (container-type not applied? container-name
     // missing? width computed wrong? @container rule not emitted?).
-    const wideContainerStyle = getComputedStyle(wideContainer);
-    const narrowContainerStyle = getComputedStyle(narrowContainer);
-    // eslint-disable-next-line no-console
-    console.log(
-      '[SeverityRow container-query debug]',
-      JSON.stringify(
-        {
-          wide: {
-            containerWidth: wideContainer.getBoundingClientRect().width,
-            containerType: wideContainerStyle.containerType,
-            containerName: wideContainerStyle.containerName,
-            rowGridTemplateColumns: getComputedStyle(wide).gridTemplateColumns,
-          },
-          narrow: {
-            containerWidth: narrowContainer.getBoundingClientRect().width,
-            containerType: narrowContainerStyle.containerType,
-            containerName: narrowContainerStyle.containerName,
-            rowGridTemplateColumns: getComputedStyle(narrow).gridTemplateColumns,
-          },
-        },
-        null,
-        2
-      )
-    );
-
     // Re-read the computed style inside `waitFor`. Capturing the track count
     // into a const first and then `await expect(count)` asserts on a number
     // that was already frozen — there is nothing left to retry, so a read

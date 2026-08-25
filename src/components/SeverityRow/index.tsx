@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import { forwardRef, memo, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
@@ -10,6 +10,10 @@ import {
   TReqorePadded,
   withStoppedPropagation,
 } from '../../helpers/utils';
+import {
+  SEVERITY_ROW_NARROW_BREAKPOINT_PX,
+  useNarrowContainer,
+} from '../../hooks/useNarrowContainer';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -132,9 +136,6 @@ const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
 const StyledContainer = styled.div<{ $fluid: boolean }>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
 `;
-
-/** Below this container width, the actions wrap under the label. */
-const NARROW_BREAKPOINT_PX = 640;
 
 /** Width of the coloured severity strip on the row's left edge. Constant
  *  across sizes so the marker reads at the same visual weight regardless
@@ -297,31 +298,14 @@ const ReqoreSeverityRow = memo(
 
       const hasBadge = badge !== undefined && badge !== null;
 
-      /* Track container width via a ResizeObserver so the row's grid can
-         respond to the WRAPPER's own width (not the viewport's) —
-         critical for the drawer / sidebar / split-panel case where a
-         narrow container sits on a wide screen. Pass the resolved state
-         to StyledRow as a `data-narrow` attribute; the CSS selector on
-         `&[data-narrow='true']` rewrites the grid. */
-      const containerRef = useRef<HTMLDivElement | null>(null);
-      const [isNarrow, setIsNarrow] = useState(false);
-      useEffect(() => {
-        const node = containerRef.current;
-        if (!node || typeof ResizeObserver === 'undefined') return undefined;
-        const observer = new ResizeObserver((entries) => {
-          for (const entry of entries) {
-            // `contentBoxSize` is the modern read; fall back to the entry's
-            // boundingClientRect for older browsers that still call the
-            // callback but don't populate the newer field.
-            const width = Array.isArray(entry.contentBoxSize)
-              ? entry.contentBoxSize[0]?.inlineSize ?? entry.contentRect.width
-              : entry.contentRect.width;
-            setIsNarrow(width > 0 && width <= NARROW_BREAKPOINT_PX);
-          }
-        });
-        observer.observe(node);
-        return () => observer.disconnect();
-      }, []);
+      /* Track the WRAPPER's own width (not the viewport's) so the grid responds
+         to the box the row actually sits in — the drawer / sidebar / split-panel
+         case, where a narrow container sits on a wide screen. The result is
+         stamped on StyledRow as `data-narrow` and an attribute selector rewrites
+         the grid. Shared with ReqoreEntityRow so both rows break at one width. */
+      const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>(
+        SEVERITY_ROW_NARROW_BREAKPOINT_PX
+      );
 
       return (
         <StyledContainer
