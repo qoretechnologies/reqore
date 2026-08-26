@@ -1,4 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { expect, waitFor } from 'storybook/test';
 import { IReqoreSpanProps, ReqoreSpan } from '../../components/Span';
 import { ReqoreVerticalSpacer } from '../../index';
 import { StoryMeta } from '../utils';
@@ -171,5 +172,60 @@ export const Effect: Story = {
       uppercase: true,
       textSize: '40px',
     },
+  },
+};
+
+
+export const MaxWidth: Story = {
+  render: () => (
+    <>
+      {/* The bound alone: the span stops growing, but the text still spills. */}
+      <ReqoreSpan maxWidth='20ch' className='bound-only'>
+        svc-qorus-saas-10-svc-qorus-saas-2
+      </ReqoreSpan>
+      <ReqoreVerticalSpacer height={10} />
+      {/* The pair: a bound plus the effect that says what happens to text which does
+          not fit. This is the combination that replaces a styled wrapper. */}
+      <ReqoreSpan maxWidth='20ch' effect={{ noWrap: true }} className='bound-and-nowrap'>
+        svc-qorus-saas-10-svc-qorus-saas-2
+      </ReqoreSpan>
+      <ReqoreVerticalSpacer height={10} />
+      {/* Shorter than the bound: untouched, not padded out to it. */}
+      <ReqoreSpan maxWidth='20ch' effect={{ noWrap: true }} className='short'>
+        short
+      </ReqoreSpan>
+    </>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders `maxWidth` on its own and paired with `effect={{ noWrap: true }}`. The bound stops the span growing; the effect supplies the `white-space` / `overflow` / `text-overflow` that turns the overflow into an ellipsis. Together they replace the styled wrapper consumers used to reach for; a span shorter than the bound keeps its natural width.',
+      },
+    },
+  },
+  play: async () => {
+    const bound = await waitFor(() => {
+      const el = document.querySelector('.bound-only') as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+    const truncated = document.querySelector('.bound-and-nowrap') as HTMLElement;
+    const short = document.querySelector('.short') as HTMLElement;
+
+    // A browser resolves the `ch` to pixels, so assert the bound is respected rather
+    // than the literal the caller wrote.
+    const cap = parseFloat(getComputedStyle(bound).maxWidth);
+    expect(Number.isFinite(cap)).toBe(true);
+    expect(bound.getBoundingClientRect().width).toBeLessThanOrEqual(cap + 1);
+
+    // Bound alone does not ellipsize — that is the effect's job, and keeping them
+    // separate is what lets a caller have one without the other.
+    expect(getComputedStyle(bound).textOverflow).toBe('clip');
+    expect(getComputedStyle(truncated).textOverflow).toBe('ellipsis');
+    expect(truncated.scrollWidth).toBeGreaterThan(truncated.clientWidth);
+
+    // Not padded out to the cap.
+    expect(short.getBoundingClientRect().width).toBeLessThan(cap);
   },
 };
