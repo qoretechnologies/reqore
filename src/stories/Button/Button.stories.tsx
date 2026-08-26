@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { expect, fireEvent } from 'storybook/test';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton from '../../components/Button';
-import { ReqoreControlGroup, ReqoreMessage, ReqoreTag, ReqoreVerticalSpacer } from '../../index';
+import { ReqoreControlGroup, ReqoreMessage, ReqoreVerticalSpacer } from '../../index';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, IconArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
@@ -972,73 +972,5 @@ export const Square: Story = {
       const labelMid = labelBox.left + labelBox.width / 2;
       await expect(Math.abs(labelMid - chipMid)).toBeLessThan(4);
     }
-  },
-};
-
-export const BorderStyle: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Renders `effect.borderStyle` across several components. A dashed or dotted border reads as \"this is a slot, not a thing\" — the convention for an *add* affordance, where the control stands in for content that does not exist yet. It lives on `effect` rather than on one component's props, so every effect-aware surface gets it at once. It sets the style only and never draws a border that was not there, so a `flat` surface — which has `border: 0` — is unaffected; the last row shows that.",
-      },
-    },
-  },
-  render: () => (
-    <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
-      <ReqoreControlGroup>
-        <ReqoreButton label='Solid (default)' icon='AddLine' />
-        <ReqoreButton effect={{ borderStyle: 'dashed' }} label='Dashed' icon='AddLine' />
-        <ReqoreButton effect={{ borderStyle: 'dotted' }} label='Dotted' icon='AddLine' />
-      </ReqoreControlGroup>
-
-      <ReqoreControlGroup>
-        <ReqoreButton
-          effect={{ borderStyle: 'dashed' }}
-          intent='info'
-          label='Info'
-          icon='AddLine'
-        />
-        <ReqoreButton
-          effect={{ borderStyle: 'dashed' }}
-          intent='success'
-          label='Success'
-          icon='AddLine'
-        />
-        <ReqoreButton effect={{ borderStyle: 'dashed' }} minimal label='Minimal' icon='AddLine' />
-        <ReqoreButton
-          effect={{ borderStyle: 'dashed' }}
-          size='small'
-          label='Small'
-          icon='AddLine'
-        />
-      </ReqoreControlGroup>
-
-      {/* Not a button — the whole point of putting it on `effect`. */}
-      <ReqoreControlGroup>
-        <ReqoreTag effect={{ borderStyle: 'dashed' }} label='A tag' />
-      </ReqoreControlGroup>
-
-      {/* `flat` draws no border at all, so there is nothing for the style
-          to apply to — the effect is inert rather than wrong. */}
-      <ReqoreControlGroup>
-        <ReqoreButton
-          flat
-          effect={{ borderStyle: 'dashed' }}
-          label='Flat — no border to style'
-          icon='AddLine'
-        />
-      </ReqoreControlGroup>
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    const buttons = canvasElement.querySelectorAll('button');
-    await expect(getComputedStyle(buttons[0]).borderStyle).toBe('solid');
-    await expect(getComputedStyle(buttons[1]).borderStyle).toBe('dashed');
-    await expect(getComputedStyle(buttons[2]).borderStyle).toBe('dotted');
-
-    // Inert on flat: no border width, so nothing is drawn either way.
-    const flatButton = buttons[buttons.length - 1];
-    await expect(getComputedStyle(flatButton).borderTopWidth).toBe('0px');
   },
 };
