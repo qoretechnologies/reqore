@@ -121,6 +121,12 @@ export interface IReqoreCustomTagProps
    * by a screen reader. Nothing about the value is thrown away to make it fit.
    *
    * Needs `maxWidth` — there is nothing to drop until the label is capped.
+   *
+   * `'middle'` splits the label into two elements, and does so whether or not it
+   * actually overflows — CSS cannot know that without measuring, which is exactly what
+   * this avoids. The rendered text is unchanged, but a test asking for the label by
+   * text has to match across the boundary: read `.reqore-tag`'s `textContent` rather
+   * than reaching for a single text node.
    */
   truncate?: 'end' | 'middle';
   asBadge?: boolean;

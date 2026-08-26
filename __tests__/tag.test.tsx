@@ -451,3 +451,16 @@ test('Does not split a numeric <Tag /> label', () => {
   expect(document.querySelector('.reqore-tag-label-head')).toBeNull();
   expect(document.querySelector('.reqore-tag-label').textContent).toBe('1234567890');
 });
+
+test('Splits a middle-truncated <Tag /> label even when it fits', () => {
+  // CSS cannot know whether the label overflows without measuring, which is the whole
+  // point of doing this in CSS — so the split is unconditional. The rendered text is
+  // unchanged; only the node boundary is new, and a consumer querying by text has to
+  // match across it.
+  renderTag({ label: 'short', maxWidth: '40ch', truncate: 'middle' });
+
+  const label = document.querySelector('.reqore-tag-label') as HTMLElement;
+
+  expect(label.textContent).toBe('short');
+  expect(document.querySelector('.reqore-tag-label-head')).toBeTruthy();
+});
