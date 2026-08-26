@@ -152,6 +152,25 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
   fontFamily?: TReqoreFontFamilyShorthand | string;
   textSize?: TSizes | string;
   textAlign?: 'left' | 'center' | 'right';
+  /**
+   * How a border is drawn, for any component that draws one.
+   *
+   * `'dashed'` / `'dotted'` read as "this is a slot, not a thing" — the
+   * convention for an *add* affordance, where the control stands in for
+   * content that does not exist yet. Living on `effect` rather than on
+   * one component's props means every effect-aware surface gets it at
+   * once: a button, a panel, a tag, a callout, an entity row.
+   *
+   * Applied with `!important` for the same reason `borderColor` and
+   * `fontFamily` are: components declare their border with the `border`
+   * SHORTHAND (`1px solid …`), which resets `border-style`, and that
+   * shorthand sits further down the cascade than this block.
+   *
+   * Sets the style only — it never draws a border that was not there.
+   * On a `flat` surface, which has `border: 0`, it is inert rather than
+   * wrong.
+   */
+  borderStyle?: 'solid' | 'dashed' | 'dotted';
   glow?: {
     size?: number;
     color: TReqoreEffectColor;
@@ -498,6 +517,13 @@ ${({ effect }: IReqoreTextEffectProps) =>
     effect && effect.fontFamily
       ? css`
           font-family: ${getFontFamily(effect.fontFamily)} !important;
+        `
+      : undefined}
+
+  ${({ effect }: IReqoreTextEffectProps) =>
+    effect && effect.borderStyle
+      ? css`
+          border-style: ${effect.borderStyle} !important;
         `
       : undefined}
 
