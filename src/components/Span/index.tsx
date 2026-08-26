@@ -20,6 +20,25 @@ export interface IReqoreSpanProps
     IWithReqoreTooltip {
   size?: TSizes | string;
   inline?: IReqoreTextEffectProps['inline'];
+  /**
+   * Upper bound on the span's width, as any CSS length (`'32ch'`, `'240px'`,
+   * `'min(100%, 32ch)'`). Same prop as on `ReqoreButton`, `ReqoreTag`, `ReqorePopover`
+   * and `ReqoreBubble`.
+   *
+   * On its own this only stops the span growing — the text still spills out. Pair it
+   * with `effect={{ noWrap: true }}`, which supplies the
+   * `white-space` / `overflow` / `text-overflow` half, to get a single line that
+   * ellipsizes:
+   *
+   * ```tsx
+   * <ReqoreSpan maxWidth='min(100%, 32ch)' effect={{ noWrap: true }}>{name}</ReqoreSpan>
+   * ```
+   *
+   * The two are separate because they answer different questions — how wide may this
+   * be, and what happens to text that does not fit — and plenty of callers want one
+   * without the other.
+   */
+  maxWidth?: string;
 }
 
 export const StyledSpan = styled(StyledTextEffect)`
@@ -27,6 +46,7 @@ export const StyledSpan = styled(StyledTextEffect)`
     intent ? theme.intents[intent] : theme.text?.color || 'inherit'};
   font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
   vertical-align: ${({ inline }) => (inline ? 'middle' : undefined)};
+  max-width: ${({ maxWidth }) => maxWidth || undefined};
 `;
 
 export const ReqoreSpan = memo(
@@ -40,6 +60,7 @@ export const ReqoreSpan = memo(
         intent,
         className,
         inline = false,
+        maxWidth,
         tooltip,
         ...props
       }: IReqoreSpanProps,
@@ -57,6 +78,7 @@ export const ReqoreSpan = memo(
           inline={inline}
           {...props}
           Component={StyledSpan}
+          maxWidth={maxWidth}
           tooltip={tooltip}
           _size={size}
           className={`${className || ''} reqore-span`}
