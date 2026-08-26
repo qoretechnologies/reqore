@@ -341,11 +341,23 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   }
 `;
 
-const StyledTagKeyWrapper = styled.span<{ size: TSizes; $wrap?: boolean; $hasWidth?: boolean }>`
+const StyledTagKeyWrapper = styled.span<{
+  size: TSizes;
+  $wrap?: boolean;
+  $hasWidth?: boolean;
+  $capped?: boolean;
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: ${({ hasKey, fixed }) => (hasKey ? (fixed === 'key' ? '0 0 auto' : 1) : undefined)};
+  /* A key normally GROWS to share the tag with the label, which is what gives an
+     uncapped key/value tag its even split. Under a cap that split is wrong twice
+     over: the key takes half the width to render four characters, and the label is
+     left with too little room for a tail it is not allowed to shrink — so the tail
+     runs out past the tag's edge with a hole where the key's unused half was. Capped,
+     the key takes what it needs and the label gets the rest. */
+  flex: ${({ hasKey, fixed, $capped }) =>
+    hasKey ? (fixed === 'key' || $capped ? '0 0 auto' : 1) : undefined};
   flex-shrink: 0;
   min-height: 100%;
   padding-left: ${({ size, hasIcon }) => hasIcon && `${TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px`};
@@ -667,6 +679,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             onClick={rest.disabled ? undefined : onClick}
             $wrap={wrap}
             $hasWidth={!!width}
+            $capped={capped}
             hasKey={!!labelKey}
             hasIcon={hasLeftIcon}
             padOnRight={!label && !labelKey && !hasRightIcon}

@@ -717,6 +717,14 @@ export const MaxWidthTruncateMiddle: Story = {
         label='https://qorus.example.com:8011/webhooks/stripe-notifications'
         maxWidth='34ch'
       />
+      {/* With a label key beside it — the key is fixed, so the label gets whatever is
+          left, which is the case a consumer hits first. */}
+      <ReqoreTag
+        labelKey='POST'
+        label='https://qorus.example.com:8011/webhooks/paddle-notifications'
+        maxWidth='34ch'
+        truncate='middle'
+      />
     </ReqoreTagGroup>
   ),
   parameters: {
@@ -730,7 +738,7 @@ export const MaxWidthTruncateMiddle: Story = {
   play: async () => {
     const tags = await waitFor(() => {
       const found = document.querySelectorAll('.reqore-tag');
-      expect(found.length).toBe(4);
+      expect(found.length).toBe(5);
       return Array.from(found) as HTMLElement[];
     });
 

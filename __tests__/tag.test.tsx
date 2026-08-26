@@ -464,3 +464,25 @@ test('Splits a middle-truncated <Tag /> label even when it fits', () => {
   expect(label.textContent).toBe('short');
   expect(document.querySelector('.reqore-tag-label-head')).toBeTruthy();
 });
+
+test('Gives a capped <Tag /> label the room its key does not need', () => {
+  // A key normally grows to share the tag with the label, which is right when the tag
+  // sizes to its content. Under a cap it starved the label: the key took half the
+  // width to render four characters, and the tail — which is not allowed to shrink —
+  // ran out past the tag's edge, leaving a hole where the key's unused half was.
+  renderTag({
+    labelKey: 'POST',
+    label: 'https://host:8011/webhooks/paddle-notifications',
+    maxWidth: '30ch',
+    truncate: 'middle',
+  });
+
+  expect(getComputedStyle(document.querySelector('.reqore-tag-key-content')).flexGrow).toBe('0');
+});
+
+test('Still splits an uncapped key/value <Tag /> evenly', () => {
+  // The even split is the whole point of a key/value tag; only a cap changes it.
+  renderTag({ labelKey: 'Key', label: 'value' });
+
+  expect(getComputedStyle(document.querySelector('.reqore-tag-key-content')).flexGrow).toBe('1');
+});
