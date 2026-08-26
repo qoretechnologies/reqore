@@ -86,6 +86,49 @@ export interface IReqoreCustomTagProps
   color?: TReqoreEffectColor;
   actions?: IReqoreTagAction[];
   width?: string;
+  /**
+   * Upper bound on the tag's width, as any CSS length (`'30ch'`, `'240px'`,
+   * `'min(100%, 30ch)'`). A label longer than the box is truncated with an ellipsis.
+   *
+   * This is not `width`. `width` FIXES the box, so a short label is padded out to it
+   * and a long one is still clipped; `maxWidth` only caps it, so a short tag keeps its
+   * natural size and only a long one shortens.
+   *
+   * Only the LABEL truncates. The icons, the label key and the actions keep their full
+   * size, because they are the parts a reader cannot reconstruct — a truncated `POST`
+   * key or a half-drawn remove button tells them nothing, while a shortened URL still
+   * shows what kind of thing it is. Pair it with `tooltip` so the whole value stays
+   * reachable.
+   *
+   * Has no effect with `wrap`, which makes the label flow onto more lines instead, or
+   * with `width`, which has already fixed the box.
+   */
+  maxWidth?: string;
+  /**
+   * Which part of a capped label is dropped. Defaults to `'end'`.
+   *
+   * - `'end'` — the tail goes: `https://host/webhooks/paddle-notif…`
+   * - `'middle'` — the middle goes, and both ends survive:
+   *   `https://host/we…paddle-notifications`
+   *
+   * Reach for `'middle'` when the values share a prefix and differ at the end — URLs
+   * on one host, paths under one root, ids with a common namespace. Dropping the tail
+   * there renders every one of them identically, which is the opposite of what a label
+   * is for.
+   *
+   * Both are pure CSS: the whole label stays in the DOM either way, so it is still
+   * selectable, copyable, findable with the browser's own search and read out in full
+   * by a screen reader. Nothing about the value is thrown away to make it fit.
+   *
+   * Needs `maxWidth` — there is nothing to drop until the label is capped.
+   *
+   * `'middle'` splits the label into two elements, and does so whether or not it
+   * actually overflows — CSS cannot know that without measuring, which is exactly what
+   * this avoids. The rendered text is unchanged, but a test asking for the label by
+   * text has to match across the boundary: read `.reqore-tag`'s `textContent` rather
+   * than reaching for a single text node.
+   */
+  truncate?: 'end' | 'middle';
   asBadge?: boolean;
   intent?: TReqoreIntent;
   wrap?: boolean;
@@ -144,6 +187,9 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   color?: TReqoreColor;
   $wrap?: boolean;
   $hasWidth?: boolean;
+  $maxWidth?: string;
+  /** True when the label is capped and must shorten rather than push the box wider. */
+  $capped?: boolean;
 }
 
 export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
@@ -167,7 +213,10 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   line-height: 1.1;
 
   min-width: ${({ size, asBadge }) => (asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size])}px;
-  max-width: ${({ fixed }) => (fixed !== true ? '100%' : undefined)};
+  /* An explicit cap wins over the implicit one: a caller asking for 30ch means 30ch
+     even inside a container wider than that, and 100% would let the tag grow past it. */
+  max-width: ${({ $maxWidth, fixed }) =>
+    $maxWidth ?? (fixed !== true ? '100%' : undefined)};
   flex: ${({ fluid, fixed }) => (fixed === true ? '0 0 auto' : fluid ? '1 auto' : '0 0 auto')};
   justify-self: ${({ fixed, fluid }) =>
     fixed === true ? 'flex-start' : fluid ? 'stretch' : undefined};
@@ -292,11 +341,23 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   }
 `;
 
-const StyledTagKeyWrapper = styled.span<{ size: TSizes; $wrap?: boolean; $hasWidth?: boolean }>`
+const StyledTagKeyWrapper = styled.span<{
+  size: TSizes;
+  $wrap?: boolean;
+  $hasWidth?: boolean;
+  $capped?: boolean;
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: ${({ hasKey, fixed }) => (hasKey ? (fixed === 'key' ? '0 0 auto' : 1) : undefined)};
+  /* A key normally GROWS to share the tag with the label, which is what gives an
+     uncapped key/value tag its even split. Under a cap that split is wrong twice
+     over: the key takes half the width to render four characters, and the label is
+     left with too little room for a tail it is not allowed to shrink — so the tail
+     runs out past the tag's edge with a hole where the key's unused half was. Capped,
+     the key takes what it needs and the label gets the rest. */
+  flex: ${({ hasKey, fixed, $capped }) =>
+    hasKey ? (fixed === 'key' || $capped ? '0 0 auto' : 1) : undefined};
   flex-shrink: 0;
   min-height: 100%;
   padding-left: ${({ size, hasIcon }) => hasIcon && `${TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px`};
@@ -308,13 +369,33 @@ const StyledTagContentWrapper = styled.span<{
   size: TSizes;
   $wrap?: boolean;
   $hasWidth?: boolean;
+  $capped?: boolean;
 }>`
   display: flex;
   align-items: center;
   justify-content: center;
   flex: ${({ fixed }) => (fixed === 'label' ? '0 0 auto' : 1)};
-  flex-shrink: 0;
   min-height: 100%;
+
+  /* This wrapper is what makes a capped tag possible, and by default it is what makes
+     it impossible. It refuses to shrink so a label is never squashed inside a fluid
+     tag — correct when the tag sizes to its content, but with a cap it means the box
+     cannot get narrower than the text, so the tag's own overflow:hidden clips it. And
+     because the content is CENTRED, it clips at BOTH ends: "https://host/a/b" renders
+     as "ps://host/a/", and a label key disappears off the left entirely.
+
+     min-width is the other half: a flex item defaults to min-width:auto, which is its
+     content's width, so flex-shrink alone still cannot take it below the text. */
+  ${({ $capped }) =>
+    $capped
+      ? css`
+          flex-shrink: 1;
+          min-width: 0;
+          justify-content: flex-start;
+        `
+      : css`
+          flex-shrink: 0;
+        `}
 `;
 
 const StyledTagContent = styled(StyledTextEffect)<{
@@ -322,7 +403,13 @@ const StyledTagContent = styled(StyledTextEffect)<{
   $paddingSize?: TSizes;
   $wrap?: boolean;
   $hasWidth?: boolean;
+  $capped?: boolean;
 }>`
+  ${({ $capped }) =>
+    $capped &&
+    css`
+      min-width: 0;
+    `}
   padding: ${({ $paddingSize = 'normal' }) => TAG_VERTICAL_PADDING_FROM_SIZE[$paddingSize]}px
     ${({ size }) => TAG_HORIZONTAL_PADDING_FROM_SIZE[size]}px;
   min-height: 100%;
@@ -360,6 +447,85 @@ const StyledTagContentKey = styled(StyledTagContent)`
           word-break: break-word;
         `}
 `;
+
+/**
+ * The label's own box when the tag is capped.
+ *
+ * text-overflow needs a block box: StyledTagContent is a flex container (that is how
+ * the label is vertically centred), and its text child is an ANONYMOUS flex item,
+ * which cannot take text-overflow — the declaration already on StyledTagContent has
+ * therefore never produced an ellipsis, only a hard clip. Giving the label a real
+ * element of its own is what turns the clip into an ellipsis, and it is rendered only
+ * for a capped tag so every other tag keeps exactly the DOM it had.
+ *
+ * This is Appendix A.9 ("cascade ellipsis, never apply to the wrapper") applied to the
+ * tag: the slot clips, the text-bearing element inside it ellipsizes, and only the
+ * LABEL is wrapped so the icons and the label key keep their natural width.
+ */
+const StyledTruncatedLabel = styled.span`
+  min-width: 0;
+  max-width: 100%;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+/**
+ * A label that drops its MIDDLE rather than its tail.
+ *
+ * CSS has no middle ellipsis, so the label is split in two and flexbox is left to do
+ * the work: the head may shrink and ellipsizes when it does, the tail never shrinks.
+ * The result reads `head…tail`, and it re-flows with the box — no measuring, no
+ * resize observer, and no character count that is wrong at a different font size.
+ *
+ * The whole label is still in the DOM, in order, so selecting the tag copies the
+ * complete value and a screen reader reads it out whole. That is the part a JS
+ * shortener cannot match: it deletes the characters it hides.
+ */
+const StyledMiddleTruncatedLabel = styled.span`
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  white-space: nowrap;
+`;
+
+const StyledTruncatedLabelHead = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+/* Never shrinks: it is the half the caller asked to keep. */
+const StyledTruncatedLabelTail = styled.span`
+  flex-shrink: 0;
+  white-space: nowrap;
+`;
+
+/**
+ * Where to cut a label whose middle is dropped.
+ *
+ * The last third is pinned. Enough to tell apart values that differ only at the end —
+ * two webhooks on one host, two ids in one namespace — without pinning so much that
+ * the head has no room left to say what kind of thing it is.
+ */
+const MIDDLE_TRUNCATE_TAIL_RATIO = 3;
+
+/** Split a label for middle truncation, by code point so a surrogate pair survives. */
+const splitTagLabel = (label: string): [string, string] => {
+  const characters = Array.from(label);
+  const tailLength = Math.floor(characters.length / MIDDLE_TRUNCATE_TAIL_RATIO);
+
+  if (!tailLength) {
+    return [label, ''];
+  }
+
+  return [
+    characters.slice(0, characters.length - tailLength).join(''),
+    characters.slice(characters.length - tailLength).join(''),
+  ];
+};
 
 const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   flex-shrink: 0;
@@ -409,6 +575,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       inheritCustomTheme,
       wrap = false,
       width,
+      maxWidth,
+      truncate = 'end',
       leftIconColor,
       rightIconColor,
       iconColor,
@@ -457,6 +625,22 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     const hasLeftIcon = !!leftIcon || !!leftIconProps?.image;
     const hasRightIcon = !!rightIcon || !!rightIconProps?.image;
 
+    /* A cap only truncates when there is nothing else already deciding the label's
+       shape: `wrap` asks for more lines instead of fewer characters, and `width` has
+       already fixed the box. Honouring all three at once would mean guessing which
+       the caller meant. */
+    const capped = !!maxWidth && !wrap && !width;
+
+    /* Split once per label rather than per render. Only a string can be cut in the
+       middle — a numeric label is short by nature and has no meaningful halves. */
+    const middleParts = useMemo(
+      () =>
+        capped && truncate === 'middle' && typeof label === 'string'
+          ? splitTagLabel(label)
+          : undefined,
+      [capped, truncate, label]
+    );
+
     const effect = useMemo(
       () => ({
         ...rest.effect,
@@ -474,6 +658,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         theme={theme}
         effect={effect}
         width={width}
+        $maxWidth={maxWidth}
         labelKey={labelKey}
         color={getCustomColor(intent)}
         className={`${className || ''} reqore-tag`}
@@ -494,6 +679,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             onClick={rest.disabled ? undefined : onClick}
             $wrap={wrap}
             $hasWidth={!!width}
+            $capped={capped}
             hasKey={!!labelKey}
             hasIcon={hasLeftIcon}
             padOnRight={!label && !labelKey && !hasRightIcon}
@@ -539,6 +725,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             onClick={rest.disabled ? undefined : onClick}
             $wrap={wrap}
             $hasWidth={!!width}
+            $capped={capped}
             hasKey={!!labelKey}
             fixed={rest.fixed}
           >
@@ -548,6 +735,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 $paddingSize={paddingSize}
                 $wrap={wrap}
                 $hasWidth={!!width}
+                $capped={capped}
                 labelAlign={labelAlign || (labelKey ? 'left' : 'center')}
                 compact={compact}
                 effect={
@@ -557,7 +745,20 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                   } as IReqoreEffect
                 }
               >
-                {label}
+                {!capped ? (
+                  label
+                ) : middleParts ? (
+                  <StyledMiddleTruncatedLabel className='reqore-tag-label'>
+                    <StyledTruncatedLabelHead className='reqore-tag-label-head'>
+                      {middleParts[0]}
+                    </StyledTruncatedLabelHead>
+                    <StyledTruncatedLabelTail className='reqore-tag-label-tail'>
+                      {middleParts[1]}
+                    </StyledTruncatedLabelTail>
+                  </StyledMiddleTruncatedLabel>
+                ) : (
+                  <StyledTruncatedLabel className='reqore-tag-label'>{label}</StyledTruncatedLabel>
+                )}
               </StyledTagContent>
             ) : null}
             {hasRightIcon ? (
