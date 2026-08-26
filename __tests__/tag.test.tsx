@@ -294,3 +294,92 @@ test('Renders <Tag /> aligned to the text baseline on request', () => {
 
   expect(getComputedStyle(document.querySelector('.reqore-tag')).verticalAlign).toBe('baseline');
 });
+
+const renderTag = (props: Record<string, unknown>) =>
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag {...props} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+const tag = () => document.querySelector('.reqore-tag') as HTMLElement;
+const tagContent = () => document.querySelector('.reqore-tag-content') as HTMLElement;
+const tagLabel = () => document.querySelector('.reqore-tag-label') as HTMLElement;
+
+test('Renders <Tag /> capped at maxWidth', () => {
+  renderTag({ label: 'https://host/webhooks/paddle-notifications', maxWidth: '20ch' });
+
+  expect(getComputedStyle(tag()).maxWidth).toBe('20ch');
+});
+
+test('Renders <Tag /> label in its own box so it can ellipsize', () => {
+  // text-overflow needs a block box. The label used to be an anonymous flex item of
+  // StyledTagContent, which cannot take it — the tag clipped instead of ellipsizing.
+  renderTag({ label: 'a-very-long-label-that-will-not-fit', maxWidth: '10ch' });
+
+  const label = tagLabel();
+
+  expect(label).toBeTruthy();
+  expect(label.textContent).toBe('a-very-long-label-that-will-not-fit');
+  expect(getComputedStyle(label).textOverflow).toBe('ellipsis');
+  expect(getComputedStyle(label).overflow).toBe('hidden');
+  expect(getComputedStyle(label).whiteSpace).toBe('nowrap');
+});
+
+test('Lets a capped <Tag /> shrink below its label', () => {
+  // Both halves of the flexbox fix: the wrapper refuses to shrink by default, and a
+  // flex item's min-width:auto keeps it at its content width even when it can.
+  // Without either, the tag's overflow:hidden clips the CENTRED label at both ends.
+  renderTag({ label: 'a-very-long-label-that-will-not-fit', maxWidth: '10ch' });
+
+  const content = getComputedStyle(tagContent());
+
+  expect(content.flexShrink).toBe('1');
+  expect(content.minWidth).toBe('0px');
+  expect(content.justifyContent).toBe('flex-start');
+});
+
+test('Leaves an uncapped <Tag /> exactly as it was', () => {
+  // The default must not change: every existing tag keeps the same DOM and the same
+  // no-shrink wrapper, so nothing that relies on a tag sizing to its label moves.
+  renderTag({ label: 'a-very-long-label-that-will-not-fit' });
+
+  expect(tagLabel()).toBeNull();
+  expect(getComputedStyle(tagContent()).flexShrink).toBe('0');
+  expect(getComputedStyle(tag()).maxWidth).toBe('100%');
+});
+
+test('Does not truncate a <Tag /> that wraps or has a fixed width', () => {
+  // `wrap` asks for more lines rather than fewer characters, and `width` has already
+  // fixed the box; honouring a cap as well would mean guessing which the caller meant.
+  const { rerender } = renderTag({ label: 'long label here', maxWidth: '10ch', wrap: true });
+
+  expect(tagLabel()).toBeNull();
+
+  rerender(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag label='long label here' maxWidth='10ch' width='300px' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(tagLabel()).toBeNull();
+});
+
+test('Keeps a capped <Tag /> label key whole', () => {
+  // The key is the part a reader cannot reconstruct: a truncated "POST" says nothing,
+  // while a shortened URL still shows what kind of thing it is.
+  renderTag({ labelKey: 'POST', label: 'https://host/webhooks/x', maxWidth: '16ch' });
+
+  const key = document.querySelector('.reqore-tag-key-content') as HTMLElement;
+
+  expect(key.textContent).toBe('POST');
+  expect(getComputedStyle(key).flexShrink).toBe('0');
+});
