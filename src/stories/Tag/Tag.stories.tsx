@@ -690,3 +690,74 @@ export const MaxWidth: Story = {
     expect(tags[4].querySelector('.reqore-tag-label')).toBeNull();
   },
 };
+
+
+export const MaxWidthTruncateMiddle: Story = {
+  render: () => (
+    <ReqoreTagGroup>
+      {/* Same host, different webhook — the tail is the only thing telling them
+          apart, so dropping it would render both identically. */}
+      <ReqoreTag
+        label='https://qorus.example.com:8011/webhooks/paddle-notifications'
+        maxWidth='34ch'
+        truncate='middle'
+      />
+      <ReqoreTag
+        label='https://qorus.example.com:8011/webhooks/stripe-notifications'
+        maxWidth='34ch'
+        truncate='middle'
+      />
+      {/* The same two with the default end truncation, for contrast: both read the
+          same, which is what this option exists to avoid. */}
+      <ReqoreTag
+        label='https://qorus.example.com:8011/webhooks/paddle-notifications'
+        maxWidth='34ch'
+      />
+      <ReqoreTag
+        label='https://qorus.example.com:8011/webhooks/stripe-notifications'
+        maxWidth='34ch'
+      />
+    </ReqoreTagGroup>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders `truncate='middle'` beside the default. The first two tags share a host and differ only at the end, so keeping both ends tells them apart; the second two are the same values with the tail dropped, and read identically. Both are pure CSS — the whole label stays in the DOM either way, so the value is still selectable, copyable and read out in full by a screen reader.",
+      },
+    },
+  },
+  play: async () => {
+    const tags = await waitFor(() => {
+      const found = document.querySelectorAll('.reqore-tag');
+      expect(found.length).toBe(4);
+      return Array.from(found) as HTMLElement[];
+    });
+
+    const parts = (tag: HTMLElement) => [
+      tag.querySelector('.reqore-tag-label-head') as HTMLElement,
+      tag.querySelector('.reqore-tag-label-tail') as HTMLElement,
+    ];
+
+    const [paddleHead, paddleTail] = parts(tags[0]);
+    const [stripeHead, stripeTail] = parts(tags[1]);
+
+    // Nothing is thrown away: the DOM still holds the whole value.
+    expect(`${paddleHead.textContent}${paddleTail.textContent}`).toBe(
+      'https://qorus.example.com:8011/webhooks/paddle-notifications'
+    );
+
+    // The head is what actually shortens...
+    expect(paddleHead.scrollWidth).toBeGreaterThan(paddleHead.clientWidth);
+    // ...and the pinned tail is fully visible, which is the whole point.
+    expect(paddleTail.scrollWidth).toBe(paddleTail.clientWidth);
+
+    // The two are distinguishable on screen, which they would not be end-truncated.
+    expect(paddleTail.textContent).not.toBe(stripeTail.textContent);
+    expect(stripeTail.textContent).toContain('notifications');
+
+    // The default keeps the single label box and no pinned tail.
+    expect(tags[2].querySelector('.reqore-tag-label')).toBeTruthy();
+    expect(tags[2].querySelector('.reqore-tag-label-tail')).toBeNull();
+  },
+};

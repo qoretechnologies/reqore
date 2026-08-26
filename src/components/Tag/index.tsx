@@ -104,6 +104,25 @@ export interface IReqoreCustomTagProps
    * with `width`, which has already fixed the box.
    */
   maxWidth?: string;
+  /**
+   * Which part of a capped label is dropped. Defaults to `'end'`.
+   *
+   * - `'end'` — the tail goes: `https://host/webhooks/paddle-notif…`
+   * - `'middle'` — the middle goes, and both ends survive:
+   *   `https://host/we…paddle-notifications`
+   *
+   * Reach for `'middle'` when the values share a prefix and differ at the end — URLs
+   * on one host, paths under one root, ids with a common namespace. Dropping the tail
+   * there renders every one of them identically, which is the opposite of what a label
+   * is for.
+   *
+   * Both are pure CSS: the whole label stays in the DOM either way, so it is still
+   * selectable, copyable, findable with the browser's own search and read out in full
+   * by a screen reader. Nothing about the value is thrown away to make it fit.
+   *
+   * Needs `maxWidth` — there is nothing to drop until the label is capped.
+   */
+  truncate?: 'end' | 'middle';
   asBadge?: boolean;
   intent?: TReqoreIntent;
   wrap?: boolean;
@@ -164,7 +183,7 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   $hasWidth?: boolean;
   $maxWidth?: string;
   /** True when the label is capped and must shorten rather than push the box wider. */
-  $truncate?: boolean;
+  $capped?: boolean;
 }
 
 export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
@@ -332,7 +351,7 @@ const StyledTagContentWrapper = styled.span<{
   size: TSizes;
   $wrap?: boolean;
   $hasWidth?: boolean;
-  $truncate?: boolean;
+  $capped?: boolean;
 }>`
   display: flex;
   align-items: center;
@@ -349,8 +368,8 @@ const StyledTagContentWrapper = styled.span<{
 
      min-width is the other half: a flex item defaults to min-width:auto, which is its
      content's width, so flex-shrink alone still cannot take it below the text. */
-  ${({ $truncate }) =>
-    $truncate
+  ${({ $capped }) =>
+    $capped
       ? css`
           flex-shrink: 1;
           min-width: 0;
@@ -366,10 +385,10 @@ const StyledTagContent = styled(StyledTextEffect)<{
   $paddingSize?: TSizes;
   $wrap?: boolean;
   $hasWidth?: boolean;
-  $truncate?: boolean;
+  $capped?: boolean;
 }>`
-  ${({ $truncate }) =>
-    $truncate &&
+  ${({ $capped }) =>
+    $capped &&
     css`
       min-width: 0;
     `}
@@ -434,6 +453,62 @@ const StyledTruncatedLabel = styled.span`
   white-space: nowrap;
 `;
 
+/**
+ * A label that drops its MIDDLE rather than its tail.
+ *
+ * CSS has no middle ellipsis, so the label is split in two and flexbox is left to do
+ * the work: the head may shrink and ellipsizes when it does, the tail never shrinks.
+ * The result reads `head…tail`, and it re-flows with the box — no measuring, no
+ * resize observer, and no character count that is wrong at a different font size.
+ *
+ * The whole label is still in the DOM, in order, so selecting the tag copies the
+ * complete value and a screen reader reads it out whole. That is the part a JS
+ * shortener cannot match: it deletes the characters it hides.
+ */
+const StyledMiddleTruncatedLabel = styled.span`
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  white-space: nowrap;
+`;
+
+const StyledTruncatedLabelHead = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+/* Never shrinks: it is the half the caller asked to keep. */
+const StyledTruncatedLabelTail = styled.span`
+  flex-shrink: 0;
+  white-space: nowrap;
+`;
+
+/**
+ * Where to cut a label whose middle is dropped.
+ *
+ * The last third is pinned. Enough to tell apart values that differ only at the end —
+ * two webhooks on one host, two ids in one namespace — without pinning so much that
+ * the head has no room left to say what kind of thing it is.
+ */
+const MIDDLE_TRUNCATE_TAIL_RATIO = 3;
+
+/** Split a label for middle truncation, by code point so a surrogate pair survives. */
+const splitTagLabel = (label: string): [string, string] => {
+  const characters = Array.from(label);
+  const tailLength = Math.floor(characters.length / MIDDLE_TRUNCATE_TAIL_RATIO);
+
+  if (!tailLength) {
+    return [label, ''];
+  }
+
+  return [
+    characters.slice(0, characters.length - tailLength).join(''),
+    characters.slice(characters.length - tailLength).join(''),
+  ];
+};
+
 const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   flex-shrink: 0;
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
@@ -483,6 +558,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       wrap = false,
       width,
       maxWidth,
+      truncate = 'end',
       leftIconColor,
       rightIconColor,
       iconColor,
@@ -535,7 +611,17 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
        shape: `wrap` asks for more lines instead of fewer characters, and `width` has
        already fixed the box. Honouring all three at once would mean guessing which
        the caller meant. */
-    const truncate = !!maxWidth && !wrap && !width;
+    const capped = !!maxWidth && !wrap && !width;
+
+    /* Split once per label rather than per render. Only a string can be cut in the
+       middle — a numeric label is short by nature and has no meaningful halves. */
+    const middleParts = useMemo(
+      () =>
+        capped && truncate === 'middle' && typeof label === 'string'
+          ? splitTagLabel(label)
+          : undefined,
+      [capped, truncate, label]
+    );
 
     const effect = useMemo(
       () => ({
@@ -620,7 +706,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             onClick={rest.disabled ? undefined : onClick}
             $wrap={wrap}
             $hasWidth={!!width}
-            $truncate={truncate}
+            $capped={capped}
             hasKey={!!labelKey}
             fixed={rest.fixed}
           >
@@ -630,7 +716,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 $paddingSize={paddingSize}
                 $wrap={wrap}
                 $hasWidth={!!width}
-                $truncate={truncate}
+                $capped={capped}
                 labelAlign={labelAlign || (labelKey ? 'left' : 'center')}
                 compact={compact}
                 effect={
@@ -640,10 +726,19 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                   } as IReqoreEffect
                 }
               >
-                {truncate ? (
-                  <StyledTruncatedLabel className='reqore-tag-label'>{label}</StyledTruncatedLabel>
-                ) : (
+                {!capped ? (
                   label
+                ) : middleParts ? (
+                  <StyledMiddleTruncatedLabel className='reqore-tag-label'>
+                    <StyledTruncatedLabelHead className='reqore-tag-label-head'>
+                      {middleParts[0]}
+                    </StyledTruncatedLabelHead>
+                    <StyledTruncatedLabelTail className='reqore-tag-label-tail'>
+                      {middleParts[1]}
+                    </StyledTruncatedLabelTail>
+                  </StyledMiddleTruncatedLabel>
+                ) : (
+                  <StyledTruncatedLabel className='reqore-tag-label'>{label}</StyledTruncatedLabel>
                 )}
               </StyledTagContent>
             ) : null}

@@ -383,3 +383,71 @@ test('Keeps a capped <Tag /> label key whole', () => {
   expect(key.textContent).toBe('POST');
   expect(getComputedStyle(key).flexShrink).toBe('0');
 });
+
+test('Drops the middle of a capped <Tag /> label on request', () => {
+  // Values that share a prefix and differ at the end — URLs on one host, ids in one
+  // namespace — all render identically when the tail is what goes.
+  renderTag({
+    label: 'https://host/webhooks/paddle-notifications',
+    maxWidth: '20ch',
+    truncate: 'middle',
+  });
+
+  const head = document.querySelector('.reqore-tag-label-head') as HTMLElement;
+  const tail = document.querySelector('.reqore-tag-label-tail') as HTMLElement;
+
+  expect(head).toBeTruthy();
+  expect(tail).toBeTruthy();
+
+  // The whole value is still in the DOM, in order: the tag stays copyable, findable
+  // and readable in full. A JS shortener deletes the characters it hides.
+  expect(`${head.textContent}${tail.textContent}`).toBe(
+    'https://host/webhooks/paddle-notifications'
+  );
+
+  // The head ellipsizes; the tail is the part that is kept, so it never shrinks.
+  expect(getComputedStyle(head).textOverflow).toBe('ellipsis');
+  expect(getComputedStyle(head).minWidth).toBe('0px');
+  expect(getComputedStyle(tail).flexShrink).toBe('0');
+});
+
+test('Splits a middle-truncated <Tag /> label at the last third', () => {
+  renderTag({ label: '123456789012', maxWidth: '6ch', truncate: 'middle' });
+
+  expect(document.querySelector('.reqore-tag-label-head').textContent).toBe('12345678');
+  expect(document.querySelector('.reqore-tag-label-tail').textContent).toBe('9012');
+});
+
+test('Keeps a middle-truncated <Tag /> label whole when there is no third to drop', () => {
+  // Two characters have no meaningful halves; pinning one of them would put an
+  // ellipsis in the middle of a value that fits.
+  renderTag({ label: 'ab', maxWidth: '20ch', truncate: 'middle' });
+
+  expect(document.querySelector('.reqore-tag-label-head').textContent).toBe('ab');
+  expect(document.querySelector('.reqore-tag-label-tail').textContent).toBe('');
+});
+
+test('Truncates a <Tag /> at the end by default', () => {
+  renderTag({ label: 'https://host/webhooks/paddle-notifications', maxWidth: '20ch' });
+
+  expect(document.querySelector('.reqore-tag-label')).toBeTruthy();
+  expect(document.querySelector('.reqore-tag-label-head')).toBeNull();
+});
+
+test('Ignores truncate on an uncapped <Tag />', () => {
+  // There is nothing to drop until the label is capped, so the label must not be
+  // split into two elements for no reason.
+  renderTag({ label: 'https://host/webhooks/paddle-notifications', truncate: 'middle' });
+
+  expect(document.querySelector('.reqore-tag-label')).toBeNull();
+  expect(document.querySelector('.reqore-tag-label-head')).toBeNull();
+});
+
+test('Does not split a numeric <Tag /> label', () => {
+  // A number has no head and tail worth telling apart, and Array.from would have to
+  // be handed a string anyway.
+  renderTag({ label: 1234567890, maxWidth: '4ch', truncate: 'middle' });
+
+  expect(document.querySelector('.reqore-tag-label-head')).toBeNull();
+  expect(document.querySelector('.reqore-tag-label').textContent).toBe('1234567890');
+});
