@@ -1575,8 +1575,9 @@ export const ExpandableRows: Story = {
           'Renders a table whose rows open into a detail panel. Clicking anywhere on a ' +
           'row toggles it, and the prepended expander column says which rows can open — ' +
           'a row whose `renderExpandedRow` returns nothing gets neither, and its click ' +
-          'falls through to whatever the table would otherwise do with it. More than one ' +
-          'row can be open at a time unless `expandSingle` is set.',
+          'falls through to whatever the table would otherwise do with it. Two rows are ' +
+          'opened here and both stay open; compare with `Expandable Rows Single`, which ' +
+          'makes the same two clicks and ends with one.',
       },
     },
   },
@@ -1603,21 +1604,30 @@ export const ExpandableRows: Story = {
       </div>
     ),
   },
-  /* Opened by the story rather than by `defaultExpanded`, so the picture shows
-     the feature whatever the fixture is sorted into: the id that happens to sit
-     in the first row is not knowable from here. */
+  /* Opens TWO rows, and the story below opens the same two. That pairing is the
+     point: identical gestures, two panels here and one there, so the pair shows
+     what `expandSingle` does rather than asserting it in prose.
+
+     Opened by the story rather than by `defaultExpanded` so the picture holds
+     whatever the fixture sorts into the top rows — which id lands first is not
+     knowable from here. */
   play: async ({ canvasElement }) => {
-    const firstRowCells = await waitFor(() => {
-      const cells = canvasElement
-        .querySelectorAll('.reqore-table-row')[0]
-        ?.querySelectorAll('.reqore-table-cell');
-      if (!cells?.length) throw new Error('table rows not rendered');
-      return cells;
+    await waitFor(() => {
+      if (!canvasElement.querySelectorAll('.reqore-table-row').length) {
+        throw new Error('table rows not rendered');
+      }
     });
 
-    await fireEvent.click(firstRowCells[firstRowCells.length - 1]);
+    const cellsIn = (index: number) =>
+      canvasElement
+        .querySelectorAll('.reqore-table-row')
+        [index].querySelectorAll('.reqore-table-cell');
+
+    await fireEvent.click(cellsIn(0)[cellsIn(0).length - 1]);
+    await fireEvent.click(cellsIn(1)[cellsIn(1).length - 1]);
+
     await waitFor(() =>
-      expect(canvasElement.querySelectorAll('.reqore-table-row-expanded').length).toBe(1)
+      expect(canvasElement.querySelectorAll('.reqore-table-row-expanded').length).toBe(2)
     );
   },
 };
@@ -1628,8 +1638,9 @@ export const ExpandableRowsSingle: Story = {
     docs: {
       description: {
         story:
-          'The same table with `expandSingle`: opening a row closes whichever was open, ' +
-          'so the reader is always looking at exactly one detail panel.',
+          'The same table and the same two clicks as `Expandable Rows`, with ' +
+          '`expandSingle` set: opening the second row closes the first, so the reader is ' +
+          'always looking at exactly one detail panel.',
       },
     },
   },
@@ -1638,8 +1649,8 @@ export const ExpandableRowsSingle: Story = {
     expandSingle: true,
     label: 'Expandable rows, one at a time',
   },
-  /* Open one, then another: the first closes, and the capture shows exactly one
-     panel — which is the whole difference this story exists to show. */
+  /* The same two clicks as the story above. Two panels there, one here — that
+     difference IS this story. */
   play: async ({ canvasElement }) => {
     const cellsIn = (index: number) =>
       canvasElement.querySelectorAll('.reqore-table-row')[index].querySelectorAll(
