@@ -131,6 +131,12 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
    */
   gradient?: IReqoreEffectGradient | IReqoreEffectGradient[];
   noWrap?: boolean;
+  /**
+   * Clamp the text to this many lines; anything longer is cut with an ellipsis.
+   * Unbroken runs (base64 payloads, URLs, hashes) are force-wrapped so they fill
+   * the allowed lines instead of overflowing a single line horizontally.
+   */
+  maxLines?: number;
   spaced?: number;
 
   weight?: number | 'thin' | 'light' | 'normal' | 'bold' | 'thick';
@@ -503,6 +509,19 @@ ${({ effect }: IReqoreTextEffectProps) =>
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
+        `
+      : undefined}
+
+  ${({ effect }: IReqoreTextEffectProps) =>
+    effect && effect.maxLines
+      ? css`
+          /* !important: StyledTextEffect re-declares display after this base
+             template, and line-clamp only clips inside a -webkit-box. */
+          display: -webkit-box !important;
+          -webkit-line-clamp: ${effect.maxLines};
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          overflow-wrap: anywhere;
         `
       : undefined}
 

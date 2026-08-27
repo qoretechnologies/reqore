@@ -1,10 +1,16 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useState } from 'react';
-import { expect, fireEvent } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton from '../../components/Button';
-import { ReqoreControlGroup, ReqoreMessage, ReqoreVerticalSpacer } from '../../index';
+import {
+  ReqoreControlGroup,
+  ReqoreMenu,
+  ReqoreMenuItem,
+  ReqoreMessage,
+  ReqoreVerticalSpacer,
+} from '../../index';
 import { StoryMeta } from '../utils';
 import { ALL_SIZES, IconArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
@@ -972,5 +978,174 @@ export const Square: Story = {
       const labelMid = labelBox.left + labelBox.width / 2;
       await expect(Math.abs(labelMid - chipMid)).toBeLessThan(4);
     }
+  },
+};
+
+/* The real-world payload behind `descriptionMaxLines`: a qog template-field
+   item whose example value is a whole base64-encoded file. Repeating a PDF
+   header keeps it deterministic — and it contains no spaces, which is exactly
+   the case that needs `overflow-wrap: anywhere` to fill lines at all. */
+const BASE64_EXAMPLE = `Example value: "${'JVBERi0xLjcKJcTl8uXrp9Og0MTGCjQgMCBvYmoKPDwvRmlsdGVyL0ZsYXRlRGVjb2RlCg=='.repeat(
+  30
+)}"`;
+
+const ClampedDescriptionDemo = () => {
+  const [picks, setPicks] = useState(0);
+
+  return (
+    <ReqoreControlGroup vertical gapSize='big' style={{ maxWidth: 480 }}>
+      <ReqoreMessage size='small' flat opaque={false} className='clamp-pick-count'>
+        {`Item picks: ${picks}`}
+      </ReqoreMessage>
+      <ReqoreMenu padded rounded>
+        <ReqoreMenuItem
+          className='clamped-item'
+          badge='data'
+          description={BASE64_EXAMPLE}
+          descriptionMaxLines={4}
+          onClick={() => setPicks((cur) => cur + 1)}
+        >
+          Attachment Body
+        </ReqoreMenuItem>
+        <ReqoreMenuItem
+          className='short-item'
+          badge='string'
+          description='Example value: "invoice.pdf"'
+          descriptionMaxLines={4}
+          onClick={() => setPicks((cur) => cur + 1)}
+        >
+          Attachment Name
+        </ReqoreMenuItem>
+      </ReqoreMenu>
+    </ReqoreControlGroup>
+  );
+};
+
+export const ClampedDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Clamps an overflowing description to `descriptionMaxLines` lines with an inline "Show more" / "Show less" affordance — the pattern for template-field example values that can be a whole base64 file. The affordance only appears when the clamped text actually overflows (the short item stays affordance-free), revealing never activates the button itself, and a normal click on the item still does.',
+      },
+    },
+  },
+  render: () => <ClampedDescriptionDemo />,
+  play: async ({ canvasElement }) => {
+    // The long item clamps and grows a toggle; the short one measures as
+    // fitting and must NOT get one, even with the prop set.
+    await _testsWaitForText('Show more');
+    const toggles = canvasElement.querySelectorAll('.reqore-button-description-toggle');
+    await expect(toggles.length).toBe(1);
+    await expect(canvasElement.querySelector('.short-item .reqore-button-description-toggle')).toBeNull();
+
+    const description = canvasElement.querySelector(
+      '.clamped-item .reqore-button-description'
+    ) as HTMLElement;
+    // Clamped: the element holds more text than it shows.
+    await expect(description.scrollHeight).toBeGreaterThan(description.clientHeight + 1);
+
+    // Revealing must not count as picking the item (the toggle span stops
+    // propagation inside the <button>).
+    fireEvent.click(toggles[0]);
+    await _testsWaitForText('Show less');
+    await _testsWaitForText('Item picks: 0');
+    // Expanded: everything is visible now.
+    await expect(description.scrollHeight).toBeLessThanOrEqual(description.clientHeight + 1);
+    // Regression: expanding removes the clamp effect, but the unbroken base64
+    // run must KEEP force-wrapping — without it the text stops wrapping and
+    // overflows the surface horizontally.
+    await expect(description.scrollWidth).toBeLessThanOrEqual(description.clientWidth + 1);
+
+    // Collapse restores the clamp…
+    fireEvent.click(
+      canvasElement.querySelector('.clamped-item .reqore-button-description-toggle')!
+    );
+    await _testsWaitForText('Show more');
+    await expect(description.scrollHeight).toBeGreaterThan(description.clientHeight + 1);
+
+    // …and a plain click on the item itself still activates it.
+    fireEvent.click(canvasElement.querySelector('.clamped-item')!);
+    await _testsWaitForText('Item picks: 1');
+  },
+};
+
+const ClampedDescriptionModalDemo = () => {
+  const [picks, setPicks] = useState(0);
+
+  return (
+    <ReqoreControlGroup vertical gapSize='big' style={{ maxWidth: 480 }}>
+      <ReqoreMessage size='small' flat opaque={false} className='clamp-pick-count'>
+        {`Item picks: ${picks}`}
+      </ReqoreMessage>
+      <ReqoreMenu padded rounded>
+        <ReqoreMenuItem
+          className='clamped-item'
+          badge='data'
+          description={BASE64_EXAMPLE}
+          descriptionMaxLines={4}
+          descriptionModal
+          descriptionShowMoreLabel='Show full value'
+          onClick={() => setPicks((cur) => cur + 1)}
+        >
+          Attachment Body
+        </ReqoreMenuItem>
+      </ReqoreMenu>
+    </ReqoreControlGroup>
+  );
+};
+
+export const ClampedDescriptionModal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The `descriptionModal` variant: for descriptions that can be huge (a whole base64 file), the affordance opens the FULL value in a modal — selectable, scrollable, with a Copy action — instead of expanding it inline into the surface. Opening and using the modal never activates the item itself.',
+      },
+    },
+  },
+  render: () => <ClampedDescriptionModalDemo />,
+  play: async ({ canvasElement }) => {
+    await _testsWaitForText('Show full value');
+
+    // Open the full-value modal — this must NOT count as picking the item.
+    fireEvent.click(canvasElement.querySelector('.reqore-button-description-toggle')!);
+    const modal = await waitFor(
+      () => {
+        const el = document.querySelector('.reqore-button-description-modal');
+        if (!el) throw new Error('modal not open yet');
+        return el;
+      },
+      { timeout: 10000 }
+    );
+    await _testsWaitForText('Item picks: 0');
+
+    // The modal holds the WHOLE value (the clamped surface shows a fraction).
+    const textarea = modal.querySelector('textarea') as HTMLTextAreaElement;
+    await expect(textarea.value.length).toBe(BASE64_EXAMPLE.length);
+
+    // Copy surfaces a notification either way (success, or a denial from the
+    // clipboard permission) — never an unhandled rejection.
+    const copy = Array.from(modal.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Copy')
+    )!;
+    fireEvent.click(copy);
+    await waitFor(
+      () => {
+        if (!document.querySelector('.reqore-notification')) throw new Error('no notification');
+      },
+      { timeout: 10000 }
+    );
+
+    // Closing the modal leaves the item unpicked.
+    fireEvent.click(modal.querySelector('.reqore-drawer-close-button')!);
+    await waitFor(
+      () => {
+        if (document.querySelector('.reqore-button-description-modal'))
+          throw new Error('modal still open');
+      },
+      { timeout: 10000 }
+    );
+    await _testsWaitForText('Item picks: 0');
   },
 };

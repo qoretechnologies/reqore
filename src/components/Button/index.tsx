@@ -1,6 +1,16 @@
 import { size } from 'lodash';
 import { rgba, saturate, tint } from 'polished';
-import React, { forwardRef, memo, useCallback, useMemo } from 'react';
+import React, {
+  forwardRef,
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import styled, { css, keyframes } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
@@ -57,13 +67,14 @@ import { IReqoreIconName } from '../../types/icons';
 import {
   getPrimaryGradient,
   IReqoreEffect,
-  ReqoreTextEffect,
   StyledEffect,
+  StyledTextEffect,
   TReqoreColor,
   TReqoreEffectColor,
   TReqoreHexColor,
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import ReqoreLink from '../Link';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
 import { ReqoreHorizontalSpacer, ReqoreSpacer } from '../Spacer';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
@@ -210,6 +221,25 @@ export interface IReqoreButtonProps
   rightIconProps?: IReqoreIconProps;
   labelEffect?: IReqoreEffect;
   descriptionEffect?: IReqoreEffect;
+  /**
+   * Clamp the description to this many lines; when it overflows, an inline
+   * "Show more" / "Show less" affordance reveals or re-clamps the rest.
+   * Purely presentational — the full description is always in the DOM.
+   * The affordance is a styled `<span>`, not a nested `<button>` (the button
+   * root already is one), and its clicks do not activate the button itself.
+   */
+  descriptionMaxLines?: number;
+  /**
+   * With `descriptionMaxLines`: the affordance opens the FULL description in a
+   * modal (selectable, scrollable, with a Copy action) instead of expanding
+   * inline. The right choice when the description can be huge — a whole
+   * base64 file expanded inline makes the surface unusable.
+   */
+  descriptionModal?: boolean;
+  /** Label of the clamp's reveal affordance. @default 'Show more' */
+  descriptionShowMoreLabel?: string;
+  /** Label of the clamp's collapse affordance. @default 'Show less' */
+  descriptionShowLessLabel?: string;
   label?: React.HTMLAttributes<HTMLButtonElement>['children'];
   as?: string | React.ElementType;
   grow?: 0 | 1 | 2 | 3 | 4;
@@ -492,6 +522,17 @@ export const StyledButton = styled(StyledEffect).withConfig({
   }
 `;
 
+/* Lazily loaded: Modal transitively imports Button (Modal → Drawer → Panel →
+   Button), so a static import here would close a module cycle. The dynamic one
+   only resolves when a full-value modal actually opens. */
+const ReqoreButtonDescriptionModal = lazy(() => import('./DescriptionModal'));
+
+/* Module-level so the objects keep a stable identity across renders — the
+   toggle style feeds a memoized ReqoreLink, and a fresh object per render
+   would defeat its memo. */
+const DESCRIPTION_WRAP_STYLE: React.CSSProperties = { overflowWrap: 'anywhere' };
+const DESCRIPTION_TOGGLE_STYLE: React.CSSProperties = { alignSelf: 'flex-start' };
+
 export const StyledButtonContent = styled.div`
   display: flex;
   align-items: center;
@@ -643,6 +684,10 @@ const ReqoreButton = memo(
         effect,
         labelEffect,
         descriptionEffect,
+        descriptionMaxLines,
+        descriptionModal,
+        descriptionShowMoreLabel = 'Show more',
+        descriptionShowLessLabel = 'Show less',
         leftIconColor,
         rightIconColor,
         iconColor,
@@ -677,6 +722,54 @@ const ReqoreButton = memo(
       const iconsAlign = iconsAlignProp ?? (square ? 'center' : undefined);
 
       const shortcutEnabled = !!shortcut && !rest.disabled && !readOnly && !loading;
+
+      // Description clamping (`descriptionMaxLines`). The toggle only renders
+      // when the clamped text actually overflows — measured, not assumed — so
+      // short descriptions with the prop set stay affordance-free.
+      const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+      const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
+      const [descriptionOverflows, setDescriptionOverflows] = useState(false);
+      const descriptionRef = useRef<HTMLSpanElement | null>(null);
+
+      useEffect(() => {
+        if (!descriptionMaxLines || descriptionExpanded) {
+          return;
+        }
+        const el = descriptionRef.current;
+        // +1 tolerates sub-pixel rounding of line boxes
+        setDescriptionOverflows(!!el && el.scrollHeight > el.clientHeight + 1);
+      }, [description, descriptionMaxLines, descriptionExpanded]);
+
+      const handleDescriptionToggle = useCallback(
+        (event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (descriptionModal) {
+            setDescriptionModalOpen(true);
+          } else {
+            setDescriptionExpanded((cur) => !cur);
+          }
+        },
+        [descriptionModal]
+      );
+
+      // stopPropagation alone cannot keep the button from LOOKING pressed:
+      // `:active` and focus land on the ancestor <button> natively on mousedown
+      // of any child, before any React handler runs. Cancelling the mousedown's
+      // default suppresses both, so pressing the toggle neither flashes the
+      // button's pressed styling nor steals focus to it.
+      const handleDescriptionTogglePress = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }, []);
+
+      // Events fired inside the (portaled) modal still bubble through the
+      // REACT tree — without this stop they would reach the button and
+      // activate it (menu items select on click).
+      const stopModalPropagation = useCallback((event: React.SyntheticEvent) => {
+        event.stopPropagation();
+      }, []);
 
       useHotkeys(
         shortcut ?? [],
@@ -923,17 +1016,67 @@ const ReqoreButton = memo(
           </StyledButtonContent>
 
           {description && (
-            <ReqoreTextEffect
-              className='reqore-button-description'
-              effect={{
-                textSize: getOneLessSize(size),
-                weight: 'light',
-                textAlign,
-                ...descriptionEffect,
-              }}
-            >
-              {description}
-            </ReqoreTextEffect>
+            <>
+              {/* StyledTextEffect directly (ReqoreTextEffect does not forward
+                  refs) — the ref is what the overflow measurement reads. The
+                  inline overflow-wrap stays applied while EXPANDED too: the
+                  clamp effect (and its wrapping) is removed on expand, and an
+                  unbroken run (base64, a URL) would otherwise stop wrapping
+                  and overflow the surface horizontally. */}
+              <StyledTextEffect
+                ref={descriptionRef}
+                className='reqore-button-description reqore-text-effect'
+                style={descriptionMaxLines ? DESCRIPTION_WRAP_STYLE : undefined}
+                effect={{
+                  textSize: getOneLessSize(size),
+                  weight: 'light',
+                  textAlign,
+                  ...(descriptionMaxLines && !descriptionExpanded
+                    ? { maxLines: descriptionMaxLines }
+                    : {}),
+                  ...descriptionEffect,
+                }}
+              >
+                {description}
+              </StyledTextEffect>
+              {descriptionMaxLines && (descriptionOverflows || descriptionExpanded) ? (
+                /* `as='span'`, NOT the default `<button>` — the button root
+                   already is one, and interactive content may not nest inside
+                   it. The handler stops propagation, so revealing a long
+                   description never activates the button (menu items select
+                   on click). `alignSelf` keeps the affordance text-width in
+                   the button's column flow instead of a full-width click row. */
+                <ReqoreLink
+                  as='span'
+                  className='reqore-button-description-toggle'
+                  size={getOneLessSize(size)}
+                  onClick={handleDescriptionToggle}
+                  onMouseDown={handleDescriptionTogglePress}
+                  style={DESCRIPTION_TOGGLE_STYLE}
+                >
+                  {descriptionModal || !descriptionExpanded
+                    ? descriptionShowMoreLabel
+                    : descriptionShowLessLabel}
+                </ReqoreLink>
+              ) : null}
+              {descriptionModalOpen ? (
+                <span onClick={stopModalPropagation} onMouseDown={stopModalPropagation}>
+                  <Suspense fallback={null}>
+                    <ReqoreButtonDescriptionModal
+                      label={
+                        typeof label === 'string'
+                          ? label
+                          : typeof children === 'string'
+                          ? children
+                          : undefined
+                      }
+                      value={String(description)}
+                      onClose={() => setDescriptionModalOpen(false)}
+                    />
+                  </Suspense>
+                </span>
+              ) : null}
+            </>
           )}
 
           {indicatorConfig && (
