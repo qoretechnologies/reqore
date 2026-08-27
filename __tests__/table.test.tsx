@@ -1043,3 +1043,165 @@ test('<Table /> honours an explicit overscanRowCount', () => {
   const rendered = document.querySelectorAll('.reqore-table-row').length;
   expect(rendered).toBeLessThanOrEqual(12);
 });
+
+describe('<Table /> expandable rows', () => {
+  const columns: IReqoreTableColumn[] = [
+    { dataId: 'id', header: { label: 'ID' }, width: 80 },
+    { dataId: 'name', header: { label: 'Name' }, width: 200 },
+  ];
+  const rows = [
+    { id: 1, name: 'first', _expandId: 'first' },
+    { id: 2, name: 'second', _expandId: 'second' },
+    { id: 3, name: 'third', _expandId: 'third' },
+  ];
+
+  /**
+   * Click a row the way a person does — on one of its cells.
+   *
+   * The table has always put the row's click handler on its CELLS (that is how
+   * `onRowClick` fires too), and cells fill the row, so "click the row" and
+   * "click a cell" are the same gesture. The LAST cell, to stay clear of the
+   * expander's own button in the first.
+   */
+  const clickRow = (index: number) => {
+    const cells = document
+      .querySelectorAll('.reqore-table-row')
+      [index].querySelectorAll('.reqore-table-cell');
+    act(() => {
+      fireEvent.click(cells[cells.length - 1]);
+    });
+  };
+
+  const renderTable = (props: Partial<IReqoreTableProps> = {}) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={columns}
+            data={rows}
+            renderExpandedRow={(row) => <div className='detail'>detail for {row.name}</div>}
+            {...(props as any)}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  test('adds an expander column and opens nothing until asked', () => {
+    renderTable();
+
+    // The expander is prepended, so the table has one column more than declared.
+    expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(3);
+    expect(document.querySelectorAll('.detail').length).toBe(0);
+  });
+
+  test('opens a row when its own row is clicked', () => {
+    renderTable();
+
+    clickRow(0);
+
+    expect(document.querySelectorAll('.detail').length).toBe(1);
+    expect(document.querySelector('.detail')).toHaveTextContent('detail for first');
+  });
+
+  test('keeps more than one row open, unless told not to', () => {
+    renderTable();
+
+    clickRow(0);
+    clickRow(1);
+
+    expect(document.querySelectorAll('.detail').length).toBe(2);
+  });
+
+  test('closes the previous row when expandSingle is set', () => {
+    renderTable({ expandSingle: true });
+
+    clickRow(0);
+    clickRow(1);
+
+    expect(document.querySelectorAll('.detail').length).toBe(1);
+    expect(document.querySelector('.detail')).toHaveTextContent('detail for second');
+  });
+
+  test('closes an open row when it is clicked again', () => {
+    renderTable();
+
+    clickRow(0);
+    expect(document.querySelectorAll('.detail').length).toBe(1);
+
+    clickRow(0);
+    expect(document.querySelectorAll('.detail').length).toBe(0);
+  });
+
+  test('honours a controlled expansion and reports every change', () => {
+    const onExpandedChange = vi.fn();
+
+    renderTable({ expanded: ['second'], onExpandedChange });
+
+    expect(document.querySelector('.detail')).toHaveTextContent('detail for second');
+
+    clickRow(0);
+
+    // Controlled: the table reports the change and does NOT move on its own.
+    expect(onExpandedChange).toHaveBeenCalledWith(['second', 'first']);
+    expect(document.querySelector('.detail')).toHaveTextContent('detail for second');
+  });
+
+  test('gives no expander, and no toggle, to a row with nothing to show', () => {
+    const onRowClick = vi.fn();
+
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={columns}
+            data={rows}
+            onRowClick={onRowClick}
+            // Only the second row has a detail.
+            renderExpandedRow={(row) => (row.name === 'second' ? <div className='detail' /> : null)}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    clickRow(0);
+
+    // Nothing to expand, so the click falls through to what the table would
+    // otherwise have done with it.
+    expect(document.querySelectorAll('.detail').length).toBe(0);
+    expect(onRowClick).toHaveBeenCalledTimes(1);
+  });
+
+  test('expands in the non-virtualized body too', () => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={columns}
+            data={rows}
+            virtualized={false}
+            renderExpandedRow={(row) => <div className='detail'>detail for {row.name}</div>}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    clickRow(0);
+
+    // No measurement and no react-window here — the panel simply takes the
+    // height of its content, which is the case the virtualised path emulates.
+    expect(document.querySelectorAll('.detail').length).toBe(1);
+  });
+
+  test('leaves a table without renderExpandedRow exactly as it was', () => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable columns={columns} data={rows} />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    expect(document.querySelectorAll('.reqore-table-header-cell').length).toBe(2);
+    expect(document.querySelectorAll('.reqore-table-row-group').length).toBe(0);
+  });
+});

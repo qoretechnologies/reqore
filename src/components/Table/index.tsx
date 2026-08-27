@@ -122,6 +122,20 @@ export interface IReqoreTableColumn extends IReqoreIntent {
 export interface IReqoreTableRowData {
   [key: string]: any;
   _selectId?: string | number;
+  /**
+   * The row's position in the data as supplied, stamped by the table before it
+   * filters or sorts. Read-only; setting it yourself overrides the stamp.
+   */
+  _reqoreIndex?: number;
+  /**
+   * Identity for row EXPANSION, when `renderExpandedRow` is in use.
+   *
+   * Falls back to `_selectId`, then to `_reqoreIndex`. Give it a stable value
+   * whenever the table can be sorted or filtered: a rendered position is not
+   * identity, so an expansion keyed on one stays with the SLOT rather than
+   * with the row.
+   */
+  _expandId?: string | number;
   _intent?: TReqoreIntent;
   _disabled?: boolean;
   /**
@@ -168,6 +182,36 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * `'Toggle selection on all data'`.
    */
   selectToggleAllTooltip?: string;
+
+  /**
+   * Renders the detail panel for an expanded row.
+   *
+   * Setting it turns the table's rows into expandable ones: an expander column
+   * is prepended and each row can open a panel of arbitrary content beneath
+   * itself. Return a falsy value for a row that has nothing to show and that
+   * row gets no expander.
+   *
+   * The panel's height is MEASURED, not declared — content can be any height
+   * and can change after it opens. `estimatedExpandedRowHeight` is only what a
+   * virtualised list assumes for the frame before the first measurement lands.
+   */
+  renderExpandedRow?: (row: IReqoreTableRowData) => React.ReactNode;
+  /** Rows expanded on first render, when expansion is uncontrolled. */
+  defaultExpanded?: (string | number)[];
+  /** Expanded rows. Pass with `onExpandedChange` to control expansion. */
+  expanded?: (string | number)[];
+  onExpandedChange?: (expanded: (string | number)[]) => void;
+  /** Opening a row closes any other. Off by default. */
+  expandSingle?: boolean;
+  /** Tooltip on a collapsed row's expander. Defaults to `'Show details'`. */
+  expandRowTooltip?: string;
+  /** Tooltip on an expanded row's expander. Defaults to `'Hide details'`. */
+  collapseRowTooltip?: string;
+  /**
+   * Height a virtualised list assumes for a panel it has not measured yet.
+   * Only affects the first frame after a row opens. Defaults to 200.
+   */
+  estimatedExpandedRowHeight?: number;
 
   striped?: boolean;
   emptyMessage?: string;
@@ -414,6 +458,14 @@ const ReqoreTable = ({
   rowHeight,
   overscanRowCount,
   selectToggleAllTooltip = 'Toggle selection on all data',
+  renderExpandedRow,
+  defaultExpanded,
+  expanded,
+  onExpandedChange,
+  expandSingle,
+  expandRowTooltip = 'Show details',
+  collapseRowTooltip = 'Hide details',
+  estimatedExpandedRowHeight = 200,
   columnsToggleLabel = 'Show / hide columns',
   filterPlaceholder,
   scrollToTopTooltip = 'Scroll to top',
@@ -551,13 +603,30 @@ const ReqoreTable = ({
   const transformedData = useMemo(() => {
     const hasQuery = normalizedQuery.length > 0;
 
+    /* Carry each row's position in the ORIGINAL data alongside it, rather than
+       ON it, through both filters.
+
+       The position is the last-resort expansion identity: unlike a rendered-row
+       position it survives sorting and filtering, so a row supplying neither
+       `_expandId` nor `_selectId` keeps its own panel open rather than handing
+       it to whoever lands in that slot next.
+
+       It must not reach the row until AFTER the global query has run. That
+       filter matches against `JSON.stringify(datum)`, so an index written onto
+       the row is searchable text: a table filtered by "1" started matching the
+       row at index 1 whatever it contained. Stamping after filtering keeps the
+       query looking only at the data the caller supplied. */
+    const positioned = _data.map((datum, index) => ({ datum, index }));
+
     // Filter by global query
-    let filteredData = hasQuery
-      ? _data.filter((datum) => JSON.stringify(datum).toLowerCase().includes(normalizedQuery))
-      : _data;
+    let filtered = hasQuery
+      ? positioned.filter(({ datum }) =>
+          JSON.stringify(datum).toLowerCase().includes(normalizedQuery)
+        )
+      : positioned;
 
     // Filter by column filters
-    filteredData = filteredData.filter((datum) => {
+    filtered = filtered.filter(({ datum }) => {
       return normalizedFilters.every(([filterKey, filterValue]) => {
         const datumValue = datum[filterKey as string];
 
@@ -565,8 +634,45 @@ const ReqoreTable = ({
       });
     });
 
+    const filteredData = filtered.map(({ datum, index }) =>
+      datum._reqoreIndex === undefined ? { ...datum, _reqoreIndex: index } : datum
+    );
+
     return _sort ? sortTableData(filteredData, _sort) : filteredData;
   }, [_data, _sort, normalizedFilters, normalizedQuery]);
+
+  /**
+   * Which rows are open. Uncontrolled by default (`defaultExpanded` seeds it),
+   * controlled when the caller passes `expanded` — the same shape `selected`
+   * uses, so a consumer does not learn a second convention for the same idea.
+   */
+  const [_expanded, _setExpanded] = useState<(string | number)[]>(defaultExpanded ?? []);
+  const activeExpanded = expanded ?? _expanded;
+
+  /** A row's expansion identity. See `_expandId`. */
+  const getExpandId = useCallback(
+    (row: IReqoreTableRowData): string | number =>
+      row._expandId ?? row._selectId ?? row._reqoreIndex,
+    []
+  );
+
+  const handleExpandClick = useCallback(
+    (expandId: string | number) => {
+      const isOpen = activeExpanded.some((id) => id.toString() === expandId.toString());
+      const next = isOpen
+        ? activeExpanded.filter((id) => id.toString() !== expandId.toString())
+        : expandSingle
+          ? [expandId]
+          : [...activeExpanded, expandId];
+
+      if (expanded === undefined) {
+        _setExpanded(next);
+      }
+
+      onExpandedChange?.(next);
+    },
+    [activeExpanded, expandSingle, expanded, onExpandedChange]
+  );
 
   const selectableData = useMemo(
     () => transformedData.filter((datum) => datum._selectId ?? false),
@@ -719,6 +825,53 @@ const ReqoreTable = ({
       });
     }
 
+    /* Unshifted AFTER the select box so it ends up to its LEFT. The expander is
+       about the row you are looking at; the checkbox is about a set you are
+       building. The one that acts on this row alone comes first. */
+    if (renderExpandedRow) {
+      fullColumns.unshift({
+        /* Wider than the select box's 20px. That column holds a checkbox glyph
+           that happens to fit; this one holds a real icon button, and at 20px
+           with no padding the chevron was clipped by its own cell and read as a
+           smudge rather than as a control. 40px is what the button needs to sit
+           in its cell without being cut. */
+        dataId: 'expander',
+        width: 40,
+        sortable: false,
+        hideable: false,
+        filterable: false,
+        resizable: false,
+        pin: 'left',
+        pinnable: false,
+        align: 'center',
+
+        header: { label: '' },
+
+        cell: {
+          padded: 'none',
+          actions: (row: IReqoreTableRowData) => {
+            // A row with nothing to show gets no control — an expander that
+            // opens an empty panel is worse than no expander.
+            if (!renderExpandedRow(row)) return [];
+
+            const expandId = getExpandId(row);
+            const isOpen = activeExpanded.some((id) => id.toString() === `${expandId}`);
+
+            return [
+              {
+                tooltip: isOpen ? collapseRowTooltip : expandRowTooltip,
+                flat: true,
+                transparent: true,
+                icon: isOpen ? 'ArrowUpSLine' : 'ArrowDownSLine',
+                'aria-expanded': isOpen,
+                onClick: () => handleExpandClick(expandId),
+              },
+            ];
+          },
+        },
+      });
+    }
+
     return prepareColumns(fullColumns, columnModifiers, zoomToSize[zoom]);
   }, [
     _internalColumns,
@@ -730,6 +883,12 @@ const ReqoreTable = ({
     selectToggleAllTooltip,
     activeSelected,
     handleToggleSelectClick,
+    renderExpandedRow,
+    activeExpanded,
+    handleExpandClick,
+    getExpandId,
+    expandRowTooltip,
+    collapseRowTooltip,
   ]);
 
   useUpdateEffect(() => {
@@ -1064,6 +1223,10 @@ const ReqoreTable = ({
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}
             getRowProps={getRowProps}
+            renderExpandedRow={renderExpandedRow}
+            expanded={activeExpanded}
+            onExpandClick={handleExpandClick}
+            estimatedExpandedRowHeight={estimatedExpandedRowHeight}
             tableWidth={sizes.width}
           />
         )}

@@ -243,6 +243,20 @@ const StyledCalloutLabelRow = styled.div`
   min-width: 0;
 `;
 
+/**
+ * The body of a callout given plain children (rather than a label/description
+ * pair).
+ *
+ * Deliberately NO font-weight. This used to force 800 on everything inside it,
+ * which is heavier than the callout's own label — a `ReqoreSpan` at `bold`
+ * (700) sitting above a paragraph at 800 reads as though the paragraph were the
+ * heading. More to the point, bold is how a writer marks the few words that
+ * matter, and a component that sets an entire block to extra-bold takes that
+ * away from every consumer at once: emphasis inside the block becomes
+ * invisible, because there is nothing left to be heavier than.
+ *
+ * Callers who do want a heavy body still have `contentEffect={{ weight }}`.
+ */
 const StyledCalloutContent = styled(StyledTextEffect)<{
   size: IReqoreCalloutProps['size'];
   theme: IReqoreTheme;
@@ -250,7 +264,6 @@ const StyledCalloutContent = styled(StyledTextEffect)<{
   color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
   font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size] * 1.2}px;
   line-height: 1.25;
-  font-weight: 800;
 `;
 
 export const ReqoreCallout = memo(

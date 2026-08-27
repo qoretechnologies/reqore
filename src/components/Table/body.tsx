@@ -1,6 +1,6 @@
 import count from 'lodash/size';
 import { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import { FixedSizeList, VariableSizeList } from 'react-window';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -23,6 +23,8 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
    * `IReqoreTableProps.overscanRowCount` for the public-facing docs.
    */
   overscanRowCount?: number;
+  /** See `IReqoreTableProps.estimatedExpandedRowHeight`. */
+  estimatedExpandedRowHeight?: number;
 }
 
 /**
@@ -33,7 +35,7 @@ export interface IReqoreTableSectionBodyProps extends IReqoreTableRowOptions {
 const MIN_OVERSCAN_ROWS = 8;
 
 // Wrapper that owns the overlay scrollbar's positioning context. The native
-// scroll container (`StyledList` / `StyledNonVirtualizedBody`) lives inside;
+// scroll container (the react-window list / `StyledNonVirtualizedBody`) lives inside;
 // the overlay thumb is absolutely positioned over its right edge.
 const StyledBodyWrapper = styled.div`
   position: relative;
@@ -54,7 +56,15 @@ const hideNativeScrollbar = css`
   }
 `;
 
-const StyledList = styled(List)`
+const StyledFixedList = styled(FixedSizeList)`
+  box-sizing: border-box;
+  ${hideNativeScrollbar}
+`;
+
+/* Used only when rows can expand. A panel's height is not knowable up front and
+   changes while it is open, so the list has to be told each item's size — and
+   re-told whenever a measurement lands. */
+const StyledVariableList = styled(VariableSizeList)`
   box-sizing: border-box;
   ${hideNativeScrollbar}
 `;
@@ -183,6 +193,59 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       [overscanRowCount, measuredHeight, rowHeight]
     );
 
+    /**
+     * Measured heights of open detail panels, keyed by expansion id.
+     *
+     * A ref, not state: the row reports its height from a ResizeObserver, and
+     * the only thing that has to happen in response is telling react-window to
+     * re-measure from that index down. Routing it through state would re-render
+     * every row to move one of them.
+     */
+    const expandedHeights = useRef<Record<string, number>>({});
+    const listRef = useRef<VariableSizeList>(null);
+
+    const expandable = !!rest.renderExpandedRow;
+    const expandedIds = rest.expanded;
+
+    const expandIdFor = useCallback(
+      (index: number): string =>
+        `${data[index]?._expandId ?? data[index]?._selectId ?? data[index]?._reqoreIndex ?? index}`,
+      [data]
+    );
+
+    const isExpanded = useCallback(
+      (index: number): boolean =>
+        !!expandedIds?.some((id) => id.toString() === expandIdFor(index)),
+      [expandedIds, expandIdFor]
+    );
+
+    const itemSize = useCallback(
+      (index: number): number =>
+        isExpanded(index)
+          ? rowHeight +
+            (expandedHeights.current[expandIdFor(index)] ?? rest.estimatedExpandedRowHeight ?? 200)
+          : rowHeight,
+      [isExpanded, expandIdFor, rowHeight, rest.estimatedExpandedRowHeight]
+    );
+
+    /** A panel reported its height — re-measure from its row down. */
+    const handleExpandedHeight = useCallback(
+      (index: number, panelHeight: number) => {
+        const key = expandIdFor(index);
+        if (expandedHeights.current[key] === panelHeight) return;
+        expandedHeights.current[key] = panelHeight;
+        listRef.current?.resetAfterIndex(index);
+      },
+      [expandIdFor]
+    );
+
+    /* Which rows are open has changed, so every size from the first affected
+       row down is stale. Reset from 0 rather than tracking the delta: the list
+       recomputes lazily and this runs only on a toggle. */
+    useEffect(() => {
+      if (expandable) listRef.current?.resetAfterIndex(0);
+    }, [expandedIds, expandable]);
+
     const renderNonVirtualizedRow = useCallback(
       (_item: unknown, index: number) => (
         <ReqoreTableRow key={index} data={itemData} index={index} />
@@ -209,9 +272,31 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       );
     }
 
+    if (expandable) {
+      return (
+        <StyledBodyWrapper>
+          <StyledVariableList
+            ref={listRef}
+            outerRef={targetRef}
+            itemCount={itemCount}
+            height={measuredHeight}
+            className='reqore-table-body'
+            itemSize={itemSize}
+            itemData={{ ...itemData, onExpandedHeight: handleExpandedHeight }}
+            estimatedItemSize={rowHeight}
+            overscanCount={overscanCount}
+            width='100%'
+          >
+            {ReqoreTableRow}
+          </StyledVariableList>
+          <ReqoreTableScrollbar targetRef={targetRef} />
+        </StyledBodyWrapper>
+      );
+    }
+
     return (
       <StyledBodyWrapper>
-        <StyledList
+        <StyledFixedList
           outerRef={targetRef}
           itemCount={itemCount}
           height={measuredHeight}
@@ -222,7 +307,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
           width='100%'
         >
           {ReqoreTableRow}
-        </StyledList>
+        </StyledFixedList>
         <ReqoreTableScrollbar targetRef={targetRef} />
       </StyledBodyWrapper>
     );

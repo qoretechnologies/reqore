@@ -1555,3 +1555,119 @@ export const OverscanRowCount: Story = {
     label: 'Overscan pinned to one row',
   },
 };
+
+/**
+ * Rows that open.
+ *
+ * A table is the right shape for a list you filter, sort and scan; a panel of
+ * detail is the right shape for the one row you have picked out of it. Before
+ * this the two could not be the same component, so a surface that wanted both
+ * became a list of cards and gave up filtering and sorting to keep its detail.
+ *
+ * The panel's height is measured rather than declared — it can be anything, and
+ * it can change while open — so this works inside the virtualised body too.
+ */
+export const ExpandableRows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table whose rows open into a detail panel. Clicking anywhere on a ' +
+          'row toggles it, and the prepended expander column says which rows can open — ' +
+          'a row whose `renderExpandedRow` returns nothing gets neither, and its click ' +
+          'falls through to whatever the table would otherwise do with it. Two rows are ' +
+          'opened here and both stay open; compare with `Expandable Rows Single`, which ' +
+          'makes the same two clicks and ends with one.',
+      },
+    },
+  },
+  args: {
+    height: 500,
+    label: 'Expandable rows',
+    renderExpandedRow: (row: any) => (
+      <div
+        style={{
+          padding: '12px 16px',
+          display: 'flex',
+          flexFlow: 'column',
+          alignItems: 'flex-start',
+          gap: 8,
+        }}
+      >
+        <ReqoreH3>{`${row.firstName} ${row.lastName}`}</ReqoreH3>
+        <ReqoreP>
+          {`Everything the table had no room for lives here — the full address, the ` +
+            `exact date, whatever this row is actually about. The panel is ordinary ` +
+            `content: any height, and free to change height while it is open.`}
+        </ReqoreP>
+        <ReqoreTag label={row.occupation} />
+      </div>
+    ),
+  },
+  /* Opens TWO rows, and the story below opens the same two. That pairing is the
+     point: identical gestures, two panels here and one there, so the pair shows
+     what `expandSingle` does rather than asserting it in prose.
+
+     Opened by the story rather than by `defaultExpanded` so the picture holds
+     whatever the fixture sorts into the top rows — which id lands first is not
+     knowable from here. */
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      if (!canvasElement.querySelectorAll('.reqore-table-row').length) {
+        throw new Error('table rows not rendered');
+      }
+    });
+
+    const cellsIn = (index: number) =>
+      canvasElement
+        .querySelectorAll('.reqore-table-row')
+        [index].querySelectorAll('.reqore-table-cell');
+
+    await fireEvent.click(cellsIn(0)[cellsIn(0).length - 1]);
+    await fireEvent.click(cellsIn(1)[cellsIn(1).length - 1]);
+
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.reqore-table-row-expanded').length).toBe(2)
+    );
+  },
+};
+
+/** One at a time — for detail heavy enough that two open at once is a scroll. */
+export const ExpandableRowsSingle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same table and the same two clicks as `Expandable Rows`, with ' +
+          '`expandSingle` set: opening the second row closes the first, so the reader is ' +
+          'always looking at exactly one detail panel.',
+      },
+    },
+  },
+  args: {
+    ...ExpandableRows.args,
+    expandSingle: true,
+    label: 'Expandable rows, one at a time',
+  },
+  /* The same two clicks as the story above. Two panels there, one here — that
+     difference IS this story. */
+  play: async ({ canvasElement }) => {
+    const cellsIn = (index: number) =>
+      canvasElement.querySelectorAll('.reqore-table-row')[index].querySelectorAll(
+        '.reqore-table-cell'
+      );
+
+    await waitFor(() => {
+      if (!canvasElement.querySelectorAll('.reqore-table-row').length) {
+        throw new Error('table rows not rendered');
+      }
+    });
+
+    await fireEvent.click(cellsIn(0)[cellsIn(0).length - 1]);
+    await fireEvent.click(cellsIn(1)[cellsIn(1).length - 1]);
+
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.reqore-table-row-expanded').length).toBe(1)
+    );
+  },
+};
