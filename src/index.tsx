@@ -5,6 +5,13 @@ export { ReqoreBubble, ReqoreBubbleGroup } from './components/Bubble';
 export { default as ReqoreButton } from './components/Button';
 export { ReqoreCallout } from './components/Callout';
 export { default as ReqoreCheckbox } from './components/Checkbox';
+export {
+  REQORE_COLLAPSE_DURATION_MS,
+  REQORE_COLLAPSE_EASING,
+  ReqoreCollapse,
+  reqoreCollapseTransition,
+} from './components/Collapse';
+export type { IReqoreCollapseProps } from './components/Collapse';
 export { ReqoreCollapsibleContent } from './components/CollapsibleContent';
 export { ReqoreCollection } from './components/Collection';
 export { ReqoreColumns } from './components/Columns';
