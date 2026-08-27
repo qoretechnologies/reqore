@@ -53,7 +53,13 @@ export interface IReqoreCalloutProps
   label?: React.ReactNode;
   /** Effect applied to the label. */
   labelEffect?: IReqoreEffect;
-  /** Body copy rendered under the label. Falls back to `children`. */
+  /**
+   * Body copy rendered under the label. Falls back to `children`.
+   *
+   * Rendered inside a paragraph, so it takes text and inline content. For a
+   * body with blocks in it — a button row, a list — pass `children` instead
+   * and leave this unset; both render under the label.
+   */
   description?: React.ReactNode;
   /** Effect applied to the description. */
   descriptionEffect?: IReqoreEffect;
@@ -260,9 +266,16 @@ const StyledCalloutLabelRow = styled.div`
 const StyledCalloutContent = styled(StyledTextEffect)<{
   size: IReqoreCalloutProps['size'];
   theme: IReqoreTheme;
+  /* Set when the body sits under a label. A callout with no label has nothing
+     for its body to be smaller than, so the body is the callout's voice and
+     runs a step above the base size; under a label it is body copy, and body
+     copy larger than the heading above it reads as the heading being the
+     afterthought. */
+  $underLabel?: boolean;
 }>`
   color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
-  font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size] * 1.2}px;
+  font-size: ${({ size = 'normal', $underLabel }) =>
+    TEXT_FROM_SIZE[size] * ($underLabel ? 1 : 1.2)}px;
   line-height: 1.25;
 `;
 
@@ -381,6 +394,27 @@ export const ReqoreCallout = memo(
                 >
                   {description}
                 </ReqoreP>
+              )}
+              {/* A label with children used to render the label alone and DROP
+                  the body — silently, which is the worst way for a component to
+                  disagree with its caller. The body goes under the label, in
+                  the same block the unstructured branch uses: it is a div, so
+                  it takes arbitrary content (a button row, a list) that a
+                  `description` cannot, since that renders inside a paragraph.
+
+                  Both render when both are given: prose in the description and
+                  an affordance under it is a real shape, and picking a winner
+                  would be the same silent drop in a smaller box. */}
+              {children && (
+                <StyledCalloutContent
+                  theme={theme}
+                  size={label ? descriptionSize : size}
+                  $underLabel={!!label}
+                  effect={contentEffect || {}}
+                  className='reqore-callout-content'
+                >
+                  {children}
+                </StyledCalloutContent>
               )}
               {!label && hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
             </StyledCalloutBody>

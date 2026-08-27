@@ -101,6 +101,52 @@ test('Falls back to children when label/description are not provided', () => {
   expect(document.querySelectorAll('.reqore-callout-label').length).toBe(0);
 });
 
+test('Renders children under a label, rather than dropping them', () => {
+  /* A label with children and no `description` used to render the label and
+     silently discard the body. Children go in the content block, not the
+     description paragraph, so a body with blocks in it stays valid markup. */
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Heads up'>
+            <div className='body-block'>Body that is not a paragraph</div>
+          </ReqoreCallout>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-callout-label')!.textContent).toBe('Heads up');
+  expect(document.querySelector('.reqore-callout-content')!.textContent).toBe(
+    'Body that is not a paragraph'
+  );
+  // The body is not inside the description paragraph.
+  expect(document.querySelector('.reqore-callout-description')).toBeNull();
+  expect(document.querySelector('p .body-block')).toBeNull();
+});
+
+test('Renders the description AND children when both are given', () => {
+  // Prose plus an affordance under it is a real shape, and dropping either
+  // half would be the same silent discard in a smaller box.
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreCallout label='Heads up' description='The description'>
+            <button type='button'>An action</button>
+          </ReqoreCallout>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-callout-description')!.textContent).toBe(
+    'The description'
+  );
+  expect(document.querySelector('.reqore-callout-content')!.textContent).toBe('An action');
+});
+
 test('Renders <Callout /> with icon', () => {
   render(
     <ReqoreUIProvider>
