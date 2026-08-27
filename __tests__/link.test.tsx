@@ -93,3 +93,64 @@ test('Renders a custom element via `as` and passes element props through', () =>
   expect(link.getAttribute('href')).toBe('/issues');
   expect(link.hasAttribute('data-router-link')).toBe(true);
 });
+
+test('Truncates a capped link from the end by default', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreLink href='https://example.com/a/very/long/path' maxWidth='120px'>
+            https://example.com/a/very/long/path
+          </ReqoreLink>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  // One head, no tail: the end is what gives way.
+  expect(document.querySelectorAll('.reqore-link-text-head').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-link-text-tail').length).toBe(0);
+  expect(document.querySelector('.reqore-link')!.textContent).toBe(
+    'https://example.com/a/very/long/path'
+  );
+});
+
+test('Keeps both ends when a capped link truncates in the middle', () => {
+  /* An address is told apart from its neighbours by its tail — two webhooks on
+     one host differ only there — so the middle is what may be dropped. */
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreLink href='https://example.com/webhooks/paddle' maxWidth='120px' truncate='middle'>
+            https://example.com/webhooks/paddle
+          </ReqoreLink>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const head = document.querySelector('.reqore-link-text-head')!;
+  const tail = document.querySelector('.reqore-link-text-tail')!;
+
+  // The last third, floored: 35 characters keeps 11.
+  expect(tail.textContent).toBe('ooks/paddle');
+  expect(`${head.textContent}${tail.textContent}`).toBe('https://example.com/webhooks/paddle');
+});
+
+test('Leaves an uncapped link whole', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreLink href='https://example.com' truncate='middle'>
+            https://example.com
+          </ReqoreLink>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelectorAll('.reqore-link-text-head').length).toBe(0);
+  expect(document.querySelector('.reqore-link')!.textContent).toBe('https://example.com');
+});
