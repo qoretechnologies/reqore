@@ -79,12 +79,37 @@ interface IReqoreLinkStyle {
   $maxWidth?: string;
 }
 
+/**
+ * Holds the truncated halves.
+ *
+ * A nested row, so the outer link's `gap` (which exists to separate an icon
+ * from its text) does not also open a gap in the MIDDLE of a word — a cut
+ * address rendered as "https://supah.qoretechnologie…  ks/paddle" with a hole
+ * where the ellipsis should meet the tail.
+ */
+const StyledTruncatedText = styled.span`
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  /* Deliberately no overflow clipping here. The head clips itself, and
+     clipping again at this level cuts the underline off: it is painted 3px
+     below the baseline, outside a box sized to the text. A truncated link that
+     has quietly stopped being underlined no longer reads as a link at all. */
+`;
+
 /** The half that gives way. See `truncate`. */
 const StyledTruncatedHead = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+  /* The ellipsis needs the clipping; the underline is drawn 3px BELOW the
+     baseline and gets clipped with it, so a truncated link kept its ellipsis
+     and lost the one mark that says it is a link. The padding pushes the clip
+     boundary past the underline and the negative margin gives the space back,
+     so nothing moves. */
+  padding-bottom: 5px;
+  margin-bottom: -5px;
 `;
 
 /** The half the caller asked to keep. */
@@ -126,7 +151,6 @@ export const StyledLink = styled(StyledSpan)<IReqoreLinkStyle>`
       ? css`
           display: inline-flex;
           max-width: ${$maxWidth};
-          overflow: hidden;
           white-space: nowrap;
           vertical-align: bottom;
         `
@@ -149,6 +173,17 @@ export const StyledLink = styled(StyledSpan)<IReqoreLinkStyle>`
      '.layout a { text-decoration: none }' reset, which would otherwise
      strip the underline from the anchor variant. */
   && {
+    text-decoration: ${({ $underline }) => ($underline === false ? 'none' : 'underline')};
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  /* A capped link lays its text out in an inline-flex row, and an inline-flex
+     box does not paint its own decoration over its flex items — so a truncated
+     link silently stopped looking like a link. The parts draw it themselves,
+     from the same flag, rather than each inheriting a rule that does not cross
+     that boundary. */
+  && .reqore-link-text-head,
+  && .reqore-link-text-tail {
     text-decoration: ${({ $underline }) => ($underline === false ? 'none' : 'underline')};
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
@@ -274,14 +309,14 @@ export const ReqoreLink = memo(
             />
           ) : null}
           {middleParts ? (
-            <>
+            <StyledTruncatedText>
               <StyledTruncatedHead className='reqore-link-text-head'>
                 {middleParts[0]}
               </StyledTruncatedHead>
               <StyledTruncatedTail className='reqore-link-text-tail'>
                 {middleParts[1]}
               </StyledTruncatedTail>
-            </>
+            </StyledTruncatedText>
           ) : maxWidth ? (
             <StyledTruncatedHead className='reqore-link-text-head'>{children}</StyledTruncatedHead>
           ) : (
