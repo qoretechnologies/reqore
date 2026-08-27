@@ -850,6 +850,12 @@ const ReqoreTable = ({
         cell: {
           padded: 'none',
           actions: (row: IReqoreTableRowData) => {
+            /* A disabled row is not interactive, and expanding is an
+               interaction. Offering the control anyway says the row is dead
+               except for this one thing, which is not what `_disabled` means —
+               the rest of the table already refuses clicks on it. */
+            if (row._disabled) return [];
+
             // A row with nothing to show gets no control — an expander that
             // opens an empty panel is worse than no expander.
             if (!renderExpandedRow(row)) return [];

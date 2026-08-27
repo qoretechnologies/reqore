@@ -346,7 +346,12 @@ const ReqoreTableRow = memo(
        `renderExpandedRow` returning nothing means "this row has nothing more to
        show" — it gets no panel, no expander, and its click falls through to
        whatever the table would otherwise have done with it. */
-    const expandedContent = renderExpandedRow?.(data[index]);
+    /* A disabled row does not expand — see the expander column in `index.tsx`.
+       Enforced here as well as there so the two cannot drift: the column decides
+       whether to draw the control, this decides whether the row responds and
+       whether a panel renders at all, including one a controlled `expanded`
+       still names. */
+    const expandedContent = data[index]?._disabled ? undefined : renderExpandedRow?.(data[index]);
     const canExpand = !!expandedContent;
     const expandId = data[index]?._expandId ?? data[index]?._selectId ?? data[index]?._reqoreIndex;
     const isExpanded =

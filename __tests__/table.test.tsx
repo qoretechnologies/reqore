@@ -1241,6 +1241,44 @@ describe('<Table /> expandable rows', () => {
     expect(document.querySelectorAll('.detail').length).toBe(1);
   });
 
+  test('will not expand a disabled row, however it is asked', () => {
+    /* `_disabled` means the row is not interactive, and expanding is an
+       interaction — offering it anyway would say the row is dead except for
+       this one thing. Asserted three ways because there are three routes in:
+       the expander control, a click on the row, and a controlled `expanded`
+       that names it. */
+    const withDisabled = [
+      { id: 1, name: 'first', _expandId: 'first' },
+      { id: 2, name: 'second', _expandId: 'second', _disabled: true },
+    ];
+
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={columns}
+            data={withDisabled}
+            expanded={['second']}
+            renderExpandedRow={(row) => <div className='detail'>detail for {row.name}</div>}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    // Named in `expanded`, and still no panel.
+    expect(container.querySelectorAll('.detail').length).toBe(0);
+
+    // No expander control on that row.
+    const disabledRow = container.querySelectorAll('.reqore-table-row')[1];
+    expect(
+      disabledRow.querySelector('[data-reqore-table-column-id="expander"] button')
+    ).toBeNull();
+
+    // And clicking it opens nothing.
+    clickRow(1);
+    expect(container.querySelectorAll('.detail').length).toBe(0);
+  });
+
   test('leaves a table without renderExpandedRow exactly as it was', () => {
     render(
       <ReqoreUIProvider>
