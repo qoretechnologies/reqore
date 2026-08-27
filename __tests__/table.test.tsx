@@ -1279,6 +1279,57 @@ describe('<Table /> expandable rows', () => {
     expect(container.querySelectorAll('.detail').length).toBe(0);
   });
 
+  test('does not confuse a row identified by position with one whose id is that number', () => {
+    /* The fallback identity used to be the row's index in the caller's data,
+       compared in the same space as `_selectId` — so the row at index 1 and the
+       row whose `_selectId` was 1 answered to the same identity, and opening
+       either opened both. */
+    const mixed = [
+      { id: 10, name: 'by id', _selectId: 1 },
+      // No `_selectId` of its own, so it is identified by its position — which
+      // is 1, the same number as the row above answers to.
+      { id: 11, name: 'positional' },
+    ];
+
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={columns}
+            data={mixed}
+            renderExpandedRow={(row) => <div className='detail'>detail for {row.name}</div>}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    clickRow(0);
+
+    expect(container.querySelectorAll('.detail').length).toBe(1);
+    expect(container.querySelector('.detail')).toHaveTextContent('detail for by id');
+  });
+
+  test('opens a row that has no id of its own by its position', () => {
+    // The positional identity is still addressable — it is only namespaced.
+    const anonymous = [{ id: 10, name: 'first' }, { id: 11, name: 'second' }];
+
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={columns}
+            data={anonymous}
+            defaultExpanded={['@position:1']}
+            renderExpandedRow={(row) => <div className='detail'>detail for {row.name}</div>}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    expect(container.querySelectorAll('.detail').length).toBe(1);
+    expect(container.querySelector('.detail')).toHaveTextContent('detail for second');
+  });
+
   test('leaves a table without renderExpandedRow exactly as it was', () => {
     render(
       <ReqoreUIProvider>

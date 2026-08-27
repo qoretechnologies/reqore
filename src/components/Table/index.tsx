@@ -34,6 +34,7 @@ import {
   getColumnsCount,
   getExportActions,
   getOnlyShownColumns,
+  getRowExpandId,
   getZoomActions,
   hasGroupedColumns,
   hasHiddenColumns,
@@ -130,7 +131,9 @@ export interface IReqoreTableRowData {
   /**
    * Identity for row EXPANSION, when `renderExpandedRow` is in use.
    *
-   * Falls back to `_selectId`, then to `_reqoreIndex`. Give it a stable value
+   * Falls back to `_selectId`, then to the row's position in the data as
+   * supplied — the position written as `'@position:<index>'`, so that it cannot
+   * be mistaken for an id someone actually gave a row. Give this a stable value
    * whenever the table can be sorted or filtered: a rendered position is not
    * identity, so an expansion keyed on one stays with the SLOT rather than
    * with the row.
@@ -196,9 +199,12 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * virtualised list assumes for the frame before the first measurement lands.
    */
   renderExpandedRow?: (row: IReqoreTableRowData) => React.ReactNode;
-  /** Rows expanded on first render, when expansion is uncontrolled. */
+  /**
+   * Rows expanded on first render, when expansion is uncontrolled. Rows are
+   * named by their expansion identity — see `_expandId`.
+   */
   defaultExpanded?: (string | number)[];
-  /** Expanded rows. Pass with `onExpandedChange` to control expansion. */
+  /** Expanded rows, by `_expandId`. Pass with `onExpandedChange` to control expansion. */
   expanded?: (string | number)[];
   onExpandedChange?: (expanded: (string | number)[]) => void;
   /** Opening a row closes any other. Off by default. */
@@ -649,10 +655,9 @@ const ReqoreTable = ({
   const [_expanded, _setExpanded] = useState<(string | number)[]>(defaultExpanded ?? []);
   const activeExpanded = expanded ?? _expanded;
 
-  /** A row's expansion identity. See `_expandId`. */
+  /** A row's expansion identity. See `_expandId` and `getRowExpandId`. */
   const getExpandId = useCallback(
-    (row: IReqoreTableRowData): string | number =>
-      row._expandId ?? row._selectId ?? row._reqoreIndex,
+    (row: IReqoreTableRowData): string | number => getRowExpandId(row),
     []
   );
 

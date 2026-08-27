@@ -26,6 +26,7 @@ import {
   calculatePinOffsets,
   getColumnRenderedWidth,
   getReorderedLeaves,
+  getRowExpandId,
   getTotalColumnsWidth,
   IColumnPinInfo,
 } from './helpers';
@@ -353,9 +354,8 @@ const ReqoreTableRow = memo(
        still names. */
     const expandedContent = data[index]?._disabled ? undefined : renderExpandedRow?.(data[index]);
     const canExpand = !!expandedContent;
-    const expandId = data[index]?._expandId ?? data[index]?._selectId ?? data[index]?._reqoreIndex;
-    const isExpanded =
-      canExpand && !!expanded?.some((id) => id.toString() === `${expandId}`);
+    const expandId = getRowExpandId(data[index], index);
+    const isExpanded = canExpand && !!expanded?.some((id) => id.toString() === expandId);
 
     /* Measure the open panel and report it upward. A virtualised list has to be
        told how tall each item is, and a panel's height is not knowable in
@@ -440,7 +440,7 @@ const ReqoreTableRow = memo(
                          object. A row with nothing to expand falls through to
                          whatever the table would otherwise do with the click. */
                       e.stopPropagation();
-                      onExpandClick?.(expandId!);
+                      onExpandClick?.(expandId);
                     } else if (onRowClick) {
                       e.stopPropagation();
                       onRowClick(data[index]);

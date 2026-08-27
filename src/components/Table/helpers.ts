@@ -1,6 +1,6 @@
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
-import { IReqoreTableColumn, IReqoreTableData, IReqoreTableSort } from '.';
+import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowData, IReqoreTableSort } from '.';
 import { ICON_FROM_SIZE, SIZE_TO_MODIFIER, TSizes } from '../../constants/sizes';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
@@ -401,7 +401,34 @@ export const removeInternalData = (data: IReqoreTableData): any[] => {
     delete newItem._selectId;
     delete newItem._disabled;
     delete newItem._intent;
+    delete newItem._expandId;
+    delete newItem._reqoreIndex;
 
     return newItem;
   });
+};
+
+/** Prefix for the positional expansion identity. See `getRowExpandId`. */
+export const EXPAND_ID_POSITION_PREFIX = '@position:';
+
+/**
+ * A row's expansion identity: `_expandId`, else `_selectId`, else its position
+ * in the data as supplied.
+ *
+ * The position is NAMESPACED, and that is the whole point of this function
+ * existing. A position and an id are different kinds of thing, and while they
+ * shared one comparison space a row with no `_selectId` sitting at index 3
+ * answered to the same identity as the row whose `_selectId` was 3 — so opening
+ * one opened both. Prefixing the fallback puts positions in a space no
+ * caller-supplied id occupies.
+ *
+ * A row identified by position can still be named in `expanded` /
+ * `defaultExpanded`, as `'@position:3'` — but give such a row an `_expandId`
+ * instead: a position is only stable until the caller's data changes.
+ */
+export const getRowExpandId = (row: IReqoreTableRowData, fallbackIndex?: number): string => {
+  if (row?._expandId !== undefined && row._expandId !== null) return `${row._expandId}`;
+  if (row?._selectId !== undefined && row._selectId !== null) return `${row._selectId}`;
+
+  return `${EXPAND_ID_POSITION_PREFIX}${row?._reqoreIndex ?? fallbackIndex ?? ''}`;
 };

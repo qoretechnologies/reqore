@@ -4,7 +4,7 @@ import { FixedSizeList, VariableSizeList } from 'react-window';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import { getTotalColumnsWidth } from './helpers';
+import { getRowExpandId, getTotalColumnsWidth } from './helpers';
 import ReqoreTableRow, { IReqoreTableRowOptions } from './row';
 import { ReqoreTableScrollbar } from './scrollbar';
 
@@ -184,14 +184,12 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     const expandedIds = rest.expanded;
 
     const expandIdFor = useCallback(
-      (index: number): string =>
-        `${data[index]?._expandId ?? data[index]?._selectId ?? data[index]?._reqoreIndex ?? index}`,
+      (index: number): string => getRowExpandId(data[index], index),
       [data]
     );
 
     const isExpanded = useCallback(
-      (index: number): boolean =>
-        !!expandedIds?.some((id) => id.toString() === expandIdFor(index)),
+      (index: number): boolean => !!expandedIds?.some((id) => id.toString() === expandIdFor(index)),
       [expandedIds, expandIdFor]
     );
 
