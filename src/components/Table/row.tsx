@@ -20,6 +20,7 @@ import { ReqoreP } from '../Paragraph';
 import ReqoreTag from '../Tag';
 import { TimeAgo } from '../TimeAgo';
 import { IReqoreButtonProps } from '../Button';
+import { useEffect, useRef } from 'react';
 import { IReqoreCustomTableBodyCell, ReqoreTableBodyCell } from './cell';
 import {
   calculatePinOffsets,
@@ -66,6 +67,14 @@ export interface IReqoreTableRowOptions {
   setHoveredRow?: (index: number) => void;
   tableWidth: number;
   getRowProps?: IReqoreTableRowPropsMapper;
+  /** See `IReqoreTableProps.renderExpandedRow`. */
+  renderExpandedRow?: (row: IReqoreTableRowData) => React.ReactNode;
+  /** Expansion ids currently open. */
+  expanded?: (string | number)[];
+  /** Reports an open panel's measured height so a virtualised list can size it. */
+  onExpandedHeight?: (index: number, height: number) => void;
+  /** Toggles a row open or closed. */
+  onExpandClick?: (expandId: string | number) => void;
 }
 export interface IReqoreCustomTableRowProps extends IReqoreTableRowOptions {
   style?: React.CSSProperties;
@@ -92,6 +101,25 @@ export interface IReqoreTableRowStyle {
   wrap?: boolean;
   minWidth?: number;
 }
+
+/**
+ * Wraps a row and its detail panel into ONE virtualised item.
+ *
+ * react-window positions items absolutely and gives each one a height, so an
+ * expanded row cannot be a sibling of its panel — the two have to occupy the
+ * same item box or the panel would be laid over the row beneath it.
+ */
+const StyledTableRowGroup = styled.div`
+  display: flex;
+  flex-flow: column;
+  overflow: hidden;
+`;
+
+/** The open panel. Owns no styling of its own beyond containing the content. */
+const StyledExpandedRow = styled.div`
+  min-width: 0;
+  overflow: hidden;
+`;
 
 export const StyledTableRow = styled.div.withConfig({
   // `wrap` drives the row's flex-wrap rule; it is not a DOM attribute.
@@ -158,6 +186,10 @@ const ReqoreTableRow = memo(
       rowComponent,
       tableWidth,
       getRowProps,
+      renderExpandedRow,
+      expanded,
+      onExpandedHeight,
+      onExpandClick,
     },
 
     style,
@@ -310,6 +342,34 @@ const ReqoreTableRow = memo(
       [columns, tableWidth]
     );
 
+    /* What this row can do about expansion.
+       `renderExpandedRow` returning nothing means "this row has nothing more to
+       show" — it gets no panel, no expander, and its click falls through to
+       whatever the table would otherwise have done with it. */
+    const expandedContent = renderExpandedRow?.(data[index]);
+    const canExpand = !!expandedContent;
+    const expandId = data[index]?._expandId ?? data[index]?._selectId ?? data[index]?._reqoreIndex;
+    const isExpanded =
+      canExpand && !!expanded?.some((id) => id.toString() === `${expandId}`);
+
+    /* Measure the open panel and report it upward. A virtualised list has to be
+       told how tall each item is, and a panel's height is not knowable in
+       advance: it depends on content that can itself change while open. The
+       observer is what turns "I do not know" into "it is 312px now". */
+    const panelRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      const element = panelRef.current;
+      if (!element || !isExpanded || !onExpandedHeight) return undefined;
+
+      const report = () => onExpandedHeight(index, element.getBoundingClientRect().height);
+      report();
+
+      if (typeof ResizeObserver === 'undefined') return undefined;
+      const observer = new ResizeObserver(report);
+      observer.observe(element);
+      return () => observer.disconnect();
+    }, [isExpanded, onExpandedHeight, index, expandedContent]);
+
     const renderCells = useCallback(
       () =>
         reorderedLeaves.map(
@@ -362,6 +422,14 @@ const ReqoreTableRow = memo(
                     if (cell?.onClick) {
                       e.stopPropagation();
                       cell.onClick(data[index]);
+                    } else if (canExpand) {
+                      /* The whole row is the expander. A caret alone is a small
+                         target for the commonest thing to want from a row that
+                         has more to say, and the row already reads as one
+                         object. A row with nothing to expand falls through to
+                         whatever the table would otherwise do with the click. */
+                      e.stopPropagation();
+                      onExpandClick?.(expandId!);
                     } else if (onRowClick) {
                       e.stopPropagation();
                       onRowClick(data[index]);
@@ -397,6 +465,9 @@ const ReqoreTableRow = memo(
         CellComponent,
         onSelectClick,
         renderContent,
+        canExpand,
+        expandId,
+        onExpandClick,
       ]
     );
 
@@ -411,18 +482,43 @@ const ReqoreTableRow = memo(
     const mergedStyle = consumerRowProps?.style ? { ...style, ...consumerRowProps.style } : style;
     const { className: _c, style: _s, ...consumerAttrs } = consumerRowProps ?? {};
 
-    return (
+    const row = (
       <RowComponent
         {...consumerAttrs}
-        style={mergedStyle}
+        style={renderExpandedRow ? undefined : mergedStyle}
         className={mergedClassName}
-        interactive={!!onRowClick && !data[index]._disabled}
+        interactive={(!!onRowClick || canExpand) && !data[index]._disabled}
         size={size}
         wrap={rowWrap}
         minWidth={totalColumnsWidth}
       >
         {renderCells()}
       </RowComponent>
+    );
+
+    /* Not expandable at all — the row IS the item, exactly as before. Keeping
+       this path byte-for-byte is what makes the feature free for every table
+       that does not use it. */
+    if (!renderExpandedRow) {
+      return row;
+    }
+
+    /* react-window positions items absolutely and gives each one a height, so
+       an expanded row cannot be a SIBLING of its panel — the two have to share
+       one item box or the panel would be drawn over the row beneath it. */
+    return (
+      <StyledTableRowGroup style={mergedStyle} className='reqore-table-row-group'>
+        {row}
+        {isExpanded ? (
+          <StyledExpandedRow
+            ref={panelRef}
+            className='reqore-table-row-expanded'
+            style={{ minWidth: totalColumnsWidth }}
+          >
+            {expandedContent}
+          </StyledExpandedRow>
+        ) : null}
+      </StyledTableRowGroup>
     );
   }
 );
