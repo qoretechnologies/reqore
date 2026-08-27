@@ -1618,13 +1618,21 @@ export const ExpandableRows: Story = {
       }
     });
 
-    const cellsIn = (index: number) =>
-      canvasElement
-        .querySelectorAll('.reqore-table-row')
-        [index].querySelectorAll('.reqore-table-cell');
+    /* The rows that actually offer an expander, not the first two on screen:
+       the fixture disables some rows and a disabled row does not expand, so
+       taking them by position opened one panel and quietly asserted two. */
+    const expandableRows = () =>
+      Array.from(canvasElement.querySelectorAll('.reqore-table-row')).filter((row) =>
+        row.querySelector('[data-reqore-table-column-id="expander"] button')
+      );
 
-    await fireEvent.click(cellsIn(0)[cellsIn(0).length - 1]);
-    await fireEvent.click(cellsIn(1)[cellsIn(1).length - 1]);
+    const clickRow = async (row: Element) => {
+      const cells = row.querySelectorAll('.reqore-table-cell');
+      await fireEvent.click(cells[cells.length - 1]);
+    };
+
+    await clickRow(expandableRows()[0]);
+    await clickRow(expandableRows()[1]);
 
     await waitFor(() =>
       expect(canvasElement.querySelectorAll('.reqore-table-row-expanded').length).toBe(2)
@@ -1652,22 +1660,64 @@ export const ExpandableRowsSingle: Story = {
   /* The same two clicks as the story above. Two panels there, one here — that
      difference IS this story. */
   play: async ({ canvasElement }) => {
-    const cellsIn = (index: number) =>
-      canvasElement.querySelectorAll('.reqore-table-row')[index].querySelectorAll(
-        '.reqore-table-cell'
-      );
-
     await waitFor(() => {
       if (!canvasElement.querySelectorAll('.reqore-table-row').length) {
         throw new Error('table rows not rendered');
       }
     });
 
-    await fireEvent.click(cellsIn(0)[cellsIn(0).length - 1]);
-    await fireEvent.click(cellsIn(1)[cellsIn(1).length - 1]);
+    // Same selection as the story above — expandable rows, not the first two on
+    // screen, since a disabled row offers no expander.
+    const expandableRows = () =>
+      Array.from(canvasElement.querySelectorAll('.reqore-table-row')).filter((row) =>
+        row.querySelector('[data-reqore-table-column-id="expander"] button')
+      );
+
+    const clickRow = async (row: Element) => {
+      const cells = row.querySelectorAll('.reqore-table-cell');
+      await fireEvent.click(cells[cells.length - 1]);
+    };
+
+    await clickRow(expandableRows()[0]);
+    await clickRow(expandableRows()[1]);
 
     await waitFor(() =>
       expect(canvasElement.querySelectorAll('.reqore-table-row-expanded').length).toBe(1)
     );
+  },
+};
+
+/**
+ * The same feature on a table that sizes itself.
+ *
+ * No `height`, so the body grows to its content — which is the case that broke:
+ * a body sized as `rowCount * rowHeight` is only correct while every row is the
+ * same height, and an open panel is not. The row showed as expanded and its
+ * detail was clipped clean off the bottom.
+ */
+export const ExpandableRowsAutoHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A short expandable table with no `height` of its own, so it grows to fit its ' +
+          'content. The open row makes the body taller by exactly the panel it reveals, ' +
+          'rather than clipping it.',
+      },
+    },
+  },
+  args: {
+    height: undefined,
+    label: 'Expandable rows, self-sizing',
+    data: slice(tableData.data as IReqoreTableRowData[], 0, 4),
+    /* Opened declaratively: this story is about the body's HEIGHT, and a click
+       is a second thing that can go wrong in a picture of the first.
+
+       Index 2, not 1 — row 1 of the fixture is `_disabled`, and a disabled row
+       does not expand. The four rows shown include it, so the picture also
+       shows a row with no expander at all, which is the other half of the
+       contract. */
+    defaultExpanded: [(tableData.data as IReqoreTableRowData[])[2]._selectId],
+    renderExpandedRow: ExpandableRows.args?.renderExpandedRow,
   },
 };

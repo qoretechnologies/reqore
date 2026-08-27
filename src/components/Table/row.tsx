@@ -26,6 +26,7 @@ import {
   calculatePinOffsets,
   getColumnRenderedWidth,
   getReorderedLeaves,
+  getRowExpandId,
   getTotalColumnsWidth,
   IColumnPinInfo,
 } from './helpers';
@@ -346,11 +347,15 @@ const ReqoreTableRow = memo(
        `renderExpandedRow` returning nothing means "this row has nothing more to
        show" — it gets no panel, no expander, and its click falls through to
        whatever the table would otherwise have done with it. */
-    const expandedContent = renderExpandedRow?.(data[index]);
+    /* A disabled row does not expand — see the expander column in `index.tsx`.
+       Enforced here as well as there so the two cannot drift: the column decides
+       whether to draw the control, this decides whether the row responds and
+       whether a panel renders at all, including one a controlled `expanded`
+       still names. */
+    const expandedContent = data[index]?._disabled ? undefined : renderExpandedRow?.(data[index]);
     const canExpand = !!expandedContent;
-    const expandId = data[index]?._expandId ?? data[index]?._selectId ?? data[index]?._reqoreIndex;
-    const isExpanded =
-      canExpand && !!expanded?.some((id) => id.toString() === `${expandId}`);
+    const expandId = getRowExpandId(data[index], index);
+    const isExpanded = canExpand && !!expanded?.some((id) => id.toString() === expandId);
 
     /* Measure the open panel and report it upward. A virtualised list has to be
        told how tall each item is, and a panel's height is not knowable in
@@ -361,7 +366,13 @@ const ReqoreTableRow = memo(
       const element = panelRef.current;
       if (!element || !isExpanded || !onExpandedHeight) return undefined;
 
-      const report = () => onExpandedHeight(index, element.getBoundingClientRect().height);
+      /* A non-positive measurement is not an answer — it is the panel not laid
+         out yet (or a test DOM that does not lay out at all). Reporting it would
+         replace the estimate with zero and collapse the row to its header. */
+      const report = () => {
+        const panelHeight = element.getBoundingClientRect().height;
+        if (panelHeight > 0) onExpandedHeight(index, panelHeight);
+      };
       report();
 
       if (typeof ResizeObserver === 'undefined') return undefined;
@@ -429,7 +440,7 @@ const ReqoreTableRow = memo(
                          object. A row with nothing to expand falls through to
                          whatever the table would otherwise do with the click. */
                       e.stopPropagation();
-                      onExpandClick?.(expandId!);
+                      onExpandClick?.(expandId);
                     } else if (onRowClick) {
                       e.stopPropagation();
                       onRowClick(data[index]);
