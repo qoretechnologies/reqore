@@ -603,28 +603,40 @@ const ReqoreTable = ({
   const transformedData = useMemo(() => {
     const hasQuery = normalizedQuery.length > 0;
 
-    /* Stamp each row with its position in the ORIGINAL data, before any filter
-       or sort touches it. That is the last-resort expansion identity: unlike a
-       rendered-row position it survives sorting and filtering, so a row that
-       supplies neither `_expandId` nor `_selectId` keeps its own panel open
-       rather than handing it to whoever lands in that slot next. */
-    const indexedData = _data.map((datum, index) =>
-      datum._reqoreIndex === undefined ? { ...datum, _reqoreIndex: index } : datum
-    );
+    /* Carry each row's position in the ORIGINAL data alongside it, rather than
+       ON it, through both filters.
+
+       The position is the last-resort expansion identity: unlike a rendered-row
+       position it survives sorting and filtering, so a row supplying neither
+       `_expandId` nor `_selectId` keeps its own panel open rather than handing
+       it to whoever lands in that slot next.
+
+       It must not reach the row until AFTER the global query has run. That
+       filter matches against `JSON.stringify(datum)`, so an index written onto
+       the row is searchable text: a table filtered by "1" started matching the
+       row at index 1 whatever it contained. Stamping after filtering keeps the
+       query looking only at the data the caller supplied. */
+    const positioned = _data.map((datum, index) => ({ datum, index }));
 
     // Filter by global query
-    let filteredData = hasQuery
-      ? indexedData.filter((datum) => JSON.stringify(datum).toLowerCase().includes(normalizedQuery))
-      : indexedData;
+    let filtered = hasQuery
+      ? positioned.filter(({ datum }) =>
+          JSON.stringify(datum).toLowerCase().includes(normalizedQuery)
+        )
+      : positioned;
 
     // Filter by column filters
-    filteredData = filteredData.filter((datum) => {
+    filtered = filtered.filter(({ datum }) => {
       return normalizedFilters.every(([filterKey, filterValue]) => {
         const datumValue = datum[filterKey as string];
 
         return datumValue?.toString().toLowerCase().includes(filterValue);
       });
     });
+
+    const filteredData = filtered.map(({ datum, index }) =>
+      datum._reqoreIndex === undefined ? { ...datum, _reqoreIndex: index } : datum
+    );
 
     return _sort ? sortTableData(filteredData, _sort) : filteredData;
   }, [_data, _sort, normalizedFilters, normalizedQuery]);
@@ -818,8 +830,13 @@ const ReqoreTable = ({
        building. The one that acts on this row alone comes first. */
     if (renderExpandedRow) {
       fullColumns.unshift({
+        /* Wider than the select box's 20px. That column holds a checkbox glyph
+           that happens to fit; this one holds a real icon button, and at 20px
+           with no padding the chevron was clipped by its own cell and read as a
+           smudge rather than as a control. 40px is what the button needs to sit
+           in its cell without being cut. */
         dataId: 'expander',
-        width: 20,
+        width: 40,
         sortable: false,
         hideable: false,
         filterable: false,
