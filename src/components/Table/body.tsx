@@ -1,5 +1,5 @@
 import count from 'lodash/size';
-import { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FixedSizeList, VariableSizeList } from 'react-window';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
@@ -164,35 +164,6 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       return () => el.removeEventListener('scroll', handleScroll);
     }, [headerRef, onScrollChange, targetRef]);
 
-    const measuredHeight = useMemo(() => {
-      if ((!height && height !== 0) || height > itemCount * rowHeight) {
-        return itemCount * rowHeight;
-      }
-      return height;
-    }, [height, itemCount, rowHeight]);
-
-    /**
-     * How far ahead of the viewport to render.
-     *
-     * react-window's default is 2 rows, and that is the reason a fast scroll
-     * shows blank strips: the window is advanced by a `setState` in a passive
-     * scroll handler, so the browser paints the scrolled container one or more
-     * frames before React commits the rows that belong there. Two rows is
-     * roughly 66px of cover, while a single trackpad flick moves several
-     * hundred — so the leading edge of the body is simply empty until the next
-     * commit lands.
-     *
-     * One viewport's worth of rows is the principled default: it guarantees
-     * the rendered window covers a full screen of travel between commits,
-     * which is more than any one frame can consume.
-     */
-    const overscanCount = useMemo(
-      () =>
-        overscanRowCount ??
-        Math.max(MIN_OVERSCAN_ROWS, Math.ceil(measuredHeight / rowHeight)),
-      [overscanRowCount, measuredHeight, rowHeight]
-    );
-
     /**
      * Measured heights of open detail panels, keyed by expansion id.
      *
@@ -203,6 +174,11 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
      */
     const expandedHeights = useRef<Record<string, number>>({});
     const listRef = useRef<VariableSizeList>(null);
+    /* Bumped whenever a panel reports a new height. The heights themselves live
+       in a ref because react-window is told about them imperatively — but a
+       table that sizes ITSELF has to recompute its own height when they change,
+       and a ref cannot ask for that. */
+    const [measuredVersion, setMeasuredVersion] = useState(0);
 
     const expandable = !!rest.renderExpandedRow;
     const expandedIds = rest.expanded;
@@ -235,6 +211,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
         if (expandedHeights.current[key] === panelHeight) return;
         expandedHeights.current[key] = panelHeight;
         listRef.current?.resetAfterIndex(index);
+        setMeasuredVersion((version) => version + 1);
       },
       [expandIdFor]
     );
@@ -245,6 +222,53 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     useEffect(() => {
       if (expandable) listRef.current?.resetAfterIndex(0);
     }, [expandedIds, expandable]);
+
+    /**
+     * How tall the body's content is, with any open panels included.
+     *
+     * `itemCount * rowHeight` is only true while every row is the same height.
+     * An expanded row is not, so a table left to size itself clipped its own
+     * panels: the row showed as open and the detail underneath it was simply
+     * cut off. Sum the real item sizes when rows can expand.
+     */
+    const contentHeight = useMemo(() => {
+      if (!expandable) return itemCount * rowHeight;
+
+      let total = 0;
+      for (let index = 0; index < itemCount; index += 1) total += itemSize(index);
+      return total;
+      // `measuredVersion` is the dependency that matters: `itemSize` reads
+      // panel heights out of a ref, so nothing else here changes when one lands.
+    }, [expandable, itemCount, rowHeight, itemSize, measuredVersion]);
+
+    const measuredHeight = useMemo(() => {
+      if ((!height && height !== 0) || height > contentHeight) {
+        return contentHeight;
+      }
+      return height;
+    }, [height, contentHeight]);
+
+    /**
+     * How far ahead of the viewport to render.
+     *
+     * react-window's default is 2 rows, and that is the reason a fast scroll
+     * shows blank strips: the window is advanced by a `setState` in a passive
+     * scroll handler, so the browser paints the scrolled container one or more
+     * frames before React commits the rows that belong there. Two rows is
+     * roughly 66px of cover, while a single trackpad flick moves several
+     * hundred — so the leading edge of the body is simply empty until the next
+     * commit lands.
+     *
+     * One viewport's worth of rows is the principled default: it guarantees
+     * the rendered window covers a full screen of travel between commits,
+     * which is more than any one frame can consume.
+     */
+    const overscanCount = useMemo(
+      () =>
+        overscanRowCount ??
+        Math.max(MIN_OVERSCAN_ROWS, Math.ceil(measuredHeight / rowHeight)),
+      [overscanRowCount, measuredHeight, rowHeight]
+    );
 
     const renderNonVirtualizedRow = useCallback(
       (_item: unknown, index: number) => (

@@ -1671,3 +1671,33 @@ export const ExpandableRowsSingle: Story = {
     );
   },
 };
+
+/**
+ * The same feature on a table that sizes itself.
+ *
+ * No `height`, so the body grows to its content — which is the case that broke:
+ * a body sized as `rowCount * rowHeight` is only correct while every row is the
+ * same height, and an open panel is not. The row showed as expanded and its
+ * detail was clipped clean off the bottom.
+ */
+export const ExpandableRowsAutoHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A short expandable table with no `height` of its own, so it grows to fit its ' +
+          'content. The open row makes the body taller by exactly the panel it reveals, ' +
+          'rather than clipping it.',
+      },
+    },
+  },
+  args: {
+    height: undefined,
+    label: 'Expandable rows, self-sizing',
+    data: slice(tableData.data as IReqoreTableRowData[], 0, 4),
+    // Opened declaratively: this story is about the body's HEIGHT, and a click
+    // is a second thing that can go wrong in a picture of the first.
+    defaultExpanded: [(tableData.data as IReqoreTableRowData[])[1]._selectId],
+    renderExpandedRow: ExpandableRows.args?.renderExpandedRow,
+  },
+};

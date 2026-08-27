@@ -361,7 +361,13 @@ const ReqoreTableRow = memo(
       const element = panelRef.current;
       if (!element || !isExpanded || !onExpandedHeight) return undefined;
 
-      const report = () => onExpandedHeight(index, element.getBoundingClientRect().height);
+      /* A non-positive measurement is not an answer — it is the panel not laid
+         out yet (or a test DOM that does not lay out at all). Reporting it would
+         replace the estimate with zero and collapse the row to its header. */
+      const report = () => {
+        const panelHeight = element.getBoundingClientRect().height;
+        if (panelHeight > 0) onExpandedHeight(index, panelHeight);
+      };
       report();
 
       if (typeof ResizeObserver === 'undefined') return undefined;

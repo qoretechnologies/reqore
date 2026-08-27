@@ -1171,6 +1171,55 @@ describe('<Table /> expandable rows', () => {
     expect(onRowClick).toHaveBeenCalledTimes(1);
   });
 
+  test('grows its own height to fit an open panel', () => {
+    /* A table left to size itself used to compute `itemCount * rowHeight`,
+       which is only true while every row is the same height. An expanded row is
+       not, so the row showed as open and its detail was clipped clean off.
+
+       jsdom lays nothing out, so the panel has to be given a height for the
+       measurement path to have anything to report — without this the test
+       passes whether the fix is present or not, which is how the first version
+       of it fooled me. */
+    const PANEL_HEIGHT = 120;
+    const realRect = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      if (this.classList?.contains('reqore-table-row-expanded')) {
+        return { ...realRect.call(this), height: PANEL_HEIGHT } as DOMRect;
+      }
+      return realRect.call(this);
+    };
+
+    try {
+      const { container } = render(
+        <ReqoreUIProvider>
+          <ReqoreLayoutContent>
+            <ReqoreTable
+              columns={columns}
+              data={rows}
+              // No `height`: the table sizes itself, which is the broken case.
+              renderExpandedRow={() => <div className='detail' />}
+            />
+          </ReqoreLayoutContent>
+        </ReqoreUIProvider>
+      );
+
+      const bodyHeight = () =>
+        parseFloat(
+          (container.querySelector('.reqore-table-body') as HTMLElement).style.height || '0'
+        );
+
+      const collapsed = bodyHeight();
+      expect(collapsed).toBeGreaterThan(0);
+
+      clickRow(0);
+
+      expect(container.querySelectorAll('.detail').length).toBe(1);
+      expect(bodyHeight()).toBe(collapsed + PANEL_HEIGHT);
+    } finally {
+      Element.prototype.getBoundingClientRect = realRect;
+    }
+  });
+
   test('expands in the non-virtualized body too', () => {
     render(
       <ReqoreUIProvider>
