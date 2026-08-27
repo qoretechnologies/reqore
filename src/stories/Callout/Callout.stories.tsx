@@ -1,5 +1,6 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { IReqoreCalloutProps, ReqoreCallout } from '../../components/Callout';
+import ReqoreButton from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
@@ -15,9 +16,6 @@ const meta = {
     chromatic: {
       viewports: [450, 1440],
     },
-  },
-  args: {
-    children: 'No records match the current filters.',
   },
   argTypes: {
     ...IntentArg,
@@ -66,6 +64,9 @@ export const Default: Story = {
     },
   },
   render: Template,
+  args: {
+    children: 'No records match the current filters.',
+  },
 };
 
 export const TopAccent: Story = {
@@ -95,6 +96,7 @@ export const Flat: Story = {
   },
   render: Template,
   args: {
+    children: 'No records match the current filters.',
     flat: true,
   },
 };
@@ -109,6 +111,9 @@ export const Fluid: Story = {
     },
   },
   render: (args) => <ReqoreCallout {...args} fluid />,
+  args: {
+    children: 'No records match the current filters.',
+  },
 };
 
 export const Intents: Story = {
@@ -237,6 +242,40 @@ export const WithLabel: Story = {
     description:
       'Set up your AI provider before publishing this Qog. The build will succeed but runs will fail at execution time.',
     intent: 'warning',
+  },
+};
+
+export const WithLabelAndRichBody: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Callout with a label and a body given as children rather than a ' +
+          '`description`. The description is a paragraph and takes text; children go in ' +
+          'the content block, so a body that carries its own blocks — a button row, a ' +
+          'list — renders under the label without invalid markup.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'Build with Qonsole',
+    icon: 'Robot2Line',
+    intent: 'info',
+    children: (
+      <>
+        Prefer natural language? Open Qonsole and describe what you need — it can build and
+        edit this service for you, step by step.
+        <ReqoreControlGroup style={{ marginTop: '10px' }}>
+          <ReqoreButton icon='Robot2Line' intent='info' fixed>
+            Create with Qonsole
+          </ReqoreButton>
+          <ReqoreButton icon='BookOpenLine' fixed>
+            Read the guide
+          </ReqoreButton>
+        </ReqoreControlGroup>
+      </>
+    ),
   },
 };
 
