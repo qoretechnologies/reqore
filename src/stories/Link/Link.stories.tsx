@@ -261,18 +261,14 @@ export const Truncated: Story = {
       'https://supah.qoretechnologies.com:8011/webhooks/paddle-notifications'
     );
 
-    /* The contrast the last row is here for, asserted rather than left to the
-       eye: a capped link stays inside the box it was given, an uncapped one
-       does not — it is ordinary inline text, and an address has almost nowhere
-       legal to break. */
-    const fits = (link: Element) => {
-      const box = link.parentElement!.getBoundingClientRect();
-      const rect = link.getBoundingClientRect();
-      return rect.width <= box.width + 1;
-    };
-
-    await expect(fits(capped)).toBe(true);
-    await expect(fits(links[links.length - 1])).toBe(false);
+    /* The contract: a capped link stays inside the box it was given. Only that
+       half is asserted. Whether the UNCAPPED one overflows depends on where the
+       browser is willing to break an address — it took the hyphen in CI and not
+       locally — so the last row stays as a visual control and is not something
+       to assert. A test that passes or fails on font metrics is a test that
+       reports the runner, not the component. */
+    const box = capped.parentElement!.getBoundingClientRect();
+    await expect(capped.getBoundingClientRect().width).toBeLessThanOrEqual(box.width + 1);
   },
 };
 
