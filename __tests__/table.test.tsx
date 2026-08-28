@@ -1330,6 +1330,33 @@ describe('<Table /> expandable rows', () => {
     expect(container.querySelector('.detail')).toHaveTextContent('detail for second');
   });
 
+  test('reports the panel its content needs, not the room the row happens to leave', () => {
+    /* The group is a fixed-height flex column whose height comes FROM this
+       measurement, so a panel that is allowed to flex shrinks to the room the
+       current item size leaves it and then reports that as its height. The
+       measurement would feed the box that constrains the measurement, and the
+       content ends up clipped at the bottom. */
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable
+            columns={columns}
+            data={rows}
+            renderExpandedRow={() => <div className='detail' />}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    clickRow(0);
+
+    const panel = container.querySelector('.reqore-table-row-expanded') as HTMLElement;
+
+    expect(getComputedStyle(panel).flexGrow).toBe('0');
+    expect(getComputedStyle(panel).flexShrink).toBe('0');
+    expect(getComputedStyle(panel).flexBasis).toBe('auto');
+  });
+
   test('leaves a table without renderExpandedRow exactly as it was', () => {
     render(
       <ReqoreUIProvider>

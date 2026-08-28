@@ -116,8 +116,21 @@ const StyledTableRowGroup = styled.div`
   overflow: hidden;
 `;
 
-/** The open panel. Owns no styling of its own beyond containing the content. */
+/**
+ * The open panel. Owns no styling of its own beyond containing the content.
+ *
+ * `flex: 0 0 auto` is load-bearing. The group is a fixed-height flex column —
+ * react-window decides that height from the panel's own measurement — so a
+ * panel left to flex SHRINKS to whatever room the current item size leaves it,
+ * and then reports that shrunken height as its own. The measurement feeds the
+ * box that constrains the measurement: content ends up clipped at the bottom by
+ * however far the header's real height differs from the assumed row height, and
+ * every observation shaves a little more off. Refusing to shrink makes the
+ * panel's height its CONTENT's height, always, which is the only number worth
+ * reporting.
+ */
 const StyledExpandedRow = styled.div`
+  flex: 0 0 auto;
   min-width: 0;
   overflow: hidden;
 `;

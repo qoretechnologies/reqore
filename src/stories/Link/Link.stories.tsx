@@ -155,6 +155,123 @@ export const InProse: Story = {
   ),
 };
 
+/**
+ * The shape a truncating link is FOR: a table cell that has a fixed width and a
+ * value that does not. Both rows are capped at the same width; the difference
+ * is which part of the address survives.
+ */
+const AddressRow = ({
+  label,
+  href,
+  truncate,
+}: {
+  label: string;
+  href: string;
+  truncate?: 'end' | 'middle';
+}) => (
+  <ReqoreControlGroup verticalAlign='center' gapSize='normal'>
+    <ReqoreP size='small' style={{ width: 90, opacity: 0.6 }}>
+      {label}
+    </ReqoreP>
+    <div
+      style={{
+        width: 320,
+        border: '1px dashed rgba(255,255,255,0.18)',
+        padding: '4px 8px',
+        borderRadius: 4,
+      }}
+    >
+      <ReqoreLink href={href} external maxWidth='100%' truncate={truncate} size='small'>
+        {href}
+      </ReqoreLink>
+    </div>
+  </ReqoreControlGroup>
+);
+
+export const Truncated: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Link capped with `maxWidth`, in both truncation modes, inside a box narrower than the text. `end` keeps the beginning — right for a name someone reads left to right. `middle` keeps both ends, which is what an address wants: the scheme and host say where it is, the last segment says WHICH one it is, and the two webhooks below are told apart only by their tails. Uncapped is shown for contrast, overflowing its box exactly as a link with no cap does.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <AddressRow
+        label='end'
+        href='https://supah.qoretechnologies.com:8011/webhooks/paddle-notifications'
+      />
+      <AddressRow
+        label='middle'
+        truncate='middle'
+        href='https://supah.qoretechnologies.com:8011/webhooks/paddle-notifications'
+      />
+      <AddressRow
+        label='middle'
+        truncate='middle'
+        href='https://supah.qoretechnologies.com:8011/webhooks/slack-events'
+      />
+      <ReqoreControlGroup verticalAlign='center' gapSize='normal'>
+        <ReqoreP size='small' style={{ width: 90, opacity: 0.6 }}>
+          uncapped — overflows, for contrast
+        </ReqoreP>
+        <div
+          style={{
+            width: 320,
+            border: '1px dashed rgba(255,255,255,0.18)',
+            padding: '4px 8px',
+            borderRadius: 4,
+          }}
+        >
+          <ReqoreLink
+            href='https://supah.qoretechnologies.com:8011/webhooks/paddle-notifications'
+            external
+            size='small'
+          >
+            https://supah.qoretechnologies.com:8011/webhooks/paddle-notifications
+          </ReqoreLink>
+        </div>
+      </ReqoreControlGroup>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    // The capped links render head/tail parts; the uncapped one does not.
+    await expect(canvasElement.querySelectorAll('.reqore-link-text-head').length).toBe(3);
+    await expect(canvasElement.querySelectorAll('.reqore-link-text-tail').length).toBe(2);
+
+    // A middle-truncated link keeps its tail intact, which is the whole point:
+    // these two addresses differ only after the last slash.
+    const tails = Array.from(canvasElement.querySelectorAll('.reqore-link-text-tail')).map(
+      (node) => node.textContent
+    );
+    await expect(tails[0]).not.toBe(tails[1]);
+
+    /* A capped link still LOOKS like a link. The parts are laid out in an
+       inline-flex row, which does not inherit the anchor's painted underline,
+       so this asserts the decoration reaches the text rather than the box. */
+    const head = canvasElement.querySelector('.reqore-link-text-head') as HTMLElement;
+    await expect(getComputedStyle(head).textDecorationLine).toBe('underline');
+
+    // Capping never changes the text itself — only how much of it is painted.
+    const links = canvasElement.querySelectorAll('.reqore-link');
+    const capped = links[0];
+    await expect(capped.textContent).toBe(
+      'https://supah.qoretechnologies.com:8011/webhooks/paddle-notifications'
+    );
+
+    /* The contract: a capped link stays inside the box it was given. Only that
+       half is asserted. Whether the UNCAPPED one overflows depends on where the
+       browser is willing to break an address — it took the hyphen in CI and not
+       locally — so the last row stays as a visual control and is not something
+       to assert. A test that passes or fails on font metrics is a test that
+       reports the runner, not the component. */
+    const box = capped.parentElement!.getBoundingClientRect();
+    await expect(capped.getBoundingClientRect().width).toBeLessThanOrEqual(box.width + 1);
+  },
+};
+
 /** Disabled — dimmed and non-interactive. */
 export const Disabled: Story = {
   parameters: {
