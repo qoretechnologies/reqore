@@ -215,7 +215,7 @@ export const Truncated: Story = {
       />
       <ReqoreControlGroup verticalAlign='center' gapSize='normal'>
         <ReqoreP size='small' style={{ width: 90, opacity: 0.6 }}>
-          uncapped
+          uncapped — overflows, for contrast
         </ReqoreP>
         <div
           style={{
@@ -255,10 +255,24 @@ export const Truncated: Story = {
     await expect(getComputedStyle(head).textDecorationLine).toBe('underline');
 
     // Capping never changes the text itself — only how much of it is painted.
-    const capped = canvasElement.querySelectorAll('.reqore-link')[0];
+    const links = canvasElement.querySelectorAll('.reqore-link');
+    const capped = links[0];
     await expect(capped.textContent).toBe(
       'https://supah.qoretechnologies.com:8011/webhooks/paddle-notifications'
     );
+
+    /* The contrast the last row is here for, asserted rather than left to the
+       eye: a capped link stays inside the box it was given, an uncapped one
+       does not — it is ordinary inline text, and an address has almost nowhere
+       legal to break. */
+    const fits = (link: Element) => {
+      const box = link.parentElement!.getBoundingClientRect();
+      const rect = link.getBoundingClientRect();
+      return rect.width <= box.width + 1;
+    };
+
+    await expect(fits(capped)).toBe(true);
+    await expect(fits(links[links.length - 1])).toBe(false);
   },
 };
 
