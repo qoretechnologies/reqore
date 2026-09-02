@@ -33,8 +33,7 @@ Reqore is a comprehensive, highly customizable UI library for React applications
 - **Checkbox**: Single and grouped checkboxes with switch variants
 - **RadioGroup**: Radio button groups
 - **Dropdown**: Customizable dropdown menus
-- **MultiSelect**: Multiple selection with tags
-- **SingleSelect**: Single selection with a tag, and an optional way to enter a value the list does not offer
+- **Select**: Selection with tags, a searchable list, and an optional way to enter a value the list does not offer — one value by default, many with `multi` (`MultiSelect` is the same component with `multi` pre-set)
 - **DatePicker**: Date and time selection
 - **Slider**: Range sliders
 

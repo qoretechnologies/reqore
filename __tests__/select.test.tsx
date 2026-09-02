@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { ReqoreSingleSelect, ReqoreUIProvider } from '../src';
-import { IReqoreSingleSelectProps } from '../src/components/SingleSelect';
+import { ReqoreSelect, ReqoreUIProvider } from '../src';
+import { IReqoreSelectSingleProps } from '../src/components/Select';
 import { MultiSelectItems } from '../src/mock/multiSelect';
 
 beforeAll(() => {
@@ -9,16 +9,16 @@ beforeAll(() => {
   vi.useFakeTimers();
 });
 
-const SingleSelectTestComponent = ({
+const SelectTestComponent = ({
   onValueChange,
   value,
   ...rest
-}: Partial<IReqoreSingleSelectProps>) => {
+}: Partial<IReqoreSelectSingleProps>) => {
   const [selected, setSelected] = React.useState<string | undefined>(value);
 
   return (
     <ReqoreUIProvider>
-      <ReqoreSingleSelect
+      <ReqoreSelect
         {...rest}
         value={selected}
         onValueChange={(value) => {
@@ -30,9 +30,9 @@ const SingleSelectTestComponent = ({
   );
 };
 
-test('Renders empty <ReqoreSingleSelect />', () => {
+test('Renders empty <ReqoreSelect />', () => {
   act(() => {
-    render(<SingleSelectTestComponent items={MultiSelectItems} />);
+    render(<SelectTestComponent items={MultiSelectItems} />);
   });
 
   vi.advanceTimersByTime(1);
@@ -45,9 +45,9 @@ test('Renders empty <ReqoreSingleSelect />', () => {
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
 });
 
-test('Renders <ReqoreSingleSelect /> with a value as a single chip', () => {
+test('Renders <ReqoreSelect /> with a value as a single chip', () => {
   act(() => {
-    render(<SingleSelectTestComponent items={MultiSelectItems} value='Existing item 3' />);
+    render(<SelectTestComponent items={MultiSelectItems} value='Existing item 3' />);
   });
 
   vi.advanceTimersByTime(1);
@@ -57,9 +57,9 @@ test('Renders <ReqoreSingleSelect /> with a value as a single chip', () => {
   expect(screen.queryByText('No value selected')).toBe(null);
 });
 
-test('Renders <ReqoreSingleSelect /> with a value that is not among the items', () => {
+test('Renders <ReqoreSelect /> with a value that is not among the items', () => {
   act(() => {
-    render(<SingleSelectTestComponent items={MultiSelectItems} value='$.create.body.sku' />);
+    render(<SelectTestComponent items={MultiSelectItems} value='$.create.body.sku' />);
   });
 
   vi.advanceTimersByTime(1);
@@ -70,12 +70,12 @@ test('Renders <ReqoreSingleSelect /> with a value that is not among the items', 
   expect(screen.getByText('$.create.body.sku')).toBeTruthy();
 });
 
-test('Renders <ReqoreSingleSelect /> and clears the value by removing the chip', () => {
+test('Renders <ReqoreSelect /> and clears the value by removing the chip', () => {
   const onValueChange = vi.fn();
 
   act(() => {
     render(
-      <SingleSelectTestComponent
+      <SelectTestComponent
         items={MultiSelectItems}
         value='Existing item 3'
         onValueChange={onValueChange}
@@ -92,12 +92,12 @@ test('Renders <ReqoreSingleSelect /> and clears the value by removing the chip',
   expect(screen.getByText('No value selected')).toBeTruthy();
 });
 
-test('Renders <ReqoreSingleSelect /> and REPLACES the value when another item is picked', () => {
+test('Renders <ReqoreSelect /> and REPLACES the value when another item is picked', () => {
   const onValueChange = vi.fn();
 
   act(() => {
     render(
-      <SingleSelectTestComponent
+      <SelectTestComponent
         items={MultiSelectItems}
         value='Existing item 3'
         onValueChange={onValueChange}
@@ -121,12 +121,12 @@ test('Renders <ReqoreSingleSelect /> and REPLACES the value when another item is
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 });
 
-test('Renders <ReqoreSingleSelect /> and deselects the value by picking it again', () => {
+test('Renders <ReqoreSelect /> and deselects the value by picking it again', () => {
   const onValueChange = vi.fn();
 
   act(() => {
     render(
-      <SingleSelectTestComponent
+      <SelectTestComponent
         items={MultiSelectItems}
         value='Existing item 3'
         onValueChange={onValueChange}
@@ -144,11 +144,11 @@ test('Renders <ReqoreSingleSelect /> and deselects the value by picking it again
   expect(screen.getByText('No value selected')).toBeTruthy();
 });
 
-test('Renders <ReqoreSingleSelect /> and does not select a disabled item', () => {
+test('Renders <ReqoreSelect /> and does not select a disabled item', () => {
   const onValueChange = vi.fn();
 
   act(() => {
-    render(<SingleSelectTestComponent items={MultiSelectItems} onValueChange={onValueChange} />);
+    render(<SelectTestComponent items={MultiSelectItems} onValueChange={onValueChange} />);
   });
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
@@ -161,9 +161,9 @@ test('Renders <ReqoreSingleSelect /> and does not select a disabled item', () =>
   expect(screen.getByText('No value selected')).toBeTruthy();
 });
 
-test('Renders disabled <ReqoreSingleSelect /> when there are no items and none can be created', () => {
+test('Renders disabled <ReqoreSelect /> when there are no items and none can be created', () => {
   act(() => {
-    render(<SingleSelectTestComponent />);
+    render(<SelectTestComponent />);
   });
 
   fireEvent.focus(document.querySelector('.reqore-input')!);
@@ -172,12 +172,12 @@ test('Renders disabled <ReqoreSingleSelect /> when there are no items and none c
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(0);
 });
 
-test('Renders <ReqoreSingleSelect /> that can create a value outside the item list', () => {
+test('Renders <ReqoreSelect /> that can create a value outside the item list', () => {
   const onValueChange = vi.fn();
 
   act(() => {
     render(
-      <SingleSelectTestComponent
+      <SelectTestComponent
         items={MultiSelectItems}
         canCreateItems
         onValueChange={onValueChange}
@@ -201,9 +201,9 @@ test('Renders <ReqoreSingleSelect /> that can create a value outside the item li
   expect(screen.getByText('$.create.body.sku')).toBeTruthy();
 });
 
-test('Renders <ReqoreSingleSelect /> without a divider when nothing matched', () => {
+test('Renders <ReqoreSelect /> without a divider when nothing matched', () => {
   act(() => {
-    render(<SingleSelectTestComponent items={MultiSelectItems} canCreateItems />);
+    render(<SelectTestComponent items={MultiSelectItems} canCreateItems />);
   });
 
   fireEvent.change(document.querySelector('.reqore-input')!, {
@@ -218,9 +218,9 @@ test('Renders <ReqoreSingleSelect /> without a divider when nothing matched', ()
   expect(screen.queryByText('Values matching your query')).toBe(null);
 });
 
-test('Renders <ReqoreSingleSelect /> with a divider above the values that DID match', () => {
+test('Renders <ReqoreSelect /> with a divider above the values that DID match', () => {
   act(() => {
-    render(<SingleSelectTestComponent items={MultiSelectItems} canCreateItems />);
+    render(<SelectTestComponent items={MultiSelectItems} canCreateItems />);
   });
 
   fireEvent.change(document.querySelector('.reqore-input')!, {
@@ -233,12 +233,12 @@ test('Renders <ReqoreSingleSelect /> with a divider above the values that DID ma
   expect(screen.getByText('Values matching your query')).toBeTruthy();
 });
 
-test('Renders <ReqoreSingleSelect /> that creates a value with the ENTER key', () => {
+test('Renders <ReqoreSelect /> that creates a value with the ENTER key', () => {
   const onValueChange = vi.fn();
 
   act(() => {
     render(
-      <SingleSelectTestComponent
+      <SelectTestComponent
         items={MultiSelectItems}
         canCreateItems
         enterKeySelects
@@ -260,9 +260,9 @@ test('Renders <ReqoreSingleSelect /> that creates a value with the ENTER key', (
   expect(screen.getByText('$.create.status')).toBeTruthy();
 });
 
-test('Renders <ReqoreSingleSelect /> with an empty string as no selection', () => {
+test('Renders <ReqoreSelect /> with an empty string as no selection', () => {
   act(() => {
-    render(<SingleSelectTestComponent items={MultiSelectItems} value='' />);
+    render(<SelectTestComponent items={MultiSelectItems} value='' />);
   });
 
   vi.advanceTimersByTime(1);
@@ -272,10 +272,10 @@ test('Renders <ReqoreSingleSelect /> with an empty string as no selection', () =
   expect(screen.getByText('No value selected')).toBeTruthy();
 });
 
-test('Renders <ReqoreSingleSelect /> with a non-removable chip', () => {
+test('Renders <ReqoreSelect /> with a non-removable chip', () => {
   act(() => {
     render(
-      <SingleSelectTestComponent
+      <SelectTestComponent
         items={MultiSelectItems}
         value='Existing item 3'
         canRemoveItems={false}
@@ -287,4 +287,59 @@ test('Renders <ReqoreSingleSelect /> with a non-removable chip', () => {
 
   expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
   expect(document.querySelectorAll('.reqore-tag-remove').length).toBe(0);
+});
+
+test('Renders <ReqoreSelect multi /> holding many values', () => {
+  const onValueChange = vi.fn();
+
+  const MultiTestComponent = () => {
+    const [selected, setSelected] = React.useState<string[]>(['Existing item 1']);
+
+    return (
+      <ReqoreUIProvider>
+        <ReqoreSelect
+          multi
+          items={MultiSelectItems}
+          canRemoveItems
+          value={selected}
+          onValueChange={(value) => {
+            setSelected(value);
+            onValueChange(value);
+          }}
+        />
+      </ReqoreUIProvider>
+    );
+  };
+
+  act(() => {
+    render(<MultiTestComponent />);
+  });
+
+  fireEvent.focus(document.querySelector('.reqore-input')!);
+
+  vi.advanceTimersByTime(1);
+
+  fireEvent.click(screen.getAllByText('Existing item 3').at(-1)!);
+
+  // `multi` ADDS rather than replaces, and hands back an array — the whole
+  // point of the discriminant
+  expect(onValueChange).toHaveBeenNthCalledWith(1, ['Existing item 1', 'Existing item 3']);
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(2);
+});
+
+test('Renders <ReqoreSelect multi /> with the multi labels, not the single ones', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreSelect multi items={MultiSelectItems} value={[]} onValueChange={vi.fn()} />
+      </ReqoreUIProvider>
+    );
+  });
+
+  vi.advanceTimersByTime(1);
+
+  // The single-value defaults must not leak into the multi path — that path is
+  // a pure rename of ReqoreMultiSelect and has to render exactly as before
+  expect(screen.getByText('No items selected')).toBeTruthy();
+  expect(screen.queryByText('No value selected')).toBe(null);
 });

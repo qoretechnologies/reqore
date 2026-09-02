@@ -1,16 +1,16 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { IReqoreSingleSelectProps, ReqoreSingleSelect } from '../../components/SingleSelect';
+import { IReqoreSelectSingleProps, ReqoreSelect } from '../../components/Select';
 import { MultiSelectItems } from '../../mock/multiSelect';
 import { IReqoreIconName } from '../../types/icons';
 import { StoryMeta } from '../utils';
 import { FlatArg, IconArg, MinimalArg, SizeArg, argManager } from '../utils/args';
 
-const { createArg } = argManager<IReqoreSingleSelectProps>();
+const { createArg } = argManager<IReqoreSelectSingleProps>();
 
 const meta = {
-  title: 'Form/Single Select',
-  component: ReqoreSingleSelect,
+  title: 'Form/Select',
+  component: ReqoreSelect,
   parameters: {
     chromatic: {
       delay: 500,
@@ -36,16 +36,16 @@ const meta = {
     }),
     ...IconArg('onItemClickIcon', 'Clickable item right icon', null),
   },
-} as StoryMeta<typeof ReqoreSingleSelect>;
+} as StoryMeta<typeof ReqoreSelect>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const Template: StoryFn<IReqoreSingleSelectProps> = (args: IReqoreSingleSelectProps) => {
+const Template: StoryFn<IReqoreSelectSingleProps> = (args: IReqoreSelectSingleProps) => {
   const [selected, setSelected] = useState<string | undefined>('Existing item 3');
 
   return (
-    <ReqoreSingleSelect
+    <ReqoreSelect
       value={selected}
       {...args}
       onValueChange={setSelected}
@@ -64,7 +64,7 @@ export const Basic: Story = {
     docs: {
       description: {
         story:
-          'Renders SingleSelect in its default configuration: the chosen value is a chip and the list holds the candidates.',
+          'Renders Select in its default configuration: the chosen value is a chip and the list holds the candidates.',
       },
     },
   },
@@ -79,7 +79,7 @@ export const Empty: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders SingleSelect in its empty state.',
+        story: 'Renders Select in its empty state.',
       },
     },
   },
@@ -95,7 +95,7 @@ export const ValueOutsideTheList: Story = {
     docs: {
       description: {
         story:
-          'Renders SingleSelect holding a value that no item offers — the case a creatable field lands in once a value is entered by hand. The chip is drawn from the value itself.',
+          'Renders Select holding a value that no item offers — the case a creatable field lands in once a value is entered by hand. The chip is drawn from the value itself.',
       },
     },
   },
@@ -111,7 +111,7 @@ export const NotCreatable: Story = {
     docs: {
       description: {
         story:
-          'Renders SingleSelect as a pure picker: only the offered values can be chosen.',
+          'Renders Select as a pure picker: only the offered values can be chosen.',
       },
     },
   },
@@ -127,7 +127,7 @@ export const NotClearable: Story = {
     docs: {
       description: {
         story:
-          'Renders SingleSelect whose chip cannot be removed — for a field that must always hold a value.',
+          'Renders Select whose chip cannot be removed — for a field that must always hold a value.',
       },
     },
   },
@@ -142,7 +142,7 @@ export const AutoOpen: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders SingleSelect that opens its list automatically on mount.',
+        story: 'Renders Select that opens its list automatically on mount.',
       },
     },
   },
@@ -157,7 +157,7 @@ export const Flat: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders SingleSelect in its flat variant.',
+        story: 'Renders Select in its flat variant.',
       },
     },
   },
@@ -172,7 +172,7 @@ export const Minimal: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders SingleSelect in its minimal variant.',
+        story: 'Renders Select in its minimal variant.',
       },
     },
   },
@@ -187,7 +187,7 @@ export const WithCustomEmptyMessage: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders an empty SingleSelect with a custom empty-state message.',
+        story: 'Renders an empty Select with a custom empty-state message.',
       },
     },
   },
@@ -205,7 +205,7 @@ export const Clickable: Story = {
     docs: {
       description: {
         story:
-          'Renders SingleSelect whose chip is clickable, so hover and press states are exercised.',
+          'Renders Select whose chip is clickable, so hover and press states are exercised.',
       },
     },
   },
@@ -221,7 +221,7 @@ export const Disabled: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders SingleSelect in its disabled state.',
+        story: 'Renders Select in its disabled state.',
       },
     },
   },
@@ -236,7 +236,7 @@ export const WithEffect: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Renders SingleSelect with a visual effect applied.',
+        story: 'Renders Select with a visual effect applied.',
       },
     },
   },
@@ -261,5 +261,30 @@ export const WithEffect: Story = {
         },
       },
     },
+  },
+};
+
+export const Multi: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Select with `multi`, which is the same component holding many values instead of one — picking a second item adds to the selection rather than replacing it. `ReqoreMultiSelect` is this, with `multi` pre-set.',
+      },
+    },
+  },
+  render: (args) => {
+    const [selected, setSelected] = useState<string[]>(['Existing item 3', 'Existing item 1']);
+
+    return (
+      <ReqoreSelect
+        {...args}
+        multi
+        value={selected}
+        onValueChange={setSelected}
+        enterKeySelects
+        items={MultiSelectItems}
+      />
+    );
   },
 };
