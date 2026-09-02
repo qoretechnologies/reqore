@@ -201,6 +201,38 @@ test('Renders <ReqoreSingleSelect /> that can create a value outside the item li
   expect(screen.getByText('$.create.body.sku')).toBeTruthy();
 });
 
+test('Renders <ReqoreSingleSelect /> without a divider when nothing matched', () => {
+  act(() => {
+    render(<SingleSelectTestComponent items={MultiSelectItems} canCreateItems />);
+  });
+
+  fireEvent.change(document.querySelector('.reqore-input')!, {
+    target: { value: 'nothing matches this' },
+  });
+
+  vi.advanceTimersByTime(1);
+
+  expect(screen.getAllByText('Create new "nothing matches this"')).toBeTruthy();
+  expect(screen.getAllByText('No existing value found')).toBeTruthy();
+  // The divider would head a section whose only content says it is empty
+  expect(screen.queryByText('Values matching your query')).toBe(null);
+});
+
+test('Renders <ReqoreSingleSelect /> with a divider above the values that DID match', () => {
+  act(() => {
+    render(<SingleSelectTestComponent items={MultiSelectItems} canCreateItems />);
+  });
+
+  fireEvent.change(document.querySelector('.reqore-input')!, {
+    target: { value: 'Existing item' },
+  });
+
+  vi.advanceTimersByTime(1);
+
+  expect(screen.getAllByText('Create new "Existing item"')).toBeTruthy();
+  expect(screen.getByText('Values matching your query')).toBeTruthy();
+});
+
 test('Renders <ReqoreSingleSelect /> that creates a value with the ENTER key', () => {
   const onValueChange = vi.fn();
 

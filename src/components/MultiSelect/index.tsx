@@ -238,7 +238,9 @@ export const ReqoreMultiSelectBase = ({
       selected: value.includes(item.value),
     }));
 
-    if (query && !size(filteredItems)) {
+    const nothingMatched: boolean = Boolean(query) && !size(filteredItems);
+
+    if (nothingMatched) {
       filteredItems = [
         { label: noMatchingItemsLabel, readOnly: true, minimal: true, icon: 'ForbidLine' },
       ];
@@ -268,7 +270,9 @@ export const ReqoreMultiSelectBase = ({
             },
           },
         },
-        { divider: true, label: matchingItemsDividerLabel },
+        // No divider when nothing matched: it would head a section whose only
+        // content is the line saying the section is empty.
+        ...(nothingMatched ? [] : [{ divider: true, label: matchingItemsDividerLabel }]),
         ...filteredItems,
       ];
     }
