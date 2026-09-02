@@ -14,10 +14,13 @@ import ReqoreTagGroup from '../Tag/group';
 export type TReqoreMultiSelectItem = Omit<IReqoreDropdownItem, 'color'> &
   Pick<IReqoreTagProps, 'asBadge' | 'rightIcon' | 'actions'> & { isNew?: boolean };
 
-export interface IReqoreMultiSelectProps
+/**
+ * Everything a multi- and a single-select share. The two differ only in the
+ * shape of the value they carry, so `value` / `onValueChange` are declared by
+ * each of them and everything else lives here.
+ */
+export interface IReqoreMultiSelectCommonProps
   extends Omit<IReqoreControlGroupProps, 'children' | 'vertical' | 'stack'> {
-  value?: string[];
-  onValueChange: (value: string[]) => void;
   items?: TReqoreMultiSelectItem[];
   onItemClick?: (item: IReqoreDropdownItem) => void;
   onItemClickIcon?: IReqoreTagProps['rightIcon'];
@@ -54,6 +57,20 @@ export interface IReqoreMultiSelectProps
   searchPlaceholder?: string;
   /** Placeholder for the search input when `canCreateItems` is true. Defaults to `'Type to search or create an item...'`. */
   createItemPlaceholder?: string;
+}
+
+export interface IReqoreMultiSelectProps extends IReqoreMultiSelectCommonProps {
+  value?: string[];
+  onValueChange: (value: string[]) => void;
+}
+
+/**
+ * Internal-only shape. `single` is what `ReqoreSingleSelect` sets to make the
+ * selection hold at most one value; it is deliberately not part of
+ * `IReqoreMultiSelectProps`, so a multi-select cannot be talked into it.
+ */
+export interface IReqoreMultiSelectBaseProps extends IReqoreMultiSelectProps {
+  single?: boolean;
 }
 
 export interface IReqoreMultiSelectItemProps
@@ -102,10 +119,11 @@ export const ReqoreMultiSelectItem = memo(
   }
 );
 
-export const ReqoreMultiSelect = ({
+export const ReqoreMultiSelectBase = ({
   value = [],
   onValueChange,
   onItemClick,
+  single,
   canRemoveItems,
   canCreateItems,
   items = [],
@@ -129,7 +147,7 @@ export const ReqoreMultiSelect = ({
   searchPlaceholder = 'Type to search...',
   createItemPlaceholder = 'Type to search or create an item...',
   ...rest
-}: IReqoreMultiSelectProps) => {
+}: IReqoreMultiSelectBaseProps) => {
   const [createdItems, setCreatedItems] = useState<TReqoreMultiSelectItem[]>([]);
   const [query, setQuery] = useState<string>('');
   const popoverData = useRef<IPopoverControls>(undefined);
@@ -157,14 +175,16 @@ export const ReqoreMultiSelect = ({
   const addRemoveItem = useCallback(
     (item: TReqoreMultiSelectItem): void => {
       if (value.includes(item.value)) {
-        onValueChange(value.filter((v) => v !== item.value));
+        onValueChange(single ? [] : value.filter((v) => v !== item.value));
         onItemRemoved?.(item.value);
       } else {
-        onValueChange([...value, item.value]);
+        // A single select holds one value, so picking another replaces it
+        // rather than adding to it.
+        onValueChange(single ? [item.value] : [...value, item.value]);
         onItemAdded?.(item.value);
       }
     },
-    [value, onValueChange, onItemAdded, onItemRemoved]
+    [value, onValueChange, onItemAdded, onItemRemoved, single]
   );
 
   const handleItemSelect = useCallback(
@@ -181,8 +201,16 @@ export const ReqoreMultiSelect = ({
       }
 
       setQuery('');
+
+      // A single select holds one value, so the list has nothing left to offer
+      // once one is picked. The dropdown closes itself on a click
+      // (`multiSelect={!single}` below), but the ENTER-key path never reaches
+      // it, so close it here too.
+      if (single) {
+        popoverData.current?.close();
+      }
     },
-    [createdItems, value, items, addRemoveItem]
+    [createdItems, value, items, addRemoveItem, single]
   );
 
   /*
@@ -277,7 +305,10 @@ export const ReqoreMultiSelect = ({
 
   const getItemByValue = useCallback(
     (value: string): TReqoreMultiSelectItem => {
-      return [...items, ...createdItems].find((item) => item.value === value);
+      // A selected value with no matching item still gets a chip — without the
+      // fallback the value is held but nothing is drawn for it, which reads as
+      // "nothing is selected".
+      return [...items, ...createdItems].find((item) => item.value === value) ?? { value };
     },
     [items, createdItems, value]
   );
@@ -324,7 +355,7 @@ export const ReqoreMultiSelect = ({
           placeholder={canCreateItems ? createItemPlaceholder : searchPlaceholder}
           {...selectorProps}
           disabled={isSelectorDisabled}
-          multiSelect
+          multiSelect={!single}
           onFocus={() => {
             setFocused(true);
 
@@ -352,3 +383,7 @@ export const ReqoreMultiSelect = ({
     </ReqoreControlGroup>
   );
 };
+
+export const ReqoreMultiSelect = (props: IReqoreMultiSelectProps) => (
+  <ReqoreMultiSelectBase {...props} />
+);
