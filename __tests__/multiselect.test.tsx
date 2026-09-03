@@ -62,6 +62,30 @@ test('Renders <ReqoreMultiSelect /> with default value', () => {
   expect(screen.getByText('Existing item 3')).toBeTruthy();
 });
 
+test('Renders <ReqoreMultiSelect /> with a value that is not among the items', () => {
+  act(() => {
+    render(
+      <MultiSelectItemsTestComponent
+        items={MultiSelectItems}
+        value={['Existing item 1', 'a value nobody offered']}
+        canRemoveItems
+      />
+    );
+  });
+
+  vi.advanceTimersByTime(1);
+
+  // A selected value with no matching item still gets a chip; without it the
+  // value is held but nothing is drawn for it
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(2);
+  expect(screen.getByText('a value nobody offered')).toBeTruthy();
+
+  fireEvent.click(document.querySelectorAll('.reqore-tag-remove')[1]!);
+
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(1);
+  expect(screen.queryByText('a value nobody offered')).toBe(null);
+});
+
 test('Renders <ReqoreMultiSelect /> with default value, items can be removed', () => {
   act(() => {
     render(

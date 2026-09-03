@@ -114,6 +114,7 @@ export { default as ReqoreRating } from './components/Rating';
 export { default as ReqoreSegmentedControl } from './components/SegmentedControl';
 export { default as ReqoreSeverityRow } from './components/SeverityRow';
 export { ReqoreRichTextEditor } from './components/RichTextEditor';
+export { ReqoreSelect } from './components/Select';
 export { ReqoreSkeleton } from './components/Skeleton';
 export { ReqoreSlider } from './components/Slider';
 export { ReqoreHorizontalSpacer, ReqoreSpacer, ReqoreVerticalSpacer } from './components/Spacer';
