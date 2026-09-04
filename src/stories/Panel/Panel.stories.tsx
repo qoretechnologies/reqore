@@ -1550,6 +1550,85 @@ export const StickyHeaderOutsideScrollAtRest: Story = {
   render: renderStickyOutsideScroll,
 };
 
+// The host shape every other sticky story omits: a scroll container that carries
+// its OWN padding. `position: sticky; top: 0` resolves against a scrollport's
+// CONTENT box, so an uncompensated header parks below that padding and content
+// scrolls through the gap. This is not exotic — StyledPanelContent puts padding
+// and overflow on one element, so every default panel, drawer and modal body is
+// this shape.
+export const StickyHeaderInPaddedScrollport: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders sticky-header panels inside a scroll container that has its own 24px padding. Scrolled in the play — the pinned header sits flush with the container’s visible top edge, not below its padding, and its top corners are square while stuck.',
+      },
+    },
+    chromatic: { viewports: [600] },
+  },
+  render: () => (
+    <div
+      style={{ height: 300, overflow: 'auto', padding: 24, border: '1px solid #333' }}
+      data-testid='padded-sticky-scrollport'
+    >
+      {new Array(6).fill(null).map((_, index) => (
+        <ReqorePanel
+          key={index}
+          label={`Sticky panel ${index + 1}`}
+          stickyHeader
+          icon='PushpinLine'
+          padded
+          fluid
+        >
+          {message}
+        </ReqorePanel>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const port = canvasElement.querySelector(
+      '[data-testid="padded-sticky-scrollport"]'
+    ) as HTMLElement;
+    if (!port) return;
+
+    port.scrollTop = 400;
+    fireEvent.scroll(port);
+
+    await waitFor(async () => {
+      const headers = Array.from(
+        port.querySelectorAll('.reqore-panel-title')
+      ) as HTMLElement[];
+      // The line a sticky header must pin to: the scrollport's visible top edge.
+      const line =
+        port.getBoundingClientRect().top +
+        (parseFloat(getComputedStyle(port).borderTopWidth) || 0);
+      // The pinned header is the topmost one that has NOT scrolled past the
+      // line — i.e. the smallest non-negative delta. Picking "the first header
+      // near the top" instead catches whichever header is already above the
+      // viewport and reports its distance, which is a different number
+      // entirely. This selector holds whether the header pins at 0 (fixed) or
+      // at the scrollport's padding (broken), so the assertion below is what
+      // decides, not the search.
+      const pinned = headers
+        .map((h) => ({ h, delta: h.getBoundingClientRect().top - line }))
+        .filter((c) => c.delta >= -1)
+        .sort((a, b) => a.delta - b.delta)[0]?.h;
+      await expect(pinned).toBeTruthy();
+
+      // TWO-SIDED on purpose. A one-sided `>= line` bound passes happily at
+      // +24px, which is exactly the bug — and is how this shipped unnoticed.
+      await expect(
+        Math.abs(pinned!.getBoundingClientRect().top - line)
+      ).toBeLessThanOrEqual(1);
+
+      // The stuck detector shares the defect: comparing against the bare border
+      // box flips `isHeaderStuck` late by the same inset, so a pinned header
+      // would keep its rounded corners across the whole gap.
+      await expect(getComputedStyle(pinned!).borderTopLeftRadius).toBe('0px');
+    });
+  },
+};
+
 export const Raised: Story = {
   parameters: {
     docs: {

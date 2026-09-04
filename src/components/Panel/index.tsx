@@ -233,6 +233,11 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
   theme: IReqoreTheme;
   noHorizontalPadding?: boolean;
   stickyHeaderOffset?: number;
+  /** The resolved scroll ancestor's top padding, measured at runtime. Subtracted
+   *  from the sticky `top` so a padded scrollport still pins the header flush to
+   *  its visible top edge. Internal — the component measures it; callers use
+   *  `stickyHeaderOffset` to shift a header deliberately. */
+  stickyHeaderInset?: number;
   /** Always a resolved pixel number — the component maps `TSizes` names before
    *  it reaches the styles, so the css (which interpolates px) never sees a string. */
   $accentSize?: number;
@@ -249,10 +254,35 @@ const getScrollableAncestor = (node: HTMLElement | null): HTMLElement | null => 
   let el = node?.parentElement ?? null;
   while (el) {
     const overflowY = getComputedStyle(el).overflowY;
-    if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') return el;
+    // `hidden` counts: it is a scroll container per spec and DOES capture a
+    // sticky descendant, even though it shows no scrollbar. Skipping it picks
+    // the wrong ancestor and measures the wrong inset below.
+    if (
+      overflowY === 'auto' ||
+      overflowY === 'scroll' ||
+      overflowY === 'overlay' ||
+      overflowY === 'hidden'
+    ) {
+      return el;
+    }
     el = el.parentElement;
   }
   return null;
+};
+
+/** The distance from a scrollport's border-box top to the line a `position:
+ *  sticky; top: 0` descendant actually pins to — its top padding. Sticky
+ *  resolves against the scroll container's CONTENT box, so a padded scrollport
+ *  parks the header below its own padding and content scrolls through the gap.
+ *  Border is reported separately: it sits outside the scrollport and so shifts
+ *  the reference the stuck-detector measures against, but not the sticky line. */
+const getScrollportInset = (el: HTMLElement | null): { padding: number; border: number } => {
+  if (!el) return { padding: 0, border: 0 };
+  const style = getComputedStyle(el);
+  return {
+    padding: parseFloat(style.paddingTop) || 0,
+    border: parseFloat(style.borderTopWidth) || 0,
+  };
 };
 
 export const StyledPanelTitleHeader = styled.div`
@@ -631,8 +661,17 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
       ? `${getPaddingSize(padded, size)}px`
       : undefined};
   position: ${({ stickyHeader }) => (stickyHeader ? 'sticky' : 'relative')};
-  top: ${({ stickyHeader, stickyHeaderOffset = 0 }) =>
-    stickyHeader ? `${stickyHeaderOffset}px` : undefined};
+  /* \`top: 0\` must mean "flush with the visible top edge of whatever scrolls",
+     which is what every call site assumes. Sticky resolves against the scroll
+     container's CONTENT box, so on a padded scrollport — which every default
+     panel/drawer/modal body is, since StyledPanelContent puts padding and
+     overflow on one element — an uncompensated 0 parks the header below the
+     padding and lets content scroll through the gap. \`stickyHeaderInset\` is
+     that padding, measured from the real scroll ancestor at runtime;
+     \`stickyHeaderOffset\` stays a deliberate caller offset on top of a now
+     correct zero. */
+  top: ${({ stickyHeader, stickyHeaderOffset = 0, stickyHeaderInset = 0 }) =>
+    stickyHeader ? `${stickyHeaderOffset - stickyHeaderInset}px` : undefined};
   z-index: ${({ stickyHeader }) => (stickyHeader ? 2 : undefined)};
   // A sticky header forces the panel wrapper to overflow visible (so the
   // header can stick), which stops the wrapper from clipping the header's top
@@ -909,6 +948,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     // nothing.
     const stickySentinelRef = useRef<HTMLDivElement>(null);
     const [isHeaderStuck, setIsHeaderStuck] = useState(false);
+    const [stickyInset, setStickyInset] = useState(0);
 
     useEffect(() => {
       if (!rest.stickyHeader) {
@@ -920,10 +960,20 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const offset = rest.stickyHeaderOffset ?? 0;
       const scrollParent = getScrollableAncestor(sentinel);
       let frame = 0;
+      // Read once per layout change, not per scroll frame: `measure()` runs in a
+      // rAF on every scroll and already forces a layout read.
+      let inset = getScrollportInset(scrollParent);
+      setStickyInset(inset.padding);
       const measure = () => {
         frame = 0;
         const sentinelTop = sentinel.getBoundingClientRect().top;
-        const rootTop = scrollParent ? scrollParent.getBoundingClientRect().top : 0;
+        // Border box plus the border, which is the line the compensated header
+        // pins to. Comparing against the bare border box flips `isHeaderStuck`
+        // late by the scrollport's inset, so a pinned header keeps its top
+        // radius through exactly the gap this fix closes.
+        const rootTop = scrollParent
+          ? scrollParent.getBoundingClientRect().top + inset.border
+          : 0;
         // 1px deadzone so the exact at-rest position (sentinel flush against the
         // top) never reads as stuck.
         setIsHeaderStuck(sentinelTop < rootTop + offset - 1);
@@ -931,12 +981,25 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       const onScroll = () => {
         if (!frame) frame = requestAnimationFrame(measure);
       };
+      const onLayout = () => {
+        inset = getScrollportInset(scrollParent);
+        setStickyInset(inset.padding);
+        onScroll();
+      };
       measure();
       document.addEventListener('scroll', onScroll, { capture: true, passive: true });
-      window.addEventListener('resize', onScroll, { passive: true });
+      window.addEventListener('resize', onLayout, { passive: true });
+      // Responsive padding changes the inset without a window resize or a
+      // scroll, and the header would stay compensated by the old value.
+      const observer =
+        scrollParent && typeof ResizeObserver !== 'undefined'
+          ? new ResizeObserver(onLayout)
+          : undefined;
+      observer?.observe(scrollParent as HTMLElement);
       return () => {
         document.removeEventListener('scroll', onScroll, true);
-        window.removeEventListener('resize', onScroll);
+        window.removeEventListener('resize', onLayout);
+        observer?.disconnect();
         if (frame) cancelAnimationFrame(frame);
       };
     }, [rest.stickyHeader, rest.stickyHeaderOffset]);
@@ -1402,6 +1465,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               radiusSize={rest.radiusSize}
               stickyHeader={rest.stickyHeader}
               stickyHeaderOffset={rest.stickyHeaderOffset}
+              stickyHeaderInset={stickyInset}
               isStuck={isHeaderStuck}
             >
               {hasTitleHeader && (
