@@ -1590,13 +1590,24 @@ export const StickyHeaderInPaddedScrollport: Story = {
           icon='PushpinLine'
           padded
           fluid
+          // A FIXED body height, not text. Panel height decided by how the copy
+          // happens to wrap is viewport-dependent, and the scroll offset that
+          // lands inside the stuck window at one width falls outside it at
+          // another — which is exactly how this story passed locally and failed
+          // in CI.
+          contentStyle={{ minHeight: 160 }}
         >
-          {/* Short enough that several panels fit the scrollport at once, so a
-              header is visibly pinned while the NEXT panel arrives underneath
-              it. The full-length fixture made every panel taller than the
-              container, leaving one header on screen and nothing to see. */}
-          Panel {index + 1} body. Scroll: this panel's header stays pinned to the
-          top edge until the next panel pushes it away.
+          {/* Sized deliberately: tall enough that a panel can scroll under its
+              own header (so "stuck" is reachable and lasts), short enough that
+              several panels share the scrollport (so the pin is visible). The
+              full-length fixture made every panel taller than the container —
+              one header, nothing to see; trimming it to one line went too far
+              the other way and left almost nothing to scroll. */}
+          Panel {index + 1}. This panel is tall enough to scroll beneath its own
+          header, so the header is genuinely pinned rather than merely sitting at
+          the top. Scroll and the header stays put until the next panel pushes it
+          away. Padding around the scrollport is tinted so a low pin would show
+          as a stripe above this header.
         </ReqorePanel>
       ))}
     </div>
@@ -1607,40 +1618,47 @@ export const StickyHeaderInPaddedScrollport: Story = {
     ) as HTMLElement;
     if (!port) return;
 
-    port.scrollTop = 400;
+    // Target ONE panel and scroll until its own header must be pinned, instead
+    // of scrolling a fixed distance and asserting on "whichever header is near
+    // the top". The fixed-distance version clamped when the content was short,
+    // left a header merely SITTING at the line rather than stuck, and passed or
+    // failed on how the fixture happened to lay out.
+    const panels = Array.from(port.querySelectorAll('.reqore-panel')) as HTMLElement[];
+    await expect(panels.length).toBeGreaterThan(2);
+    const target = panels[1];
+    const offsetInScroller =
+      target.getBoundingClientRect().top - port.getBoundingClientRect().top + port.scrollTop;
+    // Scroll into the middle of the panel's STUCK WINDOW, derived rather than
+    // guessed. The window opens once the panel's top passes the line by more
+    // than the scrollport's padding (below that, a header pinning low is still
+    // at its natural position and proves nothing) and closes when the panel's
+    // bottom reaches the header and pushes it out. Measured here: 94px panel,
+    // 40px header, 24px padding — stuck from 24 to 54, and a fixed
+    // `offsetHeight / 2` sat at 47, one wrap away from the edge.
+    const headerEl = target.querySelector('.reqore-panel-title') as HTMLElement;
+    const pad = parseFloat(getComputedStyle(port).paddingTop) || 0;
+    const windowOpens = pad;
+    const windowCloses = target.offsetHeight - headerEl.offsetHeight;
+    port.scrollTop = offsetInScroller + (windowOpens + windowCloses) / 2;
     fireEvent.scroll(port);
 
     await waitFor(async () => {
-      const headers = Array.from(
-        port.querySelectorAll('.reqore-panel-title')
-      ) as HTMLElement[];
+      const header = headerEl;
       // The line a sticky header must pin to: the scrollport's visible top edge.
       const line =
         port.getBoundingClientRect().top +
         (parseFloat(getComputedStyle(port).borderTopWidth) || 0);
-      // The pinned header is the topmost one that has NOT scrolled past the
-      // line — i.e. the smallest non-negative delta. Picking "the first header
-      // near the top" instead catches whichever header is already above the
-      // viewport and reports its distance, which is a different number
-      // entirely. This selector holds whether the header pins at 0 (fixed) or
-      // at the scrollport's padding (broken), so the assertion below is what
-      // decides, not the search.
-      const pinned = headers
-        .map((h) => ({ h, delta: h.getBoundingClientRect().top - line }))
-        .filter((c) => c.delta >= -1)
-        .sort((a, b) => a.delta - b.delta)[0]?.h;
-      await expect(pinned).toBeTruthy();
 
       // TWO-SIDED on purpose. A one-sided `>= line` bound passes happily at
       // +24px, which is exactly the bug — and is how this shipped unnoticed.
       await expect(
-        Math.abs(pinned!.getBoundingClientRect().top - line)
+        Math.abs(header.getBoundingClientRect().top - line)
       ).toBeLessThanOrEqual(1);
 
       // The stuck detector shares the defect: comparing against the bare border
       // box flips `isHeaderStuck` late by the same inset, so a pinned header
       // would keep its rounded corners across the whole gap.
-      await expect(getComputedStyle(pinned!).borderTopLeftRadius).toBe('0px');
+      await expect(getComputedStyle(header).borderTopLeftRadius).toBe('0px');
     });
   },
 };
