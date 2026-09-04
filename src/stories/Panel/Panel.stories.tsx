@@ -1561,14 +1561,25 @@ export const StickyHeaderInPaddedScrollport: Story = {
     docs: {
       description: {
         story:
-          'Renders sticky-header panels inside a scroll container that has its own 24px padding. Scrolled in the play — the pinned header sits flush with the container’s visible top edge, not below its padding, and its top corners are square while stuck.',
+          'Renders sticky-header panels inside a scroll container whose own 24px padding is tinted so it is visible. Scrolled in the play — the pinned header covers the tinted band completely, sitting flush with the container’s visible top edge rather than below its padding, and its top corners are square while stuck.',
       },
     },
     chromatic: { viewports: [600] },
   },
   render: () => (
+    // The scrollport's own 24px padding is given a contrasting background on
+    // purpose: it is the thing under test. A pinned header must cover the top
+    // band completely. If it pins low, that band shows as a stripe above the
+    // header with content sliding through it — which is what the bug looked
+    // like, and what a snapshot with no visible padding could never show.
     <div
-      style={{ height: 300, overflow: 'auto', padding: 24, border: '1px solid #333' }}
+      style={{
+        height: 320,
+        overflow: 'auto',
+        padding: 24,
+        background: '#7b341e',
+        border: '1px solid #333',
+      }}
       data-testid='padded-sticky-scrollport'
     >
       {new Array(6).fill(null).map((_, index) => (
@@ -1580,7 +1591,12 @@ export const StickyHeaderInPaddedScrollport: Story = {
           padded
           fluid
         >
-          {message}
+          {/* Short enough that several panels fit the scrollport at once, so a
+              header is visibly pinned while the NEXT panel arrives underneath
+              it. The full-length fixture made every panel taller than the
+              container, leaving one header on screen and nothing to see. */}
+          Panel {index + 1} body. Scroll: this panel's header stays pinned to the
+          top edge until the next panel pushes it away.
         </ReqorePanel>
       ))}
     </div>
