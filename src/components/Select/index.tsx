@@ -100,6 +100,51 @@ export interface IReqoreSelectItemProps
   onItemClickIcon?: IReqoreTagProps['rightIcon'];
 }
 
+/**
+ * A readable preview of a structured value, for the chip's tooltip.
+ *
+ * The label names WHICH preset was picked; it cannot show what is in it. For a
+ * hash the operator has otherwise no way to see what they chose without
+ * reopening the list and reading the source, so the contents are offered on
+ * hover instead.
+ *
+ * Capped, because a tooltip is a glance and a large hash is not: past the cap
+ * the reader is better served by opening the value properly. `JSON.stringify`
+ * throws on a circular structure, which is a thing a consumer's value can
+ * legitimately be, so a value that cannot be previewed simply gets no tooltip.
+ */
+const STRUCTURED_TOOLTIP_MAX = 600;
+
+export const structuredValueTooltip = (value: unknown): string | undefined => {
+  if (value === null || typeof value !== 'object') {
+    return undefined;
+  }
+
+  try {
+    const preview = JSON.stringify(value, null, 2);
+
+    if (!preview) {
+      return undefined;
+    }
+
+    return preview.length > STRUCTURED_TOOLTIP_MAX
+      ? `${preview.slice(0, STRUCTURED_TOOLTIP_MAX)}\n…`
+      : preview;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * What the chip offers on hover.
+ *
+ * An item's own tooltip always wins: a consumer that says what the value means
+ * knows better than a dump of it. The preview only fills the gap where a
+ * structured value would otherwise be invisible behind its label.
+ */
+export const selectItemTooltip = (item: TReqoreSelectItem): IReqoreTagProps['tooltip'] =>
+  item.tooltip ?? structuredValueTooltip(item.value);
+
 export const ReqoreSelectItem = memo(
   ({
     item,
@@ -153,6 +198,9 @@ export const ReqoreSelectItem = memo(
            throws "Objects are not valid as a React child" rather than degrading.
            Such an item shows no label instead, which is what it has. */
         label={item.label || (typeof value === 'object' ? undefined : value)}
+        /* The item's own tooltip always wins — this only fills the gap where a
+           structured value would otherwise be invisible behind its label. */
+        tooltip={selectItemTooltip(item)}
         onRemoveClick={onRemoveClick}
         intent={item.intent}
         effect={!item.intent ? item.effect || selectedItemEffect : undefined}

@@ -1,7 +1,9 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect } from 'storybook/test';
+import { expect, userEvent } from 'storybook/test';
 import { useState } from 'react';
+import ReqoreControlGroup from '../../components/ControlGroup';
 import { IReqoreSelectSingleProps, ReqoreSelect } from '../../components/Select';
+import ReqoreTag from '../../components/Tag';
 import { MultiSelectItems } from '../../mock/multiSelect';
 import { IReqoreIconName } from '../../types/icons';
 import { StoryMeta } from '../utils';
@@ -20,6 +22,9 @@ const meta = {
   args: {
     canCreateItems: true,
     canRemoveItems: true,
+    // The value every story STARTS from, so a story that wants a different one
+    // (or none) says so in its own args rather than the template hardcoding it.
+    value: 'Existing item 3',
   },
   argTypes: {
     ...FlatArg,
@@ -42,13 +47,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const Template: StoryFn<IReqoreSelectSingleProps> = (args: IReqoreSelectSingleProps) => {
-  const [selected, setSelected] = useState<string | undefined>('Existing item 3');
+/**
+ * A story's `value` is where the select STARTS, not what it is pinned to.
+ *
+ * `{...args}` used to be spread AFTER `value={selected}`, so a story that
+ * declared a value re-applied it on every render: picking an item updated the
+ * state and the very next render threw the choice away. `Empty` could never be
+ * filled in and `ValueOutsideTheList` could never be changed — both looked like
+ * a broken control rather than a frozen story.
+ */
+const Template: StoryFn<IReqoreSelectSingleProps> = ({
+  value,
+  ...args
+}: IReqoreSelectSingleProps) => {
+  const [selected, setSelected] = useState<string | undefined>(value);
 
   return (
     <ReqoreSelect
-      value={selected}
       {...args}
+      value={selected}
       onValueChange={setSelected}
       enterKeySelects
       selectorProps={{
@@ -206,15 +223,56 @@ export const Clickable: Story = {
     docs: {
       description: {
         story:
-          'Renders Select whose chip is clickable, so hover and press states are exercised.',
+          'Renders Select whose chip is clickable — the count beside it rises on every click, so the chip is visibly still live after the first one. The play clicks it twice and checks the count reached 2.',
       },
     },
   },
-  render: Template,
+  /* Its own render rather than `Template`: the old story handed `onItemClick` a
+     `console.log`, so nothing on screen moved and a reviewer had no way to tell
+     a working chip from a dead one — the first click looked like it did
+     something and every later click looked identical. What the story is FOR is
+     that the chip stays clickable, so it has to show that. */
+  render: ({ value, ...args }: IReqoreSelectSingleProps) => {
+    const [selected, setSelected] = useState<string | undefined>(value);
+    const [clicks, setClicks] = useState(0);
+
+    return (
+      <ReqoreControlGroup vertical>
+        <ReqoreTag
+          className='click-count'
+          labelKey='Chip clicks'
+          label={clicks}
+          intent={clicks ? 'success' : undefined}
+        />
+        <div className='select-host'>
+          <ReqoreSelect
+            {...args}
+            value={selected}
+            onValueChange={setSelected}
+            onItemClick={() => setClicks((count) => count + 1)}
+            items={MultiSelectItems}
+          />
+        </div>
+      </ReqoreControlGroup>
+    );
+  },
 
   args: {
-    onItemClick: (item) => console.log('onItemClick', item),
     onItemClickIcon: 'EditLine' as IReqoreIconName,
+  },
+
+  play: async () => {
+    /* The handler sits on `.reqore-tag-content`, not on `.reqore-tag` — the
+       outer span is only the box. Clicking the parent does nothing, because
+       events bubble up rather than down. */
+    const chip = () =>
+      document.querySelector('.select-host .reqore-tag-content') as HTMLElement;
+
+    await userEvent.click(chip());
+    await expect(document.querySelector('.click-count')?.textContent).toContain('1');
+
+    await userEvent.click(chip());
+    await expect(document.querySelector('.click-count')?.textContent).toContain('2');
   },
 };
 
@@ -336,6 +394,11 @@ export const StructuredValues: Story = {
     await expect(document.querySelector('.reqore-tag')?.textContent).toContain(
       'Hash Allowed Value 1'
     );
+    /* The half a label cannot carry is offered on HOVER — hover the chip to
+       read the hash. That goes through `ReqoreTooltipComponent`, a popover
+       rather than a `title` attribute, so its content is asserted in
+       `__tests__/selectItem.test.tsx` where it can be checked deterministically
+       instead of raced against a popover here. */
     // The payload half is data, and never reaches the DOM — it used to arrive
     // as `value="[object Object]"` on the chip.
     await expect(document.querySelector('.reqore-tag')?.getAttribute('value')).toBe(null);

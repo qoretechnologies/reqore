@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
-import { ReqoreSelectItem } from '../src/components/Select';
+import {
+  ReqoreSelectItem,
+  selectItemTooltip,
+  structuredValueTooltip,
+} from '../src/components/Select';
 
 /**
  * A select item carries how it should LOOK and what it MEANS. Only the first
@@ -92,4 +96,58 @@ test('the presentation half of an item still reaches the tag', () => {
   expect(screen.getByText('KEY')).toBeTruthy();
   expect(document.querySelector('.my-own-class')).toBeTruthy();
   expect(document.querySelector('.reqore-icon')).toBeTruthy();
+});
+
+/**
+ * The label names WHICH preset was picked; it cannot show what is in it. Hover
+ * offers the contents, so an operator can see what they chose without reopening
+ * the list and reading the source.
+ */
+describe('the tooltip offered for a structured value', () => {
+  it('previews the value as readable JSON', () => {
+    const tooltip = structuredValueTooltip({ option1: { subOption1: 'test' }, option2: 500 });
+
+    expect(tooltip).toContain('option1');
+    expect(tooltip).toContain('subOption1');
+    expect(tooltip).toContain('500');
+  });
+
+  it('offers nothing for a value that reads fine as its own label', () => {
+    // A scalar is already shown in full by the label, so a tooltip repeating it
+    // would be noise.
+    expect(structuredValueTooltip('plain')).toBeUndefined();
+    expect(structuredValueTooltip(42)).toBeUndefined();
+    expect(structuredValueTooltip(null)).toBeUndefined();
+    expect(structuredValueTooltip(undefined)).toBeUndefined();
+  });
+
+  it('caps a large value rather than filling the screen', () => {
+    const big = { items: Array.from({ length: 500 }, (_, i) => `item-number-${i}`) };
+    const tooltip = structuredValueTooltip(big)!;
+
+    expect(tooltip.length).toBeLessThan(700);
+    expect(tooltip.endsWith('…')).toBe(true);
+  });
+
+  it('gives up quietly on a value that cannot be serialised', () => {
+    // A circular structure is a legitimate thing for a consumer to hold, and
+    // `JSON.stringify` throws on it — the chip must still render.
+    const circular: Record<string, unknown> = { name: 'loop' };
+    circular.self = circular;
+
+    expect(() => structuredValueTooltip(circular)).not.toThrow();
+    expect(structuredValueTooltip(circular)).toBeUndefined();
+  });
+
+  it('never overrides a tooltip the item set itself', () => {
+    // A consumer that says what the value MEANS knows better than a dump of it.
+    expect(
+      selectItemTooltip({ label: 'Preset', value: { a: 1 }, tooltip: 'Set by the caller' } as never)
+    ).toBe('Set by the caller');
+  });
+
+  it('fills the gap only where the item offers no tooltip of its own', () => {
+    expect(selectItemTooltip({ label: 'Preset', value: { a: 1 } } as never)).toContain('"a": 1');
+    expect(selectItemTooltip({ label: 'Preset', value: 'scalar' } as never)).toBeUndefined();
+  });
 });
