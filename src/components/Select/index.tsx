@@ -1,6 +1,8 @@
 import { omit, size } from 'lodash';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import styled from 'styled-components';
 import { ReqoreDropdown, ReqoreInput } from '../..';
+import { MONO_FONT } from '../../constants/fonts';
 import { TSizes } from '../../constants/sizes';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import { IReqoreDropdownProps } from '../Dropdown';
@@ -136,14 +138,47 @@ export const structuredValueTooltip = (value: unknown): string | undefined => {
 };
 
 /**
+ * The preview block itself.
+ *
+ * A value is data, so it is set in the platform's own monospace — the stack
+ * `ReqoreDataView` uses for the same reason — and its whitespace is preserved,
+ * because the indentation IS the structure. Rendered as pre-formatted text
+ * rather than through `ReqoreDataView`: that component is a panel with
+ * collapsible sections, which is the right way to READ a value and the wrong
+ * thing to put inside a hover tooltip (a 236px interactive tree that vanishes
+ * when the pointer leaves).
+ */
+const StyledValuePreview = styled.span`
+  display: block;
+  font-family: ${MONO_FONT};
+  font-size: 12px;
+  white-space: pre;
+`;
+
+/**
  * What the chip offers on hover.
  *
  * An item's own tooltip always wins: a consumer that says what the value means
  * knows better than a dump of it. The preview only fills the gap where a
  * structured value would otherwise be invisible behind its label.
  */
-export const selectItemTooltip = (item: TReqoreSelectItem): IReqoreTagProps['tooltip'] =>
-  item.tooltip ?? structuredValueTooltip(item.value);
+export const selectItemTooltip = (item: TReqoreSelectItem): IReqoreTagProps['tooltip'] => {
+  if (item.tooltip) {
+    return item.tooltip;
+  }
+
+  const preview = structuredValueTooltip(item.value);
+
+  return preview ?
+      {
+        content: (
+          <StyledValuePreview className='reqore-select-item-value-preview'>
+            {preview}
+          </StyledValuePreview>
+        ),
+      }
+    : undefined;
+};
 
 export const ReqoreSelectItem = memo(
   ({

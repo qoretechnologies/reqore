@@ -146,8 +146,28 @@ describe('the tooltip offered for a structured value', () => {
     ).toBe('Set by the caller');
   });
 
-  it('fills the gap only where the item offers no tooltip of its own', () => {
-    expect(selectItemTooltip({ label: 'Preset', value: { a: 1 } } as never)).toContain('"a": 1');
+  it('offers nothing for a value its label already shows in full', () => {
     expect(selectItemTooltip({ label: 'Preset', value: 'scalar' } as never)).toBeUndefined();
+  });
+
+  it('renders the preview as pre-formatted monospace, because a value is data', () => {
+    const tooltip = selectItemTooltip({ label: 'Preset', value: { a: 1 } } as never);
+    const content = (tooltip as { content: JSX.Element }).content;
+
+    const { container } = render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>{content}</ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    const preview = container.querySelector('.reqore-select-item-value-preview') as HTMLElement;
+    expect(preview).toBeTruthy();
+    // The indentation IS the structure, so the whitespace has to survive.
+    expect(preview.textContent).toContain('"a": 1');
+    expect(preview.textContent).toContain('\n');
+    expect(getComputedStyle(preview).whiteSpace).toBe('pre');
+    expect(getComputedStyle(preview).fontFamily).toContain('monospace');
   });
 });
