@@ -114,11 +114,45 @@ export const ReqoreSelectItem = memo(
       return null;
     }
 
+    /**
+     * A select item carries two different things: how it should LOOK (label,
+     * icon, actions, intent — what a tag renders) and what it MEANS (the value
+     * it stands for, its metadata, whether the user just created it).
+     *
+     * Only the first belongs on the tag. `ReqoreTag` extends
+     * `React.HTMLAttributes` and spreads whatever it does not consume straight
+     * onto the rendered element, so passing the whole item put the item's own
+     * data on the DOM node — and `value` is a real HTML attribute, so React
+     * kept it. A structured value (a hash allowed-value, as Qorus forms use)
+     * has no string form, so it arrived as `value="[object Object]"`: the fact
+     * that an object exists, rendered where its contents should be.
+     *
+     * Stripped here rather than at every call site, because the item shape is
+     * this file's own and a consumer has no way to know which of its keys the
+     * tag would forward.
+     */
+    const {
+      value,
+      metadata,
+      items,
+      divider,
+      dividerAlign,
+      dividerPadded,
+      line,
+      isNew,
+      ...presentation
+    } = item;
+
     return (
       <ReqoreTag
-        {...item}
+        {...presentation}
         disabled={disabled || item.disabled}
-        label={item.label || item.value}
+        /* An unlabelled item falls back to showing its own value, which works
+           for the scalar it was written for. A structured value has no label
+           form, and `label` is rendered as a React child — so passing one
+           throws "Objects are not valid as a React child" rather than degrading.
+           Such an item shows no label instead, which is what it has. */
+        label={item.label || (typeof value === 'object' ? undefined : value)}
         onRemoveClick={onRemoveClick}
         intent={item.intent}
         effect={!item.intent ? item.effect || selectedItemEffect : undefined}

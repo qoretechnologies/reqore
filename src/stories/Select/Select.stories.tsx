@@ -1,4 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { expect } from 'storybook/test';
 import { useState } from 'react';
 import { IReqoreSelectSingleProps, ReqoreSelect } from '../../components/Select';
 import { MultiSelectItems } from '../../mock/multiSelect';
@@ -286,5 +287,58 @@ export const Multi: Story = {
         items={MultiSelectItems}
       />
     );
+  },
+};
+
+/**
+ * The value a select item stands for is not always a string. A Qorus form's
+ * "hash allowed value" is a whole structure, and the item is one preset the
+ * operator can pick — the label is the readable part, the hash is the payload.
+ */
+const StructuredItems = [
+  {
+    label: 'Hash Allowed Value 1',
+    value: { option1: { subOption1: 'test' }, option2: 500 },
+  },
+  {
+    label: 'Hash Allowed Value 2',
+    value: { option1: { subOption1: 'This is a changed value' }, option2: 50000000 },
+  },
+  // Deliberately unlabelled: what an item with no display name has to fall back
+  // on. A scalar reads fine as its own label; the two above cannot, and show
+  // none rather than crashing the tag.
+  { value: 'a-plain-value' },
+];
+
+export const StructuredValues: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Select over items whose values are hashes rather than strings — the shape a Qorus form uses for a hash allowed value. The chosen item shows its label, and the structure it carries stays out of the rendered element.',
+      },
+    },
+  },
+  render: (args) => {
+    const [selected, setSelected] = useState<unknown>(StructuredItems[0].value);
+
+    return (
+      <ReqoreSelect
+        {...args}
+        value={selected as string}
+        onValueChange={setSelected}
+        items={StructuredItems as IReqoreSelectSingleProps['items']}
+      />
+    );
+  },
+  play: async () => {
+    // The label is the readable half and is what the chip shows.
+    await expect(document.querySelector('.reqore-tag')?.textContent).toContain(
+      'Hash Allowed Value 1'
+    );
+    // The payload half is data, and never reaches the DOM — it used to arrive
+    // as `value="[object Object]"` on the chip.
+    await expect(document.querySelector('.reqore-tag')?.getAttribute('value')).toBe(null);
+    await expect(document.body.innerHTML).not.toContain('[object Object]');
   },
 };
