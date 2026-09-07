@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { ReqoreDropdown, ReqoreInput } from '../..';
 import { MONO_FONT } from '../../constants/fonts';
-import { TSizes } from '../../constants/sizes';
+import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
@@ -151,7 +151,10 @@ export const structuredValueTooltip = (value: unknown): string | undefined => {
 const StyledValuePreview = styled.span`
   display: block;
   font-family: ${MONO_FONT};
-  font-size: 12px;
+  /* The scale, not the number it currently resolves to. 12px IS
+     TEXT_FROM_SIZE.small, so writing the literal changes nothing today and
+     silently stops tracking the day the scale moves. */
+  font-size: ${TEXT_FROM_SIZE.small}px;
   white-space: pre;
 `;
 
