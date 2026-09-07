@@ -766,3 +766,355 @@ export const OverflowCapped: Story = {
 };
 
 
+// ── Expandable ───────────────────────────────────────────────────────────────
+
+/** The rail and its scroll region / box, queried fresh on every call so a
+ *  `waitFor` never asserts on a stale capture. */
+const railOf = (root: HTMLElement) => root.querySelector('.reqore-nav-rail') as HTMLElement;
+const scrollWrapOf = (root: HTMLElement) =>
+  root.querySelector('.reqore-nav-rail-scroll') as HTMLElement;
+const scrollBoxOf = (root: HTMLElement) =>
+  root.querySelector('.reqore-nav-rail-scroll-box') as HTMLElement;
+
+/** EXPANDABLE — hidden pages fold behind an expand toggle (a chevron mark at the
+ *  foot of the column) instead of the `⋮` flyout. Collapsed, `maxItems={4}` shows
+ *  four pages; the toggle's tooltip counts the rest. */
+export const Expandable: Story = {
+  args: {
+    items: ITEMS,
+    position: 'static',
+    maxItems: 4,
+    expandable: true,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the inline rail with `expandable` and `maxItems={4}`: four page marks (Dashboard active with its sections) and, in place of the ⋮ menu, a chevron toggle at the foot of the column that folds the other three pages away. The play asserts a folded page is absent and the toggle reads collapsed.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: 'More items' })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('button', { name: 'Settings' })).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Show all items' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  },
+};
+
+/** EXPANDED — the toggle grows the rail in place: every page (and every section
+ *  of the active one) is shown and the toggle flips to "show fewer". */
+export const Expanded: Story = {
+  args: {
+    items: ITEMS,
+    position: 'static',
+    maxItems: 4,
+    expandable: true,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the expandable rail and clicks its toggle (play): the rail grows in place to show all seven pages, and the toggle flips to a 'Show fewer items' chevron pointing back up.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show all items' }));
+    await expect(canvas.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Show fewer items' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+  },
+};
+
+/** EXPANDED · SCROLLS — past `expandedMaxHeight` the expanded rail scrolls with
+ *  a hidden scrollbar; a vignette fades whichever edge still has marks out of
+ *  view. The play scrolls it half-way so both edges fade in the snapshot. */
+export const ExpandedScrolls: Story = {
+  args: {
+    items: MANY_ITEMS,
+    position: 'static',
+    maxItems: 4,
+    expandable: true,
+    expandedMaxHeight: 360,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an expandable rail of 23 pages capped at `expandedMaxHeight={360}` and expands it (play). The rail stops at 360px and scrolls with its scrollbar hidden; a vignette fades the bottom edge while marks are out of view below it and the top edge once some have scrolled past. The play checks each edge in turn and leaves the rail scrolled half-way, so the snapshot shows both.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show all items' }));
+
+    // The cap holds…
+    await waitFor(() =>
+      expect(railOf(canvasElement).getBoundingClientRect().height).toBeLessThanOrEqual(360)
+    );
+    // …and at the top only the bottom edge fades.
+    await waitFor(() => {
+      expect(scrollWrapOf(canvasElement)).toHaveClass('reqore-nav-rail-fade-bottom');
+      expect(scrollWrapOf(canvasElement)).not.toHaveClass('reqore-nav-rail-fade-top');
+    });
+
+    // At the end, only the top.
+    scrollBoxOf(canvasElement).scrollTop = scrollBoxOf(canvasElement).scrollHeight;
+    fireEvent.scroll(scrollBoxOf(canvasElement));
+    await waitFor(() => {
+      expect(scrollWrapOf(canvasElement)).toHaveClass('reqore-nav-rail-fade-top');
+      expect(scrollWrapOf(canvasElement)).not.toHaveClass('reqore-nav-rail-fade-bottom');
+    });
+
+    // Half-way: both.
+    const box = scrollBoxOf(canvasElement);
+    box.scrollTop = Math.round((box.scrollHeight - box.clientHeight) / 2);
+    fireEvent.scroll(box);
+    await waitFor(() => {
+      expect(scrollWrapOf(canvasElement)).toHaveClass('reqore-nav-rail-fade-top');
+      expect(scrollWrapOf(canvasElement)).toHaveClass('reqore-nav-rail-fade-bottom');
+    });
+  },
+};
+
+/** EXPANDABLE · IN GUTTER — a floating expandable rail grows to the gutter's
+ *  height (the positioned ancestor caps it before the default 95vh does) and
+ *  scrolls inside it. */
+export const ExpandableInGutter: Story = {
+  args: {
+    items: MANY_ITEMS,
+    floating: true,
+    position: 'left',
+    expandable: true,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a floating, expandable rail of 23 pages in a 520px-tall page and expands it (play). The rail grows to fill the gutter — capped by the positioned ancestor rather than the default 95vh — and scrolls inside it behind the bottom vignette.',
+      },
+    },
+  },
+  render: (args: IReqoreNavRailProps) => (
+    <Backdrop>
+      <ReqoreNavRail {...args} />
+    </Backdrop>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show all items' }));
+    await waitFor(() =>
+      expect(railOf(canvasElement).getBoundingClientRect().height).toBeLessThanOrEqual(520)
+    );
+    await waitFor(() =>
+      expect(scrollWrapOf(canvasElement)).toHaveClass('reqore-nav-rail-fade-bottom')
+    );
+  },
+};
+
+/** EXPANDABLE · MOBILE — the same on a phone: the toggle is a tap target, and the
+ *  expanded rail is capped by the phone-height page and scrolls. */
+export const ExpandableMobile: Story = {
+  args: {
+    items: MANY_ITEMS,
+    floating: true,
+    position: 'right',
+    expandable: true,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 760 } },
+    docs: {
+      description: {
+        story:
+          'Renders the floating expandable rail in a phone-width frame (captured at 380px) pinned to the right gutter, and expands it (play): the toggle is a plain tap target, the expanded rail is capped by the page and scrolls behind the bottom vignette.',
+      },
+    },
+  },
+  render: (args: IReqoreNavRailProps) => (
+    <Backdrop height={560}>
+      <ReqoreNavRail {...args} />
+    </Backdrop>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show all items' }));
+    await waitFor(() =>
+      expect(scrollWrapOf(canvasElement)).toHaveClass('reqore-nav-rail-fade-bottom')
+    );
+  },
+};
+
+// ── Labels ───────────────────────────────────────────────────────────────────
+
+/** LABELLED — `showLabels` widens the rail into a column of labelled pills. */
+export const Labelled: Story = {
+  args: { items: ITEMS, position: 'static', showLabels: true, defaultActiveId: 'dashboard' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the inline rail with `showLabels`: every page and section mark is a fluid pill reading its icon and label, the active group spans the rail's width, and the surface keeps the icon rail's corner radius rather than rounding its caps into a stadium.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Dashboard' })).toHaveTextContent('Dashboard');
+    await expect(canvas.getByRole('button', { name: 'Overview' })).toHaveTextContent('Overview');
+  },
+};
+
+/** LABELLED · RIGHT GUTTER — pinned by its right edge, a labelled rail grows
+ *  leftward over the page. */
+export const LabelledInGutter: Story = {
+  args: {
+    items: ITEMS,
+    floating: true,
+    position: 'right',
+    showLabels: true,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a floating, labelled rail pinned to the right gutter of a page: pinned by its right edge, the wider rail grows leftward over the content, tooltips gone (the labels replace them).',
+      },
+    },
+  },
+  render: (args: IReqoreNavRailProps) => (
+    <Backdrop>
+      <ReqoreNavRail {...args} />
+    </Backdrop>
+  ),
+};
+
+/** LABELS ON HOVER — icons only until the pointer has rested on the rail for
+ *  1.5s (the default `showLabelsDelay`); the labels hide again when it leaves. */
+export const LabelsOnHover: Story = {
+  args: { items: ITEMS, position: 'static', showLabels: 'hover', defaultActiveId: 'dashboard' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the inline rail with `showLabels='hover'`. The play asserts it starts icon-only, hovers the rail and waits out the default 1.5s dwell, after which every mark shows its label — the state the snapshot captures.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = canvasElement.querySelector('.reqore-nav-rail') as HTMLElement;
+    await expect(canvas.getByRole('button', { name: 'Dashboard' }).textContent).toBe('');
+    await userEvent.hover(nav);
+    await waitFor(
+      () => expect(canvas.getByRole('button', { name: 'Dashboard' })).toHaveTextContent('Dashboard'),
+      { timeout: 4000 }
+    );
+  },
+};
+
+/** LABELS ON HOVER · DELAY — `showLabelsDelay` sets the dwell (here 300ms). The
+ *  play also proves the labels hide when the pointer leaves. */
+export const LabelsOnHoverDelay: Story = {
+  args: {
+    items: ITEMS,
+    position: 'static',
+    showLabels: 'hover',
+    showLabelsDelay: 300,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the hover-labelled rail with `showLabelsDelay={300}`. The play hovers and expects the labels within a second — well inside the default 1.5s, which would fail this wait — then moves the pointer away (icons again) and back (labels again), which is what the snapshot captures.',
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = canvasElement.querySelector('.reqore-nav-rail') as HTMLElement;
+    const dashboard = () => canvas.getByRole('button', { name: 'Dashboard' });
+
+    await userEvent.hover(nav);
+    await waitFor(() => expect(dashboard()).toHaveTextContent('Dashboard'), { timeout: 1000 });
+
+    await userEvent.unhover(nav);
+    await waitFor(() => expect(dashboard().textContent).toBe(''));
+
+    await userEvent.hover(nav);
+    await waitFor(() => expect(dashboard()).toHaveTextContent('Dashboard'), { timeout: 1000 });
+  },
+};
+
+/** LABELLED · EXPANDABLE — with labels the toggle spells itself out: "3 more"
+ *  while collapsed, instead of relying on a tooltip. */
+export const LabelledExpandable: Story = {
+  args: {
+    items: ITEMS,
+    position: 'static',
+    maxItems: 4,
+    expandable: true,
+    showLabels: true,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a labelled, expandable rail collapsed to `maxItems={4}`: the toggle is a fluid pill at the foot of the column spelling out '3 more' rather than relying on a tooltip.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Show all items' })).toHaveTextContent('3 more');
+  },
+};
+
+/** LABELLED · EXPANDED — the labelled rail already expanded (`defaultExpanded`)
+ *  past its cap: the toggle reads "Show fewer items" and the column scrolls
+ *  behind the vignette like the icon rail does. */
+export const LabelledExpanded: Story = {
+  args: {
+    items: MANY_ITEMS,
+    position: 'static',
+    maxItems: 4,
+    expandable: true,
+    showLabels: true,
+    defaultExpanded: true,
+    expandedMaxHeight: 360,
+    defaultActiveId: 'dashboard',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a labelled rail of 23 pages already expanded (`defaultExpanded`) and capped at 360px: the toggle reads 'Show fewer items', and the labelled column scrolls behind the bottom vignette exactly as the icon rail does.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Show fewer items' })).toHaveTextContent(
+      'Show fewer items'
+    );
+    await waitFor(() =>
+      expect(scrollWrapOf(canvasElement)).toHaveClass('reqore-nav-rail-fade-bottom')
+    );
+  },
+};

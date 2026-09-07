@@ -20,7 +20,10 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getColorFromMaybeString, getMainBackgroundColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
+import { useReqoreProperty } from '../../hooks/useReqoreContext';
+import { useScrollFade } from '../../hooks/useScrollFade';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { RaisedElement } from '../../styles';
 import {
@@ -37,7 +40,7 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, StyledEffect } from '../Effect';
+import { IReqoreEffect, StyledEffect, TReqoreHexColor } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { TReqoreMenuItemEventHandler } from '../Menu/item';
 import { ReqorePopover } from '../Popover';
@@ -145,6 +148,56 @@ export interface IReqoreNavRailProps
    *  (the lower of the two wins), so a short viewport can still show fewer. Does
    *  not cap the active page's sub-items. */
   maxItems?: number;
+  /**
+   * Fold hidden destinations behind an expand toggle that grows the rail in
+   * place, instead of the `⋮` flyout. Collapsed, the rail shows what the height
+   * budget and `maxItems` allow; expanded, it shows EVERY item and section,
+   * growing up to `expandedMaxHeight` and scrolling past that — with the
+   * scrollbar hidden and a vignette on whichever edge still has marks out of
+   * view. The toggle is the rail's only overflow affordance in this mode: the
+   * active page's hidden sections fold behind it too, not into a `⋮`.
+   */
+  expandable?: boolean;
+  /** Controlled expanded state (with `expandable`). Omit to run uncontrolled. */
+  expanded?: boolean;
+  /**
+   * Uncontrolled initial expanded state.
+   * @default false
+   */
+  defaultExpanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  /**
+   * Tallest the expanded rail may grow before it scrolls. A number is taken as
+   * px; a string is any CSS length. A `floating` rail is additionally capped by
+   * its positioned ancestor, whichever is shorter.
+   * @default '95vh'
+   */
+  expandedMaxHeight?: number | string;
+  /**
+   * Colour of the vignette at the scrolling edges of an expanded rail. Defaults
+   * to the rail's own surface, so the marks read as dissolving into it; set it
+   * when a surface `effect` paints something the default cannot match.
+   */
+  fadeColor?: TReqoreHexColor;
+  /**
+   * Show each mark's label beside its icon, widening the rail — to the right for
+   * a left / static rail, to the left for a right one:
+   * - `true` — always: a labelled rail.
+   * - `'hover'` — icons only until the pointer has rested on the rail for
+   *   `showLabelsDelay`; the labels hide again once it leaves. Pointer devices
+   *   only: on a touch screen there is no hover to dwell in, so the rail stays
+   *   icon-only (as a rail on a tablet should) and the marks keep their
+   *   tooltips.
+   * Labelled marks drop their tooltips — the label IS the tooltip — and the
+   * `header` / `footer` align to the rail's leading edge.
+   */
+  showLabels?: boolean | 'hover';
+  /**
+   * How long the pointer must rest on the rail before `showLabels='hover'`
+   * reveals the labels, in ms.
+   * @default 1500
+   */
+  showLabelsDelay?: number;
   /** Surface radius. Round (pill, matching the circular marks) by default;
    *  `radiusSize` overrides with a fixed size; `rounded={false}` squares it. */
   rounded?: boolean;
@@ -178,7 +231,9 @@ export interface IReqoreNavRailProps
   moreSectionsLabel?: string;
   /**
    * Suffix used to build the overflow-trigger tooltip content — rendered as
-   * `${hidden.length} ${overflowTooltipSuffix}`. Defaults to `'more'`.
+   * `${hidden.length} ${overflowTooltipSuffix}`. Defaults to `'more'`. With
+   * `expandable`, the same string is the collapsed toggle's tooltip (and, on a
+   * labelled rail, its text).
    */
   overflowTooltipSuffix?: string;
   /**
@@ -187,6 +242,16 @@ export interface IReqoreNavRailProps
    * grouping element's `aria-label`. Defaults to `'sections'`.
    */
   activeGroupAriaLabelSuffix?: string;
+  /**
+   * ARIA label of the expand toggle while the rail is collapsed (its tooltip
+   * is the hidden count). Defaults to `'Show all items'`.
+   */
+  expandLabel?: string;
+  /**
+   * ARIA label, tooltip and (on a labelled rail) text of the expand toggle
+   * while the rail is expanded. Defaults to `'Show fewer items'`.
+   */
+  collapseLabel?: string;
 }
 
 // ── Styled surface ────────────────────────────────────────────────────────────
@@ -211,6 +276,8 @@ interface ISurfaceStyle {
   $revealMode?: boolean;
   $shown?: boolean;
   $restOpacity?: number;
+  /** Cap on the expanded rail's height (any CSS length); it scrolls past it. */
+  $maxHeight?: string;
 }
 
 const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
@@ -221,6 +288,11 @@ const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
   gap: ${({ $gap }) => $gap}px;
   padding: ${({ $padding }) => $padding}px;
   border-radius: ${({ $pill, $radius }) => ($pill ? '9999px' : `${$radius}px`)};
+  /* Labels widen the rail (a hover dwell, a menu closing): let a browser that can
+     interpolate \`fit-content\` slide it open rather than snap. Elsewhere this is
+     ignored and the rail simply resizes. */
+  interpolate-size: allow-keywords;
+  transition: width 0.2s ease-out;
 
   background-color: ${({ theme, $transparent, $opacity, $bgLightness }) =>
     $transparent
@@ -249,6 +321,17 @@ const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
       max-height: calc(100% - 8px);
     `}
 
+  /* Expanded: cap the rail and let the scroll box inside shrink to fit — a
+     floating rail also stays inside its positioned ancestor. */
+  ${({ $maxHeight, $floating, $position }) =>
+    $maxHeight &&
+    css`
+      box-sizing: border-box;
+      max-height: ${$floating && $position !== 'static'
+        ? `min(${$maxHeight}, calc(100% - 8px))`
+        : $maxHeight};
+    `}
+
   ${({ $revealMode, $shown, $restOpacity }) =>
     $revealMode &&
     css`
@@ -256,7 +339,7 @@ const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
       /* Only truly-hidden (revealOnScroll, restOpacity 0) blocks pointer events;
          a dimmed idle rail must stay hoverable so it can reveal itself. */
       pointer-events: ${$shown || $restOpacity > 0 ? 'auto' : 'none'};
-      transition: opacity 220ms ease;
+      transition: opacity 220ms ease, width 0.2s ease-out;
     `}
 `;
 
@@ -271,6 +354,7 @@ const ActiveGroupSurface = styled(StyledEffect)<{
   $radiusBottom: number;
   $ring: string;
   $tint?: string;
+  $labelled?: boolean;
 }>`
   display: flex;
   flex-flow: column nowrap;
@@ -287,7 +371,145 @@ const ActiveGroupSurface = styled(StyledEffect)<{
       background-color: ${$tint};
     `}
   box-shadow: inset 0 0 0 1px ${({ $ring }) => $ring};
+  /* A labelled group spans the rail so its (fluid) marks can fill the width;
+     the section divider inside stays centred by the group's own alignment. */
+  ${({ $labelled }) =>
+    $labelled &&
+    css`
+      align-self: stretch;
+    `}
 `;
+
+/* The scroll region of the rail. Inert unless the rail is expanded: no overflow
+   (so a mark's glow can still bleed past its edge), no visible fades, no
+   layout of its own — the marks sit exactly where they did.
+
+   Expanded, the wrapper carries the vignette: overlay gradients on THIS
+   element rather than inside the scroll box, where they would scroll away with
+   the marks. Which edges fade is a measurement carried by classes (see
+   `useScrollFade` for why it is never state). The fades reach into the rail's
+   padding — the box below bleeds by the same amount — so the vignette spans the
+   surface edge to edge, and they take the surface's inner radius so the corners
+   never poke out of the pill. `pointer-events: none` keeps them from swallowing
+   a click on the mark beneath. */
+const NavRailScroll = styled.div.withConfig({
+  // A control group hands every non-intrinsic child its own props; none of them
+  // belong on this div.
+  shouldForwardProp: omitStyleProps(
+    'size',
+    'intent',
+    'fluid',
+    'fixed',
+    'fill',
+    'flat',
+    'minimal',
+    'stack',
+    'spaceBetween',
+    'customTheme'
+  ),
+})<{
+  $fadeFrom: string;
+  $fadeTo: string;
+  $fadeSize: number;
+  $fadeRadius: number;
+  $bleed: number;
+  $scrollable: boolean;
+  $labelled: boolean;
+}>`
+  position: relative;
+  display: flex;
+  flex-flow: column nowrap;
+  min-height: 0;
+
+  ${({ $scrollable }) =>
+    $scrollable &&
+    css`
+      flex: 1 1 auto;
+    `}
+
+  /* A labelled rail's marks span the column, so the region must too. */
+  ${({ $labelled }) =>
+    $labelled &&
+    css`
+      align-self: stretch;
+    `}
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: ${({ $bleed }) => -$bleed}px;
+    right: ${({ $bleed }) => -$bleed}px;
+    height: ${({ $fadeSize }) => $fadeSize}px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
+  }
+
+  &::before {
+    top: 0;
+    border-radius: ${({ $fadeRadius }) => `${$fadeRadius}px ${$fadeRadius}px 0 0`};
+    background: linear-gradient(
+      to bottom,
+      ${({ $fadeFrom }) => $fadeFrom},
+      ${({ $fadeTo }) => $fadeTo}
+    );
+  }
+
+  &::after {
+    bottom: 0;
+    border-radius: ${({ $fadeRadius }) => `0 0 ${$fadeRadius}px ${$fadeRadius}px`};
+    background: linear-gradient(
+      to top,
+      ${({ $fadeFrom }) => $fadeFrom},
+      ${({ $fadeTo }) => $fadeTo}
+    );
+  }
+
+  &.reqore-nav-rail-fade-top::before {
+    opacity: 1;
+  }
+
+  &.reqore-nav-rail-fade-bottom::after {
+    opacity: 1;
+  }
+`;
+
+/* The box that actually scrolls. The scrollbar is hidden on purpose: the
+   vignette IS the affordance, and a native bar is wider than the gap between
+   marks. Wheel, trackpad, touch and keyboard still scroll it. The negative
+   margin / padding pair widens the clip box into the rail's padding without
+   moving the marks, so a glow or raised shadow is clipped at the surface, not
+   at the mark. */
+const NavRailScrollBox = styled.div<{ $scrollable: boolean; $bleed: number }>`
+  display: flex;
+  flex-flow: column nowrap;
+  min-height: 0;
+
+  ${({ $scrollable, $bleed }) =>
+    $scrollable &&
+    css`
+      overflow-y: auto;
+      overflow-x: hidden;
+      margin: 0 ${-$bleed}px;
+      padding: 0 ${$bleed}px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+
+      &::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+      }
+    `}
+`;
+
+// Hoisted so the memo'd control group / spacer children see stable objects.
+const EXPANDED_GROUP_STYLE: CSSProperties = { minHeight: 0, flex: '1 1 auto' };
+// A labelled rail aligns its column to the leading edge (so fluid marks can
+// stretch); a divider has a fixed width and must be re-centred by hand.
+const LABELLED_DIVIDER_STYLE: CSSProperties = { alignSelf: 'center' };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -347,6 +569,8 @@ interface IOverflowProps {
    * `${items.length} ${tooltipSuffix}`. Defaults to `'more'`.
    */
   tooltipSuffix?: string;
+  /** On a labelled rail the trigger is a pill reading `${items.length} ${tooltipSuffix}`. */
+  labelled?: boolean;
   onSelect: (id: string) => void;
   onOpenChange: (open: boolean) => void;
 }
@@ -358,6 +582,7 @@ const NavRailOverflow = memo(
     placement,
     ariaLabel,
     tooltipSuffix = 'more',
+    labelled,
     onSelect,
     onOpenChange,
   }: IOverflowProps) => {
@@ -369,13 +594,16 @@ const NavRailOverflow = memo(
         size,
         flat: true,
         minimal: true,
-        circle: true,
+        circle: !labelled,
+        pill: !!labelled,
+        fluid: !!labelled,
         raised: true,
         'aria-label': ariaLabel,
         className: 'reqore-nav-rail-overflow',
-        tooltip: { content: `${items.length} ${tooltipSuffix}`, placement },
+        tooltip: labelled ? undefined : { content: `${items.length} ${tooltipSuffix}`, placement },
+        label: labelled ? `${items.length} ${tooltipSuffix}` : undefined,
       }),
-      [size, ariaLabel, placement, items.length, tooltipSuffix]
+      [size, ariaLabel, placement, items.length, tooltipSuffix, labelled]
     );
     const handleItemClick = useCallback<TReqoreMenuItemEventHandler>(
       (_event, itemId) => {
@@ -421,6 +649,62 @@ const NavRailOverflow = memo(
   }
 );
 
+// ── Expand toggle ───────────────────────────────────────────────────────────
+
+interface IExpandToggleProps {
+  expanded: boolean;
+  /** Marks (items + sections) a collapsed rail folds away. */
+  hiddenCount: number;
+  size: TSizes;
+  tipSide: 'left' | 'right';
+  labelled?: boolean;
+  expandLabel: string;
+  collapseLabel: string;
+  tooltipSuffix: string;
+  onToggle: () => void;
+}
+
+// The one overflow affordance of an `expandable` rail. Shaped like a mark
+// (circle, or a fluid pill on a labelled rail) so it reads as part of the
+// column, with a chevron pointing the way the rail will grow.
+const NavRailExpandToggle = memo(
+  ({
+    expanded,
+    hiddenCount,
+    size,
+    tipSide,
+    labelled,
+    expandLabel,
+    collapseLabel,
+    tooltipSuffix,
+    onToggle,
+  }: IExpandToggleProps) => {
+    const text = expanded ? collapseLabel : `${hiddenCount} ${tooltipSuffix}`;
+    const tooltip = useMemo(
+      () => ({ content: text, placement: tipSide }) as TReqoreTooltipProp,
+      [text, tipSide]
+    );
+    return (
+      <ReqoreButton
+        icon={expanded ? 'ArrowUpSLine' : 'ArrowDownSLine'}
+        size={size}
+        flat
+        minimal
+        raised
+        circle={!labelled}
+        pill={!!labelled}
+        fluid={!!labelled}
+        aria-label={expanded ? collapseLabel : expandLabel}
+        aria-expanded={expanded}
+        className='reqore-nav-rail-expand'
+        tooltip={labelled ? undefined : tooltip}
+        label={labelled ? text : undefined}
+        onClick={onToggle}
+      />
+    );
+  }
+);
+
 // ── Mark (page / section) ────────────────────────────────────────────────────
 
 interface INavRailMarkProps {
@@ -436,6 +720,9 @@ interface INavRailMarkProps {
    *  instead of the ghost/minimal resting state, so "you are here" reads clearly
    *  even against the active group's own tinted surface. */
   active?: boolean;
+  /** Show the label beside the icon: the mark becomes a fluid pill (spanning the
+   *  rail) and drops its tooltip, which would only repeat the label. */
+  labelled?: boolean;
   tipSide: 'left' | 'right';
   className: string;
   ariaCurrent?: 'page' | 'location';
@@ -457,6 +744,7 @@ const NavRailMark = memo(
     effect,
     disabled,
     active,
+    labelled,
     tipSide,
     className,
     ariaCurrent,
@@ -483,7 +771,9 @@ const NavRailMark = memo(
         // Escape hatch first, so the rail's own structural / behavioural props
         // below always win (the mark can be tuned but never broken).
         {...buttonProps}
-        circle
+        circle={!labelled}
+        pill={labelled || buttonProps?.pill}
+        fluid={labelled || buttonProps?.fluid}
         size={size}
         icon={icon}
         leftIconProps={leftIconProps}
@@ -499,7 +789,8 @@ const NavRailMark = memo(
         className={className}
         aria-label={label}
         aria-current={ariaCurrent}
-        tooltip={tooltip}
+        tooltip={labelled ? undefined : tooltip}
+        label={labelled ? label : undefined}
         onClick={handleClick}
       />
     );
@@ -511,10 +802,13 @@ const NavRailMark = memo(
 /**
  * A compact navigation rail: a thin column of circular marks for primary
  * destinations, with the active destination's sub-items nested directly beneath
- * it in a distinct sub-capsule. Overflow folds into a `⋮` flyout; it can pin to
- * a gutter and rest dimmed until approached (or, for mobile, stay hidden and
- * appear only while scrolling); and its sub-items can drive and follow page
- * scroll via `scrollSpy` + `scrollTargetId`.
+ * it in a distinct sub-capsule. Overflow folds into a `⋮` flyout — or, with
+ * `expandable`, behind a toggle that grows the rail in place (capped, then
+ * scrolling behind a vignette). It can pin to a gutter and rest dimmed until
+ * approached (or, for mobile, stay hidden and appear only while scrolling); its
+ * sub-items can drive and follow page scroll via `scrollSpy` + `scrollTargetId`;
+ * and `showLabels` widens it into a labelled rail — always, or after the pointer
+ * has rested on it for a moment.
  */
 export const ReqoreNavRail = memo(
   ({
@@ -536,6 +830,14 @@ export const ReqoreNavRail = memo(
     scrollSpy,
     maxHeight,
     maxItems,
+    expandable,
+    expanded,
+    defaultExpanded = false,
+    onExpandedChange,
+    expandedMaxHeight = '95vh',
+    fadeColor,
+    showLabels,
+    showLabelsDelay = 1500,
     size = 'small',
     intent,
     effect,
@@ -559,11 +861,14 @@ export const ReqoreNavRail = memo(
     moreSectionsLabel = 'More sections',
     overflowTooltipSuffix = 'more',
     activeGroupAriaLabelSuffix = 'sections',
+    expandLabel = 'Show all items',
+    collapseLabel = 'Show fewer items',
   }: IReqoreNavRailProps) => {
     // NB: `intent` is deliberately NOT fed to the theme here — it must not
     // recolour the whole rail surface; it only drives the active accent + the
     // active group's tint (see `activeIntent` / `renderActiveGroup`).
     const theme = useReqoreTheme('main', customTheme, undefined, undefined, inheritCustomTheme);
+    const isHoverCapable = useReqoreProperty('isHoverCapable');
     const subSize = getOneLessSize(size);
     const tipSide: 'left' | 'right' = position === 'right' ? 'left' : 'right';
     const activeIntent: TReqoreIntent = intent ?? 'info';
@@ -581,6 +886,22 @@ export const ReqoreNavRail = memo(
     const [internalSubId, setInternalSubId] = useState(defaultActiveSubId);
     const activeSubItemId = activeSubId ?? internalSubId ?? subItems[0]?.id;
 
+    const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+    const isExpanded = !!expandable && (expanded ?? internalExpanded);
+    const toggleExpanded = useCallback(() => {
+      const next = !(expanded ?? internalExpanded);
+      if (expanded === undefined) setInternalExpanded(next);
+      onExpandedChange?.(next);
+    }, [expanded, internalExpanded, onExpandedChange]);
+
+    // Labels on a dwell are a pointer nicety: on a touch screen there is no
+    // hover to rest in, so the rail stays icon-only (with its tooltips and
+    // overflow names) rather than half-working. `isHoverCapable` defaults to
+    // capable where the query cannot be evaluated.
+    const hoverLabels = showLabels === 'hover' && isHoverCapable !== false;
+    const [dwellLabels, setDwellLabels] = useState(false);
+    const labelled = showLabels === true || (hoverLabels && dwellLabels);
+
     const [hovered, setHovered] = useState(false);
     const [scrolling, setScrolling] = useState(false);
     const [openMenus, setOpenMenus] = useState(0);
@@ -588,28 +909,56 @@ export const ReqoreNavRail = memo(
       (open: boolean) => setOpenMenus((c) => Math.max(0, c + (open ? 1 : -1))),
       []
     );
+    // Read by the native pointer handlers below, which are bound once.
+    const hoveredRef = useRef(false);
+    const openMenusRef = useRef(0);
 
     const railRef = useRef<HTMLDivElement>(null);
     const budgetOn = !!floating || typeof maxHeight === 'number';
     const availHeight = useAncestorHeight(budgetOn, maxHeight, railRef);
 
-    // Idle-reveal hover uses NATIVE mouseenter/leave on the rail element, not
-    // React's — React routes enter/leave through the React tree, so a portalled
-    // child (a mark's tooltip) counts as "inside" and the leave never fires when
-    // a tooltip is up. Native DOM events use real subtree containment instead.
+    // Idle-reveal hover and the label dwell use NATIVE mouseenter/leave on the
+    // rail element, not React's — React routes enter/leave through the React
+    // tree, so a portalled child (a mark's tooltip) counts as "inside" and the
+    // leave never fires when a tooltip is up. Native DOM events use real subtree
+    // containment instead.
     useEffect(() => {
-      if (!idleReveal) return undefined;
+      if (!idleReveal && !hoverLabels) return undefined;
       const el = railRef.current;
       if (!el) return undefined;
-      const enter = () => setHovered(true);
-      const leave = () => setHovered(false);
+      let dwell: ReturnType<typeof setTimeout> | undefined;
+      const enter = () => {
+        hoveredRef.current = true;
+        if (idleReveal) setHovered(true);
+        if (hoverLabels) {
+          clearTimeout(dwell);
+          dwell = setTimeout(() => setDwellLabels(true), showLabelsDelay);
+        }
+      };
+      const leave = () => {
+        hoveredRef.current = false;
+        clearTimeout(dwell);
+        if (idleReveal) setHovered(false);
+        // While a flyout opened from the rail is up the pointer is in the menu,
+        // and narrowing the rail would move the menu's anchor: keep the labels
+        // until the menu closes (see the effect on `openMenus`).
+        if (hoverLabels && openMenusRef.current === 0) setDwellLabels(false);
+      };
       el.addEventListener('mouseenter', enter);
       el.addEventListener('mouseleave', leave);
       return () => {
+        clearTimeout(dwell);
         el.removeEventListener('mouseenter', enter);
         el.removeEventListener('mouseleave', leave);
       };
-    }, [idleReveal]);
+    }, [idleReveal, hoverLabels, showLabelsDelay]);
+
+    // The last menu closing with the pointer already gone is the deferred
+    // "leave" from above.
+    useEffect(() => {
+      openMenusRef.current = openMenus;
+      if (openMenus === 0 && !hoveredRef.current) setDwellLabels(false);
+    }, [openMenus]);
 
     // Budget marks to the height; sections get ~40% (min 2), pages the rest.
     const markH = SIZE_TO_PX[size] + GAP_FROM_SIZE[size];
@@ -634,8 +983,19 @@ export const ReqoreNavRail = memo(
       itemMax = Math.min(itemMax, Math.max(1, Math.floor(maxItems)));
     }
 
-    const { shown: itemsShown, hidden: itemsHidden } = splitAroundActive(items, activeItemId, itemMax);
-    const { shown: subsShown, hidden: subsHidden } = splitAroundActive(subItems, activeSubItemId, subMax);
+    // What a COLLAPSED rail shows is always computed: expanded shows everything,
+    // and the toggle is offered only when collapsing would actually fold
+    // something — so an expanded rail nothing would hide never offers a "show
+    // fewer" that changes nothing.
+    const collapsedItems = splitAroundActive(items, activeItemId, itemMax);
+    const collapsedSubs = splitAroundActive(subItems, activeSubItemId, subMax);
+    const hiddenWhenCollapsed = collapsedItems.hidden.length + collapsedSubs.hidden.length;
+    const { shown: itemsShown, hidden: itemsHidden } = isExpanded
+      ? { shown: items, hidden: [] as IReqoreNavRailItem[] }
+      : collapsedItems;
+    const { shown: subsShown, hidden: subsHidden } = isExpanded
+      ? { shown: subItems, hidden: [] as IReqoreNavRailSubItem[] }
+      : collapsedSubs;
     const activeAt = itemsShown.findIndex((i) => i.id === activeItemId);
     const before = activeAt >= 0 ? itemsShown.slice(0, activeAt) : itemsShown; // before active
     const after = activeAt >= 0 ? itemsShown.slice(activeAt + 1) : []; // after active
@@ -731,6 +1091,19 @@ export const ReqoreNavRail = memo(
       };
     }, [revealOnScroll, scrollContainer, scrollHideDelay]);
 
+    // The vignette follows the scroll box's edges; off (classes cleared) while
+    // the rail is collapsed and nothing scrolls.
+    const scrollWrapRef = useRef<HTMLDivElement>(null);
+    const scrollBoxRef = useRef<HTMLDivElement>(null);
+    useScrollFade({
+      scrollRef: scrollBoxRef,
+      targetRef: scrollWrapRef,
+      axis: 'y',
+      enabled: isExpanded,
+      startClassName: 'reqore-nav-rail-fade-top',
+      endClassName: 'reqore-nav-rail-fade-bottom',
+    });
+
     const revealMode = !!idleReveal || !!revealOnScroll;
     const shown = revealOnScroll
       ? scrolling || openMenus > 0
@@ -742,6 +1115,30 @@ export const ReqoreNavRail = memo(
     const pill = rounded && !radiusSize;
     const radius = resolveRadius(size, radiusSize);
     const pad = resolvePadding(padded, size);
+    // A labelled rail is wide: a 9999px radius would round its caps into
+    // semicircles. Keep the curvature of the icon-only pill instead, so the
+    // rail reads as the same object, just wider.
+    const pillRadius = Math.round(SIZE_TO_PX[size] / 2 + pad + 1);
+    const surfacePill = pill && !labelled;
+    const surfaceRadius = pill && labelled ? pillRadius : radius;
+    // The fade dissolves the marks into the rail's own surface (or, on a
+    // transparent rail, into the page behind it).
+    const fadeBase =
+      fadeColor ??
+      (isTransparent
+        ? getMainBackgroundColor(theme)
+        : changeLightness(getMainBackgroundColor(theme), 0.02));
+    const fadeFrom = rgba(fadeBase, isTransparent ? 1 : opacity);
+    const fadeTo = rgba(fadeBase, 0);
+    const expandedCap = isExpanded
+      ? typeof expandedMaxHeight === 'number'
+        ? `${expandedMaxHeight}px`
+        : expandedMaxHeight
+      : undefined;
+    // Labelled marks are fluid pills that must span the column, so the column
+    // aligns to its leading edge instead of centring (and handing every child
+    // the auto side-margins that would keep it at its own width).
+    const columnAlign = labelled ? 'flex-start' : 'center';
 
     const renderItem = (item: IReqoreNavRailItem) => {
       const active = item.id === activeItemId;
@@ -755,6 +1152,7 @@ export const ReqoreNavRail = memo(
           size={size}
           disabled={item.disabled}
           active={active}
+          labelled={labelled}
           // A per-item effect (a "special" mark) wins and always paints; else the
           // active mark takes the shared activeEffect, inactive marks none.
           effect={item.effect ?? (active ? activeEffect : undefined)}
@@ -779,6 +1177,7 @@ export const ReqoreNavRail = memo(
         height={Math.round(GAP_FROM_SIZE[size] * (withLine ? 2.5 : 3.5))}
         width={`${Math.round(SIZE_TO_PX[size] * 0.66)}px`}
         lineSize={withLine ? 'small' : 'none'}
+        style={labelled ? LABELLED_DIVIDER_STYLE : undefined}
       />
     );
 
@@ -801,6 +1200,7 @@ export const ReqoreNavRail = memo(
           size={subSize}
           disabled={sub.disabled}
           active={active}
+          labelled={labelled}
           effect={active ? activeEffect : undefined}
           intent={active ? sub.intent ?? activeIntent : sub.intent}
           className='reqore-nav-rail-subitem'
@@ -837,6 +1237,7 @@ export const ReqoreNavRail = memo(
           $radiusBottom={pill ? Math.round(SIZE_TO_PX[subSize] / 2) : radius}
           $ring={rgba(groupColor, 0.42)}
           $tint={activeEffect?.gradient ? undefined : rgba(groupColor, 0.16)}
+          $labelled={labelled}
         >
           {renderItem(item)}
           <ReqoreVerticalSpacer
@@ -846,7 +1247,7 @@ export const ReqoreNavRail = memo(
             intent={item.intent ?? activeIntent}
           />
           {subsShown.map(renderSub)}
-          {subsHidden.length ? (
+          {!expandable && subsHidden.length ? (
             <NavRailOverflow
               items={subsHidden.map((s) => ({
                 id: s.id,
@@ -858,6 +1259,7 @@ export const ReqoreNavRail = memo(
               placement={tipSide}
               ariaLabel={moreSectionsLabel}
               tooltipSuffix={overflowTooltipSuffix}
+              labelled={labelled}
               onSelect={onSubSelect}
               onOpenChange={onMenuToggle}
             />
@@ -878,8 +1280,8 @@ export const ReqoreNavRail = memo(
           theme={theme}
           $gap={GAP_FROM_SIZE[size]}
           $padding={pad}
-          $radius={radius}
-          $pill={pill}
+          $radius={surfaceRadius}
+          $pill={surfacePill}
           $flat={isFlat}
           $raised={!!raised}
           $transparent={isTransparent}
@@ -893,21 +1295,64 @@ export const ReqoreNavRail = memo(
           $revealMode={revealMode}
           $shown={shown}
           $restOpacity={restOpacity}
+          $maxHeight={expandedCap}
         >
-          <ReqoreControlGroup vertical gapSize={size} horizontalAlign='center'>
+          <ReqoreControlGroup
+            vertical
+            gapSize={size}
+            horizontalAlign={columnAlign}
+            // Expanded, the column must be allowed to shrink so the scroll
+            // region inside it (not the header / toggle / footer) takes the cut.
+            style={isExpanded ? EXPANDED_GROUP_STYLE : undefined}
+          >
             {header}
-            {before.map(renderPrimary)}
-            {activeAt >= 0 && activeItem ? renderActiveGroup(activeItem) : null}
-            {after.map(renderPrimary)}
-            {itemsHidden.length ? (
-              <NavRailOverflow
-                items={itemsHidden.map((i) => ({ id: i.id, label: i.label, icon: i.icon }))}
+            <NavRailScroll
+              ref={scrollWrapRef}
+              className='reqore-nav-rail-scroll'
+              $fadeFrom={fadeFrom}
+              $fadeTo={fadeTo}
+              $fadeSize={SIZE_TO_PX[size]}
+              $fadeRadius={pill ? Math.round(SIZE_TO_PX[size] / 2) + pad : Math.max(0, radius - 1)}
+              $bleed={pad}
+              $scrollable={isExpanded}
+              $labelled={labelled}
+            >
+              <NavRailScrollBox
+                ref={scrollBoxRef}
+                className='reqore-nav-rail-scroll-box'
+                $scrollable={isExpanded}
+                $bleed={pad}
+              >
+                <ReqoreControlGroup vertical gapSize={size} horizontalAlign={columnAlign}>
+                  {before.map(renderPrimary)}
+                  {activeAt >= 0 && activeItem ? renderActiveGroup(activeItem) : null}
+                  {after.map(renderPrimary)}
+                  {!expandable && itemsHidden.length ? (
+                    <NavRailOverflow
+                      items={itemsHidden.map((i) => ({ id: i.id, label: i.label, icon: i.icon }))}
+                      size={size}
+                      placement={tipSide}
+                      ariaLabel={moreItemsLabel}
+                      tooltipSuffix={overflowTooltipSuffix}
+                      labelled={labelled}
+                      onSelect={onItemSelect}
+                      onOpenChange={onMenuToggle}
+                    />
+                  ) : null}
+                </ReqoreControlGroup>
+              </NavRailScrollBox>
+            </NavRailScroll>
+            {expandable && hiddenWhenCollapsed > 0 ? (
+              <NavRailExpandToggle
+                expanded={isExpanded}
+                hiddenCount={hiddenWhenCollapsed}
                 size={size}
-                placement={tipSide}
-                ariaLabel={moreItemsLabel}
+                tipSide={tipSide}
+                labelled={labelled}
+                expandLabel={expandLabel}
+                collapseLabel={collapseLabel}
                 tooltipSuffix={overflowTooltipSuffix}
-                onSelect={onItemSelect}
-                onOpenChange={onMenuToggle}
+                onToggle={toggleExpanded}
               />
             ) : null}
             {footer}
