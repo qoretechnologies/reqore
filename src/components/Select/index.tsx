@@ -117,6 +117,24 @@ export interface IReqoreSelectItemProps
  */
 const STRUCTURED_TOOLTIP_MAX = 600;
 
+/**
+ * And a cap on LINES, which is the one that actually bounds the popover.
+ *
+ * The character cap alone does not: pretty-printed JSON is mostly short lines, so 600
+ * characters of a nested hash is roughly forty of them — around 700px, most of a laptop
+ * screen, for something the reader triggered by pointing at it. Height is what makes a
+ * tooltip oppressive, and height is a count of lines, so that is what to count.
+ *
+ * There is no scrolling to fall back on: `InternalPopover` clamps its width to the
+ * viewport but sets no default max-height, and a hover popover closes when the pointer
+ * leaves the trigger, so anything past the fold could be neither seen nor reached. Better
+ * to stop early and say so with the ellipsis than to render a wall and clip it silently.
+ *
+ * Twelve because a tooltip is a glance. Past that the reader is better served by opening
+ * the value properly, which is the consumer's surface and not this one.
+ */
+const STRUCTURED_TOOLTIP_MAX_LINES = 12;
+
 export const structuredValueTooltip = (value: unknown): string | undefined => {
   if (value === null || typeof value !== 'object') {
     return undefined;
@@ -129,9 +147,15 @@ export const structuredValueTooltip = (value: unknown): string | undefined => {
       return undefined;
     }
 
-    return preview.length > STRUCTURED_TOOLTIP_MAX
-      ? `${preview.slice(0, STRUCTURED_TOOLTIP_MAX)}\n…`
-      : preview;
+    const lines = preview.split('\n');
+    const tooTall = lines.length > STRUCTURED_TOOLTIP_MAX_LINES;
+    const capped = tooTall ? lines.slice(0, STRUCTURED_TOOLTIP_MAX_LINES).join('\n') : preview;
+    const tooLong = capped.length > STRUCTURED_TOOLTIP_MAX;
+
+    // One ellipsis however many caps applied — two would read as part of the value.
+    return tooTall || tooLong
+      ? `${tooLong ? capped.slice(0, STRUCTURED_TOOLTIP_MAX) : capped}\n…`
+      : capped;
   } catch {
     return undefined;
   }

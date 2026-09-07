@@ -129,6 +129,42 @@ describe('the tooltip offered for a structured value', () => {
     expect(tooltip.endsWith('…')).toBe(true);
   });
 
+  it('caps the LINES, which is what the popover grows by', () => {
+    /* A character cap does not bound height. Pretty-printed JSON is mostly short
+       lines, so 600 characters of a nested hash is around forty of them — roughly
+       700px, and `InternalPopover` sets no default max-height, so the popover simply
+       grows. This value is under the character cap and would still have filled the
+       screen. */
+    const deep = {
+      connection: Object.fromEntries(
+        Array.from({ length: 40 }, (_, i) => [`k${i}`, i])
+      ),
+    };
+    const tooltip = structuredValueTooltip(deep)!;
+
+    expect(tooltip.length).toBeLessThan(600);
+    expect(tooltip.split('\n').length).toBeLessThanOrEqual(13);
+    expect(tooltip.endsWith('…')).toBe(true);
+  });
+
+  it('says it truncated exactly once, however many caps applied', () => {
+    // Both caps hitting the same value must not stack two ellipses into the preview.
+    const wide = {
+      items: Array.from({ length: 500 }, (_, i) => `a-fairly-long-item-value-${i}`),
+    };
+    const tooltip = structuredValueTooltip(wide)!;
+
+    expect(tooltip.match(/…/g)).toHaveLength(1);
+  });
+
+  it('leaves a value that fits exactly as it is', () => {
+    const small = { host: 'localhost', port: 8080 };
+    const tooltip = structuredValueTooltip(small)!;
+
+    expect(tooltip).toBe(JSON.stringify(small, null, 2));
+    expect(tooltip).not.toContain('…');
+  });
+
   it('gives up quietly on a value that cannot be serialised', () => {
     // A circular structure is a legitimate thing for a consumer to hold, and
     // `JSON.stringify` throws on it — the chip must still render.

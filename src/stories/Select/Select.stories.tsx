@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { expect, userEvent } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 import { useState } from 'react';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { IReqoreSelectSingleProps, ReqoreSelect } from '../../components/Select';
@@ -403,5 +403,64 @@ export const StructuredValues: Story = {
     // as `value="[object Object]"` on the chip.
     await expect(document.querySelector('.reqore-tag')?.getAttribute('value')).toBe(null);
     await expect(document.body.innerHTML).not.toContain('[object Object]');
+  },
+};
+
+/* A value big enough that an uncapped preview would run off the screen: forty keys,
+   which pretty-prints to forty-two lines. It sits UNDER the 600-character cap, so the
+   character limit alone would have let all of it through — the line cap is what holds
+   it. */
+const HugeStructuredItems = [
+  {
+    label: 'Huge Hash Allowed Value',
+    value: {
+      connection: Object.fromEntries(Array.from({ length: 40 }, (_, i) => [`option${i}`, i])),
+    },
+  },
+];
+
+export const StructuredValueTooltipIsBounded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Hovers the chip of an item whose value is a hash far too large to preview in full. The tooltip stops at twelve lines and says so with an ellipsis, rather than growing a popover taller than the viewport — `InternalPopover` clamps width to the screen but sets no default max-height, and a hover popover cannot be scrolled because it closes when the pointer leaves.',
+      },
+    },
+  },
+  render: (args) => {
+    const [selected, setSelected] = useState<unknown>(HugeStructuredItems[0].value);
+
+    return (
+      <ReqoreSelect
+        {...args}
+        value={selected as string}
+        onValueChange={setSelected}
+        items={HugeStructuredItems as IReqoreSelectSingleProps['items']}
+      />
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.hover(canvasElement.querySelector('.reqore-tag')!);
+
+    const preview = await waitFor(() => {
+      const node = document.querySelector('.reqore-select-item-value-preview');
+      expect(node).toBeTruthy();
+      return node as HTMLElement;
+    });
+
+    // Twelve lines of value plus the ellipsis that says there is more.
+    const text = preview.textContent ?? '';
+    await expect(text.split('\n')).toHaveLength(13);
+    await expect(text.endsWith('…')).toBe(true);
+
+    /* The assertion that matters is the rendered one: the popover has no default
+       max-height, so an uncapped preview would simply grow. Forty-two lines at this
+       size is around 700px; bounded, it is a fraction of that and comfortably inside
+       the viewport. */
+    const popover = preview.closest('.reqore-popover-content') ?? preview.parentElement!;
+    await expect(popover.getBoundingClientRect().height).toBeLessThan(
+      window.innerHeight / 2
+    );
   },
 };
