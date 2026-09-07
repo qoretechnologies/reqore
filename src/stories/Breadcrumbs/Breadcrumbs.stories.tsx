@@ -291,13 +291,53 @@ export const CollapsedAdoptsLeafTheme: Story = {
     // Its menu is a clean navigation list: every crumb is a labelled row —
     // including the Home crumb (a label-less icon would render as a lone,
     // centred icon; here it reads "Home").
-    fireEvent.mouseEnter(control);
-    await waitFor(() => expect(document.querySelector('.reqore-menu')).toBeTruthy());
-    await waitFor(() => {
-      const menuText = document.querySelector('.reqore-menu')?.textContent ?? '';
-      expect(menuText).toContain('Home');
-      expect(menuText).toContain('Jobs');
-      expect(menuText).toContain('Bbm');
-    });
+    /* Hover INSIDE the wait, and pick the menu by its contents.
+    
+       The menu is a hover popover in a portal, so it cannot be scoped to the
+       canvas — and the story suite runs parallel and NOT isolated, so every
+       file shares one document. Hovering once and then waiting made two
+       assumptions that do not hold under that load: that the popover was still
+       open by the time the assertion ran (a neighbouring story's click can
+       dismiss it), and that whatever `.reqore-menu` the document held was ours.
+       Re-hovering on each attempt re-opens it, and matching on the leaf label
+       picks THIS trail's menu rather than whichever one happens to be up. */
+    const findTrailMenu = () =>
+      Array.from(document.querySelectorAll('.reqore-menu')).find((el) =>
+        (el.textContent ?? '').includes('Bbm')
+      );
+
+    let trailMenu: Element | undefined;
+
+    /* One hover per ATTEMPT, not per poll: the popover opens on a timer, and
+       re-hovering on every `waitFor` tick restarts that timer, so it never
+       elapses. Three attempts, because the thing being guarded against is a
+       neighbour dismissing the popover between the hover and the assertion —
+       one more hover fixes that, where retrying the assertion alone cannot. */
+    for (let attempt = 0; attempt < 3 && !trailMenu; attempt++) {
+      const trigger = canvasElement.querySelector('.reqore-breadcrumbs-overflow-current');
+
+      if (trigger) {
+        fireEvent.mouseEnter(trigger);
+      }
+
+      try {
+        trailMenu = await waitFor(() => {
+          const menu = findTrailMenu();
+          if (!menu) {
+            throw new Error('the collapsed trail has not opened its menu yet');
+          }
+          return menu;
+        });
+      } catch {
+        // Not up yet — hover again rather than keep waiting on a closed popover.
+      }
+    }
+
+    await expect(trailMenu, 'the collapsed trail never opened its menu').toBeTruthy();
+
+    const menuText = trailMenu?.textContent ?? '';
+    await expect(menuText).toContain('Home');
+    await expect(menuText).toContain('Jobs');
+    await expect(menuText).toContain('Bbm');
   },
 };
