@@ -1,4 +1,4 @@
-import { expect, fn, userEvent } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { useCallback, useState } from 'react';
 import { NodeEntry, Range, Text } from 'slate';
@@ -91,6 +91,84 @@ export const WithDefaultValue: Story = {
         children: [{ text: 'This is already a new paragraph.' }],
       },
     ],
+  },
+};
+
+/**
+ * Clicking a chip gives the editor a cursor.
+ *
+ * A chip is an inline VOID — it holds no text of its own — so a click on it has
+ * no text position to land in and the browser puts the cursor nowhere. When the
+ * whole value IS one chip, as it is for a field holding a single reference,
+ * that made the editor impossible to type into at all: the chip covers the
+ * control, and clicking it did nothing.
+ *
+ * Reported against a Qorus test assertion's `Value`, where it made a path
+ * deeper than any offered candidate — the case a rich-text control exists for —
+ * impossible to write by hand.
+ *
+ * The cursor lands AFTER the chip, which is where a walk is continued.
+ */
+export const ClickingATagPlacesTheCursor: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Clicks a chip that is the entire value and types — the cursor must land after the chip so the text is appended to it.',
+      },
+    },
+  },
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [
+          { text: '' },
+          {
+            type: 'tag',
+            value: '$.order.id',
+            label: 'id',
+            children: [{ text: '' }],
+          },
+          { text: '' },
+        ],
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await waitFor(() => {
+      const el = doc.querySelector<HTMLElement>('[contenteditable="true"]');
+      expect(el).toBeTruthy();
+      return el!;
+    });
+
+    // Slate wraps a void in its own span and the tag that carries the click
+    // handler is a CHILD of it, so a click dispatched on the wrapper never
+    // reaches it — events bubble up, not down. Click the tag's LABEL: on a
+    // short label the chip's geometric centre is its `×`, which removes the
+    // chip and would make this pass or fail for the wrong reason.
+    const chip = await waitFor(() => {
+      const wrapper = doc.querySelector<HTMLElement>('[data-slate-void="true"]');
+      expect(wrapper).toBeTruthy();
+      const label = Array.from(wrapper!.querySelectorAll<HTMLElement>('*')).find(
+        (el) =>
+          el.textContent === 'id' && !el.className.toString().includes('reqore-tag-remove')
+      );
+      expect(label).toBeTruthy();
+      return label!;
+    });
+
+    await userEvent.click(chip);
+    await userEvent.keyboard('.value');
+
+    // Appended to the chip, not inserted before it: the reference is extended.
+    // Appended to the chip, not inserted before it: the reference is extended.
+    // The chip and the typed run are separate DOM nodes, so `innerText` puts
+    // layout whitespace between them; the ORDER is what is being asserted.
+    await waitFor(() =>
+      expect(editor.innerText.replace(/[\s\uFEFF]/g, '')).toContain('id.value')
+    );
   },
 };
 

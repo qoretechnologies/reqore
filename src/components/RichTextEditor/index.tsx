@@ -4,7 +4,15 @@ import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useState }
 import { useUpdateEffect } from 'react-use';
 import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
-import { Editable, ReactEditor, Slate, useSelected, withReact } from 'slate-react';
+import {
+  Editable,
+  ReactEditor,
+  Slate,
+  useReadOnly,
+  useSelected,
+  useSlateStatic,
+  withReact,
+} from 'slate-react';
 import {
   EditableProps,
   RenderElementProps,
@@ -79,11 +87,73 @@ export interface IReqoreRichTextEditorProps
 
 export const TemplateElement = memo((props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
   const selected = useSelected();
+  const editor = useSlateStatic();
+  const readOnly = useReadOnly();
 
-  const handleClick = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+  /* A chip is an inline VOID: it holds no text of its own, so a click on it has
+     no text position to land in and the browser places the cursor nowhere. This
+     handler used to `preventDefault()` + `stopPropagation()` and stop there,
+     which made the chip a dead spot.
+
+     That is not merely a missing convenience. A field whose entire value is one
+     reference renders as one chip and nothing else, so the chip IS the control:
+     with no way to get a cursor into the editor, nothing could be typed into it
+     at all. Reported against a Qorus test assertion's `Value`, where it made a
+     path deeper than any offered candidate — the case the rich-text control
+     exists for — impossible to write by hand.
+
+     The cursor goes AFTER the chip, which is where a walk is continued
+     (`$.order.id` -> `$.order.id.value`). Both calls above are kept and are
+     load-bearing: `preventDefault` stops the browser racing us to a position of
+     its own, and `stopPropagation` keeps the click from reaching a host row that
+     treats a click as "collapse me". The selection is then set explicitly rather
+     than left to the browser, so where the cursor lands does not depend on which
+     pixel of the chip was hit.
+
+     Removing a chip is unaffected: that is the tag's own `×`
+     (`onRemoveClick`), not a click on its body. */
+  const handleClick = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // The consumer's own handler still runs: the editor composes `onTagClick`
+      // and any `getTagProps().onClick` into the `tagProps.onClick` below, and
+      // this element used to be overridden by it rather than run alongside it.
+      props.tagProps?.onClick?.(e);
+
+      // A read-only surface has no cursor to give.
+      if (readOnly) {
+        return;
+      }
+
+      try {
+        const path = ReactEditor.findPath(editor, props.element);
+        // From the void's END, and skipping voids. Asking for the point after
+        // the void's PATH can resolve to a point INSIDE its own empty text
+        // child, where typing is silently ignored — the cursor reads as placed
+        // (the DOM selection is real and inside the editor) and the editor
+        // still accepts nothing, which is a worse failure than an obvious one.
+        // The fallback covers a void that ends the document with no text node
+        // after it; a well-formed document always has one.
+        const point =
+          Editor.after(editor, Editor.end(editor, path), { voids: false }) ??
+          Editor.end(editor, []);
+        // Focus BEFORE selecting. `ReactEditor.focus` restores the editor's
+        // previous selection as it takes focus, so focusing afterwards throws
+        // away the point just set — which cost the FIRST character typed after
+        // a chip click and nothing else, the kind of loss that reads as a
+        // flaky keyboard rather than a bug.
+        ReactEditor.focus(editor);
+        Transforms.select(editor, point);
+      } catch {
+        // The element can be gone between render and click (a re-render that
+        // replaced the value). Losing the cursor is the right outcome then, and
+        // it must not take the click handler down with it.
+      }
+    },
+    [editor, props.element, props.tagProps, readOnly]
+  );
 
   return (
     <>
@@ -93,10 +163,12 @@ export const TemplateElement = memo((props: RenderElementProps & { tagProps: IRe
         flat={false}
         asBadge
         fixed='key'
-        onClick={handleClick}
         tooltip={props.element.value?.toString()}
         label={props.element.label}
         {...props.tagProps}
+        // AFTER the spread on purpose: `tagProps` carries an `onClick` of its
+        // own, so declaring this before it meant this handler never ran at all.
+        onClick={handleClick}
         contentEditable={false}
         intent={selected ? 'info' : props.tagProps?.intent}
       />
