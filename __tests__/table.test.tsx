@@ -695,6 +695,47 @@ test('Cells on <Table /> are interactive', () => {
   expect(fn).toHaveBeenCalledWith(1);
 });
 
+test('A row `getRowProps` marks `interactive: false` takes no click, and the rows around it still do', () => {
+  const opened = vi.fn();
+  const rowClicked = vi.fn();
+  const rows = makeRows(3);
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+          columns={[
+            { dataId: 'id', header: { label: 'ID' }, width: 50, cell: { onClick: ({ id }) => opened(id) } },
+            { dataId: 'firstName', header: { label: 'First Name' }, width: 150 },
+          ]}
+          data={rows}
+          onRowClick={({ id }) => rowClicked(id)}
+          // the middle row is the one that opens nothing
+          getRowProps={({ id }) => ({ interactive: id !== 2 })}
+        />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const tableRows = document.querySelectorAll('.reqore-table-row');
+  const cellsOf = (row: Element) => row.querySelectorAll('.reqore-table-cell');
+
+  // the static row: neither the cell's own click nor the row click
+  fireEvent.click(cellsOf(tableRows[1])[0]);
+  fireEvent.click(cellsOf(tableRows[1])[1]);
+  expect(opened).not.toHaveBeenCalled();
+  expect(rowClicked).not.toHaveBeenCalled();
+
+  // its neighbours are untouched
+  fireEvent.click(cellsOf(tableRows[0])[0]);
+  expect(opened).toHaveBeenLastCalledWith(1);
+  fireEvent.click(cellsOf(tableRows[2])[1]);
+  expect(rowClicked).toHaveBeenLastCalledWith(3);
+
+  // and it is not the dimmed, inert `_disabled` row: it renders its content
+  expect(tableRows[1].textContent).toContain(String(rows[1].firstName));
+});
+
 const TestingTableWithState = () => {
   const [columns, setColumns] = useState<IReqoreTableColumn[]>([
     {

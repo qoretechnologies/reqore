@@ -358,6 +358,10 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * `style` are merged in — anything else you return replaces or extends
    * them. Use this instead of `.reqore-table-row:has(...)` selectors when
    * a consumer needs to key row appearance off a data condition.
+   *
+   * Return `interactive: false` for a row that takes no click — see
+   * `IReqoreTableRowPropsMapper` — so a table whose rows open on click can say
+   * which of them do not, once, without marking its data.
    */
   getRowProps?: IReqoreTableRowOptions['getRowProps'];
 
