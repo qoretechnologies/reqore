@@ -1134,9 +1134,11 @@ export const LabelledSlots: Story = {
     position: 'static',
     showLabels: true,
     defaultActiveId: 'dashboard',
-    footer: ({ labelled }) => (
+    footer: ({ labelled, size }) => (
       <ReqoreButton
         icon='MenuUnfoldLine'
+        // The rail's own mark size, so the control sits in the column like a mark.
+        size={size}
         flat
         minimal
         raised
@@ -1153,15 +1155,17 @@ export const LabelledSlots: Story = {
     docs: {
       description: {
         story:
-          "Renders a labelled rail whose footer is a render prop: told the rail is labelled, the sidebar control renders as a fluid pill reading 'Open sidebar' like the marks above it, instead of an icon-only circle stranded under a column of labels.",
+          "Renders a labelled rail whose footer is a render prop: told the rail is labelled and the marks' size, the sidebar control renders as a fluid pill reading 'Open sidebar' at exactly the marks' height, instead of an icon-only circle stranded under a column of labels — or a pill a size too large.",
       },
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'Open sidebar' })).toHaveTextContent(
-      'Open sidebar'
-    );
+    const footer = canvas.getByRole('button', { name: 'Open sidebar' });
+    await expect(footer).toHaveTextContent('Open sidebar');
+    // Same height as a primary mark — the slot took the rail's size.
+    const mark = canvas.getByRole('button', { name: 'Projects' });
+    await expect(footer.getBoundingClientRect().height).toBe(mark.getBoundingClientRect().height);
   },
 };
 

@@ -490,17 +490,25 @@ test('The ⋮ trigger is a direct child of its column, not boxed in a popover wr
 
 // ── header / footer slots ────────────────────────────────────────────────────
 
-test('header and footer render props receive the labelled / expanded state', () => {
-  const slot = ({ labelled, expanded }: { labelled: boolean; expanded: boolean }) => (
+test('header and footer render props receive the labelled / expanded state and the mark size', () => {
+  const slot = ({
+    labelled,
+    expanded,
+    size,
+  }: {
+    labelled: boolean;
+    expanded: boolean;
+    size: string;
+  }) => (
     <span data-testid='slot'>
-      {labelled ? 'labelled' : 'icons'} {expanded ? 'expanded' : 'collapsed'}
+      {labelled ? 'labelled' : 'icons'} {expanded ? 'expanded' : 'collapsed'} {size}
     </span>
   );
 
   const { unmount } = renderRail(
     <ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' header={slot} />
   );
-  expect(screen.getByTestId('slot')).toHaveTextContent('icons collapsed');
+  expect(screen.getByTestId('slot')).toHaveTextContent('icons collapsed small');
   unmount();
 
   renderRail(
@@ -511,14 +519,15 @@ test('header and footer render props receive the labelled / expanded state', () 
       expandable
       defaultExpanded
       showLabels
+      size='big'
       footer={slot}
     />
   );
-  expect(screen.getByTestId('slot')).toHaveTextContent('labelled expanded');
+  expect(screen.getByTestId('slot')).toHaveTextContent('labelled expanded big');
 
   // Collapsing re-renders the slot with the new state.
   fireEvent.click(screen.getByRole('button', { name: 'Show fewer items' }));
-  expect(screen.getByTestId('slot')).toHaveTextContent('labelled collapsed');
+  expect(screen.getByTestId('slot')).toHaveTextContent('labelled collapsed big');
 });
 
 test('A plain node header / footer still renders as-is', () => {

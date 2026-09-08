@@ -110,10 +110,14 @@ export interface IReqoreNavRailSlotState {
   labelled: boolean;
   /** The rail is expanded (`expandable`). */
   expanded: boolean;
+  /** The size the primary marks render at — a slot control that should sit in
+   *  the column like a mark takes the same one. */
+  size: TSizes;
 }
 
 /** A `header` / `footer`: a node, or a function of the rail's slot state — so a
- *  control can follow the marks (a labelled pill while they are labelled). */
+ *  control can follow the marks (their `size`; a labelled pill while they are
+ *  labelled). */
 export type TReqoreNavRailSlot = ReactNode | ((state: IReqoreNavRailSlotState) => ReactNode);
 
 export interface IReqoreNavRailProps
@@ -226,8 +230,9 @@ export interface IReqoreNavRailProps
    *  back to the intent tint when omitted. */
   activeEffect?: IReqoreEffect;
   /** Rendered above the items (e.g. an open-sidebar control or a logo). A
-   *  function receives the rail's slot state — `labelled`, `expanded` — so the
-   *  control can match the marks (a labelled pill while the rail is labelled). */
+   *  function receives the rail's slot state — `labelled`, `expanded`, `size` —
+   *  so the control can match the marks (their size; a labelled pill while the
+   *  rail is labelled). */
   header?: TReqoreNavRailSlot;
   /** Rendered below the items — pinned under the scroll region, never folded
    *  away. A function receives the slot state like `header`. */
@@ -974,8 +979,8 @@ export const ReqoreNavRail = memo(
     const labelled = showLabels === true || (hoverLabels && dwellLabels);
     // What the header / footer are told, so a control can follow the marks.
     const slotState = useMemo<IReqoreNavRailSlotState>(
-      () => ({ labelled, expanded: isExpanded }),
-      [labelled, isExpanded]
+      () => ({ labelled, expanded: isExpanded, size }),
+      [labelled, isExpanded, size]
     );
     const renderSlot = (slot: TReqoreNavRailSlot): ReactNode =>
       typeof slot === 'function' ? slot(slotState) : slot;
