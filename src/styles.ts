@@ -131,8 +131,12 @@ export const ReadOnlyElement = css`
  * The colours are theme-neutral additive overlays (white-on-dark, black-on-
  * light) so the same recipe lights up correctly across every Reqore theme.
  */
+/** The two inset layers a raised surface paints — exported so a surface that
+ *  also carries an effect glow can compose both into one `box-shadow` instead
+ *  of one overriding the other. */
+export const RAISED_SHADOWS =
+  'inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.22)';
+
 export const RaisedElement = css`
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+  box-shadow: ${RAISED_SHADOWS};
 `;

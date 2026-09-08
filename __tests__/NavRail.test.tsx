@@ -487,3 +487,66 @@ test('The ⋮ trigger is a direct child of its column, not boxed in a popover wr
   expect(sections.closest('.reqore-popover-wrapper')).toBeNull();
   expect(sections.parentElement).toHaveClass('reqore-nav-rail-active');
 });
+
+// ── header / footer slots ────────────────────────────────────────────────────
+
+test('header and footer render props receive the labelled / expanded state', () => {
+  const slot = ({ labelled, expanded }: { labelled: boolean; expanded: boolean }) => (
+    <span data-testid='slot'>
+      {labelled ? 'labelled' : 'icons'} {expanded ? 'expanded' : 'collapsed'}
+    </span>
+  );
+
+  const { unmount } = renderRail(
+    <ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' header={slot} />
+  );
+  expect(screen.getByTestId('slot')).toHaveTextContent('icons collapsed');
+  unmount();
+
+  renderRail(
+    <ReqoreNavRail
+      items={ITEMS}
+      defaultActiveId='dashboard'
+      maxItems={2}
+      expandable
+      defaultExpanded
+      showLabels
+      footer={slot}
+    />
+  );
+  expect(screen.getByTestId('slot')).toHaveTextContent('labelled expanded');
+
+  // Collapsing re-renders the slot with the new state.
+  fireEvent.click(screen.getByRole('button', { name: 'Show fewer items' }));
+  expect(screen.getByTestId('slot')).toHaveTextContent('labelled collapsed');
+});
+
+test('A plain node header / footer still renders as-is', () => {
+  renderRail(
+    <ReqoreNavRail
+      items={ITEMS}
+      defaultActiveId='dashboard'
+      header={<span data-testid='h'>top</span>}
+      footer={<span data-testid='f'>bottom</span>}
+    />
+  );
+  expect(screen.getByTestId('h')).toHaveTextContent('top');
+  expect(screen.getByTestId('f')).toHaveTextContent('bottom');
+});
+
+test('The nav carries class hooks for the labelled and expanded states', () => {
+  const { unmount } = renderRail(<ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' />);
+  const nav = () => screen.getByRole('navigation');
+  expect(nav()).not.toHaveClass('reqore-nav-rail-labelled');
+  expect(nav()).not.toHaveClass('reqore-nav-rail-expanded');
+  unmount();
+
+  renderRail(
+    <ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' maxItems={2} expandable showLabels />
+  );
+  expect(nav()).toHaveClass('reqore-nav-rail-labelled');
+  expect(nav()).not.toHaveClass('reqore-nav-rail-expanded');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Show all items' }));
+  expect(nav()).toHaveClass('reqore-nav-rail-expanded');
+});

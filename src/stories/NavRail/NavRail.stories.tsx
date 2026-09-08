@@ -5,7 +5,14 @@ import ReqoreNavRail, {
   IReqoreNavRailItem,
   IReqoreNavRailProps,
 } from '../../components/NavRail';
-import { ReqoreControlGroup, ReqoreP, ReqorePanel, ReqoreTag, ReqoreUIProvider } from '../../index';
+import {
+  ReqoreButton,
+  ReqoreControlGroup,
+  ReqoreP,
+  ReqorePanel,
+  ReqoreTag,
+  ReqoreUIProvider,
+} from '../../index';
 import { StoryMeta } from '../utils';
 
 const meta = {
@@ -1117,4 +1124,73 @@ export const LabelledExpanded: Story = {
       expect(scrollWrapOf(canvasElement)).toHaveClass('reqore-nav-rail-fade-bottom')
     );
   },
+};
+
+/** LABELLED · SLOTS — `header` / `footer` as render props: a control that
+ *  follows the marks, a labelled pill while the rail is labelled. */
+export const LabelledSlots: Story = {
+  args: {
+    items: ITEMS,
+    position: 'static',
+    showLabels: true,
+    defaultActiveId: 'dashboard',
+    footer: ({ labelled }) => (
+      <ReqoreButton
+        icon='MenuUnfoldLine'
+        flat
+        minimal
+        raised
+        circle={!labelled}
+        pill={labelled}
+        fluid={labelled}
+        aria-label='Open sidebar'
+        tooltip={labelled ? undefined : { content: 'Open sidebar', placement: 'right' }}
+        label={labelled ? 'Open sidebar' : undefined}
+      />
+    ),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a labelled rail whose footer is a render prop: told the rail is labelled, the sidebar control renders as a fluid pill reading 'Open sidebar' like the marks above it, instead of an icon-only circle stranded under a column of labels.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Open sidebar' })).toHaveTextContent(
+      'Open sidebar'
+    );
+  },
+};
+
+/** RAISED · GLOW — a flat + raised rail casting a drop shadow through
+ *  `effect.glow`: the raised highlight and the glow compose into one shadow. */
+export const RaisedGlow: Story = {
+  args: {
+    items: ITEMS,
+    floating: true,
+    position: 'left',
+    flat: true,
+    raised: true,
+    defaultActiveId: 'dashboard',
+    effect: {
+      gradient: { colors: { 0: '#2a1e40', 100: '#161222' }, direction: 'to bottom' },
+      glow: { color: '#000000', blur: 28, size: 6, opacity: 0.6 },
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a flat, raised rail floating over a page with a soft black `effect.glow` — a drop shadow. The raised inset highlight and the glow are composed into one `box-shadow`, so the rail keeps its lift AND casts the shadow; before, the raised rule silently overrode any glow on a raised rail.',
+      },
+    },
+  },
+  render: (args: IReqoreNavRailProps) => (
+    <Backdrop>
+      <ReqoreNavRail {...args} />
+    </Backdrop>
+  ),
 };
