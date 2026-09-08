@@ -30,6 +30,79 @@ export const sortTableData = (data: any[], sort: IReqoreTableSort) => {
   return [...data].sort(firstBy(by, { ignoreCase: true, direction }));
 };
 
+/** How well a cell value answers a global filter query. Higher is better. */
+export type TReqoreTableQueryMatch = 0 | 1 | 2 | 3 | 4;
+
+/**
+ * Scores one cell value against a lower-cased query: an exact cell wins over a cell
+ * that starts with the query, which wins over a cell with a word that starts with it,
+ * which wins over a cell that merely contains it. `0` is no match.
+ */
+export const getQueryMatchScore = (value: unknown, query: string): TReqoreTableQueryMatch => {
+  if (value === undefined || value === null || typeof value === 'object') {
+    return 0;
+  }
+
+  const text = value.toString().toLowerCase();
+
+  if (text === query) {
+    return 4;
+  }
+
+  if (text.startsWith(query)) {
+    return 3;
+  }
+
+  const at = text.indexOf(query);
+
+  if (at === -1) {
+    return 0;
+  }
+
+  return /[^a-z0-9]/.test(text.charAt(at - 1)) ? 2 : 1;
+};
+
+/**
+ * Orders rows that already passed the global filter by how well they match it.
+ *
+ * The filter itself accepts a row when the query appears anywhere in its data, hidden
+ * fields included, which is the right net to cast but says nothing about order: a table
+ * filtered by a name showed the two rows called that name wherever the alphabet put them,
+ * among rows that merely mentioned the word in a description or carried it in an id the
+ * reader never sees. Rows are ranked by the first shown column that matches — a name
+ * that merely contains the word still beats a description that starts with it, because
+ * the first column is what a row IS — and within that column by how well it matches
+ * (exact, prefix, word prefix, substring); a row matched only through data no column
+ * shows ranks last. Ties keep the order they arrived in, so the caller's ordering still
+ * decides between equally good matches.
+ */
+export const rankTableDataByQuery = <T extends Record<string, unknown>>(
+  rows: T[],
+  query: string,
+  columns: IReqoreTableColumn[]
+): T[] => {
+  if (!query) {
+    return rows;
+  }
+
+  const fields = flattenColumns(columns)
+    .filter((column) => column.show !== false)
+    .map((column) => column.dataId);
+
+  const ranked = rows.map((row, index) => {
+    // The first shown column that matches decides the rank; the columns come in
+    // the order the table shows them, and the first one is the row's identity.
+    const column = fields.findIndex((field) => getQueryMatchScore(row[field], query) > 0);
+    const score = column === -1 ? 0 : getQueryMatchScore(row[fields[column]], query);
+
+    return { row, index, column: column === -1 ? fields.length : column, score };
+  });
+
+  return ranked
+    .sort((a, b) => a.column - b.column || b.score - a.score || a.index - b.index)
+    .map(({ row }) => row);
+};
+
 export const updateColumnData = (
   columns: IReqoreTableColumn[],
   columnId: string,

@@ -806,13 +806,86 @@ export const DefaultFilter: Story = {
     docs: {
       description: {
         story:
-          'Renders Table with a default filter applied.',
+          'Renders Table with a default filter applied; the catalogue\'s last-name sort stays in charge of the order, since a chosen sort outranks relevance.',
       },
     },
   },
   args: {
     filterable: true,
     filter: 'Village',
+  },
+};
+
+const relevanceColumns: IReqoreTableColumn[] = [
+  { dataId: 'name', header: { label: 'Connection' }, grow: 1 },
+  { dataId: 'description', header: { label: 'Description' }, grow: 2 },
+];
+
+/* Alphabetical on purpose: with the query "telegram" the rows called Telegram
+   sit in the middle of this order, which is what the filter used to show. */
+const relevanceData = [
+  { id: 1, name: 'Alerts to Telegram', description: 'Forwards alerts' },
+  { id: 2, name: 'Gmail', description: 'Reads the inbox, posts a digest to telegram' },
+  { id: 3, name: 'Slack', description: 'Ops workspace', token: 'telegram-token' },
+  { id: 4, name: 'Telegram', description: 'The bot connection' },
+  { id: 5, name: 'Telegram Support', description: 'Support channel bot' },
+  { id: 6, name: 'Untelegrammed', description: 'A name that only contains the word' },
+];
+
+const firstRowNames = (canvasElement: HTMLElement) =>
+  Array.from(canvasElement.querySelectorAll('.reqore-table-row')).map(
+    (row) => row.querySelector('.reqore-table-cell')?.textContent
+  );
+
+export const FilterRelevance: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table filtered by "telegram" that opted into `filterRanking="relevance"` — the row called Telegram first, then names starting with it, then names and descriptions merely mentioning it, and a row matched only through hidden data last.',
+      },
+    },
+  },
+  args: {
+    columns: relevanceColumns,
+    data: relevanceData,
+    filterable: true,
+    filter: 'telegram',
+    filterRanking: 'relevance',
+    // The catalogue's default args sort by last name; a chosen sort outranks
+    // relevance by design, so this story runs without one.
+    sort: undefined,
+    height: 400,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(firstRowNames(canvasElement)).toEqual([
+        'Telegram',
+        'Telegram Support',
+        'Alerts to Telegram',
+        'Untelegrammed',
+        'Gmail',
+        'Slack',
+      ])
+    );
+  },
+};
+
+export const FilterArrivingOrder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same filtered table without opting into ranking — the default: the matching rows keep the order they arrived in.',
+      },
+    },
+  },
+  args: {
+    ...FilterRelevance.args,
+    filterRanking: undefined,
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(firstRowNames(canvasElement)[0]).toBe('Alerts to Telegram'));
   },
 };
 

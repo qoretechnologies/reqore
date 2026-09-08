@@ -41,6 +41,7 @@ import {
   prepareColumns,
   removeInternalData,
   sizeToZoom,
+  rankTableDataByQuery,
   sortTableData,
   zoomToSize,
 } from './helpers';
@@ -168,6 +169,15 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   filterProps?: (data: IReqoreTableData) => IReqoreInputProps;
   filter?: string | number;
   onFilterChange?: (query: string | number) => void;
+  /**
+   * How rows that pass the global filter are ordered while a query is active.
+   * `'none'` (default) keeps the arriving order — the filter only narrows. `'relevance'`
+   * ranks the matches by the first shown column that matches the query and how well it
+   * matches — see `rankTableDataByQuery` — leaving ties in their arriving order; a table
+   * that is searched by name (a list of connections, jobs, services) wants this. An
+   * explicit `sort` always wins over it.
+   */
+  filterRanking?: 'relevance' | 'none';
 
   exportable?: boolean;
 
@@ -450,6 +460,7 @@ const ReqoreTable = ({
   actions = [],
   onFilterChange,
   filterProps,
+  filterRanking = 'none',
   emptyMessage = 'No data in this table, try changing your search query or filters',
   headerCellComponent,
   rowComponent,
@@ -648,8 +659,17 @@ const ReqoreTable = ({
       datum._reqoreIndex === undefined ? { ...datum, _reqoreIndex: index } : datum
     );
 
-    return _sort ? sortTableData(filteredData, _sort) : filteredData;
-  }, [_data, _sort, normalizedFilters, normalizedQuery]);
+    // `_sort` always carries a direction; only a `by` is a chosen sort.
+    if (_sort?.by) {
+      return sortTableData(filteredData, _sort);
+    }
+
+    // Opted-in relevance: the reader asked for a thing by name and expects the
+    // rows called that first, not wherever the alphabet or the data put them.
+    return hasQuery && filterRanking === 'relevance'
+      ? rankTableDataByQuery(filteredData, normalizedQuery, _internalColumns)
+      : filteredData;
+  }, [_data, _sort, normalizedFilters, normalizedQuery, filterRanking, _internalColumns]);
 
   /**
    * Which rows are open. Uncontrolled by default (`defaultExpanded` seeds it),

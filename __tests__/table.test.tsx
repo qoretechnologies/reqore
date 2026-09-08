@@ -4,6 +4,7 @@ import { act } from 'react-dom/test-utils';
 import { ReqoreLayoutContent, ReqoreTable, ReqoreUIProvider } from '../src';
 import { IReqoreTableColumn, IReqoreTableProps } from '../src/components/Table';
 import tableData from '../src/mock/tableData';
+import { getQueryMatchScore, rankTableDataByQuery } from '../src/components/Table/helpers';
 
 /** `n` rows of the mock fixture, cycled so the ids stay unique. */
 const makeRows = (n: number) =>
@@ -1465,4 +1466,129 @@ describe('expandable rows and re-renders', () => {
     // every parent render — 24 more calls here per tick, 100 on a list page.
     expect(renderExpandedRow.mock.calls.length).toBe(afterMount);
   });
+});
+
+/* Relevance ranking of the global filter (see rankTableDataByQuery). */
+
+const relevanceColumns: IReqoreTableColumn[] = [
+  { dataId: 'name', header: { label: 'Name' } },
+  { dataId: 'description', header: { label: 'Description' } },
+  { dataId: 'secret', header: { label: 'Secret' }, show: false },
+];
+
+/* The order the data arrives in is alphabetical, which is exactly the order a
+   filter must NOT keep: the rows called "telegram" sit in the middle. */
+const relevanceRows = [
+  { id: 1, name: 'Alerts to Telegram', description: 'Forwards alerts' },
+  { id: 2, name: 'Gmail', description: 'Reads the inbox, posts a digest to telegram' },
+  { id: 3, name: 'Slack', description: 'Ops workspace', secret: 'telegram-token' },
+  { id: 4, name: 'Telegram', description: 'The bot connection' },
+  { id: 5, name: 'Telegram Support', description: 'Support channel bot' },
+  { id: 6, name: 'Untelegrammed', description: 'A name that only contains the word' },
+];
+
+describe('getQueryMatchScore', () => {
+  test('ranks an exact cell over a prefix over a word prefix over a substring', () => {
+    expect(getQueryMatchScore('Telegram', 'telegram')).toBe(4);
+    expect(getQueryMatchScore('Telegram Support', 'telegram')).toBe(3);
+    expect(getQueryMatchScore('Alerts to Telegram', 'telegram')).toBe(2);
+    expect(getQueryMatchScore('Untelegrammed', 'telegram')).toBe(1);
+    expect(getQueryMatchScore('Slack', 'telegram')).toBe(0);
+  });
+
+  test('ignores values a cell cannot show as text', () => {
+    expect(getQueryMatchScore({ nested: 'telegram' }, 'telegram')).toBe(0);
+    expect(getQueryMatchScore(undefined, 'telegram')).toBe(0);
+    expect(getQueryMatchScore(42, '4')).toBe(3);
+  });
+});
+
+describe('rankTableDataByQuery', () => {
+  test('puts the rows called the query first, then prefixes, then mentions, then hidden matches', () => {
+    expect(rankTableDataByQuery(relevanceRows, 'telegram', relevanceColumns).map((row) => row.id)).toEqual([
+      4, 5, 1, 6, 2, 3,
+    ]);
+  });
+
+  test('a match in an earlier column beats the same match further right', () => {
+    const ranked = rankTableDataByQuery(
+      [
+        { id: 1, name: 'Ops', description: 'Telegram' },
+        { id: 2, name: 'Telegram', description: 'Ops' },
+      ],
+      'telegram',
+      relevanceColumns
+    );
+
+    expect(ranked.map((row) => row.id)).toEqual([2, 1]);
+  });
+
+  test('keeps the arriving order between equal matches and without a query', () => {
+    const equal = [
+      { id: 1, name: 'Telegram', description: '' },
+      { id: 2, name: 'telegram', description: '' },
+    ];
+
+    expect(rankTableDataByQuery(equal, 'telegram', relevanceColumns).map((row) => row.id)).toEqual([1, 2]);
+    expect(rankTableDataByQuery(relevanceRows, '', relevanceColumns)).toBe(relevanceRows);
+  });
+});
+
+const renderedNames = () =>
+  Array.from(document.querySelectorAll('.reqore-table-row')).map(
+    (row) => row.querySelector('.reqore-table-cell')?.textContent
+  );
+
+const renderRelevanceTable = (props: Partial<React.ComponentProps<typeof ReqoreTable>> = {}) =>
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable
+            columns={relevanceColumns}
+            data={relevanceRows}
+            filterable
+            filter='telegram'
+            height={400}
+            {...props}
+          />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+/* The file runs on fake timers; the global filter settles after its 300ms delay. */
+const settleFilter = () => act(() => vi.advanceTimersByTime(400));
+
+test('<Table /> orders filtered rows by relevance when opted in', () => {
+  renderRelevanceTable({ filterRanking: 'relevance' });
+  settleFilter();
+
+  expect(renderedNames()).toEqual([
+    'Telegram',
+    'Telegram Support',
+    'Alerts to Telegram',
+    'Untelegrammed',
+    'Gmail',
+    'Slack',
+  ]);
+});
+
+test('<Table /> keeps the arriving order of filtered rows by default', () => {
+  renderRelevanceTable();
+  settleFilter();
+
+  expect(renderedNames()).toEqual([
+    'Alerts to Telegram',
+    'Gmail',
+    'Slack',
+    'Telegram',
+    'Telegram Support',
+    'Untelegrammed',
+  ]);
+});
+
+test('<Table /> lets an explicit sort win over relevance', () => {
+  renderRelevanceTable({ filterRanking: 'relevance', sort: { by: 'name', direction: 'desc' } });
+  settleFilter();
+
+  expect(renderedNames()[0]).toBe('Untelegrammed');
 });
