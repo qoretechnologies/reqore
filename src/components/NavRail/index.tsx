@@ -25,7 +25,7 @@ import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useScrollFade } from '../../hooks/useScrollFade';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { RaisedElement } from '../../styles';
+import { RAISED_SHADOWS } from '../../styles';
 import {
   IReqoreComponent,
   IReqoreIntent,
@@ -40,7 +40,7 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, StyledEffect, TReqoreHexColor } from '../Effect';
+import { getGlowBoxShadow, IReqoreEffect, StyledEffect, TReqoreHexColor } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { TReqoreMenuItemEventHandler } from '../Menu/item';
 import { ReqorePopover } from '../Popover';
@@ -102,6 +102,23 @@ export interface IReqoreNavRailSubItem {
 }
 
 export type TReqoreNavRailPosition = 'left' | 'right' | 'static';
+
+/** What the rail tells its `header` / `footer` about itself. */
+export interface IReqoreNavRailSlotState {
+  /** The marks are spelling out their labels — `showLabels`, or the hover
+   *  dwell has elapsed. */
+  labelled: boolean;
+  /** The rail is expanded (`expandable`). */
+  expanded: boolean;
+  /** The size the primary marks render at — a slot control that should sit in
+   *  the column like a mark takes the same one. */
+  size: TSizes;
+}
+
+/** A `header` / `footer`: a node, or a function of the rail's slot state — so a
+ *  control can follow the marks (their `size`; a labelled pill while they are
+ *  labelled). */
+export type TReqoreNavRailSlot = ReactNode | ((state: IReqoreNavRailSlotState) => ReactNode);
 
 export interface IReqoreNavRailProps
   extends IReqoreComponent,
@@ -212,10 +229,14 @@ export interface IReqoreNavRailProps
    *  (e.g. a coordinated gradient to pair with the rail's own `effect`). Falls
    *  back to the intent tint when omitted. */
   activeEffect?: IReqoreEffect;
-  /** Rendered above the items (e.g. an open-sidebar control or a logo). */
-  header?: ReactNode;
-  /** Rendered below the items. */
-  footer?: ReactNode;
+  /** Rendered above the items (e.g. an open-sidebar control or a logo). A
+   *  function receives the rail's slot state — `labelled`, `expanded`, `size` —
+   *  so the control can match the marks (their size; a labelled pill while the
+   *  rail is labelled). */
+  header?: TReqoreNavRailSlot;
+  /** Rendered below the items — pinned under the scroll region, never folded
+   *  away. A function receives the slot state like `header`. */
+  footer?: TReqoreNavRailSlot;
   className?: string;
   style?: CSSProperties;
 
@@ -255,6 +276,53 @@ export interface IReqoreNavRailProps
 }
 
 // ── Styled surface ────────────────────────────────────────────────────────────
+
+/**
+ * `box-shadow` rules for a surface that paints shadow layers of its own (the
+ * raised highlight, the active group's ring) AND may carry an effect glow. The
+ * later `box-shadow` declaration would win — a raised rail could never cast a
+ * glow or drop shadow — so the two are composed into one, under the glow's own
+ * trigger state when it has one.
+ */
+const withGlow = (theme: IReqoreTheme, effect: IReqoreEffect | undefined, own: string) => {
+  const base = css`
+    box-shadow: ${own};
+  `;
+
+  if (!effect?.glow) {
+    return base;
+  }
+
+  const both = css`
+    box-shadow: ${getGlowBoxShadow(theme, effect.glow)}, ${own};
+  `;
+
+  switch (effect.glow.when) {
+    case 'hover':
+      return css`
+        ${base}
+        &:hover {
+          ${both}
+        }
+      `;
+    case 'focus':
+      return css`
+        ${base}
+        &:focus {
+          ${both}
+        }
+      `;
+    case 'active':
+      return css`
+        ${base}
+        &:active {
+          ${both}
+        }
+      `;
+    default:
+      return both;
+  }
+};
 
 interface ISurfaceStyle {
   theme: IReqoreTheme;
@@ -307,7 +375,8 @@ const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
     css`
       backdrop-filter: blur(${$blur}px);
     `}
-  ${({ $raised, $flat }) => $raised && $flat && RaisedElement}
+  ${({ $raised, $flat, effect, theme }) =>
+    $raised && $flat && withGlow(theme, effect as IReqoreEffect | undefined, RAISED_SHADOWS)}
 
   ${({ $floating, $position, $offset }) =>
     $floating &&
@@ -370,7 +439,9 @@ const ActiveGroupSurface = styled(StyledEffect)<{
     css`
       background-color: ${$tint};
     `}
-  box-shadow: inset 0 0 0 1px ${({ $ring }) => $ring};
+  /* The ring is a shadow layer too — composed with the active effect's glow. */
+  ${({ $ring, effect, theme }) =>
+    withGlow(theme, effect as IReqoreEffect | undefined, `inset 0 0 0 1px ${$ring}`)}
   /* A labelled group spans the rail so its (fluid) marks can fill the width;
      the section divider inside stays centred by the group's own alignment. */
   ${({ $labelled }) =>
@@ -906,6 +977,13 @@ export const ReqoreNavRail = memo(
     const hoverLabels = showLabels === 'hover' && isHoverCapable !== false;
     const [dwellLabels, setDwellLabels] = useState(false);
     const labelled = showLabels === true || (hoverLabels && dwellLabels);
+    // What the header / footer are told, so a control can follow the marks.
+    const slotState = useMemo<IReqoreNavRailSlotState>(
+      () => ({ labelled, expanded: isExpanded, size }),
+      [labelled, isExpanded, size]
+    );
+    const renderSlot = (slot: TReqoreNavRailSlot): ReactNode =>
+      typeof slot === 'function' ? slot(slotState) : slot;
 
     const [hovered, setHovered] = useState(false);
     const [scrolling, setScrolling] = useState(false);
@@ -1280,7 +1358,14 @@ export const ReqoreNavRail = memo(
           ref={railRef}
           effect={effect as IReqoreEffect}
           role='navigation'
-          className={`${className ?? ''} reqore-nav-rail`.trim()}
+          className={[
+            className,
+            'reqore-nav-rail',
+            labelled && 'reqore-nav-rail-labelled',
+            isExpanded && 'reqore-nav-rail-expanded',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           style={style}
           theme={theme}
           $gap={GAP_FROM_SIZE[size]}
@@ -1310,7 +1395,7 @@ export const ReqoreNavRail = memo(
             // region inside it (not the header / toggle / footer) takes the cut.
             style={isExpanded ? EXPANDED_GROUP_STYLE : undefined}
           >
-            {header}
+            {renderSlot(header)}
             <NavRailScroll
               ref={scrollWrapRef}
               className='reqore-nav-rail-scroll'
@@ -1360,7 +1445,7 @@ export const ReqoreNavRail = memo(
                 onToggle={toggleExpanded}
               />
             ) : null}
-            {footer}
+            {renderSlot(footer)}
           </ReqoreControlGroup>
         </NavRailSurface>
       </ReqoreThemeProvider>

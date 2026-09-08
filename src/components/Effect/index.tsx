@@ -264,6 +264,22 @@ const buildGradientLayer = (
   return `${type}-gradient(${directionOrShape}${colorString}) ${box}`;
 };
 
+/**
+ * The `box-shadow` a (non-text) glow paints. Exported so a surface that needs
+ * shadow layers of its own — an inset ring, a raised highlight — can compose
+ * them with the glow in one declaration instead of overriding it. `opacity`
+ * applies here as it does to a text glow.
+ */
+export const getGlowBoxShadow = (
+  theme: IReqoreTheme,
+  glow: NonNullable<IReqoreEffect['glow']>
+): string => {
+  const color = getColorFromMaybeString(theme, glow.color);
+  const painted = glow.opacity !== undefined && glow.opacity < 1 ? rgba(color, glow.opacity) : color;
+
+  return `${glow.inset ? 'inset ' : ''}0 0 ${glow.blur || 0}px ${glow.size || 2}px ${painted}`;
+};
+
 export const StyledEffect = styled.span`
   // If gradient was supplied
   ${({ effect, theme, minimal, active, transparent, isText }: IReqoreTextEffectProps) => {
@@ -397,8 +413,7 @@ export const StyledEffect = styled.span`
 
     if (!isText) {
       glow = css`
-        box-shadow: ${effect.glow.inset ? 'inset ' : ''} 0 0 ${effect.glow.blur || 0}px
-          ${effect.glow.size || 2}px ${getColorFromMaybeString(theme, effect.glow.color)};
+        box-shadow: ${getGlowBoxShadow(theme, effect.glow)};
       `;
     } else {
       const color = getColorFromMaybeString(
