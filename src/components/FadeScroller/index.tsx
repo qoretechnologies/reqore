@@ -1,19 +1,11 @@
-import {
-  forwardRef,
-  memo,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { forwardRef, memo, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { TReqoreHexColor } from '../Effect';
 import { getMainBackgroundColor } from '../../helpers/colors';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
+import { IReqoreScrollFadeMeasurement, useScrollFade } from '../../hooks/useScrollFade';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreIntent,
@@ -280,64 +272,36 @@ export const ReqoreFadeScroller = memo(
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const scrollRef = useRef<HTMLDivElement>(null);
       const { targetRef } = useCombinedRefs<HTMLDivElement>(ref);
-      // Read inside `update`, which is deliberately dependency-free so it can be
+      // Read inside the measurement pass, which is dependency-free so it can be
       // handed to listeners and observers once and never rebuilt.
       const dragToScrollRef = useRef(dragToScroll);
       dragToScrollRef.current = dragToScroll;
-      const fadeRef = useRef(fade);
-      fadeRef.current = fade;
 
-      const update = useCallback(() => {
-        const element = scrollRef.current;
+      // The cursor follows the measurement, not the render: toggling a class
+      // here keeps "can this be dragged?" answered by the same pass that
+      // decides which edges fade, without a state round-trip.
+      const onMeasure = useCallback(
+        ({ element, overflows }: IReqoreScrollFadeMeasurement) => {
+          element.classList.toggle(
+            'reqore-fade-scroller-draggable',
+            dragToScrollRef.current && overflows
+          );
+        },
+        []
+      );
 
-        if (!element) {
-          return;
-        }
-
-        const left = element.scrollLeft > 1;
-        const right = element.scrollLeft + element.clientWidth < element.scrollWidth - 1;
-
-        // The cursor follows the measurement, not the render: toggling a class
-        // here keeps "can this be dragged?" answered by the same pass that
-        // decides which edges fade, without a state round-trip.
-        element.classList.toggle(
-          'reqore-fade-scroller-draggable',
-          dragToScrollRef.current && element.scrollWidth > element.clientWidth
-        );
-
-        // Same for the fades: the wrapper's edge gradients are driven by classes,
-        // so this whole pass writes to the DOM and never re-enters the render.
-        const wrapper = targetRef.current;
-
-        wrapper?.classList.toggle('reqore-fade-scroller-fade-left', fadeRef.current && left);
-        wrapper?.classList.toggle('reqore-fade-scroller-fade-right', fadeRef.current && right);
-      }, [targetRef]);
-
-      // After every render, because the children can change width without the
-      // scroller resizing (a chip's label loads, an item is removed). Safe to run
-      // unconditionally now that it only writes classes: there is no state for it
-      // to feed back into.
-      useLayoutEffect(update);
-
-      useEffect(() => {
-        const element = scrollRef.current;
-
-        if (!element) {
-          return undefined;
-        }
-
-        element.addEventListener('scroll', update, { passive: true });
-
-        const observer =
-          typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(update);
-
-        observer?.observe(element);
-
-        return () => {
-          element.removeEventListener('scroll', update);
-          observer?.disconnect();
-        };
-      }, [update]);
+      // Which edges fade is a measurement carried by classes on the wrapper (see
+      // the styled block above, and the hook for why it is never state). The
+      // pass re-runs on scroll, on resize and after every render.
+      useScrollFade({
+        scrollRef,
+        targetRef,
+        axis: 'x',
+        enabled: fade,
+        startClassName: 'reqore-fade-scroller-fade-left',
+        endClassName: 'reqore-fade-scroller-fade-right',
+        onMeasure,
+      });
 
       useEffect(() => {
         const element = scrollRef.current;
