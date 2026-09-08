@@ -985,14 +985,14 @@ const ReqoreTable = ({
     return _columnsList;
   }, [finalColumns, columnsToggleLabel]);
 
-  const handleScrollToTop = () => {
+  const handleScrollToTop = useCallback(() => {
     mainTableRef.current?.scrollTo({
       top: 0,
       behavior: 'smooth',
     });
 
     setIsScrolled(false);
-  };
+  }, []);
 
   const tableActions = useMemo<IReqorePanelAction[]>(() => {
     const finalActions: IReqorePanelAction[] = [...actions];
@@ -1254,6 +1254,24 @@ const ReqoreTable = ({
     [paging]
   );
 
+  /* One options object per change of the caller's paging, not one per render:
+     the pagination container is memoised on it, and a fresh object made it
+     re-run the paging hook on every render of the table. */
+  const paginationType = useMemo(
+    () =>
+      pagingOptions
+        ? {
+            ...pagingOptions,
+            onPageChange: () => {
+              if (!pagingOptions.infinite) {
+                handleScrollToTop();
+              }
+            },
+          }
+        : undefined,
+    [pagingOptions, handleScrollToTop]
+  );
+
   return (
     <>
       <ReqorePanel
@@ -1273,32 +1291,25 @@ const ReqoreTable = ({
         <ReqoreThemeProvider theme={theme} customTheme={rest.customTheme}>
           <ReqorePaginationContainer<IReqoreTableRowData>
             items={transformedData}
-            type={
-              pagingOptions
-                ? {
-                    ...pagingOptions,
-                    onPageChange: () => {
-                      if (!pagingOptions.infinite) {
-                        handleScrollToTop();
-                      }
-                    },
-                  }
-                : undefined
-            }
+            type={paginationType}
           >
-            {(_pagedData, _children, { applyPaging }) => (
+            {(_pagedData) => (
               <>
                 {showExportModal && (
                   <ReqoreTableExportModal
                     data={
-                      showExportModal === 'current' ? applyPaging(transformedData) : transformedData
+                      showExportModal === 'current' ? _pagedData : transformedData
                     }
                     onClose={() => setShowExportModal(undefined)}
                     exportMapper={exportMapper}
                   />
                 )}
-                {renderTable(applyPaging(transformedData))}
-                {count(applyPaging(transformedData)) === 0
+                {/* The page the container already memoised — NOT
+                    `applyPaging(transformedData)`, which slices a fresh array
+                    on every render and so re-rendered every mounted row on
+                    every render of the table, whatever the page was doing. */}
+                {renderTable(_pagedData)}
+                {count(_pagedData) === 0
                   ? rest.children || (
                       <ReqoreMessage
                         flat

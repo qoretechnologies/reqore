@@ -1,4 +1,4 @@
-import { merge, size } from 'lodash';
+import { size } from 'lodash';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useUpdateEffect } from 'react-use';
 import usePagination, { usePaginationReturn } from 'react-use-pagination-hook';
@@ -54,7 +54,20 @@ export const useReqorePaging = <T>(
     startPage,
     enabled = true,
     onPageChange,
-  }: IReqorePagingOptions<T> = merge({}, defaultPagingOptions, options);
+  }: IReqorePagingOptions<T> = {
+    /* A SHALLOW default, deliberately. This was lodash `merge`, which deep-clones:
+       every call built a new `items` array and cloned every row object in it, so
+       the page slice below saw new input on every render, every consumer of the
+       slice (a table body, a collection) saw a new array, and every memoised row
+       re-rendered on every render of its page — fifty rows, whatever the page was
+       doing. `items` is the caller's; it is not ours to copy.
+       An `undefined` option keeps its default, as the merge treated it: a caller
+       that re-renders without a prop it passed before still gets ten per page. */
+    ...defaultPagingOptions,
+    ...(Object.fromEntries(
+      Object.entries(options).filter(([, value]) => value !== undefined)
+    ) as IReqorePagingOptions<T>),
+  };
   const allPageCount = useMemo(() => Math.ceil(size(items) / itemsPerPage), [items, itemsPerPage]);
   const { pagelist, currentPage, setPage, setTotalPage, goNext, goBefore } = usePagination({
     numOfPage: allPageCount,

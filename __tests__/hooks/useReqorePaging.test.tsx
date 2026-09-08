@@ -268,3 +268,30 @@ test('useReqorePaging returns correct number of items with infinite loading', ()
   expect(result.current.itemsLeft).toEqual(0);
   expect(result.current.renderControls).toEqual(false);
 });
+
+test("useReqorePaging hands back the caller's own rows, and the same page while nothing changed", () => {
+  const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
+  const items = [{ id: 1 }, { id: 2 }, { id: 3 }];
+  const { result, rerender } = renderHook(() => useReqorePaging({ items, itemsPerPage: 2 }), {
+    wrapper,
+  });
+
+  /* The options used to go through lodash `merge`, which deep-clones: every
+     render built a new `items` array of cloned rows, so the page slice was new
+     on every render and every memoised row downstream re-rendered with it —
+     fifty rows, on every render of a list page. */
+  const page = result.current.items;
+  expect(page[0]).toBe(items[0]);
+  expect(page).toHaveLength(2);
+
+  rerender();
+
+  expect(result.current.items).toBe(page);
+});
+
+test('useReqorePaging still applies the defaults it used to merge in', () => {
+  const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
+  const { result } = renderHook(() => useReqorePaging({ items: [{ id: 1 }] }), { wrapper });
+  expect(result.current.itemsPerPage).toBe(10);
+  expect(result.current.infinite).toBe(false);
+});

@@ -214,6 +214,19 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       [expandIdFor]
     );
 
+    /* The expandable list needs one more callback in its item data. Spreading
+       it inline handed react-window a NEW object on every render, which undid
+       the identity work above for exactly the tables that can least afford it:
+       every mounted row — each now carrying a pinned expander button — re-rendered
+       whenever anything above the table did, and a page that re-renders often
+       (a live list, a context whose value is rebuilt per render) dropped to a
+       handful of frames a second while the pointer moved. Memoised on the two
+       things that can actually change. */
+    const expandableItemData = useMemo(
+      () => ({ ...itemData, onExpandedHeight: handleExpandedHeight }),
+      [itemData, handleExpandedHeight]
+    );
+
     /* Which rows are open has changed, so every size from the first affected
        row down is stale. Reset from 0 rather than tracking the delta: the list
        recomputes lazily and this runs only on a toggle. */
@@ -304,7 +317,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
             height={measuredHeight}
             className='reqore-table-body'
             itemSize={itemSize}
-            itemData={{ ...itemData, onExpandedHeight: handleExpandedHeight }}
+            itemData={expandableItemData}
             estimatedItemSize={rowHeight}
             overscanCount={overscanCount}
             width='100%'

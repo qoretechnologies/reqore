@@ -1411,3 +1411,58 @@ describe('<Table /> expandable rows', () => {
     expect(document.querySelectorAll('.reqore-table-row-group').length).toBe(0);
   });
 });
+
+describe('expandable rows and re-renders', () => {
+  const columns: IReqoreTableColumn[] = [
+    { dataId: 'id', header: { label: 'ID' }, width: 60 },
+    { dataId: 'name', header: { label: 'Name' } },
+  ];
+  const rows = Array.from({ length: 12 }, (_, index) => ({
+    id: index + 1,
+    _selectId: index + 1,
+    name: `row ${index + 1}`,
+  }));
+
+  /* A parent that re-renders for reasons of its own — a live list page, a
+     context whose value is rebuilt per render — while handing the table the
+     SAME data, columns and renderer. `renderExpandedRow` runs once per row
+     render, so its call count is the number of row renders. */
+  const Harness = ({ renderExpandedRow }: { renderExpandedRow: (row: any) => any }) => {
+    /* `height` is a body prop that is NOT part of the per-row item data, so
+       changing it re-renders the body while every row's data stays the same —
+       exactly the case a memoised row must skip. */
+    const [height, setHeight] = useState(300);
+    return (
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <button className='tick' onClick={() => setHeight((h) => h + 1)} />
+          <ReqoreTable
+            columns={columns}
+            data={rows}
+            height={height}
+            renderExpandedRow={renderExpandedRow}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  };
+
+  test('does not re-render its rows when the table re-renders with unchanged props', () => {
+    const renderExpandedRow = vi.fn((row: any) => <div className='detail'>{row.name}</div>);
+    render(<Harness renderExpandedRow={renderExpandedRow} />);
+    const afterMount = renderExpandedRow.mock.calls.length;
+    expect(afterMount).toBeGreaterThan(0);
+
+    act(() => {
+      fireEvent.click(document.querySelector('.tick')!);
+    });
+    act(() => {
+      fireEvent.click(document.querySelector('.tick')!);
+    });
+
+    // The spread `{ ...itemData, onExpandedHeight }` handed react-window a new
+    // item-data object on every render, so every mounted row re-rendered on
+    // every parent render — 24 more calls here per tick, 100 on a list page.
+    expect(renderExpandedRow.mock.calls.length).toBe(afterMount);
+  });
+});
