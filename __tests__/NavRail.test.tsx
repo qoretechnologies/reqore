@@ -467,3 +467,23 @@ describe("showLabels='hover'", () => {
     expect(dashboard().textContent).toBe('');
   });
 });
+
+test('The ⋮ trigger is a direct child of its column, not boxed in a popover wrapper', () => {
+  // The trigger is the one mark rendered through ReqorePopover. Unless the
+  // popover is told the trigger is a Reqore component it wraps it in a span
+  // with overflow:hidden — which becomes the flex child in the trigger's place,
+  // so a labelled (fluid) trigger has nothing to stretch inside and the mark's
+  // raised shadow is clipped. Qlip build #253 caught the first.
+  const { unmount } = renderRail(
+    <ReqoreNavRail items={ITEMS} defaultActiveId='dashboard' maxItems={2} showLabels />
+  );
+  const items = screen.getByRole('button', { name: 'More items' });
+  expect(items.closest('.reqore-popover-wrapper')).toBeNull();
+  expect(items).toHaveTextContent('1 more');
+  unmount();
+
+  renderRail(<ReqoreNavRail items={SECTIONED} defaultActiveId='dashboard' maxHeight={120} />);
+  const sections = screen.getByRole('button', { name: 'More sections' });
+  expect(sections.closest('.reqore-popover-wrapper')).toBeNull();
+  expect(sections.parentElement).toHaveClass('reqore-nav-rail-active');
+});

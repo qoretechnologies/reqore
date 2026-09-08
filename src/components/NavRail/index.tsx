@@ -637,6 +637,11 @@ const NavRailOverflow = memo(
       <ReqorePopover
         component={ReqoreButton}
         componentProps={componentProps}
+        // The trigger IS the mark: rendered directly, not boxed in the popover's
+        // wrapper span — that span would be the flex child in the mark's place
+        // (so a labelled, fluid trigger could never stretch to the rail's width)
+        // and its overflow:hidden would clip the mark's raised shadow.
+        isReqoreComponent
         handler='click'
         placement={placement}
         closeOnInsideClick
