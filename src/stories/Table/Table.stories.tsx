@@ -1695,6 +1695,54 @@ export const ExpandableRowsSingle: Story = {
  * same height, and an open panel is not. The row showed as expanded and its
  * detail was clipped clean off the bottom.
  */
+/** The row `Static Row` makes static — by id, so sorting cannot move it. The
+ *  story sorts by id, so this is the fourth row on screen, inside the
+ *  virtualised window; the default sort would put it anywhere in the list. */
+const STATIC_ROW_ID = [...tableData.data].sort((a, b) => a.id - b.id)[3].id;
+
+/** A row that opens nothing, among rows that do. */
+export const StaticRow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Every row opens on click (`onRowClick`), except one, which `getRowProps` ' +
+          'answers with `interactive: false`: it takes no click and shows no pointer or ' +
+          'hover, but it is not dimmed the way a `_disabled` row is — it is a row to read, ' +
+          'not a control that is off. For the fixed entry in a table of openable rows: a ' +
+          "total, a provider's own namespace, the one the reader may only look at. Said " +
+          'once, by the mapper, with nothing marked on the data; the controls inside its ' +
+          'cells still work, so it can still be selected.',
+      },
+    },
+  },
+  args: {
+    selectable: true,
+    sort: { by: 'id', direction: 'asc' },
+    onRowClick: noop,
+    // By identity, not position: a sorted table's fourth row of DATA is
+    // not its fourth row on screen.
+    getRowProps: ({ id }) => ({ interactive: id !== STATIC_ROW_ID }),
+  },
+  play: async ({ canvasElement }) => {
+    const rows = await waitFor(() => {
+      const found = Array.from(canvasElement.querySelectorAll('.reqore-table-row'));
+      expect(found.length).toBeGreaterThan(4);
+      return found;
+    });
+    const cellsOf = (row: Element) => Array.from(row.querySelectorAll<HTMLElement>('.reqore-table-cell'));
+    const carries = (row: Element, id: number) =>
+      cellsOf(row).some((cell) => cell.textContent?.trim() === String(id));
+    const staticRow = rows.find((row) => carries(row, STATIC_ROW_ID));
+    const otherRow = rows.find((row) => !carries(row, STATIC_ROW_ID));
+    expect(staticRow).toBeDefined();
+    expect(otherRow).toBeDefined();
+    // the static row's cells carry the default cursor; its neighbours the pointer
+    expect(getComputedStyle(cellsOf(staticRow!)[2]).cursor).toBe('default');
+    expect(getComputedStyle(cellsOf(otherRow!)[2]).cursor).toBe('pointer');
+  },
+};
+
 export const ExpandableRowsAutoHeight: Story = {
   parameters: {
     docs: {

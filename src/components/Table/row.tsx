@@ -47,7 +47,21 @@ import {
 export type IReqoreTableRowPropsMapper = (
   row: IReqoreTableRowData,
   index: number
-) => Partial<React.HTMLAttributes<HTMLDivElement>> | undefined;
+) =>
+  | (Partial<React.HTMLAttributes<HTMLDivElement>> & {
+      /**
+       * `false` makes this row take no click: no cell `onClick`, no `onRowClick`,
+       * no expand-by-row, no select-by-row, and no pointer or hover on its cells.
+       * The row still reads as a row — unlike `_disabled` it is not dimmed — and
+       * the controls inside its cells (a select box, an action button) keep
+       * their own handlers. For the row in a table of openable rows that has
+       * nothing to open: a fixed entry, a total, the one the reader may only
+       * look at. Decided per row by the mapper, so a table with one such row
+       * in a thousand says so once, here, and marks nothing on its data.
+       */
+      interactive?: boolean;
+    })
+  | undefined;
 
 export interface IReqoreTableRowOptions {
   columns: IReqoreTableColumn[];
@@ -212,6 +226,16 @@ const ReqoreTableRow = memo(
     const isSelected =
       data[index]._selectId &&
       selected.find((selectId) => selectId.toString() === data[index]._selectId.toString());
+    // Consumer-supplied per-row attributes. Merge className / style so
+    // Reqore's baseline "reqore-table-row" class + the react-window
+    // absolute-position style survive; `interactive` is Reqore's own and is
+    // read here, not spread; anything else the consumer returns is spread
+    // as-is (data-*, aria-*, event handlers, etc.).
+    const consumerRowProps = getRowProps?.(data[index], index);
+    /* A row that takes no click. Its cells show no pointer and no hover, and the
+       click handler below returns before it opens, expands or selects anything;
+       buttons rendered INSIDE its cells (`cell.actions`) keep their own handlers. */
+    const isStatic = consumerRowProps?.interactive === false;
 
     const CellComponent = cellComponent || ReqoreTableBodyCell;
     const RowComponent = rowComponent || StyledTableRow;
@@ -440,9 +464,12 @@ const ReqoreTableRow = memo(
                   pinEdge: pinInfo?.isEdge,
                   even: index % 2 === 0 ? true : false,
                   intent: cell?.intent || data[index]._intent || intent,
-                  interactive: !!cell?.onClick || !!onRowClick,
-                  interactiveCell: !!cell?.onClick,
+                  interactive: (!!cell?.onClick || !!onRowClick) && !isStatic,
+                  interactiveCell: !!cell?.onClick && !isStatic,
                   onClick: (e: React.MouseEvent<HTMLDivElement>) => {
+                    if (isStatic) {
+                      return;
+                    }
                     if (cell?.onClick) {
                       e.stopPropagation();
                       cell.onClick(data[index]);
@@ -492,26 +519,27 @@ const ReqoreTableRow = memo(
         canExpand,
         expandId,
         onExpandClick,
+        isStatic,
       ]
     );
 
-    // Consumer-supplied per-row attributes. Merge className / style so
-    // Reqore's baseline "reqore-table-row" class + the react-window
-    // absolute-position style survive; anything else the consumer returns
-    // is spread as-is (data-*, aria-*, event handlers, etc.).
-    const consumerRowProps = getRowProps?.(data[index], index);
     const mergedClassName = consumerRowProps?.className
       ? `reqore-table-row ${consumerRowProps.className}`
       : 'reqore-table-row';
     const mergedStyle = consumerRowProps?.style ? { ...style, ...consumerRowProps.style } : style;
-    const { className: _c, style: _s, ...consumerAttrs } = consumerRowProps ?? {};
+    const {
+      className: _c,
+      style: _s,
+      interactive: _i,
+      ...consumerAttrs
+    } = consumerRowProps ?? {};
 
     const row = (
       <RowComponent
         {...consumerAttrs}
         style={renderExpandedRow ? undefined : mergedStyle}
         className={mergedClassName}
-        interactive={(!!onRowClick || canExpand) && !data[index]._disabled}
+        interactive={(!!onRowClick || canExpand) && !data[index]._disabled && !isStatic}
         size={size}
         wrap={rowWrap}
         minWidth={totalColumnsWidth}
