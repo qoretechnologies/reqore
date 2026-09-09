@@ -1,4 +1,5 @@
 /* @flow */
+import { TReqoreFilterRanking } from '../../helpers/search';
 import { size as count, isArray } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
@@ -177,7 +178,7 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * that is searched by name (a list of connections, jobs, services) wants this. An
    * explicit `sort` always wins over it.
    */
-  filterRanking?: 'relevance' | 'none';
+  filterRanking?: TReqoreFilterRanking;
 
   exportable?: boolean;
 

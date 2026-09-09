@@ -229,6 +229,69 @@ const Template: StoryFn<typeof ReqoreDropdown<IReqoreButtonProps>> = (args) => {
   );
 };
 
+const relevanceDropdownItems: IReqoreDropdownProps['items'] = [
+  { label: 'Alerts to Telegram', value: 'alerts' },
+  { divider: true, label: 'Others' },
+  { label: 'Slack', value: 'slack' },
+  { label: 'Telegram', value: 'telegram' },
+  { label: 'Telegram Support', value: 'support' },
+  { label: 'Untelegrammed', value: 'un' },
+];
+
+const renderedItemLabels = () =>
+  Array.from(document.querySelectorAll('.reqore-popover-content .reqore-menu-item')).map(
+    (item) =>
+      relevanceDropdownItems
+        .map(({ label }) => label as string)
+        .filter((label) => item.textContent?.startsWith(label))
+        .sort((a, b) => b.length - a.length)[0]
+  );
+
+export const FilterRelevance: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an open dropdown filtered by "telegram" that opted into `filterRanking="relevance"` — Telegram first, then Telegram Support, then the items merely mentioning it, and no divider.',
+      },
+    },
+  },
+  args: {
+    items: relevanceDropdownItems,
+    filterable: true,
+    filterRanking: 'relevance',
+    filter: 'telegram',
+    label: 'Connection',
+  },
+  play: async () => {
+    await _testsClickButton({ label: 'Connection' });
+    await waitFor(() =>
+      expect(renderedItemLabels()).toEqual([
+        'Telegram',
+        'Telegram Support',
+        'Alerts to Telegram',
+        'Untelegrammed',
+      ])
+    );
+  },
+};
+
+export const FilterArrivingOrder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same open, filtered dropdown without opting into ranking — the default: the matching items keep their order, divider included.',
+      },
+    },
+  },
+  args: { ...FilterRelevance.args, filterRanking: undefined },
+  play: async () => {
+    await _testsClickButton({ label: 'Connection' });
+    await waitFor(() => expect(renderedItemLabels()[0]).toBe('Alerts to Telegram'));
+  },
+};
+
 export const Basic: Story = {
   parameters: {
     docs: {

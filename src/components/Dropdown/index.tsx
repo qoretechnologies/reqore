@@ -1,3 +1,4 @@
+import { TReqoreFilterRanking } from '../../helpers/search';
 import { size } from 'lodash';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import { ReqorePanel, ReqorePopover } from '../..';
@@ -23,6 +24,8 @@ export interface IReqoreDropdownProps
   component?: any;
   filterable?: boolean;
   onFilterChange?: (query: string) => void;
+  /** See `IReqoreDropdownListProps.filterRanking`. */
+  filterRanking?: TReqoreFilterRanking;
   filter?: string | number;
   filterPlaceholder?: string;
   /**
@@ -112,6 +115,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   handler,
   placement,
   filterable,
+  filterRanking,
   onFilterChange,
   filterPlaceholder,
   filterPlaceholderBuilder,
@@ -218,6 +222,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
         height={listHeight}
         items={items || []}
         filterable={filterable}
+        filterRanking={filterRanking}
         onItemSelect={onItemSelect}
         inputProps={inputProps}
         scrollToSelected={scrollToSelected}

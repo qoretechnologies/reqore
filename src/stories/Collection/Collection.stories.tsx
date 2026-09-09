@@ -78,6 +78,71 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/* Alphabetical on purpose: with the query "telegram" the cards called Telegram
+   sit in the middle of this order, which is what the search used to show. */
+const relevanceItems: IReqoreCollectionProps['items'] = [
+  { label: 'Alerts to Telegram', content: 'Forwards alerts' },
+  { label: 'Gmail', content: 'Reads the inbox, posts a digest to telegram' },
+  { label: 'Slack', content: 'Ops workspace', searchString: 'telegram-token' },
+  { label: 'Telegram', content: 'The bot connection' },
+  { label: 'Telegram Support', content: 'Support channel bot' },
+  { label: 'Untelegrammed', content: 'A name that only contains the word' },
+];
+
+const renderedCardLabels = (canvasElement: HTMLElement) =>
+  Array.from(canvasElement.querySelectorAll('.reqore-collection-item')).map(
+    (item) =>
+      relevanceItems
+        .map(({ label }) => label as string)
+        .filter((label) => item.textContent?.startsWith(label))
+        .sort((a, b) => b.length - a.length)[0]
+  );
+
+export const FilterRelevance: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a collection searched for "telegram" that opted into `filterRanking="relevance"` — the card called Telegram first, then labels starting with it, then labels and contents merely mentioning it, and a card matched only through its `searchString` last.',
+      },
+    },
+  },
+  args: {
+    items: relevanceItems,
+    filterable: true,
+    filterRanking: 'relevance',
+    sortable: false,
+    defaultQuery: 'telegram',
+  },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(renderedCardLabels(canvasElement)).toEqual([
+        'Telegram',
+        'Telegram Support',
+        'Alerts to Telegram',
+        'Untelegrammed',
+        'Gmail',
+        'Slack',
+      ])
+    );
+  },
+};
+
+export const FilterArrivingOrder: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same searched collection without opting into ranking — the default: the matching cards keep the collection\'s own order.',
+      },
+    },
+  },
+  args: { ...FilterRelevance.args, filterRanking: undefined },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(renderedCardLabels(canvasElement)[0]).toBe('Alerts to Telegram'));
+  },
+};
+
 export const Basic: Story = {
   parameters: {
     docs: {
