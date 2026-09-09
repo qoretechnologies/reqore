@@ -1112,3 +1112,72 @@ test('Keyboard navigation skips disabled items and empty-items items', () => {
     expect.anything()
   );
 });
+
+/* Relevance ranking of the filter (see helpers/search.ts). */
+
+const relevanceDropdownItems = [
+  { label: 'Alerts to Telegram', value: 'alerts' },
+  { divider: true, label: 'Others' },
+  { label: 'Slack', value: 'slack' },
+  { label: 'Telegram', value: 'telegram' },
+  { label: 'Telegram Support', value: 'support' },
+  { label: 'Untelegrammed', value: 'un' },
+];
+
+/* An item's text starts with its label (the label renders more than once); the
+   longest matching label is the item's. */
+const renderedItemLabels = () =>
+  Array.from(document.querySelectorAll('.reqore-popover-content .reqore-menu-item')).map(
+    (item) =>
+      relevanceDropdownItems
+        .map(({ label }) => label)
+        .filter((label) => item.textContent?.startsWith(label))
+        .sort((a, b) => b.length - a.length)[0]
+  );
+
+const openAndFilterDropdown = (props: Record<string, unknown> = {}) => {
+  vi.useFakeTimers();
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDropdown filterable items={relevanceDropdownItems} {...props} />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+  act(() => {
+    fireEvent.click(document.querySelector('.reqore-button')!);
+    vi.advanceTimersByTime(100);
+  });
+  fireEvent.change(document.querySelector('.reqore-input')!, { target: { value: 'telegram' } });
+  act(() => {
+    vi.advanceTimersByTime(500);
+  });
+};
+
+test('<Dropdown /> keeps its order of filter matches by default, dividers included', () => {
+  openAndFilterDropdown();
+
+  expect(renderedItemLabels()).toEqual([
+    'Alerts to Telegram',
+    'Telegram',
+    'Telegram Support',
+    'Untelegrammed',
+  ]);
+  expect(document.querySelectorAll('.reqore-popover-content .reqore-menu-divider').length).toBe(1);
+});
+
+test('<Dropdown /> ranks filter matches by relevance when opted in and drops dividers', () => {
+  openAndFilterDropdown({ filterRanking: 'relevance' });
+
+  expect(renderedItemLabels()).toEqual([
+    'Telegram',
+    'Telegram Support',
+    'Alerts to Telegram',
+    'Untelegrammed',
+  ]);
+  expect(document.querySelectorAll('.reqore-popover-content .reqore-menu-divider').length).toBe(0);
+});

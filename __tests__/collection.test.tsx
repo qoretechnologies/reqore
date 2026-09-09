@@ -399,3 +399,67 @@ test('<Collection /> sortByGroupFirst=false sorts by custom field before group',
   expect(relevanceLabels[2]).toBe('AWS Partial Match');
   expect(relevanceLabels[3]).toBe('Zendesk Weak Match');
 });
+
+/* Relevance ranking of the search (see helpers/search.ts). */
+
+const relevanceItems: IReqoreCollectionItemProps[] = [
+  { label: 'Alerts to Telegram', content: 'Forwards alerts' },
+  { label: 'Gmail', content: 'Reads the inbox, posts a digest to telegram' },
+  { label: 'Slack', content: 'Ops workspace', searchString: 'telegram-token' },
+  { label: 'Telegram', content: 'The bot connection' },
+  { label: 'Telegram Support', content: 'Support channel bot' },
+  { label: 'Untelegrammed', content: 'A name that only contains the word' },
+];
+
+/* A card's text starts with its label; "Telegram Support" also starts with
+   "Telegram", so the longest matching label is the card's. */
+const renderedLabels = () =>
+  Array.from(document.querySelectorAll('.reqore-collection-item')).map(
+    (item) =>
+      relevanceItems
+        .map(({ label }) => label as string)
+        .filter((label) => item.textContent?.startsWith(label))
+        .sort((a, b) => b.length - a.length)[0]
+  );
+
+const searchCollection = (props: Partial<React.ComponentProps<typeof ReqoreCollection>> = {}) => {
+  vi.useFakeTimers();
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreCollection items={relevanceItems} filterable sortable={false} {...props} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+  mockAllIsIntersecting(true);
+  fireEvent.change(document.querySelector('.reqore-input')!, { target: { value: 'telegram' } });
+  act(() => {
+    vi.advanceTimersByTime(500);
+  });
+};
+
+test('<Collection /> keeps its own order of search matches by default', () => {
+  searchCollection();
+
+  expect(renderedLabels()).toEqual([
+    'Alerts to Telegram',
+    'Gmail',
+    'Slack',
+    'Telegram',
+    'Telegram Support',
+    'Untelegrammed',
+  ]);
+});
+
+test('<Collection /> ranks search matches by relevance when opted in', () => {
+  searchCollection({ filterRanking: 'relevance' });
+
+  expect(renderedLabels()).toEqual([
+    'Telegram',
+    'Telegram Support',
+    'Alerts to Telegram',
+    'Untelegrammed',
+    'Gmail',
+    'Slack',
+  ]);
+});

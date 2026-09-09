@@ -1,3 +1,4 @@
+import { TReqoreFilterRanking, asSearchText, rankByQuery } from '../../helpers/search';
 import { size } from 'lodash';
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { IReqoreDropdownProps } from '.';
@@ -64,6 +65,13 @@ export interface IReqoreDropdownListProps
 
   filterable?: boolean;
   onFilterChange?: (query: string) => void;
+  /**
+   * How items that pass the filter are ordered while the box has text. `'none'`
+   * (default) keeps the list's order. `'relevance'` ranks the matches by label first,
+   * then value, description and children, exact before prefix before mention; dividers
+   * are dropped while ranking, since a ranked list has no groups.
+   */
+  filterRanking?: TReqoreFilterRanking;
   filter?: string | number;
   filterPlaceholder?: string;
   /**
@@ -112,6 +120,7 @@ const ReqoreDropdownList = memo(
     listStyle,
     closePopover,
     filterable,
+    filterRanking = 'none',
     width,
     height,
     onItemSelect,
@@ -193,9 +202,9 @@ const ReqoreDropdownList = memo(
         return _items;
       }
 
-      return _items.filter((item) => {
+      const matches = _items.filter((item) => {
         if (item.divider) {
-          return true;
+          return filterRanking !== 'relevance';
         }
 
         const text: string | undefined = item.label || item.value || item.children;
@@ -206,7 +215,19 @@ const ReqoreDropdownList = memo(
 
         return text.toString().toLowerCase().indexOf(query.toString().toLowerCase()) !== -1;
       });
-    }, [items, query, _items]);
+
+      if (filterRanking !== 'relevance') {
+        return matches;
+      }
+
+      // Opted-in relevance: typing "tele" into a long picker puts Telegram first.
+      return rankByQuery(matches, query.toString().toLowerCase(), [
+        (item) => asSearchText(item.label),
+        (item) => asSearchText(item.value),
+        (item) => asSearchText((item as { description?: unknown }).description),
+        (item) => asSearchText(item.children),
+      ]);
+    }, [items, query, _items, filterRanking]);
 
     const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       if (onFilterChange) {

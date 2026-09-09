@@ -1,3 +1,4 @@
+import { TReqoreFilterRanking, asSearchText, rankByQuery } from '../../helpers/search';
 import { map, orderBy, size } from 'lodash';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
@@ -77,6 +78,14 @@ export interface IReqoreCollectionProps
   groups?: TReqoreCollectionGroups;
 
   filterable?: boolean;
+  /**
+   * How items that pass the search are ordered while the box has text. `'none'`
+   * (default) keeps the collection's own order — the search only narrows. `'relevance'`
+   * ranks the matches by label first, then badge, content, expanded content and
+   * `searchString`, exact before prefix before mention, and takes precedence over the
+   * collection's sort while the query is active (the sort returns when it is cleared).
+   */
+  filterRanking?: TReqoreFilterRanking;
   sortable?: boolean;
   zoomable?: boolean;
 
@@ -138,6 +147,7 @@ export const ReqoreCollection = memo(
     fill,
     maxItemHeight,
     filterable,
+    filterRanking = 'none',
     inputInTitle = true,
 
     sortable,
@@ -249,7 +259,7 @@ export const ReqoreCollection = memo(
         return sortedItems;
       }
 
-      return sortedItems.filter((item) => {
+      const matches = sortedItems.filter((item) => {
         const text = `${item.label}${item.content?.toString()}${item.expandedContent?.toString()}${
           item.searchString || ''
         }`;
@@ -260,7 +270,21 @@ export const ReqoreCollection = memo(
 
         return text.toString().toLowerCase().indexOf(query.toLowerCase()) !== -1;
       });
-    }, [items, query, sortedItems]);
+
+      if (filterRanking !== 'relevance') {
+        return matches;
+      }
+
+      // Opted-in relevance: the reader asked for a thing by name and expects the
+      // cards called that first; the sorted order still decides between equal matches.
+      return rankByQuery(matches, query.toString().toLowerCase(), [
+        (item) => asSearchText(item.label),
+        (item) => asSearchText(item.badge),
+        (item) => asSearchText(item.content),
+        (item) => asSearchText(item.expandedContent),
+        (item) => item.searchString,
+      ]);
+    }, [items, query, sortedItems, filterRanking]);
 
     const handlePreQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
       setPreQuery(event.target.value);

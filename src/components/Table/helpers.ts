@@ -1,3 +1,4 @@
+import { getQueryMatchScore, rankByQuery } from '../../helpers/search';
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowData, IReqoreTableSort } from '.';
@@ -7,6 +8,8 @@ import { IReqorePanelSubAction } from '../Panel';
 
 export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
   direction === 'asc' ? 'desc' : 'asc';
+
+export { getQueryMatchScore };
 
 export const fixSort = (sort: IReqoreTableSort) => {
   return { ...sort, direction: sort?.direction || 'desc' };
@@ -29,6 +32,25 @@ export const sortTableData = (data: any[], sort: IReqoreTableSort) => {
   // @ts-expect-error Needed because of the thenby library
   return [...data].sort(firstBy(by, { ignoreCase: true, direction }));
 };
+
+/**
+ * Orders rows that already passed the global filter by how well they match it —
+ * `rankByQuery` over the columns the table shows, in column order, so a match in the
+ * first (identity) column outranks any match further right; a row matched only
+ * through data no column shows ranks last.
+ */
+export const rankTableDataByQuery = <T extends Record<string, unknown>>(
+  rows: T[],
+  query: string,
+  columns: IReqoreTableColumn[]
+): T[] =>
+  rankByQuery(
+    rows,
+    query,
+    flattenColumns(columns)
+      .filter((column) => column.show !== false)
+      .map((column) => (row: T) => row[column.dataId])
+  );
 
 export const updateColumnData = (
   columns: IReqoreTableColumn[],
