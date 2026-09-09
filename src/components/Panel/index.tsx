@@ -191,6 +191,23 @@ export interface IReqorePanelProps
   iconColor?: TReqoreEffectColor;
   responsiveActions?: boolean;
   responsiveTitle?: boolean;
+  /**
+   * Keep the title bar on ONE row when it goes narrow, by dropping the title text and leaving the
+   * icon in its place: `[icon] [actions] [×]`.
+   *
+   * Without it a narrow bar stacks — title, then actions, then close/collapse — and the action
+   * group goes `fluid`, so a single small button gets a full-width row to itself with the rest of
+   * it empty. That costs more room than the title ever did, and the trigger is a width guess
+   * rather than a fit measurement: a bar can restack while its label still had room.
+   *
+   * Opt-in, because the label carries meaning this cannot recover — it is the collapse target,
+   * it may be inline-editable, and on a panel with no icon it is the only thing identifying the
+   * panel at all. Nothing changes without an icon to fall back to; the label survives as that
+   * icon's tooltip, and `description` (a second line by definition) is dropped for the row.
+   *
+   * @default false
+   */
+  compactTitle?: boolean;
   getContentRef?: (ref: HTMLDivElement) => any;
 
   labelProps?: React.HTMLAttributes<unknown>;
@@ -873,6 +890,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       fluid,
       responsiveActions = true,
       responsiveTitle = true,
+      compactTitle = false,
       size: panelSize = 'normal',
       getContentRef,
       labelProps = {},
@@ -1146,6 +1164,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       () => responsiveTitle && width < 480 && process.env.NODE_ENV !== 'test',
       [width, responsiveTitle]
     );
+    /**
+     * Narrow, and the consumer asked for the one-row treatment. Everything `isSmall` does to make
+     * room by stacking — the column flow, the fluid action groups, the control buttons moving to a
+     * row of their own — is suppressed; the title text gives up its space instead.
+     */
+    const isCompactRow = isSmall && compactTitle;
 
     // If collapsible is true, toggle the isCollapsed state
     // If the isCollapsed state is true, the component is expanded
@@ -1456,7 +1480,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               opacity={minimal ? 0 : opacity ?? 1}
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
-              isMobile={isMobile || isSmall}
+              isMobile={(isMobile || isSmall) && !isCompactRow}
               ref={measureRef}
               padded={padded}
               wrapperPadding={wrapperPadding}
@@ -1481,6 +1505,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   ) : icon || iconImage || label || badge ? (
                     (() => {
                       const hasPanelIcon = !!icon || !!iconImage || loading;
+                      // The icon takes the label's place, so there has to BE an icon. Without one
+                      // the label is the only thing identifying the panel and it stays put — a
+                      // header with neither is not a compact header, it is an empty one. The label
+                      // is not lost either way: it is already this icon's tooltip.
+                      const hideTitleText = isCompactRow && hasPanelIcon;
 
                       // Layout decision:
                       // - iconWithLabel=true → render the icon INSIDE the
@@ -1497,7 +1526,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       //   the icon in row 1 (label), row 2 (description), or
                       //   spans both rows (center). The description always
                       //   indents past the icon column.
-                      const inlineWithLabel = hasPanelIcon && (iconWithLabel || !description);
+                      const inlineWithLabel =
+                        hasPanelIcon && (iconWithLabel || !description || hideTitleText);
                       const useOuterGrid = hasPanelIcon && !inlineWithLabel;
 
                       // Outer grid → grid column-gap handles icon→label
@@ -1530,7 +1560,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       const labelRow = (
                         <StyledPanelTitleHeaderLabelAndBadge className='reqore-panel-title-label-row'>
                           {inlineWithLabel && panelIcon}
-                          {typeof label === 'string' ? (
+                          {hideTitleText ? null : typeof label === 'string' ? (
                             <LabelEditor
                               size={labelSize || panelSize}
                               customTheme={theme}
@@ -1569,7 +1599,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       // pairing: a bigger label should not make supporting
                       // text smaller. Consumers that want to size the
                       // description explicitly pass `descriptionEffect.textSize`.
-                      const descriptionRow = description ? (
+                      const descriptionRow = description && !hideTitleText ? (
                         <ReqoreSpan
                           className='reqore-panel-title-description'
                           size={panelSize}
@@ -1584,14 +1614,14 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         <StyledPanelTitleHeaderContent
                           size={panelSize}
                           {...labelProps}
-                          hasLabel={!!label}
+                          hasLabel={!!label && !hideTitleText}
                           hasIcon={useOuterGrid}
                           iconSize={
                             ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
                           }
                           $hasOuterIcon={useOuterGrid}
                           $iconVerticalAlign={iconVerticalAlign}
-                          $hasDescription={!!description}
+                          $hasDescription={!!description && !hideTitleText}
                         >
                           {useOuterGrid ? (
                             <>
@@ -1618,7 +1648,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     />
                   ) : null}
                   <ReqorePanelNonResponsiveActions
-                    show={isSmall && (!!onClose || collapsible)}
+                    show={isSmall && !isCompactRow && (!!onClose || collapsible)}
                     isSmall={isSmall}
                     showControlButtons
                     size={panelSize}
@@ -1640,7 +1670,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               {hasResponsiveActions(nonFloatingActions) && (
                 <ReqoreControlGroup
                   responsive={responsiveActions}
-                  fluid={responsiveActions || isSmall}
+                  fluid={responsiveActions || (isSmall && !isCompactRow)}
                   horizontalAlign='flex-end'
                   customTheme={theme}
                   size={panelSize}
@@ -1651,8 +1681,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               )}
               <ReqorePanelNonResponsiveActions
                 show={showNonResponsiveGroup()}
-                isSmall={isSmall}
-                showControlButtons={!isSmall}
+                isSmall={isSmall && !isCompactRow}
+                showControlButtons={!isSmall || isCompactRow}
                 size={panelSize}
                 hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                 customTheme={theme}
@@ -1664,7 +1694,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 collapseTooltip={collapseTooltip}
                 expandTooltip={expandTooltip}
                 closeTooltip={closeTooltip}
-                fluid={!hasTitleHeader || isSmall}
+                fluid={!hasTitleHeader || (isSmall && !isCompactRow)}
               >
                 {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>

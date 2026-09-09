@@ -663,3 +663,92 @@ test('Does not forward the Panel accentPosition prop to the DOM', () => {
   // ...while the styles still read it — the strip is rendered.
   panels.forEach((panel) => expect(getComputedStyle(panel).paddingLeft).toBe('5px'));
 });
+
+describe('compactTitle', () => {
+  // `isSmall` is deliberately inert under NODE_ENV=test so the rest of the suite measures the
+  // wide layout. Stub it to reach the narrow branch; jsdom reports a width of 0, which is
+  // below the 480px threshold.
+  const originalMatchMedia = window.matchMedia;
+
+  const renderNarrow = (ui: React.ReactNode) => {
+    vi.stubEnv('NODE_ENV', 'development');
+    // The provider guards `useMedia` behind the same NODE_ENV check, so un-stubbing it exposes
+    // `matchMedia`, which jsdom does not implement. Report "no match": the assertions here are
+    // about the MEASURED width branch, not the viewport one.
+    window.matchMedia = ((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: noop,
+      removeListener: noop,
+      addEventListener: noop,
+      removeEventListener: noop,
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia;
+
+    return render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>{ui}</ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    window.matchMedia = originalMatchMedia;
+  });
+
+  test('Drops the title text and keeps the icon when narrow', () => {
+    renderNarrow(
+      <ReqorePanel compactTitle label='Publish as Template' icon='Upload2Line'>
+        Body
+      </ReqorePanel>
+    );
+
+    expect(document.querySelector('.reqore-panel-title')).not.toBeNull();
+    expect(document.querySelector('.reqore-panel-title-icon')).not.toBeNull();
+    // The label is not lost — it is the icon's tooltip — but it no longer spends a row.
+    expect(document.querySelector('.reqore-panel-title')!.textContent).not.toContain(
+      'Publish as Template'
+    );
+  });
+
+  test('Keeps the title bar on one row rather than stacking it', () => {
+    renderNarrow(
+      <ReqorePanel compactTitle label='Publish as Template' icon='Upload2Line'>
+        Body
+      </ReqorePanel>
+    );
+
+    // The stack is what this prop exists to avoid: a column flow costs a row for the title and
+    // another for the actions, and stretches the action group to fill it.
+    expect(getComputedStyle(document.querySelector('.reqore-panel-title')!).flexFlow).toContain(
+      'row'
+    );
+  });
+
+  test('Keeps the title text when there is no icon to fall back to', () => {
+    renderNarrow(
+      <ReqorePanel compactTitle label='Publish as Template'>
+        Body
+      </ReqorePanel>
+    );
+
+    // A header with neither icon nor label is not compact, it is empty.
+    expect(document.querySelector('.reqore-panel-title')!.textContent).toContain(
+      'Publish as Template'
+    );
+  });
+
+  test('Leaves the title alone without the opt-in', () => {
+    renderNarrow(
+      <ReqorePanel label='Publish as Template' icon='Upload2Line'>
+        Body
+      </ReqorePanel>
+    );
+
+    expect(document.querySelector('.reqore-panel-title')!.textContent).toContain(
+      'Publish as Template'
+    );
+  });
+});
