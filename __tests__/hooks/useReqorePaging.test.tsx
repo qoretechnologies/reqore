@@ -295,3 +295,51 @@ test('useReqorePaging still applies the defaults it used to merge in', () => {
   expect(result.current.itemsPerPage).toBe(10);
   expect(result.current.infinite).toBe(false);
 });
+
+test('useReqorePaging keeps an infinite list on its page when rows are appended', () => {
+  const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
+  const rows = (n: number) => Array.from({ length: n }, (_, i) => ({ id: i + 1 }));
+  const { result, rerender } = renderHook(
+    ({ items }: { items: { id: number }[] }) => useReqorePaging({ items, itemsPerPage: 10, infinite: true }),
+    { wrapper, initialProps: { items: rows(30) } }
+  );
+
+  act(() => {
+    result.current.next();
+    result.current.next();
+  });
+  expect(result.current.currentPage).toEqual(3);
+  expect(result.current.items).toHaveLength(30);
+
+  /* A row arrives at the top, then fifty older rows load at the bottom: the
+     reader had opened three pages and keeps them. It used to snap back to ten
+     rows on every count change. */
+  rerender({ items: rows(31) });
+  expect(result.current.currentPage).toEqual(3);
+  expect(result.current.items).toHaveLength(30);
+
+  rerender({ items: rows(81) });
+  expect(result.current.currentPage).toEqual(3);
+  expect(result.current.pageCount).toEqual(9);
+
+  /* Only a list that shrank below the page pulls the page back. */
+  rerender({ items: rows(12) });
+  expect(result.current.currentPage).toEqual(2);
+  expect(result.current.items).toHaveLength(12);
+});
+
+test('useReqorePaging still opens a paged (non-infinite) list on page 1 when its data changes', () => {
+  const wrapper = ({ children }: any) => <ReqoreUIProvider>{children}</ReqoreUIProvider>;
+  const rows = (n: number) => Array.from({ length: n }, (_, i) => ({ id: i + 1 }));
+  const { result, rerender } = renderHook(
+    ({ items }: { items: { id: number }[] }) => useReqorePaging({ items, itemsPerPage: 10 }),
+    { wrapper, initialProps: { items: rows(30) } }
+  );
+  act(() => {
+    result.current.next();
+  });
+  expect(result.current.currentPage).toEqual(2);
+
+  rerender({ items: rows(31) });
+  expect(result.current.currentPage).toEqual(1);
+});
