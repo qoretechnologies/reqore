@@ -1160,16 +1160,34 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [label, icon, badge, breadcrumbs]
     );
 
+    /**
+     * `width` comes from `useMeasure`, which reports 0 until the element is actually measured —
+     * and in jsdom it stays 0 forever. `0 < 480` is true, so an unmeasured panel used to claim it
+     * was narrow; the guard against that was `NODE_ENV !== 'test'`, added in 4eb8ac1 ("Test
+     * fixes") back when the suite was jsdom-only.
+     *
+     * That proxy stopped holding when snapshots moved to a real browser under vitest: same
+     * NODE_ENV, real widths, and the narrow layout switched off in the one place it needed to be
+     * on. No snapshot has ever shown a stacked title bar, which is why the stack going three rows
+     * deep on a drawer went unnoticed for so long (#664).
+     *
+     * Asking whether the width was MEASURED says what the guard always meant. jsdom keeps its 0
+     * and stays wide, so the unit suite is unaffected; a browser measures and behaves.
+     */
     const isSmall = useMemo(
-      () => responsiveTitle && width < 480 && process.env.NODE_ENV !== 'test',
+      () => responsiveTitle && width > 0 && width < 480,
       [width, responsiveTitle]
     );
     /**
-     * Narrow, and the consumer asked for the one-row treatment. Everything `isSmall` does to make
-     * room by stacking — the column flow, the fluid action groups, the control buttons moving to a
-     * row of their own — is suppressed; the title text gives up its space instead.
+     * Narrow, and the consumer asked for the one-row treatment. Everything the narrow layout does
+     * to make room by stacking — the column flow, the fluid action groups, the control buttons
+     * moving to a row of their own — is suppressed; the title text gives up its space instead.
+     *
+     * Keyed off BOTH triggers, because the stack has two: the panel measuring under 480px, and the
+     * provider's viewport-level `isMobile`. Reading only the first left a phone-width viewport
+     * holding a wider panel stacking with no compact treatment applied.
      */
-    const isCompactRow = isSmall && compactTitle;
+    const isCompactRow = (isSmall || isMobile) && compactTitle;
 
     // If collapsible is true, toggle the isCollapsed state
     // If the isCollapsed state is true, the component is expanded
@@ -1378,9 +1396,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       let show: boolean = false;
 
       // SHOULD THIS GROUP SHOW CONTROL BUTTONS?
-      // This group should only show control buttons
-      // if the panel is not small
-      if (!isSmall && (onClose || collapsible)) {
+      // This group should only show control buttons if the panel is not small — a small one gives
+      // them a row of their own. `compactTitle` is the exception it was written before: there IS
+      // no separate row there, the whole point being to stay on one, so the buttons belong here
+      // exactly as they do at full width. Without this the compact header rendered its icon and
+      // actions and silently dropped close and collapse.
+      if ((!isSmall || isCompactRow) && (onClose || collapsible)) {
         show = true;
       }
 
@@ -1392,7 +1413,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
 
       return show;
-    }, [isSmall, collapsible, nonFloatingActions, hasNonResponsiveActions]);
+    }, [isSmall, isCompactRow, collapsible, nonFloatingActions, hasNonResponsiveActions]);
 
     const iconTooltip = useMemo(
       () => ({

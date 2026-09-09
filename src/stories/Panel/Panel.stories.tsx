@@ -1976,3 +1976,42 @@ export const HoverActionReachableWithoutHover: Story = {
     expect(gated).toBe(true);
   },
 };
+
+export const CompactTitleWhenNarrow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Both panels are 380px wide — below the 480px threshold — and differ only in `compactTitle`. Left, the default: the title bar flips to a column, so the title takes one row, the actions another, and the close/collapse buttons a third; the action group also goes `fluid`, so a small button gets a full-width row with the rest of it empty. Right, `compactTitle`: the title TEXT gives up its space instead and the icon stands in for it, keeping `[icon] [actions] [×]` on one row. The label is not lost — it is already the icon's tooltip. Measured on a real drawer at 375px, the stacked version cost a 93px header for a title using 204px of the width and a 359px control group holding a 106px button. The threshold is the PANEL's own measured width, not the viewport, so this reproduces at any capture size — a narrow drawer or split pane on a wide screen is the case it exists for.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
+      <div style={{ width: '380px' }}>
+        <ReqorePanel
+          label='Publish as Template'
+          icon='Upload2Line'
+          collapsible
+          onClose={noop}
+          actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+        >
+          Default: the bar stacks.
+        </ReqorePanel>
+      </div>
+      <div style={{ width: '380px' }}>
+        <ReqorePanel
+          compactTitle
+          label='Publish as Template'
+          icon='Upload2Line'
+          collapsible
+          onClose={noop}
+          actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+        >
+          compactTitle: one row, icon in the title's place.
+        </ReqorePanel>
+      </div>
+    </ReqoreControlGroup>
+  ),
+};
+

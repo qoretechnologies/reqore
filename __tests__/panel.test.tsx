@@ -664,28 +664,21 @@ test('Does not forward the Panel accentPosition prop to the DOM', () => {
   panels.forEach((panel) => expect(getComputedStyle(panel).paddingLeft).toBe('5px'));
 });
 
+/**
+ * `isSmall` is driven by the panel's MEASURED width, and jsdom never measures — `useMeasure`
+ * reports 0 forever. Feed it a width instead of reaching for NODE_ENV: the default of 0 keeps
+ * every other test in this file on the wide layout, exactly as before.
+ */
+let mockedPanelWidth = 0;
+
+vi.mock('react-use', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-use')>();
+  return { ...actual, useMeasure: () => [noop, { width: mockedPanelWidth }] };
+});
+
 describe('compactTitle', () => {
-  // `isSmall` is deliberately inert under NODE_ENV=test so the rest of the suite measures the
-  // wide layout. Stub it to reach the narrow branch; jsdom reports a width of 0, which is
-  // below the 480px threshold.
-  const originalMatchMedia = window.matchMedia;
-
   const renderNarrow = (ui: React.ReactNode) => {
-    vi.stubEnv('NODE_ENV', 'development');
-    // The provider guards `useMedia` behind the same NODE_ENV check, so un-stubbing it exposes
-    // `matchMedia`, which jsdom does not implement. Report "no match": the assertions here are
-    // about the MEASURED width branch, not the viewport one.
-    window.matchMedia = ((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: noop,
-      removeListener: noop,
-      addEventListener: noop,
-      removeEventListener: noop,
-      dispatchEvent: () => false,
-    })) as unknown as typeof window.matchMedia;
-
+    mockedPanelWidth = 380;
     return render(
       <ReqoreUIProvider>
         <ReqoreLayoutContent>{ui}</ReqoreLayoutContent>
@@ -694,8 +687,7 @@ describe('compactTitle', () => {
   };
 
   afterEach(() => {
-    vi.unstubAllEnvs();
-    window.matchMedia = originalMatchMedia;
+    mockedPanelWidth = 0;
   });
 
   test('Drops the title text and keeps the icon when narrow', () => {
@@ -745,6 +737,24 @@ describe('compactTitle', () => {
       <ReqorePanel label='Publish as Template' icon='Upload2Line'>
         Body
       </ReqorePanel>
+    );
+
+    expect(document.querySelector('.reqore-panel-title')!.textContent).toContain(
+      'Publish as Template'
+    );
+  });
+
+  test('Stays wide while the panel has not been measured', () => {
+    // The case the old NODE_ENV guard existed for: an unmeasured panel reports 0, and `0 < 480`
+    // must not be read as "narrow".
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel compactTitle label='Publish as Template' icon='Upload2Line'>
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
     );
 
     expect(document.querySelector('.reqore-panel-title')!.textContent).toContain(
