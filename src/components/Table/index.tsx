@@ -172,11 +172,12 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   onFilterChange?: (query: string | number) => void;
   /**
    * How rows that pass the global filter are ordered while a query is active.
-   * `'none'` (default) keeps the arriving order — the filter only narrows. `'relevance'`
-   * ranks the matches by the first shown column that matches the query and how well it
-   * matches — see `rankTableDataByQuery` — leaving ties in their arriving order; a table
-   * that is searched by name (a list of connections, jobs, services) wants this. An
-   * explicit `sort` always wins over it.
+   * `'none'` (default) keeps the sorted / arriving order — the filter only narrows.
+   * `'relevance'` ranks the matches by the first shown column that matches the query and
+   * how well it matches — see `rankTableDataByQuery` — and takes precedence over `sort`
+   * while the query is active (the sort decides between equal matches and returns when
+   * the box is cleared); a table that is searched by name (a list of connections, jobs,
+   * services) wants this.
    */
   filterRanking?: TReqoreFilterRanking;
 
@@ -661,15 +662,17 @@ const ReqoreTable = ({
     );
 
     // `_sort` always carries a direction; only a `by` is a chosen sort.
-    if (_sort?.by) {
-      return sortTableData(filteredData, _sort);
-    }
+    const sortedData = _sort?.by ? sortTableData(filteredData, _sort) : filteredData;
 
-    // Opted-in relevance: the reader asked for a thing by name and expects the
-    // rows called that first, not wherever the alphabet or the data put them.
+    // Opted-in relevance takes precedence over the sort while the box has text:
+    // the reader asked for a thing by name and expects the rows called that
+    // first, not wherever the sort put them. Nearly every table carries a
+    // default sort (a list page persists "name, A-Z"), so "the sort wins" would
+    // mean the opt-in never applies where it is wanted. The sorted order still
+    // decides between equally good matches, and returns when the box is cleared.
     return hasQuery && filterRanking === 'relevance'
-      ? rankTableDataByQuery(filteredData, normalizedQuery, _internalColumns)
-      : filteredData;
+      ? rankTableDataByQuery(sortedData, normalizedQuery, _internalColumns)
+      : sortedData;
   }, [_data, _sort, normalizedFilters, normalizedQuery, filterRanking, _internalColumns]);
 
   /**

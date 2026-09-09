@@ -852,8 +852,7 @@ export const FilterRelevance: Story = {
     filterable: true,
     filter: 'telegram',
     filterRanking: 'relevance',
-    // The catalogue's default args sort by last name; a chosen sort outranks
-    // relevance by design, so this story runs without one.
+    // The catalogue's default args sort by last name, which these rows do not have.
     sort: undefined,
     height: 400,
   },

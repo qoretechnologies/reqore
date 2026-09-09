@@ -1586,8 +1586,24 @@ test('<Table /> keeps the arriving order of filtered rows by default', () => {
   ]);
 });
 
-test('<Table /> lets an explicit sort win over relevance', () => {
+test('<Table /> ranks over a sort while the query is active, sorted order breaking ties', () => {
+  // Sorted Z-A the names would start with Untelegrammed; relevance still puts the
+  // exact match first, and the sort decides only between equally good matches.
   renderRelevanceTable({ filterRanking: 'relevance', sort: { by: 'name', direction: 'desc' } });
+  settleFilter();
+
+  expect(renderedNames()).toEqual([
+    'Telegram',
+    'Telegram Support',
+    'Alerts to Telegram',
+    'Untelegrammed',
+    'Gmail',
+    'Slack',
+  ]);
+});
+
+test('<Table /> keeps a sort in charge without the opt-in', () => {
+  renderRelevanceTable({ sort: { by: 'name', direction: 'desc' } });
   settleFilter();
 
   expect(renderedNames()[0]).toBe('Untelegrammed');
