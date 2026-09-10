@@ -423,6 +423,12 @@ export const StyledPanelTitleHeader = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  /* This header CLAIMS the row and the action group beside it pushes back — that contention is
+     what squeezes the group past its content width, which is the only thing that makes
+     scrollWidth exceed clientWidth and the fold into the menu fire. Basing it on 0 instead was
+     tried and it hands the group its full content width, so nothing ever overflows and actions
+     labelled "hidden when small" stay visible on a small panel. The group's own min/max bound
+     the split; this side just has to want the space. */
   flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
@@ -748,20 +754,6 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
      fluid, and a full-width group had room not to collapse). */
   flex-flow: ${({ $descriptionBelow }) => ($descriptionBelow ? 'row wrap' : 'row')};
 
-  ${({ $descriptionBelow }) =>
-    $descriptionBelow &&
-    css`
-      /* The header declares \`width: 100%\`, which costs nothing in a nowrap row because
-         flex-shrink squeezes it — but in a WRAPPING one it claims the whole line and pushes
-         the actions onto their own row, which is not what "description below" asked for.
-         Basing it on 0 instead lets it grow into whatever the actions leave, on line one. */
-      > .reqore-panel-title-header {
-        width: auto;
-        flex: 1 1 0%;
-        min-width: 0;
-      }
-    `}
-
   ${({ $descriptionFontPx }) =>
     !!$descriptionFontPx &&
     css`
@@ -773,6 +765,21 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
          again, in the other direction. */
       .reqore-panel-title-description {
         font-size: ${$descriptionFontPx}px;
+      }
+    `}
+
+  ${({ $descriptionBelow }) =>
+    $descriptionBelow &&
+    css`
+      /* Only on a wrapping bar. The header claims the row so the action group beside it gets
+         squeezed and folds — that is what the base rule is for — but in a WRAPPING row a
+         full-width claim takes the whole line and pushes the actions onto their own, which is
+         not what "description below" asked for. Here the header grows from 0 into whatever the
+         actions leave, on line one, and the description takes line two. */
+      > .reqore-panel-title-header {
+        width: auto;
+        flex: 1 1 0%;
+        min-width: 0;
       }
     `}
 
@@ -1051,7 +1058,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       iconColor,
       iconProps = {},
       fluid,
-      responsiveActions = false,
+      responsiveActions = true,
       responsiveTitle = true,
       compactTitle = false,
       fitLabel = true,
@@ -2050,18 +2057,41 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               {hasResponsiveActions(nonFloatingActions) && (
                 <ReqoreControlGroup
                   responsive={responsiveActions}
-                  // `fitLabel` means "give the title a fair share of the row", and it cannot have
-                  // one while this group stretches: measured at 206px to hold 90px of buttons on a
-                  // 518px bar, leaving the title 142px. Content-sizing it hands that space back.
-                  // The cost is the group's own overflow — `responsive` collapse tests
-                  // `scrollWidth > clientWidth`, which a content-sized group never trips, so the
-                  // fold into the `…` menu stops happening. That trade rides with the opt-in
-                  // rather than being taken on everyone's behalf.
-                  fluid={responsiveActions && !fitLabel}
+                  // Not `fluid`: a stretched group takes the row's remainder whether it needs it
+                  // or not — measured at 206px to hold 90px of buttons on a 518px bar, leaving
+                  // the title 142px.
+                  fluid={false}
                   horizontalAlign='flex-end'
                   customTheme={theme}
                   size={panelSize}
+                  // …but `fluid={false}` alone compiles to `flex: 0 0 auto`, which pins the group
+                  // at its content width and so can NEVER overflow — and `responsive` collapse
+                  // triggers on `scrollWidth > clientWidth`, so the fold into the `…` menu simply
+                  // stops happening. That is the bug behind actions labelled "Hidden when small"
+                  // being visible on a small panel.
+                  //
+                  // The two are separable, they were only ever coupled through this one flag: a
+                  // CONTENT-width basis that may still shrink. The group never claims the row's
+                  // remainder, the title keeps its share, and once the row is contended the group
+                  // is squeezed below its content, overflows, and folds as it always did.
                   {...responsiveActionsWrapperProps}
+                  // `max-width` is the load-bearing part. Unbounded, the group takes its full
+                  // content width, never overflows, and so never folds — which is how actions
+                  // labelled "Hidden when small" ended up visible on a small panel. Bounded to
+                  // half the bar it cannot starve the title, and the moment its buttons need
+                  // more than that share it overflows and the fold into the `…` menu fires,
+                  // which is the behaviour that was lost. Half is the split that makes neither
+                  // side the default winner.
+                  style={{
+                    flex: '0 1 auto',
+                    // Floored, not 0. Shrinking to nothing clips the buttons instead of folding
+                    // them — measured at 27px of group holding 38px of button. `ControlGroup`
+                    // ignores its own overflow below 40px (`clientWidth > 40`), so that is the
+                    // width at which the fold is still able to fire.
+                    minWidth: 40,
+                    maxWidth: '50%',
+                    ...responsiveActionsWrapperProps?.style,
+                  }}
                 >
                   {nonFloatingActions.map(renderResponsiveActions())}
                 </ReqoreControlGroup>

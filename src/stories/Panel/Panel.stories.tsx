@@ -1989,14 +1989,14 @@ export const FitLabelComparison: Story = {
     docs: {
       description: {
         story:
-          "What changed when the title-bar defaults changed, at four widths. Column 1 restores the OLD defaults explicitly — `responsiveActions` on, no fit, one line, an unbounded description — and it is what every panel used to do: the action group is `fluid`, so it takes the row's remainder whether it needs it or not, and the title and its description are left fighting over a column that is a third of the panel. Column 2 sets nothing at all and is the new default: the actions take only the width they need, the title wraps to two lines before it shrinks and shrinks before it truncates, and the description is bounded to two lines so it cannot run away underneath. Column 3 adds the one thing still opt-in, `descriptionPosition='below'`, which gives the description a row of its own under the bar — it does not widen the title, but the description stops wrapping and the bar stops changing height as the panel narrows.",
+          "The whole cascade, engaged. Column 1 reproduces the OLD behaviour — the stretched action group plus the old title defaults — by forcing the group back to `width: 100%` through `responsiveActionsWrapperProps`; that group took the row's remainder whether it needed it or not, leaving the title a third of the panel. Column 2 sets nothing at all: the group now takes a content-width BASIS but stays SHRINKABLE, so it never claims the remainder and still folds into the `…` menu once the row is contended — and the title wraps to two lines before it shrinks, shrinks before it truncates, with the description bounded so it cannot run away underneath. Column 3 adds the one thing still opt-in, `descriptionPosition='below'`, which gives the description a row of its own under the bar.",
       },
     },
   },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
       {[
-        { title: '1 · Before — the old defaults', legacy: true, below: false },
+        { title: '1 · Before — stretched action group', legacy: true, below: false },
         { title: '2 · Now — nothing set', legacy: false, below: false },
         { title: "3 · Now + description 'below'", legacy: false, below: true },
       ].map((variant) => (
@@ -2009,10 +2009,15 @@ export const FitLabelComparison: Story = {
                 // component now ships, which is the point of the comparison.
                 {...(variant.legacy
                   ? {
-                      responsiveActions: true,
                       fitLabel: false,
                       labelMaxLines: 1,
                       descriptionMaxLines: 0,
+                      // The old action group stretched to the row's remainder. That is no longer
+                      // reachable through a prop, so the story restores the CSS it used to emit —
+                      // otherwise there is nothing left to compare the new default against.
+                      responsiveActionsWrapperProps: {
+                        style: { flex: '1 1 auto', width: '100%' },
+                      },
                     }
                   : {})}
                 {...(variant.below ? { descriptionPosition: 'below' as const } : {})}
