@@ -1982,25 +1982,64 @@ export const FitLabelComparison: Story = {
     docs: {
       description: {
         story:
-          "The same four widths with `fitLabel` off (left, today's behaviour) and on (right). Off: the title keeps its natural 19px and ellipsizes as soon as it runs out of room — and it runs out early, because the responsive action group is `fluid` and takes the row's remainder (measured at 206px to hold 90px of buttons on a 518px bar, leaving the title 142px). On: the group takes only what it needs, the title gets a fair share, and it shrinks toward a floor of two thirds its natural size before ellipsizing — 19 / 19 / 18 / 12px. The cost of the opt-in is that a content-sized group cannot overflow, so its fold into the `…` menu stops happening; that is why this is a prop and not the default.",
+          "The whole cascade, engaged, against the panel a caller actually gets today. Column 1 sets NO props beyond its content, so `responsiveActions` sits at its default of `true` and the action group is `fluid` — it takes the row's remainder whether it needs it or not, and the title is ellipsized from the widest panel down. Columns 2 to 4 turn that off, which is the change that gives the title a fair share of the row before any of the new props do anything; each then adds one stage of the cascade. Column 2 adds `fitLabel`: the title shrinks toward a floor of two thirds its natural size, and ellipsizes only once the floor cannot hold it. Column 3 adds `labelMaxLines={2}` together with `descriptionMaxLines={2}`, because a bar that bounds the title but not the text under it only half-solves the problem: it wraps first, then shrinks to make two lines work, and ellipsizes last — wrapping keeps every character at full size, shrinking keeps every character, and only the ellipsis removes words, so that is the order. Column 4 adds `descriptionPosition='below'`, which is the change that actually buys room: the description stops sharing the title's column and takes a row of its own under the bar, roughly doubling the width the title has to work with.",
       },
     },
   },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
       {[
-        { label: 'Today — ellipsis only', fitLabel: false, fitActions: false },
-        { label: 'fitLabel — title shrinks', fitLabel: true, fitActions: false },
-        { label: 'fitLabel + fitActions', fitLabel: true, fitActions: true },
+        {
+          title: '1 · Default — nothing set',
+          defaults: true,
+          fitLabel: false,
+          lines: 1,
+          below: false,
+          descLines: 0,
+        },
+        {
+          title: '2 · actions content-sized, + fitLabel',
+          defaults: false,
+          fitLabel: true,
+          lines: 1,
+          below: false,
+          descLines: 0,
+        },
+        {
+          title: '3 · + labelMaxLines={2}',
+          defaults: false,
+          fitLabel: true,
+          lines: 2,
+          below: false,
+          descLines: 2,
+        },
+        {
+          title: "4 · + description 'below'",
+          defaults: false,
+          fitLabel: true,
+          lines: 2,
+          below: true,
+          descLines: 2,
+        },
       ].map((variant) => (
-        <ReqoreControlGroup key={variant.label} vertical gapSize='normal' fixed>
-          <ReqoreP style={{ margin: 0, opacity: 0.7 }}>{variant.label}</ReqoreP>
-          {[520, 440, 400, 345, 300, 270].map((w) => (
+        <ReqoreControlGroup key={variant.title} vertical gapSize='normal' fixed>
+          <ReqoreP style={{ margin: 0, opacity: 0.7 }}>{variant.title}</ReqoreP>
+          {[440, 380, 330, 290, 260].map((w) => (
             <div key={w} style={{ width: `${w}px` }}>
               <ReqorePanel
-                fitLabel={variant.fitLabel}
-                fitActions={variant.fitActions}
-                label='Publish as Template'
+                // Column 1 is a bare panel — no props at all beyond its content — so it shows
+                // what a caller gets today, `responsiveActions` default included.
+                {...(variant.defaults
+                  ? {}
+                  : {
+                      responsiveActions: false,
+                      fitLabel: variant.fitLabel,
+                      labelMaxLines: variant.lines,
+                      descriptionMaxLines: variant.descLines || undefined,
+                      descriptionPosition: variant.below ? ('below' as const) : ('inline' as const),
+                    })}
+                label='Publish this Qog to the Template Marketplace'
+                description='Share this Qog with your team.'
                 icon='Upload2Line'
                 collapsible
                 onClose={noop}

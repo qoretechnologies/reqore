@@ -34,6 +34,19 @@ export interface IUseFitTextSizeOptions {
   max: number;
   /** Floor in px. Defaults to `max * FIT_TEXT_MIN_RATIO`, never below `FIT_TEXT_FLOOR_PX`. */
   min?: number;
+  /**
+   * How many lines the text may occupy. The fit measures against `available * lines`, so a
+   * label allowed to wrap keeps its natural size until it overruns BOTH lines — wrapping is
+   * cheaper than shrinking, so it should happen first.
+   *
+   * A first-order approximation: a wrapped line breaks on a word and rarely fills to its last
+   * pixel, so the real capacity is a little under this. Being slightly optimistic is the right
+   * side to err on — whatever still overflows is ellipsized by the clamp, which is the end of
+   * the cascade anyway.
+   *
+   * @default 1
+   */
+  lines?: number;
   /** Off returns `max`. */
   enabled?: boolean;
 }
@@ -58,6 +71,7 @@ export const useFitTextSize = <T extends HTMLElement = HTMLDivElement>({
   available,
   max,
   min,
+  lines = 1,
   enabled = true,
 }: IUseFitTextSizeOptions): [React.MutableRefObject<T | null>, number] => {
   const ref = useRef<T | null>(null);
@@ -95,17 +109,18 @@ export const useFitTextSize = <T extends HTMLElement = HTMLDivElement>({
 
     context.font = `${style.fontStyle} ${style.fontWeight} ${max}px ${style.fontFamily}`;
     const widthAtMax = context.measureText(text).width + spacing;
+    // The budget is the row width times the number of lines the label may use: the text is
+    // one continuous run being poured into `lines` boxes of `available` each.
+    const budget = available * Math.max(1, lines) + FIT_TOLERANCE_PX;
 
-    if (widthAtMax <= available + FIT_TOLERANCE_PX) {
+    if (widthAtMax <= budget) {
       setSize(max);
 
       return;
     }
 
-    setSize(
-      Math.max(floor, Math.min(max, Math.floor(((available + FIT_TOLERANCE_PX) / widthAtMax) * max)))
-    );
-  }, [text, available, max, floor, enabled]);
+    setSize(Math.max(floor, Math.min(max, Math.floor((budget / widthAtMax) * max))));
+  }, [text, available, max, floor, lines, enabled]);
 
   return [ref, size];
 };

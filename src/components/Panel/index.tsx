@@ -37,10 +37,10 @@ import {
   getReadableColor,
 } from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
-import { getOneLessSize, getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
+import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
-import { useFitTextSize } from '../../hooks/useFitTextSize';
+import { FIT_TEXT_FLOOR_PX, useFitTextSize } from '../../hooks/useFitTextSize';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   ACTIVE_ICON_SCALE,
@@ -213,16 +213,49 @@ export interface IReqorePanelProps
    */
   fitLabel?: boolean;
   /**
-   * Step the action buttons down a size on a narrow bar, so the controls give up room the way
-   * the title does instead of staying at full size while everything around them shrinks.
+   * Where the description goes.
    *
-   * Separate from `fitLabel` because it is a different trade: `fitLabel` buys the title space by
-   * taking it from the action group, while this shrinks the actions themselves. They compose —
-   * together the row gets smaller controls AND a title sized to what is left.
+   * `'inline'` (the default) stacks it under the title, sharing the title's column — so the
+   * title, the description and the actions all divide one row, and on a narrow bar the two
+   * texts fight each other for a column that may be a third of the panel.
    *
-   * @default false
+   * `'below'` gives it a row of its own under the whole bar, actions included. The title then
+   * has the column to itself and the description gets the full width, which is usually more
+   * than either had before: at a 300px bar the title's box goes from 128px to 226px, and the
+   * description stops wrapping to three lines. Worth it when the description is a real
+   * sentence; unnecessary when it is a word or two that was never going to wrap.
+   *
+   * @default 'inline'
    */
-  fitActions?: boolean;
+  descriptionPosition?: 'inline' | 'below';
+  /**
+   * How many lines the description may wrap to before it is ellipsized. Unset means unlimited,
+   * which is today's behaviour.
+   *
+   * Separate from `labelMaxLines` because the two answer different questions — the title names
+   * the panel and is worth two lines, a description is support text and is often worth one —
+   * but a bar that bounds one and not the other only half-solves the problem: clamp the title
+   * to two lines at 260px and the description underneath still runs to four.
+   *
+   * @default undefined (unlimited)
+   */
+  descriptionMaxLines?: number;
+  /**
+   * How many lines the title may wrap to before it is ellipsized. `1` (the default) is today's
+   * behaviour: one line, cut with an ellipsis the moment it runs out of room.
+   *
+   * Above 1 the title gives ground in the order that costs the reader least — it wraps before
+   * it shrinks, and shrinks before it truncates. Wrapping keeps every character at full size,
+   * shrinking keeps every character, and only the ellipsis actually removes words, so that is
+   * the order. With `fitLabel` the two compose: the fit measures against the whole line budget,
+   * so the title stays at its natural size while it fits in two lines, then shrinks to make two
+   * lines work, and the clamp ellipsizes whatever a floored font still cannot hold.
+   *
+   * Two is the useful value. A title bar that grows past two lines stops reading as a bar.
+   *
+   * @default 1
+   */
+  labelMaxLines?: number;
   /**
    * Floor for the shrinking title, in px. Defaults to two thirds of its natural size and
    * never below 11px — past that a heading is fine print, and an ellipsis reads better.
@@ -291,6 +324,13 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
    *  its visible top edge. Internal — the component measures it; callers use
    *  `stickyHeaderOffset` to shift a header deliberately. */
   stickyHeaderInset?: number;
+  /** True when the description is rendered as its own full-width row under the bar. The bar
+   *  must wrap for that row to exist at all. */
+  $descriptionBelow?: boolean;
+  /** Resolved line cap for the description, or 0 for "no cap". */
+  $descriptionMaxLines?: number;
+  /** Description size in px once the title has been fitted, or 0 to leave it at its own. */
+  $descriptionFontPx?: number;
   /** Always a resolved pixel number — the component maps `TSizes` names before
    *  it reaches the styles, so the css (which interpolates px) never sees a string. */
   $accentSize?: number;
@@ -337,6 +377,46 @@ const getScrollportInset = (el: HTMLElement | null): { padding: number; border: 
     border: parseFloat(style.borderTopWidth) || 0,
   };
 };
+
+/**
+ * The box the title lives in — and, when the title may wrap, the thing that clamps it.
+ *
+ * It exists first as a measuring box: as a `min-width: 0` flex child it reports the width the
+ * row actually left for the title, where the heading itself would report what its text wants.
+ * `overflow: hidden` is what makes it shrinkable at all, and `display: flex` keeps it from
+ * opening a line box around the inline-flex heading — a block wrapper adds the row's leading on
+ * top of the heading's own box, which made a `tiny` panel 3px taller than it used to be.
+ */
+const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number }>`
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  flex: 0 1 auto;
+
+  ${({ $clampLines }) =>
+    $clampLines > 1 &&
+    css`
+      .reqore-heading {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: ${$clampLines};
+        overflow: hidden;
+        white-space: normal;
+        /* A single word longer than the box would push past it rather than break, and the
+           clamp would have nothing to ellipsize. */
+        overflow-wrap: anywhere;
+        max-width: 100%;
+
+        /* The heading wraps its text in a span of its own, and \`-webkit-line-clamp\` counts the
+           box's CHILDREN rather than the lines inside them — so one block-level child reads as
+           a single line and nothing is ever clamped, however far the text overruns. Putting the
+           text back into the heading's own line boxes is what the clamp actually measures. */
+        .reqore-span {
+          display: inline;
+        }
+      }
+    `}
+`;
 
 export const StyledPanelTitleHeader = styled.div`
 
@@ -666,7 +746,49 @@ export const StyledPanelTitle = styled.div<IStyledPanel>`
      label and lets the responsive action group collapse instead, which is what the "hidden when
      small" actions are for and what the stack was quietly defeating (a column made the group
      fluid, and a full-width group had room not to collapse). */
-  flex-flow: row;
+  flex-flow: ${({ $descriptionBelow }) => ($descriptionBelow ? 'row wrap' : 'row')};
+
+  ${({ $descriptionBelow }) =>
+    $descriptionBelow &&
+    css`
+      /* The header declares \`width: 100%\`, which costs nothing in a nowrap row because
+         flex-shrink squeezes it — but in a WRAPPING one it claims the whole line and pushes
+         the actions onto their own row, which is not what "description below" asked for.
+         Basing it on 0 instead lets it grow into whatever the actions leave, on line one. */
+      > .reqore-panel-title-header {
+        width: auto;
+        flex: 1 1 0%;
+        min-width: 0;
+      }
+    `}
+
+  ${({ $descriptionFontPx }) =>
+    !!$descriptionFontPx &&
+    css`
+      /* The description is a fixed px from \`TEXT_FROM_SIZE\` and knows nothing about the title
+         having shrunk, so a fitted title crosses under it: at the 12px floor the support text
+         renders at 15px and outranks the heading it supports. Scaling it by the SAME factor the
+         title took keeps the two in their original proportion instead of giving the description
+         a fit of its own — which would size it against its own box and let the pair drift apart
+         again, in the other direction. */
+      .reqore-panel-title-description {
+        font-size: ${$descriptionFontPx}px;
+      }
+    `}
+
+  ${({ $descriptionMaxLines }) =>
+    !!$descriptionMaxLines &&
+    css`
+      .reqore-panel-title-description {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: ${$descriptionMaxLines};
+        overflow: hidden;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+    `}
+
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
@@ -933,7 +1055,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       responsiveTitle = true,
       compactTitle = false,
       fitLabel = false,
-      fitActions = false,
+      labelMaxLines = 1,
+      descriptionPosition = 'inline',
+      descriptionMaxLines,
       labelMinTextSize,
       size: panelSize = 'normal',
       getContentRef,
@@ -1240,27 +1364,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      */
     const isNarrow = isSmall || isMobile;
     /**
-     * The size the action buttons render at, stepped down as the bar narrows.
-     *
-     * Progressive rather than a single switch at the narrow threshold: one step taken once means
-     * every panel below 480px renders identical buttons, which reads as "the buttons never
-     * change" precisely where the room is tightest. Each step is worth roughly 8px per button,
-     * so a three-button row buys the title ~25px per step.
-     */
-    const actionSize: TSizes = useMemo(() => {
-      if (!fitActions || !width) {
-        return panelSize;
-      }
-
-      const steps = width >= 480 ? 0 : width >= 380 ? 1 : 2;
-
-      return steps === 0
-        ? panelSize
-        : steps === 1
-          ? getOneLessSize(panelSize)
-          : getOneLessSize(getOneLessSize(panelSize));
-    }, [fitActions, width, panelSize]);
-    /**
      * The tightest fallback, still opt-in: drop the title TEXT and leave the icon in its place.
      * For a bar too narrow even to ellipsize into — a `[icon] [actions] [×]` header. Nothing
      * changes without an icon to fall back to, and the label survives as that icon's tooltip.
@@ -1539,14 +1642,33 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * space. Kept as state rather than read during render so the fit is calculated from a width
      * that has actually been laid out.
      */
+    /** Whole lines, at least one — a fractional or zero `labelMaxLines` is a caller slip, not
+     *  a request for half a line of text. */
+    const clampLines = Math.max(1, Math.floor(labelMaxLines) || 1);
+    /** `compactTitle` drops the description with the title it belongs to, so a bar that has
+     *  given up its title never grows a row to carry one. */
+    const descriptionBelow =
+      descriptionPosition === 'below' && !!description && !(hideTitleForIcon && !!icon);
+    const descriptionClamp = Math.max(0, Math.floor(descriptionMaxLines || 0));
     const [labelAvailable, setLabelAvailable] = useState<number | undefined>(undefined);
     const [labelFitRef, labelFitPx] = useFitTextSize<HTMLDivElement>({
       text: typeof label === 'string' ? label : '',
       available: labelAvailable,
       max: labelNaturalPx,
       min: labelMinTextSize,
+      lines: clampLines,
       enabled: fitLabel !== false && typeof label === 'string' && !labelEffect?.textSize,
     });
+
+    /** Only while the title is actually below its natural size, and never over a caller who
+     *  pinned the description's own size. */
+    const descriptionFontPx =
+      fitLabel && !descriptionEffect?.textSize && labelFitPx < labelNaturalPx
+        ? Math.max(
+            FIT_TEXT_FLOOR_PX,
+            Math.round((TEXT_FROM_SIZE[panelSize] ?? TEXT_FROM_SIZE.normal) * (labelFitPx / labelNaturalPx))
+          )
+        : 0;
 
     /**
      * How much room the title has, computed rather than measured off its own box.
@@ -1565,48 +1687,45 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * Re-run on `width`, which is the bar's own measured width: when the bar resizes, so does
      * everything in it.
      */
+    /**
+     * The title's available width is its CONTAINING BLOCK minus whatever shares it — measured,
+     * not reconstructed.
+     *
+     * This used to subtract the action group, the gaps and the icon from the bar's width. That
+     * arithmetic held only for the one layout it was written against: give the panel a
+     * `description` and the icon moves into an outer grid, so the sum over-reported by 30-80px
+     * and the fit under-shrank. The symptom was the worst of both worlds — a title both smaller
+     * AND ellipsized, which is the one outcome the feature exists to avoid.
+     *
+     * Measuring the parent is safe precisely where it looks circular. While the text overflows
+     * — the only regime in which anything shrinks — the parent is pinned by the row, not by the
+     * text: at a 300px bar it measures 128px at 19px, at 16px, and wrapped to two lines. When
+     * the text does fit, the parent has slack and the fit returns the natural size, which is
+     * the right answer either way.
+     */
     useLayoutEffect(() => {
       const node = labelFitRef.current;
-      const bar = node?.closest('.reqore-panel-title') as HTMLElement | null;
-      const header = bar?.querySelector('.reqore-panel-title-header') as HTMLElement | null;
+      const parent = node?.parentElement;
 
-      if (!fitLabel || !node || !bar || !header) {
+      if (!fitLabel || !node || !parent) {
         return;
       }
 
-      const barStyle = getComputedStyle(bar);
-      const horizontalPadding =
-        (parseFloat(barStyle.paddingLeft) || 0) + (parseFloat(barStyle.paddingRight) || 0);
-      const barGap = parseFloat(barStyle.columnGap) || parseFloat(barStyle.gap) || 0;
-
-      // Everything on the bar that is not the title's own header.
-      const competing = Array.from(bar.children).reduce(
+      const style = getComputedStyle(parent);
+      const padding =
+        (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+      const gap = parseFloat(style.columnGap) || parseFloat(style.gap) || 0;
+      // A badge sits beside the title in the same box and takes real width.
+      const siblings = Array.from(parent.children).reduce(
         (total, child) =>
-          child === header ? total : total + (child as HTMLElement).getBoundingClientRect().width,
+          child === node ? total : total + (child as HTMLElement).getBoundingClientRect().width,
         0
       );
-      const barGaps = barGap * Math.max(0, bar.children.length - 1);
-
-      // …and everything inside the header that is not the title itself: the icon, the badge,
-      // and the description column's gap.
-      const insideHeader = Array.from(header.querySelectorAll(':scope *')).reduce(
-        (total, child) => {
-          const el = child as HTMLElement;
-
-          return el === node || node.contains(el) || el.contains(node)
-            ? total
-            : total + (el.parentElement === node.parentElement ? el.getBoundingClientRect().width : 0);
-        },
-        0
-      );
-
-      const next = Math.max(
-        0,
-        Math.round(bar.clientWidth - horizontalPadding - barGaps - competing - insideHeader)
-      );
+      const gaps = gap * Math.max(0, parent.children.length - 1);
+      const next = Math.max(0, Math.round(parent.clientWidth - padding - siblings - gaps));
 
       setLabelAvailable((current) => (current === next ? current : next));
-    }, [fitLabel, label, width, labelFitPx, badge, actions, panelSize]);
+    }, [fitLabel, label, width, badge, actions, panelSize, description, clampLines]);
 
     const iconTooltip = useMemo(
       () => ({
@@ -1694,6 +1813,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               opacity={minimal ? 0 : opacity ?? 1}
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
+              $descriptionBelow={descriptionBelow}
+              $descriptionMaxLines={descriptionClamp}
+              $descriptionFontPx={descriptionFontPx}
               // Stamped for the same reason `EntityRow` stamps it: a narrow container is a fact
               // about the box, and a test or a story asserting the narrow treatment should read
               // it rather than infer it from pixels.
@@ -1786,25 +1908,27 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                             // the inline-flex heading: a block wrapper adds the row's leading on
                             // top of the heading's own box, which made a `tiny` panel 3px taller
                             // than it was before this wrapper existed.
-                            <div
+                            <StyledPanelTitleLabelBox
                               ref={labelFitRef}
-                              style={{
-                                display: 'flex',
-                                minWidth: 0,
-                                overflow: 'hidden',
-                                flex: '0 1 auto',
-                              }}
+                              className='reqore-panel-title-label-box'
+                              $clampLines={clampLines}
                             >
                             <LabelEditor
                               size={labelSize || panelSize}
                               customTheme={theme}
                               effect={{
-                                noWrap: true,
+                                // `noWrap` pins the heading to one line; a clamped title is
+                                // allowed to wrap, and the clamp brings its own ellipsis.
+                                noWrap: clampLines === 1,
                                 ...labelEffect,
                               }}
                               style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
+                                // A clamped title takes its display from the box above, which
+                                // sets `-webkit-box`. Naming a display here would beat that
+                                // rule and quietly turn the clamp off.
+                                ...(clampLines > 1
+                                  ? {}
+                                  : { display: 'inline-flex', alignItems: 'center' }),
                                 minWidth: 0,
                                 // Capped to the measured wrapper so the heading's own
                                 // `text-overflow: ellipsis` (from `noWrap`) has a box to overflow.
@@ -1824,7 +1948,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                               onSubmit={onLabelEdit}
                               tooltip={showLabelTooltip ? customLabelTooltip || label : undefined}
                             />
-                            </div>
+                            </StyledPanelTitleLabelBox>
                           ) : (
                             label
                           )}
@@ -1847,7 +1971,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       // pairing: a bigger label should not make supporting
                       // text smaller. Consumers that want to size the
                       // description explicitly pass `descriptionEffect.textSize`.
-                      const descriptionRow = description && !hideTitleText ? (
+                      const descriptionRow = description && !hideTitleText && !descriptionBelow ? (
                         <ReqoreSpan
                           className='reqore-panel-title-description'
                           size={panelSize}
@@ -1901,7 +2025,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     show={false}
                     isSmall={false}
                     showControlButtons
-                    size={actionSize}
+                    size={panelSize}
                     hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                     customTheme={theme}
                     isCollapsed={_isCollapsed}
@@ -1930,7 +2054,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   fluid={responsiveActions && !fitLabel}
                   horizontalAlign='flex-end'
                   customTheme={theme}
-                  size={actionSize}
+                  size={panelSize}
                   {...responsiveActionsWrapperProps}
                 >
                   {nonFloatingActions.map(renderResponsiveActions())}
@@ -1940,7 +2064,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 show={showNonResponsiveGroup()}
                 isSmall={false}
                 showControlButtons
-                size={actionSize}
+                size={panelSize}
                 hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                 customTheme={theme}
                 isCollapsed={_isCollapsed}
@@ -1955,6 +2079,24 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               >
                 {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>
+              {descriptionBelow ? (
+                // `flex-basis: 100%` is what puts it on its own line — the bar is a wrapping
+                // flex row, so a full-width item cannot share one with anything before it.
+                // `min-width: 0` so a long sentence wraps inside the bar instead of widening it.
+                <div
+                  className='reqore-panel-title-description-row'
+                  style={{ flex: '0 0 100%', minWidth: 0 }}
+                >
+                  <ReqoreSpan
+                    className='reqore-panel-title-description'
+                    size={panelSize}
+                    effect={{ opacity: 0.7, ...descriptionEffect }}
+                    intent={descriptionIntent}
+                  >
+                    {description}
+                  </ReqoreSpan>
+                </div>
+              ) : null}
             </StyledPanelTopBar>
           )}
           {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
