@@ -209,7 +209,7 @@ export interface IReqorePanelProps
    * the `…` menu stops happening. Freeing the title means bounding that group some other way —
    * a decision about how the title bar divides its width, not a flag.
    *
-   * @default false
+   * @default true
    */
   fitLabel?: boolean;
   /**
@@ -237,7 +237,7 @@ export interface IReqorePanelProps
    * but a bar that bounds one and not the other only half-solves the problem: clamp the title
    * to two lines at 260px and the description underneath still runs to four.
    *
-   * @default undefined (unlimited)
+   * @default 2
    */
   descriptionMaxLines?: number;
   /**
@@ -253,7 +253,7 @@ export interface IReqorePanelProps
    *
    * Two is the useful value. A title bar that grows past two lines stops reading as a bar.
    *
-   * @default 1
+   * @default 2
    */
   labelMaxLines?: number;
   /**
@@ -1051,13 +1051,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       iconColor,
       iconProps = {},
       fluid,
-      responsiveActions = true,
+      responsiveActions = false,
       responsiveTitle = true,
       compactTitle = false,
-      fitLabel = false,
-      labelMaxLines = 1,
+      fitLabel = true,
+      labelMaxLines = 2,
       descriptionPosition = 'inline',
-      descriptionMaxLines,
+      descriptionMaxLines = 2,
       labelMinTextSize,
       size: panelSize = 'normal',
       getContentRef,
@@ -1421,9 +1421,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
 
     const hasNonResponsiveActions = useCallback(
+      // `show: false` has to be honoured on BOTH paths. The `responsiveActions: false` arm used
+      // to ask only whether the array had entries, so a panel whose every action is hidden still
+      // reported having some and rendered an empty control group. It went unnoticed while the
+      // prop defaulted to `true` and that arm was mostly dead.
       (data: TReqorePanelActions) =>
-        (!responsiveActions && size(data)) ||
-        data.some((action) => action.responsive === false && action.show !== false),
+        data.some(
+          (action) =>
+            (!responsiveActions || action.responsive === false) && action.show !== false
+        ),
       [actions, bottomActions, responsiveActions, showActionsWhenCollapsed, _isCollapsed]
     );
 

@@ -1977,69 +1977,47 @@ export const HoverActionReachableWithoutHover: Story = {
   },
 };
 
+/** A real sentence rather than a few words: a description that was never going to wrap tells you
+ *  nothing about how the bar handles one, and the whole question here is what happens when the
+ *  title and the text under it compete for the same column. Shared by all four columns so their
+ *  heights compare. */
+const PANEL_DESCRIPTION =
+  'Share this Qog with your team and publish it to the marketplace so anyone can install it.';
+
 export const FitLabelComparison: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          "The whole cascade, engaged, against the panel a caller actually gets today. Column 1 sets NO props beyond its content, so `responsiveActions` sits at its default of `true` and the action group is `fluid` — it takes the row's remainder whether it needs it or not, and the title is ellipsized from the widest panel down. Columns 2 to 4 turn that off, which is the change that gives the title a fair share of the row before any of the new props do anything; each then adds one stage of the cascade. Column 2 adds `fitLabel`: the title shrinks toward a floor of two thirds its natural size, and ellipsizes only once the floor cannot hold it. Column 3 adds `labelMaxLines={2}` together with `descriptionMaxLines={2}`, because a bar that bounds the title but not the text under it only half-solves the problem: it wraps first, then shrinks to make two lines work, and ellipsizes last — wrapping keeps every character at full size, shrinking keeps every character, and only the ellipsis removes words, so that is the order. Column 4 adds `descriptionPosition='below'`, which is the change that actually buys room: the description stops sharing the title's column and takes a row of its own under the bar, roughly doubling the width the title has to work with.",
+          "What changed when the title-bar defaults changed, at four widths. Column 1 restores the OLD defaults explicitly — `responsiveActions` on, no fit, one line, an unbounded description — and it is what every panel used to do: the action group is `fluid`, so it takes the row's remainder whether it needs it or not, and the title and its description are left fighting over a column that is a third of the panel. Column 2 sets nothing at all and is the new default: the actions take only the width they need, the title wraps to two lines before it shrinks and shrinks before it truncates, and the description is bounded to two lines so it cannot run away underneath. Column 3 adds the one thing still opt-in, `descriptionPosition='below'`, which gives the description a row of its own under the bar — it does not widen the title, but the description stops wrapping and the bar stops changing height as the panel narrows.",
       },
     },
   },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
       {[
-        {
-          title: '1 · Default — nothing set',
-          defaults: true,
-          fitLabel: false,
-          lines: 1,
-          below: false,
-          descLines: 0,
-        },
-        {
-          title: '2 · actions content-sized, + fitLabel',
-          defaults: false,
-          fitLabel: true,
-          lines: 1,
-          below: false,
-          descLines: 0,
-        },
-        {
-          title: '3 · + labelMaxLines={2}',
-          defaults: false,
-          fitLabel: true,
-          lines: 2,
-          below: false,
-          descLines: 2,
-        },
-        {
-          title: "4 · + description 'below'",
-          defaults: false,
-          fitLabel: true,
-          lines: 2,
-          below: true,
-          descLines: 2,
-        },
+        { title: '1 · Before — the old defaults', legacy: true, below: false },
+        { title: '2 · Now — nothing set', legacy: false, below: false },
+        { title: "3 · Now + description 'below'", legacy: false, below: true },
       ].map((variant) => (
         <ReqoreControlGroup key={variant.title} vertical gapSize='normal' fixed>
           <ReqoreP style={{ margin: 0, opacity: 0.7 }}>{variant.title}</ReqoreP>
-          {[440, 380, 330, 290, 260].map((w) => (
+          {[440, 360, 300, 260].map((w) => (
             <div key={w} style={{ width: `${w}px` }}>
               <ReqorePanel
-                // Column 1 is a bare panel — no props at all beyond its content — so it shows
-                // what a caller gets today, `responsiveActions` default included.
-                {...(variant.defaults
-                  ? {}
-                  : {
-                      responsiveActions: false,
-                      fitLabel: variant.fitLabel,
-                      labelMaxLines: variant.lines,
-                      descriptionMaxLines: variant.descLines || undefined,
-                      descriptionPosition: variant.below ? ('below' as const) : ('inline' as const),
-                    })}
+                // Column 1 names every old default back; the others take whatever the
+                // component now ships, which is the point of the comparison.
+                {...(variant.legacy
+                  ? {
+                      responsiveActions: true,
+                      fitLabel: false,
+                      labelMaxLines: 1,
+                      descriptionMaxLines: 0,
+                    }
+                  : {})}
+                {...(variant.below ? { descriptionPosition: 'below' as const } : {})}
                 label='Publish this Qog to the Template Marketplace'
-                description='Share this Qog with your team.'
+                description={PANEL_DESCRIPTION}
                 icon='Upload2Line'
                 collapsible
                 onClose={noop}
