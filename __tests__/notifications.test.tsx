@@ -175,3 +175,104 @@ test('Maximum of 5 notifications is shown at once', async () => {
 
   expect(document.querySelectorAll('.reqore-notification').length).toBe(5);
 });
+
+test('A variant renders under its class; an action runs and closes it', async () => {
+  const openFn = vi.fn();
+  const closeFn = vi.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton
+          id='test'
+          variant='card'
+          onClose={closeFn}
+          actions={[{ label: 'Open', onClick: openFn }]}
+        />
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.click(screen.getByText('Add Notification'));
+
+  act(() => vi.advanceTimersByTime(500));
+
+  expect(document.querySelectorAll('.reqore-notification-card').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-notification-close').length).toBe(1);
+
+  fireEvent.click(document.querySelector('.reqore-notification-actions button'));
+
+  expect(openFn).toHaveBeenCalledTimes(1);
+  expect(closeFn).toHaveBeenCalledWith('test');
+
+  act(() => vi.advanceTimersByTime(1000));
+
+  expect(document.querySelectorAll('.reqore-notification').length).toBe(0);
+});
+
+test('A variant holds its timer while hovered and finishes after the pointer leaves', async () => {
+  const finishFn = vi.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton id='test' variant='glass' duration={3000} onFinish={finishFn} />
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.click(screen.getByText('Add Notification'));
+
+  act(() => vi.advanceTimersByTime(1000));
+
+  fireEvent.mouseEnter(document.querySelector('.reqore-notification'));
+
+  act(() => vi.advanceTimersByTime(10000));
+
+  expect(finishFn).toHaveBeenCalledTimes(0);
+
+  fireEvent.mouseLeave(document.querySelector('.reqore-notification'));
+
+  act(() => vi.advanceTimersByTime(2500));
+
+  expect(finishFn).toHaveBeenCalledWith('test');
+});
+
+test('The classic box keeps its timer running while hovered', async () => {
+  const finishFn = vi.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton id='test' duration={3000} onFinish={finishFn} />
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.click(screen.getByText('Add Notification'));
+  fireEvent.mouseEnter(document.querySelector('.reqore-notification'));
+
+  act(() => vi.advanceTimersByTime(3500));
+
+  expect(finishFn).toHaveBeenCalledWith('test');
+});
+
+test('Provider defaults apply under a notification’s own props', async () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider options={{ notifications: { variant: 'glass' } }}>
+        <AddButton id='defaulted' />
+        <AddButton id='own' variant='compact' />
+      </ReqoreUIProvider>
+    );
+  });
+
+  const buttons = screen.getAllByText('Add Notification');
+  fireEvent.click(buttons[0]);
+  fireEvent.click(buttons[1]);
+
+  act(() => vi.advanceTimersByTime(500));
+
+  expect(document.querySelectorAll('.reqore-notification-glass').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-notification-compact').length).toBe(1);
+});

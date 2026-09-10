@@ -157,7 +157,7 @@ interface IStyledRowProps {
   $paddingSize: TSizes;
 }
 
-const ICON_TILE_SIZE_FROM_SIZE: Record<TSizes, number> = {
+export const ICON_TILE_SIZE_FROM_SIZE: Record<TSizes, number> = {
   micro: 18,
   tiny: 22,
   small: 26,

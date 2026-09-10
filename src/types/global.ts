@@ -1,9 +1,9 @@
-import { IReqoreEffect } from '../components/Effect';
-import { IReqoreErrorBoundaryProps } from '../components/ErrorBoundary';
-import { IPopoverOptions } from '../components/Popover';
-import { IReqoreSpinnerProps } from '../components/Spinner';
-import { TSizes } from '../constants/sizes';
-import { IReqoreCustomTheme, TReqoreIntent } from '../constants/theme';
+import type { IReqoreEffect } from '../components/Effect';
+import type { IReqoreErrorBoundaryProps } from '../components/ErrorBoundary';
+import type { IPopoverOptions } from '../components/Popover';
+import type { IReqoreSpinnerProps } from '../components/Spinner';
+import type { TSizes } from '../constants/sizes';
+import type { IReqoreCustomTheme, TReqoreIntent } from '../constants/theme';
 
 export interface IReqoreComponent {
   closePopover?: () => void;

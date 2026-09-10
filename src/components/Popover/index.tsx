@@ -3,9 +3,9 @@ import React, { forwardRef, memo, MutableRefObject, useCallback, useEffect, useR
 import { useUnmount, useUpdateEffect } from 'react-use';
 import styled from 'styled-components';
 import { useReqoreProperty } from '../..';
-import { IReqoreOptions } from '../../containers/UIProvider';
+import type { IReqoreOptions } from '../../containers/UIProvider';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
-import {
+import type {
   IReqoreComponent,
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -13,7 +13,7 @@ import {
   IWithReqoreFlat,
   IWithReqoreMinimal,
 } from '../../types/global';
-import { IReqoreIconName } from '../../types/icons';
+import type { IReqoreIconName } from '../../types/icons';
 import InternalPopover from '../InternalPopover';
 
 export interface IReqorePopoverProps

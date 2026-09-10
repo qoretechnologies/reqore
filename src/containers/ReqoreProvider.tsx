@@ -206,31 +206,37 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
     [confirmAction]
   );
 
-  const addNotification = useCallback((data: IReqoreNotificationData) => {
-    setNotifications((cur) => {
-      let newNotifications = [...cur];
-      const id = data.id || nanoid();
-      const fixedData: IReqoreNotificationData = {
-        position: 'TOP',
-        ...data,
-      };
+  const notificationDefaults = options?.notifications;
+  const addNotification = useCallback(
+    (data: IReqoreNotificationData) => {
+      setNotifications((cur) => {
+        let newNotifications = [...cur];
+        const id = data.id || nanoid();
+        // The app's defaults (`options.notifications`) under the notification's own props.
+        const fixedData: IReqoreNotificationData = {
+          position: 'TOP',
+          ...notificationDefaults,
+          ...data,
+        };
 
-      const index = cur.findIndex((notification) => notification.id === id);
+        const index = cur.findIndex((notification) => notification.id === id);
 
-      if (index >= 0) {
-        newNotifications[index] = fixedData;
-      } else {
-        newNotifications = [...newNotifications, { ...fixedData, id }];
-      }
+        if (index >= 0) {
+          newNotifications[index] = fixedData;
+        } else {
+          newNotifications = [...newNotifications, { ...fixedData, id }];
+        }
 
-      // If the length of the array is larger than 5, remove the first oldest notification
-      if (newNotifications.length > 5) {
-        newNotifications.shift();
-      }
+        // If the length of the array is larger than 5, remove the first oldest notification
+        if (newNotifications.length > 5) {
+          newNotifications.shift();
+        }
 
-      return newNotifications;
-    });
-  }, []);
+        return newNotifications;
+      });
+    },
+    [notificationDefaults]
+  );
 
   const removeNotification = (id: string | number) => {
     setNotifications((cur) => {

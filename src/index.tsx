@@ -104,6 +104,12 @@ export { default as ReqoreNavbarGroup } from './components/Navbar/group';
 export { default as ReqoreNavbarItem } from './components/Navbar/item';
 export { default as ReqoreNotificationsWrapper } from './components/Notifications';
 export { default as ReqoreNotification } from './components/Notifications/notification';
+export type {
+  IReqoreNotificationAction,
+  IReqoreNotificationDefaults,
+  IReqoreNotificationProps,
+  TReqoreNotificationVariant,
+} from './components/Notifications/notification';
 export { ReqorePagination } from './components/Paging';
 export { ReqorePanel, ReqorePanelSkeleton } from './components/Panel';
 export { ReqoreP, ReqoreP as ReqoreParagraph } from './components/Paragraph';

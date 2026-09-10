@@ -8,7 +8,7 @@ import {
   isString,
   isUndefined,
 } from 'lodash';
-import { IReqorePanelAction, IReqorePanelSubAction } from '../components/Panel';
+import type { IReqorePanelAction, IReqorePanelSubAction } from '../components/Panel';
 import {
   ACCENT_SIZE_TO_PX,
   NUMBER_TO_SIZE,
