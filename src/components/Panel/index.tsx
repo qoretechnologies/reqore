@@ -1782,9 +1782,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                             // `min-width: 0` flex child it reports the width the row actually
                             // left for the title, where the heading would report what the text
                             // wants. `overflow: hidden` is what makes it shrinkable at all.
+                            // `display: flex` keeps the wrapper from opening a line box around
+                            // the inline-flex heading: a block wrapper adds the row's leading on
+                            // top of the heading's own box, which made a `tiny` panel 3px taller
+                            // than it was before this wrapper existed.
                             <div
                               ref={labelFitRef}
-                              style={{ minWidth: 0, overflow: 'hidden', flex: '0 1 auto' }}
+                              style={{
+                                display: 'flex',
+                                minWidth: 0,
+                                overflow: 'hidden',
+                                flex: '0 1 auto',
+                              }}
                             >
                             <LabelEditor
                               size={labelSize || panelSize}
