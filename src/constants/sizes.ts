@@ -55,6 +55,22 @@ export const NUMBER_TO_SIZE = {
   7: 'massive',
 };
 
+/**
+ * The px font-size each heading level renders at.
+ *
+ * `ReqoreHeading` reads this rather than carrying the numbers inline, so anything that
+ * needs to reason about a heading's size in px — `Panel`'s fit-to-width title, for one —
+ * is looking at the same scale the heading actually paints.
+ */
+export const HEADER_LEVEL_TO_PX: Record<number, number> = {
+  1: 30,
+  2: 24,
+  3: 19,
+  4: 14,
+  5: 11,
+  6: 8,
+};
+
 export const HEADER_SIZE_TO_NUMBER = {
   micro: 6,
   tiny: 5,

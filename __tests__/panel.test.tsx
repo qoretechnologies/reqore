@@ -705,15 +705,28 @@ describe('compactTitle', () => {
     );
   });
 
-  test('Keeps the title bar on one row rather than stacking it', () => {
-    renderNarrow(
-      <ReqorePanel compactTitle label='Publish as Template' icon='Upload2Line'>
+  test('Keeps a narrow title bar on one row, with or without the opt-in', () => {
+    // The default narrow treatment: one row, label ellipsized, responsive actions collapsed. It
+    // used to flip to a column, which cost a row for the title, another for the actions and a
+    // third for close/collapse — and made the action group `fluid`, so the actions it was meant
+    // to collapse had room not to.
+    const { unmount } = renderNarrow(
+      <ReqorePanel label='Publish as Template' icon='Upload2Line' onClose={noop}>
         Body
       </ReqorePanel>
     );
+    expect(getComputedStyle(document.querySelector('.reqore-panel-title')!).flexFlow).toContain(
+      'row'
+    );
+    // …and the controls stay in the trailing group rather than moving to a row of their own.
+    expect(document.querySelectorAll('.reqore-panel-title button').length).toBeGreaterThan(0);
+    unmount();
 
-    // The stack is what this prop exists to avoid: a column flow costs a row for the title and
-    // another for the actions, and stretches the action group to fill it.
+    renderNarrow(
+      <ReqorePanel compactTitle label='Publish as Template' icon='Upload2Line' onClose={noop}>
+        Body
+      </ReqorePanel>
+    );
     expect(getComputedStyle(document.querySelector('.reqore-panel-title')!).flexFlow).toContain(
       'row'
     );
@@ -760,5 +773,29 @@ describe('compactTitle', () => {
     expect(document.querySelector('.reqore-panel-title')!.textContent).toContain(
       'Publish as Template'
     );
+  });
+});
+
+describe('narrow action labels', () => {
+  test('Drops an action label for its icon when the bar is narrow', () => {
+    mockedPanelWidth = 380;
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqorePanel
+            label='Publish as Template'
+            icon='Upload2Line'
+            actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+          >
+            Body
+          </ReqorePanel>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+    const bar = document.querySelector('.reqore-panel-title')!;
+    // The action keeps its icon and loses its words — the label moves to the tooltip.
+    expect(bar.textContent).not.toContain('Preview');
+    mockedPanelWidth = 0;
   });
 });

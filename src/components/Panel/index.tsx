@@ -8,6 +8,7 @@ import {
   ReactElement,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -19,6 +20,7 @@ import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   ACCENT_SIZE_TO_PX,
   GAP_FROM_SIZE,
+  HEADER_LEVEL_TO_PX,
   HEADER_SIZE_TO_NUMBER,
   ICON_FROM_HEADER_SIZE,
   PADDING_FROM_SIZE,
@@ -35,9 +37,10 @@ import {
   getReadableColor,
 } from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
-import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
+import { getOneLessSize, getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
+import { useFitTextSize } from '../../hooks/useFitTextSize';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   ACTIVE_ICON_SCALE,
@@ -192,18 +195,51 @@ export interface IReqorePanelProps
   responsiveActions?: boolean;
   responsiveTitle?: boolean;
   /**
-   * Keep the title bar on ONE row when it goes narrow, by dropping the title text and leaving the
-   * icon in its place: `[icon] [actions] [×]`.
+   * Shrink the title to fit its box before ellipsizing it, down to `labelMinTextSize`.
+   * Ignored when `labelEffect.textSize` pins a size.
    *
-   * Without it a narrow bar stacks — title, then actions, then close/collapse — and the action
-   * group goes `fluid`, so a single small button gets a full-width row to itself with the rest of
-   * it empty. That costs more room than the title ever did, and the trigger is a width guess
-   * rather than a fit measurement: a bar can restack while its label still had room.
+   * OPT-IN, and the reason is space rather than the fit itself. The responsive action group is
+   * `fluid`, so it takes the row's remainder — measured at 206px to hold 90px of buttons — and
+   * the title is left with 142px of a 518px bar. The fit then does exactly what it is told and
+   * shrinks a title that would have fitted at its natural size given a fair share.
    *
-   * Opt-in, because the label carries meaning this cannot recover — it is the collapse target,
-   * it may be inline-editable, and on a panel with no icon it is the only thing identifying the
-   * panel at all. Nothing changes without an icon to fall back to; the label survives as that
-   * icon's tooltip, and `description` (a second line by definition) is dropped for the row.
+   * With the action group content-sized instead, the cascade is right: 19 / 19 / 18 / 12 / 12px
+   * as the bar goes 518 → 438 → 378 → 298 → 218. But `responsive` collapse tests
+   * `scrollWidth > clientWidth`, so a content-sized group can never overflow and the fold into
+   * the `…` menu stops happening. Freeing the title means bounding that group some other way —
+   * a decision about how the title bar divides its width, not a flag.
+   *
+   * @default false
+   */
+  fitLabel?: boolean;
+  /**
+   * Step the action buttons down a size on a narrow bar, so the controls give up room the way
+   * the title does instead of staying at full size while everything around them shrinks.
+   *
+   * Separate from `fitLabel` because it is a different trade: `fitLabel` buys the title space by
+   * taking it from the action group, while this shrinks the actions themselves. They compose —
+   * together the row gets smaller controls AND a title sized to what is left.
+   *
+   * @default false
+   */
+  fitActions?: boolean;
+  /**
+   * Floor for the shrinking title, in px. Defaults to two thirds of its natural size and
+   * never below 11px — past that a heading is fine print, and an ellipsis reads better.
+   */
+  labelMinTextSize?: number;
+  /**
+   * Drop the title TEXT on a narrow bar and leave the icon in its place: `[icon] [actions] [×]`.
+   *
+   * A narrow bar already stays on one row without this — the label ellipsizes and the responsive
+   * actions collapse into their overflow. `compactTitle` is the tighter fallback for a bar with
+   * so little room that an ellipsized label is a character and a half: it gives that space to the
+   * actions instead.
+   *
+   * Opt-in, because the label carries meaning this cannot recover — it is the collapse target and
+   * it may be inline-editable. Nothing changes on a panel with no icon to fall back to, since a
+   * header with neither is not compact but empty; the label survives as that icon's tooltip, and
+   * `description` (a second line by definition) is dropped for the row.
    *
    * @default false
    */
@@ -303,6 +339,7 @@ const getScrollportInset = (el: HTMLElement | null): { padding: number; border: 
 };
 
 export const StyledPanelTitleHeader = styled.div`
+
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -625,7 +662,11 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
 
 export const StyledPanelTitle = styled.div<IStyledPanel>`
   display: flex;
-  flex-flow: ${({ responsive, isMobile }) => (responsive ? (isMobile ? 'column' : 'row') : 'row')};
+  /* Always a row. The title bar used to flip to a column when narrow; it now ellipsizes its
+     label and lets the responsive action group collapse instead, which is what the "hidden when
+     small" actions are for and what the stack was quietly defeating (a column made the group
+     fluid, and a full-width group had room not to collapse). */
+  flex-flow: row;
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
@@ -891,6 +932,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       responsiveActions = true,
       responsiveTitle = true,
       compactTitle = false,
+      fitLabel = false,
+      fitActions = false,
+      labelMinTextSize,
       size: panelSize = 'normal',
       getContentRef,
       labelProps = {},
@@ -1179,15 +1223,54 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [width, responsiveTitle]
     );
     /**
-     * Narrow, and the consumer asked for the one-row treatment. Everything the narrow layout does
-     * to make room by stacking — the column flow, the fluid action groups, the control buttons
-     * moving to a row of their own — is suppressed; the title text gives up its space instead.
+     * Narrow, from either trigger: the panel measuring under 480px, or the provider's
+     * viewport-level `isMobile`.
      *
-     * Keyed off BOTH triggers, because the stack has two: the panel measuring under 480px, and the
-     * provider's viewport-level `isMobile`. Reading only the first left a phone-width viewport
-     * holding a wider panel stacking with no compact treatment applied.
+     * A narrow title bar STAYS ON ONE ROW. The label ellipsizes (it already carries `noWrap`) and
+     * the responsive action group collapses into its overflow, which is what the "hidden when
+     * small" actions exist for. It used to stack instead — title on one row, actions on another,
+     * close/collapse on a third — and that cost more room than the title ever took: measured on a
+     * drawer at 375px, a 93px header for a title using 204px of the width, with a 359px action
+     * group holding a 106px button and 261px of nothing beside it.
+     *
+     * Stacking also broke the collapse it was supposed to help. Going to a column made the action
+     * group `fluid`, the group got a full-width row, and with that much space its own measurement
+     * decided fewer actions needed collapsing — so an action labelled "hidden when small" rendered
+     * in full on a small panel.
      */
-    const isCompactRow = (isSmall || isMobile) && compactTitle;
+    const isNarrow = isSmall || isMobile;
+    /**
+     * The size the action buttons render at, stepped down as the bar narrows.
+     *
+     * Progressive rather than a single switch at the narrow threshold: one step taken once means
+     * every panel below 480px renders identical buttons, which reads as "the buttons never
+     * change" precisely where the room is tightest. Each step is worth roughly 8px per button,
+     * so a three-button row buys the title ~25px per step.
+     */
+    const actionSize: TSizes = useMemo(() => {
+      if (!fitActions || !width) {
+        return panelSize;
+      }
+
+      const steps = width >= 480 ? 0 : width >= 380 ? 1 : 2;
+
+      return steps === 0
+        ? panelSize
+        : steps === 1
+          ? getOneLessSize(panelSize)
+          : getOneLessSize(getOneLessSize(panelSize));
+    }, [fitActions, width, panelSize]);
+    /**
+     * The tightest fallback, still opt-in: drop the title TEXT and leave the icon in its place.
+     * For a bar too narrow even to ellipsize into — a `[icon] [actions] [×]` header. Nothing
+     * changes without an icon to fall back to, and the label survives as that icon's tooltip.
+     */
+    /**
+     * The title gives up its space entirely and the icon stands in. Opt-in only: the automatic
+     * end of the cascade is the ellipsis, and dropping the title is a decision the caller makes,
+     * not something a width should take on their behalf. Needs an icon to fall back to.
+     */
+    const hideTitleForIcon = isNarrow && compactTitle;
 
     // If collapsible is true, toggle the isCollapsed state
     // If the isCollapsed state is true, the component is expanded
@@ -1225,7 +1308,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         (action: IReqorePanelAction, index: number) => {
           return renderActions(action, index, true, align);
         },
-      [actions, showActionsWhenCollapsed, _isCollapsed]
+      // `isNarrow` belongs here even though this callback does not name it: it wraps
+      // `renderActions`, which does. Without it the wrapper keeps whichever `renderActions`
+      // existed on the first render — when `useMeasure` still reported 0 and the bar did not
+      // yet know it was narrow — so a width-dependent decision inside it could never take
+      // effect. That is what silently defeated dropping the action labels: the flag flipped and
+      // the closure did not. (`renderActions` itself cannot go here: it is declared below.)
+      [isNarrow, actions, showActionsWhenCollapsed, _isCollapsed]
     );
 
     const hasNonResponsiveActions = useCallback(
@@ -1247,7 +1336,14 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         (action: IReqorePanelAction, index: number) => {
           return renderActions(action, index, false, align);
         },
-      [actions, bottomActions, responsiveActions, showActionsWhenCollapsed, _isCollapsed]
+      [
+        isNarrow,
+        actions,
+        bottomActions,
+        responsiveActions,
+        showActionsWhenCollapsed,
+        _isCollapsed,
+      ]
     );
 
     const renderActions = useCallback(
@@ -1342,6 +1438,16 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           );
         }
 
+        // FIRST thing to go when the bar is short of room: the action's LABEL, not the
+        // panel's title. An action is a verb the icon already carries, and the label moves
+        // to the tooltip rather than being lost; the title is the only thing naming what
+        // this panel IS. Needs an icon to fall back to — an unlabelled, iconless button is
+        // a blank box — and a caller can pin the label with `responsive: false`.
+        // `label` on an action is typed `string | number`; a tooltip is not, so the numeric
+        // case is stringified rather than cast away.
+        const actionLabelTooltip = typeof label === 'number' ? String(label) : label;
+        const dropActionLabel = isNarrow && !!rest.icon && !!label;
+
         return (
           <ReqoreButton
             fixed
@@ -1351,6 +1457,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             className={className}
             customTheme={rest.customTheme || theme}
             intent={intent}
+            tooltip={dropActionLabel ? rest.tooltip || actionLabelTooltip : rest.tooltip}
             onClick={
               rest.onClick
                 ? (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -1360,11 +1467,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 : undefined
             }
           >
-            {label}
+            {dropActionLabel ? undefined : label}
           </ReqoreButton>
         );
       },
-      [actions, theme, showActionsWhenCollapsed, _isCollapsed]
+      [actions, theme, showActionsWhenCollapsed, _isCollapsed, isNarrow]
     );
 
     const interactive: boolean = !!(
@@ -1396,12 +1503,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       let show: boolean = false;
 
       // SHOULD THIS GROUP SHOW CONTROL BUTTONS?
-      // This group should only show control buttons if the panel is not small — a small one gives
-      // them a row of their own. `compactTitle` is the exception it was written before: there IS
-      // no separate row there, the whole point being to stay on one, so the buttons belong here
-      // exactly as they do at full width. Without this the compact header rendered its icon and
-      // actions and silently dropped close and collapse.
-      if ((!isSmall || isCompactRow) && (onClose || collapsible)) {
+      // Always, now that a narrow bar stays on one row: there is no separate control row for them
+      // to move to. This used to read `!isSmall`, which withheld them here because a small panel
+      // rendered its own row below — and that row is what the one-row treatment removed.
+      if (onClose || collapsible) {
         show = true;
       }
 
@@ -1413,7 +1518,95 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
 
       return show;
-    }, [isSmall, isCompactRow, collapsible, nonFloatingActions, hasNonResponsiveActions]);
+    }, [collapsible, onClose, nonFloatingActions, hasNonResponsiveActions]);
+
+    /**
+     * The title's natural size in px, from the heading level it renders at — the same
+     * `labelSize || HEADER_SIZE_TO_NUMBER[panelSize]` the icon is sized from.
+     */
+    const labelNaturalPx =
+      HEADER_LEVEL_TO_PX[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]] ?? HEADER_LEVEL_TO_PX[3];
+    /**
+     * SECOND thing to give: the title's size. Once the actions are down to icons and the
+     * row is still short, the title shrinks toward a floor rather than dropping characters
+     * — the end of a name is often the part that distinguishes it. Only at the floor does
+     * the existing `noWrap` ellipsis take over.
+     *
+     * Off when the caller pins `labelEffect.textSize`: they have said what size they want.
+     */
+    /**
+     * The width the layout left for the title, observed on the box that claims the leftover
+     * space. Kept as state rather than read during render so the fit is calculated from a width
+     * that has actually been laid out.
+     */
+    const [labelAvailable, setLabelAvailable] = useState<number | undefined>(undefined);
+    const [labelFitRef, labelFitPx] = useFitTextSize<HTMLDivElement>({
+      text: typeof label === 'string' ? label : '',
+      available: labelAvailable,
+      max: labelNaturalPx,
+      min: labelMinTextSize,
+      enabled: fitLabel !== false && typeof label === 'string' && !labelEffect?.textSize,
+    });
+
+    /**
+     * How much room the title has, computed rather than measured off its own box.
+     *
+     * The box the title sits in is sized by its content, so measuring THAT is circular — the
+     * font shrinks, the box shrinks, and the size ratchets to the floor. Measuring the space it
+     * COULD have is not: take the bar, subtract everything competing with the title, and what
+     * is left does not move when the title's font does.
+     *
+     * Everything competing with it is text-independent: the action groups and control buttons
+     * (the bar's other children), and the icon and badge that share the title's row. The action
+     * group is `fluid` by default and would otherwise swallow the leftover, which is why this
+     * cannot be solved by giving the title column `flex-grow` — it competes with a group that
+     * is designed to take the rest, and loses.
+     *
+     * Re-run on `width`, which is the bar's own measured width: when the bar resizes, so does
+     * everything in it.
+     */
+    useLayoutEffect(() => {
+      const node = labelFitRef.current;
+      const bar = node?.closest('.reqore-panel-title') as HTMLElement | null;
+      const header = bar?.querySelector('.reqore-panel-title-header') as HTMLElement | null;
+
+      if (!fitLabel || !node || !bar || !header) {
+        return;
+      }
+
+      const barStyle = getComputedStyle(bar);
+      const horizontalPadding =
+        (parseFloat(barStyle.paddingLeft) || 0) + (parseFloat(barStyle.paddingRight) || 0);
+      const barGap = parseFloat(barStyle.columnGap) || parseFloat(barStyle.gap) || 0;
+
+      // Everything on the bar that is not the title's own header.
+      const competing = Array.from(bar.children).reduce(
+        (total, child) =>
+          child === header ? total : total + (child as HTMLElement).getBoundingClientRect().width,
+        0
+      );
+      const barGaps = barGap * Math.max(0, bar.children.length - 1);
+
+      // …and everything inside the header that is not the title itself: the icon, the badge,
+      // and the description column's gap.
+      const insideHeader = Array.from(header.querySelectorAll(':scope *')).reduce(
+        (total, child) => {
+          const el = child as HTMLElement;
+
+          return el === node || node.contains(el) || el.contains(node)
+            ? total
+            : total + (el.parentElement === node.parentElement ? el.getBoundingClientRect().width : 0);
+        },
+        0
+      );
+
+      const next = Math.max(
+        0,
+        Math.round(bar.clientWidth - horizontalPadding - barGaps - competing - insideHeader)
+      );
+
+      setLabelAvailable((current) => (current === next ? current : next));
+    }, [fitLabel, label, width, labelFitPx, badge, actions, panelSize]);
 
     const iconTooltip = useMemo(
       () => ({
@@ -1501,7 +1694,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               opacity={minimal ? 0 : opacity ?? 1}
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
-              isMobile={(isMobile || isSmall) && !isCompactRow}
+              // Stamped for the same reason `EntityRow` stamps it: a narrow container is a fact
+              // about the box, and a test or a story asserting the narrow treatment should read
+              // it rather than infer it from pixels.
+              data-narrow={isNarrow ? 'true' : 'false'}
               ref={measureRef}
               padded={padded}
               wrapperPadding={wrapperPadding}
@@ -1514,7 +1710,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               isStuck={isHeaderStuck}
             >
               {hasTitleHeader && (
-                <StyledPanelTitleHeader>
+                <StyledPanelTitleHeader className='reqore-panel-title-header'>
                   {breadcrumbs ? (
                     <ReqoreBreadcrumbs
                       {...breadcrumbs}
@@ -1530,7 +1726,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       // the label is the only thing identifying the panel and it stays put — a
                       // header with neither is not a compact header, it is an empty one. The label
                       // is not lost either way: it is already this icon's tooltip.
-                      const hideTitleText = isCompactRow && hasPanelIcon;
+                      const hideTitleText = hideTitleForIcon && hasPanelIcon;
 
                       // Layout decision:
                       // - iconWithLabel=true → render the icon INSIDE the
@@ -1582,6 +1778,14 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                         <StyledPanelTitleHeaderLabelAndBadge className='reqore-panel-title-label-row'>
                           {inlineWithLabel && panelIcon}
                           {hideTitleText ? null : typeof label === 'string' ? (
+                            // The measured box is this wrapper, not the heading: as a
+                            // `min-width: 0` flex child it reports the width the row actually
+                            // left for the title, where the heading would report what the text
+                            // wants. `overflow: hidden` is what makes it shrinkable at all.
+                            <div
+                              ref={labelFitRef}
+                              style={{ minWidth: 0, overflow: 'hidden', flex: '0 1 auto' }}
+                            >
                             <LabelEditor
                               size={labelSize || panelSize}
                               customTheme={theme}
@@ -1593,11 +1797,25 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 minWidth: 0,
+                                // Capped to the measured wrapper so the heading's own
+                                // `text-overflow: ellipsis` (from `noWrap`) has a box to overflow.
+                                // An `inline-flex` heading otherwise sizes to its text, and the
+                                // wrapper clips it mid-word with no ellipsis at all.
+                                maxWidth: '100%',
+                                // Inline, not through `effect.textSize`: `StyledHeader` sets its
+                                // own `font-size` from the heading level in a rule that lands
+                                // after the effect's, so the effect could never win. An inline
+                                // style beats both. A caller pinning `labelEffect.textSize`
+                                // disables the fit, so this never fights them.
+                                ...(fitLabel !== false && !labelEffect?.textSize
+                                  ? { fontSize: `${labelFitPx}px` }
+                                  : {}),
                               }}
                               label={label}
                               onSubmit={onLabelEdit}
                               tooltip={showLabelTooltip ? customLabelTooltip || label : undefined}
                             />
+                            </div>
                           ) : (
                             label
                           )}
@@ -1669,10 +1887,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     />
                   ) : null}
                   <ReqorePanelNonResponsiveActions
-                    show={isSmall && !isCompactRow && (!!onClose || collapsible)}
-                    isSmall={isSmall}
+                    // The narrow bar keeps its controls in the trailing group, so this row —
+                    // which existed only for the stacked layout — never shows.
+                    show={false}
+                    isSmall={false}
                     showControlButtons
-                    size={panelSize}
+                    size={actionSize}
                     hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                     customTheme={theme}
                     isCollapsed={_isCollapsed}
@@ -1691,10 +1911,17 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               {hasResponsiveActions(nonFloatingActions) && (
                 <ReqoreControlGroup
                   responsive={responsiveActions}
-                  fluid={responsiveActions || (isSmall && !isCompactRow)}
+                  // `fitLabel` means "give the title a fair share of the row", and it cannot have
+                  // one while this group stretches: measured at 206px to hold 90px of buttons on a
+                  // 518px bar, leaving the title 142px. Content-sizing it hands that space back.
+                  // The cost is the group's own overflow — `responsive` collapse tests
+                  // `scrollWidth > clientWidth`, which a content-sized group never trips, so the
+                  // fold into the `…` menu stops happening. That trade rides with the opt-in
+                  // rather than being taken on everyone's behalf.
+                  fluid={responsiveActions && !fitLabel}
                   horizontalAlign='flex-end'
                   customTheme={theme}
-                  size={panelSize}
+                  size={actionSize}
                   {...responsiveActionsWrapperProps}
                 >
                   {nonFloatingActions.map(renderResponsiveActions())}
@@ -1702,9 +1929,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               )}
               <ReqorePanelNonResponsiveActions
                 show={showNonResponsiveGroup()}
-                isSmall={isSmall && !isCompactRow}
-                showControlButtons={!isSmall || isCompactRow}
-                size={panelSize}
+                isSmall={false}
+                showControlButtons
+                size={actionSize}
                 hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
                 customTheme={theme}
                 isCollapsed={_isCollapsed}
@@ -1715,7 +1942,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 collapseTooltip={collapseTooltip}
                 expandTooltip={expandTooltip}
                 closeTooltip={closeTooltip}
-                fluid={!hasTitleHeader || (isSmall && !isCompactRow)}
+                fluid={!hasTitleHeader}
               >
                 {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>

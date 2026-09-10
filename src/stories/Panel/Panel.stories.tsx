@@ -1977,38 +1977,84 @@ export const HoverActionReachableWithoutHover: Story = {
   },
 };
 
-export const CompactTitleWhenNarrow: Story = {
+export const FitLabelComparison: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          "Both panels are 380px wide — below the 480px threshold — and differ only in `compactTitle`. Left, the default: the title bar flips to a column, so the title takes one row, the actions another, and the close/collapse buttons a third; the action group also goes `fluid`, so a small button gets a full-width row with the rest of it empty. Right, `compactTitle`: the title TEXT gives up its space instead and the icon stands in for it, keeping `[icon] [actions] [×]` on one row. The label is not lost — it is already the icon's tooltip. Measured on a real drawer at 375px, the stacked version cost a 93px header for a title using 204px of the width and a 359px control group holding a 106px button. The threshold is the PANEL's own measured width, not the viewport, so this reproduces at any capture size — a narrow drawer or split pane on a wide screen is the case it exists for.",
+          "The same four widths with `fitLabel` off (left, today's behaviour) and on (right). Off: the title keeps its natural 19px and ellipsizes as soon as it runs out of room — and it runs out early, because the responsive action group is `fluid` and takes the row's remainder (measured at 206px to hold 90px of buttons on a 518px bar, leaving the title 142px). On: the group takes only what it needs, the title gets a fair share, and it shrinks toward a floor of two thirds its natural size before ellipsizing — 19 / 19 / 18 / 12px. The cost of the opt-in is that a content-sized group cannot overflow, so its fold into the `…` menu stops happening; that is why this is a prop and not the default.",
       },
     },
   },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
-      <div style={{ width: '380px' }}>
-        <ReqorePanel
-          label='Publish as Template'
-          icon='Upload2Line'
-          collapsible
-          onClose={noop}
-          actions={[{ label: 'Preview', icon: 'EyeLine' }]}
-        >
-          Default: the bar stacks.
-        </ReqorePanel>
-      </div>
-      <div style={{ width: '380px' }}>
+      {[
+        { label: 'Today — ellipsis only', fitLabel: false, fitActions: false },
+        { label: 'fitLabel — title shrinks', fitLabel: true, fitActions: false },
+        { label: 'fitLabel + fitActions', fitLabel: true, fitActions: true },
+      ].map((variant) => (
+        <ReqoreControlGroup key={variant.label} vertical gapSize='normal' fixed>
+          <ReqoreP style={{ margin: 0, opacity: 0.7 }}>{variant.label}</ReqoreP>
+          {[520, 440, 400, 345, 300, 270].map((w) => (
+            <div key={w} style={{ width: `${w}px` }}>
+              <ReqorePanel
+                fitLabel={variant.fitLabel}
+                fitActions={variant.fitActions}
+                label='Publish as Template'
+                icon='Upload2Line'
+                collapsible
+                onClose={noop}
+                actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+              >
+                {w}px
+              </ReqorePanel>
+            </div>
+          ))}
+        </ReqoreControlGroup>
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const CompactTitleWhenNarrow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "What a title bar gives up, in order, as its box shrinks — four widths of the same panel, then the opt-in last resort. 520px: everything fits, actions labelled, title at its natural 19px. 380px: the ACTION LABELS go first and the buttons keep their icons with the label moved to the tooltip — an action is a verb its icon already carries, while the title is the only thing naming what the panel is. 300px and 220px: the title ellipsizes. The fifth panel is `compactTitle`, for a bar too narrow to ellipsize into: the title gives up its space entirely and the icon stands in, with the label surviving as that icon's tooltip. A middle stage — shrinking the title within a font-size range before it ellipsizes — exists behind `fitLabel` but is not on by default; see the prop's note for the layout change it needs.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize="big" fluid>
+      {[
+        { w: 520, note: 'Everything fits: labelled actions, title at 19px.' },
+        { w: 380, note: 'Action labels go first — icons keep them in tooltips.' },
+        { w: 300, note: 'Title ellipsizes.' },
+        { w: 220, note: 'Less room still — icons and an ellipsis.' },
+      ].map(({ w, note }) => (
+        <div key={w} style={{ width: `${w}px` }}>
+          <ReqorePanel
+            label="Publish as Template"
+            icon="Upload2Line"
+            collapsible
+            onClose={noop}
+            actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+          >
+            {w}px — {note}
+          </ReqorePanel>
+        </div>
+      ))}
+      <div style={{ width: '220px' }}>
         <ReqorePanel
           compactTitle
-          label='Publish as Template'
-          icon='Upload2Line'
+          label="Publish as Template"
+          icon="Upload2Line"
           collapsible
           onClose={noop}
           actions={[{ label: 'Preview', icon: 'EyeLine' }]}
         >
-          compactTitle: one row, icon in the title's place.
+          220px, compactTitle — the icon takes the title's place.
         </ReqorePanel>
       </div>
     </ReqoreControlGroup>
