@@ -2079,6 +2079,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   // nothing clips the buttons rather than folding them, and ControlGroup ignores
                   // its own overflow below that width, which would strand them clipped.
                   style={{
+                    // Pushed to the trailing edge. A `fluid` group used to span the bar and its
+                    // own `horizontalAlign` put the buttons on the right; a content-sized one is
+                    // only as wide as its buttons, so with no title header beside it — Tree has
+                    // no label — it would sit at the LEFT of an otherwise empty bar. `auto`
+                    // margin restores the edge without giving the group any width back.
+                    marginLeft: 'auto',
                     // Content basis that may still shrink. `fluid={false}` alone compiles to
                     // `flex: 0 0 auto`, which pins the group at its content width so it can never
                     // overflow — and `responsive` collapse watches `scrollWidth > clientWidth`,
