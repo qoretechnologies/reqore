@@ -612,6 +612,90 @@ export const ReqoreRichTextEditor = forwardRef<
       return undefined;
     }, [tags]);
 
+    /* A caret in the empty text BESIDE a chip is a dead cursor.
+       
+       The position itself is legitimate — it is the point `TemplateElement`
+       deliberately moves to when the chip is clicked, and typing works from
+       there. What breaks is arriving by clicking the empty text directly: the
+       BROWSER owns the DOM caret then, and it resolves the first keystroke back
+       into the chip's own text child, where Slate silently ignores it.
+
+       Measured on the reported case: selection `[0,2]` before the key,
+       `[0,1,0]` after it, document unchanged, `onChange` fired twice.
+
+       Re-selecting through Slate alone does not help, because Slate's selection
+       is ALREADY the right point — `Transforms.select` to the same range is a
+       no-op and never re-syncs the DOM. So the DOM range is set explicitly,
+       which is the thing the next keystroke actually resolves from.
+
+       Collapsed selections only: a RANGE spanning a chip is how it gets
+       selected for deletion and must be left alone. */
+    const repairCaretBesideVoid = useCallback(() => {
+      if (rest.readOnly || rest.disabled) {
+        return;
+      }
+
+      const { selection } = editor;
+
+      if (!selection || !Range.isCollapsed(selection)) {
+        return;
+      }
+
+      try {
+        /* Either already inside a void (`voids: true`, or the void the point
+           is inside is not matched at all), or in the empty text immediately
+           after one. `Editor.void` / `Editor.leaf` rather than `Editor.nodes`:
+           the latter returns a generator, which this build target cannot
+           destructure (TS2802). */
+        const inside = Editor.void(editor, { at: selection, voids: true });
+
+        let voidPath = inside?.[1];
+
+        if (!voidPath) {
+          const textEntry = Editor.leaf(editor, selection);
+
+          if (!textEntry) {
+            return;
+          }
+
+          const [textNode, textPath] = textEntry;
+
+          if ((textNode as any).text !== '') {
+            return;
+          }
+
+          const previous = Editor.previous(editor, { at: textPath });
+
+          if (!previous || !Editor.isVoid(editor, previous[0] as any)) {
+            return;
+          }
+
+          voidPath = previous[1];
+        }
+
+        // The same point `TemplateElement` uses: from the void's END and
+        // skipping voids, so it cannot resolve back into another one.
+        const point =
+          Editor.after(editor, Editor.end(editor, voidPath), { voids: false }) ??
+          Editor.end(editor, []);
+        const range = { anchor: point, focus: point };
+
+        Transforms.select(editor, range);
+
+        const domRange = ReactEditor.toDOMRange(editor, range);
+        const domSelection = ReactEditor.getWindow(editor).getSelection();
+
+        if (domSelection) {
+          domSelection.removeAllRanges();
+          domSelection.addRange(domRange);
+        }
+      } catch {
+        // A selection can reference a path a concurrent re-render has removed,
+        // and `toDOMRange` throws for a point it cannot resolve. Leaving the
+        // cursor where it is beats throwing out of an event handler.
+      }
+    }, [editor, rest.readOnly, rest.disabled]);
+
     return (
       <ReqorePanel flat padded={false} minimal transparent size='small' {...panelProps}>
         <Slate
@@ -630,6 +714,7 @@ export const ReqoreRichTextEditor = forwardRef<
             renderLeaf={renderLeaf}
             decorate={decorate}
             onFocusCapture={handleFocus}
+            onMouseUp={repairCaretBesideVoid}
             as={RefSafeSlateEditable}
             style={{
               lineHeight: 1.5,

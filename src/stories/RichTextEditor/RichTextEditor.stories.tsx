@@ -823,7 +823,6 @@ export const TypingAfterClickingPastTheTag: Story = {
          moves to is the one the caret already claims, so it is a no-op);
        - claiming `insertText` in `onDOMBeforeInput` and inserting past the
          void by hand. */
-  tags: ['!test'],
   parameters: {
     docs: {
       description: {
