@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useMeasure, useUpdateEffect } from 'react-use';
+import { panelIsSmall } from './responsive';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
@@ -110,7 +111,8 @@ export type TReqorePanelActions = IReqorePanelAction[];
 export type TReqorePanelBottomActions = IReqorePanelBottomAction[];
 
 export interface IReqorePanelProps
-  extends IReqoreComponent,
+  extends
+    IReqoreComponent,
     IWithReqoreSize,
     IWithReqoreCustomTheme,
     IWithReqoreFlat,
@@ -325,17 +327,19 @@ export const StyledPanelTitleHeaderContent = styled.div<{
           align-items: start;
 
           & > .reqore-panel-title-icon {
-            ${$iconVerticalAlign === 'top'
-              ? css`
-                  grid-row: 1;
-                `
-              : $iconVerticalAlign === 'bottom' && $hasDescription
-              ? css`
-                  grid-row: 2;
-                `
-              : css`
-                  grid-row: 1 / ${$hasDescription ? 3 : 2};
-                `}
+            ${
+              $iconVerticalAlign === 'top'
+                ? css`
+                    grid-row: 1;
+                  `
+                : $iconVerticalAlign === 'bottom' && $hasDescription
+                  ? css`
+                      grid-row: 2;
+                    `
+                  : css`
+                      grid-row: 1 / ${$hasDescription ? 3 : 2};
+                    `
+            }
             grid-column: 1;
             align-self: center;
             justify-self: start;
@@ -494,33 +498,37 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
       &::before {
         content: '';
         position: absolute;
-        ${accentPosition === 'left'
-          ? css`
-              top: 0;
-              bottom: 0;
-              left: 0;
-              width: ${$accentSize}px;
-            `
-          : css`
-              top: 0;
-              right: 0;
-              left: 0;
-              height: ${$accentSize}px;
-            `}
-        ${stripRadius
-          ? accentPosition === 'left'
+        ${
+          accentPosition === 'left'
             ? css`
-                border-top-left-radius: ${stripRadius}px;
-                border-bottom-left-radius: ${stripRadius}px;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: ${$accentSize}px;
               `
             : css`
-                border-top-left-radius: ${stripRadius}px;
-                border-top-right-radius: ${stripRadius}px;
+                top: 0;
+                right: 0;
+                left: 0;
+                height: ${$accentSize}px;
               `
-          : undefined}
-        background-color: ${intent
-          ? theme.intents[intent]
-          : changeLightness(getMainBackgroundColor(theme), 0.22)};
+        }
+        ${
+          stripRadius
+            ? accentPosition === 'left'
+              ? css`
+                  border-top-left-radius: ${stripRadius}px;
+                  border-bottom-left-radius: ${stripRadius}px;
+                `
+              : css`
+                  border-top-left-radius: ${stripRadius}px;
+                  border-top-right-radius: ${stripRadius}px;
+                `
+            : undefined
+        }
+        background-color: ${
+          intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.22)
+        };
       }
     `;
   }}
@@ -560,34 +568,43 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
               transform: scale(${ACTIVE_ICON_SCALE});
             }
 
-            background-color: ${opacity === 0 && flat
-              ? undefined
-              : rgba(
-                  darken(0.025, rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)),
-                  opacity
-                )};
+            background-color: ${
+              opacity === 0 && flat
+                ? undefined
+                : rgba(
+                    darken(
+                      0.025,
+                      rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                    ),
+                    opacity
+                  )
+            };
 
-            border-color: ${hasPanelBorder({ flat, intent, accentPosition })
-              ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25)
-              : undefined};
+            border-color: ${
+              hasPanelBorder({ flat, intent, accentPosition })
+                ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25)
+                : undefined
+            };
 
-            ${opacity !== 0 &&
-            css`
-              ${StyledCollectionItemContent}:after {
-                background: linear-gradient(
-                  to top,
-                  ${rgba(
+            ${
+              opacity !== 0 &&
+              css`
+                ${StyledCollectionItemContent}:after {
+                  background: linear-gradient(
+                    to top,
+                    ${rgba(
                       darken(
                         0.025,
                         rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
                       ),
                       opacity
                     )}
-                    0%,
-                  transparent 100%
-                );
-              }
-            `}
+                      0%,
+                    transparent 100%
+                  );
+                }
+              `
+            }
           }
         `
       : undefined}
@@ -652,14 +669,14 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     !padded || isCollapsed || !minimal
       ? `${getPaddingSize(padded, size)}px`
       : minimal
-      ? `${getPaddingSize(padded, size) / 2}px`
-      : 0};
+        ? `${getPaddingSize(padded, size) / 2}px`
+        : 0};
   padding-top: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'bottom' || wrapperPadding === 'none'
       ? undefined
       : minimal
-      ? `${getPaddingSize(padded, size)}px`
-      : undefined};
+        ? `${getPaddingSize(padded, size)}px`
+        : undefined};
   position: ${({ stickyHeader }) => (stickyHeader ? 'sticky' : 'relative')};
   /* \`top: 0\` must mean "flush with the visible top edge of whatever scrolls",
      which is what every call site assumes. Sticky resolves against the scroll
@@ -739,14 +756,14 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
     !padded || !minimal
       ? `${getPaddingSize(padded, size)}px`
       : minimal
-      ? getPaddingSize(padded, size) / 2
-      : 0};
+        ? getPaddingSize(padded, size) / 2
+        : 0};
   padding-bottom: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'top' || wrapperPadding === 'none'
       ? undefined
       : minimal
-      ? `${getPaddingSize(padded, size)}px`
-      : undefined};
+        ? `${getPaddingSize(padded, size)}px`
+        : undefined};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
@@ -760,8 +777,8 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     !padded
       ? undefined
       : noHorizontalPadding
-      ? `${getPaddingSize(padded, size)}px 0`
-      : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
+        ? `${getPaddingSize(padded, size)}px 0`
+        : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
   flex: 1;
   /* A flex child's min-height defaults to its content size, so without this the
      scrollable content can't shrink: a panel/drawer body taller than the panel
@@ -971,9 +988,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         // pins to. Comparing against the bare border box flips `isHeaderStuck`
         // late by the scrollport's inset, so a pinned header keeps its top
         // radius through exactly the gap this fix closes.
-        const rootTop = scrollParent
-          ? scrollParent.getBoundingClientRect().top + inset.border
-          : 0;
+        const rootTop = scrollParent ? scrollParent.getBoundingClientRect().top + inset.border : 0;
         // 1px deadzone so the exact at-rest position (sentinel flush against the
         // top) never reads as stuck.
         setIsHeaderStuck(sentinelTop < rootTop + offset - 1);
@@ -1142,10 +1157,19 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [label, icon, badge, breadcrumbs]
     );
 
-    const isSmall = useMemo(
-      () => responsiveTitle && width < 480 && process.env.NODE_ENV !== 'test',
-      [width, responsiveTitle]
-    );
+    /* No `NODE_ENV !== 'test'` escape any more.
+     *
+     * That guard existed because `width` starts at 0 and `width < 480` was
+     * therefore true for every panel — in jsdom, where nothing ever measures,
+     * permanently. It forced the wide layout in tests to stop every panel in
+     * every suite rendering as a phone, which is the same bug it was hiding in
+     * the browser, where the wrong layout lasted one frame instead of forever.
+     *
+     * With `panelIsSmall` refusing an unmeasured panel, tests get the wide
+     * layout for the honest reason: nothing has measured them. And the
+     * responsive path becomes testable for the first time — feed a width and it
+     * behaves, rather than being switched off by the environment. */
+    const isSmall = useMemo(() => panelIsSmall(width, responsiveTitle), [width, responsiveTitle]);
 
     // If collapsible is true, toggle the isCollapsed state
     // If the isCollapsed state is true, the component is expanded
@@ -1453,7 +1477,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               theme={theme}
               minimal={minimal || opacity === 0}
               size={contentSize || panelSize}
-              opacity={minimal ? 0 : opacity ?? 1}
+              opacity={minimal ? 0 : (opacity ?? 1)}
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
               isMobile={isMobile || isSmall}
@@ -1695,7 +1719,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               padded={padded}
               intent={intent}
               minimal={minimal || opacity === 0}
-              opacity={minimal ? 0 : opacity ?? 1}
+              opacity={minimal ? 0 : (opacity ?? 1)}
               size={contentSize || panelSize}
               noHorizontalPadding={noHorizontalPadding}
             >
