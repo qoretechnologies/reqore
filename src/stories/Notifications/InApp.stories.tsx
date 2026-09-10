@@ -190,7 +190,7 @@ export const InApp: Story = {
     docs: {
       description: {
         story:
-          'Pick the form, the surface flags, a size and a corner, then send any of the seven notifications or a stack of four. Hovering one holds its timer; an action runs and closes it; the close does what it says.',
+          'Pick the form, the surface flags, a size and a corner, then send any of the seven notifications or a stack of four. Hovering one holds its timer; an action runs and closes it; the close does what it says. Sent as compact, a notification drops its actions — a pill answers to a click on itself.',
       },
     },
   },
@@ -231,7 +231,7 @@ const DefaultsPage = () => {
             content: 'order-sync is live',
             intent: 'success',
             duration: 8000,
-            actions: [{ label: 'Open' }],
+            onClick: noop,
           })
         }
       >

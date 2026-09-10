@@ -40,14 +40,15 @@ import { IReqoreNotificationType, typeToIcon } from './styles';
  * the duration runs out. The surface stays neutral, so a stack of mixed
  * intents reads as one family.
  *
- * `compact` is the one-line form — a pill with the icon, a sentence and an
- * inline action — for acknowledgements ("Saved", "Copied"). It keeps the
- * bloom and drops the timer line.
+ * `compact` is the one-line form — a pill with the icon and a sentence — for
+ * acknowledgements ("Saved", "Copied"). It keeps the bloom and drops the
+ * timer line and the action buttons: a pill answers to a click on itself and
+ * to its close, nothing more. Something with a next step is the long form.
  *
- * By default the surface is `flat` (no border, no drop shadow) and `raised`
- * (an inset highlight along the top edge). `flat={false}` adds a hairline
- * border, a faint intent ring and a drop shadow; `minimal` removes the
- * surface altogether; `opaque` makes it solid.
+ * Every surface floats on a drop shadow. By default it is `flat` (no border)
+ * and `raised` (an inset highlight along the top edge). `flat={false}` adds a
+ * hairline border and a faint intent ring; `minimal` removes the surface
+ * altogether; `opaque` makes it solid.
  *
  * The classic message-styled surface lives in `./styles` and is used by
  * `ReqoreMessage`; it is re-exported here for anyone who imported it from
@@ -97,7 +98,7 @@ export interface IReqoreNotificationProps
   duration?: number;
   onFinish?: () => any;
   fluid?: boolean;
-  /** No border and no drop shadow. Default `true`. */
+  /** No border. Default `true`; `false` adds a hairline border and a faint intent ring. */
   flat?: boolean;
   /** An inset highlight along the top edge. Default `true`; only on a `flat` surface. */
   raised?: boolean;
@@ -114,9 +115,9 @@ export interface IReqoreNotificationProps
   padded?: TReqorePadded;
   /** Size of the notification's padding. Defaults to `size`. */
   paddingSize?: TSizes;
-  /** The one-line pill form. */
+  /** The one-line pill form. It shows no `actions`: a pill answers to `onClick` and its close. */
   compact?: boolean;
-  /** Buttons under the content; inline when `compact`. `minimal flat raised` by default. */
+  /** Buttons under the content, `minimal flat raised compact` by default. Not shown when `compact`. */
   actions?: IReqoreNotificationAction[];
   /**
    * Holds the auto-dismiss timer while the pointer is over the notification,
@@ -213,6 +214,13 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
           verticalMultiplier: 0.5,
           horizontalMultiplier: 0.8,
         })};
+        /* The icon gives the text its inset; without one, the text needs its own. */
+        ${!$hasIcon &&
+        $padded !== false &&
+        $padded !== 'vertical' &&
+        css`
+          padding-left: ${Math.round(PADDING_FROM_SIZE[$paddingSize] * 2)}px;
+        `}
         border-radius: 999px;
         width: ${$fluid ? '100%' : 'fit-content'};
         max-width: ${$fluid ? 'none' : 'min(520px, calc(100vw - 60px))'};
@@ -244,15 +252,15 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
       `;
     }
 
-    const shadows: string[] = [];
+    // Every surface floats; `flat` only decides the border and the ring, and the
+    // raised highlight sits on a flat surface only (as on a button).
+    const shadows: string[] = [`0 20px 44px -16px ${rgba(DARK, 0.65)}`];
 
-    if (!$flat) {
-      if ($hasIntent) {
-        shadows.push(`0 0 0 1px ${rgba($accent, 0.28)}`);
-      }
+    if (!$flat && $hasIntent) {
+      shadows.push(`0 0 0 1px ${rgba($accent, 0.28)}`);
+    }
 
-      shadows.push(`0 20px 44px -16px ${rgba(DARK, 0.65)}`);
-    } else if ($raised) {
+    if ($flat && $raised) {
       shadows.push(RAISED_SHADOWS);
     }
 
@@ -265,7 +273,7 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
         -webkit-backdrop-filter: blur(${$blur}px) saturate(1.5);
       `}
       border: ${$flat ? 0 : `1px solid ${rgba(LIGHT, 0.12)}`};
-      box-shadow: ${shadows.length ? shadows.join(', ') : 'none'};
+      box-shadow: ${shadows.join(', ')};
     `;
   }}
 
@@ -554,15 +562,16 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
           color={iconColor ?? palette.glyph}
         />
       );
-    const actionButtons = actions?.length
-      ? actions.map(({ label, onClick: onActionClick, closeOnClick, ...rest }, index) => (
+    const actionButtons =
+      actions?.length && !compact
+        ? actions.map(({ label, onClick: onActionClick, closeOnClick, ...rest }, index) => (
           <ReqoreButton
             key={`${label}-${index}`}
             size={controlSize}
             minimal
             flat
             raised
-            compact={compact}
+            compact
             intent={index === 0 ? resolvedIntent : undefined}
             {...rest}
             onClick={(event) => {
@@ -656,7 +665,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
                   {content}
                 </StyledNotificationText>
               ) : null}
-              {actionButtons && !compact ? (
+              {actionButtons ? (
                 <ReqoreControlGroup
                   size={controlSize}
                   gapSize='small'
@@ -668,11 +677,6 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
                 </ReqoreControlGroup>
               ) : null}
             </StyledNotificationBody>
-            {actionButtons && compact ? (
-              <StyledNotificationTrailing className='reqore-notification-actions'>
-                {actionButtons}
-              </StyledNotificationTrailing>
-            ) : null}
             {onClose ? (
               <StyledNotificationTrailing>
                 <ReqoreButton
@@ -681,6 +685,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
                   minimal
                   flat
                   compact
+                  circle={compact}
                   className='reqore-notification-close'
                   aria-label={closeLabel}
                   onClick={handleClose}

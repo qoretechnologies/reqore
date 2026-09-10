@@ -68,8 +68,9 @@ export const DANGER = SAMPLES[3];
 export const sampleProps = (sample: TSample, compact?: boolean): Partial<IReqoreNotificationProps> => {
   const { key, short, ...props } = sample;
 
+  // A pill carries no actions (it answers to a click on itself and its close).
   return compact
-    ? { ...props, compact: true, title: undefined, content: short ?? props.content }
+    ? { ...props, compact: true, title: undefined, content: short ?? props.content, actions: undefined }
     : props;
 };
 

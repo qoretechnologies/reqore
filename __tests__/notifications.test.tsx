@@ -176,19 +176,11 @@ test('Maximum of 5 notifications is shown at once', async () => {
   expect(document.querySelectorAll('.reqore-notification').length).toBe(5);
 });
 
-test('The compact form renders under its class; an action runs and closes it', async () => {
-  const openFn = vi.fn();
-  const closeFn = vi.fn();
-
+test('The compact form renders under its class, with a close and neither line nor actions', async () => {
   act(() => {
     render(
       <ReqoreUIProvider>
-        <AddButton
-          id='test'
-          compact
-          onClose={closeFn}
-          actions={[{ label: 'Open', onClick: openFn }]}
-        />
+        <AddButton id='test' compact duration={3000} actions={[{ label: 'Open' }]} />
       </ReqoreUIProvider>
     );
   });
@@ -200,6 +192,26 @@ test('The compact form renders under its class; an action runs and closes it', a
   expect(document.querySelectorAll('.reqore-notification-compact').length).toBe(1);
   expect(document.querySelectorAll('.reqore-notification-close').length).toBe(1);
   expect(document.querySelectorAll('.reqore-notification-progress').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-notification-actions').length).toBe(0);
+});
+
+test('An action runs and closes the notification', async () => {
+  const openFn = vi.fn();
+  const closeFn = vi.fn();
+
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton id='test' onClose={closeFn} actions={[{ label: 'Open', onClick: openFn }]} />
+      </ReqoreUIProvider>
+    );
+  });
+
+  fireEvent.click(screen.getByText('Add Notification'));
+
+  act(() => vi.advanceTimersByTime(500));
+
+  expect(document.querySelectorAll('.reqore-notification-actions button').length).toBe(1);
 
   fireEvent.click(document.querySelector('.reqore-notification-actions button'));
 

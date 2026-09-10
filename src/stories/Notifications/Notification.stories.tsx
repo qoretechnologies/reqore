@@ -57,7 +57,7 @@ const SURFACES: { label: string; props: Partial<typeof DANGER> }[] = [
   { label: 'minimal', props: { minimal: true } },
   { label: 'blur 0', props: { blur: 0 } },
   { label: 'raised false', props: { raised: false } },
-  { label: 'flat false · border, ring, shadow', props: { flat: false } },
+  { label: 'flat false · border, ring', props: { flat: false } },
   { label: 'flat false · raised false', props: { flat: false, raised: false } },
   { label: 'flat false · opaque', props: { flat: false, opaque: true } },
 ];
@@ -67,7 +67,7 @@ export const Surfaces: Story = {
     docs: {
       description: {
         story:
-          'The surface flags over a busy backdrop, long form beside compact: the default (flat, raised, translucent glass), opaque, minimal (no surface), blur off, raised off, flat off (hairline border, faint intent ring, drop shadow), and their combinations.',
+          'The surface flags over a busy backdrop, long form beside compact: the default (flat, raised, translucent glass — every surface floats on a drop shadow), opaque, minimal (no surface), blur off, raised off, flat off (hairline border, faint intent ring), and their combinations.',
       },
     },
   },
@@ -93,7 +93,7 @@ export const Content: Story = {
     docs: {
       description: {
         story:
-          'What goes inside: a title alone, a body alone, both, a long body that wraps, a React node as the body, a custom icon, a custom icon colour, no icon at all, the icon without its tile — and the compact pill with a bold lead-in, with a body only, and with a tiled icon.',
+          'What goes inside: a title alone, a body alone, both, a long body that wraps, a React node as the body, a custom icon, a custom icon colour, no icon at all, the icon without its tile — and the compact pill with a bold lead-in, with a body only, with a tiled icon, and with no icon (the text takes the room the icon would have).',
       },
     },
   },
@@ -167,6 +167,9 @@ export const Content: Story = {
       <Row label='compact · content only'>
         <ReqoreNotification {...STATIC} compact intent='info' content='Copied to clipboard' />
       </Row>
+      <Row label='compact · no icon'>
+        <ReqoreNotification {...STATIC} compact content='Copied to clipboard' />
+      </Row>
       <Row label='compact · iconHasBackground'>
         <ReqoreNotification
           {...STATIC}
@@ -179,7 +182,7 @@ export const Content: Story = {
     </Grid>
   ),
   play: async () => {
-    await waitFor(() => expect(countNotifications()).toBe(12));
+    await waitFor(() => expect(countNotifications()).toBe(13));
   },
 };
 
@@ -188,7 +191,7 @@ export const Actions: Story = {
     docs: {
       description: {
         story:
-          'Actions are minimal, flat, raised buttons; the first carries the intent. One, two and three (they wrap), with an icon, with an intent of its own, one that leaves the notification open (`closeOnClick: false`), a notification with no close, one that is clickable as a whole, and the compact pill with one and two actions.',
+          'Actions are minimal, flat, raised, compact buttons; the first carries the intent. One, two and three (they wrap), with an icon, with an intent of its own, one that leaves the notification open (`closeOnClick: false`), a notification with no close, one that is clickable as a whole. The compact pill never shows actions — it answers to a click on itself and to its close — so the pill rows here are clickable, without a close, and without an icon.',
       },
     },
   },
@@ -231,20 +234,21 @@ export const Actions: Story = {
       <Row label='clickable'>
         <ReqoreNotification {...STATIC} {...sampleProps(SAMPLES[0])} actions={undefined} onClick={noop} />
       </Row>
-      <Row label='compact · one action'>
-        <ReqoreNotification {...STATIC} {...sampleProps(SAMPLES[6], true)} />
-      </Row>
-      <Row label='compact · two actions'>
-        <ReqoreNotification {...STATIC} {...sampleProps(SAMPLES[1], true)} />
+      <Row label='compact · clickable (no actions by design)'>
+        <ReqoreNotification {...STATIC} {...sampleProps(SAMPLES[1], true)} onClick={noop} />
       </Row>
       <Row label='compact · no close'>
         <ReqoreNotification {...sampleProps(SAMPLES[0], true)} onFinish={noop} />
+      </Row>
+      <Row label='compact · no icon'>
+        <ReqoreNotification {...STATIC} {...sampleProps(SAMPLES[6], true)} />
       </Row>
     </Grid>
   ),
   play: async () => {
     await waitFor(() => expect(countNotifications()).toBe(10));
-    expect(document.querySelectorAll('.reqore-notification-actions button')).toHaveLength(13);
+    expect(document.querySelectorAll('.reqore-notification-actions button')).toHaveLength(9);
+    expect(document.querySelectorAll('.reqore-notification-compact .reqore-notification-actions')).toHaveLength(0);
   },
 };
 
