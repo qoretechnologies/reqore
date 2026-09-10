@@ -191,7 +191,7 @@ export const Actions: Story = {
     docs: {
       description: {
         story:
-          'Actions are minimal, flat, raised, compact buttons; the first carries the intent. One, two and three (they wrap), with an icon, with an intent of its own, one that leaves the notification open (`closeOnClick: false`), a notification with no close, one that is clickable as a whole. The compact pill never shows actions — it answers to a click on itself and to its close — so the pill rows here are clickable, without a close, and without an icon.',
+          'Actions are minimal, flat, raised, compact buttons; the first carries the intent. One, two and three (they wrap), with an icon, with an intent of its own, one that leaves the notification open (`closeOnClick: false`), a notification with no close, one that is clickable as a whole. The compact pill never shows actions — it answers to a click on itself and to its close — so the pill rows here are clickable, without a close, without an icon, and with neither: a pill is symmetric, the icon sits as far from its end as the close from its own, and an end without a control gives the text the same inset.',
       },
     },
   },
@@ -243,10 +243,28 @@ export const Actions: Story = {
       <Row label='compact · no icon'>
         <ReqoreNotification {...STATIC} {...sampleProps(SAMPLES[6], true)} />
       </Row>
+      <Row label='compact · no icon, no close'>
+        <ReqoreNotification {...sampleProps(SAMPLES[6], true)} onFinish={noop} />
+      </Row>
+      <Row label='compact · icon, no close'>
+        <ReqoreNotification {...sampleProps(SAMPLES[1], true)} onFinish={noop} />
+      </Row>
     </Grid>
   ),
   play: async () => {
-    await waitFor(() => expect(countNotifications()).toBe(10));
+    await waitFor(() => expect(countNotifications()).toBe(12));
+    // A pill is symmetric: the icon's box sits as far from its end as the close
+    // does from its end, and an end without a control gives the text the same inset.
+    const pills = Array.from(document.querySelectorAll<HTMLElement>('.reqore-notification-compact'));
+    const both = pills.find((el) => el.querySelector('.reqore-notification-icon') && el.querySelector('.reqore-notification-close'))!;
+    const iconGlyph = both.querySelector('.reqore-notification-icon svg')!.getBoundingClientRect();
+    const closeGlyph = both.querySelector('.reqore-notification-close svg')!.getBoundingClientRect();
+    const pill = both.getBoundingClientRect();
+    expect(Math.abs(iconGlyph.left - pill.left - (pill.right - closeGlyph.right))).toBeLessThan(2);
+    const bare = pills.find((el) => !el.querySelector('.reqore-notification-icon') && !el.querySelector('.reqore-notification-close'))!;
+    const text = bare.querySelector('.reqore-notification-content')!.getBoundingClientRect();
+    const bareBox = bare.getBoundingClientRect();
+    expect(Math.round(text.left - bareBox.left)).toBe(Math.round(bareBox.right - text.right));
     expect(document.querySelectorAll('.reqore-notification-actions button')).toHaveLength(9);
     expect(document.querySelectorAll('.reqore-notification-compact .reqore-notification-actions')).toHaveLength(0);
   },

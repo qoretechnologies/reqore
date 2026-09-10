@@ -3,7 +3,13 @@ import { getLuminance, rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled, { css, keyframes } from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
-import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import {
+  PADDING_FROM_SIZE,
+  RADIUS_FROM_SIZE,
+  SIZE_TO_PX,
+  TEXT_FROM_SIZE,
+  TSizes,
+} from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
@@ -179,6 +185,7 @@ interface IStyledNotificationProps {
   $blur: number;
   $clickable?: boolean;
   $hasIcon?: boolean;
+  $hasClose?: boolean;
   $hasIntent?: boolean;
   $padded: TReqorePadded;
   $paddingSize: TSizes;
@@ -200,27 +207,25 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
   color: ${({ $text }) => $text};
 
   /* ---- shape ---- */
-  ${({ $compact, $size, $fluid, $hasIcon, $padded, $paddingSize }) => {
+  ${({ $compact, $size, $fluid, $hasIcon, $hasClose, $padded, $paddingSize }) => {
     const gap = Math.round(PADDING_FROM_SIZE[$size] * 0.8);
 
     if ($compact) {
+      // A pill is symmetric by construction: the icon sits in a box the size
+      // of the close button, so both ends carry the same padding; an end
+      // without a control gives the text the same inset instead.
+      const pad = PADDING_FROM_SIZE[$paddingSize];
+      const vertical = $padded === false || $padded === 'horizontal' ? 0 : Math.round(pad * 0.5);
+      const horizontal = $padded === false || $padded === 'vertical' ? 0 : Math.round(pad * 0.8);
+      const inset = $padded === false || $padded === 'vertical' ? 0 : pad * 2;
+
       return css`
         display: flex;
         align-items: center;
         gap: ${Math.round(gap * 0.75)}px;
-        padding: ${resolvePadding({
-          padded: $padded,
-          paddingSize: $paddingSize,
-          verticalMultiplier: 0.5,
-          horizontalMultiplier: 0.8,
-        })};
-        /* The icon gives the text its inset; without one, the text needs its own. */
-        ${!$hasIcon &&
-        $padded !== false &&
-        $padded !== 'vertical' &&
-        css`
-          padding-left: ${Math.round(PADDING_FROM_SIZE[$paddingSize] * 2)}px;
-        `}
+        min-height: ${SIZE_TO_PX[getOneLessSize($size)] + vertical * 2}px;
+        padding: ${vertical}px ${$hasClose ? horizontal : inset}px ${vertical}px
+          ${$hasIcon ? horizontal : inset}px;
         border-radius: 999px;
         width: ${$fluid ? '100%' : 'fit-content'};
         max-width: ${$fluid ? 'none' : 'min(520px, calc(100vw - 60px))'};
@@ -323,6 +328,8 @@ const StyledNotificationIconTile = styled.div<{
   $size: TSizes;
   $color: TReqoreHexColor;
   $tinted: boolean;
+  /** A box of this many px instead of the tile size — the pill matches its close button. */
+  $boxPx?: number;
 }>`
   position: relative;
   z-index: 1;
@@ -330,8 +337,8 @@ const StyledNotificationIconTile = styled.div<{
   display: flex;
   align-items: center;
   justify-content: center;
-  width: ${({ $size }) => ICON_TILE_SIZE_FROM_SIZE[$size]}px;
-  height: ${({ $size }) => ICON_TILE_SIZE_FROM_SIZE[$size]}px;
+  width: ${({ $size, $boxPx }) => $boxPx ?? ICON_TILE_SIZE_FROM_SIZE[$size]}px;
+  height: ${({ $size, $boxPx }) => $boxPx ?? ICON_TILE_SIZE_FROM_SIZE[$size]}px;
   border-radius: 50%;
   background: ${({ $tinted, $color }) => ($tinted ? rgba($color, 0.2) : 'transparent')};
 `;
@@ -554,11 +561,11 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     const progressVisible = !!duration && (showProgress ?? !compact);
     const iconNode =
       resolvedIntent === 'pending' && !icon ? (
-        <ReqoreSpinner size={size} type={5} intent='pending' />
+        <ReqoreSpinner size={compact ? controlSize : size} type={5} intent='pending' />
       ) : (
         <ReqoreIcon
           icon={icon || INTENT_ICON[resolvedIntent] || typeToIcon[resolvedIntent]}
-          size={size}
+          size={compact ? controlSize : size}
           color={iconColor ?? palette.glyph}
         />
       );
@@ -609,6 +616,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             $blur={blur}
             $clickable={!!onClick}
             $hasIcon={hasIcon}
+            $hasClose={!!onClose}
             $hasIntent={!!resolvedIntent}
             $padded={padded}
             $paddingSize={paddingSize ?? size}
@@ -623,18 +631,15 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
               <StyledNotificationBloom $color={palette.accent} $compact={compact} />
             ) : null}
             {hasIcon ? (
-              compact && !tinted ? (
-                iconNode
-              ) : (
-                <StyledNotificationIconTile
-                  $size={compact ? getOneLessSize(size) : size}
-                  $color={palette.accent}
-                  $tinted={tinted}
-                  className='reqore-notification-icon'
-                >
-                  {iconNode}
-                </StyledNotificationIconTile>
-              )
+              <StyledNotificationIconTile
+                $size={compact ? controlSize : size}
+                $boxPx={compact ? SIZE_TO_PX[controlSize] : undefined}
+                $color={palette.accent}
+                $tinted={tinted}
+                className='reqore-notification-icon'
+              >
+                {iconNode}
+              </StyledNotificationIconTile>
             ) : null}
             <StyledNotificationBody $compact={compact}>
               {title ? (
