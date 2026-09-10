@@ -63,13 +63,28 @@ const editorIn = async (doc: Document) =>
     return el!;
   });
 
+/**
+ * Click, then wait for the editor to actually HOLD focus before typing.
+ *
+ * Without the wait the keystrokes are dispatched at whatever had focus when
+ * the click was still settling, which under a loaded full-suite run is nothing
+ * at all — `Type Into An Empty Field` passed alone and timed out at 6.2s in the
+ * suite. The same wait is why `ErasingAReferenceKeepsTheEditor` is stable.
+ */
+const focusEditor = async (doc: Document, editor: HTMLElement) => {
+  await userEvent.click(editor);
+  await waitFor(() =>
+    expect(editor === doc.activeElement || editor.contains(doc.activeElement)).toBe(true)
+  );
+};
+
 /** Typing into an empty field puts the text in. The floor of the matrix. */
 export const TypeIntoAnEmptyField: Story = {
   args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], onChange: fn() },
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
     const editor = await editorIn(doc);
-    await userEvent.click(editor);
+    await focusEditor(doc, editor);
     await userEvent.keyboard('hello');
     await waitFor(() => expect(editor.innerText.replace(/[\s﻿]/g, '')).toContain('hello'));
   },
@@ -81,7 +96,7 @@ export const TypeWithAChipPresent: Story = {
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
     const editor = await editorIn(doc);
-    await userEvent.click(editor);
+    await focusEditor(doc, editor);
     await userEvent.keyboard('xy');
     await waitFor(() => expect(editor.innerText.replace(/[\s﻿]/g, '')).toContain('xy'));
   },
@@ -110,9 +125,23 @@ export const ClickingInOffersTheList: Story = {
   },
 };
 
-/** ...and writing a value instead of picking one puts it away. */
+/**
+ * ...and writing a value instead of picking one puts it away.
+ *
+ * `actions` is set because the Qorus IDE's `RichTextField` sets it on every
+ * rich-text field, and it is load-bearing here: the styling / undo / redo
+ * buttons render as `customElements` of this SAME popover. A first cut of the
+ * dismiss fix exempted surfaces carrying controls, which read as reasonable and
+ * disabled the fix on every field it was written for. Without these args the
+ * story passes while the real field does nothing.
+ */
 export const TypingDismissesTheList: Story = {
-  args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], tags: TAGS, onChange: fn() },
+  args: {
+    value: [{ type: 'paragraph', children: [{ text: '' }] }],
+    tags: TAGS,
+    actions: { redo: true, undo: true, styling: false },
+    onChange: fn(),
+  },
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
     const editor = await editorIn(doc);
@@ -141,7 +170,7 @@ export const TypingBesideAChipDoesNotExtendIt: Story = {
     const doc = canvasElement.ownerDocument;
     const editor = await editorIn(doc);
 
-    await userEvent.click(editor);
+    await focusEditor(doc, editor);
     await userEvent.keyboard('a');
     await sleep(300);
 

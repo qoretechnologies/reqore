@@ -444,6 +444,13 @@ export const WithActions: Story = {
     await userEvent.click(document.querySelector('div[contenteditable]'));
     await userEvent.keyboard('Papa', { delay: 100 });
 
+    /* Typing dismisses the surface these buttons live on — the toolbar shares
+       one popover with the template list, and the list has to go away when an
+       author writes a value instead of picking one. So it is reopened before
+       reaching for undo, which is what a person does too. */
+    await userEvent.click(document.querySelector('div[contenteditable]'));
+    await sleep(300);
+
     await expect(document.querySelectorAll('.reqore-button')[3]).toBeEnabled();
     await expect(document.querySelectorAll('.reqore-button')[4]).toBeDisabled();
 

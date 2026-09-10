@@ -292,18 +292,16 @@ function Textarea<T>(
         return;
       }
 
-      /* Not when the surface is also the TOOLBAR.
+      /* The toolbar shares this surface, and it goes too.
       
          `RichTextEditor` renders its styling / undo / redo buttons as
-         `customElements` of this same popover, so closing it on a keystroke
-         would take the formatting controls away the moment the author typed —
-         caught by `RichTextEditor > With Actions`, which types and then reaches
-         for undo. A surface that is only a list of templates is an offer and
-         can be dismissed; one carrying controls is part of the editor. */
-      // NB: `size` here is this component's own PROP, not lodash — length it is.
-      if (((templates as { customElements?: unknown[] })?.customElements?.length ?? 0) > 0) {
-        return;
-      }
+         `customElements` of the SAME popover as the template list, so there is
+         no way to dismiss one without the other. Exempting surfaces that carry
+         controls was tried and is worse: every Qorus IDE rich-text field passes
+         `actions={{redo, undo}}`, so the exemption held the list open on every
+         field it was written for — it disabled the fix exactly where it was
+         needed. Dismissing on a keystroke is the behaviour asked for; the
+         controls come back with the surface on the next click. */
 
       const { key, ctrlKey, metaKey, altKey } = event;
       const changesText =
