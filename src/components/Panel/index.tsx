@@ -2058,38 +2058,36 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               {hasResponsiveActions(nonFloatingActions) && (
                 <ReqoreControlGroup
                   responsive={responsiveActions}
-                  // Not `fluid`: a stretched group takes the row's remainder whether it needs it
-                  // or not — measured at 206px to hold 90px of buttons on a 518px bar, leaving
-                  // the title 142px.
+                  // Not fluid by default. `fluid` emits `width: 100%`, so the group's flex basis
+                  // becomes the whole bar and the title — the only shrinkable thing on the other
+                  // side — collapses to nothing: measured at 0px of title on a 400px panel, and
+                  // 142px of a 518px bar where the buttons needed 90.
+                  //
+                  // A caller whose actions include something with no useful width of its own —
+                  // Collection puts a search input in here — opts back in through
+                  // `responsiveActionsWrapperProps`, because `fluid` is also what ControlGroup
+                  // propagates to its children, and that input has nothing to fill without it.
                   fluid={false}
                   horizontalAlign='flex-end'
                   customTheme={theme}
                   size={panelSize}
-                  // …but `fluid={false}` alone compiles to `flex: 0 0 auto`, which pins the group
-                  // at its content width and so can NEVER overflow — and `responsive` collapse
-                  // triggers on `scrollWidth > clientWidth`, so the fold into the `…` menu simply
-                  // stops happening. That is the bug behind actions labelled "Hidden when small"
-                  // being visible on a small panel.
-                  //
-                  // The two are separable, they were only ever coupled through this one flag: a
-                  // CONTENT-width basis that may still shrink. The group never claims the row's
-                  // remainder, the title keeps its share, and once the row is contended the group
-                  // is squeezed below its content, overflows, and folds as it always did.
                   {...responsiveActionsWrapperProps}
-                  // `max-width` is the load-bearing part. Unbounded, the group takes its full
-                  // content width, never overflows, and so never folds — which is how actions
-                  // labelled "Hidden when small" ended up visible on a small panel. Bounded to
-                  // half the bar it cannot starve the title, and the moment its buttons need
-                  // more than that share it overflows and the fold into the `…` menu fires,
-                  // which is the behaviour that was lost. Half is the split that makes neither
-                  // side the default winner.
+                  // The cap is the whole fix. Half the bar guarantees the title the other half,
+                  // and the moment the buttons need more than their share the group overflows —
+                  // which is what `responsive` collapse watches (`scrollWidth > clientWidth`), so
+                  // the fold into the `…` menu still fires. Floored at 40px because shrinking to
+                  // nothing clips the buttons rather than folding them, and ControlGroup ignores
+                  // its own overflow below that width, which would strand them clipped.
                   style={{
+                    // Content basis that may still shrink. `fluid={false}` alone compiles to
+                    // `flex: 0 0 auto`, which pins the group at its content width so it can never
+                    // overflow — and `responsive` collapse watches `scrollWidth > clientWidth`,
+                    // so the fold into the `…` menu would simply stop happening.
                     flex: '0 1 auto',
-                    // Floored, not 0. Shrinking to nothing clips the buttons instead of folding
-                    // them — measured at 27px of group holding 38px of button. `ControlGroup`
-                    // ignores its own overflow below 40px (`clientWidth > 40`), so that is the
-                    // width at which the fold is still able to fire.
+                    // Floored, because shrinking to nothing clips the buttons instead of folding
+                    // them, and ControlGroup ignores its own overflow below 40px.
                     minWidth: 40,
+                    // Capped, so a group that IS opted back into growing cannot take the row.
                     maxWidth: '50%',
                     ...responsiveActionsWrapperProps?.style,
                   }}

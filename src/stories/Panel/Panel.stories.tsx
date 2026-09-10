@@ -2043,7 +2043,7 @@ export const CompactTitleWhenNarrow: Story = {
     docs: {
       description: {
         story:
-          "What a title bar gives up, in order, as its box shrinks — four widths of the same panel, then the opt-in last resort. 520px: everything fits, actions labelled, title at its natural 19px. 380px: the ACTION LABELS go first and the buttons keep their icons with the label moved to the tooltip — an action is a verb its icon already carries, while the title is the only thing naming what the panel is. 300px and 220px: the title ellipsizes. The fifth panel is `compactTitle`, for a bar too narrow to ellipsize into: the title gives up its space entirely and the icon stands in, with the label surviving as that icon's tooltip. A middle stage — shrinking the title within a font-size range before it ellipsizes — exists behind `fitLabel` but is not on by default; see the prop's note for the layout change it needs.",
+          "What a title bar gives up, in order, as its box shrinks — four widths of the same panel, then the opt-in last resort. 520px: everything fits, actions labelled, title at its natural 19px. 380px: the ACTION LABELS go first and the buttons keep their icons with the label moved to the tooltip — an action is a verb its icon already carries, while the title is the only thing naming what the panel is. 300px: the title WRAPS to a second line, which costs height but keeps every character at full size. 220px: only once two lines will not hold it does the title shrink toward a floor and then ellipsize. The fifth panel is `compactTitle`, for a bar too narrow to ellipsize into: the title gives up its space entirely and the icon stands in, with the label surviving as that icon's tooltip.",
       },
     },
   },
@@ -2052,8 +2052,8 @@ export const CompactTitleWhenNarrow: Story = {
       {[
         { w: 520, note: 'Everything fits: labelled actions, title at 19px.' },
         { w: 380, note: 'Action labels go first — icons keep them in tooltips.' },
-        { w: 300, note: 'Title ellipsizes.' },
-        { w: 220, note: 'Less room still — icons and an ellipsis.' },
+        { w: 300, note: 'Title wraps to a second line — nothing is lost yet.' },
+        { w: 220, note: 'Two lines no longer hold it: the title shrinks, then ellipsizes.' },
       ].map(({ w, note }) => (
         <div key={w} style={{ width: `${w}px` }}>
           <ReqorePanel
