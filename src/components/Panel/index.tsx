@@ -423,14 +423,15 @@ export const StyledPanelTitleHeader = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  /* This header CLAIMS the row and the action group beside it pushes back — that contention is
-     what squeezes the group past its content width, which is the only thing that makes
-     scrollWidth exceed clientWidth and the fold into the menu fire. Basing it on 0 instead was
-     tried and it hands the group its full content width, so nothing ever overflows and actions
-     labelled "hidden when small" stay visible on a small panel. The group's own min/max bound
-     the split; this side just has to want the space. */
+  /* A CONTENT basis, and both extremes were tried before settling here. Basis 0 hands the action
+     group beside this one its full content width, so nothing ever overflows and the fold into the
+     menu never fires — actions labelled "hidden when small" stay visible on a small panel. A 100%
+     width does the opposite: this header claims the entire row, so the group is always crushed to
+     its floor and always folds however much room there is, which hid Tree's save button behind an
+     overflow menu on a panel with space to spare. On a content basis the two shrink against each
+     other in proportion to what they each need, which is the only version where folding means
+     "there is no room" rather than "there is a header". */
   flex: 1 1 auto;
-  width: 100%;
   overflow: hidden;
 `;
 
