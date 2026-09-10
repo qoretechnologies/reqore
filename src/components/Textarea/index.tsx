@@ -270,6 +270,54 @@ function Textarea<T>(
     setPopoverData(data);
   }, []);
 
+  /* Typing is declining the offer.
+
+     The template list is anchored to the field, and a long enough list covers
+     the very text being typed. Reported on the Qorus IDE's assertion `Value`
+     field: clicking in to place a cursor opened a 29-item list whose entries
+     each carry a paragraph of prose, and it then sat on top of the editor
+     while the author typed — the warning under it updated as they went, and
+     the list did not.
+
+     `closeOnTargetClick={false}` deliberately keeps the list up through the
+     clicks that place a cursor, which is right. What was missing is the other
+     half: an author who starts writing a value instead of picking one has
+     answered the question the list was asking.
+
+     Only keys that CHANGE the text count. Navigation, modifiers and `Enter`
+     are left alone so arrowing to an item and choosing it still works. */
+  const handleTypingClosesTemplates = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!popoverData?.isOpen?.()) {
+        return;
+      }
+
+      /* Not when the surface is also the TOOLBAR.
+      
+         `RichTextEditor` renders its styling / undo / redo buttons as
+         `customElements` of this same popover, so closing it on a keystroke
+         would take the formatting controls away the moment the author typed —
+         caught by `RichTextEditor > With Actions`, which types and then reaches
+         for undo. A surface that is only a list of templates is an offer and
+         can be dismissed; one carrying controls is part of the editor. */
+      // NB: `size` here is this component's own PROP, not lodash — length it is.
+      if (((templates as { customElements?: unknown[] })?.customElements?.length ?? 0) > 0) {
+        return;
+      }
+
+      const { key, ctrlKey, metaKey, altKey } = event;
+      const changesText =
+        (key?.length === 1 && !ctrlKey && !metaKey && !altKey) ||
+        key === 'Backspace' ||
+        key === 'Delete';
+
+      if (changesText) {
+        popoverData.close();
+      }
+    },
+    [popoverData, templates]
+  );
+
   const renderChildren = () => {
     return (
       <>
@@ -284,6 +332,12 @@ function Textarea<T>(
             onChange?.(e);
           }}
           as={rest.as || 'textarea'}
+          // After `{...rest}` so it wins, and it chains rather than replaces:
+          // the Slate editable passes its own `onKeyDown` through here.
+          onKeyDown={(event: React.KeyboardEvent) => {
+            handleTypingClosesTemplates(event);
+            (rest as { onKeyDown?: (e: React.KeyboardEvent) => void }).onKeyDown?.(event);
+          }}
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
           ref={(ref) => setInputRef(ref)}
