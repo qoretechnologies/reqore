@@ -1,7 +1,7 @@
 import { createContext } from 'use-context-selector';
 import { IReqoreErrorBoundaryProps } from '../components/ErrorBoundary';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
-import {
+import type {
   IReqoreConfirmationModal,
   IReqoreModal,
   IReqoreModalFromProps,
