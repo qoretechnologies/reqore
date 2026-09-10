@@ -21,6 +21,16 @@ const StyledNotificationsWrapper = styled.div<IReqoreNotificationsStyle>`
   position: fixed;
   z-index: 10000;
   padding: 0 20px 20px 20px;
+  display: flex;
+  flex-flow: column;
+  /* Notifications of different widths (a pill under a card) line up with
+     the corner they are in; centred on the plain top / bottom positions. */
+  align-items: ${({ positions }) =>
+    positions.includes('left')
+      ? 'flex-start'
+      : positions.includes('right')
+      ? 'flex-end'
+      : 'center'};
 
   ${({ positions }) => {
     const hasTwoPositions = positions.length > 1;

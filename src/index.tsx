@@ -108,7 +108,6 @@ export type {
   IReqoreNotificationAction,
   IReqoreNotificationDefaults,
   IReqoreNotificationProps,
-  TReqoreNotificationVariant,
 } from './components/Notifications/notification';
 export { ReqorePagination } from './components/Paging';
 export { ReqorePanel, ReqorePanelSkeleton } from './components/Panel';

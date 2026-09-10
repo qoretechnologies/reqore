@@ -176,7 +176,7 @@ test('Maximum of 5 notifications is shown at once', async () => {
   expect(document.querySelectorAll('.reqore-notification').length).toBe(5);
 });
 
-test('A variant renders under its class; an action runs and closes it', async () => {
+test('The compact form renders under its class; an action runs and closes it', async () => {
   const openFn = vi.fn();
   const closeFn = vi.fn();
 
@@ -185,7 +185,7 @@ test('A variant renders under its class; an action runs and closes it', async ()
       <ReqoreUIProvider>
         <AddButton
           id='test'
-          variant='card'
+          compact
           onClose={closeFn}
           actions={[{ label: 'Open', onClick: openFn }]}
         />
@@ -197,8 +197,9 @@ test('A variant renders under its class; an action runs and closes it', async ()
 
   act(() => vi.advanceTimersByTime(500));
 
-  expect(document.querySelectorAll('.reqore-notification-card').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-notification-compact').length).toBe(1);
   expect(document.querySelectorAll('.reqore-notification-close').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-notification-progress').length).toBe(0);
 
   fireEvent.click(document.querySelector('.reqore-notification-actions button'));
 
@@ -210,13 +211,13 @@ test('A variant renders under its class; an action runs and closes it', async ()
   expect(document.querySelectorAll('.reqore-notification').length).toBe(0);
 });
 
-test('A variant holds its timer while hovered and finishes after the pointer leaves', async () => {
+test('The timer line shows with a duration and holds while hovered', async () => {
   const finishFn = vi.fn();
 
   act(() => {
     render(
       <ReqoreUIProvider>
-        <AddButton id='test' variant='glass' duration={3000} onFinish={finishFn} />
+        <AddButton id='test' duration={3000} onFinish={finishFn} />
       </ReqoreUIProvider>
     );
   });
@@ -224,6 +225,8 @@ test('A variant holds its timer while hovered and finishes after the pointer lea
   fireEvent.click(screen.getByText('Add Notification'));
 
   act(() => vi.advanceTimersByTime(1000));
+
+  expect(document.querySelectorAll('.reqore-notification-progress').length).toBe(1);
 
   fireEvent.mouseEnter(document.querySelector('.reqore-notification'));
 
@@ -238,13 +241,13 @@ test('A variant holds its timer while hovered and finishes after the pointer lea
   expect(finishFn).toHaveBeenCalledWith('test');
 });
 
-test('The classic box keeps its timer running while hovered', async () => {
+test('pauseOnHover false keeps the timer running while hovered', async () => {
   const finishFn = vi.fn();
 
   act(() => {
     render(
       <ReqoreUIProvider>
-        <AddButton id='test' duration={3000} onFinish={finishFn} />
+        <AddButton id='test' duration={3000} pauseOnHover={false} onFinish={finishFn} />
       </ReqoreUIProvider>
     );
   });
@@ -260,9 +263,9 @@ test('The classic box keeps its timer running while hovered', async () => {
 test('Provider defaults apply under a notification’s own props', async () => {
   act(() => {
     render(
-      <ReqoreUIProvider options={{ notifications: { variant: 'glass' } }}>
+      <ReqoreUIProvider options={{ notifications: { compact: true } }}>
         <AddButton id='defaulted' />
-        <AddButton id='own' variant='compact' />
+        <AddButton id='own' compact={false} />
       </ReqoreUIProvider>
     );
   });
@@ -273,6 +276,6 @@ test('Provider defaults apply under a notification’s own props', async () => {
 
   act(() => vi.advanceTimersByTime(500));
 
-  expect(document.querySelectorAll('.reqore-notification-glass').length).toBe(1);
+  expect(document.querySelectorAll('.reqore-notification').length).toBe(2);
   expect(document.querySelectorAll('.reqore-notification-compact').length).toBe(1);
 });

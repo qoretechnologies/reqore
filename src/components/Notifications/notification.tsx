@@ -3,14 +3,8 @@ import { getLuminance, rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled, { css, keyframes } from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
-import {
-  PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { TReqoreHexColor } from '../Effect';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
   changeDarkness,
@@ -19,8 +13,9 @@ import {
   getReadableColor,
   getReadableColorFrom,
 } from '../../helpers/colors';
+import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
-import { getOneLessSize, TReqorePadded } from '../../helpers/utils';
+import { RAISED_SHADOWS } from '../../styles';
 import {
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
@@ -28,26 +23,36 @@ import {
   IWithReqoreOpaque,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { TReqoreEffectColor } from '../Effect';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { StyledEffect } from '../Effect';
+import { StyledEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
 import { ICON_TILE_SIZE_FROM_SIZE } from '../EntityRow';
-import { ReqoreHeading } from '../Header';
 import ReqoreIcon from '../Icon';
-import { IReqoreNotificationsPosition } from './index';
 import { ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import { ReqoreSpinner } from '../Spinner';
-import {
-  IReqoreNotificationType,
-  StyledIconWrapper,
-  StyledNotificationContent,
-  StyledNotificationContentWrapper,
-  StyledNotificationInnerContent,
-  StyledReqoreNotification,
-  typeToIcon,
-} from './styles';
+import { IReqoreNotificationsPosition } from './index';
+import { IReqoreNotificationType, typeToIcon } from './styles';
+
+/**
+ * A notification: frosted glass over whatever is behind it, the intent as a
+ * soft bloom behind the icon and a thin line along the bottom that drains as
+ * the duration runs out. The surface stays neutral, so a stack of mixed
+ * intents reads as one family.
+ *
+ * `compact` is the one-line form — a pill with the icon, a sentence and an
+ * inline action — for acknowledgements ("Saved", "Copied"). It keeps the
+ * bloom and drops the timer line.
+ *
+ * By default the surface is `flat` (no border, no drop shadow) and `raised`
+ * (an inset highlight along the top edge). `flat={false}` adds a hairline
+ * border, a faint intent ring and a drop shadow; `minimal` removes the
+ * surface altogether; `opaque` makes it solid.
+ *
+ * The classic message-styled surface lives in `./styles` and is used by
+ * `ReqoreMessage`; it is re-exported here for anyone who imported it from
+ * this module.
+ */
 
 export type { IReqoreNotificationStyle, IReqoreNotificationType } from './styles';
 export {
@@ -60,25 +65,6 @@ export {
   typeToIcon,
 } from './styles';
 
-/**
- * The looks a notification can take. Unset keeps the classic message-styled
- * box; every variant below paints the intent on the icon and the timer line
- * and keeps the surface itself neutral (except `filled`), so a stack of mixed
- * intents reads as one family.
- *
- * - `card`    — a neutral card with a hairline border, the icon on a tinted
- *               tile and the timer as a line along the bottom (Sonner, Radix).
- * - `accent`  — the card with a short intent-coloured bar down its left edge
- *               and a plain icon (Mantine).
- * - `filled`  — the whole surface in the intent colour; for the loud ones
- *               (Chakra).
- * - `glass`   — frosted, translucent, an intent bloom behind the icon and a
- *               faint intent ring; Reqore's own look (iOS banners, Vercel).
- * - `compact` — a one-line pill for acknowledgements — "Saved", "Copied" —
- *               with an inline action (Material snackbar, Linear).
- */
-export type TReqoreNotificationVariant = 'card' | 'accent' | 'filled' | 'glass' | 'compact';
-
 export interface IReqoreNotificationAction
   extends Omit<IReqoreButtonProps, 'onClick' | 'label' | 'children'> {
   label: string;
@@ -87,210 +73,201 @@ export interface IReqoreNotificationAction
   closeOnClick?: boolean;
 }
 
-/**
- * Defaults every notification added through the provider starts from — set
- * once on `ReqoreUIProvider` (`options.notifications`) to give the whole app
- * one look. A notification's own props win.
- */
-export interface IReqoreNotificationDefaults
-  extends Partial<
-    Pick<
-      IReqoreNotificationProps,
-      | 'variant'
-      | 'size'
-      | 'pauseOnHover'
-      | 'showProgress'
-      | 'iconHasBackground'
-      | 'flat'
-      | 'minimal'
-      | 'opaque'
-      | 'blur'
-      | 'effect'
-      | 'duration'
-      | 'closeLabel'
-    >
-  > {
-  position?: IReqoreNotificationsPosition;
-}
-
 export interface IReqoreNotificationProps
   extends IWithReqoreEffect,
     IWithReqoreMinimal,
     IWithReqoreOpaque,
     IWithReqoreCustomTheme {
+  /** The intent, under its older name. `intent` wins when both are given. */
   type?: IReqoreNotificationType;
   intent?: TReqoreIntent;
   title?: string;
-  content: string | React.ReactNode;
+  content?: string | React.ReactNode;
+  /** Replaces the intent's icon. */
   icon?: IReqoreIconName;
+  iconColor?: TReqoreEffectColor;
+  /**
+   * Draws the icon on a round, intent-tinted tile. Default `true`; `compact`
+   * shows the bare icon unless this is set.
+   */
+  iconHasBackground?: boolean;
   onClose?: () => any;
   onClick?: () => any;
+  /** Milliseconds until `onFinish`; nothing when unset. */
   duration?: number;
   onFinish?: () => any;
   fluid?: boolean;
+  /** No border and no drop shadow. Default `true`. */
   flat?: boolean;
+  /** An inset highlight along the top edge. Default `true`; only on a `flat` surface. */
+  raised?: boolean;
   size?: TSizes;
+  /** Backdrop blur radius in px. Default `18`; `0` turns the frost off. */
   blur?: number;
   /**
-   * Controls which axes receive the notification's outer padding.
+   * Controls which axes receive the notification's padding.
    * - `true` (default): padding on both axes
    * - `false`: no padding
    * - `'horizontal'`: only left/right padding
    * - `'vertical'`: only top/bottom padding
    */
   padded?: TReqorePadded;
-  /**
-   * Size of the notification's outer padding. Defaults to `size`.
-   */
+  /** Size of the notification's padding. Defaults to `size`. */
   paddingSize?: TSizes;
-  /** The look — see `TReqoreNotificationVariant`. Unset keeps the classic box. */
-  variant?: TReqoreNotificationVariant;
-  /** Buttons under the content; inline in the `compact` variant. */
+  /** The one-line pill form. */
+  compact?: boolean;
+  /** Buttons under the content; inline when `compact`. `minimal flat raised` by default. */
   actions?: IReqoreNotificationAction[];
   /**
-   * Draws the icon on an intent-tinted tile. `card`, `filled` and `glass`
-   * do this on their own; pass `false` to turn it off, `true` to get it on
-   * `accent`.
-   */
-  iconHasBackground?: boolean;
-  iconColor?: TReqoreEffectColor;
-  /**
    * Holds the auto-dismiss timer while the pointer is over the notification,
-   * so a reader gets to finish the sentence. Default `true` for variants,
-   * `false` for the classic box (which never did).
+   * so a reader gets to finish the sentence. Default `true`.
    */
   pauseOnHover?: boolean;
   /**
-   * The thin line that drains as the duration runs out. Default `true`
-   * whenever there is a duration.
+   * The thin line along the bottom that drains as the duration runs out.
+   * Default `true` with a duration; `compact` has none unless this is set.
    */
   showProgress?: boolean;
   /** Accessible name of the close button. */
   closeLabel?: string;
 }
 
-/* ---------------------------------------------------------------------------
- * Variants
- * ------------------------------------------------------------------------ */
-
-interface IReqoreNotificationVariantStyle {
-  theme: IReqoreTheme;
-  $variant: TReqoreNotificationVariant;
-  $size: TSizes;
-  $fluid?: boolean;
-  $clickable?: boolean;
-  $hasIcon?: boolean;
-  $hasIntent?: boolean;
-  /** The neutral surface behind every variant but `filled`. */
-  $surface: TReqoreHexColor;
-  /** Text on `$surface`. */
-  $text: TReqoreHexColor;
-  /** The intent colour, or a neutral stand-in when there is no intent. */
-  $accent: TReqoreHexColor;
-  /** Text on `$accent` (the `filled` variant). */
-  $filledText: TReqoreHexColor;
+/**
+ * Defaults every notification added through the provider starts from — set
+ * once on `ReqoreUIProvider` (`options.notifications`) to give the whole app
+ * one look and one corner. A notification's own props win.
+ */
+export interface IReqoreNotificationDefaults
+  extends Partial<
+    Pick<
+      IReqoreNotificationProps,
+      | 'compact'
+      | 'size'
+      | 'flat'
+      | 'raised'
+      | 'minimal'
+      | 'opaque'
+      | 'blur'
+      | 'effect'
+      | 'duration'
+      | 'pauseOnHover'
+      | 'showProgress'
+      | 'iconHasBackground'
+      | 'closeLabel'
+    >
+  > {
+  position?: IReqoreNotificationsPosition;
 }
+
+/* ---------------------------------------------------------------------------
+ * Styles
+ * ------------------------------------------------------------------------ */
 
 const DARK: TReqoreHexColor = '#000000';
 const LIGHT: TReqoreHexColor = '#ffffff';
 
-const variantSurface = ({
-  $variant,
-  $surface,
-  $text,
-  $accent,
-  $filledText,
-  $hasIntent,
-}: IReqoreNotificationVariantStyle) => {
-  const hairline = rgba($text, 0.12);
-  const lift = `0 14px 34px -14px ${rgba(DARK, 0.6)}`;
+interface IStyledNotificationProps {
+  theme: IReqoreTheme;
+  $size: TSizes;
+  $compact?: boolean;
+  $fluid?: boolean;
+  $flat: boolean;
+  $raised: boolean;
+  $minimal?: boolean;
+  $opaque?: boolean;
+  $blur: number;
+  $clickable?: boolean;
+  $hasIcon?: boolean;
+  $hasIntent?: boolean;
+  $padded: TReqorePadded;
+  $paddingSize: TSizes;
+  /** The neutral surface. */
+  $surface: TReqoreHexColor;
+  /** Text on the surface. */
+  $text: TReqoreHexColor;
+  /** The intent colour, or a neutral stand-in. */
+  $accent: TReqoreHexColor;
+}
 
-  switch ($variant) {
-    case 'filled':
-      return css`
-        background: linear-gradient(135deg, ${$accent}, ${changeLightness($accent, 0.06)});
-        border: 1px solid ${rgba(LIGHT, 0.18)};
-        box-shadow: 0 14px 34px -14px ${rgba($accent, 0.7)};
-        color: ${$filledText};
-      `;
-    case 'glass':
-      return css`
-        background: ${rgba($surface, 0.74)};
-        backdrop-filter: blur(18px) saturate(1.5);
-        -webkit-backdrop-filter: blur(18px) saturate(1.5);
-        border: 1px solid ${rgba(LIGHT, 0.12)};
-        box-shadow:
-          0 0 0 1px ${$hasIntent ? rgba($accent, 0.28) : 'transparent'},
-          0 20px 44px -16px ${rgba(DARK, 0.65)};
-        color: ${$text};
-      `;
-    case 'accent':
-      return css`
-        background: ${$surface};
-        border: 1px solid ${hairline};
-        box-shadow: ${lift};
-        color: ${$text};
-
-        &::before {
-          content: '';
-          position: absolute;
-          left: 7px;
-          top: 9px;
-          bottom: 9px;
-          width: 3px;
-          border-radius: 3px;
-          background: ${$hasIntent ? $accent : rgba($text, 0.3)};
-        }
-      `;
-    case 'compact':
-    case 'card':
-    default:
-      return css`
-        background: ${$surface};
-        border: 1px solid ${hairline};
-        box-shadow:
-          ${lift},
-          inset 0 1px 0 ${rgba(LIGHT, 0.04)};
-        color: ${$text};
-      `;
-  }
-};
-
-export const StyledReqoreNotificationVariant = styled(StyledEffect)<IReqoreNotificationVariantStyle>`
+export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>`
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
-  transition: filter 0.2s ease-out;
+  transition:
+    filter 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+  color: ${({ $text }) => $text};
 
-  ${({ $variant, $size, $fluid, $hasIcon }) => {
-    const pad = PADDING_FROM_SIZE[$size];
+  /* ---- shape ---- */
+  ${({ $compact, $size, $fluid, $hasIcon, $padded, $paddingSize }) => {
+    const gap = Math.round(PADDING_FROM_SIZE[$size] * 0.8);
 
-    if ($variant === 'compact') {
+    if ($compact) {
       return css`
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: ${Math.round(pad * 0.6)}px;
-        padding: ${Math.round(pad * 0.5)}px ${Math.round(pad * 0.6)}px ${Math.round(pad * 0.5)}px
-          ${pad}px;
+        gap: ${Math.round(gap * 0.75)}px;
+        padding: ${resolvePadding({
+          padded: $padded,
+          paddingSize: $paddingSize,
+          verticalMultiplier: 0.5,
+          horizontalMultiplier: 0.8,
+        })};
         border-radius: 999px;
-        width: ${$fluid ? '100%' : 'auto'};
-        max-width: min(520px, calc(100vw - 60px));
+        width: ${$fluid ? '100%' : 'fit-content'};
+        max-width: ${$fluid ? 'none' : 'min(520px, calc(100vw - 60px))'};
       `;
     }
 
     return css`
       display: grid;
       grid-template-columns: ${$hasIcon ? 'auto minmax(0, 1fr) auto' : 'minmax(0, 1fr) auto'};
-      column-gap: ${Math.round(pad * 0.8)}px;
+      column-gap: ${gap}px;
       align-items: start;
-      padding: ${pad}px ${Math.round(pad * 0.8)}px ${pad}px
-        ${$variant === 'accent' ? pad + 10 : pad}px;
+      padding: ${resolvePadding({
+        padded: $padded,
+        paddingSize: $paddingSize,
+        verticalMultiplier: 1,
+        horizontalMultiplier: 1,
+      })};
       border-radius: ${RADIUS_FROM_SIZE[$size] + 4}px;
       width: ${$fluid ? '100%' : 'min(400px, calc(100vw - 60px))'};
     `;
   }}
 
-  ${variantSurface}
+  /* ---- surface ---- */
+  ${({ $minimal, $opaque, $blur, $flat, $raised, $surface, $accent, $hasIntent }) => {
+    if ($minimal) {
+      return css`
+        background: transparent;
+        border: 0;
+      `;
+    }
+
+    const shadows: string[] = [];
+
+    if (!$flat) {
+      if ($hasIntent) {
+        shadows.push(`0 0 0 1px ${rgba($accent, 0.28)}`);
+      }
+
+      shadows.push(`0 20px 44px -16px ${rgba(DARK, 0.65)}`);
+    } else if ($raised) {
+      shadows.push(RAISED_SHADOWS);
+    }
+
+    return css`
+      background: ${rgba($surface, $opaque ? 1 : 0.74)};
+      ${!$opaque &&
+      $blur > 0 &&
+      css`
+        backdrop-filter: blur(${$blur}px) saturate(1.5);
+        -webkit-backdrop-filter: blur(${$blur}px) saturate(1.5);
+      `}
+      border: ${$flat ? 0 : `1px solid ${rgba(LIGHT, 0.12)}`};
+      box-shadow: ${shadows.length ? shadows.join(', ') : 'none'};
+    `;
+  }}
 
   &:not(:first-child) {
     margin-top: ${({ $size }) => PADDING_FROM_SIZE[$size]}px;
@@ -307,28 +284,37 @@ export const StyledReqoreNotificationVariant = styled(StyledEffect)<IReqoreNotif
     `}
 `;
 
-const StyledNotificationBloom = styled.div<{ $color: TReqoreHexColor }>`
+/** The intent, as a soft glow behind the icon. */
+const StyledNotificationBloom = styled.div<{ $color: TReqoreHexColor; $compact?: boolean }>`
   position: absolute;
   pointer-events: none;
-  width: 170px;
-  height: 170px;
-  left: -60px;
-  top: -80px;
   border-radius: 50%;
+  filter: blur(6px);
+  ${({ $compact }) =>
+    $compact
+      ? css`
+          width: 120px;
+          height: 120px;
+          left: -45px;
+          top: -60px;
+        `
+      : css`
+          width: 170px;
+          height: 170px;
+          left: -60px;
+          top: -80px;
+        `}
   background: radial-gradient(
     circle at center,
     ${({ $color }) => rgba($color, 0.55)} 0%,
     ${({ $color }) => rgba($color, 0)} 70%
   );
-  filter: blur(6px);
 `;
 
 const StyledNotificationIconTile = styled.div<{
   $size: TSizes;
   $color: TReqoreHexColor;
   $tinted: boolean;
-  $round: boolean;
-  $onFilled: boolean;
 }>`
   position: relative;
   z-index: 1;
@@ -338,9 +324,8 @@ const StyledNotificationIconTile = styled.div<{
   justify-content: center;
   width: ${({ $size }) => ICON_TILE_SIZE_FROM_SIZE[$size]}px;
   height: ${({ $size }) => ICON_TILE_SIZE_FROM_SIZE[$size]}px;
-  border-radius: ${({ $round, $size }) => ($round ? '50%' : `${RADIUS_FROM_SIZE[$size]}px`)};
-  background: ${({ $tinted, $onFilled, $color }) =>
-    !$tinted ? 'transparent' : $onFilled ? rgba(LIGHT, 0.18) : rgba($color, 0.2)};
+  border-radius: 50%;
+  background: ${({ $tinted, $color }) => ($tinted ? rgba($color, 0.2) : 'transparent')};
 `;
 
 const StyledNotificationBody = styled.div<{ $compact?: boolean }>`
@@ -394,19 +379,8 @@ const StyledNotificationProgress = styled.div<{
   animation-play-state: ${({ $paused }) => ($paused ? 'paused' : 'running')};
 `;
 
-const VARIANT_ICON: Record<
-  TReqoreNotificationVariant,
-  { hasBackground: boolean; round: boolean }
-> = {
-  card: { hasBackground: true, round: false },
-  accent: { hasBackground: false, round: false },
-  filled: { hasBackground: true, round: false },
-  glass: { hasBackground: true, round: true },
-  compact: { hasBackground: false, round: false },
-};
-
-/** Filled glyphs: on a tile or a pill a hairline check reads as a smudge. */
-const VARIANT_TYPE_ICON: Partial<Record<TReqoreIntent, IReqoreIconName>> = {
+/** Filled glyphs: on a tile a hairline check reads as a smudge. */
+const INTENT_ICON: Partial<Record<TReqoreIntent, IReqoreIconName>> = {
   info: 'InformationFill',
   success: 'CheckboxCircleFill',
   warning: 'AlertFill',
@@ -418,6 +392,11 @@ const VARIANT_TYPE_ICON: Partial<Record<TReqoreIntent, IReqoreIconName>> = {
 const sixDigits = (color: string): TReqoreHexColor =>
   (color.length > 7 ? color.slice(0, 7) : color) as TReqoreHexColor;
 
+const BIG_SIZES: TSizes[] = ['big', 'huge', 'massive'];
+
+/* ---------------------------------------------------------------------------
+ * Component
+ * ------------------------------------------------------------------------ */
 
 const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
   (
@@ -426,25 +405,26 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       intent,
       icon,
       iconColor,
+      iconHasBackground,
       title,
       content,
       onClose,
       onClick,
       duration,
       onFinish,
-      flat,
+      flat = true,
+      raised = true,
       minimal,
-      opaque = true,
-      blur,
+      opaque = false,
+      blur = 18,
       size = 'normal',
       customTheme,
       inheritCustomTheme,
       padded = true,
       paddingSize,
-      variant,
+      compact,
       actions,
-      iconHasBackground,
-      pauseOnHover,
+      pauseOnHover = true,
       showProgress,
       closeLabel = 'Close',
       effect,
@@ -453,17 +433,9 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     ref: any
   ) => {
     const resolvedIntent = intent || type;
-    // The classic box paints its surface in the intent (the theme hook swaps
-    // `main` for it); a variant keeps the app's surface and paints the intent
-    // on the icon, the bar and the timer line instead.
+    // The app's surface, not the intent's: the intent is painted on the icon,
+    // the bloom and the timer line.
     const theme = useReqoreTheme(
-      'main',
-      customTheme,
-      resolvedIntent,
-      'notifications',
-      inheritCustomTheme
-    );
-    const surfaceTheme = useReqoreTheme(
       'main',
       customTheme,
       undefined,
@@ -478,8 +450,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       config: SPRING_CONFIG,
     });
 
-    /* ---- auto-dismiss timer, with an optional hold while hovered ---- */
-    const shouldPause = pauseOnHover ?? !!variant;
+    /* ---- auto-dismiss timer, held while hovered ---- */
     const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const remainingRef = useRef<number | undefined>(duration);
     const startedAtRef = useRef<number>(0);
@@ -519,7 +490,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     }, [duration, type, intent, content, title, startTimer, clearTimer]);
 
     const handleMouseEnter = useCallback(() => {
-      if (!shouldPause || !duration || !timerRef.current) {
+      if (!pauseOnHover || !duration || !timerRef.current) {
         return;
       }
 
@@ -529,34 +500,37 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       );
       clearTimer();
       setPaused(true);
-    }, [shouldPause, duration, clearTimer]);
+    }, [pauseOnHover, duration, clearTimer]);
 
     const handleMouseLeave = useCallback(() => {
-      if (!shouldPause || !duration) {
+      if (!pauseOnHover || !duration) {
         return;
       }
 
       setPaused(false);
       // A reader who hovered at the very end still gets a beat to click.
       startTimer(Math.max(remainingRef.current ?? 0, 400));
-    }, [shouldPause, duration, startTimer]);
+    }, [pauseOnHover, duration, startTimer]);
 
-    /* ---- the colours a variant paints with ---- */
+    /* ---- colours ---- */
     const palette = useMemo(() => {
-      const surface = changeLightness(surfaceTheme.main, 0.05);
-      const text = getReadableColor(surfaceTheme, undefined, undefined, true);
-      const accent = resolvedIntent
-        ? sixDigits(getNotificationIntent(surfaceTheme, resolvedIntent))
-        : changeLightness(surfaceTheme.main, 0.3);
-
+      const surface = changeLightness(theme.main, 0.05);
+      const text = getReadableColor(theme, undefined, undefined, true);
+      // `muted` is the readable colour at 30% alpha — as a bloom or a line it
+      // would paint white — so it takes the neutral grey a notification
+      // without an intent gets.
+      const accent =
+        resolvedIntent && resolvedIntent !== 'muted'
+          ? sixDigits(getNotificationIntent(theme, resolvedIntent))
+          : changeLightness(theme.main, 0.3);
       // The intents are mid-dark colours; on a dark surface an icon painted in
       // one, on a tile tinted with the same one, loses its edge. Lift it there,
       // deepen it on a light surface.
       const glyph =
         getLuminance(surface) < 0.4 ? changeLightness(accent, 0.18) : changeDarkness(accent, 0.1);
 
-      return { surface, text, accent, glyph, filledText: getReadableColorFrom(accent, false) };
-    }, [surfaceTheme, resolvedIntent]);
+      return { surface, text, accent, glyph, onAccent: getReadableColorFrom(accent, false) };
+    }, [theme, resolvedIntent]);
 
     const handleClose = useCallback(
       (event?: React.MouseEvent) => {
@@ -566,235 +540,165 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       [onClose]
     );
 
-    if (variant) {
-      const isFilled = variant === 'filled';
-      const isCompact = variant === 'compact';
-      const textColor = isFilled ? palette.filledText : palette.text;
-      const hasIcon = !!(icon || resolvedIntent);
-      const tinted = iconHasBackground ?? VARIANT_ICON[variant].hasBackground;
-      const controlSize = getOneLessSize(size);
-      const buttonTheme = isFilled ? { main: changeLightness(palette.accent, 0.12) } : undefined;
-      const progressVisible = !!duration && (showProgress ?? !isCompact);
-      const iconNode =
-        resolvedIntent === 'pending' && !icon ? (
-          <ReqoreSpinner size={size} type={5} intent={isFilled ? undefined : 'pending'} />
-        ) : (
-          <ReqoreIcon
-            icon={icon || VARIANT_TYPE_ICON[resolvedIntent] || typeToIcon[resolvedIntent]}
-            size={size}
-            color={iconColor ?? (isFilled ? palette.filledText : palette.glyph)}
-          />
-        );
-      const actionButtons = actions?.length
-        ? actions.map(({ label, onClick: onActionClick, closeOnClick, ...rest }, index) => (
-            <ReqoreButton
-              key={`${label}-${index}`}
-              size={controlSize}
-              flat
-              compact={isCompact}
-              minimal={isCompact || index > 0}
-              intent={index === 0 && !isFilled ? resolvedIntent : undefined}
-              customTheme={buttonTheme}
-              {...rest}
-              onClick={(event) => {
-                event.stopPropagation();
-                onActionClick?.();
-
-                if (closeOnClick !== false) {
-                  onClose?.();
-                }
-              }}
-            >
-              {label}
-            </ReqoreButton>
-          ))
-        : null;
-
-      return transitions((styles, item) =>
-        item ? (
-          <ReqoreThemeProvider>
-            <StyledReqoreNotificationVariant
-              as={animated.div}
-              ref={ref}
-              style={styles}
-              theme={surfaceTheme}
-              effect={effect}
-              role={
-                resolvedIntent === 'danger' || resolvedIntent === 'warning' ? 'alert' : 'status'
-              }
-              className={`reqore-notification reqore-notification-${variant}`}
-              $variant={variant}
-              $size={size}
-              $fluid={fluid}
-              $clickable={!!onClick}
-              $hasIcon={hasIcon}
-              $hasIntent={!!resolvedIntent}
-              $surface={palette.surface}
-              $text={palette.text}
-              $accent={palette.accent}
-              $filledText={palette.filledText}
-              onClick={onClick ? () => onClick() : undefined}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              {variant === 'glass' && resolvedIntent ? (
-                <StyledNotificationBloom $color={palette.accent} />
-              ) : null}
-              {hasIcon ? (
-                isCompact ? (
-                  iconNode
-                ) : (
-                  <StyledNotificationIconTile
-                    $size={size}
-                    $color={palette.accent}
-                    $tinted={tinted}
-                    $round={VARIANT_ICON[variant].round}
-                    $onFilled={isFilled}
-                    className='reqore-notification-icon'
-                  >
-                    {iconNode}
-                  </StyledNotificationIconTile>
-                )
-              ) : null}
-              <StyledNotificationBody $compact={isCompact}>
-                {title ? (
-                  isCompact ? (
-                    <ReqoreSpan
-                      size={getOneLessSize(size)}
-                      effect={{ weight: 'bold', color: textColor }}
-                      className='reqore-notification-title'
-                    >
-                      {title}
-                    </ReqoreSpan>
-                  ) : (
-                    <ReqoreP
-                      size={size}
-                      effect={{ weight: 'bold', color: textColor }}
-                      className='reqore-notification-title'
-                    >
-                      {title}
-                    </ReqoreP>
-                  )
-                ) : null}
-                {content ? (
-                  <StyledNotificationText
-                    $size={size}
-                    $dim={!!title}
-                    className='reqore-notification-content'
-                  >
-                    {content}
-                  </StyledNotificationText>
-                ) : null}
-                {actionButtons && !isCompact ? (
-                  <ReqoreControlGroup
-                    size={controlSize}
-                    gapSize='small'
-                    wrap
-                    style={{ marginTop: PADDING_FROM_SIZE[controlSize] }}
-                    className='reqore-notification-actions'
-                  >
-                    {actionButtons}
-                  </ReqoreControlGroup>
-                ) : null}
-              </StyledNotificationBody>
-              {actionButtons && isCompact ? (
-                <StyledNotificationTrailing className='reqore-notification-actions'>
-                  {actionButtons}
-                </StyledNotificationTrailing>
-              ) : null}
-              {onClose ? (
-                <StyledNotificationTrailing>
-                  <ReqoreButton
-                    icon='CloseLine'
-                    size={controlSize}
-                    minimal
-                    flat
-                    compact
-                    customTheme={buttonTheme}
-                    className='reqore-notification-close'
-                    aria-label={closeLabel}
-                    onClick={handleClose}
-                  />
-                </StyledNotificationTrailing>
-              ) : null}
-              {progressVisible ? (
-                <StyledNotificationProgress
-                  key={`${duration}${resolvedIntent}${title}${content}`}
-                  className='reqore-notification-progress'
-                  $color={isFilled ? rgba(LIGHT, 0.55) : palette.accent}
-                  $duration={duration}
-                  $paused={paused}
-                  $height={size === 'big' || size === 'huge' || size === 'massive' ? 3 : 2}
-                />
-              ) : null}
-            </StyledReqoreNotificationVariant>
-          </ReqoreThemeProvider>
-        ) : null
+    const hasIcon = !!(icon || resolvedIntent);
+    const tinted = iconHasBackground ?? !compact;
+    const controlSize = getOneLessSize(size);
+    const progressVisible = !!duration && (showProgress ?? !compact);
+    const iconNode =
+      resolvedIntent === 'pending' && !icon ? (
+        <ReqoreSpinner size={size} type={5} intent='pending' />
+      ) : (
+        <ReqoreIcon
+          icon={icon || INTENT_ICON[resolvedIntent] || typeToIcon[resolvedIntent]}
+          size={size}
+          color={iconColor ?? palette.glyph}
+        />
       );
-    }
+    const actionButtons = actions?.length
+      ? actions.map(({ label, onClick: onActionClick, closeOnClick, ...rest }, index) => (
+          <ReqoreButton
+            key={`${label}-${index}`}
+            size={controlSize}
+            minimal
+            flat
+            raised
+            compact={compact}
+            intent={index === 0 ? resolvedIntent : undefined}
+            {...rest}
+            onClick={(event) => {
+              event.stopPropagation();
+              onActionClick?.();
+
+              if (closeOnClick !== false) {
+                onClose?.();
+              }
+            }}
+          >
+            {label}
+          </ReqoreButton>
+        ))
+      : null;
 
     return transitions((styles, item) =>
       item ? (
         <ReqoreThemeProvider>
-          <StyledReqoreNotification
+          <StyledNotification
             as={animated.div}
-            key={`${duration}${type || intent}${title}${content}`}
-            type={type || intent}
-            hasShadow
-            timeout={duration}
-            clickable={!!onClick}
-            onClick={() => onClick?.()}
-            flat={flat}
-            minimal={minimal}
-            className='reqore-notification'
             ref={ref}
             style={styles}
-            size={size}
-            opaque={opaque}
-            blur={blur}
             theme={theme}
-            maxWidth='450px'
+            effect={effect}
+            role={resolvedIntent === 'danger' || resolvedIntent === 'warning' ? 'alert' : 'status'}
+            className={`reqore-notification${compact ? ' reqore-notification-compact' : ''}`}
+            $size={size}
+            $compact={compact}
+            $fluid={fluid}
+            $flat={flat}
+            $raised={raised}
+            $minimal={minimal}
+            $opaque={opaque}
+            $blur={blur}
+            $clickable={!!onClick}
+            $hasIcon={hasIcon}
+            $hasIntent={!!resolvedIntent}
+            $padded={padded}
+            $paddingSize={paddingSize ?? size}
+            $surface={palette.surface}
+            $text={palette.text}
+            $accent={palette.accent}
+            onClick={onClick ? () => onClick() : undefined}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <StyledNotificationContentWrapper
-              size={size}
-              theme={theme}
-              $padded={padded}
-              $paddingSize={paddingSize}
-            >
-              {type || intent || icon ? (
-                <>
-                  {intent === 'pending' || type === 'pending' ? (
-                    <ReqoreSpinner size={size} type={5} iconMargin={'right'} />
-                  ) : (
-                    <ReqoreIcon
-                      icon={icon || typeToIcon[type || intent]}
-                      margin={'right'}
-                      size={size}
-                    />
-                  )}
-                </>
-              ) : null}
-              <StyledNotificationInnerContent>
-                {title && <ReqoreHeading size={size}>{title}</ReqoreHeading>}
-                <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
-                  {content}
-                </StyledNotificationContent>
-              </StyledNotificationInnerContent>
-            </StyledNotificationContentWrapper>
-            {onClose ? (
-              <StyledIconWrapper
-                type={type || intent}
-                size={size}
-                clickable
-                className='reqore-notification-close'
-                onClick={handleClose}
-              >
-                <ReqoreIcon icon='CloseFill' margin='both' size={size} />
-              </StyledIconWrapper>
+            {resolvedIntent && !minimal ? (
+              <StyledNotificationBloom $color={palette.accent} $compact={compact} />
             ) : null}
-          </StyledReqoreNotification>
+            {hasIcon ? (
+              compact && !tinted ? (
+                iconNode
+              ) : (
+                <StyledNotificationIconTile
+                  $size={compact ? getOneLessSize(size) : size}
+                  $color={palette.accent}
+                  $tinted={tinted}
+                  className='reqore-notification-icon'
+                >
+                  {iconNode}
+                </StyledNotificationIconTile>
+              )
+            ) : null}
+            <StyledNotificationBody $compact={compact}>
+              {title ? (
+                compact ? (
+                  <ReqoreSpan
+                    size={controlSize}
+                    effect={{ weight: 'bold', color: palette.text }}
+                    className='reqore-notification-title'
+                  >
+                    {title}
+                  </ReqoreSpan>
+                ) : (
+                  <ReqoreP
+                    size={size}
+                    effect={{ weight: 'bold', color: palette.text }}
+                    className='reqore-notification-title'
+                  >
+                    {title}
+                  </ReqoreP>
+                )
+              ) : null}
+              {content ? (
+                <StyledNotificationText
+                  $size={size}
+                  $dim={!!title}
+                  className='reqore-notification-content'
+                >
+                  {content}
+                </StyledNotificationText>
+              ) : null}
+              {actionButtons && !compact ? (
+                <ReqoreControlGroup
+                  size={controlSize}
+                  gapSize='small'
+                  wrap
+                  style={{ marginTop: PADDING_FROM_SIZE[controlSize] }}
+                  className='reqore-notification-actions'
+                >
+                  {actionButtons}
+                </ReqoreControlGroup>
+              ) : null}
+            </StyledNotificationBody>
+            {actionButtons && compact ? (
+              <StyledNotificationTrailing className='reqore-notification-actions'>
+                {actionButtons}
+              </StyledNotificationTrailing>
+            ) : null}
+            {onClose ? (
+              <StyledNotificationTrailing>
+                <ReqoreButton
+                  icon='CloseLine'
+                  size={controlSize}
+                  minimal
+                  flat
+                  compact
+                  className='reqore-notification-close'
+                  aria-label={closeLabel}
+                  onClick={handleClose}
+                />
+              </StyledNotificationTrailing>
+            ) : null}
+            {progressVisible ? (
+              <StyledNotificationProgress
+                key={`${duration}${resolvedIntent}${title}${content}`}
+                className='reqore-notification-progress'
+                data-paused={paused || undefined}
+                $color={palette.accent}
+                $duration={duration}
+                $paused={paused}
+                $height={BIG_SIZES.includes(size) ? 3 : 2}
+              />
+            ) : null}
+          </StyledNotification>
         </ReqoreThemeProvider>
       ) : null
     );
