@@ -1,4 +1,5 @@
 import { cloneDeep } from 'lodash';
+import type { IReqoreNotificationDefaults } from '../components/Notifications/notification';
 import merge from 'lodash/merge';
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useMemo, useState } from 'react';
@@ -25,6 +26,8 @@ export interface IReqoreOptions
   > {
   withSidebar?: boolean;
   uiScale?: number;
+  /** Defaults for every notification added through `addNotification`. */
+  notifications?: IReqoreNotificationDefaults;
 }
 /**
  * Props for the top-level UI provider that wires Reqore theme and global layout.

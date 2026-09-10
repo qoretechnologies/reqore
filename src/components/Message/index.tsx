@@ -27,7 +27,7 @@ import {
   StyledNotificationInnerContent,
   StyledReqoreNotification,
   typeToIcon,
-} from '../Notifications/notification';
+} from '../Notifications/styles';
 import { ReqoreSpinner } from '../Spinner';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 

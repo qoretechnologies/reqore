@@ -1,5 +1,5 @@
 import { size } from 'lodash';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useUpdateEffect } from 'react-use';
 import usePagination, { usePaginationReturn } from 'react-use-pagination-hook';
 
@@ -85,9 +85,36 @@ export const useReqorePaging = <T>(
     });
   }, [currentPage]);
 
+  /* The pagination hook derives `currentPage` from a window of pages; while the
+     total is shrinking that window is briefly out of range and the page reads as
+     undefined, which is exactly when the clamp below has to know where the reader
+     was. */
+  const lastKnownPage = useRef(1);
+  if (currentPage) {
+    lastKnownPage.current = currentPage;
+  }
+
   useUpdateEffect(() => {
-    setPage(1);
-    setTotalPage(Math.ceil(size(items) / itemsPerPage));
+    const pageCount = Math.max(1, Math.ceil(size(items) / itemsPerPage));
+    /* An INFINITE list keeps the reader where they are. Its pages are cumulative
+       — page 3 shows the first thirty rows — so a row arriving at the top or
+       fifty older rows loading at the bottom changes what the window holds, not
+       where the reader is; snapping to page 1 on every count change collapsed a
+       list someone had scrolled down three times the moment anything arrived.
+       Only a list that shrank below the current page pulls the page back. A
+       paged table is different: its page is a slice, and a new data set (a
+       filter, a reload) should open on its first page as it always has. */
+    if (infinite) {
+      const page = currentPage ?? lastKnownPage.current;
+      if (!currentPage || page > pageCount) {
+        setPage(Math.min(page, pageCount));
+      }
+    } else {
+      setPage(1);
+    }
+    // After the page: the pagination hook validates a page against the total it
+    // holds, so shrinking the total first would reject the page it should land on.
+    setTotalPage(pageCount);
   }, [size(items)]);
 
   const slicedItems: T[] = useMemo(() => {

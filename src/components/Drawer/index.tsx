@@ -6,7 +6,7 @@ import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
-import { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
+import type { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useReqoreTheme } from '../../hooks/useTheme';
