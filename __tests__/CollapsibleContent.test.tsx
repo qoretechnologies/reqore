@@ -265,3 +265,41 @@ test('Renders without a ResizeObserver implementation', () => {
 
   globalThis.ResizeObserver = original;
 });
+
+test("Fades into `customTheme.main` as given, not a step lighter than it", async () => {
+  mockScrollHeight(600);
+
+  // A caller naming the surface: this reveal sits on #0c0c0c, not on the app's
+  // background. The fade has to end ON that, or it paints a lighter rectangle
+  // across the text it is supposed to be fading into — which is what a reveal
+  // nested in a callout, a panel or a tile always is.
+  renderContent(
+    <ReqoreCollapsibleContent customTheme={{ main: '#0c0c0c' }} maxCollapsedHeight={100}>
+      <span>Body content</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  await waitFor(() => {
+    const fade = document.querySelector('.reqore-collapsible-content-fade');
+    expect(fade).not.toBeNull();
+    expect(getComputedStyle(fade!).backgroundImage).toContain('rgb(12, 12, 12)');
+  });
+});
+
+test('Falls back to the theme background when no `customTheme.main` is given', async () => {
+  mockScrollHeight(600);
+
+  // The ambient case keeps `getMainBackgroundColor`'s slight lightening: there
+  // `theme.main` is the app's base color and its background sits a hair above.
+  renderContent(
+    <ReqoreCollapsibleContent maxCollapsedHeight={100}>
+      <span>Body content</span>
+    </ReqoreCollapsibleContent>
+  );
+
+  await waitFor(() => {
+    const fade = document.querySelector('.reqore-collapsible-content-fade');
+    expect(fade).not.toBeNull();
+    expect(getComputedStyle(fade!).backgroundImage).toContain('linear-gradient');
+  });
+});
