@@ -45,13 +45,13 @@ export interface IReqoreContext {
     readonly dialogs?: boolean;
     readonly popovers?: boolean;
     /**
-     * Truncated (ellipsized) text scrolls into view while the pointer rests on
-     * it — right to left, easing out at the end, holding for a moment, snapping
-     * back and repeating — so a clipped label, tag, cell, title or heading can
-     * be read in place. Applies to every element in the document whose
+     * Truncated (ellipsized) text scrolls into view once the pointer has rested
+     * on it for a moment (250ms) — right to left, easing out at the end, holding
+     * for a moment, snapping back and repeating — so a clipped label, tag, cell,
+     * title or heading can be read in place. Applies to every element in the document whose
      * `text-overflow: ellipsis` is actually hiding something; pointer devices
      * only, never under `prefers-reduced-motion`. `false` turns it off, an
-     * object tunes the speed and pauses; one element (with its descendants)
+     * object tunes the delay, speed and pauses; one element (with its descendants)
      * opts out with `data-reqore-marquee="false"`.
      * @default true
      */

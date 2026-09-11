@@ -56,7 +56,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Truncated text scrolls into view while the pointer rests on it — right to left at a constant speed, easing out at the end, holding a second, snapping back and repeating. A `ReqoreUIProvider` behaviour (`options.animations.marquee`, on by default), installed once on the document and keyed off the actual CSS truncation, so a button label, a tag, a table cell, a panel title, a heading or any element with `text-overflow: ellipsis` gets it with nothing wired per component. Pointer devices only; never under `prefers-reduced-motion`; `data-reqore-marquee='false'` opts an element out.",
+          "Truncated text scrolls into view once the pointer has rested on it for a quarter of a second — right to left at a constant speed, easing out at the end, holding a second, snapping back and repeating. A `ReqoreUIProvider` behaviour (`options.animations.marquee`, on by default), installed once on the document and keyed off the actual CSS truncation, so a button label, a tag, a table cell, a panel title, a heading or any element with `text-overflow: ellipsis` gets it with nothing wired per component. Pointer devices only; never under `prefers-reduced-motion`; `data-reqore-marquee='false'` opts an element out.",
       },
     },
   },
@@ -102,7 +102,7 @@ export const Scrolls: Story = {
     docs: {
       description: {
         story:
-          "Renders the column and rests the pointer on the button's label (play): the clipped label scrolls right to left to its tail with the ellipsis gone and the clipped edge fading, eases out and holds — the story's provider holds for a minute, so the snapshot shows the button label fully revealed at its end while everything else keeps its ellipsis.",
+          "Renders the column and rests the pointer on the button's label (play): the clipped label scrolls right to left to its tail with the ellipsis gone, eases out and holds — the story's provider holds for a minute, so the snapshot shows the button label fully revealed at its end: no fade on the right any more (nothing is hidden there), a fade on the left where the head has scrolled out, everything else keeping its ellipsis.",
       },
     },
   },
@@ -118,7 +118,7 @@ export const Headings: Story = {
     docs: {
       description: {
         story:
-          "Renders the column and rests the pointer on the clipped ReqoreH3 (play): nothing was added to the heading — it is an element with `text-overflow: ellipsis` like any other — and it scrolls to its tail and holds, which the snapshot captures.",
+          "Renders the column and rests the pointer on the clipped ReqoreH3 (play): nothing was added to the heading — it is an element with `text-overflow: ellipsis` like any other — and it scrolls to its tail and holds with the right fade gone and the left one on, which the snapshot captures.",
       },
     },
   },
@@ -164,6 +164,29 @@ export const ReturnsOnLeave: Story = {
       expect(box).not.toHaveAttribute(MARQUEE_STATE_ATTRIBUTE);
       expect(getComputedStyle(box).textOverflow).toBe('ellipsis');
     });
+  },
+};
+
+/** PASSING THROUGH — a pointer that leaves before the intent delay sets nothing
+ *  in motion: the ellipsis never even changes. Behaviour-only. */
+export const PassingThrough: Story = {
+  parameters: {
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          "Drives the intent delay live (play): hovers the button's label and leaves again within 100ms — well inside the 250ms the pointer must rest — and asserts nothing ever started: no marquee state, the label still ellipsized. No snapshot — it looks like Resting.",
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const label = canvas.getAllByText(/Deploy the order-router/)[0];
+    await userEvent.hover(label);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await userEvent.unhover(label);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await expect(canvasElement.querySelector(`[${MARQUEE_STATE_ATTRIBUTE}]`)).toBeNull();
   },
 };
 

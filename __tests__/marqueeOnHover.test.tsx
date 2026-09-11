@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react';
 import { ReqoreContent, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
 import {
+  edgeMask,
   findMarqueeTargets,
   findTruncatedElement,
   MARQUEE_DEFAULTS,
@@ -44,8 +45,32 @@ const box = (hidden = 200) => {
 
 const state = (el: HTMLElement) => el.getAttribute(MARQUEE_STATE_ATTRIBUTE);
 
+/* jsdom's style engine does not know `mask-image`, so the fade cannot be read
+ * back from the style; watch what the engine WRITES instead. */
+const watchMask = (el: HTMLElement) => {
+  const calls: string[] = [];
+  vi.spyOn(el.style, 'setProperty').mockImplementation((name: string, value: string | null) => {
+    if (name === '-webkit-mask-image') {
+      calls.push(value ?? '');
+    }
+  });
+  return () => calls[calls.length - 1];
+};
+
 afterEach(() => {
   document.body.innerHTML = '';
+});
+
+describe('edgeMask', () => {
+  test('fades only the edges that hide something', () => {
+    expect(edgeMask(false, true)).toBe(
+      'linear-gradient(to right, black, black calc(100% - 14px), transparent)'
+    );
+    expect(edgeMask(true, true)).toBe(
+      'linear-gradient(to right, transparent, black 14px, black calc(100% - 14px), transparent)'
+    );
+    expect(edgeMask(true, false)).toBe('linear-gradient(to right, transparent, black 14px, black)');
+  });
 });
 
 describe('marqueeProgress', () => {
@@ -152,24 +177,32 @@ describe('startMarquee', () => {
 
   test('scrolls the tail in, holds, snaps back, goes again — and restores on stop', () => {
     const el = box(200); // 200px hidden at 40px/s → a 5s pass
+    const mask = watchMask(el);
     const stop = startMarquee(el, MARQUEE_DEFAULTS);
 
-    // The ellipsis would sit on top of the moving text: clipped for the duration.
+    // The ellipsis would sit on top of the moving text: clipped for the duration,
+    // and at the start only the tail is hidden — a fade on the right alone.
     expect(el.style.textOverflow).toBe('clip');
     expect(state(el)).toBe('running');
+    expect(mask()).toBe(edgeMask(false, true));
 
     vi.advanceTimersByTime(2500);
     expect(el.scrollLeft).toBeGreaterThan(0);
     expect(el.scrollLeft).toBeLessThan(200);
+    // Mid-way both the head and the tail are hidden.
+    expect(mask()).toBe(edgeMask(true, true));
 
     vi.advanceTimersByTime(2700);
     expect(el.scrollLeft).toBe(200);
     expect(state(el)).toBe('end');
+    // Finished: nothing is hidden on the right any more, so the right fade is gone.
+    expect(mask()).toBe(edgeMask(true, false));
 
-    // Holds for `pause`, then snaps back to the start…
+    // Holds for `pause`, then snaps back to the start — and the right fade returns.
     vi.advanceTimersByTime(MARQUEE_DEFAULTS.pause + 50);
     expect(el.scrollLeft).toBe(0);
     expect(state(el)).toBe('running');
+    expect(mask()).toBe(edgeMask(false, true));
 
     // …rests briefly, and scrolls again.
     vi.advanceTimersByTime(MARQUEE_DEFAULTS.rest + 1000);
@@ -178,6 +211,7 @@ describe('startMarquee', () => {
     stop();
     expect(el.scrollLeft).toBe(0);
     expect(el.style.textOverflow).toBe('ellipsis');
+    expect(mask()).toBe('');
     expect(state(el)).toBeNull();
   });
 
@@ -249,10 +283,16 @@ describe('the provider installs it on the document', () => {
     return truncate(document.querySelector('[data-testid="clipped"]') as HTMLElement, 200);
   };
 
-  test('hovering a truncated box scrolls it; leaving stops and restores it', () => {
+  test('hovering a truncated box scrolls it after the intent delay; leaving stops and restores it', () => {
     const el = mount();
 
     fireEvent.mouseOver(el);
+    // Resting for less than the delay: nothing has moved, the ellipsis is untouched.
+    vi.advanceTimersByTime(MARQUEE_DEFAULTS.delay - 50);
+    expect(el.scrollLeft).toBe(0);
+    expect(el.style.textOverflow).toBe('ellipsis');
+    expect(state(el)).toBeNull();
+
     vi.advanceTimersByTime(1000);
     expect(el.scrollLeft).toBeGreaterThan(0);
     expect(state(el)).toBe('running');
@@ -262,13 +302,25 @@ describe('the provider installs it on the document', () => {
     expect(state(el)).toBeNull();
   });
 
+  test('a pointer that leaves before the delay sets nothing in motion', () => {
+    const el = mount();
+
+    fireEvent.mouseOver(el);
+    vi.advanceTimersByTime(100);
+    fireEvent.mouseOut(el);
+    vi.advanceTimersByTime(2000);
+    expect(el.scrollLeft).toBe(0);
+    expect(el.style.textOverflow).toBe('ellipsis');
+    expect(state(el)).toBeNull();
+  });
+
   test('moving within the box does not restart it', () => {
     const el = mount();
     const inner = document.createElement('span');
     el.appendChild(inner);
 
     fireEvent.mouseOver(el);
-    vi.advanceTimersByTime(1000);
+    vi.advanceTimersByTime(MARQUEE_DEFAULTS.delay + 1000);
     const midway = el.scrollLeft;
     fireEvent.mouseOut(el, { relatedTarget: inner });
     fireEvent.mouseOver(inner);
@@ -285,7 +337,7 @@ describe('the provider installs it on the document', () => {
   });
 
   test('an object tunes it', () => {
-    const el = mount({ animations: { marquee: { speed: 400 } } }); // 200px in 0.5s
+    const el = mount({ animations: { marquee: { delay: 0, speed: 400 } } }); // 200px in 0.5s
     fireEvent.mouseOver(el);
     vi.advanceTimersByTime(700);
     expect(el.scrollLeft).toBe(200);

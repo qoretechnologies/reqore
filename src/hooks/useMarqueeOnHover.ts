@@ -18,6 +18,13 @@ import { useEffect } from 'react';
 
 export interface IReqoreMarqueeOptions {
   /**
+   * How long the pointer must rest on the text before it starts to move, in
+   * ms — a pointer passing through on its way somewhere else sets nothing in
+   * motion. The ellipsis stays until the scroll actually starts.
+   * @default 250
+   */
+  delay?: number;
+  /**
    * Average scroll speed, in px per second — a long label takes longer rather
    * than moving faster, so it stays readable.
    * @default 40
@@ -37,6 +44,7 @@ export interface IReqoreMarqueeOptions {
 }
 
 export const MARQUEE_DEFAULTS: Required<IReqoreMarqueeOptions> = {
+  delay: 250,
   speed: 40,
   pause: 1000,
   rest: 400,
@@ -61,8 +69,20 @@ export const MARQUEE_STATE_ATTRIBUTE = 'data-reqore-marquee-state';
 const MAX_ASCENT = 5;
 /** Below this many hidden px there is nothing worth scrolling to. */
 const MIN_DISTANCE = 2;
-/** Width of the fade on the clipped edge while scrolling, px. */
+/** Width of the fade on a clipped edge while scrolling, px. */
 const EDGE_FADE = 14;
+
+/**
+ * The fades say what is hidden: the tail until it has scrolled into view, the
+ * head once it has scrolled out. Once the text has finished, nothing is hidden
+ * on the right, so the right fade goes away with it.
+ */
+export const edgeMask = (headHidden: boolean, tailHidden: boolean): string => {
+  const start = headHidden ? `transparent, black ${EDGE_FADE}px` : 'black';
+  const end = tailHidden ? `black calc(100% - ${EDGE_FADE}px), transparent` : 'black';
+
+  return `linear-gradient(to right, ${start}, ${end})`;
+};
 
 /**
  * Constant speed for most of the way, easing out over the last stretch so the
@@ -182,26 +202,41 @@ export const startMarquee = (
   }
 
   const distance = Math.max(...boxes.map((el) => el.scrollWidth - el.clientWidth));
-  const mask = `linear-gradient(to right, black calc(100% - ${EDGE_FADE}px), transparent)`;
   const previous = boxes.map((el) => ({
     textOverflow: el.style.textOverflow,
     maskImage: el.style.maskImage,
     webkitMaskImage: el.style.getPropertyValue('-webkit-mask-image'),
   }));
 
+  let mask = '';
+  const applyEdges = (headHidden: boolean, tailHidden: boolean) => {
+    const next = edgeMask(headHidden, tailHidden);
+
+    if (next === mask) {
+      return;
+    }
+    mask = next;
+    boxes.forEach((el) => {
+      el.style.maskImage = next;
+      el.style.setProperty('-webkit-mask-image', next);
+    });
+  };
+
   boxes.forEach((el) => {
     el.style.textOverflow = 'clip';
-    el.style.maskImage = mask;
-    el.style.setProperty('-webkit-mask-image', mask);
     el.setAttribute(MARQUEE_STATE_ATTRIBUTE, 'running');
   });
+  applyEdges(false, true);
 
   const duration = Math.max(400, (distance / options.speed) * 1000);
   let phase: 'scroll' | 'hold' | 'rest' = 'scroll';
   let phaseStart: number | undefined;
   let frame = 0;
 
-  const scrollTo = (left: number) => boxes.forEach((el) => (el.scrollLeft = left));
+  const scrollTo = (left: number) => {
+    boxes.forEach((el) => (el.scrollLeft = left));
+    applyEdges(left > 0, left < distance);
+  };
   const setState = (state: 'running' | 'end') =>
     boxes.forEach((el) => el.setAttribute(MARQUEE_STATE_ATTRIBUTE, state));
 
@@ -264,6 +299,7 @@ export const startMarquee = (
  *   (`prefers-reduced-motion`) stays suppressed regardless.
  */
 export const useMarqueeOnHover = (enabled: boolean, options?: IReqoreMarqueeOptions): void => {
+  const delay = options?.delay ?? MARQUEE_DEFAULTS.delay;
   const speed = options?.speed ?? MARQUEE_DEFAULTS.speed;
   const pause = options?.pause ?? MARQUEE_DEFAULTS.pause;
   const rest = options?.rest ?? MARQUEE_DEFAULTS.rest;
@@ -279,9 +315,10 @@ export const useMarqueeOnHover = (enabled: boolean, options?: IReqoreMarqueeOpti
       return undefined;
     }
 
-    const resolved = { speed, pause, rest };
-    // What is scrolling, and the box a leave is measured against: the host when
-    // there is one (its copies come and go under the pointer), else the box.
+    const resolved = { delay, speed, pause, rest };
+    // What is scrolling (or about to, while the intent delay runs), and the box
+    // a leave is measured against: the host when there is one (its copies come
+    // and go under the pointer), else the box.
     let active: { scope: HTMLElement; boxes: HTMLElement[]; stop: () => void } | null = null;
     const stopActive = () => {
       active?.stop();
@@ -303,7 +340,22 @@ export const useMarqueeOnHover = (enabled: boolean, options?: IReqoreMarqueeOpti
         return;
       }
       stopActive();
-      active = { scope, boxes, stop: startMarquee(boxes, resolved) };
+
+      // Nothing moves until the pointer has rested for `delay`; a leave before
+      // then simply cancels the wait, with the ellipsis never having changed.
+      let stop: (() => void) | undefined;
+      const timer = setTimeout(() => {
+        stop = startMarquee(boxes, resolved);
+      }, resolved.delay);
+
+      active = {
+        scope,
+        boxes,
+        stop: () => {
+          clearTimeout(timer);
+          stop?.();
+        },
+      };
     };
 
     const onOut = (event: MouseEvent) => {
