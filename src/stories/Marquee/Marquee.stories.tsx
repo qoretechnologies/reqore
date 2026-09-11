@@ -56,7 +56,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Truncated text scrolls into view once the pointer has rested on it for a quarter of a second — right to left at a constant speed, easing out at the end, holding a second, snapping back and repeating. A `ReqoreUIProvider` behaviour (`options.animations.marquee`, on by default), installed once on the document and keyed off the actual CSS truncation, so a button label, a tag, a table cell, a panel title, a heading or any element with `text-overflow: ellipsis` gets it with nothing wired per component. Pointer devices only; never under `prefers-reduced-motion`; `data-reqore-marquee='false'` opts an element out.",
+          "Truncated text scrolls into view once the pointer has rested on it for about half a second — right to left at a constant speed, easing out at the end, holding a second, snapping back and repeating. A `ReqoreUIProvider` behaviour (`options.animations.marquee`, on by default), installed once on the document and keyed off the actual CSS truncation, so a button label, a tag, a table cell, a panel title, a heading or any element with `text-overflow: ellipsis` gets it with nothing wired per component. Pointer devices only; never under `prefers-reduced-motion`; `data-reqore-marquee='false'` opts an element out.",
       },
     },
   },
@@ -175,7 +175,7 @@ export const PassingThrough: Story = {
     docs: {
       description: {
         story:
-          "Drives the intent delay live (play): hovers the button's label and leaves again within 100ms — well inside the 250ms the pointer must rest — and asserts nothing ever started: no marquee state, the label still ellipsized. No snapshot — it looks like Resting.",
+          "Drives the intent delay live (play): hovers the button's label and leaves again within 100ms — well inside the 450ms the pointer must rest — and asserts nothing ever started: no marquee state, the label still ellipsized. No snapshot — it looks like Resting.",
       },
     },
   },

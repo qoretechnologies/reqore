@@ -21,7 +21,7 @@ export interface IReqoreMarqueeOptions {
    * How long the pointer must rest on the text before it starts to move, in
    * ms — a pointer passing through on its way somewhere else sets nothing in
    * motion. The ellipsis stays until the scroll actually starts.
-   * @default 250
+   * @default 450
    */
   delay?: number;
   /**
@@ -44,7 +44,7 @@ export interface IReqoreMarqueeOptions {
 }
 
 export const MARQUEE_DEFAULTS: Required<IReqoreMarqueeOptions> = {
-  delay: 250,
+  delay: 450,
   speed: 40,
   pause: 1000,
   rest: 400,
