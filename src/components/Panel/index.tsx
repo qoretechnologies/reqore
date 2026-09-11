@@ -1664,6 +1664,67 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const descriptionBelow =
       descriptionPosition === 'below' && !!description && !(hideTitleForIcon && !!icon);
     const descriptionClamp = Math.max(0, Math.floor(descriptionMaxLines || 0));
+
+    /**
+     * A clamped description opens on click so the whole of it can be read — on a phone there is
+     * no hover to reveal it with, and two lines of a long sentence are an invitation to tap.
+     *
+     * Interactive only while it is actually cut, or already open: a description that fits is
+     * left alone, so a click on it still reaches the bar and collapses a collapsible panel the
+     * way it always has. When it IS cut, that same click must not reach the bar — opening the
+     * text and folding the panel away in one gesture is the worst of both.
+     */
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [isDescriptionTruncated, setIsDescriptionTruncated] = useState(false);
+    const descriptionRef = useRef<HTMLSpanElement>(null);
+    const descriptionIsClamped = descriptionClamp > 0 && !isDescriptionExpanded;
+
+    useLayoutEffect(() => {
+      const el = descriptionRef.current;
+
+      // `scrollHeight` is what the text wants, `clientHeight` what the clamp left it. Re-read
+      // whenever the bar's width moves, because that is what changes how many lines it takes.
+      setIsDescriptionTruncated(descriptionIsClamped && !!el && el.scrollHeight > el.clientHeight + 1);
+    }, [description, descriptionIsClamped, width]);
+
+    const descriptionIsInteractive = isDescriptionTruncated || isDescriptionExpanded;
+
+    const handleDescriptionClick = useCallback(
+      (event: React.MouseEvent | React.KeyboardEvent) => {
+        if (!descriptionIsInteractive) {
+          return;
+        }
+
+        event.stopPropagation();
+        setIsDescriptionExpanded((expanded) => !expanded);
+      },
+      [descriptionIsInteractive]
+    );
+
+    /** Shared by both places the description can render — inline with the title, or on its
+     *  own row below — so the two cannot drift apart. */
+    const descriptionProps = {
+      ref: descriptionRef,
+      className: 'reqore-panel-title-description',
+      size: panelSize,
+      effect: { opacity: 0.7, ...descriptionEffect },
+      intent: descriptionIntent,
+      onClick: handleDescriptionClick,
+      ...(descriptionIsInteractive
+        ? {
+            role: 'button' as const,
+            tabIndex: 0,
+            'aria-expanded': isDescriptionExpanded,
+            onKeyDown: (event: React.KeyboardEvent) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleDescriptionClick(event);
+              }
+            },
+            style: { cursor: 'pointer' },
+          }
+        : {}),
+    };
     const [labelAvailable, setLabelAvailable] = useState<number | undefined>(undefined);
     const [labelFitRef, labelFitPx] = useFitTextSize<HTMLDivElement>({
       text: typeof label === 'string' ? label : '',
@@ -1828,7 +1889,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
               $descriptionBelow={descriptionBelow}
-              $descriptionMaxLines={descriptionClamp}
+              $descriptionMaxLines={descriptionIsClamped ? descriptionClamp : 0}
               $descriptionFontPx={descriptionFontPx}
               // Stamped for the same reason `EntityRow` stamps it: a narrow container is a fact
               // about the box, and a test or a story asserting the narrow treatment should read
@@ -1986,14 +2047,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                       // text smaller. Consumers that want to size the
                       // description explicitly pass `descriptionEffect.textSize`.
                       const descriptionRow = description && !hideTitleText && !descriptionBelow ? (
-                        <ReqoreSpan
-                          className='reqore-panel-title-description'
-                          size={panelSize}
-                          effect={{ opacity: 0.7, ...descriptionEffect }}
-                          intent={descriptionIntent}
-                        >
-                          {description}
-                        </ReqoreSpan>
+                        <ReqoreSpan {...descriptionProps}>{description}</ReqoreSpan>
                       ) : null;
 
                       return (
@@ -2131,14 +2185,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                   className='reqore-panel-title-description-row'
                   style={{ flex: '0 0 100%', minWidth: 0 }}
                 >
-                  <ReqoreSpan
-                    className='reqore-panel-title-description'
-                    size={panelSize}
-                    effect={{ opacity: 0.7, ...descriptionEffect }}
-                    intent={descriptionIntent}
-                  >
-                    {description}
-                  </ReqoreSpan>
+                  <ReqoreSpan {...descriptionProps}>{description}</ReqoreSpan>
                 </div>
               ) : null}
             </StyledPanelTopBar>
