@@ -159,4 +159,9 @@ export { default as useLatestZIndex } from './hooks/useLatestZIndex';
 export { useReqorePaging } from './hooks/usePaging';
 export { useReqore } from './hooks/useReqore';
 export { useReqoreProperty } from './hooks/useReqoreContext';
+export {
+  REQORE_MARQUEE_OPT_OUT,
+  useMarqueeOnHover,
+  type IReqoreMarqueeOptions,
+} from './hooks/useMarqueeOnHover';
 export { useReqoreTheme } from './hooks/useTheme';

@@ -1,3 +1,4 @@
+import { IReqoreMarqueeOptions } from '../hooks/useMarqueeOnHover';
 import { createContext } from 'use-context-selector';
 import { IReqoreErrorBoundaryProps } from '../components/ErrorBoundary';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
@@ -43,6 +44,18 @@ export interface IReqoreContext {
     readonly buttons?: boolean;
     readonly dialogs?: boolean;
     readonly popovers?: boolean;
+    /**
+     * Truncated (ellipsized) text scrolls into view once the pointer has rested
+     * on it for a moment (450ms) — right to left, easing out at the end, holding
+     * for a moment, snapping back and repeating — so a clipped label, tag, cell,
+     * title or heading can be read in place. Applies to every element in the document whose
+     * `text-overflow: ellipsis` is actually hiding something; pointer devices
+     * only, never under `prefers-reduced-motion`. `false` turns it off, an
+     * object tunes the delay, speed and pauses; one element (with its descendants)
+     * opts out with `data-reqore-marquee="false"`.
+     * @default true
+     */
+    readonly marquee?: boolean | IReqoreMarqueeOptions;
   };
   readonly tooltips?: {
     /**

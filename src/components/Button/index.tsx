@@ -1,3 +1,4 @@
+import { REQORE_MARQUEE_HOST, REQORE_MARQUEE_TEXT } from '../../hooks/useMarqueeOnHover';
 import { size } from 'lodash';
 import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo } from 'react';
@@ -774,6 +775,9 @@ const ReqoreButton = memo(
             compact: _compact,
             square,
             tooltip,
+            // The label lives in two copies that swap on hover; hovering anywhere
+            // on the button scrolls a clipped label in both (see useMarqueeOnHover).
+            ...REQORE_MARQUEE_HOST,
           }}
           Component={StyledButton}
           ref={targetRef}
@@ -827,6 +831,7 @@ const ReqoreButton = memo(
                     wrap={wrap}
                     effect={labelEffect}
                     className='reqore-button-text-content'
+                    {...REQORE_MARQUEE_TEXT}
                   >
                     {_children}
                   </StyledContent>
@@ -836,6 +841,7 @@ const ReqoreButton = memo(
                     wrap={wrap}
                     effect={labelEffect}
                     className='reqore-button-text-content reqore-animated reqore-active'
+                    {...REQORE_MARQUEE_TEXT}
                   >
                     {_children}
                   </StyledActiveContent>
@@ -845,6 +851,7 @@ const ReqoreButton = memo(
                     wrap={wrap}
                     effect={labelEffect}
                     className='reqore-button-text-content reqore-animated reqore-inactive'
+                    {...REQORE_MARQUEE_TEXT}
                     aria-hidden='true'
                   >
                     {_children}
