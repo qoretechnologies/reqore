@@ -1989,37 +1989,21 @@ export const FitLabelComparison: Story = {
     docs: {
       description: {
         story:
-          "The whole cascade, engaged. Column 1 reproduces the OLD behaviour — the stretched action group plus the old title defaults — by forcing the group back to `width: 100%` through `responsiveActionsWrapperProps`; that group took the row's remainder whether it needed it or not, leaving the title a third of the panel. Column 2 sets nothing at all: the group now takes a content-width BASIS but stays SHRINKABLE, so it never claims the remainder and still folds into the `…` menu once the row is contended — and the title wraps to two lines before it shrinks, shrinks before it truncates, with the description bounded so it cannot run away underneath. Column 3 adds the one thing still opt-in, `descriptionPosition='below'`, which gives the description a row of its own under the bar.",
+          "The whole title cascade, engaged, at four widths. Left sets nothing at all: the action group takes a content-width basis but stays shrinkable, so it never claims the row's remainder and still folds into the `…` menu once the row is contended — and the title wraps to two lines before it shrinks, shrinks before it truncates, with the description clamped to two lines so it cannot run away underneath. Right adds the one thing still opt-in, `descriptionPosition='below'`, which gives the description a row of its own under the bar. A clamped description opens on click, without collapsing the panel.",
       },
     },
   },
   render: () => (
     <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
       {[
-        { title: '1 · Before — stretched action group', legacy: true, below: false },
-        { title: '2 · Now — nothing set', legacy: false, below: false },
-        { title: "3 · Now + description 'below'", legacy: false, below: true },
+        { title: 'Nothing set', below: false },
+        { title: "descriptionPosition='below'", below: true },
       ].map((variant) => (
         <ReqoreControlGroup key={variant.title} vertical gapSize='normal' fixed>
           <ReqoreP style={{ margin: 0, opacity: 0.7 }}>{variant.title}</ReqoreP>
           {[440, 360, 300, 260].map((w) => (
             <div key={w} style={{ width: `${w}px` }}>
               <ReqorePanel
-                // Column 1 names every old default back; the others take whatever the
-                // component now ships, which is the point of the comparison.
-                {...(variant.legacy
-                  ? {
-                      fitLabel: false,
-                      labelMaxLines: 1,
-                      descriptionMaxLines: 0,
-                      // The old action group stretched to the row's remainder. That is no longer
-                      // reachable through a prop, so the story restores the CSS it used to emit —
-                      // otherwise there is nothing left to compare the new default against.
-                      responsiveActionsWrapperProps: {
-                        style: { flex: '1 1 auto', width: '100%' },
-                      },
-                    }
-                  : {})}
                 {...(variant.below ? { descriptionPosition: 'below' as const } : {})}
                 label='Publish this Qog to the Template Marketplace'
                 description={PANEL_DESCRIPTION}
