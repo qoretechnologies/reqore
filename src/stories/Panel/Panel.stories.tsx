@@ -2022,6 +2022,47 @@ export const FitLabelComparison: Story = {
   ),
 };
 
+export const DescriptionExpandsOnClick: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A description cut by `descriptionMaxLines` opens on click so the whole of it can be read, and closes again on the next one — on a phone there is no hover to reveal it with. Captured AFTER the click, so the snapshot shows the open state. The panel is collapsible, and its content is still on screen underneath: the click that opens the description is stopped before it reaches the bar, because opening the text and folding the panel away in one gesture would be the worst of both. A description that fits in its lines is not interactive and a click on it still collapses the panel as it always did.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: '300px' }}>
+      <ReqorePanel
+        label='Publish this Qog'
+        description={`${PANEL_DESCRIPTION} Anyone in the organisation can then find it in the marketplace, preview the flow, and install it into their own instance with one click.`}
+        icon='Upload2Line'
+        collapsible
+        actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+      >
+        Content stays put when the description opens.
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const description = canvasElement.querySelector<HTMLElement>(
+      '.reqore-panel-title-description'
+    );
+
+    // Cut, and therefore interactive — the clamp is only worth a click when it hides text.
+    await waitFor(() => expect(description.getAttribute('role')).toBe('button'));
+    expect(description.scrollHeight).toBeGreaterThan(description.clientHeight);
+
+    await fireEvent.click(description);
+
+    await waitFor(() => expect(description.getAttribute('aria-expanded')).toBe('true'));
+    // Open: the whole text is in the box, nothing left to scroll to.
+    expect(description.scrollHeight).toBe(description.clientHeight);
+    // And the panel did not collapse under it.
+    expect(canvasElement.querySelector('.reqore-panel-content')).toBeVisible();
+  },
+};
+
 export const CompactTitleWhenNarrow: Story = {
   parameters: {
     docs: {
