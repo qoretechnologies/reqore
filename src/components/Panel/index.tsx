@@ -2093,8 +2093,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                     // Floored, because shrinking to nothing clips the buttons instead of folding
                     // them, and ControlGroup ignores its own overflow below 40px.
                     minWidth: 40,
-                    // Capped, so a group that IS opted back into growing cannot take the row.
-                    maxWidth: '50%',
+                    // Capped, so a group that IS opted back into growing cannot take the row —
+                    // but only while there is a title header to take it FROM. With no label,
+                    // badge, icon or breadcrumbs the bar is the group's alone, and holding a
+                    // Collection's search input to half of an empty bar guards nothing.
+                    maxWidth: hasTitleHeader ? '50%' : undefined,
                     ...responsiveActionsWrapperProps?.style,
                   }}
                 >
