@@ -644,6 +644,16 @@ export const ReqoreCollection = memo(
     return (
       <ReqorePanel
         {...rest}
+        // The toolbar holds a SEARCH INPUT, which is the one kind of action with no useful width
+        // of its own — it is worth exactly as much as it is given. Panel's action group is
+        // content-sized by default so that buttons cannot starve a title, and a content-sized
+        // group leaves this input at its placeholder width (measured: 264px, against 1795px when
+        // the group stretched). Opting this group back into growing is what gives the input room;
+        // Panel still caps the group at half the bar, so the title keeps its share either way.
+        responsiveActionsWrapperProps={{
+          ...rest.responsiveActionsWrapperProps,
+          fluid: filterable && inputInTitle ? true : rest.responsiveActionsWrapperProps?.fluid,
+        }}
         labelSize={labelSize}
         fill={fill}
         contentStyle={contentStyle}

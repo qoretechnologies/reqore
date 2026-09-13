@@ -1,6 +1,6 @@
 import { forwardRef, memo, useMemo } from 'react';
 import styled from 'styled-components';
-import { HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
+import { HEADER_LEVEL_TO_PX, HEADER_SIZE_TO_NUMBER, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -26,24 +26,8 @@ export const StyledHeader = styled(StyledTextEffect)`
   padding: 0;
   color: ${({ theme, intent }) => (intent ? theme.intents[intent] : 'inherit')};
 
-  font-size: ${({ _size }) => {
-    switch (_size) {
-      case 1:
-        return '30px';
-      case 2:
-        return '24px';
-      case 3:
-        return '19px';
-      case 4:
-        return '14px';
-      case 5:
-        return '11px';
-      case 6:
-        return '8px';
-      default:
-        return 'inherit';
-    }
-  }};
+  font-size: ${({ _size }) =>
+    _size && HEADER_LEVEL_TO_PX[_size] ? `${HEADER_LEVEL_TO_PX[_size]}px` : 'inherit'};
 `;
 
 export const ReqoreHeading = memo(

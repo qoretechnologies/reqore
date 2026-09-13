@@ -82,6 +82,7 @@ export interface IReqoreCollapsibleContentProps
   animated?: boolean;
   /** Extra props forwarded to both the reveal and collapse buttons. */
   buttonProps?: Partial<IReqoreButtonProps>;
+
 }
 
 interface IStyledCollapsibleContentProps {
@@ -211,6 +212,10 @@ const mergeButtonEffect = (
 /**
  * Height-clipping "Show more" reveal: tall content clips behind a gradient fade with a reveal
  * button (on hover / focus) and expands to a "Show less"; short content shows whole, no fade.
+ *
+ * `customTheme.main` doubles as the fade color: the gradient ends ON the color given, so a reveal
+ * nested in a callout, a panel or a tile fades into THAT surface instead of into the app
+ * background. Left unset, the fade follows the ambient theme background.
  */
 export const ReqoreCollapsibleContent = memo(
   forwardRef<HTMLDivElement, IReqoreCollapsibleContentProps>(
@@ -244,7 +249,7 @@ export const ReqoreCollapsibleContent = memo(
     ) => {
       // Drive theme.main and theme.intents off `customTheme` + `intent` so consumers control the
       // fade and the button color through the standard contract — there is no separate
-      // `fadeColor` knob.
+      // `fadeColor` knob. See `fade` below for what an explicit `customTheme.main` means.
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const contentRef = useRef<HTMLDivElement>(null);
       const [isCollapsed, setIsCollapsed] = useState(!defaultExpanded);
@@ -309,11 +314,27 @@ export const ReqoreCollapsibleContent = memo(
       // Clip until measured (avoids a flash of full content), then only when it overflows.
       const showCollapsed = isCollapsed && (!hasMeasured || needsCollapse);
       // The fade is the surface — when `intent` is set we fade into the intent color so the
-      // hint reads visually (a danger intent fades into red, success into green). Otherwise the
-      // fade matches the resolved theme background (driven by `customTheme.main`).
+      // hint reads visually (a danger intent fades into red, success into green).
+      //
+      // Otherwise it is the background, and which background that is depends on who said so. An
+      // explicit `customTheme.main` IS the surface this content sits on: the caller is naming the
+      // color the gradient has to land on, so it is used as given. Only the AMBIENT theme goes
+      // through `getMainBackgroundColor`, whose slight lightening exists because the app's
+      // background sits a hair above `theme.main`.
+      //
+      // Applying that lightening to a caller's own color was a bug: the fade ended one step
+      // lighter than the surface underneath it, so a reveal nested in anything that is not the
+      // app background — a callout, a panel, a tile — drew a lighter rectangle across the text
+      // instead of fading into it. Compensating for it meant passing a color a step BELOW the
+      // real surface, which is not something a consumer can be expected to know.
       const fade = useMemo(
-        () => (intent ? theme.intents[intent] : getMainBackgroundColor(theme)),
-        [theme, intent]
+        () =>
+          intent
+            ? theme.intents[intent]
+            : customTheme?.main
+              ? theme.main
+              : getMainBackgroundColor(theme),
+        [theme, intent, customTheme?.main]
       );
       // Fade height scales with `size` so a tiny picker doesn't get a hero-sized gradient and a
       // huge one doesn't look weak. Still bounded by the clip height so the fade never overruns

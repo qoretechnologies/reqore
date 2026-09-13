@@ -1976,3 +1976,135 @@ export const HoverActionReachableWithoutHover: Story = {
     expect(gated).toBe(true);
   },
 };
+
+/** A real sentence rather than a few words: a description that was never going to wrap tells you
+ *  nothing about how the bar handles one, and the whole question here is what happens when the
+ *  title and the text under it compete for the same column. Shared by all four columns so their
+ *  heights compare. */
+const PANEL_DESCRIPTION =
+  'Share this Qog with your team and publish it to the marketplace so anyone can install it.';
+
+export const FitLabelComparison: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "The whole title cascade, engaged, at four widths. Left sets nothing at all: the action group takes a content-width basis but stays shrinkable, so it never claims the row's remainder and still folds into the `…` menu once the row is contended — and the title wraps to two lines before it shrinks, shrinks before it truncates, with the description clamped to two lines so it cannot run away underneath. Right adds the one thing still opt-in, `descriptionPosition='below'`, which gives the description a row of its own under the bar. A clamped description opens on click, without collapsing the panel.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup gapSize='big' verticalAlign='flex-start'>
+      {[
+        { title: 'Nothing set', below: false },
+        { title: "descriptionPosition='below'", below: true },
+      ].map((variant) => (
+        <ReqoreControlGroup key={variant.title} vertical gapSize='normal' fixed>
+          <ReqoreP style={{ margin: 0, opacity: 0.7 }}>{variant.title}</ReqoreP>
+          {[440, 360, 300, 260].map((w) => (
+            <div key={w} style={{ width: `${w}px` }}>
+              <ReqorePanel
+                {...(variant.below ? { descriptionPosition: 'below' as const } : {})}
+                label='Publish this Qog to the Template Marketplace'
+                description={PANEL_DESCRIPTION}
+                icon='Upload2Line'
+                collapsible
+                onClose={noop}
+                actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+              >
+                {w}px
+              </ReqorePanel>
+            </div>
+          ))}
+        </ReqoreControlGroup>
+      ))}
+    </ReqoreControlGroup>
+  ),
+};
+
+export const DescriptionExpandsOnClick: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A description cut by `descriptionMaxLines` opens on click so the whole of it can be read, and closes again on the next one — on a phone there is no hover to reveal it with. Captured AFTER the click, so the snapshot shows the open state. The panel is collapsible, and its content is still on screen underneath: the click that opens the description is stopped before it reaches the bar, because opening the text and folding the panel away in one gesture would be the worst of both. A description that fits in its lines is not interactive and a click on it still collapses the panel as it always did.",
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: '300px' }}>
+      <ReqorePanel
+        label='Publish this Qog'
+        description={`${PANEL_DESCRIPTION} Anyone in the organisation can then find it in the marketplace, preview the flow, and install it into their own instance with one click.`}
+        icon='Upload2Line'
+        collapsible
+        actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+      >
+        Content stays put when the description opens.
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const description = canvasElement.querySelector<HTMLElement>(
+      '.reqore-panel-title-description'
+    );
+
+    // Cut, and therefore interactive — the clamp is only worth a click when it hides text.
+    await waitFor(() => expect(description.getAttribute('role')).toBe('button'));
+    expect(description.scrollHeight).toBeGreaterThan(description.clientHeight);
+
+    await fireEvent.click(description);
+
+    await waitFor(() => expect(description.getAttribute('aria-expanded')).toBe('true'));
+    // Open: the whole text is in the box, nothing left to scroll to.
+    expect(description.scrollHeight).toBe(description.clientHeight);
+    // And the panel did not collapse under it.
+    expect(canvasElement.querySelector('.reqore-panel-content')).toBeVisible();
+  },
+};
+
+export const CompactTitleWhenNarrow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "What a title bar gives up, in order, as its box shrinks — four widths of the same panel, then the opt-in last resort. 520px: everything fits, actions labelled, title at its natural 19px. 380px: the ACTION LABELS go first and the buttons keep their icons with the label moved to the tooltip — an action is a verb its icon already carries, while the title is the only thing naming what the panel is. 300px: the title WRAPS to a second line, which costs height but keeps every character at full size. 220px: only once two lines will not hold it does the title shrink toward a floor and then ellipsize. The fifth panel is `compactTitle`, for a bar too narrow to ellipsize into: the title gives up its space entirely and the icon stands in, with the label surviving as that icon's tooltip.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize="big" fluid>
+      {[
+        { w: 520, note: 'Everything fits: labelled actions, title at 19px.' },
+        { w: 380, note: 'Action labels go first — icons keep them in tooltips.' },
+        { w: 300, note: 'Title wraps to a second line — nothing is lost yet.' },
+        { w: 220, note: 'Two lines no longer hold it: the title shrinks, then ellipsizes.' },
+      ].map(({ w, note }) => (
+        <div key={w} style={{ width: `${w}px` }}>
+          <ReqorePanel
+            label="Publish as Template"
+            icon="Upload2Line"
+            collapsible
+            onClose={noop}
+            actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+          >
+            {w}px — {note}
+          </ReqorePanel>
+        </div>
+      ))}
+      <div style={{ width: '220px' }}>
+        <ReqorePanel
+          compactTitle
+          label="Publish as Template"
+          icon="Upload2Line"
+          collapsible
+          onClose={noop}
+          actions={[{ label: 'Preview', icon: 'EyeLine' }]}
+        >
+          220px, compactTitle — the icon takes the title's place.
+        </ReqorePanel>
+      </div>
+    </ReqoreControlGroup>
+  ),
+};
+
