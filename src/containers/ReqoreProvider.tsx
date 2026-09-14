@@ -1,3 +1,4 @@
+import { useMarqueeOnHover } from '../hooks/useMarqueeOnHover';
 import { last, size } from 'lodash';
 import { nanoid } from 'nanoid';
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
@@ -267,6 +268,7 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
         buttons: true,
         dialogs: true,
         popovers: true,
+        marquee: true,
         ...(options?.animations || {}),
       },
       tooltips: options?.tooltips ?? DEFAULT_TOOLTIP_OPTIONS,
@@ -281,6 +283,15 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
       errorBoundaryOptions: options?.errorBoundaryOptions || DEFAULT_ERROR_BOUNDARY_OPTIONS,
     }),
     [options]
+  );
+
+  // Truncated text scrolls into view on hover — one document-level behaviour
+  // for every ellipsized element, gated on a real pointer (a touch screen has
+  // no hover to rest in) and, inside the hook, on the OS motion setting.
+  const marquee = resolvedOptions.animations.marquee;
+  useMarqueeOnHover(
+    isHoverCapable && marquee !== false,
+    typeof marquee === 'object' ? marquee : undefined
   );
 
   const contextValue: IReqoreContext = useMemo(
