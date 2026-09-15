@@ -124,6 +124,11 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
   min-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size]}px;
   line-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
   vertical-align: middle;
+  /* Height only. The textarea fills its wrapper, so the browser's default
+     \`resize: both\` let a drag narrow the textarea while the wrapper — border,
+     focus outline, clear button — kept the full width, and it could never grow
+     wider than that. */
+  resize: vertical;
 
   background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
     minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
