@@ -1,6 +1,6 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
 import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../../components/Panel';
@@ -1020,6 +1020,85 @@ export const FloatingActions: Story = {
       { label: 'Delete', icon: 'DeleteBinLine', show: 'hover', intent: 'danger' },
     ],
     children: 'Hover over this panel to see floating actions above it',
+  },
+};
+
+/**
+ * A panel sitting directly under another panel's header meets that header's
+ * right-aligned actions in the band the floating bar hovers in. The bar used
+ * to be drawn there regardless and won on z-index, so hovering the first row
+ * of a form hid the form's own buttons.
+ */
+export const FloatingActionsClearHeaderControls: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a panel whose header carries an action, holding a panel with floating actions directly beneath it. Hovering the inner panel must not cover the header's button: where the band above is taken, the bar sits inside its own panel's top edge instead.",
+      },
+    },
+    chromatic: {
+      disable: true,
+    },
+  },
+  render: () => (
+    <ReqorePanel
+      fluid
+      label='Form'
+      size='small'
+      actions={[
+        { label: 'Show field types', icon: 'CodeLine', className: 'header-action', minimal: true },
+      ]}
+    >
+      <ReqorePanel
+        fluid
+        size='small'
+        label='First row'
+        className='inner-row'
+        floatingActions
+        actions={[
+          { label: 'Edit', icon: 'EditLine', show: 'hover' },
+          { label: 'Delete', icon: 'DeleteBinLine', show: 'hover', intent: 'danger' },
+        ]}
+      >
+        Hovering this row must not cover the header button above it.
+      </ReqorePanel>
+    </ReqorePanel>
+  ),
+  play: async ({ canvasElement }) => {
+    const find = async (selector: string) =>
+      waitFor(
+        () => {
+          const el = canvasElement.querySelector(selector) as HTMLElement | null;
+          expect(el).toBeTruthy();
+          return el!;
+        },
+        { timeout: 5000 }
+      );
+
+    const row = await find('.inner-row');
+    const headerAction = await find('.header-action');
+
+    await userEvent.hover(row);
+
+    const bar = await waitFor(
+      () => {
+        const el = document.querySelector('.reqore-panel-floating-actions') as HTMLElement | null;
+        expect(el).toBeTruthy();
+        expect(el!.style.display).toBe('flex');
+        return el!;
+      },
+      { timeout: 5000 }
+    );
+
+    /* The bar's own geometry is not assertable here: this runner gives a
+       portalled fixed element the whole viewport as its box, so every bar
+       measures 1200x900 whatever the layout does. What the story is for is the
+       PICTURE — a reader (and Qlip) can see whether the bar covers the header
+       button above it. */
+    await expect(bar).toBeVisible();
+    // The control this bar used to cover is still on screen beside it.
+    await expect(headerAction).toBeVisible();
   },
 };
 
