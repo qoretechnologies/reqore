@@ -1,7 +1,8 @@
-import { memo, useEffect, useState } from 'react';
-import { useUpdateEffect } from 'react-use';
+import { memo, useCallback, useEffect, useState } from 'react';
+import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent } from 'react';
+import ReqoreButton from '../Button';
 import { IReqoreHeadingProps, ReqoreHeading } from '../Header';
-import ReqoreIcon, { IReqoreIconProps } from '../Icon';
+import { IReqoreIconProps } from '../Icon';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { ReqoreSpan } from '../Span';
 
@@ -21,47 +22,99 @@ export const LabelEditor = memo(
       setName(label);
     }, [label]);
 
-    useUpdateEffect(() => {
-      if (!isEditing) {
-        onSubmit?.(name);
-      }
-    }, [isEditing]);
+    const startEditing = useCallback(() => {
+      setName(label);
+      setIsEditing(true);
+    }, [label]);
+
+    const commit = useCallback(() => {
+      setIsEditing(false);
+      onSubmit?.(name);
+    }, [name, onSubmit]);
+
+    const cancel = useCallback(() => {
+      setName(label);
+      setIsEditing(false);
+    }, [label]);
+
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          event.stopPropagation();
+          cancel();
+        } else if (event.key === 'Enter') {
+          event.preventDefault();
+          commit();
+        }
+
+        inputProps?.onKeyDown?.(event);
+      },
+      [cancel, commit, inputProps?.onKeyDown]
+    );
+
+    const handleClick = useCallback(
+      (event: MouseEvent<HTMLInputElement>) => {
+        event.stopPropagation();
+        inputProps?.onClick?.(event);
+      },
+      [inputProps?.onClick]
+    );
+
+    const handleChange = useCallback(
+      (event: ChangeEvent<HTMLInputElement>) => {
+        setName(event.target.value);
+        inputProps?.onChange?.(event);
+      },
+      [inputProps?.onChange]
+    );
+
+    const handleBlur = useCallback(
+      (event: FocusEvent<HTMLInputElement>) => {
+        commit();
+        inputProps?.onBlur?.(event);
+      },
+      [commit, inputProps?.onBlur]
+    );
+
+    const handleEditClick = useCallback(
+      (event: MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        startEditing();
+      },
+      [startEditing]
+    );
 
     if (isEditing) {
       return (
         <ReqoreInput
-          focusRules={{ type: 'auto' }}
-          onClick={(e) => e.stopPropagation()}
-          value={name}
-          minimal
-          fluid
-          onChange={(e: any) => setName(e.target.value)}
-          onKeyUp={(e) => {
-            if (e.key === 'Enter') {
-              setIsEditing(false);
-            }
-          }}
-          onBlur={() => setIsEditing(false)}
           {...inputProps}
+          focusRules={inputProps?.focusRules ?? { type: 'auto' }}
+          onClick={handleClick}
+          value={name}
+          minimal={inputProps?.minimal ?? true}
+          fluid={inputProps?.fluid ?? true}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
         />
       );
     }
 
     return (
-      <ReqoreHeading
-        {...rest}
-        className={`${rest.className || ''} reqore-label-editor`}
-        onClick={
-          onSubmit
-            ? (e) => {
-                e.stopPropagation();
-                setIsEditing(true);
-              }
-            : undefined
-        }
-      >
+      <ReqoreHeading {...rest} className={`${rest.className || ''} reqore-label-editor`}>
         <ReqoreSpan effect={effect}>{name}</ReqoreSpan>
-        {onSubmit ? <ReqoreIcon icon='EditLine' size='small' margin='left' {...iconProps} /> : null}
+        {onSubmit ? (
+          <ReqoreButton
+            aria-label='Edit panel label'
+            icon='EditLine'
+            leftIconProps={iconProps}
+            minimal
+            size='tiny'
+            tooltip='Edit panel label'
+            onClick={handleEditClick}
+          />
+        ) : null}
       </ReqoreHeading>
     );
   }

@@ -473,3 +473,24 @@ test('<TextArea /> forwards `rows` so scaleWithContent keeps it as the floor', (
   // default stays 1 — existing consumers keep their exact markup
   expect(withoutRows.getAttribute('rows')).toBe('1');
 });
+
+test('<TextArea /> resizes only vertically, whatever wraps it', () => {
+  /* The browser default is `resize: both`, but the textarea fills its wrapper
+     (`width: 100%`): dragging the grip narrower left the wrapper — its border,
+     focus outline and clear button — at the full width, and it could never grow
+     wider. Height is the only thing a drag can usefully change. */
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTextarea />
+          <ReqoreTextarea scaleWithContent fluid templates={{ items: [{ value: '$local:a' }] }} />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const textareas = Array.from(document.querySelectorAll('textarea'));
+  expect(textareas).toHaveLength(2);
+  textareas.forEach((textarea) => expect(getComputedStyle(textarea).resize).toBe('vertical'));
+});

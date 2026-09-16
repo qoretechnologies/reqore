@@ -268,6 +268,19 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
             asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
         `}
 
+  /* How a MINIMAL tag colours its label.
+
+     Minimal paints the colour at 20% alpha, so what the label actually sits on
+     is mostly the surface underneath — not the colour. For a CHROMATIC colour a
+     light tint of it reads on either theme. For an ACHROMATIC one there is no
+     tint to take: a 20% wash of grey over the surface IS the surface, so the
+     label is read against the surface, exactly as the no-colour case does.
+
+     It used to fall through to the readable colour for the colour at FULL
+     strength. A near-white muted intent is light, so that returned BLACK, and
+     the tag rendered black text on a 20% wash over a near-black page — reported
+     as "black text on a dark grey background; it's very hard to read", and true
+     of every minimal tag with a grey intent. */
   ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) => {
     return css`
       background-color: ${minimal
@@ -275,8 +288,10 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
           ? rgba(color, 0.2)
           : rgba(changeLightness('#000000', 0.05), 0.3)
         : color || changeLightness(theme.main, 0.1)};
-      color: ${minimal && color && color !== 'transparent' && !isAchromatic(color)
-        ? saturate(1, tint(0.8, color))
+      color: ${minimal && color && color !== 'transparent'
+        ? isAchromatic(color)
+          ? getReadableColorFrom(changeLightness(theme.main, 0.1))
+          : saturate(1, tint(0.8, color))
         : color && color !== 'transparent'
           ? getReadableColorFrom(color)
           : getReadableColorFrom(changeLightness(theme.main, 0.1))};

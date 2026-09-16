@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useMeasure, useUpdateEffect } from 'react-use';
+import { panelIsSmall } from './responsive';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
@@ -113,7 +114,8 @@ export type TReqorePanelActions = IReqorePanelAction[];
 export type TReqorePanelBottomActions = IReqorePanelBottomAction[];
 
 export interface IReqorePanelProps
-  extends IReqoreComponent,
+  extends
+    IReqoreComponent,
     IWithReqoreSize,
     IWithReqoreCustomTheme,
     IWithReqoreFlat,
@@ -466,17 +468,19 @@ export const StyledPanelTitleHeaderContent = styled.div<{
           align-items: start;
 
           & > .reqore-panel-title-icon {
-            ${$iconVerticalAlign === 'top'
-              ? css`
-                  grid-row: 1;
-                `
-              : $iconVerticalAlign === 'bottom' && $hasDescription
-              ? css`
-                  grid-row: 2;
-                `
-              : css`
-                  grid-row: 1 / ${$hasDescription ? 3 : 2};
-                `}
+            ${
+              $iconVerticalAlign === 'top'
+                ? css`
+                    grid-row: 1;
+                  `
+                : $iconVerticalAlign === 'bottom' && $hasDescription
+                  ? css`
+                      grid-row: 2;
+                    `
+                  : css`
+                      grid-row: 1 / ${$hasDescription ? 3 : 2};
+                    `
+            }
             grid-column: 1;
             align-self: center;
             justify-self: start;
@@ -635,33 +639,37 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
       &::before {
         content: '';
         position: absolute;
-        ${accentPosition === 'left'
-          ? css`
-              top: 0;
-              bottom: 0;
-              left: 0;
-              width: ${$accentSize}px;
-            `
-          : css`
-              top: 0;
-              right: 0;
-              left: 0;
-              height: ${$accentSize}px;
-            `}
-        ${stripRadius
-          ? accentPosition === 'left'
+        ${
+          accentPosition === 'left'
             ? css`
-                border-top-left-radius: ${stripRadius}px;
-                border-bottom-left-radius: ${stripRadius}px;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: ${$accentSize}px;
               `
             : css`
-                border-top-left-radius: ${stripRadius}px;
-                border-top-right-radius: ${stripRadius}px;
+                top: 0;
+                right: 0;
+                left: 0;
+                height: ${$accentSize}px;
               `
-          : undefined}
-        background-color: ${intent
-          ? theme.intents[intent]
-          : changeLightness(getMainBackgroundColor(theme), 0.22)};
+        }
+        ${
+          stripRadius
+            ? accentPosition === 'left'
+              ? css`
+                  border-top-left-radius: ${stripRadius}px;
+                  border-bottom-left-radius: ${stripRadius}px;
+                `
+              : css`
+                  border-top-left-radius: ${stripRadius}px;
+                  border-top-right-radius: ${stripRadius}px;
+                `
+            : undefined
+        }
+        background-color: ${
+          intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.22)
+        };
       }
     `;
   }}
@@ -701,34 +709,43 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
               transform: scale(${ACTIVE_ICON_SCALE});
             }
 
-            background-color: ${opacity === 0 && flat
-              ? undefined
-              : rgba(
-                  darken(0.025, rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)),
-                  opacity
-                )};
+            background-color: ${
+              opacity === 0 && flat
+                ? undefined
+                : rgba(
+                    darken(
+                      0.025,
+                      rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
+                    ),
+                    opacity
+                  )
+            };
 
-            border-color: ${hasPanelBorder({ flat, intent, accentPosition })
-              ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25)
-              : undefined};
+            border-color: ${
+              hasPanelBorder({ flat, intent, accentPosition })
+                ? changeLightness(getPanelBorderBaseColor(theme, { intent, accentPosition }), 0.25)
+                : undefined
+            };
 
-            ${opacity !== 0 &&
-            css`
-              ${StyledCollectionItemContent}:after {
-                background: linear-gradient(
-                  to top,
-                  ${rgba(
+            ${
+              opacity !== 0 &&
+              css`
+                ${StyledCollectionItemContent}:after {
+                  background: linear-gradient(
+                    to top,
+                    ${rgba(
                       darken(
                         0.025,
                         rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
                       ),
                       opacity
                     )}
-                    0%,
-                  transparent 100%
-                );
-              }
-            `}
+                      0%,
+                    transparent 100%
+                  );
+                }
+              `
+            }
           }
         `
       : undefined}
@@ -840,14 +857,14 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     !padded || isCollapsed || !minimal
       ? `${getPaddingSize(padded, size)}px`
       : minimal
-      ? `${getPaddingSize(padded, size) / 2}px`
-      : 0};
+        ? `${getPaddingSize(padded, size) / 2}px`
+        : 0};
   padding-top: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'bottom' || wrapperPadding === 'none'
       ? undefined
       : minimal
-      ? `${getPaddingSize(padded, size)}px`
-      : undefined};
+        ? `${getPaddingSize(padded, size)}px`
+        : undefined};
   position: ${({ stickyHeader }) => (stickyHeader ? 'sticky' : 'relative')};
   /* \`top: 0\` must mean "flush with the visible top edge of whatever scrolls",
      which is what every call site assumes. Sticky resolves against the scroll
@@ -927,14 +944,14 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
     !padded || !minimal
       ? `${getPaddingSize(padded, size)}px`
       : minimal
-      ? getPaddingSize(padded, size) / 2
-      : 0};
+        ? getPaddingSize(padded, size) / 2
+        : 0};
   padding-bottom: ${({ minimal, size, padded, wrapperPadding }: IStyledPanel) =>
     wrapperPadding === 'top' || wrapperPadding === 'none'
       ? undefined
       : minimal
-      ? `${getPaddingSize(padded, size)}px`
-      : undefined};
+        ? `${getPaddingSize(padded, size)}px`
+        : undefined};
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
@@ -948,8 +965,8 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
     !padded
       ? undefined
       : noHorizontalPadding
-      ? `${getPaddingSize(padded, size)}px 0`
-      : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
+        ? `${getPaddingSize(padded, size)}px 0`
+        : `${getPaddingSize(padded, size)}px ${getPaddingSize(padded, size)}px`};
   flex: 1;
   /* A flex child's min-height defaults to its content size, so without this the
      scrollable content can't shrink: a panel/drawer body taller than the panel
@@ -1165,9 +1182,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         // pins to. Comparing against the bare border box flips `isHeaderStuck`
         // late by the scrollport's inset, so a pinned header keeps its top
         // radius through exactly the gap this fix closes.
-        const rootTop = scrollParent
-          ? scrollParent.getBoundingClientRect().top + inset.border
-          : 0;
+        const rootTop = scrollParent ? scrollParent.getBoundingClientRect().top + inset.border : 0;
         // 1px deadzone so the exact at-rest position (sentinel flush against the
         // top) never reads as stuck.
         setIsHeaderStuck(sentinelTop < rootTop + offset - 1);
@@ -1215,28 +1230,52 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const updateFloatingActionsPosition = useCallback(() => {
       if (!floatingActionsRef.current || !panelRef.current) return;
 
-      const panelRect = panelRef.current.getBoundingClientRect();
-      const floatingRect = floatingActionsRef.current.getBoundingClientRect();
+      const panel = panelRef.current;
+      const floating = floatingActionsRef.current;
+      const panelRect = panel.getBoundingClientRect();
+      const floatingRect = floating.getBoundingClientRect();
 
       // Temporarily hide the floating actions from hit-testing so they don't
-      // block the elementFromPoint check on the panel
-      floatingActionsRef.current.style.pointerEvents = 'none';
-      const topRight = document.elementFromPoint(panelRect.right - 1, panelRect.top + 1);
-      floatingActionsRef.current.style.pointerEvents = '';
+      // block the elementFromPoint checks below
+      floating.style.pointerEvents = 'none';
 
-      const isPanelTopVisible =
-        topRight && (panelRef.current.contains(topRight) || topRight === panelRef.current);
+      const topRight = document.elementFromPoint(panelRect.right - 1, panelRect.top + 1);
+      const isPanelTopVisible = topRight && (panel.contains(topRight) || topRight === panel);
 
       if (!isPanelTopVisible) {
-        floatingActionsRef.current.style.display = 'none';
+        floating.style.pointerEvents = '';
+        floating.style.display = 'none';
         return;
       }
 
-      floatingActionsRef.current.style.display = 'flex';
-      floatingActionsRef.current.style.top = `${
-        panelRect.top - floatingRect.height + (flat ? 0 : 1)
-      }px`;
-      floatingActionsRef.current.style.left = `${panelRect.right - floatingRect.width}px`;
+      const left = panelRect.right - floatingRect.width;
+      const above = panelRect.top - floatingRect.height + (flat ? 0 : 1);
+
+      /* The bar hovers in the band just above the panel's top edge, where
+         there is usually nothing. Where there is something, it covered it and
+         won on z-index: a panel sitting directly under another panel's header
+         meets that header's right-aligned actions in exactly this band, so
+         hovering the first row of a form hid the form's own buttons.
+
+         Only a control matters — text behind a hover bar is a cosmetic
+         overlap, a button the reader can no longer click is not — and only one
+         that belongs to somebody else, since covering its own panel is what
+         this bar is for. Where the band is taken, the bar sits just inside its
+         own panel's top edge instead. */
+      const coversForeignControl = [left + 1, panelRect.right - 1].some((x) => {
+        const under = document.elementFromPoint(x, above + floatingRect.height / 2);
+
+        return (
+          !!under &&
+          !panel.contains(under) &&
+          !!under.closest('button, a, input, select, textarea, [role="button"]')
+        );
+      });
+
+      floating.style.pointerEvents = '';
+      floating.style.display = 'flex';
+      floating.style.top = `${coversForeignControl ? panelRect.top + (flat ? 0 : 1) : above}px`;
+      floating.style.left = `${left}px`;
     }, [flat]);
 
     useEffect(() => {
@@ -1350,10 +1389,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
      * Asking whether the width was MEASURED says what the guard always meant. jsdom keeps its 0
      * and stays wide, so the unit suite is unaffected; a browser measures and behaves.
      */
-    const isSmall = useMemo(
-      () => responsiveTitle && width > 0 && width < 480,
-      [width, responsiveTitle]
-    );
+    /* The same rule, from the helper that carries it and its tests —
+       `panelIsSmall` is `responsiveTitle && width > 0 && width < 480`, written
+       once so the unit suite can reach it without mounting a panel. Both sides
+       of this merge fixed the unmeasured-panel bug independently; keeping the
+       expression in two places is how they would drift. */
+    const isSmall = useMemo(() => panelIsSmall(width, responsiveTitle), [width, responsiveTitle]);
     /**
      * Narrow, from either trigger: the panel measuring under 480px, or the provider's
      * viewport-level `isMobile`.
@@ -1885,7 +1926,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               theme={theme}
               minimal={minimal || opacity === 0}
               size={contentSize || panelSize}
-              opacity={minimal ? 0 : opacity ?? 1}
+              opacity={minimal ? 0 : (opacity ?? 1)}
               noHorizontalPadding={noHorizontalPadding}
               responsive={responsiveTitle}
               $descriptionBelow={descriptionBelow}
@@ -2215,7 +2256,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               padded={padded}
               intent={intent}
               minimal={minimal || opacity === 0}
-              opacity={minimal ? 0 : opacity ?? 1}
+              opacity={minimal ? 0 : (opacity ?? 1)}
               size={contentSize || panelSize}
               noHorizontalPadding={noHorizontalPadding}
             >

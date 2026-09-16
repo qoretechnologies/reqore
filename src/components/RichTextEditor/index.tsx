@@ -4,7 +4,15 @@ import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useState }
 import { useUpdateEffect } from 'react-use';
 import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
-import { Editable, ReactEditor, Slate, useSelected, withReact } from 'slate-react';
+import {
+  Editable,
+  ReactEditor,
+  Slate,
+  useReadOnly,
+  useSelected,
+  useSlateStatic,
+  withReact,
+} from 'slate-react';
 import {
   EditableProps,
   RenderElementProps,
@@ -79,11 +87,73 @@ export interface IReqoreRichTextEditorProps
 
 export const TemplateElement = memo((props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
   const selected = useSelected();
+  const editor = useSlateStatic();
+  const readOnly = useReadOnly();
 
-  const handleClick = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+  /* A chip is an inline VOID: it holds no text of its own, so a click on it has
+     no text position to land in and the browser places the cursor nowhere. This
+     handler used to `preventDefault()` + `stopPropagation()` and stop there,
+     which made the chip a dead spot.
+
+     That is not merely a missing convenience. A field whose entire value is one
+     reference renders as one chip and nothing else, so the chip IS the control:
+     with no way to get a cursor into the editor, nothing could be typed into it
+     at all. Reported against a Qorus test assertion's `Value`, where it made a
+     path deeper than any offered candidate — the case the rich-text control
+     exists for — impossible to write by hand.
+
+     The cursor goes AFTER the chip, which is where a walk is continued
+     (`$.order.id` -> `$.order.id.value`). Both calls above are kept and are
+     load-bearing: `preventDefault` stops the browser racing us to a position of
+     its own, and `stopPropagation` keeps the click from reaching a host row that
+     treats a click as "collapse me". The selection is then set explicitly rather
+     than left to the browser, so where the cursor lands does not depend on which
+     pixel of the chip was hit.
+
+     Removing a chip is unaffected: that is the tag's own `×`
+     (`onRemoveClick`), not a click on its body. */
+  const handleClick = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // The consumer's own handler still runs: the editor composes `onTagClick`
+      // and any `getTagProps().onClick` into the `tagProps.onClick` below, and
+      // this element used to be overridden by it rather than run alongside it.
+      props.tagProps?.onClick?.(e);
+
+      // A read-only surface has no cursor to give.
+      if (readOnly) {
+        return;
+      }
+
+      try {
+        const path = ReactEditor.findPath(editor, props.element);
+        // From the void's END, and skipping voids. Asking for the point after
+        // the void's PATH can resolve to a point INSIDE its own empty text
+        // child, where typing is silently ignored — the cursor reads as placed
+        // (the DOM selection is real and inside the editor) and the editor
+        // still accepts nothing, which is a worse failure than an obvious one.
+        // The fallback covers a void that ends the document with no text node
+        // after it; a well-formed document always has one.
+        const point =
+          Editor.after(editor, Editor.end(editor, path), { voids: false }) ??
+          Editor.end(editor, []);
+        // Focus BEFORE selecting. `ReactEditor.focus` restores the editor's
+        // previous selection as it takes focus, so focusing afterwards throws
+        // away the point just set — which cost the FIRST character typed after
+        // a chip click and nothing else, the kind of loss that reads as a
+        // flaky keyboard rather than a bug.
+        ReactEditor.focus(editor);
+        Transforms.select(editor, point);
+      } catch {
+        // The element can be gone between render and click (a re-render that
+        // replaced the value). Losing the cursor is the right outcome then, and
+        // it must not take the click handler down with it.
+      }
+    },
+    [editor, props.element, props.tagProps, readOnly]
+  );
 
   return (
     <>
@@ -93,10 +163,12 @@ export const TemplateElement = memo((props: RenderElementProps & { tagProps: IRe
         flat={false}
         asBadge
         fixed='key'
-        onClick={handleClick}
         tooltip={props.element.value?.toString()}
         label={props.element.label}
         {...props.tagProps}
+        // AFTER the spread on purpose: `tagProps` carries an `onClick` of its
+        // own, so declaring this before it meant this handler never ran at all.
+        onClick={handleClick}
         contentEditable={false}
         intent={selected ? 'info' : props.tagProps?.intent}
       />
@@ -540,6 +612,90 @@ export const ReqoreRichTextEditor = forwardRef<
       return undefined;
     }, [tags]);
 
+    /* A caret in the empty text BESIDE a chip is a dead cursor.
+       
+       The position itself is legitimate — it is the point `TemplateElement`
+       deliberately moves to when the chip is clicked, and typing works from
+       there. What breaks is arriving by clicking the empty text directly: the
+       BROWSER owns the DOM caret then, and it resolves the first keystroke back
+       into the chip's own text child, where Slate silently ignores it.
+
+       Measured on the reported case: selection `[0,2]` before the key,
+       `[0,1,0]` after it, document unchanged, `onChange` fired twice.
+
+       Re-selecting through Slate alone does not help, because Slate's selection
+       is ALREADY the right point — `Transforms.select` to the same range is a
+       no-op and never re-syncs the DOM. So the DOM range is set explicitly,
+       which is the thing the next keystroke actually resolves from.
+
+       Collapsed selections only: a RANGE spanning a chip is how it gets
+       selected for deletion and must be left alone. */
+    const repairCaretBesideVoid = useCallback(() => {
+      if (rest.readOnly || rest.disabled) {
+        return;
+      }
+
+      const { selection } = editor;
+
+      if (!selection || !Range.isCollapsed(selection)) {
+        return;
+      }
+
+      try {
+        /* Either already inside a void (`voids: true`, or the void the point
+           is inside is not matched at all), or in the empty text immediately
+           after one. `Editor.void` / `Editor.leaf` rather than `Editor.nodes`:
+           the latter returns a generator, which this build target cannot
+           destructure (TS2802). */
+        const inside = Editor.void(editor, { at: selection, voids: true });
+
+        let voidPath = inside?.[1];
+
+        if (!voidPath) {
+          const textEntry = Editor.leaf(editor, selection);
+
+          if (!textEntry) {
+            return;
+          }
+
+          const [textNode, textPath] = textEntry;
+
+          if ((textNode as any).text !== '') {
+            return;
+          }
+
+          const previous = Editor.previous(editor, { at: textPath });
+
+          if (!previous || !Editor.isVoid(editor, previous[0] as any)) {
+            return;
+          }
+
+          voidPath = previous[1];
+        }
+
+        // The same point `TemplateElement` uses: from the void's END and
+        // skipping voids, so it cannot resolve back into another one.
+        const point =
+          Editor.after(editor, Editor.end(editor, voidPath), { voids: false }) ??
+          Editor.end(editor, []);
+        const range = { anchor: point, focus: point };
+
+        Transforms.select(editor, range);
+
+        const domRange = ReactEditor.toDOMRange(editor, range);
+        const domSelection = ReactEditor.getWindow(editor).getSelection();
+
+        if (domSelection) {
+          domSelection.removeAllRanges();
+          domSelection.addRange(domRange);
+        }
+      } catch {
+        // A selection can reference a path a concurrent re-render has removed,
+        // and `toDOMRange` throws for a point it cannot resolve. Leaving the
+        // cursor where it is beats throwing out of an event handler.
+      }
+    }, [editor, rest.readOnly, rest.disabled]);
+
     return (
       <ReqorePanel flat padded={false} minimal transparent size='small' {...panelProps}>
         <Slate
@@ -558,6 +714,7 @@ export const ReqoreRichTextEditor = forwardRef<
             renderLeaf={renderLeaf}
             decorate={decorate}
             onFocusCapture={handleFocus}
+            onMouseUp={repairCaretBesideVoid}
             as={RefSafeSlateEditable}
             style={{
               lineHeight: 1.5,

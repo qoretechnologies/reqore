@@ -200,7 +200,17 @@ export interface IReqoreButtonProps
    */
   shortcutHint?: boolean;
 
-  description?: string | number;
+  /**
+   * Secondary line under the label.
+   *
+   * A NODE, not only a string: a menu row's description is prose, and a host
+   * that writes its descriptions in markdown has to be able to hand over the
+   * drawn result. Every use of this prop here is either a truthiness test in a
+   * styled interpolation or `{description}` inside a `ReqoreTextEffect`, and
+   * styled-components filters the prop off the DOM element, so a node is drawn
+   * exactly where a string was.
+   */
+  description?: React.ReactNode;
   maxWidth?: string;
   textAlign?: 'left' | 'center' | 'right';
   iconsAlign?: 'center' | 'sides';

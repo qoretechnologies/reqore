@@ -486,3 +486,30 @@ test('Still splits an uncapped key/value <Tag /> evenly', () => {
 
   expect(getComputedStyle(document.querySelector('.reqore-tag-key-content')).flexGrow).toBe('1');
 });
+
+test('A minimal tag with a grey intent does not label itself black on a dark wash', () => {
+  /* A minimal tag paints its colour at 20% alpha, so the label sits on mostly
+     the surface underneath — not on the colour. For a chromatic colour the
+     label is a light tint of it; for an ACHROMATIC one there is no tint to
+     take, and it used to fall through to the readable colour for that colour at
+     FULL strength. `muted` is near-white, so that returned BLACK, and the tag
+     rendered black text on a 20% wash over a near-black page.
+
+     Reported as "black text on a dark grey background; it's very hard to read",
+     and true of every minimal tag with a grey intent. */
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTag minimal intent='muted' label='spans several interfaces' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const tag = document.querySelector('.reqore-tag') as HTMLElement;
+  const color = getComputedStyle(tag).color;
+
+  expect(color).not.toBe('rgb(0, 0, 0)');
+  expect(color).not.toBe('#000000');
+});

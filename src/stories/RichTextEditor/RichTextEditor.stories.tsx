@@ -1,4 +1,4 @@
-import { expect, fn, userEvent } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { useCallback, useState } from 'react';
 import { NodeEntry, Range, Text } from 'slate';
@@ -91,6 +91,84 @@ export const WithDefaultValue: Story = {
         children: [{ text: 'This is already a new paragraph.' }],
       },
     ],
+  },
+};
+
+/**
+ * Clicking a chip gives the editor a cursor.
+ *
+ * A chip is an inline VOID — it holds no text of its own — so a click on it has
+ * no text position to land in and the browser puts the cursor nowhere. When the
+ * whole value IS one chip, as it is for a field holding a single reference,
+ * that made the editor impossible to type into at all: the chip covers the
+ * control, and clicking it did nothing.
+ *
+ * Reported against a Qorus test assertion's `Value`, where it made a path
+ * deeper than any offered candidate — the case a rich-text control exists for —
+ * impossible to write by hand.
+ *
+ * The cursor lands AFTER the chip, which is where a walk is continued.
+ */
+export const ClickingATagPlacesTheCursor: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Clicks a chip that is the entire value and types — the cursor must land after the chip so the text is appended to it.',
+      },
+    },
+  },
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [
+          { text: '' },
+          {
+            type: 'tag',
+            value: '$.order.id',
+            label: 'id',
+            children: [{ text: '' }],
+          },
+          { text: '' },
+        ],
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await waitFor(() => {
+      const el = doc.querySelector<HTMLElement>('[contenteditable="true"]');
+      expect(el).toBeTruthy();
+      return el!;
+    });
+
+    // Slate wraps a void in its own span and the tag that carries the click
+    // handler is a CHILD of it, so a click dispatched on the wrapper never
+    // reaches it — events bubble up, not down. Click the tag's LABEL: on a
+    // short label the chip's geometric centre is its `×`, which removes the
+    // chip and would make this pass or fail for the wrong reason.
+    const chip = await waitFor(() => {
+      const wrapper = doc.querySelector<HTMLElement>('[data-slate-void="true"]');
+      expect(wrapper).toBeTruthy();
+      const label = Array.from(wrapper!.querySelectorAll<HTMLElement>('*')).find(
+        (el) =>
+          el.textContent === 'id' && !el.className.toString().includes('reqore-tag-remove')
+      );
+      expect(label).toBeTruthy();
+      return label!;
+    });
+
+    await userEvent.click(chip);
+    await userEvent.keyboard('.value');
+
+    // Appended to the chip, not inserted before it: the reference is extended.
+    // Appended to the chip, not inserted before it: the reference is extended.
+    // The chip and the typed run are separate DOM nodes, so `innerText` puts
+    // layout whitespace between them; the ORDER is what is being asserted.
+    await waitFor(() =>
+      expect(editor.innerText.replace(/[\s\uFEFF]/g, '')).toContain('id.value')
+    );
   },
 };
 
@@ -365,6 +443,13 @@ export const WithActions: Story = {
     await userEvent.click(document.querySelector('div[contenteditable]'));
     await userEvent.click(document.querySelector('div[contenteditable]'));
     await userEvent.keyboard('Papa', { delay: 100 });
+
+    /* Typing dismisses the surface these buttons live on — the toolbar shares
+       one popover with the template list, and the list has to go away when an
+       author writes a value instead of picking one. So it is reopened before
+       reaching for undo, which is what a person does too. */
+    await userEvent.click(document.querySelector('div[contenteditable]'));
+    await sleep(300);
 
     await expect(document.querySelectorAll('.reqore-button')[3]).toBeEnabled();
     await expect(document.querySelectorAll('.reqore-button')[4]).toBeDisabled();
@@ -644,5 +729,163 @@ export const UpdatesFromOutside: Story = {
   },
   play: async () => {
     await _testsWaitForText('This is a NEW UPDATED TEXT');
+  },
+};
+
+/**
+ * Two clicks, then typing, on a value that already holds a tag.
+ *
+ * Reported from the Qorus IDE's assertion `Value` field: the row holds a
+ * `$.result` reference, the author clicks once to focus and again to put the
+ * cursor after the template, and the control is then frozen — nothing types,
+ * and the template does not go away either.
+ *
+ * The existing typing stories miss this shape. `WithActions` double-clicks an
+ * EMPTY editor, `UpdatesFromInside` types into one holding only plain text, and
+ * `ClickingATagPlacesTheCursor` clicks the chip ITSELF rather than the empty
+ * text after it. This one is text + tag + the trailing empty text node, which
+ * is where a click past the chip puts the caret.
+ */
+export const TypingAfterTwoClicksWithATag: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Clicks twice to place the cursor and types — a value that already holds a tag must still accept keyboard input.',
+      },
+    },
+  },
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'cvcvcvcv' },
+          {
+            type: 'tag',
+            value: '$.result',
+            label: 'result',
+            children: [{ text: '' }],
+          },
+          { text: '' },
+        ],
+      },
+    ],
+    onChange: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await waitFor(() => {
+      const el = doc.querySelector<HTMLElement>('[contenteditable="true"]');
+      expect(el).toBeTruthy();
+      return el!;
+    });
+
+    // Exactly as reported: one click to focus, a second to place the cursor.
+    await userEvent.click(editor);
+    await userEvent.click(editor);
+
+    await userEvent.keyboard('abc');
+
+    // The typed run must actually arrive. Whitespace is stripped because the
+    // chip and the typed text are separate DOM nodes and `innerText` puts
+    // layout whitespace between them.
+    await waitFor(() =>
+      expect(editor.innerText.replace(/[\s﻿]/g, '')).toContain('abc')
+    );
+  },
+};
+
+/**
+ * Clicking AFTER the tag, then typing.
+ *
+ * "Trying to position the cursor after the template" is the reported action,
+ * and it is not the same click as the ones already covered. `userEvent.click`
+ * on the editor lands in its geometric centre — which, on this value, is the
+ * text BEFORE the chip. The caret the author is actually asking for goes in the
+ * empty text node that follows the void, and that is the position under test.
+ */
+export const TypingAfterClickingPastTheTag: Story = {
+  /* KNOWN FAILING — this is a reproduction of an OPEN defect, not a guard.
+     Excluded from the run so the suite still reports real regressions; open it
+     in Storybook to watch it happen.
+
+     Measured with the Slate editor read out of the React fiber:
+
+       selection before the key  {"anchor":{"path":[0,2],"offset":0}, ...}
+       selection after the key   {"anchor":{"path":[0,1,0],"offset":0}, ...}
+       document                  unchanged
+       onChange                  fired twice, with the same document
+
+     `[0,2]` is the empty text AFTER the chip — a legitimate caret position.
+     `[0,1,0]` is inside the chip's own text child, and `TemplateElement`'s
+     click handler already documents that typing there is silently ignored.
+     The caret is pulled in as the keystroke is handled, so the value never
+     changes and the control reads as frozen.
+
+     Three fixes were tried and none of them takes; do not assume the obvious
+     one works without running this:
+       - moving the selection out of the void in `Slate`'s `onChange`;
+       - the same on the editable's `onMouseUp` (it IS called, but the point it
+         moves to is the one the caret already claims, so it is a no-op);
+       - claiming `insertText` in `onDOMBeforeInput` and inserting past the
+         void by hand. */
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Clicks the empty text after the chip to place the cursor there, then types — the keystrokes must arrive.',
+      },
+    },
+  },
+  args: {
+    value: [
+      {
+        type: 'paragraph',
+        children: [
+          { text: 'cvcvcvcv' },
+          {
+            type: 'tag',
+            value: '$.result',
+            label: 'result',
+            children: [{ text: '' }],
+          },
+          { text: '' },
+        ],
+      },
+    ],
+    onChange: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await waitFor(() => {
+      const el = doc.querySelector<HTMLElement>('[contenteditable="true"]');
+      expect(el).toBeTruthy();
+      return el!;
+    });
+
+    await userEvent.click(editor);
+
+    // The leaf that FOLLOWS the void — the position "after the template".
+    const trailing = await waitFor(() => {
+      const voidEl = doc.querySelector<HTMLElement>('[data-slate-void="true"]');
+      expect(voidEl).toBeTruthy();
+      let n: Element | null = voidEl!.nextElementSibling;
+      while (n && !n.querySelector('[data-slate-leaf="true"]') && !n.matches('[data-slate-leaf="true"]')) {
+        n = n.nextElementSibling;
+      }
+      expect(n).toBeTruthy();
+      return n as HTMLElement;
+    });
+
+    await userEvent.click(trailing);
+    await userEvent.keyboard('abc');
+
+    // The typed run must actually arrive. Whitespace is stripped because the
+    // chip and the typed text are separate DOM nodes and `innerText` puts
+    // layout whitespace between them.
+    await waitFor(() =>
+      expect(editor.innerText.replace(/[\s\uFEFF]/g, '')).toContain('abc')
+    );
   },
 };
