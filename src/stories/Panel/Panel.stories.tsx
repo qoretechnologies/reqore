@@ -1046,6 +1046,10 @@ export const FloatingActionsClearHeaderControls: Story = {
       fluid
       label='Form'
       size='small'
+      /* The sibling floating-actions stories theme their panels for the same
+         reason: on the default dark panel over the dark page, the capture is a
+         grey rectangle and a reader cannot see the layout the story is about. */
+      customTheme={{ main: '#0b3c5d' }}
       actions={[
         { label: 'Show field types', icon: 'CodeLine', className: 'header-action', minimal: true },
       ]}
@@ -1055,6 +1059,7 @@ export const FloatingActionsClearHeaderControls: Story = {
         size='small'
         label='First row'
         className='inner-row'
+        customTheme={{ main: '#12507a' }}
         floatingActions
         actions={[
           { label: 'Edit', icon: 'EditLine', show: 'hover' },
