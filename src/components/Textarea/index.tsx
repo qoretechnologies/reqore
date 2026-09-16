@@ -74,6 +74,16 @@ export interface IReqoreTextareaProps
    */
   shortcutHint?: boolean;
   templates?: IReqoreFormTemplates;
+  /**
+   * Keeps the template list open while the author types, instead of dismissing it on the first
+   * keystroke.
+   *
+   * The default is to dismiss: a list that stays put covers the text being written, and having
+   * typed, the author has answered the question the list was asking. Set this where the field
+   * exists to insert MANY templates in a row — there, re-opening the list by clicking back into
+   * the input between every insertion is the greater cost.
+   */
+  keepTemplatesOpenWhileTyping?: boolean;
   transparent?: boolean;
   as?: React.ElementType;
 }
@@ -211,6 +221,7 @@ function Textarea<T>(
     focusRules,
     shortcutHint,
     templates,
+    keepTemplatesOpenWhileTyping,
     rows = 1,
     ...rest
   }: T & IReqoreTextareaProps,
@@ -297,6 +308,11 @@ function Textarea<T>(
         return;
       }
 
+      // The caller wants the list to survive typing - see the prop's doc.
+      if (keepTemplatesOpenWhileTyping) {
+        return;
+      }
+
       /* The toolbar shares this surface, and it goes too.
       
          `RichTextEditor` renders its styling / undo / redo buttons as
@@ -318,7 +334,7 @@ function Textarea<T>(
         popoverData.close();
       }
     },
-    [popoverData, templates]
+    [popoverData, templates, keepTemplatesOpenWhileTyping]
   );
 
   const renderChildren = () => {

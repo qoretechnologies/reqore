@@ -36,7 +36,7 @@ const WITH_CHIP = [
 ];
 
 const meta = {
-  title: 'Form/RichTextEditor/AuthorActions',
+  title: 'Form/RichTextEditor',
   component: ReqoreRichTextEditor,
   render: (args) => {
     const [value, setValue] = useState(args.value);
@@ -134,6 +134,10 @@ export const ClickingInOffersTheList: Story = {
  * dismiss fix exempted surfaces carrying controls, which read as reasonable and
  * disabled the fix on every field it was written for. Without these args the
  * story passes while the real field does nothing.
+ *
+ * This is the DEFAULT; a field that inserts many references in a row can opt
+ * out with `keepTemplatesOpenWhileTyping` — see *Typing Keeps The List When
+ * Asked*.
  */
 export const TypingDismissesTheList: Story = {
   args: {
@@ -153,6 +157,37 @@ export const TypingDismissesTheList: Story = {
     await waitFor(() => expect(listIsOpen(doc)).toBe(false));
     // Closing the list must not eat the keystroke.
     await waitFor(() => expect(editor.innerText.replace(/[\s\uFEFF]/g, '')).toContain('abc'));
+  },
+};
+
+/**
+ * The list can be told to stay put while typing.
+ *
+ * Dismissing is the default because a list that stays open covers the text
+ * being written. A field that exists to insert MANY references in a row wants
+ * the opposite — re-opening the list by clicking back into the input between
+ * every insertion costs more than the covered text does — so
+ * `keepTemplatesOpenWhileTyping` opts out of the dismissal.
+ */
+export const TypingKeepsTheListWhenAsked: Story = {
+  args: {
+    value: [{ type: 'paragraph', children: [{ text: '' }] }],
+    tags: TAGS,
+    actions: { redo: true, undo: true, styling: false },
+    keepTemplatesOpenWhileTyping: true,
+    onChange: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+
+    await userEvent.click(editor);
+    await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+
+    await userEvent.keyboard('abc');
+    // The text lands AND the list is still there to pick from.
+    await waitFor(() => expect(editor.innerText.replace(/[\s\uFEFF]/g, '')).toContain('abc'));
+    expect(listIsOpen(doc)).toBe(true);
   },
 };
 
