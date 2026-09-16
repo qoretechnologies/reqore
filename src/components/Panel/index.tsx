@@ -1230,28 +1230,52 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const updateFloatingActionsPosition = useCallback(() => {
       if (!floatingActionsRef.current || !panelRef.current) return;
 
-      const panelRect = panelRef.current.getBoundingClientRect();
-      const floatingRect = floatingActionsRef.current.getBoundingClientRect();
+      const panel = panelRef.current;
+      const floating = floatingActionsRef.current;
+      const panelRect = panel.getBoundingClientRect();
+      const floatingRect = floating.getBoundingClientRect();
 
       // Temporarily hide the floating actions from hit-testing so they don't
-      // block the elementFromPoint check on the panel
-      floatingActionsRef.current.style.pointerEvents = 'none';
-      const topRight = document.elementFromPoint(panelRect.right - 1, panelRect.top + 1);
-      floatingActionsRef.current.style.pointerEvents = '';
+      // block the elementFromPoint checks below
+      floating.style.pointerEvents = 'none';
 
-      const isPanelTopVisible =
-        topRight && (panelRef.current.contains(topRight) || topRight === panelRef.current);
+      const topRight = document.elementFromPoint(panelRect.right - 1, panelRect.top + 1);
+      const isPanelTopVisible = topRight && (panel.contains(topRight) || topRight === panel);
 
       if (!isPanelTopVisible) {
-        floatingActionsRef.current.style.display = 'none';
+        floating.style.pointerEvents = '';
+        floating.style.display = 'none';
         return;
       }
 
-      floatingActionsRef.current.style.display = 'flex';
-      floatingActionsRef.current.style.top = `${
-        panelRect.top - floatingRect.height + (flat ? 0 : 1)
-      }px`;
-      floatingActionsRef.current.style.left = `${panelRect.right - floatingRect.width}px`;
+      const left = panelRect.right - floatingRect.width;
+      const above = panelRect.top - floatingRect.height + (flat ? 0 : 1);
+
+      /* The bar hovers in the band just above the panel's top edge, where
+         there is usually nothing. Where there is something, it covered it and
+         won on z-index: a panel sitting directly under another panel's header
+         meets that header's right-aligned actions in exactly this band, so
+         hovering the first row of a form hid the form's own buttons.
+
+         Only a control matters — text behind a hover bar is a cosmetic
+         overlap, a button the reader can no longer click is not — and only one
+         that belongs to somebody else, since covering its own panel is what
+         this bar is for. Where the band is taken, the bar sits just inside its
+         own panel's top edge instead. */
+      const coversForeignControl = [left + 1, panelRect.right - 1].some((x) => {
+        const under = document.elementFromPoint(x, above + floatingRect.height / 2);
+
+        return (
+          !!under &&
+          !panel.contains(under) &&
+          !!under.closest('button, a, input, select, textarea, [role="button"]')
+        );
+      });
+
+      floating.style.pointerEvents = '';
+      floating.style.display = 'flex';
+      floating.style.top = `${coversForeignControl ? panelRect.top + (flat ? 0 : 1) : above}px`;
+      floating.style.left = `${left}px`;
     }, [flat]);
 
     useEffect(() => {
