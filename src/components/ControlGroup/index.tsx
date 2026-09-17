@@ -176,6 +176,31 @@ export const StyledReqoreControlGroup = styled(StyledEffect).withConfig({
   }}
 `;
 
+/**
+ * Drops keys whose value is `undefined`, so a prop the group has nothing to say
+ * about is *absent* from the cloned child rather than present-and-undefined.
+ *
+ * The difference matters for one kind of child and matters a lot: a custom
+ * component that gives a prop a default and then spreads the props it was
+ * handed onto the element underneath. Spreading `{ minimal: undefined }` over
+ * that default destroys it, so the child renders solid where every sibling in
+ * the group is minimal — and no prop the caller can pass will fix it, because
+ * the group is the thing overwriting it.
+ *
+ * For a plain Reqore child this changes nothing: those read their own props
+ * with their own defaults, where an absent key and an undefined one are the
+ * same thing.
+ */
+const definedOnly = <T extends Record<string, any>>(props: T): Partial<T> => {
+  const rv: Partial<T> = {};
+  for (const key of Object.keys(props) as (keyof T)[]) {
+    if (props[key] !== undefined) {
+      rv[key] = props[key];
+    }
+  }
+  return rv;
+};
+
 const ReqoreControlGroup = memo(
   forwardRef<HTMLDivElement, IReqoreControlGroupProps>(({
     children,
@@ -437,16 +462,18 @@ const ReqoreControlGroup = memo(
           : {
               ...props,
               key: props?.reactKey || _index,
-              minimal: props?.minimal ?? minimal,
-              size: props?.size || size,
-              flat: props?.flat ?? flat,
-              fluid: props?.fluid ?? fluid,
-              fixed: props?.fixed ?? fixed,
-              fill: props?.fill ?? fill,
-              spaceBetween: props?.spaceBetween ?? false,
-              stack: props?.stack ?? isStack,
-              intent: props?.intent || intent,
-              customTheme: props?.customTheme || customTheme,
+              ...definedOnly({
+                minimal: props?.minimal ?? minimal,
+                size: props?.size || size,
+                flat: props?.flat ?? flat,
+                fluid: props?.fluid ?? fluid,
+                fixed: props?.fixed ?? fixed,
+                fill: props?.fill ?? fill,
+                spaceBetween: props?.spaceBetween ?? false,
+                stack: props?.stack ?? isStack,
+                intent: props?.intent || intent,
+                customTheme: props?.customTheme || customTheme,
+              }),
             };
 
         if (isStack) {
