@@ -27,7 +27,7 @@ export const Intents: Story = {
     docs: {
       description: {
         story:
-          'Every intent — info, success, warning, danger, pending, muted — and one with none, in the long form and the compact pill. The surface stays neutral; the intent is the bloom behind the icon, the icon itself, the first action and the timer line.',
+          'Every intent — info, success, warning, danger, pending, muted — and one with none, in the long form and the compact pill. The surface stays neutral; the intent is the bloom behind the icon, the icon itself, the first action, the timer line, and the colour of the shadow the toast throws.',
       },
     },
   },
@@ -67,7 +67,7 @@ export const Surfaces: Story = {
     docs: {
       description: {
         story:
-          'The surface flags over a busy backdrop, long form beside compact: the default (flat, raised, translucent glass — every surface floats on a drop shadow), opaque, minimal (no surface), blur off, raised off, flat off (hairline border, faint intent ring), and their combinations.',
+          'The surface flags over a busy backdrop, long form beside compact: the default (flat, raised, translucent glass — every surface floats on a contact shadow plus a wide ambient one), opaque, minimal (no surface), blur off, raised off, flat off (hairline border, faint intent ring), and their combinations.',
       },
     },
   },

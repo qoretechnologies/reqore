@@ -259,7 +259,26 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
 
     // Every surface floats; `flat` only decides the border and the ring, and the
     // raised highlight sits on a flat surface only (as on a button).
-    const shadows: string[] = [`0 20px 44px -16px ${rgba(DARK, 0.65)}`];
+    //
+    // Floating is two shadows, not one. A single wide blur reads as a smudge
+    // *behind* the card; what says "lifted off the page" is a tight contact
+    // shadow directly under it together with a wide ambient one — the near
+    // shadow gives the edge somewhere to sit, the far one gives the card
+    // height. One layer alone is why these read as pasted on rather than
+    // hovering.
+    const shadows: string[] = [
+      `0 24px 48px -18px ${rgba(DARK, 0.7)}`,
+      `0 4px 12px -6px ${rgba(DARK, 0.5)}`,
+    ];
+
+    // …and a toast that already has something to say says it in the light it
+    // casts. Kept low-alpha and wide: at this strength it reads as a tint on
+    // the lift rather than as a glow, so a row of stacked toasts does not turn
+    // into a row of neon boxes. Independent of `flat`, unlike the ring below —
+    // the ring is chrome, this is the shadow the card throws.
+    if ($hasIntent) {
+      shadows.push(`0 14px 34px -20px ${rgba($accent, 0.55)}`);
+    }
 
     if (!$flat && $hasIntent) {
       shadows.push(`0 0 0 1px ${rgba($accent, 0.28)}`);
