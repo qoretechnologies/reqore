@@ -291,3 +291,55 @@ test('Provider defaults apply under a notification’s own props', async () => {
   expect(document.querySelectorAll('.reqore-notification').length).toBe(2);
   expect(document.querySelectorAll('.reqore-notification-compact').length).toBe(1);
 });
+
+test('an intent tints the shadow the toast throws, so it reads as lifted', () => {
+  // Reported as the toasts not looking like they float.
+  //
+  // Floating is two dark layers: a tight contact shadow directly under the
+  // card so its edge has somewhere to sit, plus a wide ambient one that gives
+  // it height. A single wide blur reads as a smudge behind the card. On top of
+  // that, a toast that already has something to say says it in the light it
+  // casts — so an intent adds a third, coloured layer.
+  //
+  // Asserted on the computed shadow rather than on the class, because a class
+  // differs between intents for reasons that have nothing to do with the
+  // shadow and such a test passes whether or not this works.
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <AddButton id='neutral' />
+        <AddButton id='danger' intent='danger' />
+      </ReqoreUIProvider>
+    );
+  });
+
+  const buttons = screen.getAllByText('Add Notification');
+  fireEvent.click(buttons[0]);
+  fireEvent.click(buttons[1]);
+
+  act(() => vi.advanceTimersByTime(500));
+
+  const [neutral, danger] = Array.from(
+    document.querySelectorAll('.reqore-notification')
+  ) as HTMLElement[];
+
+  const neutralShadow = getComputedStyle(neutral).boxShadow;
+  const dangerShadow = getComputedStyle(danger).boxShadow;
+
+  // The lift every toast gets: ambient + contact.
+  for (const shadow of [neutralShadow, dangerShadow]) {
+    expect(shadow).toContain('0 2px 6px -1px');
+    expect(shadow).toContain('0 18px 36px -12px');
+  }
+
+  // A neutral toast throws no coloured light...
+  const colouredLayers = (shadow: string) =>
+    shadow.split(/,(?![^(]*\))/).filter(
+      (layer) => /rgba?\(/.test(layer) && !/rgba?\(\s*0\s*,\s*0\s*,\s*0/.test(layer) && !layer.includes('inset')
+    );
+
+  expect(colouredLayers(neutralShadow)).toHaveLength(0);
+  // ...and an intent one throws exactly one, in its own colour.
+  expect(colouredLayers(dangerShadow)).toHaveLength(1);
+  expect(colouredLayers(dangerShadow)[0]).toContain('168,42,42');
+});
