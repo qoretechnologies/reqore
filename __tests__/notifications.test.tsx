@@ -328,8 +328,8 @@ test('an intent tints the shadow the toast throws, so it reads as lifted', () =>
 
   // The lift every toast gets: ambient + contact.
   for (const shadow of [neutralShadow, dangerShadow]) {
-    expect(shadow).toContain('0 24px 48px -18px');
-    expect(shadow).toContain('0 4px 12px -6px');
+    expect(shadow).toContain('0 2px 6px -1px');
+    expect(shadow).toContain('0 18px 36px -12px');
   }
 
   // A neutral toast throws no coloured light...

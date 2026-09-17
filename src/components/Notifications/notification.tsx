@@ -266,9 +266,16 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
     // shadow gives the edge somewhere to sit, the far one gives the card
     // height. One layer alone is why these read as pasted on rather than
     // hovering.
+    //
+    // The numbers are picked to REACH past the card, which a large negative
+    // spread quietly prevents: a shadow extends beyond the edge by roughly
+    // `blur / 2 + spread`, so `0 24px 48px -18px` puts ~6px at the sides and a
+    // first attempt at the intent layer (`-20px` on a 34px blur) put nothing
+    // there at all. Verified by capture, not by arithmetic — on the dark
+    // canvas these sit on, the earlier values were invisible.
     const shadows: string[] = [
-      `0 24px 48px -18px ${rgba(DARK, 0.7)}`,
-      `0 4px 12px -6px ${rgba(DARK, 0.5)}`,
+      `0 2px 6px -1px ${rgba(DARK, 0.5)}`,
+      `0 18px 36px -12px ${rgba(DARK, 0.6)}`,
     ];
 
     // …and a toast that already has something to say says it in the light it
@@ -277,7 +284,7 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
     // into a row of neon boxes. Independent of `flat`, unlike the ring below —
     // the ring is chrome, this is the shadow the card throws.
     if ($hasIntent) {
-      shadows.push(`0 14px 34px -20px ${rgba($accent, 0.55)}`);
+      shadows.push(`0 12px 30px -10px ${rgba($accent, 0.5)}`);
     }
 
     if (!$flat && $hasIntent) {
