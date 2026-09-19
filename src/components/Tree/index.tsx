@@ -8,7 +8,7 @@ import {
   set,
   unset,
 } from 'lodash';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import {
   ReqoreErrorBoundary,
@@ -172,6 +172,27 @@ export const ReqoreTree = ({
   // The size the tree paints at — `zoom` is the size as a number, this is it back as a
   // size. `??` and not `||`, so `defaultZoom={0}` means `tiny` rather than "not given".
   const zoomSize = getZoomSize(zoom);
+  /* Whether the zoom is the USER's answer or still the one `size` implied. `size`
+     keeps speaking for the zoom until somebody zooms by hand — a later `size` then
+     moves the tree body with the panel chrome instead of leaving the two at
+     different sizes — and stops speaking for it the moment they do, because a prop
+     re-render must not throw away a zoom the user chose. A ref and not state: it
+     only decides what the effect below is allowed to do, and nothing renders
+     from it. */
+  const zoomChosenByUser = useRef<boolean>(false);
+
+  useEffect(() => {
+    // An explicit `defaultZoom` is the consumer's own answer for the zoom, so `size`
+    // never speaks for it.
+    if (defaultZoom === undefined && !zoomChosenByUser.current) {
+      setZoom(clampZoom(sizeToZoom[size]));
+    }
+  }, [size, defaultZoom]);
+
+  const handleZoomChange = useCallback((newZoom: number) => {
+    zoomChosenByUser.current = true;
+    setZoom(newZoom);
+  }, []);
   const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
   const [managementDialog, setManagementDialog] = useState<IReqoreTreeManagementDialog>({
     open: false,
@@ -510,7 +531,7 @@ export const ReqoreTree = ({
       if (zoomable) {
         moreActions.actions = [
           ...moreActions.actions,
-          ...getZoomActions('reqore-tree', zoom, setZoom, true),
+          ...getZoomActions('reqore-tree', zoom, handleZoomChange, true),
         ];
       }
 
