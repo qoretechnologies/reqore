@@ -53,13 +53,26 @@ test('Has correct ARIA attributes', () => {
   expect(items[1].getAttribute('aria-checked')).toBe('false');
 });
 
-test('All enabled items are focusable', () => {
+/* A radio group is ONE tab stop (WAI-ARIA radio group pattern): Tab reaches the
+   selected item, and the arrow keys move between items. This used to assert that
+   every item was a tab stop — which is what the button did while it overwrote the
+   `tabIndex` the control gives each item, not what the control asks for. */
+test('The selected item is the one tab stop, and the arrow keys move it', () => {
   renderControl();
 
-  const items = document.querySelectorAll('.reqore-segmented-control-item');
-  items.forEach((item) => {
-    expect(item.getAttribute('tabindex')).toBe('0');
-  });
+  const tabStops = () =>
+    Array.from(document.querySelectorAll('.reqore-segmented-control-item')).map((item) =>
+      item.getAttribute('tabindex')
+    );
+
+  expect(tabStops()).toEqual(['0', '-1', '-1', '-1']);
+
+  fireEvent.keyDown(document.querySelector('.reqore-segmented-control')!, { key: 'ArrowRight' });
+
+  expect(tabStops()).toEqual(['-1', '0', '-1', '-1']);
+  expect(document.activeElement).toBe(
+    document.querySelectorAll('.reqore-segmented-control-item')[1]
+  );
 });
 
 test('Calls onChange when clicking an item', () => {

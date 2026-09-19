@@ -1603,8 +1603,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         // a blank box — and a caller can pin the label with `responsive: false`.
         // `label` on an action is typed `string | number`; a tooltip is not, so the numeric
         // case is stringified rather than cast away.
+        //
+        // `responsive: false` has to be read HERE, not only by the group that renders the
+        // action: it used to decide which control group an action was rendered in and
+        // nothing else, so a pinned label was dropped anyway and the escape hatch this
+        // comment promises did not exist. It is what the confirmation dialog stands on —
+        // two unlabelled squares, a tick and a cross, name neither the action nor the
+        // one that throws the work away.
         const actionLabelTooltip = typeof label === 'number' ? String(label) : label;
-        const dropActionLabel = isNarrow && !!rest.icon && !!label;
+        const dropActionLabel = isNarrow && action.responsive !== false && !!rest.icon && !!label;
 
         return (
           <ReqoreButton

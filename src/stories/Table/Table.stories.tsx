@@ -9,19 +9,23 @@ import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
 import { IReqoreCustomTableRowProps } from '../../components/Table/row';
 import { TReqorePaginationType } from '../../constants/paging';
+import { SIZES, SIZE_TO_PX, TEXT_FROM_SIZE } from '../../constants/sizes';
 import { sleep } from '../../helpers/utils';
 import {
+  ReqoreControlGroup,
   ReqoreH3,
   ReqoreH4,
   ReqoreIcon,
   ReqoreInput,
   ReqoreP,
+  ReqoreSpan,
   ReqoreTable,
   ReqoreTag,
 } from '../../index';
 import tableData from '../../mock/tableData';
 import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
+import { expectTableContentWithinItsRows } from '../utils/tableGeometry';
 
 const { createArg } = argManager<IReqoreTableProps>();
 
@@ -406,6 +410,7 @@ export const Basic: Story = {
   args: {
     showHelp: true,
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const ScrollChange: Story = {
@@ -739,6 +744,7 @@ export const NotFlat: Story = {
   args: {
     flat: false,
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const NoHeight: Story = {
@@ -785,6 +791,7 @@ export const Striped: Story = {
   args: {
     striped: true,
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const Filterable: Story = {
@@ -985,6 +992,7 @@ export const PinnedColumns: Story = {
     filterable: true,
     showHelp: true,
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const Selectable: Story = {
@@ -1154,6 +1162,7 @@ export const Sizes: Story = {
     wrapperSize: 'big',
     selectable: true,
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const DefaultPaging: Story = {
@@ -1343,6 +1352,7 @@ export const NonVirtualized: Story = {
     height: 400,
     label: 'Non-virtualized table',
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const Wrapped: Story = {
@@ -1361,6 +1371,7 @@ export const Wrapped: Story = {
     height: 400,
     label: 'Wrapped rows',
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const WrappedWithPinnedColumns: Story = {
@@ -1385,6 +1396,7 @@ export const WrappedWithPinnedColumns: Story = {
     height: 400,
     label: 'Wrapped with pinned columns',
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const PerColumnWrap: Story = {
@@ -1408,6 +1420,7 @@ export const PerColumnWrap: Story = {
     height: 400,
     label: 'Description column wraps, others truncate',
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const WrappedWithMaxCellHeight: Story = {
@@ -1427,6 +1440,7 @@ export const WrappedWithMaxCellHeight: Story = {
     height: 500,
     label: 'Max cell height with Show more overlay',
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const PerColumnMaxHeight: Story = {
@@ -1453,6 +1467,7 @@ export const PerColumnMaxHeight: Story = {
     height: 500,
     label: 'Only Description column clips at 60px',
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const CustomExpandHeightButton: Story = {
@@ -1602,6 +1617,7 @@ export const RowHeight: Story = {
       },
     ],
   },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };
 
 export const OverscanRowCount: Story = {
@@ -1709,6 +1725,10 @@ export const ExpandableRows: Story = {
     await waitFor(() =>
       expect(canvasElement.querySelectorAll('.reqore-table-row-expanded').length).toBe(2)
     );
+
+    // An open row is still a row: its header must contain its own cells, and the
+    // panel below it is not licence for either to spill.
+    await expectTableContentWithinItsRows(canvasElement);
   },
 };
 
@@ -1756,6 +1776,8 @@ export const ExpandableRowsSingle: Story = {
     await waitFor(() =>
       expect(canvasElement.querySelectorAll('.reqore-table-row-expanded').length).toBe(1)
     );
+
+    await expectTableContentWithinItsRows(canvasElement);
   },
 };
 
@@ -1840,4 +1862,519 @@ export const ExpandableRowsAutoHeight: Story = {
     defaultExpanded: [(tableData.data as IReqoreTableRowData[])[2]._selectId],
     renderExpandedRow: ExpandableRows.args?.renderExpandedRow,
   },
+};
+
+/** Opens-and-scrolls check shared by the two narrow stories below. */
+const expectPanelStaysInView = async (canvasElement: HTMLElement) => {
+  const panel = await waitFor(() => {
+    const el = canvasElement.querySelector<HTMLElement>('.reqore-table-row-expanded');
+    if (!el) throw new Error('panel not rendered');
+    return el;
+  });
+  const body = canvasElement.querySelector<HTMLElement>('.reqore-table-body')!;
+  const row = panel
+    .closest('.reqore-table-row-group')!
+    .querySelector<HTMLElement>('.reqore-table-row')!;
+  const cell = (id: string) =>
+    row.querySelector<HTMLElement>(`[data-reqore-table-column-id="${id}"]`)!;
+  const near = (actual: number, expected: number) =>
+    expect(Math.abs(actual - expected)).toBeLessThanOrEqual(1);
+
+  // The columns need far more room than the table has…
+  const rowWidth = row.getBoundingClientRect().width;
+  await expect(rowWidth).toBeGreaterThan(body.clientWidth * 2);
+  // …and every column can be scrolled to. A row clipped to the visible width
+  // left the body nothing to scroll: the columns past the edge were unreachable.
+  await expect(body.scrollWidth).toBeGreaterThanOrEqual(rowWidth - 1);
+
+  // As wide as what the reader can see — not as wide as the columns.
+  await waitFor(() => near(panel.getBoundingClientRect().width, body.clientWidth));
+
+  // Move the columns partway. A scroll offset is applied to layout at once,
+  // so every position below is already the scrolled one.
+  body.scrollLeft = Math.round((body.scrollWidth - body.clientWidth) / 2);
+  fireEvent.scroll(body);
+  await expect(body.scrollLeft).toBeGreaterThan(0);
+
+  const visible = body.getBoundingClientRect();
+  // The open row's pinned columns stayed pinned…
+  near(cell('expander').getBoundingClientRect().left, visible.left);
+  near(cell('actions').getBoundingClientRect().right, visible.left + body.clientWidth);
+  // …and the panel did not go with the rest.
+  near(panel.getBoundingClientRect().left, visible.left);
+};
+
+/**
+ * An open row in a table narrower than its columns — a phone, or a narrow pane.
+ *
+ * The panel is free-form detail, not a cell, so it is laid out for what the
+ * reader can SEE and stays there while the columns scroll under it. It used to
+ * be as wide as all the columns together and scroll with them: content that
+ * sizes itself to its box laid out for a width nobody could see, and most of it
+ * sat off to the right. The same box also clipped the row, which unpinned its
+ * pinned columns — they scrolled away like any other.
+ */
+export const ExpandableRowsNarrow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A 380px-wide table — a phone — whose columns need far more than that, with one ' +
+          'row open, scrolled partway to the right. The open panel is exactly as wide as ' +
+          'the table shows and stays in view while the columns move under it, so its text ' +
+          'wraps to the width it is read at. The pinned expander column stays on the left ' +
+          'and the pinned actions column on the right, in the open row as in every other.',
+      },
+    },
+  },
+  args: {
+    width: 380,
+    height: 500,
+    label: 'Expandable rows, narrow',
+    data: slice(tableData.data as IReqoreTableRowData[], 0, 6),
+    defaultExpanded: [(tableData.data as IReqoreTableRowData[])[2]._selectId],
+    renderExpandedRow: ExpandableRows.args?.renderExpandedRow,
+  },
+  play: async ({ canvasElement }) => expectPanelStaysInView(canvasElement),
+};
+
+/**
+ * The same, with wrapping cells — which renders every row rather than a
+ * virtualised window, so the row and its panel are laid out by a different
+ * body and have to come out the same.
+ */
+export const ExpandableRowsNarrowWrapped: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same narrow table, open row and partway scroll as `Expandable Rows Narrow`, ' +
+          'with `wrap` set, so cell text wraps and the body renders every row instead of a ' +
+          'window of them. The open panel is again exactly as wide as the table shows and ' +
+          'stays in view, and the open row keeps its pinned columns at either edge.',
+      },
+    },
+  },
+  args: {
+    ...ExpandableRowsNarrow.args,
+    wrap: true,
+    label: 'Expandable rows, narrow, wrapping',
+  },
+  play: async ({ canvasElement }) => expectPanelStaysInView(canvasElement),
+};
+
+/** A long address, so its row wraps to more than one line. */
+const WRAPPING_ROWS = slice(tableData.data as IReqoreTableRowData[], 0, 4).map((row, index) =>
+  index === 1
+    ? {
+        ...row,
+        address:
+          'Flat 4, The Old Granary, 17 Long Meadow Lane, Little Snoring, Fakenham, Norfolk, ' +
+          'NR21 0HP, United Kingdom — deliveries to the side door only',
+      }
+    : row
+);
+
+/**
+ * A wrapping table given more height than its rows need.
+ *
+ * A table that wraps renders every row at its own height, so how tall its rows
+ * are is known only once they are drawn. The body was sized by a guess instead —
+ * rows × `rowHeight` — which is wrong both ways at once: rows shorter than the
+ * guess left a blank band under the last one, and a row that wrapped taller
+ * than it cut the body short and scrolled it for no reason.
+ */
+export const WrappedRowsFitTheirBody: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A four-row table with `wrap` set and a `height` of 600, far more than four rows ' +
+          'need; the second row has a long address that wraps onto several lines. The body ' +
+          'is exactly as tall as its rows — no blank band under the last one and nothing to ' +
+          'scroll — whatever `rowHeight` the table was also given, since wrapped rows take ' +
+          'their height from their content. The `height` is the most the body may take.',
+      },
+    },
+  },
+  args: {
+    wrap: true,
+    height: 600,
+    rowHeight: 52,
+    label: 'Wrapped rows fit their body',
+    data: WRAPPING_ROWS,
+  },
+  play: async ({ canvasElement }) => {
+    const body = await waitFor(() => {
+      const el = canvasElement.querySelector<HTMLElement>('.reqore-table-body');
+      if (!el?.querySelectorAll('.reqore-table-row').length) throw new Error('rows not rendered');
+      return el;
+    });
+    const rows = Array.from(body.querySelectorAll<HTMLElement>('.reqore-table-row'));
+    const heights = rows.map((row) => row.getBoundingClientRect().height);
+    // The premise: the wrapped row is taller than the others.
+    await expect(Math.max(...heights)).toBeGreaterThan(Math.min(...heights) + 10);
+
+    const lastRow = rows[rows.length - 1].getBoundingClientRect();
+    const bodyBox = body.getBoundingClientRect();
+    // No blank band under the last row…
+    await expect(Math.abs(bodyBox.bottom - lastRow.bottom)).toBeLessThanOrEqual(1);
+    // …and nothing to scroll: every row is in view.
+    await expect(body.scrollHeight).toBeLessThanOrEqual(body.clientHeight + 1);
+
+    await expectTableContentWithinItsRows(canvasElement);
+  },
+};
+
+/* ------------------------------------------------------------------------- */
+/* A row's box contains its content — whatever the content is                 */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Prose of the kind a real description column holds: a sentence, a paragraph,
+ * and one that is neither — the lengths that differ are the point.
+ */
+const PROSE = [
+  'Authorise a card payment with the issuer and return an authorisation handle the caller ' +
+    'can pass to capture. The handle is valid for seven days; after that the authorisation ' +
+    'expires at the issuer and a fresh one has to be taken before any money moves.',
+  'Idempotent on the auth handle.',
+  'Reverse a captured payment, partially or in full. Every reversal is audited, the audit ' +
+    'record carries the operator who asked for it, and a partial reversal leaves the ' +
+    'remainder capturable until the original authorisation expires.',
+  'Return the issuer-side status of a payment.',
+  'Internal reconciliation helper called by the daily-recon job. It walks yesterday’s ' +
+    'settled batch, matches each line against the local ledger, and raises a discrepancy ' +
+    'event for anything it cannot account for. Not part of the public REST surface, and ' +
+    'not safe to call while a batch is being written.',
+];
+
+/** Addresses long enough that one has nowhere to go inside its column. */
+const ADDRESSES = [
+  'https://payments.internal.example.com:8443/api/v3/gateway/authorisations/pending-review',
+  'https://gw.example.com/hook',
+  'https://payments.internal.example.com:8443/api/v3/gateway/settlement/reconciliation/daily',
+  'amqps://broker-eu-west-1.messaging.example.com:5671/vhost-payments/queues/capture-retry',
+  'https://payments.internal.example.com:8443/api/v3/gateway/refunds/partial/authorisations',
+];
+
+const STATES = ['Unauthenticated', 'Running', 'Stopped', 'Running', 'Unauthenticated'];
+
+const methodRows = (count: number) =>
+  Array.from({ length: count }, (_, index) => ({
+    id: index + 1,
+    _selectId: index + 1,
+    name: ['authorize', 'capture', 'refund', 'status', '_reconcile'][index % 5],
+    address: ADDRESSES[index % ADDRESSES.length],
+    state: STATES[index % STATES.length],
+    description: PROSE[index % PROSE.length],
+  }));
+
+/**
+ * Columns whose `content` returns an ELEMENT of the caller's own choosing,
+ * which is how every real table does it — and the case the table used to get
+ * wrong, because the only containment rule it had named the paragraph its own
+ * built-in renderers produce.
+ */
+const customContentColumns: IReqoreTableColumn[] = [
+  {
+    dataId: 'name',
+    header: { label: 'Method' },
+    width: 140,
+    align: 'left',
+    cell: {
+      content: ({ name }: any) => (
+        <ReqoreSpan effect={{ weight: 'bold', fontFamily: 'mono' }}>{name}</ReqoreSpan>
+      ),
+    },
+  },
+  {
+    dataId: 'address',
+    header: { label: 'Address' },
+    width: 220,
+    align: 'left',
+    cell: {
+      content: ({ address }: any) => (
+        <ReqoreSpan size='small' effect={{ fontFamily: 'mono' }} tooltip={address}>
+          {address}
+        </ReqoreSpan>
+      ),
+    },
+  },
+  {
+    dataId: 'state',
+    header: { label: 'State' },
+    width: 160,
+    align: 'left',
+    cell: {
+      content: ({ state }: any) => (
+        <ReqoreControlGroup gapSize='small' wrap>
+          <ReqoreTag
+            size='tiny'
+            minimal
+            intent={state === 'Unauthenticated' ? 'warning' : undefined}
+            label={state}
+          />
+        </ReqoreControlGroup>
+      ),
+    },
+  },
+  {
+    dataId: 'description',
+    header: { label: 'Description' },
+    grow: 3,
+    minWidth: 220,
+    align: 'left',
+    cell: {
+      content: ({ description }: any) => (
+        <ReqoreSpan size='small' effect={{ opacity: 0.7 }} tooltip={description}>
+          {description}
+        </ReqoreSpan>
+      ),
+    },
+  },
+];
+
+/**
+ * The defect this guard exists for, in the shape it arrived in.
+ *
+ * A description column holding paragraphs, in a table that does not wrap — so
+ * every row is drawn at one height, decided before the content is laid out.
+ * Content laid out taller than that height has nowhere to go: it used to be
+ * painted over the rows beneath, two and three descriptions overprinting each
+ * other, and a long address was painted across the State chip beside it.
+ *
+ * Nothing here opts in to anything. A cell contains what it is given because
+ * that is what a cell does.
+ */
+export const LongContentFitsItsRow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A description column of paragraphs and an address column of long URLs, with ' +
+          'cell content supplied as elements rather than through the built-in renderers. ' +
+          'Every cell truncates to the one line its row has room for and keeps its full ' +
+          'text on hover; nothing is painted over the row beneath or the column beside.',
+      },
+    },
+  },
+  args: {
+    columns: customContentColumns,
+    data: methodRows(12),
+    // Narrow on purpose: a description column of about 240px turns each of
+    // these paragraphs into six to nine lines, against a row 38px tall. A wide
+    // table hides the defect behind two-line prose.
+    width: 780,
+    height: 400,
+    label: 'Long descriptions, fixed-height rows',
+  },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
+};
+
+/** The same content at every size the table offers — the row heights differ,
+ *  the invariant does not. */
+export const LongContentAtEverySize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same paragraphs at all seven sizes, `micro` through `massive`, so the ' +
+          'scale reads end to end: each size is taller and larger-texted than the one ' +
+          'above it, and in each the content is laid out to fit the height it has. ' +
+          '`micro` and `massive` used to render as `normal` — the size-to-zoom map the ' +
+          'table converts through held only the middle five sizes.',
+      },
+    },
+  },
+  args: {
+    columns: customContentColumns,
+    data: methodRows(5),
+    width: 780,
+    height: undefined,
+    label: undefined,
+  },
+  render: (args) => (
+    <div style={{ display: 'flex', flexFlow: 'column', gap: 16 }}>
+      {SIZES.map((size) => (
+        <ReqoreTable key={size} {...(args as any)} size={size} label={`size: ${size}`} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const tables = await waitFor(() => {
+      const found = Array.from(
+        canvasElement.querySelectorAll<HTMLElement>('.reqore-table-wrapper')
+      );
+      if (found.length !== SIZES.length) {
+        throw new Error(`expected ${SIZES.length} tables, found ${found.length}`);
+      }
+      return found;
+    });
+
+    /* The scale, measured. Each table must paint at ITS size — the row at
+       `SIZE_TO_PX` (plus the separator line, since these are not `flat`) and the
+       cell text at `TEXT_FROM_SIZE` — which is the assertion that fails when a
+       size falls off the size-to-zoom map and silently renders as `normal`. */
+    for (const [index, size] of SIZES.entries()) {
+      const row = tables[index].querySelector<HTMLElement>('.reqore-table-row');
+      const cell = tables[index].querySelector<HTMLElement>('.reqore-table-cell');
+
+      await expect(
+        Math.round(row.getBoundingClientRect().height),
+        `row height at size "${size}"`
+      ).toBe(SIZE_TO_PX[size] + 1);
+      await expect(getComputedStyle(cell).fontSize, `cell font size at size "${size}"`).toBe(
+        `${TEXT_FROM_SIZE[size]}px`
+      );
+    }
+
+    await expectTableContentWithinItsRows(canvasElement);
+  },
+};
+
+/**
+ * The same content with `wrap`, which is the other honest answer: the table
+ * stops virtualising and every row takes the height its content needs, so the
+ * whole description is on screen instead of one line of it.
+ */
+export const LongContentWrapped: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same paragraphs with `wrap` set. The rows are no longer one height — each ' +
+          'takes the height of its tallest cell — and the full description is readable ' +
+          'without a hover. Long addresses break rather than run into the column beside them.',
+      },
+    },
+  },
+  args: {
+    columns: customContentColumns,
+    data: methodRows(6),
+    wrap: true,
+    width: 780,
+    height: 500,
+    label: 'Long descriptions, wrapped rows',
+  },
+  play: async ({ canvasElement }) => {
+    const rows = await waitFor(() => {
+      const found = Array.from(
+        canvasElement.querySelectorAll<HTMLElement>('.reqore-table-row')
+      );
+      if (!found.length) throw new Error('table rows not rendered');
+      return found;
+    });
+    // The premise of this story: wrapped rows are NOT all one height.
+    const heights = rows.map((row) => row.getBoundingClientRect().height);
+    await expect(Math.max(...heights)).toBeGreaterThan(Math.min(...heights) + 10);
+    await expectTableContentWithinItsRows(canvasElement);
+  },
+};
+
+/** `wrap` with a `maxCellHeight`: the deliberate clamp, with its "Show more". */
+export const LongContentClampedToMaxCellHeight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Paragraphs with `wrap` and `maxCellHeight`, the middle answer: rows grow, but ' +
+          'only so far, and a cell with more to say offers "Show more" rather than ' +
+          'letting one row take a screen.',
+      },
+    },
+  },
+  args: {
+    columns: customContentColumns,
+    data: methodRows(6),
+    wrap: true,
+    maxCellHeight: 60,
+    width: 780,
+    height: 500,
+    label: 'Long descriptions, clamped',
+  },
+  play: async ({ canvasElement }) => {
+    /* The clamp knows to offer "Show more" by asking whether its content is
+       TALLER than the cell, so anything that pre-shrinks the content to fit
+       silently takes the affordance away — the cell then looks like a cell with
+       nothing more in it, and the rest of the value is unreachable. That is
+       what this asserts; the containment check below would pass either way. */
+    await waitFor(() => {
+      const overlays = canvasElement.querySelectorAll('.reqore-table-cell-expand');
+      if (!overlays.length) throw new Error('no "Show more" overlay rendered');
+    });
+
+    await expectTableContentWithinItsRows(canvasElement);
+  },
+};
+
+/**
+ * The virtualised path at the scale it exists for.
+ *
+ * Five thousand rows of the same content: the window is what is rendered, so
+ * the guard measures the rows on screen, scrolls into the middle of the list,
+ * and measures again. A fix that only holds for the first screen is not a fix.
+ */
+export const LongContentAtScale: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Five thousand rows of the same long content, virtualised. The guard measures ' +
+          'the rendered window, scrolls deep into the list, and measures the new window.',
+      },
+    },
+  },
+  args: {
+    columns: customContentColumns,
+    data: methodRows(5000),
+    width: 780,
+    height: 500,
+    label: '5,000 rows',
+  },
+  play: async ({ canvasElement }) => {
+    await expectTableContentWithinItsRows(canvasElement);
+
+    const body = canvasElement.querySelector<HTMLElement>('.reqore-table-body');
+    if (!body) throw new Error('table body not rendered');
+    body.scrollTop = Math.floor(body.scrollHeight / 2);
+    await waitFor(() => {
+      if (body.scrollTop === 0) throw new Error('body did not scroll');
+    });
+    await sleep(200);
+
+    await expectTableContentWithinItsRows(canvasElement);
+  },
+};
+
+/**
+ * `wrap` together with an explicit `virtualized`, which the table warns about:
+ * a virtualised list positions each row absolutely and has to know its height
+ * before its content is laid out, so wrapping cannot make a row taller.
+ *
+ * The warning is about the wrapping having no effect, not about the row losing
+ * hold of its content — that part holds here as everywhere: what does not fit
+ * the row is bounded by it rather than painted over the row beneath.
+ */
+export const LongContentWrappedAndVirtualized: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The contradiction the table warns about — `wrap` with `virtualized` explicitly on. ' +
+          'The rows stay one height, so the wrapping buys nothing, and what does not fit is ' +
+          'held inside the row rather than drawn over the rows below it.',
+      },
+    },
+  },
+  args: {
+    columns: customContentColumns,
+    data: methodRows(8),
+    wrap: true,
+    virtualized: true,
+    width: 780,
+    height: 400,
+    label: 'Wrapped rows in a virtualized body',
+  },
+  play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
 };

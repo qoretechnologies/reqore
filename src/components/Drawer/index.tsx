@@ -17,6 +17,44 @@ import { ReqoreBackdrop } from './backdrop';
 
 export type TPosition = 'top' | 'bottom' | 'left' | 'right';
 
+/** The floor an EDGE drawer cannot be dragged below, on the axis it resizes. */
+export const DRAWER_MIN_SIZE = '150px';
+
+/**
+ * The floor a MODAL cannot be dragged below.
+ *
+ * A modal is resizable from every edge and corner, and until this existed the
+ * floor on both axes was 40px: a dialog could be dragged into a sliver that
+ * still held its search box, its list and its close button, stacked one atop
+ * the other and none of them readable. (Reported against reqraft's "Select from
+ * items" picker, dragged to roughly 45px wide.)
+ *
+ * The numbers are what the drawer's OWN chrome needs — the part reqore can
+ * answer for; what the CONTENT needs is the consumer's to declare, through
+ * `minWidth` / `minHeight` (or `minSize` for both).
+ *
+ * Measured on `dialogs-modal--basic` at 1400x1000, sweeping the width and
+ * height of `.reqore-drawer-resizable`:
+ *
+ * - **200px wide.** Two measurements agree on it. The header: below 180px the
+ *   panel title is clipped, and below 100px the close control leaves the box
+ *   entirely (at 60px it overhangs by 46px). The content: at 200px the panel's
+ *   text column is 182px, which at reqore's body size is 47 characters — the
+ *   bottom of the 45-75 characters a line has to hold to read as prose rather
+ *   than as a column of two-word rows.
+ * - **80px tall.** The panel header is 55px and is fully visible from 60px;
+ *   80px keeps the header whole and leaves one 20px line of the content the
+ *   modal exists to show.
+ *
+ * Safe for existing modals because it is far below every one of them: the
+ * narrowest modal in reqore, reqraft and qorus-ide is 480px, the default width
+ * is `80vw`, and no modal's natural height is under the 55px header plus its
+ * content. The floor therefore changes nothing until somebody drags.
+ */
+export const MODAL_MIN_WIDTH = '200px';
+/** See {@link MODAL_MIN_WIDTH}. */
+export const MODAL_MIN_HEIGHT = '80px';
+
 export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 'resizable'> {
   children?: any;
   isOpen?: boolean;
@@ -30,7 +68,45 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   size?: string | 'auto';
   panelSize?: IReqorePanelProps['size'];
   maxSize?: string;
+  /**
+   * The floor the drawer cannot be dragged below, on the axis it resizes.
+   *
+   * An edge drawer resizes on one axis, and this is it. A MODAL resizes on
+   * both, so it reads `minWidth` / `minHeight` first and falls back to this for
+   * whichever of them is not given.
+   *
+   * Defaults to {@link DRAWER_MIN_SIZE} for an edge drawer, and to
+   * {@link MODAL_MIN_WIDTH} / {@link MODAL_MIN_HEIGHT} for a modal.
+   *
+   * UNITS: `px`, `%`, `vw`, `vh`. Nothing else. See the note on `minWidth`.
+   */
   minSize?: string;
+  /**
+   * A modal's width floor. See {@link MODAL_MIN_WIDTH}; overrides `minSize`.
+   *
+   * UNITS: **`px`, `%`, `vw`, `vh` only.** The value is handed to
+   * `re-resizable` twice and the two readers do not agree on anything else:
+   * the drag clamp runs it through `getPixelSize()`, which converts exactly
+   * those four and returns everything else UNCHANGED for `Number()` to turn
+   * into `NaN` — and `clamp()` is `Math.max(Math.min(n, max), min)`, so a
+   * `NaN` floor makes the dragged size `NaN`; while the same raw value is also
+   * written to the element's inline `min-width`, where CSS reads far more.
+   *
+   * The result is a half-failure in either direction, and the type cannot
+   * catch either one because the prop is a `string`:
+   * - `'20rem'`, `'40em'`, `'50vmin'`, `'50vmax'` — valid CSS, so the box looks
+   *   floored; `NaN` in the clamp, so the DRAG is not.
+   * - `'200'` (a bare number) — the clamp reads it, CSS drops it.
+   *
+   * Say `'200px'`.
+   */
+  minWidth?: string;
+  /**
+   * A modal's height floor. See {@link MODAL_MIN_HEIGHT}; overrides `minSize`.
+   *
+   * UNITS: `px`, `%`, `vw`, `vh`. Nothing else — see the note on `minWidth`.
+   */
+  minHeight?: string;
   opacity?: number;
   floating?: boolean;
   blur?: number;
@@ -187,7 +263,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     inheritCustomTheme,
     position = 'right',
     maxSize,
-    minSize = '150px',
+    // No default here: the fallback differs per layout (see the Resizable
+    // below), and a default would make "the caller said nothing" unreadable.
+    minSize,
+    minWidth,
+    minHeight,
     onClose,
     hasBackdrop = true,
     size,
@@ -341,12 +421,62 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
           zIndex: wrapperZIndex,
           display: 'flex',
           position: 'fixed',
-          overflow: hidable ? undefined : 'hidden',
+          /**
+           * Not clipped while anything is allowed to hang outside the box.
+           *
+           * `re-resizable` centres every handle ON the edge it drags: the four
+           * side handles are 10px bands hung at -5px, and the four corners are
+           * 20x20 squares hung at -10px on BOTH axes. A clip on this box
+           * amputates whatever hangs outside it, which cost the corners three
+           * quarters of their area and left a 10x10 target buried INSIDE the
+           * dialog: measured on `dialogs-modal--basic` at 1400x1000, a corner
+           * handle declared 20x20 was reachable only between 10px and 1px in
+           * from the corner, and `document.elementFromPoint()` at the corner
+           * itself — and anywhere outside it — returned the backdrop, whose
+           * click closes the dialog. A corner drag started there did nothing
+           * (1120x500 -> 1120x500); the same drag with the clip gone resized
+           * both axes (1120x500 -> 920x350).
+           *
+           * So the clip is dropped for exactly the two layouts that put
+           * something outside the box — a `resizable` one, whose handles do,
+           * and a `hidable` one, whose hide control always has and which has
+           * therefore always run unclipped. A drawer that is NEITHER draws
+           * nothing outside itself and keeps the clip it has always had:
+           * `resizable={false}` is a promise that the box is the box, and
+           * there is no reason to spend the blast radius there.
+           *
+           * MEASURED: removing it changed no geometry on any drawer or modal
+           * story and moved 17 subpixels of edge antialiasing (max channel
+           * delta 1/255) on `dialogs-modal--basic`.
+           *
+           * REASONED, NOT MEASURED — say so, because the measurement above
+           * could not have covered it: `stickyHeader` sets a panel's own
+           * wrapper to `overflow: visible` so the header can escape, and
+           * `overflow: hidden` on an ancestor makes that ancestor a sticky
+           * containing block, so this box was in that chain. No drawer or
+           * modal story passes `stickyHeader`, while qorus-ide ships it as a
+           * default in panels that render inside drawers — so the geometry
+           * sweep says nothing about the case that matters most.
+           *
+           * The argument that it is nonetheless inert: sticky resolves against
+           * the NEAREST scrollport, and a panel's header is a flex sibling
+           * ABOVE its `overflow: auto` content, never inside it. So a panel
+           * whose header could scroll out of view is one nested in another
+           * scroller — a panel inside a panel's content — and that scroller is
+           * INSIDE this box, which leaves it the nearest scrollport whether
+           * this box clips or not. Where there is no such scroller, this box
+           * was the nearest one, and it has never scrolled: sticky had nothing
+           * to stick to either way. Deliberately not "covered" by a story,
+           * because a story here would assert that a header sitting above a
+           * scroller stays above it, which is true before the change, after
+           * it, and with `stickyHeader` left off entirely.
+           */
+          overflow: resizable || hidable ? undefined : 'hidden',
           transformOrigin: 'center center',
           backfaceVisibility: 'hidden',
           ...positions,
         } as any),
-      [wrapperZIndex, hidable, positions]
+      [wrapperZIndex, resizable, hidable, positions]
     );
 
     const handleWrapperStyle = useMemo(
@@ -394,17 +524,39 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       [resizable]
     );
 
+    /**
+     * Which edges and corners can be dragged.
+     *
+     * `resizable` is the whole answer first: a modal used to ignore it, because
+     * every direction read `... || _isModal`. The handles were rendered anyway,
+     * and because `handleResize` DOES check `resizable`, dragging one moved the
+     * box through `re-resizable`'s own inline style and then snapped it back on
+     * the next render — a modal that says it cannot be resized could be
+     * resized, and then lost the result.
+     */
     const enable = useMemo(
-      () => ({
-        top: (resizable && position === 'bottom') || _isModal ? true : false,
-        right: (resizable && position === 'left') || _isModal ? true : false,
-        left: (resizable && position === 'right') || _isModal ? true : false,
-        bottom: (resizable && position === 'top') || _isModal ? true : false,
-        bottomLeft: _isModal,
-        bottomRight: _isModal,
-        topLeft: _isModal,
-        topRight: _isModal,
-      }),
+      () =>
+        resizable
+          ? {
+              top: position === 'bottom' || !!_isModal,
+              right: position === 'left' || !!_isModal,
+              left: position === 'right' || !!_isModal,
+              bottom: position === 'top' || !!_isModal,
+              bottomLeft: !!_isModal,
+              bottomRight: !!_isModal,
+              topLeft: !!_isModal,
+              topRight: !!_isModal,
+            }
+          : {
+              top: false,
+              right: false,
+              left: false,
+              bottom: false,
+              bottomLeft: false,
+              bottomRight: false,
+              topLeft: false,
+              topRight: false,
+            },
       [resizable, position, _isModal]
     );
 
@@ -434,11 +586,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                 }
                 minHeight={
                   layout === 'center'
-                    ? '40px'
+                    ? minHeight || minSize || MODAL_MIN_HEIGHT
                     : layout === 'horizontal'
                     ? _isHidden
                       ? 0
-                      : minSize || '40px'
+                      : minSize || DRAWER_MIN_SIZE
                     : undefined
                 }
                 maxWidth={
@@ -446,11 +598,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                 }
                 minWidth={
                   layout === 'center'
-                    ? '40px'
+                    ? minWidth || minSize || MODAL_MIN_WIDTH
                     : layout === 'vertical'
                     ? _isHidden
                       ? 0
-                      : minSize || '40px'
+                      : minSize || DRAWER_MIN_SIZE
                     : undefined
                 }
                 as={StyledDrawerResizable}

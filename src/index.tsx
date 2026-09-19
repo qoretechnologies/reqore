@@ -45,6 +45,14 @@ export {
 export * from './components/DatePicker';
 export { ReqoreDescriptionList } from './components/DescriptionList';
 export { ReqoreDrawer } from './components/Drawer';
+/* The resize floors, published because a consumer has to be able to REASON
+   about its own `minSize` / `minWidth` / `minHeight` against them — and because
+   `COMPONENTS.md` names all three to consumers by name. */
+export {
+  DRAWER_MIN_SIZE,
+  MODAL_MIN_HEIGHT,
+  MODAL_MIN_WIDTH,
+} from './components/Drawer';
 export { ReqoreBackdrop } from './components/Drawer/backdrop';
 export { default as ReqoreDropdown } from './components/Dropdown';
 export { default as ReqoreEntityRow } from './components/EntityRow';
@@ -119,6 +127,10 @@ export { default as ReqoreRating } from './components/Rating';
 export { default as ReqoreSegmentedControl } from './components/SegmentedControl';
 export { default as ReqoreSeverityRow } from './components/SeverityRow';
 export { ReqoreRichTextEditor } from './components/RichTextEditor';
+export type {
+  IReqoreRichTextEditorProps,
+  TReqoreRichTextEditorRef,
+} from './components/RichTextEditor';
 export { ReqoreSelect } from './components/Select';
 export { ReqoreSkeleton } from './components/Skeleton';
 export { ReqoreSlider } from './components/Slider';
@@ -132,6 +144,17 @@ export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTableRow } from './components/Table/row';
 export { ReqoreTableValue } from './components/Table/value';
+/* The geometric guard for tables: what a consumer's own tests assert so that
+   "a row's box contains its content" keeps holding in THEIR tables too. Pure
+   measurement, no test framework — the caller decides how to fail. */
+export {
+  describeTableGeometryViolations,
+  findTableGeometryViolations,
+} from './helpers/tableGeometry';
+export type {
+  IReqoreTableGeometryOptions,
+  IReqoreTableGeometryViolation,
+} from './helpers/tableGeometry';
 export { default as ReqoreTabs } from './components/Tabs';
 export { default as ReqoreTabsContent } from './components/Tabs/content';
 export { default as ReqoreTabsListItem } from './components/Tabs/item';

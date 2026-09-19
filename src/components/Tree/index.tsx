@@ -26,7 +26,14 @@ import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { ReqoreExportModal } from '../ExportModal';
 import { IReqorePanelAction, IReqorePanelProps } from '../Panel';
-import { getExportActions, getZoomActions, sizeToZoom, zoomToSize } from '../Table/helpers';
+import {
+  clampZoom,
+  getExportActions,
+  getZoomActions,
+  getZoomSize,
+  sizeToZoom,
+  TReqoreZoom,
+} from '../Table/helpers';
 import { IReqoreTreeManagementDialog, ReqoreTreeManagementDialog } from './modal';
 
 export interface IReqoreTreeCustomRendererProps {
@@ -53,7 +60,7 @@ export interface IReqoreTreeProps extends IReqorePanelProps, IWithReqoreSize, IR
   showControls?: boolean;
   zoomable?: boolean;
   exportable?: boolean;
-  defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
+  defaultZoom?: TReqoreZoom;
   editable?: boolean;
 
   // Components provided here must be valid JSX components
@@ -161,7 +168,10 @@ export const ReqoreTree = ({
   const [allExpanded, setAllExpanded] = useState(expanded || !showControls);
   const [_showTypes, setShowTypes] = useState(showTypes);
   const addNotification = useReqoreProperty('addNotification');
-  const [zoom, setZoom] = useState(defaultZoom || sizeToZoom[size]);
+  const [zoom, setZoom] = useState<number>(clampZoom(defaultZoom ?? sizeToZoom[size]));
+  // The size the tree paints at — `zoom` is the size as a number, this is it back as a
+  // size. `??` and not `||`, so `defaultZoom={0}` means `tiny` rather than "not given".
+  const zoomSize = getZoomSize(zoom);
   const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
   const [managementDialog, setManagementDialog] = useState<IReqoreTreeManagementDialog>({
     open: false,
@@ -293,27 +303,22 @@ export const ReqoreTree = ({
       };
 
       return (
-        <StyledTreeWrapper
-          key={index}
-          size={zoomToSize[zoom]}
-          level={level}
-          className='reqore-tree-item'
-        >
+        <StyledTreeWrapper key={index} size={zoomSize} level={level} className='reqore-tree-item'>
           {isObject ? (
             <ReqoreControlGroup
-              size={zoomToSize[zoom]}
+              size={zoomSize}
               verticalAlign='center'
               onClick={() => handleItemClick(stateKey, isExpandable)}
               style={{ cursor: 'pointer' }}
               gapSize='small'
             >
               <ReqoreIcon
-                size={zoomToSize[zoom]}
+                size={zoomSize}
                 icon='ArrowDownSFill'
                 rotation={isExpandable ? 0 : -90}
                 intent='muted'
                 style={{
-                  marginLeft: `-${ICON_FROM_SIZE[zoomToSize[zoom]]}px`,
+                  marginLeft: `-${ICON_FROM_SIZE[zoomSize]}px`,
                 }}
               />
 
@@ -356,7 +361,7 @@ export const ReqoreTree = ({
               {renderDeleteButton()}
               <ReqoreSpan
                 intent='muted'
-                size={getOneLessSize(zoomToSize[zoom])}
+                size={getOneLessSize(zoomSize)}
                 inline
                 onClick={() => handleItemClick(stateKey, isExpandable)}
               >
@@ -366,7 +371,7 @@ export const ReqoreTree = ({
               </ReqoreSpan>
               {_showTypes && (
                 <ReqoreSpan
-                  size={getOneLessSize(zoomToSize[zoom])}
+                  size={getOneLessSize(zoomSize)}
                   intent='muted'
                   inline
                   style={{ whiteSpace: 'nowrap' }}
@@ -384,7 +389,7 @@ export const ReqoreTree = ({
                   {...{
                     customTheme: { text: { color: 'info:lighten:5' } },
                     style: { flexShrink: 0 },
-                    size: zoomToSize[zoom],
+                    size: zoomSize,
                   }}
                   tooltip={getItemTooltip?.([...path, key], 'key', _pathWithoutArrayKeys)}
                 >
@@ -409,7 +414,7 @@ export const ReqoreTree = ({
                         : undefined,
                     },
                   }}
-                  size={zoomToSize[zoom]}
+                  size={zoomSize}
                   tooltip={getItemTooltip?.([...path, key], 'value', _pathWithoutArrayKeys)}
                 >
                   {JSON.stringify(_data[key])}
@@ -441,7 +446,7 @@ export const ReqoreTree = ({
               {renderDeleteButton()}
               {_showTypes && (
                 <ReqoreSpan
-                  size={getOneLessSize(zoomToSize[zoom])}
+                  size={getOneLessSize(zoomSize)}
                   intent='muted'
                   inline
                   style={{ whiteSpace: 'nowrap' }}
@@ -455,7 +460,7 @@ export const ReqoreTree = ({
             <>
               {renderTree(_data[key], stateKey, level + 1, [...path, key], _pathWithoutArrayKeys)}
 
-              <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+              <ReqoreSpan intent='muted' size={getOneLessSize(zoomSize)} inline>
                 {isArray(_data[key]) ? '] ' : '} '}
               </ReqoreSpan>
             </>
@@ -638,11 +643,11 @@ export const ReqoreTree = ({
         errorBoundaryOptions={errorBoundaryOptions}
         actions={actions}
       >
-        <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+        <ReqoreSpan intent='muted' size={getOneLessSize(zoomSize)} inline>
           {isArray(data) ? '[ ' : '{ '}
         </ReqoreSpan>
         {renderTree(data)}
-        <ReqoreSpan intent='muted' size={getOneLessSize(zoomToSize[zoom])} inline>
+        <ReqoreSpan intent='muted' size={getOneLessSize(zoomSize)} inline>
           {isArray(data) ? ' ]' : ' }'}
         </ReqoreSpan>
         {editable && (

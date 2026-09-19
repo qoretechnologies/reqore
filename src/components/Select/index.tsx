@@ -1,9 +1,7 @@
 import { omit, size } from 'lodash';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import styled from 'styled-components';
 import { ReqoreDropdown, ReqoreInput } from '../..';
-import { MONO_FONT } from '../../constants/fonts';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { TSizes } from '../../constants/sizes';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
@@ -12,24 +10,105 @@ import { IReqoreInputProps } from '../Input';
 import { IPopoverControls } from '../Popover';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
+import {
+  selectItemLabel,
+  selectItemTooltip,
+  structuredValueTooltip,
+} from '../../helpers/selectItem';
 
-export type TReqoreSelectItem = Omit<IReqoreDropdownItem, 'color'> &
-  Pick<IReqoreTagProps, 'asBadge' | 'rightIcon' | 'actions'> & { isNew?: boolean };
+/**
+ * What a select can hold. A value is matched against `item.value` by identity,
+ * so any scalar works; the props take the kind a consumer holds as a type
+ * parameter, defaulting to `string`.
+ */
+export type TReqoreSelectValue = string | number | boolean;
+
+/**
+ * One candidate in the list.
+ *
+ * `value` follows what the select holds, so an item of another kind — the one
+ * identity matching can never select — is a type error rather than a row that
+ * silently does nothing when clicked.
+ *
+ * `object` stays allowed whatever the select holds: a structured value (a hash
+ * preset, as Qorus forms use) is matched by reference like any other, and it is
+ * the case `selectItemTooltip` exists for. What the select then hands its
+ * caller is outside `TReqoreSelectValue`, which is the one place the runtime is
+ * wider than the types — see `selectedItemValue`.
+ */
+export type TReqoreSelectItem<TValue extends TReqoreSelectValue = string> = Omit<
+  IReqoreDropdownItem,
+  'color' | 'value'
+> &
+  Pick<IReqoreTagProps, 'asBadge' | 'rightIcon' | 'actions'> & {
+    isNew?: boolean;
+    value?: TValue | object;
+  };
+
+/**
+ * The one narrowing between an item's value and the select's.
+ *
+ * An item may carry a structured value, which `TReqoreSelectValue` does not
+ * describe; a select over such values holds them all the same, because holding
+ * is identity. Written once, here, rather than at each of the places a picked
+ * item becomes the selection.
+ */
+const selectedItemValue = <TValue extends TReqoreSelectValue>(
+  item: Pick<TReqoreSelectItem<TValue>, 'value'>
+): TValue => item.value as TValue;
+
+/**
+ * The item a user makes by typing.
+ *
+ * Its value IS the text typed, and `TReqoreSelectCanCreateItems` only offers
+ * creation where a string is one of the things the select may hold — so the
+ * narrowing here is sound, and it is written once rather than at each of the
+ * two places a typed value becomes an item.
+ */
+const createdSelectItem = <TValue extends TReqoreSelectValue>(
+  query: string,
+  item: Omit<TReqoreSelectItem<TValue>, 'value'> = {}
+): TReqoreSelectItem<TValue> => ({ ...item, value: query as TValue });
+
+/**
+ * Whether a select can offer to create what the user typed.
+ *
+ * A created item's value IS the text typed, so creation is available exactly
+ * where a string is one of the things the select may hold — `string`, or a
+ * union including it. A select over numbers or flags cannot offer it: its
+ * `canCreateItems` is `never`, so passing it is a type error here rather than
+ * a string arriving in a consumer's `onValueChange(value: number[])` at
+ * runtime.
+ */
+export type TReqoreSelectCanCreateItems<TValue extends TReqoreSelectValue> = [string] extends (
+  [TValue]
+) ?
+  boolean
+: never;
 
 /**
  * Everything a multi- and a single-select share. The two differ only in the
  * shape of the value they carry, so `value` / `onValueChange` are declared by
  * each of them and everything else lives here.
  */
-export interface IReqoreSelectCommonProps
-  extends Omit<IReqoreControlGroupProps, 'children' | 'vertical' | 'stack'> {
-  items?: TReqoreSelectItem[];
-  onItemClick?: (item: IReqoreDropdownItem) => void;
+export interface IReqoreSelectCommonProps<TValue extends TReqoreSelectValue = string> extends Omit<
+  IReqoreControlGroupProps,
+  'children' | 'vertical' | 'stack'
+> {
+  items?: TReqoreSelectItem<TValue>[];
+  onItemClick?: (item: TReqoreSelectItem<TValue>) => void;
   onItemClickIcon?: IReqoreTagProps['rightIcon'];
-  onItemAdded?: (item: TReqoreSelectItem) => void;
-  onItemRemoved?: (item: TReqoreSelectItem) => void;
+  /** Called with the VALUE that was added, once it is part of the selection. */
+  onItemAdded?: (value: TValue) => void;
+  /** Called with the VALUE that was removed, once it has left the selection. */
+  onItemRemoved?: (value: TValue) => void;
   canRemoveItems?: boolean;
-  canCreateItems?: boolean;
+  /**
+   * Lets the user add a value that no item offers. The value created is the
+   * text they typed, so this is offered only by a select over strings — see
+   * `TReqoreSelectCanCreateItems`.
+   */
+  canCreateItems?: TReqoreSelectCanCreateItems<TValue>;
   selectedItemEffect?: IReqoreEffect;
   selectedItemSize?: TSizes;
   selectorProps?: Omit<IReqoreInputProps, 'value' | 'onValueChange'> & IReqoreDropdownProps;
@@ -62,17 +141,21 @@ export interface IReqoreSelectCommonProps
 }
 
 /** Holding ONE value — the default. */
-export interface IReqoreSelectSingleProps extends IReqoreSelectCommonProps {
+export interface IReqoreSelectSingleProps<
+  TValue extends TReqoreSelectValue = string,
+> extends IReqoreSelectCommonProps<TValue> {
   multi?: false;
-  value?: string;
-  onValueChange: (value?: string) => void;
+  value?: TValue;
+  onValueChange: (value?: TValue) => void;
 }
 
 /** Holding MANY values — what `ReqoreMultiSelect` has always been. */
-export interface IReqoreSelectMultiProps extends IReqoreSelectCommonProps {
+export interface IReqoreSelectMultiProps<
+  TValue extends TReqoreSelectValue = string,
+> extends IReqoreSelectCommonProps<TValue> {
   multi: true;
-  value?: string[];
-  onValueChange: (value: string[]) => void;
+  value?: TValue[];
+  onValueChange: (value: TValue[]) => void;
 }
 
 /**
@@ -81,131 +164,36 @@ export interface IReqoreSelectMultiProps extends IReqoreSelectCommonProps {
  * caller `string | undefined` and a multi hands back `string[]`, and neither
  * has to narrow what it is given.
  */
-export type IReqoreSelectProps = IReqoreSelectSingleProps | IReqoreSelectMultiProps;
+export type IReqoreSelectProps<TValue extends TReqoreSelectValue = string> =
+  IReqoreSelectSingleProps<TValue> | IReqoreSelectMultiProps<TValue>;
 
 /**
  * Internal-only shape. The base always speaks arrays; `single` is what the
  * public component derives from `multi` so that one implementation serves both
  * shapes.
  */
-export interface IReqoreSelectBaseProps extends IReqoreSelectCommonProps {
-  value?: string[];
-  onValueChange: (value: string[]) => void;
+export interface IReqoreSelectBaseProps<
+  TValue extends TReqoreSelectValue = string,
+> extends IReqoreSelectCommonProps<TValue> {
+  value?: TValue[];
+  onValueChange: (value: TValue[]) => void;
   single?: boolean;
 }
 
 export interface IReqoreSelectItemProps
   extends Pick<IReqoreSelectCommonProps, 'selectedItemEffect' | 'selectedItemSize' | 'disabled'> {
-  item: TReqoreSelectItem;
+  /** Whatever a select holds: the chip draws an item, it does not match one. */
+  item: TReqoreSelectItem<TReqoreSelectValue>;
   onClick?: () => void;
   onRemoveClick?: () => void;
   onItemClickIcon?: IReqoreTagProps['rightIcon'];
 }
 
-/**
- * A readable preview of a structured value, for the chip's tooltip.
- *
- * The label names WHICH preset was picked; it cannot show what is in it. For a
- * hash the operator has otherwise no way to see what they chose without
- * reopening the list and reading the source, so the contents are offered on
- * hover instead.
- *
- * Capped, because a tooltip is a glance and a large hash is not: past the cap
- * the reader is better served by opening the value properly. `JSON.stringify`
- * throws on a circular structure, which is a thing a consumer's value can
- * legitimately be, so a value that cannot be previewed simply gets no tooltip.
- */
-const STRUCTURED_TOOLTIP_MAX = 600;
-
-/**
- * And a cap on LINES, which is the one that actually bounds the popover.
- *
- * The character cap alone does not: pretty-printed JSON is mostly short lines, so 600
- * characters of a nested hash is roughly forty of them — around 700px, most of a laptop
- * screen, for something the reader triggered by pointing at it. Height is what makes a
- * tooltip oppressive, and height is a count of lines, so that is what to count.
- *
- * There is no scrolling to fall back on: `InternalPopover` clamps its width to the
- * viewport but sets no default max-height, and a hover popover closes when the pointer
- * leaves the trigger, so anything past the fold could be neither seen nor reached. Better
- * to stop early and say so with the ellipsis than to render a wall and clip it silently.
- *
- * Twelve because a tooltip is a glance. Past that the reader is better served by opening
- * the value properly, which is the consumer's surface and not this one.
- */
-const STRUCTURED_TOOLTIP_MAX_LINES = 12;
-
-export const structuredValueTooltip = (value: unknown): string | undefined => {
-  if (value === null || typeof value !== 'object') {
-    return undefined;
-  }
-
-  try {
-    const preview = JSON.stringify(value, null, 2);
-
-    if (!preview) {
-      return undefined;
-    }
-
-    const lines = preview.split('\n');
-    const tooTall = lines.length > STRUCTURED_TOOLTIP_MAX_LINES;
-    const capped = tooTall ? lines.slice(0, STRUCTURED_TOOLTIP_MAX_LINES).join('\n') : preview;
-    const tooLong = capped.length > STRUCTURED_TOOLTIP_MAX;
-
-    // One ellipsis however many caps applied — two would read as part of the value.
-    return tooTall || tooLong
-      ? `${tooLong ? capped.slice(0, STRUCTURED_TOOLTIP_MAX) : capped}\n…`
-      : capped;
-  } catch {
-    return undefined;
-  }
-};
-
-/**
- * The preview block itself.
- *
- * A value is data, so it is set in the platform's own monospace — the stack
- * `ReqoreDataView` uses for the same reason — and its whitespace is preserved,
- * because the indentation IS the structure. Rendered as pre-formatted text
- * rather than through `ReqoreDataView`: that component is a panel with
- * collapsible sections, which is the right way to READ a value and the wrong
- * thing to put inside a hover tooltip (a 236px interactive tree that vanishes
- * when the pointer leaves).
- */
-const StyledValuePreview = styled.span`
-  display: block;
-  font-family: ${MONO_FONT};
-  /* The scale, not the number it currently resolves to. 12px IS
-     TEXT_FROM_SIZE.small, so writing the literal changes nothing today and
-     silently stops tracking the day the scale moves. */
-  font-size: ${TEXT_FROM_SIZE.small}px;
-  white-space: pre;
-`;
-
-/**
- * What the chip offers on hover.
- *
- * An item's own tooltip always wins: a consumer that says what the value means
- * knows better than a dump of it. The preview only fills the gap where a
- * structured value would otherwise be invisible behind its label.
- */
-export const selectItemTooltip = (item: TReqoreSelectItem): IReqoreTagProps['tooltip'] => {
-  if (item.tooltip) {
-    return item.tooltip;
-  }
-
-  const preview = structuredValueTooltip(item.value);
-
-  return preview ?
-      {
-        content: (
-          <StyledValuePreview className='reqore-select-item-value-preview'>
-            {preview}
-          </StyledValuePreview>
-        ),
-      }
-    : undefined;
-};
+/* The item-label and item-tooltip rules live in `helpers/selectItem`, because
+   the dropdown's own rows apply them too and reaching back into this module for
+   them closed a cycle (see the note there). Re-exported here because that is
+   where consumers and tests have always found them. */
+export { selectItemLabel, selectItemTooltip, structuredValueTooltip };
 
 export const ReqoreSelectItem = memo(
   ({
@@ -254,12 +242,9 @@ export const ReqoreSelectItem = memo(
       <ReqoreTag
         {...presentation}
         disabled={disabled || item.disabled}
-        /* An unlabelled item falls back to showing its own value, which works
-           for the scalar it was written for. A structured value has no label
-           form, and `label` is rendered as a React child — so passing one
-           throws "Objects are not valid as a React child" rather than degrading.
-           Such an item shows no label instead, which is what it has. */
-        label={item.label || (typeof value === 'object' ? undefined : value)}
+        /* An unlabelled item falls back to showing its own value — see
+           `selectItemLabel`, which the dropdown's rows use too. */
+        label={selectItemLabel(item)}
         /* The item's own tooltip always wins — this only fills the gap where a
            structured value would otherwise be invisible behind its label. */
         tooltip={selectItemTooltip(item)}
@@ -282,7 +267,7 @@ export const ReqoreSelectItem = memo(
   }
 );
 
-export const ReqoreSelectBase = ({
+export const ReqoreSelectBase = <TValue extends TReqoreSelectValue = string>({
   value = [],
   onValueChange,
   onItemClick,
@@ -310,8 +295,8 @@ export const ReqoreSelectBase = ({
   searchPlaceholder = 'Type to search...',
   createItemPlaceholder = 'Type to search or create an item...',
   ...rest
-}: IReqoreSelectBaseProps) => {
-  const [createdItems, setCreatedItems] = useState<TReqoreSelectItem[]>([]);
+}: IReqoreSelectBaseProps<TValue>) => {
+  const [createdItems, setCreatedItems] = useState<TReqoreSelectItem<TValue>[]>([]);
   const [query, setQuery] = useState<string>('');
   const popoverData = useRef<IPopoverControls>(undefined);
   const [focused, setFocused] = useState<boolean>(false);
@@ -336,22 +321,24 @@ export const ReqoreSelectBase = ({
   });
 
   const addRemoveItem = useCallback(
-    (item: TReqoreSelectItem): void => {
-      if (value.includes(item.value)) {
-        onValueChange(single ? [] : value.filter((v) => v !== item.value));
-        onItemRemoved?.(item.value);
+    (item: TReqoreSelectItem<TValue>): void => {
+      const itemValue = selectedItemValue(item);
+
+      if (value.includes(itemValue)) {
+        onValueChange(single ? [] : value.filter((v) => v !== itemValue));
+        onItemRemoved?.(itemValue);
       } else {
         // A single select holds one value, so picking another replaces it
         // rather than adding to it.
-        onValueChange(single ? [item.value] : [...value, item.value]);
-        onItemAdded?.(item.value);
+        onValueChange(single ? [itemValue] : [...value, itemValue]);
+        onItemAdded?.(itemValue);
       }
     },
     [value, onValueChange, onItemAdded, onItemRemoved, single]
   );
 
   const handleItemSelect = useCallback(
-    (item: Partial<TReqoreSelectItem>) => {
+    (item: Partial<TReqoreSelectItem<TValue>>) => {
       addRemoveItem(item);
 
       if (item.isNew) {
@@ -382,12 +369,12 @@ export const ReqoreSelectBase = ({
     that are passed in as props, as well as any items that the
     user has created.
     */
-  const allItems: TReqoreSelectItem[] = useMemo(() => {
-    const customItems: TReqoreSelectItem[] = size(createdItems)
+  const allItems: TReqoreSelectItem<TValue>[] = useMemo(() => {
+    const customItems: TReqoreSelectItem<TValue>[] = size(createdItems)
       ? [{ divider: true, label: customItemsDividerLabel }, ...createdItems]
       : [];
 
-    let filteredItems: TReqoreSelectItem[] = [...items, ...customItems].filter((item) =>
+    let filteredItems: TReqoreSelectItem<TValue>[] = [...items, ...customItems].filter((item) =>
       query
         ? item.divider
           ? false
@@ -396,9 +383,9 @@ export const ReqoreSelectBase = ({
     );
 
     // Mark selected items as selected
-    filteredItems = filteredItems.map((item: TReqoreSelectItem) => ({
+    filteredItems = filteredItems.map((item: TReqoreSelectItem<TValue>) => ({
       ...omit(item, ['actions', 'asBadge', 'rightIcon']),
-      selected: value.includes(item.value),
+      selected: value.includes(selectedItemValue(item)),
     }));
 
     const nothingMatched: boolean = Boolean(query) && !size(filteredItems);
@@ -413,13 +400,12 @@ export const ReqoreSelectBase = ({
     // and there is no item that exactly matches the query, add it to the list
     if (
       query &&
-      !filteredItems.some((item: TReqoreSelectItem) => item.value === query) &&
+      !filteredItems.some((item: TReqoreSelectItem<TValue>) => item.value === query) &&
       canCreateItems
     ) {
       filteredItems = [
-        {
+        createdSelectItem<TValue>(query, {
           label: `${createItemLabelPrefix} "${query}"`,
-          value: query,
           isNew: true,
           icon: 'AddCircleLine',
           minimal: true,
@@ -432,7 +418,7 @@ export const ReqoreSelectBase = ({
               },
             },
           },
-        },
+        }),
         // No divider when nothing matched: it would head a section whose only
         // content is the line saying the section is empty.
         ...(nothingMatched ? [] : [{ divider: true, label: matchingItemsDividerLabel }]),
@@ -460,10 +446,7 @@ export const ReqoreSelectBase = ({
         if (item) {
           handleItemSelect(item);
         } else if (canCreateItems && query) {
-          handleItemSelect({
-            value: query,
-            isNew: true,
-          });
+          handleItemSelect(createdSelectItem<TValue>(query, { isNew: true }));
         }
       }
     },
@@ -471,7 +454,7 @@ export const ReqoreSelectBase = ({
   );
 
   const getItemByValue = useCallback(
-    (value: string): TReqoreSelectItem => {
+    (value: TValue): TReqoreSelectItem<TValue> => {
       // A selected value with no matching item still gets a chip — without the
       // fallback the value is held but nothing is drawn for it, which reads as
       // "nothing is selected".
@@ -486,7 +469,8 @@ export const ReqoreSelectBase = ({
         <ReqoreTagGroup minimal={rest.minimal} size={rest.size}>
           {value.map((v) => (
             <ReqoreSelectItem
-              key={v}
+              // a value may be a boolean, which is not a valid key
+              key={`${typeof v}:${v}`}
               item={getItemByValue(v)}
               onItemClickIcon={onItemClickIcon}
               onRemoveClick={canRemoveItems ? () => addRemoveItem(getItemByValue(v)) : undefined}
@@ -555,8 +539,17 @@ export const ReqoreSelectBase = ({
  * One select. `multi` decides whether it holds one value or many — there is a
  * single implementation, because the two only ever differed in the shape of
  * the value and in whether picking a second item replaces the first.
+ *
+ * One signature per shape: through the union, JSX cannot tell which `value` a
+ * consumer passed, so it could not infer what the select holds.
  */
-export const ReqoreSelect = ({
+export function ReqoreSelect<TValue extends TReqoreSelectValue = string>(
+  props: IReqoreSelectMultiProps<TValue>
+): JSX.Element;
+export function ReqoreSelect<TValue extends TReqoreSelectValue = string>(
+  props: IReqoreSelectSingleProps<TValue>
+): JSX.Element;
+export function ReqoreSelect<TValue extends TReqoreSelectValue = string>({
   multi,
   value,
   onValueChange,
@@ -576,27 +569,27 @@ export const ReqoreSelect = ({
   matchingItemsDividerLabel,
   createItemPlaceholder,
   ...rest
-}: IReqoreSelectProps) => {
+}: IReqoreSelectProps<TValue>): JSX.Element {
   const handleValueChange = useCallback(
-    (values: string[]) => {
+    (values: TValue[]) => {
       if (multi) {
-        (onValueChange as (value: string[]) => void)(values);
+        (onValueChange as (value: TValue[]) => void)(values);
         return;
       }
-      (onValueChange as (value?: string) => void)(
+      (onValueChange as (value?: TValue) => void)(
         values.length ? values[values.length - 1] : undefined
       );
     },
     [multi, onValueChange]
   );
 
-  const selected = useMemo<string[]>(() => {
+  const selected = useMemo<TValue[]>(() => {
     if (multi) {
-      return (value as string[]) ?? [];
+      return (value as TValue[]) ?? [];
     }
     // An empty string is a value nobody can see and nobody can remove, so it
     // counts as "nothing selected" the way `undefined` and `null` do.
-    return value === undefined || value === null || value === '' ? [] : [value as string];
+    return value === undefined || value === null || value === '' ? [] : [value as TValue];
   }, [multi, value]);
 
   return (
@@ -618,4 +611,4 @@ export const ReqoreSelect = ({
       onValueChange={handleValueChange}
     />
   );
-};
+}

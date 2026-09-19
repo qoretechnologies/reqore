@@ -188,18 +188,86 @@ export const StyledTableCell = styled.div.withConfig({
         }
       `}
 
-      p.reqore-table-text {
-        ${wrap
-          ? css`
-              white-space: normal;
+      /* ------------------------------------------------------------------
+         A cell contains what it is given.
+
+         These rules used to name p.reqore-table-text — the paragraph the
+         table's own 'text' / 'number' / 'time-ago' cell renderers produce — so
+         they reached exactly the content the table had written itself.
+         Everything else got nothing: the 'title' renderer (a heading), the
+         'tag' renderer, and every element a caller's own cell content function
+         returns, which is how a real table fills a cell. Those elements laid
+         themselves out at their natural size, and since a body row is drawn at
+         ONE height — decided before any of this is laid out, because a
+         virtualised list has to know it up front — a paragraph of prose simply
+         painted over the rows beneath it. Two and three descriptions
+         overprinted each other and none of them could be read.
+
+         So the rules are about the cell's content, whatever that content is:
+
+         - min-width 0, because a flex item's automatic minimum size is its
+           MIN-CONTENT width, which for one long unbreakable token (a URL, an
+           id) is the whole token. That minimum beats max-width, which is why
+           capping a link's width at the call site did not hold it: the address
+           of one row printed across the next column's chips.
+         - max-width and max-height of 100%, so the content is bounded by the
+           box it is in, on both axes, whatever it is.
+         - and, when the cell does not wrap, one line ending in an ellipsis.
+
+         Wrapping is the other honest answer: wrap turns virtualisation off (see
+         IReqoreTableProps), every row is then drawn at the height of its own
+         content, and the whole value is on screen instead of a line of it. A
+         wrapped cell still needs a break opportunity inside a long token, or it
+         overflows sideways for the same reason as above. ----------------- */
+      > * {
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      ${!maxHeight &&
+      css`
+        /* Bound the content to the cell's own height.
+
+           Left to a cell that clips itself — the maxHeight clamp above — this
+           would take its job away rather than help: that clamp shows a Show
+           more button, and it knows to show it by asking whether its content is
+           TALLER than it is. Content pre-shrunk to fit is content with nothing
+           more to show, so the button never appeared and the rest of the value
+           became unreachable.
+
+           Everywhere else the bound is what holds a cell's content to its row.
+           It is inert while wrapping does what it says, because the row is then
+           as tall as its tallest cell and that cell's content is already
+           exactly that tall. It bites where wrapping CANNOT make the row taller
+           — wrap together with an explicit virtualized, which the table warns
+           about — and in the ordinary case below, where it holds anything the
+           ellipsis does not reach: a group of chips that wrapped, an image. */
+        > * {
+          max-height: 100%;
+          overflow: hidden;
+        }
+      `}
+
+      ${wrap
+        ? css`
+            > * {
               word-break: break-word;
               overflow-wrap: anywhere;
-            `
-          : css`
-              overflow: hidden;
+            }
+
+            p.reqore-table-text {
+              white-space: normal;
+            }
+          `
+        : css`
+            > * {
               white-space: nowrap;
               text-overflow: ellipsis;
-            `}
+              overflow: hidden;
+            }
+          `}
+
+      p.reqore-table-text {
         margin: 0;
         padding: 0;
       }

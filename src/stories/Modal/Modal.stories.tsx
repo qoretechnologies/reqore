@@ -1,4 +1,4 @@
-import { expect, fireEvent } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useState } from 'react';
@@ -68,6 +68,29 @@ const meta = {
       defaultValue: '50vh',
       name: 'Height',
       type: 'string',
+    }),
+    /* The resize FLOORS, as distinct from the sizes above: those are where the
+       modal opens, these are how small a drag may take it. Discoverable here
+       because a consumer who does not know they exist declares neither, and
+       inherits a floor sized for reqore's chrome rather than for their own
+       content. */
+    ...createArg('minWidth', {
+      name: 'Minimum width',
+      type: 'string',
+      description:
+        "The width the modal cannot be dragged below. Defaults to `minSize`, then to `MODAL_MIN_WIDTH` (200px). Units: `px`, `%`, `vw`, `vh` only — anything else (a bare number, `rem`, `em`, `vmin`, `vmax`) reads as NaN in the drag clamp and the floor is lost.",
+    }),
+    ...createArg('minHeight', {
+      name: 'Minimum height',
+      type: 'string',
+      description:
+        "The height the modal cannot be dragged below. Defaults to `minSize`, then to `MODAL_MIN_HEIGHT` (80px). Same unit rule as `minWidth`.",
+    }),
+    ...createArg('minSize', {
+      name: 'Minimum size (both axes)',
+      type: 'string',
+      description:
+        'The floor for whichever of `minWidth` / `minHeight` is not given. On an edge drawer it is the only floor, and defaults to `DRAWER_MIN_SIZE` (150px). Same unit rule as `minWidth`.',
     }),
   },
 } as StoryMeta<typeof ReqoreModal>;
@@ -695,5 +718,253 @@ export const EscClosingDisabled: Story = {
     await sleep(1000);
 
     await expect(document.querySelectorAll('.reqore-modal')).toHaveLength(1);
+  },
+};
+
+/**
+ * A modal cannot be dragged into a sliver.
+ *
+ * Reported against reqraft's "Select from items" picker, dragged to roughly
+ * 45px wide by 600px tall: the search box, the list and the close button were
+ * all still there, stacked in a column nobody could read. The floor on both
+ * axes was 40px, and `minSize` — the documented way to raise it — reached edge
+ * drawers only and was dead on every modal.
+ *
+ * The story drags the modal's left edge and then its top edge far past the
+ * floor and measures what is left, so it fails if the floor is dropped or if
+ * the value stops reaching the DOM (`re-resizable` silently discards a length
+ * it cannot parse).
+ */
+const resizableBox = () => document.querySelector('.reqore-drawer-resizable') as HTMLElement;
+
+const modalSize = () => {
+  const rect = resizableBox().getBoundingClientRect();
+  return { width: Math.round(rect.width), height: Math.round(rect.height) };
+};
+
+/** The handle `re-resizable` draws for a direction, found by the cursor it sets. */
+const resizeHandle = (cursor: string) =>
+  [...resizableBox().querySelectorAll<HTMLElement>('div')].find((el) =>
+    (el.getAttribute('style') || '').includes(`cursor: ${cursor}`)
+  );
+
+/**
+ * Drag a handle from the point a pointer would actually aim at: the middle of
+ * the handle, which `re-resizable` centres ON the edge or corner it drags.
+ *
+ * The drag asserts that the point belongs to the handle before it uses it.
+ * That is the regression guard for the clip: while the drawer box clipped
+ * itself, everything a handle hung outside the box was amputated, and
+ * `elementFromPoint` at the middle of a handle returned the BACKDROP — which
+ * closes the dialog rather than resizing it.
+ */
+const dragHandlePast = async (cursor: string, dx: number, dy: number) => {
+  const handle = resizeHandle(cursor);
+  await expect(handle).toBeTruthy();
+  const rect = handle!.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+
+  await expect(document.elementFromPoint(x, y)).toBe(handle);
+
+  fireEvent.mouseDown(handle!, { clientX: x, clientY: y, button: 0 });
+  fireEvent.mouseMove(document, { clientX: x + dx, clientY: y + dy });
+  fireEvent.mouseUp(document, { clientX: x + dx, clientY: y + dy });
+};
+
+export const CannotBeDraggedIntoASliver: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Drags a modal far past its minimum size on both axes and shows that it stops at the size its own chrome needs, instead of collapsing into an unreadable sliver.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'Drag me as small as you can',
+    width: '800px',
+    height: '400px',
+  },
+  play: async () => {
+    await _testsWaitForText('Drag me as small as you can');
+    const box = modalSize;
+
+    await waitFor(() => expect(box().width).toBe(800));
+
+    await dragHandlePast('col-resize', -2500, 0);
+    await dragHandlePast('row-resize', 0, 2500);
+
+    // 200 x 80 — the width at which the title and the close control are both
+    // still in the box and a line of content still holds ~47 characters, and
+    // the height at which the 55px header is whole with a line beneath it.
+    await waitFor(() => expect(box()).toEqual({ width: 200, height: 80 }));
+  },
+};
+
+/**
+ * A modal that needs more room than the chrome does says so.
+ *
+ * `MODAL_MIN_WIDTH` / `MODAL_MIN_HEIGHT` are what REQORE can answer for: the
+ * size at which the panel's own title and close control are still in the box.
+ * What the CONTENT needs is the consumer's to declare, and until `minWidth` /
+ * `minHeight` existed there was no way to say it — a form whose fields stop
+ * being usable at 500px could still be dragged to 200.
+ *
+ * Declared floors REPLACE the defaults rather than adding to them, so a
+ * consumer can only ever raise the floor above reqore's, never think it has
+ * raised it and get reqore's.
+ *
+ * Units: these go to `re-resizable`'s `getPixelSize()`, which reads `px`, `%`,
+ * `vw` and `vh` and nothing else. `minWidth='40rem'` typechecks — the prop is
+ * a `string` — and clamps against `NaN`, which is no floor at all.
+ */
+export const HasAFloorTheContentAsksFor: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Raises the resize floor above reqore's own with `minWidth` / `minHeight`, and drags far past it to show the modal stops at the size the CONTENT needs rather than at the size the chrome needs.",
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'This form needs room',
+    width: '800px',
+    height: '400px',
+    minWidth: '500px',
+    minHeight: '220px',
+  },
+  play: async () => {
+    await _testsWaitForText('This form needs room');
+    await waitFor(() => expect(modalSize().width).toBe(800));
+
+    // Far past both floors, on both axes, side handles and corner alike.
+    await dragHandlePast('col-resize', -2500, 0);
+    await dragHandlePast('row-resize', 0, 2500);
+
+    // The declared floor, NOT the 200 x 80 the chrome would have allowed.
+    await waitFor(() => expect(modalSize()).toEqual({ width: 500, height: 220 }));
+
+    await dragHandlePast('se-resize', -2500, -2500);
+    await waitFor(() => expect(modalSize()).toEqual({ width: 500, height: 220 }));
+  },
+};
+
+/**
+ * A modal resizes from its corners, on both axes at once.
+ *
+ * It did not. `re-resizable` hangs each corner handle 10px outside the box on
+ * both axes, and the drawer box clipped itself, so three quarters of every
+ * corner was amputated: what survived was a 10x10 square buried inside the
+ * dialog, and the pointer at the corner itself — the place anyone aims —
+ * landed on the backdrop, which dismisses the dialog instead of resizing it.
+ * Measured on this story at 800x400, a corner drag from the visual corner left
+ * the modal at 800x400; the four side handles, which lost only their outer
+ * 5px, kept working, which is why only the corners read as dead.
+ *
+ * The story aims where a pointer aims — at the corner, and 6px OUTSIDE it —
+ * and asserts both that the corner handle is what takes the pointer there and
+ * that the drag moves both axes. Then it drags the corner far past the floor,
+ * because a floor that only holds for the side handles is not a floor.
+ */
+export const CanBeResizedFromItsCorner: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Drags a modal by its bottom-right corner and shows that the corner takes the pointer, resizes both axes at once, and still stops at the minimum size.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'Drag me by the corner',
+    width: '800px',
+    height: '400px',
+  },
+  play: async () => {
+    await _testsWaitForText('Drag me by the corner');
+    await waitFor(() => expect(modalSize().width).toBe(800));
+
+    const corner = resizeHandle('se-resize');
+    await expect(corner).toBeTruthy();
+
+    // Hit-testing, not class names: the corner of the box, and a point outside
+    // it, both have to reach the corner handle. With the box clipped, both
+    // returned the backdrop.
+    const rect = () => resizableBox().getBoundingClientRect();
+    const { right, bottom } = rect();
+
+    await expect(document.elementFromPoint(right, bottom)).toBe(corner);
+    await expect(document.elementFromPoint(right + 6, bottom + 6)).toBe(corner);
+    await expect(document.elementFromPoint(right - 6, bottom - 6)).toBe(corner);
+
+    // The handle is the full 20x20 `re-resizable` asks for, centred on the
+    // corner — not the 10x10 remnant a clip leaves inside the box.
+    const handleRect = corner!.getBoundingClientRect();
+    await expect(Math.round(handleRect.width)).toBe(20);
+    await expect(Math.round(handleRect.height)).toBe(20);
+    await expect(Math.round(handleRect.left)).toBe(Math.round(right) - 10);
+    await expect(Math.round(handleRect.top)).toBe(Math.round(bottom) - 10);
+
+    // One drag, both axes.
+    await dragHandlePast('se-resize', -200, -150);
+    await waitFor(() => expect(modalSize()).toEqual({ width: 600, height: 250 }));
+
+    // And the floor holds on a corner drag too — it is the same 200 x 80 the
+    // side handles stop at.
+    await dragHandlePast('se-resize', -2500, -2500);
+    await waitFor(() => expect(modalSize()).toEqual({ width: 200, height: 80 }));
+  },
+};
+
+/**
+ * A modal that says it cannot be resized cannot be resized.
+ *
+ * `resizable={false}` reached edge drawers only: every direction was enabled
+ * for a modal regardless, so the handles were there and a drag moved the box
+ * through `re-resizable`'s inline style — and then the next render snapped it
+ * back, because the drawer only records a new size when `resizable` is set.
+ */
+export const CannotBeResizedWhenResizingIsOff: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A modal with resizing turned off draws no handles at all, so its edges and corners belong to the content and the backdrop.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'Fixed size',
+    width: '800px',
+    height: '400px',
+    resizable: false,
+  },
+  play: async () => {
+    await _testsWaitForText('Fixed size');
+    await waitFor(() => expect(modalSize()).toEqual({ width: 800, height: 400 }));
+
+    for (const cursor of [
+      'col-resize',
+      'row-resize',
+      'se-resize',
+      'sw-resize',
+      'ne-resize',
+      'nw-resize',
+    ]) {
+      await expect(resizeHandle(cursor)).toBeUndefined();
+    }
+
+    // The corner belongs to the backdrop again, and the modal keeps its size.
+    const { right, bottom } = resizableBox().getBoundingClientRect();
+    await expect(
+      document.elementFromPoint(right + 6, bottom + 6)?.className
+    ).toContain('reqore-drawer-backdrop');
+    await expect(modalSize()).toEqual({ width: 800, height: 400 });
   },
 };

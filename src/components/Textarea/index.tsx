@@ -334,7 +334,21 @@ function Textarea<T>(
         popoverData.close();
       }
     },
-    [popoverData, templates, keepTemplatesOpenWhileTyping]
+    // `templates` is not read here — only whether the popover is open matters.
+    [popoverData, keepTemplatesOpenWhileTyping]
+  );
+
+  /* Chains rather than replaces: the Slate editable passes its own `onKeyDown`
+     through here, and dismissing the template list must not swallow it. Held
+     at the component's top level so the identity is stable — built inside the
+     render body it was a fresh closure every time, which made memoising the
+     handler it wraps buy nothing. */
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      handleTypingClosesTemplates(event);
+      (rest as { onKeyDown?: (e: React.KeyboardEvent) => void }).onKeyDown?.(event);
+    },
+    [handleTypingClosesTemplates, rest.onKeyDown]
   );
 
   const renderChildren = () => {
@@ -351,12 +365,8 @@ function Textarea<T>(
             onChange?.(e);
           }}
           as={rest.as || 'textarea'}
-          // After `{...rest}` so it wins, and it chains rather than replaces:
-          // the Slate editable passes its own `onKeyDown` through here.
-          onKeyDown={(event: React.KeyboardEvent) => {
-            handleTypingClosesTemplates(event);
-            (rest as { onKeyDown?: (e: React.KeyboardEvent) => void }).onKeyDown?.(event);
-          }}
+          // After `{...rest}` so it wins — see `handleKeyDown`.
+          onKeyDown={handleKeyDown}
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
           ref={(ref) => setInputRef(ref)}

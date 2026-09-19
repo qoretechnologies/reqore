@@ -763,7 +763,10 @@ const ReqoreButton = memo(
           {...{
             ...rest,
             effect: memoEffect,
-            tabIndex: rest.disabled ? -1 : 0,
+            // The caller's tab stop wins — a grid or a diagram keeps one of its
+            // buttons in the tab order and moves it — except that a disabled
+            // button is never one.
+            tabIndex: rest.disabled ? -1 : (rest.tabIndex ?? 0),
             as: as || 'button',
             theme,
             fluid,

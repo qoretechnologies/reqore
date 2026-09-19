@@ -1,7 +1,7 @@
 import { StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { useState } from 'react';
-import { ReqoreRichTextEditor } from '../../components/RichTextEditor';
+import { IReqoreRichTextEditorProps, ReqoreRichTextEditor } from '../../components/RichTextEditor';
 import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
 
@@ -15,16 +15,14 @@ import { StoryMeta } from '../utils';
  * mode and as plain text in the other. They share a shape — the field had been
  * exercised as a set of RENDERS, never as a sequence of author ACTIONS.
  *
- * KNOWN GAP, and the reason those defects reach the live IDE instead of this
- * file: the template LIST cannot be driven in a story at all. Giving
- * `ReqoreRichTextEditor` a `tags` map — the prop the list is built from — hangs
- * the runner. Four such stories blew through a 240s cap where this entire
- * 18-story component finishes in about a minute, and two independent attempts
- * hung identically. Until that is fixed there can be no coverage of opening the
- * list, of typing over it, or of where it is positioned — which is exactly the
- * set of defects that keeps escaping. Un-hanging it is the prerequisite.
+ * The template LIST is driven here too: `ClickingInOffersTheList`,
+ * `TypingDismissesTheList` and `TypingKeepsTheListWhenAsked` each hand the
+ * editor a `tags` map and then open, dismiss or hold the list the way an author
+ * does. That is the set of defects that used to escape — the list opening on
+ * the click that starts an edit and then covering the text being typed — so
+ * those three are the guards against it coming back.
  */
-const WITH_CHIP = [
+const WITH_CHIP: IReqoreRichTextEditorProps['value'] = [
   {
     type: 'paragraph',
     children: [

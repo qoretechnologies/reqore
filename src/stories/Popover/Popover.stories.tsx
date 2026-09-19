@@ -989,3 +989,157 @@ export const ClampedToViewport: Story = {
     });
   },
 };
+
+/**
+ * A 120px block sitting directly under a trigger, so the tooltip that opens
+ * below the trigger lands ON it — which is what makes the hit test below mean
+ * something. Everything here is one stacking context, so `elementFromPoint`
+ * answers the same question the browser asks when it decides where a pointer
+ * went.
+ */
+const PointerTarget = ({ marker, children }: { marker: string; children: string }) => (
+  <ReqoreMessage
+    intent='muted'
+    flat
+    className={marker}
+    style={{ width: 280, height: 120, alignItems: 'flex-end' }}
+  >
+    {children}
+  </ReqoreMessage>
+);
+
+export const PointerFallsThroughATooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Three popovers, two of them with something underneath that the reader is on their way to. A hover tooltip cannot be reached by the pointer — moving onto it fires the trigger's `mouseleave` and it unmounts on the way — so all its surface can do is sit in the path and take the hover off whatever it covers, which is how a tooltip disappears mid-sentence and how the thing it describes becomes unclickable while it is up. That surface is therefore transparent to the pointer. A popover the pointer IS meant to reach — held open on hover, or opened by click or focus — keeps it. `interactive` overrides the default in either direction. The play function hit-tests each surface with `elementFromPoint`: the tooltip's centre answers with the block underneath it, the strip where the third tooltip is pulled back over its own trigger answers with the trigger — which is the flicker, since a trigger that loses the pointer there closes the tooltip the reader is still reading — and the hover-held popover's centre answers with the popover.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='huge'>
+      <ReqoreControlGroup vertical>
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          placement='bottom'
+          content='Runs the improvement against the last snapshot'
+        >
+          Hover: a tooltip
+        </ReqorePopover>
+        <PointerTarget marker='under-the-tooltip'>Still reachable underneath</PointerTarget>
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup vertical>
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          placement='bottom'
+          offsetY={-30}
+          content='A tooltip pulled back over the thing it describes'
+        >
+          Hover: a tooltip over its own trigger
+        </ReqorePopover>
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup vertical>
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          placement='bottom'
+          keepOpenOnHover
+          closeOnInsideClick={false}
+          noWrapper
+          content={
+            <ReqoreControlGroup stack>
+              <ReqoreButton icon='EditLine'>Edit</ReqoreButton>
+              <ReqoreButton icon='DeleteBinLine'>Delete</ReqoreButton>
+            </ReqoreControlGroup>
+          }
+        >
+          Hover: actions to click
+        </ReqorePopover>
+        <PointerTarget marker='under-the-actions'>Covered while the actions are up</PointerTarget>
+      </ReqoreControlGroup>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const hitAtCentreOf = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+
+      return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    };
+
+    const [tooltipTrigger, overlappingTrigger, actionsTrigger] = [
+      ...canvasElement.querySelectorAll('.reqore-button'),
+    ] as HTMLElement[];
+
+    // The tooltip: transparent, so the pointer reaches the block it covers.
+    await userEvent.hover(tooltipTrigger);
+
+    const tooltip = await waitFor(() => {
+      const surface = document.querySelector('.reqore-popover-content') as HTMLElement;
+
+      expect(surface).toBeTruthy();
+
+      return surface;
+    });
+
+    const underTheTooltip = canvasElement.querySelector('.under-the-tooltip') as HTMLElement;
+    const throughTheTooltip = hitAtCentreOf(tooltip);
+
+    await expect(tooltip.contains(throughTheTooltip)).toBe(false);
+    // ...and the surface really is over the block, so this is not vacuous.
+    await expect(underTheTooltip.contains(throughTheTooltip)).toBe(true);
+
+    await userEvent.unhover(tooltipTrigger);
+    await waitFor(async () => expect(document.querySelector('.reqore-popover-content')).toBeNull());
+
+    // A tooltip over its own trigger: the trigger keeps the pointer, so the
+    // tooltip does not close itself the moment the reader's pointer crosses
+    // the strip it covers. This is the flicker, measured without moving
+    // anything: where the two overlap, the pointer belongs to the trigger.
+    await userEvent.hover(overlappingTrigger);
+
+    const overlapping = await waitFor(() => {
+      const surface = document.querySelector('.reqore-popover-content') as HTMLElement;
+
+      expect(surface).toBeTruthy();
+
+      return surface;
+    });
+
+    const triggerRect = overlappingTrigger.getBoundingClientRect();
+    const surfaceRect = overlapping.getBoundingClientRect();
+    const overlapTop = Math.max(triggerRect.top, surfaceRect.top);
+    const overlapBottom = Math.min(triggerRect.bottom, surfaceRect.bottom);
+
+    // The offset really does pull the surface over the trigger.
+    await expect(overlapBottom).toBeGreaterThan(overlapTop);
+
+    const inTheOverlap = document.elementFromPoint(
+      triggerRect.left + triggerRect.width / 2,
+      (overlapTop + overlapBottom) / 2
+    );
+
+    await expect(overlapping.contains(inTheOverlap)).toBe(false);
+    await expect(overlappingTrigger.contains(inTheOverlap)).toBe(true);
+
+    await userEvent.unhover(overlappingTrigger);
+    await waitFor(async () => expect(document.querySelector('.reqore-popover-content')).toBeNull());
+
+    // The clickable popover: opaque, because its buttons have to be clickable.
+    await userEvent.hover(actionsTrigger);
+
+    const actions = await waitFor(() => {
+      const surface = document.querySelector('.reqore-popover-content') as HTMLElement;
+
+      expect(surface).toBeTruthy();
+
+      return surface;
+    });
+
+    await expect(actions.contains(hitAtCentreOf(actions))).toBe(true);
+  },
+};

@@ -29,6 +29,8 @@ export type AdditionalStorybookArgs = IReqoreUIProviderProps & {
   animatedButtons?: IReqoreUIProviderProps['options']['animations']['buttons'];
   animatedDialogs?: IReqoreUIProviderProps['options']['animations']['dialogs'];
   globalUiScale?: IReqoreUIProviderProps['options']['uiScale'];
+  /** Render the story without the `ReqoreContent` wrapper (see `.storybook/preview.tsx`). */
+  withoutContent?: boolean;
 };
 
 export type StoryMeta<

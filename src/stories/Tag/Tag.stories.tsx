@@ -748,7 +748,7 @@ export const MaxWidthTruncateMiddle: Story = {
     ];
 
     const [paddleHead, paddleTail] = parts(tags[0]);
-    const [stripeHead, stripeTail] = parts(tags[1]);
+    const [, stripeTail] = parts(tags[1]);
 
     // Nothing is thrown away: the DOM still holds the whole value.
     expect(`${paddleHead.textContent}${paddleTail.textContent}`).toBe(

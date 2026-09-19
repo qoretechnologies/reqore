@@ -56,6 +56,31 @@ export interface IPopover
   offsetX?: number;
   offsetY?: number;
   blur?: boolean;
+  /**
+   * Whether the popover's own surface takes the pointer.
+   *
+   * Defaults to `true` for every popover the pointer can actually reach — one
+   * opened by `click` or `focus`, one held open with `keepOpenOnHover`, one
+   * that stays open after a hover (`hoverStay`) — and to `false` for a plain
+   * hover tooltip, which it cannot.
+   *
+   * A plain hover popover is closed by its trigger's own `mouseleave`, so a
+   * pointer moving onto it unmounts it on the way: nothing inside one has ever
+   * been clickable, hoverable or scrollable. What its surface CAN do is sit in
+   * the pointer's path — over the thing the tooltip describes, or over the
+   * trigger itself — and take the hover away from what it covers, which reads
+   * as a tooltip flickering out mid-sentence and as an element that cannot be
+   * clicked while its neighbour's tooltip is up. So it does not take the
+   * pointer, and the pointer lands on what is underneath.
+   *
+   * Set it explicitly to override either default: `true` for a hover popover
+   * that must catch the pointer for its own reasons, `false` for a click or
+   * focus popover that must let it through.
+   *
+   * Not to be confused with `keepOpenOnHover`, which is what actually makes a
+   * hover popover reachable — and which turns this on by itself.
+   */
+  interactive?: boolean;
   transparent?: boolean;
   maxWidth?: string;
   minWidth?: string;
@@ -127,6 +152,7 @@ export const ReqorePopover = memo(
         placement,
         openOnMount,
         keepOpenOnHover,
+        interactive,
         transparent,
         maxWidth,
         minWidth,
@@ -174,6 +200,17 @@ export const ReqorePopover = memo(
 
       const startEvent = startEvents[handler];
       const endEvent = endEvents[handler];
+
+      /**
+       * A popover takes the pointer only if the pointer can get to it.
+       *
+       * A plain `hover` popover is closed by the trigger's `mouseleave`, so its
+       * surface unmounts as the pointer arrives — all it can do with the
+       * pointer is take it away from whatever it is covering. Every other
+       * handler, and `keepOpenOnHover` on this one, describes a popover meant
+       * to be reached, and those keep it. See `interactive`.
+       */
+      const isInteractive = interactive ?? (handler !== 'hover' || !!keepOpenOnHover);
 
       const cancelTimeout = useCallback(() => {
         if (timeoutRef.current) {
@@ -478,6 +515,7 @@ export const ReqorePopover = memo(
                 noWrapper={noWrapper}
                 useTargetWidth={useTargetWidth}
                 transparent={transparent}
+                interactive={isInteractive}
                 maxWidth={maxWidth}
                 minWidth={minWidth}
                 maxHeight={maxHeight}
@@ -529,6 +567,7 @@ export const ReqorePopover = memo(
               noWrapper={noWrapper}
               useTargetWidth={useTargetWidth}
               transparent={transparent}
+              interactive={isInteractive}
               maxWidth={maxWidth}
               minWidth={minWidth}
               maxHeight={maxHeight}

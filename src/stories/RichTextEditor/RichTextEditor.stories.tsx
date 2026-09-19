@@ -804,32 +804,19 @@ export const TypingAfterTwoClicksWithATag: Story = {
  * on the editor lands in its geometric centre — which, on this value, is the
  * text BEFORE the chip. The caret the author is actually asking for goes in the
  * empty text node that follows the void, and that is the position under test.
+ *
+ * This began as a reproduction of an open defect: the caret was placed in the
+ * empty text AFTER the chip (`[0,2]`) and the first keystroke pulled it INTO
+ * the chip's own text child (`[0,1,0]`), where typing is silently ignored — the
+ * cursor read as placed, `onChange` fired, and the document never changed. The
+ * control read as frozen.
+ *
+ * It is a GUARD now. `repairCaretBesideVoid` on the editable's `onMouseUp`
+ * moves the selection out of the void as the click lands, so the keystroke is
+ * handled from a position that accepts it. The story fails if that repair is
+ * removed or stops reaching this case.
  */
 export const TypingAfterClickingPastTheTag: Story = {
-  /* KNOWN FAILING — this is a reproduction of an OPEN defect, not a guard.
-     Excluded from the run so the suite still reports real regressions; open it
-     in Storybook to watch it happen.
-
-     Measured with the Slate editor read out of the React fiber:
-
-       selection before the key  {"anchor":{"path":[0,2],"offset":0}, ...}
-       selection after the key   {"anchor":{"path":[0,1,0],"offset":0}, ...}
-       document                  unchanged
-       onChange                  fired twice, with the same document
-
-     `[0,2]` is the empty text AFTER the chip — a legitimate caret position.
-     `[0,1,0]` is inside the chip's own text child, and `TemplateElement`'s
-     click handler already documents that typing there is silently ignored.
-     The caret is pulled in as the keystroke is handled, so the value never
-     changes and the control reads as frozen.
-
-     Three fixes were tried and none of them takes; do not assume the obvious
-     one works without running this:
-       - moving the selection out of the void in `Slate`'s `onChange`;
-       - the same on the editable's `onMouseUp` (it IS called, but the point it
-         moves to is the one the caret already claims, so it is a no-op);
-       - claiming `insertText` in `onDOMBeforeInput` and inserting past the
-         void by hand. */
   parameters: {
     docs: {
       description: {
@@ -856,7 +843,7 @@ export const TypingAfterClickingPastTheTag: Story = {
     ],
     onChange: fn(),
   },
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;
     const editor = await waitFor(() => {
       const el = doc.querySelector<HTMLElement>('[contenteditable="true"]');

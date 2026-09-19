@@ -90,6 +90,11 @@ export interface IReqoreTableRowOptions {
   onExpandedHeight?: (index: number, height: number) => void;
   /** Toggles a row open or closed. */
   onExpandClick?: (expandId: string | number) => void;
+  /**
+   * The body's visible width, measured — what an open panel is laid out for.
+   * Absent until measured, and in a table with no panels.
+   */
+  visibleWidth?: number;
 }
 export interface IReqoreCustomTableRowProps extends IReqoreTableRowOptions {
   style?: React.CSSProperties;
@@ -123,11 +128,19 @@ export interface IReqoreTableRowStyle {
  * react-window positions items absolutely and gives each one a height, so an
  * expanded row cannot be a sibling of its panel — the two have to occupy the
  * same item box or the panel would be laid over the row beneath it.
+ *
+ * `overflow: clip`, not `hidden`. Both stop a panel taller than its
+ * not-yet-measured item from drawing over the row beneath, but `hidden` also
+ * makes the group a scroll container, and `position: sticky` sticks to the
+ * NEAREST one. The open row's pinned cells, and the panel, then stuck to a
+ * group that never scrolls, and moved with the columns like everything else.
+ * `clip` is not a scroll container, so they stick to the body, which is what
+ * scrolls.
  */
 const StyledTableRowGroup = styled.div`
   display: flex;
   flex-flow: column;
-  overflow: hidden;
+  overflow: clip;
 `;
 
 /**
@@ -142,19 +155,53 @@ const StyledTableRowGroup = styled.div`
  * every observation shaves a little more off. Refusing to shrink makes the
  * panel's height its CONTENT's height, always, which is the only number worth
  * reporting.
+ *
+ * `position: sticky; left: 0`, and as wide as the body shows (`visibleWidth`),
+ * because a panel is not a cell. Its content is free-form and lays itself out
+ * for the box it is given, so the box is what the reader can SEE, held at the
+ * body's left edge while the columns scroll under it — the way a full-width row
+ * in a data grid behaves. As wide as the columns and scrolling with them, it
+ * laid its content out for a width nobody could see, most of it past the right
+ * edge.
  */
 const StyledExpandedRow = styled.div`
   flex: 0 0 auto;
   min-width: 0;
   overflow: hidden;
+  position: sticky;
+  left: 0;
 `;
 
+/**
+ * One body row.
+ *
+ * `overflow: clip` is the backstop for the invariant the cells enforce
+ * individually: nothing a row contains is ever painted outside it, and so no
+ * row can ever be drawn over its neighbour. It matters because a row that does
+ * not wrap is given a height BEFORE its content is laid out — a virtualised
+ * list positions each row absolutely and has to know how tall it is — so there
+ * is no arrangement in which content taller than that height belongs to this
+ * row. `cell.tsx` bounds the content so this is never reached by anything the
+ * table renders itself; it is here for what the table does not control, a
+ * consumer's `cellComponent` or a content function that positions something of
+ * its own.
+ *
+ * `clip`, not `hidden`: both stop the paint, but `hidden` also makes the row a
+ * scroll container, and `position: sticky` sticks to the NEAREST one — pinned
+ * cells would stick to their own row and travel with the columns instead of
+ * holding at the body's edge. `clip` is not a scroll container. (The same
+ * reasoning, for the same reason, is on `StyledTableRowGroup` above.)
+ *
+ * A wrapping row is `min-height`, so it grows to its content and there is
+ * nothing to clip.
+ */
 export const StyledTableRow = styled.div.withConfig({
   // `wrap` drives the row's flex-wrap rule; it is not a DOM attribute.
   shouldForwardProp: omitStyleProps('wrap'),
 })<IReqoreTableRowStyle>`
   ${({ size, wrap, minWidth }) => css`
     display: flex;
+    overflow: clip;
     ${wrap
       ? css`
           min-height: ${SIZE_TO_PX[size]}px;
@@ -194,6 +241,31 @@ export interface IReqoreTableCellStyle {
   maxHeight?: number;
 }
 
+interface IReqoreTableCellContentProps extends IReqoreTableRowData {
+  /** The column's own `content` function, as data rather than as a component. */
+  render: (data: IReqoreTableRowData) => any;
+}
+
+/**
+ * Renders a column's `content` function without making the function the
+ * element TYPE.
+ *
+ * Mounting the function itself reads naturally and is a trap: a consumer that
+ * rebuilds its `columns` array — an ordinary `useMemo` with an unstable
+ * dependency — hands React a new type for every cell, and a new type means
+ * unmount and remount rather than re-render. The cell looks identical and the
+ * node underneath is a different one, so a pointer already on it (or a test
+ * that just found it) is left holding something detached from the document.
+ *
+ * The type is this component, always, so a rebuilt column now re-renders its
+ * cells. The function arrives as a prop, and a content function that keeps
+ * state of its own still gets to keep it, because it is still called inside a
+ * component rather than during the row's own render.
+ */
+const ReqoreTableCellContent = memo(({ render, ...props }: IReqoreTableCellContentProps) =>
+  render(props)
+);
+
 const ReqoreTableRow = memo(
   ({
     data: {
@@ -218,6 +290,7 @@ const ReqoreTableRow = memo(
       expanded,
       onExpandedHeight,
       onExpandClick,
+      visibleWidth,
     },
 
     style,
@@ -293,15 +366,17 @@ const ReqoreTableRow = memo(
         let content = cell?.content;
 
         if (isFunction(content)) {
-          // Check what type does the content function return
-          if (React.isValidElement(content(data))) {
-            const Content = content;
-            // If it's a react element, return it
-            return <Content {...data} _size={size} _dataId={dataId} isSelected={isSelected} />;
+          const contentProps = { ...data, _size: size, _dataId: dataId, isSelected };
+          // What the function returns decides how it is rendered: an element is
+          // mounted so that it keeps its own state, anything else is a value
+          // this cell formats below.
+          const rendered = content(contentProps);
+
+          if (React.isValidElement(rendered)) {
+            return <ReqoreTableCellContent render={content} {...contentProps} />;
           }
 
-          // If it's a function, call it and return the result
-          content = content(data) as any;
+          content = rendered as any;
         }
 
         const datum = get(data, dataId);
@@ -559,13 +634,19 @@ const ReqoreTableRow = memo(
        an expanded row cannot be a SIBLING of its panel — the two have to share
        one item box or the panel would be drawn over the row beneath it. */
     return (
-      <StyledTableRowGroup style={mergedStyle} className='reqore-table-row-group'>
+      /* At least as wide as the columns. A virtualised item is as wide as the
+         body, and clipping a wider row to it left the body nothing to scroll to:
+         every column past the visible edge was unreachable. */
+      <StyledTableRowGroup
+        style={{ ...mergedStyle, minWidth: totalColumnsWidth }}
+        className='reqore-table-row-group'
+      >
         {row}
         {isExpanded ? (
           <StyledExpandedRow
             ref={panelRef}
             className='reqore-table-row-expanded'
-            style={{ minWidth: totalColumnsWidth }}
+            style={visibleWidth ? { width: visibleWidth } : undefined}
           >
             {expandedContent}
           </StyledExpandedRow>

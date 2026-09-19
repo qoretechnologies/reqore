@@ -36,7 +36,10 @@ const meta = {
     }),
     ...IconArg('onItemClickIcon', 'Clickable item right icon', null),
   },
-} as StoryMeta<typeof ReqoreMultiSelect>;
+  /* Typed with the string-valued props the template renders: the component is
+     generic over what it holds, and `typeof` a generic component gives
+     Storybook the widest value type rather than the one these stories use. */
+} as StoryMeta<(props: IReqoreMultiSelectProps) => JSX.Element>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -404,6 +404,14 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
                 label: confirmationModal.cancelLabel || 'Cancel',
                 icon: confirmationModal.cancelIcon || 'CloseLine',
                 intent: confirmationModal.cancelButtonIntent,
+                /* A panel short of room drops its actions' labels and keeps the
+                   icons, which is the right trade for a toolbar — the label is a
+                   verb the icon already carries. Not here: this dialog exists to
+                   say which of two buttons throws the work away, and narrow it
+                   offered a tick and a cross with the destructive one named
+                   nowhere. Pinned before the caller's props, so a caller that
+                   wants the icon alone can still ask for it. */
+                responsive: false,
                 ...(confirmationModal.cancelButtonProps || {}),
                 onClick: () => {
                   closeConfirmationModal();
@@ -415,6 +423,8 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
                 label: confirmationModal.confirmLabel || 'Confirm',
                 intent: confirmationModal.confirmButtonIntent || 'success',
                 icon: confirmationModal.confirmIcon || 'CheckLine',
+                /* Named at every width — see the cancel action above. */
+                responsive: false,
                 ...(confirmationModal.confirmButtonProps || {}),
                 onClick: () => {
                   closeConfirmationModal();

@@ -11,7 +11,7 @@
  * and qorus-ide use for `TReqoreMultiSelectItem` keep resolving, with the same
  * types they always had.
  */
-import { IReqoreSelectMultiProps, ReqoreSelect } from '../Select';
+import { IReqoreSelectMultiProps, ReqoreSelect, TReqoreSelectValue } from '../Select';
 
 export type {
   IReqoreSelectBaseProps as IReqoreMultiSelectBaseProps,
@@ -23,9 +23,12 @@ export { ReqoreSelectBase as ReqoreMultiSelectBase, ReqoreSelectItem as ReqoreMu
 
 /** The multi-value half of `IReqoreSelectProps`, minus the discriminant the
     wrapper supplies — so the props are exactly what they were before. */
-export type IReqoreMultiSelectProps = Omit<IReqoreSelectMultiProps, 'multi'>;
+export type IReqoreMultiSelectProps<TValue extends TReqoreSelectValue = string> = Omit<
+  IReqoreSelectMultiProps<TValue>,
+  'multi'
+>;
 
 /** `ReqoreSelect` with `multi` pre-set: same name, same props, same value shape. */
-export const ReqoreMultiSelect = (props: IReqoreMultiSelectProps) => (
-  <ReqoreSelect {...props} multi />
-);
+export const ReqoreMultiSelect = <TValue extends TReqoreSelectValue = string>(
+  props: IReqoreMultiSelectProps<TValue>
+) => <ReqoreSelect<TValue> {...props} multi />;

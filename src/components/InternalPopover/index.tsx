@@ -93,6 +93,15 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
      (No backticks in here: this comment lives inside a template literal.) */
   max-width: ${({ maxWidth }) =>
     maxWidth ? `min(${maxWidth}, ${VIEWPORT_MAX_WIDTH})` : VIEWPORT_MAX_WIDTH};
+
+  /* A surface the pointer cannot reach must not be in its way.
+     A plain hover tooltip closes on the trigger's own mouseleave, so nothing on
+     it was ever clickable, hoverable or scrollable - but it does cover things
+     that are, and while it is up it takes their hover and their clicks. So it
+     lets the pointer through, and everything the pointer is meant to reach -
+     a click or focus popover, one held open on hover - keeps it.
+     (No backticks in here: this comment lives inside a template literal.) */
+  pointer-events: ${({ interactive }) => (interactive === false ? 'none' : undefined)};
   min-width: ${({ minWidth }) => minWidth};
   max-height: ${({ maxHeight }) => maxHeight};
   z-index: 999999;
@@ -190,6 +199,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     noWrapper,
     useTargetWidth,
     transparent,
+    interactive,
     maxWidth,
     minWidth,
     maxHeight,
@@ -422,6 +432,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     return createPortal(
       <ReqoreThemeProvider>
         <StyledPopoverWrapper
+          interactive={interactive}
           maxWidth={maxWidth}
           minWidth={minWidth}
           maxHeight={maxHeight}
