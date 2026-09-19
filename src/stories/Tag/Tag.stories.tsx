@@ -62,6 +62,13 @@ const meta = {
         disable: true,
       },
     }),
+    ...createArg('readOnly', {
+      defaultValue: false,
+      name: 'Read only',
+      description:
+        'Marks the tag as something that cannot be acted on right now, WITHOUT taking its pointer events away — so its tooltip and its actions still answer and can say why. It does NOT withhold `onClick`: a read-only `ReqoreTag`, `ReqoreButton` or `ReqoreCheckbox` still fires the handler it was given, which is why the ReadOnly story below renders one with an `onClick`. Refusing the CHANGE belongs to whatever owns the choice — `ReqoreDropdown` / `ReqoreSelect` items, `ReqoreRadioGroup` items, `ReqoreRating` and `ReqoreSegmentedControl` all decline a read-only selection — so on a tag, withhold the handler yourself. Unlike `disabled`, which dims the tag and removes it from interaction entirely, taking any explanation with it.',
+      control: 'boolean',
+    }),
   },
 } as StoryMeta<typeof ReqoreTag>;
 
@@ -767,5 +774,49 @@ export const MaxWidthTruncateMiddle: Story = {
     // The default keeps the single label box and no pinned tail.
     expect(tags[2].querySelector('.reqore-tag-label')).toBeTruthy();
     expect(tags[2].querySelector('.reqore-tag-label-tail')).toBeNull();
+  },
+};
+
+export const ReadOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "The three states a tag can be in, side by side. `disabled` is `pointer-events: none` — the tag dims and nothing on it can be hovered or pressed, so a tooltip explaining WHY is unreachable. `readOnly` only marks the tag `cursor: not-allowed`: it keeps full opacity and its pointer events, so its tooltip and its actions still answer. It does not withhold the `onClick` the middle tag here is given — the tag says the press will not help, it does not refuse it — so a caller who needs the press refused withholds the handler. Reach for `readOnly` whenever the user has to be able to find out why something is unavailable.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreTagGroup>
+      <ReqoreTag label='Available' icon='CheckLine' intent='success' onClick={noop} />
+      <ReqoreTag
+        label='Needs the Enterprise licence'
+        icon='LockLine'
+        readOnly
+        onClick={noop}
+        tooltip={{ content: 'Available on the Enterprise plan' }}
+      />
+      <ReqoreTag label='Turned off' icon='ForbidLine' disabled onClick={noop} />
+    </ReqoreTagGroup>
+  ),
+  play: async () => {
+    const tags = await waitFor(() => {
+      const found = document.querySelectorAll('.reqore-tag');
+      expect(found.length).toBe(3);
+      return Array.from(found) as HTMLElement[];
+    });
+
+    const [available, readOnly, disabled] = tags.map((tag) => getComputedStyle(tag));
+
+    expect(available.cursor).toBe('pointer');
+
+    // The read-only tag is still fully there to be hovered and read.
+    expect(readOnly.cursor).toBe('not-allowed');
+    expect(readOnly.pointerEvents).toBe('auto');
+    expect(readOnly.opacity).toBe('1');
+
+    // The disabled one is not, which is why it cannot carry a reason.
+    expect(disabled.pointerEvents).toBe('none');
+    expect(disabled.opacity).toBe('0.5');
   },
 };

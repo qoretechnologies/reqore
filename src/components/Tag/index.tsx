@@ -29,10 +29,11 @@ import {
   getReadableColorFrom,
   isAchromatic,
 } from '../../helpers/colors';
-import { ActiveIconScale, InactiveIconScale, RaisedElement } from '../../styles';
+import { ActiveIconScale, InactiveIconScale, RaisedElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
+  IReqoreReadOnly,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
   IWithReqoreFlat,
@@ -64,6 +65,7 @@ export interface IReqoreCustomTagProps
   extends
     IWithReqoreTooltip,
     IReqoreDisabled,
+    IReqoreReadOnly,
     IWithReqoreMinimal,
     IWithReqoreFluid,
     IWithReqoreEffect,
@@ -184,6 +186,9 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   theme: IReqoreTheme;
   removable?: boolean;
   interactive?: boolean;
+  /** Transient: `readOnly` is a real DOM attribute, so it has to be renamed on the
+      way into the styled span or React writes `readonly=""` onto it. */
+  $readOnly?: boolean;
   color?: TReqoreColor;
   $wrap?: boolean;
   $hasWidth?: boolean;
@@ -336,6 +341,16 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       opacity: 0.5;
       pointer-events: none;
       cursor: not-allowed;
+    `}
+
+  /* Read only is NOT disabled: the tag keeps its pointer events, so its tooltip and
+     its actions still answer — it only stops advertising itself as something to
+     press. Same meaning the prop has on ReqoreButton, ReqoreCheckbox and
+     ReqoreRating. Last, so it wins over the interactive block's cursor: pointer. */
+  ${({ $readOnly }) =>
+    $readOnly &&
+    css`
+      ${ReadOnlyElement};
     `}
 
   /* Only gate on hover where hover exists — see the same guard on ReqorePanel.
@@ -604,6 +619,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       loading,
       loadingIconType,
       compact,
+      readOnly,
       removeTooltip = 'Remove',
       ...rest
     }: IReqoreTagProps,
@@ -656,13 +672,18 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       [capped, truncate, label]
     );
 
+    /* A read-only tag is not offering to be pressed, so it does not light up on
+       hover either — but it stays clickable, exactly as `readOnly` does on a
+       button, because refusing the CHANGE is the picker's job and not the tag's. */
+    const interactive = !!onClick && !rest.disabled && !readOnly;
+
     const effect = useMemo(
       () => ({
         ...rest.effect,
         gradient: intent ? undefined : rest.effect?.gradient,
-        interactive: !!onClick && !rest.disabled,
+        interactive,
       }),
-      [intent, !!onClick, rest.disabled, JSON.stringify(rest.effect)]
+      [intent, interactive, JSON.stringify(rest.effect)]
     );
 
     return (
@@ -682,7 +703,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         asBadge={asBadge}
         minimal={minimal}
         removable={!!onRemoveClick}
-        interactive={!!onClick && !rest.disabled}
+        interactive={interactive}
+        $readOnly={readOnly}
         tabIndex={onClick && !rest.disabled ? 0 : undefined}
         $wrap={wrap}
         $hasWidth={!!width}

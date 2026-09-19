@@ -250,3 +250,61 @@ export const WithEffect: Story = {
     },
   },
 };
+
+export const UnchoosableItems: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "An option that is present but cannot be picked — and can still be read. `disabled` is the wrong tool for this: it renders the row `pointer-events: none`, which takes its tooltip and its row actions with it, so disabling the option destroys the explanation. `readOnly` is the state that keeps the row alive — full opacity, pointer events intact, `cursor: not-allowed` — while the list refuses to select it, by click and by keyboard. The reason then has somewhere to live: a `description` under the label, a `tooltip`, a `badge`, an `intent`, or a `rightAction` the user can press. The last row is `disabled` for contrast; try to hover it.",
+      },
+    },
+  },
+  render: (args: IReqoreMultiSelectProps) => {
+    const [selected, setSelected] = useState<string[]>(['smtp']);
+
+    return (
+      <ReqoreMultiSelect
+        {...args}
+        value={selected}
+        onValueChange={setSelected}
+        canRemoveItems
+        openOnMount
+        selectorProps={{ listHeight: '400px' }}
+        items={[
+          { label: 'Email (SMTP)', value: 'smtp', icon: 'MailLine' },
+          { label: 'Webhook', value: 'webhook', icon: 'GlobalLine' },
+          {
+            label: 'Slack',
+            value: 'slack',
+            icon: 'SlackLine',
+            readOnly: true,
+            description: 'No Slack connection is configured in this instance',
+            badge: [{ label: 'Needs a connection', intent: 'warning' }],
+            tooltip: { content: 'Create a Slack connection to make this available' },
+            rightAction: {
+              icon: 'ExternalLinkLine',
+              tooltip: 'Open connections',
+              onClick: () => console.log('take me to connections'),
+            },
+          },
+          {
+            label: 'PagerDuty',
+            value: 'pagerduty',
+            icon: 'AlarmWarningLine',
+            readOnly: true,
+            description: 'Available on the Enterprise plan',
+            intent: 'muted',
+          },
+          {
+            label: 'Fax',
+            value: 'fax',
+            icon: 'PrinterLine',
+            disabled: true,
+            tooltip: { content: 'You will never get to read this' },
+          },
+        ]}
+      />
+    );
+  },
+};

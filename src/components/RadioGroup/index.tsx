@@ -59,9 +59,19 @@ const ReqoreRadioGroup = ({
           checked={value === selected}
           size={size || itemRest.size}
           disabled={disabled || itemRest.disabled}
-          onClick={() => {
-            onSelectClick(value);
-          }}
+          /* A read-only option stays readable and hoverable — `readOnly` only marks
+             it `cursor: not-allowed`, it does not take its pointer events away, so
+             its tooltip and description are still the place its reason can be read.
+             Having said it cannot be picked, it must not then pick: the handler is
+             withheld rather than the option being deadened. Same rule the dropdown
+             list, ReqoreRating and ReqoreSegmentedControl follow. */
+          onClick={
+            itemRest.readOnly
+              ? undefined
+              : () => {
+                  onSelectClick(value);
+                }
+          }
         />
       )
     )}
