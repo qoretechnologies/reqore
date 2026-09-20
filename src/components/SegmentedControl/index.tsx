@@ -392,7 +392,12 @@ const ReqoreSegmentedControl = memo(
           const containerRect = container.getBoundingClientRect();
           const itemRect = selectedWrapper.getBoundingClientRect();
           setIndicatorStyle({
-            left: itemRect.left - containerRect.left,
+            // From the container's PADDING edge, which is where an absolutely positioned
+            // child's `left: 0` sits: the border-box rect plus the border (`clientLeft`,
+            // 0 when `flat`). Measured from the border edge and corrected by the padding
+            // instead, the highlight landed `padding - border` px left of its item — 2px
+            // with a border, 3px without — on every control since the component shipped.
+            left: itemRect.left - containerRect.left - container.clientLeft,
             width: itemRect.width,
           });
         }
@@ -495,12 +500,13 @@ const ReqoreSegmentedControl = memo(
         >
           {_value && selectedVisibleIndex >= 0 && !isSelectedHidden && (
             <StyledSegmentedControlIndicator
+              className='reqore-segmented-control-indicator'
               theme={theme}
               size={size}
               pill={pill}
               animate={animations.buttons !== false}
               style={{
-                transform: `translateX(${indicatorStyle.left - CONTAINER_PADDING}px)`,
+                transform: `translateX(${indicatorStyle.left}px)`,
                 width: `${indicatorStyle.width}px`,
               }}
             />
