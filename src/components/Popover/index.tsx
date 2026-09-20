@@ -64,9 +64,9 @@ export interface IPopover
    * that stays open after a hover (`hoverStay`) — and to `false` for a plain
    * hover tooltip, which it cannot.
    *
-   * A plain hover popover is closed by its trigger's own `mouseleave`, so a
-   * pointer moving onto it unmounts it on the way: nothing inside one has ever
-   * been clickable, hoverable or scrollable. What its surface CAN do is sit in
+   * A plain hover popover closes as soon as the pointer is off it, so a pointer
+   * moving onto it unmounts it on the way: nothing inside one has ever been
+   * clickable, hoverable or scrollable. What its surface CAN do is sit in
    * the pointer's path — over the thing the tooltip describes, or over the
    * trigger itself — and take the hover away from what it covers, which reads
    * as a tooltip flickering out mid-sentence and as an element that cannot be
@@ -111,6 +111,16 @@ export interface IPopoverData extends IPopoverOptions {
 export const StyledPopover = styled.span`
   overflow: hidden;
 `;
+
+/**
+ * How long a `keepOpenOnHover` close waits before it decides.
+ *
+ * The pointer needs time to cross the gap popper leaves between a trigger and
+ * its surface, so leaving the trigger only schedules the close and arriving on
+ * the surface cancels it. Exported so a test asserting "it is still up" can be
+ * written against the real window instead of a copy of the number.
+ */
+export const DEFERRED_CLOSE_DELAY = 50;
 
 const startEvents = {
   hover: 'mouseenter',
@@ -204,7 +214,7 @@ export const ReqorePopover = memo(
       /**
        * A popover takes the pointer only if the pointer can get to it.
        *
-       * A plain `hover` popover is closed by the trigger's `mouseleave`, so its
+       * A plain `hover` popover closes the moment the pointer is off it, so its
        * surface unmounts as the pointer arrives — all it can do with the
        * pointer is take it away from whatever it is covering. Every other
        * handler, and `keepOpenOnHover` on this one, describes a popover meant
@@ -228,10 +238,23 @@ export const ReqorePopover = memo(
           if (keepOpenOnHover) {
             // Add a small delay before checking to allow hover state to update
             closeTimeoutRef.current = window.setTimeout(() => {
+              /* The handle is spent the moment it fires, so it is dropped
+                 rather than left for a later `cancelTimeout` to "cancel".
+
+                 One ref cannot describe several timers, and the reconciliation
+                 arms one per pointer transition, so this may well discard a
+                 LATER timer's handle and leave the ref claiming nothing is
+                 pending while something is. That is tolerable only because the
+                 handle is not what decides anything: every armed callback
+                 re-reads `isTargetHovered` / `isPopoverHovered` before closing,
+                 so a timer nobody can cancel can still only close early, never
+                 wrongly. */
+              closeTimeoutRef.current = null;
+
               if (!isTargetHovered.current && !isPopoverHovered.current) {
                 setIsOpen(false);
               }
-            }, 50);
+            }, DEFERRED_CLOSE_DELAY);
           } else {
             if (onBeforeClose) {
               const shouldClose = onBeforeClose({ content }, e);
@@ -309,6 +332,109 @@ export const ReqorePopover = memo(
           cancelTimeout,
         ]
       );
+
+      /**
+       * A hover popover closes when the pointer is no longer on it.
+       *
+       * Closing used to depend entirely on the trigger's own `mouseleave`, and
+       * that event is not guaranteed to arrive. When one is missed the popover
+       * has no way back: `isTargetHovered` stays true, the deferred close checks
+       * it and declines, and since the pointer is already elsewhere no second
+       * `mouseleave` is ever coming. The tooltip then stays up for the life of
+       * the page — and a reader sweeping a row of them collects one per trigger,
+       * stacked over the content they describe.
+       *
+       * So the trigger's `mouseleave` is no longer the only way out. Whenever
+       * the pointer enters ANY element, this asks the DOM where it actually is:
+       * if it is neither on the trigger nor on the popover, the popover closes.
+       * `mouseover` fires once per element transition — it is the browser
+       * telling us the pointer moved, not a poll — so one missed event costs a
+       * moment, not the rest of the session.
+       */
+      useEffect(() => {
+        /* Scoped to the popovers that actually depend on `mouseleave`.
+           `click` and `focus` have no `endEvent` at all and are dismissed by the
+           document click capture or Esc, so they were never exposed. Plain
+           `hoverStay` is the same — `endEvents.hoverStay` is null. But the
+           `keepOpenOnHover` branch below REPLACES the handler's own bindings
+           with `mouseenter`/`mouseleave`, so ANY handler paired with it opens and
+           closes as a hover popover and carries the identical hole - which is why
+           the guard admits `keepOpenOnHover` whatever the handler, not only
+           alongside `hoverStay`. */
+        if (!isOpen || !componentRef || (handler !== 'hover' && !keepOpenOnHover)) {
+          return undefined;
+        }
+
+        const reconcile = (event: MouseEvent) => {
+          /* `instanceof`, not a null check: a real pointer event always targets
+             an Element, but a synthetic `mouseover` dispatched on `document` or
+             `window` - which test harnesses, analytics and a11y scripts do -
+             passes a null check and then has no `closest`. This listener sits on
+             the document for every open tooltip in the app, so an exception here
+             escapes into someone else's dispatch. The cast this replaces made
+             the null check look like a type check. */
+          const target = event.target;
+
+          if (!(target instanceof Element)) {
+            return;
+          }
+
+          const onTrigger = componentRef.contains(target);
+          /* ANY popover's surface counts, not just this one's.
+             `popperRef.current` is this popover's own surface and would be the
+             sharper test, but a pointer that has moved onto a DIFFERENT popover
+             is reading something, and closing what it left behind is a smaller
+             wrong than closing what it arrived at. The cost is that a stranded
+             popover survives while the reader is on another one — until the
+             next transition, which is one movement away. */
+          const onPopover = !!target.closest('.reqore-popover-content');
+
+          if (onTrigger || onPopover) {
+            return;
+          }
+
+          /* `attemptClose`, NOT `close`. `keepOpenOnHover` exists so the pointer
+             can travel from the trigger to the surface, and popper leaves a
+             10px gap between them (`baseOffsetY` in InternalPopover). Crossing
+             it puts the pointer on whatever is underneath for a moment, which
+             looks exactly like leaving — so an immediate close here would shut
+             the tooltip before the reader arrived, trading a tooltip that will
+             not go away for one that cannot be read. The deferred close waits
+             out the gap, and `handlePopoverMouseEnter` cancels it when the
+             pointer lands.
+
+             The refs are cleared first so that deferred check has the truth to
+             work with: the pointer is demonstrably elsewhere right now. */
+          isTargetHovered.current = false;
+          isPopoverHovered.current = false;
+          /* `attemptClose`, NOT `close` - and which of its two branches runs
+             depends on `keepOpenOnHover`.
+
+             WITH it the close is deferred and `onBeforeClose` is not consulted.
+             That is right for a reconciliation: a veto means "not on a close the
+             user initiated", and this one is not initiated at all - it is the
+             component noticing the pointer is elsewhere.
+
+             WITHOUT it - the plain tooltip, and the library default - the close
+             is immediate and DOES consult `onBeforeClose`, so a consumer that
+             vetoes can still strand one. No worse than before this existed,
+             since such a popover was already un-closable under the same veto;
+             simply not fixed by it either. A vetoing consumer owns dismissal.
+
+             The pending close is deliberately NOT cancelled and re-armed on each
+             transition. Doing that turned the fixed window into a sliding one:
+             the timer kept being pushed forward for as long as the pointer was
+             moving, so a tooltip survived an entire sweep and only went once the
+             reader stopped - weakest in exactly the case this exists for. The
+             first armed timer is left to run; it re-checks both refs before
+             closing, so it can only ever close early, never wrongly. */
+          attemptClose(event);
+        };
+
+        document.addEventListener('mouseover', reconcile, true);
+
+        return () => document.removeEventListener('mouseover', reconcile, true);
+      }, [isOpen, handler, keepOpenOnHover, componentRef, attemptClose]);
 
       const handleClick = useCallback(
         (event: MouseEvent) => {

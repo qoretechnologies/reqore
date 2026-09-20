@@ -5,7 +5,7 @@ import { ReqoreButton, ReqorePopover, ReqoreUIProvider } from '../src';
 /**
  * A tooltip must not swallow the pointer that is reading it.
  *
- * A plain `hover` popover is closed by the trigger's own `mouseleave`, so the
+ * A plain `hover` popover closes as soon as the pointer is off it, so the
  * pointer can never arrive on its surface: the surface unmounts on the way.
  * What the surface CAN do is sit in the pointer's path — over the thing the
  * tooltip is describing, over the trigger itself — and take the hover away from

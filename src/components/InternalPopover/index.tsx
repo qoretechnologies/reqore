@@ -95,7 +95,7 @@ export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
     maxWidth ? `min(${maxWidth}, ${VIEWPORT_MAX_WIDTH})` : VIEWPORT_MAX_WIDTH};
 
   /* A surface the pointer cannot reach must not be in its way.
-     A plain hover tooltip closes on the trigger's own mouseleave, so nothing on
+     A plain hover tooltip closes as soon as the pointer is off it, so nothing on
      it was ever clickable, hoverable or scrollable - but it does cover things
      that are, and while it is up it takes their hover and their clicks. So it
      lets the pointer through, and everything the pointer is meant to reach -
