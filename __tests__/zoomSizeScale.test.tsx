@@ -235,44 +235,59 @@ describe('<Table /> renders at the size it is given', () => {
     expect(container.querySelector('[defaultZoom]')).toBeNull();
   });
 
-  test('the sizes are strictly ordered — no two render alike', () => {
-    const heights = sizes.map((size) => {
-      const { container, unmount } = renderTableAt(size);
-      const row = container.querySelector<HTMLElement>('.reqore-table-row');
-      const height = parseFloat(row.style.height);
+  // The two tests below mount the table once per size — seven full renders of a
+  // 1000-row fixture each. That is ~35s on a CI runner against the 30s default,
+  // which is why the second failed there while passing on a dev machine. The
+  // cost is inherent to asserting a size MATRIX rather than one size, so the
+  // timeout is raised rather than the coverage narrowed.
+  const SIZE_MATRIX_TIMEOUT_MS = 120000;
 
-      unmount();
-      return height;
-    });
+  test(
+    'the sizes are strictly ordered — no two render alike',
+    () => {
+      const heights = sizes.map((size) => {
+        const { container, unmount } = renderTableAt(size);
+        const row = container.querySelector<HTMLElement>('.reqore-table-row');
+        const height = parseFloat(row.style.height);
 
-    heights.slice(1).forEach((height, index) => {
-      expect(height).toBeGreaterThan(heights[index]);
-    });
-  });
+        unmount();
+        return height;
+      });
 
-  test('a flat table drops the separator line at every size', () => {
-    sizes.forEach((size) => {
-      const { container, unmount } = render(
-        <ReqoreUIProvider>
-          <ReqoreLayoutContent>
-            <ReqoreTable
-              {...(tableData as IReqoreTableProps)}
-              size={size}
-              flat
-              width={500}
-              height={400}
-            />
-          </ReqoreLayoutContent>
-        </ReqoreUIProvider>
-      );
+      heights.slice(1).forEach((height, index) => {
+        expect(height).toBeGreaterThan(heights[index]);
+      });
+    },
+    SIZE_MATRIX_TIMEOUT_MS
+  );
 
-      expect(container.querySelector<HTMLElement>('.reqore-table-row').style.height).toBe(
-        `${SIZE_TO_PX[size]}px`
-      );
+  test(
+    'a flat table drops the separator line at every size',
+    () => {
+      sizes.forEach((size) => {
+        const { container, unmount } = render(
+          <ReqoreUIProvider>
+            <ReqoreLayoutContent>
+              <ReqoreTable
+                {...(tableData as IReqoreTableProps)}
+                size={size}
+                flat
+                width={500}
+                height={400}
+              />
+            </ReqoreLayoutContent>
+          </ReqoreUIProvider>
+        );
 
-      unmount();
-    });
-  });
+        expect(container.querySelector<HTMLElement>('.reqore-table-row').style.height).toBe(
+          `${SIZE_TO_PX[size]}px`
+        );
+
+        unmount();
+      });
+    },
+    SIZE_MATRIX_TIMEOUT_MS
+  );
 });
 
 describe('<Tree /> renders at the size it is given', () => {
