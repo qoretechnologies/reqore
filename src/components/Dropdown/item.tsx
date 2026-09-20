@@ -21,7 +21,14 @@ export const ReqoreDropdownItem = memo(
     // The dropdown's own data stays with the item it hands back on select. The
     // menu item passes props it does not know on to its DOM button, which wrote
     // a structured `value` as "[object Object]".
-    const { value: _value, metadata: _metadata, items: _items, ...menuItem } = item;
+    //
+    // Only a STRUCTURED value is withheld. A scalar one renders as itself, is a
+    // legitimate attribute, and callers reach for it — the date picker finds a
+    // year by `button[value="2030"]`, and withholding every value fixed the
+    // object case by breaking that one. So this asks what the value IS rather
+    // than dropping the prop outright.
+    const { value, metadata: _metadata, items: _items, ...rest } = item;
+    const menuItem = value !== null && typeof value === 'object' ? rest : { ...rest, value };
 
     return (
       <ReqoreMenuItem

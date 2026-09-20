@@ -12,9 +12,9 @@
  * measure that difference rather than trusting the props, and cover the two
  * pickers that make a choice out of a list of items.
  */
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { ReqoreMultiSelect, ReqoreRadioGroup, ReqoreUIProvider } from '../src';
+import { ReqoreDropdown, ReqoreMultiSelect, ReqoreRadioGroup, ReqoreUIProvider } from '../src';
 import { IReqoreMultiSelectProps } from '../src/components/MultiSelect';
 import { TReqoreSelectItem } from '../src/components/Select';
 
@@ -299,4 +299,28 @@ test('A read-only radio option is readable and not selectable', () => {
   fireEvent.click(screen.getByText('Pick me').closest('.reqore-checkbox')!);
 
   expect(onSelectClick).toHaveBeenNthCalledWith(1, 'pick');
+});
+
+describe('a dropdown item and its DOM button', () => {
+  test('a scalar value reaches the button, a structured one does not', async () => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreDropdown
+          isDefaultOpen
+          items={[
+            { label: 'Twenty thirty', value: 2030 },
+            { label: 'Structured', value: { id: 7, name: 'seven' } as any },
+          ]}
+        />
+      </ReqoreUIProvider>
+    );
+
+    // A scalar renders as itself and callers select on it — the date picker finds
+    // a year with exactly this selector.
+    await waitFor(() => expect(document.querySelector('button[value="2030"]')).toBeTruthy());
+
+    // A structured one would stringify to "[object Object]", so it is withheld
+    // rather than written as nonsense.
+    expect(document.querySelector('button[value="[object Object]"]')).toBeNull();
+  });
 });
