@@ -705,7 +705,13 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         removable={!!onRemoveClick}
         interactive={interactive}
         $readOnly={readOnly}
-        tabIndex={onClick && !rest.disabled ? 0 : undefined}
+        /* `interactive`, not `onClick`, decides the tab stop. A read-only tag
+           keeps its handler — refusing the CHANGE is the picker's job, not the
+           tag's — but it has stopped advertising itself as something to press,
+           and a tab stop is that same advertisement made to the keyboard. Wired
+           off the one flag so the cursor, the hover effect and the tab order
+           cannot disagree about whether this tag is pressable. */
+        tabIndex={interactive ? 0 : undefined}
         $wrap={wrap}
         $hasWidth={!!width}
       >

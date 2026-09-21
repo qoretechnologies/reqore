@@ -102,7 +102,12 @@ const EMPTY_TAGS_LIST_PROPS: IReqoreRichTextEditorProps['tagsListProps'] = {};
 export const TemplateElement = memo((props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
   const selected = useSelected();
   const editor = useSlateStatic();
-  const readOnly = useReadOnly();
+  /* Slate's own answer, which is the editor's `readOnly` — it reaches `Editable`
+     as a DOM-valid prop and Slate reads it back. It is NOT the whole answer: the
+     editor's `disabled` never reaches Slate, so `composeTagProps` marks the chip
+     read-only for that case and this takes whichever of the two says so. */
+  const slateReadOnly = useReadOnly();
+  const readOnly = slateReadOnly || !!props.tagProps?.readOnly;
 
   /* A chip is an inline VOID: it holds no text of its own, so a click on it has
      no text position to land in and the browser places the cursor nowhere. This
@@ -183,6 +188,15 @@ export const TemplateElement = memo((props: RenderElementProps & { tagProps: IRe
         // AFTER the spread on purpose: `tagProps` carries an `onClick` of its
         // own, so declaring this before it meant this handler never ran at all.
         onClick={handleClick}
+        /* And `readOnly` with it, because winning the spread cost the chip the
+           one signal that said it could not be pressed. `composeTagProps`
+           withholds its `onClick` on a read-only surface; overriding that put a
+           handler back unconditionally, and a tag with a handler paints itself
+           pressable — pointer cursor, hover lift, a tab stop — for a click this
+           element then declines. The handler stays (it still runs the
+           consumer's own `onClick`), and this is what says the cursor is not on
+           offer. */
+        readOnly={readOnly}
         contentEditable={false}
         intent={selected ? 'info' : props.tagProps?.intent}
       />
@@ -468,6 +482,15 @@ export const ReqoreRichTextEditor = forwardRef<
         const composed: IReqoreTagProps = {
           ...finalProps,
           size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
+          /* Says "not choosable" to the chip itself, which withholding the
+             handlers below cannot: `TemplateElement` binds a click of its own to
+             place the cursor, so an uninteractive editor still hands the tag a
+             handler and a tag with a handler paints itself pressable. This is
+             the flag that keeps the cursor, the hover effect and the tab stop
+             honest — and it is the ONLY route by which the editor's `disabled`
+             reaches the chip, since `disabled` never reaches Slate and
+             `useReadOnly()` therefore cannot see it. */
+          readOnly: !interactive || finalProps.readOnly,
           onClick: interactive
             ? (event) => {
                 onTagClick?.(element);
