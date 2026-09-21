@@ -85,6 +85,18 @@ export interface IPopover
   maxWidth?: string;
   minWidth?: string;
   maxHeight?: string;
+  /**
+   * Keeps the surface at the `placement` asked for instead of letting it flip
+   * to the opposite side, scrolling the target into view when there is not
+   * enough room to honour it.
+   *
+   * For a MENU opened from a form field this is the difference between usable
+   * and not: flipping puts the list over the form the field belongs to — the
+   * content the author is reading to decide what to pick — while the space
+   * below it holds the rows they have already passed. A tooltip wants the
+   * opposite and keeps the default.
+   */
+  keepPlacement?: boolean;
   icon?: IReqoreIconName;
   title?: string;
   updater?: string | number;
@@ -167,6 +179,7 @@ export const ReqorePopover = memo(
         maxWidth,
         minWidth,
         maxHeight,
+        keepPlacement,
         icon,
         title,
         onBeforeClose,
@@ -681,6 +694,7 @@ export const ReqorePopover = memo(
                 maxWidth={maxWidth}
                 minWidth={minWidth}
                 maxHeight={maxHeight}
+                keepPlacement={keepPlacement}
                 offsetX={offsetX}
                 offsetY={offsetY}
                 intent={intent}
@@ -733,6 +747,7 @@ export const ReqorePopover = memo(
               maxWidth={maxWidth}
               minWidth={minWidth}
               maxHeight={maxHeight}
+              keepPlacement={keepPlacement}
               offsetX={offsetX}
               offsetY={offsetY}
               intent={intent}

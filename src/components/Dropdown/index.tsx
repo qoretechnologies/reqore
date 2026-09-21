@@ -157,6 +157,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
   listId,
   onBeforeClose,
   onBeforeOpen,
+  keepPlacement,
   popoverId,
   offsetX,
   offsetY,
@@ -274,6 +275,7 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       onToggleChange={handleToggleChange}
       onBeforeClose={onBeforeClose}
       onBeforeOpen={onBeforeOpen}
+      keepPlacement={keepPlacement}
       id={popoverId}
       offsetX={offsetX}
       offsetY={offsetY}

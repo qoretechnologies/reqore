@@ -243,3 +243,58 @@ export const TypingBesideAChipDoesNotExtendIt: Story = {
     }).toMatchObject({ reference: '$.result', typed: 'a' });
   },
 };
+
+/**
+ * The list opens UNDER the field, even when the field sits low on the page.
+ *
+ * Popper flips a surface to the opposite side when the preferred one is too
+ * tight, which for a field's own menu is the worst of the two: it covers the
+ * form the field belongs to — the rows the author is reading to decide what to
+ * pick — while the space below holds the rows they have already passed.
+ *
+ * Reported from a Qorus test assertion's `Value`. A field carrying a
+ * validation message is ~270px tall with the control at its BOTTOM, so it sits
+ * low enough that the list flipped every time, and the same field with no
+ * message placed it correctly — one field, two behaviours, decided by how tall
+ * the message happened to be.
+ *
+ * The decorator reproduces that: a scroll container with the field pushed most
+ * of a screen down, so the room below is far less than the list needs.
+ */
+export const TheListOpensBelowAFieldNearTheBottom: Story = {
+  args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], tags: TAGS, onChange: fn() },
+  decorators: [
+    (Story: any) => (
+      <div style={{ height: '100vh', overflowY: 'auto' }} data-testid='scroller'>
+        <div style={{ height: '85vh' }} />
+        <Story />
+        <div style={{ height: '85vh' }} />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+
+    await userEvent.click(editor);
+    await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+
+    const control = (editor.closest('.reqore-control-wrapper') as HTMLElement) ?? editor;
+
+    /* Re-queried inside the wait: making room scrolls the field, so both rects
+       move, and a pair captured beforehand describes the layout the fix exists
+       to change. */
+    await waitFor(async () => {
+      const list = doc.querySelector<HTMLElement>('.reqore-popover-content')!;
+      const listTop = list.getBoundingClientRect().top;
+      const fieldBottom = control.getBoundingClientRect().bottom;
+
+      // Below the field — not over the form above it.
+      await expect(Math.round(listTop)).toBeGreaterThanOrEqual(Math.round(fieldBottom) - 1);
+      // And on screen, rather than hanging off the bottom.
+      await expect(list.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        doc.documentElement.clientHeight + 1
+      );
+    });
+  },
+};

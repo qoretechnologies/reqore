@@ -77,6 +77,23 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
 const VIEWPORT_EDGE_GUTTER = 20;
 const VIEWPORT_MAX_WIDTH = `calc(100vw - ${VIEWPORT_EDGE_GUTTER}px)`;
 
+/** The nearest ancestor that can actually be scrolled, or null. */
+const scrollableAncestor = (element: HTMLElement | null): HTMLElement | null => {
+  let node = element?.parentElement ?? null;
+
+  while (node) {
+    const { overflowY } = window.getComputedStyle(node);
+
+    if (/(auto|scroll|overlay)/.test(overflowY) && node.scrollHeight > node.clientHeight) {
+      return node;
+    }
+
+    node = node.parentElement;
+  }
+
+  return null;
+};
+
 export const StyledPopoverWrapper = styled.div<{ theme: IReqoreTheme }>`
   ${({ animate }) =>
     animate &&
@@ -187,6 +204,7 @@ export interface IReqoreInternalPopoverProps extends IPopoverData {
   closePopover: () => void;
   handler?: 'hover' | 'click' | 'focus' | 'hoverStay';
   onPopoverMouseEnter?: () => void;
+  keepPlacement?: boolean;
   onPopoverMouseLeave?: () => void;
 }
 
@@ -203,6 +221,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     maxWidth,
     minWidth,
     maxHeight,
+    keepPlacement,
     offsetX = 0,
     offsetY = 0,
     intent,
@@ -254,11 +273,59 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           },
         },
         {
+          /* Flipping is what puts a field's menu over the form the field
+             belongs to, so `keepPlacement` turns it off and the surface is
+             given room by scrolling instead — see the effect below. */
+          name: 'flip',
+          enabled: !keepPlacement,
+        },
+        {
           name: 'hide',
           enabled: true,
         },
       ],
     });
+
+    /* Making room for a placement that is held.
+       With `flip` off the surface stays below its target, so it is this that
+       has to find it somewhere to go: scroll the nearest scrollable ancestor
+       until the surface fits underneath. Only then, if the scroller had
+       nothing left to give, is the height clamped to what is actually there —
+       a short list that scrolls is still readable, whereas one running off the
+       bottom of the window is not.
+
+       Once per opening, guarded by the ref: scrolling moves the target, which
+       re-runs Popper, which would otherwise bring us straight back here. */
+    const madeRoomFor = useRef<HTMLElement | null>(null);
+    const [roomBelow, setRoomBelow] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+      if (!keepPlacement || !targetElement || !popperElement) return;
+      if (!String(placement ?? 'bottom').startsWith('bottom')) return;
+      if (madeRoomFor.current === popperElement) return;
+
+      madeRoomFor.current = popperElement;
+
+      const gap = baseOffsetY + offsetY + VIEWPORT_EDGE_GUTTER;
+      const spaceBelow = () =>
+        window.innerHeight - targetElement.getBoundingClientRect().bottom - gap;
+
+      const deficit = popperElement.offsetHeight - spaceBelow();
+
+      if (deficit > 0) {
+        const scroller = scrollableAncestor(targetElement);
+
+        if (scroller) {
+          const left = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop;
+          scroller.scrollTop += Math.min(deficit, Math.max(left, 0));
+          forceUpdate?.();
+        }
+      }
+
+      const remaining = spaceBelow();
+
+      setRoomBelow(popperElement.offsetHeight > remaining ? `${Math.max(remaining, 0)}px` : undefined);
+    }, [keepPlacement, targetElement, popperElement, placement, baseOffsetY, offsetY, forceUpdate]);
 
     useUpdateEffect(() => {
       if (!mutationObserber.current && targetElement && state) {
@@ -435,7 +502,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           interactive={interactive}
           maxWidth={maxWidth}
           minWidth={minWidth}
-          maxHeight={maxHeight}
+          maxHeight={maxHeight ?? roomBelow}
           transparent={transparent}
           effect={effect}
           isOpaque={!transparent && !minimal}

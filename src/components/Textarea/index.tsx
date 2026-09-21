@@ -411,6 +411,14 @@ function Textarea<T>(
         ref={targetRef}
         onItemSelect={handleItemSelect}
         closeOnTargetClick={false}
+        /* A template list belongs UNDER the field it writes into. Flipped, it
+           covers the form the field is part of — which is exactly what the
+           author is reading to decide what to pick — and a tall field (one
+           carrying a validation message, say) sits low enough to make Popper
+           flip it every time. Held below, the list covers the rows already
+           passed instead, and the field is scrolled up when there is no room.
+           A caller can still override it through `templates`. */
+        keepPlacement
         {...templates}
         popoverId={`id-${uuid.current}`}
         onBlur={handleBlur}
