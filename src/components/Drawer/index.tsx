@@ -46,10 +46,25 @@ export const DRAWER_MIN_SIZE = '150px';
  *   80px keeps the header whole and leaves one 20px line of the content the
  *   modal exists to show.
  *
- * Safe for existing modals because it is far below every one of them: the
- * narrowest modal in reqore, reqraft and qorus-ide is 480px, the default width
- * is `80vw`, and no modal's natural height is under the 55px header plus its
- * content. The floor therefore changes nothing until somebody drags.
+ * THE FLOOR ALSO APPLIES AT REST, which is worth stating plainly because it is
+ * easy to assume otherwise. `re-resizable` takes `minWidth` / `minHeight` both
+ * as the drag clamp and as the element's inline `min-width` / `min-height`, so
+ * a modal SMALLER than the floor is grown to it without anybody touching it.
+ * Measured on a freshly rendered `ReqoreModal`: `min-height: 80px;
+ * min-width: 200px` on `.reqore-drawer-resizable`, and `utilities-global-modal
+ * --cannot-be-closed` went from ~42px tall to 80px, its one line of text at the
+ * top and the rest empty.
+ *
+ * Width is inert in practice — the default is `80vw` and the narrowest modal in
+ * reqore, reqraft and qorus-ide is 480px — so what this actually changes is the
+ * height of a modal with less than 80px of content, which in practice means one
+ * with no header. Such a modal reserves room for chrome it does not have. That
+ * is accepted rather than worked around: 80px is a reasonable smallest dialog,
+ * and the alternative — handing `re-resizable` its bounds only once a drag is
+ * under way — buys a little dead space back in exchange for a clamp that
+ * silently stops clamping if the library ever snapshots its bounds at drag
+ * start. If a caller wants a smaller resting modal, `minHeight` takes any value
+ * this does, including one below the default floor.
  */
 export const MODAL_MIN_WIDTH = '200px';
 /** See {@link MODAL_MIN_WIDTH}. */
