@@ -1401,7 +1401,11 @@ export const MovingWithinATooltipKeepsItOpen: StoryObj<typeof meta> = {
  * A plain hover popover is `pointer-events: none` because the pointer can never
  * reach it: leaving the trigger closes it, so the surface unmounts on the way.
  * That reasoning holds for every hover popover that is allowed to close — and
- * one held open by a vetoing `onBeforeClose` is not.
+ * one held open while the pointer is elsewhere is not. A vetoing `onBeforeClose`
+ * is the arrangement pinned here because it is the one that can be expressed in
+ * a single story; the other is `openOnMount` on a popover anchored to something
+ * that never receives a `mouseleave` (the LSP-hover idiom), which the
+ * reconciliation now closes on the first pointer movement besides.
  *
  * Such a popover stays VISIBLE with the pointer elsewhere, which before 0.76.0
  * meant its contents were clickable. They are not any more, and nothing in the
