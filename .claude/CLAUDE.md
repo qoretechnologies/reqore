@@ -40,7 +40,8 @@ itself** — rules here are about how to build and publish reqore's own componen
 ## Key Facts
 
 - **Framework:** React 18 + TypeScript (strict mode)
-- **Build:** TypeScript compilation to `/dist`, exports both `.js` and `.d.ts`
+- **Build:** dual emit — ESM as `dist/**/*.js` (`module`), CommonJS as `dist/**/*.cjs`
+  (`main`), shared `.d.ts`. See "Packaging" below before touching any of it.
 - **Styling:** styled-components with theme-driven values (no CSS modules)
 - **State:** zustand + React Context (use-context-selector)
 - **Testing:** Jest + React Testing Library (tests in `__tests__/`)
@@ -106,8 +107,35 @@ yarn storybook          # Dev mode on http://localhost:6007
 yarn docs:dev           # Docusaurus dev server
 yarn test:watch         # Jest watch mode
 yarn lint               # ESLint check
-yarn build              # TypeScript compilation
+yarn build              # dual ESM + CommonJS build (see Packaging)
+yarn build:verify       # Node requires the CJS entry; esbuild bundles the ESM tree
 ```
+
+### Packaging (dual ESM + CommonJS)
+`yarn build` runs tsc twice and `scripts/postbuild-dual.mjs` turns the result into one tree:
+ESM as `dist/**/*.js` (the `module` entry — what bundlers take, and what every deep import
+such as `dist/components/Panel` resolves to, in dev and in build alike), CommonJS as
+`dist/**/*.cjs` (the `main` entry — what Node takes), shared `.d.ts`, and a
+`dist/package.json` marking the `.js` files ESM. Relative specifiers get explicit extensions
+in both trees, so a consumer never mixes them: one ThemeContext, one styled-components
+instance. `sideEffects: false` is set and must stay true — no module may have import-time
+side effects (no CSS imports, no top-level DOM access).
+
+Rules that fall out of this:
+- **No `exports` map.** It matches subpaths literally, with no extension or index probing,
+  and would break every extensionless deep import in the IDE (621 at last count).
+- **No `"type": "module"` at the repo root.** It lives in `dist/package.json` only.
+- **The ESM tree is for bundlers.** It keeps bare CommonJS subpaths (`lodash/size`) and
+  `import styled from 'styled-components'`, neither of which Node's native ESM loader
+  accepts. Node — and any server renderer that externalises the package — takes `main`.
+- In `src/index.tsx`, write `import X from '...'; export { X };` rather than
+  `export { default as X } from '...'`: the latter compiles to a getter Node's CommonJS
+  lexer cannot see, and named imports from Node ESM silently lose those exports.
+- Requiring a *leaf* module directly in Node (`require('.../dist/components/Tag/index.cjs')`)
+  fails on a circular import through the root index. It always has with the CJS dist;
+  bundlers resolve the cycle. Require the root.
+- One dependency (`react-hotkeys-hook`) is ESM-only, so requiring the CJS entry needs Node
+  20.19+ / 22.12+ (`require(esm)`). That predates the dual build.
 
 ### Pre-commit Checks
 - `yarn precheck` runs: lint → test → build (production).
