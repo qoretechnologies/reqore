@@ -4,6 +4,13 @@
   "description": "ReQore is a highly theme-able and modular UI library for React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/testing/index.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "start": "yarn storybook",
     "test": "vitest run --project unit",

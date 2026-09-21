@@ -144,17 +144,13 @@ export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTableRow } from './components/Table/row';
 export { ReqoreTableValue } from './components/Table/value';
-/* The geometric guard for tables: what a consumer's own tests assert so that
-   "a row's box contains its content" keeps holding in THEIR tables too. Pure
-   measurement, no test framework — the caller decides how to fail. */
-export {
-  describeTableGeometryViolations,
-  findTableGeometryViolations,
-} from './helpers/tableGeometry';
-export type {
-  IReqoreTableGeometryOptions,
-  IReqoreTableGeometryViolation,
-} from './helpers/tableGeometry';
+/* The geometric guard for tables — what a consumer's own tests assert so that
+   "a row's box contains its content" keeps holding in THEIR tables too — is
+   NOT here. It is published as `@qoretechnologies/reqore/testing`, because
+   reqore ships CommonJS with no `sideEffects` flag: anything re-exported from
+   this barrel reaches every consumer's bundle whether or not it is imported,
+   and a two-hundred-line layout-measuring helper that no application renders
+   with has no business there. See `src/testing/index.ts`. */
 export { default as ReqoreTabs } from './components/Tabs';
 export { default as ReqoreTabsContent } from './components/Tabs/content';
 export { default as ReqoreTabsListItem } from './components/Tabs/item';

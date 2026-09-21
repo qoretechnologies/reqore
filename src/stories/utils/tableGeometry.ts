@@ -3,7 +3,7 @@ import {
   describeTableGeometryViolations,
   findTableGeometryViolations,
   IReqoreTableGeometryOptions,
-} from '../../helpers/tableGeometry';
+} from '../../testing';
 
 /**
  * The assertion itself: waits for the table's rows, then requires every body
