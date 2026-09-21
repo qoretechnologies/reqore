@@ -10,11 +10,8 @@ import { IReqoreInputProps } from '../Input';
 import { IPopoverControls } from '../Popover';
 import ReqoreTag, { IReqoreTagProps } from '../Tag';
 import ReqoreTagGroup from '../Tag/group';
-import {
-  selectItemLabel,
-  selectItemTooltip,
-  structuredValueTooltip,
-} from '../../helpers/selectItem';
+import { selectItemLabel, structuredValueTooltip } from '../../helpers/selectItem';
+import { selectItemTooltip } from './valuePreview';
 
 /**
  * What a select can hold. A value is matched against `item.value` by identity,
@@ -189,11 +186,13 @@ export interface IReqoreSelectItemProps
   onItemClickIcon?: IReqoreTagProps['rightIcon'];
 }
 
-/* The item-label and item-tooltip rules live in `helpers/selectItem`, because
+/* The item-label and preview-string rules live in `helpers/selectItem`, because
    the dropdown's own rows apply them too and reaching back into this module for
-   them closed a cycle (see the note there). Re-exported here because that is
-   where consumers and tests have always found them. */
-export { selectItemLabel, selectItemTooltip, structuredValueTooltip };
+   them closed a cycle (see the note there); the rendered preview they feed is
+   `./valuePreview`, which only this module reaches. Both re-exported here
+   because this is where consumers and tests have always found them. */
+export { selectItemLabel, structuredValueTooltip };
+export { selectItemTooltip } from './valuePreview';
 
 export const ReqoreSelectItem = memo(
   ({
