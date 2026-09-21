@@ -1402,10 +1402,12 @@ export const MovingWithinATooltipKeepsItOpen: StoryObj<typeof meta> = {
  * reach it: leaving the trigger closes it, so the surface unmounts on the way.
  * That reasoning holds for every hover popover that is allowed to close — and
  * one held open while the pointer is elsewhere is not. A vetoing `onBeforeClose`
- * is the arrangement pinned here because it is the one that can be expressed in
- * a single story; the other is `openOnMount` on a popover anchored to something
- * that never receives a `mouseleave` (the LSP-hover idiom), which the
- * reconciliation now closes on the first pointer movement besides.
+ * is the arrangement pinned here; the other is `openOnMount` on a popover
+ * anchored to something that never receives a `mouseleave` (the LSP-hover
+ * idiom), which keeps its pixels because the reconciliation is gated on the
+ * pointer having opened the popover — see
+ * `AnAutoOpenedPopoverSurvivesAPointerElsewhere` — but loses its pointer the
+ * same way this one does.
  *
  * Such a popover stays VISIBLE with the pointer elsewhere, which before 0.76.0
  * meant its contents were clickable. They are not any more, and nothing in the
@@ -1498,5 +1500,80 @@ export const AVetoedTooltipKeepsItsPixelsButNotItsPointer: Story = {
     // Visible, laid out, and not the thing the pointer would hit.
     await expect(deadButton.getBoundingClientRect().width).toBeGreaterThan(0);
     await expect(vetoed.contains(centreOf(deadButton))).toBe(false);
+  },
+};
+
+/**
+ * AN AUTO-OPENED POPOVER IS NOT THE POINTER'S TO CLOSE.
+ *
+ * The reconciliation asks where the pointer is and closes when the answer is
+ * "not here". That is evidence of something only for a popover the pointer put
+ * there. An `openOnMount` popover was put there by the component — the pointer
+ * has never been on its trigger — so a pointer elsewhere says nothing about it,
+ * and reading it as a reason to close took such a popover down on the first
+ * mouse movement anywhere on the page.
+ *
+ * Reqore's own `Clamped To Viewport` and `Progress → With Tooltip` both lost
+ * their auto-opened popovers to that, and two live surfaces do the same thing:
+ * the Qorus IDE's FSM error tooltip, and reqraft's LSP hover documentation,
+ * whose anchor is a 1x1 `pointer-events: none` span — a trigger the pointer can
+ * never be on, so it could never be closed by the pointer leaving it either.
+ *
+ * What this does NOT do is make such a popover un-closable, which is the part
+ * worth pinning: the trigger keeps its own `mouseleave`/`mouseenter` handling
+ * whatever opened the popover. Hovering the trigger of an already-open hover
+ * popover still closes it, exactly as it did before the reconciliation existed.
+ */
+export const AnAutoOpenedPopoverSurvivesAPointerElsewhere: StoryObj<typeof meta> = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An `openOnMount` popover and an unrelated trigger. Hovering the unrelated trigger leaves the auto-opened popover alone — the pointer was never what held it open, so the pointer being elsewhere is not a reason to close it. Its own trigger still closes it.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='huge'>
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        openOnMount
+        placement='right'
+        content='I opened on my own'
+        componentProps={{ id: 'auto-trigger' }}
+      >
+        Auto-opened
+      </ReqorePopover>
+
+      <ReqoreSpacer height={40} />
+
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        placement='right'
+        content='I belong to the other one'
+        componentProps={{ id: 'unrelated-trigger' }}
+      >
+        Something else to hover
+      </ReqorePopover>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    // It is up before anything is touched.
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1));
+
+    // A pointer somewhere else entirely. Well past the close window.
+    await userEvent.hover(document.querySelector('#unrelated-trigger') as HTMLElement);
+    await sleep(DEFERRED_CLOSE_DELAY * 4);
+
+    // Two now: the auto-opened one survived, and the hovered one opened.
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(2));
+
+    // And it is still closable by its own trigger, which is the half that must
+    // not be traded away for the half above.
+    await userEvent.unhover(document.querySelector('#unrelated-trigger') as HTMLElement);
+    await userEvent.hover(document.querySelector('#auto-trigger') as HTMLElement);
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(0), { timeout: 4000 });
   },
 };

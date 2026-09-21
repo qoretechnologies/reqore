@@ -206,6 +206,8 @@ export const ReqorePopover = memo(
       const timeoutRef = useRef<number | null>(null);
       const isTargetHovered = useRef(false);
       const isPopoverHovered = useRef(false);
+      /** Whether the pointer is what opened this. See `open`, and the reconciliation. */
+      const openedByPointer = useRef(false);
       const closeTimeoutRef = useRef<number | null>(null);
 
       const startEvent = startEvents[handler];
@@ -298,6 +300,14 @@ export const ReqorePopover = memo(
             }
           }
 
+          /* Did the POINTER put this here? Every open driven by the trigger
+             carries the event that drove it — `handleTargetMouseEnter`, and the
+             `startEvent` listener, both pass one through. The `openOnMount`
+             effect calls this with nothing, because nothing about a pointer is
+             true of it. That distinction is what the reconciliation below is
+             gated on; see the note there. */
+          openedByPointer.current = !!e;
+
           // Cancel any pending close timeout when opening
           cancelTimeout();
 
@@ -361,7 +371,32 @@ export const ReqorePopover = memo(
            closes as a hover popover and carries the identical hole - which is why
            the guard admits `keepOpenOnHover` whatever the handler, not only
            alongside `hoverStay`. */
-        if (!isOpen || !componentRef || (handler !== 'hover' && !keepOpenOnHover)) {
+        /* And only for a popover the POINTER opened.
+
+           This asks where the pointer is and closes when the answer is "not
+           here" — which is evidence of anything only if the pointer is what put
+           the popover here in the first place. An `openOnMount` popover was put
+           here by the component; the pointer was never on its trigger, so the
+           pointer being elsewhere is not news about it, and closing on that
+           reading takes it down on the first mouse movement anywhere on the
+           page. Three of reqore's own stories lost their auto-opened popovers
+           to exactly that, and two live surfaces do the same thing: the Qorus
+           IDE's FSM error tooltip, and reqraft's LSP hover documentation, whose
+           anchor is a 1x1 `pointer-events: none` span and therefore a trigger
+           the pointer can never be on.
+
+           This does NOT make such a popover un-closable, which is the thing
+           worth being careful about: the trigger keeps its own `mouseleave`
+           listener whatever opened it, so hovering it and leaving still closes
+           it, exactly as it did before the reconciliation existed. What is
+           withheld is only the part that reads a pointer somewhere else as a
+           reason to go. */
+        if (
+          !isOpen ||
+          !componentRef ||
+          !openedByPointer.current ||
+          (handler !== 'hover' && !keepOpenOnHover)
+        ) {
           return undefined;
         }
 
