@@ -1394,3 +1394,105 @@ export const MovingWithinATooltipKeepsItOpen: StoryObj<typeof meta> = {
     await expect(popoverSurfaces()).toHaveLength(1);
   },
 };
+
+/**
+ * THE ONE CASE THE NEW DEFAULT TAKES SOMETHING AWAY.
+ *
+ * A plain hover popover is `pointer-events: none` because the pointer can never
+ * reach it: leaving the trigger closes it, so the surface unmounts on the way.
+ * That reasoning holds for every hover popover that is allowed to close — and
+ * one held open by a vetoing `onBeforeClose` is not.
+ *
+ * Such a popover stays VISIBLE with the pointer elsewhere, which before 0.76.0
+ * meant its contents were clickable. They are not any more, and nothing in the
+ * types says so: a button inside one is now unreachable rather than merely
+ * unwanted, and the pointer lands on whatever is behind it.
+ *
+ * In a real browser on purpose, and this is the point: `pointer-events` is
+ * invisible to a jsdom test, because a synthetic `click` dispatches straight at
+ * its target and never hit-tests. Only `document.elementFromPoint()` sees it, so
+ * this is the only kind of test that can hold the behaviour still.
+ *
+ * Asserting the documented limitation, not endorsing it. A consumer that holds a
+ * hover popover open deliberately and wants its content used should pass
+ * `keepOpenOnHover` (which turns `interactive` on by itself) or `interactive`.
+ */
+export const AVetoedTooltipKeepsItsPixelsButNotItsPointer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A hover popover whose `onBeforeClose` refuses to close: it stays on screen after the pointer has left the trigger, and the button inside it is no longer reachable — `elementFromPoint` at the button's own centre answers with something outside the popover. This is the one arrangement in which the 0.76.0 `interactive` default removes behaviour that worked, which is why it is pinned here. The second popover is the same thing with `interactive` passed explicitly, which is the fix a consumer applies.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='huge'>
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        placement='bottom'
+        onBeforeClose={() => false}
+        noWrapper
+        componentProps={{ id: 'vetoed-trigger' }}
+        content={<ReqoreButton icon='EditLine'>Unreachable</ReqoreButton>}
+      >
+        Hover: a tooltip that refuses to close
+      </ReqorePopover>
+
+      {/* The stranded surface hangs below its trigger, so the second row is
+          pushed clear of it — otherwise the snapshot a reviewer approves is one
+          control sitting on top of another. */}
+      <ReqoreSpacer height={60} />
+
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        placement='bottom'
+        onBeforeClose={() => false}
+        interactive
+        noWrapper
+        componentProps={{ id: 'vetoed-interactive-trigger' }}
+        content={<ReqoreButton icon='EditLine'>Reachable</ReqoreButton>}
+      >
+        Hover: the same, with interactive
+      </ReqorePopover>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const centreOf = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+
+      return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    };
+
+    const surfaceAfterLeaving = async (triggerId: string) => {
+      const trigger = document.querySelector(`#${triggerId}`) as HTMLElement;
+
+      await userEvent.hover(trigger);
+
+      const surface = await waitFor(() => {
+        const open = document.querySelector('.reqore-popover-content') as HTMLElement;
+
+        expect(open).toBeTruthy();
+
+        return open;
+      });
+
+      // The veto is what this story is about: leave, and it is still here.
+      await userEvent.unhover(trigger);
+      await sleep(DEFERRED_CLOSE_DELAY * 4);
+      await expect(document.contains(surface)).toBe(true);
+
+      return surface;
+    };
+
+    const vetoed = await surfaceAfterLeaving('vetoed-trigger');
+    const deadButton = vetoed.querySelector('.reqore-button') as HTMLElement;
+
+    await expect(deadButton).toBeTruthy();
+    // Visible, laid out, and not the thing the pointer would hit.
+    await expect(deadButton.getBoundingClientRect().width).toBeGreaterThan(0);
+    await expect(vetoed.contains(centreOf(deadButton))).toBe(false);
+  },
+};

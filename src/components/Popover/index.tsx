@@ -393,33 +393,34 @@ export const ReqorePopover = memo(
             return;
           }
 
-          /* `attemptClose`, NOT `close`. `keepOpenOnHover` exists so the pointer
-             can travel from the trigger to the surface, and popper leaves a
-             10px gap between them (`baseOffsetY` in InternalPopover). Crossing
-             it puts the pointer on whatever is underneath for a moment, which
-             looks exactly like leaving — so an immediate close here would shut
-             the tooltip before the reader arrived, trading a tooltip that will
-             not go away for one that cannot be read. The deferred close waits
-             out the gap, and `handlePopoverMouseEnter` cancels it when the
-             pointer lands.
-
-             The refs are cleared first so that deferred check has the truth to
-             work with: the pointer is demonstrably elsewhere right now. */
+          /* The refs are cleared first so the deferred check below has the truth
+             to work with: the pointer is demonstrably elsewhere right now. */
           isTargetHovered.current = false;
           isPopoverHovered.current = false;
           /* `attemptClose`, NOT `close` - and which of its two branches runs
              depends on `keepOpenOnHover`.
 
-             WITH it the close is deferred and `onBeforeClose` is not consulted.
-             That is right for a reconciliation: a veto means "not on a close the
-             user initiated", and this one is not initiated at all - it is the
+             WITH it the close is deferred, because that flag exists so the
+             pointer can travel from the trigger to the surface and popper leaves
+             a 10px gap between them (`baseOffsetY` in InternalPopover). Crossing
+             it puts the pointer on whatever is underneath for a moment, which
+             looks exactly like leaving - so an immediate close here would shut
+             the tooltip before the reader arrived, trading a tooltip that will
+             not go away for one that cannot be read. The deferred close waits
+             out the gap and `handlePopoverMouseEnter` cancels it when the pointer
+             lands. `onBeforeClose` is not consulted on that path, which is right
+             for a reconciliation: a veto means "not on a close the user
+             initiated", and this one is not initiated at all - it is the
              component noticing the pointer is elsewhere.
 
              WITHOUT it - the plain tooltip, and the library default - the close
              is immediate and DOES consult `onBeforeClose`, so a consumer that
              vetoes can still strand one. No worse than before this existed,
              since such a popover was already un-closable under the same veto;
-             simply not fixed by it either. A vetoing consumer owns dismissal.
+             simply not fixed by it either. A vetoing consumer owns dismissal -
+             and owes it more than before, because a stranded hover popover is
+             now `pointer-events: none`, so anything inside it is unreachable
+             rather than merely unwanted. See `interactive`.
 
              The pending close is deliberately NOT cancelled and re-armed on each
              transition. Doing that turned the fixed window into a sliding one:
