@@ -136,8 +136,13 @@ Rules that fall out of this:
 - Requiring a *leaf* module directly in Node (`require('.../dist/components/Tag/index.cjs')`)
   fails on a circular import through the root index. It always has with the CJS dist;
   bundlers resolve the cycle. Require the root.
-- One dependency (`react-hotkeys-hook`) is ESM-only, so requiring the CJS entry needs Node
-  20.19+ / 22.12+ (`require(esm)`). That predates the dual build.
+- **No ESM-only dependency may sit on the CommonJS path.** `nanoid` is pinned to 3.x and
+  `react-hotkeys-hook` to 4.x because 5.x of both ship ESM only, and a CJS file that
+  `require()`s them throws `ERR_REQUIRE_ESM` on any Node without `require(esm)` (older than
+  20.19 / 22.12). HubSpot's EU render runtime is such a Node: it installs the package's own
+  dependency graph and ignores consumer `overrides`/`resolutions`, so the graph itself has to
+  be clean. `build:verify` loads the CJS entry with `--no-experimental-require-module` to
+  catch a regression before publish; run it with the same flag when adding a dependency.
 
 ### Pre-commit Checks
 - `yarn precheck` runs: lint → test → build (production).
