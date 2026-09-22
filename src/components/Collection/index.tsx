@@ -23,7 +23,15 @@ import {
 } from '../Panel';
 import { ReqoreSkeleton } from '../Skeleton';
 import { ReqoreVerticalSpacer } from '../Spacer';
-import { getZoomActions, sizeToZoom, sortTableData, zoomToSize } from '../Table/helpers';
+import {
+  clampZoom,
+  getZoomActions,
+  getZoomSize,
+  getZoomWidth,
+  sizeToZoom,
+  sortTableData,
+  TReqoreZoom,
+} from '../Table/helpers';
 import { IReqoreCollectionItemProps, ReqoreCollectionItem } from './item';
 
 const CollectionGroupHeader = memo(({ name }: { name: string }) => (
@@ -66,7 +74,7 @@ export interface IReqoreCollectionProps
   maxItemHeight?: number;
 
   defaultQuery?: string;
-  defaultZoom?: 0 | 0.5 | 1 | 1.5 | 2;
+  defaultZoom?: TReqoreZoom;
   defaultSort?: 'asc' | 'desc';
   defaultSortBy?: string;
 
@@ -131,13 +139,11 @@ export const StyledCollectionWrapper = styled(StyledColumns)`
   position: relative;
 `;
 
-export const zoomToWidth = {
-  0: '200px',
-  0.5: '300px',
-  1: '400px',
-  1.5: '500px',
-  2: '600px',
-};
+/**
+ * The column width each zoom level lays out at — the shared scale's widths, re-exported
+ * here because this module has always published them under this name.
+ */
+export { zoomToWidth } from '../Table/helpers';
 
 export const ReqoreCollection = memo(
   ({
@@ -211,7 +217,11 @@ export const ReqoreCollection = memo(
     const [sortBy, setSortBy] = useState<string>(defaultSortBy);
     const [contentRef, setContentRef] = useState<HTMLDivElement>(undefined);
     const isMobile = useReqoreProperty('isMobile');
-    const [zoom, setZoom] = useState<number>(defaultZoom || sizeToZoom.normal);
+    const [zoom, setZoom] = useState<number>(clampZoom(defaultZoom ?? sizeToZoom.normal));
+    // The size the collection paints at, and the width its columns lay out at, for any
+    // level of the shared zoom scale. `??` so `defaultZoom={0}` is honoured.
+    const zoomSize = getZoomSize(zoom);
+    const zoomWidth = getZoomWidth(zoom);
 
     const { query, setQuery, preQuery, setPreQuery } = useQueryWithDelay(
       defaultQuery,
@@ -436,7 +446,7 @@ export const ReqoreCollection = memo(
                 ref={setContentRef}
                 height={height}
                 alignItems={alignItems}
-                minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
+                minColumnWidth={minColumnWidth || zoomWidth}
                 maxColumnWidth={maxColumnWidth}
                 className='reqore-collection-content'
               >
@@ -462,7 +472,7 @@ export const ReqoreCollection = memo(
                           {showHeader && <CollectionGroupHeader name={group} />}
                           <ReqoreErrorBoundary {...errorBoundaryOptions}>
                             <ReqoreCollectionItem
-                              size={zoomToSize[zoom]}
+                              size={zoomSize}
                               responsiveTitle={false}
                               {...item}
                               icon={item.icon || (item.selected ? selectedIcon : undefined)}
@@ -521,7 +531,7 @@ export const ReqoreCollection = memo(
                     const itemsNodes = groupItems.map((item, index) => (
                       <ReqoreErrorBoundary {...errorBoundaryOptions} key={index}>
                         <ReqoreCollectionItem
-                          size={zoomToSize[zoom]}
+                          size={zoomSize}
                           responsiveTitle={false}
                           {...item}
                           icon={item.icon || (item.selected ? selectedIcon : undefined)}
@@ -562,8 +572,8 @@ export const ReqoreCollection = memo(
                           rounded={rounded}
                           stacked={stacked}
                           alignItems={alignItems}
-                          minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
-                          maxColumnWidth={maxColumnWidth || zoomToWidth[zoom]}
+                          minColumnWidth={minColumnWidth || zoomWidth}
+                          maxColumnWidth={maxColumnWidth || zoomWidth}
                           className='reqore-collection-group-content'
                         >
                           {itemsNodes}
@@ -629,7 +639,7 @@ export const ReqoreCollection = memo(
             fill={fill}
             height={height}
             alignItems={alignItems}
-            minColumnWidth={minColumnWidth || zoomToWidth[zoom]}
+            minColumnWidth={minColumnWidth || zoomWidth}
             maxColumnWidth={maxColumnWidth}
             className='reqore-collection-content'
           >

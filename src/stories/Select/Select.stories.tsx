@@ -42,7 +42,12 @@ const meta = {
     }),
     ...IconArg('onItemClickIcon', 'Clickable item right icon', null),
   },
-} as StoryMeta<typeof ReqoreSelect>;
+  /* Typed with the SINGLE-value props, which is what the shared template
+     renders. The component's own props are a union of the single and the
+     multi shape, and Storybook's arg typing collapses that union to `never` —
+     every story's `args` then failed to type-check. `Multi` sets `multi` in
+     its own render. */
+} as StoryMeta<(props: IReqoreSelectSingleProps) => JSX.Element>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

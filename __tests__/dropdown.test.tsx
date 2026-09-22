@@ -1181,3 +1181,54 @@ test('<Dropdown /> ranks filter matches by relevance when opted in and drops div
   ]);
   expect(document.querySelectorAll('.reqore-popover-content .reqore-menu-divider').length).toBe(0);
 });
+
+test("<Dropdown /> keeps an item's own data off the button it renders", () => {
+  // An item's `value` is the dropdown's: it is searched, and handed back on
+  // select. Forwarded to the menu item, it reached the DOM button, which wrote a
+  // structured value — an allowed value that is a hash — as "[object Object]".
+  const onItemSelect = vi.fn();
+  const value = { type: 'hash', value: { retries: 3 } };
+  vi.useFakeTimers();
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDropdown
+              isDefaultOpen
+              label='Presets'
+              onItemSelect={onItemSelect}
+              items={[
+                { label: 'Retry three times', value, metadata: { source: 'preset' } },
+                { label: 'Nested', items: [{ label: 'Inner', value: 'inner' }] },
+              ]}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    vi.advanceTimersByTime(1);
+  });
+
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('.reqore-popover-content .reqore-menu-item')
+  );
+  expect(buttons.map((button) => button.textContent)).toEqual([
+    expect.stringContaining('Retry three times'),
+    expect.stringContaining('Nested'),
+  ]);
+  buttons.forEach((button) => {
+    expect(button.value).toBe('');
+    expect(button.hasAttribute('metadata')).toBe(false);
+    expect(button.hasAttribute('items')).toBe(false);
+  });
+
+  // …while the item a selection hands back still carries all of it.
+  act(() => {
+    fireEvent.click(buttons[0]);
+  });
+  expect(onItemSelect).toHaveBeenCalledWith(
+    expect.objectContaining({ label: 'Retry three times', value, metadata: { source: 'preset' } }),
+    expect.anything()
+  );
+});

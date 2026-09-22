@@ -1,0 +1,7 @@
+{
+  "name": "@qoretechnologies/reqore-testing",
+  "private": true,
+  "description": "Entry-point stub so `@qoretechnologies/reqore/testing` resolves to dist/testing. NOT an `exports` map on purpose: 17 sibling projects deep-import extensionless paths such as `@qoretechnologies/reqore/dist/components/Button`, and `exports` subpath patterns perform no extension or directory-index resolution, so adding one would break every one of them. A folder stub is understood by Node's legacy resolver, by every bundler, and by TypeScript, and it restricts nothing.",
+  "main": "../dist/testing/index.js",
+  "types": "../dist/testing/index.d.ts"
+}

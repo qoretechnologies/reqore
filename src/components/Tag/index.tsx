@@ -29,10 +29,11 @@ import {
   getReadableColorFrom,
   isAchromatic,
 } from '../../helpers/colors';
-import { ActiveIconScale, InactiveIconScale, RaisedElement } from '../../styles';
+import { ActiveIconScale, InactiveIconScale, RaisedElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
   IReqoreIntent,
+  IReqoreReadOnly,
   IWithReqoreCustomTheme,
   IWithReqoreEffect,
   IWithReqoreFlat,
@@ -64,6 +65,7 @@ export interface IReqoreCustomTagProps
   extends
     IWithReqoreTooltip,
     IReqoreDisabled,
+    IReqoreReadOnly,
     IWithReqoreMinimal,
     IWithReqoreFluid,
     IWithReqoreEffect,
@@ -184,6 +186,9 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   theme: IReqoreTheme;
   removable?: boolean;
   interactive?: boolean;
+  /** Transient: `readOnly` is a real DOM attribute, so it has to be renamed on the
+      way into the styled span or React writes `readonly=""` onto it. */
+  $readOnly?: boolean;
   color?: TReqoreColor;
   $wrap?: boolean;
   $hasWidth?: boolean;
@@ -268,6 +273,19 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
             asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
         `}
 
+  /* How a MINIMAL tag colours its label.
+
+     Minimal paints the colour at 20% alpha, so what the label actually sits on
+     is mostly the surface underneath — not the colour. For a CHROMATIC colour a
+     light tint of it reads on either theme. For an ACHROMATIC one there is no
+     tint to take: a 20% wash of grey over the surface IS the surface, so the
+     label is read against the surface, exactly as the no-colour case does.
+
+     It used to fall through to the readable colour for the colour at FULL
+     strength. A near-white muted intent is light, so that returned BLACK, and
+     the tag rendered black text on a 20% wash over a near-black page — reported
+     as "black text on a dark grey background; it's very hard to read", and true
+     of every minimal tag with a grey intent. */
   ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) => {
     return css`
       background-color: ${minimal
@@ -275,8 +293,10 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
           ? rgba(color, 0.2)
           : rgba(changeLightness('#000000', 0.05), 0.3)
         : color || changeLightness(theme.main, 0.1)};
-      color: ${minimal && color && color !== 'transparent' && !isAchromatic(color)
-        ? saturate(1, tint(0.8, color))
+      color: ${minimal && color && color !== 'transparent'
+        ? isAchromatic(color)
+          ? getReadableColorFrom(changeLightness(theme.main, 0.1))
+          : saturate(1, tint(0.8, color))
         : color && color !== 'transparent'
           ? getReadableColorFrom(color)
           : getReadableColorFrom(changeLightness(theme.main, 0.1))};
@@ -321,6 +341,16 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
       opacity: 0.5;
       pointer-events: none;
       cursor: not-allowed;
+    `}
+
+  /* Read only is NOT disabled: the tag keeps its pointer events, so its tooltip and
+     its actions still answer — it only stops advertising itself as something to
+     press. Same meaning the prop has on ReqoreButton, ReqoreCheckbox and
+     ReqoreRating. Last, so it wins over the interactive block's cursor: pointer. */
+  ${({ $readOnly }) =>
+    $readOnly &&
+    css`
+      ${ReadOnlyElement};
     `}
 
   /* Only gate on hover where hover exists — see the same guard on ReqorePanel.
@@ -589,6 +619,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       loading,
       loadingIconType,
       compact,
+      readOnly,
       removeTooltip = 'Remove',
       ...rest
     }: IReqoreTagProps,
@@ -641,13 +672,18 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       [capped, truncate, label]
     );
 
+    /* A read-only tag is not offering to be pressed, so it does not light up on
+       hover either — but it stays clickable, exactly as `readOnly` does on a
+       button, because refusing the CHANGE is the picker's job and not the tag's. */
+    const interactive = !!onClick && !rest.disabled && !readOnly;
+
     const effect = useMemo(
       () => ({
         ...rest.effect,
         gradient: intent ? undefined : rest.effect?.gradient,
-        interactive: !!onClick && !rest.disabled,
+        interactive,
       }),
-      [intent, !!onClick, rest.disabled, JSON.stringify(rest.effect)]
+      [intent, interactive, JSON.stringify(rest.effect)]
     );
 
     return (
@@ -667,8 +703,15 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         asBadge={asBadge}
         minimal={minimal}
         removable={!!onRemoveClick}
-        interactive={!!onClick && !rest.disabled}
-        tabIndex={onClick && !rest.disabled ? 0 : undefined}
+        interactive={interactive}
+        $readOnly={readOnly}
+        /* `interactive`, not `onClick`, decides the tab stop. A read-only tag
+           keeps its handler — refusing the CHANGE is the picker's job, not the
+           tag's — but it has stopped advertising itself as something to press,
+           and a tab stop is that same advertisement made to the keyboard. Wired
+           off the one flag so the cursor, the hover effect and the tab order
+           cannot disagree about whether this tag is pressable. */
+        tabIndex={interactive ? 0 : undefined}
         $wrap={wrap}
         $hasWidth={!!width}
       >

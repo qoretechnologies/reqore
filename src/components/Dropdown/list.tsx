@@ -113,6 +113,38 @@ export interface IReqoreDropdownListProps
   onSelectedItemsChange?: (items: Array<IReqoreDropdownItem | undefined>) => void;
 }
 
+/**
+ * Whether a row is a CHOICE — what the arrow keys walk, what ENTER picks and what
+ * a click selects.
+ *
+ * Three states, and they are not the same thing:
+ *
+ * - `disabled` takes the row out of interaction altogether: reqore renders it with
+ *   `pointer-events: none`, so nothing on it can be hovered, read or pressed.
+ * - `readOnly` leaves the row ALIVE and only marks it `cursor: not-allowed`. Its
+ *   tooltip, description, badge and row actions all still work, which is the one
+ *   state in which a row can say WHY it cannot be picked. Having said so, it must
+ *   not then be pickable — which is what this excludes, and what `ReqoreRating`
+ *   and `ReqoreSegmentedControl` already do with the same prop.
+ * - a row with a SUBMENU is navigation rather than a choice, so it is walked and
+ *   entered but never selected — including when it is read only. One whose submenu
+ *   is empty is rendered disabled, so it is neither.
+ *
+ * Dividers are not rows at all and are filtered by each caller, which knows where
+ * its `divider` flag lives.
+ */
+const isChoosableDropdownItem = (item: IReqoreDropdownItem): boolean => {
+  if (item.disabled) {
+    return false;
+  }
+
+  if ('items' in item) {
+    return !!size(item.items);
+  }
+
+  return !item.readOnly;
+};
+
 const ReqoreDropdownList = memo(
   ({
     items,
@@ -239,26 +271,12 @@ const ReqoreDropdownList = memo(
       setFocusedItemIndex(null);
     };
 
-    // Get selectable items (non-dividers, non-disabled, non-empty submenus)
-    // Use the SAME disabled logic as rendering to ensure consistency
-    const selectableItems = useMemo(() => {
-      return filteredItems.filter((item) => {
-        // Skip dividers
-        if (item.divider) {
-          return false;
-        }
-        // Skip items that are explicitly disabled
-        if (item.disabled) {
-          return false;
-        }
-        // Skip items with empty items array or falsy items (rendered as disabled)
-        // An item is considered "parent-like" if it has the items property
-        if ('items' in item && (!item.items || !size(item.items))) {
-          return false;
-        }
-        return true;
-      });
-    }, [filteredItems]);
+    // What the keyboard walks. The SAME predicate the rows are rendered with, so
+    // the arrow keys and the list can never disagree about which row is which.
+    const selectableItems = useMemo(
+      () => filteredItems.filter((item) => !item.divider && isChoosableDropdownItem(item)),
+      [filteredItems]
+    );
 
     const handleItemSelectClick = useCallback(
       (item: IReqoreDropdownItem, event: React.MouseEvent<HTMLElement>): void => {
@@ -286,6 +304,13 @@ const ReqoreDropdownList = memo(
         if (size(item.items)) {
           handleSelectItemAtLevel(item);
 
+          return;
+        }
+
+        // A read-only row keeps its pointer events on purpose — that is what lets it
+        // carry the reason it cannot be picked — so the click DOES land here, and the
+        // choice is refused rather than the row being made untouchable.
+        if (item.readOnly) {
           return;
         }
 
@@ -578,11 +603,9 @@ const ReqoreDropdownList = memo(
                     { dividerAlign, dividerPadded, divider, ...item }: IReqoreDropdownItem,
                     index: number
                   ) => {
-                    // Check if this item is actually selectable (same logic as selectableItems filter)
-                    const isSelectableItem =
-                      !divider &&
-                      !item.disabled &&
-                      !('items' in item && (!item.items || !size(item.items)));
+                    // One predicate, shared with `selectableItems`, so the index the
+                    // keyboard counts and the index the row advertises stay the same.
+                    const isSelectableItem = !divider && isChoosableDropdownItem(item);
 
                     // Assign selectableIndex BEFORE incrementing
                     const itemSelectableIndex = isSelectableItem ? selectableIndexCounter : -1;

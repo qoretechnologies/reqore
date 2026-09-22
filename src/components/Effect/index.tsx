@@ -64,17 +64,35 @@ export type TReqoreRgbColor = `rgb(${number}, ${number}, ${number})`;
 export type TReqoreRgbaColor = `rgba(${number}, ${number}, ${number}, ${string})`;
 export type TReqoreMultiTypeColor = TReqoreHexColor | TReqoreRgbColor | TReqoreRgbaColor;
 export type TReqoreColor = TReqoreHexColor | 'transparent';
+/** The colour a modifier applies to: an intent, the theme's own, or a hex. */
+export type TReqoreEffectColorBase = TReqoreIntent | 'main' | TReqoreHexColor;
+
+/**
+ * A colour, optionally lightened or darkened.
+ *
+ * The modifier segments are `${number}`, NOT the enumerated
+ * `TReqoreEffectColorManipulationMultiplier` / `...Alpha`. Enumerating them
+ * spelled this type as roughly ten thousand members (2 manipulations × 30
+ * multipliers × 11 alphas × every intent and the hex pattern), and a union
+ * that size is a tax paid by every consumer: under TypeScript 7 an expression
+ * that merely MENTIONS a value of it — a conditional between two colours, an
+ * object literal checked against `IReqoreEffect` — fails to compile with
+ * `TS2590: Expression produces a union type that is too complex to represent`.
+ * The Qorus IDE's map had to cast correctly-typed colours to `any` to get past
+ * it.
+ *
+ * The accepted spellings are unchanged. The ranges the manipulations are
+ * DESIGNED for stay published as `TReqoreEffectColorManipulationMultiplier`
+ * (1-30) and `TReqoreEffectColorManipulationAlpha` (0-1 in tenths) for a
+ * consumer that wants to pin them; `changeLightness` treats the multiplier as
+ * a step count and clamps the result, so a number outside the range is a
+ * degree of the same effect rather than an error.
+ */
 export type TReqoreEffectColor =
   | (TReqoreColor | TReqoreHexColor | 'main' | TReqoreIntent)
-  | `${TReqoreIntent | 'main' | TReqoreHexColor}:${TReqoreEffectColorManipulation}`
-  | `${
-      | TReqoreIntent
-      | 'main'
-      | TReqoreHexColor}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}`
-  | `${
-      | TReqoreIntent
-      | 'main'
-      | TReqoreHexColor}:${TReqoreEffectColorManipulation}:${TReqoreEffectColorManipulationMultiplier}:${TReqoreEffectColorManipulationAlpha}`;
+  | `${TReqoreEffectColorBase}:${TReqoreEffectColorManipulation}`
+  | `${TReqoreEffectColorBase}:${TReqoreEffectColorManipulation}:${number}`
+  | `${TReqoreEffectColorBase}:${TReqoreEffectColorManipulation}:${number}:${number}`;
 export type TReqoreEffectColorList = [
   'main' | TReqoreIntent | TReqoreColor,
   TReqoreEffectColorManipulation | undefined,

@@ -650,7 +650,7 @@ test('Does not forward the Panel accentPosition prop to the DOM', () => {
           <ReqorePanel label='Plain' intent='danger' accentPosition='left'>
             Body
           </ReqorePanel>
-          <ReqorePanel label='Resizable' intent='danger' accentPosition='left' resizable>
+          <ReqorePanel label='Resizable' intent='danger' accentPosition='left' resizable={{}}>
             Body
           </ReqorePanel>
         </ReqoreLayoutContent>

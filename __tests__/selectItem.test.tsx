@@ -157,6 +157,55 @@ describe('the tooltip offered for a structured value', () => {
     expect(tooltip.match(/…/g)).toHaveLength(1);
   });
 
+  it('caps the WIDTH, which neither other cap touches', () => {
+    /* A value whose bulk is one long scalar rather than deep structure — a SQL
+       statement, a URL, a base64 blob — serialises to a few enormous lines. The
+       line cap does not bite (few lines) and the character cap is a budget for
+       the whole preview rather than for one line of it, so before this the
+       preview was three lines whose longest ran ~598 characters: about 4300px at
+       this font, against a `white-space: pre` block that never wraps. The
+       popover clamps itself to the viewport and clips the overflow, so the value
+       was cut mid-string with nothing saying that it had been. */
+    const oneLongLine = {
+      sql: `SELECT ${'col_name_that_is_long, '.repeat(500)}FROM t`,
+    };
+    const tooltip = structuredValueTooltip(oneLongLine)!;
+    const longest = Math.max(...tooltip.split('\n').map((line) => line.length));
+
+    // Bounded, and bounded well inside a laptop viewport at MONO_FONT / 12px.
+    expect(longest).toBeLessThanOrEqual(101);
+    // And the cut line says so itself, not only the end of the preview.
+    expect(tooltip.split('\n').some((line) => line.endsWith('…') && line.length > 1)).toBe(
+      true
+    );
+  });
+
+  it('leaves the lines of ordinary nested JSON alone', () => {
+    // The width cap must be inert for the shape a preview is actually for: a
+    // config hash's lines are tens of characters, not hundreds.
+    const config: Record<string, unknown> = { name: 'connection', options: {} };
+    for (let i = 0; i < 200; i++) {
+      (config.options as Record<string, string>)[`option_${i}`] = `value-for-option-${i}`;
+    }
+    const tooltip = structuredValueTooltip(config)!;
+
+    expect(Math.max(...tooltip.split('\n').map((line) => line.length))).toBeLessThan(60);
+    // Only the trailing ellipsis — no line was wide enough to be cut.
+    expect(tooltip.match(/…/g)).toHaveLength(1);
+  });
+
+  it('serialises a given value once, however often the chip re-renders', () => {
+    /* `selectItemTooltip` is called from a chip's render, so a select holding a
+       large hash would otherwise re-run `JSON.stringify` over all of it on every
+       render that does not bail out of `memo`, to keep at most 600 characters. */
+    const value = { items: Array.from({ length: 2000 }, (_, i) => `item-${i}`) };
+    const first = structuredValueTooltip(value);
+
+    expect(structuredValueTooltip(value)).toBe(first);
+    // A different object with equal contents is a different value, and is built.
+    expect(structuredValueTooltip({ ...value })).toEqual(first);
+  });
+
   it('leaves a value that fits exactly as it is', () => {
     const small = { host: 'localhost', port: 8080 };
     const tooltip = structuredValueTooltip(small)!;

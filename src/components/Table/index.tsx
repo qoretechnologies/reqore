@@ -30,6 +30,7 @@ import ReqoreTableBody from './body';
 import ReqoreTableHeader, { IReqoreCustomHeaderCellComponent } from './header';
 import { IReqoreTableHeaderCellProps } from './headerCell';
 import {
+  clampZoom,
   fixSort,
   flipSortDirection,
   getColumnsCount,
@@ -37,6 +38,7 @@ import {
   getOnlyShownColumns,
   getRowExpandId,
   getZoomActions,
+  getZoomSize,
   hasGroupedColumns,
   hasHiddenColumns,
   prepareColumns,
@@ -44,7 +46,7 @@ import {
   sizeToZoom,
   rankTableDataByQuery,
   sortTableData,
-  zoomToSize,
+  TReqoreZoom,
 } from './helpers';
 import { IReqoreTableRowOptions } from './row';
 
@@ -101,6 +103,17 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   cell?: {
     onClick?: (cellValue: any) => void;
     tooltip?: (cellValue: any) => string | IReqoreTooltip;
+    /**
+     * What the cell shows: one of the named formats, a value, or a function of
+     * the row.
+     *
+     * A function returning an element is rendered inside a component of the
+     * table's own, so the cell survives its column being rebuilt and a function
+     * that keeps state keeps it. The one thing that does not survive is
+     * REPLACING a stateful `content` with a different one on a live cell: the
+     * hooks it calls change identity under the same component, which is the
+     * usual hook-order rule. Swap the row's data, not the function.
+     */
     content?: TReqoreTableColumnContent;
     actions?: (
       data: IReqoreTableRowData
@@ -184,7 +197,8 @@ export interface IReqoreTableProps extends IReqorePanelProps {
   exportable?: boolean;
 
   zoomable?: boolean;
-  defaultZoom?: number;
+  /** The zoom level the table mounts at, overriding the one `size` implies. */
+  defaultZoom?: TReqoreZoom;
 
   selectable?: boolean;
   selected?: (string | number)[];
@@ -209,6 +223,11 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * The panel's height is MEASURED, not declared — content can be any height
    * and can change after it opens. `estimatedExpandedRowHeight` is only what a
    * virtualised list assumes for the frame before the first measurement lands.
+   *
+   * The panel is as wide as the table SHOWS, not as wide as its columns, and
+   * stays in view while the columns scroll sideways. Content that lays itself
+   * out by its width — wrapping text, a diagram — is therefore laid out for
+   * what the reader can see, on a phone as on a desktop.
    */
   renderExpandedRow?: (row: IReqoreTableRowData) => React.ReactNode;
   /**
@@ -320,6 +339,16 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * When `true`, every cell allows natural text flow (no ellipsis truncation) and rows grow to fit
    * the tallest cell. Individual columns can override with `cell.wrap`. Setting this implicitly
    * disables virtualization unless `virtualized` is explicitly set.
+   *
+   * This is the choice between the two ways a cell can hold more than it has
+   * room for, not between containing it and not: a cell ALWAYS contains its
+   * content. Left off, a row is one height and each cell shows the one line it
+   * has room for, ending in an ellipsis — give the column a `cell.tooltip` (or
+   * let the row expand) so the rest is a hover away. Turned on, the row takes
+   * the height of its own content and the whole value is on screen, at the cost
+   * of virtualisation and of rows that are no longer uniform to scan. Pair it
+   * with `maxCellHeight` for the middle: rows grow, but only so far, and a cell
+   * with more to say offers "Show more".
    */
   wrap?: boolean;
 
@@ -458,6 +487,7 @@ const ReqoreTable = ({
   fill,
   filterable,
   zoomable,
+  defaultZoom,
   filter = '',
   actions = [],
   onFilterChange,
@@ -531,6 +561,15 @@ const ReqoreTable = ({
     }
   }, [wrap, hasColumnWrap, virtualized]);
 
+  useEffect(() => {
+    if (!shouldVirtualize && rowHeight !== undefined) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[ReqoreTable] `rowHeight` has no effect on a table that renders every row — each row takes the height of its content (`wrap` / `cell.wrap` / `virtualized={false}`). Drop `rowHeight`, or let the table virtualize.'
+      );
+    }
+  }, [shouldVirtualize, rowHeight]);
+
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   // Live height of the header (column labels + the filter row when present). When
   // the table `fill`s its container the virtualized body must leave room for this
@@ -544,7 +583,10 @@ const ReqoreTable = ({
     [dataId: string]: { [modifier: string]: any };
   }>({});
   const [_internalColumns, setColumns] = useState<IReqoreTableColumn[]>(columns);
-  const [zoom, setZoom] = useState<number>(sizeToZoom[size]);
+  const [zoom, setZoom] = useState<number>(clampZoom(defaultZoom ?? sizeToZoom[size]));
+  // The size the table actually paints at. `zoom` is the size as a number so the zoom
+  // control can step it; this is that number back as a size, for every size there is.
+  const zoomSize = getZoomSize(zoom);
   const [showExportModal, setShowExportModal] = useState<'full' | 'current' | undefined>(undefined);
   const theme = useReqoreTheme('main', rest.customTheme, intent);
 
@@ -911,11 +953,11 @@ const ReqoreTable = ({
       });
     }
 
-    return prepareColumns(fullColumns, columnModifiers, zoomToSize[zoom]);
+    return prepareColumns(fullColumns, columnModifiers, zoomSize);
   }, [
     _internalColumns,
     columnModifiers,
-    zoom,
+    zoomSize,
     selectable,
     selectedIcon,
     selectToggleTooltip,
@@ -1211,10 +1253,10 @@ const ReqoreTable = ({
         ref={wrapperRef}
         className='reqore-table-wrapper'
         rounded={rest.rounded !== false && rest.flat !== false}
-        size={rest.flat === false ? wrapperSize : zoomToSize[zoom]}
+        size={rest.flat === false ? wrapperSize : zoomSize}
       >
         <ReqoreTableHeader
-          size={zoomToSize[zoom]}
+          size={zoomSize}
           columns={finalColumns}
           ref={mainHeaderRef}
           bodyRef={mainTableRef}
@@ -1250,7 +1292,7 @@ const ReqoreTable = ({
             onScrollChange={handleScrollChange}
             selected={_selected}
             selectedRowIntent={selectedRowIntent}
-            size={zoomToSize[zoom]}
+            size={zoomSize}
             striped={striped}
             flat={rest.flat}
             wrap={wrap}

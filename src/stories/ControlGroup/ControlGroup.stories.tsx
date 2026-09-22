@@ -1,5 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { expect, waitFor } from 'storybook/test';
 import { IReqoreControlGroupProps } from '../../components/ControlGroup';
+import { sleep } from '../../helpers/utils';
 import {
   ReqoreButton,
   ReqoreCheckbox,
@@ -733,4 +735,72 @@ export const MultiElementItem: Story = {
       </ReqoreControlGroup>
     </div>
   ),
+};
+
+/**
+ * The header group in a narrow panel: the layout where a fold used to undo
+ * itself. `ReqorePanel` gives its responsive action group `flex: 0 1 auto` with
+ * a 40px floor and a 50% cap, so the group is only as wide as what it is
+ * showing — which means folding an action away makes the group itself narrower.
+ */
+const NARROW_PANEL_GROUP = '.reqore-control-group[style*="flex: 0 1 auto"]';
+
+export const ResponsiveFoldSettles: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A responsive action group in a 380px panel, narrow enough that its actions cannot all fit and some of them have to fold into the `…` menu. Folding makes the group narrower, and the group watches its own size — so this is the layout where the fold used to undo itself: put the folded actions back, measure, fold them again, about five times a second for as long as the panel was on screen. The group now ignores the size change its own fold caused and takes its cue from its container instead, so it folds once and stops. The play function measures exactly that: once the fold has settled it watches the row for a second and a half and asserts that nothing is added to it or removed from it.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 380 }}>
+      <ReqorePanel
+        label='Improvement'
+        collapsible
+        onClose={() => {}}
+        actions={[
+          { label: 'Run', icon: 'PlayLine' },
+          { label: 'Duplicate', icon: 'FileCopyLine' },
+          { label: 'Archive', icon: 'ArchiveLine' },
+          { label: 'Export', icon: 'DownloadLine' },
+          { label: 'Share', icon: 'ShareLine' },
+        ]}
+      >
+        A panel narrow enough that its actions have to fold.
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const group = await waitFor(() => {
+      const element = canvasElement.querySelector(NARROW_PANEL_GROUP) as HTMLElement;
+
+      expect(element).toBeTruthy();
+
+      return element;
+    });
+
+    // Let the first measurement and the 200ms observer debounce drain.
+    await sleep(600);
+
+    const foldedTo = group.children.length;
+    let churn = 0;
+    const observer = new MutationObserver((records) => {
+      churn += records.length;
+    });
+
+    observer.observe(group, { childList: true });
+
+    // Several debounce periods: a group feeding its own observer empties and
+    // refills the row about five times a second.
+    await sleep(1500);
+    observer.disconnect();
+
+    await expect(churn).toBe(0);
+    // ...and it is still showing what it settled on, so a group that folded
+    // nothing could not pass this by standing still.
+    await expect(group.children.length).toBe(foldedTo);
+    await expect(group.scrollWidth).toBeLessThanOrEqual(group.clientWidth);
+  },
 };

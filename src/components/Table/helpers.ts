@@ -2,7 +2,7 @@ import { getQueryMatchScore, rankByQuery } from '../../helpers/search';
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowData, IReqoreTableSort } from '.';
-import { ICON_FROM_SIZE, SIZE_TO_MODIFIER, TSizes } from '../../constants/sizes';
+import { ICON_FROM_SIZE, SIZES, SIZE_TO_MODIFIER, TSizes } from '../../constants/sizes';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
 
@@ -79,38 +79,106 @@ export const updateColumnData = (
   return newColumns;
 };
 
-export const sizeToZoom = {
-  tiny: 0,
-  small: 0.5,
-  normal: 1,
-  big: 1.5,
-  huge: 2,
+/**
+ * The size ⇄ zoom scale, shared by `ReqoreTable`, `ReqoreTree` and `ReqoreCollection`.
+ *
+ * Those components carry the size they were asked for as a NUMBER, because the zoom
+ * control steps it up and down; every render then converts that number back into a
+ * `TSizes` to hand to the things that paint. Both maps are therefore generated from
+ * `SIZES` — the one list of sizes there is — so the conversion is TOTAL in both
+ * directions by construction.
+ *
+ * It was not always: the maps were written out by hand with five of the seven sizes
+ * in them, so `micro` and `massive` converted to `undefined`, converted back to
+ * `normal`, and rendered at exactly the normal row height and font — `micro` came out
+ * LARGER than `small`. Deriving the maps, and reading the control's bounds off them
+ * (`MIN_ZOOM` / `MAX_ZOOM` below), is what keeps the next size added to `TSizes` from
+ * disappearing the same way.
+ */
+
+/**
+ * A level on that scale: `MIN_ZOOM` to `MAX_ZOOM` in `ZOOM_STEP` increments, one per
+ * `TSizes`. Anything else is snapped onto the scale by `clampZoom`, so a value from
+ * outside is a rounding, never an `undefined` size.
+ */
+export type TReqoreZoom = number;
+
+/** One click of zoom in or out. The scale's levels are `ZOOM_STEP` apart. */
+export const ZOOM_STEP = 0.5;
+
+/** The zoom level `normal` sits at — what "reset zoom" returns to. */
+export const ZOOM_RESET = 1;
+
+const NORMAL_INDEX = SIZES.indexOf('normal');
+
+const zoomForSize = (size: TSizes): number =>
+  ZOOM_RESET + (SIZES.indexOf(size) - NORMAL_INDEX) * ZOOM_STEP;
+
+export const sizeToZoom: Record<TSizes, number> = SIZES.reduce(
+  (map, size) => ({ ...map, [size]: zoomForSize(size) }),
+  {} as Record<TSizes, number>
+);
+
+export const zoomToSize: Record<number, TSizes> = SIZES.reduce(
+  (map, size) => ({ ...map, [sizeToZoom[size]]: size }),
+  {} as Record<number, TSizes>
+);
+
+/** The ends of the scale, read off the map rather than written out again. */
+export const MIN_ZOOM: number = Math.min(...Object.values(sizeToZoom));
+export const MAX_ZOOM: number = Math.max(...Object.values(sizeToZoom));
+
+/**
+ * Snaps a zoom to the nearest level the scale actually has, and holds it inside the
+ * scale's ends — so a stored zoom from an older, shorter scale, or an arithmetic
+ * result that drifted, still names a size instead of falling off the map.
+ */
+export const clampZoom = (zoom: number): number =>
+  Number.isFinite(zoom)
+    ? Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(zoom / ZOOM_STEP) * ZOOM_STEP))
+    : ZOOM_RESET;
+
+/** The size a zoom level renders at. Total: every number in, a real size out. */
+export const getZoomSize = (zoom: number): TSizes => zoomToSize[clampZoom(zoom)];
+
+/**
+ * What the zoom control CALLS each level.
+ *
+ * Keyed by size, and exhaustively — adding a size to `TSizes` fails to compile here
+ * rather than rendering as a missing label. The five middle values are the ones the
+ * control has always shown; the ends continue the scale it established (halving
+ * below `tiny`, another 30 points above `huge`).
+ */
+export const SIZE_TO_ZOOM_LABEL: Record<TSizes, string> = {
+  micro: '15%',
+  tiny: '30%',
+  small: '60%',
+  normal: '100%',
+  big: '130%',
+  huge: '160%',
+  massive: '190%',
 };
 
-export const zoomToSize = {
-  0: 'tiny',
-  0.5: 'small',
-  1: 'normal',
-  1.5: 'big',
-  2: 'huge',
-};
+export const zoomToLabel: Record<number, string> = SIZES.reduce(
+  (map, size) => ({ ...map, [sizeToZoom[size]]: SIZE_TO_ZOOM_LABEL[size] }),
+  {} as Record<number, string>
+);
 
-export const zoomToWidth = {
-  0: '200px',
-  0.5: '300px',
-  1: '400px',
-  1.5: '500px',
-  2: '600px',
-};
+/** The label for a zoom level, for any number. */
+export const getZoomLabel = (zoom: number): string => SIZE_TO_ZOOM_LABEL[getZoomSize(zoom)];
 
-// This code converts a zoom level to a label.
-export const zoomToLabel = {
-  0: '30%',
-  0.5: '60%',
-  1: '100%',
-  1.5: '130%',
-  2: '160%',
-};
+/** A column is 400px at `normal` and a hundred wider or narrower per zoom step. */
+const ZOOM_WIDTH_AT_RESET = 400;
+const ZOOM_WIDTH_PER_STEP = 100;
+
+/** The column width a zoom level lays out at, for any number. */
+export const getZoomWidth = (zoom: number): string =>
+  `${ZOOM_WIDTH_AT_RESET + ((clampZoom(zoom) - ZOOM_RESET) / ZOOM_STEP) * ZOOM_WIDTH_PER_STEP}px`;
+
+export const zoomToWidth: Record<number, string> = SIZES.reduce(
+  (map, size) => ({ ...map, [sizeToZoom[size]]: getZoomWidth(sizeToZoom[size]) }),
+  {} as Record<number, string>
+);
 
 export const getExportActions = (
   onClick: (type: 'current' | 'full') => void,
@@ -128,43 +196,55 @@ export const getExportActions = (
   },
 ];
 
+/**
+ * The zoom in / reset / out controls.
+ *
+ * Every bound here comes from the scale itself: a direction is disabled at the end of
+ * the scale it would step past, and a step is clamped back onto the scale. Nothing
+ * restates where the ends are, so a size added to `TSizes` extends these controls
+ * along with everything else.
+ */
 export const getZoomActions = (
   type: string,
   zoom: number,
   setter: (zoom: number) => void,
   withLabels?: boolean
-): IReqorePanelSubAction[] => [
-  {
-    icon: 'ZoomInLine',
-    label: withLabels ? 'Zoom in' : undefined,
-    tooltip: 'Zoom in',
-    disabled: zoom === 2,
-    className: `${type}-zoom-in`,
-    onClick: () => {
-      setter(zoom + 0.5);
+): IReqorePanelSubAction[] => {
+  const currentZoom = clampZoom(zoom);
+
+  return [
+    {
+      icon: 'ZoomInLine',
+      label: withLabels ? 'Zoom in' : undefined,
+      tooltip: 'Zoom in',
+      disabled: currentZoom >= MAX_ZOOM,
+      className: `${type}-zoom-in`,
+      onClick: () => {
+        setter(clampZoom(currentZoom + ZOOM_STEP));
+      },
     },
-  },
-  {
-    icon: 'RestartLine',
-    label: `${zoomToLabel[zoom]}${withLabels ? ' (reset)' : ''}`,
-    tooltip: 'Reset zoom',
-    disabled: zoom === 1,
-    className: `${type}-zoom-reset`,
-    onClick: () => {
-      setter(1);
+    {
+      icon: 'RestartLine',
+      label: `${getZoomLabel(currentZoom)}${withLabels ? ' (reset)' : ''}`,
+      tooltip: 'Reset zoom',
+      disabled: currentZoom === ZOOM_RESET,
+      className: `${type}-zoom-reset`,
+      onClick: () => {
+        setter(ZOOM_RESET);
+      },
     },
-  },
-  {
-    icon: 'ZoomOutLine',
-    tooltip: 'Zoom out',
-    label: withLabels ? 'Zoom out' : undefined,
-    disabled: zoom === 0,
-    className: `${type}-zoom-out`,
-    onClick: () => {
-      setter(zoom - 0.5);
+    {
+      icon: 'ZoomOutLine',
+      tooltip: 'Zoom out',
+      label: withLabels ? 'Zoom out' : undefined,
+      disabled: currentZoom <= MIN_ZOOM,
+      className: `${type}-zoom-out`,
+      onClick: () => {
+        setter(clampZoom(currentZoom - ZOOM_STEP));
+      },
     },
-  },
-];
+  ];
+};
 
 export const getColumnsCount = (columns: IReqoreTableColumn[]): number => {
   let count = 0;

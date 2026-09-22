@@ -74,6 +74,16 @@ export interface IReqoreTextareaProps
    */
   shortcutHint?: boolean;
   templates?: IReqoreFormTemplates;
+  /**
+   * Keeps the template list open while the author types, instead of dismissing it on the first
+   * keystroke.
+   *
+   * The default is to dismiss: a list that stays put covers the text being written, and having
+   * typed, the author has answered the question the list was asking. Set this where the field
+   * exists to insert MANY templates in a row — there, re-opening the list by clicking back into
+   * the input between every insertion is the greater cost.
+   */
+  keepTemplatesOpenWhileTyping?: boolean;
   transparent?: boolean;
   as?: React.ElementType;
 }
@@ -124,6 +134,11 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
   min-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size]}px;
   line-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
   vertical-align: middle;
+  /* Height only. The textarea fills its wrapper, so the browser's default
+     \`resize: both\` let a drag narrow the textarea while the wrapper — border,
+     focus outline, clear button — kept the full width, and it could never grow
+     wider than that. */
+  resize: vertical;
 
   background-color: ${({ theme, minimal, transparent }: IReqoreTextareaStyle) =>
     minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
@@ -206,6 +221,7 @@ function Textarea<T>(
     focusRules,
     shortcutHint,
     templates,
+    keepTemplatesOpenWhileTyping,
     rows = 1,
     ...rest
   }: T & IReqoreTextareaProps,
@@ -270,6 +286,71 @@ function Textarea<T>(
     setPopoverData(data);
   }, []);
 
+  /* Typing is declining the offer.
+
+     The template list is anchored to the field, and a long enough list covers
+     the very text being typed. Reported on the Qorus IDE's assertion `Value`
+     field: clicking in to place a cursor opened a 29-item list whose entries
+     each carry a paragraph of prose, and it then sat on top of the editor
+     while the author typed — the warning under it updated as they went, and
+     the list did not.
+
+     `closeOnTargetClick={false}` deliberately keeps the list up through the
+     clicks that place a cursor, which is right. What was missing is the other
+     half: an author who starts writing a value instead of picking one has
+     answered the question the list was asking.
+
+     Only keys that CHANGE the text count. Navigation, modifiers and `Enter`
+     are left alone so arrowing to an item and choosing it still works. */
+  const handleTypingClosesTemplates = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!popoverData?.isOpen?.()) {
+        return;
+      }
+
+      // The caller wants the list to survive typing - see the prop's doc.
+      if (keepTemplatesOpenWhileTyping) {
+        return;
+      }
+
+      /* The toolbar shares this surface, and it goes too.
+      
+         `RichTextEditor` renders its styling / undo / redo buttons as
+         `customElements` of the SAME popover as the template list, so there is
+         no way to dismiss one without the other. Exempting surfaces that carry
+         controls was tried and is worse: every Qorus IDE rich-text field passes
+         `actions={{redo, undo}}`, so the exemption held the list open on every
+         field it was written for — it disabled the fix exactly where it was
+         needed. Dismissing on a keystroke is the behaviour asked for; the
+         controls come back with the surface on the next click. */
+
+      const { key, ctrlKey, metaKey, altKey } = event;
+      const changesText =
+        (key?.length === 1 && !ctrlKey && !metaKey && !altKey) ||
+        key === 'Backspace' ||
+        key === 'Delete';
+
+      if (changesText) {
+        popoverData.close();
+      }
+    },
+    // `templates` is not read here — only whether the popover is open matters.
+    [popoverData, keepTemplatesOpenWhileTyping]
+  );
+
+  /* Chains rather than replaces: the Slate editable passes its own `onKeyDown`
+     through here, and dismissing the template list must not swallow it. Held
+     at the component's top level so the identity is stable — built inside the
+     render body it was a fresh closure every time, which made memoising the
+     handler it wraps buy nothing. */
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      handleTypingClosesTemplates(event);
+      (rest as { onKeyDown?: (e: React.KeyboardEvent) => void }).onKeyDown?.(event);
+    },
+    [handleTypingClosesTemplates, rest.onKeyDown]
+  );
+
   const renderChildren = () => {
     return (
       <>
@@ -284,6 +365,8 @@ function Textarea<T>(
             onChange?.(e);
           }}
           as={rest.as || 'textarea'}
+          // After `{...rest}` so it wins — see `handleKeyDown`.
+          onKeyDown={handleKeyDown}
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
           ref={(ref) => setInputRef(ref)}
@@ -328,6 +411,14 @@ function Textarea<T>(
         ref={targetRef}
         onItemSelect={handleItemSelect}
         closeOnTargetClick={false}
+        /* A template list belongs UNDER the field it writes into. Flipped, it
+           covers the form the field is part of — which is exactly what the
+           author is reading to decide what to pick — and a tall field (one
+           carrying a validation message, say) sits low enough to make Popper
+           flip it every time. Held below, the list covers the rows already
+           passed instead, and the field is scrolled up when there is no room.
+           A caller can still override it through `templates`. */
+        keepPlacement
         {...templates}
         popoverId={`id-${uuid.current}`}
         onBlur={handleBlur}

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "lib": ["es2017", "es2018", "es2019", "es2020", "es2021", "DOM"],
+    "lib": ["es2017", "es2018", "es2019", "es2020", "es2021", "DOM", "DOM.Iterable"],
+    "target": "es2021",
     "module": "esnext",
     "sourceMap": true,
     "moduleResolution": "bundler",
