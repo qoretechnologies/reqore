@@ -56,6 +56,25 @@ function explicit(fromFile, spec, tree, ext, emittedExt) {
   throw new Error(`postbuild: cannot resolve '${spec}' from ${relative(tree, fromFile)}`);
 }
 
+
+/**
+ * `export { default as X } from './p'` compiles to
+ *   get: function () { return __importDefault(p_1).default; }
+ * which Node's CommonJS lexer cannot read, so `import { X } from` the package
+ * silently loses X under Node ESM (45 exports at the time of writing). For a
+ * module we compiled ourselves `__importDefault(m)` returns `m` unchanged
+ * (tsc sets `__esModule`), so `m.default` is the same value and the lexer
+ * reads it. Only getters whose module came from a relative require are
+ * touched; third-party defaults keep the interop wrapper.
+ */
+function readableReexportGetters(src) {
+  const local = new Set();
+  for (const m of src.matchAll(/var (\w+) = (?:__importDefault\()?require\("\.\.?\/[^"]+"\)\)?;/g)) local.add(m[1]);
+  return src.replace(
+    /get: function \(\) \{ return __importDefault\((\w+)\)\.default; \}/g,
+    (m, id) => (local.has(id) ? `get: function () { return ${id}.default; }` : m)
+  );
+}
 const ESM_SPEC = /(\b(?:import|export)\b[^'"]*?\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)(['"])([^'"]+)\2/g;
 const CJS_SPEC = /(\brequire\s*\(\s*)(['"])([^'"]+)\2/g;
 
@@ -78,6 +97,7 @@ for (const file of walk(CJS_SRC)) {
     const src = readFileSync(file, 'utf8');
     let out = src.replace(CJS_SPEC, (m, lead, q, spec) => `${lead}${q}${explicit(file, spec, CJS_SRC, 'cjs', 'js')}${q}`);
     out = out.replace(/\/\/# sourceMappingURL=(.+)\.js\.map\s*$/m, '//# sourceMappingURL=$1.cjs.map');
+    out = readableReexportGetters(out);
     const target = join(DIST, rel.replace(/\.js$/, '.cjs'));
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, out);

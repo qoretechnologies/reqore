@@ -128,9 +128,11 @@ Rules that fall out of this:
 - **The ESM tree is for bundlers.** It keeps bare CommonJS subpaths (`lodash/size`) and
   `import styled from 'styled-components'`, neither of which Node's native ESM loader
   accepts. Node — and any server renderer that externalises the package — takes `main`.
-- In `src/index.tsx`, write `import X from '...'; export { X };` rather than
-  `export { default as X } from '...'`: the latter compiles to a getter Node's CommonJS
-  lexer cannot see, and named imports from Node ESM silently lose those exports.
+- Keep writing `export { default as X } from '...'` in `src/index.tsx`. It compiles to a
+  getter Node's CommonJS lexer cannot read; the post-build step rewrites those getters to
+  the readable form. Do NOT hoist replacement imports to the top of `index.tsx` instead —
+  that changes module evaluation order through an existing import cycle
+  (`styles.ts` ↔ `components/Icon`) and every Storybook story fails with a TDZ error.
 - Requiring a *leaf* module directly in Node (`require('.../dist/components/Tag/index.cjs')`)
   fails on a circular import through the root index. It always has with the CJS dist;
   bundlers resolve the cycle. Require the root.
