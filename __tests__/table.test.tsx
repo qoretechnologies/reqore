@@ -532,6 +532,38 @@ test('<Table /> with rowHeight override renders every virtualized row at that he
   });
 });
 
+test('<Table /> with rowHeight AND expandable rows sizes the row, not just its slot', () => {
+  // The regression: react-window's inline height goes to the row only while a
+  // table has no expanded rows. Add `renderExpandedRow` and the row and its
+  // panel share one item box, so the inline height lands on the GROUP and the
+  // row itself fell back to its size-derived height — 32px holding 38px of
+  // content, which rendered the second line outside the row's own border.
+  const data: IReqoreTableProps = {
+    ...tableData,
+    rowHeight: 80,
+    size: 'small',
+    width: 500,
+    height: 400,
+    renderExpandedRow: () => <div>expanded</div>,
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const rows = document.querySelectorAll('.reqore-table-row');
+  expect(rows.length).toBeGreaterThan(0);
+  rows.forEach((row) => {
+    // 80 minus the 1px the non-flat derivation adds for the row's border, so
+    // the row's box sits inside the item rather than straddling it.
+    expect(getComputedStyle(row as HTMLElement).height).toBe('79px');
+  });
+});
+
 test('<Table /> without rowHeight falls back to the size-derived row height', () => {
   // size defaults to 'normal' (38px) and flat is undefined ⇒ rowHeight = 38 + 1 = 39px.
   const data: IReqoreTableProps = {

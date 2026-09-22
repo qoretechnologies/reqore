@@ -75,6 +75,8 @@ export interface IReqoreTableRowOptions {
   size?: TSizes;
   flat?: boolean;
   wrap?: boolean;
+  /** See `IReqoreTableProps.rowHeight`; resolved by the body and passed down. */
+  rowHeight?: number;
   maxCellHeight?: number;
   expandHeightButtonProps?: Partial<IReqoreButtonProps>;
   cellComponent?: IReqoreCustomTableBodyCell;
@@ -120,6 +122,8 @@ export interface IReqoreTableRowStyle {
   size?: TSizes;
   wrap?: boolean;
   minWidth?: number;
+  /** Effective row height in px; overrides the size-derived default. */
+  rowHeight?: number;
 }
 
 /**
@@ -199,15 +203,15 @@ export const StyledTableRow = styled.div.withConfig({
   // `wrap` drives the row's flex-wrap rule; it is not a DOM attribute.
   shouldForwardProp: omitStyleProps('wrap'),
 })<IReqoreTableRowStyle>`
-  ${({ size, wrap, minWidth }) => css`
+  ${({ size, wrap, minWidth, rowHeight }) => css`
     display: flex;
     overflow: clip;
     ${wrap
       ? css`
-          min-height: ${SIZE_TO_PX[size]}px;
+          min-height: ${rowHeight ?? SIZE_TO_PX[size]}px;
         `
       : css`
-          height: ${SIZE_TO_PX[size]}px;
+          height: ${rowHeight ?? SIZE_TO_PX[size]}px;
         `}
     ${minWidth
       ? css`
@@ -280,6 +284,7 @@ const ReqoreTableRow = memo(
       selectedRowIntent,
       flat,
       wrap,
+      rowHeight,
       maxCellHeight,
       expandHeightButtonProps,
       cellComponent,
@@ -617,6 +622,12 @@ const ReqoreTableRow = memo(
         interactive={(!!onRowClick || canExpand) && !data[index]._disabled && !isStatic}
         size={size}
         wrap={rowWrap}
+        /* The row's own box, not just the slot react-window reserves for it.
+           Without this a caller-set `rowHeight` made the ITEM taller while the
+           row stayed at its size-derived height, so a second line of content
+           rendered outside the row's own border — the prop's whole purpose is
+           multi-line cells, and it left them hanging past the divider. */
+        rowHeight={rowHeight}
         minWidth={totalColumnsWidth}
       >
         {renderCells()}
