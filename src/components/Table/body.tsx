@@ -129,7 +129,17 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     // the previous value and reuses it when nothing moved. Writing a ref during
     // render is sound for a pure "cache the last value" cell like this one.
     const itemDataRef = useRef<IReqoreTableRowOptions>();
-    const nextItemData = { data, size, ...rest } as IReqoreTableRowOptions;
+    // `rowHeight` is resolved here (override, or derived from `size`), so the
+    // row gets the SAME number react-window uses for its item box. The border
+    // is the 1px the derivation above adds for a non-flat table; the row's own
+    // box has to sit inside the item, not straddle it.
+    const resolvedRowHeight = rest.flat ? rowHeight : rowHeight - 1;
+    const nextItemData = {
+      data,
+      size,
+      rowHeight: resolvedRowHeight,
+      ...rest,
+    } as IReqoreTableRowOptions;
     const previousItemData = itemDataRef.current;
     const itemDataUnchanged =
       !!previousItemData &&
