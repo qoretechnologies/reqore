@@ -9,6 +9,7 @@ import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import { IReqoreContext } from '../context/ReqoreContext';
 import ThemeContext from '../context/ThemeContext';
 import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
+import { REQORE_PORTAL_ID } from '../helpers/portal';
 import ReqoreProvider from './ReqoreProvider';
 import ReqoreThemeProvider from './ThemeProvider';
 
@@ -70,7 +71,7 @@ const ReqorePortal = memo(
   forwardRef<HTMLDivElement, object>((_props, ref) => {
     return (
       <ReqoreThemeProvider>
-        <StyledPortal id='reqore-portal' ref={ref} />
+        <StyledPortal id={REQORE_PORTAL_ID} ref={ref} />
       </ReqoreThemeProvider>
     );
   })
@@ -80,7 +81,12 @@ const ReqorePortal = memo(
  * Wrap your application with Reqore's theme, layout, and modal portal context.
  */
 const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(({ children, theme, options }) => {
-  const [modalPortal, setModalPortal] = useState<any>(false);
+  // One re-render after the portal node commits, so anything that portalled
+  // during the very first client render re-targets from document.body to the
+  // portal node (see helpers/portal.ts). Never read for anything else: the
+  // children render on the first pass regardless — withholding them until the
+  // portal existed is what left server-rendered HTML empty.
+  const [, setPortalNode] = useState<HTMLDivElement | null>(null);
 
   const _theme: Partial<IReqoreTheme> = useMemo(() => cloneDeep(theme || {}), [theme]);
   const _defaultTheme: IReqoreTheme = useMemo(() => cloneDeep(DEFAULT_THEME), []);
@@ -96,9 +102,9 @@ const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(({ children, the
           <GlobalStyle />
         </ReqoreThemeProvider>
         <ReqoreLayoutWrapper withSidebar={options?.withSidebar}>
-          {modalPortal ? <ReqoreProvider options={options}>{children}</ReqoreProvider> : null}
+          <ReqoreProvider options={options}>{children}</ReqoreProvider>
         </ReqoreLayoutWrapper>
-        <ReqorePortal ref={setModalPortal} />
+        <ReqorePortal ref={setPortalNode} />
       </ThemeContext.Provider>
     </>
   );

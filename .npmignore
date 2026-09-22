@@ -26,3 +26,6 @@ tsconfig.prod.json
 viteshot.config.js
 yarn-error.log
 yarn.lock
+scripts
+tsconfig.esm.json
+dist-*

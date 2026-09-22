@@ -1,7 +1,7 @@
 import { animated, useTransition } from '@react-spring/web';
 import { Resizable } from 're-resizable';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { renderInPortal } from '../../helpers/portal';
 import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
 import { SPRING_CONFIG } from '../../constants/animations';
@@ -408,7 +408,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       [resizable, position, _isModal]
     );
 
-    return createPortal(
+    return renderInPortal(
       transitions((styles: any, item) =>
         item ? (
           <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
@@ -506,7 +506,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
           </ReqoreThemeProvider>
         ) : null
       ),
-      document.querySelector(customPortalId || '#reqore-portal')!
+      customPortalId
     );
   }
 );

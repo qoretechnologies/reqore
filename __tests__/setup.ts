@@ -36,10 +36,14 @@ const newableMockFn = ((impl?: (...args: any[]) => any) =>
       : function () {}
   )) as unknown as typeof vi.fn;
 
+// Server-rendering tests opt out of jsdom with `@vitest-environment node`; the
+// IntersectionObserver mock writes to `window`, which does not exist there.
+const hasDom = typeof window !== 'undefined';
+
 beforeEach(() => {
-  setupIntersectionMocking(newableMockFn);
+  if (hasDom) setupIntersectionMocking(newableMockFn);
 });
 
 afterEach(() => {
-  resetIntersectionMocking();
+  if (hasDom) resetIntersectionMocking();
 });

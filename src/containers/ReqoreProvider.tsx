@@ -74,6 +74,11 @@ export interface IReqoreConfirmationModal {
   modalProps?: IReqoreModalProps;
 }
 
+// react-use's useMedia reads matchMedia synchronously in the browser; on the
+// server it needs an explicit default or it warns on every render. Passing
+// `undefined` in the browser keeps the synchronous read exactly as before.
+const SERVER_MEDIA_DEFAULT = typeof window === 'undefined' ? false : undefined;
+
 const DEFAULT_ERROR_BOUNDARY_OPTIONS = {
   errorMessage:
     'There was an error rendering this component. You can try resetting or refreshing the page.',
@@ -132,11 +137,14 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
   const latestZIndex = useRef<number>(9000);
 
-  const isMobile = process.env.NODE_ENV === 'test' ? false : useMedia('(max-width: 480px)');
+  const isMobile =
+    process.env.NODE_ENV === 'test'
+      ? false
+      : useMedia('(max-width: 480px)', SERVER_MEDIA_DEFAULT);
   const isTablet =
     process.env.NODE_ENV === 'test'
       ? false
-      : useMedia('(min-width: 480px) and (max-width: 1200px)');
+      : useMedia('(min-width: 480px) and (max-width: 1200px)', SERVER_MEDIA_DEFAULT);
   const isMobileOrTablet = isMobile || isTablet;
   // Pointer CAPABILITY, not viewport width — the two disagree often enough to
   // matter (a narrow desktop window hovers; a large tablet does not). Defaults to

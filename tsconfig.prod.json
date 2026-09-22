@@ -1,6 +1,13 @@
 {
   "compilerOptions": {
-    "lib": ["es2017", "es2018", "es2019", "es2020", "es2021", "DOM"],
+    "lib": [
+      "es2017",
+      "es2018",
+      "es2019",
+      "es2020",
+      "es2021",
+      "DOM"
+    ],
     "module": "commonjs",
     "sourceMap": true,
     "moduleResolution": "node",
@@ -12,15 +19,27 @@
     "strictNullChecks": false,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
+    "declarationMap": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "jsx": "react-jsx",
-    "types": ["node", "react", "react-dom"],
-    "outDir": "dist"
+    "types": [
+      "node",
+      "react",
+      "react-dom"
+    ],
+    "outDir": "dist-cjs"
   },
-  "exclude": ["node_modules", "./src/stories/*", "./src/mock/*", "__tests__/*"],
-  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
+  "exclude": [
+    "node_modules",
+    "./src/stories/*",
+    "./src/mock/*",
+    "__tests__/*"
+  ],
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx"
+  ]
 }
