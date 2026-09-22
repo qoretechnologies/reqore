@@ -1529,7 +1529,7 @@ export const AnAutoOpenedPopoverSurvivesAPointerElsewhere: StoryObj<typeof meta>
     docs: {
       description: {
         story:
-          'An `openOnMount` popover and an unrelated trigger. Hovering the unrelated trigger leaves the auto-opened popover alone — the pointer was never what held it open, so the pointer being elsewhere is not a reason to close it. Its own trigger still closes it.',
+          'Two `openOnMount` popovers and an unrelated trigger. Hovering the unrelated trigger leaves both auto-opened popovers alone — the pointer was never what held them open, so the pointer being elsewhere is no reason to close them. Hovering one of their OWN triggers still closes that one, and only that one: the story ends with the second still up, which is the state it is about.',
       },
     },
   },
@@ -1541,9 +1541,22 @@ export const AnAutoOpenedPopoverSurvivesAPointerElsewhere: StoryObj<typeof meta>
         openOnMount
         placement='right'
         content='I opened on my own'
-        componentProps={{ id: 'auto-trigger' }}
+        componentProps={{ id: 'auto-a' }}
       >
-        Auto-opened
+        Auto-opened A
+      </ReqorePopover>
+
+      <ReqoreSpacer height={40} />
+
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        openOnMount
+        placement='right'
+        content='So did I, and I am still here'
+        componentProps={{ id: 'auto-b' }}
+      >
+        Auto-opened B
       </ReqorePopover>
 
       <ReqoreSpacer height={40} />
@@ -1560,20 +1573,26 @@ export const AnAutoOpenedPopoverSurvivesAPointerElsewhere: StoryObj<typeof meta>
     </ReqoreControlGroup>
   ),
   play: async () => {
-    // It is up before anything is touched.
-    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1));
+    const hover = (id: string) => userEvent.hover(document.querySelector(id) as HTMLElement);
 
-    // A pointer somewhere else entirely. Well past the close window.
-    await userEvent.hover(document.querySelector('#unrelated-trigger') as HTMLElement);
-    await sleep(DEFERRED_CLOSE_DELAY * 4);
-
-    // Two now: the auto-opened one survived, and the hovered one opened.
+    // Both are up before anything is touched.
     await waitFor(async () => expect(popoverSurfaces()).toHaveLength(2));
 
-    // And it is still closable by its own trigger, which is the half that must
-    // not be traded away for the half above.
+    // A pointer somewhere else entirely. Well past the close window.
+    await hover('#unrelated-trigger');
+    await sleep(DEFERRED_CLOSE_DELAY * 4);
+
+    // Three: both auto-opened ones survived, and the hovered one opened.
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(3));
+
     await userEvent.unhover(document.querySelector('#unrelated-trigger') as HTMLElement);
-    await userEvent.hover(document.querySelector('#auto-trigger') as HTMLElement);
-    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(0), { timeout: 4000 });
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(2));
+
+    /* And each is still closable by its OWN trigger, which is the half that
+       must not be traded away for the half above. A closes; B is untouched,
+       so the story ends showing an auto-opened popover rather than an empty
+       frame — the picture has to be of the thing the name claims. */
+    await hover('#auto-a');
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1), { timeout: 4000 });
   },
 };
