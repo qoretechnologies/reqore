@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
+import { renderInPortal } from '../../helpers/portal';
 import { usePopper } from 'react-popper';
 import { useUnmount, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
@@ -419,7 +419,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
       popperRef.current = el;
     }, []);
 
-    return createPortal(
+    return renderInPortal(
       <ReqoreThemeProvider>
         <StyledPopoverWrapper
           maxWidth={maxWidth}
@@ -473,7 +473,7 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           </StyledPopoverContent>
         </StyledPopoverWrapper>
       </ReqoreThemeProvider>,
-      document.querySelector(customPortalId || '#reqore-portal')!
+      customPortalId
     );
   }
 );

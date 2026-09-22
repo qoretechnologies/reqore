@@ -1,6 +1,6 @@
 import { map } from 'lodash';
 import { cloneElement, isValidElement, memo } from 'react';
-import { createPortal } from 'react-dom';
+import { renderInPortal } from '../../helpers/portal';
 import { ReqoreErrorBoundary, ReqoreModal, useReqoreProperty } from '../..';
 import { modalStore } from '../../containers/ReqoreProvider';
 
@@ -12,7 +12,7 @@ export const ReqoreModalsWrapper = memo(() => {
     <ReqoreErrorBoundary>
       {map(modals, ({ modal, options: modalOptions }, key) =>
         isValidElement(modal) ? (
-          createPortal(
+          renderInPortal(
             cloneElement(modal, {
               key,
               isOpen: true,
@@ -23,7 +23,7 @@ export const ReqoreModalsWrapper = memo(() => {
                   }
                 : undefined,
             }),
-            document.querySelector(customPortalId || '#reqore-portal')!
+            customPortalId
           )
         ) : (
           <ReqoreModal
