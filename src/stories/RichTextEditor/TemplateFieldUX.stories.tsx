@@ -298,3 +298,57 @@ export const TheListOpensBelowAFieldNearTheBottom: Story = {
     });
   },
 };
+
+/**
+ * THE FLOOR UNDER `keepPlacement`.
+ *
+ * Holding the list below its field means clamping its height to the room that
+ * is there. That is a good trade while the room is worth having, and it decays
+ * badly: the clamp bottoms out at `max-height: 0px`, which is an open list
+ * nobody can see, with `flip` switched off so there is nowhere else for it to
+ * go. Measured on this exact layout before the floor existed — computed
+ * max-height 0px, rendered height 0, sitting at y=885 of a 900px window.
+ * Nothing told the author the list had opened at all.
+ *
+ * So the preference yields under `MIN_USABLE_SPACE_BELOW`. Covering the form is
+ * the cost `keepPlacement` exists to avoid, and it is still the cheaper of the
+ * two once the alternative is showing nothing.
+ *
+ * The layout is the case scrolling cannot rescue: the field is pinned to the
+ * foot of the viewport and there is no scrollable ancestor, so there is no room
+ * to be found and none to be made.
+ */
+export const TheListFlipsRatherThanVanishWithNoRoomBelow: Story = {
+  args: { value: [{ type: 'paragraph', children: [{ text: '' }] }], tags: TAGS, onChange: fn() },
+  decorators: [
+    (Story: any) => (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'flex-end' }}>
+        <div style={{ width: '100%' }}>
+          <Story />
+        </div>
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+
+    await userEvent.click(editor);
+    await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+
+    const control = (editor.closest('.reqore-control-wrapper') as HTMLElement) ?? editor;
+
+    await waitFor(async () => {
+      const list = doc.querySelector<HTMLElement>('.reqore-popover-content')!;
+      const rect = list.getBoundingClientRect();
+
+      // Visible at all, which is the whole point.
+      await expect(rect.height).toBeGreaterThan(0);
+      await expect(getComputedStyle(list).maxHeight).not.toBe('0px');
+      // And it went UP, because down was not a place.
+      await expect(rect.top).toBeLessThan(control.getBoundingClientRect().top);
+      // Still on screen.
+      await expect(rect.bottom).toBeLessThanOrEqual(doc.documentElement.clientHeight + 1);
+    });
+  },
+};

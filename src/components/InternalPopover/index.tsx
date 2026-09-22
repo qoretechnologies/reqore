@@ -75,6 +75,18 @@ const StyledPopoverArrow = styled.div<{ theme: IReqoreTheme }>`
 /** Gutter kept between a popover and each viewport edge, so a clamped surface
  *  never sits flush against the side of the screen. */
 const VIEWPORT_EDGE_GUTTER = 20;
+
+/**
+ * The least room below a target that still counts as somewhere to put a list.
+ *
+ * `keepPlacement` holds a surface below its target and clamps its height to the
+ * space that is there. That is a good trade while the space is worth having and
+ * a bad one as it runs out — the clamp bottoms out at zero, which renders an
+ * open list nobody can see. A hundred pixels is about three rows of a menu plus
+ * its padding: enough to read one option and know there are more to scroll to.
+ * Less than that and the surface is better off flipped, wherever it lands.
+ */
+const MIN_USABLE_SPACE_BELOW = 100;
 const VIEWPORT_MAX_WIDTH = `calc(100vw - ${VIEWPORT_EDGE_GUTTER}px)`;
 
 /** The nearest ancestor that can actually be scrolled, or null. */
@@ -248,6 +260,9 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     const mutationObserber: MutableRefObject<any> = useRef(null);
     const resizeObserver = useRef<ResizeObserver | null>(null);
     const baseOffsetY = noArrow ? 5 : 10;
+    /* Declared before `usePopper` because the flip modifier below reads it.
+       See MIN_USABLE_SPACE_BELOW and the room-making effect. */
+    const [mustFlip, setMustFlip] = useState(false);
     const { styles, attributes, forceUpdate, state } = usePopper(targetElement, popperElement, {
       placement,
       modifiers: [
@@ -275,9 +290,14 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
         {
           /* Flipping is what puts a field's menu over the form the field
              belongs to, so `keepPlacement` turns it off and the surface is
-             given room by scrolling instead — see the effect below. */
+             given room by scrolling instead — see the effect below.
+
+             `mustFlip` puts it back. Holding the placement is a strong
+             preference, not a promise to honour it at any cost: where there is
+             no usable room below even after scrolling, the choice is not
+             "below or over the form" but "over the form or nowhere at all". */
           name: 'flip',
-          enabled: !keepPlacement,
+          enabled: !keepPlacement || mustFlip,
         },
         {
           name: 'hide',
@@ -324,7 +344,28 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
 
       const remaining = spaceBelow();
 
-      setRoomBelow(popperElement.offsetHeight > remaining ? `${Math.max(remaining, 0)}px` : undefined);
+      /* Below is only a place if something can be READ there.
+         Clamping to whatever is left is right while "whatever is left" is a
+         few rows; it stops being right as it approaches nothing, and at the
+         bottom of that slope sits `max-height: 0px` — a list that is mounted,
+         open, and invisible, with `flip` switched off so there is nowhere else
+         for it to go. Measured on a field pinned to the foot of the viewport
+         with no scrollable ancestor: computed max-height 0px, rendered height
+         0, at y=885 of a 900px window. Nothing tells the author the list even
+         opened.
+
+         So there is a floor, and under it the preference yields: let Popper
+         flip. Covering the form is the cost this prop exists to avoid, and it
+         is still cheaper than showing nothing at all. */
+      if (remaining < MIN_USABLE_SPACE_BELOW) {
+        setMustFlip(true);
+        setRoomBelow(undefined);
+
+        return;
+      }
+
+      setMustFlip(false);
+      setRoomBelow(popperElement.offsetHeight > remaining ? `${remaining}px` : undefined);
     }, [keepPlacement, targetElement, popperElement, placement, baseOffsetY, offsetY, forceUpdate]);
 
     useUpdateEffect(() => {
