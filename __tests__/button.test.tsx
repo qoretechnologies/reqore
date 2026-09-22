@@ -286,3 +286,30 @@ test('Renders <Button /> with raised effect', () => {
 
   expect(document.querySelectorAll('.reqore-button').length).toBe(1);
 });
+
+/* A widget that manages its own tab order — a grid, a diagram — keeps exactly
+   one of its buttons in the tab sequence and moves it with the arrow keys. The
+   button used to overwrite whatever `tabIndex` it was given with 0, so every
+   button stayed tabbable and such a widget could not be built on it. */
+test('<Button /> keeps the tabIndex it is given', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreButton className='default'>Default</ReqoreButton>
+          <ReqoreButton className='skipped' tabIndex={-1}>
+            Skipped
+          </ReqoreButton>
+          <ReqoreButton className='disabled' tabIndex={0} disabled>
+            Disabled
+          </ReqoreButton>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.default')?.getAttribute('tabindex')).toBe('0');
+  expect(document.querySelector('.skipped')?.getAttribute('tabindex')).toBe('-1');
+  // A disabled button is never a tab stop, whatever it was asked for.
+  expect(document.querySelector('.disabled')?.getAttribute('tabindex')).toBe('-1');
+});

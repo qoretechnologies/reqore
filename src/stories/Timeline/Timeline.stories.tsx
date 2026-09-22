@@ -2,7 +2,10 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useCallback, useEffect, useState } from 'react';
 import { _testsClickButton } from '../../../__tests__/utils';
-import ReqoreTimeline, { IReqoreTimelineProps } from '../../components/Timeline';
+import ReqoreTimeline, {
+  IReqoreTimelineItem,
+  IReqoreTimelineProps,
+} from '../../components/Timeline';
 import { sleep } from '../../helpers/utils';
 import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
@@ -904,7 +907,7 @@ export const HorizontalInteractive: Story = {
   render: (args) => {
     const [step, setStep] = useState(1);
 
-    const items: IReqoreTimelineProps['items'] = [
+    const items: IReqoreTimelineItem[] = [
       'Cart',
       'Address',
       'Payment',

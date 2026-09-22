@@ -1,5 +1,14 @@
 import count from 'lodash/size';
-import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { FixedSizeList, VariableSizeList } from 'react-window';
 import styled, { css } from 'styled-components';
 import { TABLE_SIZE_TO_PX } from '../../constants/sizes';
@@ -69,14 +78,14 @@ const StyledVariableList = styled(VariableSizeList)`
   ${hideNativeScrollbar}
 `;
 
-const StyledNonVirtualizedBody = styled.div<{ height?: number; minWidth: number }>`
-  ${({ height, minWidth }) => css`
+const StyledNonVirtualizedBody = styled.div<{ maxHeight?: number; minWidth: number }>`
+  ${({ maxHeight, minWidth }) => css`
     box-sizing: border-box;
     overflow: auto;
     ${hideNativeScrollbar}
-    ${height || height === 0
+    ${maxHeight || maxHeight === 0
       ? css`
-          height: ${height}px;
+          max-height: ${maxHeight}px;
         `
       : ''}
     > * {
@@ -113,6 +122,27 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
 
     const totalColumnsWidth = useMemo(() => getTotalColumnsWidth(rest.columns), [rest.columns]);
 
+    const expandable = !!rest.renderExpandedRow;
+
+    /* What an open panel is laid out for: the width the reader can see, not the
+       columns' — see `StyledExpandedRow`. Measured only where there are panels,
+       so a table without them re-renders on a resize exactly as it did before.
+       A layout effect, so the first open panel is sized before it is painted. */
+    const [visibleWidth, setVisibleWidth] = useState<number>();
+    useLayoutEffect(() => {
+      const element = targetRef.current;
+      if (!expandable || !element) return undefined;
+
+      // Zero is a body not laid out yet (or a test DOM), not a width.
+      const measure = () => setVisibleWidth(element.clientWidth || undefined);
+      measure();
+
+      if (typeof ResizeObserver === 'undefined') return undefined;
+      const observer = new ResizeObserver(measure);
+      observer.observe(element);
+      return () => observer.disconnect();
+    }, [expandable, targetRef]);
+
     // Keep `itemData`'s IDENTITY stable while its contents are unchanged.
     //
     // This used to be a `useMemo` keyed on `[data, size, rest]`, which cannot
@@ -139,6 +169,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
       size,
       rowHeight: resolvedRowHeight,
       ...rest,
+      visibleWidth,
     } as IReqoreTableRowOptions;
     const previousItemData = itemDataRef.current;
     const itemDataUnchanged =
@@ -190,7 +221,6 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
        and a ref cannot ask for that. */
     const [measuredVersion, setMeasuredVersion] = useState(0);
 
-    const expandable = !!rest.renderExpandedRow;
     const expandedIds = rest.expanded;
 
     const expandIdFor = useCallback(
@@ -299,15 +329,18 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     );
 
     if (!virtualized) {
-      // Non-virtualized rows can wrap and exceed the fixed `rowHeight`, so pinning a pixel
-      // height would force a vertical scrollbar. Only set a height when the caller explicitly
-      // requested one — otherwise let the body grow to fit its content.
+      // Every row here is drawn at its own height, so the body is as tall as its
+      // rows and a caller's `height` is only the most it may take. It used to be
+      // pinned to `min(height, rows × rowHeight)` — a guess at heights that are
+      // known only once the rows are drawn. Rows shorter than the guess left a
+      // blank band under the last one; a row wrapped taller than it cut the body
+      // short and scrolled it for nothing.
       return (
         <StyledBodyWrapper>
           <StyledNonVirtualizedBody
             className='reqore-table-body'
             ref={targetRef}
-            height={height || height === 0 ? measuredHeight : undefined}
+            maxHeight={height || height === 0 ? height : undefined}
             minWidth={totalColumnsWidth}
           >
             {data.map(renderNonVirtualizedRow)}

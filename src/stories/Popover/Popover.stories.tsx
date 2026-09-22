@@ -2,7 +2,7 @@ import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { useMount } from 'react-use';
 import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
-import { IReqorePopoverProps } from '../../components/Popover';
+import { DEFERRED_CLOSE_DELAY, IReqorePopoverProps } from '../../components/Popover';
 import { sleep } from '../../helpers/utils';
 import {
   ReqoreButton,
@@ -987,5 +987,612 @@ export const ClampedToViewport: Story = {
       // Never wider than the viewport it is rendered into.
       await expect(popover.getBoundingClientRect().width).toBeLessThanOrEqual(window.innerWidth);
     });
+  },
+};
+
+/**
+ * A 120px block sitting directly under a trigger, so the tooltip that opens
+ * below the trigger lands ON it — which is what makes the hit test below mean
+ * something. Everything here is one stacking context, so `elementFromPoint`
+ * answers the same question the browser asks when it decides where a pointer
+ * went.
+ */
+const PointerTarget = ({ marker, children }: { marker: string; children: string }) => (
+  <ReqoreMessage
+    intent='muted'
+    flat
+    className={marker}
+    style={{ width: 280, height: 120, alignItems: 'flex-end' }}
+  >
+    {children}
+  </ReqoreMessage>
+);
+
+export const PointerFallsThroughATooltip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Three popovers, two of them with something underneath that the reader is on their way to. A hover tooltip cannot be reached by the pointer — moving onto it fires the trigger's `mouseleave` and it unmounts on the way — so all its surface can do is sit in the path and take the hover off whatever it covers, which is how a tooltip disappears mid-sentence and how the thing it describes becomes unclickable while it is up. That surface is therefore transparent to the pointer. A popover the pointer IS meant to reach — held open on hover, or opened by click or focus — keeps it. `interactive` overrides the default in either direction. The play function hit-tests each surface with `elementFromPoint`: the tooltip's centre answers with the block underneath it, the strip where the third tooltip is pulled back over its own trigger answers with the trigger — which is the flicker, since a trigger that loses the pointer there closes the tooltip the reader is still reading — and the hover-held popover's centre answers with the popover.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='huge'>
+      <ReqoreControlGroup vertical>
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          placement='bottom'
+          content='Runs the improvement against the last snapshot'
+        >
+          Hover: a tooltip
+        </ReqorePopover>
+        <PointerTarget marker='under-the-tooltip'>Still reachable underneath</PointerTarget>
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup vertical>
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          placement='bottom'
+          offsetY={-30}
+          content='A tooltip pulled back over the thing it describes'
+        >
+          Hover: a tooltip over its own trigger
+        </ReqorePopover>
+      </ReqoreControlGroup>
+
+      <ReqoreControlGroup vertical>
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          placement='bottom'
+          keepOpenOnHover
+          closeOnInsideClick={false}
+          noWrapper
+          content={
+            <ReqoreControlGroup stack>
+              <ReqoreButton icon='EditLine'>Edit</ReqoreButton>
+              <ReqoreButton icon='DeleteBinLine'>Delete</ReqoreButton>
+            </ReqoreControlGroup>
+          }
+        >
+          Hover: actions to click
+        </ReqorePopover>
+        <PointerTarget marker='under-the-actions'>Covered while the actions are up</PointerTarget>
+      </ReqoreControlGroup>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const hitAtCentreOf = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+
+      return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    };
+
+    const [tooltipTrigger, overlappingTrigger, actionsTrigger] = [
+      ...canvasElement.querySelectorAll('.reqore-button'),
+    ] as HTMLElement[];
+
+    // The tooltip: transparent, so the pointer reaches the block it covers.
+    await userEvent.hover(tooltipTrigger);
+
+    const tooltip = await waitFor(() => {
+      const surface = document.querySelector('.reqore-popover-content') as HTMLElement;
+
+      expect(surface).toBeTruthy();
+
+      return surface;
+    });
+
+    const underTheTooltip = canvasElement.querySelector('.under-the-tooltip') as HTMLElement;
+    const throughTheTooltip = hitAtCentreOf(tooltip);
+
+    await expect(tooltip.contains(throughTheTooltip)).toBe(false);
+    // ...and the surface really is over the block, so this is not vacuous.
+    await expect(underTheTooltip.contains(throughTheTooltip)).toBe(true);
+
+    await userEvent.unhover(tooltipTrigger);
+    await waitFor(async () => expect(document.querySelector('.reqore-popover-content')).toBeNull());
+
+    // A tooltip over its own trigger: the trigger keeps the pointer, so the
+    // tooltip does not close itself the moment the reader's pointer crosses
+    // the strip it covers. This is the flicker, measured without moving
+    // anything: where the two overlap, the pointer belongs to the trigger.
+    await userEvent.hover(overlappingTrigger);
+
+    const overlapping = await waitFor(() => {
+      const surface = document.querySelector('.reqore-popover-content') as HTMLElement;
+
+      expect(surface).toBeTruthy();
+
+      return surface;
+    });
+
+    const triggerRect = overlappingTrigger.getBoundingClientRect();
+    const surfaceRect = overlapping.getBoundingClientRect();
+    const overlapTop = Math.max(triggerRect.top, surfaceRect.top);
+    const overlapBottom = Math.min(triggerRect.bottom, surfaceRect.bottom);
+
+    // The offset really does pull the surface over the trigger.
+    await expect(overlapBottom).toBeGreaterThan(overlapTop);
+
+    const inTheOverlap = document.elementFromPoint(
+      triggerRect.left + triggerRect.width / 2,
+      (overlapTop + overlapBottom) / 2
+    );
+
+    await expect(overlapping.contains(inTheOverlap)).toBe(false);
+    await expect(overlappingTrigger.contains(inTheOverlap)).toBe(true);
+
+    await userEvent.unhover(overlappingTrigger);
+    await waitFor(async () => expect(document.querySelector('.reqore-popover-content')).toBeNull());
+
+    // The clickable popover: opaque, because its buttons have to be clickable.
+    await userEvent.hover(actionsTrigger);
+
+    const actions = await waitFor(() => {
+      const surface = document.querySelector('.reqore-popover-content') as HTMLElement;
+
+      expect(surface).toBeTruthy();
+
+      return surface;
+    });
+
+    await expect(actions.contains(hitAtCentreOf(actions))).toBe(true);
+  },
+};
+
+const HoverTooltip = ({ id, label }: { id: string; label: string }) => (
+  <ReqorePopover
+    component={ReqoreButton}
+    isReqoreComponent
+    keepOpenOnHover
+    content={`What ${label} means`}
+    componentProps={{ id }}
+  >
+    {label}
+  </ReqorePopover>
+);
+
+const popoverSurfaces = () => document.querySelectorAll('.reqore-popover-content');
+
+/**
+ * THE REGRESSION: a tooltip whose `mouseleave` never arrives.
+ *
+ * Closing used to depend entirely on the trigger's own `mouseleave`, and that
+ * event is not guaranteed to be delivered. When one was missed the popover had
+ * no way back — `isTargetHovered` stayed true, the deferred close checked it and
+ * declined, and no second `mouseleave` was coming because the pointer had
+ * already moved on. The tooltip then stayed up for the life of the page, and a
+ * reader crossing a table collected one per trigger.
+ *
+ * So this fires NO `mouseleave`. The only thing that happens is what really
+ * happens when a pointer arrives somewhere else: a `mouseover` on the element it
+ * landed on. That alone has to be enough.
+ *
+ * In a real browser on purpose. jsdom gives every element zero geometry, so
+ * popper marks the reference hidden and `InternalPopover` closes the popover by
+ * itself — which makes "it eventually closed" true there no matter what the
+ * component does.
+ */
+export const StrandedWithNoMouseleave: StoryObj<typeof meta> = {
+  parameters: { chromatic: { disable: true }, qlip: { skip: true } },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <HoverTooltip id='stranded-trigger' label='First' />
+      <ReqoreButton id='stranded-elsewhere'>Somewhere else</ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const trigger = document.querySelector('#stranded-trigger') as HTMLElement;
+
+    await userEvent.hover(trigger);
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1), { timeout: 4000 });
+
+    // The pointer turns up elsewhere. Note what is NOT dispatched: `mouseleave`
+    // on the trigger. That is the event the old code waited for forever.
+    document
+      .querySelector('#stranded-elsewhere')!
+      .dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(0), { timeout: 4000 });
+  },
+};
+
+/**
+ * ...and the tooltip still survives the trip to its own surface.
+ *
+ * The mirror of the story above, and the one that matters most: whatever closes
+ * a stranded tooltip must not close one the reader is walking towards.
+ * `keepOpenOnHover` exists precisely so the pointer can leave the trigger and
+ * arrive on the surface, and popper leaves a 10px gap between the two
+ * (`baseOffsetY`). Crossing it puts the pointer on whatever is underneath for a
+ * moment — which is indistinguishable, at that instant, from leaving for good.
+ *
+ * So the transit is played out literally: `mouseleave` the trigger, `mouseover`
+ * the page, and the tooltip must still be there on the other side.
+ */
+export const TransitAcrossTheGap: StoryObj<typeof meta> = {
+  parameters: { chromatic: { disable: true }, qlip: { skip: true } },
+  render: () => <HoverTooltip id='transit-trigger' label='First' />,
+  play: async () => {
+    const trigger = document.querySelector('#transit-trigger') as HTMLElement;
+
+    await userEvent.hover(trigger);
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1), { timeout: 4000 });
+
+    // Mid-transit: off the trigger, not yet on the surface.
+    trigger.dispatchEvent(new MouseEvent('mouseleave', { bubbles: false }));
+    document.body.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+
+    // Still there mid-flight. The grace is the deferred close's own window, so
+    // the check sits inside it — a pointer crosses 10px in a few milliseconds,
+    // and an immediate close would already have shut the tooltip by now.
+    await sleep(DEFERRED_CLOSE_DELAY / 2);
+    await expect(popoverSurfaces()).toHaveLength(1);
+
+    // The pointer completes the journey, which is what the grace was for, and
+    // arriving cancels the pending close.
+    await userEvent.hover(popoverSurfaces()[0] as HTMLElement);
+
+    // Now well past the window: still up, because the reader is on it.
+    await sleep(DEFERRED_CLOSE_DELAY * 4);
+    await expect(popoverSurfaces()).toHaveLength(1);
+  },
+};
+
+/**
+ * Sweeping along a row leaves ONE tooltip up.
+ *
+ * A table header row is a line of adjacent triggers a few pixels apart, read by
+ * dragging the pointer along it. This is the ordinary case, with both halves of
+ * every crossing delivered — it guards the everyday sweep, and it is NOT the
+ * regression above: with `mouseleave` present the old code closed each tooltip
+ * through its normal binding, so this stays green either way.
+ */
+export const SweepingAlongARowLeavesOneUp: StoryObj<typeof meta> = {
+  parameters: { chromatic: { disable: true }, qlip: { skip: true } },
+  render: () => (
+    <ReqoreControlGroup>
+      {['First', 'Second', 'Third', 'Fourth'].map((label) => (
+        <ReqorePopover
+          key={label}
+          component={ReqoreButton}
+          isReqoreComponent
+          keepOpenOnHover
+          interactive={false}
+          content={`What ${label} means`}
+          componentProps={{ id: `sweep-${label}` }}
+        >
+          {label}
+        </ReqorePopover>
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const triggerNamed = (label: string) =>
+      document.querySelector(`#sweep-${label}`) as HTMLElement;
+    const labels = ['First', 'Second', 'Third', 'Fourth'];
+
+    // `unhover` before each `hover`: `userEvent.hover()` dispatches only the
+    // ENTER half, so a bare hover-then-hover would leave every tooltip up for a
+    // reason that belongs to the test helper rather than the component.
+    for (const [index, label] of labels.entries()) {
+      if (index > 0) {
+        await userEvent.unhover(triggerNamed(labels[index - 1]));
+      }
+
+      await userEvent.hover(triggerNamed(label));
+    }
+
+    await waitFor(
+      async () => {
+        await expect([...popoverSurfaces()].map((surface) => surface.textContent)).toEqual([
+          'What Fourth means',
+        ]);
+      },
+      { timeout: 4000 }
+    );
+
+    await userEvent.unhover(triggerNamed('Fourth'));
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(0), { timeout: 4000 });
+  },
+};
+
+/**
+ * The same, for a PLAIN tooltip — the library default and the widest blast radius.
+ *
+ * Every `tooltip` prop in reqore is a `hover` popover without `keepOpenOnHover`,
+ * which takes the other branch: no 50ms grace, an immediate close, and
+ * `onBeforeClose` consulted. The stories above all set `keepOpenOnHover`, so
+ * none of them covers the path almost every tooltip in the product actually
+ * takes. This one does, and it is still the regression that matters — a
+ * `mouseover` elsewhere and no `mouseleave` at all.
+ */
+export const APlainTooltipAlsoComesDown: StoryObj<typeof meta> = {
+  parameters: { chromatic: { disable: true }, qlip: { skip: true } },
+  render: () => (
+    <ReqoreControlGroup vertical>
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        content='What First means'
+        componentProps={{ id: 'plain-trigger' }}
+      >
+        First
+      </ReqorePopover>
+      <ReqoreButton id='plain-elsewhere'>Somewhere else</ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await userEvent.hover(document.querySelector('#plain-trigger') as HTMLElement);
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1), { timeout: 4000 });
+
+    document
+      .querySelector('#plain-elsewhere')!
+      .dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(0), { timeout: 4000 });
+  },
+};
+
+/**
+ * Moving WITHIN a tooltip does not close it.
+ *
+ * The reconciliation closes a popover when the pointer turns up somewhere that
+ * is neither the trigger nor a popover surface. That surface exemption is the
+ * only thing holding an interactive tooltip open while the reader moves around
+ * inside it — from one word to the next, onto a link, across a table in the
+ * content — and if it ever stops matching, the tooltip shuts in the reader's
+ * face 50ms later.
+ *
+ * This has to be driven with raw `mouseout`/`mouseover` carrying `relatedTarget`,
+ * the way a browser reports a move between two elements. `userEvent.hover()`
+ * cannot express it: hovering re-fires the wrapper's own `onMouseEnter`, which
+ * re-sets `isPopoverHovered` and cancels any pending close, so it repairs the
+ * very damage the test is trying to observe. A story written with `hover` passes
+ * even with this whole feature deleted — which is exactly what happened to the
+ * first attempt at it.
+ */
+export const MovingWithinATooltipKeepsItOpen: StoryObj<typeof meta> = {
+  parameters: { chromatic: { disable: true }, qlip: { skip: true } },
+  render: () => (
+    <ReqorePopover
+      component={ReqoreButton}
+      isReqoreComponent
+      keepOpenOnHover
+      content={
+        <ReqoreControlGroup vertical>
+          <span id='inner-a'>First line</span>
+          <span id='inner-b'>Second line</span>
+        </ReqoreControlGroup>
+      }
+      componentProps={{ id: 'within-trigger' }}
+    >
+      Hover me
+    </ReqorePopover>
+  ),
+  play: async () => {
+    await userEvent.hover(document.querySelector('#within-trigger') as HTMLElement);
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1), { timeout: 4000 });
+
+    const first = document.querySelector('#inner-a') as HTMLElement;
+    const second = document.querySelector('#inner-b') as HTMLElement;
+
+    await expect(first).toBeTruthy();
+    await expect(second).toBeTruthy();
+
+    // The reader's eye moves down one line. This is the event pair a browser
+    // emits for it — and nothing else: no enter on the wrapper to paper over it.
+    first.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: second }));
+    second.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, relatedTarget: first }));
+
+    // Well past the window a close would have used.
+    await sleep(DEFERRED_CLOSE_DELAY * 4);
+    await expect(popoverSurfaces()).toHaveLength(1);
+  },
+};
+
+/**
+ * THE ONE CASE THE NEW DEFAULT TAKES SOMETHING AWAY.
+ *
+ * A plain hover popover is `pointer-events: none` because the pointer can never
+ * reach it: leaving the trigger closes it, so the surface unmounts on the way.
+ * That reasoning holds for every hover popover that is allowed to close — and
+ * one held open while the pointer is elsewhere is not. A vetoing `onBeforeClose`
+ * is the arrangement pinned here; the other is `openOnMount` on a popover
+ * anchored to something that never receives a `mouseleave` (the LSP-hover
+ * idiom), which keeps its pixels because the reconciliation is gated on the
+ * pointer having opened the popover — see
+ * `AnAutoOpenedPopoverSurvivesAPointerElsewhere` — but loses its pointer the
+ * same way this one does.
+ *
+ * Such a popover stays VISIBLE with the pointer elsewhere, which before 0.76.0
+ * meant its contents were clickable. They are not any more, and nothing in the
+ * types says so: a button inside one is now unreachable rather than merely
+ * unwanted, and the pointer lands on whatever is behind it.
+ *
+ * In a real browser on purpose, and this is the point: `pointer-events` is
+ * invisible to a jsdom test, because a synthetic `click` dispatches straight at
+ * its target and never hit-tests. Only `document.elementFromPoint()` sees it, so
+ * this is the only kind of test that can hold the behaviour still.
+ *
+ * Asserting the documented limitation, not endorsing it. A consumer that holds a
+ * hover popover open deliberately and wants its content used should pass
+ * `keepOpenOnHover` (which turns `interactive` on by itself) or `interactive`.
+ */
+export const AVetoedTooltipKeepsItsPixelsButNotItsPointer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A hover popover whose `onBeforeClose` refuses to close: it stays on screen after the pointer has left the trigger, and the button inside it is no longer reachable — `elementFromPoint` at the button's own centre answers with something outside the popover. This is the one arrangement in which the 0.76.0 `interactive` default removes behaviour that worked, which is why it is pinned here. The second popover is the same thing with `interactive` passed explicitly, which is the fix a consumer applies.",
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='huge'>
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        placement='bottom'
+        onBeforeClose={() => false}
+        noWrapper
+        componentProps={{ id: 'vetoed-trigger' }}
+        content={<ReqoreButton icon='EditLine'>Unreachable</ReqoreButton>}
+      >
+        Hover: a tooltip that refuses to close
+      </ReqorePopover>
+
+      {/* The stranded surface hangs below its trigger, so the second row is
+          pushed clear of it — otherwise the snapshot a reviewer approves is one
+          control sitting on top of another. */}
+      <ReqoreSpacer height={60} />
+
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        placement='bottom'
+        onBeforeClose={() => false}
+        interactive
+        noWrapper
+        componentProps={{ id: 'vetoed-interactive-trigger' }}
+        content={<ReqoreButton icon='EditLine'>Reachable</ReqoreButton>}
+      >
+        Hover: the same, with interactive
+      </ReqorePopover>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const centreOf = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+
+      return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    };
+
+    const surfaceAfterLeaving = async (triggerId: string) => {
+      const trigger = document.querySelector(`#${triggerId}`) as HTMLElement;
+
+      await userEvent.hover(trigger);
+
+      const surface = await waitFor(() => {
+        const open = document.querySelector('.reqore-popover-content') as HTMLElement;
+
+        expect(open).toBeTruthy();
+
+        return open;
+      });
+
+      // The veto is what this story is about: leave, and it is still here.
+      await userEvent.unhover(trigger);
+      await sleep(DEFERRED_CLOSE_DELAY * 4);
+      await expect(document.contains(surface)).toBe(true);
+
+      return surface;
+    };
+
+    const vetoed = await surfaceAfterLeaving('vetoed-trigger');
+    const deadButton = vetoed.querySelector('.reqore-button') as HTMLElement;
+
+    await expect(deadButton).toBeTruthy();
+    // Visible, laid out, and not the thing the pointer would hit.
+    await expect(deadButton.getBoundingClientRect().width).toBeGreaterThan(0);
+    await expect(vetoed.contains(centreOf(deadButton))).toBe(false);
+  },
+};
+
+/**
+ * AN AUTO-OPENED POPOVER IS NOT THE POINTER'S TO CLOSE.
+ *
+ * The reconciliation asks where the pointer is and closes when the answer is
+ * "not here". That is evidence of something only for a popover the pointer put
+ * there. An `openOnMount` popover was put there by the component — the pointer
+ * has never been on its trigger — so a pointer elsewhere says nothing about it,
+ * and reading it as a reason to close took such a popover down on the first
+ * mouse movement anywhere on the page.
+ *
+ * Reqore's own `Clamped To Viewport` and `Progress → With Tooltip` both lost
+ * their auto-opened popovers to that, and two live surfaces do the same thing:
+ * the Qorus IDE's FSM error tooltip, and reqraft's LSP hover documentation,
+ * whose anchor is a 1x1 `pointer-events: none` span — a trigger the pointer can
+ * never be on, so it could never be closed by the pointer leaving it either.
+ *
+ * What this does NOT do is make such a popover un-closable, which is the part
+ * worth pinning: the trigger keeps its own `mouseleave`/`mouseenter` handling
+ * whatever opened the popover. Hovering the trigger of an already-open hover
+ * popover still closes it, exactly as it did before the reconciliation existed.
+ */
+export const AnAutoOpenedPopoverSurvivesAPointerElsewhere: StoryObj<typeof meta> = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two `openOnMount` popovers and an unrelated trigger. Hovering the unrelated trigger leaves both auto-opened popovers alone — the pointer was never what held them open, so the pointer being elsewhere is no reason to close them. Hovering one of their OWN triggers still closes that one, and only that one: the story ends with the second still up, which is the state it is about.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='huge'>
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        openOnMount
+        placement='right'
+        content='I opened on my own'
+        componentProps={{ id: 'auto-a' }}
+      >
+        Auto-opened A
+      </ReqorePopover>
+
+      <ReqoreSpacer height={40} />
+
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        openOnMount
+        placement='right'
+        content='So did I, and I am still here'
+        componentProps={{ id: 'auto-b' }}
+      >
+        Auto-opened B
+      </ReqorePopover>
+
+      <ReqoreSpacer height={40} />
+
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        placement='right'
+        content='I belong to the other one'
+        componentProps={{ id: 'unrelated-trigger' }}
+      >
+        Something else to hover
+      </ReqorePopover>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const hover = (id: string) => userEvent.hover(document.querySelector(id) as HTMLElement);
+
+    // Both are up before anything is touched.
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(2));
+
+    // A pointer somewhere else entirely. Well past the close window.
+    await hover('#unrelated-trigger');
+    await sleep(DEFERRED_CLOSE_DELAY * 4);
+
+    // Three: both auto-opened ones survived, and the hovered one opened.
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(3));
+
+    await userEvent.unhover(document.querySelector('#unrelated-trigger') as HTMLElement);
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(2));
+
+    /* And each is still closable by its OWN trigger, which is the half that
+       must not be traded away for the half above. A closes; B is untouched,
+       so the story ends showing an auto-opened popover rather than an empty
+       frame — the picture has to be of the thing the name claims. */
+    await hover('#auto-a');
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1), { timeout: 4000 });
   },
 };

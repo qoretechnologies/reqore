@@ -469,6 +469,44 @@ test('Wrapped <Table /> renders rows with min-height instead of fixed height', (
   });
 });
 
+/* `rowHeight` sizes a virtualised row; a row that wraps takes its content's
+   height instead. Given both, the table used to size its body by the unused
+   `rowHeight` and left a blank band under the rows — and said nothing. */
+const rowHeightWarnings = (warn: { mock: { calls: unknown[][] } }) =>
+  warn.mock.calls.filter(([message]) => String(message).includes('`rowHeight` has no effect'));
+
+test('A wrapped <Table /> says so when it is also given a rowHeight it cannot use', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  try {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable {...tableData} wrap rowHeight={52} />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    expect(rowHeightWarnings(warn)).toHaveLength(1);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
+test('A virtualized <Table /> takes its rowHeight without a warning', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  try {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable {...tableData} rowHeight={52} />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+    expect(rowHeightWarnings(warn)).toHaveLength(0);
+  } finally {
+    warn.mockRestore();
+  }
+});
+
 test('<Table /> with rowHeight override renders every virtualized row at that height', () => {
   const data: IReqoreTableProps = {
     ...tableData,

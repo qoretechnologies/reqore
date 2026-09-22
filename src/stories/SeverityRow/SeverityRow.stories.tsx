@@ -554,7 +554,6 @@ export const NarrowContainerActionsWrap: Story = {
     const rows = canvasElement.querySelectorAll('.reqore-severity-row');
     await waitFor(() => expect(rows.length).toBe(2));
 
-    const [wideContainer, narrowContainer] = Array.from(containers) as HTMLElement[];
     const [wide, narrow] = Array.from(rows) as HTMLElement[];
 
     // The narrow layout is stamped on the row as `data-narrow` by its own

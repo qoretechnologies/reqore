@@ -1,6 +1,7 @@
 import React, { memo, useCallback } from 'react';
 import { ReqoreMenuItem } from '../..';
 import ReqoreMenuDivider, { IReqoreMenuDividerProps } from '../Menu/divider';
+import { selectItemLabel } from '../../helpers/selectItem';
 import { IReqoreDropdownItem } from './list';
 
 export interface IReqoreDropdownItemProps extends IReqoreDropdownItem {
@@ -10,22 +11,36 @@ export interface IReqoreDropdownItemProps extends IReqoreDropdownItem {
 }
 
 export const ReqoreDropdownItem = memo(
-  ({ onItemClick, scrollIntoView, keyboardFocused, ...rest }: IReqoreDropdownItemProps) => {
+  ({ onItemClick, scrollIntoView, keyboardFocused, ...item }: IReqoreDropdownItemProps) => {
     const handleItemClick = useCallback(
       (event: React.MouseEvent<HTMLElement>) => {
-        onItemClick(rest, event);
+        onItemClick(item, event);
       },
-      [onItemClick, rest]
+      [onItemClick, item]
     );
+    // The dropdown's own data stays with the item it hands back on select. The
+    // menu item passes props it does not know on to its DOM button, which wrote
+    // a structured `value` as "[object Object]".
+    //
+    // Only a STRUCTURED value is withheld. A scalar one renders as itself, is a
+    // legitimate attribute, and callers reach for it — the date picker finds a
+    // year by `button[value="2030"]`, and withholding every value fixed the
+    // object case by breaking that one. So this asks what the value IS rather
+    // than dropping the prop outright.
+    const { value, metadata: _metadata, items: _items, ...rest } = item;
+    const menuItem = value !== null && typeof value === 'object' ? rest : { ...rest, value };
 
     return (
       <ReqoreMenuItem
-        {...rest}
-        label={rest.label || rest.value}
+        {...menuItem}
+        // An unlabelled row shows its own value, the same way the chip for it
+        // does — one rule, in `selectItemLabel`, so the list and the selection
+        // made from it cannot disagree.
+        label={selectItemLabel(item)}
         onClick={handleItemClick}
-        rightIcon={rest.selected ? 'CheckLine' : rest.rightIcon}
+        rightIcon={item.selected ? 'CheckLine' : item.rightIcon}
         scrollIntoView={scrollIntoView || keyboardFocused}
-        selected={keyboardFocused ? true : rest.selected}
+        selected={keyboardFocused ? true : item.selected}
       />
     );
   }

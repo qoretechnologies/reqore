@@ -4,7 +4,15 @@ import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useState }
 import { useUpdateEffect } from 'react-use';
 import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
-import { Editable, ReactEditor, Slate, useSelected, withReact } from 'slate-react';
+import {
+  Editable,
+  ReactEditor,
+  Slate,
+  useReadOnly,
+  useSelected,
+  useSlateStatic,
+  withReact,
+} from 'slate-react';
 import {
   EditableProps,
   RenderElementProps,
@@ -77,13 +85,94 @@ export interface IReqoreRichTextEditorProps
   };
 }
 
+/* Stable identities for the optional props' defaults.
+ *
+ * Written as literals in the destructuring (`tagsProps = {}`,
+ * `getTagProps = () => ({})`) they were rebuilt on EVERY render, which put a
+ * new identity into `renderElement`'s dependency list every time — and
+ * slate-react's own `ElementComponent` memo compares `renderElement` by
+ * identity. So an unstable default made every element in the document
+ * re-render on every keystroke, including chips nothing had touched. Hoisting
+ * them costs nothing and is the whole fix for the common case, where the
+ * consumer passes neither prop. */
+const NO_TAG_PROPS = (): IReqoreTagProps => ({});
+const EMPTY_TAG_PROPS: IReqoreTagProps = {};
+const EMPTY_TAGS_LIST_PROPS: IReqoreRichTextEditorProps['tagsListProps'] = {};
+
 export const TemplateElement = memo((props: RenderElementProps & { tagProps: IReqoreTagProps }) => {
   const selected = useSelected();
+  const editor = useSlateStatic();
+  /* Slate's own answer, which is the editor's `readOnly` — it reaches `Editable`
+     as a DOM-valid prop and Slate reads it back. It is NOT the whole answer: the
+     editor's `disabled` never reaches Slate, so `composeTagProps` marks the chip
+     read-only for that case and this takes whichever of the two says so. */
+  const slateReadOnly = useReadOnly();
+  const readOnly = slateReadOnly || !!props.tagProps?.readOnly;
 
-  const handleClick = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+  /* A chip is an inline VOID: it holds no text of its own, so a click on it has
+     no text position to land in and the browser places the cursor nowhere. This
+     handler used to `preventDefault()` + `stopPropagation()` and stop there,
+     which made the chip a dead spot.
+
+     That is not merely a missing convenience. A field whose entire value is one
+     reference renders as one chip and nothing else, so the chip IS the control:
+     with no way to get a cursor into the editor, nothing could be typed into it
+     at all. Reported against a Qorus test assertion's `Value`, where it made a
+     path deeper than any offered candidate — the case the rich-text control
+     exists for — impossible to write by hand.
+
+     The cursor goes AFTER the chip, which is where a walk is continued
+     (`$.order.id` -> `$.order.id.value`). Both calls above are kept and are
+     load-bearing: `preventDefault` stops the browser racing us to a position of
+     its own, and `stopPropagation` keeps the click from reaching a host row that
+     treats a click as "collapse me". The selection is then set explicitly rather
+     than left to the browser, so where the cursor lands does not depend on which
+     pixel of the chip was hit.
+
+     Removing a chip is unaffected: that is the tag's own `×`
+     (`onRemoveClick`), not a click on its body. */
+  const handleClick = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // The consumer's own handler still runs: the editor composes `onTagClick`
+      // and any `getTagProps().onClick` into the `tagProps.onClick` below, and
+      // this element used to be overridden by it rather than run alongside it.
+      props.tagProps?.onClick?.(e);
+
+      // A read-only surface has no cursor to give.
+      if (readOnly) {
+        return;
+      }
+
+      try {
+        const path = ReactEditor.findPath(editor, props.element);
+        // From the void's END, and skipping voids. Asking for the point after
+        // the void's PATH can resolve to a point INSIDE its own empty text
+        // child, where typing is silently ignored — the cursor reads as placed
+        // (the DOM selection is real and inside the editor) and the editor
+        // still accepts nothing, which is a worse failure than an obvious one.
+        // The fallback covers a void that ends the document with no text node
+        // after it; a well-formed document always has one.
+        const point =
+          Editor.after(editor, Editor.end(editor, path), { voids: false }) ??
+          Editor.end(editor, []);
+        // Focus BEFORE selecting. `ReactEditor.focus` restores the editor's
+        // previous selection as it takes focus, so focusing afterwards throws
+        // away the point just set — which cost the FIRST character typed after
+        // a chip click and nothing else, the kind of loss that reads as a
+        // flaky keyboard rather than a bug.
+        ReactEditor.focus(editor);
+        Transforms.select(editor, point);
+      } catch {
+        // The element can be gone between render and click (a re-render that
+        // replaced the value). Losing the cursor is the right outcome then, and
+        // it must not take the click handler down with it.
+      }
+    },
+    [editor, props.element, props.tagProps, readOnly]
+  );
 
   return (
     <>
@@ -93,10 +182,21 @@ export const TemplateElement = memo((props: RenderElementProps & { tagProps: IRe
         flat={false}
         asBadge
         fixed='key'
-        onClick={handleClick}
         tooltip={props.element.value?.toString()}
         label={props.element.label}
         {...props.tagProps}
+        // AFTER the spread on purpose: `tagProps` carries an `onClick` of its
+        // own, so declaring this before it meant this handler never ran at all.
+        onClick={handleClick}
+        /* And `readOnly` with it, because winning the spread cost the chip the
+           one signal that said it could not be pressed. `composeTagProps`
+           withholds its `onClick` on a read-only surface; overriding that put a
+           handler back unconditionally, and a tag with a handler paints itself
+           pressable — pointer cursor, hover lift, a tab stop — for a click this
+           element then declines. The handler stays (it still runs the
+           consumer's own `onClick`), and this is what says the cursor is not on
+           offer. */
+        readOnly={readOnly}
         contentEditable={false}
         intent={selected ? 'info' : props.tagProps?.intent}
       />
@@ -286,10 +386,10 @@ export const ReqoreRichTextEditor = forwardRef<
       ],
       onChange,
       tags,
-      getTagProps = () => ({}),
-      tagsProps = {},
+      getTagProps = NO_TAG_PROPS,
+      tagsProps = EMPTY_TAG_PROPS,
       onTagClick,
-      tagsListProps = {},
+      tagsListProps = EMPTY_TAGS_LIST_PROPS,
       panelProps,
       actions,
       customRenderLeaf,
@@ -338,44 +438,99 @@ export const ReqoreRichTextEditor = forwardRef<
       return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
     }, [value]);
 
+    /**
+     * The composed chip props, cached PER ELEMENT.
+     *
+     * Composing them inline in `renderElement` built a new object — and two new
+     * closures — every time it ran, for every chip in the document. That object
+     * is `TemplateElement`'s only non-trivial prop, so `memo()` on it could
+     * never bail out, and `handleClick`'s `useCallback` inside it, which lists
+     * `props.tagProps`, could never hit: every chip re-rendered and re-bound its
+     * handlers on every keystroke, on the hot path of a control whose whole job
+     * is to be typed into.
+     *
+     * A `WeakMap` keyed by the element is the right cache because Slate's
+     * documents are immutable: an untouched node keeps its identity across an
+     * edit, and an edited one becomes a new object, which misses and recomposes.
+     * Entries are dropped with the elements themselves.
+     *
+     * The cache is thrown away and rebuilt whenever anything the composition
+     * reads changes, so `getTagProps` identity is the invalidation signal — a
+     * `useCallback`-stable one is a promise that its answer for a given element
+     * is stable too. A `getTagProps` that has to react to something else (a
+     * hover, a selection held outside the editor) must list it, exactly as it
+     * already must for `renderElement` to see the change at all.
+     */
+    const tagPropsCache = useMemo(
+      () => new WeakMap<CustomElement, IReqoreTagProps>(),
+      [editor, getTagProps, tagsProps, onTagClick, rest.size, rest.readOnly, rest.disabled]
+    );
+
+    const composeTagProps = useCallback(
+      (element: CustomElement): IReqoreTagProps => {
+        const cached = tagPropsCache.get(element);
+
+        if (cached) {
+          return cached;
+        }
+
+        const finalProps: IReqoreTagProps = {
+          ...tagsProps,
+          ...getTagProps(element),
+        };
+        const interactive = !rest.readOnly && !rest.disabled;
+        const composed: IReqoreTagProps = {
+          ...finalProps,
+          size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
+          /* Says "not choosable" to the chip itself, which withholding the
+             handlers below cannot: `TemplateElement` binds a click of its own to
+             place the cursor, so an uninteractive editor still hands the tag a
+             handler and a tag with a handler paints itself pressable. This is
+             the flag that keeps the cursor, the hover effect and the tab stop
+             honest — and it is the ONLY route by which the editor's `disabled`
+             reaches the chip, since `disabled` never reaches Slate and
+             `useReadOnly()` therefore cannot see it. */
+          readOnly: !interactive || finalProps.readOnly,
+          onClick: interactive
+            ? (event) => {
+                onTagClick?.(element);
+                finalProps.onClick?.(event);
+              }
+            : undefined,
+          onRemoveClick: interactive
+            ? () => {
+                try {
+                  const path = ReactEditor.findPath(editor, element);
+                  Transforms.removeNodes(editor, { at: path });
+                } catch (error) {
+                  // Element may no longer be in the editor
+                  console.warn('Failed to remove tag:', error);
+                }
+              }
+            : undefined,
+        };
+
+        tagPropsCache.set(element, composed);
+
+        return composed;
+      },
+      [
+        tagPropsCache,
+        editor,
+        getTagProps,
+        tagsProps,
+        onTagClick,
+        rest.size,
+        rest.readOnly,
+        rest.disabled,
+      ]
+    );
+
     const renderElement = useCallback(
       (props) => {
         switch (props.element.type) {
           case 'tag': {
-            const tagProps = getTagProps(props.element);
-            const finalProps = {
-              ...tagsProps,
-              ...tagProps,
-            };
-
-            return (
-              <TemplateElement
-                {...props}
-                tagProps={{
-                  ...finalProps,
-                  size: rest.size ? getOneLessSize(rest.size) : finalProps.size || 'small',
-                  onClick:
-                    !rest.readOnly && !rest.disabled
-                      ? (event) => {
-                          onTagClick?.(props.element);
-                          finalProps.onClick?.(event);
-                        }
-                      : undefined,
-                  onRemoveClick:
-                    !rest.readOnly && !rest.disabled
-                      ? () => {
-                          try {
-                            const path = ReactEditor.findPath(editor, props.element);
-                            Transforms.removeNodes(editor, { at: path });
-                          } catch (error) {
-                            // Element may no longer be in the editor
-                            console.warn('Failed to remove tag:', error);
-                          }
-                        }
-                      : undefined,
-                }}
-              />
-            );
+            return <TemplateElement {...props} tagProps={composeTagProps(props.element)} />;
           }
           default:
             return (
@@ -387,28 +542,18 @@ export const ReqoreRichTextEditor = forwardRef<
             );
         }
       },
-      // All values read inside the callback must be listed here.
-      // `editor` is stable (created once via `useState` initializer)
-      // but listed for completeness. The callback-shaped props
-      // (`getTagProps`, `onTagClick`) and the `rest`-derived flags
-      // (`size`, `readOnly`, `disabled`) need to be tracked so the
-      // memo invalidates when the parent passes new ones — otherwise
-      // tag chips render with stale click handlers / sizes.
-      // Consumers that pass non-stable callbacks via inline arrow
-      // functions will cause re-memoization on every render; pass
-      // stable refs (`useCallback`) for best performance.
-      [
-        isEmpty,
-        placeholder,
-        placeholderProps,
-        editor,
-        getTagProps,
-        tagsProps,
-        onTagClick,
-        rest.size,
-        rest.readOnly,
-        rest.disabled,
-      ]
+      // All values read inside the callback must be listed here. Everything
+      // the chip composition reads now hangs off `composeTagProps`, which
+      // carries those dependencies itself — so this list is short on purpose,
+      // and that matters: slate-react's `ElementComponent` memo compares
+      // `renderElement` BY IDENTITY, so a dependency that churns re-renders
+      // every element in the document, not just the chips.
+      //
+      // Consumers that pass non-stable callbacks (`getTagProps`, `onTagClick`)
+      // or a fresh `placeholderProps` object as inline literals put that churn
+      // back; pass stable refs (`useCallback` / `useMemo`) for best
+      // performance.
+      [isEmpty, placeholder, placeholderProps, composeTagProps]
     );
 
     const handleFocus = useCallback(
@@ -540,6 +685,139 @@ export const ReqoreRichTextEditor = forwardRef<
       return undefined;
     }, [tags]);
 
+    /* A caret in the empty text BESIDE a chip is a dead cursor.
+       
+       The position itself is legitimate — it is the point `TemplateElement`
+       deliberately moves to when the chip is clicked, and typing works from
+       there. What breaks is arriving by clicking the empty text directly: the
+       BROWSER owns the DOM caret then, and it resolves the first keystroke back
+       into the chip's own text child, where Slate silently ignores it.
+
+       Measured on the reported case: selection `[0,2]` before the key,
+       `[0,1,0]` after it, document unchanged, `onChange` fired twice.
+
+       Re-selecting through Slate alone does not help, because Slate's selection
+       is ALREADY the right point — `Transforms.select` to the same range is a
+       no-op and never re-syncs the DOM. So the DOM range is set explicitly,
+       which is the thing the next keystroke actually resolves from.
+
+       Collapsed selections only: a RANGE spanning a chip is how it gets
+       selected for deletion and must be left alone. */
+    const repairCaretBesideVoid = useCallback(() => {
+      if (rest.readOnly || rest.disabled) {
+        return;
+      }
+
+      /* Adopt the caret this click placed BEFORE reading it.
+
+         slate-react takes the browser's caret into `editor.selection` from a
+         `selectionchange` handler throttled to 100ms, so at mouseup Slate may
+         still have no selection at all. This handler then used to return
+         without repairing anything — and the gap is worse than a missed
+         repair: a re-render of the editable in that window sees a browser caret
+         with no Slate selection, treats it as stale and REMOVES it, which is
+         itself a selection change and spends the throttle window. The click's
+         own change is deferred to the trailing edge, a key pressed before then
+         is dropped, and by the time the handler runs there is no caret left to
+         adopt — the field reads as frozen.
+
+         Measured in the Qorus test editor: Slate's selection `null` at the first
+         keystroke while the browser caret sat correctly beside the chip; the
+         same story passed only when the key happened to land more than 100ms
+         after the last throttled call.
+
+         Only a caret slate-react itself would accept is taken, and never while
+         composing — an IME owns the selection then. */
+      try {
+        const domSelection = ReactEditor.getWindow(editor).getSelection();
+        const { anchorNode, focusNode } = domSelection ?? {};
+
+        /* The same test slate-react's own handler applies before it adopts a
+           caret, so this takes exactly what that handler would take, only
+           sooner. */
+        if (
+          domSelection &&
+          domSelection.rangeCount > 0 &&
+          anchorNode &&
+          focusNode &&
+          !ReactEditor.isComposing(editor) &&
+          ReactEditor.hasSelectableTarget(editor, anchorNode) &&
+          ReactEditor.hasSelectableTarget(editor, focusNode)
+        ) {
+          const clicked = ReactEditor.toSlateRange(editor, domSelection, {
+            exactMatch: false,
+            suppressThrow: true,
+          });
+
+          if (clicked && !(editor.selection && Range.equals(editor.selection, clicked))) {
+            Transforms.select(editor, clicked);
+          }
+        }
+      } catch {
+        // Nothing to adopt is not an error; the throttled handler still runs.
+      }
+
+      const { selection } = editor;
+
+      if (!selection || !Range.isCollapsed(selection)) {
+        return;
+      }
+
+      try {
+        /* Either already inside a void (`voids: true`, or the void the point
+           is inside is not matched at all), or in the empty text immediately
+           after one. `Editor.void` / `Editor.leaf` rather than `Editor.nodes`:
+           the latter returns a generator, which this build target cannot
+           destructure (TS2802). */
+        const inside = Editor.void(editor, { at: selection, voids: true });
+
+        let voidPath = inside?.[1];
+
+        if (!voidPath) {
+          const textEntry = Editor.leaf(editor, selection);
+
+          if (!textEntry) {
+            return;
+          }
+
+          const [textNode, textPath] = textEntry;
+
+          if ((textNode as any).text !== '') {
+            return;
+          }
+
+          const previous = Editor.previous(editor, { at: textPath });
+
+          if (!previous || !Editor.isVoid(editor, previous[0] as any)) {
+            return;
+          }
+
+          voidPath = previous[1];
+        }
+
+        // The same point `TemplateElement` uses: from the void's END and
+        // skipping voids, so it cannot resolve back into another one.
+        const point =
+          Editor.after(editor, Editor.end(editor, voidPath), { voids: false }) ??
+          Editor.end(editor, []);
+        const range = { anchor: point, focus: point };
+
+        Transforms.select(editor, range);
+
+        const domRange = ReactEditor.toDOMRange(editor, range);
+        const domSelection = ReactEditor.getWindow(editor).getSelection();
+
+        if (domSelection) {
+          domSelection.removeAllRanges();
+          domSelection.addRange(domRange);
+        }
+      } catch {
+        // A selection can reference a path a concurrent re-render has removed,
+        // and `toDOMRange` throws for a point it cannot resolve. Leaving the
+        // cursor where it is beats throwing out of an event handler.
+      }
+    }, [editor, rest.readOnly, rest.disabled]);
+
     return (
       <ReqorePanel flat padded={false} minimal transparent size='small' {...panelProps}>
         <Slate
@@ -558,6 +836,7 @@ export const ReqoreRichTextEditor = forwardRef<
             renderLeaf={renderLeaf}
             decorate={decorate}
             onFocusCapture={handleFocus}
+            onMouseUp={repairCaretBesideVoid}
             as={RefSafeSlateEditable}
             style={{
               lineHeight: 1.5,

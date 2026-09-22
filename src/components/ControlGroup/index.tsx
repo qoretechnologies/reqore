@@ -1,5 +1,14 @@
-import { debounce } from 'lodash';
-import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { DebouncedFunc, debounce } from 'lodash';
+import React, {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useMount, useUnmount } from 'react-use';
 import styled, { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
@@ -242,6 +251,9 @@ const ReqoreControlGroup = memo(
     const [lastReSize, setLastReSize] = useState<number>(0);
     const [isOverflownDialogOpen, setIsOverflownDialogOpen] = useState<boolean>(false);
     const observer = useRef<ResizeObserver | null>(null);
+    const onResize = useRef<DebouncedFunc<() => void> | null>(null);
+    /** The sizes the group's own last fold left behind; see `getLayoutSignature`. */
+    const lastSettledLayout = useRef<string | undefined>(undefined);
     const ref = useRef<HTMLDivElement>(null);
 
     const setRefs = useCallback(
@@ -286,31 +298,111 @@ const ReqoreControlGroup = memo(
       );
     }, [vertical, responsive, children]);
 
+    /**
+     * The two sizes a fold depends on, as one comparable value: how much room
+     * the container is granting, and how much of it the group is taking.
+     *
+     * Both are needed, and neither on its own would do.
+     *
+     * The group's own width is the only thing that can report a sibling growing
+     * beside it — a panel title getting longer takes room away from the action
+     * group without the header changing size at all. But it CANNOT report the
+     * container growing: a folded group is only as wide as the one button it is
+     * showing, so widening the window around it leaves its own box untouched
+     * and it would stay folded forever.
+     *
+     * The container's width reports exactly that, and is unmoved by anything
+     * the group does to its own contents — unless the container is itself
+     * sized by the group, which is what the comparison below is for.
+     */
+    const getLayoutSignature = useCallback((): string | undefined => {
+      const element = ref.current;
+
+      if (!element) {
+        return undefined;
+      }
+
+      return `${element.parentElement?.clientWidth ?? -1}:${element.clientWidth}`;
+    }, []);
+
+    /**
+     * Remembers the layout the group's own fold produced, before the browser
+     * gets a chance to report it back.
+     *
+     * Folding a child away changes the group's width, and the group watches its
+     * own width — so without this the fold undoes itself: the observer fires,
+     * every folded child goes back, the group measures itself as overflowing,
+     * folds again, resizes again, forever. Recording the sizes here, in a
+     * layout effect that runs the moment the fold is in the DOM, lets the
+     * observer tell the group's own doing (sizes it already knows about) from
+     * news it has not heard yet (any other pair of numbers).
+     *
+     * This runs only for a group that can actually fold: reading `clientWidth`
+     * forces layout, and control groups are everywhere.
+     */
+    useLayoutEffect(() => {
+      if (vertical || !responsive) {
+        return;
+      }
+
+      lastSettledLayout.current = getLayoutSignature();
+    }, [overflowingChildren, vertical, responsive, getLayoutSignature]);
+
     useMount(() => {
       if (!vertical && responsive) {
-        if ('ResizeObserver' in window) {
-          observer.current = new ResizeObserver(
-            debounce(() => {
-              if (ref && ref.current) {
-                setOverflowingChildren(0);
-                setLastReSize(ref.current.clientWidth);
-              }
-            }, 200)
-          );
+        if ('ResizeObserver' in window && ref.current) {
+          onResize.current = debounce(() => {
+            if (!ref.current) {
+              return;
+            }
 
+            const layout = getLayoutSignature();
+
+            // The group's own fold, coming back around. Nothing outside the
+            // group has moved since it folded, so putting the folded children
+            // back would only make it fold them again.
+            if (layout === lastSettledLayout.current) {
+              return;
+            }
+
+            lastSettledLayout.current = layout;
+
+            // Something outside the group moved: start from everything shown
+            // and let the measurement below decide what has to go.
+            setOverflowingChildren(0);
+            setLastReSize(ref.current.clientWidth);
+          }, 200);
+
+          observer.current = new ResizeObserver(onResize.current);
           observer.current.observe(ref.current);
+
+          // The container carries the news the group's own box cannot; see
+          // `getLayoutSignature`.
+          if (ref.current.parentElement) {
+            observer.current.observe(ref.current.parentElement);
+          }
         }
       }
     });
 
     useUnmount(() => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
+      // Cancel first: a debounced callback still in flight would otherwise run
+      // against an unmounted group.
+      onResize.current?.cancel();
+      observer.current?.disconnect();
     });
 
     useEffect(() => {
       // Is the control group still overflowing?
+      //
+      // This counts up one child at a time and stops when the row fits, or when
+      // there is nothing left in it but the overflow button — which is 40px
+      // wide, and `checkIfOverflowing` ignores a group that narrow. It is NOT
+      // bounded by the number of children: the fold slices the `children` array
+      // while the count walks the rendered elements, and an array with holes in
+      // it (a panel whose actions include ones it decided not to render) has
+      // more slots than elements, so a bound taken from the count would stop
+      // the fold one short and leave the last action clipped.
       if ((overflowingChildren || overflowingChildren === 0) && checkIfOverflowing()) {
         setOverflowingChildren(overflowingChildren + 1);
       }

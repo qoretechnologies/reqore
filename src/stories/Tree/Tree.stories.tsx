@@ -1,4 +1,4 @@
-import { expect, fireEvent } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { ChangeEvent, useState } from 'react';
@@ -11,6 +11,7 @@ import ReqoreInput from '../../components/Input';
 import ReqoreTag from '../../components/Tag';
 import ReqoreTextarea from '../../components/Textarea';
 import { IReqoreTreeProps, ReqoreTree } from '../../components/Tree';
+import { SIZES, TEXT_FROM_SIZE } from '../../constants/sizes';
 import MockObject from '../../mock/object.json';
 import { StoryMeta } from '../utils';
 import { SizeArg, argManager } from '../utils/args';
@@ -107,6 +108,61 @@ export const Zoomable: Story = {
   },
   args: {
     zoomable: true,
+  },
+};
+
+/**
+ * Every size the tree offers, so the scale reads end to end.
+ *
+ * The tree carries its size internally as a zoom level and converts it back on every
+ * render; while that conversion held only five of the seven sizes, `micro` and
+ * `massive` came back out of it as `normal` and rendered identically to it. The play
+ * function measures each tree rather than trusting that the prop was accepted.
+ */
+export const EverySize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same data at all seven sizes, `micro` through `massive`. Each size ' +
+          'renders at its own text size — `micro` and `massive` used to render as ' +
+          '`normal`.',
+      },
+    },
+  },
+  args: {
+    data: MockObject,
+    expanded: true,
+    label: undefined,
+  },
+  render: (args) => (
+    <div style={{ display: 'flex', flexFlow: 'column', gap: 8 }}>
+      {SIZES.map((size) => (
+        <div key={size} data-tree-size={size}>
+          <ReqoreTree {...(args as IReqoreTreeProps)} size={size} label={`size: ${size}`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => {
+      if (!canvasElement.querySelector('.reqore-tree-toggle')) {
+        throw new Error('tree items not rendered');
+      }
+    });
+
+    /* Measured, not asserted from the prop: a size that falls off the internal
+       size-to-zoom map still ACCEPTS the prop, it just paints as `normal`. */
+    for (const size of SIZES) {
+      const toggle = canvasElement.querySelector<HTMLElement>(
+        `[data-tree-size="${size}"] .reqore-tree-toggle`
+      );
+
+      await expect(toggle, `tree at size "${size}"`).toBeTruthy();
+      await expect(getComputedStyle(toggle).fontSize, `tree text at size "${size}"`).toBe(
+        `${TEXT_FROM_SIZE[size]}px`
+      );
+    }
   },
 };
 

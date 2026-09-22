@@ -248,8 +248,7 @@ test('animated keeps the fade mounted while expanded so the opacity can transiti
 test('Renders without a ResizeObserver implementation', () => {
   const original = globalThis.ResizeObserver;
   // Simulate a non-DOM / older test environment.
-  // @ts-expect-error — intentionally removing the global for the assertion.
-  delete globalThis.ResizeObserver;
+  delete (globalThis as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
 
   expect(() =>
     renderContent(

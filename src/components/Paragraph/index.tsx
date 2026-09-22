@@ -21,6 +21,14 @@ export interface IReqoreParagraphProps
   size?: TSizes | string;
   block?: boolean;
   inline?: boolean;
+  /**
+   * The element to render instead of `p`, keeping the paragraph's look.
+   *
+   * For content a `<p>` may not hold — a rendered list, a code block — which
+   * the browser would otherwise move out of the paragraph, and its styling
+   * with it.
+   */
+  as?: React.ElementType;
 }
 
 export const StyledParagraph = styled(StyledTextEffect)`

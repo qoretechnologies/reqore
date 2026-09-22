@@ -200,7 +200,17 @@ export interface IReqoreButtonProps
    */
   shortcutHint?: boolean;
 
-  description?: string | number;
+  /**
+   * Secondary line under the label.
+   *
+   * A NODE, not only a string: a menu row's description is prose, and a host
+   * that writes its descriptions in markdown has to be able to hand over the
+   * drawn result. Every use of this prop here is either a truthiness test in a
+   * styled interpolation or `{description}` inside a `ReqoreTextEffect`, and
+   * styled-components filters the prop off the DOM element, so a node is drawn
+   * exactly where a string was.
+   */
+  description?: React.ReactNode;
   maxWidth?: string;
   textAlign?: 'left' | 'center' | 'right';
   iconsAlign?: 'center' | 'sides';
@@ -753,7 +763,10 @@ const ReqoreButton = memo(
           {...{
             ...rest,
             effect: memoEffect,
-            tabIndex: rest.disabled ? -1 : 0,
+            // The caller's tab stop wins — a grid or a diagram keeps one of its
+            // buttons in the tab order and moves it — except that a disabled
+            // button is never one.
+            tabIndex: rest.disabled ? -1 : (rest.tabIndex ?? 0),
             as: as || 'button',
             theme,
             fluid,

@@ -596,8 +596,8 @@ test('Keeps its actions beside the label in a wide container', () => {
 
 test('Renders without a ResizeObserver implementation', () => {
   const original = globalThis.ResizeObserver;
-  // @ts-expect-error — deliberately removing it to exercise the guard.
-  delete globalThis.ResizeObserver;
+  // Deliberately removed to exercise the guard.
+  delete (globalThis as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver;
 
   try {
     renderRowWithActions({ actions: [{ label: 'Investigate' }] });
