@@ -1,5 +1,6 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 import ReqoreSegmentedControl, {
   IReqoreSegmentedControlProps,
 } from '../../components/SegmentedControl';
@@ -34,6 +35,26 @@ const InteractiveTemplate: StoryFn<IReqoreSegmentedControlProps> = (args) => {
   );
 };
 
+/**
+ * The highlight is drawn by an absolutely positioned child and placed by measurement, so
+ * only a real layout can say whether it sits under the active item. It did not, by
+ * `padding - border` px, from the component's first release until the measurement was
+ * taken from the padding edge; this is the assertion that keeps it there.
+ */
+const expectHighlightUnderActiveItem = async () => {
+  await waitFor(() => {
+    const control = document.querySelector('.reqore-segmented-control')!;
+    const highlight = control.querySelector('.reqore-segmented-control-indicator')!;
+    const active = control.querySelector('button[aria-checked="true"]')!;
+    const a = highlight.getBoundingClientRect();
+    const b = active.getBoundingClientRect();
+    expect(Math.abs(a.left - b.left)).toBeLessThan(0.5);
+    expect(Math.abs(a.top - b.top)).toBeLessThan(0.5);
+    expect(Math.abs(a.width - b.width)).toBeLessThan(0.5);
+    expect(Math.abs(a.height - b.height)).toBeLessThan(0.5);
+  });
+};
+
 export const Basic: Story = {
   parameters: {
     docs: {
@@ -48,6 +69,7 @@ export const Basic: Story = {
     value: 'day',
     items: defaultItems,
   },
+  play: expectHighlightUnderActiveItem,
 };
 
 export const Pill: Story = {
@@ -82,6 +104,8 @@ export const Flat: Story = {
     items: defaultItems,
     flat: true,
   },
+  // No border: the one case where the old measurement was off by the whole padding.
+  play: expectHighlightUnderActiveItem,
 };
 
 export const Fluid: Story = {

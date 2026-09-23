@@ -248,3 +248,60 @@ test('Shows selected item label in "More" button when active item is hidden', ()
   // The "More" button should display the hidden selected item's label
   expect(moreButton!.textContent).toContain('Year');
 });
+
+/**
+ * The highlight's offset, with the geometry a browser reports: a container whose
+ * border-box starts at 20 with a 1px border and 3px padding, so its first item starts
+ * at 24. The highlight is positioned from the PADDING edge (21), so it needs `translateX(3px)`.
+ * Measured from the border edge and corrected by the padding, as it was, it came out at 1px
+ * — 2px left of the item.
+ */
+test('Positions the highlight under the active item from the padding edge', () => {
+  const realRect = Element.prototype.getBoundingClientRect;
+  const realClientLeft = Object.getOwnPropertyDescriptor(Element.prototype, 'clientLeft');
+  // A button carries its label twice (the copy that swaps in on hover), so match a prefix.
+  const itemIndex = (el: Element) => {
+    const button = el.matches('button') ? el : el.querySelector('button.reqore-segmented-control-item');
+    const text = button?.textContent?.trim() ?? '';
+    return ['Day', 'Week', 'Month', 'Year'].findIndex((label) => text.startsWith(label));
+  };
+
+  Element.prototype.getBoundingClientRect = function (this: Element) {
+    const rect = { top: 20, bottom: 66, height: 46, x: 0, y: 20, toJSON: () => ({}) };
+    if (this.classList.contains('reqore-segmented-control')) {
+      return { ...rect, left: 20, right: 275, width: 255 } as DOMRect;
+    }
+    // The measured node is an item's wrapper (holding exactly one item button) or the
+    // button itself; the container holds them all and was answered above.
+    const isItem =
+      this.matches('button.reqore-segmented-control-item') ||
+      this.querySelectorAll('button.reqore-segmented-control-item').length === 1;
+    const index = isItem ? itemIndex(this) : -1;
+    if (index >= 0) {
+      const left = 24 + index * 55;
+      return { ...rect, left, right: left + 55, width: 55 } as DOMRect;
+    }
+    return { ...rect, left: 0, right: 0, width: 0 } as DOMRect;
+  };
+  Object.defineProperty(Element.prototype, 'clientLeft', {
+    configurable: true,
+    get(this: Element) {
+      return this.classList.contains('reqore-segmented-control') ? 1 : 0;
+    },
+  });
+
+  try {
+    renderControl({ value: 'week' });
+    const highlight = document.querySelector<HTMLElement>('.reqore-segmented-control-indicator');
+    // Week starts at 24 + 55 = 79; from the padding edge at 21 that is 58.
+    expect(highlight?.style.transform).toBe('translateX(58px)');
+    expect(highlight?.style.width).toBe('55px');
+  } finally {
+    Element.prototype.getBoundingClientRect = realRect;
+    if (realClientLeft) {
+      Object.defineProperty(Element.prototype, 'clientLeft', realClientLeft);
+    } else {
+      delete (Element.prototype as any).clientLeft;
+    }
+  }
+});
