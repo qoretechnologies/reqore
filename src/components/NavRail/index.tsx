@@ -40,7 +40,7 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { getGlowBoxShadow, IReqoreEffect, StyledEffect, TReqoreHexColor } from '../Effect';
+import { IReqoreEffect, StyledEffect, TReqoreHexColor, withGlow } from '../Effect';
 import ReqoreMenu from '../Menu';
 import ReqoreMenuItem, { TReqoreMenuItemEventHandler } from '../Menu/item';
 import { ReqorePopover } from '../Popover';
@@ -276,53 +276,6 @@ export interface IReqoreNavRailProps
 }
 
 // ── Styled surface ────────────────────────────────────────────────────────────
-
-/**
- * `box-shadow` rules for a surface that paints shadow layers of its own (the
- * raised highlight, the active group's ring) AND may carry an effect glow. The
- * later `box-shadow` declaration would win — a raised rail could never cast a
- * glow or drop shadow — so the two are composed into one, under the glow's own
- * trigger state when it has one.
- */
-const withGlow = (theme: IReqoreTheme, effect: IReqoreEffect | undefined, own: string) => {
-  const base = css`
-    box-shadow: ${own};
-  `;
-
-  if (!effect?.glow) {
-    return base;
-  }
-
-  const both = css`
-    box-shadow: ${getGlowBoxShadow(theme, effect.glow)}, ${own};
-  `;
-
-  switch (effect.glow.when) {
-    case 'hover':
-      return css`
-        ${base}
-        &:hover {
-          ${both}
-        }
-      `;
-    case 'focus':
-      return css`
-        ${base}
-        &:focus {
-          ${both}
-        }
-      `;
-    case 'active':
-      return css`
-        ${base}
-        &:active {
-          ${both}
-        }
-      `;
-    default:
-      return both;
-  }
-};
 
 interface ISurfaceStyle {
   theme: IReqoreTheme;

@@ -298,6 +298,54 @@ export const getGlowBoxShadow = (
   return `${glow.inset ? 'inset ' : ''}0 0 ${glow.blur || 0}px ${glow.size || 2}px ${painted}`;
 };
 
+/**
+ * `box-shadow` rules for a surface that paints shadow layers of its own (a
+ * raised highlight, an inset ring, a floating lift) AND may carry an effect
+ * glow. `StyledEffect` paints the glow as a `box-shadow` too, so the surface's
+ * later declaration would win and the glow would never show — the two are
+ * composed into one declaration instead, under the glow's own trigger state
+ * when it has one. Shared by `ReqoreNavRail` and `ReqoreButtonRail`.
+ */
+export const withGlow = (theme: IReqoreTheme, effect: IReqoreEffect | undefined, own: string) => {
+  const base = css`
+    box-shadow: ${own};
+  `;
+
+  if (!effect?.glow) {
+    return base;
+  }
+
+  const both = css`
+    box-shadow: ${getGlowBoxShadow(theme, effect.glow)}, ${own};
+  `;
+
+  switch (effect.glow.when) {
+    case 'hover':
+      return css`
+        ${base}
+        &:hover {
+          ${both}
+        }
+      `;
+    case 'focus':
+      return css`
+        ${base}
+        &:focus {
+          ${both}
+        }
+      `;
+    case 'active':
+      return css`
+        ${base}
+        &:active {
+          ${both}
+        }
+      `;
+    default:
+      return both;
+  }
+};
+
 export const StyledEffect = styled.span`
   // If gradient was supplied
   ${({ effect, theme, minimal, active, transparent, isText }: IReqoreTextEffectProps) => {

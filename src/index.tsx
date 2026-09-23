@@ -3,6 +3,8 @@ export { default as ReqoreBreadcrumbs } from './components/Breadcrumbs';
 export { default as ReqoreBreadcrumbsItem } from './components/Breadcrumbs/item';
 export { ReqoreBubble, ReqoreBubbleGroup } from './components/Bubble';
 export { default as ReqoreButton } from './components/Button';
+export { ReqoreButtonRail } from './components/ButtonRail';
+export type { IReqoreButtonRailProps } from './components/ButtonRail';
 export { ReqoreCallout } from './components/Callout';
 export { default as ReqoreCheckbox } from './components/Checkbox';
 export {
