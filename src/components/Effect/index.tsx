@@ -322,7 +322,9 @@ export const getGlowBoxShadow = (
       const painted = g.opacity !== undefined && g.opacity < 1 ? rgba(color, g.opacity) : color;
 
       // `size` 0 still means the default 2px spread, as it always has.
-      return `${g.inset ? 'inset ' : ''}${g.x || 0}px ${g.y || 0}px ${g.blur || 0}px ${
+      // An offset is written only when set, so a centred glow is the same CSS as ever.
+      const offset = (v?: number) => (v ? `${v}px` : '0');
+      return `${g.inset ? 'inset ' : ''}${offset(g.x)} ${offset(g.y)} ${g.blur || 0}px ${
         g.size || 2
       }px ${painted}`;
     })
