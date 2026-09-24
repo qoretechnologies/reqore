@@ -104,3 +104,79 @@ export const BorderStyle: Story = {
     await expect(getComputedStyle(flatButton).borderTopWidth).toBe('0px');
   },
 };
+
+export const GradientRing: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`gradient.surface` paints the first gradient on the BORDER only and fills the surface with a plain colour: a gradient ring around a normal surface. The top row is the default (the gradient fills the button and a lighter echo of it draws the border); the second row is the same gradient as a ring around a dark surface; the third animates the ring (`animate: \'always\'`). The readable text colour follows the surface, not the gradient. A ring needs a border to draw on: on a surface without one (a flat surface, a tag) there is nothing to paint.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <ReqoreControlGroup>
+        <ReqoreButton label='Filled (default)' effect={{ gradient: { colors: { 0: '#a45fae', 50: '#8db844', 100: '#a45fae' } } }} />
+      </ReqoreControlGroup>
+      <ReqoreControlGroup>
+        <ReqoreButton
+          label='Ring'
+          data-testid='ring'
+          effect={{ gradient: { colors: { 0: '#a45fae', 50: '#8db844', 100: '#a45fae' }, surface: '#15121c' } }}
+        />
+      </ReqoreControlGroup>
+      <ReqoreControlGroup>
+        <ReqoreButton
+          label='Flowing ring'
+          effect={{
+            gradient: { colors: { 0: '#a45fae', 50: '#8db844', 100: '#a45fae' }, surface: '#15121c', animate: 'always', animationSpeed: 3 },
+          }}
+        />
+      </ReqoreControlGroup>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const ring = canvasElement.querySelector('[data-testid="ring"]') as HTMLElement;
+    const style = getComputedStyle(ring);
+    // The surface colour fills the padding box; the gradient is only on the border box.
+    await expect(style.backgroundImage).toMatch(/linear-gradient\(rgb\(21, 18, 28\), rgb\(21, 18, 28\)\).*linear-gradient/);
+    await expect(style.backgroundClip).toContain('padding-box');
+    await expect(style.backgroundClip).toContain('border-box');
+  },
+};
+
+export const GlowList: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`glow` takes a list as well as a single glow, painted together, and each glow can be offset (`x`, `y`). Two offset glows make a two-tone shadow: purple to the left, green to the right. The single centred glow next to it is the familiar default. A list follows the first glow\'s `when`.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ padding: 40 }}>
+      <ReqoreControlGroup gapSize='huge'>
+        <ReqoreButton label='One glow' effect={{ glow: { color: '#a45fae', blur: 24, opacity: 0.6 } }} />
+        <ReqoreButton
+          label='Two-tone glow'
+          data-testid='two-tone'
+          effect={{
+            glow: [
+              { color: '#a45fae', blur: 34, x: -14, y: 6, opacity: 0.55 },
+              { color: '#8db844', blur: 34, x: 14, y: 6, opacity: 0.5 },
+            ],
+          }}
+        />
+      </ReqoreControlGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const el = canvasElement.querySelector('[data-testid="two-tone"]') as HTMLElement;
+    const shadow = getComputedStyle(el).boxShadow;
+    // Both glows, each at its own offset.
+    await expect(shadow).toMatch(/-14px 6px 34px/);
+    await expect(shadow).toMatch(/14px 6px 34px/);
+  },
+};

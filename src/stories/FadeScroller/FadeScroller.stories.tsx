@@ -130,6 +130,21 @@ const meta = {
       name: 'Fluid',
       defaultValue: true,
     }),
+    ...createArg('marquee', {
+      type: 'boolean',
+      name: 'Marquee',
+      defaultValue: false,
+    }),
+    ...createArg('marqueeSpeed', {
+      type: 'number',
+      name: 'Marquee speed (px/s)',
+      defaultValue: 40,
+    }),
+    ...createArg('marqueePauseOnHover', {
+      type: 'boolean',
+      name: 'Marquee pauses on hover',
+      defaultValue: true,
+    }),
   },
 } as StoryMeta<typeof ReqoreFadeScroller>;
 
@@ -449,5 +464,39 @@ export const NonFluidBesideContent: Story = {
         <KpiCards count={4} />
       </ReqoreFadeScroller>
     </ReqoreControlGroup>
+  ),
+};
+
+/* A partner strip: the payload a marquee exists for. Names rather than KPI cards,
+   because a row of logos is what people reach for this with. */
+const PARTNERS = ['Haltian', 'Time & Space', 'Fresenius', 'Raiffeisen Bank International', 'DHL'];
+
+/**
+ * `marquee`: the row scrolls by itself and loops without a seam. Hover it to pause;
+ * with reduced motion on, it is the plain row.
+ */
+export const Marquee: Story = {
+  parameters: {
+    // The row is mid-motion whenever it is photographed, so no two captures match.
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'Renders a self-scrolling strip of partner names that loops seamlessly at `marqueeSpeed` pixels per second, fading both edges, pausing while hovered or focused, and falling back to a plain scrollable row under `prefers-reduced-motion`.',
+      },
+    },
+  },
+  args: {
+    marquee: true,
+    gapSize: 'big',
+  },
+  render: (args) => (
+    <div style={{ width: 480, maxWidth: '100%' }}>
+      <ReqoreFadeScroller {...args}>
+        {PARTNERS.map((name) => (
+          <ReqoreTag key={name} label={name} size='big' minimal />
+        ))}
+      </ReqoreFadeScroller>
+    </div>
   ),
 };

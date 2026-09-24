@@ -26,3 +26,18 @@ test('honours opacity, as the text glow already did', () => {
     '0 0 0px 2px #ff0000'
   );
 });
+
+test('offsets a glow when x / y are set', () => {
+  expect(getGlowBoxShadow(DEFAULT_THEME, { color: '#ff0000', blur: 20, x: -14, y: 6 })).toBe(
+    '-14px 6px 20px 2px #ff0000'
+  );
+});
+
+test('paints a list of glows as one shadow, first on top', () => {
+  expect(
+    getGlowBoxShadow(DEFAULT_THEME, [
+      { color: '#ff0000', blur: 20, x: -14 },
+      { color: '#00ff00', blur: 20, x: 14 },
+    ])
+  ).toBe('-14px 0 20px 2px #ff0000, 14px 0 20px 2px #00ff00');
+});

@@ -1,5 +1,5 @@
 import { forwardRef, memo, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { TReqoreHexColor } from '../Effect';
@@ -76,6 +76,35 @@ export interface IReqoreFadeScrollerProps
    * @default false
    */
   dragToScroll?: boolean;
+  /**
+   * Scroll the row by itself, continuously and seamlessly — a strip of partner
+   * logos, a ticker of recent events, a rail of names that should feel alive.
+   *
+   * The children are rendered twice, the second copy `aria-hidden`, and the track
+   * slides exactly one copy's width before it starts over, so the loop has no
+   * seam. The row pauses while the pointer rests on it or anything inside it has
+   * focus (`marqueePauseOnHover`), so a logo can be looked at and a link inside
+   * can be clicked. Under `prefers-reduced-motion` it does not move at all: the
+   * copy is not rendered and the row is the plain scrollable row it would be
+   * without this prop.
+   *
+   * Both edges fade while it runs — there is always content past each edge — and
+   * `dragToScroll` is ignored, because a row that drives itself is not scrollable.
+   * @default false
+   */
+  marquee?: boolean;
+  /**
+   * Marquee pace in pixels per second. One loop's duration follows from the
+   * measured width of the content, so a long row and a short one move at the
+   * same speed rather than taking the same time.
+   * @default 40
+   */
+  marqueeSpeed?: number;
+  /**
+   * Pause the marquee while hovered or while something inside it has focus.
+   * @default true
+   */
+  marqueePauseOnHover?: boolean;
 }
 
 /**
@@ -160,6 +189,13 @@ const StyledFadeScrollerWrapper = styled.div<IStyledFadeScrollerProps>`
   &.reqore-fade-scroller-fade-right::after {
     opacity: 1;
   }
+
+  /* A marquee always has content past both edges, so both fades are on for as
+     long as it runs — no measurement needed, and none is made. */
+  &.reqore-fade-scroller-marquee-fade::before,
+  &.reqore-fade-scroller-marquee-fade::after {
+    opacity: 1;
+  }
 `;
 
 interface IStyledScrollProps {
@@ -167,6 +203,7 @@ interface IStyledScrollProps {
   $verticalAlign: string;
   $rigid: boolean;
   $fluid?: boolean;
+  $marquee?: boolean;
 }
 
 /*
@@ -182,7 +219,8 @@ const StyledFadeScrollerContent = styled.div<IStyledScrollProps>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
   max-width: 100%;
   min-width: 0;
-  overflow-x: auto;
+  /* A marquee drives itself: nothing to scroll, and a scrollbar would be a lie. */
+  overflow-x: ${({ $marquee }) => ($marquee ? 'hidden' : 'auto')};
   overflow-y: hidden;
   /* Keeps a focus ring on the last item from being clipped by the overflow box. */
   padding-bottom: 2px;
@@ -233,6 +271,64 @@ const StyledFadeScrollerContent = styled.div<IStyledScrollProps>`
   }
 `;
 
+const marqueeSlide = keyframes`
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+`;
+
+/*
+ * The track holds two copies of the row and slides by half its own width — one
+ * copy — per loop. The duration is a custom property set from the measured copy
+ * width, so the pace in pixels per second is the same however long the row is.
+ */
+const StyledMarqueeTrack = styled.div<{ $pauseOnHover: boolean }>`
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  animation: ${marqueeSlide} var(--reqore-marquee-duration, 30s) linear infinite;
+  will-change: transform;
+
+  ${({ $pauseOnHover }) =>
+    $pauseOnHover &&
+    css`
+      .reqore-fade-scroller-marquee:hover &,
+      .reqore-fade-scroller-marquee:focus-within & {
+        animation-play-state: paused;
+      }
+    `}
+
+  /* Belt and braces: the component already renders a plain row under reduced
+     motion, this covers a preference that changes after mount. */
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
+/*
+ * One copy of the row. The space between its last item and the next copy's first
+ * has to equal the gap inside it, or the loop shows a seam — so each copy carries
+ * that gap as padding, which also keeps "half the track" exactly one copy wide.
+ */
+const StyledMarqueeGroup = styled.div<Omit<IStyledScrollProps, '$fluid' | '$marquee'>>`
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: ${({ $verticalAlign }) => $verticalAlign};
+  gap: ${({ $gap }) => $gap}px;
+  padding-right: ${({ $gap }) => $gap}px;
+
+  ${({ $rigid }) =>
+    $rigid &&
+    `
+    & > * {
+      flex: 0 0 auto;
+    }
+  `}
+`;
+
 /**
  * A single-line horizontal scroller that fades whichever edge has content out of
  * view — for chip strips, tag rows, stat rails, breadcrumb trails and any other row
@@ -259,6 +355,9 @@ export const ReqoreFadeScroller = memo(
         fadeColor,
         fade = true,
         dragToScroll = false,
+        marquee = false,
+        marqueeSpeed = 40,
+        marqueePauseOnHover = true,
         fluid = true,
         intent,
         customTheme,
@@ -271,11 +370,25 @@ export const ReqoreFadeScroller = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const scrollRef = useRef<HTMLDivElement>(null);
+      const trackRef = useRef<HTMLDivElement>(null);
+      const groupRef = useRef<HTMLDivElement>(null);
       const { targetRef } = useCombinedRefs<HTMLDivElement>(ref);
+      // Someone who asked their OS for less motion gets the plain row: no copy,
+      // no animation, and the fades measured like any other row.
+      const reducedMotion = useMemo(
+        () =>
+          typeof window !== 'undefined' &&
+          typeof window.matchMedia === 'function' &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        []
+      );
+      const marqueeActive = marquee && !reducedMotion;
+      // A row that drives itself cannot also be dragged.
+      const canDrag = dragToScroll && !marqueeActive;
       // Read inside the measurement pass, which is dependency-free so it can be
       // handed to listeners and observers once and never rebuilt.
-      const dragToScrollRef = useRef(dragToScroll);
-      dragToScrollRef.current = dragToScroll;
+      const dragToScrollRef = useRef(canDrag);
+      dragToScrollRef.current = canDrag;
 
       // The cursor follows the measurement, not the render: toggling a class
       // here keeps "can this be dragged?" answered by the same pass that
@@ -297,16 +410,53 @@ export const ReqoreFadeScroller = memo(
         scrollRef,
         targetRef,
         axis: 'x',
-        enabled: fade,
+        // The marquee's fades are static (see the wrapper styles); measuring
+        // scrollLeft against a translating track would only ever find the start.
+        enabled: fade && !marqueeActive,
         startClassName: 'reqore-fade-scroller-fade-left',
         endClassName: 'reqore-fade-scroller-fade-right',
         onMeasure,
       });
 
+      /* One loop takes as long as one copy needs to pass at `marqueeSpeed`. The
+         copy is measured rather than assumed, and re-measured when it changes
+         size — logos load after the first paint and a row of them gets wider. */
+      useEffect(() => {
+        const track = trackRef.current;
+        const group = groupRef.current;
+
+        if (!marqueeActive || !track || !group) {
+          return undefined;
+        }
+
+        const apply = () => {
+          const width = group.offsetWidth;
+
+          if (width > 0) {
+            track.style.setProperty(
+              '--reqore-marquee-duration',
+              `${width / Math.max(1, marqueeSpeed)}s`
+            );
+          }
+        };
+
+        apply();
+
+        if (typeof ResizeObserver === 'undefined') {
+          return undefined;
+        }
+
+        const observer = new ResizeObserver(apply);
+
+        observer.observe(group);
+
+        return () => observer.disconnect();
+      }, [marqueeActive, marqueeSpeed]);
+
       useEffect(() => {
         const element = scrollRef.current;
 
-        if (!dragToScroll || !element) {
+        if (!canDrag || !element) {
           return undefined;
         }
 
@@ -492,7 +642,7 @@ export const ReqoreFadeScroller = memo(
           element.classList.remove('reqore-fade-scroller-dragging');
           element.classList.remove('reqore-fade-scroller-draggable');
         };
-      }, [dragToScroll]);
+      }, [canDrag]);
 
       /* An intent tints the fade, because the fade IS this component's only
          surface — there is no border or background for an intent to colour
@@ -509,7 +659,14 @@ export const ReqoreFadeScroller = memo(
           tooltip={tooltip}
           ref={targetRef}
           theme={theme}
-          className={`${className || ''} reqore-fade-scroller`.trim()}
+          className={[
+            className || '',
+            'reqore-fade-scroller',
+            marqueeActive ? 'reqore-fade-scroller-marquee' : '',
+            marqueeActive && fade ? 'reqore-fade-scroller-marquee-fade' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
           $fadeColor={resolvedFadeColor}
           $fluid={fluid}
         >
@@ -520,8 +677,36 @@ export const ReqoreFadeScroller = memo(
             $verticalAlign={verticalAlign}
             $rigid={rigid}
             $fluid={fluid}
+            $marquee={marqueeActive}
           >
-            {children}
+            {marqueeActive ? (
+              <StyledMarqueeTrack
+                ref={trackRef}
+                className='reqore-fade-scroller-marquee-track'
+                $pauseOnHover={marqueePauseOnHover}
+              >
+                <StyledMarqueeGroup
+                  ref={groupRef}
+                  className='reqore-fade-scroller-marquee-group'
+                  $gap={GAP_FROM_SIZE[gapSize]}
+                  $verticalAlign={verticalAlign}
+                  $rigid={rigid}
+                >
+                  {children}
+                </StyledMarqueeGroup>
+                <StyledMarqueeGroup
+                  aria-hidden='true'
+                  className='reqore-fade-scroller-marquee-group reqore-fade-scroller-marquee-clone'
+                  $gap={GAP_FROM_SIZE[gapSize]}
+                  $verticalAlign={verticalAlign}
+                  $rigid={rigid}
+                >
+                  {children}
+                </StyledMarqueeGroup>
+              </StyledMarqueeTrack>
+            ) : (
+              children
+            )}
           </StyledFadeScrollerContent>
         </ReqoreTooltipComponent>
       );

@@ -287,3 +287,55 @@ test('Stops fading once a row that overflowed no longer does', () => {
   setMetrics(content(), { scrollLeft: 0, clientWidth: 500, scrollWidth: 500 });
   expect(fades()).toEqual({ left: false, right: false });
 });
+
+test('Marquee renders the row twice, hides the copy from assistive tech and fades both edges', () => {
+  mount(
+    <ReqoreFadeScroller marquee>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+
+  const groups = document.querySelectorAll('.reqore-fade-scroller-marquee-group');
+
+  expect(groups.length).toBe(2);
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(6);
+  expect(groups[1].getAttribute('aria-hidden')).toBe('true');
+  expect(groups[0].getAttribute('aria-hidden')).toBeNull();
+  expect(wrapper().classList.contains('reqore-fade-scroller-marquee')).toBe(true);
+  // Static fades: a marquee always has content past both edges.
+  expect(wrapper().classList.contains('reqore-fade-scroller-marquee-fade')).toBe(true);
+});
+
+test('Marquee with fade={false} fades neither edge', () => {
+  mount(
+    <ReqoreFadeScroller marquee fade={false}>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+
+  expect(wrapper().classList.contains('reqore-fade-scroller-marquee')).toBe(true);
+  expect(wrapper().classList.contains('reqore-fade-scroller-marquee-fade')).toBe(false);
+  expect(fades()).toEqual({ left: false, right: false });
+});
+
+test('Marquee ignores dragToScroll: a self-driving row is not grabbable', () => {
+  mount(
+    <ReqoreFadeScroller marquee dragToScroll>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+  setMetrics(content(), { scrollLeft: 0 });
+
+  expect(content().classList.contains('reqore-fade-scroller-draggable')).toBe(false);
+});
+
+test('Without marquee the row is rendered once', () => {
+  mount(
+    <ReqoreFadeScroller>
+      <Chips />
+    </ReqoreFadeScroller>
+  );
+
+  expect(document.querySelectorAll('.reqore-fade-scroller-marquee-group').length).toBe(0);
+  expect(document.querySelectorAll('.reqore-tag').length).toBe(3);
+});
