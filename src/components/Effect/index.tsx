@@ -134,8 +134,31 @@ export interface IReqoreEffectGradient {
   colors: TReqoreEffectGradientColors;
   direction?: string;
   borderColor?: TReqoreEffectColor;
+  /**
+   * Paint the gradient on the BORDER only and fill the surface with this colour
+   * instead — a gradient ring around a plain surface (an "AI is working" rail,
+   * a highlighted card). Only honoured on the first gradient, which is the one
+   * that draws the border, and only where there is a border to draw on (not on
+   * text, and not when `borderColor` is set). The readable text colour follows
+   * the surface; `animate` still flows the ring. The colour may carry an alpha
+   * (`'main:darken:1:0.9'`) for a translucent surface.
+   */
+  surface?: TReqoreEffectColor;
   animate?: TReqoreEffectGradientAnimationTrigger;
   animationSpeed?: 1 | 2 | 3 | 4 | 5;
+}
+
+export interface IReqoreEffectGlow {
+  size?: number;
+  color: TReqoreEffectColor;
+  inset?: boolean;
+  blur?: number;
+  opacity?: number;
+  /** Horizontal offset in px (a non-text glow). Default 0: centred. */
+  x?: number;
+  /** Vertical offset in px (a non-text glow). Default 0: centred. */
+  y?: number;
+  when?: 'always' | 'hover' | 'focus' | 'active';
 }
 
 export interface IReqoreEffect extends IReqoreEffectFilters {
@@ -189,14 +212,15 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
    * wrong.
    */
   borderStyle?: 'solid' | 'dashed' | 'dotted';
-  glow?: {
-    size?: number;
-    color: TReqoreEffectColor;
-    inset?: boolean;
-    blur?: number;
-    opacity?: number;
-    when?: 'always' | 'hover' | 'focus' | 'active';
-  };
+  /**
+   * A glow around the element — or a list of them, painted together (the first
+   * is on top). A list is how a surface gets a two-tone glow: one colour to the
+   * left (`x: -14`), another to the right (`x: 14`). The trigger (`when`) is the
+   * FIRST glow's; a text glow only paints the first. Because it may be a list,
+   * code that reads a glow back must not reach into `effect.glow.color`
+   * directly — use `getPrimaryGlow(effect.glow)` / `normalizeGlows(effect.glow)`.
+   */
+  glow?: IReqoreEffectGlow | IReqoreEffectGlow[];
   frost?:
     | boolean
     | {
@@ -291,12 +315,29 @@ const buildGradientLayer = (
 export const getGlowBoxShadow = (
   theme: IReqoreTheme,
   glow: NonNullable<IReqoreEffect['glow']>
-): string => {
-  const color = getColorFromMaybeString(theme, glow.color);
-  const painted = glow.opacity !== undefined && glow.opacity < 1 ? rgba(color, glow.opacity) : color;
+): string =>
+  normalizeGlows(glow)
+    .map((g) => {
+      const color = getColorFromMaybeString(theme, g.color);
+      const painted = g.opacity !== undefined && g.opacity < 1 ? rgba(color, g.opacity) : color;
 
-  return `${glow.inset ? 'inset ' : ''}0 0 ${glow.blur || 0}px ${glow.size || 2}px ${painted}`;
+      // `size` 0 still means the default 2px spread, as it always has.
+      return `${g.inset ? 'inset ' : ''}${g.x || 0}px ${g.y || 0}px ${g.blur || 0}px ${
+        g.size || 2
+      }px ${painted}`;
+    })
+    .join(', ');
+
+/** Every glow in `effect.glow`, whether it was given as one or as a list. */
+export const normalizeGlows = (glow?: IReqoreEffectGlow | IReqoreEffectGlow[]): IReqoreEffectGlow[] => {
+  if (!glow) return [];
+  return Array.isArray(glow) ? glow : [glow];
 };
+
+/** The first glow: the one whose `when` triggers the list, and the one a text glow paints. */
+export const getPrimaryGlow = (
+  glow?: IReqoreEffectGlow | IReqoreEffectGlow[]
+): IReqoreEffectGlow | undefined => normalizeGlows(glow)[0];
 
 /**
  * `box-shadow` rules for a surface that paints shadow layers of its own (a
@@ -311,7 +352,9 @@ export const withGlow = (theme: IReqoreTheme, effect: IReqoreEffect | undefined,
     box-shadow: ${own};
   `;
 
-  if (!effect?.glow) {
+  const primaryGlow = getPrimaryGlow(effect?.glow);
+
+  if (!effect?.glow || !primaryGlow) {
     return base;
   }
 
@@ -319,7 +362,7 @@ export const withGlow = (theme: IReqoreTheme, effect: IReqoreEffect | undefined,
     box-shadow: ${getGlowBoxShadow(theme, effect.glow)}, ${own};
   `;
 
-  switch (effect.glow.when) {
+  switch (primaryGlow.when) {
     case 'hover':
       return css`
         ${base}
@@ -357,7 +400,20 @@ export const StyledEffect = styled.span`
     // Build padding-box layers (the actual fill) for every gradient in the list.
     const paddingLayers: string[] = [];
     const paddingLayersActive: string[] = [];
-    gradients.forEach((g) => {
+    // `surface` on the first gradient: the ring is the gradient, the fill is a colour.
+    const surfaceColor =
+      !isText && gradients[0].surface && !gradients[0].borderColor
+        ? getColorFromMaybeString(theme, gradients[0].surface)
+        : undefined;
+
+    gradients.forEach((g, index) => {
+      if (index === 0 && surfaceColor) {
+        const fill = `linear-gradient(${surfaceColor}, ${surfaceColor}) padding-box`;
+        paddingLayers.push(fill);
+        paddingLayersActive.push(fill);
+        return;
+      }
+
       const colors = createEffectGradient(
         theme,
         g.colors,
@@ -385,7 +441,9 @@ export const StyledEffect = styled.span`
     // Determine the text color based on the primary gradient
     let color: TReqoreHexColor | undefined;
     if (!effect.color) {
-      color = getGradientMix(theme, primary.colors);
+      color = surfaceColor
+        ? (getColorFromMaybeString(theme, primary.surface!) as TReqoreHexColor)
+        : getGradientMix(theme, primary.colors);
     }
 
     let borderColor: string;
@@ -401,16 +459,18 @@ export const StyledEffect = styled.span`
       borderColor = 'transparent';
       borderHoverColor = 'transparent';
 
+      // A `surface` ring shows the gradient's own colours; the default ring is a
+      // lighter echo of the fill it borders.
       const borderGradientColors: string = createEffectGradient(
         theme,
         primary.colors,
-        0.15,
+        surfaceColor ? 0 : 0.15,
         minimal
       );
       const borderGradientColorsActive: string = createEffectGradient(
         theme,
         primary.colors,
-        0.25,
+        surfaceColor ? 0.1 : 0.25,
         minimal
       );
 
@@ -471,7 +531,9 @@ export const StyledEffect = styled.span`
   }}
 
   ${({ effect, theme, isText }: IReqoreTextEffectProps) => {
-    if (!effect || !effect.glow) {
+    const primaryGlow = getPrimaryGlow(effect?.glow);
+
+    if (!effect || !effect.glow || !primaryGlow) {
       return undefined;
     }
 
@@ -484,10 +546,10 @@ export const StyledEffect = styled.span`
     } else {
       const color = getColorFromMaybeString(
         theme,
-        effect.glow.color === 'main' ? 'main:lighten:2' : effect.glow.color
+        primaryGlow.color === 'main' ? 'main:lighten:2' : primaryGlow.color
       );
-      const blur = effect.glow.blur || 0;
-      const opacity = effect.glow.opacity || 1;
+      const blur = primaryGlow.blur || 0;
+      const opacity = primaryGlow.opacity || 1;
 
       glow = css`
         color: ${Colors.LIGHT};
@@ -499,11 +561,11 @@ export const StyledEffect = styled.span`
       `;
     }
 
-    if (effect.glow.when === 'always' || !effect.glow.when) {
+    if (primaryGlow.when === 'always' || !primaryGlow.when) {
       return glow;
     }
 
-    if (effect.glow.when === 'hover') {
+    if (primaryGlow.when === 'hover') {
       return css`
         &:hover {
           ${glow}
@@ -511,7 +573,7 @@ export const StyledEffect = styled.span`
       `;
     }
 
-    if (effect.glow.when === 'focus') {
+    if (primaryGlow.when === 'focus') {
       return css`
         &:focus {
           ${glow}
@@ -519,7 +581,7 @@ export const StyledEffect = styled.span`
       `;
     }
 
-    if (effect.glow.when === 'active') {
+    if (primaryGlow.when === 'active') {
       return css`
         &:active {
           ${glow}

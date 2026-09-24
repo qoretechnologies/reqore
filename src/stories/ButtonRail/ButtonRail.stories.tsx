@@ -400,6 +400,52 @@ export const WithEffects: Story = {
   ),
 };
 
+/** The site's "AI is working" rail, built from `effect` alone. */
+const WORKING_EFFECT = {
+  gradient: {
+    colors: { 0: '#a45fae', 50: '#8db844', 100: '#a45fae' },
+    direction: 'to right',
+    surface: 'main:darken:1:0.92',
+    animate: 'always',
+    animationSpeed: 3,
+  },
+  glow: [
+    { color: '#803a8a', blur: 34, x: -14, y: 6, opacity: 0.55 },
+    { color: '#8db844', blur: 34, x: 14, y: 6, opacity: 0.5 },
+  ],
+} as const;
+
+export const Working: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a rail in a "working" state using nothing but `effect`: a flowing purple-to-green gradient ring around the rail\'s dark surface (`gradient.surface` + `animate`) and a two-tone glow (a `glow` list, purple offset left and green offset right) composed with the floating shadow. The one button is the only action while the work runs. When the effect is removed the rail is the plain one.',
+      },
+    },
+  },
+  render: (args) => (
+    <div style={{ padding: 40 }}>
+      <ReqoreButtonRail aria-label='Working' data-testid='working' {...args} effect={WORKING_EFFECT as never}>
+        <ReqoreButton icon='StopCircleLine' minimal effect={{ color: '#a45fae', weight: 'thick' }} description='Changing the pricing page…'>
+          Qorus is building your request
+        </ReqoreButton>
+      </ReqoreButtonRail>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const rail = canvasElement.querySelector('[data-testid="working"]') as HTMLElement;
+    const style = getComputedStyle(rail);
+    // A ring: the surface fills the padding box, the gradient only the border box.
+    await expect(style.backgroundClip).toContain('padding-box');
+    await expect(style.backgroundClip).toContain('border-box');
+    // Both glows and the rail's own lift, in one shadow.
+    await expect(style.boxShadow).toMatch(/-14px 6px 34px/);
+    await expect(style.boxShadow).toMatch(/14px 6px 34px/);
+    await expect(within(canvasElement).getByText('Qorus is building your request')).toBeVisible();
+  },
+};
+
 export const WithActiveButton: Story = {
   parameters: {
     docs: {
