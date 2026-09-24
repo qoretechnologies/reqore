@@ -26,6 +26,7 @@ import {
 import { getPrimaryGradient } from '../Effect';
 import ReqoreMessage from '../Message';
 import { IPopoverData } from '../Popover';
+import { hideModifier } from './hideModifier';
 
 const getPopoverArrowColor = ({ theme, dim, intent, flat, effect, isOpaque }) => {
   const primary = getPrimaryGradient(effect?.gradient);
@@ -299,10 +300,9 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
           name: 'flip',
           enabled: !keepPlacement || mustFlip,
         },
-        {
-          name: 'hide',
-          enabled: true,
-        },
+        // Popper's own, except that an ancestor with no box cannot hide the
+        // target — see hideModifier.ts.
+        hideModifier,
       ],
     });
 
