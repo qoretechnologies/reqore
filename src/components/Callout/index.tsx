@@ -59,6 +59,9 @@ export interface IReqoreCalloutProps
    * Rendered inside a paragraph, so it takes text and inline content. For a
    * body with blocks in it — a button row, a list — pass `children` instead
    * and leave this unset; both render under the label.
+   *
+   * On its own — no label, no children — the icon is centred on it; with a
+   * label the icon sits on the label line. See the note on `StyledCallout`.
    */
   description?: React.ReactNode;
   /** Effect applied to the description. */
@@ -137,12 +140,32 @@ interface IStyledCalloutProps
   /** Always a resolved pixel number — the component maps `TSizes` names before
    *  it reaches the styles, so no css lambda ever sees a string. */
   $accentSize: number;
+  /** A description and nothing else beside the icon — see the alignment note. */
+  $descriptionOnly?: boolean;
 }
 
 const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
   position: relative;
   display: flex;
-  align-items: flex-start;
+  /* Where the icon sits against the text.
+
+     With a LABEL the icon belongs on the label line: the label is bold body
+     text at the callout's own size, whose line box is about the icon's height,
+     and top-aligning keeps the icon there however far the description under
+     it wraps. That is the layout this component was built around.
+
+     A callout with only a DESCRIPTION has no such line. The description is
+     rendered a size step down (descriptionSize), so its line box is shorter
+     than the icon — 11px against 17px at small — and top-aligning the two
+     leaves the text visibly above the icon: measured 3px between their
+     centres in qorus-ide's template drawer, more at a phone's zoom. There is
+     nothing on the first row for the icon to line up with, so it is centred
+     on the text instead: a one-line hint, the shape these callouts nearly
+     always take, lines up exactly, and a wrapped one gets the banner
+     convention of an icon centred on its message rather than one pinned to a
+     first line it does not match. Children keep the top alignment — a body
+     of blocks (a list, a button row) is not a message to centre against. */
+  align-items: ${({ $descriptionOnly }) => ($descriptionOnly ? 'center' : 'flex-start')};
   gap: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size] * 2}px;
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
@@ -329,6 +352,8 @@ export const ReqoreCallout = memo(
       const hasBadge = badge !== undefined && badge !== null;
       const hasIcon = !!icon || !!iconProps?.image;
       const hasStructuredContent = !!label || !!description;
+      // The description as the only text beside the icon — see `StyledCallout`.
+      const descriptionOnly = !!description && !label && !children;
 
       const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
         if (iconColor) return iconColor;
@@ -361,6 +386,7 @@ export const ReqoreCallout = memo(
           $accentSize={accentSizePx}
           $padded={padded}
           $paddingSize={paddingSize ?? size}
+          $descriptionOnly={descriptionOnly}
           className={`${className || ''} reqore-callout`}
         >
           {hasIcon && (

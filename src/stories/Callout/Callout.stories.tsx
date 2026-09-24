@@ -1,4 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { expect, waitFor } from 'storybook/test';
 import { IReqoreCalloutProps, ReqoreCallout } from '../../components/Callout';
 import ReqoreButton from '../../components/Button';
 import ReqoreControlGroup from '../../components/ControlGroup';
@@ -653,4 +654,58 @@ export const RadiusSize: Story = {
       ))}
     </ReqoreControlGroup>
   ),
+};
+
+/** reqore#677: a callout with an icon and a description but no label — the
+ *  shape an inline hint takes. The description is rendered a size step below
+ *  the callout, so its line is shorter than the icon, and top-aligning the two
+ *  left the sentence floating above the glyph (3px between the centres at
+ *  `small`, more at a phone's zoom). With no label line for the icon to sit on
+ *  it is centred on the text instead. */
+export const DescriptionOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders description-only callouts (icon + description, no label) at every size, plus one whose description wraps. The icon is centred on the text: the play measures the icon and the text line and expects their vertical centres to agree within a pixel on every single-line callout. Compare With Icon, where a label keeps the icon on the label line.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical fluid gapSize='normal'>
+      {ALL_SIZES.map((size) => (
+        <ReqoreCallout
+          key={size}
+          size={size}
+          intent='info'
+          icon='InformationLine'
+          description={`This template needs these app connections (${size}). Create or authorize them here before applying the template.`}
+          fluid
+        />
+      ))}
+      <div style={{ width: 360 }}>
+        <ReqoreCallout
+          size='small'
+          intent='warning'
+          icon='AlertLine'
+          description='A description that wraps to several lines keeps its icon centred on the message rather than pinned to a first line it does not match.'
+          fluid
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() => {
+      const callouts = Array.from(document.querySelectorAll<HTMLElement>('.reqore-callout'));
+      expect(callouts.length).toBe(ALL_SIZES.length + 1);
+      // Every single-line callout: the icon's centre is the text line's centre.
+      callouts.slice(0, ALL_SIZES.length).forEach((callout) => {
+        const icon = callout.querySelector('.reqore-callout-icon')!.getBoundingClientRect();
+        const text = callout.querySelector('.reqore-callout-description')!.getBoundingClientRect();
+        const iconMid = icon.top + icon.height / 2;
+        const textMid = text.top + text.height / 2;
+        expect(Math.abs(iconMid - textMid)).toBeLessThanOrEqual(1);
+      });
+    });
+  },
 };
