@@ -457,11 +457,12 @@ test('Callout accentSize accepts TSizes names resolved through ACCENT_SIZE_TO_PX
   expect(getComputedStyle(byDefault).paddingTop).toBe('5px');
 });
 
-/* Where the icon sits against the text (reqore#677). A description alone is
-   centred on the icon — its line box is a size step shorter than the icon, so
-   top-aligning left the text floating above it. A label keeps the icon on the
-   label line, and children keep the top alignment, since a body of blocks is
-   not a message to centre against. */
+/* Where the icon sits against the text (reqore#677). One piece of text on its
+   own — a label or a description — is centred on the icon: neither line box is
+   the icon's height, so top-aligning left the text floating above it. A label
+   with a description under it keeps the icon on the label line, and children
+   keep the top alignment, since a body of blocks is not a message to centre
+   against. */
 test('Centres the icon on a description that stands alone', () => {
   render(
     <ReqoreUIProvider>
@@ -472,7 +473,17 @@ test('Centres the icon on a description that stands alone', () => {
   expect(document.querySelector('.reqore-callout')).toHaveStyle('align-items: center');
 });
 
-test('Keeps the icon on the label line when there is a label', () => {
+test('Centres the icon on a label that stands alone', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreCallout icon='InformationLine' label='This template needs these app connections' />
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-callout')).toHaveStyle('align-items: center');
+});
+
+test('Keeps the icon on the label line when a description follows it', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreCallout icon='InformationLine' label='Heads up' description='Body copy under it.' />

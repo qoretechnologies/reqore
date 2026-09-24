@@ -709,3 +709,47 @@ export const DescriptionOnly: Story = {
     });
   },
 };
+
+/** reqore#677, the other half: a callout with an icon and a label but no
+ *  description. The label is body text at the callout's own size, but its line
+ *  box still runs 2-7px short of the icon (15px against 17px at small, 26px
+ *  against 33px at huge), so top-aligning left the text above the glyph —
+ *  3.5px between the centres at huge. One piece of text on its own is centred
+ *  on the icon, whichever piece it is. */
+export const LabelOnly: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders label-only callouts (icon + label, no description) at every size. The icon is centred on the label: the play measures both and expects their vertical centres to agree within a pixel. Compare With Icon, where a description under the label keeps the icon on the label line.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical fluid gapSize='normal'>
+      {ALL_SIZES.map((size) => (
+        <ReqoreCallout
+          key={size}
+          size={size}
+          intent='info'
+          icon='InformationLine'
+          label={`This template needs these app connections (${size})`}
+          fluid
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    await waitFor(() => {
+      const callouts = Array.from(document.querySelectorAll<HTMLElement>('.reqore-callout'));
+      expect(callouts.length).toBe(ALL_SIZES.length);
+      callouts.forEach((callout) => {
+        const icon = callout.querySelector('.reqore-callout-icon')!.getBoundingClientRect();
+        const text = callout.querySelector('.reqore-callout-label')!.getBoundingClientRect();
+        const iconMid = icon.top + icon.height / 2;
+        const textMid = text.top + text.height / 2;
+        expect(Math.abs(iconMid - textMid)).toBeLessThanOrEqual(1);
+      });
+    });
+  },
+};
