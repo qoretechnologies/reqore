@@ -456,3 +456,52 @@ test('Callout accentSize accepts TSizes names resolved through ACCENT_SIZE_TO_PX
   expect(getComputedStyle(normal).paddingTop).toBe('5px');
   expect(getComputedStyle(byDefault).paddingTop).toBe('5px');
 });
+
+/* Where the icon sits against the text (reqore#677). One piece of text on its
+   own — a label or a description — is centred on the icon: neither line box is
+   the icon's height, so top-aligning left the text floating above it. A label
+   with a description under it keeps the icon on the label line, and children
+   keep the top alignment, since a body of blocks is not a message to centre
+   against. */
+test('Centres the icon on a description that stands alone', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreCallout icon='InformationLine' description='Create or authorize them here.' />
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-callout')).toHaveStyle('align-items: center');
+});
+
+test('Centres the icon on a label that stands alone', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreCallout icon='InformationLine' label='This template needs these app connections' />
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-callout')).toHaveStyle('align-items: center');
+});
+
+test('Keeps the icon on the label line when a description follows it', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreCallout icon='InformationLine' label='Heads up' description='Body copy under it.' />
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-callout')).toHaveStyle('align-items: flex-start');
+});
+
+test('Keeps the top alignment for children, which may be blocks', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreCallout icon='InformationLine'>
+        <div>One block</div>
+        <div>Another block</div>
+      </ReqoreCallout>
+    </ReqoreUIProvider>
+  );
+
+  expect(document.querySelector('.reqore-callout')).toHaveStyle('align-items: flex-start');
+});

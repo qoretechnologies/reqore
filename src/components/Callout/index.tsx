@@ -49,7 +49,12 @@ export interface IReqoreCalloutProps
     IWithReqoreFluid,
     IWithReqoreSize,
     IWithReqoreTooltip {
-  /** Strong primary heading rendered above the body. */
+  /**
+   * Strong primary heading rendered above the body.
+   *
+   * On its own — no description, no children — the icon is centred on it; with
+   * a description under it the icon sits on the label line.
+   */
   label?: React.ReactNode;
   /** Effect applied to the label. */
   labelEffect?: IReqoreEffect;
@@ -59,6 +64,9 @@ export interface IReqoreCalloutProps
    * Rendered inside a paragraph, so it takes text and inline content. For a
    * body with blocks in it — a button row, a list — pass `children` instead
    * and leave this unset; both render under the label.
+   *
+   * On its own — no label, no children — the icon is centred on it; under a
+   * label the icon sits on the label line. See the note on `StyledCallout`.
    */
   description?: React.ReactNode;
   /** Effect applied to the description. */
@@ -137,12 +145,34 @@ interface IStyledCalloutProps
   /** Always a resolved pixel number — the component maps `TSizes` names before
    *  it reaches the styles, so no css lambda ever sees a string. */
   $accentSize: number;
+  /** One piece of text and nothing else beside the icon — a label alone or a
+   *  description alone. See the alignment note. */
+  $loneText?: boolean;
 }
 
 const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
   position: relative;
   display: flex;
-  align-items: flex-start;
+  /* Where the icon sits against the text.
+
+     With a LABEL AND A DESCRIPTION the icon belongs on the label line, and
+     top-aligning keeps it there however far the description under it wraps.
+     That is the layout this component was built around.
+
+     With ONE piece of text and nothing else — a label on its own, or a
+     description on its own, the shape an inline hint nearly always takes —
+     there is no second row to protect, and top-aligning only makes the text
+     and the icon share a top edge. Neither is the icon's height: a label's
+     line box runs 2-7px short of it (15px against 17px at small, 26px against
+     33px at huge), and a description, rendered a size step down, runs shorter
+     still (11px against 17px at small). So the text sat visibly above the
+     icon: measured 3px between their centres in qorus-ide's template drawer
+     with a description, 3.5px at huge with a label. The icon is centred on the
+     text instead. A one-line hint lines up exactly; a wrapped one gets the
+     banner convention of an icon centred on its message rather than pinned to
+     a first line it does not match. Children keep the top alignment — a body
+     of blocks (a list, a button row) is not a message to centre against. */
+  align-items: ${({ $loneText }) => ($loneText ? 'center' : 'flex-start')};
   gap: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size] * 2}px;
   width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
   max-width: 100%;
@@ -329,6 +359,8 @@ export const ReqoreCallout = memo(
       const hasBadge = badge !== undefined && badge !== null;
       const hasIcon = !!icon || !!iconProps?.image;
       const hasStructuredContent = !!label || !!description;
+      // Exactly one piece of text beside the icon — see `StyledCallout`.
+      const loneText = !children && !!label !== !!description;
 
       const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
         if (iconColor) return iconColor;
@@ -361,6 +393,7 @@ export const ReqoreCallout = memo(
           $accentSize={accentSizePx}
           $padded={padded}
           $paddingSize={paddingSize ?? size}
+          $loneText={loneText}
           className={`${className || ''} reqore-callout`}
         >
           {hasIcon && (
