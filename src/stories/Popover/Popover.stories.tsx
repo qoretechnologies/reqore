@@ -1596,3 +1596,105 @@ export const AnAutoOpenedPopoverSurvivesAPointerElsewhere: StoryObj<typeof meta>
     await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1), { timeout: 4000 });
   },
 };
+
+/**
+ * A wrapper with `display: contents` lays nothing out and clips nothing, but it
+ * still has a computed `overflow` — and Table gives every cell's direct child
+ * `overflow: hidden`, so a click-catching wrapper in a cell has one. Popper
+ * reads computed `overflow` to find what clips the trigger, took the box-less
+ * wrapper's 0×0 rect as that boundary, and reported the trigger hidden; the
+ * popover closed within the frame it opened (#679).
+ */
+export const ABoxlessWrapperCannotHideTheTrigger: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A click popover whose trigger sits inside a `display: contents` wrapper with `overflow: hidden` — the shape a click-catching wrapper takes inside a table cell. The wrapper has no box and clips nothing, so the popover stays open. Before #679 Popper counted the wrapper as a clipping parent, measured it as 0×0, and the popover closed about 35ms after it opened.',
+      },
+    },
+  },
+  render: () => (
+    <ReqorePanel label='Table cell' padded style={{ width: 360 }}>
+      <div style={{ display: 'contents', overflow: 'hidden' }}>
+        <ReqorePopover
+          component={ReqoreButton}
+          isReqoreComponent
+          handler='click'
+          placement='bottom'
+          content='Still open — the wrapper above the trigger has no box to clip it with.'
+          componentProps={{ id: 'boxless-trigger' }}
+        >
+          Open the picker
+        </ReqorePopover>
+      </div>
+    </ReqorePanel>
+  ),
+  play: async () => {
+    await userEvent.click(document.querySelector('#boxless-trigger') as HTMLElement);
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1));
+
+    // It used to be gone about 35ms after opening; wait well past that.
+    await sleep(500);
+
+    await expect(popoverSurfaces()).toHaveLength(1);
+    await expect(document.querySelector('[data-popper-reference-hidden="true"]')).toBeNull();
+  },
+};
+
+/**
+ * The other half of #679: a real clipping box still hides the trigger. The
+ * trigger is scrolled out of a box that clips, and the popover closes — the
+ * behaviour the `hide` modifier exists for, kept. The story ends scrolled away,
+ * because that is the state it is about: a picture of the reopened popover is
+ * indistinguishable from one taken before the play ran at all.
+ */
+export const AScrolledAwayTriggerStillCloses: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A click popover whose trigger sits at the top of a 120px scrolling box. Opening it and then scrolling the box 400px takes the trigger out of view, and the popover closes with it: an ancestor that has a box and clips is still honoured, so a popover never floats over a trigger the reader can no longer see. The story ends scrolled away — the note inside the box is what the box shows there, with no popover beside it.',
+      },
+    },
+  },
+  render: () => (
+    <div
+      id='clipping-box'
+      style={{ width: 360, height: 120, overflow: 'auto', border: '1px dashed #888' }}
+    >
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        handler='click'
+        placement='right'
+        content='Anchored to a trigger that can scroll away'
+        componentProps={{ id: 'scrolled-trigger' }}
+      >
+        Scroll me away
+      </ReqorePopover>
+      <div style={{ height: 380 }} />
+      <ReqoreMessage flat intent='muted' size='small'>
+        Scrolled 400px: the trigger is out of view above, and its popover closed with it.
+      </ReqoreMessage>
+      <div style={{ height: 200 }} />
+    </div>
+  ),
+  play: async () => {
+    const box = document.querySelector('#clipping-box') as HTMLElement;
+    const trigger = document.querySelector('#scrolled-trigger') as HTMLElement;
+
+    await userEvent.click(trigger);
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(1));
+
+    box.scrollTop = 400;
+    fireEvent.scroll(box);
+
+    // The trigger really is outside the box's visible area...
+    await expect(trigger.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      box.getBoundingClientRect().top
+    );
+    // ...and the popover anchored to it is gone.
+    await waitFor(async () => expect(popoverSurfaces()).toHaveLength(0), { timeout: 4000 });
+  },
+};
