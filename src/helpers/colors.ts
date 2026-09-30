@@ -1,5 +1,14 @@
 import { cloneDeep, merge, reduce, size } from 'lodash';
-import { darken, getLuminance, lighten, mix, readableColor, rgba, transparentize } from 'polished';
+import {
+  darken,
+  getContrast,
+  getLuminance,
+  lighten,
+  mix,
+  readableColor,
+  rgba,
+  transparentize,
+} from 'polished';
 import {
   TReqoreEffectColor,
   TReqoreEffectColorList,
@@ -136,6 +145,46 @@ export const changeDarkness = (color: TReqoreHexColor, lightness?: number): TReq
       ? (lighten(lightness, fixedColor) as TReqoreHexColor)
       : (darken(lightness, fixedColor) as TReqoreHexColor)
     : color;
+};
+
+/**
+ * The colour without its alpha channel, as a six-digit hex: `#e6e6e630` → `#e6e6e6`,
+ * `rgba(10, 102, 64, 0.5)` → `#0a6640`. For colour maths that needs the hue a colour
+ * is drawn in rather than how faintly it is drawn (Reqore's muted intent, for one, is
+ * an eight-digit hex).
+ */
+export const getOpaqueColor = (color: TReqoreMultiTypeColor): TReqoreHexColor => {
+  const { r, g, b } = getRGBAFromHex(color);
+  const toHex = (value: number) => value.toString(16).padStart(2, '0');
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}` as TReqoreHexColor;
+};
+
+/**
+ * `color`, pushed lighter (on a dark background) or darker (on a light one) until it
+ * reads as TEXT on `background` — the WCAG contrast ratio reaches `minContrast`.
+ *
+ * Unlike `getReadableColorFrom`, which answers black or white, this keeps the hue: a
+ * green stays green, only a shade that can be read. It is what an outlined or
+ * text-only status label needs, where the colour itself has to carry the text. A
+ * colour that already reads is returned unchanged; one that cannot reach the ratio
+ * ends at white or black, which always can.
+ */
+export const getReadableAccentColor = (
+  color: TReqoreMultiTypeColor,
+  background: TReqoreMultiTypeColor,
+  minContrast: number = 4.5
+): TReqoreHexColor => {
+  const surface = getOpaqueColor(background);
+  const onLight = shouldDarken(surface);
+  let accent: TReqoreHexColor = getOpaqueColor(color);
+
+  // 25 steps of 4% lightness cover the whole range, so the loop always ends.
+  for (let step = 0; step < 25 && getContrast(accent, surface) < minContrast; step++) {
+    accent = (onLight ? darken(0.04, accent) : lighten(0.04, accent)) as TReqoreHexColor;
+  }
+
+  return accent;
 };
 
 export const getColorByBgColor = (bgColor) => {

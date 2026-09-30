@@ -62,6 +62,14 @@ const meta = {
         disable: true,
       },
     }),
+    ...createArg('appearance', {
+      defaultValue: 'solid',
+      name: 'Appearance',
+      description:
+        "How much of the tag the colour paints: `solid` fills it (default), `soft` draws a ring and the label over a 20% wash of the colour, `text` colours only the label and icons.",
+      options: ['solid', 'soft', 'text'],
+      control: 'select',
+    }),
     ...createArg('readOnly', {
       defaultValue: false,
       name: 'Read only',
@@ -818,5 +826,276 @@ export const ReadOnly: Story = {
     // The disabled one is not, which is why it cannot carry a reason.
     expect(disabled.pointerEvents).toBe('none');
     expect(disabled.opacity).toBe('0.5');
+  },
+};
+
+/* ---------------------------------------------------------------------------------
+ * appearance: 'soft' | 'text'
+ * ------------------------------------------------------------------------------- */
+
+const APPEARANCE_INTENTS: IReqoreTagProps['intent'][] = [
+  'info',
+  'success',
+  'pending',
+  'warning',
+  'danger',
+  'muted',
+];
+
+const APPEARANCE_INTENT_ICONS: Record<string, IReqoreTagProps['icon']> = {
+  info: 'InformationLine',
+  success: 'CheckboxCircleLine',
+  pending: 'TimerLine',
+  warning: 'AlertLine',
+  danger: 'ErrorWarningLine',
+  muted: 'ForbidLine',
+};
+
+/**
+ * One row per intent (then a custom `color`, an `effect.color` and no colour at all),
+ * each with the same four tags: icon + label, a key/value tag, a removable tag with a
+ * right icon, and a clickable pill. Then every size, and the three appearances side by
+ * side so the soft and text looks can be compared with the solid one they replace.
+ */
+const AppearanceMatrix = ({ appearance }: { appearance: IReqoreTagProps['appearance'] }) => {
+  const rows: { name: string; props: Partial<IReqoreTagProps>; icon: IReqoreTagProps['icon'] }[] =
+    [
+      ...APPEARANCE_INTENTS.map((intent) => ({
+        name: intent,
+        props: { intent },
+        icon: APPEARANCE_INTENT_ICONS[intent],
+      })),
+      { name: 'color', props: { color: '#8e44ad' }, icon: 'PaletteLine' },
+      { name: 'effect.color', props: { effect: { color: '#1abc9c' } }, icon: 'DropLine' },
+      { name: 'no colour', props: {}, icon: 'PriceTag3Line' },
+    ];
+
+  return (
+    <div className='appearance-matrix'>
+      {rows.map(({ name, props, icon }) => (
+        <ReqoreTagGroup
+          key={name}
+          appearance={appearance}
+          className={`appearance-row appearance-row-${name.replace(/[^a-z]/g, '-')}`}
+          style={{ marginBottom: 8 }}
+        >
+          <ReqoreTag {...props} icon={icon} label={name} />
+          <ReqoreTag {...props} labelKey='status' label={name} />
+          <ReqoreTag
+            {...props}
+            label='Removable'
+            rightIcon='ArrowRightSLine'
+            onRemoveClick={noop}
+          />
+          <ReqoreTag {...props} icon={icon} label='Pill' radiusSize='huge' onClick={noop} />
+        </ReqoreTagGroup>
+      ))}
+      <ReqoreVerticalSpacer height={10} />
+      <ReqoreTagGroup appearance={appearance} className='appearance-sizes'>
+        {ALL_SIZES.map((size) => (
+          <ReqoreTag
+            key={size}
+            size={size}
+            intent='success'
+            icon='CheckboxCircleLine'
+            label={size}
+            onRemoveClick={noop}
+          />
+        ))}
+      </ReqoreTagGroup>
+      <ReqoreVerticalSpacer height={10} />
+      <ReqoreTagGroup className='appearance-compare'>
+        <ReqoreTag intent='danger' icon='ErrorWarningLine' label='Solid' appearance='solid' />
+        <ReqoreTag intent='danger' icon='ErrorWarningLine' label='Soft' appearance='soft' />
+        <ReqoreTag intent='danger' icon='ErrorWarningLine' label='Text' appearance='text' />
+      </ReqoreTagGroup>
+    </div>
+  );
+};
+
+/** WCAG contrast of two `rgb()`/`rgba()` colours, compositing alpha over `under`. */
+const parseRgb = (value: string): number[] => (value.match(/[\d.]+/g) || []).map(Number);
+
+const compose = (top: number[], under: number[]): number[] => {
+  const alpha = top[3] ?? 1;
+
+  return [0, 1, 2].map((i) => top[i] * alpha + under[i] * (1 - alpha));
+};
+
+const luminance = ([r, g, b]: number[]) => {
+  const [lr, lg, lb] = [r, g, b].map((c) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+
+  return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+};
+
+const contrast = (a: number[], b: number[]) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+/** The opaque colour behind an element: the first ancestor that paints a background. */
+const surfaceBehind = (element: HTMLElement): number[] => {
+  let node = element.parentElement;
+
+  while (node) {
+    const background = parseRgb(getComputedStyle(node).backgroundColor);
+
+    if (background.length && (background[3] ?? 1) === 1) {
+      return background;
+    }
+
+    node = node.parentElement;
+  }
+
+  return [255, 255, 255];
+};
+
+const expectAppearance = async (appearance: 'soft' | 'text') => {
+  const tags = await waitFor(() => {
+    const found = document.querySelectorAll('.appearance-row .reqore-tag');
+    // 9 rows × 4 tags
+    expect(found.length).toBe(36);
+    return Array.from(found) as HTMLElement[];
+  });
+
+  for (const tag of tags) {
+    const style = getComputedStyle(tag);
+    const text = parseRgb(style.color);
+    const background = parseRgb(style.backgroundColor);
+    const behind = surfaceBehind(tag);
+
+    if (appearance === 'soft') {
+      // The ring is drawn inside the edge, and the wash is the colour at 20%.
+      expect(style.boxShadow).toContain('inset');
+      expect(background[3]).toBeCloseTo(0.2, 2);
+    } else {
+      expect(style.boxShadow).toBe('none');
+      expect(style.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    }
+
+    // The label reads on what it sits on: 4.5:1 is the target, measured here against
+    // the real page (a shade off the theme's own surface), hence a little slack.
+    expect(
+      contrast(text, compose(background, behind)),
+      `contrast of "${tag.textContent}"`
+    ).toBeGreaterThan(4);
+  }
+
+  // A chromatic intent keeps its hue: the success label is green, not white or black.
+  const [r, g, b] = parseRgb(
+    getComputedStyle(document.querySelector('.appearance-row-success .reqore-tag')).color
+  );
+  expect(g).toBeGreaterThan(r);
+  expect(g).toBeGreaterThan(b);
+
+  // The group's appearance reached its tags, and a soft or text tag is exactly the
+  // size of a solid one next to it.
+  const compare = Array.from(
+    document.querySelectorAll('.appearance-compare .reqore-tag')
+  ) as HTMLElement[];
+  const heights = compare.map((tag) => tag.getBoundingClientRect().height);
+  expect(new Set(heights).size).toBe(1);
+
+  // The remove button still renders on every removable tag.
+  expect(document.querySelectorAll('.appearance-row .reqore-tag-remove').length).toBe(9);
+};
+
+export const Soft: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders `appearance='soft'` tags for every intent, a custom `color`, an `effect.color` and no colour — with icons, a label key, a remove button and a pill — then every size, and a solid / soft / text comparison. Only the 1px ring and the label carry the colour, over a 20% wash of it.",
+      },
+    },
+  },
+  render: () => <AppearanceMatrix appearance='soft' />,
+  play: async () => expectAppearance('soft'),
+};
+
+export const SoftLight: Story = {
+  args: { mainTheme: '#f4f4f4' } as Story['args'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders the soft tags on a light theme: the label and ring take a darker shade of each colour, so every intent still reads on its 20% wash.",
+      },
+    },
+  },
+  render: () => <AppearanceMatrix appearance='soft' />,
+  play: async () => expectAppearance('soft'),
+};
+
+export const SoftMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 900 } },
+    docs: {
+      description: {
+        story:
+          'Renders the soft tags on a phone-width screen (captured at 380px): each row wraps onto more lines inside the screen instead of overflowing it.',
+      },
+    },
+  },
+  render: () => <AppearanceMatrix appearance='soft' />,
+  play: async () => {
+    await expectAppearance('soft');
+
+    for (const tag of Array.from(document.querySelectorAll('.appearance-matrix .reqore-tag'))) {
+      expect(tag.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
+    }
+  },
+};
+
+export const Text: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders `appearance='text'` tags for every intent, a custom `color`, an `effect.color` and no colour — with icons, a label key, a remove button and a pill — then every size, and a solid / soft / text comparison. Only the label and its icons carry the colour; there is no border and no background.",
+      },
+    },
+  },
+  render: () => <AppearanceMatrix appearance='text' />,
+  play: async () => expectAppearance('text'),
+};
+
+export const TextLight: Story = {
+  args: { mainTheme: '#f4f4f4' } as Story['args'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the text-only tags on a light theme: each label takes a darker shade of its colour, so it still reads on the light surface.',
+      },
+    },
+  },
+  render: () => <AppearanceMatrix appearance='text' />,
+  play: async () => expectAppearance('text'),
+};
+
+export const TextMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 900 } },
+    docs: {
+      description: {
+        story:
+          'Renders the text-only tags on a phone-width screen (captured at 380px): each row wraps onto more lines inside the screen instead of overflowing it.',
+      },
+    },
+  },
+  render: () => <AppearanceMatrix appearance='text' />,
+  play: async () => {
+    await expectAppearance('text');
+
+    for (const tag of Array.from(document.querySelectorAll('.appearance-matrix .reqore-tag'))) {
+      expect(tag.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
+    }
   },
 };

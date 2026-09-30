@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
 import { noop } from 'lodash';
 import {
   ReqoreContent,
@@ -512,4 +513,91 @@ test('A minimal tag with a grey intent does not label itself black on a dark was
 
   expect(color).not.toBe('rgb(0, 0, 0)');
   expect(color).not.toBe('#000000');
+});
+
+describe('appearance', () => {
+  const renderTags = (tags: React.ReactNode, main?: `#${string}`) =>
+    render(
+      <ReqoreUIProvider theme={main ? { main } : undefined}>
+        <ReqoreLayoutContent>
+          <ReqoreContent>{tags}</ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  const tagStyle = (index = 0) =>
+    window.getComputedStyle(document.querySelectorAll('.reqore-tag')[index]);
+
+  test('solid is the default and is what a tag without the prop renders', () => {
+    renderTags(
+      <>
+        <ReqoreTag intent='success' label='Default' />
+        <ReqoreTag intent='success' label='Solid' appearance='solid' />
+      </>
+    );
+
+    expect(tagStyle(0).backgroundColor).toBe(tagStyle(1).backgroundColor);
+    expect(tagStyle(0).color).toBe(tagStyle(1).color);
+    // The solid tag is filled with the intent colour (#0A6640).
+    expect(tagStyle(0).backgroundColor).toBe('rgb(10, 102, 64)');
+  });
+
+  test('soft draws a ring and a 20% wash of the colour, and colours the label', () => {
+    renderTags(<ReqoreTag intent='success' label='Soft' appearance='soft' />);
+
+    expect(tagStyle().backgroundColor).toBe('rgba(10, 102, 64, 0.2)');
+    expect(tagStyle().boxShadow).toContain('inset 0 0 0 1px');
+    // The label keeps the hue: green, not the white a solid tag would use.
+    const [r, g, b] = tagStyle().color.match(/\d+/g).map(Number);
+    expect(g).toBeGreaterThan(r);
+    expect(g).toBeGreaterThan(b);
+  });
+
+  test('text colours only the label: no background and no ring', () => {
+    renderTags(<ReqoreTag intent='danger' label='Text' appearance='text' />);
+
+    expect(tagStyle().backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(tagStyle().boxShadow).toBe('none');
+    const [r, g, b] = tagStyle().color.match(/\d+/g).map(Number);
+    expect(r).toBeGreaterThan(g);
+    expect(r).toBeGreaterThan(b);
+  });
+
+  test('the label is darkened on a light theme and lightened on a dark one', () => {
+    renderTags(<ReqoreTag intent='pending' label='Light' appearance='text' />, '#f4f4f4');
+    const onLight = tagStyle().color;
+    cleanup();
+
+    renderTags(<ReqoreTag intent='pending' label='Dark' appearance='text' />, '#222222');
+    const onDark = tagStyle().color;
+
+    const lightness = (color: string) =>
+      color
+        .match(/\d+/g)
+        .slice(0, 3)
+        .map(Number)
+        .reduce((sum, value) => sum + value, 0);
+
+    expect(lightness(onLight)).toBeLessThan(lightness(onDark));
+  });
+
+  test('a tag group hands its appearance to tags that do not set their own', () => {
+    renderTags(
+      <ReqoreTagGroup appearance='text'>
+        <ReqoreTag intent='info' label='From group' />
+        <ReqoreTag intent='info' label='Own' appearance='solid' />
+      </ReqoreTagGroup>
+    );
+
+    expect(tagStyle(0).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(tagStyle(1).backgroundColor).toBe('rgb(7, 118, 203)');
+  });
+
+  test('effect.color is the colour when there is no intent or color', () => {
+    renderTags(
+      <ReqoreTag label='Effect' appearance='soft' effect={{ color: '#8e44ad' }} />
+    );
+
+    expect(tagStyle().backgroundColor).toBe('rgba(142, 68, 173, 0.2)');
+  });
 });
