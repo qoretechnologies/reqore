@@ -2,6 +2,7 @@ import React from 'react';
 import styled, { css } from 'styled-components';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IWithReqoreMinimal, IWithReqoreSize } from '../../types/global';
+import { TReqoreTagAppearance } from '.';
 
 export interface IReqoreTagGroup
   extends React.HTMLAttributes<HTMLDivElement>, IWithReqoreSize, IWithReqoreMinimal {
@@ -11,6 +12,11 @@ export interface IReqoreTagGroup
   wrap?: boolean;
   fluid?: boolean;
   align?: 'left' | 'center' | 'right';
+  /**
+   * Default `appearance` for every tag in the group (`'solid'`, `'soft'` or `'text'`).
+   * A tag's own `appearance` wins.
+   */
+  appearance?: TReqoreTagAppearance;
 }
 
 interface IStyledTagGroupProps {
@@ -55,6 +61,7 @@ const ReqoreTagGroup = ({
   wrap = true,
   fluid,
   align,
+  appearance,
   ...rest
 }: IReqoreTagGroup) => (
   <StyledTagGroup
@@ -74,6 +81,9 @@ const ReqoreTagGroup = ({
               child.props?.minimal || child.props?.minimal === false
                 ? child.props.minimal
                 : minimal,
+            // Only when the group sets one, so a child that is not a tag is not
+            // handed an `appearance` it never asked for.
+            ...(appearance && !child.props?.appearance ? { appearance } : {}),
           })
         : null
     )}

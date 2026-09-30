@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import _size from 'lodash/size';
-import { rgba, saturate, tint } from 'polished';
+import { mix, rgba, saturate, tint } from 'polished';
 import React, { forwardRef, HTMLAttributes, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
@@ -25,6 +25,8 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
   getColorFromMaybeString,
+  getOpaqueColor,
+  getReadableAccentColor,
   getReadableColor,
   getReadableColorFrom,
   isAchromatic,
@@ -53,6 +55,80 @@ import {
 } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
+
+/**
+ * How much of the tag the colour paints.
+ *
+ * - `'solid'` — the colour fills the tag and the label takes the readable colour for
+ *   it. The default, and the look every tag had before this prop existed.
+ * - `'soft'` — an outlined status pill: the colour draws the border and the label (and
+ *   its icons), over a 20% wash of the same colour.
+ * - `'text'` — only the label and its icons carry the colour; no border and no
+ *   background.
+ */
+export type TReqoreTagAppearance = 'solid' | 'soft' | 'text';
+
+/** The colours a `soft` or `text` tag is painted with, resolved once per colour. */
+export interface IReqoreTagAppearanceColors {
+  /** Label, icons and the remove button: the colour at a shade that reads on the tag. */
+  text: TReqoreHexColor;
+  background: string;
+  hoverBackground: string;
+  /** Soft only: the ring drawn inside the tag's edge. */
+  border?: string;
+  /** Behind the `labelKey` half of a key/value tag. */
+  keyBackground: string;
+  /** Behind the remove button and actions on hover. */
+  buttonHoverBackground: string;
+}
+
+/** Share of the colour laid over the surface behind a soft tag. */
+export const TAG_SOFT_BACKGROUND_OPACITY = 0.2;
+
+/**
+ * Resolves the colours of a `soft` or `text` tag.
+ *
+ * The label has to read against what it actually sits on: for a soft tag that is the
+ * 20% wash over the theme's surface, for a text tag the surface itself. So the label
+ * is the tag's own colour pushed lighter (dark theme) or darker (light theme) until it
+ * reaches a 4.5:1 contrast there — a green label stays green, only a shade that reads.
+ * With no colour at all the tag is neutral: the surface's readable text colour plays
+ * the part of the colour.
+ */
+export const getTagAppearanceColors = (
+  theme: IReqoreTheme,
+  appearance: Exclude<TReqoreTagAppearance, 'solid'>,
+  color?: TReqoreColor
+): IReqoreTagAppearanceColors => {
+  const surface = getOpaqueColor(theme.main);
+  const base = getOpaqueColor(
+    color && color !== 'transparent' ? color : getReadableColorFrom(surface)
+  );
+
+  if (appearance === 'soft') {
+    const background = mix(TAG_SOFT_BACKGROUND_OPACITY, base, surface) as TReqoreHexColor;
+    const text = getReadableAccentColor(base, background);
+
+    return {
+      text,
+      background: rgba(base, TAG_SOFT_BACKGROUND_OPACITY),
+      hoverBackground: rgba(base, TAG_SOFT_BACKGROUND_OPACITY + 0.1),
+      border: rgba(text, 0.6),
+      keyBackground: rgba(base, 0.15),
+      buttonHoverBackground: rgba(base, 0.25),
+    };
+  }
+
+  const text = getReadableAccentColor(base, surface);
+
+  return {
+    text,
+    background: 'transparent',
+    hoverBackground: rgba(text, 0.1),
+    keyBackground: rgba(getReadableColorFrom(surface), 0.08),
+    buttonHoverBackground: rgba(text, 0.15),
+  };
+};
 
 export interface IReqoreTagAction
   extends IWithReqoreTooltip, IReqoreDisabled, IReqoreIntent, HTMLAttributes<HTMLSpanElement> {
@@ -172,6 +248,21 @@ export interface IReqoreCustomTagProps
   verticalAlign?: 'baseline' | 'middle' | 'top' | 'bottom';
   compact?: boolean;
   /**
+   * How much of the tag the colour (`intent`, `color`, or `effect.color` when neither is
+   * set) paints. Defaults to `'solid'`, the look every tag had before this prop.
+   *
+   * - `'soft'` — outlined status pill: the colour draws a 1px border and the label and
+   *   icons, over a 20% wash of itself (GitHub / Linear style status chips).
+   * - `'text'` — only the label and icons carry the colour; no border, no background.
+   *
+   * The label takes the colour at a shade that reads on the tag (4.5:1 against the
+   * theme's surface), so the same intent works on dark and light themes. `minimal`
+   * has no effect on a soft or text tag, and neither does `flat={false}`'s border —
+   * the appearance decides the whole look. The border is drawn inside the tag's edge,
+   * so a soft tag is exactly as big as a solid one.
+   */
+  appearance?: TReqoreTagAppearance;
+  /**
    * Tooltip shown on the remove ("X") affordance rendered when `onRemoveClick`
    * is set. Defaults to `'Remove'`.
    */
@@ -195,6 +286,9 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   $maxWidth?: string;
   /** True when the label is capped and must shorten rather than push the box wider. */
   $capped?: boolean;
+  /** Set for a `soft` or `text` tag only: a solid tag keeps its original rules. */
+  $appearance?: TReqoreTagAppearance;
+  $appearanceColors?: IReqoreTagAppearanceColors;
 }
 
 export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
@@ -286,7 +380,11 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
      the tag rendered black text on a 20% wash over a near-black page — reported
      as "black text on a dark grey background; it's very hard to read", and true
      of every minimal tag with a grey intent. */
-  ${({ theme, color, labelKey, minimal }: IReqoreTagStyle) => {
+  ${({ theme, color, labelKey, minimal, $appearanceColors }: IReqoreTagStyle) => {
+    if ($appearanceColors) {
+      return undefined;
+    }
+
     return css`
       background-color: ${minimal
         ? color
@@ -307,8 +405,8 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
     `;
   }}
 
-  ${({ theme, color, interactive, minimal, effect }) =>
-    interactive
+  ${({ theme, color, interactive, minimal, effect, $appearanceColors }) =>
+    interactive && !$appearanceColors
       ? css`
           cursor: pointer;
           &:hover {
@@ -334,6 +432,47 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
         `
       : undefined}
 
+  /* Soft and text tags: the colour draws the label (and, soft, the ring and a wash)
+     instead of filling the tag. The ring is an inset shadow rather than a border so a
+     soft tag keeps the exact box of a solid one — side by side in a group they line
+     up — and it replaces any flat={false} border and the raised shading. */
+  ${({ $appearance, $appearanceColors, labelKey, interactive, effect }: IReqoreTagStyle) =>
+    $appearanceColors &&
+    css`
+      background-color: ${$appearanceColors.background};
+      color: ${$appearanceColors.text};
+      border: 0;
+      box-shadow: ${$appearanceColors.border
+        ? `inset 0 0 0 1px ${$appearanceColors.border}`
+        : 'none'};
+
+      ${StyledTagKeyWrapper} {
+        background-color: ${labelKey ? $appearanceColors.keyBackground : undefined};
+      }
+
+      ${interactive &&
+      css`
+        cursor: pointer;
+        &:hover {
+          .reqore-tag-content,
+          .reqore-tag-key-content {
+            ${ActiveIconScale}
+          }
+
+          ${!effect?.gradient &&
+          css`
+            background-color: ${$appearanceColors.hoverBackground};
+          `}
+        }
+      `}
+
+      &:focus,
+      &:active {
+        outline-color: ${$appearance === 'soft'
+          ? $appearanceColors.border
+          : rgba($appearanceColors.text, 0.5)};
+      }
+    `}
 
   ${({ disabled }) =>
     disabled &&
@@ -566,15 +705,17 @@ const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
   align-items: center;
   transition: all 0.2s ease-out;
 
-  ${({ color, effect }) => css`
+  ${({ color, effect, $appearanceColors }) => css`
     .reqore-icon {
       transform: scale(0.85);
     }
     &:hover {
       cursor: pointer;
-      background-color: ${color && !effect?.gradient
-        ? changeLightness(color, 0.09)
-        : rgba('#000000', 0.2)};
+      background-color: ${$appearanceColors
+        ? $appearanceColors.buttonHoverBackground
+        : color && !effect?.gradient
+          ? changeLightness(color, 0.09)
+          : rgba('#000000', 0.2)};
 
       .reqore-icon {
         transform: scale(1);
@@ -621,6 +762,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       compact,
       readOnly,
       removeTooltip = 'Remove',
+      appearance = 'solid',
       ...rest
     }: IReqoreTagProps,
     ref
@@ -677,13 +819,33 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
        button, because refusing the CHANGE is the picker's job and not the tag's. */
     const interactive = !!onClick && !rest.disabled && !readOnly;
 
+    const tagColor = getCustomColor(intent);
+    /* A soft or text tag with no intent and no colour takes its colour from
+       effect.color, the one other place a caller can name one. */
+    const appearanceColor =
+      tagColor ||
+      (rest.effect?.color ? getColorFromMaybeString(theme, rest.effect.color) : undefined);
+    const appearanceColors = useMemo(
+      () =>
+        appearance === 'soft' || appearance === 'text'
+          ? getTagAppearanceColors(theme, appearance, appearanceColor)
+          : undefined,
+      [appearance, theme, appearanceColor]
+    );
+
+    /* When effect.color IS the soft / text tag's colour, it has been turned into a
+       readable shade already — left in the effect it would repaint the label in the
+       raw colour, which is what the appearance exists to avoid. */
+    const effectColorIsTagColor = !!appearanceColors && !tagColor && !!rest.effect?.color;
+
     const effect = useMemo(
       () => ({
         ...rest.effect,
+        ...(effectColorIsTagColor ? { color: undefined } : {}),
         gradient: intent ? undefined : rest.effect?.gradient,
         interactive,
       }),
-      [intent, interactive, JSON.stringify(rest.effect)]
+      [intent, interactive, effectColorIsTagColor, JSON.stringify(rest.effect)]
     );
 
     return (
@@ -696,7 +858,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         width={width}
         $maxWidth={maxWidth}
         labelKey={labelKey}
-        color={getCustomColor(intent)}
+        color={tagColor}
+        $appearance={appearanceColors ? appearance : undefined}
+        $appearanceColors={appearanceColors}
         className={`${className || ''} reqore-tag`}
         size={size}
         ref={ref}
@@ -831,6 +995,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                       color: getCustomColor(intent),
                       onClick: onClick,
                       effect: rest.effect,
+                      $appearanceColors: appearanceColors,
                       ...action,
                       // MERGED, not replaced, and after the spread: a consumer
                       // passing `className` used to clobber `reqore-tag-action`
@@ -869,6 +1034,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
               className: 'reqore-tag-remove',
               onClick: onRemoveClick,
               effect: rest.effect,
+              $appearanceColors: appearanceColors,
             }}
             isReqoreComponent
             content={removeTooltip}
