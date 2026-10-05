@@ -1231,7 +1231,6 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       if (!floatingActionsRef.current || !panelRef.current) return;
 
       const panelRect = panelRef.current.getBoundingClientRect();
-      const floatingRect = floatingActionsRef.current.getBoundingClientRect();
 
       // Temporarily hide the floating actions from hit-testing so they don't
       // block the elementFromPoint check on the panel
@@ -1248,6 +1247,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       }
 
       floatingActionsRef.current.style.display = 'flex';
+      // measured once shown: hidden by an earlier call (the panel's top was covered), the actions measure
+      // 0 x 0, and were placed with their left edge on the panel's right edge - past the screen's edge on
+      // a narrow one
+      const floatingRect = floatingActionsRef.current.getBoundingClientRect();
       floatingActionsRef.current.style.top = `${
         panelRect.top - floatingRect.height + (flat ? 0 : 1)
       }px`;
