@@ -1,10 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
 import { stringify } from 'yaml';
 import { ReqoreTextarea, useReqoreProperty } from '../..';
+import { BROWSER_MONOSPACE_FONT } from '../../constants/fonts';
 import { convertToCSV } from '../../helpers/utils';
+import { IReqoreEffect } from '../Effect';
 import { IReqoreModalProps, ReqoreModal } from '../Modal';
 import ReqoreTabs, { IReqoreTabsProps } from '../Tabs';
 import ReqoreTabsContent from '../Tabs/content';
+
+/** CSV, JSON and YAML are data: they stay in the monospace a textarea always had. */
+const DATA_FONT_EFFECT: IReqoreEffect = { fontFamily: BROWSER_MONOSPACE_FONT };
 
 export interface IReqoreExportModalProps extends IReqoreModalProps {
   data: { [key: string]: unknown } | unknown[];
@@ -126,7 +131,13 @@ export const ReqoreExportModal = ({
       >
         {tabs.map((tab) => (
           <ReqoreTabsContent tabId={tab.id} key={tab.id} padded='none'>
-            <ReqoreTextarea readOnly value={dataToExport} scaleWithContent minimal />
+            <ReqoreTextarea
+              readOnly
+              value={dataToExport}
+              scaleWithContent
+              minimal
+              effect={DATA_FONT_EFFECT}
+            />
           </ReqoreTabsContent>
         ))}
       </ReqoreTabs>

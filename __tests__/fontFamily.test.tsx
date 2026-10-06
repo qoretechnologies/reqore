@@ -1,5 +1,7 @@
 import { render } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
+import { ReqoreExportModal } from '../src/components/ExportModal';
+import { ReqoreTreeManagementDialog } from '../src/components/Tree/modal';
 import {
   ReqoreButton,
   ReqoreContent,
@@ -48,14 +50,16 @@ const CONTROLS = [
 /**
  * jsdom has no user-agent stylesheet, so a bare `<button>` would inherit the page font there
  * and prove nothing. A browser gives form controls a font of their own (Chromium:
- * `font: -webkit-small-control`, the platform's control face). This is that rule, at the same
- * element-selector strength, so the test sees what a browser does.
+ * `font: -webkit-small-control`, the platform's control face, and `monospace` for a textarea).
+ * These are those rules, at the same element-selector strength, so the test sees what a
+ * browser does.
  */
 let userAgentControlFont: HTMLStyleElement;
 
 beforeEach(() => {
   userAgentControlFont = document.createElement('style');
-  userAgentControlFont.textContent = 'button, input, textarea, select { font-family: system-ui; }';
+  userAgentControlFont.textContent =
+    'button, input, select { font-family: system-ui; } textarea { font-family: monospace; }';
   document.head.appendChild(userAgentControlFont);
 });
 
@@ -124,4 +128,26 @@ test('A text that sets its own font keeps it under a theme font', () => {
 
   expect(fontOf('.reqore-tag')).toBe(MONO);
   expect(fontOf('.reqore-button')).toBe('system-ui');
+});
+
+test('The textareas that hold data keep the monospace a textarea always had', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <div style={{ fontFamily: PAGE_FONT }}>
+            <ReqoreExportModal data={[{ id: 1, name: 'Rob' }]} />
+            <ReqoreTreeManagementDialog data={{ key: 'name', value: 'Rob' }} />
+          </div>
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const textareas = Array.from(document.querySelectorAll('.reqore-textarea')) as HTMLElement[];
+
+  expect(textareas.length).toBeGreaterThanOrEqual(2);
+  textareas.forEach((textarea) =>
+    expect(getComputedStyle(textarea).fontFamily).toBe('monospace')
+  );
 });

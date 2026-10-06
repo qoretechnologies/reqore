@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { IReqoreTreeProps } from '.';
 import { ReqoreTextarea } from '../..';
+import { BROWSER_MONOSPACE_FONT } from '../../constants/fonts';
 import ReqoreButton from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreInput from '../Input';
 import { IReqoreModalProps, ReqoreModal } from '../Modal';
 import ReqoreTag from '../Tag';
+
+const VALUE_FONT_EFFECT = { fontFamily: BROWSER_MONOSPACE_FONT };
 
 export interface IReqoreTreeManagementDialog
   extends IReqoreModalProps,
@@ -117,6 +120,8 @@ export const ReqoreTreeManagementDialog = ({
                   placeholder={valuePlaceholder}
                   fluid
                   disabled={value === '[]' || value === '{}'}
+                  // A raw value is data: it stays in the monospace a textarea always had.
+                  effect={VALUE_FONT_EFFECT}
                 />
               )}
               <ReqoreButton

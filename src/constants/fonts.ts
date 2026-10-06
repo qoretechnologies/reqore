@@ -17,6 +17,14 @@ export const MONO_FONT =
  */
 export const SYSTEM_FONT = 'system-ui';
 
+/**
+ * The generic `monospace` family: what a `<textarea>` gets from the browser's own stylesheet.
+ * `ReqoreTextarea` follows the page's font since 0.77.6, so a textarea that holds data rather
+ * than prose (`ReqoreExportModal`'s export, `ReqoreTree`'s raw value editor) names this to keep
+ * the face it always had.
+ */
+export const BROWSER_MONOSPACE_FONT = 'monospace';
+
 /** Shorthands accepted by `effect.fontFamily`, on top of any raw CSS font stack. */
 export const FONT_FAMILY_SHORTHANDS = {
   mono: MONO_FONT,
