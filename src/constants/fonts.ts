@@ -1,5 +1,5 @@
 /**
- * The font stacks Reqore components resolve `effect.fontFamily` shorthands to.
+ * The font stacks Reqore resolves the `effect.fontFamily` and `theme.fontFamily` shorthands to.
  *
  * They live here rather than inside a component because more than one component
  * needs them: `ReqoreDataView` renders whole trees of monospaced keys and values,
@@ -11,7 +11,10 @@
 export const MONO_FONT =
   "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
 
-/** The platform UI font — what most Reqore text already renders in. */
+/**
+ * The platform UI font, for `effect.fontFamily: 'system'`. No component names it by default:
+ * Reqore text is in the page's font, or the theme's (`theme.fontFamily`) when one is set.
+ */
 export const SYSTEM_FONT = 'system-ui';
 
 /** Shorthands accepted by `effect.fontFamily`, on top of any raw CSS font stack. */

@@ -4,9 +4,11 @@ import merge from 'lodash/merge';
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useMemo, useState } from 'react';
 import styled, { createGlobalStyle, css } from 'styled-components';
-import ReqoreLayoutWrapper from '../components/Layout';
+import ReqoreLayoutWrapper, { IReqoreLayoutWrapperProps } from '../components/Layout';
+import { getFontFamily } from '../constants/fonts';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';
 import { IReqoreContext } from '../context/ReqoreContext';
+import { TReqoreDataAttributes } from '../types/global';
 import ThemeContext from '../context/ThemeContext';
 import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
 import ReqoreProvider from './ReqoreProvider';
@@ -36,6 +38,14 @@ export interface IReqoreUIProviderProps {
   children?: any;
   theme?: Partial<IReqoreTheme>;
   options?: IReqoreOptions;
+  /**
+   * Props for the layout wrapper the provider renders around the app (`.reqore-layout-wrapper`):
+   * `transparent` to let the page's own background show through, plus any `div` attribute —
+   * `className`, `style`, `data-*`, `aria-*`. `className` is merged with the wrapper's own;
+   * `options.withSidebar` keeps deciding the direction.
+   */
+  layoutWrapperProps?: Omit<IReqoreLayoutWrapperProps, 'children' | 'withSidebar'> &
+    TReqoreDataAttributes;
 }
 
 const GlobalStyle = createGlobalStyle`
@@ -64,6 +74,13 @@ const StyledPortal = styled.div`
   ${({ theme }) => css`
     color: ${getReadableColor(theme, undefined, undefined, true)};
   `}
+
+  /* The portal is outside the layout wrapper, so it names the theme's font itself. */
+  ${({ theme }) =>
+    theme.fontFamily &&
+    css`
+      font-family: ${getFontFamily(theme.fontFamily)};
+    `}
 `;
 
 const ReqorePortal = memo(
@@ -79,29 +96,31 @@ const ReqorePortal = memo(
 /**
  * Wrap your application with Reqore's theme, layout, and modal portal context.
  */
-const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(({ children, theme, options }) => {
-  const [modalPortal, setModalPortal] = useState<any>(false);
+const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(
+  ({ children, theme, options, layoutWrapperProps }) => {
+    const [modalPortal, setModalPortal] = useState<any>(false);
 
-  const _theme: Partial<IReqoreTheme> = useMemo(() => cloneDeep(theme || {}), [theme]);
-  const _defaultTheme: IReqoreTheme = useMemo(() => cloneDeep(DEFAULT_THEME), []);
-  const rebuiltTheme: IReqoreTheme = useMemo(
-    () => buildTheme(merge(_defaultTheme, _theme)),
-    [_defaultTheme, _theme]
-  );
+    const _theme: Partial<IReqoreTheme> = useMemo(() => cloneDeep(theme || {}), [theme]);
+    const _defaultTheme: IReqoreTheme = useMemo(() => cloneDeep(DEFAULT_THEME), []);
+    const rebuiltTheme: IReqoreTheme = useMemo(
+      () => buildTheme(merge(_defaultTheme, _theme)),
+      [_defaultTheme, _theme]
+    );
 
-  return (
-    <>
-      <ThemeContext.Provider value={{ ...rebuiltTheme }}>
-        <ReqoreThemeProvider>
-          <GlobalStyle />
-        </ReqoreThemeProvider>
-        <ReqoreLayoutWrapper withSidebar={options?.withSidebar}>
-          {modalPortal ? <ReqoreProvider options={options}>{children}</ReqoreProvider> : null}
-        </ReqoreLayoutWrapper>
-        <ReqorePortal ref={setModalPortal} />
-      </ThemeContext.Provider>
-    </>
-  );
-});
+    return (
+      <>
+        <ThemeContext.Provider value={{ ...rebuiltTheme }}>
+          <ReqoreThemeProvider>
+            <GlobalStyle />
+          </ReqoreThemeProvider>
+          <ReqoreLayoutWrapper {...layoutWrapperProps} withSidebar={options?.withSidebar}>
+            {modalPortal ? <ReqoreProvider options={options}>{children}</ReqoreProvider> : null}
+          </ReqoreLayoutWrapper>
+          <ReqorePortal ref={setModalPortal} />
+        </ThemeContext.Provider>
+      </>
+    );
+  }
+);
 
 export default ReqoreUIProvider;

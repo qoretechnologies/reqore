@@ -343,7 +343,7 @@ const Tree = styled.div<IStyledThemeProps>`
      data-view material rather than a row of disconnected chips.
      Override via the tag's own \`effect.textSize\` if you need to
      dial it back. \`&&\` (not \`!important\`) beats \`StyledTag\`'s
-     \`font-family: system-ui\` — both are one generated class deep, so
+     \`font-family: inherit\` — both are one generated class deep, so
      without the specificity boost the winner is just whichever
      styled-component happens to mount last. \`!important\` here would
      tax every downstream consumer trying to override this from their

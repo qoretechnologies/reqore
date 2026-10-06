@@ -246,3 +246,12 @@ export interface IWithReqoreSkeleton {
 
 export interface IReqoreTooltip extends IPopoverOptions {}
 export type TReqoreTooltipProp = string | IReqoreTooltip;
+
+/**
+ * `data-*` attributes, for a props bag written as an object: JSX lets any hyphenated attribute
+ * through, but an object literal typed as a component's props does not, so
+ * `{ 'data-track-click': 'pricing' }` needs this to type-check.
+ */
+export type TReqoreDataAttributes = {
+  [key: `data-${string}`]: string | number | boolean | undefined;
+};

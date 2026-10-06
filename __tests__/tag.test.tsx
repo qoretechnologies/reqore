@@ -186,7 +186,7 @@ test('Renders <Tag /> with a monospace font family from the effect', () => {
     </ReqoreUIProvider>
   );
 
-  // The tag declares `font-family: system-ui` of its own, so this asserts the effect
+  // The tag declares a `font-family` of its own (`inherit`), so this asserts the effect
   // actually wins the cascade — the reason ReqoreDataView had to reach for a
   // descendant override before this existed.
   const tag = document.querySelector('.reqore-tag');
@@ -195,20 +195,24 @@ test('Renders <Tag /> with a monospace font family from the effect', () => {
   expect(getComputedStyle(tag).fontFamily).not.toContain('system-ui');
 });
 
-test('Renders <Tag /> with its own font family when the effect asks for none', () => {
+test('Renders <Tag /> in the font of the text around it when the effect asks for none', () => {
   render(
     <ReqoreUIProvider>
       <ReqoreLayoutContent>
         <ReqoreContent>
-          <ReqoreTag label='Label' />
+          <div style={{ fontFamily: 'Georgia, serif' }}>
+            <ReqoreTag label='Label' />
+          </div>
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
   );
 
-  expect(getComputedStyle(document.querySelector('.reqore-tag')).fontFamily).toContain(
-    'system-ui'
-  );
+  // It used to name the platform UI font (system-ui) whatever the page was set in.
+  const { fontFamily } = getComputedStyle(document.querySelector('.reqore-tag'));
+
+  expect(fontFamily).toBe('Georgia, serif');
+  expect(fontFamily).not.toContain('system-ui');
 });
 
 test('Renders <Tag /> raised, and not raised when it already has a border', () => {
