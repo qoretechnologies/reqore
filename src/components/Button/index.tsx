@@ -146,10 +146,44 @@ export const StyledButtonIndicator = styled.span<IReqoreButtonIndicatorStyle>`
 `;
 
 /**
+ * The `<button>` attributes a form reads. `React.HTMLAttributes` (which the button props
+ * extend) has none of them, so without these a button could not be a named submit, a reset,
+ * or a button that must NOT submit the form it sits in.
+ */
+export type TReqoreButtonFormAttributes = Pick<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  | 'type'
+  | 'name'
+  | 'value'
+  | 'form'
+  | 'formAction'
+  | 'formEncType'
+  | 'formMethod'
+  | 'formNoValidate'
+  | 'formTarget'
+>;
+
+/** The `<a>` attributes a button rendered as a link takes (see `href`). */
+export type TReqoreButtonLinkAttributes = Pick<
+  React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  'href' | 'target' | 'rel' | 'download' | 'hrefLang' | 'referrerPolicy'
+>;
+
+/**
  * Button props for the primary Reqore action component.
+ *
+ * Form attributes (`type`, `name`, `value`, `form`, `formAction`, …) reach the `<button>`.
+ * There is deliberately NO default `type`: a button inside a `<form>` submits it, as an HTML
+ * button does and as a `ReqoreButton` always has — pass `type='button'` for one that must not.
+ *
+ * `href` renders the button as a real link (`<a href>`), so middle-click, "open in a new tab"
+ * and the browser's link semantics work; `target`, `rel`, `download` go with it. A disabled
+ * link drops its `href` and is marked `aria-disabled`.
  */
 export interface IReqoreButtonProps
   extends React.HTMLAttributes<HTMLButtonElement>,
+    TReqoreButtonFormAttributes,
+    TReqoreButtonLinkAttributes,
     IReqoreDisabled,
     IReqoreIntent,
     IReqoreReadOnly,
@@ -261,6 +295,8 @@ export interface IReqoreButtonStyle extends IReqoreButtonProps {
   theme: IReqoreTheme;
   animate?: boolean;
   color?: TReqoreHexColor;
+  /** Rendered as an `<a>`: no underline from the browser's link style. */
+  $isLink?: boolean;
 }
 
 const getButtonMainColor = (
@@ -487,6 +523,18 @@ export const StyledButton = styled(StyledEffect).withConfig({
     ${DisabledElement};
   }
 
+  ${({ $isLink }) =>
+    $isLink
+      ? css`
+          text-decoration: none;
+
+          /* A link has no :disabled; a disabled one says so with aria-disabled. */
+          &[aria-disabled='true'] {
+            ${DisabledElement};
+          }
+        `
+      : undefined}
+
   &:focus,
   &:active {
     outline: 2px solid
@@ -669,6 +717,8 @@ const ReqoreButton = memo(
         shortcut,
         shortcutHint,
         loadingIconType,
+        href,
+        type,
         ...rest
       }: IReqoreButtonProps,
       ref
@@ -705,6 +755,29 @@ const ReqoreButton = memo(
 
       const showShortcutHint =
         !!shortcut && shortcutHint !== false && shortcutHintsEnabled !== false;
+
+      // An `href` makes the button a link, unless the caller picked the element themselves
+      // (`as`). A link has no `disabled` and no form `type`: a disabled one keeps no `href`
+      // to follow and says so with `aria-disabled` instead.
+      const element = as || (href !== undefined ? 'a' : 'button');
+      const isLink = element === 'a';
+      const elementProps = useMemo(
+        () =>
+          isLink
+            ? {
+                href: rest.disabled ? undefined : href,
+                disabled: undefined,
+                'aria-disabled': rest.disabled || undefined,
+                $isLink: true,
+              }
+            : // Only the keys that were given: a custom `as` (a router link, say) that derives
+              // its own `href` must not receive an injected `href={undefined}`.
+              {
+                ...(href !== undefined ? { href } : {}),
+                ...(type !== undefined ? { type } : {}),
+              },
+        [isLink, href, type, rest.disabled]
+      );
 
       // If color or intent was specified, set the color
       const customColor = useMemo(
@@ -767,7 +840,8 @@ const ReqoreButton = memo(
             // buttons in the tab order and moves it — except that a disabled
             // button is never one.
             tabIndex: rest.disabled ? -1 : (rest.tabIndex ?? 0),
-            as: as || 'button',
+            ...elementProps,
+            as: element,
             theme,
             fluid,
             fixed,

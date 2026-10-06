@@ -1,6 +1,6 @@
 import { omit } from 'lodash';
 import { rgba } from 'polished';
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
@@ -28,6 +28,7 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
+import ReqoreButton from '../Button';
 import { StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
@@ -81,8 +82,28 @@ export interface IReqoreInputProps
 
   pill?: boolean;
 
+  /**
+   * With `type='password'`, adds a button at the end of the field that shows and hides the
+   * password. It is a real `type='button'` (it never submits the form the field is in), takes
+   * a tab stop, says what it does in its `aria-label` and points at the field with
+   * `aria-controls`; `aria-pressed` tells whether the password is shown. Clicking it does not
+   * take the focus from the field, and the value and the caret stay where they were.
+   *
+   * `true` uses English labels; pass an object to translate them.
+   */
+  passwordToggle?: boolean | IReqoreInputPasswordToggle;
+
   children?: React.ReactNode | ((props: any) => React.ReactNode);
   as?: string | React.ElementType;
+}
+
+export interface IReqoreInputPasswordToggle {
+  /** `aria-label` while the password is hidden. Defaults to `'Show password'`. */
+  showLabel?: string;
+  /** `aria-label` while the password is shown. Defaults to `'Hide password'`. */
+  hideLabel?: string;
+  /** Called with `true` when the password is shown, `false` when it is hidden again. */
+  onToggle?: (visible: boolean) => void;
 }
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
@@ -91,6 +112,7 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
   clearable?: boolean;
   hasIcon?: boolean;
   hasShortcutHint?: boolean;
+  hasPasswordToggle?: boolean;
 }
 
 export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
@@ -122,11 +144,11 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   }
 `;
 
-const StyledIconWrapper = styled.div<IReqoreInputStyle>`
+const StyledIconWrapper = styled.div<IReqoreInputStyle & { offset?: number }>`
   position: absolute;
   height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   width: ${({ _size }) => SIZE_TO_PX[_size]}px;
-  right: ${({ position }) => (position === 'right' ? 0 : undefined)};
+  right: ${({ position, offset = 0 }) => (position === 'right' ? `${offset}px` : undefined)};
   top: 0;
   display: flex;
   justify-content: center;
@@ -149,13 +171,14 @@ export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
   flex: 1;
   margin: 0;
   padding: ${({ _size }) => PADDING_FROM_SIZE[_size] / 2}px 7px;
-  padding-right: ${({ clearable, hasRightIcon, hasShortcutHint, _size }) => {
+  padding-right: ${({ clearable, hasRightIcon, hasShortcutHint, hasPasswordToggle, _size }) => {
     let padding = 7;
 
-    if (clearable || hasRightIcon) {
+    if (clearable || hasRightIcon || hasPasswordToggle) {
       padding = 0;
       padding += clearable ? SIZE_TO_PX[_size] : 0;
       padding += hasRightIcon ? SIZE_TO_PX[_size] : 0;
+      padding += hasPasswordToggle ? SIZE_TO_PX[_size] : 0;
     }
 
     // Reserve room so typed text / placeholder doesn't slide under the hint badge.
@@ -250,12 +273,17 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       pill,
       loading,
       loadingIconType,
+      passwordToggle,
       ...rest
     }: IReqoreInputProps,
     ref
   ) => {
     const { targetRef } = useCombinedRefs(ref);
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const generatedId = useId();
+    // The caret to put back once the field has changed type (see `togglePassword`).
+    const selectionToRestore = useRef<[number, number] | null>(null);
     const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
     const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
 
@@ -276,6 +304,40 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     const leftIcon: IReqoreIconName = loading
       ? `Loader${loadingIconType || ''}Line`
       : icon || leftIconProps?.icon;
+
+    const hasPasswordToggle = rest.type === 'password' && !!passwordToggle;
+    const passwordToggleConfig: IReqoreInputPasswordToggle =
+      typeof passwordToggle === 'object' ? passwordToggle : {};
+    const inputId = rest.id ?? (hasPasswordToggle ? `reqore-input-${generatedId}` : undefined);
+    const passwordToggleOnToggle = passwordToggleConfig.onToggle;
+
+    /* Changing an input's `type` can reset its selection, so the caret is read before the
+       swap and put back after it. The value is never touched: it is the same element. */
+    const togglePassword = useCallback(() => {
+      if (inputRef) {
+        selectionToRestore.current = [inputRef.selectionStart ?? 0, inputRef.selectionEnd ?? 0];
+      }
+
+      setPasswordVisible(!passwordVisible);
+      passwordToggleOnToggle?.(!passwordVisible);
+    }, [inputRef, passwordVisible, passwordToggleOnToggle]);
+
+    useLayoutEffect(() => {
+      const selection = selectionToRestore.current;
+
+      if (inputRef && selection) {
+        selectionToRestore.current = null;
+        inputRef.setSelectionRange(selection[0], selection[1]);
+      }
+    }, [passwordVisible, inputRef]);
+
+    // A pointer press on the toggle must not pull the focus out of the field being typed in.
+    const keepFocusInField = useCallback((event: React.MouseEvent) => {
+      event.preventDefault();
+    }, []);
+
+    // Room at the right edge, from the edge inwards: the toggle, the right icon, the clear button.
+    const passwordToggleWidth = hasPasswordToggle ? SIZE_TO_PX[size] : 0;
 
     return (
       <ReqoreTooltipComponent
@@ -312,6 +374,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         <StyledInput
           as='input'
           {...omit(rest, ['children'])}
+          id={inputId}
+          type={hasPasswordToggle && passwordVisible ? 'text' : rest.type}
           effect={{
             interactive: !rest?.disabled && !readOnly,
             ...rest?.effect,
@@ -326,6 +390,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           hasIcon={!!icon}
           hasRightIcon={!!rightIcon}
           hasShortcutHint={showShortcutHint}
+          hasPasswordToggle={hasPasswordToggle}
           clearable={clearable}
           className={`${className || ''} reqore-control reqore-input`}
           readOnly={readOnly || loading}
@@ -337,11 +402,12 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           enabled={clearable}
           onClick={onClearClick}
           hasRightIcon={!!rightIcon}
+          rightOffset={passwordToggleWidth}
           size={size}
           show={rest?.value && rest.value !== '' ? true : false}
         />
         {hasRightIcon && (
-          <StyledIconWrapper _size={size} position='right'>
+          <StyledIconWrapper _size={size} position='right' offset={passwordToggleWidth}>
             <ReqoreIcon
               size={size}
               icon={rightIcon}
@@ -351,10 +417,41 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             />
           </StyledIconWrapper>
         )}
+        {hasPasswordToggle && (
+          <StyledIconWrapper _size={size} position='right'>
+            <ReqoreButton
+              type='button'
+              className='reqore-input-password-toggle'
+              size={size}
+              icon={passwordVisible ? 'EyeOffLine' : 'EyeLine'}
+              minimal
+              flat
+              transparent
+              compact
+              square
+              rounded={false}
+              disabled={rest.disabled}
+              aria-label={
+                passwordVisible
+                  ? passwordToggleConfig.hideLabel ?? 'Hide password'
+                  : passwordToggleConfig.showLabel ?? 'Show password'
+              }
+              aria-controls={inputId}
+              aria-pressed={passwordVisible}
+              onMouseDown={keepFocusInField}
+              onClick={togglePassword}
+            />
+          </StyledIconWrapper>
+        )}
         {showShortcutHint && (
           <StyledShortcutWrapper
             _size={size}
-            offset={(hasRightIcon ? SIZE_TO_PX[size] : 0) + (clearable ? SIZE_TO_PX[size] : 0) + 7}
+            offset={
+              (hasRightIcon ? SIZE_TO_PX[size] : 0) +
+              (clearable ? SIZE_TO_PX[size] : 0) +
+              passwordToggleWidth +
+              7
+            }
           >
             <ReqoreKeyboardShortcut shortcut={focusRules.shortcut} size={size} compact />
           </StyledShortcutWrapper>

@@ -1,9 +1,10 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { expect } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 import ReqoreInput, { IReqoreInputProps } from '../../components/Input';
-import { ReqoreControlGroup } from '../../index';
+import { ReqoreButton, ReqoreControlGroup } from '../../index';
 import { StoryMeta } from '../utils';
+import { StoryForm, storyFormText } from '../utils/formPreview';
 import { ALL_SIZES, FlatArg, IconArg, MinimalArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
 const meta = {
@@ -407,5 +408,206 @@ export const ShortcutHint: Story = {
   play: async ({ canvasElement }) => {
     // Three of the four inputs render a hint (the last opts out)
     await expect(canvasElement.querySelectorAll('.reqore-keyboard-shortcut').length).toBe(3);
+  },
+};
+
+/* -------------------------------------------------------------------------------------------
+ * The show-password toggle (`passwordToggle`).
+ * ----------------------------------------------------------------------------------------- */
+
+const PasswordField = (props: Partial<IReqoreInputProps>) => {
+  const [value, setValue] = useState('correct horse battery');
+
+  return (
+    <ReqoreInput
+      type='password'
+      name='password'
+      placeholder='Password'
+      fluid
+      passwordToggle
+      {...props}
+      value={value}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setValue(event.target.value)}
+      onClearClick={props.onClearClick ? () => setValue('') : undefined}
+    />
+  );
+};
+
+const PasswordForm = () => (
+  <StoryForm>
+    <ReqoreControlGroup vertical fluid>
+      <PasswordField className='story-password' icon='LockPasswordLine' />
+      <ReqoreButton type='submit' intent='info' fixed>
+        Sign in
+      </ReqoreButton>
+    </ReqoreControlGroup>
+  </StoryForm>
+);
+
+const passwordInput = () => document.querySelector('.story-password') as HTMLInputElement;
+const passwordToggle = () =>
+  document.querySelector('.reqore-input-password-toggle') as HTMLButtonElement;
+
+export const PasswordToggle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a password field with `passwordToggle` in a form: the password is hidden and an eye button at the end of the field, labelled "Show password", shows it. The toggle is a `type="button"`, so it is not what submits the form.',
+      },
+    },
+  },
+  render: PasswordForm,
+  play: async () => {
+    const input = await waitFor(() => {
+      expect(passwordInput()).toBeTruthy();
+      return passwordInput();
+    });
+    const toggle = passwordToggle();
+
+    expect(input.type).toBe('password');
+    expect(toggle.type).toBe('button');
+    expect(toggle.getAttribute('aria-label')).toBe('Show password');
+    expect(toggle.getAttribute('aria-controls')).toBe(input.id);
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    await waitFor(() => expect(storyFormText('posts')).toBe('password=correct horse battery'));
+  },
+};
+
+export const PasswordToggleShown: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the password field after its eye button was clicked while typing: the password reads in clear text, the button turns into "Hide password" (crossed-out eye), the field keeps the focus, the value and the caret, and nothing was submitted.',
+      },
+    },
+  },
+  render: PasswordForm,
+  play: async () => {
+    const input = await waitFor(() => {
+      expect(passwordInput()).toBeTruthy();
+      return passwordInput();
+    });
+
+    await userEvent.click(input);
+    input.setSelectionRange(8, 8);
+    await userEvent.click(passwordToggle());
+
+    await waitFor(() => expect(input.type).toBe('text'));
+    expect(input.value).toBe('correct horse battery');
+    expect(document.activeElement).toBe(input);
+    expect([input.selectionStart, input.selectionEnd]).toEqual([8, 8]);
+    expect(passwordToggle().getAttribute('aria-label')).toBe('Hide password');
+    expect(passwordToggle().getAttribute('aria-pressed')).toBe('true');
+    expect(storyFormText('submitted')).toBeUndefined();
+  },
+};
+
+export const PasswordToggleKeyboard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the password field driven from the keyboard: Tab moves from the field to its eye button (focus ring on the button) and Enter shows the password; the form is not submitted. Pressing Enter in the field afterwards does submit it, with the password.',
+      },
+    },
+  },
+  render: PasswordForm,
+  play: async () => {
+    const input = await waitFor(() => {
+      expect(passwordInput()).toBeTruthy();
+      return passwordInput();
+    });
+
+    await userEvent.click(input);
+    await userEvent.tab();
+    await waitFor(() => expect(document.activeElement).toBe(passwordToggle()));
+    await userEvent.keyboard('{Enter}');
+
+    await waitFor(() => expect(input.type).toBe('text'));
+    expect(storyFormText('submitted')).toBeUndefined();
+
+    await userEvent.click(input);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() =>
+      expect(storyFormText('submitted')).toBe('password=correct horse battery')
+    );
+
+    // Leave the button focused for the snapshot: that is the state this story shows.
+    passwordToggle().focus();
+  },
+};
+
+export const PasswordToggleWithOtherIcons: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders password fields with `passwordToggle` at every size, next to a clear button, a right icon and a keyboard-shortcut hint: the eye button always sits at the very end and the others move left to make room, so nothing overlaps and the text stops before them. The last field is disabled, and so is its toggle; the one with translated labels says "Zobrazit heslo".',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='small' fluid>
+      {ALL_SIZES.map((size) => (
+        <PasswordField key={size} size={size} />
+      ))}
+      <PasswordField onClearClick={() => undefined} rightIcon='ShieldKeyholeLine' />
+      <PasswordField
+        focusRules={{ type: 'keypress', shortcut: 'p', doNotInsertShortcut: true }}
+        passwordToggle={{ showLabel: 'Zobrazit heslo', hideLabel: 'Skrýt heslo' }}
+        className='story-translated'
+      />
+      <PasswordField disabled />
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const toggles = await waitFor(() => {
+      const found = document.querySelectorAll('.reqore-input-password-toggle');
+      expect(found.length).toBe(ALL_SIZES.length + 3);
+      return Array.from(found) as HTMLButtonElement[];
+    });
+
+    expect(toggles[toggles.length - 1].disabled).toBe(true);
+    expect(toggles[toggles.length - 2].getAttribute('aria-label')).toBe('Zobrazit heslo');
+
+    // The toggle is the last thing in the field, and the clear button and the right icon
+    // sit left of it without overlapping.
+    const field = toggles[ALL_SIZES.length].closest('.reqore-control-wrapper') as HTMLElement;
+    const toggleBox = toggles[ALL_SIZES.length].getBoundingClientRect();
+    const fieldBox = field.getBoundingClientRect();
+    expect(Math.round(fieldBox.right - toggleBox.right)).toBeLessThanOrEqual(1);
+
+    const others = Array.from(
+      field.querySelectorAll('.reqore-clear-input-button, .reqore-icon:not(.reqore-button *)')
+    ).map((element) => element.getBoundingClientRect());
+    others.forEach((box) => expect(box.right).toBeLessThanOrEqual(toggleBox.left + 1));
+  },
+};
+
+export const PasswordToggleMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 700 } },
+    docs: {
+      description: {
+        story:
+          'Renders the sign-in password field on a phone-width screen (380px): the field fills the width with the eye button at its end, and tapping the button shows the password.',
+      },
+    },
+  },
+  render: PasswordForm,
+  play: async () => {
+    const input = await waitFor(() => {
+      expect(passwordInput()).toBeTruthy();
+      return passwordInput();
+    });
+
+    await userEvent.click(passwordToggle());
+    await waitFor(() => expect(input.type).toBe('text'));
+
+    const field = input.closest('.reqore-control-wrapper') as HTMLElement;
+    expect(field.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
   },
 };

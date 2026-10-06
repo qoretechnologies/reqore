@@ -1,7 +1,9 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { useState } from 'react';
+import { expect, userEvent, waitFor } from 'storybook/test';
 import ReqoreRadioGroup, { IReqoreRadioGroupProps } from '../../components/RadioGroup';
 import { StoryMeta } from '../utils';
+import { StoryForm, storyFormText } from '../utils/formPreview';
 import { DisabledArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreRadioGroupProps>();
@@ -254,5 +256,113 @@ export const WithTexts: Story = {
     asSwitch: true,
     onText: 'True',
     offText: 'False and wrong',
+  },
+};
+
+/* -------------------------------------------------------------------------------------------
+ * As a form control: with a `name`, the options are one native radio group.
+ * ----------------------------------------------------------------------------------------- */
+
+const DEVICES: IReqoreRadioGroupProps['items'] = [
+  { label: 'Authenticator app', value: 'otp-app', description: 'Pixel 9, added in March' },
+  { label: 'Backup phone', value: 'otp-phone' },
+  { label: 'Retired security key', value: 'otp-key', disabled: true },
+  { label: 'Hardware token', value: 'otp-token' },
+];
+
+const FormTemplate: StoryFn<IReqoreRadioGroupProps> = (args: IReqoreRadioGroupProps) => {
+  const [selected, setSelected] = useState('otp-phone');
+
+  return (
+    <StoryForm>
+      <ReqoreRadioGroup
+        aria-label='Your one-time-code devices'
+        name='selectedCredentialId'
+        required
+        {...args}
+        items={DEVICES}
+        selected={selected}
+        onSelectClick={setSelected}
+      />
+    </StoryForm>
+  );
+};
+
+const radios = () =>
+  Array.from(document.querySelectorAll('.reqore-checkbox-input')) as HTMLInputElement[];
+
+export const FormControl: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a named radio group inside a plain HTML form, with what the form posts written under it. Every option is a native radio named `selectedCredentialId`; clicking "Authenticator app" selects it and the form posts `selectedCredentialId=otp-app`.',
+      },
+    },
+  },
+  render: FormTemplate,
+  play: async () => {
+    await waitFor(() => expect(storyFormText('posts')).toBe('selectedCredentialId=otp-phone'));
+
+    const options = radios();
+    expect(options.map((radio) => radio.type)).toEqual(['radio', 'radio', 'radio', 'radio']);
+    expect(options.every((radio) => radio.name === 'selectedCredentialId')).toBe(true);
+    expect(document.querySelector('[role="radiogroup"]').getAttribute('aria-label')).toBe(
+      'Your one-time-code devices'
+    );
+
+    await userEvent.click(document.querySelector('.reqore-checkbox-label'));
+
+    await waitFor(() => expect(options[0].checked).toBe(true));
+    await waitFor(() => expect(storyFormText('posts')).toBe('selectedCredentialId=otp-app'));
+  },
+};
+
+export const FormControlKeyboard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same group, driven from the keyboard. Tab enters the group on the selected option (one tab stop for the whole group) and draws the focus ring on its box; the down arrow moves the choice past the disabled option to "Hardware token", which the form then posts.',
+      },
+    },
+  },
+  render: FormTemplate,
+  play: async () => {
+    await waitFor(() => expect(storyFormText('posts')).toBe('selectedCredentialId=otp-phone'));
+    const options = radios();
+
+    await userEvent.tab();
+    await waitFor(() => expect(document.activeElement).toBe(options[1]));
+
+    await userEvent.keyboard('{ArrowDown}');
+
+    await waitFor(() => expect(document.activeElement).toBe(options[3]));
+    await waitFor(() => expect(options[3].checked).toBe(true));
+    await waitFor(() => expect(storyFormText('posts')).toBe('selectedCredentialId=otp-token'));
+  },
+};
+
+export const FormControlMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 700 } },
+    docs: {
+      description: {
+        story:
+          'Renders the named radio group on a phone-width screen (380px): the options and the description fit the screen, and tapping "Hardware token" selects it.',
+      },
+    },
+  },
+  render: FormTemplate,
+  play: async () => {
+    await waitFor(() => expect(storyFormText('posts')).toBe('selectedCredentialId=otp-phone'));
+
+    const labels = document.querySelectorAll('.reqore-checkbox-label');
+    await userEvent.click(labels[3]);
+
+    await waitFor(() => expect(storyFormText('posts')).toBe('selectedCredentialId=otp-token'));
+    const form = document.querySelector('.story-form') as HTMLElement;
+    expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth + 1);
   },
 };
