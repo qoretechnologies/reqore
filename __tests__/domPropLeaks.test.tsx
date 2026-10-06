@@ -284,21 +284,28 @@ const CASES: [string, () => ReactElement][] = [
     ),
   ],
   [
-    'an open Popover whose content is a DOM element and a Message',
+    'an open Popover whose content is a DOM element',
     () => (
       <ReqorePopover
         component={ReqoreButton}
         isReqoreComponent
         openOnMount
         handler='click'
-        content={[
-          <div key='div' className='reqore-probe'>
-            Text
-          </div>,
-          <ReqoreMessage key='message' intent='info'>
-            Message
-          </ReqoreMessage>,
-        ]}
+        content={<div className='reqore-probe'>Text</div>}
+      >
+        Open
+      </ReqorePopover>
+    ),
+  ],
+  [
+    'an open Popover whose content is a Message',
+    () => (
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        openOnMount
+        handler='click'
+        content={<ReqoreMessage intent='info'>Message</ReqoreMessage>}
       >
         Open
       </ReqorePopover>
@@ -427,7 +434,7 @@ test('REQORE_CONTROL_GROUP_CHILD_PROPS names every prop a control group hands it
     minimal: true,
     intent: 'info' as const,
     size: 'small' as const,
-    customTheme: { main: '#ff0000' },
+    customTheme: { main: '#ff0000' as const },
   };
 
   renderInProvider(
