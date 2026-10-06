@@ -60,6 +60,7 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
     'backgroundBlur',
     'blur',
     'clickable',
+    'customTheme',
     'fill',
     'fixed',
     'flat',
@@ -70,9 +71,11 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
     'minimal',
     'opaque',
     'raised',
+    'size',
     'spaceBetween',
     'stack',
-    'timeout'
+    'timeout',
+    'tooltip'
   ),
 })<IReqoreNotificationStyle>`
   min-width: ${({ fluid }) => (!fluid ? '30px' : undefined)};

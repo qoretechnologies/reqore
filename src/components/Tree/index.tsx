@@ -162,6 +162,8 @@ export const ReqoreTree = ({
   dialogValueLabel = 'Value',
   dialogKeyPlaceholder = 'Key',
   dialogValuePlaceholder = 'Value',
+  // Not used by the tree any more; taken out so it does not reach the panel's element.
+  mode: _mode,
   ...rest
 }: IReqoreTreeProps) => {
   const [items, setItems] = useState({});

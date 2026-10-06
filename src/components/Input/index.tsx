@@ -13,6 +13,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -115,7 +116,10 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
   hasPasswordToggle?: boolean;
 }
 
-export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
+// `width` is the field's CSS width; on a `div` it is not an attribute.
+export const StyledInputWrapper = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('width'),
+})<IReqoreInputStyle>`
   height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   width: ${({ width }) => (width ? `${width}px` : 'auto')};
   max-width: ${({ fluid, fixed }) => (fluid && !fixed ? '100%' : undefined)};
@@ -144,7 +148,9 @@ export const StyledInputWrapper = styled.div<IReqoreInputStyle>`
   }
 `;
 
-const StyledIconWrapper = styled.div<IReqoreInputStyle & { offset?: number }>`
+const StyledIconWrapper = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('offset'),
+})<IReqoreInputStyle & { offset?: number }>`
   position: absolute;
   height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   width: ${({ _size }) => SIZE_TO_PX[_size]}px;
@@ -155,7 +161,9 @@ const StyledIconWrapper = styled.div<IReqoreInputStyle & { offset?: number }>`
   align-items: center;
 `;
 
-const StyledShortcutWrapper = styled.div<{ _size: TSizes; offset: number }>`
+const StyledShortcutWrapper = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('offset'),
+})<{ _size: TSizes; offset: number }>`
   position: absolute;
   height: 100%;
   top: 0;
@@ -165,7 +173,31 @@ const StyledShortcutWrapper = styled.div<{ _size: TSizes; offset: number }>`
   pointer-events: none;
 `;
 
-export const StyledInput = styled(StyledEffect)<IReqoreInputStyle>`
+/* The input's styling flags must stop here (`StyledEffect` already stops `theme`, `effect` and
+   the rest of its own). A DOM `input` drops most of them on its own, but not `fill` (an SVG
+   attribute), and a component given as `as` — the DatePicker's react-aria `DateInput` —
+   receives every prop and writes them onto its own element. */
+export const StyledInput = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    '_size',
+    'clearable',
+    'fill',
+    'fixed',
+    'flat',
+    'fluid',
+    'hasIcon',
+    'hasPasswordToggle',
+    'hasRightIcon',
+    'hasShortcutHint',
+    'minimal',
+    'pill',
+    'rounded',
+    'spaceBetween',
+    'stack',
+    'tooltip',
+    'transparent'
+  ),
+})<IReqoreInputStyle>`
   height: 100%;
   width: 100%;
   flex: 1;

@@ -337,7 +337,8 @@ export const StyledButton = styled(StyledEffect).withConfig({
   // A containing ControlGroup can propagate its `fill` layout flag through
   // polymorphic controls such as Dropdown. The flag is meaningful to the
   // group, but it is not a valid boolean attribute for the rendered button.
-  shouldForwardProp: omitStyleProps('fill'),
+  // `color` is the button's colour and `wrap` how its label breaks, both for its styles.
+  shouldForwardProp: omitStyleProps('fill', 'color', 'wrap'),
 })<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
@@ -551,7 +552,9 @@ export const StyledButton = styled(StyledEffect).withConfig({
   }
 `;
 
-export const StyledButtonContent = styled.div`
+export const StyledButtonContent = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('wrap'),
+})`
   display: flex;
   align-items: center;
   width: 100%;

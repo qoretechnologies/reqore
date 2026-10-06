@@ -8,12 +8,17 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreEffect } from '../../types/global';
 import { IReqoreEffect, StyledEffect, TReqoreHexColor } from '../Effect';
 import { ReqoreSpan } from '../Span';
 
-export const StyledSpacer = styled.div`
+// `width` and `height` size the spacer through its styles; as attributes they mean nothing on a
+// `div` (and React warns when a computed one is `NaN`).
+export const StyledSpacer = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('width', 'height'),
+})`
   display: ${({ horizontal }) => (horizontal ? 'inline-flex' : 'flex')};
   vertical-align: middle;
   align-items: ${({ align }) => {
@@ -40,7 +45,9 @@ export const StyledSpacer = styled.div`
   flex-shrink: 0;
 `;
 
-export const StyledSpace = styled.div`
+export const StyledSpace = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('width', 'height'),
+})`
   display: inline-block;
   flex: 0 0 auto;
 
@@ -61,7 +68,9 @@ export const StyledSpace = styled.div`
   }}
 `;
 
-export const StyledLine = styled(StyledEffect)`
+export const StyledLine = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps('width', 'height'),
+})`
   flex-shrink: 0;
   background-color: ${({ theme, lineSize }) =>
     lineSize === 'none' ? 'transparent' : changeLightness(theme.main, 0.2)};

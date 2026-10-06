@@ -7,6 +7,7 @@ import { ReqoreErrorBoundary, ReqoreP, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { ReqorePaginationContainer } from '../../containers/Paging';
+import { omitStyleProps } from '../../helpers/styled';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -125,7 +126,9 @@ export interface IReqoreCollectionProps
   paging?: TReqorePaginationType<IReqoreCollectionItemProps>;
 }
 
-export const StyledCollectionWrapper = styled(StyledColumns)`
+export const StyledCollectionWrapper = styled(StyledColumns).withConfig({
+  shouldForwardProp: omitStyleProps('fill', 'height'),
+})`
   height: ${({ height }) => (height ? `${height}` : 'auto')};
   flex: ${({ fill }) => (fill ? 1 : undefined)};
 

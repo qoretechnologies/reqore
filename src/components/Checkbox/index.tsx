@@ -16,6 +16,7 @@ import {
   getReadableColor,
   getReadableColorFrom,
 } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -110,7 +111,9 @@ export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
   theme: IReqoreTheme;
 }
 
-const StyledSwitchToggle = styled.div`
+const StyledSwitchToggle = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('width'),
+})`
   transition: all 0.2s ease-in-out;
   content: '';
   display: flex;
@@ -230,7 +233,11 @@ const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle
     getReadableColorFrom(checked ? theme.originalMain : changeLightness(theme.main, 0.2))};
 `;
 
-const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
+// The row also receives what a `ReqoreControlGroup` hands every child (`fill`, `stack`, …);
+// `fill` is the one a `div` would otherwise keep, being an SVG attribute.
+const StyledCheckbox = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('fill'),
+})<IReqoreCheckboxStyle>`
   display: inline-flex;
   align-items: center;
   cursor: pointer;

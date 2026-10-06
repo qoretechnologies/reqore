@@ -23,6 +23,7 @@ import styled from 'styled-components';
 import { ReqoreErrorBoundary, ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
 import { formatDateToType, TDateFormat, toDate } from '../../helpers/dates';
+import { omitStyleProps } from '../../helpers/styled';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement } from '../../styles';
@@ -139,7 +140,12 @@ const StyledDateSegment: typeof DateSegment = styled(DateSegment)`
     border-radius: 4px;
   }
 `;
-const StyledDateInput: typeof DateInput = styled(DateInput)`
+/* Rendered by `ReqoreInput` (its `as`), which hands it the field's `value` for the clear
+   button. The value belongs to the date field around it; `DateInput` would write it onto
+   its segment group. */
+const StyledDateInput: typeof DateInput = styled(DateInput).withConfig({
+  shouldForwardProp: omitStyleProps('value'),
+})`
   display: inline-flex;
   align-items: center;
 `;

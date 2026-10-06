@@ -12,6 +12,7 @@ import {
   getGradientMix,
   getReadableColorFrom,
 } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { IWithReqoreMinimal } from '../../types/global';
 
@@ -391,7 +392,19 @@ export const withGlow = (theme: IReqoreTheme, effect: IReqoreEffect | undefined,
   }
 };
 
-export const StyledEffect = styled.span`
+/**
+ * Props every effect-based component styles itself with, and nothing it renders should get.
+ * A DOM tag drops most of them on its own, but `color` is an HTML attribute, and a component
+ * given as `as` (`animated.div`, re-resizable, a router link, react-aria's `DateInput`) receives
+ * every prop and writes them onto its own element — `theme="[object Object]"` and the like.
+ * Components built on `StyledEffect` inherit this filter (styled-components combines it with
+ * their own `shouldForwardProp`).
+ */
+const REQORE_EFFECT_STYLE_PROPS = ['color', 'effect', 'intent', 'isText', 'theme'];
+
+export const StyledEffect = styled.span.withConfig({
+  shouldForwardProp: omitStyleProps(...REQORE_EFFECT_STYLE_PROPS),
+})`
   // If gradient was supplied
   ${({ effect, theme, minimal, active, transparent, isText }: IReqoreTextEffectProps) => {
     const gradients = normalizeGradients(effect?.gradient);

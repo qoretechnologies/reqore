@@ -31,6 +31,7 @@ import {
   getReadableColorFrom,
   isAchromatic,
 } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { ActiveIconScale, InactiveIconScale, RaisedElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
@@ -291,7 +292,11 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   $appearanceColors?: IReqoreTagAppearanceColors;
 }
 
-export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
+// `fill` is handed down by a containing `ReqoreControlGroup`; it is an SVG attribute, so a
+// `span` would keep it. `width` sizes the tag through its styles.
+export const StyledTag = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps('fill', 'width'),
+})<IReqoreTagStyle>`
   display: inline-flex;
   justify-content: center;
   flex-shrink: 0;
@@ -696,7 +701,9 @@ const splitTagLabel = (label: string): [string, string] => {
   ];
 };
 
-const StyledButtonWrapper = styled.span<IReqoreTagStyle>`
+const StyledButtonWrapper = styled.span.withConfig({
+  shouldForwardProp: omitStyleProps('color'),
+})<IReqoreTagStyle>`
   flex-shrink: 0;
   font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
   width: ${({ size }) => BADGE_SIZE_TO_PX[size]}px;

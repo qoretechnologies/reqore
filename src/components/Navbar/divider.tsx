@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import styled from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
+import { omitStyleProps } from '../../helpers/styled';
 import { getReadableColor } from '../../helpers/colors';
 
 export interface IReqoreNavbarDividerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -8,7 +9,10 @@ export interface IReqoreNavbarDividerProps extends React.HTMLAttributes<HTMLDivE
   theme?: IReqoreTheme;
 }
 
-const StyledNavbarDivider = styled.div<{
+// The navbar's `type` (`header` / `footer`) picks its theme; it is not the element's `type`.
+const StyledNavbarDivider = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('type'),
+})<{
   theme: IReqoreTheme;
   type?: 'header' | 'footer';
 }>`

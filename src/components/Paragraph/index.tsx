@@ -1,6 +1,7 @@
 import { forwardRef, memo } from 'react';
 import styled from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
@@ -31,7 +32,10 @@ export interface IReqoreParagraphProps
   as?: React.ElementType;
 }
 
-export const StyledParagraph = styled(StyledTextEffect)`
+// `fill` is handed down by a containing `ReqoreControlGroup`; a `p` would keep it.
+export const StyledParagraph = styled(StyledTextEffect).withConfig({
+  shouldForwardProp: omitStyleProps('fill'),
+})`
   padding: 0;
   margin: 0;
   color: ${({ theme, intent }) =>

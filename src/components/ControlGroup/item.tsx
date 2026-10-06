@@ -1,7 +1,7 @@
 import { forwardRef, memo, ReactNode } from 'react';
 import styled from 'styled-components';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { omitStyleProps } from '../../helpers/styled';
+import { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { IWithReqoreFluid, IWithReqoreSize } from '../../types/global';
 
 export interface IReqoreControlGroupItemProps
@@ -38,20 +38,7 @@ export interface IReqoreControlGroupItemProps
 }
 
 export const StyledReqoreControlGroupItem = styled.div.withConfig({
-  shouldForwardProp: omitStyleProps(
-    'customTheme',
-    'fill',
-    'fixed',
-    'flat',
-    'fluid',
-    'gapSize',
-    'horizontal',
-    'intent',
-    'minimal',
-    'size',
-    'spaceBetween',
-    'stack'
-  ),
+  shouldForwardProp: omitStyleProps(...REQORE_CONTROL_GROUP_CHILD_PROPS, 'gapSize', 'horizontal'),
 })<IReqoreControlGroupItemProps>`
   display: flex;
   flex-flow: ${({ horizontal }) => (horizontal ? 'row' : 'column')};

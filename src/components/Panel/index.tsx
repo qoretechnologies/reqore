@@ -582,7 +582,18 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   // Filtering here still leaves the styled-component's own interpolations reading the prop.
   // Everything else follows styled-components' own rule, so re-resizable still receives its
   // `enable` / size / handle config — those are component props, not HTML attributes.
-  shouldForwardProp: omitStyleProps('fill', 'accentPosition'),
+  // `opacity` is the surface's background opacity, an SVG attribute a `div` would keep; the
+  // remaining flags only style the surface, and re-resizable would write them onto its div.
+  shouldForwardProp: omitStyleProps(
+    'accentPosition',
+    'fill',
+    'flat',
+    'fluid',
+    'interactive',
+    'isCollapsed',
+    'opacity',
+    'rounded'
+  ),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
     rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
@@ -764,7 +775,9 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   ${({ disabled }) => disabled && DisabledElement}
 `;
 
-export const StyledPanelTitle = styled.div<IStyledPanel>`
+export const StyledPanelTitle = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('opacity'),
+})<IStyledPanel>`
   display: flex;
   /* Always a row. The title bar used to flip to a column when narrow; it now ellipsizes its
      label and lets the responsive action group collapse instead, which is what the "hidden when

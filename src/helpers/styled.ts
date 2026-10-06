@@ -56,3 +56,38 @@ export const omitStyleProps = (...propsToOmit: string[]) => {
     return typeof elementToBeCreated === 'string' ? defaultValidatorFn(prop) : true;
   };
 };
+
+/**
+ * The props `ReqoreControlGroup` clones onto every child that is a component (see the group's
+ * `useCloneThroughFragments` callback): its layout flags, and — in a `stack` group — where the
+ * child sits in the stack, for nested groups to round their corners by. A child that renders a
+ * DOM element, or a third-party component that writes its props onto one, must not forward
+ * them: `shouldForwardProp: omitStyleProps(...REQORE_CONTROL_GROUP_CHILD_PROPS)`.
+ */
+export const REQORE_CONTROL_GROUP_CHILD_PROPS = [
+  'customTheme',
+  'fill',
+  'fixed',
+  'flat',
+  'fluid',
+  'intent',
+  'minimal',
+  'size',
+  'spaceBetween',
+  'stack',
+  // Stack groups only.
+  'childId',
+  'childrenCount',
+  'isChild',
+  'isFirst',
+  'isFirstGroup',
+  'isFirstInLastGroup',
+  'isInsideStackGroup',
+  'isInsideVerticalGroup',
+  'isLast',
+  'isLastGroup',
+  'isLastInFirstGroup',
+  'isLastInLastGroup',
+  'isMasterGroupRounded',
+  'rounded',
+];

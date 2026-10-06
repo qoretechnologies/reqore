@@ -3,6 +3,7 @@ import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreNavbarTheme, IReqoreTheme } from '../../constants/theme';
 import { getMainColor, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreEffect } from '../../types/global';
 import { IReqoreEffect, StyledEffect } from '../Effect';
@@ -22,7 +23,10 @@ export interface IReqoreNavbarStyle extends IReqoreNavbarProps {
   effect?: IReqoreEffect;
 }
 
-export const StyledNavbar = styled(StyledEffect)<IReqoreNavbarStyle>`
+// The navbar's `type` (`header` / `footer`) picks its theme; it is not the element's `type`.
+export const StyledNavbar = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps('type'),
+})<IReqoreNavbarStyle>`
   ${({ theme, type }: IReqoreNavbarStyle) => css`
     height: 50px;
     flex-shrink: 0;
