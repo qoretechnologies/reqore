@@ -1,4 +1,5 @@
 import { StoryObj } from '@storybook/react';
+import { expect } from 'storybook/test';
 import { ReqoreColumns, ReqoreTier } from '../..';
 import { StoryMeta } from '../utils';
 
@@ -181,4 +182,87 @@ export const Group: Story = {
       />
     </ReqoreColumns>
   ),
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * priceDetailEffect / priceDetailProps
+ * ---------------------------------------------------------------------------------------------- */
+
+const PLAN_FEATURES = [
+  { icon: 'CheckLine' as const, content: '10,000 runs a month' },
+  { icon: 'CheckLine' as const, content: 'Email support' },
+];
+
+const PriceDetailTiers = () => (
+  <ReqoreColumns minColumnWidth='240px' columnsGap='15px' style={{ maxWidth: '1000px' }}>
+    <ReqoreTier
+      name='Default'
+      price={49}
+      currency='$'
+      priceDetail='/ month'
+      featureList={PLAN_FEATURES}
+    />
+    <ReqoreTier
+      name='As written'
+      price={49}
+      currency='$'
+      priceDetail='/ month'
+      priceDetailEffect={{ uppercase: false }}
+      featureList={PLAN_FEATURES}
+    />
+    <ReqoreTier
+      name='Readable'
+      price={49}
+      currency='$'
+      priceDetail='/ month, billed yearly'
+      priceDetailProps={{ intent: undefined, size: 'normal' }}
+      priceDetailEffect={{ uppercase: false, opacity: 0.75 }}
+      featureList={PLAN_FEATURES}
+    />
+  </ReqoreColumns>
+);
+
+const priceDetails = (canvasElement: HTMLElement) =>
+  Array.from(canvasElement.querySelectorAll('.reqore-tier-price-detail')) as HTMLElement[];
+
+const expectPriceDetails = async (canvasElement: HTMLElement) => {
+  const [muted, asWritten, readable] = priceDetails(canvasElement);
+  const style = (element: HTMLElement) => getComputedStyle(element);
+
+  await expect(muted.textContent).toBe('/ month');
+  await expect(style(muted).textTransform).toBe('uppercase');
+  await expect(style(asWritten).textTransform).toBe('none');
+  // Still the muted colour: only the case changed.
+  await expect(style(asWritten).color).toBe(style(muted).color);
+  // No muted intent: the text colour, dimmed by the effect's opacity, at the normal size.
+  await expect(style(readable).color).not.toBe(style(muted).color);
+  await expect(style(readable).opacity).toBe('0.75');
+  await expect(style(readable).fontSize).toBe('15px');
+};
+
+export const PriceDetailEffect: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders three plans whose "/ month" line differs: the default small muted uppercase line, `priceDetailEffect={{ uppercase: false }}` keeping the text as written, and a readable one with `priceDetailProps` (no muted intent, normal size) and a dimming effect.',
+      },
+    },
+  },
+  render: PriceDetailTiers,
+  play: async ({ canvasElement }) => expectPriceDetails(canvasElement),
+};
+
+export const PriceDetailEffectLight: Story = {
+  args: { mainTheme: '#f4f4f4' } as Story['args'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the three "/ month" lines on a light theme: the default muted line is pale grey, and the readable one, without the muted intent, is dark text at 75% opacity.',
+      },
+    },
+  },
+  render: PriceDetailTiers,
+  play: async ({ canvasElement }) => expectPriceDetails(canvasElement),
 };

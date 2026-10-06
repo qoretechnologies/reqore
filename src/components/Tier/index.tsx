@@ -1,8 +1,10 @@
 import { isNumber } from 'lodash';
 import { memo, useMemo } from 'react';
+import { TReqoreDataAttributes } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
+import { IReqoreEffect } from '../Effect';
 import { ReqoreH1 } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelProps, ReqorePanel } from '../Panel';
@@ -23,7 +25,19 @@ export interface IReqoreTierProps extends Omit<IReqorePanelProps, 'description'>
   price: string | number;
   currency: string;
   currencyPosition?: 'before' | 'after';
+  /** The line under the price — the billing period ("/ month"), "per seat", "billed yearly". */
   priceDetail?: string;
+  /**
+   * Effect for `priceDetail`, spread over its defaults (`uppercase`). `{ uppercase: false }`
+   * keeps the text as written; a `color` or `opacity` makes the muted line readable.
+   */
+  priceDetailEffect?: IReqoreEffect;
+  /**
+   * Props for the `priceDetail` paragraph (a `ReqoreP`), spread over its defaults
+   * (`intent: 'muted'`, `size: 'small'`): another `intent` or `size`, `className`, `style`,
+   * `aria-*`, `data-*`. Its `effect` is merged with `priceDetailEffect`, which wins.
+   */
+  priceDetailProps?: Partial<IReqoreParagraphProps> & TReqoreDataAttributes;
   salePrice?: string | number;
   description?: string | React.ReactNode;
   actionButtonProps?: IReqoreButtonProps;
@@ -47,6 +61,8 @@ export const ReqoreTier = memo(
     currency,
     currencyPosition = 'before',
     priceDetail,
+    priceDetailEffect,
+    priceDetailProps,
     description,
     price,
     actionButtonProps,
@@ -143,7 +159,13 @@ export const ReqoreTier = memo(
               {currency && currencyPosition === 'after' && isNumber(price) ? currency : undefined}
             </ReqoreH1>
             {priceDetail && (
-              <ReqoreP intent='muted' size='small' effect={{ uppercase: true }}>
+              <ReqoreP
+                intent='muted'
+                size='small'
+                {...priceDetailProps}
+                effect={{ uppercase: true, ...priceDetailProps?.effect, ...priceDetailEffect }}
+                className={`${priceDetailProps?.className || ''} reqore-tier-price-detail`}
+              >
                 {priceDetail}
               </ReqoreP>
             )}
