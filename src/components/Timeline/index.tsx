@@ -64,6 +64,18 @@ export interface IReqoreTimelineItem extends IReqoreDisabled, IReqoreIntent {
   titleEffect?: IReqoreEffect;
   /** Effect for the content */
   contentEffect?: IReqoreEffect;
+  /**
+   * The step that matters now: the current one, or the one that needs attention. Its marker
+   * gets a halo in the item's colour (its `intent`, else the timeline's, else the neutral line
+   * colour) and its title is bolder. Marks the item `aria-current="step"`.
+   */
+  highlighted?: boolean;
+  /**
+   * The step is running: its marker shows a spinning loader (`LoaderLine`) in place of its icon
+   * or dot, in the item's colour. Under `prefers-reduced-motion` the loader stands still. Marks
+   * the item `aria-busy="true"`.
+   */
+  pending?: boolean;
 }
 
 /**
@@ -168,6 +180,8 @@ export interface IReqoreTimelineItemStyle extends IReqoreTimelineStyle {
   dashed?: boolean;
   /** Minimum connector length (px) below this marker; vertical mode only. */
   spacing?: number;
+  /** The highlighted step: the marker draws a halo. */
+  $highlighted?: boolean;
 }
 
 // Size of the timeline marker (icon container) - made smaller
@@ -192,6 +206,17 @@ const SPACING_FROM_SIZE: Record<TSizes, number> = {
   big: 24,
   huge: 32,
   massive: 44,
+};
+
+// Width of the halo round a highlighted marker
+const HALO_FROM_SIZE: Record<TSizes, number> = {
+  micro: 2,
+  tiny: 3,
+  small: 3,
+  normal: 4,
+  big: 5,
+  huge: 6,
+  massive: 7,
 };
 
 // Line width for the connector
@@ -312,6 +337,21 @@ const StyledTimelineMarker = styled.div<IReqoreTimelineItemStyle>`
   transition: all 0.2s ease-in-out;
   flex-shrink: 0;
   z-index: 1;
+
+  ${({ $highlighted, theme, hasIntent, size }) =>
+    $highlighted &&
+    css`
+      box-shadow: 0 0 0 ${HALO_FROM_SIZE[size]}px
+        ${rgba(hasIntent ? theme.main : changeLightness(theme.main, 0.2), 0.3)};
+    `}
+
+  /* A pending step's loader spins (ReqoreIcon animation spin), except where motion is
+     unwelcome: there it stands still and still reads as a loader. */
+  @media (prefers-reduced-motion: reduce) {
+    .reqore-timeline-pending-icon {
+      animation: none;
+    }
+  }
 `;
 
 const StyledTimelineDot = styled.div<IReqoreTimelineItemStyle>`
@@ -454,6 +494,9 @@ interface ITimelineItemRendererProps {
   onKeyDown: (event: React.KeyboardEvent, item: IReqoreTimelineItem) => void;
 }
 
+const TITLE_STYLE: React.CSSProperties = { fontWeight: 500 };
+const HIGHLIGHTED_TITLE_STYLE: React.CSSProperties = { fontWeight: 700 };
+
 const TimelineItemRenderer = memo(
   ({
     item,
@@ -491,16 +534,29 @@ const TimelineItemRenderer = memo(
         onKeyDown={(e) => onKeyDown(e, item)}
         tabIndex={isClickable ? 0 : undefined}
         role='listitem'
-        className='reqore-timeline-item'
+        aria-current={item.highlighted ? 'step' : undefined}
+        aria-busy={item.pending ? true : undefined}
+        className={`reqore-timeline-item${
+          item.highlighted ? ' reqore-timeline-item-highlighted' : ''
+        }${item.pending ? ' reqore-timeline-item-pending' : ''}`}
       >
         <StyledTimelineMarkerWrapper theme={itemTheme} size={size} direction={direction}>
           <StyledTimelineMarker
             theme={itemTheme}
             size={size}
             hasIntent={hasIntent}
+            $highlighted={item.highlighted}
             className='reqore-timeline-marker'
           >
-            {item.icon ? (
+            {item.pending ? (
+              <ReqoreIcon
+                icon='LoaderLine'
+                animation='spin'
+                size={getOneLessSize(getOneLessSize(size))}
+                color={item.iconColor || (hasIntent ? itemTheme.main : undefined)}
+                className='reqore-timeline-pending-icon'
+              />
+            ) : item.icon ? (
               <ReqoreIcon
                 icon={item.icon}
                 size={getOneLessSize(getOneLessSize(size))}
@@ -545,7 +601,7 @@ const TimelineItemRenderer = memo(
                 size={size}
                 effect={item.titleEffect}
                 className='reqore-timeline-title'
-                style={{ fontWeight: 500 }}
+                style={item.highlighted ? HIGHLIGHTED_TITLE_STYLE : TITLE_STYLE}
               >
                 {item.title}
               </ReqoreSpan>

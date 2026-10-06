@@ -577,3 +577,92 @@ test('Collapsed range: custom label, defaultExpanded and onRangeToggle', () => {
   expect(screen.getByText('3 read-only builds')).toBeTruthy();
   expect(screen.queryByText('Build 2')).toBeNull();
 });
+
+/* ------------------------------------------------------------------------------------------------
+ * highlighted / pending
+ * ---------------------------------------------------------------------------------------------- */
+
+const renderTimeline = (props: Partial<React.ComponentProps<typeof ReqoreTimeline>>) =>
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreTimeline
+            items={[
+              { title: 'Order received', icon: 'CheckLine', intent: 'success' },
+              { title: 'Payment capture', icon: 'PauseLine', intent: 'warning', highlighted: true },
+              { title: 'Carrier booked', pending: true },
+              { title: 'Customer notified' },
+            ]}
+            {...props}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+const items = () => Array.from(document.querySelectorAll('.reqore-timeline-item')) as HTMLElement[];
+const marker = (item: HTMLElement) => item.querySelector('.reqore-timeline-marker') as HTMLElement;
+const title = (item: HTMLElement) => item.querySelector('.reqore-timeline-title') as HTMLElement;
+
+test('A highlighted item is the current step: a haloed marker and a bolder title', () => {
+  renderTimeline({});
+
+  const [plain, highlighted] = items();
+
+  expect(highlighted.getAttribute('aria-current')).toBe('step');
+  expect(highlighted.classList.contains('reqore-timeline-item-highlighted')).toBe(true);
+  expect(plain.hasAttribute('aria-current')).toBe(false);
+
+  // The halo is a ring of the item's colour (warning) round the marker.
+  expect(getComputedStyle(marker(highlighted)).boxShadow).toMatch(/^0 0 0 4px rgba\(/);
+  expect(getComputedStyle(marker(plain)).boxShadow).toBe('');
+
+  expect(title(highlighted).style.fontWeight).toBe('700');
+  expect(title(plain).style.fontWeight).toBe('500');
+});
+
+test('A highlighted item without an intent takes a neutral halo, sized by the timeline', () => {
+  renderTimeline({
+    size: 'small',
+    items: [{ title: 'One' }, { title: 'Two', highlighted: true }],
+  });
+
+  expect(getComputedStyle(marker(items()[1])).boxShadow).toMatch(/^0 0 0 3px rgba\(/);
+});
+
+test('A pending item shows a spinning loader in place of its icon or dot', () => {
+  renderTimeline({});
+
+  const pending = items()[2];
+
+  expect(pending.getAttribute('aria-busy')).toBe('true');
+  expect(pending.classList.contains('reqore-timeline-item-pending')).toBe(true);
+
+  const loader = marker(pending).querySelector('.reqore-timeline-pending-icon') as HTMLElement;
+
+  expect(loader).toBeTruthy();
+  expect(getComputedStyle(loader).animation).toContain('1s linear infinite');
+  // No dot behind it, and no other item is busy.
+  expect(marker(pending).children).toHaveLength(1);
+  expect(items().filter((item) => item.hasAttribute('aria-busy'))).toHaveLength(1);
+});
+
+test('A pending item replaces its own icon, in its colour', () => {
+  renderTimeline({
+    items: [{ title: 'Carrier booked', icon: 'TruckLine', intent: 'info', pending: true }],
+  });
+
+  const pending = marker(items()[0]);
+
+  expect(pending.querySelectorAll('.reqore-icon')).toHaveLength(1);
+  expect(pending.querySelector('.reqore-timeline-pending-icon')).toBeTruthy();
+});
+
+test('Highlighted and pending work on a horizontal timeline', () => {
+  renderTimeline({ direction: 'horizontal', responsive: false });
+
+  expect(document.querySelector('.reqore-timeline-horizontal')).toBeTruthy();
+  expect(items()[1].getAttribute('aria-current')).toBe('step');
+  expect(items()[2].querySelector('.reqore-timeline-pending-icon')).toBeTruthy();
+});
