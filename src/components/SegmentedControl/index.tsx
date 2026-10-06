@@ -1,3 +1,4 @@
+import { isUndefined, omitBy } from 'lodash';
 import React, {
   forwardRef,
   memo,
@@ -31,10 +32,11 @@ import {
   IWithReqoreEffect,
   IWithReqoreFluid,
   IWithReqoreSize,
+  TReqoreDataAttributes,
   TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { TReqoreBadge } from '../Button';
+import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreButton from '../Button';
 import { IReqoreEffect } from '../Effect';
 import ReqoreMenu from '../Menu';
@@ -60,7 +62,24 @@ export interface IReqoreSegmentedControlItem {
   effect?: IReqoreEffect;
   /** Badge content on the segment */
   badge?: TReqoreBadge | TReqoreBadge[];
+  /**
+   * More props for the segment's `ReqoreButton`: `data-*` (a `data-track-click` for analytics),
+   * `aria-*` (an `aria-label` for an icon-only segment), `id`, `className` (merged), `style`,
+   * `leftIconProps`, … They go under the control's own, so the segments stay a radio group
+   * that the control runs: the selection handler, `role`, `aria-checked`, `tabIndex`,
+   * `disabled` and the selected look are the control's, and the item's own `icon`,
+   * `rightIcon`, `badge`, `tooltip` and `effect` win when set. A segment folded into the
+   * "More" menu passes them to its menu item.
+   */
+  props?: TReqoreSegmentedControlItemProps;
 }
+
+/** What a segment's `props` may hold (see `IReqoreSegmentedControlItem.props`). */
+export type TReqoreSegmentedControlItemProps = Omit<
+  Partial<IReqoreButtonProps>,
+  'onClick' | 'role' | 'tabIndex' | 'aria-checked' | 'label' | 'children'
+> &
+  TReqoreDataAttributes;
 
 export interface IReqoreSegmentedControlProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'>,
@@ -204,11 +223,11 @@ const estimateItemWidth = (
     );
   }
 
-  if (item.icon) {
+  if (item.icon ?? item.props?.icon) {
     width += ICON_FROM_SIZE[itemSize] + PADDING_FROM_SIZE[itemSize] / 2;
   }
 
-  if (item.rightIcon) {
+  if (item.rightIcon ?? item.props?.rightIcon) {
     width += ICON_FROM_SIZE[itemSize] + PADDING_FROM_SIZE[itemSize] / 2;
   }
 
@@ -532,17 +551,24 @@ const ReqoreSegmentedControl = memo(
                 fluid={fluid}
               >
                 <ReqoreButton
+                  {...item.props}
                   ref={(el) => {
                     itemRefs.current[item.value] = el;
                   }}
                   flat
                   transparent
-                  icon={item.icon}
-                  rightIcon={item.rightIcon}
-                  badge={item.badge}
-                  tooltip={item.tooltip}
+                  // The item's own fields win over its props, but only where they are set.
+                  {...omitBy(
+                    {
+                      icon: item.icon,
+                      rightIcon: item.rightIcon,
+                      badge: item.badge,
+                      tooltip: item.tooltip,
+                      effect: item.effect,
+                    },
+                    isUndefined
+                  )}
                   disabled={itemDisabled}
-                  effect={item.effect}
                   size={size}
                   fluid={fluid}
                   intent={
@@ -567,7 +593,7 @@ const ReqoreSegmentedControl = memo(
                       ? 0
                       : -1
                   }
-                  className='reqore-segmented-control-item'
+                  className={`${item.props?.className || ''} reqore-segmented-control-item`}
                   pill={pill}
                 >
                   {item.label}
@@ -610,9 +636,12 @@ const ReqoreSegmentedControl = memo(
                   <ReqoreMenu customTheme={customTheme}>
                     {hiddenItems.map((overflowItem) => (
                       <ReqoreMenuItem
+                        {...overflowItem.props}
                         key={overflowItem.value}
-                        icon={overflowItem.icon}
-                        rightIcon={overflowItem.rightIcon}
+                        {...omitBy(
+                          { icon: overflowItem.icon, rightIcon: overflowItem.rightIcon },
+                          isUndefined
+                        )}
                         disabled={overflowItem.disabled}
                         selected={overflowItem.value === _value}
                         intent={
