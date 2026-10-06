@@ -20,6 +20,7 @@ import {
   ReqoreNavbarItem,
   ReqoreP,
   ReqorePanel,
+  ReqorePopover,
   ReqoreSlider,
   ReqoreSpacer,
   ReqoreTabs,
@@ -280,6 +281,27 @@ const CASES: [string, () => ReactElement][] = [
       <ReqoreMessage intent='info' tooltip='Tooltip' effect={{ gradient: { colors: 'info' } }}>
         Message
       </ReqoreMessage>
+    ),
+  ],
+  [
+    'an open Popover whose content is a DOM element and a Message',
+    () => (
+      <ReqorePopover
+        component={ReqoreButton}
+        isReqoreComponent
+        openOnMount
+        handler='click'
+        content={[
+          <div key='div' className='reqore-probe'>
+            Text
+          </div>,
+          <ReqoreMessage key='message' intent='info'>
+            Message
+          </ReqoreMessage>,
+        ]}
+      >
+        Open
+      </ReqorePopover>
     ),
   ],
   [

@@ -60,6 +60,8 @@ export const StyledReqoreNotification = styled(StyledEffect).withConfig({
     'backgroundBlur',
     'blur',
     'clickable',
+    // Handed to popover content.
+    'closePopover',
     'customTheme',
     'fill',
     'fixed',
