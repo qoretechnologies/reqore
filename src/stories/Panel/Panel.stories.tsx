@@ -2108,3 +2108,162 @@ export const CompactTitleWhenNarrow: Story = {
   ),
 };
 
+
+/* ------------------------------------------------------------------------------------------------
+ * media — a cover clipped to the panel's corners
+ * ---------------------------------------------------------------------------------------------- */
+
+/** A self-contained 16:9 landscape as a `data:` URI, so the stories need no network. */
+const cover = (sky: string, hill: string, sun: string) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360' width='640' height='360'>` +
+      `<defs><linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'>` +
+      `<stop offset='0' stop-color='${sky}'/><stop offset='1' stop-color='${hill}'/>` +
+      `</linearGradient></defs>` +
+      `<rect width='640' height='360' fill='url(#sky)'/>` +
+      `<circle cx='470' cy='120' r='54' fill='${sun}'/>` +
+      `<path d='M0 270 Q160 190 320 260 T640 240 V360 H0 Z' fill='${hill}'/>` +
+      `<path d='M0 310 Q200 250 420 300 T640 300 V360 H0 Z' fill='#000000' opacity='0.25'/>` +
+      `</svg>`
+  )}`;
+
+const DUSK = cover('#2b2350', '#7b4f8f', '#f2a874');
+const DAY = cover('#9fd3f2', '#5ec0a5', '#ffe08a');
+
+const MediaCards = () => (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+      gap: 20,
+      maxWidth: 1000,
+      alignItems: 'start',
+    }}
+  >
+    <ReqorePanel
+      media={DUSK}
+      mediaAlt='Hills at dusk'
+      label='Why orders double-ship'
+      description='September 10, 2026 · 7 min read'
+      descriptionPosition='below'
+      bottomActions={[
+        {
+          label: 'Read the article',
+          rightIcon: 'ArrowRightLine',
+          position: 'right',
+          responsive: false,
+        },
+      ]}
+      flat
+      radiusSize='huge'
+    >
+      A retry that resends the whole order ships it twice. Here is who is responsible.
+    </ReqorePanel>
+    <ReqorePanel media={DAY} mediaAspectRatio='4 / 3' padded={false} flat radiusSize='huge' />
+    <ReqorePanel
+      media={DAY}
+      mediaPosition='bottom'
+      mediaAspectRatio='21 / 9'
+      label='Bottom media'
+      icon='Image2Line'
+    >
+      The cover sits under everything, its bottom corners following the panel.
+    </ReqorePanel>
+  </div>
+);
+
+const mediaFrames = (canvasElement: HTMLElement) =>
+  Array.from(canvasElement.querySelectorAll('.reqore-panel-media')) as HTMLElement[];
+
+const imagesLoaded = (canvasElement: HTMLElement) =>
+  waitFor(() =>
+    Array.from(canvasElement.querySelectorAll('.reqore-panel-media img')).forEach((image) => {
+      expect((image as HTMLImageElement).complete).toBe(true);
+      expect((image as HTMLImageElement).naturalWidth).toBeGreaterThan(0);
+    })
+  );
+
+/** The frame spans the panel inside its border, flush with the edge it sits on. */
+const expectEdgeToEdge = (frame: HTMLElement, edge: 'top' | 'bottom') => {
+  const panel = frame.closest('.reqore-panel') as HTMLElement;
+  const panelBox = panel.getBoundingClientRect();
+  const frameBox = frame.getBoundingClientRect();
+  const border = parseFloat(getComputedStyle(panel).borderTopWidth) || 0;
+
+  expect(Math.abs(frameBox.width - panel.clientWidth)).toBeLessThanOrEqual(1);
+  expect(Math.abs(frameBox.left - (panelBox.left + border))).toBeLessThanOrEqual(1);
+
+  if (edge === 'top') {
+    expect(Math.abs(frameBox.top - (panelBox.top + border))).toBeLessThanOrEqual(1);
+  } else {
+    expect(Math.abs(panelBox.bottom - border - frameBox.bottom)).toBeLessThanOrEqual(1);
+  }
+};
+
+const expectMediaCards = async (canvasElement: HTMLElement) => {
+  await imagesLoaded(canvasElement);
+
+  const [article, photo, bottom] = mediaFrames(canvasElement);
+
+  expectEdgeToEdge(article, 'top');
+  expectEdgeToEdge(photo, 'top');
+  expectEdgeToEdge(bottom, 'bottom');
+
+  // The cover is above the title bar, and the image is decorative only when no alt is given.
+  expect(article.nextElementSibling?.classList.contains('reqore-panel-title')).toBe(true);
+  expect(article.querySelector('img')?.getAttribute('alt')).toBe('Hills at dusk');
+  expect(photo.querySelector('img')?.getAttribute('alt')).toBe('');
+  // A flat 'huge' panel: the frame's corners are the panel's own radius.
+  expect(getComputedStyle(article).borderTopLeftRadius).toBe(
+    getComputedStyle(article.closest('.reqore-panel') as HTMLElement).borderTopLeftRadius
+  );
+  // An aspect ratio fixes the frame, and the image covers it.
+  const photoBox = photo.getBoundingClientRect();
+  expect(Math.abs(photoBox.width / photoBox.height - 4 / 3)).toBeLessThan(0.02);
+  expect(getComputedStyle(photo.querySelector('img') as HTMLElement).objectFit).toBe('cover');
+};
+
+export const Media: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders three panels with `media`: an article card with the cover above its title bar, a photo card that is only the image (4:3, unpadded), and a panel with the cover at the bottom (21:9). Each cover runs edge to edge and is clipped to the panel\'s rounded corners.',
+      },
+    },
+  },
+  render: MediaCards,
+  play: async ({ canvasElement }) => expectMediaCards(canvasElement),
+};
+
+export const MediaLight: Story = {
+  args: { mainTheme: '#f4f4f4' } as Story['args'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the three media panels on a light theme: the covers sit on white-grey cards, edge to edge and clipped to the corners.',
+      },
+    },
+  },
+  render: MediaCards,
+  play: async ({ canvasElement }) => expectMediaCards(canvasElement),
+};
+
+export const MediaMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 1000 } },
+    docs: {
+      description: {
+        story:
+          'Renders the media panels on a phone-width screen (380px): one column, each cover the full width of its card, and nothing wider than the screen.',
+      },
+    },
+  },
+  render: MediaCards,
+  play: async ({ canvasElement }) => {
+    await expectMediaCards(canvasElement);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1);
+  },
+};
