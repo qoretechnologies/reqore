@@ -1,5 +1,6 @@
 import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 import ReqoreStatistic, { IReqoreStatisticProps } from '../../components/Statistic';
 import { TSizes } from '../../constants/sizes';
 import { ReqoreControlGroup } from '../../index';
@@ -714,4 +715,138 @@ export const RadiusSize: Story = {
       ))}
     </ReqoreControlGroup>
   ),
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * valueAs — the element the value is written in
+ * ---------------------------------------------------------------------------------------------- */
+
+const tiles = (canvasElement: HTMLElement) =>
+  Array.from(canvasElement.querySelectorAll('.reqore-statistic')) as HTMLElement[];
+
+const headingsIn = (element: HTMLElement) =>
+  Array.from(element.querySelectorAll('h1, h2, h3, h4, h5, h6')).map((heading) => heading.tagName);
+
+const valueOf = (tile: HTMLElement) =>
+  tile.querySelector('.reqore-statistic-value') as HTMLElement;
+
+export const ValueAs: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders four revenue tiles that look the same: the default, whose prefix, value and suffix are three headings, and `valueAs` `"p"`, `"div"` and `"h3"`, which write the whole value as one paragraph, one div or one h3 heading.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup gapSize='huge' wrap>
+      {([undefined, 'p', 'div', 'h3'] as const).map((valueAs) => (
+        <ReqoreStatistic
+          key={valueAs ?? 'default'}
+          value='48,200'
+          prefix='$'
+          suffix='/mo'
+          label={valueAs ? `valueAs="${valueAs}"` : 'Default'}
+          icon='MoneyDollarCircleLine'
+          rounded
+          valueAs={valueAs}
+        />
+      ))}
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const [plain, paragraph, div, heading] = tiles(canvasElement);
+
+    await expect(headingsIn(plain)).toEqual(['H2', 'H2', 'H2']);
+    await expect(headingsIn(paragraph)).toEqual([]);
+    await expect(paragraph.querySelector('p.reqore-statistic-value-row')?.textContent).toBe(
+      '$48,200/mo'
+    );
+    await expect(headingsIn(div)).toEqual([]);
+    await expect(headingsIn(heading)).toEqual(['H3']);
+
+    // Same look whatever the element: the value's size and weight, and the tile's height.
+    const look = (tile: HTMLElement) => {
+      const style = getComputedStyle(valueOf(tile));
+      return [style.fontSize, style.fontWeight, Math.round(tile.getBoundingClientRect().height)];
+    };
+
+    await expect(look(paragraph)).toEqual(look(plain));
+    await expect(look(div)).toEqual(look(plain));
+    await expect(look(heading)).toEqual(look(plain));
+  },
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * countUp
+ * ---------------------------------------------------------------------------------------------- */
+
+const finishedCounting = async (canvasElement: HTMLElement, values: string[]) =>
+  waitFor(
+    () => {
+      expect(tiles(canvasElement).map((tile) => valueOf(tile).textContent)).toEqual(values);
+      expect(canvasElement.querySelector('.reqore-statistic-value-final')).toBeNull();
+    },
+    { timeout: 5000 }
+  );
+
+export const CountUp: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders four tiles with `countUp`: they count up from 0 once on screen, keeping the value\'s own format ($48,200, 99.9 with its % suffix, 1.2M), and rest on the values as given. The fourth, "2–4", is not one number and shows at once.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup gapSize='huge' wrap>
+      <ReqoreStatistic value='$48,200' label='Revenue' icon='MoneyDollarCircleLine' countUp />
+      <ReqoreStatistic
+        value={99.9}
+        suffix='%'
+        label='Uptime'
+        intent='success'
+        countUp={{ duration: 800 }}
+      />
+      <ReqoreStatistic value='1.2M' label='Events' countUp={{ duration: 1200 }} />
+      <ReqoreStatistic value='2–4' label='Days to fix' countUp />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    await finishedCounting(canvasElement, ['$48,200', '99.9', '1.2M', '2–4']);
+  },
+};
+
+export const CountUpWhenInView: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a counting tile below the fold of a scroll box: it shows 0 while it is out of view and counts up to 12,345 when the box is scrolled to it.',
+      },
+    },
+  },
+  render: () => (
+    <div
+      className='story-scroll-box'
+      style={{ height: 200, width: 360, overflow: 'auto', border: '1px dashed #666' }}
+    >
+      <div style={{ height: 400, padding: 20 }}>Scroll down to the statistic.</div>
+      <ReqoreStatistic value='12,345' label='Orders recovered' rounded countUp />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.story-scroll-box') as HTMLElement;
+
+    // Out of view: the tile waits on its starting value.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const counting = valueOf(tiles(canvasElement)[0]).querySelector('[aria-hidden]');
+    await expect(counting?.textContent).toBe('0');
+
+    box.scrollTop = box.scrollHeight;
+
+    await finishedCounting(canvasElement, ['12,345']);
+  },
 };
