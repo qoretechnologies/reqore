@@ -79,7 +79,8 @@ export interface IDatePickerProps<T extends TDateValue>
   timeFieldProps?: React.ComponentProps<typeof TimeField<Time>>;
   pickerDayProps?: IReqoreButtonProps;
   pickerActiveDayProps?: IReqoreButtonProps;
-  yearMonthPickerProps?: IReqoreButtonProps;
+  /** Spread onto the month / year pickers. Their `value` is the picker's own date. */
+  yearMonthPickerProps?: Omit<IReqoreButtonProps, 'value'>;
 
   minValue?: TDateValue;
   maxValue?: TDateValue;

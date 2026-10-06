@@ -5,7 +5,7 @@ import { IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown from '../Dropdown';
 
-export interface IYearMonthDropdownsProps extends IReqoreButtonProps {
+export interface IYearMonthDropdownsProps extends Omit<IReqoreButtonProps, 'value'> {
   value?: ZonedDateTime;
   onValueChange(value: ZonedDateTime, close: boolean): void;
   setIsMonthDropdownOpen(open: boolean): void;

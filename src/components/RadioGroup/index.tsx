@@ -22,6 +22,15 @@ export interface IReqoreRadioGroupProps
   onText?: string;
   offText?: string;
   margin?: 'left' | 'right' | 'both' | 'none';
+  /**
+   * Form field name shared by the options' native radio inputs. With it the options are one
+   * native group: the form posts the selected `value` under this name, the group is a single
+   * tab stop and the arrow keys move the choice. Without it each option is still a native
+   * radio (focusable, `Space` selects it), but they are not grouped and nothing is posted.
+   */
+  name?: string;
+  /** A choice must be made before the form submits. */
+  required?: boolean;
 }
 
 const ReqoreRadioGroup = ({
@@ -35,9 +44,11 @@ const ReqoreRadioGroup = ({
   onText,
   offText,
   margin = 'left',
+  name,
+  required,
   ...rest
 }: IReqoreRadioGroupProps) => (
-  <ReqoreControlGroup {...rest} vertical={vertical}>
+  <ReqoreControlGroup role='radiogroup' {...rest} vertical={vertical}>
     {items.map(({ value, divider, ...itemRest }, index) =>
       divider ? (
         <ReqoreMenuDivider
@@ -56,6 +67,10 @@ const ReqoreRadioGroup = ({
           margin={margin}
           {...itemRest}
           key={value}
+          type='radio'
+          name={name}
+          value={value}
+          required={required || itemRest.required}
           checked={value === selected}
           size={size || itemRest.size}
           disabled={disabled || itemRest.disabled}

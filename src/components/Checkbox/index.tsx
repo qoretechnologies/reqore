@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import React, { forwardRef, memo, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
@@ -75,6 +75,35 @@ export interface IReqoreCheckboxProps
 
   onCheckClick?: () => void;
   onUncheckClick?: () => void;
+
+  /**
+   * The native control drawn by this checkbox. Every checkbox renders a real, visually hidden
+   * `<input>` before its box: it is what a `<form>` posts, what the keyboard (`Space`) toggles
+   * and what a screen reader announces (`role="checkbox"`, or `"switch"` with `asSwitch`). Use
+   * `'radio'` for an option of a choice; `ReqoreRadioGroup` does it for its options.
+   * Defaults to `'checkbox'`.
+   */
+  type?: 'checkbox' | 'radio';
+  /** Form field name of the native input. Without one, nothing is posted. */
+  name?: string;
+  /** What the native input posts when checked. The browser posts `on` when it is not set. */
+  value?: string;
+  /**
+   * The initial state of an UNCONTROLLED checkbox (one given no `checked`): the box then
+   * follows the native input as it is clicked or toggled. Checkboxes only — a radio's
+   * siblings do not tell it when they take the choice, so radios stay controlled.
+   */
+  defaultChecked?: boolean;
+  /** The native input must be checked for its form to submit. */
+  required?: boolean;
+  /**
+   * Any other attribute of the native input (`id`, `form`, `autoFocus`, `onChange`, `onFocus`,
+   * …). `aria-*` attributes given to the checkbox itself are sent to the native input too.
+   */
+  inputProps?: Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    'type' | 'checked' | 'defaultChecked' | 'name' | 'value' | 'required' | 'disabled'
+  >;
 }
 
 export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
@@ -237,6 +266,35 @@ const StyledCheckbox = styled.div<IReqoreCheckboxStyle>`
       border-color: ${({ theme, checked }) => changeLightness(theme.main, checked ? 0.4 : 0.35)};
     }
   }
+
+  /* The native control: present for forms, keyboards and screen readers, invisible and
+     out of the pointer's way. It sits right before the box, so its focus ring can be
+     drawn ON the box. */
+  > .reqore-checkbox-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    pointer-events: none;
+  }
+
+  /* Outside the box and in the text colour: a ring in a shade of the surface is lost
+     around a box this small. */
+  > .reqore-checkbox-input:focus-visible + .reqore-checkbox-box {
+    outline: 2px solid
+      ${({ theme }) =>
+        rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.7)};
+    outline-offset: 2px;
+    border-radius: ${({ asSwitch }) => (asSwitch ? '50px' : '50%')};
+  }
+
+  .reqore-checkbox-label {
+    cursor: inherit;
+  }
 `;
 
 const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
@@ -247,7 +305,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       labelDetailPosition = 'right',
       size = 'normal',
       margin = 'left',
-      checked,
+      checked: checkedProp,
       disabled,
       className,
       labelPosition = 'right',
@@ -274,10 +332,41 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       wrapLabel,
       onCheckClick,
       onUncheckClick,
+      type = 'checkbox',
+      name,
+      value,
+      defaultChecked,
+      required,
+      inputProps,
       ...rest
     }: IReqoreCheckboxProps,
     ref
   ) => {
+    const isUncontrolled =
+      type === 'checkbox' && checkedProp === undefined && defaultChecked !== undefined;
+    const [uncontrolledChecked, setUncontrolledChecked] = useState<boolean>(!!defaultChecked);
+    const checked = isUncontrolled ? uncontrolledChecked : checkedProp;
+
+    const generatedId = useId();
+    const inputId = inputProps?.id ?? `reqore-checkbox-${generatedId}`;
+    const descriptionId = `${inputId}-description`;
+    const inputRef = useRef<HTMLInputElement>(null);
+    // True while a click on the drawing is being handed to the native input.
+    const forwardingClick = useRef(false);
+
+    // `aria-*` describe the control, so they go to the native input; the rest stays on the row.
+    const ariaProps: React.AriaAttributes = {};
+    const rowProps: React.HTMLAttributes<HTMLDivElement> = {};
+
+    Object.keys(rest).forEach((key) => {
+      if (key.startsWith('aria-') && key !== 'aria-hidden') {
+        ariaProps[key] = rest[key];
+      } else {
+        rowProps[key] = rest[key];
+      }
+    });
+
+    const { onClick } = rowProps;
     const [offRef, { width: offWidth }] = useMeasure();
     const [onRef, { width: onWidth }] = useMeasure();
     const _intent = checked
@@ -304,10 +393,111 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       return !!(onText || offText || onText === 0 || offText === 0);
     }, [onText, offText]);
 
+    /* One activation, one click. A pointer clicks the drawing (the native input takes no
+       pointer events), and that click is handed to the native input so it toggles, fires its
+       change and is posted; the copy is stopped at the input, so neither this handler nor
+       anything above it hears the same press twice. The keyboard and the label activate the
+       native input directly, and that click bubbles here like a pointer's would. Either way
+       the caller's `onClick` runs once. A read-only checkbox still calls it (the caller owns
+       the change), but its native input never toggles. */
+    const handleClick = useCallback(
+      (event: React.MouseEvent<HTMLDivElement>) => {
+        const input = inputRef.current;
+        const fromInput = event.target === input;
+
+        if (input && !fromInput && !disabled && !readOnly) {
+          forwardingClick.current = true;
+          input.click();
+          forwardingClick.current = false;
+        }
+
+        // The switch's halves have their own handlers; a key press has no half to land on.
+        if (fromInput && asSwitch) {
+          (checked ? onUncheckClick : onCheckClick)?.();
+        }
+
+        onClick?.(event);
+      },
+      [onClick, disabled, readOnly, asSwitch, checked, onCheckClick, onUncheckClick]
+    );
+
+    const handleInputClick = useCallback(
+      (event: React.MouseEvent<HTMLInputElement>) => {
+        if (readOnly) {
+          event.preventDefault();
+        }
+
+        if (forwardingClick.current) {
+          event.stopPropagation();
+        }
+
+        inputProps?.onClick?.(event);
+      },
+      [readOnly, inputProps?.onClick]
+    );
+
+    const handleInputChange = useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        // React reports a checkbox's change from its click, even one that was cancelled
+        // because the checkbox is read-only; nothing changed, so nothing is reported.
+        if (readOnly) {
+          return;
+        }
+
+        if (isUncontrolled) {
+          setUncontrolledChecked(event.target.checked);
+        }
+
+        inputProps?.onChange?.(event);
+      },
+      [readOnly, isUncontrolled, inputProps?.onChange]
+    );
+
+    // The label's own activation would click the input a second time: the row already did.
+    const handleLabelClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+    }, []);
+
+    const describedBy =
+      [description ? descriptionId : undefined, ariaProps['aria-describedby']]
+        .filter(Boolean)
+        .join(' ') || undefined;
+
+    const nativeInput = (
+      <input
+        role={asSwitch && type === 'checkbox' ? 'switch' : undefined}
+        aria-readonly={readOnly || undefined}
+        {...ariaProps}
+        {...inputProps}
+        aria-describedby={describedBy}
+        ref={inputRef}
+        id={inputId}
+        className={`${inputProps?.className || ''} reqore-checkbox-input`}
+        type={type}
+        name={name}
+        // Only when given: a `value` key, even `undefined`, makes React write `value=""`,
+        // which would replace the browser's `on`.
+        {...(value !== undefined ? { value } : {})}
+        required={required}
+        disabled={disabled}
+        checked={!!checked}
+        onClick={handleInputClick}
+        onChange={handleInputChange}
+      />
+    );
+
+    const labelProps = {
+      as: 'label' as React.ElementType,
+      htmlFor: inputId,
+      onClick: handleLabelClick,
+    };
+
     const { Component, props } = useComponentTooltip(
       {
-        ...rest,
+        ...rowProps,
+        onClick: handleClick,
         theme,
+        asSwitch,
         size,
         tooltip,
         disabled,
@@ -330,6 +520,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
               <ReqoreControlGroup>
                 {labelDetailPosition === 'left' && labelDetail}
                 <ReqoreTextEffect
+                  {...labelProps}
+                  className='reqore-checkbox-label'
                   active={checked}
                   effect={{
                     ...labelEffect,
@@ -343,6 +535,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
               </ReqoreControlGroup>
               {description && (
                 <ReqoreTextEffect
+                  id={descriptionId}
                   className='reqore-checkbox-description'
                   effect={{
                     textSize: getOneLessSize(size),
@@ -357,10 +550,12 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
             <ReqoreSpacer width={PADDING_FROM_SIZE[size]} />
           </>
         ) : null}
+        {nativeInput}
         {asSwitch ? (
           <StyledSwitch
+            className='reqore-checkbox-box'
+            aria-hidden='true'
             size={size}
-            tabIndex='0'
             labelPosition={labelPosition}
             checked={checked}
             theme={theme}
@@ -451,8 +646,9 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
           </StyledSwitch>
         ) : (
           <ReqoreIcon
+            className='reqore-checkbox-box'
+            aria-hidden='true'
             size={size}
-            tabIndex={0}
             icon={
               !image
                 ? checked
@@ -472,6 +668,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
               <ReqoreControlGroup>
                 {labelDetailPosition === 'left' && labelDetail}
                 <ReqoreTextEffect
+                  {...labelProps}
+                  className='reqore-checkbox-label'
                   active={checked}
                   effect={{
                     ...labelEffect,
@@ -485,6 +683,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
               </ReqoreControlGroup>
               {description && (
                 <ReqoreTextEffect
+                  id={descriptionId}
                   className='reqore-checkbox-description'
                   effect={{
                     textSize: getOneLessSize(size),

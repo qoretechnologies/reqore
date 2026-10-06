@@ -1,11 +1,12 @@
 import { StoryFn, StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
 import { useState } from 'react';
-import { expect, fireEvent } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreButton from '../../components/Button';
 import { ReqoreControlGroup, ReqoreMessage, ReqoreVerticalSpacer } from '../../index';
 import { StoryMeta } from '../utils';
+import { StoryForm, storyFormText } from '../utils/formPreview';
 import { ALL_SIZES, IconArg, RadiusSizeArg, SizeArg } from '../utils/args';
 
 const meta = {
@@ -972,5 +973,133 @@ export const Square: Story = {
       const labelMid = labelBox.left + labelBox.width / 2;
       await expect(Math.abs(labelMid - chipMid)).toBeLessThan(4);
     }
+  },
+};
+
+/* -------------------------------------------------------------------------------------------
+ * Form attributes and links.
+ * ----------------------------------------------------------------------------------------- */
+
+const TermsForm = () => (
+  <StoryForm>
+    <ReqoreControlGroup wrap>
+      <ReqoreButton type='submit' name='accept' value='Accept' intent='success' icon='CheckLine'>
+        Accept
+      </ReqoreButton>
+      <ReqoreButton type='submit' name='cancel' value='Decline' icon='CloseLine'>
+        Decline
+      </ReqoreButton>
+      <ReqoreButton type='button' icon='FileTextLine' className='story-read-terms'>
+        Read the terms
+      </ReqoreButton>
+    </ReqoreControlGroup>
+  </StoryForm>
+);
+
+const buttonByText = (text: string) =>
+  Array.from(document.querySelectorAll('.reqore-button')).find(
+    (button) => button.querySelector('.reqore-button-text-content')?.textContent === text
+  ) as HTMLButtonElement & HTMLAnchorElement;
+
+export const FormAttributes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a terms form with two named submit buttons and a `type="button"` one. "Read the terms" does not submit the form; "Decline" does, and the form posts the pressed button\'s name and value (`cancel=Decline`).',
+      },
+    },
+  },
+  render: TermsForm,
+  play: async () => {
+    const decline = await waitFor(() => {
+      expect(buttonByText('Decline')).toBeTruthy();
+      return buttonByText('Decline');
+    });
+
+    expect(decline.type).toBe('submit');
+    expect(decline.name).toBe('cancel');
+    expect(decline.value).toBe('Decline');
+    expect(buttonByText('Read the terms').type).toBe('button');
+
+    await userEvent.click(buttonByText('Read the terms'));
+    expect(storyFormText('submitted')).toBeUndefined();
+
+    await userEvent.click(decline);
+    await waitFor(() => expect(storyFormText('submitted')).toBe('cancel=Decline'));
+  },
+};
+
+export const AsLink: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders buttons given an `href`: each is a real link (`<a href>`, so it can be middle-clicked or opened in a new tab) that looks exactly like a button, with no link underline. The last one is disabled: dimmed, with no `href` to follow and `aria-disabled` set.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical fluid={false}>
+      <ReqoreButton href='#sign-in-google' icon='GoogleFill' className='story-link'>
+        Sign in with Google
+      </ReqoreButton>
+      <ReqoreButton
+        href='#sign-in-github'
+        target='_blank'
+        rel='noopener noreferrer'
+        icon='GithubFill'
+        intent='info'
+        className='story-link'
+      >
+        Sign in with GitHub
+      </ReqoreButton>
+      <ReqoreButton href='#sign-in-facebook' icon='FacebookFill' disabled className='story-link'>
+        Sign in with Facebook
+      </ReqoreButton>
+    </ReqoreControlGroup>
+  ),
+  play: async () => {
+    const links = await waitFor(() => {
+      const found = Array.from(document.querySelectorAll('.story-link')) as HTMLAnchorElement[];
+      expect(found.length).toBe(3);
+      return found;
+    });
+
+    expect(links.map((link) => link.tagName)).toEqual(['A', 'A', 'A']);
+    expect(links[0].getAttribute('href')).toBe('#sign-in-google');
+    expect(links[1].target).toBe('_blank');
+    expect(links[1].rel).toBe('noopener noreferrer');
+    expect(getComputedStyle(links[0]).textDecorationLine).toBe('none');
+
+    expect(links[2].hasAttribute('href')).toBe(false);
+    expect(links[2].getAttribute('aria-disabled')).toBe('true');
+    expect(getComputedStyle(links[2]).pointerEvents).toBe('none');
+  },
+};
+
+export const FormAttributesMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 700 } },
+    docs: {
+      description: {
+        story:
+          'Renders the terms form on a phone-width screen (380px): the three buttons wrap inside the screen, and tapping "Accept" submits the form with `accept=Accept`.',
+      },
+    },
+  },
+  render: TermsForm,
+  play: async () => {
+    const accept = await waitFor(() => {
+      expect(buttonByText('Accept')).toBeTruthy();
+      return buttonByText('Accept');
+    });
+
+    await userEvent.click(accept);
+    await waitFor(() => expect(storyFormText('submitted')).toBe('accept=Accept'));
+
+    const form = document.querySelector('.story-form') as HTMLElement;
+    expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth + 1);
   },
 };

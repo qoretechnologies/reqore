@@ -36,8 +36,12 @@ import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreFormTemplates extends IReqoreDropdownProps {}
 
+/**
+ * Every `<textarea>` attribute (`name`, `required`, `maxLength`, `minLength`, `form`, `wrap`,
+ * `autoComplete`, …) reaches the element, so the field posts with the form it sits in.
+ */
 export interface IReqoreTextareaProps
-  extends React.HTMLAttributes<HTMLTextAreaElement>,
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement>,
     IReqoreReadOnly,
     IReqoreDisabled,
     IWithReqoreCustomTheme,

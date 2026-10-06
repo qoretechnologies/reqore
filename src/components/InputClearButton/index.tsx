@@ -10,13 +10,16 @@ export interface IReqoreInputClearButtonProps extends IReqoreButtonProps {
   show: boolean;
   enabled: boolean;
   hasRightIcon?: boolean;
+  /** Extra room (px) taken at the field's right edge by something else, e.g. a password toggle. */
+  rightOffset?: number;
 }
 
 export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
-  shouldForwardProp: omitStyleProps('hasRightIcon', 'show'),
-})<{ hasRightIcon?: boolean; show?: boolean }>`
+  shouldForwardProp: omitStyleProps('hasRightIcon', 'show', 'rightOffset'),
+})<{ hasRightIcon?: boolean; show?: boolean; rightOffset?: number }>`
   position: absolute;
-  right: ${({ size, hasRightIcon }) => (hasRightIcon ? SIZE_TO_PX[size] : 0)}px;
+  right: ${({ size, hasRightIcon, rightOffset = 0 }) =>
+    (hasRightIcon ? SIZE_TO_PX[size] : 0) + rightOffset}px;
   top: 0;
   justify-content: center;
   align-items: center;

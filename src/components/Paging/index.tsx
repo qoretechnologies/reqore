@@ -282,9 +282,12 @@ function Pagination<T>({
                     label: `${showLabels ? `${pageLabel} ` : ''}${page}`,
                     onClick: () => setPage(page),
                     selected: page === currentPage,
-                    ...(page === currentPage
-                      ? (activePageButtonProps as IReqoreDropdownItemProps)
-                      : (pageButtonProps as IReqoreDropdownItemProps)),
+                    // Read as item props minus the click handlers: a dropdown item's
+                    // `onClick` receives the item, a button's the mouse event.
+                    ...((page === currentPage ? activePageButtonProps : pageButtonProps) as Omit<
+                      IReqoreDropdownItemProps,
+                      'onClick' | 'onItemClick'
+                    >),
                   }))}
                   placement='bottom'
                   inputProps={{ focusRules: { type: 'auto', viewportOnly: true } }}

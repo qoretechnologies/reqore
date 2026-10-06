@@ -5,6 +5,7 @@ import { IReqoreTextareaProps } from '../../components/Textarea';
 import { sleep } from '../../helpers/utils';
 import { ReqoreButton, ReqoreControlGroup, ReqoreTextarea } from '../../index';
 import { StoryMeta } from '../utils';
+import { StoryForm, storyFormText } from '../utils/formPreview';
 import { ALL_SIZES, DisabledArg, MinimalArg, RadiusSizeArg, SizeArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqoreTextareaProps>();
@@ -555,5 +556,93 @@ export const TemplatesAreClosedWhenFocusIsLost: Story = {
     // Press the tab key to move focus to the button
     await userEvent.keyboard('{Tab}');
     await expect(document.querySelector('.reqore-popover-content')).toBeFalsy();
+  },
+};
+
+/* -------------------------------------------------------------------------------------------
+ * Form attributes: every `<textarea>` attribute reaches the element.
+ * ----------------------------------------------------------------------------------------- */
+
+const AboutForm = () => {
+  const [value, setValue] = useState('Integration lead at a mid-sized bank.');
+
+  return (
+    <StoryForm>
+      <ReqoreControlGroup vertical fluid>
+        <ReqoreTextarea
+          name='about'
+          required
+          maxLength={120}
+          minLength={10}
+          fluid
+          scaleWithContent
+          rows={3}
+          placeholder='Tell us about yourself'
+          className='story-about'
+          value={value}
+          onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setValue(event.target.value)}
+        />
+        <ReqoreButton type='submit' intent='info' fixed>
+          Save profile
+        </ReqoreButton>
+      </ReqoreControlGroup>
+    </StoryForm>
+  );
+};
+
+export const FormAttributes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a textarea named `about` (required, 10 to 120 characters) inside a form. The form posts it under its own name; typing more is posted as typed, and "Save profile" submits it.',
+      },
+    },
+  },
+  render: AboutForm,
+  play: async () => {
+    const textarea = await waitFor(() => {
+      const element = document.querySelector('textarea.story-about') as HTMLTextAreaElement;
+      expect(element).toBeTruthy();
+      return element;
+    });
+
+    expect(textarea.name).toBe('about');
+    expect(textarea.required).toBe(true);
+    expect(textarea.maxLength).toBe(120);
+    expect(textarea.minLength).toBe(10);
+    await waitFor(() =>
+      expect(storyFormText('posts')).toBe('about=Integration lead at a mid-sized bank.')
+    );
+
+    await userEvent.type(textarea, ' Ten years of EDI.');
+    await userEvent.click(document.querySelector('button[type="submit"]'));
+
+    await waitFor(() =>
+      expect(storyFormText('submitted')).toBe(
+        'about=Integration lead at a mid-sized bank. Ten years of EDI.'
+      )
+    );
+  },
+};
+
+export const FormAttributesMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 700 } },
+    docs: {
+      description: {
+        story:
+          'Renders the profile form on a phone-width screen (380px): the named textarea fills the width and its text wraps inside it.',
+      },
+    },
+  },
+  render: AboutForm,
+  play: async () => {
+    await waitFor(() =>
+      expect(storyFormText('posts')).toBe('about=Integration lead at a mid-sized bank.')
+    );
+    const form = document.querySelector('.story-form') as HTMLElement;
+    expect(form.scrollWidth).toBeLessThanOrEqual(form.clientWidth + 1);
   },
 };
