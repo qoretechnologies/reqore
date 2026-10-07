@@ -42,8 +42,22 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
   activeColor: string;
 }
 
+// The props the item's styles read. A `div` drops most of them on its own, but not `fill` (an SVG
+// attribute) or `disabled`, and a component given as the tab's `as` would receive all of them.
 export const StyledTabListItem = styled.div.withConfig({
-  shouldForwardProp: omitStyleProps('fill'),
+  shouldForwardProp: omitStyleProps(
+    'active',
+    'activeColor',
+    'activeTabMarker',
+    'disabled',
+    'fill',
+    'fixed',
+    'intent',
+    'padded',
+    'size',
+    'theme',
+    'vertical'
+  ),
 })<IReqoreTabListItemStyle>`
   ${({
     theme,

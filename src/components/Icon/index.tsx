@@ -7,7 +7,7 @@ import styled, { css, keyframes } from 'styled-components';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ICON_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { IReqoreIntent, IWithReqoreEffect, IWithReqoreTooltip } from '../../types/global';
@@ -90,14 +90,15 @@ export const StyledIconWrapper = styled(StyledEffect).withConfig({
     'animation',
     'compact',
     'effect',
-    // Handed down by a containing `ReqoreControlGroup`.
-    'fill',
     'interactive',
     'margin',
     'marginSize',
     'rotation',
     'rounded',
-    'tooltip'
+    'tooltip',
+    // The icon's size, and everything a containing `ReqoreControlGroup` hands it (`fill`,
+    // `customTheme`, its place in a stack, ...).
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
   ),
 })<{ margin: 'right' | 'left' | 'both' }>`
   display: inline-flex;

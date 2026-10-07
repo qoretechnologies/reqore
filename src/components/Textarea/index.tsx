@@ -12,7 +12,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import { listReqoreStyleProps, omitStyleProps, TReqoreStylePropKeys } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -98,7 +98,10 @@ export interface IReqoreTextareaStyle extends IReqoreTextareaProps {
   _size?: TSizes;
 }
 
-export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
+// `width` and `height` size the wrapper through its styles; a `div` has neither attribute.
+export const StyledTextareaWrapper = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('height', 'width'),
+})<IReqoreTextareaStyle>`
   height: ${({ height }) => (height ? `${height}px` : undefined)};
   min-height: ${({ _size }) => SIZE_TO_PX[_size]}px;
   max-height: 100%;
@@ -120,12 +123,46 @@ export const StyledTextareaWrapper = styled.div<IReqoreTextareaStyle>`
   }
 `;
 
+/**
+ * Every textarea prop that only styles or configures the field. None of them reaches the
+ * rendered element — the `<textarea>`, or a component given as `as` (Slate's editable in
+ * `ReqoreRichTextEditor`, which writes the props it does not know onto its `div`). Its own props
+ * (`renderElement`, `renderLeaf`, `decorate`, ...) and every `<textarea>` attribute still do. The
+ * compiler checks the record against `IReqoreTextareaStyle`, so a new prop that is not added
+ * here fails the build instead of leaking.
+ */
+export const REQORE_TEXTAREA_STYLE_PROPS = listReqoreStyleProps<
+  TReqoreStylePropKeys<IReqoreTextareaStyle, React.TextareaHTMLAttributes<HTMLTextAreaElement>>
+>({
+  customTheme: true,
+  effect: true,
+  fixed: true,
+  flat: true,
+  fluid: true,
+  focusRules: true,
+  hasClearButton: true,
+  height: true,
+  inheritCustomTheme: true,
+  intent: true,
+  keepTemplatesOpenWhileTyping: true,
+  minimal: true,
+  onClearClick: true,
+  radiusSize: true,
+  rounded: true,
+  scaleWithContent: true,
+  shortcutHint: true,
+  size: true,
+  _size: true,
+  templates: true,
+  theme: true,
+  tooltip: true,
+  transparent: true,
+  width: true,
+  wrapperStyle: true,
+});
+
 export const StyledTextarea = styled(StyledEffect).withConfig({
-  // `hasClearButton` drives padding only and must never reach the DOM. Everything else
-  // follows styled-components' own rule, so a polymorphic `as` component — Slate's
-  // editable in `ReqoreRichTextEditor` — still receives `renderElement` / `renderLeaf` /
-  // `decorate`, which are component props rather than HTML attributes.
-  shouldForwardProp: omitStyleProps('hasClearButton'),
+  shouldForwardProp: omitStyleProps(...REQORE_TEXTAREA_STYLE_PROPS),
 })<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;

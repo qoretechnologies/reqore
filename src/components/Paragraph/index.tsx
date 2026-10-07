@@ -1,7 +1,7 @@
 import { forwardRef, memo } from 'react';
 import styled from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { omitStyleProps } from '../../helpers/styled';
+import { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
@@ -32,9 +32,11 @@ export interface IReqoreParagraphProps
   as?: React.ElementType;
 }
 
-// `fill` is handed down by a containing `ReqoreControlGroup`; a `p` would keep it.
+// `_size` is the paragraph's text size, for its styles; the layout flags a containing
+// `ReqoreControlGroup` hands it are for the group. A `p` would keep `fill` (an SVG attribute), and
+// a component the paragraph is rendered `as` would receive them all.
 export const StyledParagraph = styled(StyledTextEffect).withConfig({
-  shouldForwardProp: omitStyleProps('fill'),
+  shouldForwardProp: omitStyleProps('_size', ...REQORE_CONTROL_GROUP_CHILD_PROPS),
 })`
   padding: 0;
   margin: 0;

@@ -3,12 +3,14 @@ import { render } from '@testing-library/react';
 import { ReactElement } from 'react';
 import {
   DatePicker,
+  ReqoreBreadcrumbsItem,
   ReqoreButton,
   ReqoreCheckbox,
   ReqoreCollection,
   ReqoreContent,
   ReqoreControlGroup,
   ReqoreHeader,
+  ReqoreIcon,
   ReqoreInput,
   ReqoreKeyValueTable,
   ReqoreLayoutContent,
@@ -25,11 +27,18 @@ import {
   ReqoreSpacer,
   ReqoreTabs,
   ReqoreTabsContent,
+  ReqoreTabsListItem,
   ReqoreTag,
+  ReqoreTextarea,
   ReqoreTimeline,
   ReqoreTree,
   ReqoreUIProvider,
 } from '../src';
+import { animated } from '@react-spring/web';
+import { REQORE_BUTTON_STYLE_PROPS } from '../src/components/Button';
+import { REQORE_PANEL_STYLE_PROPS } from '../src/components/Panel';
+import { REQORE_TAG_STYLE_PROPS } from '../src/components/Tag';
+import { REQORE_TEXTAREA_STYLE_PROPS } from '../src/components/Textarea';
 import { REQORE_CONTROL_GROUP_CHILD_PROPS } from '../src/helpers/styled';
 
 /**
@@ -58,6 +67,9 @@ const NOT_ON_HTML: Record<string, string[]> = {
   spacing: [],
   // Legacy `<font color>` only.
   color: [],
+  disabled: ['button', 'input', 'select', 'textarea', 'option', 'optgroup', 'fieldset'],
+  readOnly: ['input', 'textarea'],
+  label: ['track', 'option', 'optgroup'],
   wrap: ['textarea'],
   width: ['img', 'canvas', 'video', 'iframe', 'input', 'embed', 'object', 'col', 'colgroup'],
   height: ['img', 'canvas', 'video', 'iframe', 'input', 'embed', 'object'],
@@ -89,6 +101,16 @@ const NOT_ON_HTML: Record<string, string[]> = {
   ],
 };
 
+/**
+ * Attributes of some element that a Reqore component uses for its own meaning (`size='small'`).
+ * Checked on the element a component target renders — the stubs below mark theirs — because
+ * that element received the props a component was handed, and none of these were the caller's.
+ */
+const NOT_ON_A_COMPONENT_TARGET = ['size'];
+
+/** Set by the stub components below on the element they render. */
+const COMPONENT_TARGET_ATTRIBUTE = 'data-component-target';
+
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 const getReactProps = (element: Element): Record<string, unknown> | undefined => {
@@ -115,6 +137,7 @@ const findLeakedProps = (): string[] => {
     }
 
     const tag = element.tagName.toLowerCase();
+    const isComponentTarget = element.hasAttribute(COMPONENT_TARGET_ATTRIBUTE);
 
     Object.entries(props).forEach(([prop, value]) => {
       // React renders nothing for an absent value, and says nothing about it either.
@@ -128,7 +151,11 @@ const findLeakedProps = (): string[] => {
 
       const allowedOn = NOT_ON_HTML[prop];
 
-      if (!isPropValid(prop) || (allowedOn && !allowedOn.includes(tag))) {
+      if (
+        !isPropValid(prop) ||
+        (allowedOn && !allowedOn.includes(tag)) ||
+        (isComponentTarget && NOT_ON_A_COMPONENT_TARGET.includes(prop))
+      ) {
         leaks.push(`${describeElement(element)} ${prop}`);
       }
     });
@@ -170,9 +197,25 @@ const renderInProvider = (element: ReactElement) =>
 
 /** A router's link: it writes every prop it does not know onto its `<a>`. */
 const RouterLinkStub = ({ to, children, ...rest }: any) => (
-  <a href={to} {...rest}>
+  <a href={to} {...{ [COMPONENT_TARGET_ATTRIBUTE]: true }} {...rest}>
     {children}
   </a>
+);
+
+// A router link's `to`. Typed loosely: the components accept a component's own props through
+// `as`, which their prop types cannot name.
+const ROUTER_LINK_TO = { to: '/issues' } as Record<string, string>;
+
+/** An editor surface (Slate's `Editable`): it too writes the props it does not know onto its div. */
+const EditorStub = ({ value, onChange: _onChange, ...rest }: any) => (
+  <div
+    contentEditable
+    suppressContentEditableWarning
+    {...{ [COMPONENT_TARGET_ATTRIBUTE]: true }}
+    {...rest}
+  >
+    {value}
+  </div>
 );
 
 // `fill` is not a checkbox prop, but a containing control group hands it to every child, and
@@ -358,6 +401,208 @@ const CASES: [string, () => ReactElement][] = [
     ),
   ],
   ['a KeyValueTable', () => <ReqoreKeyValueTable data={{ key: 'value', other: 'value' }} />],
+  [
+    'a Button rendered as a router link in a vertical stack group',
+    () => (
+      <ReqoreControlGroup vertical stack fluid spaceBetween>
+        <ReqoreButton
+          as={RouterLinkStub}
+          {...ROUTER_LINK_TO}
+          fluid
+          compact
+          flat
+          animated
+          maxWidth='200px'
+          alignSelf='center'
+          rounded
+          pill
+          raised
+          grow={1}
+          shrink={1}
+          verticalPadding='small'
+          radiusSize='big'
+          textAlign='center'
+          iconsAlign='center'
+          active
+          minimal
+          transparent
+          readOnly
+          wrap
+          size='small'
+          icon='CheckLine'
+          rightIcon='ArrowRightLine'
+          iconColor='info'
+          description='Description'
+          badge={1}
+          indicator
+          tooltip='Tooltip'
+        >
+          Go to issues
+        </ReqoreButton>
+        <ReqoreButton as={RouterLinkStub} {...ROUTER_LINK_TO} square fixed circle>
+          X
+        </ReqoreButton>
+      </ReqoreControlGroup>
+    ),
+  ],
+  [
+    'a Breadcrumbs item rendered as a router link',
+    () => (
+      <ReqoreBreadcrumbsItem
+        as={RouterLinkStub}
+        {...ROUTER_LINK_TO}
+        label='Issues'
+        size='small'
+        interactive
+      />
+    ),
+  ],
+  [
+    'a Menu item rendered as a router link',
+    () => (
+      <ReqoreMenu>
+        <ReqoreMenuItem as={RouterLinkStub} {...ROUTER_LINK_TO} label='Issues' wrap />
+      </ReqoreMenu>
+    ),
+  ],
+  [
+    'a Tag rendered as a router link in a control group',
+    () => (
+      <ReqoreControlGroup fill stack>
+        <ReqoreTag
+          {...({ as: RouterLinkStub, to: '/issues' } as any)}
+          label='Tag'
+          labelKey='Key'
+          width='100px'
+          fixed
+          minimal
+          rounded
+          asBadge
+          size='small'
+          intent='info'
+          tooltip='Tooltip'
+          onRemoveClick={vi.fn()}
+        />
+      </ReqoreControlGroup>
+    ),
+  ],
+  [
+    'a Paragraph rendered as a router link in a control group',
+    () => (
+      <ReqoreControlGroup fill>
+        <ReqoreP as={RouterLinkStub} {...ROUTER_LINK_TO} size='small' inline tooltip='Tooltip'>
+          Paragraph
+        </ReqoreP>
+      </ReqoreControlGroup>
+    ),
+  ],
+  [
+    'a transparent Panel rendered as a router link',
+    () => (
+      <ReqorePanel
+        as={RouterLinkStub}
+        {...ROUTER_LINK_TO}
+        label='Panel'
+        transparent
+        flat
+        fluid
+        rounded
+        minimal
+        disabled
+        opacity={0.5}
+        intent='info'
+        tooltip='Tooltip'
+      >
+        Content
+      </ReqorePanel>
+    ),
+  ],
+  [
+    'a resizable, transparent Panel',
+    () => (
+      <ReqorePanel
+        label='Panel'
+        resizable={{ enable: { right: true }, minWidth: 100 }}
+        transparent
+        minimal
+        padded={false}
+        contentStyle={{ padding: 0 }}
+        badge={1}
+      >
+        Content
+      </ReqorePanel>
+    ),
+  ],
+  [
+    'a resizable Panel in a stack group',
+    () => (
+      <ReqoreControlGroup stack fluid>
+        <ReqorePanel label='One' resizable={{ enable: { right: true } }} transparent>
+          One
+        </ReqorePanel>
+        <ReqorePanel label='Two' resizable={{ enable: { right: true } }}>
+          Two
+        </ReqorePanel>
+      </ReqoreControlGroup>
+    ),
+  ],
+  [
+    'a Tabs list item rendered as a router link',
+    () => (
+      <ReqoreTabsListItem
+        id='issues'
+        as={RouterLinkStub}
+        props={ROUTER_LINK_TO}
+        label='Issues'
+        active
+        disabled
+        fill
+        vertical
+        padded={false}
+        intent='info'
+        size='small'
+        activeTabMarker='line'
+      />
+    ),
+  ],
+  [
+    'a Textarea rendered as an editor component',
+    () => (
+      <ReqoreTextarea
+        as={EditorStub}
+        value='Value'
+        onChange={vi.fn()}
+        flat
+        minimal
+        rounded={false}
+        transparent
+        fluid
+        fixed
+        width={100}
+        height={100}
+        scaleWithContent
+        intent='info'
+      />
+    ),
+  ],
+  [
+    'an animated Icon in a control group',
+    () => (
+      <ReqoreControlGroup stack fill customTheme={{ main: '#ff0000' }}>
+        <ReqoreIcon
+          wrapperElement={animated.span}
+          icon='CheckLine'
+          size='small'
+          margin='right'
+          rounded
+          interactive
+          compact
+          intent='info'
+        />
+        <ReqoreIcon wrapperElement={animated.span} image='image.png' size='small' />
+      </ReqoreControlGroup>
+    ),
+  ],
   ['a Spacer', () => <ReqoreSpacer width={10} height={10} lineSize='normal' />],
 ];
 
@@ -401,6 +646,17 @@ describe('the leak detector', () => {
       '<div.reqore-probe> hasIcon',
       '<div.reqore-probe> width',
     ]);
+  });
+
+  test("finds a Reqore `size` a component target's element was given", () => {
+    renderInProvider(
+      <>
+        <RouterLinkStub to='/issues' className='reqore-probe' size='small' />
+        <input className='reqore-probe-input' size={10} />
+      </>
+    );
+
+    expect(findLeakedProps()).toEqual(['<a.reqore-probe> size']);
   });
 
   test('leaves real attributes, data and aria attributes, and SVG presentation alone', () => {
@@ -453,4 +709,35 @@ test('REQORE_CONTROL_GROUP_CHILD_PROPS names every prop a control group hands it
   handedOut.delete('style');
 
   expect([...handedOut].sort()).toEqual([...REQORE_CONTROL_GROUP_CHILD_PROPS].sort());
+});
+
+describe('the style prop lists', () => {
+  // The compiler checks each list against its component's prop interface; these check that no
+  // list holds a prop the rendered element or component is meant to receive.
+  test.each([
+    [
+      'ReqoreButton',
+      REQORE_BUTTON_STYLE_PROPS,
+      ['disabled', 'href', 'type', 'onClick', 'children'],
+    ],
+    ['ReqoreTag', REQORE_TAG_STYLE_PROPS, ['onClick', 'children', 'className', 'style']],
+    [
+      'ReqoreTextarea',
+      REQORE_TEXTAREA_STYLE_PROPS,
+      ['value', 'readOnly', 'disabled', 'rows', 'wrap', 'placeholder', 'onChange'],
+    ],
+    // re-resizable's own props: a `Resizable` panel needs them.
+    ['ReqorePanel', REQORE_PANEL_STYLE_PROPS, ['size', 'enable', 'minWidth', 'style', 'children']],
+  ])('%s forwards what its element needs', (_name, list: string[], forwarded) => {
+    forwarded.forEach((prop) => expect(list).not.toContain(prop));
+  });
+
+  test.each([
+    ['ReqoreButton', REQORE_BUTTON_STYLE_PROPS, ['fluid', 'compact', 'maxWidth', 'alignSelf']],
+    ['ReqorePanel', REQORE_PANEL_STYLE_PROPS, ['transparent', 'flat', 'opacity', 'disabled']],
+    ['ReqoreTag', REQORE_TAG_STYLE_PROPS, ['asBadge', 'labelKey', 'width', 'size']],
+    ['ReqoreTextarea', REQORE_TEXTAREA_STYLE_PROPS, ['flat', 'minimal', 'rounded', 'width']],
+  ])('%s keeps back its styling props', (_name, list: string[], kept) => {
+    kept.forEach((prop) => expect(list).toContain(prop));
+  });
 });

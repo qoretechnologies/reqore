@@ -37,7 +37,12 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import {
+  listReqoreStyleProps,
+  omitStyleProps,
+  REQORE_CONTROL_GROUP_CHILD_PROPS,
+  TReqoreStylePropKeys,
+} from '../../helpers/styled';
 import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -575,24 +580,104 @@ const getPanelBorderBaseColor = (
   { intent, accentPosition }: Pick<IStyledPanel, 'intent' | 'accentPosition'>
 ) => (intent && !accentPosition ? theme.intents[intent] : getMainBackgroundColor(theme));
 
+/**
+ * Every panel prop that only styles or configures the panel. None of them reaches the rendered
+ * element — the `div`, re-resizable's `Resizable` (which spreads every prop it does not know onto
+ * its wrapper div), or a component given as `as`. The compiler checks the record against
+ * `IStyledPanel`, so a new prop that is not added here fails the build instead of leaking.
+ *
+ * re-resizable's own props (`size`, `enable`, `minWidth`, handles, ...) are not in it: they are
+ * the `Resizable`'s to receive. `opacity` is the surface's background opacity, an SVG attribute
+ * a `div` would keep.
+ */
+export const REQORE_PANEL_STYLE_PROPS = listReqoreStyleProps<
+  TReqoreStylePropKeys<IStyledPanel, React.HTMLAttributes<HTMLDivElement> & ResizableProps>
+>({
+  accentPosition: true,
+  actions: true,
+  badge: true,
+  blur: true,
+  bottomActions: true,
+  breadcrumbs: true,
+  closeButtonProps: true,
+  closePopover: true,
+  closeTooltip: true,
+  collapseButtonProps: true,
+  collapseTooltip: true,
+  collapsible: true,
+  compactTitle: true,
+  contentEffect: true,
+  contentSize: true,
+  contentStyle: true,
+  customLabelTooltip: true,
+  customTheme: true,
+  description: true,
+  descriptionEffect: true,
+  descriptionIntent: true,
+  descriptionMaxLines: true,
+  descriptionPosition: true,
+  disabled: true,
+  errorBoundaryOptions: true,
+  expandTooltip: true,
+  fill: true,
+  fitLabel: true,
+  flat: true,
+  floatingActions: true,
+  fluid: true,
+  getContentRef: true,
+  icon: true,
+  iconColor: true,
+  iconImage: true,
+  iconProps: true,
+  iconVerticalAlign: true,
+  iconWithLabel: true,
+  inheritCustomTheme: true,
+  intent: true,
+  isCollapsed: true,
+  isStuck: true,
+  label: true,
+  labelEffect: true,
+  labelMaxLines: true,
+  labelMinTextSize: true,
+  labelProps: true,
+  labelSize: true,
+  loading: true,
+  loadingIconType: true,
+  minimal: true,
+  noHorizontalPadding: true,
+  onClose: true,
+  onCollapseChange: true,
+  onLabelEdit: true,
+  opacity: true,
+  padded: true,
+  radiusSize: true,
+  raised: true,
+  resizable: true,
+  responsiveActions: true,
+  responsiveActionsWrapperProps: true,
+  responsiveTitle: true,
+  rounded: true,
+  showActionsWhenCollapsed: true,
+  showLabelTooltip: true,
+  skeleton: true,
+  stickyHeader: true,
+  stickyHeaderInset: true,
+  stickyHeaderOffset: true,
+  theme: true,
+  tooltip: true,
+  transparent: true,
+  unMountContentOnCollapse: true,
+  wrapperPadding: true,
+});
+
 export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
-  // `fill` controls panel layout and must not become a boolean DOM attribute. Neither must
-  // `accentPosition`: when the panel renders as a `Resizable` (a COMPONENT target) the rule
-  // below forwards everything, and re-resizable spreads the leftovers onto its wrapper div.
-  // Filtering here still leaves the styled-component's own interpolations reading the prop.
-  // Everything else follows styled-components' own rule, so re-resizable still receives its
-  // `enable` / size / handle config — those are component props, not HTML attributes.
-  // `opacity` is the surface's background opacity, an SVG attribute a `div` would keep; the
-  // remaining flags only style the surface, and re-resizable would write them onto its div.
+  // Its own props, `interactive` (set by the panel for its hover styles) and the layout flags a
+  // containing ControlGroup hands it — except `size`, which a panel never forwards but a
+  // `Resizable` reads as its own.
   shouldForwardProp: omitStyleProps(
-    'accentPosition',
-    'fill',
-    'flat',
-    'fluid',
-    'interactive',
-    'isCollapsed',
-    'opacity',
-    'rounded'
+    ...REQORE_PANEL_STYLE_PROPS,
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS.filter((prop) => prop !== 'size'),
+    'interactive'
   ),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
