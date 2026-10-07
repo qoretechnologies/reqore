@@ -1397,6 +1397,60 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       setIsHovered(false);
     }, []);
 
+    /* The way from the panel to its floating actions.
+     *
+     * The actions float above the panel's top-right corner, so a pointer heading for
+     * them from inside the panel leaves the panel through its top edge - usually to the
+     * LEFT of the actions, on a diagonal - and passes over what lies above the panel
+     * before it reaches them. Ending the hover the moment the pointer left the panel
+     * hid the actions on that way, and the click meant for them landed on what they had
+     * been covering (in reqraft's expression editor: the Visual / Text switch, so
+     * "Remove" switched the view instead).
+     *
+     * So while the pointer is in the strip between the panel's top edge and the top of
+     * the actions, across the panel's width, the hover stays; it ends when the pointer
+     * leaves that strip for anything that is neither the panel nor the actions. Decided
+     * by where the pointer IS, on each move - no timer to guess the time a person needs. */
+    const corridorUntrackRef = useRef<(() => void) | null>(null);
+    const stopCorridor = useCallback(() => {
+      corridorUntrackRef.current?.();
+      corridorUntrackRef.current = null;
+    }, []);
+    const inCorridor = useCallback((x: number, y: number): boolean => {
+      if (!panelRef.current || !floatingActionsRef.current) return false;
+      if (floatingActionsRef.current.style.display === 'none') return false;
+      const panelRect = panelRef.current.getBoundingClientRect();
+      const actionsRect = floatingActionsRef.current.getBoundingClientRect();
+      return (
+        x >= Math.min(panelRect.left, actionsRect.left) &&
+        x <= Math.max(panelRect.right, actionsRect.right) &&
+        y >= actionsRect.top &&
+        y <= panelRect.top + 1
+      );
+    }, []);
+    const followCorridor = useCallback(() => {
+      stopCorridor();
+      const onMove = (event: PointerEvent | MouseEvent) => {
+        const target = event.target instanceof Node ? event.target : null;
+        // reached the actions or came back into the panel: their own handlers take over
+        if (
+          target &&
+          (floatingActionsRef.current?.contains(target) || panelRef.current?.contains(target))
+        ) {
+          stopCorridor();
+          return;
+        }
+        if (!inCorridor(event.clientX, event.clientY)) {
+          stopCorridor();
+          cancelHover();
+        }
+      };
+      document.addEventListener('mousemove', onMove, true);
+      corridorUntrackRef.current = () => document.removeEventListener('mousemove', onMove, true);
+    }, [cancelHover, inCorridor, stopCorridor]);
+    // a corridor followed when the panel goes is followed no more
+    useEffect(() => stopCorridor, [stopCorridor]);
+
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (floatingActions) {
@@ -1410,11 +1464,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             return;
           }
 
-          cancelHover();
+          if (_isHovered && inCorridor(e.clientX, e.clientY)) {
+            followCorridor();
+          } else {
+            cancelHover();
+          }
         }
         rest.onMouseLeave?.(e);
       },
-      [floatingActions, rest.onMouseLeave, cancelHover]
+      [floatingActions, rest.onMouseLeave, cancelHover, _isHovered, inCorridor, followCorridor]
     );
 
     const handleFloatingActionsMouseLeave = useCallback(
@@ -1429,9 +1487,15 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           return;
         }
 
+        // back towards the panel through the strip between them
+        if (inCorridor(e.clientX, e.clientY)) {
+          followCorridor();
+          return;
+        }
+
         cancelHover();
       },
-      [cancelHover]
+      [cancelHover, inCorridor, followCorridor]
     );
 
     /* The panel renders as re-resizable's `Resizable` when it is resizable — unless the caller
