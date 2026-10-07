@@ -75,6 +75,24 @@ describe('a list opened by focus', () => {
     expect(isOpen()).toBe(true);
   });
 
+  it('stays closed after Escape while the field keeps the focus', () => {
+    // the focus check is made once per field: the list's own opening and closing re-run the popover's
+    // listener effect, and a check on every re-run reopened the list Escape had just closed
+    show();
+    const field = document.querySelector('.reqore-input') as HTMLInputElement;
+    act(() => {
+      field.focus();
+    });
+    settle();
+    expect(isOpen()).toBe(true);
+    act(() => {
+      fireEvent.keyDown(document, { key: 'Escape' });
+    });
+    settle();
+    expect(document.activeElement).toBe(field);
+    expect(isOpen()).toBe(false);
+  });
+
   it('stays closed for a field nobody is in', () => {
     show();
     settle();
