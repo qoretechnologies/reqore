@@ -25,6 +25,9 @@ import { IReqoreParagraphProps, ReqoreP } from '../Paragraph';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import { IReqoreTagProps } from '../Tag';
 
+// One object for every render: the paragraph is memoized, and a fresh style would defeat it.
+const TIER_DESCRIPTION_STYLE: React.CSSProperties = { textAlign: 'center', padding: '0 20px' };
+
 export interface IReqoreTierFeature extends Omit<IReqoreParagraphProps, 'content'> {
   icon?: IReqoreIconName;
   iconProps?: IReqoreIconProps;
@@ -227,7 +230,7 @@ const ReqoreClassicTier = memo(
             <ReqoreP
               as='div'
               className='reqore-tier-description'
-              style={{ textAlign: 'center', padding: '0 20px' }}
+              style={TIER_DESCRIPTION_STYLE}
             >
               {description}
             </ReqoreP>
