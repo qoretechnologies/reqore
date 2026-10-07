@@ -107,3 +107,20 @@ test('without dragToScroll the mouse does not drag the table, as before', () => 
 
   expect(body.scrollLeft).toBe(0);
 });
+
+test('Shift with a plain wheel on the header scrolls the table sideways', () => {
+  const { body, header } = renderTable();
+  body.scrollTo = ((options: ScrollToOptions) => {
+    body.scrollLeft = options.left ?? body.scrollLeft;
+  }) as typeof body.scrollTo;
+
+  fireEvent.wheel(header, { deltaY: 90, shiftKey: true });
+
+  expect(body.scrollLeft).toBe(90);
+});
+
+test('with dragToScroll, the body says it can be pulled', () => {
+  const { body } = renderTable({ dragToScroll: true });
+
+  expect(body.closest('.reqore-table-wrapper-draggable')).not.toBeNull();
+});

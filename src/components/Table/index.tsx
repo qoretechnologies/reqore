@@ -447,6 +447,16 @@ const StyledTableWrapper = styled.div`
   flex: 1;
   overflow: hidden;
 
+  /* dragToScroll: the body says it can be pulled, and while a pull is on, nothing under
+     it is selected. Only a body that overflows sideways can be pulled. */
+  &.reqore-table-wrapper-draggable .reqore-table-body {
+    cursor: grab;
+  }
+  .reqore-table-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+
   ${({ rounded, size = 'normal' }) => css`
     border-radius: ${rounded === false ? 0 : RADIUS_FROM_SIZE[size]}px;
   `}
@@ -1282,7 +1292,7 @@ const ReqoreTable = ({
     return (
       <StyledTableWrapper
         ref={wrapperRef}
-        className='reqore-table-wrapper'
+        className={`reqore-table-wrapper${dragToScroll ? ' reqore-table-wrapper-draggable' : ''}`}
         rounded={rest.rounded !== false && rest.flat !== false}
         size={rest.flat === false ? wrapperSize : zoomSize}
       >
