@@ -91,3 +91,34 @@ export const REQORE_CONTROL_GROUP_CHILD_PROPS = [
   'isMasterGroupRounded',
   'rounded',
 ];
+
+/**
+ * The props of a styled component's prop interface `TProps` that only style it: every key that
+ * is not one of `TTargetProps` — the attributes and props of what the component renders.
+ *
+ * `as`, `forwardedAs` and transient (`$`-prefixed) props are left out: styled-components consumes
+ * those itself and never forwards them.
+ */
+export type TReqoreStylePropKeys<TProps, TTargetProps> = Exclude<
+  Extract<keyof TProps, string>,
+  keyof TTargetProps | 'as' | 'forwardedAs' | `$${string}`
+>;
+
+/**
+ * Lists a component's styling props for `omitStyleProps`, from a record the compiler checks
+ * against the component's prop interface.
+ *
+ * A hand-written omit list goes stale: a prop added to the interface later reaches the rendered
+ * element until someone remembers the list (ReqoreButton rendered `as` a router link handed its
+ * `fluid`, `compact`, `maxWidth`, ... to the link, which wrote them onto its `<a>`; a resizable,
+ * transparent ReqorePanel handed re-resizable `transparent`). Typed as
+ * `Record<TReqoreStylePropKeys<...>, true>`, the record must name every such prop and nothing
+ * else, so a new prop that is not added fails the build instead of leaking.
+ *
+ * @example
+ * const BUTTON_STYLE_PROPS = listReqoreStyleProps<
+ *   TReqoreStylePropKeys<IReqoreButtonStyle, React.ButtonHTMLAttributes<HTMLButtonElement>>
+ * >({ fluid: true, compact: true, ... });
+ */
+export const listReqoreStyleProps = <TKeys extends string>(props: Record<TKeys, true>): TKeys[] =>
+  Object.keys(props) as TKeys[];

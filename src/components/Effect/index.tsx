@@ -763,7 +763,12 @@ ${({ effect }: IReqoreTextEffectProps) =>
 // other props. Spreading `...props` here re-injects `className`, which styled-
 // components then concatenates on top of the prop className, duplicating any
 // custom class (e.g. `reqore-link` / `reqore-span`) on every text-effect element.
-export const StyledTextEffect = styled(StyledEffect).attrs({ isText: true })`
+//
+// `inline` and `block` pick the display below. Neither is the element's: a `p` or `span` drops
+// them, but a component given as `as` would write them onto its own element.
+export const StyledTextEffect = styled(StyledEffect)
+  .withConfig({ shouldForwardProp: omitStyleProps('block', 'inline') })
+  .attrs({ isText: true })`
   display: ${({ inline, block }) => (inline ? 'inline' : block ? 'block' : 'inline-block')};
 
   ${({ effect }: IReqoreTextEffectProps) =>

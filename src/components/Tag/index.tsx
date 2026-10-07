@@ -31,7 +31,12 @@ import {
   getReadableColorFrom,
   isAchromatic,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import {
+  listReqoreStyleProps,
+  omitStyleProps,
+  REQORE_CONTROL_GROUP_CHILD_PROPS,
+  TReqoreStylePropKeys,
+} from '../../helpers/styled';
 import { ActiveIconScale, InactiveIconScale, RaisedElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
@@ -292,10 +297,67 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   $appearanceColors?: IReqoreTagAppearanceColors;
 }
 
-// `fill` is handed down by a containing `ReqoreControlGroup`; it is an SVG attribute, so a
-// `span` would keep it. `width` sizes the tag through its styles.
+/**
+ * Every tag prop that only styles or configures the tag. None of them reaches the rendered
+ * element — the `span`, or a component given as `as`. The compiler checks the record against
+ * `IReqoreTagStyle`, so a new prop that is not added here fails the build instead of leaking.
+ */
+export const REQORE_TAG_STYLE_PROPS = listReqoreStyleProps<
+  TReqoreStylePropKeys<IReqoreTagStyle, React.HTMLAttributes<HTMLSpanElement>>
+>({
+  actions: true,
+  align: true,
+  appearance: true,
+  asBadge: true,
+  compact: true,
+  customTheme: true,
+  disabled: true,
+  effect: true,
+  fixed: true,
+  flat: true,
+  fluid: true,
+  icon: true,
+  iconColor: true,
+  inheritCustomTheme: true,
+  intent: true,
+  interactive: true,
+  label: true,
+  labelAlign: true,
+  labelEffect: true,
+  labelKey: true,
+  labelKeyAlign: true,
+  labelKeyEffect: true,
+  leftIconColor: true,
+  leftIconProps: true,
+  loading: true,
+  loadingIconType: true,
+  maxWidth: true,
+  minimal: true,
+  onRemoveClick: true,
+  paddingSize: true,
+  radiusSize: true,
+  raised: true,
+  readOnly: true,
+  removable: true,
+  removeTooltip: true,
+  rightIcon: true,
+  rightIconColor: true,
+  rightIconProps: true,
+  rounded: true,
+  size: true,
+  skeleton: true,
+  theme: true,
+  tooltip: true,
+  truncate: true,
+  verticalAlign: true,
+  width: true,
+  wrap: true,
+});
+
+// The layout flags a containing `ReqoreControlGroup` hands the tag are not the element's either
+// (`fill` is an SVG attribute, so a `span` would keep it).
 export const StyledTag = styled(StyledEffect).withConfig({
-  shouldForwardProp: omitStyleProps('fill', 'width'),
+  shouldForwardProp: omitStyleProps(...REQORE_TAG_STYLE_PROPS, ...REQORE_CONTROL_GROUP_CHILD_PROPS),
 })<IReqoreTagStyle>`
   display: inline-flex;
   justify-content: center;
