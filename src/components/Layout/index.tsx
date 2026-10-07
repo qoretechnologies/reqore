@@ -1,17 +1,29 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
+import { getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 
-export interface IReqoreLayoutWrapperProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface IReqoreLayoutWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: any;
   withSidebar?: boolean;
+  /**
+   * Paint no background, so the page's own colour shows through the whole layout.
+   *
+   * By default the wrapper paints the theme's surface (`theme.main` lightened a step, what
+   * `getMainBackgroundColor` returns) over everything it holds. A page that sets its own
+   * background behind the app — on `body`, a section, an image — sees that surface as a
+   * rectangle of a slightly different colour, with a seam where it meets the rest. With
+   * `transparent` the wrapper keeps its layout and its readable text colour and draws no
+   * surface at all.
+   */
+  transparent?: boolean;
 }
 
 const StyledReqoreLayoutWrapper = styled.div<{
   withSidebar: boolean;
+  $transparent?: boolean;
   theme: IReqoreTheme;
 }>`
   display: flex;
@@ -28,15 +40,23 @@ const StyledReqoreLayoutWrapper = styled.div<{
     text-decoration: none;
   }
 
-  ${({ withSidebar, theme }) => css`
+  ${({ withSidebar, theme, $transparent }) => css`
     flex-flow: ${withSidebar ? 'row' : 'column'};
-    background-color: ${changeLightness(theme.main, 0.02)};
+    background-color: ${$transparent ? 'transparent' : changeLightness(theme.main, 0.02)};
     color: ${getReadableColor(theme, undefined, undefined, true)};
   `}
+
+  /* Only when the theme names a font: without one, Reqore's text is in the page's font. */
+  ${({ theme }) =>
+    theme.fontFamily &&
+    css`
+      font-family: ${getFontFamily(theme.fontFamily)};
+    `}
 `;
 
 const ReqoreLayoutWrapper = ({
   withSidebar,
+  transparent,
   children,
   className,
   ...rest
@@ -46,6 +66,7 @@ const ReqoreLayoutWrapper = ({
       {...rest}
       className={`${className || ''} reqore-layout-wrapper`}
       withSidebar={withSidebar}
+      $transparent={transparent}
     >
       {children}
     </StyledReqoreLayoutWrapper>

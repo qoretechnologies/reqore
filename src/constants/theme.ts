@@ -1,5 +1,6 @@
 import { IReqoreEffect, TReqoreEffectColor, TReqoreHexColor } from '../components/Effect';
 import { Colors } from './colors';
+import { TReqoreFontFamilyShorthand } from './fonts';
 
 export interface IReqoreSidebarTheme {
   main?: TReqoreHexColor;
@@ -57,6 +58,19 @@ export interface IReqoreTheme {
     color?: TReqoreHexColor;
     dim?: boolean;
   };
+  /**
+   * The font Reqore renders in — set on the layout wrapper and the portal that popovers, modals
+   * and drawers render into, and inherited from there by the text inside, buttons and inputs
+   * included. Accepts the `'mono'` / `'system'` shorthands of `effect.fontFamily` or any CSS
+   * font stack.
+   *
+   * Tags and textareas are excluded: `ReqoreTag` (badges included) and the
+   * `ReqoreKeyboardShortcut` keys keep the platform UI font (`system-ui`), and `ReqoreTextarea`
+   * keeps the browser's `monospace`. `effect.fontFamily` still picks a font for one of them.
+   *
+   * Unset (the default), the wrapper and the portal name no font: the page's font reaches them.
+   */
+  fontFamily?: TReqoreFontFamilyShorthand | string;
   intents: IReqoreIntents;
   sidebar?: IReqoreSidebarTheme;
   notifications: IReqoreIntents;

@@ -60,6 +60,7 @@ import {
   IWithReqoreLoading,
   IWithReqoreSize,
   IWithReqoreTooltip,
+  TReqoreDataAttributes,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreBreadcrumbs, { IReqoreBreadcrumbsProps } from '../Breadcrumbs';
@@ -315,6 +316,33 @@ export interface IReqorePanelProps
    * resolved through `ACCENT_SIZE_TO_PX`. Defaults to `'normal'` (5px).
    */
   accentSize?: number | TSizes;
+  /**
+   * A cover — an image URL, or any node (an `<img>`, a `<picture>`, a `<video>`, an
+   * illustration) — drawn edge to edge across the panel, outside its padding, and clipped to
+   * its rounded corners. At the `'top'` (the default) it sits above the title bar; at the
+   * `'bottom'`, under the bottom actions. A URL renders an `<img>` (`mediaAlt` is its text); an
+   * `img`, `picture`, `video`, `svg`, `canvas` or `iframe` node fills the width. Hidden while the
+   * panel is collapsed.
+   */
+  media?: string | React.ReactNode;
+  /**
+   * Alternative text for a `media` URL. Default `''`: a decorative image, skipped by screen
+   * readers. A node carries its own.
+   */
+  mediaAlt?: string;
+  /** Where the media sits. Default `'top'`. */
+  mediaPosition?: 'top' | 'bottom';
+  /**
+   * The media frame's aspect ratio — anything CSS `aspect-ratio` takes (`'16 / 9'`, `1.6`).
+   * The media then covers the frame (`object-fit: cover`), cropped rather than stretched.
+   * Unset, the frame is as tall as the media.
+   */
+  mediaAspectRatio?: string | number;
+  /**
+   * Props for the media frame (a `div`): `className` (merged with `reqore-panel-media`),
+   * `style` (e.g. a `maxHeight`), `aria-*`, `data-*`.
+   */
+  mediaProps?: React.HTMLAttributes<HTMLDivElement> & TReqoreDataAttributes;
 }
 
 export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
@@ -340,6 +368,9 @@ export interface IStyledPanel extends Omit<IReqorePanelProps, 'accentSize'> {
    *  runtime). The header drops its top radius while stuck so it reads as a
    *  full-width bar, and regains it at rest. */
   isStuck?: boolean;
+  /** True when `media` sits above the title bar: the bar is not the panel's top edge, so a
+   *  sticky header has no top corners to round. */
+  $mediaAbove?: boolean;
 }
 
 /** Nearest scrollable ancestor of `node` (the element a `position: sticky`
@@ -908,9 +939,10 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     intent,
     accentPosition,
     isStuck,
+    $mediaAbove,
   }: IStyledPanel) =>
     stickyHeader && rounded
-      ? isStuck
+      ? isStuck || $mediaAbove
         ? '0px'
         : `${Math.max(
             0,
@@ -926,9 +958,10 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
     intent,
     accentPosition,
     isStuck,
+    $mediaAbove,
   }: IStyledPanel) =>
     stickyHeader && rounded
-      ? isStuck
+      ? isStuck || $mediaAbove
         ? '0px'
         : `${Math.max(
             0,
@@ -989,6 +1022,65 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   overflow: auto;
   overflow-wrap: anywhere;
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+`;
+
+/** The media frame. Its outer corners take the panel's inner curve, so the media is clipped to
+ *  the panel's shape even where the panel cannot clip it (a sticky header makes the panel
+ *  overflow visible). */
+export const StyledPanelMedia = styled.div<{
+  $position: 'top' | 'bottom';
+  $radius: number;
+  $aspectRatio?: string | number;
+}>`
+  flex: 0 0 auto;
+  position: relative;
+  overflow: hidden;
+  ${({ $position, $radius }) =>
+    $position === 'top'
+      ? css`
+          border-top-left-radius: ${$radius}px;
+          border-top-right-radius: ${$radius}px;
+        `
+      : css`
+          border-bottom-left-radius: ${$radius}px;
+          border-bottom-right-radius: ${$radius}px;
+        `}
+
+  > img,
+  > video,
+  > picture,
+  > picture > img,
+  > svg,
+  > canvas,
+  > iframe {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    border: 0;
+  }
+
+  > img,
+  > video,
+  > picture > img {
+    height: auto;
+  }
+
+  ${({ $aspectRatio }) =>
+    $aspectRatio !== undefined &&
+    css`
+      aspect-ratio: ${$aspectRatio};
+
+      > img,
+      > video,
+      > picture,
+      > picture > img,
+      > svg,
+      > canvas,
+      > iframe {
+        height: 100%;
+        object-fit: cover;
+      }
+    `}
 `;
 
 export const StyledFloatingActions = styled.div<{
@@ -1118,6 +1210,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       closeTooltip = 'Close',
       accentPosition,
       accentSize,
+      media,
+      mediaAlt = '',
+      mediaPosition = 'top',
+      mediaAspectRatio,
+      mediaProps,
       ...rest
     }: IReqorePanelProps,
     ref
@@ -1660,6 +1757,46 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const opacity = rest.transparent ? 0 : rest.opacity;
     const noHorizontalPadding = opacity === 0 && flat && !intent && !rest.raised;
 
+    // The media frame's outer corners follow the panel's INNER curve: its radius, less the 1px
+    // border when it draws one — the same inset the sticky header and the accent strip take.
+    const mediaRadius = rounded
+      ? Math.max(
+          0,
+          resolveRadius('normal', rest.radiusSize) -
+            (hasPanelBorder({ flat, intent, accentPosition }) ? 1 : 0)
+        )
+      : 0;
+    const hasMedia = media !== undefined && media !== null && media !== false && media !== '';
+
+    const mediaNode = useMemo(
+      () =>
+        hasMedia ? (
+          <StyledPanelMedia
+            {...mediaProps}
+            className={classNames(
+              mediaProps?.className,
+              'reqore-panel-media',
+              `reqore-panel-media-${mediaPosition}`
+            )}
+            $position={mediaPosition}
+            $radius={mediaRadius}
+            $aspectRatio={mediaAspectRatio}
+          >
+            {typeof media === 'string' ? (
+              <img
+                src={media}
+                alt={mediaAlt}
+                decoding='async'
+                className='reqore-panel-media-image'
+              />
+            ) : (
+              media
+            )}
+          </StyledPanelMedia>
+        ) : null,
+      [hasMedia, media, mediaAlt, mediaPosition, mediaAspectRatio, mediaProps, mediaRadius]
+    );
+
     const showNonResponsiveGroup = useCallback((): boolean => {
       let show: boolean = false;
 
@@ -1896,8 +2033,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
+          {!_isCollapsed && mediaPosition === 'top' ? mediaNode : null}
           {/* Stuck-detection sentinel — 0-height marker at the very top of the
-              panel, above the sticky header. See the observer effect above. */}
+              panel, above the sticky header. See the observer effect above. It goes under
+              top media, so it sits where the header starts. */}
           {rest.stickyHeader ? (
             <div ref={stickySentinelRef} aria-hidden='true' style={{ height: 0 }} />
           ) : null}
@@ -1949,6 +2088,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               stickyHeaderOffset={rest.stickyHeaderOffset}
               stickyHeaderInset={stickyInset}
               isStuck={isHeaderStuck}
+              $mediaAbove={hasMedia && mediaPosition === 'top' && !_isCollapsed}
             >
               {hasTitleHeader && (
                 <StyledPanelTitleHeader className='reqore-panel-title-header'>
@@ -2302,6 +2442,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               ) : null}
             </StyledPanelBottomActions>
           ) : null}
+          {!_isCollapsed && mediaPosition === 'bottom' ? mediaNode : null}
         </ReqoreTooltipComponent>
       </ReqoreErrorBoundary>
     );

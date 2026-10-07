@@ -1,5 +1,5 @@
 /**
- * The font stacks Reqore components resolve `effect.fontFamily` shorthands to.
+ * The font stacks Reqore resolves the `effect.fontFamily` and `theme.fontFamily` shorthands to.
  *
  * They live here rather than inside a component because more than one component
  * needs them: `ReqoreDataView` renders whole trees of monospaced keys and values,

@@ -277,3 +277,17 @@ export const withStoppedPropagation =
     event.stopPropagation();
     onClick?.(event);
   };
+
+/**
+ * Whether `element` is a control that types text — a text input, a textarea, a select or an
+ * editable region. Those need the arrow, Home and End keys for their own caret, so a component
+ * that handles those keys itself (a toolbar, a carousel) leaves them alone there.
+ */
+export const isTextEntry = (element: HTMLElement): boolean =>
+  element.isContentEditable ||
+  element.tagName === 'TEXTAREA' ||
+  element.tagName === 'SELECT' ||
+  (element.tagName === 'INPUT' &&
+    !['button', 'checkbox', 'radio', 'submit', 'reset'].includes(
+      (element as HTMLInputElement).type
+    ));

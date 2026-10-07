@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 /**
  * Default width below which a row's actions wrap under its label.
@@ -36,12 +36,34 @@ export const SEVERITY_ROW_NARROW_BREAKPOINT_PX = 640;
  *
  * Degrades to "never narrow" where `ResizeObserver` is unavailable, which keeps the
  * wide layout rather than guessing.
+ *
+ * The first answer is measured before the browser paints (a layout effect), not left to the
+ * observer's first callback: that one arrives after React has committed, so a narrow container
+ * was painted once in its WIDE layout and then jumped — a visible flash and a layout shift on
+ * every mount at phone width. The observer keeps the answer current from there.
  */
 export const useNarrowContainer = <T extends HTMLElement = HTMLDivElement>(
   breakpoint: number = NARROW_CONTAINER_BREAKPOINT_PX
 ): [React.MutableRefObject<T | null>, boolean] => {
   const containerRef = useRef<T | null>(null);
   const [isNarrow, setIsNarrow] = useState(false);
+
+  useLayoutEffect(() => {
+    const node = containerRef.current;
+
+    if (!node || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    // The content box, as the observer reports it: the client width less the padding.
+    const style = getComputedStyle(node);
+    const width =
+      node.clientWidth -
+      (parseFloat(style.paddingLeft) || 0) -
+      (parseFloat(style.paddingRight) || 0);
+
+    setIsNarrow(width > 0 && width <= breakpoint);
+  }, [breakpoint]);
 
   useEffect(() => {
     const node = containerRef.current;

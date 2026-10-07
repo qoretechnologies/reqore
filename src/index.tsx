@@ -163,6 +163,7 @@ export { default as ReqoreTagGroup } from './components/Tag/group';
 export { default as ReqoreTestimonial } from './components/Testimonial';
 export { default as ReqoreTextarea } from './components/Textarea';
 export { ReqoreTier } from './components/Tier';
+export { ReqoreTierGroup } from './components/Tier/group';
 export { TimeAgo as ReqoreTimeAgo } from './components/TimeAgo';
 export { default as ReqoreTimeline } from './components/Timeline';
 export { ReqoreTree } from './components/Tree';
