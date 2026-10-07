@@ -1337,6 +1337,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [cancelHover]
     );
 
+    /* The panel renders as re-resizable's `Resizable` when it is resizable — unless the caller
+       gave its own element in `as`, which always wins. (`rest.as || cond ? Resizable : 'div'`
+       binds as `(rest.as || cond) ? …`, so a panel given `as` used to render a `Resizable`.) */
+    const isResizableElement = !rest.as && !!resizable && !disabled && !_isCollapsed;
+
     const _resizable: ResizableProps = useMemo(() => {
       // Only carry re-resizable's props when the panel actually renders as a
       // `Resizable` (the same condition the `as` below uses). Otherwise the
@@ -1344,9 +1349,8 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       // through the panel — spreading `enable` / `defaultSize` / … onto a div
       // would emit invalid-DOM-attribute warnings. A non-resizable (or
       // collapsed / disabled) panel therefore carries no resizable props.
-      const isResizableElement = !!resizable && !disabled && !_isCollapsed;
       return isResizableElement && resizable ? resizable : {};
-    }, [resizable, _isCollapsed, disabled]);
+    }, [resizable, isResizableElement]);
 
     // Return true if the card has a title bar, otherwise return false.
     const hasTitleBar: boolean = useMemo(
@@ -1868,7 +1872,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         <ReqoreTooltipComponent
           {...omit(rest, ['onResize'])}
           {..._resizable}
-          as={rest.as || (!!resizable && !disabled && !_isCollapsed) ? Resizable : 'div'}
+          as={rest.as || (isResizableElement ? Resizable : 'div')}
           isCollapsed={_isCollapsed}
           rounded={rounded}
           flat={flat}
