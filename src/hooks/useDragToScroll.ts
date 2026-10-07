@@ -188,6 +188,14 @@ const bind = (
       if (activePointer === undefined || event.pointerId !== activePointer) {
         return;
       }
+      /* Only the capture THIS gesture took ends it. A finger's pointer is captured by
+         the element it lands on (implicit touch capture); taking the capture for the
+         handle moves it away from that element, which then reports losing it - and
+         that is the drag starting, not ending. Ending there stopped a swipe on a
+         table's header after its first few pixels. */
+      if (event.type === 'lostpointercapture' && event.target !== handle) {
+        return;
+      }
       endGesture();
     };
 

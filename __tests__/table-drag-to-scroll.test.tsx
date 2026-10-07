@@ -124,3 +124,17 @@ test('with dragToScroll, the body says it can be pulled', () => {
 
   expect(body.closest('.reqore-table-wrapper-draggable')).not.toBeNull();
 });
+
+test('a finger keeps scrolling when the cell it landed on loses its own capture', () => {
+  // A touch pointer is captured by the element it lands on; the drag taking the capture for
+  // the header makes that element report losing it. That is the drag starting, not ending.
+  const { body, headerCell } = renderTable();
+
+  pointer(headerCell, 'pointerDown', { clientX: 300, pointerType: 'touch' });
+  pointer(headerCell, 'pointerMove', { clientX: 290, pointerType: 'touch' });
+  fireEvent(headerCell, Object.assign(new Event('lostpointercapture', { bubbles: true }), { pointerId: 1 }));
+  pointer(headerCell, 'pointerMove', { clientX: 200, pointerType: 'touch' });
+  pointer(headerCell, 'pointerUp', { clientX: 200, pointerType: 'touch' });
+
+  expect(body.scrollLeft).toBe(100);
+});
