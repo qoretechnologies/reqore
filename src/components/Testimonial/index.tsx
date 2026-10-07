@@ -54,7 +54,12 @@ export interface IReqoreTestimonialProps
     IWithReqoreFluid,
     IWithReqoreSize,
     IWithReqoreTooltip {
-  /** The testimonial body — the quote / endorsement copy. Falls back to `children`. */
+  /**
+   * The testimonial body — the quote / endorsement copy. Falls back to `children`.
+   *
+   * Text, inline content or blocks (several `ReqoreP`s, a list): it is drawn in a block container
+   * with the quote's typography, not in a paragraph, which could not hold a block.
+   */
   quote?: React.ReactNode;
   /** Effect applied to the quote text. */
   quoteEffect?: IReqoreEffect;
@@ -296,6 +301,8 @@ const ReqoreTestimonial = memo(
 
       return (
         <ReqoreTooltipComponent
+          // A div, not the effect's span: the card holds blocks, which a span may not.
+          as='div'
           {...rest}
           Component={StyledTestimonial}
           tooltip={tooltip}
@@ -347,7 +354,12 @@ const ReqoreTestimonial = memo(
               $wrap={wrap}
               className='reqore-testimonial-quote'
             >
-              <ReqoreP size={size} effect={quoteEffect}>
+              <ReqoreP
+                as='div'
+                size={size}
+                effect={quoteEffect}
+                className='reqore-testimonial-quote-text'
+              >
                 {quoteContent}
               </ReqoreP>
             </StyledQuote>

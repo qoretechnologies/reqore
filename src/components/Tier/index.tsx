@@ -25,6 +25,11 @@ export interface IReqoreTierProps extends Omit<IReqorePanelProps, 'description'>
   currencyPosition?: 'before' | 'after';
   priceDetail?: string;
   salePrice?: string | number;
+  /**
+   * Text under the price. Text, inline content or blocks (a `ReqoreP`, a list, a
+   * `ReqoreControlGroup`): it is drawn in a block container with paragraph typography, not in a
+   * paragraph, which could not hold a block.
+   */
   description?: string | React.ReactNode;
   actionButtonProps?: IReqoreButtonProps;
   featureList?: IReqoreTierFeature[];
@@ -151,7 +156,13 @@ export const ReqoreTier = memo(
             )}
           </ReqoreControlGroup>
           {description && (
-            <ReqoreP style={{ textAlign: 'center', padding: '0 20px' }}>{description}</ReqoreP>
+            <ReqoreP
+              as='div'
+              className='reqore-tier-description'
+              style={{ textAlign: 'center', padding: '0 20px' }}
+            >
+              {description}
+            </ReqoreP>
           )}
           <ReqoreControlGroup fluid horizontalAlign='center'>
             <ReqoreButton
