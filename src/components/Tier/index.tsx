@@ -557,6 +557,11 @@ const ReqoreModernTier = memo(
       };
     }, [colors, rest.contentEffect]);
 
+    // The description is a block (see `description`); one effect object keeps its memo.
+    const descriptionTextEffect = useMemo(
+      (): IReqoreEffect => ({ color: colors.muted, ...descriptionEffect }),
+      [colors.muted, descriptionEffect]
+    );
     const contentStyle = useMemo(
       (): React.CSSProperties => ({
         display: 'flex',
@@ -671,9 +676,10 @@ const ReqoreModernTier = memo(
 
           {description ? (
             <ReqoreP
+              as='div'
               size={size}
               className='reqore-tier-description'
-              effect={{ color: colors.muted, ...descriptionEffect }}
+              effect={descriptionTextEffect}
             >
               {description}
             </ReqoreP>

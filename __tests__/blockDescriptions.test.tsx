@@ -76,6 +76,19 @@ const COMPONENTS: [string, string, (description: ReactNode) => ReactElement][] =
     (description) => <ReqoreTier name='Tier' price={10} currency='$' description={description} />,
   ],
   [
+    'ReqoreTier, modern',
+    'reqore-tier-description',
+    (description) => (
+      <ReqoreTier
+        appearance='modern'
+        name='Tier'
+        price={10}
+        currency='$'
+        description={description}
+      />
+    ),
+  ],
+  [
     'ReqoreTestimonial',
     'reqore-testimonial-quote-text',
     (quote) => <ReqoreTestimonial quote={quote} />,
