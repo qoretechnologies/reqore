@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css } from 'styled-components';
-import styled from '../../helpers/styled';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import {
   PADDING_FROM_SIZE,
   resolveRadius,
@@ -35,7 +35,7 @@ import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect, StyledTextEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -152,7 +152,19 @@ interface IStyledCalloutProps
   $loneText?: boolean;
 }
 
-const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledCallout = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'accentPosition',
+    'disabled',
+    'inheritCustomTheme',
+    'interactive',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledCalloutProps>`
   position: relative;
   display: flex;
   /* Where the icon sits against the text.
@@ -425,7 +437,7 @@ export const ReqoreCallout = memo(
               )}
               {description && (
                 <ReqoreP
-                  as='div'
+                  as={getReqoreTextElement(description)}
                   size={descriptionSize}
                   effect={{ opacity: 0.78, ...descriptionEffect }}
                   className='reqore-callout-description'
@@ -444,6 +456,8 @@ export const ReqoreCallout = memo(
                   would be the same silent drop in a smaller box. */}
               {children && (
                 <StyledCalloutContent
+                  // A div: children may be blocks (a button row, a list), which a span may not hold.
+                  as='div'
                   theme={theme}
                   size={label ? descriptionSize : size}
                   $underLabel={!!label}
@@ -457,6 +471,8 @@ export const ReqoreCallout = memo(
             </StyledCalloutBody>
           ) : (
             <StyledCalloutContent
+              // A div: children may be blocks (a button row, a list), which a span may not hold.
+              as='div'
               theme={theme}
               size={size}
               effect={contentEffect || {}}

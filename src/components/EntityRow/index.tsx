@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css } from 'styled-components';
-import styled from '../../helpers/styled';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
@@ -31,7 +31,7 @@ import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -186,7 +186,17 @@ const StyledContainer = styled.div<{ $fluid: boolean }>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
 `;
 
-const StyledRow = styled(StyledEffect)<IStyledRowProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledRow = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'disabled',
+    'inheritCustomTheme',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledRowProps>`
   display: grid;
   grid-template-columns: ${({ $hasIcon, $iconHasBackground, size }) =>
     $hasIcon
@@ -441,7 +451,7 @@ const ReqoreEntityRow = memo(
               {description && (
                 <StyledTextSlot $wrap={wrap}>
                   <ReqoreP
-                    as='div'
+                    as={getReqoreTextElement(description)}
                     size={secondarySize}
                     effect={{ opacity: 0.7, ...descriptionEffect }}
                     className='reqore-entity-row-description'

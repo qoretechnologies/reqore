@@ -126,6 +126,17 @@ export const REQORE_AMBIGUOUS_PROP_ELEMENTS: Readonly<
   ],
 };
 
+/**
+ * The state attributes a component's omit list may name for its default element but that are
+ * the element's own when it is rendered `as` an element that has them (see `omitStyleProps`).
+ */
+const REQORE_ELEMENT_STATE_PROPS = new Set<string | number | symbol>([
+  'disabled',
+  'readOnly',
+  'checked',
+  'selected',
+]);
+
 /** Whether `prop` is an attribute of the element `tag`, as far as Reqore's names go. */
 export const isReqoreElementAttribute = (prop: string | number | symbol, tag: string): boolean => {
   if (typeof prop !== 'string' || SVG_TAGS.has(tag)) {
@@ -146,7 +157,17 @@ export const omitStyleProps = (...propsToOmit: string[]) => {
     elementToBeCreated?: TReqoreStyledTarget
   ): boolean => {
     if (omitted.has(prop)) {
-      return false;
+      // A component's omit list is built against its default element. Given `as` another tag
+      // that has the state attribute — `<ReqorePanel as='fieldset' disabled>`, `<ReqoreTag
+      // as='button' disabled>` — the attribute is that element's, so it goes through.
+      return (
+        typeof elementToBeCreated === 'string' &&
+        REQORE_ELEMENT_STATE_PROPS.has(prop) &&
+        defaultValidatorFn(prop) &&
+        (REQORE_AMBIGUOUS_PROP_ELEMENTS[prop as string] as readonly string[]).includes(
+          elementToBeCreated
+        )
+      );
     }
 
     // Mirror styled-components' own default — a component gets everything, a DOM tag what is an

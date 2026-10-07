@@ -44,6 +44,14 @@ export const StyledParagraph = styled(StyledTextEffect).withConfig({
   font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
 `;
 
+/**
+ * The element a text slot that may hold blocks is drawn as: a `p` for text (a string or a number),
+ * so plain text is exactly the paragraph it always was — consumer CSS aimed at `p` still matches —
+ * and a `div` for anything else, which may be a block a `p` cannot hold.
+ */
+export const getReqoreTextElement = (content: React.ReactNode): 'p' | 'div' =>
+  typeof content === 'string' || typeof content === 'number' ? 'p' : 'div';
+
 export const ReqoreP = memo(
   forwardRef(
     (

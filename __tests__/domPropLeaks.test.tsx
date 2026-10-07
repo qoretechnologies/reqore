@@ -6,10 +6,15 @@ import {
   ReqoreAccordion,
   ReqoreBreadcrumbsItem,
   ReqoreButton,
+  ReqoreCallout,
   ReqoreCheckbox,
   ReqoreCollection,
   ReqoreContent,
   ReqoreControlGroup,
+  ReqoreEntityRow,
+  ReqoreFeatureCard,
+  ReqoreSeverityRow,
+  ReqoreTestimonial,
   ReqoreDropdown,
   ReqoreHeader,
   ReqoreIcon,
@@ -213,6 +218,28 @@ const RouterLinkStub = ({ to, children, ...rest }: any) => (
 // A router link's `to`. Typed loosely: the components accept a component's own props through
 // `as`, which their prop types cannot name.
 const ROUTER_LINK_TO = { to: '/issues' } as Record<string, string>;
+
+const AS_ROUTER_LINK = { as: RouterLinkStub, to: '/issues' } as any;
+
+/** The standard surface props the card and row components share, every one of them set. */
+const SURFACE_PROPS = {
+  intent: 'info',
+  flat: false,
+  fluid: true,
+  fixed: true,
+  rounded: true,
+  raised: true,
+  transparent: true,
+  disabled: true,
+  padded: true,
+  paddingSize: 'big',
+  radiusSize: 'big',
+  customTheme: { main: '#ff0000' },
+  inheritCustomTheme: false,
+  tooltip: 'Tooltip',
+  effect: { gradient: { colors: 'info' } },
+  onClick: vi.fn(),
+} as any;
 
 /** An editor surface (Slate's `Editable`): it too writes the props it does not know onto its div. */
 const EditorStub = ({ value, onChange: _onChange, ...rest }: any) => (
@@ -635,9 +662,7 @@ const CASES: [string, () => ReactElement][] = [
   ],
   [
     'a Dropdown with a placeholder',
-    () => (
-      <ReqoreDropdown label='Dropdown' placeholder='Placeholder' items={[{ label: 'Item' }]} />
-    ),
+    () => <ReqoreDropdown label='Dropdown' placeholder='Placeholder' items={[{ label: 'Item' }]} />,
   ],
   [
     'a Collection with a selected item',
@@ -648,6 +673,44 @@ const CASES: [string, () => ReactElement][] = [
           { label: 'Two', content: 'Two', disabled: true },
         ]}
       />
+    ),
+  ],
+  [
+    'a Textarea in a filling stack group, and one rendered as an editor component',
+    () => (
+      <ReqoreControlGroup fill stack spaceBetween>
+        <ReqoreTextarea value='Value' onChange={vi.fn()} />
+        <ReqoreTextarea as={EditorStub} value='Value' onChange={vi.fn()} />
+      </ReqoreControlGroup>
+    ),
+  ],
+  [
+    'the description components in a filling stack group',
+    () => (
+      <ReqoreControlGroup fill stack size='small'>
+        <ReqoreCallout label='Callout' description='Description' />
+        <ReqoreEntityRow label='Entity' description='Description' />
+        <ReqoreSeverityRow label='Severity' description='Description' />
+        <ReqoreFeatureCard label='Feature' description='Description' />
+        <ReqoreTestimonial quote='Quote' />
+      </ReqoreControlGroup>
+    ),
+  ],
+  [
+    'the description components rendered as a router link in a filling group',
+    () => (
+      <ReqoreControlGroup fill size='small'>
+        <ReqoreCallout
+          {...AS_ROUTER_LINK}
+          {...SURFACE_PROPS}
+          label='Callout'
+          accentPosition='left'
+        />
+        <ReqoreEntityRow {...AS_ROUTER_LINK} {...SURFACE_PROPS} label='Entity' />
+        <ReqoreSeverityRow {...AS_ROUTER_LINK} {...SURFACE_PROPS} label='Severity' />
+        <ReqoreFeatureCard {...AS_ROUTER_LINK} {...SURFACE_PROPS} label='Feature' />
+        <ReqoreTestimonial {...AS_ROUTER_LINK} {...SURFACE_PROPS} quote='Quote' />
+      </ReqoreControlGroup>
     ),
   ],
   ['a Spacer', () => <ReqoreSpacer width={10} height={10} lineSize='normal' />],
@@ -678,6 +741,43 @@ describe('no styling prop reaches the DOM', () => {
 
     expect(findLeakedProps()).toEqual([]);
     expect(getReactDomPropWarnings()).toEqual([]);
+  });
+});
+
+describe('a component rendered as another DOM tag', () => {
+  // A component's omit list is built against its default element; a state attribute it names
+  // there is the new element's own when that element has it.
+  test('a Panel as a fieldset is a disabled fieldset', () => {
+    renderInProvider(
+      <ReqorePanel as='fieldset' label='Panel' disabled>
+        <input className='reqore-probe-input' />
+      </ReqorePanel>
+    );
+
+    expect(document.querySelector('fieldset.reqore-panel')).toBeDisabled();
+    expect(document.querySelector('.reqore-probe-input')).toBeDisabled();
+    expect(findLeakedProps()).toEqual([]);
+  });
+
+  test('a Tag as a button is a disabled button', () => {
+    renderInProvider(
+      <ReqoreTag {...({ as: 'button' } as any)} label='Tag' disabled size='small' />
+    );
+
+    expect(document.querySelector('button.reqore-tag')).toBeDisabled();
+    expect(findLeakedProps()).toEqual([]);
+  });
+
+  test('a disabled Panel and Tag keep `disabled` off the div and span they render by default', () => {
+    renderInProvider(
+      <>
+        <ReqorePanel label='Panel' disabled />
+        <ReqoreTag label='Tag' disabled />
+      </>
+    );
+
+    expect(document.querySelector('.reqore-panel')).not.toHaveAttribute('disabled');
+    expect(document.querySelector('.reqore-tag')).not.toHaveAttribute('disabled');
   });
 });
 

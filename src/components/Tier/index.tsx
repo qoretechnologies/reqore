@@ -21,7 +21,7 @@ import { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { ReqoreH1, ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelProps, ReqorePanel } from '../Panel';
-import { IReqoreParagraphProps, ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, IReqoreParagraphProps, ReqoreP } from '../Paragraph';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import { IReqoreTagProps } from '../Tag';
 
@@ -228,7 +228,7 @@ const ReqoreClassicTier = memo(
           </ReqoreControlGroup>
           {description && (
             <ReqoreP
-              as='div'
+              as={getReqoreTextElement(description)}
               className='reqore-tier-description'
               style={TIER_DESCRIPTION_STYLE}
             >
@@ -676,7 +676,7 @@ const ReqoreModernTier = memo(
 
           {description ? (
             <ReqoreP
-              as='div'
+              as={getReqoreTextElement(description)}
               size={size}
               className='reqore-tier-description'
               effect={descriptionTextEffect}

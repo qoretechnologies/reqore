@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css } from 'styled-components';
-import styled from '../../helpers/styled';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import {
   PADDING_FROM_SIZE,
   resolveRadius,
@@ -35,7 +35,7 @@ import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreEntityRow from '../EntityRow';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import ReqoreRating from '../Rating';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -156,7 +156,17 @@ const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
     ? rgba(theme.intents[intent], 0.06)
     : changeDarkness(getMainBackgroundColor(theme), 0.03);
 
-const StyledTestimonial = styled(StyledEffect)<IStyledTestimonialProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledTestimonial = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'disabled',
+    'inheritCustomTheme',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledTestimonialProps>`
   position: relative;
   display: flex;
   flex-flow: column;
@@ -356,7 +366,7 @@ const ReqoreTestimonial = memo(
               className='reqore-testimonial-quote'
             >
               <ReqoreP
-                as='div'
+                as={getReqoreTextElement(quoteContent)}
                 size={size}
                 effect={quoteEffect}
                 className='reqore-testimonial-quote-text'

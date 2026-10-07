@@ -21,8 +21,9 @@ import {
  * Consumers pass paragraphs and control groups there. Drawn inside a `<p>`, that is invalid HTML:
  * the browser's parser closes the paragraph at the first block, moving the content out of it and
  * out of its styling, and React warns ("validateDOMNesting: <div> cannot appear as a descendant
- * of <p>"). The text is drawn in a block container with the same typography instead, and the
- * component around it is a block too — a `span` may not hold one either.
+ * of <p>"). Content that is not text is drawn in a `div` with the same typography instead, and
+ * the component around it is a block too — a `span` may not hold one either. Plain text stays a
+ * `<p>`, exactly as before, so consumer CSS aimed at `p` still matches it.
  *
  * React warns about a nesting pair once per page, so the structure is checked as well.
  */
@@ -144,16 +145,20 @@ describe('a description given block content', () => {
 });
 
 describe('a plain-text description', () => {
-  test.each(COMPONENTS)('%s draws the text alone, as before', (_name, className, build) => {
-    const { container } = renderInProvider(build(PLAIN_TEXT));
-    const description = container.querySelector(`.${className}`);
+  test.each(COMPONENTS)(
+    '%s draws the text alone in a paragraph, as before',
+    (_name, className, build) => {
+      const { container } = renderInProvider(build(PLAIN_TEXT));
+      const description = container.querySelector(`.${className}`);
 
-    expect(description).toHaveTextContent(PLAIN_TEXT);
-    // The text is the container's only content: no wrapper was added around it.
-    expect(description.childNodes).toHaveLength(1);
-    expect(description.firstChild.nodeType).toBe(Node.TEXT_NODE);
-    expect(findMisplacedBlocks(container)).toEqual([]);
-  });
+      expect(description.tagName).toBe('P');
+      expect(description).toHaveTextContent(PLAIN_TEXT);
+      // The text is the container's only content: no wrapper was added around it.
+      expect(description.childNodes).toHaveLength(1);
+      expect(description.firstChild.nodeType).toBe(Node.TEXT_NODE);
+      expect(findMisplacedBlocks(container)).toEqual([]);
+    }
+  );
 
   test('is drawn with the same styles as a paragraph', () => {
     // styled-components names a class after the CSS it generates, so the same classes mean the
@@ -173,6 +178,24 @@ describe('a plain-text description', () => {
     expect(paragraph.tagName).toBe('P');
     expect(block.tagName).toBe('DIV');
     expect(block.className).toBe(paragraph.className);
+  });
+});
+
+describe("a callout's children", () => {
+  test.each([
+    ['under a label', { label: 'Label', description: 'Description' }],
+    ['on their own', {}],
+  ])('take block content %s', (_name, props) => {
+    vi.mocked(console.error).mockClear();
+    const { container } = renderInProvider(
+      <ReqoreCallout {...props}>{BLOCK_CONTENT}</ReqoreCallout>
+    );
+    const content = container.querySelector('.reqore-callout-content');
+
+    expect(content.tagName).toBe('DIV');
+    expect(content.querySelector('.reqore-probe-group')).not.toBeNull();
+    expect(findMisplacedBlocks(container)).toEqual([]);
+    expect(getNestingWarnings()).toEqual([]);
   });
 });
 

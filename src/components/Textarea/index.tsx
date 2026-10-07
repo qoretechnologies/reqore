@@ -15,6 +15,7 @@ import { changeLightness, getReadableColor } from '../../helpers/colors';
 import styled, {
   listReqoreStyleProps,
   omitStyleProps,
+  REQORE_CONTROL_GROUP_CHILD_PROPS,
   TReqoreStylePropKeys,
 } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
@@ -166,7 +167,10 @@ export const REQORE_TEXTAREA_STYLE_PROPS = listReqoreStyleProps<
 });
 
 export const StyledTextarea = styled(StyledEffect).withConfig({
-  shouldForwardProp: omitStyleProps(...REQORE_TEXTAREA_STYLE_PROPS),
+  shouldForwardProp: omitStyleProps(
+    ...REQORE_TEXTAREA_STYLE_PROPS,
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
 })<IReqoreTextareaStyle>`
   width: 100%;
   max-width: 100%;
