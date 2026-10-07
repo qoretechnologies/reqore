@@ -197,7 +197,7 @@ export const StackLight: Story = {
     docs: {
       description: {
         story:
-          'Renders the plan stack on a 360px phone on a light theme: the highlighted Pro plan in front on a white card washed in blue, Starter and Enterprise dimmed behind it on either side, and dark controls under it.',
+          'Renders the plan stack on a 360px phone on a light theme: the highlighted Pro plan in front on a near-white card washed in blue, Starter and Enterprise dimmed behind it on either side, and dark controls under it.',
       },
     },
   },
@@ -290,7 +290,7 @@ export const StackReducedMotion: Story = {
     docs: {
       description: {
         story:
-          'Renders the plan stack on a 360px phone for a user who asked for reduced motion, after a swipe to the left: Enterprise is in front, switched at once with no animation, and the plan behind it is neither turned nor followed the finger.',
+          'Renders the plan stack on a 360px phone for a user who asked for reduced motion, after a swipe to the left: Enterprise is in front, switched at once with no animation and without following the finger, and the plan behind it is not turned.',
       },
     },
   },
@@ -420,11 +420,11 @@ export const StackThemed: Story = {
 
 export const NarrowColumns: Story = {
   parameters: {
-    ...phoneParameters(1900),
+    ...phoneParameters(1080),
     docs: {
       description: {
         story:
-          'Renders the three plans on a 360px phone with the default `mobileLayout` ("columns"): one plan under the other, full width, each with its button at its bottom, and no stack controls.',
+          'Renders the three plans on a 360px phone with the default `mobileLayout` ("columns"): one plan under the other, full width, each with its button at its bottom (the third runs on below the screen), and no stack controls.',
       },
     },
   },

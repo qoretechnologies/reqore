@@ -299,7 +299,7 @@ export const ModernLight: Story = {
     docs: {
       description: {
         story:
-          'Renders the three modern plans on a light theme: white cards with a hairline border, dark text, muted lines that keep a 4.5:1 contrast, and the highlighted plan washed and bordered in blue with a filled button.',
+          'Renders the three modern plans on a light theme: near-white cards with a hairline border, dark text, muted lines that keep a 4.5:1 contrast, and the highlighted plan washed and bordered in blue with a filled button.',
       },
     },
   },
