@@ -627,6 +627,14 @@ export const ReqorePopover = memo(
             if (handler === 'hoverStay') {
               componentRef.addEventListener('mouseleave', cancelTimeout);
             }
+
+            /* A popover opened by focus is opened by the user being in the field, however they got there.
+               A field focused as it mounts (an editor that opens with the cursor in its field) was focused
+               before this listener was attached: no `focusin` came, and its list stayed closed until the
+               user left the field and came back. */
+            if (handler === 'focus' && componentRef.contains(document.activeElement)) {
+              open();
+            }
           }
         }
 
