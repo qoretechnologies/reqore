@@ -8,7 +8,7 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import CustomThemeContext from '../../context/CustomThemeContext';
 import { changeLightness, getMainBackgroundColor, shouldDarken } from '../../helpers/colors';
-import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
+import { getOneLessSize, isTextEntry, resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { RAISED_SHADOWS } from '../../styles';
@@ -190,16 +190,6 @@ const FOCUSABLE_SELECTOR = [
   'textarea:not([disabled])',
   '[tabindex]',
 ].join(', ');
-
-/** Keys a text control needs for its own caret; the rail leaves them alone. */
-const isTextEntry = (element: HTMLElement): boolean =>
-  element.isContentEditable ||
-  element.tagName === 'TEXTAREA' ||
-  element.tagName === 'SELECT' ||
-  (element.tagName === 'INPUT' &&
-    !['button', 'checkbox', 'radio', 'submit', 'reset'].includes(
-      (element as HTMLInputElement).type
-    ));
 
 /** Drops keys whose value is `undefined` — an absent prop, not an undefined one
  *  (see the `ReqoreControlGroup` entry in COMPONENTS.md for why it matters). */

@@ -1,4 +1,5 @@
 import { RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { prefersReducedMotion } from './usePrefersReducedMotion';
 
 /**
  * How a number counts up to its value. `true` takes every default.
@@ -171,11 +172,6 @@ export const formatCountUpValue = (value: number, parsed: IReqoreCountUpValue): 
     fraction !== undefined ? `${parsed.decimal}${fraction}` : ''
   }${parsed.suffix}`;
 };
-
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** easeOutCubic: fast at first, settling into the value. */
 const ease = (progress: number) => 1 - Math.pow(1 - progress, 3);
