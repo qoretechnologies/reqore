@@ -1,7 +1,7 @@
 import { isNumber } from 'lodash';
 import { mix, rgba } from 'polished';
 import { memo, useMemo } from 'react';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {

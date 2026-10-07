@@ -3,7 +3,7 @@ import { size } from 'lodash';
 import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
@@ -27,7 +27,7 @@ import {
   isAchromatic,
 } from '../../helpers/colors';
 import { shortcutHasModifier, TReqoreKeyboardShortcut } from '../../helpers/shortcuts';
-import {
+import styled, {
   listReqoreStyleProps,
   omitStyleProps,
   REQORE_CONTROL_GROUP_CHILD_PROPS,

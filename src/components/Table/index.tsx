@@ -3,7 +3,8 @@ import { TReqoreFilterRanking } from '../../helpers/search';
 import { size as count, isArray } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   ReqoreControlGroup,
   ReqoreMessage,

@@ -16,7 +16,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import { panelIsSmall } from './responsive';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   ACCENT_SIZE_TO_PX,
@@ -37,7 +37,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import {
+import styled, {
   listReqoreStyleProps,
   omitStyleProps,
   REQORE_CONTROL_GROUP_CHILD_PROPS,

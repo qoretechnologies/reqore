@@ -1,6 +1,6 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useCallback, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import {
   GAP_FROM_SIZE,
   ICON_FROM_SIZE,
@@ -11,7 +11,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';

@@ -1,6 +1,6 @@
 import { rgba } from 'polished';
 import { HTMLAttributes } from 'react';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
 import { Colors } from '../../constants/colors';
 import { getFontFamily, TReqoreFontFamilyShorthand } from '../../constants/fonts';
 import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
@@ -12,7 +12,7 @@ import {
   getGradientMix,
   getReadableColorFrom,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { IWithReqoreMinimal } from '../../types/global';
 

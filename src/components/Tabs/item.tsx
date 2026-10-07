@@ -1,7 +1,7 @@
 import { omit } from 'lodash';
 import { forwardRef, memo, useState, useTransition } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTabsListItem, TReqoreTabsActiveMarker } from '.';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme } from '../../constants/theme';
@@ -11,7 +11,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreFlat } from '../../types/global';

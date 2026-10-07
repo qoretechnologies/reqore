@@ -1,11 +1,11 @@
 import { omit } from 'lodash';
 import { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IWithReqoreSize } from '../../types/global';

@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import { rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
   CONTROL_TEXT_FROM_SIZE,
@@ -12,7 +12,11 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { listReqoreStyleProps, omitStyleProps, TReqoreStylePropKeys } from '../../helpers/styled';
+import styled, {
+  listReqoreStyleProps,
+  omitStyleProps,
+  TReqoreStylePropKeys,
+} from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';

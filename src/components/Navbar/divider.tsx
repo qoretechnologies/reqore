@@ -1,7 +1,6 @@
 import React, { forwardRef } from 'react';
-import styled from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getReadableColor } from '../../helpers/colors';
 
 export interface IReqoreNavbarDividerProps extends React.HTMLAttributes<HTMLDivElement> {

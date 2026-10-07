@@ -10,11 +10,11 @@ import React, {
   useState,
 } from 'react';
 import { useMount, useUnmount } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqoreButton, ReqoreDrawer } from '../..';
 import { GAP_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import {
   IReqoreIntent,

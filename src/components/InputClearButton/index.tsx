@@ -1,8 +1,7 @@
 import { animated, useTransition } from '@react-spring/web';
-import styled from 'styled-components';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { SIZE_TO_PX } from '../../constants/sizes';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreButtonProps } from '../Button';
 import ReqoreIcon from '../Icon';
 

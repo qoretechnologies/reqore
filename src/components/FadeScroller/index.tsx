@@ -1,5 +1,6 @@
 import { forwardRef, memo, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
+import styled from '../../helpers/styled';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { TReqoreHexColor } from '../Effect';

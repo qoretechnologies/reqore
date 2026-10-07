@@ -1,5 +1,6 @@
 import React from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IWithReqoreMinimal, IWithReqoreSize } from '../../types/global';
 import { TReqoreTagAppearance } from '.';

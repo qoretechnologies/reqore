@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { RADIUS_FROM_SIZE, RATING_GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getColorFromMaybeString, getReadableColor } from '../../helpers/colors';

@@ -9,7 +9,8 @@ import React, {
   useState,
 } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
   CONTROL_TEXT_FROM_SIZE,

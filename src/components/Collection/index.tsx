@@ -2,12 +2,12 @@ import { TReqoreFilterRanking, asSearchText, rankByQuery } from '../../helpers/s
 import { map, orderBy, size } from 'lodash';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqoreErrorBoundary, ReqoreP, useReqoreProperty } from '../..';
 import { TReqorePaginationType } from '../../constants/paging';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { ReqorePaginationContainer } from '../../containers/Paging';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';

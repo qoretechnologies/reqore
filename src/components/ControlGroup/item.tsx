@@ -1,7 +1,6 @@
 import { forwardRef, memo, ReactNode } from 'react';
-import styled from 'styled-components';
 import { GAP_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { IWithReqoreFluid, IWithReqoreSize } from '../../types/global';
 
 export interface IReqoreControlGroupItemProps

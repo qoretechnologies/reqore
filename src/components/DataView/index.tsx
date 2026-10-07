@@ -41,7 +41,8 @@ import {
   type ReactNode,
 } from 'react';
 import { rgba } from 'polished';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   GAP_FROM_SIZE,
   PADDING_FROM_SIZE,

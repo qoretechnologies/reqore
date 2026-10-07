@@ -1,7 +1,7 @@
 /* @flow */
 import { get, isFunction, isString } from 'lodash';
 import React, { ReactElement, memo, useCallback, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import {
   IReqoreTableColumn,
   IReqoreTableData,
@@ -11,7 +11,7 @@ import {
 import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { TReqoreHexColor } from '../Effect';

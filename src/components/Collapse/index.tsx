@@ -1,5 +1,6 @@
 import { forwardRef, memo, useMemo, type CSSProperties, type ReactNode } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 
 /** Shared timing for anything that folds. See `ReqoreCollapse`. */

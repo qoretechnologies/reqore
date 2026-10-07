@@ -1,7 +1,6 @@
 import { forwardRef, memo } from 'react';
-import styled from 'styled-components';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
-import { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {

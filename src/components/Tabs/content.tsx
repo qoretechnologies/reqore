@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 
 export type TReqoreTabsContentPadding =

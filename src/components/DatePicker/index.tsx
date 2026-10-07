@@ -19,11 +19,10 @@ import {
   DatePicker as RADatePicker,
   TimeField,
 } from 'react-aria-components';
-import styled from 'styled-components';
 import { ReqoreErrorBoundary, ReqorePanel, ReqorePopover } from '../..';
 import { changeLightness } from '../../helpers/colors';
 import { formatDateToType, TDateFormat, toDate } from '../../helpers/dates';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement } from '../../styles';

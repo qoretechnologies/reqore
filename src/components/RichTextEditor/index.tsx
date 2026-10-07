@@ -339,7 +339,8 @@ const SLATE_EDITABLE_PROPS = new Set<string>([
  * survives for a different reason: it is a real SVG paint attribute, and this
  * element is not an SVG.
  */
-const NON_EDITABLE_PROPS = new Set<string>(['cols', 'fill', 'rows', 'value']);
+// `disabled` styles the field (Slate is disabled through `readOnly`); a `div` has no such attribute.
+const NON_EDITABLE_PROPS = new Set<string>(['cols', 'disabled', 'fill', 'rows', 'value']);
 
 /**
  * `ReqoreTextarea` is polymorphic and attaches an input ref to its rendered component. Slate's

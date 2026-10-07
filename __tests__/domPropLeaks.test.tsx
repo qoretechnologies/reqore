@@ -3,12 +3,14 @@ import { render } from '@testing-library/react';
 import { ReactElement } from 'react';
 import {
   DatePicker,
+  ReqoreAccordion,
   ReqoreBreadcrumbsItem,
   ReqoreButton,
   ReqoreCheckbox,
   ReqoreCollection,
   ReqoreContent,
   ReqoreControlGroup,
+  ReqoreDropdown,
   ReqoreHeader,
   ReqoreIcon,
   ReqoreInput,
@@ -23,6 +25,7 @@ import {
   ReqoreP,
   ReqorePanel,
   ReqorePopover,
+  ReqoreRating,
   ReqoreSlider,
   ReqoreSpacer,
   ReqoreTabs,
@@ -67,7 +70,12 @@ const NOT_ON_HTML: Record<string, string[]> = {
   spacing: [],
   // Legacy `<font color>` only.
   color: [],
+  // A Reqore `size` is a size name; only form controls have a `size` attribute.
+  size: ['input', 'select'],
   disabled: ['button', 'input', 'select', 'textarea', 'option', 'optgroup', 'fieldset'],
+  checked: ['input'],
+  selected: ['option'],
+  placeholder: ['input', 'textarea'],
   readOnly: ['input', 'textarea'],
   label: ['track', 'option', 'optgroup'],
   wrap: ['textarea'],
@@ -601,6 +609,45 @@ const CASES: [string, () => ReactElement][] = [
         />
         <ReqoreIcon wrapperElement={animated.span} image='image.png' size='small' />
       </ReqoreControlGroup>
+    ),
+  ],
+  [
+    'a checked, read-only, disabled Checkbox and Switch',
+    () => (
+      <>
+        <ReqoreCheckbox label='Check' checked readOnly size='small' />
+        <ReqoreCheckbox label='Check' checked disabled size='big' asSwitch />
+      </>
+    ),
+  ],
+  ['a read-only Rating', () => <ReqoreRating value={3} readOnly size='small' />],
+  [
+    'an Accordion with a disabled item',
+    () => (
+      <ReqoreAccordion
+        size='small'
+        items={[
+          { label: 'One', content: 'One' },
+          { label: 'Two', content: 'Two', disabled: true },
+        ]}
+      />
+    ),
+  ],
+  [
+    'a Dropdown with a placeholder',
+    () => (
+      <ReqoreDropdown label='Dropdown' placeholder='Placeholder' items={[{ label: 'Item' }]} />
+    ),
+  ],
+  [
+    'a Collection with a selected item',
+    () => (
+      <ReqoreCollection
+        items={[
+          { label: 'One', content: 'One', selected: true },
+          { label: 'Two', content: 'Two', disabled: true },
+        ]}
+      />
     ),
   ],
   ['a Spacer', () => <ReqoreSpacer width={10} height={10} lineSize='normal' />],

@@ -1,7 +1,7 @@
 import { Placement } from '@popperjs/core';
 import React, { forwardRef, memo, MutableRefObject, useCallback, useEffect, useRef } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { useReqoreProperty } from '../..';
 import type { IReqoreOptions } from '../../containers/UIProvider';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';

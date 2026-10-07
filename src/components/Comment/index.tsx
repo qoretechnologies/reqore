@@ -1,5 +1,5 @@
 import { omit, size } from 'lodash';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { ReqoreButton, ReqoreColumn, ReqoreControlGroup, ReqoreDropdown } from '../..';
 import { TReqoreIntent } from '../../constants/theme';
 import { IReqoreIconName } from '../../types/icons';

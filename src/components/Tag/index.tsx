@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import _size from 'lodash/size';
 import { mix, rgba, saturate, tint } from 'polished';
 import React, { forwardRef, HTMLAttributes, useCallback, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import { SYSTEM_FONT } from '../../constants/fonts';
@@ -31,7 +31,7 @@ import {
   getReadableColorFrom,
   isAchromatic,
 } from '../../helpers/colors';
-import {
+import styled, {
   listReqoreStyleProps,
   omitStyleProps,
   REQORE_CONTROL_GROUP_CHILD_PROPS,
