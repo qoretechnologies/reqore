@@ -101,6 +101,9 @@ const StyledTableHeaderWrapper = styled.div<IReqoreTableSectionStyle>`
 
     overflow-x: hidden;
     overflow-y: hidden;
+    /* A sideways swipe is the table's to handle (it scrolls the body, which this
+       header follows); the page still pans up and down under a finger. */
+    touch-action: pan-y;
 
     flex-shrink: 0;
     flex-flow: column;

@@ -459,6 +459,56 @@ export const ScrollChange: Story = {
   },
 };
 
+/** A press-and-pull on the table, by the browser's own pointer events (the story runner's mouse moves
+ *  the real pointer, so the table sees them as a person's drag). */
+const pullSideways = (element: Element, from: number, to: number, pointerType = 'mouse') => {
+  const box = element.getBoundingClientRect();
+  const y = box.top + box.height / 2;
+  const fire = (type: string, x: number, buttons: number) =>
+    element.dispatchEvent(
+      new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 7, pointerType, button: 0, buttons })
+    );
+  fire('pointerdown', from, 1);
+  fire('pointermove', (from + to) / 2, 1);
+  fire('pointermove', to, 1);
+  fire('pointerup', to, 0);
+};
+
+export const DragToScroll: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table wider than its 400px frame with `dragToScroll`. Pulled sideways by its header or its rows, it scrolls; a swipe on the header scrolls it on a touch screen too.',
+      },
+    },
+  },
+  args: {
+    dragToScroll: true,
+    width: 400,
+    height: 300,
+    label: 'Pull me sideways',
+  },
+  play: async ({ canvasElement }) => {
+    const body = await waitFor(() => {
+      const el = canvasElement.querySelector('.reqore-table-body') as HTMLElement | null;
+      expect(el).not.toBeNull();
+      expect(el!.scrollWidth).toBeGreaterThan(el!.clientWidth);
+      return el!;
+    });
+    const headerCell = canvasElement.querySelector('.reqore-table-header-wrapper .reqore-table-header-cell') as HTMLElement;
+    // by the header, with the mouse
+    pullSideways(headerCell, 300, 200);
+    await waitFor(() => expect(body.scrollLeft).toBe(100));
+    // by the header, with a finger
+    pullSideways(headerCell, 300, 250, 'touch');
+    await waitFor(() => expect(body.scrollLeft).toBe(150));
+    // and the header follows the body
+    const header = canvasElement.querySelector('.reqore-table-header-wrapper') as HTMLElement;
+    await waitFor(() => expect(header.scrollLeft).toBe(150));
+  },
+};
+
 export const GroupedColumns: Story = {
   parameters: {
     docs: {
