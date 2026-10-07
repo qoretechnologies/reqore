@@ -343,6 +343,10 @@ export const StyledButton = styled(StyledEffect).withConfig({
   display: flex;
   flex-flow: column;
   justify-content: center;
+  /* The page's font (or the theme's, which the layout sets), not the browser's control font:
+     a button left to the user-agent stylesheet renders in the platform's form-control face
+     whatever font the text around it is in. */
+  font-family: inherit;
   font-weight: 570;
   position: relative;
   overflow: hidden;

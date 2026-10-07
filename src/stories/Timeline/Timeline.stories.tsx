@@ -1177,3 +1177,159 @@ export const IconsOnlyVertical: Story = {
     firstItem.blur();
   },
 };
+
+/* ------------------------------------------------------------------------------------------------
+ * highlighted / pending
+ * ---------------------------------------------------------------------------------------------- */
+
+const runItems: IReqoreTimelineItem[] = [
+  {
+    title: 'Order received',
+    timestamp: '14:02:07',
+    icon: 'CheckLine',
+    intent: 'success',
+  },
+  {
+    title: 'Stock reserved',
+    timestamp: '14:02:08',
+    icon: 'CheckLine',
+    intent: 'success',
+  },
+  {
+    title: 'Payment capture',
+    content: 'Waiting for the payment provider for 19 hours.',
+    timestamp: '14:02:11',
+    icon: 'PauseLine',
+    intent: 'warning',
+    highlighted: true,
+  },
+  {
+    title: 'Carrier booked',
+    content: 'Booking the shipment with the carrier.',
+    timestamp: 'running',
+    intent: 'info',
+    pending: true,
+  },
+  {
+    title: 'Customer notified',
+    icon: 'MailLine',
+  },
+];
+
+const timelineItems = (canvasElement: HTMLElement) =>
+  Array.from(canvasElement.querySelectorAll('.reqore-timeline-item')) as HTMLElement[];
+
+const expectStepStates = async (canvasElement: HTMLElement) => {
+  const items = timelineItems(canvasElement);
+  const current = items.filter((item) => item.getAttribute('aria-current') === 'step');
+  const busy = items.filter((item) => item.getAttribute('aria-busy') === 'true');
+
+  await expect(current.map((item) => item.textContent)).toEqual([
+    expect.stringContaining('Payment capture'),
+  ]);
+  await expect(busy.map((item) => item.textContent)).toEqual([
+    expect.stringContaining('Carrier booked'),
+  ]);
+
+  // The highlighted marker carries a halo; the others do not.
+  const halo = (item: HTMLElement) =>
+    getComputedStyle(item.querySelector('.reqore-timeline-marker') as HTMLElement).boxShadow;
+  await expect(halo(current[0])).toMatch(/rgba?\(/);
+  await expect(halo(items[0])).toBe('none');
+  // Its title is bolder than a plain one.
+  const weight = (item: HTMLElement) => {
+    const title = item.querySelector('.reqore-timeline-title') as HTMLElement;
+    return Number(getComputedStyle(title).fontWeight);
+  };
+  await expect(weight(current[0])).toBeGreaterThan(weight(items[0]));
+
+  // The running step shows the loader in place of its icon.
+  await expect(busy[0].querySelectorAll('.reqore-timeline-marker .reqore-icon')).toHaveLength(1);
+  await expect(busy[0].querySelector('.reqore-timeline-pending-icon')).toBeTruthy();
+};
+
+export const HighlightedAndPending: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an order run: two done steps, the current step highlighted (a warning halo round its marker and a bolder title), a running step whose marker is a spinning loader, and an upcoming one.',
+      },
+    },
+  },
+  args: { items: runItems },
+  render: Template,
+  play: async ({ canvasElement }) => expectStepStates(canvasElement),
+};
+
+export const HighlightedAndPendingHorizontal: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same run as a horizontal step row: the current step has a halo and a bolder title, and the running step shows the loader.',
+      },
+    },
+  },
+  args: { items: runItems, direction: 'horizontal', responsive: false },
+  render: Template,
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('.reqore-timeline-horizontal')).toBeTruthy();
+    await expectStepStates(canvasElement);
+  },
+};
+
+export const HighlightedAndPendingLight: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the run on a light theme: the warning halo and the info loader read on the light surface.',
+      },
+    },
+  },
+  args: { mainTheme: '#f4f4f4' } as Story['args'],
+  render: () => <ReqoreTimeline items={runItems} />,
+  play: async ({ canvasElement }) => expectStepStates(canvasElement),
+};
+
+export const HighlightedAndPendingMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 760 } },
+    docs: {
+      description: {
+        story:
+          'Renders the run on a phone-width screen (380px) twice: as a small horizontal step row (`responsive={false}`) whose five steps share the width, and as a small vertical timeline. Both keep the highlighted step and the running one, and fit the screen.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='huge' fluid>
+      <ReqoreTimeline
+        items={runItems.map(({ content: _content, ...item }) => item)}
+        direction='horizontal'
+        responsive={false}
+        size='small'
+      />
+      <ReqoreTimeline items={runItems} size='small' />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const timelines = Array.from(
+      canvasElement.querySelectorAll('.reqore-timeline')
+    ) as HTMLElement[];
+
+    const horizontal = timelines.map((timeline) =>
+      timeline.classList.contains('reqore-timeline-horizontal')
+    );
+    await expect(horizontal).toEqual([true, false]);
+
+    for (const timeline of timelines) {
+      await expectStepStates(timeline);
+      await expect(timeline.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth);
+    }
+
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1);
+  },
+};

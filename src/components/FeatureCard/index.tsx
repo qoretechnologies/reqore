@@ -16,7 +16,12 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
-import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
+import {
+  getOneLessSize,
+  resolvePadding,
+  TReqorePadded,
+  withStoppedPropagation,
+} from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -29,9 +34,12 @@ import {
   IWithReqoreFluid,
   IWithReqoreSize,
   IWithReqoreTooltip,
+  TReqoreDataAttributes,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { ButtonBadge, TReqoreBadge } from '../Button';
+import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
+import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
+import ReqoreControlGroupItem from '../ControlGroup/item';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
@@ -39,6 +47,11 @@ import { ReqoreP } from '../Paragraph';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export type TReqoreFeatureCardMarker = 'line' | 'number' | 'icon' | 'none';
+
+export interface IReqoreFeatureCardAction extends Omit<IReqoreButtonProps, 'children'> {
+  /** Visible button label. */
+  label?: string;
+}
 
 export interface IReqoreFeatureCardProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>,
@@ -109,6 +122,26 @@ export interface IReqoreFeatureCardProps
    * the padding independently from the card's text scale.
    */
   paddingSize?: TSizes;
+  /**
+   * Buttons in the card's footer, after `footer`. Each is a `ReqoreButton` (`label` is its
+   * text) at the card's `size`, `intent` and `customTheme` unless it sets its own, and disabled
+   * with the card; `fluid` makes one span the footer. A click on one does not reach the card's
+   * own `onClick`.
+   */
+  actions?: IReqoreFeatureCardAction[];
+  /**
+   * Content for the card's footer, before the `actions`: a link, a tag group, a price, a note.
+   * A string or a number is written at the description's size. The footer is the card's last
+   * row and sits at its bottom edge, so in a row of cards of equal height the footers line up
+   * whatever the length of each description.
+   */
+  footer?: React.ReactNode;
+  /**
+   * Props for the footer row, a `ReqoreControlGroup` (wrapping, `gapSize` small, centred on
+   * the cross axis by default): `horizontalAlign='flex-end'` to right-align it, `vertical` to
+   * stack it, `spaceBetween`, `gapSize`, `className`, `style`.
+   */
+  footerProps?: Partial<IReqoreControlGroupProps> & TReqoreDataAttributes;
 }
 
 interface IStyledFeatureCardProps extends Omit<IReqoreFeatureCardProps, 'transparent' | 'raised'> {
@@ -152,6 +185,12 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
   ${({ $raised, flat }) => $raised && flat !== false && RaisedElement}
 
   ${({ disabled }) => disabled && DisabledElement}
+
+  /* The footer is the last row and takes whatever height the card has spare above it, so
+     the footers of a row of stretched cards share one line. */
+  > .reqore-feature-card-footer {
+    margin-top: auto;
+  }
 
   ${({ interactive, theme, intent }) =>
     interactive
@@ -300,6 +339,9 @@ export const ReqoreFeatureCard = memo(
         onClick,
         padded = true,
         paddingSize,
+        actions,
+        footer,
+        footerProps,
         ...rest
       },
       ref
@@ -310,6 +352,8 @@ export const ReqoreFeatureCard = memo(
       const isInteractive = interactive || !!onClick;
       const hasBadge = badge !== undefined && badge !== null;
       const marker: TReqoreFeatureCardMarker = markerProp ?? (icon ? 'icon' : 'line');
+      const hasActions = !!actions?.length;
+      const hasFooter = (footer !== undefined && footer !== null && footer !== false) || hasActions;
 
       return (
         <ReqoreTooltipComponent
@@ -384,6 +428,46 @@ export const ReqoreFeatureCard = memo(
               </StyledTextSlot>
             )}
           </StyledFeatureCardContent>
+          {hasFooter && (
+            <ReqoreControlGroup
+              wrap
+              gapSize='small'
+              verticalAlign='center'
+              size={size}
+              {...footerProps}
+              className={`${footerProps?.className || ''} reqore-feature-card-footer`}
+            >
+              {footer !== undefined && footer !== null && footer !== false ? (
+                <ReqoreControlGroupItem className='reqore-feature-card-footer-content'>
+                  {typeof footer === 'string' || typeof footer === 'number' ? (
+                    // Text gets the description's size, so a footer note reads as card text.
+                    <ReqoreP size={descriptionSize} customTheme={theme}>
+                      {footer}
+                    </ReqoreP>
+                  ) : (
+                    footer
+                  )}
+                </ReqoreControlGroupItem>
+              ) : null}
+              {actions?.map(({ label: actionLabel, ...action }, index) => (
+                <ReqoreButton
+                  key={index}
+                  size={size}
+                  intent={intent}
+                  customTheme={customTheme}
+                  // A disabled card is out of the pointer's reach, but not the keyboard's.
+                  disabled={disabled}
+                  {...action}
+                  className={`${action.className || ''} reqore-feature-card-action`}
+                  // After the spread, so it wraps the consumer's handler: an action is a
+                  // control, and a click on it is never a click on the card.
+                  onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
+                >
+                  {actionLabel}
+                </ReqoreButton>
+              ))}
+            </ReqoreControlGroup>
+          )}
         </ReqoreTooltipComponent>
       );
     }

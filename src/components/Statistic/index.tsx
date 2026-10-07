@@ -1,7 +1,7 @@
 import { rgba } from 'polished';
-import { forwardRef, memo, useMemo } from 'react';
+import { forwardRef, memo, useMemo, useRef } from 'react';
 import styled, { css } from 'styled-components';
-import { resolveRadius, TSizes } from '../../constants/sizes';
+import { HEADER_SIZE_TO_NUMBER, resolveRadius, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
@@ -16,6 +16,7 @@ import {
   resolvePadding,
   TReqorePadded,
 } from '../../helpers/utils';
+import { IReqoreCountUpOptions, useCountUp } from '../../hooks/useCountUp';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, InactiveIconScale, RaisedElement, ScaleIconOnHover } from '../../styles';
 import {
@@ -30,7 +31,7 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, patchPrimaryGradient, StyledEffect, TReqoreEffectColor } from '../Effect';
-import { ReqoreHeading } from '../Header';
+import { ReqoreHeading, StyledHeader } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
@@ -47,6 +48,26 @@ export interface IReqoreStatisticTrend {
   /** Override the default arrow icon */
   icon?: IReqoreIconName;
 }
+
+/**
+ * The element a statistic's value is written in (`valueAs`): a heading level, or a plain
+ * element for a figure that is content rather than the title of a section.
+ */
+export type TReqoreStatisticValueElement =
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'h5'
+  | 'h6'
+  | 'p'
+  | 'div'
+  | 'span';
+
+/** How a statistic counts up to its value (`countUp`). */
+export type IReqoreStatisticCountUp = IReqoreCountUpOptions;
+
+const HEADING_ELEMENTS: TReqoreStatisticValueElement[] = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
 
 export interface IReqoreStatisticProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'>,
@@ -75,6 +96,33 @@ export interface IReqoreStatisticProps
   trend?: IReqoreStatisticTrend;
   /** Effect applied to the value text */
   valueEffect?: IReqoreEffect;
+  /**
+   * The element the value is written in.
+   *
+   * Unset (the default), the prefix, the value and the suffix are each a heading (`h1` – `h4`,
+   * picked by `size`), so every tile puts one to three headings into the page's outline — a
+   * row of KPI tiles reads to a screen reader as a list of section titles.
+   *
+   * Set it and the whole value — prefix, number and suffix — is ONE element of that kind,
+   * drawn exactly as before (the same size, from `size`, and the same weight): a heading level
+   * of your choice for a figure that does title a section, or `'p'` / `'div'` / `'span'` for
+   * a figure that is content.
+   */
+  valueAs?: TReqoreStatisticValueElement;
+  /**
+   * Count the value up once the tile is on screen.
+   *
+   * The count starts when `threshold` (default `0.35`) of the value is in view and plays once,
+   * from `from` (default `0`) over `duration` ms (default `1000`), easing out; until it starts
+   * the tile shows `from`. Each frame keeps the value's own format — its decimals, its thousands
+   * separator and the text around the number (`'$1.2M'`, `'99.8%'`, `'1,234'`), or `format`
+   * writes every frame. The last frame is the value exactly as given.
+   *
+   * Under `prefers-reduced-motion`, and for a value that is not one number (`'2–4'`, `'24/7'`,
+   * `'N/A'`), the value shows at once. While it counts, the moving number is hidden from
+   * assistive technology and the value itself is read instead.
+   */
+  countUp?: boolean | IReqoreStatisticCountUp;
   /** Effect applied to the label text */
   labelEffect?: IReqoreEffect;
   /** Effect applied to the card background (supports gradients) */
@@ -267,12 +315,75 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
     `}
 `;
 
-const StyledStatisticValueRow = styled.div`
+const StyledStatisticValueRow = styled.div<{ $element?: TReqoreStatisticValueElement }>`
   display: flex;
   align-items: baseline;
   gap: 4px;
   flex-wrap: nowrap;
+
+  /* valueAs: the row is the one element the value is written in. A heading or a paragraph
+     brings the browser's margins, which the value never had; and the weight the headings
+     used to bring is the row's to give where it is not a heading. */
+  ${({ $element }) =>
+    $element &&
+    css`
+      margin: 0;
+      padding: 0;
+      font-size: inherit;
+      ${!HEADING_ELEMENTS.includes($element) &&
+      css`
+        font-weight: bold;
+      `}
+    `}
 `;
+
+/** The value itself while it counts: there for screen readers, not on screen. */
+const StyledStatisticValueFinal = styled.span`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+`;
+
+const PREFIX_SUFFIX_EFFECT: IReqoreEffect = { opacity: 0.6 };
+
+interface IStatisticValuePartProps {
+  as?: TReqoreStatisticValueElement;
+  size: TSizes;
+  theme: IReqoreTheme;
+  className: string;
+  effect?: IReqoreEffect;
+  children: React.ReactNode;
+}
+
+/**
+ * The prefix, the value or the suffix. Without `valueAs` each is its own heading, as it always
+ * was. With it the row is the element and each part is a span inside it, styled exactly as the
+ * heading was (the same size and the same component), so nothing moves.
+ */
+const StatisticValuePart = memo(
+  ({ as, size, theme, className, effect, children }: IStatisticValuePartProps) =>
+    as ? (
+      <StyledHeader
+        as='span'
+        _size={HEADER_SIZE_TO_NUMBER[size]}
+        theme={theme}
+        effect={effect}
+        className={className}
+      >
+        {children}
+      </StyledHeader>
+    ) : (
+      <ReqoreHeading size={size} className={className} effect={effect}>
+        {children}
+      </ReqoreHeading>
+    )
+);
 
 const ReqoreStatistic = memo(
   forwardRef<HTMLDivElement, IReqoreStatisticProps>(
@@ -287,6 +398,8 @@ const ReqoreStatistic = memo(
         suffix,
         trend,
         valueEffect,
+        valueAs,
+        countUp,
         labelEffect,
         effect,
         align = 'center',
@@ -311,8 +424,13 @@ const ReqoreStatistic = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      // What a ReqoreHeading resolves for itself: the value's text never takes the intent.
+      const valueTheme = useReqoreTheme('main');
+      const valueRowRef = useRef<HTMLDivElement>(null);
+      const { display, final, counting } = useCountUp(value, countUp, valueRowRef);
 
       const secondarySize = useMemo(() => getOneLessSize(size), [size]);
+      const valueSize = useMemo(() => getOneHigherSize(size), [size]);
       const flexAlign = useMemo(() => alignToFlexAlign(align), [align]);
 
       const interactive = useMemo(
@@ -408,31 +526,53 @@ const ReqoreStatistic = memo(
                 {label}
               </ReqoreSpan>
             )}
-            <StyledStatisticValueRow className='reqore-statistic-value-row'>
+            <StyledStatisticValueRow
+              ref={valueRowRef}
+              as={valueAs}
+              $element={valueAs}
+              className='reqore-statistic-value-row'
+            >
               {prefix && (
-                <ReqoreHeading
-                  size={getOneHigherSize(size)}
+                <StatisticValuePart
+                  as={valueAs}
+                  size={valueSize}
+                  theme={valueTheme}
                   className='reqore-statistic-prefix'
-                  effect={{ opacity: 0.6 }}
+                  effect={PREFIX_SUFFIX_EFFECT}
                 >
                   {prefix}
-                </ReqoreHeading>
+                </StatisticValuePart>
               )}
-              <ReqoreHeading
-                size={getOneHigherSize(size)}
+              <StatisticValuePart
+                as={valueAs}
+                size={valueSize}
+                theme={valueTheme}
                 className='reqore-statistic-value'
                 effect={valueEffect}
               >
-                {value}
-              </ReqoreHeading>
+                {counting ? (
+                  <>
+                    <span aria-hidden='true' className='reqore-statistic-value-count'>
+                      {display}
+                    </span>
+                    <StyledStatisticValueFinal className='reqore-statistic-value-final'>
+                      {final}
+                    </StyledStatisticValueFinal>
+                  </>
+                ) : (
+                  display
+                )}
+              </StatisticValuePart>
               {suffix && (
-                <ReqoreHeading
-                  size={getOneHigherSize(size)}
+                <StatisticValuePart
+                  as={valueAs}
+                  size={valueSize}
+                  theme={valueTheme}
                   className='reqore-statistic-suffix'
-                  effect={{ opacity: 0.6 }}
+                  effect={PREFIX_SUFFIX_EFFECT}
                 >
                   {suffix}
-                </ReqoreHeading>
+                </StatisticValuePart>
               )}
             </StyledStatisticValueRow>
             {trend && (

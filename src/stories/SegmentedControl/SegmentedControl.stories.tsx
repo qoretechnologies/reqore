@@ -461,3 +461,62 @@ export const Responsive: Story = {
     );
   },
 };
+
+/* ------------------------------------------------------------------------------------------------
+ * Per-item props
+ * ---------------------------------------------------------------------------------------------- */
+
+const CYCLE_ITEMS: IReqoreSegmentedControlProps['items'] = [
+  {
+    value: 'monthly',
+    label: 'Monthly',
+    props: { 'data-track-click': 'pricing-cycle', 'data-track-label': 'monthly' },
+  },
+  {
+    value: 'yearly',
+    label: 'Yearly',
+    badge: '-20%',
+    props: { 'data-track-click': 'pricing-cycle', 'data-track-label': 'yearly' },
+  },
+];
+
+const VIEW_ITEMS: IReqoreSegmentedControlProps['items'] = [
+  { value: 'list', icon: 'ListCheck', props: { 'aria-label': 'List view' } },
+  { value: 'grid', icon: 'LayoutGridLine', props: { 'aria-label': 'Grid view' } },
+  { value: 'board', icon: 'LayoutColumnLine', props: { 'aria-label': 'Board view' } },
+];
+
+export const ItemProps: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a billing-cycle control whose segments carry `data-track-*` attributes through their `props`, and an icon-only view switcher whose segments are named by an `aria-label` each. Clicking Yearly selects it; the segments stay a radio group.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup vertical gapSize='big'>
+      <InteractiveTemplate items={CYCLE_ITEMS} value='monthly' pill />
+      <InteractiveTemplate items={VIEW_ITEMS} value='grid' />
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const [cycle, view] = Array.from(
+      canvasElement.querySelectorAll('.reqore-segmented-control')
+    ) as HTMLElement[];
+    const yearly = cycle.querySelector('[data-track-label="yearly"]') as HTMLElement;
+
+    await expect(cycle.querySelectorAll('[data-track-click="pricing-cycle"]')).toHaveLength(2);
+    await expect(yearly.getAttribute('role')).toBe('radio');
+    await expect(yearly.getAttribute('aria-checked')).toBe('false');
+
+    yearly.click();
+    await waitFor(() => expect(yearly.getAttribute('aria-checked')).toBe('true'));
+
+    const names = Array.from(view.querySelectorAll('[role="radio"]')).map((segment) =>
+      segment.getAttribute('aria-label')
+    );
+    await expect(names).toEqual(['List view', 'Grid view', 'Board view']);
+  },
+};

@@ -49,7 +49,7 @@ import {
   TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
-import { MONO_FONT } from '../../constants/fonts';
+import { MONO_FONT, getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { TReqoreEffectColor } from '../Effect';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
@@ -492,6 +492,21 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
   font-family: ${MONO_FONT};
   font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
   word-break: break-word;
+
+  /* The monospace is for the data, not for the controls in the cell. Buttons and inputs take
+     the font around them (see ReqoreButton), so without this the "+ Add property" /
+     "+ Add item" buttons, the type picker, the delete button and the edit and rename inputs of
+     every nested level would be in the cell's monospace. They get the theme's font when the
+     theme names one, otherwise the browser's own control font (\`revert\`), which is what they
+     were in before buttons and inputs inherited: CSS cannot name the page's font from inside a
+     cell that has replaced it. The cell itself keeps the monospace, so its text and its line
+     boxes, and with them the data, render exactly as they did. */
+  & .reqore-button,
+  & .reqore-input {
+    font-family: ${({ $theme }) =>
+      $theme.fontFamily ? getFontFamily($theme.fontFamily) : 'revert'};
+  }
+
   /* Complex values (records / arrays) get a generous left inset and a
      small top margin so the nested block reads as an indented chunk
      under its key. The left rail itself lives on the nested

@@ -1,5 +1,7 @@
 import { StoryFn, StoryObj } from '@storybook/react';
+import { expect, fireEvent, fn } from 'storybook/test';
 import ReqoreControlGroup from '../../components/ControlGroup';
+import ReqoreTag from '../../components/Tag';
 import { IReqoreFeatureCardProps, ReqoreFeatureCard } from '../../components/FeatureCard';
 import { TSizes } from '../../constants/sizes';
 import { DEFAULT_INTENTS } from '../../constants/theme';
@@ -598,4 +600,214 @@ export const CustomPaddingSize: Story = {
       ))}
     </ReqoreControlGroup>
   ),
+};
+
+/* ------------------------------------------------------------------------------------------------
+ * actions / footer
+ * ---------------------------------------------------------------------------------------------- */
+
+const PROBLEMS = [
+  {
+    label: 'Double shipments',
+    icon: 'FileCopyLine' as const,
+    description: 'A workflow fails and retries. Two shipments go out.',
+  },
+  {
+    label: 'Silent failures',
+    icon: 'NotificationOffLine' as const,
+    description:
+      'The sync failed at 2am. No one got an alert, and the first to notice was a customer calling about a missing order the next morning.',
+  },
+  {
+    label: 'Stuck orders',
+    icon: 'PauseCircleLine' as const,
+    description: 'An order waits at payment capture for nineteen hours.',
+  },
+];
+
+const onCardClick = fn();
+const onFixClick = fn();
+
+const ProblemCards = ({ fluidActions }: { fluidActions?: boolean }) => (
+  <div
+    className='story-cards'
+    style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+      gap: 20,
+      maxWidth: 960,
+      alignItems: 'stretch',
+    }}
+  >
+    {PROBLEMS.map((problem) => (
+      <ReqoreFeatureCard
+        key={problem.label}
+        {...problem}
+        marker='icon'
+        intent='warning'
+        flat
+        raised
+        onClick={onCardClick}
+        actions={[
+          {
+            label: 'Show me the fix',
+            icon: 'ArrowRightLine',
+            intent: 'info',
+            fluid: fluidActions,
+            onClick: onFixClick,
+          },
+        ]}
+      />
+    ))}
+  </div>
+);
+
+const footerRows = (canvasElement: HTMLElement) =>
+  Array.from(canvasElement.querySelectorAll('.reqore-feature-card-footer')) as HTMLElement[];
+
+const expectFootersInOneLine = async (canvasElement: HTMLElement) => {
+  const tops = footerRows(canvasElement).map((row) => Math.round(row.getBoundingClientRect().top));
+
+  await expect(tops).toHaveLength(3);
+  // The cards stretch to the tallest; each footer sits at its card's bottom, so in one row
+  // of cards they share a line whatever the length of each description.
+  await expect(new Set(tops).size).toBe(1);
+  footerRows(canvasElement).forEach((row) => {
+    const card = row.closest('.reqore-feature-card') as HTMLElement;
+    const bottomPadding = parseFloat(getComputedStyle(card).paddingBottom);
+    const contentBottom = card.getBoundingClientRect().bottom - bottomPadding;
+    expect(Math.abs(contentBottom - row.getBoundingClientRect().bottom)).toBeLessThanOrEqual(1.5);
+  });
+};
+
+const expectActionStopsAtTheButton = async (canvasElement: HTMLElement) => {
+  onCardClick.mockClear();
+  onFixClick.mockClear();
+
+  await fireEvent.click(canvasElement.querySelector('.reqore-feature-card-action') as HTMLElement);
+  await expect(onFixClick).toHaveBeenCalledTimes(1);
+  await expect(onCardClick).not.toHaveBeenCalled();
+};
+
+export const Actions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders three clickable problem cards with an "Show me the fix" action each: the cards stretch to the tallest, and each action sits at its card\'s bottom edge, so the three buttons share one line. Clicking an action runs the action, not the card.',
+      },
+    },
+  },
+  render: () => <ProblemCards />,
+  play: async ({ canvasElement }) => {
+    await expectFootersInOneLine(canvasElement);
+    await expectActionStopsAtTheButton(canvasElement);
+  },
+};
+
+export const ActionsLight: Story = {
+  args: { mainTheme: '#f4f4f4' } as Story['args'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the three problem cards with their actions on a light theme, the buttons still on one line at the cards\' bottom edges.',
+      },
+    },
+  },
+  render: () => <ProblemCards />,
+  play: async ({ canvasElement }) => expectFootersInOneLine(canvasElement),
+};
+
+export const ActionsMobile: Story = {
+  parameters: {
+    viewport: { defaultViewport: 'mobile1' },
+    qlip: { viewport: { width: 380, height: 1000 } },
+    docs: {
+      description: {
+        story:
+          'Renders the problem cards on a phone-width screen (380px): one column, each action `fluid` across its card, and nothing wider than the screen.',
+      },
+    },
+  },
+  render: () => <ProblemCards fluidActions />,
+  play: async ({ canvasElement }) => {
+    const actions = Array.from(
+      canvasElement.querySelectorAll('.reqore-feature-card-action')
+    ) as HTMLElement[];
+
+    await expect(actions).toHaveLength(3);
+    actions.forEach((action) => {
+      const row = action.closest('.reqore-feature-card-footer') as HTMLElement;
+      const width = action.getBoundingClientRect().width;
+      expect(Math.abs(width - row.clientWidth)).toBeLessThanOrEqual(1);
+    });
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1);
+  },
+};
+
+export const Footer: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders cards with a `footer`: a tag group and a "Learn more" action in one row; a price before a "Buy" action, right-aligned with `footerProps`; and a footer of text only.',
+      },
+    },
+  },
+  render: () => (
+    <ReqoreControlGroup gapSize='big' verticalAlign='flex-start' wrap>
+      <div style={{ width: 300 }}>
+        <ReqoreFeatureCard
+          label='Connectors'
+          description='Talk to 200+ systems out of the box.'
+          marker='icon'
+          icon='PlugLine'
+          footer={
+            <ReqoreControlGroup gapSize='tiny'>
+              <ReqoreTag label='SAP' size='small' />
+              <ReqoreTag label='Salesforce' size='small' />
+            </ReqoreControlGroup>
+          }
+          actions={[{ label: 'Learn more', minimal: true, rightIcon: 'ArrowRightLine' }]}
+        />
+      </div>
+      <div style={{ width: 300 }}>
+        <ReqoreFeatureCard
+          label='Pro plan'
+          description='Everything a growing team needs.'
+          marker='number'
+          markerLabel='02'
+          footer={<strong className='story-price'>$49 / month</strong>}
+          footerProps={{ horizontalAlign: 'flex-end' }}
+          actions={[{ label: 'Buy', intent: 'success' }]}
+        />
+      </div>
+      <div style={{ width: 300 }}>
+        <ReqoreFeatureCard
+          label='Docs'
+          description='Read how it works.'
+          marker='line'
+          footer='Updated September 2026'
+        />
+      </div>
+    </ReqoreControlGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const [tags, priced, text] = footerRows(canvasElement);
+
+    // The footer content comes first, then the actions, in one row.
+    await expect(tags.firstElementChild?.querySelectorAll('.reqore-tag')).toHaveLength(2);
+    await expect(tags.lastElementChild?.classList.contains('reqore-feature-card-action')).toBe(
+      true
+    );
+    const [content, buy] = Array.from(priced.children).map((child) =>
+      child.getBoundingClientRect()
+    );
+    const middle = (box: DOMRect) => box.top + box.height / 2;
+    await expect(Math.abs(middle(content) - middle(buy))).toBeLessThan(2);
+    // Right-aligned: the action ends where the row does.
+    await expect(Math.abs(buy.right - priced.getBoundingClientRect().right)).toBeLessThanOrEqual(1);
+    await expect(text.textContent).toBe('Updated September 2026');
+  },
 };

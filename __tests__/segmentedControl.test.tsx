@@ -1,6 +1,8 @@
 import { fireEvent, render } from '@testing-library/react';
+import { vi } from 'vitest';
 import {
   ReqoreContent,
+  ReqoreIcon,
   ReqoreLayoutContent,
   ReqoreSegmentedControl,
   ReqoreUIProvider,
@@ -304,4 +306,134 @@ test('Positions the highlight under the active item from the padding edge', () =
       delete (Element.prototype as any).clientLeft;
     }
   }
+});
+
+/* ------------------------------------------------------------------------------------------------
+ * Per-item props
+ * ---------------------------------------------------------------------------------------------- */
+
+const segments = () =>
+  Array.from(
+    document.querySelectorAll(
+      'button.reqore-segmented-control-item:not(.reqore-segmented-control-more)'
+    )
+  ) as HTMLElement[];
+
+test('An item’s props reach its button: data, aria, id, class merged, style', () => {
+  renderControl({
+    items: [
+      {
+        value: 'monthly',
+        label: 'Monthly',
+        props: {
+          'data-track-click': 'pricing-cycle',
+          'data-track-label': 'monthly',
+          'aria-label': 'Bill monthly',
+          id: 'cycle-monthly',
+          className: 'cycle',
+          style: { minWidth: 120 },
+        },
+      },
+      { value: 'yearly', label: 'Yearly', props: { 'data-track-click': 'pricing-cycle' } },
+    ],
+    value: 'monthly',
+  });
+
+  const [monthly, yearly] = segments();
+
+  expect(monthly.getAttribute('data-track-click')).toBe('pricing-cycle');
+  expect(monthly.getAttribute('data-track-label')).toBe('monthly');
+  expect(monthly.getAttribute('aria-label')).toBe('Bill monthly');
+  expect(monthly.id).toBe('cycle-monthly');
+  expect(monthly.classList.contains('cycle')).toBe(true);
+  expect(monthly.classList.contains('reqore-segmented-control-item')).toBe(true);
+  expect(monthly.style.minWidth).toBe('120px');
+  expect(yearly.getAttribute('data-track-click')).toBe('pricing-cycle');
+  expect(yearly.hasAttribute('data-track-label')).toBe(false);
+});
+
+test('An item’s props cannot break the radio group the control runs', () => {
+  const onChange = vi.fn();
+
+  renderControl({
+    items: [
+      { value: 'a', label: 'A' },
+      {
+        value: 'b',
+        label: 'B',
+        props: { disabled: true, 'aria-disabled': false, minimal: true },
+      },
+    ],
+    value: 'a',
+    onChange,
+  });
+
+  const [, b] = segments();
+
+  expect(b.getAttribute('role')).toBe('radio');
+  expect(b.getAttribute('aria-checked')).toBe('false');
+  expect(b.getAttribute('tabindex')).toBe('-1');
+  // `disabled` is the control's: the item does not set it, so the segment stays enabled.
+  expect(b).not.toBeDisabled();
+
+  fireEvent.click(b);
+  expect(onChange).toHaveBeenCalledWith('b');
+});
+
+test('The item’s own fields win over its props; its props fill the ones it leaves unset', () => {
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreSegmentedControl
+            items={[
+              { value: 'a', label: 'A', icon: 'SunLine', props: { icon: 'MoonLine', badge: 2 } },
+              { value: 'b', label: 'B', props: { icon: 'MoonLine' } },
+            ]}
+            value='a'
+          />
+          <ReqoreIcon icon='SunLine' className='reference-sun' />
+          <ReqoreIcon icon='MoonLine' className='reference-moon' />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const glyph = (element: Element) => element.querySelector('svg')?.innerHTML;
+  const sun = glyph(document.querySelector('.reference-sun'));
+  const moon = glyph(document.querySelector('.reference-moon'));
+  const [a, b] = segments();
+  const icons = (segment: HTMLElement) =>
+    Array.from(segment.querySelectorAll('.reqore-icon')).map(glyph).filter(Boolean);
+
+  expect(sun).not.toBe(moon);
+  // A's own icon wins; the badge it does not set comes from its props.
+  expect(icons(a)).toContain(sun);
+  expect(icons(a)).not.toContain(moon);
+  expect(a.querySelector('.reqore-tag')).toBeTruthy();
+  // B sets no icon, so its props' icon is used.
+  expect(icons(b)).toContain(moon);
+});
+
+test('A segment folded into the More menu passes its props to its menu item', () => {
+  renderControl({
+    _testWidth: 150,
+    items: [
+      { value: 'day', label: 'Day' },
+      { value: 'week', label: 'Week' },
+      { value: 'month', label: 'Month' },
+      { value: 'year', label: 'Year', props: { 'data-track-label': 'year' } },
+    ],
+    value: 'day',
+  });
+
+  const more = document.querySelector('.reqore-segmented-control-more') as HTMLElement;
+
+  expect(more).toBeTruthy();
+  fireEvent.mouseEnter(more);
+  fireEvent.click(more);
+
+  const menuItem = document.querySelector('.reqore-menu-item[data-track-label="year"]');
+
+  expect(menuItem).toBeTruthy();
 });

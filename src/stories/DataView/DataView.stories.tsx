@@ -747,7 +747,9 @@ export const EditableArrayOps: Story = {
     docs: {
       description: {
         story:
-          'Renders DataView exercising the editable array operations (add, edit, remove).',
+          'Renders DataView exercising the editable array operations (add, edit, remove). ' +
+          'The values are monospace; the "+ Add item" button in the list\'s value cell is a ' +
+          "control and keeps the control font instead of the cell's monospace.",
       },
     },
   },
@@ -769,6 +771,19 @@ export const EditableArrayOps: Story = {
       '.reqore-data-view-array-item'
     );
     await expect(arrayItems.length).toBe(3);
+
+    // The values are data and stay monospace. The "+ Add item" button sits in the same value
+    // cell but is a control: it keeps the control font rather than the cell's monospace.
+    const valueCell = canvasElement.querySelector('.reqore-data-view-value-cell') as HTMLElement;
+    const addItem = valueCell.querySelector(
+      '.reqore-data-view-add-row .reqore-button'
+    ) as HTMLElement;
+    await expect(addItem).toHaveTextContent('Add item');
+    await expect(getComputedStyle(addItem).fontFamily).not.toContain('monospace');
+    const value = valueCell.querySelector(
+      '.reqore-data-view-value .reqore-tag-content'
+    ) as HTMLElement;
+    await expect(getComputedStyle(value).fontFamily).toContain('monospace');
 
     // Delete the second item (`pending`). Hover-reveal the action
     // group; click the delete button.

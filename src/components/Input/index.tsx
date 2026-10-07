@@ -222,6 +222,8 @@ export const StyledInput = styled(StyledEffect).withConfig({
   }}px;
 
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
+  /* The page's font (or the theme's), not the browser's form-control font. */
+  font-family: inherit;
   font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   transition: all 0.2s ease-out;
   border-radius: inherit;

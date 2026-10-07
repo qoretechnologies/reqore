@@ -1,4 +1,5 @@
-import { fireEvent, render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import {
   ReqoreContent,
   ReqoreFeatureCard,
@@ -314,4 +315,144 @@ test('Renders <FeatureCard /> with custom paddingSize', () => {
   );
 
   expect(document.querySelectorAll('.reqore-feature-card').length).toBe(1);
+});
+
+/* ------------------------------------------------------------------------------------------------
+ * actions / footer
+ * ---------------------------------------------------------------------------------------------- */
+
+const renderCard = (props: Partial<React.ComponentProps<typeof ReqoreFeatureCard>>) =>
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreContent>
+          <ReqoreFeatureCard
+            label='Double shipments'
+            description='A retry ships twice.'
+            {...props}
+          />
+        </ReqoreContent>
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+const footer = () => document.querySelector('.reqore-feature-card-footer') as HTMLElement;
+const actionButtons = () =>
+  Array.from(document.querySelectorAll('.reqore-feature-card-action')) as HTMLElement[];
+
+test('A card with neither actions nor footer renders no footer row', () => {
+  renderCard({});
+
+  expect(footer()).toBeNull();
+  expect(document.querySelector('.reqore-feature-card').children).toHaveLength(2);
+});
+
+test('actions render as buttons in the footer, the last row of the card', () => {
+  const onFix = vi.fn();
+
+  renderCard({
+    actions: [
+      { label: 'Show me how', icon: 'ArrowRightLine', onClick: onFix },
+      { label: 'Later', minimal: true },
+    ],
+  });
+
+  const card = document.querySelector('.reqore-feature-card') as HTMLElement;
+
+  expect(card.lastElementChild).toBe(footer());
+  expect(screen.getByRole('button', { name: 'Show me how' })).toBe(actionButtons()[0]);
+  expect(screen.getByRole('button', { name: 'Later' })).toBe(actionButtons()[1]);
+  // The footer takes the card's spare height above it, so footers of equal cards line up.
+  expect(getComputedStyle(footer()).marginTop).toBe('auto');
+
+  fireEvent.click(actionButtons()[0]);
+  expect(onFix).toHaveBeenCalledTimes(1);
+});
+
+test('A click on an action does not reach the card’s own onClick', () => {
+  const onCard = vi.fn();
+  const onAction = vi.fn();
+
+  renderCard({ onClick: onCard, actions: [{ label: 'Fix', onClick: onAction }] });
+
+  fireEvent.click(actionButtons()[0]);
+  expect(onAction).toHaveBeenCalledTimes(1);
+  expect(onCard).not.toHaveBeenCalled();
+
+  fireEvent.click(document.querySelector('.reqore-feature-card-label'));
+  expect(onCard).toHaveBeenCalledTimes(1);
+});
+
+test('Actions take the card size and intent unless they set their own', () => {
+  renderCard({
+    size: 'small',
+    intent: 'success',
+    actions: [{ label: 'Inherit' }, { label: 'Own', size: 'big', intent: 'danger' }],
+  });
+
+  const [inherited, own] = actionButtons();
+
+  expect(getComputedStyle(inherited).fontSize).toBe('12px');
+  expect(getComputedStyle(own).fontSize).toBe('17px');
+  // A solid intent button is filled with the intent colour: success, and danger.
+  expect(getComputedStyle(inherited).backgroundColor).toBe('rgb(10, 102, 64)');
+  expect(getComputedStyle(own).backgroundColor).toBe('rgb(168, 42, 42)');
+});
+
+test('An action is fluid only when it says so', () => {
+  renderCard({ actions: [{ label: 'Fixed' }, { label: 'Full width', fluid: true }] });
+
+  const [plain, fluid] = actionButtons();
+
+  expect(getComputedStyle(plain).flexGrow).toBe('0');
+  expect(getComputedStyle(fluid).flexGrow).toBe('1');
+});
+
+test('footer renders before the actions, untouched by the footer row', () => {
+  renderCard({
+    footer: <span className='price'>$49</span>,
+    actions: [{ label: 'Buy' }],
+  });
+
+  const [content, action] = Array.from(footer().children) as HTMLElement[];
+
+  expect(content.classList.contains('reqore-feature-card-footer-content')).toBe(true);
+  expect(content.querySelector('.price').textContent).toBe('$49');
+  expect(action.classList.contains('reqore-feature-card-action')).toBe(true);
+});
+
+test('A footer without actions renders the footer row; text at the description size', () => {
+  renderCard({ footer: 'Read the article' });
+
+  const note = footer().querySelector('.reqore-paragraph') as HTMLElement;
+
+  expect(footer().textContent).toBe('Read the article');
+  expect(actionButtons()).toHaveLength(0);
+  expect(note).toBeTruthy();
+  expect(getComputedStyle(note).fontSize).toBe(
+    getComputedStyle(document.querySelector('.reqore-feature-card-description')).fontSize
+  );
+});
+
+test('footerProps reach the footer row', () => {
+  renderCard({
+    actions: [{ label: 'Go' }],
+    footerProps: { vertical: true, className: 'card-footer', 'data-slot': 'footer' },
+  });
+
+  expect(footer().classList.contains('card-footer')).toBe(true);
+  expect(footer().getAttribute('data-slot')).toBe('footer');
+  expect(getComputedStyle(footer()).flexFlow).toContain('column');
+});
+
+test('Actions are disabled with the card, unless one says otherwise', () => {
+  renderCard({
+    disabled: true,
+    actions: [{ label: 'Fix' }, { label: 'Read', disabled: false }],
+  });
+
+  const [fix, read] = actionButtons();
+
+  expect(fix).toBeDisabled();
+  expect(read).not.toBeDisabled();
 });
