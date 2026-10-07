@@ -583,7 +583,16 @@ export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
 }
 
 export const ButtonBadge = memo(
-  ({ wrapGroup, compact, active, margin = 'left', ...props }: IReqoreButtonBadgeProps) => {
+  ({
+    wrapGroup,
+    compact,
+    active,
+    margin = 'left',
+    // Without a size the spacer before the badge computed `NaNpx`.
+    size: badgeSize = 'normal',
+    ...rest
+  }: IReqoreButtonBadgeProps) => {
+    const props = { ...rest, size: badgeSize };
     const renderTag = useCallback(
       ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
         <ReqoreTag
