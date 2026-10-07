@@ -609,10 +609,14 @@ export const ButtonBadge = memo(
             : (content as IReqoreTagProps))}
         />
       ),
-      [props]
+      // The tag is built from its arguments; only `active` comes from the closure.
+      [active]
     );
 
-    const content = Array.isArray(props.content) ? props.content : [props.content];
+    const content = useMemo(
+      () => (Array.isArray(rest.content) ? rest.content : [rest.content]),
+      [rest.content]
+    );
 
     const leftBadges = useMemo(
       () =>
