@@ -4,6 +4,7 @@ import styled, { css } from 'styled-components';
 import { ReqoreErrorBoundary } from '../..';
 import { TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
+import { omitStyleProps } from '../../helpers/styled';
 import { IReqoreComponent, IWithReqoreLoading } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqoreButtonProps } from '../Button';
@@ -99,7 +100,9 @@ export interface IReqoreTabsProps extends IReqoreComponent, React.HTMLAttributes
   _testWidth?: number;
 }
 
-const StyledTabs = styled.div<Partial<IReqoreTabsProps>>`
+const StyledTabs = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('width'),
+})<Partial<IReqoreTabsProps>>`
   display: flex;
   ${({ vertical, fillParent, width }) => css`
     width: ${width ? `${width}px` : '100%'};

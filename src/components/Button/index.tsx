@@ -337,7 +337,8 @@ export const StyledButton = styled(StyledEffect).withConfig({
   // A containing ControlGroup can propagate its `fill` layout flag through
   // polymorphic controls such as Dropdown. The flag is meaningful to the
   // group, but it is not a valid boolean attribute for the rendered button.
-  shouldForwardProp: omitStyleProps('fill'),
+  // `color` is the button's colour and `wrap` how its label breaks, both for its styles.
+  shouldForwardProp: omitStyleProps('fill', 'color', 'wrap'),
 })<IReqoreButtonStyle>`
   display: flex;
   flex-flow: column;
@@ -551,7 +552,9 @@ export const StyledButton = styled(StyledEffect).withConfig({
   }
 `;
 
-export const StyledButtonContent = styled.div`
+export const StyledButtonContent = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('wrap'),
+})`
   display: flex;
   align-items: center;
   width: 100%;
@@ -580,7 +583,16 @@ export interface IReqoreButtonBadgeProps extends IWithReqoreSize {
 }
 
 export const ButtonBadge = memo(
-  ({ wrapGroup, compact, active, margin = 'left', ...props }: IReqoreButtonBadgeProps) => {
+  ({
+    wrapGroup,
+    compact,
+    active,
+    margin = 'left',
+    // Without a size the spacer before the badge computed `NaNpx`.
+    size: badgeSize = 'normal',
+    ...rest
+  }: IReqoreButtonBadgeProps) => {
+    const props = { ...rest, size: badgeSize };
     const renderTag = useCallback(
       ({ size, color, theme, content, key }: IReqoreButtonBadgeProps & { key: number }) => (
         <ReqoreTag
@@ -597,10 +609,14 @@ export const ButtonBadge = memo(
             : (content as IReqoreTagProps))}
         />
       ),
-      [props]
+      // The tag is built from its arguments; only `active` comes from the closure.
+      [active]
     );
 
-    const content = Array.isArray(props.content) ? props.content : [props.content];
+    const content = useMemo(
+      () => (Array.isArray(rest.content) ? rest.content : [rest.content]),
+      [rest.content]
+    );
 
     const leftBadges = useMemo(
       () =>

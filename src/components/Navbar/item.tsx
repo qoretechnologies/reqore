@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
+import { omitStyleProps } from '../../helpers/styled';
 import { changeLightness, getMainColor } from '../../helpers/colors';
 import {
   ActiveIconScale,
@@ -22,7 +23,10 @@ export interface IReqoreNavbarItemStyle extends IReqoreNavbarItemProps {
   theme?: IReqoreTheme;
 }
 
-const StyledNavbarItem = styled.div<IReqoreNavbarItemStyle>`
+// The navbar's `type` (`header` / `footer`) picks its theme; it is not the element's `type`.
+const StyledNavbarItem = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('type'),
+})<IReqoreNavbarItemStyle>`
   height: 100%;
   min-width: 50px;
   display: flex;

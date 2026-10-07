@@ -582,9 +582,12 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
               <>
                 {React.Children.map(content, (child) =>
                   child
-                    ? React.cloneElement(child, {
-                        closePopover,
-                      })
+                    ? // A DOM element cannot use it, and React would warn about the prop.
+                      React.isValidElement(child) && typeof child.type === 'string'
+                      ? child
+                      : React.cloneElement(child, {
+                          closePopover,
+                        })
                     : null
                 )}
               </>

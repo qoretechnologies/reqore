@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTheme } from '../../constants/theme';
+import { omitStyleProps } from '../../helpers/styled';
 
 export interface IReqoreNavbarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   position?: 'right' | 'left';
@@ -13,7 +14,10 @@ export interface IReqoreNavbarGroupStyle extends IReqoreNavbarGroupProps {
   theme: IReqoreTheme;
 }
 
-export const StyledNavbarGroup = styled.div<IReqoreNavbarGroupStyle>`
+// The navbar's `type` (`header` / `footer`) picks its theme; it is not the element's `type`.
+export const StyledNavbarGroup = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('type'),
+})<IReqoreNavbarGroupStyle>`
   ${({ position }: IReqoreNavbarGroupStyle) => css`
     height: 100%;
     float: ${position};
