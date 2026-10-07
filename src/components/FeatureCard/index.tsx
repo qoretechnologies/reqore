@@ -68,7 +68,13 @@ export interface IReqoreFeatureCardProps
   label: React.ReactNode;
   /** Effect applied to the label heading. */
   labelEffect?: IReqoreEffect;
-  /** Body copy under the label. */
+  /**
+   * Body copy under the label.
+   *
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`): it is drawn in
+   * a block container with the description's typography, not in a paragraph, which could not
+   * hold a block.
+   */
   description?: React.ReactNode;
   /** Effect applied to the description paragraph. */
   descriptionEffect?: IReqoreEffect;
@@ -357,6 +363,8 @@ export const ReqoreFeatureCard = memo(
 
       return (
         <ReqoreTooltipComponent
+          // A div, not the effect's span: the card holds blocks, which a span may not.
+          as='div'
           {...rest}
           ref={ref}
           Component={StyledFeatureCard}
@@ -418,6 +426,7 @@ export const ReqoreFeatureCard = memo(
             {description && (
               <StyledTextSlot $wrap={wrap}>
                 <ReqoreP
+                  as='div'
                   size={descriptionSize}
                   customTheme={theme}
                   effect={{ opacity: 0.72, ...descriptionEffect }}

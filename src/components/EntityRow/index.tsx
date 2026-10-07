@@ -75,7 +75,13 @@ export interface IReqoreEntityRowProps
     IWithReqoreTooltip {
   /** Primary text — e.g. the Qog name. */
   label: React.ReactNode;
-  /** Secondary text — typically a one-line description. */
+  /**
+   * Secondary text — typically a one-line description.
+   *
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`): it is drawn in
+   * a block container with the description's typography, not in a paragraph, which could not
+   * hold a block.
+   */
   description?: React.ReactNode;
   /** Tertiary text — e.g. "Last run: success · 3 hours ago · 384ms". */
   metadata?: React.ReactNode;
@@ -372,6 +378,8 @@ const ReqoreEntityRow = memo(
       return (
         <StyledContainer ref={containerRef} $fluid={fluid} className='reqore-entity-row-container'>
           <ReqoreTooltipComponent
+            // A div, not the effect's span: the row holds blocks, which a span may not.
+            as='div'
             data-narrow={isNarrow || undefined}
             {...rest}
             Component={StyledRow}
@@ -432,6 +440,7 @@ const ReqoreEntityRow = memo(
               {description && (
                 <StyledTextSlot $wrap={wrap}>
                   <ReqoreP
+                    as='div'
                     size={secondarySize}
                     effect={{ opacity: 0.7, ...descriptionEffect }}
                     className='reqore-entity-row-description'

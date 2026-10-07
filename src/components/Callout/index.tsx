@@ -61,9 +61,10 @@ export interface IReqoreCalloutProps
   /**
    * Body copy rendered under the label. Falls back to `children`.
    *
-   * Rendered inside a paragraph, so it takes text and inline content. For a
-   * body with blocks in it — a button row, a list — pass `children` instead
-   * and leave this unset; both render under the label.
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`):
+   * it is drawn in a block container with the description's typography, not in
+   * a paragraph, which could not hold a block. `children` render under it, in
+   * the callout's body typography.
    *
    * On its own — no label, no children — the icon is centred on it; under a
    * label the icon sits on the label line. See the note on `StyledCallout`.
@@ -370,6 +371,8 @@ export const ReqoreCallout = memo(
 
       return (
         <ReqoreTooltipComponent
+          // A div, not the effect's span: the callout holds blocks, which a span may not.
+          as='div'
           {...rest}
           ref={ref}
           Component={StyledCallout}
@@ -421,6 +424,7 @@ export const ReqoreCallout = memo(
               )}
               {description && (
                 <ReqoreP
+                  as='div'
                   size={descriptionSize}
                   effect={{ opacity: 0.78, ...descriptionEffect }}
                   className='reqore-callout-description'
@@ -431,9 +435,8 @@ export const ReqoreCallout = memo(
               {/* A label with children used to render the label alone and DROP
                   the body — silently, which is the worst way for a component to
                   disagree with its caller. The body goes under the label, in
-                  the same block the unstructured branch uses: it is a div, so
-                  it takes arbitrary content (a button row, a list) that a
-                  `description` cannot, since that renders inside a paragraph.
+                  the same block the unstructured branch uses, in the callout's
+                  body typography rather than the description's.
 
                   Both render when both are given: prose in the description and
                   an affordance under it is a real shape, and picking a winner

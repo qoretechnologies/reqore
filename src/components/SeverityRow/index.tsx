@@ -50,7 +50,13 @@ export interface IReqoreSeverityRowProps
     IWithReqoreTooltip {
   /** Primary line — e.g. "Payment Processing · stripe-webhook-receiver". */
   label: React.ReactNode;
-  /** Secondary line — e.g. "Avg duration 4.7s exceeded 3.5s threshold · just now". */
+  /**
+   * Secondary line — e.g. "Avg duration 4.7s exceeded 3.5s threshold · just now".
+   *
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`): it is drawn in
+   * a block container with the description's typography, not in a paragraph, which could not
+   * hold a block.
+   */
   description?: React.ReactNode;
   /** Optional inline content rendered before the label (e.g. severity Tag). */
   leading?: React.ReactNode;
@@ -314,6 +320,8 @@ const ReqoreSeverityRow = memo(
           className='reqore-severity-row-container'
         >
           <ReqoreTooltipComponent
+            // A div, not the effect's span: the row holds blocks, which a span may not.
+            as='div'
             data-narrow={isNarrow || undefined}
             {...rest}
             Component={StyledRow}
@@ -363,6 +371,7 @@ const ReqoreSeverityRow = memo(
               {description && (
                 <StyledTextSlot $wrap={wrap}>
                   <ReqoreP
+                    as='div'
                     size={secondarySize}
                     effect={{ opacity: 0.6, ...descriptionEffect }}
                     className='reqore-severity-row-description'
