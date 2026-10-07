@@ -52,8 +52,7 @@ const StyledShortcutKey = styled.span<IStyledShortcutKey>`
   min-width: ${({ _size }) => BADGE_SIZE_TO_PX[_size]}px;
   padding: 0 ${({ _size, compact }) => PADDING_FROM_SIZE[_size] / (compact ? 3 : 2)}px;
   font-size: ${({ _size }) => TAG_TEXT_FROM_SIZE[_size]}px;
-  /* The surrounding text's font, like a tag's: the page's, or the theme's. */
-  font-family: inherit;
+  font-family: system-ui;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;

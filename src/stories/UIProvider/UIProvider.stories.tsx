@@ -26,7 +26,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /* ------------------------------------------------------------------------------------------------
- * Fonts — controls are in the page's font, or the theme's
+ * Fonts — buttons and inputs are in the page's font, or the theme's; tags and textareas keep
+ * their own
  * ---------------------------------------------------------------------------------------------- */
 
 const Controls = () => (
@@ -52,18 +53,31 @@ const Controls = () => (
   </ReqorePanel>
 );
 
-const CONTROL_SELECTORS = [
+/** What takes the font of the text around it: the page's, or the theme's. */
+const INHERITING_SELECTORS = [
   '.reqore-panel-title .reqore-heading',
   '.reqore-paragraph',
-  '.reqore-tag',
   '.reqore-input',
-  '.reqore-textarea',
   '.reqore-button',
-  '.reqore-keyboard-shortcut-key',
 ];
 
-const expectFontEverywhere = async (root: HTMLElement, font: string) => {
-  for (const selector of CONTROL_SELECTORS) {
+/**
+ * What keeps a face of its own, whatever the page or the theme is set in: tags and shortcut
+ * keys name the platform UI font, a textarea keeps the browser's monospace.
+ */
+const OWN_FONTS: [string, string][] = [
+  ['.reqore-tag', 'system-ui'],
+  ['.reqore-keyboard-shortcut-key', 'system-ui'],
+  ['.reqore-textarea', 'monospace'],
+];
+
+const expectFonts = async (root: HTMLElement, inheritedFont: string) => {
+  const expected: [string, string][] = [
+    ...INHERITING_SELECTORS.map((selector): [string, string] => [selector, inheritedFont]),
+    ...OWN_FONTS,
+  ];
+
+  for (const [selector, font] of expected) {
     const elements = Array.from(root.querySelectorAll(selector)) as HTMLElement[];
 
     await expect([selector, elements.length > 0]).toEqual([selector, true]);
@@ -80,7 +94,7 @@ export const PageFont: Story = {
     docs: {
       description: {
         story:
-          'Renders a panel with a paragraph, tags, an input, a textarea, buttons and a shortcut key on a page set in a serif font: every one of them is in the page\'s font, with no browser control font and no system-ui left over.',
+          'Renders a panel with a paragraph, tags, an input, a textarea, buttons and a shortcut key on a page set in a serif font: the title, the paragraph, the input and the buttons are in the page\'s font, with no browser control font left over, while the tags and the shortcut key keep the platform UI font (system-ui) and the textarea keeps the browser\'s monospace, as they always had.',
       },
     },
   },
@@ -90,7 +104,7 @@ export const PageFont: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    await expectFontEverywhere(
+    await expectFonts(
       canvasElement.querySelector('.story-page') as HTMLElement,
       getComputedStyle(canvasElement.querySelector('.story-page') as HTMLElement).fontFamily
     );
@@ -102,7 +116,7 @@ export const ThemeFontFamily: Story = {
     docs: {
       description: {
         story:
-          'Renders the same panel under a provider with `theme.fontFamily: "mono"`: the layout wrapper sets the monospace stack and the text, the tags, the fields, the buttons and the shortcut key all take it.',
+          'Renders the same panel under a provider with `theme.fontFamily: "mono"`: the layout wrapper sets the monospace stack and the title, the paragraph, the input and the buttons take it; the tags and the shortcut key stay in system-ui and the textarea in the browser\'s monospace, because the theme font excludes them.',
       },
     },
   },
@@ -122,7 +136,7 @@ export const ThemeFontFamily: Story = {
 
     // The computed stack comes back with double quotes.
     await expect(mono).toBe(MONO_FONT.replace(/'/g, '"'));
-    await expectFontEverywhere(themed, mono);
+    await expectFonts(themed, mono);
   },
 };
 

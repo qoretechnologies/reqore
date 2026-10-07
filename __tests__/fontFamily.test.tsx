@@ -1,7 +1,5 @@
 import { render } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
-import { ReqoreExportModal } from '../src/components/ExportModal';
-import { ReqoreTreeManagementDialog } from '../src/components/Tree/modal';
 import {
   ReqoreButton,
   ReqoreContent,
@@ -39,13 +37,29 @@ const renderControls = (theme?: Partial<IReqoreTheme>, pageFont?: string) =>
 const fontOf = (selector: string) =>
   getComputedStyle(document.querySelector(selector) as HTMLElement).fontFamily;
 
-const CONTROLS = [
-  '.reqore-button',
-  '.reqore-input',
-  '.reqore-textarea',
-  '.reqore-tag',
-  '.reqore-keyboard-shortcut-key',
+/** The controls that take the font of the text around them: the page's, or the theme's. */
+const INHERITING = ['.reqore-button', '.reqore-input'];
+
+/**
+ * The ones that keep a face of their own whatever the page or the theme is set in: a tag and a
+ * shortcut key name the platform UI font, a textarea keeps the browser's monospace.
+ */
+const OWN_FONTS: [string, string][] = [
+  ['.reqore-tag', 'system-ui'],
+  ['.reqore-keyboard-shortcut-key', 'system-ui'],
+  ['.reqore-textarea', 'monospace'],
 ];
+
+const expectFonts = (inheritedFont: string) => {
+  INHERITING.forEach((selector) => {
+    expect(document.querySelector(selector)).toBeTruthy();
+    expect([selector, fontOf(selector)]).toEqual([selector, inheritedFont]);
+  });
+  OWN_FONTS.forEach(([selector, font]) => {
+    expect(document.querySelector(selector)).toBeTruthy();
+    expect([selector, fontOf(selector)]).toEqual([selector, font]);
+  });
+};
 
 /**
  * jsdom has no user-agent stylesheet, so a bare `<button>` would inherit the page font there
@@ -65,13 +79,10 @@ beforeEach(() => {
 
 afterEach(() => userAgentControlFont.remove());
 
-test('Buttons, inputs, textareas, tags and shortcut keys are in the font of the page', () => {
+test('Buttons and inputs are in the font of the page; tags and textareas keep their own', () => {
   renderControls(undefined, PAGE_FONT);
 
-  CONTROLS.forEach((selector) => {
-    expect(document.querySelector(selector)).toBeTruthy();
-    expect([selector, fontOf(selector)]).toEqual([selector, PAGE_FONT]);
-  });
+  expectFonts(PAGE_FONT);
 });
 
 test('Without a theme font, Reqore is in the font the page sets on its body', () => {
@@ -83,22 +94,19 @@ test('Without a theme font, Reqore is in the font the page sets on its body', ()
     // The layout wrapper and the portal name no font, so the body's reaches everything.
     expect(fontOf('.reqore-layout-wrapper')).toBe(PAGE_FONT);
     expect(fontOf('#reqore-portal')).toBe(PAGE_FONT);
-    CONTROLS.forEach((selector) =>
-      expect([selector, fontOf(selector)]).toEqual([selector, PAGE_FONT])
-    );
+    expectFonts(PAGE_FONT);
   } finally {
     document.body.style.fontFamily = '';
   }
 });
 
-test('theme.fontFamily sets the font of the layout, the portal and every control', () => {
+test('theme.fontFamily sets the font of the layout, the portal, the buttons and the inputs', () => {
   renderControls({ fontFamily: '"Avenir Next", sans-serif' });
 
   expect(fontOf('.reqore-layout-wrapper')).toBe('"Avenir Next", sans-serif');
   expect(fontOf('#reqore-portal')).toBe('"Avenir Next", sans-serif');
-  CONTROLS.forEach((selector) =>
-    expect([selector, fontOf(selector)]).toEqual([selector, '"Avenir Next", sans-serif'])
-  );
+  // Tags, shortcut keys and textareas are excluded: they keep system-ui and monospace.
+  expectFonts('"Avenir Next", sans-serif');
 });
 
 test('theme.fontFamily takes the mono and system shorthands', () => {
@@ -111,7 +119,7 @@ test('theme.fontFamily takes the mono and system shorthands', () => {
   renderControls({ fontFamily: 'system' });
 
   expect(fontOf('.reqore-layout-wrapper')).toBe('system-ui');
-  expect(fontOf('.reqore-tag')).toBe('system-ui');
+  expect(fontOf('.reqore-input')).toBe('system-ui');
 });
 
 test('A text that sets its own font keeps it under a theme font', () => {
@@ -121,6 +129,11 @@ test('A text that sets its own font keeps it under a theme font', () => {
         <ReqoreContent>
           <ReqoreTag label='sku' effect={{ fontFamily: 'mono' }} />
           <ReqoreButton effect={{ fontFamily: 'system' }}>Run</ReqoreButton>
+          <ReqoreTextarea
+            value='Notes'
+            onChange={() => undefined}
+            effect={{ fontFamily: PAGE_FONT }}
+          />
         </ReqoreContent>
       </ReqoreLayoutContent>
     </ReqoreUIProvider>
@@ -128,26 +141,6 @@ test('A text that sets its own font keeps it under a theme font', () => {
 
   expect(fontOf('.reqore-tag')).toBe(MONO);
   expect(fontOf('.reqore-button')).toBe('system-ui');
-});
-
-test('The textareas that hold data keep the monospace a textarea always had', () => {
-  render(
-    <ReqoreUIProvider>
-      <ReqoreLayoutContent>
-        <ReqoreContent>
-          <div style={{ fontFamily: PAGE_FONT }}>
-            <ReqoreExportModal data={[{ id: 1, name: 'Rob' }]} />
-            <ReqoreTreeManagementDialog data={{ key: 'name', value: 'Rob' }} />
-          </div>
-        </ReqoreContent>
-      </ReqoreLayoutContent>
-    </ReqoreUIProvider>
-  );
-
-  const textareas = Array.from(document.querySelectorAll('.reqore-textarea')) as HTMLElement[];
-
-  expect(textareas.length).toBeGreaterThanOrEqual(2);
-  textareas.forEach((textarea) =>
-    expect(getComputedStyle(textarea).fontFamily).toBe('monospace')
-  );
+  // A textarea that holds prose can still ask for the page's font.
+  expect(fontOf('.reqore-textarea')).toBe(PAGE_FONT);
 });

@@ -130,8 +130,6 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  /* The page's font (or the theme's), not the browser's form-control font. */
-  font-family: inherit;
   font-size: ${({ _size = 'normal' }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
   margin: 0;
   padding: ${({ _size = 'normal' }) => TEXTAREA_PADDING_FROM_SIZE[_size]}px;

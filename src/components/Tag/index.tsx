@@ -5,6 +5,7 @@ import React, { forwardRef, HTMLAttributes, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { ReqorePopover, useReqoreTheme } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
+import { SYSTEM_FONT } from '../../constants/fonts';
 import {
   BADGE_RADIUS_FROM_RADIUS_SIZE,
   BADGE_RADIUS_FROM_SIZE,
@@ -295,10 +296,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   justify-content: center;
   flex-shrink: 0;
   align-items: stretch;
-  /* The text around the tag sets its font: the page's, or the theme's, which the layout
-     wrapper and the portal declare. A tag used to name the platform UI font here, so it was
-     the one piece of a page that ignored the page's typeface.
-     Only when the caller has not asked for a family. StyledTag extends StyledEffect,
+  /* Only when the caller has not asked for a family. StyledTag extends StyledEffect,
      so an unconditional declaration here always won the cascade over effect.fontFamily
      — which is why ReqoreDataView had to force monospace back on with a specificity-
      boosted descendant override instead of just setting the effect.
@@ -306,7 +304,7 @@ export const StyledTag = styled(StyledEffect)<IReqoreTagStyle>`
   ${({ effect }: IReqoreTagStyle) =>
     !effect?.fontFamily &&
     css`
-      font-family: inherit;
+      font-family: ${SYSTEM_FONT};
     `}
   overflow: hidden;
   vertical-align: ${({ verticalAlign = 'middle' }) => verticalAlign};

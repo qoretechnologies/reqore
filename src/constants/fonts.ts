@@ -11,19 +11,8 @@
 export const MONO_FONT =
   "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
 
-/**
- * The platform UI font, for `effect.fontFamily: 'system'`. No component names it by default:
- * Reqore text is in the page's font, or the theme's (`theme.fontFamily`) when one is set.
- */
+/** The platform UI font — what most Reqore text already renders in. */
 export const SYSTEM_FONT = 'system-ui';
-
-/**
- * The generic `monospace` family: what a `<textarea>` gets from the browser's own stylesheet.
- * `ReqoreTextarea` follows the page's font since 0.77.6, so a textarea that holds data rather
- * than prose (`ReqoreExportModal`'s export, `ReqoreTree`'s raw value editor) names this to keep
- * the face it always had.
- */
-export const BROWSER_MONOSPACE_FONT = 'monospace';
 
 /** Shorthands accepted by `effect.fontFamily`, on top of any raw CSS font stack. */
 export const FONT_FAMILY_SHORTHANDS = {
