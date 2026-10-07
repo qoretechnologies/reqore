@@ -111,7 +111,9 @@ export const ReqoreTier = memo(
         <ReqoreVerticalSpacer height={20} />
         {badge && (
           <>
-            <ButtonBadge content={badge} />
+            {/* On a line of its own, like a callout's or an entity row's badge: nothing to
+                space it from. Sized with the tier's panel. */}
+            <ButtonBadge size={rest.size} content={badge} margin='none' />
             <ReqoreVerticalSpacer height={10} />
           </>
         )}

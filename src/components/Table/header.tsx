@@ -5,6 +5,7 @@ import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { IWithReqoreSize } from '../../types/global';
@@ -130,7 +131,9 @@ export const StyledColumnGroupHeader = styled.div<IReqoreTableHeaderStyle>`
   `}
 `;
 
-const StyledColumnGroup = styled.div<IReqoreTableHeaderStyle>`
+const StyledColumnGroup = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('width'),
+})<IReqoreTableHeaderStyle>`
   display: flex;
   flex-flow: column;
   flex-shrink: 0;

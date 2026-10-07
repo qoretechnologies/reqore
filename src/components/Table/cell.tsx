@@ -30,8 +30,9 @@ export interface IReqoreTableBodyCellProps
 }
 
 export const StyledTableCell = styled.div.withConfig({
-  // `wrap` drives the cell's white-space rule; it is not a DOM attribute.
-  shouldForwardProp: omitStyleProps('wrap'),
+  // `wrap` drives the cell's white-space rule and `width` its CSS width; neither is a DOM
+  // attribute of a `div`.
+  shouldForwardProp: omitStyleProps('wrap', 'width'),
 })<IReqoreTableCellStyle>`
   ${({ width, minWidth, maxWidth, grow }) =>
     css`

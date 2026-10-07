@@ -11,6 +11,7 @@ import {
   getMainBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IWithReqoreFlat } from '../../types/global';
@@ -41,7 +42,9 @@ export interface IReqoreTabListItemStyle extends IReqoreTabListItemProps {
   activeColor: string;
 }
 
-export const StyledTabListItem = styled.div<IReqoreTabListItemStyle>`
+export const StyledTabListItem = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('fill'),
+})<IReqoreTabListItemStyle>`
   ${({
     theme,
     disabled,

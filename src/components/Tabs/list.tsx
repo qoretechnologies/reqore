@@ -19,6 +19,7 @@ import {
   getMainBackgroundColor,
   getNthGradientColor,
 } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreBreadcrumbItem } from '../Breadcrumbs';
@@ -42,7 +43,9 @@ export interface IReqoreTabsListStyle extends Omit<IReqoreTabsListProps, 'tabs'>
   theme: IReqoreTheme;
 }
 
-export const StyledReqoreTabsList = styled.div<IReqoreTabsListStyle>`
+export const StyledReqoreTabsList = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('fill', 'width'),
+})<IReqoreTabsListStyle>`
   ${({ theme, fill, vertical, size, padded, flat, activeTabMarker, currentTabColor, width }) => css`
     height: ${vertical ? '100%' : undefined};
     width: ${vertical ? width || '200px' : '100%'};

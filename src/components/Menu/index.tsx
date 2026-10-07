@@ -6,6 +6,7 @@ import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes'
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -50,7 +51,29 @@ export interface IReqoreMenuStyle extends IReqoreMenuProps {
   theme: IReqoreTheme;
 }
 
-const StyledReqoreMenu = styled(StyledEffect)<IReqoreMenuStyle>`
+/* Rendered as re-resizable's `Resizable` when the menu is resizable, which writes every prop it
+   does not know onto its `div`: the menu's styling flags stop here. Resizable's own props
+   (`size`, `minWidth`, `maxHeight`, …) still pass. */
+const StyledReqoreMenu = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    '_size',
+    'fill',
+    'fixed',
+    'flat',
+    'fluid',
+    'isResizableLeft',
+    'isResizableRight',
+    'minimal',
+    'padded',
+    'position',
+    'rounded',
+    'showResizableBorder',
+    'spaceBetween',
+    'stack',
+    'transparent',
+    'width'
+  ),
+})<IReqoreMenuStyle>`
   width: ${({ width }) => width || undefined};
   min-width: ${({ width }) => (width ? undefined : '160px')};
   padding: ${({ padded = true, _size }) =>

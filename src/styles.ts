@@ -1,11 +1,15 @@
 import styled, { css } from 'styled-components';
 import { StyledTextEffect } from './components/Effect';
 import { StyledIconWrapper } from './components/Icon';
+import { omitStyleProps } from './helpers/styled';
 
 export const INACTIVE_ICON_SCALE = 0.85;
 export const ACTIVE_ICON_SCALE = 0.93;
 
-export const StyledContent = styled(StyledTextEffect)`
+// `wrap` sets how a label breaks; on a `span` it is not an attribute.
+export const StyledContent = styled(StyledTextEffect).withConfig({
+  shouldForwardProp: omitStyleProps('wrap'),
+})`
   position: relative;
 
   ${({ wrap }) =>
@@ -21,7 +25,9 @@ export const StyledContent = styled(StyledTextEffect)`
         `}
 `;
 
-export const StyledActiveContent = styled(StyledTextEffect)`
+export const StyledActiveContent = styled(StyledTextEffect).withConfig({
+  shouldForwardProp: omitStyleProps('wrap'),
+})`
   position: absolute;
   transform: translateY(-150%);
   opacity: 0;
@@ -41,7 +47,9 @@ export const StyledActiveContent = styled(StyledTextEffect)`
         `}
 `;
 
-export const StyledInActiveContent = styled(StyledTextEffect)`
+export const StyledInActiveContent = styled(StyledTextEffect).withConfig({
+  shouldForwardProp: omitStyleProps('wrap'),
+})`
   position: absolute;
   transform: translateY(0);
   transition: all 0.2s ease-out;
@@ -59,7 +67,9 @@ export const StyledInActiveContent = styled(StyledTextEffect)`
         `}
 `;
 
-export const StyledInvisibleContent = styled(StyledTextEffect)`
+export const StyledInvisibleContent = styled(StyledTextEffect).withConfig({
+  shouldForwardProp: omitStyleProps('wrap'),
+})`
   visibility: hidden;
   position: relative;
   overflow: hidden;

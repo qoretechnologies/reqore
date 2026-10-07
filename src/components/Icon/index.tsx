@@ -90,6 +90,8 @@ export const StyledIconWrapper = styled(StyledEffect).withConfig({
     'animation',
     'compact',
     'effect',
+    // Handed down by a containing `ReqoreControlGroup`.
+    'fill',
     'interactive',
     'margin',
     'marginSize',

@@ -554,6 +554,8 @@ const ReqoreControlGroup = memo(
           : {
               ...props,
               key: props?.reactKey || _index,
+              // Keep in step with `REQORE_CONTROL_GROUP_CHILD_PROPS`, which the children use to
+              // keep these off the DOM.
               ...definedOnly({
                 minimal: props?.minimal ?? minimal,
                 size: props?.size || size,
@@ -598,6 +600,7 @@ const ReqoreControlGroup = memo(
               borderBottomRightRadius: getBorderBottomRightRadius(index, props?.rounded) ?? 0,
               ...(props?.style || {}),
             },
+            // Also in `REQORE_CONTROL_GROUP_CHILD_PROPS`.
             ...(!isIntrinsicElement
               ? {
                   isChild: true,

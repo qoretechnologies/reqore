@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDebounce, useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
 import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ReqoreBackdrop } from '../Drawer/backdrop';
@@ -54,7 +55,9 @@ export interface IReqoreCollectionItemProps
   groups?: string[];
 }
 
-export const StyledCollectionItemContent = styled.div`
+export const StyledCollectionItemContent = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('opacity'),
+})`
   max-height: ${({ providedHeight }) => (providedHeight ? `${providedHeight}px` : 'auto')};
   overflow: ${({ isSelected }) => (isSelected ? 'auto' : 'hidden')};
   position: relative;

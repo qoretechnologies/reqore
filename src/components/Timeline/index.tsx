@@ -11,6 +11,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -230,7 +231,11 @@ const LINE_WIDTH_FROM_SIZE: Record<TSizes, number> = {
   massive: 3,
 };
 
-const StyledTimeline = styled.ol<IReqoreTimelineStyle>`
+// `direction` and `spacing` lay the timeline out; both are SVG attributes, so the elements
+// would otherwise keep them.
+const StyledTimeline = styled.ol.withConfig({
+  shouldForwardProp: omitStyleProps('direction', 'spacing'),
+})<IReqoreTimelineStyle>`
   list-style: none;
   margin: 0;
   padding: 0;
@@ -245,7 +250,9 @@ const StyledTimeline = styled.ol<IReqoreTimelineStyle>`
     `}
 `;
 
-const StyledTimelineItem = styled.li<IReqoreTimelineItemStyle>`
+const StyledTimelineItem = styled.li.withConfig({
+  shouldForwardProp: omitStyleProps('direction', 'spacing'),
+})<IReqoreTimelineItemStyle>`
   display: flex;
   position: relative;
 
@@ -311,7 +318,9 @@ const StyledTimelineItem = styled.li<IReqoreTimelineItemStyle>`
     `}
 `;
 
-const StyledTimelineMarkerWrapper = styled.div<IReqoreTimelineItemStyle>`
+const StyledTimelineMarkerWrapper = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('direction', 'spacing'),
+})<IReqoreTimelineItemStyle>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -322,7 +331,9 @@ const StyledTimelineMarkerWrapper = styled.div<IReqoreTimelineItemStyle>`
   position: relative;
 `;
 
-const StyledTimelineMarker = styled.div<IReqoreTimelineItemStyle>`
+const StyledTimelineMarker = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('direction', 'spacing'),
+})<IReqoreTimelineItemStyle>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -364,7 +375,9 @@ const StyledTimelineDot = styled.div<IReqoreTimelineItemStyle>`
 
 // Line now positioned to connect markers (icon to icon) — vertical mode only.
 // Horizontal mode draws its connector via a pseudo-element on StyledTimelineItem.
-const StyledTimelineLine = styled.div<IReqoreTimelineItemStyle>`
+const StyledTimelineLine = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('direction', 'spacing'),
+})<IReqoreTimelineItemStyle>`
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -395,7 +408,9 @@ const StyledTimelineLine = styled.div<IReqoreTimelineItemStyle>`
     `}
 `;
 
-const StyledTimelineContent = styled.div<IReqoreTimelineItemStyle>`
+const StyledTimelineContent = styled.div.withConfig({
+  shouldForwardProp: omitStyleProps('direction', 'spacing'),
+})<IReqoreTimelineItemStyle>`
   flex: 1;
   min-width: 0;
   ${({ direction, size }) =>

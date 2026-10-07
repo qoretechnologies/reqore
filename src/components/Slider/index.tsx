@@ -4,6 +4,7 @@ import styled, { css } from 'styled-components';
 import { HALF_PADDING_FROM_SIZE, ICON_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreCustomTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
+import { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { TReqoreTooltipProp } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -84,7 +85,11 @@ const StyledThumb = styled(Slider.Thumb)`
     outline: none;
   }
 `;
-const StyledRoot = styled(Slider.Root)`
+// A child of `SliderRootWrapper` (a control group), so it is handed the group's child props;
+// radix writes whatever it is given onto its `span`.
+const StyledRoot = styled(Slider.Root).withConfig({
+  shouldForwardProp: omitStyleProps(...REQORE_CONTROL_GROUP_CHILD_PROPS),
+})`
   position: relative;
   display: inline-flex;
   align-items: center;

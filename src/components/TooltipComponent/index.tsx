@@ -1,3 +1,4 @@
+import { omit } from 'lodash';
 import { forwardRef, memo } from 'react';
 import { buildTooltipForComponents } from '../../helpers/utils';
 import { TReqoreTooltipProp } from '../../types/global';
@@ -21,7 +22,9 @@ export const ReqoreTooltipComponent = memo(
         component={Component}
         isReqoreComponent
         ref={ref}
-        componentProps={rest}
+        // The popover draws the tooltip; a DOM element (`Component='div'`) has no use for it
+        // and would render it as a `tooltip` attribute.
+        componentProps={typeof Component === 'string' ? omit(rest, ['tooltip']) : rest}
       >
         {rest.children}
       </ReqorePopover>

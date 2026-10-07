@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { getReadableColor } from '../../helpers/colors';
+import { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize, isStringSize } from '../../helpers/utils';
 import { IWithReqoreEffect, IWithReqoreSize } from '../../types/global';
 import { IReqoreEffect, StyledTextEffect } from '../Effect';
@@ -18,7 +19,11 @@ export interface IReqoreMenuDividerProps
   line?: boolean;
 }
 
-export const StyledMenuDivider = styled(StyledTextEffect)`
+// A menu hands every child its `wrap`; the divider has no text to wrap, and a `div` would
+// keep the attribute.
+export const StyledMenuDivider = styled(StyledTextEffect).withConfig({
+  shouldForwardProp: omitStyleProps('wrap'),
+})`
   width: 100%;
   padding: 0;
   padding-top: ${({ padded, size }) =>
