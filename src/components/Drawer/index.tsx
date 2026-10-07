@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
+import { useReqoreMedia } from '../../hooks/useReqoreMedia';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import type { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
@@ -16,6 +17,130 @@ import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../Panel';
 import { ReqoreBackdrop } from './backdrop';
 
 export type TPosition = 'top' | 'bottom' | 'left' | 'right';
+
+/**
+ * The viewport width (px, inclusive) at or below which a `responsiveLayout`
+ * drawer becomes a sheet when the caller names no breakpoint. 900 is the
+ * number qorus-ide converged on for every one of its drawers: a 620–720px
+ * side panel in a 900px window leaves a sliver of page that is not usable
+ * anyway, so the sheet is the honest layout there. The provider's own
+ * `isMobile` (≤ 480px) is too narrow for drawers that wide — at 600px such a
+ * panel covers the viewport with its handle off-screen — and
+ * `isMobileOrTablet` (≤ 1200px) would put sheets on landscape tablets.
+ */
+export const DRAWER_SHEET_BREAKPOINT = 900;
+
+/**
+ * Which viewport width switches a `responsiveLayout` drawer into a sheet:
+ * `'mobile'` is the provider's `isMobile` (≤ 480px), `'tablet'` is its
+ * `isMobileOrTablet` (≤ 1200px), and a number is a width in px, inclusive.
+ * Omitted, it is `DRAWER_SHEET_BREAKPOINT`. Reqore owns these numbers; a
+ * consumer never carries a media query of its own for this.
+ */
+export type TReqoreDrawerResponsiveBreakpoint = 'mobile' | 'tablet' | number;
+
+export interface IReqoreDrawerResponsiveLayout {
+  /** Which viewport width switches the layout. Defaults to `DRAWER_SHEET_BREAKPOINT` (900px). */
+  below?: TReqoreDrawerResponsiveBreakpoint;
+  /** The edge the sheet attaches to while the layout is active. Defaults to `'bottom'`. */
+  position?: TPosition;
+  /** The sheet's size on the axis it occupies. Defaults to `'100%'`. */
+  size?: string;
+  /**
+   * The cap on that axis. Defaults to `'90vh'` — the same cap every drawer has
+   * on its cross axis by default, so a bottom sheet rises to 90% of the screen
+   * and leaves a strip of page above it where a tap on the backdrop closes it.
+   * Pass `'100%'` for an edge-to-edge sheet. Separate from the drawer's own
+   * `maxSize` on purpose: that one caps the SIDE drawer's width, and a value
+   * meant as a width must never become a sheet's height.
+   */
+  maxSize?: string;
+}
+
+export interface IReqoreDrawerResolvedResponsiveLayout {
+  /** Whether the sheet layout is in force for the current viewport. */
+  active: boolean;
+  /** The edge the sheet attaches to; only set while `active`. */
+  position?: TPosition;
+  /** The sheet's size on its axis; only set while `active`. */
+  size?: string;
+  /** The cap on that axis; only set while `active`. */
+  maxSize?: string;
+}
+
+export const DRAWER_RESPONSIVE_LAYOUT_DEFAULTS: Required<IReqoreDrawerResponsiveLayout> = {
+  below: DRAWER_SHEET_BREAKPOINT,
+  position: 'bottom',
+  size: '100%',
+  maxSize: '90vh',
+};
+
+/**
+ * What the resolver needs to know about the viewport. The two named flags are
+ * the provider's; `belowSheetBreakpoint` answers "is the viewport at or below
+ * the numeric `below` (or `DRAWER_SHEET_BREAKPOINT` when none is given)" and
+ * is ignored when `below` names a provider breakpoint. The component evaluates
+ * it with one media query; a consumer calling the resolver itself evaluates
+ * it however it already measures the viewport.
+ */
+export interface IReqoreDrawerResponsiveViewport {
+  isMobile: boolean;
+  isMobileOrTablet: boolean;
+  belowSheetBreakpoint: boolean;
+}
+
+/**
+ * Decides whether a drawer's `responsiveLayout` is in force, and with what
+ * geometry. Pure, so the decision is unit-testable without a viewport: jsdom
+ * has no `matchMedia`, so every breakpoint is fixed `false` in unit tests, and
+ * the rendered sheet is proven in a real browser instead — the
+ * `Dialogs/Drawer` `ResponsiveSheet*` stories do that at 380px and 800px.
+ *
+ * A modal (`_isModal`) is never turned into a sheet: it is already centred
+ * and sized for its content, and it has no edge to attach to.
+ */
+export const resolveDrawerResponsiveLayout = (
+  responsiveLayout: boolean | IReqoreDrawerResponsiveLayout | undefined,
+  viewport: IReqoreDrawerResponsiveViewport,
+  isModal?: boolean
+): IReqoreDrawerResolvedResponsiveLayout => {
+  if (!responsiveLayout || isModal) {
+    return { active: false };
+  }
+
+  const config: IReqoreDrawerResponsiveLayout =
+    responsiveLayout === true ? {} : responsiveLayout;
+  const below = config.below ?? DRAWER_RESPONSIVE_LAYOUT_DEFAULTS.below;
+  const active =
+    below === 'mobile'
+      ? viewport.isMobile
+      : below === 'tablet'
+      ? viewport.isMobileOrTablet
+      : viewport.belowSheetBreakpoint;
+
+  if (!active) {
+    return { active: false };
+  }
+
+  return {
+    active: true,
+    position: config.position ?? DRAWER_RESPONSIVE_LAYOUT_DEFAULTS.position,
+    size: config.size ?? DRAWER_RESPONSIVE_LAYOUT_DEFAULTS.size,
+    maxSize: config.maxSize ?? DRAWER_RESPONSIVE_LAYOUT_DEFAULTS.maxSize,
+  };
+};
+
+/**
+ * The px width behind a `responsiveLayout` config's numeric `below`, or the
+ * default when it names a provider breakpoint or nothing — the component
+ * always subscribes to exactly one query, so a hook never comes and goes.
+ */
+export const drawerSheetBreakpointPx = (
+  responsiveLayout: boolean | IReqoreDrawerResponsiveLayout | undefined
+): number =>
+  responsiveLayout && responsiveLayout !== true && typeof responsiveLayout.below === 'number'
+    ? responsiveLayout.below
+    : DRAWER_SHEET_BREAKPOINT;
 
 /** The floor an EDGE drawer cannot be dragged below, on the axis it resizes. */
 export const DRAWER_MIN_SIZE = '150px';
@@ -133,6 +258,35 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   confirmOnClose?: boolean | IReqoreConfirmationModal;
   /** Whether to trap focus within the drawer when open. Defaults to true for modals and drawers with backdrop. */
   focusTrap?: boolean;
+  /**
+   * Become a full-width sheet on small screens instead of a fixed-size edge
+   * panel. OPT-IN, because it changes geometry a caller may have sized for.
+   *
+   * A `size='720px'` right-hand drawer is unusable at 380px: it covers the
+   * whole viewport, its resize handle sits off-screen and nothing says why
+   * the page behind it stopped responding. With `responsiveLayout`, at or
+   * below the breakpoint — `DRAWER_SHEET_BREAKPOINT` (900px) unless `below`
+   * says `'mobile'` (≤ 480px), `'tablet'` (≤ 1200px) or a px number — the
+   * drawer attaches to the bottom edge (or the `position` given), takes
+   * `100%` of that axis (or the `size` given) up to a `maxSize` of `90vh`
+   * (or the one given; `'100%'` for edge to edge), and drops the affordances
+   * that make no sense on a sheet — `resizable`, `hidable` and `floating` are
+   * off while the layout is active, and a drawer the user had hidden on a
+   * wide screen is shown again rather than left hidden with no control to
+   * bring it back. Above the breakpoint nothing changes.
+   *
+   * These defaults are qorus-ide's `useResponsiveDrawerProps` behaviour moved
+   * into the library: bottom, full width, 90% of the height, at 900px. Pass
+   * `true` for them, or `{ below, position, size, maxSize }` to tune them.
+   * The root carries `.reqore-drawer-sheet` while the layout is active, so a
+   * story or test can assert which branch rendered.
+   *
+   * Reqore owns the breakpoints: consumers must not hand-roll a `matchMedia`
+   * for this — that is exactly the local workaround this prop replaces.
+   * Modals (`ReqoreModal`) ignore it; they are centred and content-sized
+   * already.
+   */
+  responsiveLayout?: boolean | IReqoreDrawerResponsiveLayout;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -276,8 +430,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     isHidden,
     customTheme,
     inheritCustomTheme,
-    position = 'right',
-    maxSize,
+    position: positionProp = 'right',
+    maxSize: maxSizeProp,
     // No default here: the fallback differs per layout (see the Resizable
     // below), and a default would make "the caller said nothing" unreadable.
     minSize,
@@ -285,13 +439,14 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     minHeight,
     onClose,
     hasBackdrop = true,
-    size,
-    resizable = true,
-    hidable,
+    size: sizeProp,
+    resizable: resizableProp = true,
+    hidable: hidableProp,
     onHideToggle,
     className,
     flat,
-    floating,
+    floating: floatingProp,
+    responsiveLayout,
     blur,
     opacity,
     intent,
@@ -312,6 +467,32 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     const customPortalId = useReqoreProperty('customPortalId');
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+    const isMobile = useReqoreProperty('isMobile');
+    const isMobileOrTablet = useReqoreProperty('isMobileOrTablet');
+    // One query, always subscribed (a hook cannot come and go with the prop):
+    // the numeric sheet breakpoint, or the default when a provider breakpoint
+    // is named and this flag is ignored anyway.
+    const belowSheetBreakpoint = useReqoreMedia(
+      `(max-width: ${drawerSheetBreakpointPx(responsiveLayout)}px)`
+    );
+    // The sheet decision is made once per render from the breakpoints, and
+    // every geometry input below is derived from it, so the rest of the
+    // component never has to ask "is the layout active?" again.
+    const sheet = useMemo(
+      () =>
+        resolveDrawerResponsiveLayout(
+          responsiveLayout,
+          { isMobile, isMobileOrTablet, belowSheetBreakpoint },
+          _isModal
+        ),
+      [responsiveLayout, isMobile, isMobileOrTablet, belowSheetBreakpoint, _isModal]
+    );
+    const position = sheet.active ? sheet.position : positionProp;
+    const size = sheet.active ? sheet.size : sizeProp;
+    const maxSize = sheet.active ? sheet.maxSize : maxSizeProp;
+    const resizable = sheet.active ? false : resizableProp;
+    const hidable = sheet.active ? false : hidableProp;
+    const floating = sheet.active ? false : floatingProp;
     const layout = useMemo(
       () =>
         _isModal
@@ -322,6 +503,10 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       [position, _isModal]
     );
     const [_isHidden, setIsHidden] = useState<boolean>(isHidden || false);
+    // A sheet has no hide control, so a drawer hidden on a wide screen is shown
+    // again when the layout becomes active; the user's choice is kept in
+    // `_isHidden` and honoured again once the viewport widens.
+    const hidden = sheet.active ? false : _isHidden;
     const [_size, setSize] = useState<any>({
       width: width || (layout === 'horizontal' ? 'auto' : size || '300px'),
       height: height || (layout === 'vertical' ? 'auto' : size || '300px'),
@@ -333,7 +518,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
 
     // Use focus trap to keep focus within the drawer when open
     useFocusTrap(drawerRef, {
-      active: isOpen && shouldTrapFocus && !_isHidden,
+      active: isOpen && shouldTrapFocus && !hidden,
       restoreFocus: true,
       autoFocus: true,
     });
@@ -506,19 +691,19 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
         width: _isModal
           ? _size.width
           : layout === 'vertical'
-          ? _isHidden
+          ? hidden
             ? 0
             : _size.width
           : 'auto',
         height: _isModal
           ? _size.height
           : layout === 'horizontal'
-          ? _isHidden
+          ? hidden
             ? 0
             : _size.height
           : 'auto',
       }),
-      [_isModal, layout, _isHidden, _size]
+      [_isModal, layout, hidden, _size]
     );
 
     const onHideToggleClick = useCallback(() => {
@@ -579,7 +764,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       transitions((styles: any, item) =>
         item ? (
           <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
-            {hasBackdrop && !_isHidden ? (
+            {hasBackdrop && !hidden ? (
               <ReqoreBackdrop
                 onClose={handleClose}
                 zIndex={zIndex}
@@ -595,7 +780,9 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
               aria-modal={_isModal || hasBackdrop ? 'true' : undefined}
             >
               <Resizable
-                className={`${className || ''} reqore-drawer-resizable`}
+                className={`${className || ''} reqore-drawer-resizable${
+                  sheet.active ? ' reqore-drawer-sheet' : ''
+                }`}
                 maxHeight={
                   layout === 'horizontal' || layout === 'center' ? maxSize || '90vh' : undefined
                 }
@@ -603,7 +790,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                   layout === 'center'
                     ? minHeight || minSize || MODAL_MIN_HEIGHT
                     : layout === 'horizontal'
-                    ? _isHidden
+                    ? hidden
                       ? 0
                       : minSize || DRAWER_MIN_SIZE
                     : undefined
@@ -615,7 +802,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                   layout === 'center'
                     ? minWidth || minSize || MODAL_MIN_WIDTH
                     : layout === 'vertical'
-                    ? _isHidden
+                    ? hidden
                       ? 0
                       : minSize || DRAWER_MIN_SIZE
                     : undefined
@@ -633,7 +820,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                 onResize={handleResize}
                 enable={enable}
               >
-                {_isHidden && hidable ? (
+                {hidden && hidable ? (
                   <StyledCloseWrapper
                     className='reqore-drawer-controls'
                     position={position}
@@ -649,7 +836,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     />
                   </StyledCloseWrapper>
                 ) : null}
-                {!_isHidden && (
+                {!hidden && (
                   <ReqorePanel
                     {...rest}
                     size={panelSize}

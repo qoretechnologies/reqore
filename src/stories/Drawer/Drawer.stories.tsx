@@ -1,5 +1,5 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
 import { _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
@@ -378,4 +378,163 @@ export const WithBackgroundBlur: Story = {
       backgroundBlur: 5,
     },
   },
+};
+
+/* `responsiveLayout` is qorus-ide's bottom-sheet behaviour moved into the
+   library, so the stories pin down what the IDE gets back: WHERE it switches
+   (900px, not the provider's 480px), HOW TALL the sheet is (90vh, like every
+   IDE drawer today) and what each knob changes. Every story shares one set of
+   drawer args; only the viewport and the `responsiveLayout` config differ. */
+const SHEET_ARGS = {
+  responsiveLayout: true,
+  size: '720px',
+  position: 'right',
+  hidable: true,
+  resizable: true,
+} as const;
+
+/** The `qlip` + Storybook viewport pair for a phone-width capture. */
+const PHONE_VIEWPORT = {
+  viewport: { defaultViewport: 'mobile1' },
+  qlip: { viewport: { width: 380, height: 700 } },
+};
+
+/** 800px: above the provider's mobile breakpoint, below the sheet breakpoint. */
+const SMALL_WINDOW_VIEWPORT = {
+  viewport: { defaultViewport: 'tablet' },
+  qlip: { viewport: { width: 800, height: 700 } },
+};
+
+/* The enter spring slides the sheet in from beyond the edge, so the geometry
+   is only final once it has settled: query inside `waitFor` and measure
+   against the frame's own layout viewport, which is what `position: fixed`
+   resolves against. `heightRatio` is the share of the viewport the sheet
+   takes (0.9 for the `90vh` default); `edge` is the side it is flush with. */
+const expectSheet = async ({
+  heightRatio,
+  edge,
+}: {
+  heightRatio: number;
+  edge: 'top' | 'bottom';
+}) => {
+  await _testsWaitForText('This is a test');
+  await waitFor(() => {
+    const box = document.querySelector('.reqore-drawer-resizable') as HTMLElement;
+    expect(box).toBeTruthy();
+    expect(box.classList.contains('reqore-drawer-sheet')).toBe(true);
+    const { width, height, top, bottom } = box.getBoundingClientRect();
+    const { clientWidth, clientHeight } = document.documentElement;
+    expect(Math.round(width)).toBe(clientWidth);
+    expect(Math.abs(height - clientHeight * heightRatio)).toBeLessThan(2);
+    if (edge === 'bottom') {
+      expect(Math.abs(bottom - clientHeight)).toBeLessThan(2);
+    } else {
+      expect(Math.abs(top)).toBeLessThan(2);
+    }
+    // No hide control and no resize handles on a sheet.
+    expect(document.querySelector('.reqore-drawer-hide-button')).toBeNull();
+    expect(box.querySelectorAll('[style*="cursor: row-resize"]')).toHaveLength(0);
+  });
+};
+
+/** The other branch: the caller's 720px right-hand panel, untouched. */
+const expectSidePanel = async () => {
+  await _testsWaitForText('This is a test');
+  await waitFor(() => {
+    const box = document.querySelector('.reqore-drawer-resizable') as HTMLElement;
+    expect(box).toBeTruthy();
+    expect(box.classList.contains('reqore-drawer-sheet')).toBe(false);
+    // The caller's own size still drives the box: `re-resizable` writes it inline.
+    expect(box.style.width).toBe('720px');
+    expect(document.querySelector('.reqore-drawer-hide-button')).toBeTruthy();
+  });
+};
+
+export const ResponsiveSheetMobile: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    ...PHONE_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'A `size="720px"` right-hand drawer with `responsiveLayout` on a phone-width screen (captured at 380px): it becomes a bottom sheet the full width of the screen and 90% of its height — the `90vh` default cap, so a strip of page stays visible above it and a tap there closes it. The resize handle and the hide control are gone, and the root carries `.reqore-drawer-sheet`.',
+      },
+    },
+  },
+  render: Template,
+  play: () => expectSheet({ heightRatio: 0.9, edge: 'bottom' }),
+};
+
+export const ResponsiveSheetBelowBreakpoint: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    ...SMALL_WINDOW_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'The same drawer in an 800px window: wider than the provider’s 480px mobile breakpoint, narrower than the 900px sheet breakpoint (`DRAWER_SHEET_BREAKPOINT`, the number qorus-ide uses for all of its drawers). It is still a sheet — a 720px panel would leave 80px of page here, which is no page at all.',
+      },
+    },
+  },
+  render: Template,
+  play: () => expectSheet({ heightRatio: 0.9, edge: 'bottom' }),
+};
+
+export const ResponsiveSheetProviderBreakpoint: Story = {
+  args: { ...SHEET_ARGS, responsiveLayout: { below: 'mobile' } },
+  parameters: {
+    ...SMALL_WINDOW_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'The same 800px window with `responsiveLayout={{ below: "mobile" }}`: the switch now follows the provider’s phone breakpoint (≤ 480px) instead of the 900px default, so at 800px the caller’s 720px right-hand panel renders unchanged, hide control included. Compare with the story above, which differs only in `below`.',
+      },
+    },
+  },
+  render: Template,
+  play: expectSidePanel,
+};
+
+export const ResponsiveSheetFullHeight: Story = {
+  args: { ...SHEET_ARGS, responsiveLayout: { maxSize: '100%' } },
+  parameters: {
+    ...PHONE_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'A phone-width sheet with `responsiveLayout={{ maxSize: "100%" }}`: the `90vh` cap is lifted and the sheet runs edge to edge, covering the page completely. `maxSize` here is the sheet’s own cap, separate from the drawer’s `maxSize`, which caps the side panel’s width.',
+      },
+    },
+  },
+  render: Template,
+  play: () => expectSheet({ heightRatio: 1, edge: 'bottom' }),
+};
+
+export const ResponsiveSheetFromTop: Story = {
+  args: { ...SHEET_ARGS, responsiveLayout: { position: 'top' } },
+  parameters: {
+    ...PHONE_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'A phone-width sheet with `responsiveLayout={{ position: "top" }}`: the sheet hangs from the top edge instead, still the full width and 90% of the height, leaving the strip of page at the bottom. `position` is the sheet’s edge while the layout is active; the drawer’s own `position` is what it reverts to above the breakpoint.',
+      },
+    },
+  },
+  render: Template,
+  play: () => expectSheet({ heightRatio: 0.9, edge: 'top' }),
+};
+
+export const ResponsiveSheetDesktop: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same `responsiveLayout` drawer on a desktop screen (1920px): the caller’s 720px right-hand panel renders unchanged, with its hide control, and no `.reqore-drawer-sheet` class — the prop changes nothing above the breakpoint.',
+      },
+    },
+  },
+  render: Template,
+  play: expectSidePanel,
 };
