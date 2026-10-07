@@ -1048,3 +1048,88 @@ describe('editable DataView', () => {
     expect(last.tags).toEqual(['a', 'c']);
   });
 });
+
+describe('the fonts of an editable DataView', () => {
+  // A nested record and a nested list. Their "+ Add property" and "+ Add item" buttons, and the
+  // editor of a value inside them, sit in a value cell, whose monospace is for the data.
+  const NESTED = { owner: { name: 'Pet store' }, tags: ['dog'] };
+  const THEME_FONT = '"Avenir Next", sans-serif';
+
+  const renderNested = (theme?: { fontFamily?: string }) =>
+    render(
+      <ReqoreUIProvider theme={theme}>
+        <ReqoreLayoutContent>
+          <ReqoreContent>
+            <ReqoreDataView
+              data={NESTED}
+              editable
+              collapsibleRoot={false}
+              onDataChange={() => undefined}
+            />
+          </ReqoreContent>
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  const fontOf = (element: Element | null | undefined) => {
+    expect(element).toBeTruthy();
+    return getComputedStyle(element as HTMLElement).fontFamily;
+  };
+
+  const addButtons = () =>
+    Array.from(document.querySelectorAll('.reqore-data-view-add-row .reqore-button'));
+
+  const inValueCell = (element: Element) => !!element.closest('.reqore-data-view-value-cell');
+
+  const nestedValue = () =>
+    Array.from(document.querySelectorAll('.reqore-data-view-value')).find((chip) =>
+      chip.textContent?.includes('Pet store')
+    );
+
+  /** Opens the editor of `owner.name`, a value two value cells deep. */
+  const editNestedValue = () => {
+    fireEvent.click(nestedValue() as HTMLElement);
+    const editor = document.querySelector('.reqore-data-view-edit-group') as HTMLElement;
+    expect(editor).toBeTruthy();
+    expect(inValueCell(editor)).toBe(true);
+    return editor;
+  };
+
+  it('sets the values in monospace and the controls in a value cell in the theme font', () => {
+    renderNested({ fontFamily: THEME_FONT });
+
+    const nestedAdd = addButtons().filter(inValueCell);
+    expect(nestedAdd.map((button) => button.textContent)).toEqual([
+      expect.stringContaining('Add property'),
+      expect.stringContaining('Add item'),
+    ]);
+    nestedAdd.forEach((button) => expect(fontOf(button)).toBe(THEME_FONT));
+    // The same font as the root's "+ Add property", which is outside every value cell.
+    expect(fontOf(addButtons().find((button) => !inValueCell(button)))).toBe(THEME_FONT);
+    expect(fontOf(nestedValue()?.querySelector('.reqore-tag-content'))).toContain('monospace');
+
+    const editor = editNestedValue();
+    expect(fontOf(editor.querySelector('input.reqore-data-view-edit'))).toBe(THEME_FONT);
+    // The type picker, Save and Cancel.
+    const editorButtons = Array.from(editor.querySelectorAll('.reqore-button'));
+    expect(editorButtons.length).toBe(3);
+    editorButtons.forEach((button) => expect(fontOf(button)).toBe(THEME_FONT));
+  });
+
+  it('keeps the controls in a value cell out of the monospace without a theme font', () => {
+    renderNested();
+
+    const nestedAdd = addButtons().filter(inValueCell);
+    expect(nestedAdd.length).toBe(2);
+    // The browser's own control font (`revert`), which jsdom has no stylesheet for: what
+    // matters here is that the cell's monospace does not reach them.
+    nestedAdd.forEach((button) => expect(fontOf(button)).not.toContain('monospace'));
+    expect(fontOf(nestedValue()?.querySelector('.reqore-tag-content'))).toContain('monospace');
+
+    const editor = editNestedValue();
+    expect(fontOf(editor.querySelector('input.reqore-data-view-edit'))).not.toContain('monospace');
+    editor
+      .querySelectorAll('.reqore-button')
+      .forEach((button) => expect(fontOf(button)).not.toContain('monospace'));
+  });
+});
