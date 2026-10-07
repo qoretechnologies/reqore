@@ -216,6 +216,10 @@ export const ReqorePopover = memo(
       const popperRef = useRef(null);
 
       const [isOpen, setIsOpen] = React.useState(false);
+      /* The trigger whose focus was checked when its listener was attached. The listener effect re-runs
+         whenever the list opens or closes (it depends on `open`, which depends on `isOpen`); a check on
+         every re-run reopened a list Escape had just closed while the field kept the focus. */
+      const focusCheckedFor = useRef<HTMLElement | null>(null);
       const timeoutRef = useRef<number | null>(null);
       const isTargetHovered = useRef(false);
       const isPopoverHovered = useRef(false);
@@ -626,6 +630,17 @@ export const ReqorePopover = memo(
 
             if (handler === 'hoverStay') {
               componentRef.addEventListener('mouseleave', cancelTimeout);
+            }
+
+            /* A popover opened by focus is opened by the user being in the field, however they got there.
+               A field focused as it mounts (an editor that opens with the cursor in its field) was focused
+               before this listener was attached: no `focusin` came, and its list stayed closed until the
+               user left the field and came back. Checked once per trigger, as it is attached. */
+            if (handler === 'focus' && focusCheckedFor.current !== componentRef) {
+              focusCheckedFor.current = componentRef;
+              if (componentRef.contains(document.activeElement)) {
+                open();
+              }
             }
           }
         }

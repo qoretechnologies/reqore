@@ -1,7 +1,15 @@
 import isPropValid from '@emotion/is-prop-valid';
 import { map, size } from 'lodash';
-import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useState } from 'react';
-import { useUpdateEffect } from 'react-use';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { BaseEditor, createEditor, Editor, Range, Transforms } from 'slate';
 import { HistoryEditor, withHistory } from 'slate-history';
 import {
@@ -408,9 +416,20 @@ export const ReqoreRichTextEditor = forwardRef<
     useImperativeHandle(ref, () => editor, [editor]);
     const [target, setTarget] = useState<Range | undefined>();
 
-    useUpdateEffect(() => {
+    /* The value is compared with the document as it is committed - in a layout effect, which runs before
+       the browser handles another key. A passive effect ran after painting and, under load, after the next
+       key: a value that matched the document when it was rendered was then compared with a document that
+       had a key more, taken as a value from outside, and put in its place - the key was lost and the caret
+       went to the end ("arr.for" typed came out "arr.fr"). */
+    const valueKey = JSON.stringify(value);
+    const mounted = useRef(false);
+    useLayoutEffect(() => {
+      if (!mounted.current) {
+        mounted.current = true;
+        return;
+      }
       // Only update the editor's children if the value has changed
-      if (JSON.stringify(value) === JSON.stringify(editor.children)) {
+      if (valueKey === JSON.stringify(editor.children)) {
         return;
       }
       // Use Slate transforms instead of direct mutation
@@ -432,7 +451,7 @@ export const ReqoreRichTextEditor = forwardRef<
         editor.selection = null;
         editor.children = value;
       }
-    }, [JSON.stringify(value)]);
+    }, [valueKey]);
 
     const isEmpty = useMemo(() => {
       return size(value) === 1 && size(value[0].children) === 1 && value[0].children[0].text === '';
