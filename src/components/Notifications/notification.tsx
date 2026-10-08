@@ -1,4 +1,4 @@
-import { animated, useTransition } from '@react-spring/web';
+import { animated, to, useSpring, useTransition } from '@react-spring/web';
 import { getLuminance, rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled, { css, keyframes } from 'styled-components';
@@ -19,7 +19,10 @@ import {
   getReadableColor,
   getReadableColorFrom,
 } from '../../helpers/colors';
+import { getSwipeStep } from '../../helpers/gestures';
 import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
+import { DRAG_CONTROL_SELECTOR, usePointerDrag } from '../../hooks/usePointerDrag';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { RAISED_SHADOWS } from '../../styles';
 import {
@@ -137,6 +140,16 @@ export interface IReqoreNotificationProps
   showProgress?: boolean;
   /** Accessible name of the close button. */
   closeLabel?: string;
+  /**
+   * Whether the notification can be flicked away. Dragging it sideways follows the finger, and
+   * letting go past 18% of its width (`SWIPE.distance`) or with a flick closes it through
+   * `onClose`, the same path as the close button; a shorter pull springs back, at once under
+   * `prefers-reduced-motion`. The timer holds while it is held. A press on the close button or
+   * an action is theirs, and a mostly vertical press stays the page's to scroll. The root
+   * carries `.reqore-notification-swipeable` while it is on and `.reqore-notification-dragging`
+   * during a drag. Default `true`; nothing without an `onClose`.
+   */
+  swipeToDismiss?: boolean;
 }
 
 /**
@@ -161,6 +174,7 @@ export interface IReqoreNotificationDefaults
       | 'showProgress'
       | 'iconHasBackground'
       | 'closeLabel'
+      | 'swipeToDismiss'
     >
   > {
   position?: IReqoreNotificationsPosition;
@@ -184,6 +198,8 @@ interface IStyledNotificationProps {
   $opaque?: boolean;
   $blur: number;
   $clickable?: boolean;
+  $swipeable?: boolean;
+  $dragging?: boolean;
   $hasIcon?: boolean;
   $hasClose?: boolean;
   $hasIntent?: boolean;
@@ -320,6 +336,19 @@ export const StyledNotification = styled(StyledEffect)<IStyledNotificationProps>
       &:hover {
         filter: brightness(1.08);
       }
+    `}
+
+  /* The browser keeps vertical panning from a press here; the sideways drag is ours. */
+  ${({ $swipeable }) =>
+    $swipeable &&
+    css`
+      touch-action: pan-y;
+    `}
+
+  ${({ $dragging }) =>
+    $dragging &&
+    css`
+      user-select: none;
     `}
 `;
 
@@ -470,6 +499,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       closeLabel = 'Close',
       effect,
       fluid,
+      swipeToDismiss,
     },
     ref: any
   ) => {
@@ -491,7 +521,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       config: SPRING_CONFIG,
     });
 
-    /* ---- auto-dismiss timer, held while hovered ---- */
+    /* ---- auto-dismiss timer, held while hovered or held under a finger ---- */
     const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const remainingRef = useRef<number | undefined>(duration);
     const startedAtRef = useRef<number>(0);
@@ -530,28 +560,112 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       return clearTimer;
     }, [duration, type, intent, content, title, startTimer, clearTimer]);
 
-    const handleMouseEnter = useCallback(() => {
-      if (!pauseOnHover || !duration || !timerRef.current) {
-        return;
-      }
+    // What holds the timer: the pointer resting on it, a finger dragging it. It runs again
+    // only once neither does.
+    const holdsRef = useRef({ hover: false, drag: false });
 
-      remainingRef.current = Math.max(
-        (remainingRef.current ?? duration) - (Date.now() - startedAtRef.current),
-        0
-      );
-      clearTimer();
-      setPaused(true);
-    }, [pauseOnHover, duration, clearTimer]);
+    const holdTimer = useCallback(
+      (by: 'hover' | 'drag') => {
+        holdsRef.current[by] = true;
+
+        if (!duration || !timerRef.current) {
+          return;
+        }
+
+        remainingRef.current = Math.max(
+          (remainingRef.current ?? duration) - (Date.now() - startedAtRef.current),
+          0
+        );
+        clearTimer();
+        setPaused(true);
+      },
+      [duration, clearTimer]
+    );
+
+    const releaseTimer = useCallback(
+      (by: 'hover' | 'drag') => {
+        holdsRef.current[by] = false;
+
+        if (!duration || holdsRef.current.hover || holdsRef.current.drag) {
+          return;
+        }
+
+        setPaused(false);
+        // A reader who hovered at the very end still gets a beat to click.
+        startTimer(Math.max(remainingRef.current ?? 0, 400));
+      },
+      [duration, startTimer]
+    );
+
+    const handleMouseEnter = useCallback(() => {
+      if (pauseOnHover) {
+        holdTimer('hover');
+      }
+    }, [pauseOnHover, holdTimer]);
 
     const handleMouseLeave = useCallback(() => {
-      if (!pauseOnHover || !duration) {
-        return;
+      if (pauseOnHover) {
+        releaseTimer('hover');
       }
+    }, [pauseOnHover, releaseTimer]);
 
-      setPaused(false);
-      // A reader who hovered at the very end still gets a beat to click.
-      startTimer(Math.max(remainingRef.current ?? 0, 400));
-    }, [pauseOnHover, duration, startTimer]);
+    /* ---- swipe to dismiss ---- */
+    const reducedMotion = usePrefersReducedMotion();
+    const mountedRef = useRef(true);
+
+    useEffect(
+      () => () => {
+        mountedRef.current = false;
+      },
+      []
+    );
+
+    const swipeable = swipeToDismiss !== false && !!onClose;
+    const [swipe, swipeApi] = useSpring(() => ({ x: 0, config: SPRING_CONFIG }));
+    const swipeStartRef = useRef<{ x: number; width: number } | null>(null);
+    const { dragging, handlers: swipeHandlers } = usePointerDrag({
+      enabled: swipeable,
+      // Sideways is the swipe; a mostly vertical press stays the page's to scroll.
+      axis: 'x',
+      canStart: (event) => {
+        const control = (event.target as Element | null)?.closest?.(DRAG_CONTROL_SELECTOR);
+
+        return !control || !event.currentTarget.contains(control);
+      },
+      onStart: (element) => {
+        swipeStartRef.current = { x: swipe.x.get(), width: element.getBoundingClientRect().width };
+        holdTimer('drag');
+      },
+      onMove: ({ dx }) => {
+        const start = swipeStartRef.current;
+
+        if (start) {
+          swipeApi.set({ x: start.x + dx });
+        }
+      },
+      onEnd: ({ dx, vx }, committed) => {
+        const start = swipeStartRef.current;
+
+        swipeStartRef.current = null;
+
+        if (committed && start && getSwipeStep(dx, vx, start.width) !== 0) {
+          // Closed from where the finger left it. A caller whose `onClose` keeps it on
+          // screen gets it back in place, and its timer, on the next turn.
+          onClose?.();
+          setTimeout(() => {
+            if (mountedRef.current) {
+              swipeApi.start({ x: 0, immediate: reducedMotion });
+              releaseTimer('drag');
+            }
+          }, 0);
+
+          return;
+        }
+
+        swipeApi.start({ x: 0, immediate: reducedMotion });
+        releaseTimer('drag');
+      },
+    });
 
     /* ---- colours ---- */
     const palette = useMemo(() => {
@@ -627,11 +741,19 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
           <StyledNotification
             as={animated.div}
             ref={ref}
-            style={styles}
+            style={{
+              ...styles,
+              // The swipe's translate ahead of the enter / leave spring's own scale.
+              transform: to([swipe.x, styles.transform], (x, base) =>
+                x ? `translate3d(${x}px, 0, 0) ${base}` : base
+              ),
+            }}
             theme={theme}
             effect={effect}
             role={resolvedIntent === 'danger' || resolvedIntent === 'warning' ? 'alert' : 'status'}
-            className={`reqore-notification${compact ? ' reqore-notification-compact' : ''}`}
+            className={`reqore-notification${compact ? ' reqore-notification-compact' : ''}${
+              swipeable ? ' reqore-notification-swipeable' : ''
+            }${dragging ? ' reqore-notification-dragging' : ''}`}
             $size={size}
             $compact={compact}
             $fluid={fluid}
@@ -641,6 +763,8 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             $opaque={opaque}
             $blur={blur}
             $clickable={!!onClick}
+            $swipeable={swipeable}
+            $dragging={dragging}
             $hasIcon={hasIcon}
             $hasClose={!!onClose}
             $hasIntent={!!resolvedIntent}
@@ -652,6 +776,7 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
             onClick={onClick ? () => onClick() : undefined}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            {...swipeHandlers}
           >
             {resolvedIntent && !minimal ? (
               <StyledNotificationBloom $color={palette.accent} $compact={compact} />
