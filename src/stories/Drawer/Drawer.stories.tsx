@@ -1,13 +1,17 @@
 import { StoryFn, StoryObj } from '@storybook/react';
-import { fireEvent } from 'storybook/test';
+import { expect, fireEvent, waitFor } from 'storybook/test';
 import { noop } from 'lodash';
-import { _testsWaitForText } from '../../../__tests__/utils';
-import { IReqoreDrawerProps, ReqoreDrawer } from '../../components/Drawer';
+import { useState } from 'react';
+import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
+import { IReqoreDrawerProps, ReqoreDrawer, TPosition } from '../../components/Drawer';
 import { IReqoreInputProps } from '../../components/Input';
+import { sleep } from '../../helpers/utils';
 import {
   ReqoreButton,
+  ReqoreCallout,
   ReqoreCollection,
   ReqoreInput,
+  ReqoreP,
   ReqorePanel,
   ReqoreTabs,
   ReqoreTabsContent,
@@ -15,6 +19,7 @@ import {
 } from '../../index';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
+import { IDragPointerOptions, dragPointer } from '../utils/pointer';
 
 const { createArg } = argManager<IReqoreDrawerProps>();
 
@@ -85,6 +90,13 @@ const meta = {
       defaultValue: true,
       name: 'Has Backdrop',
       type: 'boolean',
+    }),
+    ...createArg('swipeToClose', {
+      defaultValue: true,
+      name: 'Swipe to close',
+      type: 'boolean',
+      description:
+        'While `responsiveLayout` has made the drawer a sheet, dragging its title bar toward its edge and letting go past 18% of its size (or with a flick) closes it; a shorter drag springs back. On by default; nothing outside the sheet layout.',
     }),
     ...IntentArg,
   },
@@ -377,5 +389,453 @@ export const WithBackgroundBlur: Story = {
     contentEffect: {
       backgroundBlur: 5,
     },
+  },
+};
+
+/* `responsiveLayout` is qorus-ide's bottom-sheet behaviour moved into the
+   library, so the stories pin down what the IDE gets back: WHERE it switches
+   (900px, not the provider's 480px), HOW TALL the sheet is (90vh, like every
+   IDE drawer today) and what each knob changes. Every story shares one set of
+   drawer args; only the viewport and the `responsiveLayout` config differ. */
+const SHEET_ARGS = {
+  responsiveLayout: true,
+  size: '720px',
+  position: 'right',
+  hidable: true,
+  resizable: true,
+} as const;
+
+/** The `qlip` + Storybook viewport pair for a phone-width capture. */
+const PHONE_VIEWPORT = {
+  viewport: { defaultViewport: 'mobile1' },
+  qlip: { viewport: { width: 380, height: 700 } },
+};
+
+/**
+ * `PHONE_VIEWPORT` for a story whose frame after the play shows nothing of the feature — the
+ * page with the sheet gone, or a sheet at rest that `ResponsiveSheetMobile` already captures.
+ * The play still runs at phone width (the Storybook `viewport` parameter sizes the page before
+ * it); only the Qlip capture is skipped, so no empty or duplicate snapshot is produced.
+ */
+const PHONE_VIEWPORT_UNCAPTURED = {
+  ...PHONE_VIEWPORT,
+  qlip: { ...PHONE_VIEWPORT.qlip, skip: true },
+};
+
+/** 800px: above the provider's mobile breakpoint, below the sheet breakpoint. */
+const SMALL_WINDOW_VIEWPORT = {
+  viewport: { defaultViewport: 'tablet' },
+  qlip: { viewport: { width: 800, height: 700 } },
+};
+
+/* The enter spring slides the sheet in from beyond the edge, so the geometry
+   is only final once it has settled: query inside `waitFor` and measure
+   against the frame's own layout viewport, which is what `position: fixed`
+   resolves against. `heightRatio` is the share of the viewport the sheet
+   takes (0.9 for the `90vh` default); `edge` is the side it is flush with. */
+const expectSheet = async ({
+  heightRatio,
+  edge,
+}: {
+  heightRatio: number;
+  edge: 'top' | 'bottom';
+}) => {
+  await _testsWaitForText('This is a test');
+  await waitFor(() => {
+    const box = document.querySelector('.reqore-drawer-resizable') as HTMLElement;
+    expect(box).toBeTruthy();
+    expect(box.classList.contains('reqore-drawer-sheet')).toBe(true);
+    const { width, height, top, bottom } = box.getBoundingClientRect();
+    const { clientWidth, clientHeight } = document.documentElement;
+    expect(Math.round(width)).toBe(clientWidth);
+    expect(Math.abs(height - clientHeight * heightRatio)).toBeLessThan(2);
+    if (edge === 'bottom') {
+      expect(Math.abs(bottom - clientHeight)).toBeLessThan(2);
+    } else {
+      expect(Math.abs(top)).toBeLessThan(2);
+    }
+    // No hide control and no resize handles on a sheet.
+    expect(document.querySelector('.reqore-drawer-hide-button')).toBeNull();
+    expect(box.querySelectorAll('[style*="cursor: row-resize"]')).toHaveLength(0);
+  });
+};
+
+/** The other branch: the caller's 720px right-hand panel, untouched. */
+const expectSidePanel = async () => {
+  await _testsWaitForText('This is a test');
+  await waitFor(() => {
+    const box = document.querySelector('.reqore-drawer-resizable') as HTMLElement;
+    expect(box).toBeTruthy();
+    expect(box.classList.contains('reqore-drawer-sheet')).toBe(false);
+    // The caller's own size still drives the box: `re-resizable` writes it inline.
+    expect(box.style.width).toBe('720px');
+    expect(document.querySelector('.reqore-drawer-hide-button')).toBeTruthy();
+  });
+};
+
+export const ResponsiveSheetMobile: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    ...PHONE_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'A `size="720px"` right-hand drawer with `responsiveLayout` on a phone-width screen (captured at 380px): it becomes a bottom sheet the full width of the screen and 90% of its height — the `90vh` default cap, so a strip of page stays visible above it and a tap there closes it. The resize handle and the hide control are gone, and the root carries `.reqore-drawer-sheet`.',
+      },
+    },
+  },
+  render: Template,
+  play: () => expectSheet({ heightRatio: 0.9, edge: 'bottom' }),
+};
+
+export const ResponsiveSheetBelowBreakpoint: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    ...SMALL_WINDOW_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'The same drawer in an 800px window: wider than the provider’s 480px mobile breakpoint, narrower than the 900px sheet breakpoint (`DRAWER_SHEET_BREAKPOINT`, the number qorus-ide uses for all of its drawers). It is still a sheet — a 720px panel would leave 80px of page here, which is no page at all.',
+      },
+    },
+  },
+  render: Template,
+  play: () => expectSheet({ heightRatio: 0.9, edge: 'bottom' }),
+};
+
+export const ResponsiveSheetProviderBreakpoint: Story = {
+  args: { ...SHEET_ARGS, responsiveLayout: { below: 'mobile' } },
+  parameters: {
+    ...SMALL_WINDOW_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'The same 800px window with `responsiveLayout={{ below: "mobile" }}`: the switch now follows the provider’s phone breakpoint (≤ 480px) instead of the 900px default, so at 800px the caller’s 720px right-hand panel renders unchanged, hide control included. Compare with the story above, which differs only in `below`.',
+      },
+    },
+  },
+  render: Template,
+  play: expectSidePanel,
+};
+
+export const ResponsiveSheetFullHeight: Story = {
+  args: { ...SHEET_ARGS, responsiveLayout: { maxSize: '100%' } },
+  parameters: {
+    ...PHONE_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'A phone-width sheet with `responsiveLayout={{ maxSize: "100%" }}`: the `90vh` cap is lifted and the sheet runs edge to edge, covering the page completely. `maxSize` here is the sheet’s own cap, separate from the drawer’s `maxSize`, which caps the side panel’s width.',
+      },
+    },
+  },
+  render: Template,
+  play: () => expectSheet({ heightRatio: 1, edge: 'bottom' }),
+};
+
+export const ResponsiveSheetFromTop: Story = {
+  args: { ...SHEET_ARGS, responsiveLayout: { position: 'top' } },
+  parameters: {
+    ...PHONE_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'A phone-width sheet with `responsiveLayout={{ position: "top" }}`: the sheet hangs from the top edge instead, still the full width and 90% of the height, leaving the strip of page at the bottom. `position` is the sheet’s edge while the layout is active; the drawer’s own `position` is what it reverts to above the breakpoint.',
+      },
+    },
+  },
+  render: Template,
+  play: () => expectSheet({ heightRatio: 0.9, edge: 'top' }),
+};
+
+export const ResponsiveSheetDesktop: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same `responsiveLayout` drawer on a desktop screen (1920px): the caller’s 720px right-hand panel renders unchanged, with its hide control, and no `.reqore-drawer-sheet` class — the prop changes nothing above the breakpoint.',
+      },
+    },
+  },
+  render: Template,
+  play: expectSidePanel,
+};
+
+/* Swipe-to-close. The sheet's own title bar is the handle. The stories drive it with real
+   pointer events the way a finger does (`dragPointer`) and assert what the drawer did inside
+   `waitFor`, because the enter spring and the snap-back both take a moment to settle. A sheet
+   that closes leaves a callout on the page behind it, so the story's snapshot shows the outcome
+   rather than an empty page. */
+const SWIPE_CONTENT = Array.from({ length: 12 }, (_, index) => (
+  <ReqoreP key={index}>
+    Paragraph {index + 1}. By impossible of in difficulty discovered celebrated ye. Justice joy
+    manners boy met resolve produce. Bed head loud next plan rent had easy add him. As earnestly
+    shameless elsewhere defective estimable fulfilled of. Esteem my advice it an excuse enable.
+  </ReqoreP>
+));
+
+const SwipeTemplate: StoryFn<typeof ReqoreDrawer> = (args) => {
+  const [isOpen, setIsOpen] = useState(true);
+
+  return (
+    <>
+      <ReqorePanel label='Just some background text' padded>
+        {isOpen ? (
+          <ReqoreP>The sheet is open over this page.</ReqoreP>
+        ) : (
+          <ReqoreCallout intent='success' label='Closed by a swipe' />
+        )}
+      </ReqorePanel>
+      <ReqoreDrawer
+        {...args}
+        isOpen={isOpen}
+        label='Swipe me away'
+        icon='DragMoveLine'
+        onClose={() => setIsOpen(false)}
+        actions={[{ label: 'An action', icon: 'Search2Line' }]}
+      >
+        {SWIPE_CONTENT}
+      </ReqoreDrawer>
+    </>
+  );
+};
+
+const sheetBox = () => document.querySelector('.reqore-drawer-resizable') as HTMLElement;
+
+/** The sheet's own title bar: the handle. */
+const sheetHeader = () =>
+  document.querySelector(
+    '.reqore-drawer-resizable > .reqore-drawer > .reqore-panel-title'
+  ) as HTMLElement;
+
+/** The sheet is on screen, flush with `edge`, and not moved by a drag (settled or sprung back). */
+const expectSheetAtRest = async (edge: TPosition) => {
+  await _testsWaitForText('Swipe me away');
+  await waitFor(() => {
+    const box = sheetBox();
+    expect(box).toBeTruthy();
+    expect(box.classList.contains('reqore-drawer-sheet')).toBe(true);
+    const rect = box.getBoundingClientRect();
+    const { clientWidth, clientHeight } = document.documentElement;
+    const gap =
+      edge === 'bottom'
+        ? clientHeight - rect.bottom
+        : edge === 'top'
+        ? rect.top
+        : edge === 'right'
+        ? clientWidth - rect.right
+        : rect.left;
+    expect(Math.abs(gap)).toBeLessThan(2);
+    expect(box.style.transform || 'none').toBe('none');
+  });
+};
+
+/**
+ * Drags the sheet's title bar by `share` of the sheet's size along its axis: toward its edge when
+ * positive, away from it when negative.
+ */
+const swipeSheet = async (edge: TPosition, share: number, options?: IDragPointerOptions) => {
+  const header = sheetHeader();
+  const grab = header.getBoundingClientRect();
+  const box = sheetBox().getBoundingClientRect();
+  const distance = (edge === 'top' || edge === 'bottom' ? box.height : box.width) * share;
+  const by =
+    edge === 'bottom'
+      ? { dx: 0, dy: distance }
+      : edge === 'top'
+      ? { dx: 0, dy: -distance }
+      : edge === 'right'
+      ? { dx: distance, dy: 0 }
+      : { dx: -distance, dy: 0 };
+
+  await dragPointer(
+    header,
+    { x: grab.left + grab.width / 2, y: grab.top + grab.height / 2 },
+    by,
+    options
+  );
+};
+
+const expectSheetClosed = async () => {
+  await _testsWaitForText('Closed by a swipe');
+  await waitFor(() => expect(document.querySelector('.reqore-drawer-sheet')).toBeNull());
+};
+
+export const SheetSwipeToClose: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    ...PHONE_VIEWPORT_UNCAPTURED,
+    docs: {
+      description: {
+        story:
+          'A phone-width sheet pushed away: its title bar is dragged down by 40% of its height and let go, the sheet closes, and the page behind it says so with a callout. Swipe-to-close is on for every `responsiveLayout` sheet unless `swipeToClose={false}`.',
+      },
+    },
+  },
+  render: SwipeTemplate,
+  play: async () => {
+    await expectSheetAtRest('bottom');
+    await expect(sheetBox().classList.contains('reqore-drawer-swipeable')).toBe(true);
+    await swipeSheet('bottom', 0.4);
+    await expectSheetClosed();
+  },
+};
+
+export const SheetSwipeSpringsBack: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    ...PHONE_VIEWPORT_UNCAPTURED,
+    docs: {
+      description: {
+        story:
+          'The same sheet dragged down by only 6% of its height, held still and let go: too short to count and not a flick, so it springs back to its edge and stays open.',
+      },
+    },
+  },
+  render: SwipeTemplate,
+  play: async () => {
+    await expectSheetAtRest('bottom');
+    await swipeSheet('bottom', 0.06, { settle: 80 });
+    await expectSheetAtRest('bottom');
+    await expect(document.querySelector('.reqore-callout')).toBeNull();
+  },
+};
+
+export const SheetSwipeAsksFirst: Story = {
+  args: { ...SHEET_ARGS, confirmOnClose: { content: 'Close this sheet?' } },
+  parameters: {
+    ...PHONE_VIEWPORT_UNCAPTURED,
+    docs: {
+      description: {
+        story:
+          'A sheet with `confirmOnClose` pushed away: the swipe goes through the same close path as the close button, so the confirmation asks first while the sheet springs back under it; confirming then closes the sheet.',
+      },
+    },
+  },
+  render: SwipeTemplate,
+  play: async () => {
+    await expectSheetAtRest('bottom');
+    await swipeSheet('bottom', 0.4);
+    await _testsWaitForText('Close this sheet?');
+    await expectSheetAtRest('bottom');
+    await _testsClickButton({ label: 'Confirm' });
+    await expectSheetClosed();
+  },
+};
+
+export const SheetSwipeFromTop: Story = {
+  args: { ...SHEET_ARGS, responsiveLayout: { position: 'top' } },
+  parameters: {
+    ...PHONE_VIEWPORT_UNCAPTURED,
+    docs: {
+      description: {
+        story:
+          'A sheet hanging from the top edge (`responsiveLayout={{ position: "top" }}`) is pushed away upward: dragged up by 40% of its height and let go, it closes. Every sheet swipes toward its own edge.',
+      },
+    },
+  },
+  render: SwipeTemplate,
+  play: async () => {
+    await expectSheetAtRest('top');
+    await swipeSheet('top', 0.4);
+    await expectSheetClosed();
+  },
+};
+
+export const SheetSwipeSideSheet: Story = {
+  args: { ...SHEET_ARGS, responsiveLayout: { position: 'right', maxSize: '85vw' } },
+  parameters: {
+    ...PHONE_VIEWPORT_UNCAPTURED,
+    docs: {
+      description: {
+        story:
+          'A side sheet (`responsiveLayout={{ position: "right", maxSize: "85vw" }}`) is pushed away to the right: dragged by 40% of its width and let go, it closes; a drag that moves mostly up or down is left to the content.',
+      },
+    },
+  },
+  render: SwipeTemplate,
+  play: async () => {
+    await expectSheetAtRest('right');
+    await swipeSheet('right', 0.4);
+    await expectSheetClosed();
+  },
+};
+
+export const SheetSwipeOff: Story = {
+  args: { ...SHEET_ARGS, swipeToClose: false },
+  parameters: {
+    ...PHONE_VIEWPORT_UNCAPTURED,
+    docs: {
+      description: {
+        story:
+          'A sheet with `swipeToClose={false}`: its title bar is dragged down by 40% of its height and let go, and nothing happens — the sheet stays where it is, without the `.reqore-drawer-swipeable` class, and only the close button closes it.',
+      },
+    },
+  },
+  render: SwipeTemplate,
+  play: async () => {
+    await expectSheetAtRest('bottom');
+    await expect(sheetBox().classList.contains('reqore-drawer-swipeable')).toBe(false);
+    await swipeSheet('bottom', 0.4);
+    await sleep(500);
+    await expectSheetAtRest('bottom');
+  },
+};
+
+export const SheetContentScrollsAsBefore: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    ...PHONE_VIEWPORT_UNCAPTURED,
+    docs: {
+      description: {
+        story:
+          'The same swipeable sheet with twelve paragraphs in it: a drag down the content by 40% of the sheet’s height is not a swipe — the content is a scroller and keeps its gesture — so the sheet stays open and in place. Only the title bar is the handle.',
+      },
+    },
+  },
+  render: SwipeTemplate,
+  play: async () => {
+    await expectSheetAtRest('bottom');
+    const content = sheetBox().querySelector(
+      ':scope > .reqore-drawer > .reqore-panel-content'
+    ) as HTMLElement;
+    await expect(content).toBeTruthy();
+    await expect(content.scrollHeight).toBeGreaterThan(content.clientHeight);
+    const grab = content.getBoundingClientRect();
+    await dragPointer(
+      content,
+      { x: grab.left + grab.width / 2, y: grab.top + 40 },
+      { dx: 0, dy: sheetBox().getBoundingClientRect().height * 0.4 }
+    );
+    await sleep(500);
+    await expectSheetAtRest('bottom');
+  },
+};
+
+export const SheetSwipeInProgress: Story = {
+  args: SHEET_ARGS,
+  parameters: {
+    ...PHONE_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'A phone-width sheet caught mid-swipe: its title bar has been dragged down by 30% of its height and is still held, so the sheet sits that far below its edge with the page showing above it, the root carries `.reqore-drawer-dragging`, and nothing is animating. The one swipe story Qlip captures — the others end on a closed sheet or a sheet at rest.',
+      },
+    },
+  },
+  render: SwipeTemplate,
+  play: async () => {
+    await expectSheetAtRest('bottom');
+    const height = sheetBox().getBoundingClientRect().height;
+    await swipeSheet('bottom', 0.3, { release: false });
+    await waitFor(() => {
+      const box = sheetBox();
+      expect(box.classList.contains('reqore-drawer-dragging')).toBe(true);
+      // The browser serialises the translate with its own precision; the rect below pins it.
+      expect(box.style.transform).toMatch(/^translate3d\(0px, \d+(\.\d+)?px, 0(px)?\)$/);
+      const { clientHeight } = document.documentElement;
+      expect(Math.abs(box.getBoundingClientRect().bottom - clientHeight - height * 0.3)).toBeLessThan(2);
+    });
   },
 };

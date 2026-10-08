@@ -2,7 +2,7 @@ import { useMarqueeOnHover } from '../hooks/useMarqueeOnHover';
 import { last, size } from 'lodash';
 import { nanoid } from 'nanoid';
 import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { useMedia } from 'react-use';
+import { useReqoreMedia } from '../hooks/useReqoreMedia';
 import { useContext } from 'use-context-selector';
 import { create } from 'zustand';
 import { ReqoreModal, ReqoreTextEffect } from '..';
@@ -132,20 +132,16 @@ const ReqoreProvider: React.FC<IReqoreNotifications> = memo(({ children, options
   const theme: IReqoreTheme = useContext<IReqoreTheme>(ThemeContext);
   const latestZIndex = useRef<number>(9000);
 
-  const isMobile = process.env.NODE_ENV === 'test' ? false : useMedia('(max-width: 480px)');
-  const isTablet =
-    process.env.NODE_ENV === 'test'
-      ? false
-      : useMedia('(min-width: 480px) and (max-width: 1200px)');
+  // Live media queries in a browser, fixed defaults in jsdom — see
+  // `useReqoreMedia` for why that is decided once per module load.
+  const isMobile = useReqoreMedia('(max-width: 480px)');
+  const isTablet = useReqoreMedia('(min-width: 480px) and (max-width: 1200px)');
   const isMobileOrTablet = isMobile || isTablet;
   // Pointer CAPABILITY, not viewport width — the two disagree often enough to
   // matter (a narrow desktop window hovers; a large tablet does not). Defaults to
   // `true` when the query cannot be evaluated so hover-gated UI keeps its desktop
   // behaviour instead of degrading.
-  const isHoverCapable =
-    process.env.NODE_ENV === 'test'
-      ? true
-      : useMedia('(hover: hover) and (pointer: fine)', true);
+  const isHoverCapable = useReqoreMedia('(hover: hover) and (pointer: fine)', true);
 
   const getAndIncreaseZIndex = useCallback((): number => {
     latestZIndex.current += 1;

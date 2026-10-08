@@ -1,14 +1,22 @@
-import { animated, useTransition } from '@react-spring/web';
+import { animated, SpringValue, to, useSpring, useTransition } from '@react-spring/web';
 import { Resizable } from 're-resizable';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { css } from 'styled-components';
 import { useReqoreProperty } from '../..';
+import { useReqoreMedia } from '../../hooks/useReqoreMedia';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { IReqoreTheme } from '../../constants/theme';
 import type { IReqoreConfirmationModal } from '../../containers/ReqoreProvider';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { getSwipeStep } from '../../helpers/gestures';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import {
+  DRAG_CONTROL_SELECTOR,
+  IPointerDragDelta,
+  usePointerDrag,
+} from '../../hooks/usePointerDrag';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
@@ -16,6 +24,218 @@ import { IReqorePanelAction, IReqorePanelProps, ReqorePanel } from '../Panel';
 import { ReqoreBackdrop } from './backdrop';
 
 export type TPosition = 'top' | 'bottom' | 'left' | 'right';
+
+/**
+ * The viewport width (px, inclusive) at or below which a `responsiveLayout`
+ * drawer becomes a sheet when the caller names no breakpoint. 900 is the
+ * number qorus-ide converged on for every one of its drawers: a 620–720px
+ * side panel in a 900px window leaves a sliver of page that is not usable
+ * anyway, so the sheet is the honest layout there. The provider's own
+ * `isMobile` (≤ 480px) is too narrow for drawers that wide — at 600px such a
+ * panel covers the viewport with its handle off-screen — and
+ * `isMobileOrTablet` (≤ 1200px) would put sheets on landscape tablets.
+ */
+export const DRAWER_SHEET_BREAKPOINT = 900;
+
+/**
+ * Which viewport width switches a `responsiveLayout` drawer into a sheet:
+ * `'mobile'` is the provider's `isMobile` (≤ 480px), `'tablet'` is its
+ * `isMobileOrTablet` (≤ 1200px), and a number is a width in px, inclusive.
+ * Omitted, it is `DRAWER_SHEET_BREAKPOINT`. Reqore owns these numbers; a
+ * consumer never carries a media query of its own for this.
+ */
+export type TReqoreDrawerResponsiveBreakpoint = 'mobile' | 'tablet' | number;
+
+export interface IReqoreDrawerResponsiveLayout {
+  /** Which viewport width switches the layout. Defaults to `DRAWER_SHEET_BREAKPOINT` (900px). */
+  below?: TReqoreDrawerResponsiveBreakpoint;
+  /** The edge the sheet attaches to while the layout is active. Defaults to `'bottom'`. */
+  position?: TPosition;
+  /** The sheet's size on the axis it occupies. Defaults to `'100%'`. */
+  size?: string;
+  /**
+   * The cap on that axis. Defaults to `'90vh'` — the same cap every drawer has
+   * on its cross axis by default, so a bottom sheet rises to 90% of the screen
+   * and leaves a strip of page above it where a tap on the backdrop closes it.
+   * Pass `'100%'` for an edge-to-edge sheet. Separate from the drawer's own
+   * `maxSize` on purpose: that one caps the SIDE drawer's width, and a value
+   * meant as a width must never become a sheet's height.
+   */
+  maxSize?: string;
+}
+
+export interface IReqoreDrawerResolvedResponsiveLayout {
+  /** Whether the sheet layout is in force for the current viewport. */
+  active: boolean;
+  /** The edge the sheet attaches to; only set while `active`. */
+  position?: TPosition;
+  /** The sheet's size on its axis; only set while `active`. */
+  size?: string;
+  /** The cap on that axis; only set while `active`. */
+  maxSize?: string;
+}
+
+export const DRAWER_RESPONSIVE_LAYOUT_DEFAULTS: Required<IReqoreDrawerResponsiveLayout> = {
+  below: DRAWER_SHEET_BREAKPOINT,
+  position: 'bottom',
+  size: '100%',
+  maxSize: '90vh',
+};
+
+/**
+ * What the resolver needs to know about the viewport. The two named flags are
+ * the provider's; `belowSheetBreakpoint` answers "is the viewport at or below
+ * the numeric `below` (or `DRAWER_SHEET_BREAKPOINT` when none is given)" and
+ * is ignored when `below` names a provider breakpoint. The component evaluates
+ * it with one media query; a consumer calling the resolver itself evaluates
+ * it however it already measures the viewport.
+ */
+export interface IReqoreDrawerResponsiveViewport {
+  isMobile: boolean;
+  isMobileOrTablet: boolean;
+  belowSheetBreakpoint: boolean;
+}
+
+/**
+ * Decides whether a drawer's `responsiveLayout` is in force, and with what
+ * geometry. Pure, so the decision is unit-testable without a viewport: jsdom
+ * has no `matchMedia`, so every breakpoint is fixed `false` in unit tests, and
+ * the rendered sheet is proven in a real browser instead — the
+ * `Dialogs/Drawer` `ResponsiveSheet*` stories do that at 380px and 800px.
+ *
+ * A modal (`_isModal`) is never turned into a sheet: it is already centred
+ * and sized for its content, and it has no edge to attach to.
+ */
+export const resolveDrawerResponsiveLayout = (
+  responsiveLayout: boolean | IReqoreDrawerResponsiveLayout | undefined,
+  viewport: IReqoreDrawerResponsiveViewport,
+  isModal?: boolean
+): IReqoreDrawerResolvedResponsiveLayout => {
+  if (!responsiveLayout || isModal) {
+    return { active: false };
+  }
+
+  const config: IReqoreDrawerResponsiveLayout =
+    responsiveLayout === true ? {} : responsiveLayout;
+  const below = config.below ?? DRAWER_RESPONSIVE_LAYOUT_DEFAULTS.below;
+  const active =
+    below === 'mobile'
+      ? viewport.isMobile
+      : below === 'tablet'
+      ? viewport.isMobileOrTablet
+      : viewport.belowSheetBreakpoint;
+
+  if (!active) {
+    return { active: false };
+  }
+
+  return {
+    active: true,
+    position: config.position ?? DRAWER_RESPONSIVE_LAYOUT_DEFAULTS.position,
+    size: config.size ?? DRAWER_RESPONSIVE_LAYOUT_DEFAULTS.size,
+    maxSize: config.maxSize ?? DRAWER_RESPONSIVE_LAYOUT_DEFAULTS.maxSize,
+  };
+};
+
+/**
+ * The px width behind a `responsiveLayout` config's numeric `below`, or the
+ * default when it names a provider breakpoint or nothing — the component
+ * always subscribes to exactly one query, so a hook never comes and goes.
+ */
+export const drawerSheetBreakpointPx = (
+  responsiveLayout: boolean | IReqoreDrawerResponsiveLayout | undefined
+): number =>
+  responsiveLayout && responsiveLayout !== true && typeof responsiveLayout.below === 'number'
+    ? responsiveLayout.below
+    : DRAWER_SHEET_BREAKPOINT;
+
+/** An offset of the drawer's box from where it would otherwise sit, in px. */
+export interface IReqoreDrawerDragOffset {
+  x: number;
+  y: number;
+}
+
+/**
+ * What a sheet dragged by `delta` does. `offset` is where to draw it meanwhile: it follows the
+ * finger toward the edge it is attached to and stays put when pulled the other way — a bottom
+ * sheet is not lifted off its edge. `closes` is whether letting go here closes it: past
+ * `SWIPE.distance` of its `size` on that axis, or with a flick (`SWIPE.velocity`) toward the edge.
+ */
+export const getSheetSwipe = (
+  position: TPosition,
+  delta: IPointerDragDelta,
+  size: number
+): { offset: IReqoreDrawerDragOffset; closes: boolean } => {
+  const vertical = position === 'top' || position === 'bottom';
+  const towardEdge = position === 'bottom' || position === 'right' ? 1 : -1;
+  const distance = towardEdge * (vertical ? delta.dy : delta.dx);
+  const velocity = towardEdge * (vertical ? delta.vy : delta.vx);
+  const travel = distance > 0 ? towardEdge * distance : 0;
+
+  return {
+    offset: vertical ? { x: 0, y: travel } : { x: travel, y: 0 },
+    closes: getSwipeStep(distance, velocity, size) === 1,
+  };
+};
+
+/** What a modal's drag is held within. */
+export interface IReqoreModalDragBounds {
+  /** The box with no offset applied: where the modal sits at rest. */
+  box: { left: number; top: number; width: number; height: number };
+  viewport: { width: number; height: number };
+  /** The height of the title bar, the part that has to stay reachable. */
+  handleHeight: number;
+}
+
+const clampBetween = (value: number, a: number, b: number): number =>
+  Math.min(Math.max(value, Math.min(a, b)), Math.max(a, b));
+
+/**
+ * `offset` held so the modal's title bar stays whole in the viewport: the box's left and right
+ * edges inside it, the bar fully below the top and above the bottom. The title bar is what the
+ * modal is dragged and closed by, and one pushed off-screen has no way back. A box wider than
+ * the viewport cannot satisfy that on its axis; it is held to always span the viewport instead.
+ */
+export const clampModalDragOffset = (
+  offset: IReqoreDrawerDragOffset,
+  { box, viewport, handleHeight }: IReqoreModalDragBounds
+): IReqoreDrawerDragOffset => ({
+  x: clampBetween(offset.x, -box.left, viewport.width - box.left - box.width),
+  y: clampBetween(offset.y, -box.top, viewport.height - box.top - handleHeight),
+});
+
+/**
+ * Whether a press at `target` lands on the drawer's own title bar — the handle a sheet is swiped
+ * and a modal dragged by — and not on a control in it. The bar is the drawer panel's direct
+ * `.reqore-panel-title`; a panel in the drawer's content has one of its own, and that one is
+ * not a handle. A press on a button (the close control, an action), a link, a field or the
+ * actions' control group is theirs.
+ */
+export const isDrawerHeaderGrab = (target: EventTarget | null, box: HTMLElement): boolean => {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  const bar = target.closest('.reqore-panel-title');
+
+  if (!bar || !bar.parentElement?.classList.contains('reqore-drawer') || !box.contains(bar)) {
+    return false;
+  }
+
+  const control = target.closest(DRAG_CONTROL_SELECTOR);
+
+  return !control || !bar.contains(control);
+};
+
+/** What a header drag measured when it began. */
+interface IDrawerDragStart {
+  /** The offset the box already had. */
+  offset: IReqoreDrawerDragOffset;
+  /** The sheet's size on the axis it moves along. */
+  size: number;
+  /** A modal's bounds; a sheet has none. */
+  bounds?: IReqoreModalDragBounds;
+}
 
 /** The floor an EDGE drawer cannot be dragged below, on the axis it resizes. */
 export const DRAWER_MIN_SIZE = '150px';
@@ -133,6 +353,54 @@ export interface IReqoreDrawerProps extends Omit<IReqorePanelProps, 'size' | 're
   confirmOnClose?: boolean | IReqoreConfirmationModal;
   /** Whether to trap focus within the drawer when open. Defaults to true for modals and drawers with backdrop. */
   focusTrap?: boolean;
+  /**
+   * Become a full-width sheet on small screens instead of a fixed-size edge
+   * panel. OPT-IN, because it changes geometry a caller may have sized for.
+   *
+   * A `size='720px'` right-hand drawer is unusable at 380px: it covers the
+   * whole viewport, its resize handle sits off-screen and nothing says why
+   * the page behind it stopped responding. With `responsiveLayout`, at or
+   * below the breakpoint — `DRAWER_SHEET_BREAKPOINT` (900px) unless `below`
+   * says `'mobile'` (≤ 480px), `'tablet'` (≤ 1200px) or a px number — the
+   * drawer attaches to the bottom edge (or the `position` given), takes
+   * `100%` of that axis (or the `size` given) up to a `maxSize` of `90vh`
+   * (or the one given; `'100%'` for edge to edge), and drops the affordances
+   * that make no sense on a sheet — `resizable`, `hidable` and `floating` are
+   * off while the layout is active, and a drawer the user had hidden on a
+   * wide screen is shown again rather than left hidden with no control to
+   * bring it back. Above the breakpoint nothing changes.
+   *
+   * These defaults are qorus-ide's `useResponsiveDrawerProps` behaviour moved
+   * into the library: bottom, full width, 90% of the height, at 900px. Pass
+   * `true` for them, or `{ below, position, size, maxSize }` to tune them.
+   * The root carries `.reqore-drawer-sheet` while the layout is active, so a
+   * story or test can assert which branch rendered.
+   *
+   * Reqore owns the breakpoints: consumers must not hand-roll a `matchMedia`
+   * for this — that is exactly the local workaround this prop replaces.
+   * Modals (`ReqoreModal`) ignore it; they are centred and content-sized
+   * already.
+   */
+  responsiveLayout?: boolean | IReqoreDrawerResponsiveLayout;
+  /**
+   * Whether the sheet can be pushed away. While `responsiveLayout` has made the drawer a sheet,
+   * dragging its title bar toward the edge it is attached to follows the finger, and letting go
+   * past `SWIPE.distance` (18%) of the sheet's size on that axis — or with a flick toward the
+   * edge — closes it through the same path as the close button, so `confirmOnClose` still asks
+   * first. A shorter drag springs back; at once under `prefers-reduced-motion` or with
+   * `animations.dialogs` off. The title bar alone is the handle (not a button, an action or a
+   * field in it), so the content scrolls as it always did, and every sheet `position` swipes
+   * toward its own edge. The box carries `.reqore-drawer-swipeable` while it is on and
+   * `.reqore-drawer-dragging` during a drag. Default `true`: a sheet a finger cannot push away
+   * reads as stuck. Nothing outside the sheet layout, and nothing without an `onClose`.
+   */
+  swipeToClose?: boolean;
+  /**
+   * `ReqoreModal`'s `draggable`, handed over under another name so that the HTML attribute of
+   * that name never reaches the DOM — it would start the browser's own drag of the panel.
+   * @internal
+   */
+  _draggable?: boolean;
 }
 
 export interface IReqoreDrawerStyle extends IReqoreDrawerProps {
@@ -204,8 +472,32 @@ export const StyledCloseWrapper = styled.div<IReqoreDrawerStyle>`
 
 export const StyledDrawerResizable = styled(animated.div)<{
   $edgelessPosition?: TPosition;
+  /** The title bar is a handle: `'swipe'` pushes a sheet away, `'drag'` moves a modal. */
+  $handle?: 'swipe' | 'drag';
+  $dragging?: boolean;
 }>`
   pointer-events: auto;
+
+  ${({ $handle }) =>
+    $handle &&
+    css`
+      /* The drawer's own title bar, not that of a panel in its content. The browser must not
+         pan or zoom from a press there: the drag is ours. */
+      > .reqore-drawer > .reqore-panel-title {
+        touch-action: none;
+        cursor: ${$handle === 'drag' ? 'move' : 'grab'};
+      }
+    `}
+
+  ${({ $handle, $dragging }) =>
+    $dragging &&
+    css`
+      user-select: none;
+
+      > .reqore-drawer > .reqore-panel-title {
+        cursor: ${$handle === 'drag' ? 'move' : 'grabbing'};
+      }
+    `}
 
   ${({ $edgelessPosition }) => {
     if (!$edgelessPosition) {
@@ -276,8 +568,8 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     isHidden,
     customTheme,
     inheritCustomTheme,
-    position = 'right',
-    maxSize,
+    position: positionProp = 'right',
+    maxSize: maxSizeProp,
     // No default here: the fallback differs per layout (see the Resizable
     // below), and a default would make "the caller said nothing" unreadable.
     minSize,
@@ -285,13 +577,16 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     minHeight,
     onClose,
     hasBackdrop = true,
-    size,
-    resizable = true,
-    hidable,
+    size: sizeProp,
+    resizable: resizableProp = true,
+    hidable: hidableProp,
     onHideToggle,
     className,
     flat,
-    floating,
+    floating: floatingProp,
+    responsiveLayout,
+    swipeToClose,
+    _draggable,
     blur,
     opacity,
     intent,
@@ -312,6 +607,32 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     const customPortalId = useReqoreProperty('customPortalId');
     const getAndIncreaseZIndex = useReqoreProperty('getAndIncreaseZIndex');
     const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+    const isMobile = useReqoreProperty('isMobile');
+    const isMobileOrTablet = useReqoreProperty('isMobileOrTablet');
+    // One query, always subscribed (a hook cannot come and go with the prop):
+    // the numeric sheet breakpoint, or the default when a provider breakpoint
+    // is named and this flag is ignored anyway.
+    const belowSheetBreakpoint = useReqoreMedia(
+      `(max-width: ${drawerSheetBreakpointPx(responsiveLayout)}px)`
+    );
+    // The sheet decision is made once per render from the breakpoints, and
+    // every geometry input below is derived from it, so the rest of the
+    // component never has to ask "is the layout active?" again.
+    const sheet = useMemo(
+      () =>
+        resolveDrawerResponsiveLayout(
+          responsiveLayout,
+          { isMobile, isMobileOrTablet, belowSheetBreakpoint },
+          _isModal
+        ),
+      [responsiveLayout, isMobile, isMobileOrTablet, belowSheetBreakpoint, _isModal]
+    );
+    const position = sheet.active ? sheet.position : positionProp;
+    const size = sheet.active ? sheet.size : sizeProp;
+    const maxSize = sheet.active ? sheet.maxSize : maxSizeProp;
+    const resizable = sheet.active ? false : resizableProp;
+    const hidable = sheet.active ? false : hidableProp;
+    const floating = sheet.active ? false : floatingProp;
     const layout = useMemo(
       () =>
         _isModal
@@ -322,6 +643,10 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       [position, _isModal]
     );
     const [_isHidden, setIsHidden] = useState<boolean>(isHidden || false);
+    // A sheet has no hide control, so a drawer hidden on a wide screen is shown
+    // again when the layout becomes active; the user's choice is kept in
+    // `_isHidden` and honoured again once the viewport widens.
+    const hidden = sheet.active ? false : _isHidden;
     const [_size, setSize] = useState<any>({
       width: width || (layout === 'horizontal' ? 'auto' : size || '300px'),
       height: height || (layout === 'vertical' ? 'auto' : size || '300px'),
@@ -333,7 +658,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
 
     // Use focus trap to keep focus within the drawer when open
     useFocusTrap(drawerRef, {
-      active: isOpen && shouldTrapFocus && !_isHidden,
+      active: isOpen && shouldTrapFocus && !hidden,
       restoreFocus: true,
       autoFocus: true,
     });
@@ -412,6 +737,124 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
           }
         }
       : undefined;
+
+    const isHoverCapable = useReqoreProperty('isHoverCapable');
+    const reducedMotion = usePrefersReducedMotion();
+    // Motion that is not the finger's own — a sheet let go early springing back — is instant
+    // when the user asked for less of it, or when dialog animations are off.
+    const immediateMotion = animations.dialogs === false || reducedMotion;
+    // A sheet with nothing to close into cannot be swiped. A modal is dragged only where the
+    // pointer can hover: the `move` cursor on its title bar is the affordance, and on a touch
+    // screen a press on a header belongs to the page.
+    const swipeable = sheet.active && swipeToClose !== false && !!onClose;
+    const draggable = !!_isModal && !!_draggable && isHoverCapable;
+    const [drag, dragApi] = useSpring(() => ({ x: 0, y: 0, config: SPRING_CONFIG }));
+    const dragStartRef = useRef<IDrawerDragStart | null>(null);
+    const [closedBySwipe, setClosedBySwipe] = useState(false);
+
+    const { dragging, handlers: dragHandlers } = usePointerDrag({
+      enabled: swipeable || draggable,
+      // A sheet moves on one axis, so a press that scrolls along the other is not a swipe.
+      axis: draggable ? 'both' : layout === 'horizontal' ? 'y' : 'x',
+      canStart: (event) => isDrawerHeaderGrab(event.target, event.currentTarget),
+      onStart: (box) => {
+        const rect = box.getBoundingClientRect();
+        const offset = { x: drag.x.get(), y: drag.y.get() };
+
+        dragStartRef.current = {
+          offset,
+          size: layout === 'horizontal' ? rect.height : rect.width,
+          bounds: draggable
+            ? {
+                box: {
+                  left: rect.left - offset.x,
+                  top: rect.top - offset.y,
+                  width: rect.width,
+                  height: rect.height,
+                },
+                viewport: {
+                  width: document.documentElement.clientWidth,
+                  height: document.documentElement.clientHeight,
+                },
+                handleHeight:
+                  box
+                    .querySelector(':scope > .reqore-drawer > .reqore-panel-title')
+                    ?.getBoundingClientRect().height ?? 0,
+              }
+            : undefined,
+        };
+      },
+      onMove: (delta) => {
+        const start = dragStartRef.current;
+
+        if (!start) {
+          return;
+        }
+
+        dragApi.set(
+          start.bounds
+            ? clampModalDragOffset(
+                { x: start.offset.x + delta.dx, y: start.offset.y + delta.dy },
+                start.bounds
+              )
+            : getSheetSwipe(position, delta, start.size).offset
+        );
+      },
+      onEnd: (delta, committed) => {
+        const start = dragStartRef.current;
+
+        dragStartRef.current = null;
+
+        // A modal stays where it was let go.
+        if (!start || start.bounds) {
+          return;
+        }
+
+        if (committed && getSheetSwipe(position, delta, start.size).closes) {
+          // Closed from where the finger left it: the leave transition carries on from there.
+          setClosedBySwipe(true);
+          handleClose?.();
+        } else {
+          dragApi.start({ x: 0, y: 0, immediate: immediateMotion });
+        }
+      },
+    });
+
+    // A sheet whose swipe asked to close but is still open — `confirmOnClose` is asking, or the
+    // caller closes it later — springs back meanwhile; one that did close keeps its offset, so
+    // the leave transition carries on from where the finger left it.
+    useEffect(() => {
+      if (!closedBySwipe) {
+        return;
+      }
+
+      setClosedBySwipe(false);
+
+      if (isOpen) {
+        dragApi.start({ x: 0, y: 0, immediate: immediateMotion });
+      }
+    }, [closedBySwipe, isOpen]);
+
+    // Wherever the box was dragged to, it opens in its place next time.
+    useEffect(() => {
+      if (isOpen) {
+        dragApi.set({ x: 0, y: 0 });
+      }
+    }, [isOpen]);
+
+    // The box's `transform`: the drag's own translate ahead of whatever the enter / leave spring
+    // sets (a modal scales in), so neither overwrites the other. Nothing at rest, so a sheet
+    // keeps the plain box it always had.
+    const dragTransform = useCallback(
+      (spring?: SpringValue<string>) => {
+        const own = to([drag.x, drag.y], (x, y) =>
+          x || y ? `translate3d(${x}px, ${y}px, 0)` : ''
+        );
+
+        return spring ? to([own, spring], (a, b) => `${a} ${b}`.trim()) : own;
+      },
+      [drag.x, drag.y]
+    );
 
     const closeButtonProps = useMemo(
       () => ({
@@ -506,19 +949,19 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
         width: _isModal
           ? _size.width
           : layout === 'vertical'
-          ? _isHidden
+          ? hidden
             ? 0
             : _size.width
           : 'auto',
         height: _isModal
           ? _size.height
           : layout === 'horizontal'
-          ? _isHidden
+          ? hidden
             ? 0
             : _size.height
           : 'auto',
       }),
-      [_isModal, layout, _isHidden, _size]
+      [_isModal, layout, hidden, _size]
     );
 
     const onHideToggleClick = useCallback(() => {
@@ -579,7 +1022,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
       transitions((styles: any, item) =>
         item ? (
           <ReqoreThemeProvider theme={theme} customTheme={customTheme}>
-            {hasBackdrop && !_isHidden ? (
+            {hasBackdrop && !hidden ? (
               <ReqoreBackdrop
                 onClose={handleClose}
                 zIndex={zIndex}
@@ -595,7 +1038,11 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
               aria-modal={_isModal || hasBackdrop ? 'true' : undefined}
             >
               <Resizable
-                className={`${className || ''} reqore-drawer-resizable`}
+                className={`${className || ''} reqore-drawer-resizable${
+                  sheet.active ? ' reqore-drawer-sheet' : ''
+                }${swipeable ? ' reqore-drawer-swipeable' : ''}${
+                  draggable ? ' reqore-drawer-draggable' : ''
+                }${dragging ? ' reqore-drawer-dragging' : ''}`}
                 maxHeight={
                   layout === 'horizontal' || layout === 'center' ? maxSize || '90vh' : undefined
                 }
@@ -603,7 +1050,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                   layout === 'center'
                     ? minHeight || minSize || MODAL_MIN_HEIGHT
                     : layout === 'horizontal'
-                    ? _isHidden
+                    ? hidden
                       ? 0
                       : minSize || DRAWER_MIN_SIZE
                     : undefined
@@ -615,7 +1062,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                   layout === 'center'
                     ? minWidth || minSize || MODAL_MIN_WIDTH
                     : layout === 'vertical'
-                    ? _isHidden
+                    ? hidden
                       ? 0
                       : minSize || DRAWER_MIN_SIZE
                     : undefined
@@ -623,17 +1070,21 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                 as={StyledDrawerResizable}
                 {...({
                   $edgelessPosition: !floating && !_isModal ? position : undefined,
+                  $handle: draggable ? 'drag' : swipeable ? 'swipe' : undefined,
+                  $dragging: dragging,
                 } as any)}
+                {...dragHandlers}
                 style={{
                   ...resizeableStyle,
                   ...styles,
+                  transform: dragTransform(styles.transform),
                 }}
                 handleWrapperStyle={handleWrapperStyle}
                 size={sizeObject}
                 onResize={handleResize}
                 enable={enable}
               >
-                {_isHidden && hidable ? (
+                {hidden && hidable ? (
                   <StyledCloseWrapper
                     className='reqore-drawer-controls'
                     position={position}
@@ -649,7 +1100,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                     />
                   </StyledCloseWrapper>
                 ) : null}
-                {!_isHidden && (
+                {!hidden && (
                   <ReqorePanel
                     {...rest}
                     size={panelSize}

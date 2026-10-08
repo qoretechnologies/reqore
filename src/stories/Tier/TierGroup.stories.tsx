@@ -3,6 +3,7 @@ import { expect, waitFor } from 'storybook/test';
 import { ReqoreTier, ReqoreTierGroup } from '../..';
 import { IReqoreTierGroupProps } from '../../components/Tier/group';
 import { StoryMeta } from '../utils';
+import { dragPointer } from '../utils/pointer';
 import {
   expectModernRow,
   expectNoHorizontalOverflow,
@@ -88,30 +89,12 @@ const settled = async (group: HTMLElement) => {
 const swipe = (group: HTMLElement, distance: number) => {
   const viewport = group.querySelector('.reqore-tier-group-viewport') as HTMLElement;
   const rect = viewport.getBoundingClientRect();
-  const y = rect.top + rect.height / 2;
-  const startX = rect.left + rect.width / 2;
-  const fire = (type: string, x: number, buttons: number) =>
-    viewport.dispatchEvent(
-      new PointerEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        clientX: x,
-        clientY: y,
-        pointerId: 11,
-        pointerType: 'touch',
-        isPrimary: true,
-        button: 0,
-        buttons,
-      })
-    );
 
-  fire('pointerdown', startX, 1);
-
-  for (let step = 1; step <= 6; step++) {
-    fire('pointermove', startX + (distance * step) / 6, 1);
-  }
-
-  fire('pointerup', startX + distance, 0);
+  return dragPointer(
+    viewport,
+    { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+    { dx: distance, dy: 0 }
+  );
 };
 
 /** A key pressed with the carousel focused, as a keyboard user does it. */
@@ -227,12 +210,12 @@ export const StackSwipe: Story = {
 
     await expectFront(group, 'Pro');
 
-    swipe(group, -160);
+    await swipe(group, -160);
     await expectFront(group, 'Enterprise');
     await expect(control(group, '.reqore-tier-group-next').disabled).toBe(true);
 
     // The last plan is an end: a swipe past it changes nothing.
-    swipe(group, -160);
+    await swipe(group, -160);
     await settled(group);
     await expectFront(group, 'Enterprise');
     await expect(group.getAttribute('data-active-index')).toBe('2');
@@ -328,7 +311,7 @@ export const StackReducedMotion: Story = {
       await expect(item.style.transform).not.toContain('rotateY');
     }
 
-    swipe(group, -160);
+    await swipe(group, -160);
     await expectFront(group, 'Enterprise');
     // Switched at once: no card is animating.
     await expect(items().flatMap((item) => item.getAnimations())).toHaveLength(0);
