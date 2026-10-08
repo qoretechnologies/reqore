@@ -215,7 +215,17 @@ export const ReqorePopover = memo(
       const [componentRef, setComponentRef] = React.useState(null);
       const popperRef = useRef(null);
 
-      const [isOpen, setIsOpen] = React.useState(false);
+      const [isOpen, setIsOpenState] = React.useState(false);
+      /* Whether it is open NOW, set the moment it opens or closes. The controls handed out through
+         `passPopoverData` read this: a closure over `isOpen` answered for the render that handed it out,
+         and the holder got a fresh copy only after an effect and a render of its own - so a field asked
+         about its template list in that gap (a key typed straight after the click that opened it) was
+         told it was closed, and typing did not put it away. */
+      const isOpenNow = useRef(false);
+      const setIsOpen = useCallback((open: boolean) => {
+        isOpenNow.current = open;
+        setIsOpenState(open);
+      }, []);
       /* The trigger whose focus was checked when its listener was attached. The listener effect re-runs
          whenever the list opens or closes (it depends on `open`, which depends on `isOpen`); a check on
          every re-run reopened a list Escape had just closed while the field kept the focus. */
@@ -536,9 +546,14 @@ export const ReqorePopover = memo(
         ]
       );
 
+      /* Escape puts away the popover that is open, and goes no further. Heard in the CAPTURE phase: on
+         the document's bubble phase it came after every handler in the page, so an editor around the field
+         (a form row, where Escape discards the edit) heard it first, and one Escape meant for a list also
+         closed the editor and threw away what had been typed. With nothing open it is left alone. */
       const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
-          if (event.key === 'Escape') {
+          if (event.key === 'Escape' && isOpenNow.current) {
+            event.stopPropagation();
             close();
           }
         },
@@ -557,7 +572,7 @@ export const ReqorePopover = memo(
         passPopoverData?.({
           close,
           open,
-          isOpen: () => isOpen,
+          isOpen: () => isOpenNow.current,
         });
       }, [isOpen]);
 
@@ -615,7 +630,7 @@ export const ReqorePopover = memo(
           document.addEventListener('click', handleClick, true);
 
           if (closePopoversOnEscPress) {
-            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keydown', handleKeyDown, true);
           }
 
           if (keepOpenOnHover) {
@@ -649,7 +664,7 @@ export const ReqorePopover = memo(
           cancelTimeout();
 
           document.removeEventListener('click', handleClick, true);
-          document.removeEventListener('keydown', handleKeyDown);
+          document.removeEventListener('keydown', handleKeyDown, true);
 
           if (keepOpenOnHover) {
             componentRef?.removeEventListener('mouseenter', handleTargetMouseEnter);
