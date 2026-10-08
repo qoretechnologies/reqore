@@ -132,9 +132,35 @@ test('a finger keeps scrolling when the cell it landed on loses its own capture'
 
   pointer(headerCell, 'pointerDown', { clientX: 300, pointerType: 'touch' });
   pointer(headerCell, 'pointerMove', { clientX: 290, pointerType: 'touch' });
-  fireEvent(headerCell, Object.assign(new Event('lostpointercapture', { bubbles: true }), { pointerId: 1 }));
+  fireEvent(
+    headerCell,
+    Object.assign(new Event('lostpointercapture', { bubbles: true }), { pointerId: 1 })
+  );
   pointer(headerCell, 'pointerMove', { clientX: 200, pointerType: 'touch' });
   pointer(headerCell, 'pointerUp', { clientX: 200, pointerType: 'touch' });
 
   expect(body.scrollLeft).toBe(100);
+});
+
+/**
+ * A press on a column's resize handle resizes the column and leaves the table where it is (Foxhoundn, #708).
+ * The header's gesture started on the handle too, so the table scrolled under the column edge being dragged:
+ * on every table with a finger, and with the mouse when `dragToScroll` is on.
+ */
+test("a drag on a column's resize handle resizes the column and leaves the table where it is", () => {
+  const { body, header } = renderTable({ dragToScroll: true });
+  const handle = header.querySelector('.reqore-table-header-resize') as HTMLElement;
+  expect(handle).toBeTruthy();
+
+  // with the mouse
+  pointer(handle, 'pointerDown', { clientX: 300 });
+  pointer(handle, 'pointerMove', { clientX: 240 });
+  pointer(handle, 'pointerUp', { clientX: 240 });
+  expect(body.scrollLeft).toBe(0);
+
+  // with a finger: the header takes sideways swipes on every table
+  pointer(handle, 'pointerDown', { clientX: 300, pointerType: 'touch' });
+  pointer(handle, 'pointerMove', { clientX: 240, pointerType: 'touch' });
+  pointer(handle, 'pointerUp', { clientX: 240, pointerType: 'touch' });
+  expect(body.scrollLeft).toBe(0);
 });

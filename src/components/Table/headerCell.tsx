@@ -320,6 +320,8 @@ export const ReqoreTableHeaderCell = memo(
         onResize={(_event, _direction, _component) => {
           onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
         }}
+        // A press on the column's resize handle resizes the column; it does not pull the table.
+        handleClasses={{ right: 'reqore-no-drag-scroll' }}
         handleComponent={{
           right: (
             <StyledTableHeaderResize

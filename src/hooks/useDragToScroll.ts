@@ -20,10 +20,12 @@ export const DRAG_TO_SCROLL_THRESHOLD = 4;
  * tile while press-and-pull scrolls past it.
  *
  * What IS excluded is text entry, where a press-and-move already means
- * "select within this value" and there is no other way to ask for it.
+ * "select within this value" and there is no other way to ask for it, and anything
+ * marked `reqore-no-drag-scroll`: a grab handle of its own (a column's resize handle),
+ * where a press-and-move already means something else.
  */
 export const NON_DRAGGABLE =
-  'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
+  'input, textarea, select, [contenteditable=""], [contenteditable="true"], .reqore-no-drag-scroll';
 
 export interface IUseDragToScrollOptions {
   /** What scrolls sideways. */
