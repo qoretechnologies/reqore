@@ -7,6 +7,7 @@ import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import { IReqoreModalProps } from '../../components/Modal';
 import { sleep } from '../../helpers/utils';
 import {
+  ReqoreButton,
   ReqoreCollection,
   ReqoreModal,
   ReqoreP,
@@ -15,6 +16,7 @@ import {
 } from '../../index';
 import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
+import { dragPointer } from '../utils/pointer';
 
 const { createArg } = argManager<IReqoreModalProps>();
 
@@ -91,6 +93,13 @@ const meta = {
       type: 'string',
       description:
         'The floor for whichever of `minWidth` / `minHeight` is not given. On an edge drawer it is the only floor, and defaults to `DRAWER_MIN_SIZE` (150px). Same unit rule as `minWidth`.',
+    }),
+    ...createArg('draggable', {
+      name: 'Draggable',
+      type: 'boolean',
+      defaultValue: false,
+      description:
+        'Whether the modal can be moved by dragging its title bar (`move` cursor). Opt-in, and only where the pointer can hover. Resizing keeps working, a drag never starts on the close button, an action or a resize handle, the title bar stays inside the viewport, and the position resets when the modal opens again.',
     }),
   },
 } as StoryMeta<typeof ReqoreModal>;
@@ -966,5 +975,241 @@ export const CannotBeResizedWhenResizingIsOff: Story = {
       document.elementFromPoint(right + 6, bottom + 6)?.className
     ).toContain('reqore-drawer-backdrop');
     await expect(modalSize()).toEqual({ width: 800, height: 400 });
+  },
+};
+
+/* Dragging a modal by its title bar. The stories move it with real pointer events (`dragPointer`,
+   a mouse: the drag is for pointers that can hover) and measure the box inside `waitFor` — the
+   enter spring scales the modal in, so its geometry is only final once it has settled. */
+const modalHeader = () =>
+  document.querySelector(
+    '.reqore-drawer-resizable > .reqore-drawer > .reqore-panel-title'
+  ) as HTMLElement;
+
+/** A whole px, and never `-0`: `Math.round(-0.2)` is `-0`, which `toBe(0)` rejects. */
+const px = (value: number) => Math.round(value) || 0;
+
+const modalRect = () => {
+  const rect = resizableBox().getBoundingClientRect();
+
+  return {
+    left: px(rect.left),
+    top: px(rect.top),
+    width: px(rect.width),
+    height: px(rect.height),
+  };
+};
+
+/** Where the middle of the box is, relative to the middle of the viewport: the drag's offset. */
+const modalOffset = () => {
+  const { left, top, width, height } = modalRect();
+  const { clientWidth, clientHeight } = document.documentElement;
+
+  return {
+    x: px(left + width / 2 - clientWidth / 2),
+    y: px(top + height / 2 - clientHeight / 2),
+  };
+};
+
+/** A mouse drag by (dx, dy) from the middle of `target` — the title bar unless told otherwise. */
+const dragBy = async (dx: number, dy: number, target: Element = modalHeader()) => {
+  const rect = target.getBoundingClientRect();
+
+  await dragPointer(
+    target,
+    { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+    { dx, dy },
+    { pointerType: 'mouse' }
+  );
+};
+
+/**
+ * The modal is open and its enter spring has settled: the box is `width` wide and its scale has
+ * reached exactly 1, so every rect measured from here on is the modal's own geometry.
+ */
+const expectSettledModal = async (label: string, width: number) => {
+  await _testsWaitForText(label);
+  await waitFor(() => {
+    expect(modalRect().width).toBe(width);
+    expect(resizableBox().style.transform).toMatch(/scale\(1\)$/);
+  });
+};
+
+export const CanBeDraggedByItsHeader: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A `draggable` modal moved by its title bar: dragged 120px right and 80px down, it sits exactly there, and dragging its bottom-right corner afterwards still resizes it — to 600×250 — around the place it was moved to.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'Drag me around',
+    width: '800px',
+    height: '400px',
+    draggable: true,
+  },
+  play: async () => {
+    await expectSettledModal('Drag me around', 800);
+    await expect(resizableBox().classList.contains('reqore-drawer-draggable')).toBe(true);
+    await expect(modalOffset()).toEqual({ x: 0, y: 0 });
+
+    await dragBy(120, 80);
+    await waitFor(() => expect(modalOffset()).toEqual({ x: 120, y: 80 }));
+
+    // Resizing still works, and keeps the modal where it was dragged to.
+    await dragHandlePast('se-resize', -200, -150);
+    await waitFor(() => expect(modalSize()).toEqual({ width: 600, height: 250 }));
+    await expect(modalOffset()).toEqual({ x: 120, y: 80 });
+  },
+};
+
+export const DragDoesNotStartOnItsControls: Story = {
+  parameters: {
+    // The frame after the play is a modal that did not move, which `Basic` already captures.
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'A `draggable` modal with an action in its title bar: a drag that starts on the close button, on the action or on a resize handle does not move it — the first two are theirs to click, the handle resizes instead.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'Hands off my controls',
+    width: '800px',
+    height: '400px',
+    draggable: true,
+    actions: [{ label: 'An action', icon: 'Search2Line' }],
+  },
+  play: async () => {
+    await expectSettledModal('Hands off my controls', 800);
+
+    await dragBy(150, 100, document.querySelector('.reqore-drawer-close-button'));
+    await sleep(300);
+    await expect(modalOffset()).toEqual({ x: 0, y: 0 });
+
+    const action = [...document.querySelectorAll('.reqore-panel-title .reqore-button')].find(
+      (button) => button.textContent?.includes('An action')
+    );
+    await expect(action).toBeTruthy();
+    await dragBy(150, 100, action);
+    await sleep(300);
+    await expect(modalOffset()).toEqual({ x: 0, y: 0 });
+
+    // A handle resizes: the right edge moves, the left edge stays, the modal is not dragged.
+    await dragHandlePast('col-resize', -100, 0);
+    await waitFor(() => expect(modalSize()).toEqual({ width: 700, height: 400 }));
+  },
+};
+
+export const HeaderStaysInTheViewport: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'A `draggable` modal dragged far past the top-left corner stops with its title bar flush with the top and left edges of the viewport; dragged far past the bottom-right, it stops with the bar flush with the right edge and whole above the bottom one — the bar is what the modal is moved and closed by, and never leaves the screen.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'Keep my title on screen',
+    width: '800px',
+    height: '400px',
+    draggable: true,
+  },
+  play: async () => {
+    await expectSettledModal('Keep my title on screen', 800);
+    const headerHeight = Math.round(modalHeader().getBoundingClientRect().height);
+    const { clientWidth, clientHeight } = document.documentElement;
+
+    await dragBy(-5000, -5000);
+    await waitFor(() => {
+      const { left, top } = modalRect();
+      expect(left).toBe(0);
+      expect(top).toBe(0);
+    });
+
+    await dragBy(9000, 9000);
+    await waitFor(() => {
+      const { left, top, width } = modalRect();
+      expect(left + width).toBe(clientWidth);
+      expect(top + headerHeight).toBe(clientHeight);
+    });
+  },
+};
+
+export const PositionResetsOnReopen: Story = {
+  parameters: {
+    // The frame after the play is a modal that did not move, which `Basic` already captures.
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'A `draggable` modal dragged aside, closed with its close button and opened again with the button on the page: it opens centred, where it was before the drag, not where it was left.',
+      },
+    },
+  },
+  args: {
+    label: 'Back to the middle',
+    width: '800px',
+    height: '400px',
+    draggable: true,
+  },
+  render: (args) => {
+    const [isOpen, setIsOpen] = useState(true);
+
+    return (
+      <>
+        <ReqoreButton onClick={() => setIsOpen(true)}>Open the modal</ReqoreButton>
+        <ReqoreModal {...args} isOpen={isOpen} onClose={() => setIsOpen(false)}>
+          Dragged aside, closed, and opened again.
+        </ReqoreModal>
+      </>
+    );
+  },
+  play: async () => {
+    await expectSettledModal('Back to the middle', 800);
+    await dragBy(150, 100);
+    await waitFor(() => expect(modalOffset()).toEqual({ x: 150, y: 100 }));
+
+    await fireEvent.click(document.querySelector('.reqore-drawer-close-button'));
+    await waitFor(() => expect(document.querySelector('.reqore-modal')).toBeNull(), {
+      timeout: 5000,
+    });
+
+    await _testsClickButton({ label: 'Open the modal' });
+    await expectSettledModal('Back to the middle', 800);
+    await waitFor(() => expect(modalOffset()).toEqual({ x: 0, y: 0 }));
+  },
+};
+
+export const IsNotDraggableUnlessAsked: Story = {
+  parameters: {
+    // The frame after the play is a modal that did not move, which `Basic` already captures.
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'A modal without `draggable`: a drag on its title bar does nothing, and the box carries no `.reqore-drawer-draggable` class. Dragging is opt-in.',
+      },
+    },
+  },
+  render: Template,
+  args: {
+    label: 'Fixed in place',
+    width: '800px',
+    height: '400px',
+  },
+  play: async () => {
+    await expectSettledModal('Fixed in place', 800);
+    await expect(resizableBox().classList.contains('reqore-drawer-draggable')).toBe(false);
+    await dragBy(150, 100);
+    await sleep(300);
+    await expect(modalOffset()).toEqual({ x: 0, y: 0 });
   },
 };
