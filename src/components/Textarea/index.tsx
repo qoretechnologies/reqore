@@ -46,7 +46,8 @@ export interface IReqoreFormTemplates extends IReqoreDropdownProps {}
  * `autoComplete`, …) reaches the element, so the field posts with the form it sits in.
  */
 export interface IReqoreTextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+  extends
+    React.TextareaHTMLAttributes<HTMLTextAreaElement>,
     IReqoreReadOnly,
     IReqoreDisabled,
     IWithReqoreCustomTheme,
@@ -259,7 +260,7 @@ function Textarea<T>(
     fluid,
     tooltip,
     customTheme,
-        inheritCustomTheme,
+    inheritCustomTheme,
     intent,
     rounded = true,
     radiusSize,
@@ -321,10 +322,7 @@ function Textarea<T>(
       // background, switching tabs, pressing Escape, or focus loss to
       // browser chrome. Without this guard, `.closest()` throws a
       // TypeError and the popover never closes.
-      if (
-        !e.relatedTarget ||
-        e.relatedTarget.closest(`#id-${uuid.current}`) === null
-      ) {
+      if (!e.relatedTarget || e.relatedTarget.closest(`#id-${uuid.current}`) === null) {
         popoverData?.close();
       }
     },
@@ -334,6 +332,54 @@ function Textarea<T>(
   const handlePassPopoverData = useCallback((data) => {
     setPopoverData(data);
   }, []);
+
+  /* The author comes into the field from the keyboard: the templates are listed, as a click lists them
+     (qorus#646). Focus brought by a pointer is the click's to answer - opening for it too would close the
+     list again on the click - and focus that comes back from the list (a template picked) or from nowhere
+     opens nothing.
+
+     A press brings the focus only to a field that does not have it: one on the field already focused
+     brings none, and its mark would be left for the next focus, from the keyboard, to be taken for a
+     pointer's. And a press ends in a click, after the focus it brings, with a mouse and a touch alike:
+     the mark goes with it, whatever became of the focus. */
+  const focusByPointer = useRef(false);
+  const handlePointerDownCapture = useCallback(
+    (event: React.PointerEvent<HTMLTextAreaElement>) => {
+      focusByPointer.current = !event.currentTarget.contains(document.activeElement);
+      rest.onPointerDownCapture?.(event);
+    },
+    [rest.onPointerDownCapture]
+  );
+  useEffect(() => {
+    if (!templates) {
+      return undefined;
+    }
+    const pressEnded = () => {
+      focusByPointer.current = false;
+    };
+    // after the click's own handlers: the bubble phase of the document, the last to hear it
+    document.addEventListener('click', pressEnded);
+    return () => document.removeEventListener('click', pressEnded);
+  }, [templates]);
+  const handleFocusCapture = useCallback(
+    (event: React.FocusEvent<HTMLTextAreaElement>) => {
+      const byPointer = focusByPointer.current;
+      focusByPointer.current = false;
+      const from = event.relatedTarget as Element | null;
+      if (
+        templates &&
+        !byPointer &&
+        from &&
+        !from.closest('.reqore-popover-content') &&
+        popoverData &&
+        !popoverData.isOpen?.()
+      ) {
+        popoverData.open();
+      }
+      rest.onFocusCapture?.(event);
+    },
+    [templates, popoverData, rest.onFocusCapture]
+  );
 
   /* Typing is declining the offer.
 
@@ -416,6 +462,9 @@ function Textarea<T>(
           as={rest.as || 'textarea'}
           // After `{...rest}` so it wins — see `handleKeyDown`.
           onKeyDown={handleKeyDown}
+          // and so do these, which call the caller's own - see `handleFocusCapture`
+          onPointerDownCapture={handlePointerDownCapture}
+          onFocusCapture={handleFocusCapture}
           className={`${className || ''} reqore-control reqore-textarea`}
           _size={size}
           ref={(ref) => setInputRef(ref)}
