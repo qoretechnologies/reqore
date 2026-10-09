@@ -205,6 +205,12 @@ export const TemplateElement = memo((props: RenderElementProps & { tagProps: IRe
            consumer's own `onClick`), and this is what says the cursor is not on
            offer. */
         readOnly={readOnly}
+        /* Not a tab stop of its own. The editor is the tab stop, and a chip in
+           it is reached with the caret, as any character is. As a tab stop it
+           was where Tab from the text went NEXT — into the editor's own chip —
+           and what was typed after that went to the chip, which writes nothing:
+           the text field looked focused and took no typing (qorus#646). */
+        tabIndex={-1}
         contentEditable={false}
         intent={selected ? 'info' : props.tagProps?.intent}
       />

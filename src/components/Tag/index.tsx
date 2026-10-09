@@ -943,8 +943,11 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
            tag's — but it has stopped advertising itself as something to press,
            and a tab stop is that same advertisement made to the keyboard. Wired
            off the one flag so the cursor, the hover effect and the tab order
-           cannot disagree about whether this tag is pressable. */
-        tabIndex={interactive ? 0 : undefined}
+           cannot disagree about whether this tag is pressable. A pressable tag
+           keeps a `tabIndex` it is given, as a button does: a tag inside a
+           control that is itself the tab stop (a chip in a text editor) is
+           reached with that control's own keys, not with Tab. */
+        tabIndex={interactive ? (rest.tabIndex ?? 0) : undefined}
         $wrap={wrap}
         $hasWidth={!!width}
       >
