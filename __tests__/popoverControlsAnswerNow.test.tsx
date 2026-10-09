@@ -2,7 +2,13 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
-import { ReqoreContent, ReqoreDropdown, ReqoreLayoutContent, ReqoreTextarea, ReqoreUIProvider } from '../src';
+import {
+  ReqoreContent,
+  ReqoreDropdown,
+  ReqoreLayoutContent,
+  ReqoreTextarea,
+  ReqoreUIProvider,
+} from '../src';
 import { IPopoverControls } from '../src/components/Popover';
 
 /**
@@ -70,6 +76,39 @@ describe('a template list', () => {
       fireEvent.keyDown(field, { key: 'S' });
     });
     expect(isOpen()).toBe(false);
+  });
+
+  it('is put away by text written without a key, as an on-screen keyboard writes it', () => {
+    render(wrap(<ReqoreTextarea templates={{ items }} onChange={() => undefined} />));
+    const field = document.querySelector('.reqore-textarea') as HTMLElement;
+    act(() => {
+      fireEvent.click(field);
+    });
+    expect(isOpen()).toBe(true);
+    // a touch keyboard sends no keydown for the character, only the input it makes (qorus#646: the list
+    // stayed open over the completion list a typed `@` opened, which then could not be seen)
+    act(() => {
+      fireEvent(
+        field,
+        new InputEvent('beforeinput', { bubbles: true, data: '@', inputType: 'insertText' })
+      );
+    });
+    expect(isOpen()).toBe(false);
+  });
+
+  it('stays open for input that writes nothing, such as a composition starting', () => {
+    render(wrap(<ReqoreTextarea templates={{ items }} onChange={() => undefined} />));
+    const field = document.querySelector('.reqore-textarea') as HTMLElement;
+    act(() => {
+      fireEvent.click(field);
+    });
+    act(() => {
+      fireEvent(
+        field,
+        new InputEvent('beforeinput', { bubbles: true, inputType: 'insertCompositionText' })
+      );
+    });
+    expect(isOpen()).toBe(true);
   });
 
   it('stays open for keys that do not change the text', () => {

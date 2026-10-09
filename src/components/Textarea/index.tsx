@@ -433,6 +433,29 @@ function Textarea<T>(
     [popoverData, keepTemplatesOpenWhileTyping]
   );
 
+  /* Text written without a key goes the same way. An on-screen keyboard (a phone, a tablet) sends no keydown
+     for a character - only the input it makes - so on a touch device the list stayed open over what was being
+     written, and over the completion list a typed `@` or `$` opens beside it (qorus#646). Heard natively:
+     React's `onBeforeInput` is a composite of its own, not this event. Input that writes nothing yet (a
+     composition starting) leaves the list alone, as a key that changes nothing does. */
+  const latestTypingState = useRef({ popoverData, keepTemplatesOpenWhileTyping });
+  latestTypingState.current = { popoverData, keepTemplatesOpenWhileTyping };
+  useEffect(() => {
+    if (!inputRef || !templates) {
+      return undefined;
+    }
+    const handleBeforeInput = (event: Event) => {
+      const { popoverData: controls, keepTemplatesOpenWhileTyping: keep } = latestTypingState.current;
+      const inputType = (event as InputEvent).inputType ?? '';
+      const writes = /^(insert(?!Composition)|delete)/.test(inputType);
+      if (writes && !keep && controls?.isOpen?.()) {
+        controls.close();
+      }
+    };
+    inputRef.addEventListener('beforeinput', handleBeforeInput);
+    return () => inputRef.removeEventListener('beforeinput', handleBeforeInput);
+  }, [inputRef, templates]);
+
   /* Chains rather than replaces: the Slate editable passes its own `onKeyDown`
      through here, and dismissing the template list must not swallow it. Held
      at the component's top level so the identity is stable — built inside the
