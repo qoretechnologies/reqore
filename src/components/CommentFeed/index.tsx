@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { StyledPanel } from '../Panel';
 
 export interface IReqoreCommentFeedProps extends React.HTMLAttributes<HTMLDivElement> {

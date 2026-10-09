@@ -19,7 +19,7 @@ export type TReqoreMenuItemEventHandler = (
 ) => void;
 
 export type TReqoreMenuItemActionEventHandler<
-  Metadata extends Record<string, any> = Record<string, any>
+  Metadata extends Record<string, any> = Record<string, any>,
 > = (
   event: React.MouseEvent<HTMLElement>,
   itemId?: string,
@@ -45,8 +45,7 @@ export type TReqoreMenuItemAction<Metadata extends Record<string, any> = Record<
   };
 
 export interface IReqoreMenuItemProps<Metadata extends Record<string, any> = Record<string, any>>
-  extends IReqoreComponent,
-    IReqoreButtonProps {
+  extends IReqoreComponent, IReqoreButtonProps {
   label?: string | number;
   selected?: boolean;
   itemId?: string;
@@ -69,6 +68,24 @@ export interface IReqoreMenuItemRightIconStyle {
   interactive?: boolean;
   intent?: TReqoreIntent;
 }
+
+/**
+ * Centres an item in the first scrollable element between it and its menu (the menu included); scrolls
+ * nothing where the menu shows it all, and nothing outside the menu.
+ */
+const scrollWithinMenu = (item: HTMLElement, menu: Element, behavior: ScrollBehavior) => {
+  for (let el = item.parentElement; el; el = el.parentElement) {
+    const { overflowY } = window.getComputedStyle(el);
+    if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+      const box = el.getBoundingClientRect();
+      const at = item.getBoundingClientRect();
+      const delta = at.top + at.height / 2 - (box.top + box.height / 2);
+      el.scrollTo({ top: el.scrollTop + delta, behavior });
+      return;
+    }
+    if (el === menu) return;
+  }
+};
 
 const ReqoreMenuItem = memo(
   forwardRef<HTMLButtonElement, IReqoreMenuItemProps>(
@@ -142,6 +159,15 @@ const ReqoreMenuItem = memo(
 
       useEffect(() => {
         if (scrollIntoView && itemRef) {
+          /* Inside a menu, the item is scrolled to inside that menu and nothing else moves. Its own
+             `scrollIntoView` scrolled every scrollable ancestor to centre it in the viewport - the page's
+             scroll container and the document too - so arrow keys in an editor's completion list moved
+             the page and, in a short view, left it blank (qorus#646). */
+          const menu = itemRef.closest('.reqore-menu');
+          if (menu) {
+            scrollWithinMenu(itemRef, menu, scrollBehavior);
+            return;
+          }
           itemRef.scrollIntoView?.({
             // A smooth scroll is an animation, so the final offset depends on when the caller
             // looks. Honour the global toggle and the OS reduced-motion preference (same

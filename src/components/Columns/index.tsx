@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { memo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { IReqoreTheme } from '../../constants/theme';
 
 export interface IReqoreColumnsProps extends React.HTMLAttributes<HTMLDivElement> {

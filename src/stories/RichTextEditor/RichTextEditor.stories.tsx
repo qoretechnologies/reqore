@@ -876,3 +876,49 @@ export const TypingAfterClickingPastTheTag: Story = {
     );
   },
 };
+
+/** A value that is one chip and nothing else, as a field holding only a reference is. */
+const oneChipValue = [
+  {
+    type: 'paragraph',
+    children: [
+      { text: '' },
+      { type: 'tag', value: '$.order.id', label: 'id', children: [{ text: '' }] },
+      { text: '' },
+    ],
+  },
+];
+
+/** The editor and its chip (Slate's void attributes are on the tag itself). */
+const editorAndChip = async (canvasElement: HTMLElement) => {
+  const doc = canvasElement.ownerDocument;
+  return waitFor(() => {
+    const editor = doc.querySelector<HTMLElement>('[contenteditable="true"]');
+    const chip = editor?.querySelector<HTMLElement>('.reqore-tag');
+    expect(editor).toBeTruthy();
+    expect(chip).toBeTruthy();
+    return { editor: editor!, chip: chip! };
+  });
+};
+
+export const TabFromTheTextDoesNotStopOnItsChip: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Tab from the text leaves the editor; it does not stop on a chip inside it. The editor is the tab stop and a chip is reached with the caret. A chip that was a tab stop of its own took the focus from the text, and what was typed next was lost (qorus#646).',
+      },
+    },
+  },
+  args: { value: oneChipValue as never },
+  play: async ({ canvasElement }) => {
+    const { editor, chip } = await editorAndChip(canvasElement);
+
+    editor.focus();
+    await waitFor(() => expect(canvasElement.ownerDocument.activeElement).toBe(editor));
+    await userEvent.tab();
+
+    expect(canvasElement.ownerDocument.activeElement).not.toBe(chip);
+    expect(editor.contains(canvasElement.ownerDocument.activeElement)).toBe(false);
+  },
+};

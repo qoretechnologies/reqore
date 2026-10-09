@@ -8,7 +8,7 @@
  * this same folder, so it can live here — which keeps `helpers/` free of React,
  * as it is documented to be, without reopening the cycle.
  */
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { MONO_FONT } from '../../constants/fonts';
 import { TEXT_FROM_SIZE } from '../../constants/sizes';
 import { structuredValueTooltip } from '../../helpers/selectItem';

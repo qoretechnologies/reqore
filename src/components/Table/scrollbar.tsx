@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';

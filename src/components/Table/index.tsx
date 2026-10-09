@@ -3,7 +3,8 @@ import { TReqoreFilterRanking } from '../../helpers/search';
 import { size as count, isArray } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   ReqoreControlGroup,
   ReqoreMessage,
@@ -17,6 +18,7 @@ import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/
 import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
+import { useDragToScroll } from '../../hooks/useDragToScroll';
 import { useQueryWithDelay } from '../../hooks/useQueryWithDelay';
 import { IReqoreIntent, IReqoreTooltip } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
@@ -406,6 +408,18 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    */
   getRowProps?: IReqoreTableRowOptions['getRowProps'];
 
+  /**
+   * Press and pull the table sideways with the mouse or a pen to scroll it, on its
+   * body and on its header alike - for a table wider than its frame, where a plain
+   * wheel mouse has no sideways axis. A press that does not move is still a click
+   * (a header's sort and options keep working), the click that ends a real drag is
+   * not delivered, and a press on a text field is the field's. Off by default.
+   *
+   * A finger swipes the table either way: the body pans natively, and the header,
+   * which is not a scroller of its own, scrolls the body under a sideways swipe.
+   */
+  dragToScroll?: boolean;
+
   exportMapper?:
     | TReqoreKeyValueTableExportMapper
     | ((data: unknown[]) => IReqoreExportModalProps['data']);
@@ -433,6 +447,16 @@ const StyledTableWrapper = styled.div`
   width: 100%;
   flex: 1;
   overflow: hidden;
+
+  /* dragToScroll: the body says it can be pulled, and while a pull is on, nothing under
+     it is selected. Only a body that overflows sideways can be pulled. */
+  &.reqore-table-wrapper-draggable .reqore-table-body {
+    cursor: grab;
+  }
+  .reqore-table-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
 
   ${({ rounded, size = 'normal' }) => css`
     border-radius: ${rounded === false ? 0 : RADIUS_FROM_SIZE[size]}px;
@@ -534,10 +558,28 @@ const ReqoreTable = ({
   resetSizeLabel = 'Reset size',
   otherActionsLabel = 'Other',
   columnFilterPlaceholder = 'Filter by this column...',
+  dragToScroll = false,
   ...rest
 }: IReqoreTableProps) => {
   const mainTableRef = useRef<HTMLDivElement>(null);
   const mainHeaderRef = useRef<HTMLDivElement>(null);
+
+  // The body is the table's sideways scroller. The header is scrolled WITH it (the body
+  // syncs it) but is not a scroller itself, so a gesture on the header has to scroll
+  // the body: a finger always (the browser cannot pan an element that does not
+  // overflow-scroll), the mouse when `dragToScroll` asks for it.
+  useDragToScroll({
+    scrollRef: mainTableRef,
+    mouse: dragToScroll,
+    draggingClass: 'reqore-table-dragging',
+  });
+  useDragToScroll({
+    scrollRef: mainTableRef,
+    handleRef: mainHeaderRef,
+    mouse: dragToScroll,
+    touch: true,
+    draggingClass: 'reqore-table-dragging',
+  });
 
   const hasColumnWrap = useMemo(() => {
     const walk = (cols: IReqoreTableColumn[]): boolean =>
@@ -1251,7 +1293,7 @@ const ReqoreTable = ({
     return (
       <StyledTableWrapper
         ref={wrapperRef}
-        className='reqore-table-wrapper'
+        className={`reqore-table-wrapper${dragToScroll ? ' reqore-table-wrapper-draggable' : ''}`}
         rounded={rest.rounded !== false && rest.flat !== false}
         size={rest.flat === false ? wrapperSize : zoomSize}
       >

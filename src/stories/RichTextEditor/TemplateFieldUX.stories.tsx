@@ -159,6 +159,32 @@ export const TypingDismissesTheList: Story = {
 };
 
 /**
+ * ...even when the text comes straight after the click that opened the list.
+ *
+ * The list's controls answered for the moment they were handed to the field, which got a fresh copy only
+ * a render later: a key typed in that gap found the list "closed", did not put it away, and the list
+ * opened over the text (qorus#646: a field chosen into a value, clicked back into and " Stk." typed after
+ * it). No wait between the click and the keys: that gap is the case.
+ */
+export const TypingStraightAfterTheClickDismissesTheList: Story = {
+  args: {
+    value: WITH_CHIP,
+    tags: TAGS,
+    actions: { redo: true, undo: true, styling: false },
+    onChange: fn(),
+  },
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+    await userEvent.click(editor);
+    await userEvent.keyboard(' Stk.');
+    await sleep(500);
+    await expect(listIsOpen(doc)).toBe(false);
+    await waitFor(() => expect(editor.innerText.replace(/[\s\uFEFF]/g, '')).toContain('Stk.'));
+  },
+};
+
+/**
  * The list can be told to stay put while typing.
  *
  * Dismissing is the default because a list that stays open covers the text

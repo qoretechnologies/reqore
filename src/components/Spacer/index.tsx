@@ -1,6 +1,6 @@
 import { mix } from 'polished';
 import { memo, ReactNode, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import {
   LINE_SIZE_TO_NUMBER,
   PADDING_FROM_SIZE,
@@ -8,7 +8,7 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreIntent, IWithReqoreCustomTheme, IWithReqoreEffect } from '../../types/global';
 import { IReqoreEffect, StyledEffect, TReqoreHexColor } from '../Effect';

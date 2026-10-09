@@ -1,7 +1,7 @@
 import { omit } from 'lodash';
 import { rgba } from 'polished';
 import React, { forwardRef, useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   CONTROL_TEXT_FROM_SIZE,
@@ -13,7 +13,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';

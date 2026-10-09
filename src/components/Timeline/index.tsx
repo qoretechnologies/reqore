@@ -1,6 +1,6 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useCallback, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import {
   GAP_FROM_SIZE,
   ICON_FROM_SIZE,
@@ -11,7 +11,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -250,8 +250,9 @@ const StyledTimeline = styled.ol.withConfig({
     `}
 `;
 
+// `disabled` dims the item; an `li` has no such attribute (the item says so with `aria-disabled`).
 const StyledTimelineItem = styled.li.withConfig({
-  shouldForwardProp: omitStyleProps('direction', 'spacing'),
+  shouldForwardProp: omitStyleProps('direction', 'disabled', 'spacing'),
 })<IReqoreTimelineItemStyle>`
   display: flex;
   position: relative;
@@ -545,6 +546,7 @@ const TimelineItemRenderer = memo(
         isClickable={isClickable}
         isLast={isLast}
         disabled={item.disabled}
+        aria-disabled={item.disabled || undefined}
         onClick={() => onItemClick(item)}
         onKeyDown={(e) => onKeyDown(e, item)}
         tabIndex={isClickable ? 0 : undefined}

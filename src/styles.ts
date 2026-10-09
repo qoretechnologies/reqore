@@ -1,7 +1,7 @@
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { StyledTextEffect } from './components/Effect';
 import { StyledIconWrapper } from './components/Icon';
-import { omitStyleProps } from './helpers/styled';
+import styled, { omitStyleProps } from './helpers/styled';
 
 export const INACTIVE_ICON_SCALE = 0.85;
 export const ACTIVE_ICON_SCALE = 0.93;

@@ -1,7 +1,7 @@
 import { debounce } from 'lodash';
 import { memo, useEffect, useRef, useState } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { ReqoreDropdown } from '../..';
 import { IReqorePagingResult } from '../../hooks/usePaging';
 import ReqoreButton, { IReqoreButtonProps, StyledButton } from '../Button';

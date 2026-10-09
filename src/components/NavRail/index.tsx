@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import {
   GAP_FROM_SIZE,
   HALF_PADDING_FROM_SIZE,
@@ -20,7 +20,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getColorFromMaybeString, getMainBackgroundColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useScrollFade } from '../../hooks/useScrollFade';

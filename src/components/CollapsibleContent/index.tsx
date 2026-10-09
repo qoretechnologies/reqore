@@ -1,5 +1,6 @@
 import { forwardRef, memo, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { PADDING_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import { getMainBackgroundColor } from '../../helpers/colors';

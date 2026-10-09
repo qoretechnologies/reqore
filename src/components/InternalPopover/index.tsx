@@ -12,7 +12,8 @@ import React, {
 import { createPortal } from 'react-dom';
 import { usePopper } from 'react-popper';
 import { useUnmount, useUpdateEffect } from 'react-use';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { useReqoreProperty } from '../..';
 import { RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';

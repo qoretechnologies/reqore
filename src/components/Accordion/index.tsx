@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import {
   GAP_FROM_SIZE,
   PADDING_FROM_SIZE,

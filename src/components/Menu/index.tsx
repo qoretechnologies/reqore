@@ -1,12 +1,12 @@
 import { Resizable, ResizableProps } from 're-resizable';
 import React, { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
 import { ReqoreErrorBoundary } from '../..';
 import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
-import { omitStyleProps } from '../../helpers/styled';
+import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreTheme } from '../../hooks/useTheme';

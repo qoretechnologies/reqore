@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import {
   HEADER_SIZE_TO_NUMBER,
   PADDING_FROM_SIZE,
@@ -43,7 +44,7 @@ import ReqoreControlGroupItem from '../ControlGroup/item';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export type TReqoreFeatureCardMarker = 'line' | 'number' | 'icon' | 'none';
@@ -68,7 +69,13 @@ export interface IReqoreFeatureCardProps
   label: React.ReactNode;
   /** Effect applied to the label heading. */
   labelEffect?: IReqoreEffect;
-  /** Body copy under the label. */
+  /**
+   * Body copy under the label.
+   *
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`): it is drawn in
+   * a block container with the description's typography, not in a paragraph, which could not
+   * hold a block.
+   */
   description?: React.ReactNode;
   /** Effect applied to the description paragraph. */
   descriptionEffect?: IReqoreEffect;
@@ -152,7 +159,18 @@ interface IStyledFeatureCardProps extends Omit<IReqoreFeatureCardProps, 'transpa
   $paddingSize: TSizes;
 }
 
-const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledFeatureCard = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'disabled',
+    'inheritCustomTheme',
+    'interactive',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledFeatureCardProps>`
   display: flex;
   flex-flow: column;
   gap: ${({ size = 'normal' }) => PADDING_FROM_SIZE[size]}px;
@@ -357,6 +375,8 @@ export const ReqoreFeatureCard = memo(
 
       return (
         <ReqoreTooltipComponent
+          // A div, not the effect's span: the card holds blocks, which a span may not.
+          as='div'
           {...rest}
           ref={ref}
           Component={StyledFeatureCard}
@@ -418,6 +438,7 @@ export const ReqoreFeatureCard = memo(
             {description && (
               <StyledTextSlot $wrap={wrap}>
                 <ReqoreP
+                  as={getReqoreTextElement(description)}
                   size={descriptionSize}
                   customTheme={theme}
                   effect={{ opacity: 0.72, ...descriptionEffect }}

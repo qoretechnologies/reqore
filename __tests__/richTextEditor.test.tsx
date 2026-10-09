@@ -309,3 +309,21 @@ test('adopts nothing while read-only', () => {
 
   expect(ref.current?.selection).toBeNull();
 });
+
+/* A chip in a text editor is reached with the caret, as any character is; the
+   editor is the tab stop. A chip that was a tab stop of its own was where Tab
+   from the text went next, and what was typed after that went to the chip,
+   which writes nothing (qorus#646: the text field looked focused and took no
+   typing). */
+test('a chip in an editable text is not a tab stop of its own', () => {
+  renderWithTag(createRef<TReqoreRichTextEditorRef>());
+  const editable = document.querySelector<HTMLElement>('[contenteditable="true"]')!;
+  const chip = editable.querySelector<HTMLElement>('.reqore-tag')!;
+
+  expect(chip.getAttribute('tabindex')).toBe('-1');
+  const tabStops = Array.from(
+    document.querySelectorAll<HTMLElement>('[tabindex]:not([tabindex="-1"]), [contenteditable="true"]')
+  );
+  expect(tabStops.filter((el) => editable.contains(el) && el !== editable)).toEqual([]);
+});
+

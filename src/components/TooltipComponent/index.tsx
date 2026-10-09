@@ -1,4 +1,3 @@
-import { omit } from 'lodash';
 import { forwardRef, memo } from 'react';
 import { buildTooltipForComponents } from '../../helpers/utils';
 import { TReqoreTooltipProp } from '../../types/global';
@@ -11,20 +10,21 @@ export interface ITooltipComponentProps {
 }
 
 export const ReqoreTooltipComponent = memo(
-  forwardRef(({ Component, ...rest }: ITooltipComponentProps, ref) => {
-    if (!rest.tooltip) {
+  forwardRef(({ Component, tooltip, ...rest }: ITooltipComponentProps, ref) => {
+    // The tooltip is drawn by the popover. The component has no use for it, and would hand it on:
+    // a DOM element (`Component='div'`) renders it as a `tooltip` attribute, and a styled
+    // component rendered `as` another component (a router link) passes it to that component.
+    if (!tooltip) {
       return <Component {...rest} ref={ref} />;
     }
 
     return (
       <ReqorePopover
-        {...buildTooltipForComponents(rest.tooltip)}
+        {...buildTooltipForComponents(tooltip)}
         component={Component}
         isReqoreComponent
         ref={ref}
-        // The popover draws the tooltip; a DOM element (`Component='div'`) has no use for it
-        // and would render it as a `tooltip` attribute.
-        componentProps={typeof Component === 'string' ? omit(rest, ['tooltip']) : rest}
+        componentProps={rest}
       >
         {rest.children}
       </ReqorePopover>

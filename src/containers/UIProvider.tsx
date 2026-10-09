@@ -3,7 +3,8 @@ import type { IReqoreNotificationDefaults } from '../components/Notifications/no
 import merge from 'lodash/merge';
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useMemo, useState } from 'react';
-import styled, { createGlobalStyle, css } from 'styled-components';
+import { createGlobalStyle, css } from 'styled-components';
+import styled from '../helpers/styled';
 import ReqoreLayoutWrapper, { IReqoreLayoutWrapperProps } from '../components/Layout';
 import { getFontFamily } from '../constants/fonts';
 import { DEFAULT_THEME, IReqoreTheme } from '../constants/theme';

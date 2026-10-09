@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 
 export interface IReqoreNotificationsWrapperProps {
   children: any;

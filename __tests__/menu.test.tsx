@@ -105,9 +105,7 @@ test('<Menu /> item action with `actions` opens a dropdown of grouped shortcuts'
   expect(itemCb).not.toHaveBeenCalled();
   // The popover lists the two shortcut items (dividers group them).
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
-  const dropdownItems = document.querySelectorAll(
-    '.reqore-popover-content .reqore-menu-item'
-  );
+  const dropdownItems = document.querySelectorAll('.reqore-popover-content .reqore-menu-item');
   expect(dropdownItems.length).toBe(2);
 
   // Clicking a shortcut fires its handler.
@@ -119,46 +117,66 @@ test('<Menu /> item action with `actions` opens a dropdown of grouped shortcuts'
 });
 
 describe('<MenuItem /> scrollIntoView', () => {
-  const renderWithScrollSpy = (options?: Record<string, any>) => {
+  /* Inside a menu, the item is scrolled to inside that menu (see menuItemScrollStaysInMenu.test.tsx): the menu
+     is laid out as a browser would lay it out, scrollable, with the item below its middle. */
+  const renderWithMenuScrollSpy = (options?: Record<string, any>) => {
     const scrollIntoView = vi.fn();
-
-    // jsdom does not implement scrollIntoView, so there is nothing to restore afterwards
-    // beyond the spy itself.
     window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
-
-    render(
+    const menuScroll = vi.fn();
+    const tree = (marked: boolean) => (
       <ReqoreUIProvider options={options}>
         <ReqoreMenu>
           <ReqoreMenuItem label='Item 1' />
-          <ReqoreMenuItem label='Item 2' selected scrollIntoView />
+          <ReqoreMenuItem label='Item 2' className='second' selected scrollIntoView={marked} />
         </ReqoreMenu>
       </ReqoreUIProvider>
     );
-
-    return scrollIntoView;
+    const { rerender } = render(tree(false));
+    const menu = document.querySelector<HTMLElement>('.reqore-menu')!;
+    menu.getBoundingClientRect = () => ({ top: 0, height: 100 }) as DOMRect;
+    Object.defineProperty(menu, 'scrollHeight', { configurable: true, value: 300 });
+    Object.defineProperty(menu, 'clientHeight', { configurable: true, value: 100 });
+    menu.scrollTo = menuScroll as never;
+    const item = document.querySelector<HTMLElement>('.second.reqore-menu-item')!;
+    item.getBoundingClientRect = () => ({ top: 200, height: 20 }) as DOMRect;
+    rerender(tree(true));
+    return { scrollIntoView, menuScroll };
   };
 
-  test('centres the item vertically without dragging a vertical list sideways', () => {
-    const scrollIntoView = renderWithScrollSpy();
+  test('centres the item in its menu, and does not scroll anything around the menu', () => {
+    const { scrollIntoView, menuScroll } = renderWithMenuScrollSpy();
 
-    expect(scrollIntoView).toHaveBeenCalledTimes(1);
-    expect(scrollIntoView).toHaveBeenCalledWith(
-      expect.objectContaining({ block: 'center', inline: 'nearest' })
-    );
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(menuScroll).toHaveBeenCalledTimes(1);
+    // the item's middle (210) to the menu's middle (50)
+    expect(menuScroll).toHaveBeenCalledWith(expect.objectContaining({ top: 160 }));
   });
 
   test('animates the scroll by default', () => {
-    const scrollIntoView = renderWithScrollSpy();
+    const { menuScroll } = renderWithMenuScrollSpy();
 
-    expect(scrollIntoView).toHaveBeenCalledWith(
-      expect.objectContaining({ behavior: 'smooth' })
-    );
+    expect(menuScroll).toHaveBeenCalledWith(expect.objectContaining({ behavior: 'smooth' }));
   });
 
   test('jumps straight to the item when popover animations are disabled', () => {
-    const scrollIntoView = renderWithScrollSpy({ animations: { popovers: false } });
+    const { menuScroll } = renderWithMenuScrollSpy({ animations: { popovers: false } });
 
-    expect(scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ behavior: 'auto' }));
+    expect(menuScroll).toHaveBeenCalledWith(expect.objectContaining({ behavior: 'auto' }));
+  });
+
+  test('an item outside a menu is brought into view by itself, centred without dragging sideways', () => {
+    const scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    render(
+      <ReqoreUIProvider>
+        <ReqoreMenuItem label='Item 2' selected scrollIntoView />
+      </ReqoreUIProvider>
+    );
+
+    expect(scrollIntoView).toHaveBeenCalledWith(
+      expect.objectContaining({ block: 'center', inline: 'nearest' })
+    );
   });
 
   test('does not scroll items that are not marked for it', () => {

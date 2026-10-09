@@ -1,7 +1,7 @@
 import { isNumber } from 'lodash';
 import { mix, rgba } from 'polished';
 import { memo, useMemo } from 'react';
-import styled from 'styled-components';
+import styled from '../../helpers/styled';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
@@ -21,9 +21,12 @@ import { IReqoreEffect, TReqoreHexColor } from '../Effect';
 import { ReqoreH1, ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelProps, ReqorePanel } from '../Panel';
-import { IReqoreParagraphProps, ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, IReqoreParagraphProps, ReqoreP } from '../Paragraph';
 import { ReqoreVerticalSpacer } from '../Spacer';
 import { IReqoreTagProps } from '../Tag';
+
+// One object for every render: the paragraph is memoized, and a fresh style would defeat it.
+const TIER_DESCRIPTION_STYLE: React.CSSProperties = { textAlign: 'center', padding: '0 20px' };
 
 export interface IReqoreTierFeature extends Omit<IReqoreParagraphProps, 'content'> {
   icon?: IReqoreIconName;
@@ -69,6 +72,11 @@ export interface IReqoreTierProps extends Omit<IReqorePanelProps, 'description'>
    */
   priceDetailProps?: Partial<IReqoreParagraphProps> & TReqoreDataAttributes;
   salePrice?: string | number;
+  /**
+   * Text under the price. Text, inline content or blocks (a `ReqoreP`, a list, a
+   * `ReqoreControlGroup`): it is drawn in a block container with paragraph typography, not in a
+   * paragraph, which could not hold a block.
+   */
   description?: string | React.ReactNode;
   actionButtonProps?: IReqoreButtonProps;
   featureList?: IReqoreTierFeature[];
@@ -219,7 +227,13 @@ const ReqoreClassicTier = memo(
             )}
           </ReqoreControlGroup>
           {description && (
-            <ReqoreP style={{ textAlign: 'center', padding: '0 20px' }}>{description}</ReqoreP>
+            <ReqoreP
+              as={getReqoreTextElement(description)}
+              className='reqore-tier-description'
+              style={TIER_DESCRIPTION_STYLE}
+            >
+              {description}
+            </ReqoreP>
           )}
           <ReqoreControlGroup fluid horizontalAlign='center'>
             <ReqoreButton
@@ -543,6 +557,11 @@ const ReqoreModernTier = memo(
       };
     }, [colors, rest.contentEffect]);
 
+    // The description is a block (see `description`); one effect object keeps its memo.
+    const descriptionTextEffect = useMemo(
+      (): IReqoreEffect => ({ color: colors.muted, ...descriptionEffect }),
+      [colors.muted, descriptionEffect]
+    );
     const contentStyle = useMemo(
       (): React.CSSProperties => ({
         display: 'flex',
@@ -657,9 +676,10 @@ const ReqoreModernTier = memo(
 
           {description ? (
             <ReqoreP
+              as={getReqoreTextElement(description)}
               size={size}
               className='reqore-tier-description'
-              effect={{ color: colors.muted, ...descriptionEffect }}
+              effect={descriptionTextEffect}
             >
               {description}
             </ReqoreP>

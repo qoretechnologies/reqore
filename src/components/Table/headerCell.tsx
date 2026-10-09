@@ -2,7 +2,8 @@ import count from 'lodash/size';
 import { rgba } from 'polished';
 import { Resizable } from 're-resizable';
 import { memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled from '../../helpers/styled';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
@@ -319,6 +320,8 @@ export const ReqoreTableHeaderCell = memo(
         onResize={(_event, _direction, _component) => {
           onColumnsUpdate?.(dataId, 'resizedWidth', parseInt(_component.style.width));
         }}
+        // A press on the column's resize handle resizes the column; it does not pull the table.
+        handleClasses={{ right: 'reqore-no-drag-scroll' }}
         handleComponent={{
           right: (
             <StyledTableHeaderResize

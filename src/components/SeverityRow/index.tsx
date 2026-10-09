@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
@@ -29,7 +30,7 @@ import {
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect } from '../Effect';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -50,7 +51,13 @@ export interface IReqoreSeverityRowProps
     IWithReqoreTooltip {
   /** Primary line — e.g. "Payment Processing · stripe-webhook-receiver". */
   label: React.ReactNode;
-  /** Secondary line — e.g. "Avg duration 4.7s exceeded 3.5s threshold · just now". */
+  /**
+   * Secondary line — e.g. "Avg duration 4.7s exceeded 3.5s threshold · just now".
+   *
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`): it is drawn in
+   * a block container with the description's typography, not in a paragraph, which could not
+   * hold a block.
+   */
   description?: React.ReactNode;
   /** Optional inline content rendered before the label (e.g. severity Tag). */
   leading?: React.ReactNode;
@@ -145,7 +152,17 @@ const StyledContainer = styled.div<{ $fluid: boolean }>`
  *  identical. */
 const STRIP_WIDTH_PX = 4;
 
-const StyledRow = styled(StyledEffect)<IStyledRowProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledRow = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'disabled',
+    'inheritCustomTheme',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledRowProps>`
   display: grid;
   grid-template-columns: ${STRIP_WIDTH_PX}px 1fr auto;
   gap: ${({ size }) => PADDING_FROM_SIZE[size] * 2}px;
@@ -314,6 +331,8 @@ const ReqoreSeverityRow = memo(
           className='reqore-severity-row-container'
         >
           <ReqoreTooltipComponent
+            // A div, not the effect's span: the row holds blocks, which a span may not.
+            as='div'
             data-narrow={isNarrow || undefined}
             {...rest}
             Component={StyledRow}
@@ -363,6 +382,7 @@ const ReqoreSeverityRow = memo(
               {description && (
                 <StyledTextSlot $wrap={wrap}>
                   <ReqoreP
+                    as={getReqoreTextElement(description)}
                     size={secondarySize}
                     effect={{ opacity: 0.6, ...descriptionEffect }}
                     className='reqore-severity-row-description'

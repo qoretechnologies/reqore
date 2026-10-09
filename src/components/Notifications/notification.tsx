@@ -1,7 +1,8 @@
 import { animated, useTransition } from '@react-spring/web';
 import { getLuminance, rgba } from 'polished';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import styled, { css, keyframes } from 'styled-components';
+import { css, keyframes } from 'styled-components';
+import styled from '../../helpers/styled';
 import { SPRING_CONFIG } from '../../constants/animations';
 import {
   PADDING_FROM_SIZE,

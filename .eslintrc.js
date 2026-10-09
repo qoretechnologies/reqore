@@ -6,6 +6,11 @@ module.exports = {
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:react/recommended', 'plugin:react/jsx-runtime', 'plugin:storybook/recommended'],
   overrides: [
     {
+      // Stories are not shipped; the helper wraps styled-components' own `styled`.
+      files: ['src/stories/**', 'src/helpers/styled.ts'],
+      rules: { 'no-restricted-imports': 'off' },
+    },
+    {
       env: {
         node: true,
       },
@@ -37,6 +42,20 @@ module.exports = {
     // Allow the "omit a key" idiom — `const { dropped, ...rest } = obj` — where
     // the destructured sibling is intentionally discarded.
     '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
+    // Reqore's `styled` (src/helpers/styled.ts) keeps styling props that are also HTML attribute
+    // names (`size`, `disabled`, `checked`, ...) off the elements they are not attributes of.
+    'no-restricted-imports': [
+      'error',
+      {
+        paths: [
+          {
+            name: 'styled-components',
+            importNames: ['default'],
+            message: "Import `styled` from 'src/helpers/styled' (it filters DOM props).",
+          },
+        ],
+      },
+    ],
   },
   // Ignore storybook files
   ignorePatterns: ['**/stories/*', '**/mock/*'],

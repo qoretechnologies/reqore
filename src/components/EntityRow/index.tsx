@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
-import styled, { css } from 'styled-components';
+import { css } from 'styled-components';
+import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
@@ -30,7 +31,7 @@ import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
-import { ReqoreP } from '../Paragraph';
+import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -75,7 +76,13 @@ export interface IReqoreEntityRowProps
     IWithReqoreTooltip {
   /** Primary text — e.g. the Qog name. */
   label: React.ReactNode;
-  /** Secondary text — typically a one-line description. */
+  /**
+   * Secondary text — typically a one-line description.
+   *
+   * Text, inline content or blocks (a `ReqoreP`, a list, a `ReqoreControlGroup`): it is drawn in
+   * a block container with the description's typography, not in a paragraph, which could not
+   * hold a block.
+   */
   description?: React.ReactNode;
   /** Tertiary text — e.g. "Last run: success · 3 hours ago · 384ms". */
   metadata?: React.ReactNode;
@@ -179,7 +186,17 @@ const StyledContainer = styled.div<{ $fluid: boolean }>`
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
 `;
 
-const StyledRow = styled(StyledEffect)<IStyledRowProps>`
+// Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
+// its element's (nor a component it is rendered `as`). `disabled` still reaches an element that
+// has it, when the component is rendered `as` one (see `omitStyleProps`).
+const StyledRow = styled(StyledEffect).withConfig({
+  shouldForwardProp: omitStyleProps(
+    'disabled',
+    'inheritCustomTheme',
+    'radiusSize',
+    ...REQORE_CONTROL_GROUP_CHILD_PROPS
+  ),
+})<IStyledRowProps>`
   display: grid;
   grid-template-columns: ${({ $hasIcon, $iconHasBackground, size }) =>
     $hasIcon
@@ -372,6 +389,8 @@ const ReqoreEntityRow = memo(
       return (
         <StyledContainer ref={containerRef} $fluid={fluid} className='reqore-entity-row-container'>
           <ReqoreTooltipComponent
+            // A div, not the effect's span: the row holds blocks, which a span may not.
+            as='div'
             data-narrow={isNarrow || undefined}
             {...rest}
             Component={StyledRow}
@@ -432,6 +451,7 @@ const ReqoreEntityRow = memo(
               {description && (
                 <StyledTextSlot $wrap={wrap}>
                   <ReqoreP
+                    as={getReqoreTextElement(description)}
                     size={secondarySize}
                     effect={{ opacity: 0.7, ...descriptionEffect }}
                     className='reqore-entity-row-description'
