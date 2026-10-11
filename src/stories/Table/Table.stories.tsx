@@ -27,7 +27,11 @@ import tableData from '../../mock/tableData';
 import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 import { expectTableContentWithinItsRows } from '../utils/tableGeometry';
-import { expectControlsInside } from '../utils/controlsInside';
+import {
+  expectControlsInside,
+  expectWordsWhole,
+  wordsBrokenAcrossLines,
+} from '../utils/controlsInside';
 import { withViewport } from '../utils/viewport';
 
 const { createArg } = argManager<IReqoreTableProps>();
@@ -2444,7 +2448,7 @@ export const FilterableInANarrowBox: Story = {
     docs: {
       description: {
         story:
-          "Renders a searchable table in a 265px box, as a table sits in a card on a phone. The table's search field and its column and more buttons stay inside the box: the field takes the width that is left, and the buttons wrap under the label when there is none.",
+          "Renders a searchable table in a 265px box, as a table sits in a card on a phone. The title comes first, its words whole, and the search field and the more button take what is left and stay inside the box.",
       },
     },
   },
@@ -2463,6 +2467,8 @@ export const FilterableInANarrowBox: Story = {
     await waitFor(() => expect(box.querySelector('input')).toBeTruthy());
     // the toolbar: the table's own header scrolls sideways with its columns
     await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
+    // the title first: its words whole, the search field at what is left
+    await expectWordsWhole(box.querySelector('.reqore-panel-title-label-box') as HTMLElement);
   },
 };
 
@@ -2493,13 +2499,14 @@ export const FilterableOnAPhone: Story = {
     await withViewport(390, 844, async (narrowed) => {
       const table = canvasElement.querySelector('.reqore-table') as HTMLElement;
       await expectControlsInside(table, table.querySelector('.reqore-panel-title') as HTMLElement);
-      // the title keeps room to be read: the search field gives up its width first
+      // the title keeps room to be read, its words whole: the search field gives up its width first
       await waitFor(() =>
         expect(
           (table.querySelector('.reqore-panel-title-label-box') as HTMLElement).getBoundingClientRect()
             .width
         ).toBeGreaterThanOrEqual(40)
       );
+      await expectWordsWhole(table.querySelector('.reqore-panel-title-label-box') as HTMLElement);
       if (narrowed) {
         await waitFor(() =>
           expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
@@ -2508,3 +2515,37 @@ export const FilterableOnAPhone: Story = {
     });
   },
 };
+
+export const TitleWordWiderThanItsSpace: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a searchable table in a 320px box whose title is one word wider than the space left beside its search field and more button: only then is the word broken, and it stays inside the title's box, as the controls stay inside the panel.",
+      },
+    },
+  },
+  args: {
+    filterable: true,
+    label: 'Supercalifragilisticexpialidocious',
+    height: 400,
+  },
+  render: (args) => (
+    <div className='narrow-table-box' style={{ width: 320 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
+    await waitFor(() => expect(box.querySelector('input')).toBeTruthy());
+    await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
+    const label = box.querySelector('.reqore-panel-title-label-box') as HTMLElement;
+    // broken, because it does not fit whole: not cut off at the box's edge
+    await waitFor(() =>
+      expect(wordsBrokenAcrossLines(label)).toEqual(['Supercalifragilisticexpialidocious'])
+    );
+    const heading = label.querySelector('.reqore-heading') as HTMLElement;
+    expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth + 1);
+  },
+};
+

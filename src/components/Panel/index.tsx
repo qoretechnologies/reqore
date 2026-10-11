@@ -456,6 +456,13 @@ const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number }>`
     `}
 `;
 
+/**
+ * How much more than the title a group of actions that do not collapse takes of the room left over: so much
+ * that the title's box widens only once the group is at its own width (a flex item takes its grow factor's
+ * share of the free space, and the title's is 1).
+ */
+const ACTIONS_GROW_BEFORE_TITLE = 1000;
+
 export const StyledPanelTitleHeader = styled.div`
 
   display: flex;
@@ -2512,13 +2519,23 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 expandTooltip={expandTooltip}
                 closeTooltip={closeTooltip}
                 fluid={!hasTitleHeader}
-                // Beside a title the group may shrink, down to what its controls cannot do without: a
-                // search field gives up its width, a button never does (its min-content stays). It was
-                // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title to
-                // nothing and still pushed its last button past the panel's edge (qorus#646). It gives
-                // up three times the title's share: the title says what the panel is, and a search
-                // field still searches at a third of its width.
-                style={hasTitleHeader ? { flex: '0 3 auto' } : undefined}
+                // Beside a title the title comes first (qorus#646). The group was `0 0 auto`, so a narrow
+                // bar - a table in a card on a phone - squeezed the title to nothing and still pushed its
+                // last button past the panel's edge. Now the title takes its whole width first and the
+                // group what is left, at least what its controls cannot do without (a search field
+                // narrows, a button never does) and at most its own width, which leaves a wide bar as it
+                // was. A basis of 0 is what gives the title the first claim: the group is sized from the
+                // leftover, so the title shrinks only once the controls are at their smallest - and its
+                // words break only when one is wider than the space left beside them. Shrinking the two
+                // against each other instead, by any factor, took a fraction of a pixel off the title,
+                // and that broke "Services" into "Servic / es". Room the title does not need goes to the
+                // group first (a grow no title's comes near), so a search field widens before the
+                // title's box does.
+                style={
+                  hasTitleHeader
+                    ? { flex: `${ACTIONS_GROW_BEFORE_TITLE} 1 0%`, maxWidth: 'max-content' }
+                    : undefined
+                }
               >
                 {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>
