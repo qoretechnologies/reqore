@@ -211,6 +211,15 @@ const StyledRow = styled(StyledEffect).withConfig({
     justify-content: flex-start;
   }
 
+  /* Narrow, the actions stack under the label, one to a line, each the row's width, with its label
+     whole (qorus#646): kept on one line that does not wrap, two labelled actions reached past the row on
+     a phone. An icon's tooltip is its label there, and a finger gets a target it can hit. */
+  @media (pointer: coarse) {
+    &[data-narrow='true'] > .reqore-severity-row-actions > .reqore-button {
+      min-height: 44px;
+    }
+  }
+
   ${({ $clickable, theme, $intent, $transparent }) =>
     $clickable &&
     css`
@@ -393,13 +402,20 @@ const ReqoreSeverityRow = memo(
               )}
             </StyledBody>
             {actions && actions.length > 0 && (
-              <ReqoreControlGroup gapSize='small' className='reqore-severity-row-actions'>
+              <ReqoreControlGroup
+                gapSize='small'
+                className='reqore-severity-row-actions'
+                // narrow: one to a line, each the row's width (see the narrow rules above)
+                vertical={isNarrow}
+                fluid={isNarrow}
+              >
                 {actions.map((action, idx) => (
                   <ReqoreButton
                     key={idx}
                     size={size}
                     intent={action.intent ?? intent}
                     {...action}
+                    {...(isNarrow ? { fluid: true, wrap: true } : {})}
                     // After the spread: `action` carries the consumer's raw
                     // handler and this has to be the one that wins. Applied
                     // even when the action has no handler of its own — an
@@ -409,7 +425,10 @@ const ReqoreSeverityRow = memo(
                     // toggles what the row toggles cancels itself out.
                     onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
                   >
-                    {action.label}
+                    {/* Stacked, an action with only an icon is a button the row's width: its tooltip is
+                        its label, as a finger gets no tooltip to read. */}
+                    {action.label ??
+                      (isNarrow && typeof action.tooltip === 'string' ? action.tooltip : undefined)}
                   </ReqoreButton>
                 ))}
               </ReqoreControlGroup>

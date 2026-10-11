@@ -2512,6 +2512,13 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 expandTooltip={expandTooltip}
                 closeTooltip={closeTooltip}
                 fluid={!hasTitleHeader}
+                // Beside a title the group may shrink, down to what its controls cannot do without: a
+                // search field gives up its width, a button never does (its min-content stays). It was
+                // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title to
+                // nothing and still pushed its last button past the panel's edge (qorus#646). It gives
+                // up three times the title's share: the title says what the panel is, and a search
+                // field still searches at a third of its width.
+                style={hasTitleHeader ? { flex: '0 3 auto' } : undefined}
               >
                 {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>

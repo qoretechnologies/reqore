@@ -13,6 +13,7 @@ import { SIZES, SIZE_TO_PX, TEXT_FROM_SIZE } from '../../constants/sizes';
 import { sleep } from '../../helpers/utils';
 import {
   ReqoreControlGroup,
+  ReqorePanel,
   ReqoreH3,
   ReqoreH4,
   ReqoreIcon,
@@ -26,6 +27,8 @@ import tableData from '../../mock/tableData';
 import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 import { expectTableContentWithinItsRows } from '../utils/tableGeometry';
+import { expectControlsInside } from '../utils/controlsInside';
+import { withViewport } from '../utils/viewport';
 
 const { createArg } = argManager<IReqoreTableProps>();
 
@@ -2427,4 +2430,81 @@ export const LongContentWrappedAndVirtualized: Story = {
     label: 'Wrapped rows in a virtualized body',
   },
   play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
+};
+
+/* A table's toolbar in a narrow box (qorus#646): on a phone, a table in a card is narrower than the screen,
+   and its search field and actions reached past the card - the search field kept its width and the
+   toolbar did not wrap. */
+
+/** The width of a card on a 390px phone screen, inside its page's gutters: what the IDE's tables sit in. */
+const NARROW_TABLE_WIDTH = 265;
+
+export const FilterableInANarrowBox: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a searchable table in a 265px box, as a table sits in a card on a phone. The table's search field and its column and more buttons stay inside the box: the field takes the width that is left, and the buttons wrap under the label when there is none.",
+      },
+    },
+  },
+  args: {
+    filterable: true,
+    label: 'Services',
+    height: 400,
+  },
+  render: (args) => (
+    <div className='narrow-table-box' style={{ width: NARROW_TABLE_WIDTH }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
+    await waitFor(() => expect(box.querySelector('input')).toBeTruthy());
+    // the toolbar: the table's own header scrolls sideways with its columns
+    await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
+  },
+};
+
+export const FilterableOnAPhone: Story = {
+  parameters: {
+    qlip: { viewport: { width: 390, height: 844 } },
+    docs: {
+      description: {
+        story:
+          "Renders a searchable table in a card on a phone (390 px, a 16px gutter each side): its title, search field and buttons share the toolbar's one line inside the card - the title is still there to read - and none reaches past the screen.",
+      },
+    },
+  },
+  args: {
+    filterable: true,
+    label: 'Services',
+    height: 400,
+  },
+  render: (args) => (
+    <div style={{ padding: '0 16px', maxWidth: 390, boxSizing: 'border-box' }}>
+      <ReqorePanel label='Running services' padded>
+        <ReqoreTable {...args} />
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('.reqore-table input')).toBeTruthy());
+    await withViewport(390, 844, async (narrowed) => {
+      const table = canvasElement.querySelector('.reqore-table') as HTMLElement;
+      await expectControlsInside(table, table.querySelector('.reqore-panel-title') as HTMLElement);
+      // the title keeps room to be read: the search field gives up its width first
+      await waitFor(() =>
+        expect(
+          (table.querySelector('.reqore-panel-title-label-box') as HTMLElement).getBoundingClientRect()
+            .width
+        ).toBeGreaterThanOrEqual(40)
+      );
+      if (narrowed) {
+        await waitFor(() =>
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
+        );
+      }
+    });
+  },
 };

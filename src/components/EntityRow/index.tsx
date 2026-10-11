@@ -247,6 +247,15 @@ const StyledRow = styled(StyledEffect).withConfig({
     justify-content: flex-start;
   }
 
+  /* Narrow, the actions stack under the label, one to a line, each the row's width, with its label
+     whole, as ReqoreSeverityRow's do (qorus#646): on one line that does not wrap, labelled actions reached
+     past the row on a phone. An icon's tooltip is its label there, and a finger gets a target it can hit. */
+  @media (pointer: coarse) {
+    &[data-narrow='true'] > .reqore-entity-row-actions > .reqore-button {
+      min-height: 44px;
+    }
+  }
+
   ${({ $clickable, theme, $intent, $transparent }) =>
     $clickable &&
     css`
@@ -473,7 +482,13 @@ const ReqoreEntityRow = memo(
               )}
             </StyledBody>
             {actions && actions.length > 0 && (
-              <ReqoreControlGroup gapSize='small' className='reqore-entity-row-actions'>
+              <ReqoreControlGroup
+                gapSize='small'
+                className='reqore-entity-row-actions'
+                // narrow: one to a line, each the row's width (see the narrow rules above)
+                vertical={isNarrow}
+                fluid={isNarrow}
+              >
                 {actions.map(({ actions: subActions, actionsProps, ...action }, idx) =>
                   subActions?.length ? (
                     // An action carrying sub-actions is a menu, not a button — same
@@ -487,6 +502,7 @@ const ReqoreEntityRow = memo(
                       intent={action.intent ?? intent}
                       {...action}
                       {...actionsProps}
+                      {...(isNarrow ? { fluid: true } : {})}
                       items={subActions.filter(isSubActionShown)}
                       onClick={stopRowClick}
                     />
@@ -496,6 +512,7 @@ const ReqoreEntityRow = memo(
                       size={size}
                       intent={action.intent ?? intent}
                       {...action}
+                      {...(isNarrow ? { fluid: true, wrap: true } : {})}
                       // After the spread, so it wraps the consumer's handler rather
                       // than being replaced by it. Applied even to an action with no
                       // handler of its own: an action button is a control, and a click
@@ -504,7 +521,10 @@ const ReqoreEntityRow = memo(
                       // toggles cancels itself out. Matches ReqoreSeverityRow.
                       onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
                     >
-                      {action.label}
+                      {/* Stacked, an icon-only action is a button the row's width: its tooltip is its
+                          label, as a finger gets no tooltip to read. */}
+                      {action.label ??
+                        (isNarrow && typeof action.tooltip === 'string' ? action.tooltip : undefined)}
                     </ReqoreButton>
                   )
                 )}

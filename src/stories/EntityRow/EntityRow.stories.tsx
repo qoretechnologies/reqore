@@ -6,6 +6,7 @@ import ReqoreEntityRow, { IReqoreEntityRowProps } from '../../components/EntityR
 import { ReqoreP } from '../../components/Paragraph';
 import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
+import { expectControlsInside } from '../utils/controlsInside';
 
 const meta = {
   title: 'Display/Entity Row',
@@ -531,7 +532,7 @@ export const NarrowContainerActionsWrap: Story = {
     docs: {
       description: {
         story:
-          'Renders the same row in a 720px container (actions sit to the right of the label, as they always have) and a 400px one (actions wrap onto their own row under the label). The row measures its OWN container with a `ResizeObserver` and stamps `data-narrow` on itself — not a media query, because the case this exists for is a narrow drawer / sidebar / split panel on a wide screen, where the viewport is the wrong box to ask. The threshold is 480px, the Reqore mobile width, rather than the 640px `ReqoreSeverityRow` uses: that row fits a severity strip, a leading tag, a label and a description in before its actions, so it is out of room sooner. Wrapping should mean there was no room, not that the container was under some number.',
+          'Renders the same row in a 720px container (actions sit to the right of the label, as they always have) and a 400px one (actions stack under the label, one to a line, each as wide as the row). The row measures its OWN container with a `ResizeObserver` and stamps `data-narrow` on itself — not a media query, because the case this exists for is a narrow drawer / sidebar / split panel on a wide screen, where the viewport is the wrong box to ask. The threshold is 480px, the Reqore mobile width, rather than the 640px `ReqoreSeverityRow` uses: that row fits a severity strip, a leading tag, a label and a description in before its actions, so it is out of room sooner. Wrapping should mean there was no room, not that the container was under some number.',
       },
     },
   },
@@ -641,5 +642,91 @@ export const ActionDoesNotFireTheRow: Story = {
     // broken clicking altogether.
     fireEvent.click(await find<HTMLElement>('.reqore-entity-row-label'));
     await waitFor(() => expect(counts()).toEqual({ row: '1', action: '1' }));
+  },
+};
+
+/* A narrow row's labelled actions (qorus#646), as ReqoreSeverityRow's: on a phone, a row in a card is
+   narrower than the screen, and its actions stayed on one line that does not wrap, past the row. Narrow,
+   they stack under the label, one to a line, each the row's width with its label whole. */
+
+const NarrowConnectionRow = () => (
+  <div style={{ width: 320, maxWidth: '100%' }}>
+    <ReqoreEntityRow
+      label='orders-db · PostgreSQL'
+      description='Last checked 2 minutes ago · 14 ms'
+      fluid
+      actions={[
+        { label: 'Test the connection', intent: 'info', icon: 'PulseLine' },
+        { label: 'Open its settings', icon: 'Settings3Line' },
+        { icon: 'DeleteBinLine', tooltip: 'Remove', intent: 'danger', minimal: true },
+      ]}
+    />
+  </div>
+);
+
+const expectEntityActionsStacked = async (canvasElement: HTMLElement) => {
+  const row = (await waitFor(() => {
+    const el = canvasElement.querySelector('.reqore-entity-row') as HTMLElement;
+    expect(el?.getAttribute('data-narrow')).toBe('true');
+    return el;
+  })) as HTMLElement;
+  await expectControlsInside(row);
+  await waitFor(() => {
+    const boxes = Array.from(row.querySelectorAll('.reqore-entity-row-actions > .reqore-button')).map(
+      (button) => button.getBoundingClientRect()
+    );
+    expect(boxes).toHaveLength(3);
+    // one to a line, each the row's width
+    boxes.slice(1).forEach((box, index) => {
+      expect(box.top).toBeGreaterThanOrEqual(boxes[index].bottom - 0.5);
+      expect(Math.abs(box.width - boxes[0].width)).toBeLessThan(1);
+    });
+  });
+  // the icon-only Remove reads its tooltip as its label
+  expect(row.querySelector('.reqore-entity-row-actions')?.textContent).toContain('Remove');
+};
+
+export const NarrowContainerActionsStack: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a row with three actions in a 320px container, as a card on a phone: they stack under the label, one to a line, each the row's width, the labels whole and the Remove icon labelled with its tooltip; none reaches past the row.",
+      },
+    },
+  },
+  render: () => <NarrowConnectionRow />,
+  play: async ({ canvasElement }) => expectEntityActionsStacked(canvasElement),
+};
+
+export const NarrowContainerActionsStackOnTouch: Story = {
+  parameters: {
+    qlip: { viewport: { width: 390, height: 844 } },
+    docs: {
+      description: {
+        story:
+          "The same row on a phone with a finger (390 px): the stacked actions are a finger's height (44px), from a `pointer: coarse` rule, which a test browser with a mouse cannot apply, so the rule itself is checked.",
+      },
+    },
+  },
+  render: () => <NarrowConnectionRow />,
+  play: async ({ canvasElement }) => {
+    await expectEntityActionsStacked(canvasElement);
+    const coarse = Array.from(document.styleSheets).some((sheet) => {
+      let rules: CSSRuleList;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        return false;
+      }
+      return Array.from(rules).some(
+        (rule) =>
+          rule instanceof CSSMediaRule &&
+          rule.conditionText.includes('pointer: coarse') &&
+          rule.cssText.includes('reqore-entity-row-actions') &&
+          rule.cssText.includes('min-height: 44px')
+      );
+    });
+    expect(coarse).toBe(true);
   },
 };

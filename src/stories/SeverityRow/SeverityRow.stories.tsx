@@ -6,6 +6,7 @@ import ReqoreSeverityRow, { IReqoreSeverityRowProps } from '../../components/Sev
 import ReqoreTag from '../../components/Tag';
 import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
+import { expectControlsInside } from '../utils/controlsInside';
 
 const meta = {
   title: 'Display/Severity Row',
@@ -499,7 +500,7 @@ export const NarrowContainerActionsWrap: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row twice, once in a 720px container (actions sit to the right of the label, as they always have) and once in a 400px container (actions wrap into their own row underneath the label, without any viewport / media-query involvement). This is the responsive behaviour every SeverityRow needs — a drawer / sidebar / split-panel host can be narrow on any screen size, so the row measures its own container with a `ResizeObserver` and stamps `data-narrow` on itself rather than keying off the window width. (Not a CSS container query: styled-components' stylis emits `@container` but the rule never matches.) Below the row of KPI cards the fade-scroller uses, this is the second place in the library where a component's own container width drives its layout.",
+          "Renders the same row twice, once in a 720px container (actions sit to the right of the label, as they always have) and once in a 400px container (actions stack under the label, one to a line, each the row's width - the Dismiss icon labelled with its tooltip - without any viewport / media-query involvement). This is the responsive behaviour every SeverityRow needs — a drawer / sidebar / split-panel host can be narrow on any screen size, so the row measures its own container with a `ResizeObserver` and stamps `data-narrow` on itself rather than keying off the window width. (Not a CSS container query: styled-components' stylis emits `@container` but the rule never matches.) Below the row of KPI cards the fade-scroller uses, this is the second place in the library where a component's own container width drives its layout.",
       },
     },
   },
@@ -600,7 +601,7 @@ export const NarrowSidebarList: Story = {
     docs: {
       description: {
         story:
-          "Renders a list of SeverityRows inside a 320px sidebar container. Every row's actions wrap under its label — regardless of how wide the surrounding viewport is — because the container query keys on the sidebar's width, not the window's.",
+          "Renders a list of SeverityRows inside a 320px sidebar container. Every row's actions stack under its label, one to a line and each the row's width, the Dismiss icon labelled with its tooltip — regardless of how wide the surrounding viewport is — because the row keys on the sidebar's width, not the window's.",
       },
     },
   },
@@ -650,4 +651,113 @@ export const NarrowSidebarList: Story = {
       </ReqoreControlGroup>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.reqore-severity-row[data-narrow="true"]').length).toBe(3)
+    );
+    // the icon-only Dismiss reads its tooltip as its label, as a finger gets no tooltip
+    await waitFor(() =>
+      expect(
+        Array.from(canvasElement.querySelectorAll('.reqore-severity-row-actions .reqore-button')).filter(
+          (button) => button.textContent?.includes('Dismiss')
+        ).length
+      ).toBe(3)
+    );
+    for (const row of Array.from(canvasElement.querySelectorAll<HTMLElement>('.reqore-severity-row'))) {
+      await expectControlsInside(row);
+    }
+  },
+};
+
+/* A narrow row's labelled actions (qorus#646): on a phone, a row in a card is narrower than the screen, and
+   its actions stayed on one line that does not wrap - "See your subscription" and "Try again" reached past
+   the card. Narrow, they stack under the label, one to a line, each the row's width with its label whole;
+   a finger gets a target it can hit. */
+
+const ALLOWANCE_ACTIONS: IReqoreSeverityRowProps['actions'] = [
+  { label: 'See your subscription', intent: 'info', icon: 'ExternalLinkLine' },
+  { label: 'Try again', icon: 'RefreshLine' },
+];
+
+const AllowanceRow = () => (
+  <div className='narrow-row-box' style={{ width: 320, maxWidth: '100%' }}>
+    <ReqoreSeverityRow
+      label="This month's AI allowance is used up"
+      description='The design stopped at its last step. It can go on when the allowance renews, or now with a larger plan.'
+      intent='warning'
+      fluid
+      actions={ALLOWANCE_ACTIONS}
+    />
+  </div>
+);
+
+/** The row's actions, stacked one to a line, each the width of the others and inside the row, labels whole. */
+const expectActionsStacked = async (canvasElement: HTMLElement) => {
+  const row = (await waitFor(() => {
+    const el = canvasElement.querySelector('.reqore-severity-row') as HTMLElement;
+    expect(el?.getAttribute('data-narrow')).toBe('true');
+    return el;
+  })) as HTMLElement;
+  await expectControlsInside(row);
+  await waitFor(() => {
+    const [first, second] = Array.from(
+      row.querySelectorAll('.reqore-severity-row-actions > .reqore-button')
+    ).map((button) => button.getBoundingClientRect());
+    // one to a line
+    expect(second.top).toBeGreaterThanOrEqual(first.bottom - 0.5);
+    // each the row's width
+    expect(Math.abs(first.width - second.width)).toBeLessThan(1);
+  });
+  // each label whole, not cut
+  for (const label of Array.from(
+    row.querySelectorAll<HTMLElement>('.reqore-severity-row-actions .reqore-button-text-content')
+  )) {
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+  }
+};
+
+export const NarrowContainerActionsStack: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a row with two labelled actions in a 320px container, as a card on a phone: the actions stack under the label, one to a line, each the row's width with its label whole, and none reaches past the row.",
+      },
+    },
+  },
+  render: () => <AllowanceRow />,
+  play: async ({ canvasElement }) => expectActionsStacked(canvasElement),
+};
+
+export const NarrowContainerActionsStackOnTouch: Story = {
+  parameters: {
+    qlip: { viewport: { width: 390, height: 844 } },
+    docs: {
+      description: {
+        story:
+          'The same row on a phone with a finger (390 px): the stacked actions are a finger\'s height (44px), from a `pointer: coarse` rule, which a test browser with a mouse cannot apply, so the rule itself is checked.',
+      },
+    },
+  },
+  render: () => <AllowanceRow />,
+  play: async ({ canvasElement }) => {
+    await expectActionsStacked(canvasElement);
+    // Asserted from the stylesheet because a hovering runner cannot emulate a coarse pointer.
+    const coarse = Array.from(document.styleSheets).some((sheet) => {
+      let rules: CSSRuleList;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        return false;
+      }
+      return Array.from(rules).some(
+        (rule) =>
+          rule instanceof CSSMediaRule &&
+          rule.conditionText.includes('pointer: coarse') &&
+          rule.cssText.includes('reqore-severity-row-actions') &&
+          rule.cssText.includes('min-height: 44px')
+      );
+    });
+    expect(coarse).toBe(true);
+  },
 };
