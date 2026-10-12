@@ -27,6 +27,7 @@ import { StoryMeta } from '../utils';
 import { CustomIntentArg, FlatArg, IntentArg, SizeArg, argManager } from '../utils/args';
 import { expectTableContentWithinItsRows } from '../utils/tableGeometry';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreTableProps>();
 
 const defaultColumns: IReqoreTableColumn[] = [
@@ -2377,4 +2378,32 @@ export const LongContentWrappedAndVirtualized: Story = {
     label: 'Wrapped rows in a virtualized body',
   },
   play: async ({ canvasElement }) => expectTableContentWithinItsRows(canvasElement),
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table with a pinned first column on the default and on the themed surface: with `theme.panel` set the rows and the pinned cells sit on the panel surface, their lines are the hairline, and the header cells take the themed button surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreTable
+        label='Business areas'
+        columns={[
+          { dataId: 'area', header: { label: 'Area' }, pin: 'left', width: 200 },
+          { dataId: 'events', header: { label: 'Events' }, width: 120 },
+          { dataId: 'success', header: { label: 'Success' }, width: 120 },
+        ]}
+        data={[
+          { area: 'Order Management', events: 4820, success: '96.9%' },
+          { area: 'Payment Processing', events: 1812, success: '91.3%' },
+          { area: 'Inventory Management', events: 1190, success: '99.2%' },
+        ]}
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

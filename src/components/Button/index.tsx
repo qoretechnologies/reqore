@@ -21,6 +21,7 @@ import {
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
+  getColorFromMaybeString,
   getGradientMix,
   getReadableColor,
   getReadableColorFrom,
@@ -799,11 +800,22 @@ const ReqoreButton = memo(
         [isLink, href, type, rest.disabled]
       );
 
-      // If color or intent was specified, set the color
-      const customColor = useMemo(
-        () => (intent ? theme.main : changeLightness(theme.main, 0.07)),
-        [intent, theme.main]
-      );
+      // If color or intent was specified, set the color. Otherwise a button takes
+      // `theme.buttons.main` when the theme names one (and the button's surface is not
+      // customised — a customTheme main, given or inherited, moves `main` off
+      // `originalMain`), else `main` a step lighter.
+      const customColor = useMemo(() => {
+        if (intent) {
+          return theme.main;
+        }
+
+        const themedButtons =
+          theme.buttons?.main && (!theme.originalMain || theme.main === theme.originalMain)
+            ? getColorFromMaybeString(theme, theme.buttons.main)
+            : undefined;
+
+        return themedButtons ?? changeLightness(theme.main, 0.07);
+      }, [intent, theme]);
       const _flat = minimal ? flat : flat === true;
       const _children = useMemo(() => label || children, [label, children]);
       const _compact = compact ?? theme.buttons?.compact ?? !children;

@@ -7,6 +7,7 @@ import ReqoreTag from '../../components/Tag';
 import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Display/Severity Row',
   component: ReqoreSeverityRow,
@@ -649,5 +650,26 @@ export const NarrowSidebarList: Story = {
         ))}
       </ReqoreControlGroup>
     </div>
+  ),
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a neutral and a critical severity row on the default and on the themed surface: the neutral row takes the hairline, the critical row keeps its intent.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreSeverityRow label='Order Management' description='Healthy · 4.8k events' />
+      <ReqoreSeverityRow
+        label='Payment Processing'
+        description='Avg duration 4.7s exceeded 3.5s'
+        intent='danger'
+      />
+    </ThemedSurfaceComparison>
   ),
 };

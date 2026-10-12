@@ -21,6 +21,7 @@ import { StoryMeta } from '../utils';
 import { FlatArg, IntentArg, argManager } from '../utils/args';
 import { IDragPointerOptions, dragPointer } from '../utils/pointer';
 
+import { ThemedSurface } from '../utils/themedSurface';
 const { createArg } = argManager<IReqoreDrawerProps>();
 
 const meta = {
@@ -838,4 +839,22 @@ export const SheetSwipeInProgress: Story = {
       expect(Math.abs(box.getBoundingClientRect().bottom - clientHeight - height * 0.3)).toBeLessThan(2);
     });
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders an open drawer on the themed surface: with `theme.panel` set it is a panel like any other — the panel surface, title bar included, and the hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurface>
+      <ReqoreDrawer isOpen position='right' size='420px' label='A drawer on the themed surface'>
+        <ReqoreP>Drawers are panels, so they follow theme.panel.</ReqoreP>
+      </ReqoreDrawer>
+    </ThemedSurface>
+  ),
 };

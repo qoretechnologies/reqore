@@ -1,8 +1,10 @@
 import { render } from '@testing-library/react';
 import {
+  ReqoreButton,
   ReqoreContent,
   ReqoreIcon,
   ReqoreLayoutContent,
+  ReqoreNavRail,
   ReqorePanel,
   ReqoreSpan,
   ReqoreStatistic,
@@ -171,5 +173,65 @@ describe('isAchromatic', () => {
     expect(isAchromatic('#1e2a3a')).toBe(false);
     expect(isAchromatic('#161222')).toBe(false);
     expect(isAchromatic('#ff0000')).toBe(false);
+  });
+});
+
+describe('theme.panel on the nav rail', () => {
+  test('the rail is a panel-like surface', () => {
+    render(
+      <Wrapper theme={THEMED}>
+        <ReqoreNavRail items={[{ id: 'home', label: 'Home', icon: 'HomeLine' }]} activeId='home' />
+      </Wrapper>
+    );
+
+    expect(document.querySelector('nav')).toHaveStyle(`background-color: rgb(20, 20, 23)`);
+  });
+
+  test('a rail with its own customTheme keeps it', () => {
+    render(
+      <Wrapper theme={THEMED}>
+        <ReqoreNavRail
+          items={[{ id: 'home', label: 'Home', icon: 'HomeLine' }]}
+          activeId='home'
+          customTheme={{ main: '#1e2a3a' }}
+        />
+      </Wrapper>
+    );
+
+    expect(document.querySelector('nav')).not.toHaveStyle(`background-color: rgb(20, 20, 23)`);
+  });
+});
+
+describe('theme.buttons.main', () => {
+  const BUTTONS = { ...THEMED, buttons: { main: '#1c1c20' } } as Partial<IReqoreTheme>;
+
+  test('a plain button takes the themed button surface', () => {
+    render(
+      <Wrapper theme={BUTTONS}>
+        <ReqoreButton>Plain</ReqoreButton>
+      </Wrapper>
+    );
+
+    expect(document.querySelector('.reqore-button')).toHaveStyle(`background-color: rgb(28, 28, 32)`);
+  });
+
+  test('an intent and a customTheme still win', () => {
+    render(
+      <Wrapper theme={BUTTONS}>
+        <ReqoreButton intent='danger' className='with-intent'>
+          Danger
+        </ReqoreButton>
+        <ReqoreButton customTheme={{ main: '#1e2a3a' }} className='with-custom'>
+          Custom
+        </ReqoreButton>
+      </Wrapper>
+    );
+
+    expect(document.querySelector('.with-intent')).not.toHaveStyle(
+      `background-color: rgb(28, 28, 32)`
+    );
+    expect(document.querySelector('.with-custom')).not.toHaveStyle(
+      `background-color: rgb(28, 28, 32)`
+    );
   });
 });

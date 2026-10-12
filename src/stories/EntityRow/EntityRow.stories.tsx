@@ -7,6 +7,7 @@ import { ReqoreP } from '../../components/Paragraph';
 import { TSizes } from '../../constants/sizes';
 import { StoryMeta } from '../utils';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const meta = {
   title: 'Display/Entity Row',
   component: ReqoreEntityRow,
@@ -642,4 +643,26 @@ export const ActionDoesNotFireTheRow: Story = {
     fireEvent.click(await find<HTMLElement>('.reqore-entity-row-label'));
     await waitFor(() => expect(counts()).toEqual({ row: '1', action: '1' }));
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders entity rows on the default and on the themed surface: with `theme.panel` set their edge is the panel hairline.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreEntityRow
+        label='Process Incoming Order'
+        description='Routes incoming orders into the warehouse pipeline'
+        metadata='Last run: success · just now'
+        icon='PlayCircleLine'
+        actions={[{ label: 'Run', icon: 'PlayLine' }]}
+      />
+    </ThemedSurfaceComparison>
+  ),
 };

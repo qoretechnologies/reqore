@@ -106,6 +106,11 @@ export interface IReqoreTheme {
 }
 
 export interface IReqoreCustomTheme {
+  /**
+   * As `theme.buttons.main`: the surface of every button that has no intent and no surface of
+   * its own (a `customTheme` main, given or inherited) — table header cells included, which are
+   * buttons. Unset, a button is `main` a step lighter, as before. (`text` is not read.)
+   */
   main?: TReqoreEffectColor;
   text?: {
     color?: TReqoreEffectColor;

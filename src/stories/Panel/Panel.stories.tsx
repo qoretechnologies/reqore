@@ -19,6 +19,7 @@ import {
   argManager,
 } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 const { createArg } = argManager<IReqorePanelProps>();
 
 const message =
@@ -2266,4 +2267,34 @@ export const MediaMobile: Story = {
     await expectMediaCards(canvasElement);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1);
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders panels on the default and on the themed surface — plain, collapsible, with an intent, with a top accent and with a customTheme: the plain ones take the panel surface (title bar included) and hairline; the intent, the accent strip and the customTheme still win.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqorePanel label='Plain panel' padded>
+        The surface and the hairline come from the theme.
+      </ReqorePanel>
+      <ReqorePanel label='Collapsible panel' collapsible padded>
+        The title bar shares the surface.
+      </ReqorePanel>
+      <ReqorePanel label='Danger intent' intent='danger' padded>
+        The intent still tints the edge.
+      </ReqorePanel>
+      <ReqorePanel label='Top accent' intent='info' accentPosition='top' padded>
+        The strip carries the intent; the edge is the hairline.
+      </ReqorePanel>
+      <ReqorePanel label='customTheme' customTheme={{ main: '#1e2a3a' }} padded>
+        A panel with its own surface keeps it.
+      </ReqorePanel>
+    </ThemedSurfaceComparison>
+  ),
 };

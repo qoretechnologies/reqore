@@ -19,7 +19,12 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getColorFromMaybeString, getMainBackgroundColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getColorFromMaybeString,
+  getMainBackgroundColor,
+  getThemePanelSurface,
+} from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -315,14 +320,23 @@ const NavRailSurface = styled(StyledEffect)<ISurfaceStyle>`
   interpolate-size: allow-keywords;
   transition: width 0.2s ease-out;
 
+  /* With theme.panel named, the rail is one more panel-like surface: the panel surface and
+     its hairline. Otherwise it is derived from main as before. */
   background-color: ${({ theme, $transparent, $opacity, $bgLightness }) =>
     $transparent
       ? 'transparent'
-      : rgba(changeLightness(getMainBackgroundColor(theme), $bgLightness), $opacity)};
+      : rgba(
+          getThemePanelSurface(theme)?.main ??
+            changeLightness(getMainBackgroundColor(theme), $bgLightness),
+          $opacity
+        )};
   border: ${({ $flat, theme, $borderLightness }) =>
     $flat
       ? 'none'
-      : `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), $borderLightness), 0.7)}`};
+      : `1px solid ${
+          getThemePanelSurface(theme)?.border ??
+          rgba(changeLightness(getMainBackgroundColor(theme), $borderLightness), 0.7)
+        }`};
   ${({ $blur, $opacity }) =>
     $blur && $opacity < 1 &&
     css`

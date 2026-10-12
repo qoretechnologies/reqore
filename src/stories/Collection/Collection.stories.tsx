@@ -12,6 +12,7 @@ import { sleep } from '../../helpers/utils';
 import { StoryMeta } from '../utils';
 import { argManager, IntentArg, SizeArg } from '../utils/args';
 
+import { ThemedSurfaceComparison } from '../utils/themedSurface';
 export interface IColumnsStoryArgs extends IReqoreColumnsProps {
   multipleColumns?: boolean;
 }
@@ -908,4 +909,27 @@ export const ItemIsInMultipleGroups: Story = {
       },
     ],
   },
+};
+
+export const ThemedPanelSurface: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a collection on the default and on the themed surface: with `theme.panel` set each item sits on the panel surface.',
+      },
+    },
+  },
+  render: () => (
+    <ThemedSurfaceComparison>
+      <ReqoreCollection
+        label='Connections'
+        items={[
+          { label: 'Gmail', content: 'Reads the inbox' },
+          { label: 'Slack', content: 'Ops workspace' },
+          { label: 'Telegram', content: 'The bot connection' },
+        ]}
+      />
+    </ThemedSurfaceComparison>
+  ),
 };
