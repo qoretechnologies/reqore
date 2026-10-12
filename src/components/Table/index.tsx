@@ -1,7 +1,7 @@
 /* @flow */
 import { TReqoreFilterRanking } from '../../helpers/search';
 import { size as count, isArray } from 'lodash';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useMeasure, useUpdateEffect } from 'react-use';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
@@ -26,6 +26,7 @@ import { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreExportModalProps, ReqoreExportModal } from '../ExportModal';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
+import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { TReqoreKeyValueTableExportMapper } from '../KeyValueTable';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
 import { DEFAULT_ACTIONS_MENU_LABEL } from '../RowActionsMenu';
@@ -289,6 +290,17 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * `` (n) => `Search in ${n} items...` ``.
    */
   filterPlaceholder?: string | ((matchedRows: number) => string);
+  /**
+   * The table width, in pixels, at or below which the built-in search is a button with its icon until it
+   * is used: a tap, a click, or Enter or Space on it opens the search field across the table's toolbar,
+   * focused, and Escape (or leaving it) closes it again while it is empty. A search that holds text stays
+   * open. Measured on the table itself, not the window. In a card on a phone the field took the toolbar
+   * from the title, which was squeezed to a letter. Defaults to `NARROW_CONTAINER_BREAKPOINT_PX` (480);
+   * `0` never folds it.
+   */
+  searchFoldsBelowWidth?: number;
+  /** The folded search button's name (its accessible name and tooltip). Defaults to `'Search'`. */
+  searchToggleLabel?: string;
   /** Tooltip on the "scroll to top" action. Defaults to `'Scroll to top'`. */
   scrollToTopTooltip?: string;
   /** Label of the "Reset all" more-menu action. Defaults to `'Reset all'`. */
@@ -571,6 +583,8 @@ const ReqoreTable = ({
   estimatedExpandedRowHeight = 200,
   columnsToggleLabel = 'Show / hide columns',
   filterPlaceholder,
+  searchFoldsBelowWidth = NARROW_CONTAINER_BREAKPOINT_PX,
+  searchToggleLabel = 'Search',
   scrollToTopTooltip = 'Scroll to top',
   resetAllLabel = 'Reset all',
   helpLabel = 'Help',
@@ -1101,6 +1115,35 @@ const ReqoreTable = ({
     setPreQuery(event.target.value);
   }, []);
 
+  /* A narrow table's search is a button until it is used (see `searchFoldsBelowWidth`). Open, the field
+     takes the toolbar's whole line; empty, Escape or leaving it closes it and gives the button the focus
+     back, and a search that holds text stays open, so what filters the rows is always in sight. */
+  const searchToggleId = useId();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const focusSearchToggle = useRef(false);
+  const searchFolds =
+    !!filterable && sizes.width > 0 && sizes.width <= searchFoldsBelowWidth;
+  const searchShown = !searchFolds || searchOpen || preQuery !== '';
+  const searchOpenFolded = searchFolds && searchShown;
+  const handleSearchKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape' && !event.currentTarget.value) {
+      event.stopPropagation();
+      focusSearchToggle.current = true;
+      setSearchOpen(false);
+    }
+  }, []);
+  const handleSearchBlur = useCallback((event: React.FocusEvent<HTMLInputElement>) => {
+    if (!event.currentTarget.value) {
+      setSearchOpen(false);
+    }
+  }, []);
+  useEffect(() => {
+    if (!searchShown && focusSearchToggle.current) {
+      focusSearchToggle.current = false;
+      document.getElementById(searchToggleId)?.focus();
+    }
+  }, [searchShown, searchToggleId]);
+
   const columnsList = useMemo(() => {
     const _columnsList: IReqorePanelSubAction[] = [];
 
@@ -1178,24 +1221,46 @@ const ReqoreTable = ({
           ? filterPlaceholder(count(transformedData))
           : filterPlaceholder ?? `Search in ${count(transformedData)} items...`;
 
-      finalActions.push({
-        as: ReqoreInput,
-        props: {
-          key: 'search',
-          fixed: false,
-          placeholder: resolvedFilterPlaceholder,
-          onClearClick: () => {
-            setQuery('');
-            setPreQuery('');
+      if (searchShown) {
+        finalActions.push({
+          as: ReqoreInput,
+          props: {
+            key: 'search',
+            fixed: false,
+            placeholder: resolvedFilterPlaceholder,
+            onClearClick: () => {
+              setQuery('');
+              setPreQuery('');
+            },
+            onChange: handlePreQueryChange,
+            value: preQuery,
+            icon: 'Search2Line',
+            disabled: !query && !count(transformedData),
+            minimal: false,
+            // folded and opened: across the toolbar, the typing in it, closed again when left empty
+            ...(searchOpenFolded ?
+              {
+                className: 'reqore-table-search-open',
+                fluid: true,
+                autoFocus: searchOpen,
+                onKeyDown: handleSearchKeyDown,
+                onBlur: handleSearchBlur,
+              }
+            : {}),
+            ...filterProps?.(transformedData),
           },
-          onChange: handlePreQueryChange,
-          value: preQuery,
+        });
+      } else {
+        finalActions.push({
+          id: searchToggleId,
           icon: 'Search2Line',
+          className: 'reqore-table-search-toggle',
+          tooltip: searchToggleLabel,
+          'aria-label': searchToggleLabel,
           disabled: !query && !count(transformedData),
-          minimal: false,
-          ...filterProps?.(transformedData),
-        },
-      });
+          onClick: () => setSearchOpen(true),
+        });
+      }
     }
 
     if (isScrolled) {
@@ -1315,6 +1380,13 @@ const ReqoreTable = ({
     helpLabel,
     helpModalLabel,
     helpContent,
+    searchShown,
+    searchOpen,
+    searchOpenFolded,
+    searchToggleId,
+    searchToggleLabel,
+    handleSearchKeyDown,
+    handleSearchBlur,
   ]);
 
   const badge = useMemo(() => {
@@ -1448,6 +1520,8 @@ const ReqoreTable = ({
         contentStyle={{ display: 'flex', flexFlow: 'column', overflow: 'hidden' }}
         responsiveActions={false}
         {...rest}
+        // the open search takes the toolbar's line; the title is back when it closes
+        {...(searchOpenFolded ? { label: undefined, icon: undefined } : {})}
         size={wrapperSize}
         actions={tableActions}
         fill={fill}

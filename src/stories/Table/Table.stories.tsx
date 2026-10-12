@@ -2518,7 +2518,7 @@ export const FilterableInANarrowBox: Story = {
     docs: {
       description: {
         story:
-          "Renders a searchable table in a 265px box, as a table sits in a card on a phone. The title comes first, its words whole, and the search field and the more button take what is left and stay inside the box. Each row's three actions are one menu button in a column no wider than it; clicked, it opens a menu naming Add, Edit and Delete with their icons, and Edit runs and closes it without opening the row.",
+          "Renders a searchable table in a 265px box, as a table sits in a card on a phone. The title comes first, its words whole; the search is a button with its icon until it is used, and it and the more button stay inside the box. Each row's three actions are one menu button in a column no wider than it; clicked, it opens a menu naming Add, Edit and Delete with their icons, and Edit runs and closes it without opening the row.",
       },
     },
   },
@@ -2536,7 +2536,9 @@ export const FilterableInANarrowBox: Story = {
   play: async ({ canvasElement, args }) => {
     clearRowActionSpies();
     const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
-    await waitFor(() => expect(box.querySelector('input')).toBeTruthy());
+    // narrow, the search is its button until it is used
+    await waitFor(() => expect(box.querySelector('.reqore-table-search-toggle')).toBeTruthy());
+    expect(box.querySelector('.reqore-panel-title input')).toBeNull();
     // the toolbar: the table's own header scrolls sideways with its columns
     await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
     // the title first: its words whole, the search field at what is left
@@ -2556,6 +2558,132 @@ export const FilterableInANarrowBox: Story = {
   },
 };
 
+/* A narrow table's search (qorus#646): a button with its icon until it is used, so the title keeps the
+   toolbar. Opened, the field takes the toolbar's line; empty, Escape or leaving it closes it again. */
+
+const onFiftyRows = fn();
+
+/** The IDE's list card: a title with its count, a page-size control, the search and the more button. */
+const WorkflowsCard = () => (
+  <div className='workflows-card' style={{ width: 320, maxWidth: '100%' }}>
+    <ReqoreTable
+      // its count is the table's own badge
+      label='Workflows'
+      filterable
+      height={300}
+      columns={defaultColumns}
+      data={tableData.data}
+      actions={[{ label: '50 rows', icon: 'ListCheck', onClick: onFiftyRows }]}
+    />
+  </div>
+);
+
+const searchToggle = (root: HTMLElement) =>
+  root.querySelector('.reqore-table-search-toggle') as HTMLElement | null;
+const openSearch = (root: HTMLElement) =>
+  root.querySelector('.reqore-panel-title input') as HTMLInputElement | null;
+
+/** Folded: the search is its button, and the title is whole, not squeezed. */
+const expectSearchFolded = async (root: HTMLElement) => {
+  await waitFor(() => {
+    expect(searchToggle(root)).toBeTruthy();
+    expect(openSearch(root)).toBeNull();
+  });
+  const title = root.querySelector('.reqore-panel-title-label-box') as HTMLElement;
+  await expectWordsWhole(title);
+  expect(title.textContent).toContain('Workflows');
+  for (const label of Array.from(title.querySelectorAll<HTMLElement>('*'))) {
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+  }
+  await expectControlsInside(root, root.querySelector('.reqore-panel-title') as HTMLElement);
+};
+
+/** Open: the field has the focus and the toolbar's line. */
+const expectSearchOpen = async (root: HTMLElement) => {
+  await waitFor(() => {
+    const input = openSearch(root);
+    expect(input).toBeTruthy();
+    expect(document.activeElement).toBe(input);
+    const card = root.getBoundingClientRect();
+    expect(input!.getBoundingClientRect().width).toBeGreaterThan(card.width * 0.5);
+  });
+  await expectControlsInside(root, root.querySelector('.reqore-panel-title') as HTMLElement);
+};
+
+export const SearchFoldsInANarrowCard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a 320px card holding "Workflows" with its row count, a "50 rows" control, the search and the more button. The search is a button with its icon, so "Workflows" stays whole. Clicked, the search field opens across the toolbar with the focus in it; text typed in it keeps it open, and once emptied, Escape closes it and gives the button the focus back.',
+      },
+    },
+  },
+  render: () => <WorkflowsCard />,
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector('.workflows-card') as HTMLElement;
+    await expectSearchFolded(card);
+    await userEvent.click(searchToggle(card)!);
+    await expectSearchOpen(card);
+    await userEvent.keyboard('ord');
+    await userEvent.keyboard('{Escape}');
+    // a search that holds text stays open
+    expect(openSearch(card)).toBeTruthy();
+    await userEvent.clear(openSearch(card)!);
+    await userEvent.keyboard('{Escape}');
+    await expectSearchFolded(card);
+    await waitFor(() => expect(document.activeElement).toBe(searchToggle(card)));
+  },
+};
+
+export const SearchFoldedFromTheKeyboard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders the same 320px card, used from the keyboard: Tab reaches the search button, Enter opens the field with the focus in it, Escape closes it while it is empty with the focus back on the button, and Space opens it again.',
+      },
+    },
+  },
+  render: () => <WorkflowsCard />,
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector('.workflows-card') as HTMLElement;
+    await expectSearchFolded(card);
+    searchToggle(card)!.focus();
+    await userEvent.keyboard('{Enter}');
+    await expectSearchOpen(card);
+    await userEvent.keyboard('{Escape}');
+    await expectSearchFolded(card);
+    await waitFor(() => expect(document.activeElement).toBe(searchToggle(card)));
+    await userEvent.keyboard(' ');
+    await expectSearchOpen(card);
+  },
+};
+
+export const SearchFoldedOnATouchScreen: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          'Renders the card on a phone (390 px) with a finger: "Workflows" whole beside the search button. A tap on the button opens the search field across the toolbar; a tap on the rows while it is empty closes it, and the title is back.',
+      },
+    },
+  },
+  render: () => <WorkflowsCard />,
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector('.workflows-card') as HTMLElement;
+    await withTouchScreen(async (touch) => {
+      await expectSearchFolded(card);
+      await touch.tap(searchToggle(card)!);
+      await expectSearchOpen(card);
+      await touch.tap(card.querySelector('.reqore-table-body') ?? card.querySelector('.reqore-table-row')!);
+      await expectSearchFolded(card);
+    });
+  },
+};
+
 export const FilterableOnAPhone: Story = {
   globals: PHONE_STORY.globals,
   parameters: {
@@ -2563,7 +2691,7 @@ export const FilterableOnAPhone: Story = {
     docs: {
       description: {
         story:
-          "Renders a searchable table in a card on a phone (390 px, a 16px gutter each side): its title, search field and buttons share the toolbar's one line inside the card - the title is still there to read - and none reaches past the screen. Each row's actions are one menu button, so the columns keep the card's width.",
+          "Renders a searchable table in a card on a phone (390 px, a 16px gutter each side): its title, the search button and the other buttons share the toolbar's one line inside the card - the title is there to read - and none reaches past the screen. Each row's actions are one menu button, so the columns keep the card's width.",
       },
     },
   },
@@ -2580,7 +2708,10 @@ export const FilterableOnAPhone: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(canvasElement.querySelector('.reqore-table input')).toBeTruthy());
+    // in a card on a phone the search is its button until it is used
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.reqore-table .reqore-table-search-toggle')).toBeTruthy()
+    );
     await withViewport(390, 844, async (narrowed) => {
       const table = canvasElement.querySelector('.reqore-table') as HTMLElement;
       await expectControlsInside(table, table.querySelector('.reqore-panel-title') as HTMLElement);
