@@ -10,7 +10,7 @@ import { ReqoreBreadcrumbs, ReqoreLayoutContent, ReqoreUIProvider } from '../src
  */
 const layout = { row: 1000, crumb: 100 };
 
-const partWidth = (part: Element) => {
+const partWidth = (part: Element): number => {
   if (part.classList.contains('reqore-breadcrumbs-overflow-current')) {
     return layout.row;
   }
@@ -252,6 +252,51 @@ test('Static (non-responsive) trail renders every crumb, with working tooltips',
   vi.useRealTimers();
 });
 
+test('Folds another crumb rather than squeeze the crumb holding tabs, until that crumb is the first shown', () => {
+  // the crumb holding tabs fits by its box, but clips its tabs: 300px of them in 200px
+  const { scrollWidth, clientWidth } = Object.getOwnPropertyDescriptors(Element.prototype);
+  const tabsSqueezed = (element: Element) => element.classList.contains('reqore-breadcrumbs-tabs');
+  Object.defineProperty(Element.prototype, 'scrollWidth', {
+    configurable: true,
+    get(this: Element) {
+      return tabsSqueezed(this) ? 300 : scrollWidth.get!.call(this);
+    },
+  });
+  Object.defineProperty(Element.prototype, 'clientWidth', {
+    configurable: true,
+    get(this: Element) {
+      return tabsSqueezed(this) ? 200 : clientWidth.get!.call(this);
+    },
+  });
+
+  try {
+    act(() => {
+      renderTrail([
+        ...PAGES.slice(0, 3),
+        {
+          withTabs: {
+            tabs: [
+              { label: 'Overview', id: 'overview' },
+              { label: 'Code', id: 'code' },
+            ],
+            activeTab: 'overview',
+            onTabChange: () => undefined,
+          },
+        },
+      ] as typeof PAGES);
+    });
+
+    // every crumb before the tabs folded into the "…" menu; the tabs are the first crumb shown, and stay
+    const tabs = document.querySelector<HTMLElement>('.reqore-breadcrumbs-tabs');
+    expect(tabs?.dataset.position).toBe('0');
+    expect(drawnCrumbs()).toEqual([]);
+    expect(document.querySelectorAll('.reqore-dropdown-control')).toHaveLength(1);
+  } finally {
+    Object.defineProperty(Element.prototype, 'scrollWidth', scrollWidth);
+    Object.defineProperty(Element.prototype, 'clientWidth', clientWidth);
+  }
+});
+
 /*
  * Widths that change outside React - the trail's own, a part's (a badge arriving, padding animating) - come
  * from a ResizeObserver, which folds the trail again before the frame is painted. It lets go of every part
@@ -299,6 +344,9 @@ const withRecordingResizeObserver = (run: (frames: FrameRequestCallback[]) => vo
   }
 };
 
+/** The row and the parts it draws. */
+const rowParts = (row: Element) => [row, ...Array.from(row.children)];
+
 const trailObserver = () => {
   const observers = RecordingResizeObserver.instances.filter((observer) =>
     observer.observed.some(({ target }) => target.classList.contains('reqore-breadcrumbs-overflow-list'))
@@ -315,7 +363,7 @@ test('Observes the row and every part it draws, by its border box, and lets go o
     const row = document.querySelector('.reqore-breadcrumbs-overflow-list')!;
     const observed = observer.observed.map(({ target }) => target);
 
-    for (const part of [row, ...Array.from(row.children)]) {
+    for (const part of rowParts(row)) {
       expect(observed).toContain(part);
     }
     // the box a crumb grows by when its padding grows
@@ -368,7 +416,7 @@ test('A part that grows past the trail has another crumb folded before the frame
     act(() => frames[0](0));
     const row = document.querySelector('.reqore-breadcrumbs-overflow-list')!;
     const observedAgain = observer.observed.slice(watched).map(({ target }) => target);
-    expect(observedAgain).toEqual([row, ...Array.from(row.children)]);
+    expect(observedAgain).toEqual(rowParts(row));
   });
 });
 

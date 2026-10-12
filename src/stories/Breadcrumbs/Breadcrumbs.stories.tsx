@@ -646,3 +646,80 @@ export const CrumbChangeIsFoldedBeforeItIsDrawn: Story = {
     });
   },
 };
+
+/* A trail holding tabs folds crumbs rather than squeeze its tabs (qorus#646). The crumb holding the tabs
+   can be squeezed - it clips them - so the trail folds another crumb whenever it would be: the tabs keep
+   their room and stay tabs, rather than folding into their "More" menu. Checked as the trail is first
+   drawn, before the tabs measure the room they were given. */
+
+const TabsTrail = () => {
+  const [shown, setShown] = useState(false);
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreButton className='show-trail' fixed onClick={() => setShown(true)}>
+        Show the trail
+      </ReqoreButton>
+      <div className='tabs-trail-box' style={{ width: 1100 }}>
+        {shown && <ReqoreBreadcrumbs items={[...breadcrumbs, breadcrumbsTabs]} />}
+      </div>
+    </ReqoreControlGroup>
+  );
+};
+
+/** The crumb holding the tabs, and whether it clips them: its content wider than its own box. */
+const squeezedTabs = (canvasElement: HTMLElement): string[] => {
+  const tabs = canvasElement.querySelector<HTMLElement>('.reqore-breadcrumbs-overflow-list .reqore-tabs-list');
+  if (!tabs) {
+    return ['no tabs'];
+  }
+  const crumb = tabs.parentElement!;
+  return crumb.scrollWidth > crumb.clientWidth + 0.5
+    ? [`tabs ${crumb.scrollWidth}px wide in a crumb of ${crumb.clientWidth}px`]
+    : [];
+};
+
+export const CrumbsFoldBeforeTheirTabsAreSqueezed: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a trail whose last crumb holds tabs, in a box too narrow for all of it. The trail folds crumbs into its "…" menu rather than squeeze the crumb holding the tabs, so the tabs keep their room - checked as the trail is first drawn, after its commit and on its first frame, before the tabs measure the room they were given.',
+      },
+    },
+  },
+  render: () => <TabsTrail />,
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector<HTMLElement>('.tabs-trail-box')!;
+    const seen: string[] = [];
+    let firstFrame: Promise<void> | undefined;
+    let drawn: () => void = () => undefined;
+    const reached = new Promise<void>((resolve) => {
+      drawn = resolve;
+    });
+    const watch = new MutationObserver(() => {
+      if (!canvasElement.querySelector('.reqore-tabs-list')) {
+        return;
+      }
+      seen.push(...squeezedTabs(canvasElement).map((tabs) => `after the commit: ${tabs}`));
+      firstFrame ??= new Promise<void>((resolve) =>
+        requestAnimationFrame(() => {
+          seen.push(...squeezedTabs(canvasElement).map((tabs) => `first frame: ${tabs}`));
+          resolve();
+        })
+      );
+      drawn();
+    });
+    watch.observe(box, { childList: true, subtree: true });
+    try {
+      await userEvent.click(canvasElement.querySelector('.show-trail')!);
+      await reached;
+      await firstFrame;
+    } finally {
+      watch.disconnect();
+    }
+
+    await expect(seen).toEqual([]);
+    // the room came from folding crumbs
+    await expect(box.querySelector('.reqore-breadcrumbs-overflow-list .reqore-dropdown-control')).toBeTruthy();
+  },
+};

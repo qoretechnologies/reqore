@@ -142,15 +142,26 @@ const StyledFoldingTrail = styled.div`
   min-width: 0;
 `;
 
-/** A part the trail draws (a crumb, an arrow, the menu) that reaches past the trail's end. */
-const partReachesPast = (row: HTMLElement | null): boolean => {
+/**
+ * Whether the trail draws more than it has room for: a part (a crumb, an arrow, the menu) reaches past its end,
+ * or the crumb holding tabs is squeezed so that it clips them while a crumb before it could fold instead. When
+ * it is the first crumb shown, it is squeezed rather than folded, and its tabs fold into their own menu.
+ */
+const trailOverflows = (row: HTMLElement | null): boolean => {
   if (!row) {
     return false;
   }
 
   const end = row.getBoundingClientRect().right;
 
-  return Array.from(row.children).some((part) => part.getBoundingClientRect().right > end + 0.5);
+  return Array.from(row.children).some(
+    (part) =>
+      part.getBoundingClientRect().right > end + 0.5 ||
+      (part instanceof HTMLElement &&
+        part.classList.contains('reqore-breadcrumbs-tabs') &&
+        part.dataset.position !== '0' &&
+        part.scrollWidth > part.clientWidth + 0.5)
+  );
 };
 
 /**
@@ -277,9 +288,9 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
      does not fit. It is settled before the browser paints, so no frame ever draws a crumb past the trail
      (qorus#646: when the page changed its crumbs, the trail used to fold one crumb per frame, and a phone
      showed "… › New chat" running 79px past the trail for 50ms). After each render a layout effect
-     measures the parts and folds one more crumb while one reaches past the trail, or one fewer while
-     everything fits and the trail is unfolding; each step is a render React makes before the browser
-     paints.
+     measures the parts and folds one more crumb while one reaches past the trail (or the crumb holding
+     tabs clips them, see `trailOverflows`), or one fewer while everything fits and the trail is
+     unfolding; each step is a render React makes before the browser paints.
 
      What measures the trail again:
      - a new trail (`items`, unless it is drawn alike) or crumb size: from what is folded now, unfolding
@@ -306,7 +317,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       return;
     }
 
-    if (partReachesPast(rowRef.current)) {
+    if (trailOverflows(rowRef.current)) {
       if (folded < count(items)) {
         setFold((current) => ({ ...current, folded: folded + 1, unfolding: false }));
       } else if (fold.unfolding) {
@@ -353,7 +364,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         }
       }
 
-      if (!unfold && !partReachesPast(row)) {
+      if (!unfold && !trailOverflows(row)) {
         return;
       }
 
@@ -434,7 +445,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
 
     if (item.withTabs) {
       return (
-        <StyledBreadcrumbsTabsWrapper key={key}>
+        <StyledBreadcrumbsTabsWrapper key={key} className='reqore-breadcrumbs-tabs' data-position={index}>
           {index !== 0 && renderArrow(`${key}-arrow`)}
           <ReqoreTabsList
             tabs={item.withTabs.tabs}
