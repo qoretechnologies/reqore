@@ -13,6 +13,7 @@ import {
   getPanelBackgroundColor,
   getPanelHairlineColor,
   getThemePanelSurface,
+  isAchromatic,
 } from '../src/helpers/colors';
 
 const SURFACE = '#141417';
@@ -156,5 +157,19 @@ describe('effect.tabularNums', () => {
       .map((style) => style.textContent)
       .join('');
     expect(css).toContain('font-variant-numeric:tabular-nums');
+  });
+});
+
+describe('isAchromatic', () => {
+  test('a neutral with a faint bias is a grey', () => {
+    expect(isAchromatic('#141417')).toBe(true);
+    expect(isAchromatic('#2d2d33')).toBe(true);
+    expect(isAchromatic('#121212')).toBe(true);
+  });
+
+  test('a real tint is still a colour', () => {
+    expect(isAchromatic('#1e2a3a')).toBe(false);
+    expect(isAchromatic('#161222')).toBe(false);
+    expect(isAchromatic('#ff0000')).toBe(false);
   });
 });

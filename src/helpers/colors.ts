@@ -55,10 +55,15 @@ export const getReadableColorFrom = (
   return readableColor(fixedColor, returnIfLight, returnIfDark, false) as TReqoreHexColor;
 };
 
-export const isAchromatic = (color: TReqoreMultiTypeColor): boolean => {
-  const fixedColor = getRGBAFromHex(color);
+/** How far apart a colour's channels may be and still count as a grey. A neutral with a faint
+ *  bias (`#141417`, `#2d2d33`) is a grey to the eye; treated as a colour, it was tinted 80% and
+ *  fully saturated for minimal-button text, which turned near-black surfaces' labels lavender. */
+const ACHROMATIC_CHROMA = 6;
 
-  return fixedColor.r === fixedColor.g && fixedColor.g === fixedColor.b;
+export const isAchromatic = (color: TReqoreMultiTypeColor): boolean => {
+  const { r, g, b } = getRGBAFromHex(color);
+
+  return Math.max(r, g, b) - Math.min(r, g, b) <= ACHROMATIC_CHROMA;
 };
 
 export const percentToHexAlpha = (p: number) => {
