@@ -15,7 +15,7 @@ import {
   useReqoreTheme,
 } from '../..';
 import { TReqorePaginationType, getPagingObjectFromType } from '../../constants/paging';
-import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { RADIUS_FROM_SIZE, TABLE_SIZE_TO_PX, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import { useDragToScroll } from '../../hooks/useDragToScroll';
@@ -28,6 +28,7 @@ import { IReqoreExportModalProps, ReqoreExportModal } from '../ExportModal';
 import ReqoreInput, { IReqoreInputProps } from '../Input';
 import { TReqoreKeyValueTableExportMapper } from '../KeyValueTable';
 import { IReqorePanelAction, IReqorePanelProps, IReqorePanelSubAction } from '../Panel';
+import { DEFAULT_ACTIONS_MENU_LABEL } from '../RowActionsMenu';
 import ReqoreTableBody from './body';
 import ReqoreTableHeader, { IReqoreCustomHeaderCellComponent } from './header';
 import { IReqoreTableHeaderCellProps } from './headerCell';
@@ -35,6 +36,8 @@ import {
   clampZoom,
   fixSort,
   flipSortDirection,
+  foldActionsColumns,
+  getActionsMenuColumnIds,
   getColumnsCount,
   getExportActions,
   getOnlyShownColumns,
@@ -117,9 +120,22 @@ export interface IReqoreTableColumn extends IReqoreIntent {
      * usual hook-order rule. Swap the row's data, not the function.
      */
     content?: TReqoreTableColumnContent;
-    actions?: (
-      data: IReqoreTableRowData
-    ) => Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'>[];
+    /**
+     * The row's actions, drawn as icon buttons in the cell.
+     *
+     * An action's `label` is not drawn inline: it is the button's tooltip (unless it has one of its
+     * own) and its accessible name, and the action's text in the menu a narrow table folds the
+     * actions into (see `actionsMenuBelowWidth`). Without a label, a string `tooltip` is used.
+     */
+    actions?: (data: IReqoreTableRowData) => TReqoreTableCellAction[];
+    /**
+     * The table width, in pixels, at or below which a cell with two or more actions shows them as one
+     * menu button instead of side by side: the button opens a menu naming each action, and the
+     * column narrows to the button, so the row's content gets the room the buttons took. Measured on
+     * the table itself, not the window, so a table in a narrow drawer folds on a wide screen.
+     * Defaults to `NARROW_CONTAINER_BREAKPOINT_PX` (480, Reqore's phone width); `0` never folds.
+     */
+    actionsMenuBelowWidth?: number;
     intent?: TReqoreIntent;
     padded?: 'both' | 'horizontal' | 'vertical' | 'none';
     /**
@@ -136,6 +152,11 @@ export interface IReqoreTableColumn extends IReqoreIntent {
     maxHeight?: number;
   };
 }
+
+/** An action in a table cell: an icon button, called `label` where it is named in words. */
+export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> & {
+  label?: string;
+};
 
 export interface IReqoreTableRowData {
   [key: string]: any;
@@ -305,6 +326,11 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * Defaults to `'Other'`.
    */
   otherActionsLabel?: string;
+  /**
+   * What the button a narrow table folds a row's actions into is called: its accessible name and
+   * tooltip (see `cell.actionsMenuBelowWidth`). Defaults to `'Actions'`.
+   */
+  rowActionsMenuLabel?: string;
   /**
    * Fallback placeholder for the per-column filter input inside the header
    * dropdown, used when a column doesn't set `filterPlaceholder` of its own.
@@ -557,6 +583,7 @@ const ReqoreTable = ({
   hideColumnLabel = 'Hide column',
   resetSizeLabel = 'Reset size',
   otherActionsLabel = 'Other',
+  rowActionsMenuLabel = DEFAULT_ACTIONS_MENU_LABEL,
   columnFilterPlaceholder = 'Filter by this column...',
   dragToScroll = false,
   ...rest
@@ -901,6 +928,18 @@ const ReqoreTable = ({
     [activeSelected, selectableData, selectedQuant, updateSelected]
   );
 
+  /* A narrow table folds each row's actions into one menu button (see
+     `cell.actionsMenuBelowWidth`), and the column narrows to the button. Which columns fold is a
+     string that only changes when the table crosses a threshold, so a resize does not rebuild the
+     columns on every pixel. Read from the caller's columns: the select box and the expander are the
+     table's own, hold one action each, and never fold. */
+  const actionsMenuColumnIds = useMemo(
+    () => getActionsMenuColumnIds(_internalColumns, sizes.width),
+    [_internalColumns, sizes.width]
+  );
+  // A finger needs a bigger button than a mouse: the column, and the rows, make room for one.
+  const touch = useReqoreProperty('isHoverCapable') === false;
+
   const finalColumns = useMemo(() => {
     const fullColumns = [..._internalColumns];
 
@@ -995,11 +1034,18 @@ const ReqoreTable = ({
       });
     }
 
-    return prepareColumns(fullColumns, columnModifiers, zoomSize);
+    return foldActionsColumns(
+      prepareColumns(fullColumns, columnModifiers, zoomSize),
+      actionsMenuColumnIds,
+      zoomSize,
+      touch
+    );
   }, [
     _internalColumns,
     columnModifiers,
     zoomSize,
+    actionsMenuColumnIds,
+    touch,
     selectable,
     selectedIcon,
     selectToggleTooltip,
@@ -1285,6 +1331,18 @@ const ReqoreTable = ({
     return badgeList;
   }, [rest.badge, rest.label, transformedData]);
 
+  /* Under a coarse pointer, a row with its actions folded into a menu button is at least a finger
+     tall, so the button is a finger's size both ways. The row's border is the 1px the body adds to a
+     table that is not flat. */
+  const bodyRowHeight = useMemo(() => {
+    if (!touch || !actionsMenuColumnIds) {
+      return rowHeight;
+    }
+    const border = rest.flat ? 0 : 1;
+
+    return Math.max(rowHeight ?? TABLE_SIZE_TO_PX[zoomSize] + border, TOUCH_TARGET_PX + border);
+  }, [touch, actionsMenuColumnIds, rowHeight, zoomSize, rest.flat]);
+
   const renderTable = (items: IReqoreTableRowData[]) => {
     if (count(finalColumns) === 0 || count(data) === 0) {
       return null;
@@ -1340,8 +1398,9 @@ const ReqoreTable = ({
             wrap={wrap}
             maxCellHeight={maxCellHeight}
             expandHeightButtonProps={expandHeightButtonProps}
-            rowHeight={rowHeight}
+            rowHeight={bodyRowHeight}
             overscanRowCount={overscanRowCount}
+            rowActionsMenuLabel={rowActionsMenuLabel}
             virtualized={shouldVirtualize}
             rowComponent={rowComponent}
             cellComponent={bodyCellComponent}

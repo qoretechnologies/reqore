@@ -1,4 +1,4 @@
-import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { noop, slice } from 'lodash';
@@ -9,7 +9,7 @@ import { IReqoreCustomTableBodyCellProps } from '../../components/Table/cell';
 import { IReqoreCustomHeaderCellProps } from '../../components/Table/header';
 import { IReqoreCustomTableRowProps } from '../../components/Table/row';
 import { TReqorePaginationType } from '../../constants/paging';
-import { SIZES, SIZE_TO_PX, TEXT_FROM_SIZE } from '../../constants/sizes';
+import { SIZES, SIZE_TO_PX, TEXT_FROM_SIZE, TOUCH_TARGET_PX } from '../../constants/sizes';
 import { sleep } from '../../helpers/utils';
 import {
   ReqoreControlGroup,
@@ -32,9 +32,23 @@ import {
   expectWordsWhole,
   wordsBrokenAcrossLines,
 } from '../utils/controlsInside';
+import {
+  expectRowActionsMenuClosed,
+  expectRowActionsMenuItems,
+  openRowActionsMenuItems,
+  rowActionsMenuButtons,
+} from '../utils/rowActionsMenu';
+import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { withViewport } from '../utils/viewport';
 
 const { createArg } = argManager<IReqoreTableProps>();
+
+/* What each row's three actions do: the stories that use them check the one picked ran, and no other. */
+const onAddClick = fn();
+const onEditClick = fn();
+const onDeleteClick = fn();
+const clearRowActionSpies = () =>
+  [onAddClick, onEditClick, onDeleteClick].forEach((spy) => spy.mockClear());
 
 const defaultColumns: IReqoreTableColumn[] = [
   {
@@ -211,18 +225,25 @@ const defaultColumns: IReqoreTableColumn[] = [
 
     cell: {
       padded: 'none',
+      // A label is each action's tooltip and accessible name, and its words in a narrow table's menu.
       actions: () => [
         {
           icon: 'AddLine',
           intent: 'info',
+          label: 'Add',
+          onClick: onAddClick,
         },
         {
           icon: 'EditLine',
           intent: 'warning',
+          label: 'Edit',
+          onClick: onEditClick,
         },
         {
           icon: 'DeleteBinLine',
           intent: 'danger',
+          label: 'Delete',
+          onClick: onDeleteClick,
         },
       ],
     },
@@ -2443,12 +2464,40 @@ export const LongContentWrappedAndVirtualized: Story = {
 /** The width of a card on a 390px phone screen, inside its page's gutters: what the IDE's tables sit in. */
 const NARROW_TABLE_WIDTH = 265;
 
+/* A narrow table's row actions (qorus#646): three icon buttons took a third of a phone's table from the
+   columns that say which row is which. Narrow, they are one menu button per row that names them. */
+
+/** The actions cells of the rows on screen. */
+const actionCells = (root: HTMLElement) =>
+  Array.from(
+    root.querySelectorAll<HTMLElement>('.reqore-table-row [data-reqore-table-column-id="actions"]')
+  );
+
+/** Each row's actions menu button. */
+const rowActionsMenus = (root: HTMLElement) =>
+  rowActionsMenuButtons(root).filter((button) => button.closest('.reqore-table-row'));
+
+/** One menu button per row, and the actions column no wider than it, so the content has the row. */
+const expectRowActionsFolded = async (root: HTMLElement, buttonWidth: number = SIZE_TO_PX.normal) =>
+  waitFor(() => {
+    const cells = actionCells(root);
+    expect(cells.length).toBeGreaterThan(0);
+    for (const cell of cells) {
+      expect(cell.querySelectorAll('.reqore-button')).toHaveLength(1);
+      expect(cell.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(1);
+      expect(cell.getBoundingClientRect().width).toBeLessThanOrEqual(buttonWidth + 1);
+    }
+  });
+
+/** The open menu names each action in words, with its icon. */
+const expectRowActionsMenu = async () => expectRowActionsMenuItems(['Add', 'Edit', 'Delete']);
+
 export const FilterableInANarrowBox: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          "Renders a searchable table in a 265px box, as a table sits in a card on a phone. The title comes first, its words whole, and the search field and the more button take what is left and stay inside the box.",
+          "Renders a searchable table in a 265px box, as a table sits in a card on a phone. The title comes first, its words whole, and the search field and the more button take what is left and stay inside the box. Each row's three actions are one menu button in a column no wider than it; clicked, it opens a menu naming Add, Edit and Delete with their icons, and Edit runs and closes it without opening the row.",
       },
     },
   },
@@ -2456,29 +2505,44 @@ export const FilterableInANarrowBox: Story = {
     filterable: true,
     label: 'Services',
     height: 400,
+    onRowClick: fn(),
   },
   render: (args) => (
     <div className='narrow-table-box' style={{ width: NARROW_TABLE_WIDTH }}>
       <ReqoreTable {...args} />
     </div>
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
+    clearRowActionSpies();
     const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
     await waitFor(() => expect(box.querySelector('input')).toBeTruthy());
     // the toolbar: the table's own header scrolls sideways with its columns
     await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
     // the title first: its words whole, the search field at what is left
     await expectWordsWhole(box.querySelector('.reqore-panel-title-label-box') as HTMLElement);
+    // the row's actions: one menu button, which names them and runs the one picked
+    await expectRowActionsFolded(box);
+    const [first] = rowActionsMenus(box);
+    await userEvent.click(first);
+    await expectRowActionsMenu();
+    await userEvent.click(openRowActionsMenuItems()[1]);
+    await waitFor(() => expect(onEditClick).toHaveBeenCalledTimes(1));
+    await expectRowActionsMenuClosed();
+    expect(onAddClick).not.toHaveBeenCalled();
+    expect(onDeleteClick).not.toHaveBeenCalled();
+    expect(args.onRowClick).not.toHaveBeenCalled();
+    await userEvent.unhover(first);
   },
 };
 
 export const FilterableOnAPhone: Story = {
+  globals: PHONE_STORY.globals,
   parameters: {
-    qlip: { viewport: { width: 390, height: 844 } },
+    ...PHONE_STORY.parameters,
     docs: {
       description: {
         story:
-          "Renders a searchable table in a card on a phone (390 px, a 16px gutter each side): its title, search field and buttons share the toolbar's one line inside the card - the title is still there to read - and none reaches past the screen.",
+          "Renders a searchable table in a card on a phone (390 px, a 16px gutter each side): its title, search field and buttons share the toolbar's one line inside the card - the title is still there to read - and none reaches past the screen. Each row's actions are one menu button, so the columns keep the card's width.",
       },
     },
   },
@@ -2507,6 +2571,7 @@ export const FilterableOnAPhone: Story = {
         ).toBeGreaterThanOrEqual(40)
       );
       await expectWordsWhole(table.querySelector('.reqore-panel-title-label-box') as HTMLElement);
+      await expectRowActionsFolded(table);
       if (narrowed) {
         await waitFor(() =>
           expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
@@ -2549,3 +2614,180 @@ export const TitleWordWiderThanItsSpace: Story = {
   },
 };
 
+export const RowActionsInlineWhenWide: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a table in a 720px box: wide enough, so each row's Add, Edit and Delete are icon buttons side by side, as they always were, each named by its label for a screen reader and in its tooltip; there is no menu button.",
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    height: 400,
+  },
+  render: (args) => (
+    <div className='wide-table-box' style={{ width: 720 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.wide-table-box') as HTMLElement;
+    await waitFor(() => {
+      const cells = actionCells(box);
+      expect(cells.length).toBeGreaterThan(0);
+      for (const cell of cells) {
+        expect(
+          Array.from(cell.querySelectorAll('.reqore-button')).map((button) =>
+            button.getAttribute('aria-label')
+          )
+        ).toEqual(['Add', 'Edit', 'Delete']);
+      }
+    });
+    expect(box.querySelector('.reqore-row-actions-menu')).toBeNull();
+  },
+};
+
+export const RowActionsMenuOpen: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a table in a 265px box with the first row's actions menu open: Add, Edit and Delete, each with its icon and its colour.",
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    height: 400,
+  },
+  render: (args) => (
+    <div className='narrow-table-box' style={{ width: NARROW_TABLE_WIDTH }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
+    await expectRowActionsFolded(box);
+    const [first] = rowActionsMenus(box);
+    await userEvent.click(first);
+    await expectRowActionsMenu();
+    await userEvent.unhover(first);
+  },
+};
+
+export const RowActionsMenuFromTheKeyboard: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a table in a 265px box, its rows' actions folded into one menu button each. From the keyboard, Tab goes from one row's button to the next, Enter opens the menu, the arrow keys move to Delete and Enter runs it and closes the menu, Space opens it again and Escape puts it away - the focus stays on the button throughout, and the row itself is never opened.",
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    height: 400,
+    onRowClick: fn(),
+  },
+  render: (args) => (
+    <div className='narrow-table-box' style={{ width: NARROW_TABLE_WIDTH }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    clearRowActionSpies();
+    const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
+    await expectRowActionsFolded(box);
+    const [first, second] = rowActionsMenus(box);
+    expect(second).toHaveAttribute('aria-label', 'Actions');
+
+    first.focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(second);
+
+    await userEvent.keyboard('{Enter}');
+    await expectRowActionsMenu();
+    await waitFor(() => expect(second).toHaveAttribute('aria-expanded', 'true'));
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{Enter}');
+    await waitFor(() => expect(onDeleteClick).toHaveBeenCalledTimes(1));
+    await expectRowActionsMenuClosed();
+    expect(document.activeElement).toBe(second);
+
+    await userEvent.keyboard(' ');
+    await expectRowActionsMenu();
+    await userEvent.keyboard('{Escape}');
+    await expectRowActionsMenuClosed();
+    await waitFor(() => expect(second).toHaveAttribute('aria-expanded', 'false'));
+    expect(document.activeElement).toBe(second);
+
+    expect(onAddClick).not.toHaveBeenCalled();
+    expect(onEditClick).not.toHaveBeenCalled();
+    expect(args.onRowClick).not.toHaveBeenCalled();
+  },
+};
+
+export const RowActionsMenuOnATouchScreen: Story = {
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders a table in a card on a phone (390 px). Each row's actions are one menu button; on a touch screen it is a finger's size (44px each way, the rows as tall), a tap opens the menu - its rows a finger's height too - and a tap on Delete runs it and closes the menu without opening the row. Nothing reaches past the screen.",
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    height: 400,
+    onRowClick: fn(),
+  },
+  render: (args) => (
+    <div style={{ padding: '0 16px', maxWidth: 390, boxSizing: 'border-box' }}>
+      <ReqorePanel label='Running services' padded>
+        <ReqoreTable {...args} />
+      </ReqorePanel>
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    clearRowActionSpies();
+    await withTouchScreen(async (touch) => {
+      const table = canvasElement.querySelector('.reqore-table') as HTMLElement;
+      // a finger's button: only a real touch screen makes the pointer coarse
+      await expectRowActionsFolded(table, touch.real ? TOUCH_TARGET_PX : SIZE_TO_PX.normal);
+      if (touch.real) {
+        await waitFor(() => {
+          for (const button of rowActionsMenus(table)) {
+            const box = button.getBoundingClientRect();
+            expect(box.width).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+            expect(box.height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          }
+        });
+      }
+
+      await touch.tap(rowActionsMenus(table)[0]);
+      await expectRowActionsMenu();
+      if (touch.real) {
+        await waitFor(() => {
+          for (const item of openRowActionsMenuItems()) {
+            expect(item.getBoundingClientRect().height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+          }
+        });
+      }
+      await touch.tap(openRowActionsMenuItems()[2]);
+      await waitFor(() => expect(onDeleteClick).toHaveBeenCalledTimes(1));
+      await expectRowActionsMenuClosed();
+      expect(onAddClick).not.toHaveBeenCalled();
+      expect(onEditClick).not.toHaveBeenCalled();
+      expect(args.onRowClick).not.toHaveBeenCalled();
+
+      if (touch.narrowed) {
+        await waitFor(() =>
+          expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1)
+        );
+      }
+    });
+  },
+};

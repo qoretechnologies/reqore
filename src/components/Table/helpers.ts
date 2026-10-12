@@ -2,7 +2,15 @@ import { getQueryMatchScore, rankByQuery } from '../../helpers/search';
 import { size } from 'lodash';
 import { firstBy } from 'thenby';
 import { IReqoreTableColumn, IReqoreTableData, IReqoreTableRowData, IReqoreTableSort } from '.';
-import { ICON_FROM_SIZE, SIZES, SIZE_TO_MODIFIER, TSizes } from '../../constants/sizes';
+import {
+  ICON_FROM_SIZE,
+  SIZES,
+  SIZE_TO_MODIFIER,
+  SIZE_TO_PX,
+  TOUCH_TARGET_PX,
+  TSizes,
+} from '../../constants/sizes';
+import { NARROW_CONTAINER_BREAKPOINT_PX } from '../../hooks/useNarrowContainer';
 import { IReqoreIconName } from '../../types/icons';
 import { IReqorePanelSubAction } from '../Panel';
 
@@ -283,6 +291,73 @@ export const flattenColumns = (columns: IReqoreTableColumn[]): IReqoreTableColum
     }
     return [...flat, column];
   }, []);
+};
+
+/**
+ * Whether a column's cell shows its actions as one menu at this table width: the column has actions,
+ * and the table - measured on itself, not the window - is at or below the column's
+ * `cell.actionsMenuBelowWidth` (Reqore's phone width by default). Whether a CELL folds also takes two
+ * or more actions: a single one stays a button, as a menu holding one action costs a tap and saves
+ * nothing.
+ */
+export const isActionsMenuWidth = (column: IReqoreTableColumn, tableWidth?: number): boolean =>
+  !!column.cell?.actions &&
+  !!tableWidth &&
+  tableWidth > 0 &&
+  tableWidth <= (column.cell.actionsMenuBelowWidth ?? NARROW_CONTAINER_BREAKPOINT_PX);
+
+/**
+ * The ids of the columns whose actions fold at this table width, joined into one string: it changes
+ * only when the table crosses a column's threshold, not on every pixel of a resize, so the columns
+ * built from it are rebuilt only then.
+ */
+export const getActionsMenuColumnIds = (
+  columns: IReqoreTableColumn[],
+  tableWidth?: number
+): string =>
+  flattenColumns(columns)
+    .filter((column) => isActionsMenuWidth(column, tableWidth))
+    .map((column) => column.dataId)
+    .join(' ');
+
+/**
+ * The columns with the folded ones narrowed to the menu button: as wide as a button of the table's
+ * size is tall (it is square), and a finger's width where the pointer is one. No wider than the column
+ * was, and no longer resizable - the width is the button's, not the reader's.
+ */
+export const foldActionsColumns = (
+  columns: IReqoreTableColumn[],
+  foldedIds: string,
+  size: TSizes,
+  touch: boolean
+): IReqoreTableColumn[] => {
+  if (!foldedIds) {
+    return columns;
+  }
+
+  const folded = new Set(foldedIds.split(' '));
+  const width = Math.max(SIZE_TO_PX[size], touch ? TOUCH_TARGET_PX : 0);
+  const fold = (column: IReqoreTableColumn): IReqoreTableColumn => {
+    if (column.header?.columns) {
+      return { ...column, header: { ...column.header, columns: column.header.columns.map(fold) } };
+    }
+
+    if (!folded.has(column.dataId)) {
+      return column;
+    }
+
+    return {
+      ...column,
+      width: Math.min(column.resizedWidth || column.width || width, width),
+      resizedWidth: undefined,
+      minWidth: undefined,
+      maxWidth: undefined,
+      grow: undefined,
+      resizable: false,
+    };
+  };
+
+  return columns.map(fold);
 };
 
 export interface IColumnPartition {

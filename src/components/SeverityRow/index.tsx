@@ -2,7 +2,7 @@ import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
-import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
 import {
@@ -32,6 +32,7 @@ import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect } from '../Effect';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
+import ReqoreRowActionsMenu, { getRowActionLabel, TReqoreNarrowRowActions } from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreSeverityRowAction extends Omit<IReqoreButtonProps, 'children'> {
@@ -65,6 +66,15 @@ export interface IReqoreSeverityRowProps
   badge?: TReqoreBadge | TReqoreBadge[];
   /** Right-side action buttons (Investigate / Dismiss). */
   actions?: IReqoreSeverityRowAction[];
+  /**
+   * How two or more actions are shown when the row is narrow (below 640px of its container):
+   * `'menu'` (default) folds them into one menu button at the end of the label's line, `'stack'`
+   * puts them under the label, one to a line, each the row's width. See `TReqoreNarrowRowActions`.
+   * A single action is a button under the label either way.
+   */
+  narrowActions?: TReqoreNarrowRowActions;
+  /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
+  actionsMenuLabel?: string;
   /** Hide the intent-tinted background. Mirrors `transparent` on other components. */
   transparent?: boolean;
   /** Show the colored severity strip on the left edge. Default `true`. */
@@ -216,8 +226,22 @@ const StyledRow = styled(StyledEffect).withConfig({
      a phone. An icon's tooltip is its label there, and a finger gets a target it can hit. */
   @media (pointer: coarse) {
     &[data-narrow='true'] > .reqore-severity-row-actions > .reqore-button {
-      min-height: 44px;
+      min-height: ${TOUCH_TARGET_PX}px;
     }
+  }
+
+  /* Narrow, two or more actions are one menu button at the end of the label's line (qorus#646), not
+     a line each under it: the label keeps its width, and a list of rows does not grow by a line per
+     action. */
+  &[data-narrow='true'][data-actions='menu'] {
+    grid-template-columns: ${STRIP_WIDTH_PX}px 1fr auto;
+  }
+  /* The last column, named: an item placed in a row with its column left to the grid is placed before
+     the items around it, in the first column. */
+  &[data-narrow='true'][data-actions='menu'] > .reqore-severity-row-actions {
+    grid-column: -2 / -1;
+    grid-row: 1;
+    align-self: start;
   }
 
   ${({ $clickable, theme, $intent, $transparent }) =>
@@ -294,6 +318,8 @@ const ReqoreSeverityRow = memo(
         leading,
         badge,
         actions,
+        narrowActions = 'menu',
+        actionsMenuLabel,
         intent,
         transparent = false,
         showStrip = true,
@@ -332,6 +358,8 @@ const ReqoreSeverityRow = memo(
       const [containerRef, isNarrow] = useNarrowContainer<HTMLDivElement>(
         SEVERITY_ROW_NARROW_BREAKPOINT_PX
       );
+      // Narrow, two or more actions are one menu button, unless the caller wants them stacked.
+      const actionsAsMenu = isNarrow && narrowActions === 'menu' && (actions?.length ?? 0) > 1;
 
       return (
         <StyledContainer
@@ -343,6 +371,7 @@ const ReqoreSeverityRow = memo(
             // A div, not the effect's span: the row holds blocks, which a span may not.
             as='div'
             data-narrow={isNarrow || undefined}
+            data-actions={actionsAsMenu ? 'menu' : undefined}
             {...rest}
             Component={StyledRow}
             tooltip={tooltip}
@@ -401,7 +430,16 @@ const ReqoreSeverityRow = memo(
                 </StyledTextSlot>
               )}
             </StyledBody>
-            {actions && actions.length > 0 && (
+            {actionsAsMenu && (
+              <ReqoreRowActionsMenu
+                className='reqore-severity-row-actions'
+                actions={actions}
+                size={size}
+                intent={intent}
+                label={actionsMenuLabel}
+              />
+            )}
+            {!actionsAsMenu && actions && actions.length > 0 && (
               <ReqoreControlGroup
                 gapSize='small'
                 className='reqore-severity-row-actions'
@@ -428,7 +466,7 @@ const ReqoreSeverityRow = memo(
                     {/* Stacked, an action with only an icon is a button the row's width: its tooltip is
                         its label, as a finger gets no tooltip to read. */}
                     {action.label ??
-                      (isNarrow && typeof action.tooltip === 'string' ? action.tooltip : undefined)}
+                      (isNarrow ? getRowActionLabel({ tooltip: action.tooltip }) : undefined)}
                   </ReqoreButton>
                 ))}
               </ReqoreControlGroup>

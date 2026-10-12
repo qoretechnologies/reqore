@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import {
   ReqoreContent,
   ReqoreEntityRow,
@@ -608,4 +608,62 @@ test('Renders without a ResizeObserver implementation', () => {
   } finally {
     globalThis.ResizeObserver = original;
   }
+});
+
+/*
+ * Narrow, two or more actions are one menu button (qorus#646): the label keeps the row's width.
+ */
+
+const menuButtons = () => document.querySelectorAll('.reqore-row-actions-menu-button');
+
+test('Folds two or more actions into one menu button in a narrow container', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({ actions: [{ label: 'Run' }, { icon: 'DeleteBinLine', tooltip: 'Remove' }] });
+
+    const row = document.querySelector('.reqore-entity-row')!;
+    expect(row.getAttribute('data-actions')).toBe('menu');
+    expect(menuButtons()).toHaveLength(1);
+    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Actions');
+    expect(row.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(1);
+  });
+});
+
+test('Names the menu button with actionsMenuLabel', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({
+      actionsMenuLabel: 'Akce',
+      actions: [{ label: 'Run' }, { label: 'Stop' }],
+    });
+
+    expect(menuButtons()[0].getAttribute('aria-label')).toBe('Akce');
+  });
+});
+
+test('Keeps the actions in sight, stacked, with narrowActions="stack"', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({ narrowActions: 'stack', actions: [{ label: 'Run' }, { label: 'Stop' }] });
+
+    const row = document.querySelector('.reqore-entity-row')!;
+    expect(row.getAttribute('data-narrow')).toBe('true');
+    expect(row.getAttribute('data-actions')).toBeNull();
+    expect(menuButtons()).toHaveLength(0);
+    expect(row.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(2);
+  });
+});
+
+test('Keeps a single action a button when narrow, and every action inline when wide', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({ actions: [{ label: 'Run' }] });
+    expect(menuButtons()).toHaveLength(0);
+    cleanup();
+
+    NarrowResizeObserver.width = 900;
+    renderRowWithActions({ actions: [{ label: 'Run' }, { label: 'Stop' }] });
+    expect(menuButtons()).toHaveLength(0);
+    expect(document.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(2);
+  });
 });

@@ -2,12 +2,16 @@ import { IReqoreTableColumn } from '../../src/components/Table';
 import {
   calculatePinOffsets,
   flattenColumns,
+  foldActionsColumns,
+  getActionsMenuColumnIds,
+  isActionsMenuWidth,
   getColumnsCount,
   getOnlyShownColumns,
   hasHiddenColumns,
   updateColumnData,
 } from '../../src/components/Table/helpers';
 import { testColumns } from '../../src/mock/tableData';
+import { SIZE_TO_PX, TOUCH_TARGET_PX } from '../../src/constants/sizes';
 
 test('Updates top level column width', () => {
   const columns = [...testColumns];
@@ -113,4 +117,69 @@ test('calculatePinOffsets produces cumulative sticky offsets and marks edges', (
   expect(offsets.occupation.pin).toBe('right');
   expect(offsets.occupation.offset).toBe(columns[3].header.columns![1].width);
   expect(offsets.occupation.isEdge).toBe(true);
+});
+
+/*
+ * A narrow table folds a row's actions into one menu button (qorus#646): which columns fold, at what
+ * width, and how wide a folded column is.
+ */
+
+const actionsColumn = (extra: Partial<IReqoreTableColumn> = {}): IReqoreTableColumn => ({
+  dataId: 'actions',
+  width: 120,
+  cell: { actions: () => [{ icon: 'EditLine', label: 'Edit' }, { icon: 'DeleteBinLine', label: 'Delete' }] },
+  ...extra,
+});
+
+test('A column with actions folds at or below Reqore\'s phone width of the table', () => {
+  const column = actionsColumn();
+
+  expect(isActionsMenuWidth(column, 480)).toBe(true);
+  expect(isActionsMenuWidth(column, 265)).toBe(true);
+  expect(isActionsMenuWidth(column, 481)).toBe(false);
+  // not measured yet: the wide layout, rather than a guess
+  expect(isActionsMenuWidth(column, undefined)).toBe(false);
+  expect(isActionsMenuWidth(column, 0)).toBe(false);
+  // a column without actions never folds
+  expect(isActionsMenuWidth({ dataId: 'name' }, 265)).toBe(false);
+});
+
+test('A column folds at its own actionsMenuBelowWidth, and never with 0', () => {
+  const at700 = actionsColumn({ cell: { ...actionsColumn().cell, actionsMenuBelowWidth: 700 } });
+  const never = actionsColumn({ cell: { ...actionsColumn().cell, actionsMenuBelowWidth: 0 } });
+
+  expect(isActionsMenuWidth(at700, 650)).toBe(true);
+  expect(isActionsMenuWidth(at700, 701)).toBe(false);
+  expect(isActionsMenuWidth(never, 100)).toBe(false);
+});
+
+test('The folded columns are named once, grouped columns included', () => {
+  const columns: IReqoreTableColumn[] = [
+    { dataId: 'name' },
+    { dataId: 'group', header: { columns: [actionsColumn({ dataId: 'nested' })] } },
+    actionsColumn(),
+  ];
+
+  expect(getActionsMenuColumnIds(columns, 300)).toBe('nested actions');
+  expect(getActionsMenuColumnIds(columns, 900)).toBe('');
+});
+
+test('A folded column is the menu button\'s width, a finger\'s on touch, and not resizable', () => {
+  const columns: IReqoreTableColumn[] = [{ dataId: 'name', width: 200 }, actionsColumn({ resizable: true, grow: 2, minWidth: 100 })];
+
+  // unchanged where nothing folds
+  expect(foldActionsColumns(columns, '', 'normal', false)).toBe(columns);
+
+  const [name, folded] = foldActionsColumns(columns, 'actions', 'normal', false);
+  expect(name).toBe(columns[0]);
+  expect(folded.width).toBe(SIZE_TO_PX.normal);
+  expect(folded.resizable).toBe(false);
+  expect(folded.grow).toBeUndefined();
+  expect(folded.minWidth).toBeUndefined();
+
+  const [, onTouch] = foldActionsColumns(columns, 'actions', 'normal', true);
+  expect(onTouch.width).toBe(Math.max(SIZE_TO_PX.normal, TOUCH_TARGET_PX));
+  // never wider than the column was
+  const [narrowColumn] = foldActionsColumns([actionsColumn({ width: 20 })], 'actions', 'big', true);
+  expect(narrowColumn.width).toBe(20);
 });

@@ -29,7 +29,9 @@ import {
   getRowExpandId,
   getTotalColumnsWidth,
   IColumnPinInfo,
+  isActionsMenuWidth,
 } from './helpers';
+import ReqoreRowActionsMenu, { getRowActionLabel } from '../RowActionsMenu';
 
 /**
  * Per-row escape hatch handed to the RowComponent as extra HTML attributes.
@@ -97,6 +99,8 @@ export interface IReqoreTableRowOptions {
    * Absent until measured, and in a table with no panels.
    */
   visibleWidth?: number;
+  /** See `IReqoreTableProps.rowActionsMenuLabel`. */
+  rowActionsMenuLabel?: string;
 }
 export interface IReqoreCustomTableRowProps extends IReqoreTableRowOptions {
   style?: React.CSSProperties;
@@ -296,6 +300,7 @@ const ReqoreTableRow = memo(
       onExpandedHeight,
       onExpandClick,
       visibleWidth,
+      rowActionsMenuLabel,
     },
 
     style,
@@ -349,14 +354,18 @@ const ReqoreTableRow = memo(
               style={{ height: '100%' }}
               rounded={false}
             >
-              {cell.actions(data).map((action, index) => (
+              {cell.actions(data).map(({ label, ...action }, index) => (
                 <ReqoreButton
                   key={index}
                   rounded={false}
                   iconsAlign={align === 'center' ? 'center' : 'sides'}
                   textAlign={align}
                   flat
+                  // An action's label is not drawn here, where there is room for its icon only: it
+                  // is the button's tooltip, unless it has one, and its name to a screen reader.
+                  aria-label={getRowActionLabel({ label, tooltip: action.tooltip })}
                   {...action}
+                  tooltip={action.tooltip ?? label}
                   onClick={(e) => {
                     e.stopPropagation();
 
@@ -498,6 +507,27 @@ const ReqoreTableRow = memo(
       return () => observer.disconnect();
     }, [isExpanded, onExpandedHeight, index, expandedContent]);
 
+    /* A narrow table folds a cell's actions into one menu button when there are two or more of them:
+       side by side they took a third of a phone's width from the column that says which row this is.
+       One action stays a button, as a menu holding only it costs a tap and saves nothing. */
+    const renderCellContent = (column: IReqoreTableColumn) => {
+      const { cell, dataId, align } = column;
+      const actions = isActionsMenuWidth(column, tableWidth) ? cell.actions(data[index]) : undefined;
+
+      if (actions && actions.length > 1) {
+        return (
+          <ReqoreRowActionsMenu
+            actions={actions}
+            size={size}
+            label={rowActionsMenuLabel}
+            fill
+          />
+        );
+      }
+
+      return renderContent(cell, data[index], dataId, align);
+    };
+
     const renderCells = useCallback(
       () =>
         reorderedLeaves.map(
@@ -573,7 +603,7 @@ const ReqoreTableRow = memo(
                   'data-reqore-table-column-id': dataId,
                 } as IReqoreTableCellStyle)}
               >
-                {renderContent(cell, data[index], dataId, align)}
+                {renderCellContent(column)}
               </CellComponent>
             );
           }
@@ -600,6 +630,8 @@ const ReqoreTableRow = memo(
         expandId,
         onExpandClick,
         isStatic,
+        tableWidth,
+        rowActionsMenuLabel,
       ]
     );
 
