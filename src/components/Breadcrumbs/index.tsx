@@ -396,6 +396,10 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           intent={leafItem?.intent}
           label={leafItem?.label}
           badge={leafItem?.badge}
+          // ...and is NAMED as that crumb is, in full: its label may be cut with an ellipsis to fit, so a
+          // screen reader and a long press get the whole name from these - the leaf's own, or its label
+          aria-label={leafItem?.['aria-label'] ?? leafItem?.label}
+          title={leafItem?.title ?? leafItem?.label}
           // A floor so the current page always keeps a few readable characters —
           // never just an icon — however tight the bar gets. This can't cause an
           // overlap: the trail is `min-width: 0; overflow: hidden`, so it clips

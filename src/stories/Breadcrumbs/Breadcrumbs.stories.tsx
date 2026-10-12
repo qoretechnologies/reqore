@@ -466,3 +466,59 @@ export const RemeasuredAfterACrumbsTransition: Story = {
     );
   },
 };
+
+/** A detail page's trail with a current page too long for a phone's header, as qorus-ide builds it. */
+const LONG_LEAF_TRAIL: IReqoreBreadcrumbItem[] = [
+  { icon: 'Home4Fill', menuLabel: 'Home', minimal: true, flat: true },
+  { label: 'ML models', icon: 'BrainLine', minimal: true, flat: true },
+  {
+    label: 'Sentiment classifier for customer support tickets',
+    icon: 'BrainLine',
+    badge: '#14',
+    active: true,
+    minimal: false,
+    flat: false,
+  },
+];
+
+const LONG_LEAF_NAME = 'Sentiment classifier for customer support tickets';
+
+export const FoldedCurrentPageIsNamedInFull: Story = {
+  parameters: {
+    qlip: { viewport: { width: 390, height: 844 } },
+    docs: {
+      description: {
+        story:
+          'Renders a detail page\'s trail on a phone (390 px) beside a page action, with a current page too long for the header: the whole trail folds into one dropdown labelled with the current page, its name cut with an ellipsis. The dropdown still names the page in full, by its accessible name and its title, for a screen reader and a long press.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ width: 'min(330px, 100%)' }}>
+      <ReqoreBreadcrumbs
+        flat
+        padded={false}
+        items={LONG_LEAF_TRAIL}
+        rightElement={<ReqoreButton icon='MoreLine' minimal flat aria-label='Page actions' />}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const { withViewport } = await import('../utils/viewport');
+    await withViewport(390, 844, async () => {
+      const current = await waitFor(() => {
+        const button = canvasElement.querySelector<HTMLElement>(
+          '.reqore-breadcrumbs-overflow-current'
+        );
+        expect(button).toBeTruthy();
+        return button!;
+      });
+      // cut to fit...
+      const text = current.querySelector<HTMLElement>('.reqore-button-text-content')!;
+      await waitFor(() => expect(text.scrollWidth).toBeGreaterThan(text.clientWidth));
+      // ...and named in full
+      await expect(current).toHaveAttribute('aria-label', LONG_LEAF_NAME);
+      await expect(current).toHaveAttribute('title', LONG_LEAF_NAME);
+    });
+  },
+};

@@ -64,6 +64,42 @@ test('Never drops the current page, however much has to collapse', () => {
   expect(document.body.textContent).toContain('The Current Page');
 });
 
+// The folded dropdown stands in for the current page, whose label it may cut with an ellipsis to fit: it is
+// named in full by its accessible name and its title - the leaf's own when it gives them, else its label.
+test('Names the folded current page in full, by the leaf\'s own words or its label', () => {
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreBreadcrumbs items={PAGES} />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+  const byLabel = document.querySelector('.reqore-breadcrumbs-overflow-current')!;
+  expect(byLabel.getAttribute('aria-label')).toBe('Page 5');
+  expect(byLabel.getAttribute('title')).toBe('Page 5');
+
+  document.body.innerHTML = '';
+  act(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreBreadcrumbs
+            items={[
+              ...PAGES.slice(0, 4),
+              { label: 'Job 4711', 'aria-label': 'Daily Payment Reconciliation, job 4711', title: 'Daily Payment Reconciliation' },
+            ]}
+          />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+  });
+  const byLeaf = document.querySelector('.reqore-breadcrumbs-overflow-current')!;
+  expect(byLeaf.getAttribute('aria-label')).toBe('Daily Payment Reconciliation, job 4711');
+  expect(byLeaf.getAttribute('title')).toBe('Daily Payment Reconciliation');
+});
+
 test('Renders the right element in its own region, separate from the trail', () => {
   act(() => {
     render(
