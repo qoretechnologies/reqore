@@ -35,6 +35,12 @@ export default mergeConfig(
           ],
           test: {
             name: 'storybook',
+            // One story file at a time. A touch story turns on Chrome's touch emulation through the DevTools
+            // protocol (`withTouchScreen`), and that emulation belongs to the whole page: a story file running
+            // beside it, in another frame, sees a coarse pointer and no hover. In #708's CI, Table's mouse-sized
+            // row menu measured 44px (the touch size) and the Marquee stories found no hover, while the EntityRow
+            // and SeverityRow touch stories ran at the same time.
+            fileParallelism: false,
             browser: {
               enabled: true,
               // Vitest 4's @vitest/browser-playwright no longer applies
