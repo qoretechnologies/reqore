@@ -391,16 +391,34 @@ const InternalPopover: React.FC<IReqoreInternalPopoverProps> = memo(
     // viewport and target movement, but not intrinsic content-size changes.
     // Recalculate deterministically whenever the rendered popover resizes so
     // flip/preventOverflow can keep the whole surface inside the viewport.
+    //
+    // The recalculation runs at the next frame, not inside the observer's
+    // callback: Popper applies its position at once (react-popper renders it
+    // with `flushSync`), and a new position can change the popover's size -
+    // a layout change inside the callback that the browser must leave
+    // unreported for the frame, which it reports as "ResizeObserver loop
+    // completed with undelivered notifications" (qorus#646: five Dropdown
+    // stories, Select's and MultiSelect's). One recalculation per frame,
+    // however many reports came in.
     useEffect(() => {
       resizeObserver.current?.disconnect();
       resizeObserver.current = null;
       if (!popperElement || typeof ResizeObserver === 'undefined') return undefined;
 
-      const observer = new ResizeObserver(() => forceUpdate?.());
+      let frame = 0;
+      const observer = new ResizeObserver(() => {
+        if (!frame) {
+          frame = requestAnimationFrame(() => {
+            frame = 0;
+            forceUpdate?.();
+          });
+        }
+      });
       observer.observe(popperElement);
       resizeObserver.current = observer;
 
       return () => {
+        cancelAnimationFrame(frame);
         observer.disconnect();
         if (resizeObserver.current === observer) resizeObserver.current = null;
       };

@@ -190,6 +190,11 @@ release on npm.
   the reason. Chromium cannot give a page its mouse back after touch emulation: it takes the
   machine's hover and pointer, and a Linux CI runner has no mouse, so every later story in the
   same page would find `(hover: none)`. This never shows on a Mac, which always reports a mouse.
+- **No layout change inside a ResizeObserver callback:** a story fails when the browser reports
+  "ResizeObserver loop completed with undelivered notifications" (`.storybook/vitest.setup.ts`). It
+  means a resize callback changed the layout it observes in the same frame, often by setting state
+  synchronously (react-popper's `forceUpdate` renders with `flushSync`). Defer that change to the next
+  frame (`requestAnimationFrame`, once per frame), or measure without changing the layout.
 
 ### Verifying a visual fix locally with Qlip — reqore mechanics
 
