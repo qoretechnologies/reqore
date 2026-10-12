@@ -322,6 +322,14 @@ function Textarea<T>(
       // background, switching tabs, pressing Escape, or focus loss to
       // browser chrome. Without this guard, `.closest()` throws a
       // TypeError and the popover never closes.
+      //
+      // Focus that moves WITHIN the field - from a rich-text editor to a chip in it and back, as a
+      // click on the chip does - has not left it, and a press inside the field is not one that puts
+      // the list away (`closeOnTargetClick={false}`).
+      const field = (e.target as Element | null)?.closest?.('.reqore-textarea');
+      if (field && e.relatedTarget && field.contains(e.relatedTarget)) {
+        return;
+      }
       if (!e.relatedTarget || e.relatedTarget.closest(`#id-${uuid.current}`) === null) {
         popoverData?.close();
       }
@@ -336,7 +344,10 @@ function Textarea<T>(
   /* The author comes into the field from the keyboard: the templates are listed, as a click lists them
      (qorus#646). Focus brought by a pointer is the click's to answer - opening for it too would close the
      list again on the click - and focus that comes back from the list (a template picked) or from nowhere
-     opens nothing.
+     opens nothing. Nor does focus that moves within the field: a click on a chip in a rich-text field
+     moves the focus from the editor to the chip, and the editor is not outside the field. Taken for
+     an entry, it opened the list, the list's keep-below rule scrolled the page by its height, and the
+     chip, handing the focus back to the editor, closed the list: the page jumped and showed nothing.
 
      A press brings the focus only to a field that does not have it: one on the field already focused
      brings none, and its mark would be left for the next focus, from the keyboard, to be taken for a
@@ -370,6 +381,7 @@ function Textarea<T>(
         templates &&
         !byPointer &&
         from &&
+        !event.currentTarget.contains(from) &&
         !from.closest('.reqore-popover-content') &&
         popoverData &&
         !popoverData.isOpen?.()

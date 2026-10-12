@@ -378,3 +378,89 @@ export const TheListFlipsRatherThanVanishWithNoRoomBelow: Story = {
     });
   },
 };
+
+/**
+ * The layout of `TheListOpensBelowAFieldNearTheBottom`: a scroll container with the field most of a
+ * screen down.
+ */
+const nearTheBottom = (Story: any) => (
+  <div style={{ height: '100vh', overflowY: 'auto' }} className='story-scroller'>
+    <div style={{ height: '85vh' }} />
+    <Story />
+    <div style={{ height: '85vh' }} />
+  </div>
+);
+
+/**
+ * Two frames: whatever a click put in motion - a list opening, the page scrolled to make room for
+ * it - has been drawn.
+ */
+const afterTwoFrames = (win: Window) =>
+  new Promise<void>((resolve) =>
+    win.requestAnimationFrame(() => win.requestAnimationFrame(() => resolve()))
+  );
+
+/** Click a field's chip, and wait for the chip to hand the cursor back to the editor. */
+const clickChip = async (doc: Document, editor: HTMLElement) => {
+  await userEvent.click(editor.querySelector<HTMLElement>('.reqore-tag')!);
+  await waitFor(() => expect(doc.activeElement).toBe(editor));
+  await afterTwoFrames(doc.defaultView!);
+};
+
+/**
+ * A click on a chip puts the cursor after it, and that is all: it does not list the templates, and
+ * the page stays where it is.
+ *
+ * Reported from the Qorus IDE: with the cursor already in a reference field low on the page, a
+ * click on a chip scrolled the page about 137px and showed nothing. The chip takes the focus from
+ * the editor for the moment of the press; that move was taken for the author coming into the field
+ * from the keyboard, the list opened, its keep-below rule scrolled the page by its height, and the
+ * chip, handing the focus back to the editor, closed it again.
+ */
+export const ClickingAChipNeitherListsNorScrolls: Story = {
+  args: { value: WITH_CHIP, tags: TAGS, onChange: fn() },
+  decorators: [nearTheBottom],
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+    const scroller = doc.querySelector<HTMLElement>('.story-scroller')!;
+
+    // The cursor in the field, and the list a click offers put away.
+    await focusEditor(doc, editor);
+    await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(listIsOpen(doc)).toBe(false));
+    await afterTwoFrames(doc.defaultView!);
+    const scrollTop = scroller.scrollTop;
+
+    await clickChip(doc, editor);
+
+    await expect(listIsOpen(doc)).toBe(false);
+    await expect(scroller.scrollTop).toBe(scrollTop);
+  },
+};
+
+/**
+ * ...and a click on a chip leaves an open list as it is: moving the focus to the chip and back
+ * stays inside the field, and a press inside the field does not put the list away. The page does
+ * not move either.
+ */
+export const ClickingAChipLeavesAnOpenListOpen: Story = {
+  args: { value: WITH_CHIP, tags: TAGS, onChange: fn() },
+  decorators: [nearTheBottom],
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const editor = await editorIn(doc);
+    const scroller = doc.querySelector<HTMLElement>('.story-scroller')!;
+
+    await focusEditor(doc, editor);
+    await waitFor(() => expect(listIsOpen(doc)).toBe(true));
+    await afterTwoFrames(doc.defaultView!);
+    const scrollTop = scroller.scrollTop;
+
+    await clickChip(doc, editor);
+
+    await expect(listIsOpen(doc)).toBe(true);
+    await expect(scroller.scrollTop).toBe(scrollTop);
+  },
+};

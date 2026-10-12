@@ -103,6 +103,8 @@ export interface IReqoreRichTextEditorProps
  * re-render on every keystroke, including chips nothing had touched. Hoisting
  * them costs nothing and is the whole fix for the common case, where the
  * consumer passes neither prop. */
+/** A chip's own controls: a click on them is not a click on the chip's body. */
+const CHIP_CONTROLS = '.reqore-tag-remove, .reqore-tag-action';
 const NO_TAG_PROPS = (): IReqoreTagProps => ({});
 const EMPTY_TAG_PROPS: IReqoreTagProps = {};
 const EMPTY_TAGS_LIST_PROPS: IReqoreRichTextEditorProps['tagsListProps'] = {};
@@ -601,6 +603,31 @@ export const ReqoreRichTextEditor = forwardRef<
       [editor, isEmpty, onFocus, onFocusCapture, rest.disabled, rest.readOnly]
     );
 
+    /* A click on a chip's body is the chip's: it puts the cursor after it (see `TemplateElement`).
+       It is not a click that lists the templates. The list's click listener is on the field around
+       the editor, so it hears the chip's click before the chip's own handler can stop it; it is
+       told here. The chip's controls (its remove button, its actions) are not its body, and a click
+       on them lists the templates as it always has. Every other way in lists them too: a click in
+       the text, and coming into the field from the keyboard (which opens without a pointer
+       event). */
+    const tagsListBeforeOpen = tagsListProps?.onBeforeOpen;
+    const handleTemplatesBeforeOpen = useCallback(
+      (
+        popoverData: Parameters<IReqoreDropdownProps['onBeforeOpen']>[0],
+        e?: MouseEvent | KeyboardEvent
+      ) => {
+        if (
+          e?.target instanceof Element &&
+          e.target.closest('[data-slate-void="true"]') &&
+          !e.target.closest(CHIP_CONTROLS)
+        ) {
+          return false;
+        }
+        return tagsListBeforeOpen ? tagsListBeforeOpen(popoverData, e) : true;
+      },
+      [tagsListBeforeOpen]
+    );
+
     const renderLeaf = useCallback(
       (props: RenderLeafProps) =>
         customRenderLeaf ? customRenderLeaf(props) : <Leaf {...props} />,
@@ -922,6 +949,7 @@ export const ReqoreRichTextEditor = forwardRef<
                 : undefined,
               ...tagsListProps,
               items,
+              onBeforeOpen: handleTemplatesBeforeOpen,
               closeOnInsideClick: false,
               onItemSelect: (item) => {
                 if (item.value) {
