@@ -68,9 +68,11 @@ export interface IReqoreSeverityRowProps
   actions?: IReqoreSeverityRowAction[];
   /**
    * How two or more actions are shown when the row is narrow (below 640px of its container):
-   * `'menu'` (default) folds them into one menu button at the end of the label's line, `'stack'`
-   * puts them under the label, one to a line, each the row's width. See `TReqoreNarrowRowActions`.
-   * A single action is a button under the label either way.
+   * `'stack'` (default) puts them under the label, one to a line, each the row's width - a severity
+   * row is a callout, and its actions (Investigate, Try again) are the response it asks for, so they
+   * stay in sight; `'menu'` folds them into one menu button at the end of the label's line, for a
+   * list of rows that should not grow by a line per action. See `TReqoreNarrowRowActions`. A single
+   * action is a button under the label either way.
    */
   narrowActions?: TReqoreNarrowRowActions;
   /** What the menu button of `narrowActions='menu'` is called (its accessible name and tooltip). */
@@ -318,7 +320,7 @@ const ReqoreSeverityRow = memo(
         leading,
         badge,
         actions,
-        narrowActions = 'menu',
+        narrowActions = 'stack',
         actionsMenuLabel,
         intent,
         transparent = false,

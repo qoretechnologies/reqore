@@ -503,8 +503,8 @@ const renderMeasured = (width: number, props: Record<string, unknown>) => {
 
 const TWO_ACTIONS = [{ label: 'Investigate' }, { icon: 'CloseLine', tooltip: 'Dismiss' }];
 
-test('Folds two or more actions into one menu button below 640px of its container', () => {
-  renderMeasured(600, { actions: TWO_ACTIONS });
+test('Folds two or more actions into one menu button below 640px of its container, with narrowActions="menu"', () => {
+  renderMeasured(600, { actions: TWO_ACTIONS, narrowActions: 'menu' });
 
   const row = document.querySelector('.reqore-severity-row')!;
   expect(row.getAttribute('data-narrow')).toBe('true');
@@ -515,13 +515,16 @@ test('Folds two or more actions into one menu button below 640px of its containe
   expect(buttons[0].getAttribute('aria-label')).toBe('Actions');
 });
 
-test('Keeps a callout\'s actions in sight, stacked, with narrowActions="stack"', () => {
-  renderMeasured(600, { actions: TWO_ACTIONS, narrowActions: 'stack' });
+test('Keeps a callout\'s actions in sight, stacked, by default and with narrowActions="stack"', () => {
+  for (const props of [{}, { narrowActions: 'stack' as const }]) {
+    renderMeasured(600, { actions: TWO_ACTIONS, ...props });
 
-  const row = document.querySelector('.reqore-severity-row')!;
-  expect(row.getAttribute('data-actions')).toBeNull();
-  expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
-  expect(row.querySelectorAll('.reqore-severity-row-actions .reqore-button')).toHaveLength(2);
+    const row = document.querySelector('.reqore-severity-row')!;
+    expect(row.getAttribute('data-actions')).toBeNull();
+    expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
+    expect(row.querySelectorAll('.reqore-severity-row-actions .reqore-button')).toHaveLength(2);
+    cleanup();
+  }
 });
 
 test('Keeps every action inline in a wide container, and a single one a button when narrow', () => {

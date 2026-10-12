@@ -544,7 +544,15 @@ const ReqoreEntityRow = memo(
                       intent={action.intent ?? intent}
                       {...action}
                       {...actionsProps}
-                      {...(isNarrow ? { fluid: true } : {})}
+                      /* Stacked, a menu is a button the row's width like the others, and an icon-only one
+                         says what it is: its tooltip is its label, as a finger gets no tooltip to read. */
+                      {...(isNarrow ?
+                        {
+                          fluid: true,
+                          fixed: false,
+                          label: action.label ?? getRowActionLabel({ tooltip: action.tooltip }),
+                        }
+                      : {})}
                       items={subActions.filter(isSubActionShown)}
                       onClick={stopRowClick}
                     />

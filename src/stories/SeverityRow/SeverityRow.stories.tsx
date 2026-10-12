@@ -499,10 +499,10 @@ export const CustomPaddingSize: Story = {
 };
 
 /* A narrow row's actions (qorus#646). A row measures its OWN container - a severity row in a 320px drawer
-   on a 1920px screen is as narrow as one on a phone - and below 640px of it, two or more actions are one
-   menu button at the end of the label's line, as a narrow table's are: the label keeps the row's width,
-   and a list of rows does not grow by a line per action. A callout whose actions are what it is there for
-   keeps them in sight with `narrowActions='stack'`. */
+   on a 1920px screen is as narrow as one on a phone - and below 640px of it, its actions stack under the
+   label, one to a line, each the row's width: a severity row is a callout, and its buttons are the response
+   it asks for, so they stay in sight. A list of rows that should not grow by a line per action folds them
+   into one menu button at the end of the label's line with `narrowActions='menu'`, as a narrow table does. */
 
 const onInvestigate = fn();
 const onDismiss = fn();
@@ -529,8 +529,16 @@ const INCIDENT_ACTIONS: IReqoreSeverityRowProps['actions'] = [
   },
 ];
 
-const IncidentRow = ({ clickable }: { clickable?: boolean }) => (
+const IncidentRow = ({
+  clickable,
+  narrowActions = 'menu',
+}: {
+  clickable?: boolean;
+  narrowActions?: IReqoreSeverityRowProps['narrowActions'] | null;
+}) => (
   <ReqoreSeverityRow
+    // `null`: the row's own default
+    {...(narrowActions ? { narrowActions } : {})}
     label='Payment Processing · stripe-webhook-receiver'
     description='Avg duration 4.7s exceeded 3.5s threshold · just now'
     intent='danger'
@@ -569,7 +577,7 @@ export const NarrowContainerActionsMenu: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row in two framed containers of different widths, each named above it: in the 720px one its Investigate and Dismiss sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Investigate and Dismiss (the icon's tooltip) with their icons; Escape puts it away with the focus on the button, and Dismiss chosen runs and closes it without opening the row.",
+          "Renders the same row (`narrowActions='menu'`) in two framed containers of different widths, each named above it: in the 720px one its Investigate and Dismiss sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Investigate and Dismiss (the icon's tooltip) with their icons; Escape puts it away with the focus on the button, and Dismiss chosen runs and closes it without opening the row.",
       },
     },
   },
@@ -633,11 +641,16 @@ export const NarrowContainerActionsMenu: Story = {
 
 /** The rows of a narrow list, each different: as many actions as a menu takes, one action, stacked, none, a long name. */
 const EQUAL_BOX_ROWS: Array<Pick<IReqoreSeverityRowProps, 'label' | 'actions' | 'narrowActions'>> = [
-  { label: 'Payment Processing · stripe-webhook-receiver', actions: INCIDENT_ACTIONS },
+  { label: 'Payment Processing · stripe-webhook-receiver', actions: INCIDENT_ACTIONS, narrowActions: 'menu' },
   { label: 'Order sync lagging', actions: INCIDENT_ACTIONS.slice(0, 1) },
-  { label: 'Inventory feed stale', actions: INCIDENT_ACTIONS, narrowActions: 'stack' },
+  // stacked: the default
+  { label: 'Inventory feed stale', actions: INCIDENT_ACTIONS },
   { label: 'Nightly export finished late' },
-  { label: 'payment-processing-stripe-webhook-receiver-production-eu-west-1 restarted', actions: INCIDENT_ACTIONS },
+  {
+    label: 'payment-processing-stripe-webhook-receiver-production-eu-west-1 restarted',
+    actions: INCIDENT_ACTIONS,
+    narrowActions: 'menu',
+  },
 ];
 
 const EqualBoxRows = () => (
@@ -660,7 +673,7 @@ export const NarrowRowsInEqualContainersAreEqual: Story = {
     docs: {
       description: {
         story:
-          'Renders five narrow rows, each in its own framed 400px container: two actions (one menu), one action, actions stacked, no actions, and a long unbroken name. Each row fills its frame, so all five are the same width; at a phone\'s width (390px) the frames narrow together and the rows stay equal.',
+          'Renders five narrow rows, each in its own framed 400px container: two actions in one menu (`narrowActions=\'menu\'`), one action, two actions stacked (the default), no actions, and a long unbroken name. Each row fills its frame, so all five are the same width; at a phone\'s width (390px) the frames narrow together and the rows stay equal.',
       },
     },
   },
@@ -691,7 +704,7 @@ export const NarrowContainerActionsMenuOnATouchScreen: Story = {
     docs: {
       description: {
         story:
-          "Renders the row in a card on a phone (390 px): its actions are one menu button at the end of the label's line. On a touch screen the button is a finger's size (44px each way); a tap opens the menu, its rows a finger's height, and a tap on Investigate runs it and closes the menu without opening the row. Nothing reaches past the screen.",
+          "Renders the row (`narrowActions='menu'`) in a card on a phone (390 px): its actions are one menu button at the end of the label's line. On a touch screen the button is a finger's size (44px each way); a tap opens the menu, its rows a finger's height, and a tap on Investigate runs it and closes the menu without opening the row. Nothing reaches past the screen.",
       },
     },
   },
@@ -749,7 +762,7 @@ export const NarrowSidebarList: Story = {
     docs: {
       description: {
         story:
-          "Renders a list of SeverityRows inside a 320px sidebar container. Every row's Open and Dismiss are one menu button at the end of its label's line, so each row is as tall as its text — regardless of how wide the surrounding viewport is — because the row keys on the sidebar's width, not the window's. The second row's menu names Open and Dismiss.",
+          "Renders a list of SeverityRows (`narrowActions='menu'`) inside a 320px sidebar container. Every row's Open and Dismiss are one menu button at the end of its label's line, so each row is as tall as its text — regardless of how wide the surrounding viewport is — because the row keys on the sidebar's width, not the window's. The second row's menu names Open and Dismiss.",
       },
     },
   },
@@ -783,6 +796,7 @@ export const NarrowSidebarList: Story = {
             intent={row.intent}
             leading={<ReqoreTag size='tiny' intent={row.intent} label={row.leadingLabel} />}
             fluid
+            narrowActions='menu'
             actions={[
               {
                 label: 'Open',
@@ -851,7 +865,7 @@ const AllowanceRow = () => (
       description='The design stopped at its last step. It can go on when the allowance renews, or now with a larger plan.'
       intent='warning'
       fluid
-      narrowActions='stack'
+      // no `narrowActions`: a severity row stacks its actions by default
       actions={ALLOWANCE_ACTIONS}
     />
   </div>
@@ -887,7 +901,7 @@ export const NarrowContainerActionsStack: Story = {
     docs: {
       description: {
         story:
-          "Renders a callout row whose two labelled actions are what it is there for (`narrowActions='stack'`) in a 320px container, as a card on a phone: the actions stack under the label, one to a line, each the row's width with its label whole, and none reaches past the row.",
+          "Renders a callout row whose two labelled actions are what it is there for, in a 320px container, as a card on a phone, with no `narrowActions` set: by default its actions stack under the label, one to a line, each the row's width with its label whole, and none reaches past the row.",
       },
     },
   },

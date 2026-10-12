@@ -885,6 +885,57 @@ export const NarrowContainerActionsStack: Story = {
   },
 };
 
+/** An Export Ledger row whose actions stay in sight: Run, and More actions, which is a menu of its own. */
+const StackedOrderRow = () => (
+  <StoryRowBox width={320} caption='A 320px container: the actions stacked'>
+    <ReqoreEntityRow
+      label='Export Ledger'
+      description='Last run 2h ago'
+      fluid
+      narrowActions='stack'
+      actions={ORDER_ACTIONS}
+    />
+  </StoryRowBox>
+);
+
+/** Run and the More actions menu, stacked: each says what it is and is as wide as the other. */
+const expectStackedMenuLabelled = async (canvasElement: HTMLElement) => {
+  await waitFor(() => {
+    const actions = canvasElement.querySelector('.reqore-entity-row-actions') as HTMLElement;
+    const [run, more] = Array.from(actions.children) as HTMLElement[];
+    expect(run.textContent).toContain('Run');
+    // the icon-only menu reads its tooltip as its label
+    expect(more.textContent).toContain('More actions');
+    // one to a line, each the row's width
+    expect(more.getBoundingClientRect().top).toBeGreaterThanOrEqual(run.getBoundingClientRect().bottom - 0.5);
+    expect(Math.abs(more.getBoundingClientRect().width - run.getBoundingClientRect().width)).toBeLessThan(1);
+  });
+};
+
+export const NarrowStackedMenuActionIsLabelled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders an Export Ledger row whose actions stay in sight (`narrowActions='stack'`) in a 320px container: Run, and More actions, an icon-only action that opens a menu. Stacked, More actions is labelled with its tooltip and is as wide as Run, one to a line; clicked, it opens Show in chat and Copy name. The same holds at a phone's width.",
+      },
+    },
+  },
+  render: () => <StackedOrderRow />,
+  play: async ({ canvasElement }) => {
+    await expectStackedMenuLabelled(canvasElement);
+    await withViewport(390, 844, async (narrowed) => {
+      if (narrowed) {
+        await expectStackedMenuLabelled(canvasElement);
+      }
+    });
+    const more = (canvasElement.querySelector('.reqore-entity-row-actions') as HTMLElement)
+      .children[1] as HTMLElement;
+    await userEvent.click(more);
+    await waitFor(() => expect(document.body).toHaveTextContent('Show in chat'));
+  },
+};
+
 export const NarrowContainerActionsStackOnTouch: Story = {
   globals: PHONE_STORY.globals,
   parameters: {

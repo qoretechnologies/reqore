@@ -654,6 +654,24 @@ test('Keeps the actions in sight, stacked, with narrowActions="stack"', () => {
   });
 });
 
+test('Stacked, labels an icon-only action that is a menu with its tooltip', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({
+      narrowActions: 'stack',
+      actions: [
+        { label: 'Run' },
+        { icon: 'More2Line', tooltip: 'More actions', actions: [{ label: 'Show in chat' }] },
+      ],
+    });
+
+    const [, more] = Array.from(
+      document.querySelector('.reqore-entity-row-actions')!.children
+    ) as HTMLElement[];
+    expect(more.textContent).toContain('More actions');
+  });
+});
+
 test('Keeps a single action a button when narrow, and every action inline when wide', () => {
   withResizeObserver(NarrowResizeObserver, () => {
     NarrowResizeObserver.width = 400;
