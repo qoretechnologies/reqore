@@ -58,7 +58,17 @@ interface ICdpSession {
 interface IVitestBrowser {
   cdp(): ICdpSession;
   page: { viewport(width: number, height: number): Promise<void> };
+  server: { config: { name?: string } };
 }
+
+/**
+ * The Vitest project the stories tagged `touch` run in (vitest.config.ts), and the only one `withTouchScreen`
+ * runs in. Chromium cannot hand a page back as it was after its touch emulation: turning it off takes the
+ * hover and pointer the machine reports, not the ones Playwright launched the browser with, and a Linux CI
+ * runner reports no mouse. So a touch story gets a page of its own, and every other story keeps a page that
+ * never was a phone.
+ */
+export const TOUCH_STORY_PROJECT = 'storybook-touch';
 
 const pointIn = (element: Element, fx = 0.5, fy = 0.5): ITouchPoint => {
   const box = element.getBoundingClientRect();
@@ -236,8 +246,10 @@ const dispatchedTouches = (): Pick<ITouchScreen, 'tap' | 'drag'> => {
  * (`Emulation.setTouchEmulationEnabled`, which is what Playwright's `hasTouch` does: `(pointer: coarse)` and
  * `(hover: none)` match, and `navigator.maxTouchPoints` is 5) and a mobile device
  * (`Emulation.setDeviceMetricsOverride` with `mobile`, which is what its `isMobile` does) - and the frame is
- * narrowed with the `page.viewport` call qlip makes. Each is put back when `body` ends, passed or failed,
- * or every later story would run on a phone.
+ * narrowed with the `page.viewport` call qlip makes. Each is put back when `body` ends, passed or failed.
+ * Putting the touch screen back cannot give the page back its mouse on every machine (see
+ * `TOUCH_STORY_PROJECT`), so a story that calls this is tagged `touch` (`tags: ['touch']`), which runs it
+ * in a page of its own, and the test run fails one that is not.
  *
  * `vitest/browser` is imported when called, never statically: it throws outside the test runner, and a
  * static import would take the Storybook dev server down. There the touches are dispatched events instead
@@ -257,6 +269,17 @@ export const withTouchScreen = async (
   if (!browser) {
     await body({ real: false, narrowed: false, pointIn, ...dispatchedTouches() });
     return;
+  }
+
+  // a project's browser runs as a project of its own, named after both: "storybook-touch (chromium)"
+  const project = browser.server.config.name ?? '';
+  if (project !== TOUCH_STORY_PROJECT && !project.startsWith(`${TOUCH_STORY_PROJECT} (`)) {
+    throw new Error(
+      `withTouchScreen ran in the "${project}" project. A story that uses a touch screen ` +
+        `is tagged 'touch' (tags: ['touch']), so it runs in "${TOUCH_STORY_PROJECT}", in a page of its own: ` +
+        `after a touch screen, Chromium leaves the page with the machine's own hover and pointer, and a ` +
+        `Linux CI runner has no mouse, so every later story in the page would find no hover.`
+    );
   }
 
   const session = browser.cdp();

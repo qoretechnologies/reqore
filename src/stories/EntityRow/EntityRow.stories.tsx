@@ -798,6 +798,7 @@ export const NarrowRowsInEqualContainersAreEqual: Story = {
 };
 
 export const NarrowContainerActionsMenuOnATouchScreen: Story = {
+  tags: ['touch'],
   globals: PHONE_STORY.globals,
   parameters: {
     ...PHONE_STORY.parameters,
@@ -937,6 +938,7 @@ export const NarrowStackedMenuActionIsLabelled: Story = {
 };
 
 export const NarrowContainerActionsStackOnTouch: Story = {
+  tags: ['touch'],
   globals: PHONE_STORY.globals,
   parameters: {
     ...PHONE_STORY.parameters,

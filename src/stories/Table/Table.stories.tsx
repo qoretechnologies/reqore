@@ -2661,6 +2661,7 @@ export const SearchFoldedFromTheKeyboard: Story = {
 };
 
 export const SearchFoldedOnATouchScreen: Story = {
+  tags: ['touch'],
   globals: PHONE_STORY.globals,
   parameters: {
     ...PHONE_STORY.parameters,
@@ -2882,6 +2883,7 @@ export const RowActionsMenuFromTheKeyboard: Story = {
 };
 
 export const RowActionsMenuOnATouchScreen: Story = {
+  tags: ['touch'],
   globals: PHONE_STORY.globals,
   parameters: {
     ...PHONE_STORY.parameters,

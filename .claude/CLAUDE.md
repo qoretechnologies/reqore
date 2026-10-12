@@ -184,6 +184,12 @@ release on npm.
 - **Location:** `src/stories/` (e.g. `Collection.stories.tsx`).
 - **Pattern:** ArgTypes for props, canvas controls, visual testing via Chromatic.
 - **Command:** `yarn build-storybook` builds the static site.
+- **Touch stories:** a story whose play calls `withTouchScreen` (`src/stories/utils/touchScreen.ts`)
+  carries `tags: ['touch']`. `yarn test:stories` runs those stories in their own Vitest project
+  (`storybook-touch`), and so their own browser page, after the others; an untagged one fails with
+  the reason. Chromium cannot give a page its mouse back after touch emulation: it takes the
+  machine's hover and pointer, and a Linux CI runner has no mouse, so every later story in the
+  same page would find `(hover: none)`. This never shows on a Mac, which always reports a mouse.
 
 ### Verifying a visual fix locally with Qlip — reqore mechanics
 
