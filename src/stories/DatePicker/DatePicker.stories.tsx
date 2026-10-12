@@ -1,6 +1,6 @@
 import { expect, userEvent, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { _testsClickButton, _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreControlGroup from '../../components/ControlGroup';
 import { DatePicker } from '../../components/DatePicker';
@@ -256,21 +256,23 @@ export const WithIntent: Story = {
         {Object.keys(DEFAULT_INTENTS)
           .filter((key) => !key.includes('custom'))
           .reverse()
-          .map((intent) =>
-            meta.render(
-              {
-                ...args,
-                intent: intent as TReqoreIntent,
-                pickerActiveDayProps: {
+          .map((intent) => (
+            <Fragment key={intent}>
+              {meta.render(
+                {
+                  ...args,
                   intent: intent as TReqoreIntent,
+                  pickerActiveDayProps: {
+                    intent: intent as TReqoreIntent,
+                  },
+                  popoverProps: {
+                    openOnMount: intent === 'info',
+                  },
                 },
-                popoverProps: {
-                  openOnMount: intent === 'info',
-                },
-              },
-              ctx
-            )
-          )}
+                ctx
+              )}
+            </Fragment>
+          ))}
       </ReqoreControlGroup>
     );
   },

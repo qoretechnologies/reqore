@@ -506,7 +506,10 @@ const ReqoreDropdownList = memo(
 
     return (
       <ReqoreControlGroup vertical fluid>
-        {customElements}
+        {/* an array prop: keyed here, so a caller passing elements without keys draws no warning */}
+        {customElements?.map((element, index) => (
+          <React.Fragment key={index}>{element}</React.Fragment>
+        ))}
         {(size(items) && filterable) || _onBackClick ? (
           <>
             <ReqoreControlGroup fluid>

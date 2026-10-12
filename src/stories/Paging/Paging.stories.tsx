@@ -26,7 +26,12 @@ const Template: StoryRenderer<StoryType> = (args) => {
   return (
     <ReqoreControlGroup vertical fluid key='paging-wrapper'>
       {paging.items.map((item) => (
-        <ReqoreTag fixed='key' labelKey={item.id} label={`${item.firstName} ${item.lastName}`} />
+        <ReqoreTag
+          key={item.id}
+          fixed='key'
+          labelKey={item.id}
+          label={`${item.firstName} ${item.lastName}`}
+        />
       ))}
       <ReqorePagination<any>
         {...paging}
