@@ -1,10 +1,14 @@
 import { StoryObj } from '@storybook/react';
 import { noop } from 'lodash';
+import { useState } from 'react';
 import { expect, fireEvent, waitFor } from 'storybook/test';
+import { _testsWaitForText } from '../../../__tests__/utils';
 import ReqoreNotification from '../../components/Notifications/notification';
 import { TSizes } from '../../constants/sizes';
-import { ReqoreTag } from '../../index';
+import { sleep } from '../../helpers/utils';
+import { ReqoreCallout, ReqoreTag } from '../../index';
 import { StoryMeta } from '../utils';
+import { IDragPointerOptions, dragPointer } from '../utils/pointer';
 import { Backdrop, DANGER, Grid, Row, SAMPLES, STATIC, sampleProps } from './samples';
 
 /*
@@ -537,5 +541,157 @@ export const Matrix: Story = {
   ),
   play: async () => {
     await waitFor(() => expect(countNotifications()).toBe(SAMPLES.length * COLUMNS.length * 2));
+  },
+};
+
+/* Swipe-to-dismiss. The toast follows the finger sideways and closes past 18% of its width
+   or with a flick; a shorter pull springs back. The stories drive it with real pointer events
+   (`dragPointer`) and assert inside `waitFor`. One story is captured held mid-swipe; the
+   others end on a dismissed or a resting toast and are play-only. */
+const SwipeDemo = ({
+  swipeToDismiss = true,
+  duration,
+}: {
+  swipeToDismiss?: boolean;
+  duration?: number;
+}) => {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <Backdrop>
+      {open ? (
+        <ReqoreNotification
+          {...sampleProps(SAMPLES[1])}
+          duration={duration}
+          onFinish={noop}
+          swipeToDismiss={swipeToDismiss}
+          onClose={() => setOpen(false)}
+        />
+      ) : (
+        <ReqoreCallout intent='success' label='Dismissed by a swipe' />
+      )}
+    </Backdrop>
+  );
+};
+
+const toast = () => document.querySelector('.reqore-notification') as HTMLElement;
+
+/** Drags the toast sideways by `share` of its width, from its middle or from `from`. */
+const swipeToast = async (
+  share: number,
+  options?: IDragPointerOptions & { from?: Element | null }
+) => {
+  const { from, ...drag } = options ?? {};
+  const target = from ?? toast();
+  const rect = target.getBoundingClientRect();
+
+  await dragPointer(
+    target,
+    { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+    { dx: toast().getBoundingClientRect().width * share, dy: 0 },
+    drag
+  );
+};
+
+/** The toast is on screen and has not been moved by a drag (settled, or sprung back). */
+const expectToastAtRest = async () => {
+  await waitFor(() => {
+    expect(toast()).toBeTruthy();
+    expect(toast().style.transform).not.toContain('translate3d');
+    expect(toast().classList.contains('reqore-notification-dragging')).toBe(false);
+  });
+};
+
+const PHONE_VIEWPORT = {
+  viewport: { defaultViewport: 'mobile1' },
+  qlip: { viewport: { width: 380, height: 700 } },
+};
+
+export const SwipeToDismiss: Story = {
+  parameters: {
+    // The frame after the play is the page with the toast gone: nothing to review.
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'A toast flicked away: a drag that starts on its close button does nothing, then a drag of its body by 40% of its width closes it through `onClose` — the page says so with a callout. On for every toast with an `onClose` unless `swipeToDismiss={false}`.',
+      },
+    },
+  },
+  render: () => <SwipeDemo />,
+  play: async () => {
+    await expectToastAtRest();
+    await expect(toast().classList.contains('reqore-notification-swipeable')).toBe(true);
+
+    await swipeToast(0.4, { from: toast().querySelector('.reqore-notification-close') });
+    await sleep(300);
+    await expectToastAtRest();
+
+    await swipeToast(0.4);
+    await _testsWaitForText('Dismissed by a swipe');
+    await waitFor(() => expect(document.querySelector('.reqore-notification')).toBeNull());
+  },
+};
+
+export const SwipeSpringsBack: Story = {
+  parameters: {
+    // The frame after the play is a toast at rest, which every other story captures.
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'A toast pulled sideways by only 6% of its width, held still and let go: too short to count and not a flick, so it springs back and stays.',
+      },
+    },
+  },
+  render: () => <SwipeDemo />,
+  play: async () => {
+    await expectToastAtRest();
+    await swipeToast(0.06, { settle: 80 });
+    await expectToastAtRest();
+    await expect(document.querySelector('.reqore-callout')).toBeNull();
+  },
+};
+
+export const SwipeInProgress: Story = {
+  parameters: {
+    ...PHONE_VIEWPORT,
+    docs: {
+      description: {
+        story:
+          'A toast on a phone caught mid-swipe: dragged 35% of its width to the right and still held, so it sits that far from where it started, carries `.reqore-notification-dragging`, and its fifteen-second timer line is paused. The one swipe story Qlip captures.',
+      },
+    },
+  },
+  render: () => <SwipeDemo duration={15000} />,
+  play: async () => {
+    await expectToastAtRest();
+    await swipeToast(0.35, { release: false });
+    await waitFor(() => {
+      expect(toast().classList.contains('reqore-notification-dragging')).toBe(true);
+      expect(toast().style.transform).toMatch(/^translate3d\(\d+(\.\d+)?px, 0px, 0px\)/);
+      expect(toast().querySelector('.reqore-notification-progress')).toHaveAttribute('data-paused');
+    });
+  },
+};
+
+export const SwipeOff: Story = {
+  parameters: {
+    qlip: { skip: true },
+    docs: {
+      description: {
+        story:
+          'A toast with `swipeToDismiss={false}`: dragged by 40% of its width and let go, nothing happens — it stays, without the `.reqore-notification-swipeable` class, and only its close button closes it.',
+      },
+    },
+  },
+  render: () => <SwipeDemo swipeToDismiss={false} />,
+  play: async () => {
+    await expectToastAtRest();
+    await expect(toast().classList.contains('reqore-notification-swipeable')).toBe(false);
+    await swipeToast(0.4);
+    await sleep(300);
+    await expectToastAtRest();
+    await expect(document.querySelector('.reqore-callout')).toBeNull();
   },
 };
