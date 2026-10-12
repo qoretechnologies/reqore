@@ -13,7 +13,9 @@ import {
   openRowActionsMenuItems,
   rowActionsMenuButtons,
 } from '../utils/rowActionsMenu';
+import { expectEqualBoxesEqualRows, expectRowsFillTheirBoxes, StoryRowBox } from '../utils/rowBoxes';
 import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
+import { withViewport } from '../utils/viewport';
 
 const meta = {
   title: 'Display/Entity Row',
@@ -577,18 +579,26 @@ export const NarrowContainerActionsMenu: Story = {
     docs: {
       description: {
         story:
-          "Renders the same row in a 720px container, Run and the More actions menu side by side as always, and in a 400px one, where they are one menu button at the end of the label's line. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
+          "Renders the same row in two framed containers of different widths, each named above it: in the 720px one Run and the More actions menu sit side by side as always; in the 400px one they are one menu button at the end of the label's line. Each row fills its frame exactly. Clicked, the menu names Run and More actions with their icons, More actions holding Show in chat and Copy name; Escape puts it away with the focus on the button, and Run chosen runs and closes it without opening the row.",
       },
     },
   },
   render: () => (
     <ReqoreControlGroup vertical gapSize='big'>
-      <div className='wide-row-box' style={{ width: 720, maxWidth: '100%' }}>
+      <StoryRowBox
+        className='wide-row-box'
+        width={720}
+        caption='A 720px container: the actions side by side'
+      >
         <OrderRow />
-      </div>
-      <div className='narrow-row-box' style={{ width: 400, maxWidth: '100%' }}>
+      </StoryRowBox>
+      <StoryRowBox
+        className='narrow-row-box'
+        width={400}
+        caption='A 400px container: the actions in one menu'
+      >
         <OrderRow clickable />
-      </div>
+      </StoryRowBox>
     </ReqoreControlGroup>
   ),
   play: async ({ canvasElement }) => {
@@ -599,6 +609,9 @@ export const NarrowContainerActionsMenu: Story = {
       return row;
     })) as HTMLElement;
     const narrow = await narrowEntityRow(canvasElement.querySelector('.narrow-row-box')!);
+    // the two rows differ in width because their containers do, and each says which it is
+    expect(canvasElement.querySelectorAll('.story-row-box-caption')).toHaveLength(2);
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-entity-row');
 
     // wide: the actions as they always were
     expect(wide.getAttribute('data-narrow')).toBeNull();
@@ -730,6 +743,59 @@ const NarrowConnectionRow = ({ narrowActions }: Pick<IReqoreEntityRowProps, 'nar
 
 const clearConnectionSpies = () =>
   [onTestConnection, onOpenSettings, onRemove, onEntityRowClick].forEach((spy) => spy.mockClear());
+
+/** The rows of a narrow list, each different: as many actions as a menu takes, one action, stacked, none, a long name. */
+const EQUAL_BOX_ENTITY_ROWS: Array<Pick<IReqoreEntityRowProps, 'label' | 'actions' | 'narrowActions'>> = [
+  { label: 'Process Incoming Order · order-intake-workflow', actions: ORDER_ACTIONS },
+  { label: 'Sync Inventory', actions: ORDER_ACTIONS.slice(0, 1) },
+  { label: 'Export Ledger', actions: ORDER_ACTIONS, narrowActions: 'stack' },
+  { label: 'Nightly Cleanup' },
+  { label: 'process-incoming-order-order-intake-workflow-production-eu-west-1', actions: ORDER_ACTIONS },
+];
+
+const EqualBoxEntityRows = () => (
+  <ReqoreControlGroup vertical gapSize='big'>
+    {EQUAL_BOX_ENTITY_ROWS.map((row, index) => (
+      <StoryRowBox key={index} width={400} caption='A 400px container'>
+        <ReqoreEntityRow
+          description='Last run 4m ago · 1,204 executions today'
+          metadata='workflow'
+          icon='GitBranchLine'
+          {...row}
+        />
+      </StoryRowBox>
+    ))}
+  </ReqoreControlGroup>
+);
+
+export const NarrowRowsInEqualContainersAreEqual: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders five narrow rows, each in its own framed 400px container: two actions (one menu), one action, actions stacked, no actions, and a long unbroken name. Each row fills its frame, so all five are the same width; at a phone\'s width (390px) the frames narrow together and the rows stay equal.',
+      },
+    },
+  },
+  render: () => <EqualBoxEntityRows />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('.reqore-entity-row[data-narrow="true"]')).toHaveLength(
+        EQUAL_BOX_ENTITY_ROWS.length
+      )
+    );
+    expectRowsFillTheirBoxes(canvasElement, '.reqore-entity-row');
+    expectEqualBoxesEqualRows(canvasElement, '.reqore-entity-row');
+    await withViewport(390, 844, async (narrowed) => {
+      if (narrowed) {
+        await waitFor(() => {
+          expectRowsFillTheirBoxes(canvasElement, '.reqore-entity-row');
+          expectEqualBoxesEqualRows(canvasElement, '.reqore-entity-row');
+        });
+      }
+    });
+  },
+};
 
 export const NarrowContainerActionsMenuOnATouchScreen: Story = {
   globals: PHONE_STORY.globals,
