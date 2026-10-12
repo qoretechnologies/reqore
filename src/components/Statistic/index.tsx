@@ -218,13 +218,17 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
      (KPI strips, dashboards). Without bounding the tile intrinsic
      width to its column, the widest unbreakable token in the value,
      trend or label can push past the column edge and bleed into the
-     neighbouring tile. min-width 0 lets flex-shrink do its job,
-     max-width 100% caps the box at the column it lives in, and
-     overflow hidden clips any child that refuses to honour the cap.
-     With a div root these all behave as documented. */
-  min-width: 0;
+     neighbouring tile. max-width 100% caps the box at the column it
+     lives in, and overflow clip clips any child that refuses to honour
+     the cap. Clip, not hidden, and no min-width of 0 (qorus#646): a tile
+     in a flex or grid row is then never narrower than the longest word
+     of its label - the row's automatic minimum, which "hidden" (a
+     scroll container) and "min-width: 0" both took away, so a 120px
+     tile broke "DEPENDENCIES" mid-word - and never wider than its
+     column, which caps that minimum. */
   max-width: 100%;
-  overflow: hidden;
+  overflow: clip;
+  & .reqore-statistic-content,
   & .reqore-statistic-label,
   & .reqore-statistic-value-row,
   & .reqore-statistic-trend {
@@ -241,10 +245,18 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
     flex-wrap: wrap;
   }
   /* Wrap rather than ellipsis — KPI tiles benefit from the operator
-     seeing the whole sub-line rather than a clipped fragment.
-     overflow-wrap anywhere covers identifiers, URLs and long codes
+     seeing the whole sub-line rather than a clipped fragment. A label
+     is words: it wraps between them, and a word breaks only when it
+     alone is wider than the line (break-word, which unlike anywhere
+     leaves the longest word as the label's narrowest width). */
+  & .reqore-statistic-label {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    max-width: 100%;
+  }
+  /* overflow-wrap anywhere covers identifiers, URLs and long codes
      with no natural break point. */
-  & .reqore-statistic-label,
   & .reqore-statistic-value,
   & .reqore-statistic-prefix,
   & .reqore-statistic-suffix {
