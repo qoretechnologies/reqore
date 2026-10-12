@@ -68,6 +68,14 @@ const pointIn = (element: Element, fx = 0.5, fy = 0.5): ITouchPoint => {
 const toPoint = (at: Element | ITouchPoint): ITouchPoint =>
   at instanceof Element ? pointIn(at) : at;
 
+/**
+ * The next frame: what the last event set in motion has been drawn, and the effects it scheduled have run. A
+ * finger's events come a frame or more apart, and a drag handler that starts listening for moves in an effect
+ * after the touch began hears none sent in the same frame.
+ */
+const nextFrame = (): Promise<void> =>
+  new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
+
 const between = (from: ITouchPoint, to: ITouchPoint, step: number, steps: number): ITouchPoint => ({
   x: from.x + ((to.x - from.x) * step) / steps,
   y: from.y + ((to.y - from.y) * step) / steps,
@@ -169,6 +177,17 @@ const dispatchedTouches = (): Pick<ITouchScreen, 'tap' | 'drag'> => {
       })
     );
   const under = (point: ITouchPoint) => document.elementFromPoint(point.x, point.y) ?? document.body;
+  /**
+   * What a press moves the focus to, as a browser decides it: the nearest element a click can focus - a
+   * control, a link, anything with a `tabindex` (-1 included), an editable area - or none, which leaves the
+   * focus nowhere. The element under the finger is often a label inside a control; focusing only that (or
+   * nothing) tells the component around it the focus came from outside.
+   */
+  const focusTargetOf = (target: Element): HTMLElement | null =>
+    target.closest<HTMLElement>(
+      'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
+        'textarea:not([disabled]), iframe, summary, [tabindex], [contenteditable=""], [contenteditable="true"]'
+    );
 
   return {
     async tap(at) {
@@ -178,9 +197,14 @@ const dispatchedTouches = (): Pick<ITouchScreen, 'tap' | 'drag'> => {
       touch('touchstart', target, point);
       pointer('pointerup', target, point);
       touch('touchend', target, point);
-      mouse('mousedown', target, point);
-      if (target instanceof HTMLElement && target.tabIndex >= 0) {
-        target.focus();
+      // a press the page cancels moves no focus; otherwise the focus goes where a browser would put it
+      if (mouse('mousedown', target, point)) {
+        const focusTarget = focusTargetOf(target);
+        if (focusTarget) {
+          focusTarget.focus();
+        } else {
+          (document.activeElement as HTMLElement | null)?.blur?.();
+        }
       }
       mouse('mouseup', target, point);
       mouse('click', target, point);
@@ -190,13 +214,16 @@ const dispatchedTouches = (): Pick<ITouchScreen, 'tap' | 'drag'> => {
       const target = under(from);
       pointer('pointerdown', target, from);
       touch('touchstart', target, from);
+      await nextFrame();
       for (let step = 1; step <= steps; step++) {
         const point = between(from, to, step, steps);
         pointer('pointermove', target, point);
         touch('touchmove', target, point);
+        await nextFrame();
       }
       pointer('pointerup', target, to);
       touch('touchend', target, to);
+      await nextFrame();
     },
   };
 };
