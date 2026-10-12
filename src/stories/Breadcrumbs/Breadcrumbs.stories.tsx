@@ -191,8 +191,8 @@ export const NoOverlapWithRightElement: Story = {
 
 // Regression guard: re-rendering with a NEW `items` array identity (as an
 // unstable upstream `useMemo` would) must NOT accumulate crumbs. The bug was a
-// key derived from `items.indexOf(item)`, which returned -1 for the stale item
-// objects OverflowList maps over during a re-render — collapsing every crumb
+// key derived from `items.indexOf(item)`, which returned -1 for stale item
+// objects the trail mapped over during a re-render — collapsing every crumb
 // onto one key so React appended a fresh (duplicate) crumb on every render. The
 // play re-renders repeatedly and asserts the crumb count stays put.
 const ReRenderStress = () => {
@@ -519,6 +519,130 @@ export const FoldedCurrentPageIsNamedInFull: Story = {
       // ...and named in full
       await expect(current).toHaveAttribute('aria-label', LONG_LEAF_NAME);
       await expect(current).toHaveAttribute('title', LONG_LEAF_NAME);
+    });
+  },
+};
+
+/* A trail whose crumbs the page changes (qorus#646). The trail folds what does not fit before the browser
+   draws it: no frame shows a crumb past the trail's end. It used to fold one crumb per step after the
+   browser had drawn the last one, so a page that changed its crumbs showed them all, running past the
+   trail, until it had folded enough - on a 390 px phone, "… › New chat" ran 79 px past a 120 px trail for
+   50 ms. */
+
+const QONSOLE_TRAIL: IReqoreBreadcrumbItem[] = [
+  { label: 'Qonsole', icon: 'TerminalBoxLine' },
+  { label: 'Design mode', icon: 'PencilRulerLine' },
+  { label: 'New chat', icon: 'ChatNewLine' },
+];
+
+const CHAT_TRAIL: IReqoreBreadcrumbItem[] = [
+  { icon: 'Home3Line', menuLabel: 'Home' },
+  { label: 'Chats', icon: 'ChatHistoryLine' },
+  { label: 'New chat', icon: 'ChatNewLine' },
+];
+
+/** The parts the trail draws that reach past its end, each as "text left..right past end". */
+const partsPastTheTrail = (canvasElement: HTMLElement): string[] => {
+  const row = canvasElement.querySelector<HTMLElement>('.reqore-breadcrumbs-overflow-list');
+  if (!row) {
+    return ['no trail'];
+  }
+  const end = row.getBoundingClientRect().right;
+  return Array.from(row.children)
+    .map((part) => ({ part, box: part.getBoundingClientRect() }))
+    .filter(({ box }) => box.width > 0 && box.right > end + 0.5)
+    .map(({ part, box }) => `${part.textContent?.trim() || part.className} ${box.left}..${box.right} past ${end}`);
+};
+
+/**
+ * Runs `change` and returns every part the trail drew past its end meanwhile: checked after every change to
+ * the trail's DOM - a MutationObserver runs once the task that made the change is done, before any frame
+ * can be drawn - and on the first frame after the change, just before it is painted (a
+ * requestAnimationFrame callback).
+ */
+const partsDrawnPastTheTrailWhile = async (
+  canvasElement: HTMLElement,
+  change: () => Promise<void>
+): Promise<string[]> => {
+  const row = canvasElement.querySelector<HTMLElement>('.reqore-breadcrumbs-overflow-list')!;
+  const past: string[] = [];
+  let firstFrame: Promise<void> | undefined;
+  let changed: () => void = () => undefined;
+  const reached = new Promise<void>((resolve) => {
+    changed = resolve;
+  });
+  const watch = new MutationObserver(() => {
+    past.push(...partsPastTheTrail(canvasElement).map((part) => `after a change: ${part}`));
+    firstFrame ??= new Promise<void>((resolve) =>
+      requestAnimationFrame(() => {
+        past.push(...partsPastTheTrail(canvasElement).map((part) => `first frame: ${part}`));
+        resolve();
+      })
+    );
+    changed();
+  });
+  watch.observe(row, { childList: true, subtree: true, characterData: true });
+  try {
+    await change();
+    await reached;
+    await firstFrame;
+  } finally {
+    watch.disconnect();
+  }
+  return past;
+};
+
+const ChangingTrail = () => {
+  const [items, setItems] = useState(QONSOLE_TRAIL);
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreButton
+        className='open-chats'
+        fixed
+        // the new crumbs arrive the way loaded data does, not as the click's own update
+        onClick={() => Promise.resolve().then(() => setItems(CHAT_TRAIL))}
+      >
+        Open the chats
+      </ReqoreButton>
+      <div style={{ width: 290 }}>
+        <ReqoreBreadcrumbs
+          flat
+          padded={false}
+          items={items}
+          rightElement={<div className='page-actions' style={{ width: 160, height: 32 }} />}
+        />
+      </div>
+    </ReqoreControlGroup>
+  );
+};
+
+export const CrumbChangeIsFoldedBeforeItIsDrawn: Story = {
+  parameters: {
+    qlip: { viewport: { width: 390, height: 844 } },
+    docs: {
+      description: {
+        story:
+          'Renders a phone\'s trail (390 px) with about 120 px beside the page\'s actions, ending in "New chat", and changes its crumbs the way a page does when its data arrives. The trail folds what does not fit before the browser draws it: after the change and on the first frame after it, no part of the trail reaches past its end, and with no room for the folded crumbs\' "…" menu beside "New chat", the trail is one dropdown labelled "New chat".',
+      },
+    },
+  },
+  render: () => <ChangingTrail />,
+  play: async ({ canvasElement }) => {
+    const { withViewport } = await import('../utils/viewport');
+    await withViewport(390, 844, async () => {
+      await waitFor(() =>
+        expect(canvasElement.querySelector('.reqore-breadcrumbs-overflow-current')).toBeTruthy()
+      );
+      await expect(partsPastTheTrail(canvasElement)).toEqual([]);
+
+      const past = await partsDrawnPastTheTrailWhile(canvasElement, async () => {
+        await userEvent.click(canvasElement.querySelector('.open-chats')!);
+      });
+
+      await expect(past).toEqual([]);
+      const current = canvasElement.querySelector('.reqore-breadcrumbs-overflow-current');
+      await expect(current).toHaveAttribute('aria-label', 'New chat');
+      await expect(current).toHaveTextContent('New chat');
     });
   },
 };
