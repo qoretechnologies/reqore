@@ -55,6 +55,21 @@ export {
   MODAL_MIN_HEIGHT,
   MODAL_MIN_WIDTH,
 } from './components/Drawer';
+/* The sheet decision behind `responsiveLayout`, published so a consumer that
+   lays out AROUND a drawer (a docked bar, a page offset) can ask the same
+   question Reqore does instead of re-deriving the breakpoint locally. */
+export {
+  DRAWER_RESPONSIVE_LAYOUT_DEFAULTS,
+  DRAWER_SHEET_BREAKPOINT,
+  drawerSheetBreakpointPx,
+  resolveDrawerResponsiveLayout,
+} from './components/Drawer';
+export type {
+  IReqoreDrawerResolvedResponsiveLayout,
+  IReqoreDrawerResponsiveLayout,
+  IReqoreDrawerResponsiveViewport,
+  TReqoreDrawerResponsiveBreakpoint,
+} from './components/Drawer';
 export { ReqoreBackdrop } from './components/Drawer/backdrop';
 export { default as ReqoreDropdown } from './components/Dropdown';
 export { default as ReqoreEntityRow } from './components/EntityRow';
@@ -89,6 +104,10 @@ export {
   shortcutHasModifier,
 } from './helpers/shortcuts';
 export type { TReqoreKeyboardShortcut } from './helpers/shortcuts';
+/* The swipe judgement the library's own gestures share (a sheet pushed away, the tier stack),
+   so a consumer's gesture can feel the same under the finger. */
+export { getSwipeStep, SWIPE } from './helpers/gestures';
+export type { ISwipeThresholds } from './helpers/gestures';
 export { ReqoreKeyValueTable } from './components/KeyValueTable';
 export * from './components/Label';
 export { default as ReqoreLayoutContent } from './components/Layout/content';

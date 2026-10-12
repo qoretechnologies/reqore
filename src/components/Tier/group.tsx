@@ -23,8 +23,10 @@ import {
   getReadableColor,
   shouldDarken,
 } from '../../helpers/colors';
+import { getSwipeStep, SWIPE } from '../../helpers/gestures';
 import { isTextEntry } from '../../helpers/utils';
 import { NARROW_CONTAINER_BREAKPOINT_PX, useNarrowContainer } from '../../hooks/useNarrowContainer';
+import { usePointerDrag } from '../../hooks/usePointerDrag';
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
@@ -147,14 +149,15 @@ export const TIER_STACK = {
   /** The switch: a curve that overshoots a little and settles, like a spring. */
   duration: 480,
   easing: 'cubic-bezier(0.22, 1.25, 0.36, 1)',
-  /** A swipe brings the next tier to the front past this share of the tier's width... */
-  swipeDistance: 0.18,
-  /** ...or faster than this, in px per ms. */
-  swipeVelocity: 0.35,
-  /** How far a press moves, in px, before it is a swipe and not a click. */
-  slop: 8,
-  /** How much a drag past an end moves the stack. */
-  resistance: 0.3,
+  /**
+   * A swipe brings the next tier to the front past this share of the tier's width, or faster
+   * than `swipeVelocity` (px per ms); a press is a click until it has moved `slop` px; a drag past
+   * an end moves the stack by `resistance` of itself. The library's shared thresholds (`SWIPE`).
+   */
+  swipeDistance: SWIPE.distance,
+  swipeVelocity: SWIPE.velocity,
+  slop: SWIPE.slop,
+  resistance: SWIPE.resistance,
 } as const;
 
 /** `index` wrapped round (`loop`) or held to the ends of `count` tiers. */
@@ -214,19 +217,14 @@ export const getInitialTierIndex = (highlights: boolean[], defaultIndex?: number
  * (`TIER_STACK.swipeVelocity`, in the direction it went).
  */
 export const getTierSwipeStep = (distance: number, velocity: number, width: number): -1 | 0 | 1 => {
-  if (Math.abs(distance) < TIER_STACK.slop) {
-    return 0;
-  }
+  const step = getSwipeStep(distance, velocity, width, {
+    distance: TIER_STACK.swipeDistance,
+    velocity: TIER_STACK.swipeVelocity,
+    slop: TIER_STACK.slop,
+  });
 
-  const far = width > 0 && Math.abs(distance) >= width * TIER_STACK.swipeDistance;
-  const fast =
-    Math.abs(velocity) >= TIER_STACK.swipeVelocity && Math.sign(velocity) === Math.sign(distance);
-
-  if (!far && !fast) {
-    return 0;
-  }
-
-  return distance < 0 ? 1 : -1;
+  // The stack moves against the finger: dragged to the left, the NEXT tier comes to the front.
+  return step === 0 ? 0 : step < 0 ? 1 : -1;
 };
 
 const round = (value: number) => Math.round(value * 1000) / 1000;
@@ -462,16 +460,6 @@ const StyledTierGroupStatus = styled.div`
   border: 0;
 `;
 
-interface ITierGesture {
-  pointerId: number;
-  startX: number;
-  startY: number;
-  lastX: number;
-  lastTime: number;
-  velocity: number;
-  dragging: boolean;
-}
-
 export const ReqoreTierGroup = memo(
   forwardRef<HTMLDivElement, IReqoreTierGroupProps>(
     (
@@ -534,10 +522,7 @@ export const ReqoreTierGroup = memo(
       const rootRef = useRef<HTMLDivElement | null>(null);
       const viewportRef = useRef<HTMLDivElement | null>(null);
       const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-      const gestureRef = useRef<ITierGesture | null>(null);
-      const suppressClickRef = useRef(false);
       const [dragOffset, setDragOffset] = useState(0);
-      const [isDragging, setIsDragging] = useState(false);
 
       const setRootRef = useCallback(
         (node: HTMLDivElement | null) => {
@@ -678,139 +663,32 @@ export const ReqoreTierGroup = memo(
         [onKeyDown, isStack, front, count, goTo, keepFocusOnStack]
       );
 
-      const finishGesture = useCallback(
-        (commit: boolean) => {
-          const gesture = gestureRef.current;
+      // The swipe: the shared pointer drag (the same one a sheet is pushed away with), along
+      // the x axis so a mostly vertical press stays the page's to scroll. The stack follows the
+      // finger, gives a little past an end, and on release steps to the next or previous tier
+      // when the swipe went far or fast enough (`getTierSwipeStep`).
+      const { dragging: isDragging, handlers: dragHandlers } = usePointerDrag({
+        enabled: isStack && count >= 2,
+        axis: 'x',
+        slop: TIER_STACK.slop,
+        onMove: ({ dx }) => {
+          // Past an end, the stack gives a little and springs back.
+          const pastEnd = !loop && ((dx > 0 && front === 0) || (dx < 0 && front === count - 1));
 
-          gestureRef.current = null;
-
-          if (!gesture?.dragging) {
-            return;
-          }
-
-          const viewport = viewportRef.current;
-
-          if (viewport?.hasPointerCapture?.(gesture.pointerId)) {
-            viewport.releasePointerCapture(gesture.pointerId);
-          }
-
-          // The click that ends a drag is not a click on whatever it ended over.
-          suppressClickRef.current = true;
-          setIsDragging(false);
+          setDragOffset(pastEnd ? dx * TIER_STACK.resistance : dx);
+        },
+        onEnd: ({ dx, vx }, committed) => {
           setDragOffset(0);
 
-          if (commit) {
-            const step = getTierSwipeStep(
-              gesture.lastX - gesture.startX,
-              gesture.velocity,
-              getItemWidth()
-            );
+          if (committed) {
+            const step = getTierSwipeStep(dx, vx, getItemWidth());
 
             if (step) {
               goTo(front + step);
             }
           }
         },
-        [getItemWidth, goTo, front]
-      );
-
-      const handlePointerDown = useCallback(
-        (event: React.PointerEvent<HTMLDivElement>) => {
-          suppressClickRef.current = false;
-
-          if (!isStack || count < 2 || (event.pointerType === 'mouse' && event.button !== 0)) {
-            return;
-          }
-
-          gestureRef.current = {
-            pointerId: event.pointerId,
-            startX: event.clientX,
-            startY: event.clientY,
-            lastX: event.clientX,
-            lastTime: event.timeStamp,
-            velocity: 0,
-            dragging: false,
-          };
-        },
-        [isStack, count]
-      );
-
-      const handlePointerMove = useCallback(
-        (event: React.PointerEvent<HTMLDivElement>) => {
-          const gesture = gestureRef.current;
-
-          if (!gesture || gesture.pointerId !== event.pointerId) {
-            return;
-          }
-
-          // A mouse let go outside the window: nothing is held on a move that should be a drag.
-          if (event.pointerType === 'mouse' && event.buttons === 0) {
-            finishGesture(false);
-
-            return;
-          }
-
-          const dx = event.clientX - gesture.startX;
-          const dy = event.clientY - gesture.startY;
-
-          if (!gesture.dragging) {
-            if (Math.abs(dx) < TIER_STACK.slop && Math.abs(dy) < TIER_STACK.slop) {
-              return;
-            }
-
-            // Mostly vertical: the page is being scrolled, not the stack swiped.
-            if (Math.abs(dy) >= Math.abs(dx)) {
-              gestureRef.current = null;
-
-              return;
-            }
-
-            gesture.dragging = true;
-
-            try {
-              viewportRef.current?.setPointerCapture(event.pointerId);
-            } catch {
-              // Capture only keeps the drag going outside the stack; it is not the mechanism.
-            }
-
-            setIsDragging(true);
-          }
-
-          const elapsed = event.timeStamp - gesture.lastTime;
-
-          if (elapsed > 0) {
-            gesture.velocity = (event.clientX - gesture.lastX) / elapsed;
-          }
-
-          gesture.lastX = event.clientX;
-          gesture.lastTime = event.timeStamp;
-
-          // Past an end, the stack gives a little and springs back.
-          const pastEnd = !loop && ((dx > 0 && front === 0) || (dx < 0 && front === count - 1));
-
-          setDragOffset(pastEnd ? dx * TIER_STACK.resistance : dx);
-        },
-        [finishGesture, loop, front, count]
-      );
-
-      const handlePointerUp = useCallback(
-        (event: React.PointerEvent<HTMLDivElement>) => {
-          if (gestureRef.current?.pointerId === event.pointerId) {
-            finishGesture(true);
-          }
-        },
-        [finishGesture]
-      );
-
-      const handlePointerCancel = useCallback(() => finishGesture(false), [finishGesture]);
-
-      const handleClickCapture = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-        if (suppressClickRef.current) {
-          suppressClickRef.current = false;
-          event.preventDefault();
-          event.stopPropagation();
-        }
-      }, []);
+      });
 
       // A press on a neighbour (inert, so it lands on the stack) brings it to the front.
       const handleViewportClick = useCallback(
@@ -921,17 +799,7 @@ export const ReqoreTierGroup = memo(
             className='reqore-tier-group-viewport'
             $stack={isStack}
             $dragging={isDragging}
-            {...(isStack
-              ? {
-                  onPointerDown: handlePointerDown,
-                  onPointerMove: handlePointerMove,
-                  onPointerUp: handlePointerUp,
-                  onPointerCancel: handlePointerCancel,
-                  onClickCapture: handleClickCapture,
-                  onClick: handleViewportClick,
-                  onDragStart: (event: React.DragEvent) => event.preventDefault(),
-                }
-              : {})}
+            {...(isStack ? { ...dragHandlers, onClick: handleViewportClick } : {})}
           >
             <StyledTierGroupTrack className='reqore-tier-group-track' $stack={isStack}>
               {items}
