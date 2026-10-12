@@ -16,7 +16,7 @@ import ReqoreIcon from '../Icon';
 import { IReqoreTabsListItem } from '../Tabs';
 import { StyledTabListItem } from '../Tabs/item';
 import ReqoreTabsList, { StyledReqoreTabsList } from '../Tabs/list';
-import ReqoreBreadcrumbsItem from './item';
+import ReqoreBreadcrumbsItem, { IReqoreCrumbSizeObserver } from './item';
 
 export interface IReqoreBreadcrumbItemTabs {
   tabs: IReqoreTabsListItem[];
@@ -214,11 +214,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
      crumb grew from 151 to 160px and the last crumb stayed clipped (qorus#646). So every crumb is
      observed while it is drawn, and a crumb that grows past the trail, or narrows (a folded crumb may
      fit again), has the trail measured again, from all its crumbs - a new `items` array is how
-     `OverflowList` is told to. The observer reports a crumb's first width when it starts observing it,
-     which is not a change. */
+     `OverflowList` is told to. A crumb's width is taken when it starts being observed - the width the
+     trail was measured with - not from the observer's first report, which can come after the crumb has
+     already changed. */
   const trailRef = useRef<HTMLDivElement>(null);
   const [measurement, setMeasurement] = useState(0);
-  const [crumbResizeObserver, setCrumbResizeObserver] = useState<ResizeObserver>();
+  const [crumbSizeObserver, setCrumbSizeObserver] = useState<IReqoreCrumbSizeObserver>();
 
   useLayoutEffect(() => {
     if (!responsive || typeof ResizeObserver === 'undefined') {
@@ -246,11 +247,21 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       }
     });
 
-    setCrumbResizeObserver(observer);
+    setCrumbSizeObserver({
+      observe: (element) => {
+        widths.set(element, element.getBoundingClientRect().width);
+        // the border box: a crumb that grows by its padding keeps its content box
+        observer.observe(element, { box: 'border-box' });
+      },
+      unobserve: (element) => {
+        widths.delete(element);
+        observer.unobserve(element);
+      },
+    });
 
     return () => {
       observer.disconnect();
-      setCrumbResizeObserver(undefined);
+      setCrumbSizeObserver(undefined);
     };
   }, [responsive]);
 
@@ -325,7 +336,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           customTheme={customTheme}
           {...item}
           size={size}
-          resizeObserver={crumbResizeObserver}
+          sizeObserver={crumbSizeObserver}
         />
       </React.Fragment>
     );

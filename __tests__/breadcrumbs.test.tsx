@@ -185,3 +185,52 @@ test('A static trail observes nothing', () => {
     expect(crumbObserved).toBe(false);
   });
 });
+
+test('A crumb that changed width before the observer first reported it has the trail measured again', () => {
+  /* Every box is 100px wide and the trail has room, until the crumbs grow: then the spacer that
+     `OverflowList` reads is squeezed to nothing and the trail overflows. */
+  let grown = false;
+  const rect = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function (this: HTMLElement) {
+    const spacer = this.style?.width === '1px';
+    const width = spacer ? (grown ? 0 : 1) : 100;
+    return { width, height: 20, top: 0, left: 0, right: width, bottom: 20, x: 0, y: 0, toJSON: () => ({}) };
+  } as typeof rect;
+
+  try {
+    withRecordingResizeObserver(() => {
+      render(
+        <ReqoreUIProvider>
+          <ReqoreBreadcrumbs items={PAGES} />
+        </ReqoreUIProvider>
+      );
+
+      // the whole trail fits: every crumb is drawn, nothing folded
+      expect(document.querySelectorAll('.reqore-breadcrumbs-item')).toHaveLength(PAGES.length);
+      expect(document.querySelector('.reqore-dropdown-control')).toBeNull();
+
+      const observer = RecordingResizeObserver.instances.find((each) =>
+        each.observed.some(({ target }) => target.classList.contains('reqore-breadcrumbs-item'))
+      )!;
+      const list = document.querySelector('.reqore-breadcrumbs-overflow-list') as HTMLElement;
+      Object.defineProperty(list, 'scrollWidth', { configurable: true, value: 600 });
+      Object.defineProperty(list, 'clientWidth', { configurable: true, value: 500 });
+      grown = true;
+
+      // the observer's FIRST report of each crumb: already 120px, not the 100px it was measured at
+      act(() =>
+        observer.callback(
+          observer.observed.map(
+            ({ target }) =>
+              ({ target, borderBoxSize: [{ inlineSize: 120, blockSize: 20 }] }) as unknown as ResizeObserverEntry
+          ),
+          observer as unknown as ResizeObserver
+        )
+      );
+
+      expect(document.querySelector('.reqore-dropdown-control')).not.toBeNull();
+    });
+  } finally {
+    Element.prototype.getBoundingClientRect = rect;
+  }
+});

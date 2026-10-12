@@ -5,14 +5,20 @@ import { IReqoreTheme } from '../../constants/theme';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
 
+/** How the trail watches its crumbs' widths: a crumb is observed while it is drawn. */
+export interface IReqoreCrumbSizeObserver {
+  observe(element: Element): void;
+  unobserve(element: Element): void;
+}
+
 export interface IReqoreBreadcrumbItemProps extends IReqoreBreadcrumbItem {
   interactive?: boolean;
   size?: TSizes;
   /**
-   * Internal: the trail's observer of its crumbs' sizes. The crumb is observed while it is drawn, so
-   * the trail can measure again what fits when a crumb changes width after it was measured.
+   * Internal: the trail's observer of its crumbs' widths, so it can measure again what fits when a
+   * crumb changes width after it was measured.
    */
-  resizeObserver?: ResizeObserver;
+  sizeObserver?: IReqoreCrumbSizeObserver;
 }
 
 export interface IReqoreBreadcrumbItemStyle extends IReqoreBreadcrumbItemProps {
@@ -28,7 +34,7 @@ const ReqoreBreadcrumbsItem = forwardRef<HTMLButtonElement, IReqoreBreadcrumbIte
       as,
       customTheme,
       interactive: _interactive,
-      resizeObserver,
+      sizeObserver,
       ...rest
     }: IReqoreBreadcrumbItemProps,
     ref
@@ -54,15 +60,14 @@ const ReqoreBreadcrumbsItem = forwardRef<HTMLButtonElement, IReqoreBreadcrumbIte
     useEffect(() => {
       const node = element.current;
 
-      if (!node || !resizeObserver) {
+      if (!node || !sizeObserver) {
         return undefined;
       }
 
-      // the border box: a crumb that grows by its padding keeps its content box
-      resizeObserver.observe(node, { box: 'border-box' });
+      sizeObserver.observe(node);
 
-      return () => resizeObserver.unobserve(node);
-    }, [resizeObserver]);
+      return () => sizeObserver.unobserve(node);
+    }, [sizeObserver]);
 
     return (
       <ReqoreButton
