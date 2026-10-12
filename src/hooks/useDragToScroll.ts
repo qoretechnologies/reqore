@@ -52,9 +52,12 @@ export interface IUseDragToScrollOptions {
 /**
  * Press and pull a sideways-scrolling surface to scroll it.
  *
- * Shared by `ReqoreFadeScroller` (`dragToScroll`) and `ReqoreTable` (`dragToScroll`,
- * and its header's touch swipes): one implementation of the gesture, so a fix to it
- * reaches every surface.
+ * `ReqoreTable`'s (`dragToScroll`, and its header's touch swipes). It binds to the
+ * elements themselves, not through handlers spread in render, because a table's body
+ * appears after mount and its header scrolls a body that is another element. The other
+ * drags in the library - a sheet, a modal, a toast, a tier stack, `ReqoreFadeScroller`'s
+ * `dragToScroll` - share `usePointerDrag`; a fix to the gesture belongs in both (a
+ * finger's implicit capture, for one).
  */
 export const useDragToScroll = ({
   scrollRef,

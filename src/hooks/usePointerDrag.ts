@@ -213,9 +213,23 @@ export const usePointerDrag = (options: IUsePointerDragOptions): IUsePointerDrag
       optionsRef.current.onMove?.({ dx, dy, vx: gesture.vx, vy: gesture.vy }, event);
     };
     const onEnd = (event: PointerEvent) => {
-      if (gestureRef.current?.pointerId === event.pointerId) {
-        finish(event.type === 'pointerup');
+      const gesture = gestureRef.current;
+
+      if (gesture?.pointerId !== event.pointerId) {
+        return;
       }
+
+      /* Only the capture THIS gesture took ends it. A finger's pointer is captured by the element
+         it lands on (implicit touch capture); taking the capture for the element that drags moves
+         it away from that one - a title, a label, a cell inside it - which then reports losing it,
+         and that is the drag starting, not ending. Ending there stopped a swipe after its first few
+         pixels whenever the finger landed on something inside the element (found on a table's
+         header with real touch events, #710). */
+      if (event.type === 'lostpointercapture' && event.target !== gesture.element) {
+        return;
+      }
+
+      finish(event.type === 'pointerup');
     };
     // Alt-tabbing mid-drag: the release happens in another window.
     const onBlur = () => finish(false);
