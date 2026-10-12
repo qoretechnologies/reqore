@@ -1,6 +1,6 @@
 import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { StoryObj } from '@storybook/react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { noop, slice } from 'lodash';
 import { StyledEffect } from '../../components/Effect';
 import { ReqoreEmptyState } from '../../components/EmptyState';
@@ -50,6 +50,24 @@ const onDeleteClick = fn();
 const clearRowActionSpies = () =>
   [onAddClick, onEditClick, onDeleteClick].forEach((spy) => spy.mockClear());
 
+/**
+ * An input in a cell or a header that can be typed into: it starts with `initialValue` and keeps what is
+ * typed. Given a `value` and no `onChange`, it was a field React reports as read-only by mistake.
+ */
+const EditableInput = ({
+  initialValue,
+  ...rest
+}: Omit<React.ComponentProps<typeof ReqoreInput>, 'value' | 'onChange'> & { initialValue: string }) => {
+  const [value, setValue] = useState(initialValue);
+  return (
+    <ReqoreInput
+      {...rest}
+      value={value}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setValue(event.target.value)}
+    />
+  );
+};
+
 const defaultColumns: IReqoreTableColumn[] = [
   {
     dataId: 'id',
@@ -92,10 +110,10 @@ const defaultColumns: IReqoreTableColumn[] = [
           cell: {
             padded: 'both',
             content: ({ firstName, isSelected }) => (
-              <ReqoreInput
+              <EditableInput
                 icon='PriceTag2Fill'
                 size='small'
-                value={firstName}
+                initialValue={firstName}
                 intent={isSelected ? 'info' : undefined}
               />
             ),
@@ -348,7 +366,9 @@ const defaultColumnsWithCustomContentHeaders: IReqoreTableColumn[] = defaultColu
         ...column,
         header: {
           ...column.header,
-          content: <ReqoreInput icon='PriceTag2Fill' value='Custom input value' rounded={false} />,
+          content: (
+            <EditableInput icon='PriceTag2Fill' initialValue='Custom input value' rounded={false} />
+          ),
         },
       };
     }
@@ -1306,7 +1326,8 @@ const CustomHeaderCell = (props: IReqoreCustomHeaderCellProps) => {
 
 const CustomCell = (props: IReqoreCustomTableBodyCellProps) => {
   return (
-    <ReqoreP style={{ width: props.width, flexGrow: props.grow }} block={false}>
+    // a div, not a p: a cell's content may be a block (a paragraph of its own), which a p cannot hold
+    <ReqoreP as='div' style={{ width: props.width, flexGrow: props.grow }} block={false}>
       {props.children}
     </ReqoreP>
   );
