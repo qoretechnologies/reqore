@@ -2738,7 +2738,7 @@ export const TitleWordWiderThanItsSpace: Story = {
     docs: {
       description: {
         story:
-          "Renders a searchable table in a 320px box whose title is one word wider than the space left beside its search field and more button: only then is the word broken, and it stays inside the title's box, as the controls stay inside the panel.",
+          "Renders a searchable table in a 320px box whose title is one word wider than the space left beside its search button and more button: only then is the word broken, and it stays inside the title's box, as the controls stay inside the panel.",
       },
     },
   },
@@ -2754,7 +2754,8 @@ export const TitleWordWiderThanItsSpace: Story = {
   ),
   play: async ({ canvasElement }) => {
     const box = canvasElement.querySelector('.narrow-table-box') as HTMLElement;
-    await waitFor(() => expect(box.querySelector('input')).toBeTruthy());
+    // narrow, the search is its button until it is used
+    await waitFor(() => expect(box.querySelector('.reqore-table-search-toggle')).toBeTruthy());
     await expectControlsInside(box, box.querySelector('.reqore-panel-title') as HTMLElement);
     const label = box.querySelector('.reqore-panel-title-label-box') as HTMLElement;
     // broken, because it does not fit whole: not cut off at the box's edge
