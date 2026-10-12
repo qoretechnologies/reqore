@@ -1,5 +1,5 @@
 import { size as count } from 'lodash';
-import React from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { OverflowList } from 'react-overflow-list';
 import { css } from 'styled-components';
 import styled from '../../helpers/styled';
@@ -208,6 +208,62 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
 
   const leafItem = items[items.length - 1];
 
+  /* What fits is measured from the crumbs' widths, and `OverflowList` measures again only when the trail
+     itself changes width. A crumb can change width after that: its size changes, a badge arrives, or its
+     padding animates (`transition: all`) after its page has loaded - measured at the start of that, the
+     crumb grew from 151 to 160px and the last crumb stayed clipped (qorus#646). So every crumb is
+     observed while it is drawn, and a crumb that grows past the trail, or narrows (a folded crumb may
+     fit again), has the trail measured again, from all its crumbs - a new `items` array is how
+     `OverflowList` is told to. The observer reports a crumb's first width when it starts observing it,
+     which is not a change. */
+  const trailRef = useRef<HTMLDivElement>(null);
+  const [measurement, setMeasurement] = useState(0);
+  const [crumbResizeObserver, setCrumbResizeObserver] = useState<ResizeObserver>();
+
+  useLayoutEffect(() => {
+    if (!responsive || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+
+    const widths = new WeakMap<Element, number>();
+    const observer = new ResizeObserver((entries) => {
+      const list = trailRef.current?.querySelector('.reqore-breadcrumbs-overflow-list');
+      const overflowing = !!list && list.scrollWidth > list.clientWidth + 0.5;
+      let measureAgain = false;
+
+      for (const entry of entries) {
+        const width = entry.borderBoxSize?.[0]?.inlineSize ?? entry.contentRect.width;
+        const was = widths.get(entry.target);
+
+        widths.set(entry.target, width);
+        if (was !== undefined && Math.abs(width - was) >= 0.5 && (overflowing || width < was)) {
+          measureAgain = true;
+        }
+      }
+
+      if (measureAgain) {
+        setMeasurement((times) => times + 1);
+      }
+    });
+
+    setCrumbResizeObserver(observer);
+
+    return () => {
+      observer.disconnect();
+      setCrumbResizeObserver(undefined);
+    };
+  }, [responsive]);
+
+  // A new array for each measurement (`measurement` is read for that alone): `OverflowList` partitions
+  // the crumbs again when its items change.
+  const trailItems = useMemo(() => (measurement >= 0 ? [...items] : items), [items, measurement]);
+
+  /* How many crumbs are folded into the menu, as `OverflowList` last drew it: its overflow is drawn
+     before its visible crumbs, so a crumb's key is its place in the whole trail. A key by its place among
+     the VISIBLE crumbs gave a folded crumb's element to the next crumb along, which then animated from
+     that crumb's look to its own - and was measured while it did. */
+  const foldedCount = useRef(0);
+
   const renderArrow = (key: string) => (
     <ReqoreIcon
       icon='ArrowRightSLine'
@@ -231,8 +287,8 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   // ancestors collapse, `renderOverflow` emits the "…" group followed by its own
   // trailing "›", so the first visible crumb (position 0, no leading separator)
   // still connects to it.
-  const renderItem = (item: IReqoreBreadcrumbItem, index: number) => {
-    const key = `crumb-${index}`;
+  const renderItem = (item: IReqoreBreadcrumbItem, index: number, folded: number) => {
+    const key = `crumb-${folded + index}`;
 
     if (item.withTabs) {
       return (
@@ -265,7 +321,12 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
             derives its readable text + intent shades from `theme.main`; handing
             it the resolved theme (whose `.main` is the base dark colour, not the
             breadcrumbs colour) turned the text white and shifted the pills. */}
-        <ReqoreBreadcrumbsItem customTheme={customTheme} {...item} size={size} />
+        <ReqoreBreadcrumbsItem
+          customTheme={customTheme}
+          {...item}
+          size={size}
+          resizeObserver={crumbResizeObserver}
+        />
       </React.Fragment>
     );
   };
@@ -281,6 +342,8 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   //    "one button that reads as the current page instead of just …" behaviour,
   //    and it guarantees the current page is always legible however tight it gets.
   const renderOverflow = (overflowItems: IReqoreBreadcrumbItem[]) => {
+    foldedCount.current = count(overflowItems);
+
     if (!count(overflowItems)) {
       return null;
     }
@@ -364,22 +427,24 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         size={size}
         responsive={responsive}
       >
-        <StyledTrail className='reqore-breadcrumbs-trail' $color={itemColor}>
+        <StyledTrail ref={trailRef} className='reqore-breadcrumbs-trail' $color={itemColor}>
           {responsive ? (
             <OverflowList
               className='reqore-breadcrumbs-overflow-list'
-              items={items}
+              items={trailItems}
+              // drawn every time, folded crumbs or not, so `foldedCount` is always current
+              alwaysRenderOverflow
               collapseFrom='start'
               // 0, not 1: when even the current page can't fit, it must be
               // allowed to collapse too so `renderOverflow` can fold the trail
               // into the single current-page-labelled dropdown. Keeping 1 here is
               // what forced the leaf to stay and shrink to an unreadable stub.
               minVisibleItems={0}
-              itemRenderer={renderItem}
+              itemRenderer={(item, index) => renderItem(item, index, foldedCount.current)}
               overflowRenderer={renderOverflow}
             />
           ) : (
-            <StyledStaticTrail>{items.map(renderItem)}</StyledStaticTrail>
+            <StyledStaticTrail>{items.map((item, index) => renderItem(item, index, 0))}</StyledStaticTrail>
           )}
         </StyledTrail>
         {rightElement && (

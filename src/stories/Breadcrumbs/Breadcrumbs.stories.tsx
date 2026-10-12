@@ -1,6 +1,7 @@
 import { StoryObj } from '@storybook/react';
-import { useState } from 'react';
-import { expect, fireEvent, waitFor } from 'storybook/test';
+import { useMemo, useState } from 'react';
+import { expect, fireEvent, userEvent, waitFor } from 'storybook/test';
+import { IReqoreBreadcrumbItem } from '../../components/Breadcrumbs';
 import { ReqoreBreadcrumbs, ReqoreButton, ReqoreControlGroup } from '../../index';
 import breadcrumbs, { breadcrumbsTabs, specialbreadcrumbs } from '../../mock/breadcrumbs';
 import { StoryMeta } from '../utils';
@@ -339,5 +340,129 @@ export const CollapsedAdoptsLeafTheme: Story = {
     await expect(menuText).toContain('Home');
     await expect(menuText).toContain('Jobs');
     await expect(menuText).toContain('Bbm');
+  },
+};
+
+/* A crumb that changes width after the trail measured it (qorus#646). The trail decides what fits from
+   the crumbs' widths, and a crumb can grow after that: its size changes, or its padding animates
+   (`transition: all`) after its page has loaded - in the IDE a crumb grew from 151 to 160px over 200ms
+   while the trail had measured it once, at the start, so the last crumb stayed clipped by 1-2px. The
+   trail measures again whenever a crumb's width changes. */
+
+const GROWING_TRAIL: IReqoreBreadcrumbItem[] = [
+  { label: 'Interfaces', icon: 'Home3Line' },
+  { label: 'Jobs', icon: 'CalendarLine' },
+  { label: 'order-sync', icon: 'CalendarLine' },
+];
+
+const trailParts = (canvasElement: HTMLElement) => {
+  const trail = canvasElement.querySelector('.reqore-breadcrumbs-trail') as HTMLElement;
+  const list = canvasElement.querySelector('.reqore-breadcrumbs-overflow-list') as HTMLElement;
+  return { trail, list, crumbs: Array.from(list.querySelectorAll<HTMLElement>('.reqore-breadcrumbs-item')) };
+};
+
+/** Every crumb fits: the last one ends inside the trail, and nothing in the trail reaches past it. */
+const expectTrailFits = (canvasElement: HTMLElement) => {
+  const { trail, list, crumbs } = trailParts(canvasElement);
+  const last = crumbs[crumbs.length - 1];
+  expect(last).toBeTruthy();
+  expect(last.textContent).toContain('order-sync');
+  expect(last.getBoundingClientRect().right).toBeLessThanOrEqual(trail.getBoundingClientRect().right + 0.5);
+  expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth + 0.5);
+};
+
+/** The box narrowed to the trail's own width, plus `slack`: every crumb fits, with no room to spare. */
+const fitBoxToTrail = async (canvasElement: HTMLElement, slack: number) => {
+  const box = canvasElement.querySelector('.growing-trail-box') as HTMLElement;
+  const { list, crumbs } = await waitFor(() => {
+    const parts = trailParts(canvasElement);
+    expect(parts.crumbs).toHaveLength(GROWING_TRAIL.length);
+    return parts;
+  });
+  const needed = crumbs[crumbs.length - 1].getBoundingClientRect().right - list.getBoundingClientRect().left;
+  box.style.width = `${Math.ceil(needed) + slack}px`;
+  await waitFor(() => {
+    expect(trailParts(canvasElement).crumbs).toHaveLength(GROWING_TRAIL.length);
+    expectTrailFits(canvasElement);
+  });
+};
+
+const GrowingSizeTrail = () => {
+  const [size, setSize] = useState<'small' | 'normal'>('small');
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreButton className='grow-crumbs' fixed onClick={() => setSize('normal')}>
+        Make the crumbs bigger
+      </ReqoreButton>
+      <div className='growing-trail-box' style={{ width: 900 }}>
+        <ReqoreBreadcrumbs items={GROWING_TRAIL} size={size} padded={false} />
+      </div>
+    </ReqoreControlGroup>
+  );
+};
+
+export const RemeasuredWhenACrumbGrows: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a three-crumb trail in a box just wide enough for it at small size. When the crumbs become normal size, the trail measures them again: the first crumbs fold into the "…" menu and "order-sync" is whole, inside the trail.',
+      },
+    },
+  },
+  render: () => <GrowingSizeTrail />,
+  play: async ({ canvasElement }) => {
+    await fitBoxToTrail(canvasElement, 2);
+    await userEvent.click(canvasElement.querySelector('.grow-crumbs') as HTMLElement);
+    await waitFor(() => {
+      expect(canvasElement.querySelector('.reqore-dropdown-control')).toBeInTheDocument();
+      expectTrailFits(canvasElement);
+    });
+  },
+};
+
+/* The leaf crumb's page loads: the crumb goes from compact to full padding, which a crumb animates
+   (`transition: all 0.2s`). */
+const LoadingLeafTrail = () => {
+  const [loaded, setLoaded] = useState(false);
+  const items = useMemo(
+    () => GROWING_TRAIL.map((item, index) => (index === 2 ? { ...item, compact: !loaded } : item)),
+    [loaded]
+  );
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreButton className='load-page' fixed onClick={() => setLoaded(true)}>
+        Load the page
+      </ReqoreButton>
+      <div className='growing-trail-box' style={{ width: 900 }}>
+        <ReqoreBreadcrumbs items={items} padded={false} />
+      </div>
+    </ReqoreControlGroup>
+  );
+};
+
+export const RemeasuredAfterACrumbsTransition: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a three-crumb trail in a box just wide enough for it while its last crumb is compact. When the page loads, the crumb animates to full padding, and the trail measures it again as it grows: the first crumb folds into the "…" menu and "order-sync" ends whole, inside the trail.',
+      },
+    },
+  },
+  render: () => <LoadingLeafTrail />,
+  play: async ({ canvasElement }) => {
+    // The capture's no-transition stylesheet, left by an earlier story's capture in this file: this
+    // story is about a transition, so it runs with them (the capture puts the stylesheet back).
+    document.getElementById('__qlip-capture-style-overrides')?.remove();
+    await fitBoxToTrail(canvasElement, 2);
+    await userEvent.click(canvasElement.querySelector('.load-page') as HTMLElement);
+    await waitFor(
+      () => {
+        expect(canvasElement.querySelector('.reqore-dropdown-control')).toBeInTheDocument();
+        expectTrailFits(canvasElement);
+      },
+      { timeout: 2000 }
+    );
   },
 };

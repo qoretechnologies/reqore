@@ -107,3 +107,81 @@ test('Static (non-responsive) trail renders every crumb, with working tooltips',
 
   expect(document.querySelectorAll('.reqore-popover-content').length).toBe(1);
 });
+
+/*
+ * A crumb that changes width after the trail measured it has the trail measured again (qorus#646): each
+ * crumb's border box is observed while it is drawn, and no longer once it is folded or gone.
+ */
+class RecordingResizeObserver {
+  static instances: RecordingResizeObserver[] = [];
+  readonly observed: Array<{ target: Element; box?: string }> = [];
+  readonly unobserved: Element[] = [];
+  disconnected = false;
+  constructor(readonly callback: ResizeObserverCallback) {
+    RecordingResizeObserver.instances.push(this);
+  }
+  observe(target: Element, options?: ResizeObserverOptions) {
+    this.observed.push({ target, box: options?.box });
+  }
+  unobserve(target: Element) {
+    this.unobserved.push(target);
+  }
+  disconnect() {
+    this.disconnected = true;
+  }
+}
+
+const withRecordingResizeObserver = (run: () => void) => {
+  const original = globalThis.ResizeObserver;
+  RecordingResizeObserver.instances = [];
+  (globalThis as Record<string, unknown>).ResizeObserver = RecordingResizeObserver;
+  try {
+    run();
+  } finally {
+    globalThis.ResizeObserver = original;
+  }
+};
+
+test('Observes each drawn crumb by its border box, and lets go of it once it is folded', () => {
+  withRecordingResizeObserver(() => {
+    const { unmount } = render(
+      <ReqoreUIProvider>
+        <ReqoreBreadcrumbs items={PAGES} />
+      </ReqoreUIProvider>
+    );
+
+    const crumbObservers = RecordingResizeObserver.instances.filter((observer) =>
+      observer.observed.some(({ target }) => target.classList.contains('reqore-breadcrumbs-item'))
+    );
+    expect(crumbObservers).toHaveLength(1);
+    const [observer] = crumbObservers;
+    const crumbs = observer.observed.filter(({ target }) =>
+      target.classList.contains('reqore-breadcrumbs-item')
+    );
+    // every crumb, by the box a crumb grows by when its padding grows
+    expect(crumbs.length).toBeGreaterThanOrEqual(PAGES.length);
+    expect(crumbs.every(({ box }) => box === 'border-box')).toBe(true);
+    // jsdom has no width, so the whole trail folds: no crumb drawn is still observed
+    for (const { target } of crumbs) {
+      expect(observer.unobserved).toContain(target);
+    }
+
+    unmount();
+    expect(observer.disconnected).toBe(true);
+  });
+});
+
+test('A static trail observes nothing', () => {
+  withRecordingResizeObserver(() => {
+    render(
+      <ReqoreUIProvider>
+        <ReqoreBreadcrumbs responsive={false} items={PAGES} />
+      </ReqoreUIProvider>
+    );
+
+    const crumbObserved = RecordingResizeObserver.instances.some((observer) =>
+      observer.observed.some(({ target }) => target.classList.contains('reqore-breadcrumbs-item'))
+    );
+    expect(crumbObserved).toBe(false);
+  });
+});
