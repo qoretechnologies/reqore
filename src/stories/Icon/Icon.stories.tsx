@@ -320,3 +320,25 @@ export const GlobalGlowingIconsInheritedColor: Story = {
     });
   },
 };
+
+export const Heartbeat: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders status dots with the heartbeat animation — a slow pulse for something live or ' +
+          'running. It holds still under prefers-reduced-motion.',
+      },
+    },
+  },
+  render: () => (
+    <ReqorePanel padded>
+      <ReqoreControlGroup gapSize='huge' verticalAlign='center'>
+        <ReqoreIcon icon='CircleFill' size='small' animation='heartbeat' />
+        <ReqoreIcon icon='CircleFill' size='small' intent='danger' animation='heartbeat' glow />
+        <ReqoreIcon icon='CircleFill' size='small' intent='warning' animation='heartbeat' glow />
+        <ReqoreIcon icon='PulseLine' size='huge' intent='info' animation='heartbeat' />
+      </ReqoreControlGroup>
+    </ReqorePanel>
+  ),
+};

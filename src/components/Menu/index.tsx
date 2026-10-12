@@ -5,7 +5,10 @@ import { ReqoreErrorBoundary } from '../..';
 import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getPanelBackgroundColor,
+} from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -88,7 +91,7 @@ const StyledReqoreMenu = styled(StyledEffect).withConfig({
   flex-flow: column nowrap;
 
   background-color: ${({ theme, transparent }) =>
-    transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+    transparent ? 'transparent' : getPanelBackgroundColor(theme)};
   border-radius: ${({ rounded, _size }) => (rounded ? `${RADIUS_FROM_SIZE[_size]}px` : `0`)};
 
   ${({ theme, position, _size, padded, isResizableLeft, showResizableBorder }) =>

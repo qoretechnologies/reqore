@@ -11,9 +11,9 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
   getReadableColor,
 } from '../../helpers/colors';
 import {
@@ -166,7 +166,7 @@ const StyledFeatureCard = styled(StyledEffect)<IStyledFeatureCardProps>`
       horizontalMultiplier: 3,
     })};
   background-color: ${({ theme, $transparent }) =>
-    $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+    $transparent ? 'transparent' : getPanelBackgroundColor(theme)};
   border: ${({ theme, intent, flat }) =>
     flat
       ? 0

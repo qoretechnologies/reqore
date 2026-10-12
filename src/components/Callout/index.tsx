@@ -9,9 +9,10 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
 } from '../../helpers/colors';
 import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
@@ -205,7 +206,7 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
     return `${top}px ${right}px ${bottom}px ${left}px`;
   }};
   background-color: ${({ theme, $transparent }) =>
-    $transparent ? 'transparent' : changeDarkness(getMainBackgroundColor(theme), 0.03)};
+    $transparent ? 'transparent' : getPanelBackgroundColor(theme)};
   border: ${({ theme, flat, intent }) =>
     flat
       ? 0
@@ -256,7 +257,7 @@ const StyledCallout = styled(StyledEffect)<IStyledCalloutProps>`
             background-color: ${intent
               ? rgba(theme.intents[intent], $transparent ? 0.04 : 0.1)
               : $transparent
-              ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
+              ? rgba(getPanelHairlineColor(theme), 0.08)
               : changeLightness(getMainBackgroundColor(theme), -0.32)};
           }
         `

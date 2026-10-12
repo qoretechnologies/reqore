@@ -4,7 +4,11 @@ import styled, { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import {
+  changeLightness,
+  getReadableColorFrom,
+  getThemePanelSurface,
+} from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreTooltip } from '../../types/global';
@@ -103,15 +107,24 @@ export const StyledTableCell = styled.div.withConfig({
     };
 
     const backgroundColor = getBackgroundColor();
+    // A table is drawn inside a panel; with `theme.panel` named, an untinted row sits on that
+    // surface and its line is the panel's hairline.
+    const themedPanel = getThemePanelSurface(theme);
     const displayedBackgroundColor =
       backgroundColor === 'transparent'
-        ? theme.main
+        ? themedPanel?.main ?? theme.main
         : (rgba(backgroundColor, 0.3) as TReqoreHexColor);
+    const cellBorderColor =
+      backgroundColor === 'transparent' && themedPanel?.border
+        ? themedPanel.border
+        : changeLightness(displayedBackgroundColor, 0.1);
 
     // Pinned cells need an opaque paint so non-pinned cells scrolling underneath don't show
     // through. We layer the semi-transparent displayed color over a solid theme.main base.
     const pinnedBackground = pin
-      ? `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${theme.main}`
+      ? `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${
+          themedPanel?.main ?? theme.main
+        }`
       : undefined;
 
     return css`
@@ -136,7 +149,7 @@ export const StyledTableCell = styled.div.withConfig({
       background: ${pinnedBackground ??
       (backgroundColor === 'transparent' ? 'transparent' : displayedBackgroundColor)};
       color: ${getReadableColorFrom(getOriginalBackgroundColor(), !hovered)};
-      border-color: ${changeLightness(displayedBackgroundColor, 0.1)};
+      border-color: ${cellBorderColor};
       transition: background-color 0.2s ease-out;
       opacity: ${disabled ? 0.2 : 1};
       pointer-events: ${disabled ? 'none' : undefined};

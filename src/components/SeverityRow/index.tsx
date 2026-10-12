@@ -3,7 +3,12 @@ import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getMainBackgroundColor,
+  getPanelHairlineColor,
+  getReadableColor,
+} from '../../helpers/colors';
 import {
   getOneLessSize,
   resolvePadding,
@@ -202,8 +207,8 @@ const StyledRow = styled(StyledEffect)<IStyledRowProps>`
         background-color: ${$intent
           ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
           : $transparent
-          ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
-          : rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 1)};
+          ? rgba(getPanelHairlineColor(theme), 0.08)
+          : rgba(getPanelHairlineColor(theme), 1)};
       }
     `}
 

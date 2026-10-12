@@ -850,3 +850,22 @@ export const CountUpWhenInView: Story = {
     await finishedCounting(canvasElement, ['12,345']);
   },
 };
+
+export const WithDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders Statistic with a description line under the value — what the number is measured ' +
+          'against — and tabular figures, so digits line up when values change.',
+      },
+    },
+  },
+  args: {
+    value: '8,782',
+    label: 'Events processed',
+    description: '+5.9% vs the day before',
+    align: 'left',
+    valueEffect: { tabularNums: true },
+  },
+};

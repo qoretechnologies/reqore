@@ -4,9 +4,9 @@ import styled, { css } from 'styled-components';
 import { HEADER_SIZE_TO_NUMBER, resolveRadius, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
-  getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
 } from '../../helpers/colors';
 import {
@@ -125,6 +125,14 @@ export interface IReqoreStatisticProps
   countUp?: boolean | IReqoreStatisticCountUp;
   /** Effect applied to the label text */
   labelEffect?: IReqoreEffect;
+  /**
+   * A line under the value — what the number is measured against, or where it came from
+   * ("+5.9% vs the day before", "Last 24 hours"). Smaller and quieter than the value; a string,
+   * a number or any node. Rendered in `.reqore-statistic-description`.
+   */
+  description?: React.ReactNode;
+  /** Effect applied to the description, over its defaults (`{ opacity: 0.6 }`). */
+  descriptionEffect?: IReqoreEffect;
   /** Effect applied to the card background (supports gradients) */
   effect?: IReqoreEffect;
   /** Text alignment */
@@ -274,14 +282,13 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
   }) =>
     $hasBackground &&
     css`
-      background-color: ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
+      background-color: ${rgba(getPanelBackgroundColor(theme), opacity)};
       border-radius: ${rounded ? resolveRadius(size, radiusSize) : 0}px;
       border: ${flat
         ? undefined
-        : `1px solid ${changeLightness(
-            intent ? theme.intents[intent] : getMainBackgroundColor(theme),
-            0.08
-          )}`};
+        : `1px solid ${
+            intent ? changeLightness(theme.intents[intent], 0.08) : getPanelHairlineColor(theme)
+          }`};
       color: ${getReadableColor(theme, undefined, undefined, true)};
       padding: ${resolvePadding({
         padded: $padded,
@@ -401,6 +408,8 @@ const ReqoreStatistic = memo(
         valueAs,
         countUp,
         labelEffect,
+        description,
+        descriptionEffect,
         effect,
         align = 'center',
         size = 'normal',
@@ -588,6 +597,15 @@ const ReqoreStatistic = memo(
                   </ReqoreSpan>
                 )}
               </ReqoreControlGroup>
+            )}
+            {description !== undefined && description !== null && description !== '' && (
+              <ReqoreSpan
+                size={secondarySize}
+                className='reqore-statistic-description'
+                effect={{ opacity: 0.6, ...descriptionEffect }}
+              >
+                {description}
+              </ReqoreSpan>
             )}
           </ReqoreControlGroup>
         </ReqoreTooltipComponent>

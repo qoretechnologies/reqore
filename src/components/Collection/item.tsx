@@ -3,7 +3,9 @@ import { rgba } from 'polished';
 import { useEffect, useRef, useState } from 'react';
 import { useDebounce, useMeasure } from 'react-use';
 import styled, { css } from 'styled-components';
-import { changeDarkness, getMainBackgroundColor } from '../../helpers/colors';
+import {
+  getPanelBackgroundColor,
+} from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -77,7 +79,7 @@ export const StyledCollectionItemContent = styled.div.withConfig({
         transition: 0.3s ease-in-out;
         background: linear-gradient(
           to top,
-          ${rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)} 0%,
+          ${rgba(getPanelBackgroundColor(theme), opacity)} 0%,
           transparent 100%
         );
       }

@@ -173,6 +173,12 @@ export interface IReqoreEffect extends IReqoreEffectFilters {
    */
   gradient?: IReqoreEffectGradient | IReqoreEffectGradient[];
   noWrap?: boolean;
+  /**
+   * Tabular figures: every digit takes the same width, so numbers in a column, a counter that
+   * ticks, or a row of statistics line up instead of jittering (`font-variant-numeric:
+   * tabular-nums`).
+   */
+  tabularNums?: boolean;
   spaced?: number;
 
   weight?: number | 'thin' | 'light' | 'normal' | 'bold' | 'thick';
@@ -661,6 +667,13 @@ ${({ effect }: IReqoreTextEffectProps) =>
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
+        `
+      : undefined}
+
+  ${({ effect }: IReqoreTextEffectProps) =>
+    effect?.tabularNums
+      ? css`
+          font-variant-numeric: tabular-nums;
         `
       : undefined}
 

@@ -19,7 +19,7 @@ import {
   TReqoreRgbaColor,
 } from '../components/Effect';
 import { Colors } from '../constants/colors';
-import { DEFAULT_INTENTS, IReqoreTheme, TReqoreIntent } from '../constants/theme';
+import { DEFAULT_INTENTS, IReqorePanelTheme, IReqoreTheme, TReqoreIntent } from '../constants/theme';
 
 export const getReadableColor: (
   theme: Partial<IReqoreTheme>,
@@ -270,6 +270,24 @@ export const getNotificationIntent = (theme: IReqoreTheme, intent?: TReqoreInten
 
 export const getMainBackgroundColor = (theme: IReqoreTheme): TReqoreHexColor =>
   changeLightness(theme.main, 0.02);
+
+/**
+ * The `theme.panel` surface and hairline — for a component whose own surface is NOT customised.
+ * A `customTheme` with a `main`, an intent, or an inherited custom theme moves `theme.main` away
+ * from `theme.originalMain` (see `mergeThemes`); such a component keeps its derived colours.
+ */
+export const getThemePanelSurface = (theme: IReqoreTheme): IReqorePanelTheme | undefined =>
+  theme.panel && (!theme.originalMain || theme.main === theme.originalMain)
+    ? theme.panel
+    : undefined;
+
+/** The surface a panel or panel-like container paints: `theme.panel.main`, or derived from `main`. */
+export const getPanelBackgroundColor = (theme: IReqoreTheme): TReqoreHexColor =>
+  getThemePanelSurface(theme)?.main ?? changeDarkness(getMainBackgroundColor(theme), 0.03);
+
+/** The neutral 1px edge of a panel or panel-like container: `theme.panel.border`, or derived. */
+export const getPanelHairlineColor = (theme: IReqoreTheme): TReqoreHexColor =>
+  getThemePanelSurface(theme)?.border ?? changeLightness(getMainBackgroundColor(theme), 0.08);
 
 export const getColorFromMaybeString = (
   theme: IReqoreTheme,

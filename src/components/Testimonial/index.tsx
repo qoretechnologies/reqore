@@ -9,9 +9,10 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
 } from '../../helpers/colors';
 import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
@@ -148,7 +149,7 @@ interface IStyledTestimonialProps {
 const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
   intent
     ? rgba(theme.intents[intent], 0.06)
-    : changeDarkness(getMainBackgroundColor(theme), 0.03);
+    : getPanelBackgroundColor(theme);
 
 const StyledTestimonial = styled(StyledEffect)<IStyledTestimonialProps>`
   position: relative;
@@ -197,7 +198,7 @@ const StyledTestimonial = styled(StyledEffect)<IStyledTestimonialProps>`
         background-color: ${$intent
           ? rgba(theme.intents[$intent], $transparent ? 0.04 : 0.1)
           : $transparent
-          ? rgba(changeLightness(getMainBackgroundColor(theme), 0.08), 0.08)
+          ? rgba(getPanelHairlineColor(theme), 0.08)
           : changeLightness(getMainBackgroundColor(theme), 0.04)};
       }
     `}

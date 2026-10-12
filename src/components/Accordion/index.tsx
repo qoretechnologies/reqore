@@ -10,9 +10,10 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
-  changeDarkness,
   changeLightness,
   getMainBackgroundColor,
+  getPanelBackgroundColor,
+  getPanelHairlineColor,
   getReadableColor,
 } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
@@ -131,7 +132,7 @@ const StyledAccordionWrapper = styled(StyledEffect)<IStyledAccordionWrapper>`
   border-radius: ${({ rounded, size }) => (rounded ? RADIUS_FROM_SIZE[size] : 0)}px;
   overflow: hidden;
   border: ${({ flat, theme }) =>
-    flat ? undefined : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
+    flat ? undefined : `1px solid ${getPanelHairlineColor(theme)}`};
 
   ${({ disabled }) =>
     disabled &&
@@ -143,7 +144,7 @@ const StyledAccordionWrapper = styled(StyledEffect)<IStyledAccordionWrapper>`
 const StyledAccordionItem = styled.div<IStyledAccordionItem>`
   &:not(:first-child) {
     border-top: ${({ flat, theme }) =>
-      flat ? undefined : `1px solid ${changeLightness(getMainBackgroundColor(theme), 0.08)}`};
+      flat ? undefined : `1px solid ${getPanelHairlineColor(theme)}`};
   }
 `;
 
@@ -210,7 +211,7 @@ const StyledAccordionContentBody = styled.div<{ theme: IReqoreTheme; size: TSize
   padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 4.6}px`};
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  background-color: ${({ theme }) => rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
+  background-color: ${({ theme }) => rgba(getPanelBackgroundColor(theme), 1)};
   border-top: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.05)};
 `;
 

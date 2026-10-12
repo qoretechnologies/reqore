@@ -51,6 +51,26 @@ export interface IReqoreNavbarTheme {
   hoverColor?: TReqoreHexColor;
 }
 
+/**
+ * The surface panels and panel-like containers are painted on, and the hairline they are edged
+ * with. Unset, both are derived from `main` as they always were (on a dark theme the panel comes
+ * out a shade DARKER than the page). Set, a panel can sit one step above the page with a
+ * neutral 1px edge — one decision for every surface instead of a `customTheme` on each.
+ *
+ * Read by ReqorePanel (and so ReqoreDrawer, ReqoreModal and ReqoreTable), ReqoreStatistic,
+ * ReqoreAccordion, ReqoreCallout, ReqoreCollection items, ReqoreFeatureCard, ReqoreMenu,
+ * ReqoreTestimonial, ReqoreTier, ReqoreEntityRow and ReqoreSeverityRow, and by table row lines.
+ *
+ * A component whose surface is customised — a `customTheme` with a `main`, an `intent`, or a
+ * custom theme inherited from an ancestor — keeps deriving its colours from that, as before.
+ */
+export interface IReqorePanelTheme {
+  /** The panel surface. */
+  main?: TReqoreHexColor;
+  /** The 1px hairline on the panel's edge and between its rows. */
+  border?: TReqoreHexColor;
+}
+
 export interface IReqoreTheme {
   main: TReqoreHexColor;
   originalMain?: TReqoreHexColor;
@@ -77,6 +97,8 @@ export interface IReqoreTheme {
   popover?: {
     main: TReqoreHexColor;
   };
+  /** Surface and hairline for panels and panel-like containers. See `IReqorePanelTheme`. */
+  panel?: IReqorePanelTheme;
   header?: IReqoreNavbarTheme;
   footer?: IReqoreNavbarTheme;
   breadcrumbs?: IReqoreBreadcrumbsTheme;
