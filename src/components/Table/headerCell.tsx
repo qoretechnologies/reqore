@@ -32,6 +32,10 @@ export interface IReqoreTableHeaderCellProps
    * public column config — the table threads it through internally.
    */
   parentMinimal?: boolean;
+  /** See `IReqoreTableProps.headerEffect`: merged over the base header typography. */
+  parentHeaderEffect?: IReqoreEffect;
+  /** See `IReqoreTableProps.headerDividers`: `false` shows the resize handle only on hover. */
+  dividers?: boolean;
   /** See `IReqoreTableProps.sortAscendingLabel`. */
   sortAscendingLabel?: string;
   /** See `IReqoreTableProps.sortDescendingLabel`. */
@@ -158,6 +162,8 @@ export const ReqoreTableHeaderCell = memo(
     onFilterChange,
     actions,
     parentMinimal,
+    parentHeaderEffect,
+    dividers = true,
     hasColumns,
     sortAscendingLabel = 'Sort ascending',
     sortDescendingLabel = 'Sort descending',
@@ -306,8 +312,9 @@ export const ReqoreTableHeaderCell = memo(
         textSize: getOneLessSize(size),
         spaced: 1,
         ...(parentMinimal ? { opacity: 0.7 } : {}),
+        ...parentHeaderEffect,
       }),
-      [size, parentMinimal]
+      [size, parentMinimal, parentHeaderEffect]
     );
 
     return (
@@ -323,7 +330,7 @@ export const ReqoreTableHeaderCell = memo(
           right: (
             <StyledTableHeaderResize
               className='reqore-table-header-resize'
-              $minimal={parentMinimal}
+              $minimal={parentMinimal || !dividers}
             />
           ),
         }}

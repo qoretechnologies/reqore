@@ -1678,3 +1678,60 @@ test('<Table /> keeps a sort in charge without the opt-in', () => {
 
   expect(renderedNames()[0]).toBe('Untelegrammed');
 });
+
+describe('calm list props', () => {
+  const expandable: Partial<IReqoreTableProps> = {
+    columns: [{ dataId: 'id', header: { label: 'ID' } }, { dataId: 'firstName', header: { label: 'Name' } }],
+    data: tableData.data.slice(0, 3),
+    renderExpandedRow: () => <span>detail</span>,
+  };
+
+  const renderTable = (props: Partial<IReqoreTableProps>) =>
+    render(
+      <ReqoreUIProvider>
+        <ReqoreLayoutContent>
+          <ReqoreTable {...(expandable as IReqoreTableProps)} {...props} />
+        </ReqoreLayoutContent>
+      </ReqoreUIProvider>
+    );
+
+  test("expanderPosition='start' (default) leads the row with the caret", () => {
+    renderTable({});
+    const cells = document.querySelector('.reqore-table-row')!.querySelectorAll('.reqore-table-cell');
+    expect(cells[0].querySelector('[aria-expanded]')).toBeTruthy();
+  });
+
+  test("expanderPosition='end' puts the caret after the last column", () => {
+    renderTable({ expanderPosition: 'end' });
+    const cells = document.querySelector('.reqore-table-row')!.querySelectorAll('.reqore-table-cell');
+    expect(cells[0].querySelector('[aria-expanded]')).toBeNull();
+    expect(cells[cells.length - 1].querySelector('[aria-expanded]')).toBeTruthy();
+  });
+
+  test("expanderPosition='none' draws no expander column and the row still opens", () => {
+    renderTable({ expanderPosition: 'none' });
+    const row = document.querySelector('.reqore-table-row')!;
+    expect(row.querySelector('[aria-expanded]')).toBeNull();
+    expect(row.querySelectorAll('.reqore-table-cell').length).toBe(2);
+    // The whole row is the expander: its cells take the click, no caret needed.
+    fireEvent.click(row.querySelector('.reqore-table-cell')!);
+    expect(document.body.textContent).toContain('detail');
+  });
+
+  test("actionsRevealOn='hover' marks the table and the action groups it dims", () => {
+    renderTable({
+      actionsRevealOn: 'hover',
+      columns: [
+        { dataId: 'id', header: { label: 'ID' } },
+        { dataId: 'actions', header: { label: '' }, cell: { actions: () => [{ icon: 'PencilLine' }] } },
+      ],
+    });
+    expect(document.querySelector('.reqore-table-wrapper')!.classList.contains('reqore-table-actions-reveal-hover')).toBe(true);
+    expect(document.querySelector('.reqore-table-cell-actions')).toBeTruthy();
+  });
+
+  test('headerDividers={false} keeps the resize handles so columns still resize', () => {
+    renderTable({ headerDividers: false });
+    expect(document.querySelectorAll('.reqore-table-header-resize').length).toBeGreaterThan(0);
+  });
+});

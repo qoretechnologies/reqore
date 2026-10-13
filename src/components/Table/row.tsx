@@ -348,6 +348,7 @@ const ReqoreTableRow = memo(
               fluid
               style={{ height: '100%' }}
               rounded={false}
+              className='reqore-table-cell-actions'
             >
               {cell.actions(data).map((action, index) => (
                 <ReqoreButton
