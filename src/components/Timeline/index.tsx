@@ -858,14 +858,13 @@ const ReqoreTimeline = memo(
             const currentCollapsed = collapsedState![index] ?? fallback;
             onCollapseChange?.(index, !currentCollapsed);
           } else {
-            setInternalCollapsedStates((prev) => {
-              const next = !prev[index];
-              onCollapseChange?.(index, next);
-              return { ...prev, [index]: next };
-            });
+            // the host is told once, from the click: an updater is React's to run, twice in StrictMode (qorus#646)
+            const next = !internalCollapsedStates[index];
+            setInternalCollapsedStates((prev) => ({ ...prev, [index]: next }));
+            onCollapseChange?.(index, next);
           }
         },
-        [isControlled, collapsedState, items, onCollapseChange]
+        [isControlled, collapsedState, items, onCollapseChange, internalCollapsedStates]
       );
 
       const getIsCollapsed = useCallback(
