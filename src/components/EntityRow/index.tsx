@@ -33,7 +33,11 @@ import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
-import ReqoreRowActionsMenu, { getRowActionLabel, TReqoreNarrowRowActions } from '../RowActionsMenu';
+import ReqoreRowActionsMenu, {
+  getRowActionLabel,
+  hasRowActionLabel,
+  TReqoreNarrowRowActions,
+} from '../RowActionsMenu';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export interface IReqoreEntityRowAction extends Omit<IReqoreButtonProps, 'children'> {
@@ -550,7 +554,9 @@ const ReqoreEntityRow = memo(
                         {
                           fluid: true,
                           fixed: false,
-                          label: action.label ?? getRowActionLabel({ tooltip: action.tooltip }),
+                          label: hasRowActionLabel(action.label)
+                            ? action.label
+                            : getRowActionLabel({ tooltip: action.tooltip }),
                         }
                       : {})}
                       items={subActions.filter(isSubActionShown)}
@@ -573,8 +579,11 @@ const ReqoreEntityRow = memo(
                     >
                       {/* Stacked, an icon-only action is a button the row's width: its tooltip is its
                           label, as a finger gets no tooltip to read. */}
-                      {action.label ??
-                        (isNarrow ? getRowActionLabel({ tooltip: action.tooltip }) : undefined)}
+                      {hasRowActionLabel(action.label)
+                        ? action.label
+                        : isNarrow
+                          ? getRowActionLabel({ tooltip: action.tooltip })
+                          : undefined}
                     </ReqoreButton>
                   )
                 )}

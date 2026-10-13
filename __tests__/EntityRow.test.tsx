@@ -685,3 +685,27 @@ test('Keeps a single action a button when narrow, and every action inline when w
     expect(document.querySelectorAll('.reqore-entity-row-actions .reqore-button')).toHaveLength(2);
   });
 });
+
+test('Stacked, labels an action whose label is empty with its tooltip, a menu too', () => {
+  withResizeObserver(NarrowResizeObserver, () => {
+    NarrowResizeObserver.width = 400;
+    renderRowWithActions({
+      narrowActions: 'stack',
+      actions: [
+        { label: '', icon: 'DeleteBinLine', tooltip: 'Remove' },
+        {
+          label: '',
+          icon: 'More2Line',
+          tooltip: 'More actions',
+          actions: [{ label: 'Show in chat' }],
+        },
+      ],
+    });
+
+    const [remove, more] = Array.from(
+      document.querySelector('.reqore-entity-row-actions')!.children
+    ) as HTMLElement[];
+    expect(remove.textContent).toContain('Remove');
+    expect(more.textContent).toContain('More actions');
+  });
+});

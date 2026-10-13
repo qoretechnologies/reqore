@@ -160,26 +160,49 @@ test('The folded columns are named once, grouped columns included', () => {
     actionsColumn(),
   ];
 
-  expect(getActionsMenuColumnIds(columns, 300)).toBe('nested actions');
-  expect(getActionsMenuColumnIds(columns, 900)).toBe('');
+  expect(getActionsMenuColumnIds(columns, 300)).toEqual(['nested', 'actions']);
+  expect(getActionsMenuColumnIds(columns, 900)).toEqual([]);
+});
+
+test('A column whose id holds a space folds by its whole id, and no other with it', () => {
+  // `row actions` folds; `row` and `actions` are columns of their own and have no actions to fold.
+  const columns: IReqoreTableColumn[] = [
+    { dataId: 'row', width: 120 },
+    { dataId: 'actions', width: 120 },
+    actionsColumn({ dataId: 'row actions' }),
+  ];
+
+  const ids = getActionsMenuColumnIds(columns, 300);
+  expect(ids).toEqual(['row actions']);
+
+  const [row, actions, rowActions] = foldActionsColumns(columns, ids, 'normal', false);
+  expect(row).toBe(columns[0]);
+  expect(actions).toBe(columns[1]);
+  expect(rowActions.width).toBe(SIZE_TO_PX.normal);
+  expect(rowActions.resizable).toBe(false);
 });
 
 test('A folded column is the menu button\'s width, a finger\'s on touch, and not resizable', () => {
   const columns: IReqoreTableColumn[] = [{ dataId: 'name', width: 200 }, actionsColumn({ resizable: true, grow: 2, minWidth: 100 })];
 
   // unchanged where nothing folds
-  expect(foldActionsColumns(columns, '', 'normal', false)).toBe(columns);
+  expect(foldActionsColumns(columns, [], 'normal', false)).toBe(columns);
 
-  const [name, folded] = foldActionsColumns(columns, 'actions', 'normal', false);
+  const [name, folded] = foldActionsColumns(columns, ['actions'], 'normal', false);
   expect(name).toBe(columns[0]);
   expect(folded.width).toBe(SIZE_TO_PX.normal);
   expect(folded.resizable).toBe(false);
   expect(folded.grow).toBeUndefined();
   expect(folded.minWidth).toBeUndefined();
 
-  const [, onTouch] = foldActionsColumns(columns, 'actions', 'normal', true);
+  const [, onTouch] = foldActionsColumns(columns, ['actions'], 'normal', true);
   expect(onTouch.width).toBe(Math.max(SIZE_TO_PX.normal, TOUCH_TARGET_PX));
   // never wider than the column was
-  const [narrowColumn] = foldActionsColumns([actionsColumn({ width: 20 })], 'actions', 'big', true);
+  const [narrowColumn] = foldActionsColumns(
+    [actionsColumn({ width: 20 })],
+    ['actions'],
+    'big',
+    true
+  );
   expect(narrowColumn.width).toBe(20);
 });

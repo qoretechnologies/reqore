@@ -243,24 +243,24 @@ const defaultColumns: IReqoreTableColumn[] = [
 
     cell: {
       padded: 'none',
-      // A label is each action's tooltip and accessible name, and its words in a narrow table's menu.
+      // Icon buttons: a tooltip is each one's accessible name, and its words in a narrow menu.
       actions: () => [
         {
           icon: 'AddLine',
           intent: 'info',
-          label: 'Add',
+          tooltip: 'Add',
           onClick: onAddClick,
         },
         {
           icon: 'EditLine',
           intent: 'warning',
-          label: 'Edit',
+          tooltip: 'Edit',
           onClick: onEditClick,
         },
         {
           icon: 'DeleteBinLine',
           intent: 'danger',
-          label: 'Delete',
+          tooltip: 'Delete',
           onClick: onDeleteClick,
         },
       ],
@@ -2773,7 +2773,7 @@ export const RowActionsInlineWhenWide: Story = {
     docs: {
       description: {
         story:
-          "Renders a table in a 720px box: wide enough, so each row's Add, Edit and Delete are icon buttons side by side, as they always were, each named by its label for a screen reader and in its tooltip; there is no menu button.",
+          "Renders a table in a 720px box: wide enough, so each row's Add, Edit and Delete are icon buttons side by side, as they always were, each named by its tooltip for a screen reader; there is no menu button.",
       },
     },
   },
@@ -2831,12 +2831,131 @@ export const RowActionsMenuOpen: Story = {
   },
 };
 
+/* A wide table draws a cell action's label in its button, as it did before the narrow menu existed
+   (qorus#646 had it as the button's tooltip only, at any width: a labelled action was a blank
+   button). */
+
+const LABELLED_ACTIONS_COLUMNS: IReqoreTableColumn[] = [
+  { dataId: 'name', header: { label: 'Name' }, width: 200, grow: 2 },
+  {
+    dataId: 'actions',
+    header: { label: 'Actions' },
+    width: 220,
+    cell: {
+      padded: 'none',
+      actions: () => [
+        { icon: 'EditLine', label: 'Open', onClick: onEditClick },
+        { icon: 'DeleteBinLine', intent: 'danger', tooltip: 'Delete', onClick: onDeleteClick },
+      ],
+    },
+  },
+];
+
+export const RowActionLabelsWhenWide: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a table in a 720px box whose rows each offer Open, a labelled action, and Delete, an icon-only one. Wide, Open shows its word beside its icon, inside its button, and Delete its icon alone, named by its tooltip for a screen reader; there is no menu button.',
+      },
+    },
+  },
+  args: {
+    label: 'Services',
+    columns: LABELLED_ACTIONS_COLUMNS,
+    data: [{ name: 'Orders' }, { name: 'Invoices' }, { name: 'Shipments' }],
+    height: 300,
+  },
+  render: (args) => (
+    <div className='wide-table-box' style={{ width: 720 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.wide-table-box') as HTMLElement;
+    const cells = await waitFor(() => {
+      const found = actionCells(box);
+      expect(found).toHaveLength(3);
+      return found;
+    });
+    for (const cell of cells) {
+      const [open, remove] = Array.from(cell.querySelectorAll<HTMLElement>('.reqore-button'));
+      // the label is drawn, in sight, inside its button
+      const text = open.querySelector<HTMLElement>(
+        '.reqore-button-text-content:not([aria-hidden])'
+      ) as HTMLElement;
+      expect(text).toHaveTextContent('Open');
+      expect(text).toBeVisible();
+      const textBox = text.getBoundingClientRect();
+      const buttonBox = open.getBoundingClientRect();
+      expect(textBox.width).toBeGreaterThan(0);
+      expect(textBox.left).toBeGreaterThanOrEqual(buttonBox.left - 0.5);
+      expect(textBox.right).toBeLessThanOrEqual(buttonBox.right + 0.5);
+      expect(open).not.toHaveAttribute('aria-label');
+      // an icon-only action draws no text and is named by its tooltip
+      expect(remove.textContent).toBe('');
+      expect(remove).toHaveAttribute('aria-label', 'Delete');
+    }
+    expect(box.querySelector('.reqore-row-actions-menu')).toBeNull();
+  },
+};
+
+/* A wide toolbar beside a long one-line description (qorus#646): the narrow bar's rule - the title
+   first, the actions from what it leaves - applied at every width took the description's one-line
+   width as the title's claim, and squeezed the search to its least instead of wrapping the
+   description. */
+
+const LONG_DESCRIPTION =
+  'Every workflow this instance runs, with the order it was started in, ' +
+  'its current status and the service that owns it';
+
+export const WideToolbarBesideALongDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a filterable table in a 900px box whose title has a long one-line description. The search field keeps its width beside it and the description wraps under the title, as on a wide bar it always did; nothing in the toolbar reaches past the panel.',
+      },
+    },
+  },
+  args: {
+    label: 'Workflows',
+    description: LONG_DESCRIPTION,
+    filterable: true,
+    columns: LABELLED_ACTIONS_COLUMNS,
+    data: [{ name: 'Orders' }, { name: 'Invoices' }, { name: 'Shipments' }],
+    height: 300,
+  },
+  render: (args) => (
+    <div className='wide-table-box' style={{ width: 900 }}>
+      <ReqoreTable {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector('.wide-table-box') as HTMLElement;
+    const bar = box.querySelector('.reqore-panel-title') as HTMLElement;
+    const search = await waitFor(() => {
+      const input = openSearch(box);
+      expect(input).toBeTruthy();
+      return input?.closest('.reqore-control-wrapper') as HTMLElement;
+    });
+    await waitFor(() => expect(search.getBoundingClientRect().width).toBeGreaterThan(150));
+    expect(searchToggle(box)).toBeNull();
+    const description = bar.querySelector('.reqore-panel-title-description') as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(description);
+    const lines = new Set(Array.from(range.getClientRects()).map(({ top }) => Math.round(top)));
+    expect(lines.size).toBeGreaterThan(1);
+    await expectControlsInside(box, bar);
+  },
+};
+
 export const RowActionsMenuFromTheKeyboard: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          "Renders a table in a 265px box, its rows' actions folded into one menu button each. From the keyboard, Tab goes from one row's button to the next, Enter opens the menu, the arrow keys move to Delete and Enter runs it and closes the menu, Space opens it again and Escape puts it away - the focus stays on the button throughout, and the row itself is never opened.",
+          "Renders a table in a 265px box, its rows' actions folded into one menu button each. From the keyboard, Tab goes from one row's button to the next and Enter opens the menu; the arrow keys move the focus through the menu's items to Delete, a menu item a screen reader reads, and Enter runs it and closes the menu with the focus back on the button; Space opens it again and Escape puts it away, the focus on the button again. The row itself is never opened.",
       },
     },
   },
@@ -2864,7 +2983,14 @@ export const RowActionsMenuFromTheKeyboard: Story = {
     await userEvent.keyboard('{Enter}');
     await expectRowActionsMenu();
     await waitFor(() => expect(second).toHaveAttribute('aria-expanded', 'true'));
-    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{Enter}');
+    // the button controls the open menu, and the arrow keys take the focus to its items
+    const menu = document.getElementById(second.getAttribute('aria-controls') as string);
+    expect(menu).toHaveAttribute('role', 'menu');
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(document.activeElement?.textContent).toContain('Delete'));
+    expect(document.activeElement).toHaveAttribute('role', 'menuitem');
+    expect(menu?.contains(document.activeElement)).toBe(true);
+    await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(onDeleteClick).toHaveBeenCalledTimes(1));
     await expectRowActionsMenuClosed();
     expect(document.activeElement).toBe(second);

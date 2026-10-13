@@ -536,3 +536,13 @@ test('Keeps every action inline in a wide container, and a single one a button w
   renderMeasured(400, { actions: [{ label: 'Investigate' }] });
   expect(document.querySelectorAll('.reqore-row-actions-menu-button')).toHaveLength(0);
 });
+
+test('Stacked, labels an action whose label is empty with its tooltip', () => {
+  renderMeasured(400, {
+    actions: [{ label: 'Investigate' }, { label: '', icon: 'CloseLine', tooltip: 'Dismiss' }],
+  });
+
+  const buttons = document.querySelectorAll('.reqore-severity-row-actions .reqore-button');
+  expect(buttons).toHaveLength(2);
+  expect(buttons[1].textContent).toContain('Dismiss');
+});

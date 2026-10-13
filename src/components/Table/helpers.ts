@@ -307,18 +307,17 @@ export const isActionsMenuWidth = (column: IReqoreTableColumn, tableWidth?: numb
   tableWidth <= (column.cell.actionsMenuBelowWidth ?? NARROW_CONTAINER_BREAKPOINT_PX);
 
 /**
- * The ids of the columns whose actions fold at this table width, joined into one string: it changes
- * only when the table crosses a column's threshold, not on every pixel of a resize, so the columns
- * built from it are rebuilt only then.
+ * The ids of the columns whose actions fold at this table width. A list, not ids joined into one
+ * string: a column's id is any string, a space in it too, and ids split back out of a joined string
+ * named columns the table does not have.
  */
 export const getActionsMenuColumnIds = (
   columns: IReqoreTableColumn[],
   tableWidth?: number
-): string =>
+): string[] =>
   flattenColumns(columns)
     .filter((column) => isActionsMenuWidth(column, tableWidth))
-    .map((column) => column.dataId)
-    .join(' ');
+    .map((column) => column.dataId);
 
 /**
  * The columns with the folded ones narrowed to the menu button: as wide as a button of the table's
@@ -327,15 +326,15 @@ export const getActionsMenuColumnIds = (
  */
 export const foldActionsColumns = (
   columns: IReqoreTableColumn[],
-  foldedIds: string,
+  foldedIds: readonly string[],
   size: TSizes,
   touch: boolean
 ): IReqoreTableColumn[] => {
-  if (!foldedIds) {
+  if (!foldedIds.length) {
     return columns;
   }
 
-  const folded = new Set(foldedIds.split(' '));
+  const folded = new Set(foldedIds);
   const width = Math.max(SIZE_TO_PX[size], touch ? TOUCH_TARGET_PX : 0);
   const fold = (column: IReqoreTableColumn): IReqoreTableColumn => {
     if (column.header?.columns) {

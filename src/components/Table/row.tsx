@@ -7,6 +7,7 @@ import {
   IReqoreTableData,
   IReqoreTableRowClick,
   IReqoreTableRowData,
+  TReqoreTableCellAction,
 } from '.';
 import { ReqoreButton, ReqoreControlGroup, ReqoreIcon } from '../..';
 import { SIZE_TO_PX, TSizes } from '../../constants/sizes';
@@ -31,7 +32,7 @@ import {
   IColumnPinInfo,
   isActionsMenuWidth,
 } from './helpers';
-import ReqoreRowActionsMenu, { getRowActionLabel } from '../RowActionsMenu';
+import ReqoreRowActionsMenu, { getRowActionLabel, hasRowActionLabel } from '../RowActionsMenu';
 
 /**
  * Per-row escape hatch handed to the RowComponent as extra HTML attributes.
@@ -342,7 +343,11 @@ const ReqoreTableRow = memo(
         cell: IReqoreTableColumn['cell'],
         data: any,
         dataId: string,
-        align?: 'center' | 'left' | 'right'
+        align?: 'center' | 'left' | 'right',
+        /** The column is folded to the width of the menu button (see `isActionsMenuWidth`). */
+        folded?: boolean,
+        /** The row's actions, where the caller has already asked the cell for them. */
+        actions?: TReqoreTableCellAction[]
       ): ReactElement<any, any> => {
         if (cell?.actions) {
           return (
@@ -354,25 +359,37 @@ const ReqoreTableRow = memo(
               style={{ height: '100%' }}
               rounded={false}
             >
-              {cell.actions(data).map(({ label, ...action }, index) => (
-                <ReqoreButton
-                  key={index}
-                  rounded={false}
-                  iconsAlign={align === 'center' ? 'center' : 'sides'}
-                  textAlign={align}
-                  flat
-                  // An action's label is not drawn here, where there is room for its icon only: it
-                  // is the button's tooltip, unless it has one, and its name to a screen reader.
-                  aria-label={getRowActionLabel({ label, tooltip: action.tooltip })}
-                  {...action}
-                  tooltip={action.tooltip ?? getRowActionLabel({ label })}
-                  onClick={(e) => {
-                    e.stopPropagation();
+              {(actions ?? cell.actions(data)).map(({ label, ...action }, index) => {
+                /* An action's label is drawn in its button, as a button's is. Only where the
+                   column is folded to the menu button's width (a narrow table, a row with one
+                   action) does an action with an icon show the icon alone: its label is then its
+                   tooltip, unless it has one. A button that draws no label is named by its label
+                   or tooltip text, which a screen reader would not read from the icon. */
+                const drawLabel = hasRowActionLabel(label) && !(folded && action.icon);
 
-                    action.onClick?.(e);
-                  }}
-                />
-              ))}
+                return (
+                  <ReqoreButton
+                    key={index}
+                    rounded={false}
+                    iconsAlign={align === 'center' ? 'center' : 'sides'}
+                    textAlign={align}
+                    flat
+                    aria-label={
+                      drawLabel ? undefined : getRowActionLabel({ label, tooltip: action.tooltip })
+                    }
+                    {...action}
+                    label={drawLabel ? label : undefined}
+                    tooltip={
+                      drawLabel ? action.tooltip : action.tooltip ?? getRowActionLabel({ label })
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+
+                      action.onClick?.(e);
+                    }}
+                  />
+                );
+              })}
             </ReqoreControlGroup>
           );
         }
@@ -507,12 +524,15 @@ const ReqoreTableRow = memo(
       return () => observer.disconnect();
     }, [isExpanded, onExpandedHeight, index, expandedContent]);
 
-    /* A narrow table folds a cell's actions into one menu button when there are two or more of them:
-       side by side they took a third of a phone's width from the column that says which row this is.
-       One action stays a button, as a menu holding only it costs a tap and saves nothing. */
+    /* A narrow table folds a cell's actions into one menu button when there are two or more of
+       them: side by side they took a third of a phone's width from the column that says which row
+       this is. One action stays a button, as a menu holding only it costs a tap and saves nothing.
+       The cell is asked for its actions once: they are a function of the row, and not always a
+       cheap one. */
     const renderCellContent = (column: IReqoreTableColumn) => {
       const { cell, dataId, align } = column;
-      const actions = isActionsMenuWidth(column, tableWidth) ? cell.actions(data[index]) : undefined;
+      const folded = isActionsMenuWidth(column, tableWidth);
+      const actions = folded ? cell.actions(data[index]) : undefined;
 
       if (actions && actions.length > 1) {
         return (
@@ -525,7 +545,7 @@ const ReqoreTableRow = memo(
         );
       }
 
-      return renderContent(cell, data[index], dataId, align);
+      return renderContent(cell, data[index], dataId, align, folded, actions);
     };
 
     const renderCells = useCallback(

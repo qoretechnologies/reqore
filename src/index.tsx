@@ -147,6 +147,8 @@ export { default as ReqoreRadioGroup } from './components/RadioGroup';
 export { default as ReqoreRating } from './components/Rating';
 export { default as ReqoreSegmentedControl } from './components/SegmentedControl';
 export { default as ReqoreSeverityRow } from './components/SeverityRow';
+// How a narrow `ReqoreEntityRow` / `ReqoreSeverityRow` shows its actions (`narrowActions`).
+export type { TReqoreNarrowRowActions } from './components/RowActionsMenu';
 export { ReqoreRichTextEditor } from './components/RichTextEditor';
 export type {
   IReqoreRichTextEditorProps,
@@ -161,6 +163,7 @@ export { ReqoreSpinner } from './components/Spinner';
 export { default as ReqoreStackedBar } from './components/StackedBar';
 export { default as ReqoreStatistic } from './components/Statistic';
 export { default as ReqoreTable } from './components/Table';
+export type { TReqoreTableCellAction } from './components/Table';
 export { ReqoreTableBodyCell } from './components/Table/cell';
 export { ReqoreTableHeaderCell } from './components/Table/headerCell';
 export { default as ReqoreTableRow } from './components/Table/row';

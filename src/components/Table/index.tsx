@@ -122,11 +122,14 @@ export interface IReqoreTableColumn extends IReqoreIntent {
      */
     content?: TReqoreTableColumnContent;
     /**
-     * The row's actions, drawn as icon buttons in the cell.
+     * The row's actions, drawn as buttons in the cell.
      *
-     * An action's `label` is not drawn inline: it is the button's tooltip (unless it has one of its
-     * own) and its accessible name, and the action's text in the menu a narrow table folds the
-     * actions into (see `actionsMenuBelowWidth`). Without a label, a string `tooltip` is used.
+     * An action's `label` is drawn in its button, as a button's is. Where a narrow table folds the
+     * actions into one menu (see `actionsMenuBelowWidth`), it is the action's name in that menu -
+     * its text, or a number; otherwise its string `tooltip`, or its `aria-label` - and a row with
+     * only one action keeps it as a button the menu's width, its icon alone, its label then its
+     * tooltip (unless it has one) and its accessible name. A button that draws no label is named
+     * by its tooltip's text.
      */
     actions?: (data: IReqoreTableRowData) => TReqoreTableCellAction[];
     /**
@@ -155,11 +158,14 @@ export interface IReqoreTableColumn extends IReqoreIntent {
 }
 
 /**
- * An action in a table cell: an icon button, called `label` where it is named in words. A string or a
- * number, as a panel action's label is, so the actions a page gives a panel serve its table's cells too.
+ * An action in a table cell: a button, with its `label` drawn in it. Any content, as a button's
+ * label is, so the actions a page gives a panel, a button group or a row (`IReqorePanelAction`,
+ * `IReqoreButtonProps`, `IReqoreEntityRowAction`, `IReqoreSeverityRowAction`) serve its table's
+ * cells too. In the menu a narrow table folds the actions into, only text or a number names the
+ * action; anything else gives way to its string `tooltip`.
  */
 export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> & {
-  label?: string | number;
+  label?: React.ReactNode;
 };
 
 export interface IReqoreTableRowData {
@@ -946,13 +952,18 @@ const ReqoreTable = ({
   );
 
   /* A narrow table folds each row's actions into one menu button (see
-     `cell.actionsMenuBelowWidth`), and the column narrows to the button. Which columns fold is a
-     string that only changes when the table crosses a threshold, so a resize does not rebuild the
-     columns on every pixel. Read from the caller's columns: the select box and the expander are the
-     table's own, hold one action each, and never fold. */
-  const actionsMenuColumnIds = useMemo(
-    () => getActionsMenuColumnIds(_internalColumns, sizes.width),
+     `cell.actionsMenuBelowWidth`), and the column narrows to the button. Which columns fold
+     changes only when the table crosses a threshold: the list is kept by its contents - its JSON,
+     which no column id can make ambiguous - so a resize does not rebuild the columns on every
+     pixel. Read from the caller's columns: the select box and the expander are the table's own,
+     hold one action each, and never fold. */
+  const actionsMenuColumnIdsKey = useMemo(
+    () => JSON.stringify(getActionsMenuColumnIds(_internalColumns, sizes.width)),
     [_internalColumns, sizes.width]
+  );
+  const actionsMenuColumnIds = useMemo<string[]>(
+    () => JSON.parse(actionsMenuColumnIdsKey),
+    [actionsMenuColumnIdsKey]
   );
   // A finger needs a bigger button than a mouse: the column, and the rows, make room for one.
   const touch = useReqoreProperty('isHoverCapable') === false;
@@ -1114,20 +1125,45 @@ const ReqoreTable = ({
     []
   );
 
-  const handlePreQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setPreQuery(event.target.value);
-  }, []);
-
   /* A narrow table's search is a button until it is used (see `searchFoldsBelowWidth`). Open, the field
      takes the toolbar's whole line; empty, Escape or leaving it closes it and gives the button the focus
      back, and a search that holds text stays open, so what filters the rows is always in sight. */
   const searchToggleId = useId();
+  // Marks the field, so the table can give it the focus back (see `focusSearchField`).
+  const searchFieldId = useId();
   const [searchOpen, setSearchOpen] = useState(false);
   const focusSearchToggle = useRef(false);
+  const focusSearchField = useRef(false);
   const searchFolds =
     !!filterable && sizes.width > 0 && sizes.width <= searchFoldsBelowWidth;
   const searchShown = !searchFolds || searchOpen || preQuery !== '';
   const searchOpenFolded = searchFolds && searchShown;
+
+  /* Emptied while it is typed in, a folded search stays open. A field shown only for its text -
+     the table narrowed with a search in it - went away with the last character, and took the
+     focus with it to the page. Open, it closes as any open search does: Escape, or leaving it
+     empty. */
+  const handlePreQueryChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setPreQuery(event.target.value);
+
+      if (searchFolds && !event.target.value && event.target === document.activeElement) {
+        setSearchOpen(true);
+      }
+    },
+    [searchFolds, setPreQuery]
+  );
+  /* The clear button empties a folded search and leaves it open, with the focus in the field:
+     the button goes away with the text, and the focus that was on it with it. */
+  const handleSearchClear = useCallback(() => {
+    setQuery('');
+    setPreQuery('');
+
+    if (searchFolds) {
+      focusSearchField.current = true;
+      setSearchOpen(true);
+    }
+  }, [searchFolds, setQuery, setPreQuery]);
   const handleSearchKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape' && !event.currentTarget.value) {
       event.stopPropagation();
@@ -1145,7 +1181,12 @@ const ReqoreTable = ({
       focusSearchToggle.current = false;
       document.getElementById(searchToggleId)?.focus();
     }
-  }, [searchShown, searchToggleId]);
+
+    if (searchShown && focusSearchField.current) {
+      focusSearchField.current = false;
+      document.querySelector<HTMLElement>(`[data-reqore-table-search="${searchFieldId}"]`)?.focus();
+    }
+  }, [searchShown, searchToggleId, searchFieldId, preQuery]);
 
   const columnsList = useMemo(() => {
     const _columnsList: IReqorePanelSubAction[] = [];
@@ -1225,32 +1266,40 @@ const ReqoreTable = ({
           : filterPlaceholder ?? `Search in ${count(transformedData)} items...`;
 
       if (searchShown) {
+        const searchProps = filterProps?.(transformedData);
+
         finalActions.push({
           as: ReqoreInput,
           props: {
             key: 'search',
             fixed: false,
             placeholder: resolvedFilterPlaceholder,
-            onClearClick: () => {
-              setQuery('');
-              setPreQuery('');
-            },
+            onClearClick: handleSearchClear,
             onChange: handlePreQueryChange,
             value: preQuery,
             icon: 'Search2Line',
             disabled: !query && !count(transformedData),
             minimal: false,
             // folded and opened: across the toolbar, the typing in it, closed again when left empty
+            ...(searchOpenFolded ? { fluid: true, autoFocus: searchOpen } : {}),
+            ...searchProps,
+            /* After the caller's `filterProps`, calling theirs too: spread over these, a
+               caller's own `onKeyDown` or `onBlur` took away Escape and the close on leaving
+               it empty. */
             ...(searchOpenFolded ?
               {
-                className: 'reqore-table-search-open',
-                fluid: true,
-                autoFocus: searchOpen,
-                onKeyDown: handleSearchKeyDown,
-                onBlur: handleSearchBlur,
+                className: `reqore-table-search-open ${searchProps?.className || ''}`.trim(),
+                onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => {
+                  handleSearchKeyDown(event);
+                  searchProps?.onKeyDown?.(event);
+                },
+                onBlur: (event: React.FocusEvent<HTMLInputElement>) => {
+                  handleSearchBlur(event);
+                  searchProps?.onBlur?.(event);
+                },
               }
             : {}),
-            ...filterProps?.(transformedData),
+            'data-reqore-table-search': searchFieldId,
           },
         });
       } else {
@@ -1390,6 +1439,8 @@ const ReqoreTable = ({
     searchToggleLabel,
     handleSearchKeyDown,
     handleSearchBlur,
+    handleSearchClear,
+    searchFieldId,
   ]);
 
   const badge = useMemo(() => {
@@ -1410,7 +1461,7 @@ const ReqoreTable = ({
      tall, so the button is a finger's size both ways. The row's border is the 1px the body adds to a
      table that is not flat. */
   const bodyRowHeight = useMemo(() => {
-    if (!touch || !actionsMenuColumnIds) {
+    if (!touch || !actionsMenuColumnIds.length) {
       return rowHeight;
     }
     const border = rest.flat ? 0 : 1;
