@@ -116,6 +116,9 @@ const toMenuItem = (action: IReqoreRowMenuAction, touch: boolean): IReqoreDropdo
    clickable row opened, or navigated away, under the menu that was being used. */
 const stopRowClick = (event: React.MouseEvent<HTMLElement>) => event.stopPropagation();
 
+/** The filled group's style: one object for every render, so the memoised group is not drawn again for it. */
+const FILL_GROUP_STYLE = { height: '100%' } as const;
+
 const StyledRowActionsMenu = styled.div<{ $fill?: boolean }>`
   display: flex;
   flex: 0 0 auto;
@@ -266,7 +269,7 @@ export const ReqoreRowActionsMenu = memo(
             stack
             fill
             fluid
-            style={{ height: '100%' }}
+            style={FILL_GROUP_STYLE}
             rounded={false}
           >
             {menu}

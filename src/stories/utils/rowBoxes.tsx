@@ -21,9 +21,12 @@ export interface IStoryRowBoxProps {
  * read as a row sizing itself wrongly (David's review of the narrow-row stories, qorus#646). Drawn and named,
  * the difference reads as what the story is about.
  */
+/** The caption's effect: one object for every render, so the memoised paragraph is not drawn again for it. */
+const CAPTION_EFFECT = { opacity: 0.6 } as const;
+
 export const StoryRowBox = ({ caption, width, className, children }: IStoryRowBoxProps) => (
   <div className={`story-row-box ${className || ''}`.trim()} style={{ width, maxWidth: '100%' }}>
-    <ReqoreP size='small' effect={{ opacity: 0.6 }} className='story-row-box-caption'>
+    <ReqoreP size='small' effect={CAPTION_EFFECT} className='story-row-box-caption'>
       {caption}
     </ReqoreP>
     <div
