@@ -11,7 +11,7 @@ import ReqoreRowActionsMenu, { getRowActionLabel } from '../src/components/RowAc
 
 test('An action is named by its label, or else by its tooltip when that is text', () => {
   expect(getRowActionLabel({ label: 'Edit', tooltip: 'Open in the editor' })).toBe('Edit');
-  expect(getRowActionLabel({ label: 3 as unknown as string })).toBe('3');
+  expect(getRowActionLabel({ label: 3 })).toBe('3');
   expect(getRowActionLabel({ tooltip: 'Remove' })).toBe('Remove');
   expect(getRowActionLabel({ tooltip: { content: 'Dismiss' } })).toBe('Dismiss');
   expect(getRowActionLabel({ tooltip: '' })).toBeUndefined();

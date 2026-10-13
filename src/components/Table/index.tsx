@@ -154,9 +154,12 @@ export interface IReqoreTableColumn extends IReqoreIntent {
   };
 }
 
-/** An action in a table cell: an icon button, called `label` where it is named in words. */
+/**
+ * An action in a table cell: an icon button, called `label` where it is named in words. A string or a
+ * number, as a panel action's label is, so the actions a page gives a panel serve its table's cells too.
+ */
 export type TReqoreTableCellAction = Omit<IReqoreButtonProps, 'children' | 'label' | 'rightIcon'> & {
-  label?: string;
+  label?: string | number;
 };
 
 export interface IReqoreTableRowData {

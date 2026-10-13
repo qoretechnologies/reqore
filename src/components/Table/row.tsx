@@ -365,7 +365,7 @@ const ReqoreTableRow = memo(
                   // is the button's tooltip, unless it has one, and its name to a screen reader.
                   aria-label={getRowActionLabel({ label, tooltip: action.tooltip })}
                   {...action}
-                  tooltip={action.tooltip ?? label}
+                  tooltip={action.tooltip ?? getRowActionLabel({ label })}
                   onClick={(e) => {
                     e.stopPropagation();
 
