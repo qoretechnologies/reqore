@@ -951,7 +951,7 @@ export const NarrowGridTilesStayInTheirCells: Story = {
     docs: {
       description: {
         story:
-          'Renders four KPI tiles - Dependencies, Connections, Workflows and Services - in a 320px grid of four equal columns, about 74px each. Each tile is as wide as its column and no wider, the row does not overflow its box, and a label too long for its tile breaks inside its word rather than reaching into the next tile.',
+          'Renders four KPI tiles - Dependencies, Connections, Workflows and Services - in a 320px grid of four equal columns, about 74px each. Each tile is as wide as its column and no wider, the row does not overflow its box, and a label too long for its tile breaks inside its word rather than reaching into the next tile. A label that breaks is centred, line by line, as the ones that fit on one line are.',
       },
     },
   },
@@ -992,6 +992,14 @@ export const NarrowGridTilesStayInTheirCells: Story = {
       // and its label inside it
       const label = tile.querySelector('.reqore-statistic-label') as HTMLElement;
       expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth + 1);
+      // centred line by line, a broken label as a whole one is (Foxhoundn's review of #708)
+      expect(getComputedStyle(label).textAlign).toBe('center');
+      const text = document.createRange();
+      text.selectNodeContents(label);
+      const middle = box.left + box.width / 2;
+      Array.from(text.getClientRects()).forEach((line) => {
+        expect(Math.abs(line.left + line.width / 2 - middle)).toBeLessThanOrEqual(2);
+      });
     });
   },
 };

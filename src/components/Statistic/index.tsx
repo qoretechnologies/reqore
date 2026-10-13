@@ -250,11 +250,16 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
      alone is wider than the tile (break-word; anywhere, or
      word-break: break-all, broke words that had room - "DEPEND / ENCI /
      ES" on a 120px tile). */
+  /* A label that wraps is aligned as its tile is (centred by default): its box is centred by
+     align-items, but its lines were left-aligned inside it, so a broken label sat to the left of
+     its value and of the tiles beside it whose labels fit on one line. */
   & .reqore-statistic-label {
     white-space: normal;
     overflow-wrap: break-word;
     word-break: normal;
     max-width: 100%;
+    text-align: ${({ $align }) =>
+      $align === 'center' ? 'center' : $align === 'flex-end' ? 'right' : 'left'};
   }
   /* overflow-wrap anywhere covers identifiers, URLs and long codes
      with no natural break point. */
