@@ -91,7 +91,8 @@ export const ReqoreTreeManagementDialog = ({
             ) : (
               <ReqoreInput
                 disabled={data && parentType === 'array'}
-                value={key}
+                // text from the start, empty for a new item: with none, the first key made it controlled (qorus#646)
+                value={key ?? ''}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder={keyPlaceholder}
                 fluid
@@ -111,7 +112,7 @@ export const ReqoreTreeManagementDialog = ({
                 />
               ) : (
                 <ReqoreTextarea
-                  value={value}
+                  value={value ?? ''}
                   scaleWithContent
                   onChange={(e: any) => setValue(e.target.value)}
                   placeholder={valuePlaceholder}
