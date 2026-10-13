@@ -5,6 +5,15 @@ import { server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
+/** Whether this run's browser is the phone the stories tagged `touch` run on (vitest.config.ts). */
+const onThePhone = (): boolean => {
+  // a project's browser runs as a project of its own, named after both:
+  // "storybook-touch (chromium)"
+  const project = server.config.name ?? '';
+
+  return project === TOUCH_STORY_PROJECT || project.startsWith(`${TOUCH_STORY_PROJECT} (`);
+};
+
 // Registers the React renderer (renderToCanvas) plus the project's global
 // decorators/parameters from .storybook/preview for the Storybook Vitest project.
 const annotations = setProjectAnnotations([
@@ -19,6 +28,21 @@ const annotations = setProjectAnnotations([
       // the story test times out. A 100vh frame resolves regardless of parent.
       (Story: any) => createElement('div', { style: { height: '100vh' } }, createElement(Story)),
     ],
+    /* A story tagged `touch` runs on the phone. The two story projects tell those stories from the
+       others by the tags Storybook reads from the story file before it runs it (vitest.config.ts);
+       a tag the story only has once it runs - spread into it from a shared object - is not one of
+       them, and the story would run here, on the desktop, with a mouse. It fails instead, saying
+       how to tag it. */
+    beforeEach: ({ tags, title, name }) => {
+      if (tags.includes('touch') && !onThePhone()) {
+        throw new Error(
+          `"${title} / ${name}" is tagged 'touch' only once it runs, so it ran in the ` +
+            `"${server.config.name}" project, whose browser has a mouse. Write the tag in the ` +
+            `story file, as a string in the story's or its meta's own \`tags\` ` +
+            `(tags: ['touch']), so that it runs on the phone.`
+        );
+      }
+    },
   },
 ]);
 
@@ -70,10 +94,10 @@ afterEach(async () => {
    them, that it still has its mouse: a touch screen that left a desktop page without one (qorus#646) fails
    the next story here. */
 beforeEach(() => {
-  // a project's browser runs as a project of its own, named after both: "storybook-touch (chromium)"
   const project = server.config.name ?? '';
-  const phone = project === TOUCH_STORY_PROJECT || project.startsWith(`${TOUCH_STORY_PROJECT} (`);
-  const promised = phone ? '(hover: none) and (pointer: coarse)' : '(hover: hover) and (pointer: fine)';
+  const promised = onThePhone()
+    ? '(hover: none) and (pointer: coarse)'
+    : '(hover: hover) and (pointer: fine)';
 
   expect(matchMedia(promised).matches, `the "${project}" project's browser matches ${promised}`).toBe(true);
 });

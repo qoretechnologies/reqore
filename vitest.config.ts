@@ -11,18 +11,25 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const qlipUploadToken = process.env.QLIP_UPLOAD_TOKEN;
 
 /**
- * Story files with no story tagged `touch`, relative to the project root. The touch project leaves them out,
- * so it does not load every story module only to skip it. Read from the files themselves: tagging a story
- * is all it takes to run it on a touch screen.
+ * Story files that cannot hold a story tagged `touch`, relative to the project root. The touch
+ * project leaves them out, so it does not load every story module only to skip it. Read from the
+ * files themselves: tagging a story is all it takes to run it on a touch screen.
+ *
+ * Both story projects split the stories by the tags Storybook reads from a story file's source
+ * before it runs it (`tags` below): string literals, in a `tags` array on a story or its meta, or
+ * in an array the file names there. So a file with no `'touch'` or `"touch"` in it has no story
+ * either project counts as tagged, and any other file is loaded here. Matching the shape of a
+ * `tags` line instead left out a file that tagged its stories another way Storybook reads
+ * (`tags: TOUCH`, a comment in the array): the desktop project left those stories out and this
+ * one never loaded them, so they ran nowhere and nothing failed. A file that only mentions the
+ * word costs a module load. A tag a story only has when it runs (spread into it from a shared
+ * object) is read from the source by neither project: `.storybook/vitest.setup.ts` fails it.
  */
 const storyFilesWithoutTouch = (): string[] =>
   readdirSync(path.join(dirname, 'src'), { recursive: true, encoding: 'utf8' })
     .filter((file) => file.endsWith('.stories.tsx'))
     .map((file) => path.join('src', file).split(path.sep).join('/'))
-    .filter(
-      (file) =>
-        !/\btags:\s*\[[^\]]*['"]touch['"]/.test(readFileSync(path.join(dirname, file), 'utf8'))
-    );
+    .filter((file) => !/['"]touch['"]/.test(readFileSync(path.join(dirname, file), 'utf8')));
 
 // One plugin for both story projects, so they make one qlip build: one build id, and one upload at the end
 // of the run (the plugin registers its reporter once, however many projects load it).
