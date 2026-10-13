@@ -68,6 +68,18 @@ export interface IReqoreCollapsibleContentProps
    */
   buttonFluid?: boolean;
   /**
+   * Where the reveal button sits while the content is clipped.
+   *
+   * - `'overlay'` parks it inside the fade, over the last lines in view — the compact default.
+   * - `'below'` gives it its own row under the clipped box, where "Show less" also lives, so the
+   *   button never covers content. The fade becomes a mask on the content itself rather than a
+   *   painted gradient, so there is no fade colour to match and everything still in view stays
+   *   clickable. Use it when the last thing in view is interactive (a tile, a row with actions),
+   *   or when the content sits on a surface the ambient theme does not know about.
+   * @default 'overlay'
+   */
+  buttonPlacement?: 'overlay' | 'below';
+  /**
    * Animate the expand / collapse transition. Off by default — many surfaces want the
    * disclosure to feel instant. The animation only runs when:
    * 1. `animated` is `true`, AND
@@ -89,6 +101,7 @@ interface IStyledCollapsibleContentProps {
   theme: IReqoreTheme;
   $fluid?: boolean;
   $disabled?: boolean;
+  $hoverReveal?: boolean;
 }
 
 const StyledCollapsibleContent = styled(StyledEffect)<IStyledCollapsibleContentProps>`
@@ -98,13 +111,41 @@ const StyledCollapsibleContent = styled(StyledEffect)<IStyledCollapsibleContentP
   max-width: 100%;
 
   ${({ $disabled }) => $disabled && DisabledElement}
+
+  ${({ $hoverReveal }) =>
+    $hoverReveal &&
+    css`
+      /* Hover-reveal is a desktop-only nicety: gated on the pointer actually
+         being able to hover, so on touch the reveal button simply stays visible
+         rather than becoming an unreachable way to expand the content. Scoped to
+         the whole component, not the clip, so it covers a button placed below. */
+      @media (hover: hover) and (pointer: fine) {
+        .reqore-collapsible-content-reveal {
+          opacity: 0;
+          /* Not hit-testable while invisible — an opacity:0 button still takes
+             clicks, which reads as a control firing out of nowhere. */
+          pointer-events: none;
+          transition: opacity 0.15s ease;
+        }
+
+        &:hover .reqore-collapsible-content-reveal,
+        &:focus-within .reqore-collapsible-content-reveal {
+          opacity: 1;
+          pointer-events: auto;
+        }
+      }
+    `}
 `;
 
 interface IStyledClipProps {
   $collapsed: boolean;
   $maxHeight: number;
-  $hoverReveal?: boolean;
   $animated?: boolean;
+  /**
+   * Fade the clipped edge with a mask of this height instead of a painted overlay — the
+   * `buttonPlacement='below'` fade. Unset when there is no fade.
+   */
+  $maskFade?: number;
   /**
    * Measured `scrollHeight` of the content — the animation target when expanding. Falls back to
    * `$maxHeight` when not yet measured so the very first frame isn't `max-height: 0px`.
@@ -130,27 +171,11 @@ const StyledClip = styled.div<IStyledClipProps>`
           overflow: hidden;
         `}
 
-  ${({ $hoverReveal }) =>
-    $hoverReveal &&
+  ${({ $maskFade, $collapsed }) =>
+    $maskFade &&
+    $collapsed &&
     css`
-      /* Hover-reveal is a desktop-only nicety: gated on the pointer actually
-         being able to hover, so on touch the reveal button simply stays visible
-         rather than becoming an unreachable way to expand the content. */
-      @media (hover: hover) and (pointer: fine) {
-        .reqore-collapsible-content-reveal {
-          opacity: 0;
-          /* Not hit-testable while invisible — an opacity:0 button still takes
-             clicks, which reads as a control firing out of nowhere. */
-          pointer-events: none;
-          transition: opacity 0.15s ease;
-        }
-
-        &:hover .reqore-collapsible-content-reveal,
-        &:focus-within .reqore-collapsible-content-reveal {
-          opacity: 1;
-          pointer-events: auto;
-        }
-      }
+      mask-image: linear-gradient(to bottom, black calc(100% - ${$maskFade}px), transparent);
     `}
 `;
 
@@ -200,6 +225,16 @@ const StyledFadeOverlay = styled.div<IStyledFadeOverlayProps>`
   }
 `;
 
+// The row a `buttonPlacement='below'` button sits on — the same spot for "Show more" and
+// "Show less", so the control does not jump when it flips.
+const StyledButtonRow = styled.div<{ $align: 'left' | 'center' | 'right'; $gap: number }>`
+  display: flex;
+  flex-direction: column;
+  padding-top: ${({ $gap }) => $gap}px;
+  align-items: ${({ $align }) =>
+    $align === 'left' ? 'flex-start' : $align === 'right' ? 'flex-end' : 'center'};
+`;
+
 // Backdrop-blur the reveal / collapse buttons by default so they stay legible against whatever
 // content sits behind them — the fade alone leaves the button text fighting the half-faded
 // paragraphs. Consumers can override via `buttonProps.effect`.
@@ -231,6 +266,7 @@ export const ReqoreCollapsibleContent = memo(
         revealOn = 'always',
         buttonAlign = 'center',
         buttonFluid = false,
+        buttonPlacement = 'overlay',
         animated = false,
         buttonProps,
         size = 'normal',
@@ -374,6 +410,48 @@ export const ReqoreCollapsibleContent = memo(
         [buttonProps?.effect]
       );
 
+      const below = buttonPlacement === 'below';
+
+      const revealButton = (
+        <ReqoreButton
+          size={size}
+          intent={intent}
+          customTheme={customTheme}
+          icon={showMoreIcon}
+          label={showMoreLabel}
+          minimal
+          flat={false}
+          fluid={buttonFluid}
+          disabled={disabled}
+          aria-expanded={false}
+          {...buttonProps}
+          effect={mergedButtonEffect}
+          onClick={handleExpand}
+          className={`reqore-collapsible-content-reveal ${buttonProps?.className || ''}`.trim()}
+        />
+      );
+
+      // Below the box it shares the reveal's row and width, so the control stays put when it
+      // flips; over the box it owns its own full-width row, as it always has.
+      const collapseButton = (
+        <ReqoreButton
+          size={size}
+          intent={intent}
+          customTheme={customTheme}
+          icon={showLessIcon}
+          label={showLessLabel}
+          minimal
+          flat={false}
+          fluid={below ? buttonFluid : true}
+          disabled={disabled}
+          aria-expanded
+          {...buttonProps}
+          effect={mergedButtonEffect}
+          onClick={handleCollapse}
+          className={`reqore-collapsible-content-collapse ${buttonProps?.className || ''}`.trim()}
+        />
+      );
+
       return (
         <ReqoreTooltipComponent
           {...rest}
@@ -386,15 +464,16 @@ export const ReqoreCollapsibleContent = memo(
           effect={effect}
           $fluid={fluid}
           $disabled={disabled}
+          $hoverReveal={revealOn === 'hover'}
           className={`${className || ''} reqore-collapsible-content`.trim()}
         >
           <StyledClip
             ref={contentRef}
             $collapsed={showCollapsed}
             $maxHeight={maxCollapsedHeight}
-            $hoverReveal={revealOn === 'hover'}
             $animated={shouldAnimate}
             $expandedHeight={contentHeight}
+            $maskFade={below && !transparent ? fadeHeight : undefined}
             className='reqore-collapsible-content-clip'
           >
             {children}
@@ -410,58 +489,50 @@ export const ReqoreCollapsibleContent = memo(
               via `showCollapsed` — so the reveal button is in the DOM on first paint instead
               of materializing after the first ResizeObserver tick.
              */}
-            {(animationsEnabled
-              ? needsCollapse || (!hasMeasured && isCollapsed)
-              : showCollapsed) && (
-              <StyledFadeOverlay
-                $fade={fade}
-                $transparent={transparent}
-                $height={fadeHeight}
-                $padding={PADDING_FROM_SIZE[size]}
-                $align={buttonAlign}
-                $visible={showCollapsed}
-                $animated={animationsEnabled}
-                className='reqore-collapsible-content-fade'
-              >
-                <ReqoreButton
-                  size={size}
-                  intent={intent}
-                  customTheme={customTheme}
-                  icon={showMoreIcon}
-                  label={showMoreLabel}
-                  minimal
-                  flat={false}
-                  fluid={buttonFluid}
-                  disabled={disabled}
-                  {...buttonProps}
-                  effect={mergedButtonEffect}
-                  onClick={handleExpand}
-                  className={`reqore-collapsible-content-reveal ${
-                    buttonProps?.className || ''
-                  }`.trim()}
-                />
-              </StyledFadeOverlay>
-            )}
+            {!below &&
+              (animationsEnabled
+                ? needsCollapse || (!hasMeasured && isCollapsed)
+                : showCollapsed) && (
+                <StyledFadeOverlay
+                  $fade={fade}
+                  $transparent={transparent}
+                  $height={fadeHeight}
+                  $padding={PADDING_FROM_SIZE[size]}
+                  $align={buttonAlign}
+                  $visible={showCollapsed}
+                  $animated={animationsEnabled}
+                  className='reqore-collapsible-content-fade'
+                >
+                  {revealButton}
+                </StyledFadeOverlay>
+              )}
           </StyledClip>
-          {needsCollapse && !isCollapsed && (
-            <ReqoreButton
-              size={size}
-              intent={intent}
-              customTheme={customTheme}
-              icon={showLessIcon}
-              label={showLessLabel}
-              minimal
-              flat={false}
-              fluid
-              disabled={disabled}
-              {...buttonProps}
-              effect={mergedButtonEffect}
-              onClick={handleCollapse}
-              className={`reqore-collapsible-content-collapse ${
-                buttonProps?.className || ''
-              }`.trim()}
-            />
+          {/*
+            Below the box, the reveal waits for the measurement: mounting it optimistically (as
+            the overlay does) would push the layout down and back up for content that fits.
+          */}
+          {below && isCollapsed && needsCollapse && (
+            <StyledButtonRow
+              $align={buttonAlign}
+              $gap={PADDING_FROM_SIZE[size]}
+              className='reqore-collapsible-content-actions'
+            >
+              {revealButton}
+            </StyledButtonRow>
           )}
+          {needsCollapse &&
+            !isCollapsed &&
+            (below ? (
+              <StyledButtonRow
+                $align={buttonAlign}
+                $gap={PADDING_FROM_SIZE[size]}
+                className='reqore-collapsible-content-actions'
+              >
+                {collapseButton}
+              </StyledButtonRow>
+            ) : (
+              collapseButton
+            ))}
         </ReqoreTooltipComponent>
       );
     }
