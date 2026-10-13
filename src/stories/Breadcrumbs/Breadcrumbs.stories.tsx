@@ -345,8 +345,8 @@ export const CollapsedAdoptsLeafTheme: Story = {
 
 /* A crumb that changes width after the trail measured it (qorus#646). The trail decides what fits from
    the crumbs' widths, and a crumb can grow after that: its size changes, or its padding animates
-   (`transition: all`) after its page has loaded - in the IDE a crumb grew from 151 to 160px over 200ms
-   while the trail had measured it once, at the start, so the last crumb stayed clipped by 1-2px. The
+   (`transition: all`) after it is drawn - a crumb that grew from 151 to 160px over 200ms while the
+   trail had measured it once, at the start, left the last crumb clipped by 1-2px. The
    trail measures again whenever a crumb's width changes. */
 
 const GROWING_TRAIL: IReqoreBreadcrumbItem[] = [
@@ -467,7 +467,7 @@ export const RemeasuredAfterACrumbsTransition: Story = {
   },
 };
 
-/** A detail page's trail with a current page too long for a phone's header, as qorus-ide builds it. */
+/** A trail whose current page is too long for a phone's header. */
 const LONG_LEAF_TRAIL: IReqoreBreadcrumbItem[] = [
   { icon: 'Home4Fill', menuLabel: 'Home', minimal: true, flat: true },
   { label: 'ML models', icon: 'BrainLine', minimal: true, flat: true },
@@ -489,7 +489,7 @@ export const FoldedCurrentPageIsNamedInFull: Story = {
     docs: {
       description: {
         story:
-          'Renders a detail page\'s trail on a phone (390 px) beside a page action, with a current page too long for the header: the whole trail folds into one dropdown labelled with the current page, its name cut with an ellipsis. The dropdown still names the page in full, by its accessible name, for a screen reader; it has no title of its own (hovering it opens its menu, which names every crumb in full).',
+          'Renders a three-crumb trail on a phone (390 px) beside a page action, with a current page too long for the header: the whole trail folds into one dropdown labelled with the current page, its name cut with an ellipsis. The dropdown still names the page in full, by its accessible name, for a screen reader; it has no title of its own (hovering it opens its menu, which names every crumb in full).',
       },
     },
   },
@@ -734,7 +734,7 @@ const trailMenu = (canvasElement: HTMLElement) =>
 
 /* A trail made wider by its own props (qorus#646). The trail unfolds what fits when it gets wider,
    and so when the render that changes its bar's props draws it wider: a right element that goes, a
-   `maxWidth` lifted (the IDE's page wrapper lifts its 1280px when the page goes full screen). That
+   `maxWidth` lifted (a page that goes full width lifts its 1280px). That
    render used to be taken as the width the trail had been measured at, so its observer saw no
    change and the crumbs stayed folded with room to spare. */
 
