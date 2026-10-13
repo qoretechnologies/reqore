@@ -71,12 +71,13 @@ export interface IReqoreMenuItemRightIconStyle {
 
 /**
  * Centres an item in the first scrollable element between it and its menu (the menu included); scrolls
- * nothing where the menu shows it all, and nothing outside the menu.
+ * nothing where the menu shows it all, and nothing outside the menu. `overlay` scrolls as `auto`
+ * does (an older WebKit / Chromium value), as the popover's own search for a scroller reads it.
  */
 const scrollWithinMenu = (item: HTMLElement, menu: Element, behavior: ScrollBehavior) => {
   for (let el = item.parentElement; el; el = el.parentElement) {
     const { overflowY } = window.getComputedStyle(el);
-    if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+    if (/^(auto|scroll|overlay)$/.test(overflowY) && el.scrollHeight > el.clientHeight) {
       const box = el.getBoundingClientRect();
       const at = item.getBoundingClientRect();
       const delta = at.top + at.height / 2 - (box.top + box.height / 2);

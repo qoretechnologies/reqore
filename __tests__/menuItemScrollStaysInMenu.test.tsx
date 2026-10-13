@@ -83,6 +83,41 @@ describe('a menu item brought into view', () => {
     expect(menuScroll).toHaveBeenCalledWith(expect.objectContaining({ top: 110 }));
   });
 
+  it('scrolls a menu whose scroller overflows as an overlay', () => {
+    const pageScroll = vi.fn();
+    const itemScrollIntoView = watchScrollIntoView();
+    const menuOf = (two?: boolean) => (
+      <ReqoreUIProvider>
+        <div className='page' style={{ overflowY: 'auto' }}>
+          <ReqoreMenu maxHeight='100px'>
+            <ReqoreMenuItem className='one'>One</ReqoreMenuItem>
+            <ReqoreMenuItem className='two' scrollIntoView={two}>
+              Two
+            </ReqoreMenuItem>
+          </ReqoreMenu>
+        </div>
+      </ReqoreUIProvider>
+    );
+    const { rerender } = render(menuOf());
+    const page = document.querySelector<HTMLElement>('.page')!;
+    const menu = document.querySelector<HTMLElement>('.reqore-menu')!;
+    const two = document.querySelector<HTMLElement>('.two.reqore-menu-item')!;
+    laidOut(page, { top: 0, height: 300 }, { height: 2000 });
+    page.scrollTo = pageScroll as never;
+    laidOut(menu, { top: 100, height: 100 }, { height: 400 });
+    // `overlay`: an older WebKit / Chromium overflow that scrolls as `auto` does
+    menu.style.overflowY = 'overlay';
+    const menuScroll = vi.fn();
+    menu.scrollTo = menuScroll as never;
+    laidOut(two, { top: 250, height: 20 });
+
+    rerender(menuOf(true));
+
+    expect(itemScrollIntoView).not.toHaveBeenCalled();
+    expect(pageScroll).not.toHaveBeenCalled();
+    expect(menuScroll).toHaveBeenCalledWith(expect.objectContaining({ top: 110 }));
+  });
+
   it('scrolls nothing where its menu shows it all', () => {
     const itemScrollIntoView = watchScrollIntoView();
     const { rerender } = render(
