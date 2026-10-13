@@ -218,14 +218,14 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
      (KPI strips, dashboards). Without bounding the tile intrinsic
      width to its column, the widest unbreakable token in the value,
      trend or label can push past the column edge and bleed into the
-     neighbouring tile. max-width 100% caps the box at the column it
-     lives in, and overflow clip clips any child that refuses to honour
-     the cap. Clip, not hidden, and no min-width of 0 (qorus#646): a tile
-     in a flex or grid row is then never narrower than the longest word
-     of its label - the row's automatic minimum, which "hidden" (a
-     scroll container) and "min-width: 0" both took away, so a 120px
-     tile broke "DEPENDENCIES" mid-word - and never wider than its
-     column, which caps that minimum. */
+     neighbouring tile. min-width 0 lets a flex or grid row narrow the
+     tile to its share - without it a tile is never narrower than the
+     longest word of its label, and four tiles in a 320px row reached
+     past it - max-width 100% caps the box at the column it lives in,
+     and overflow clip clips any child that refuses to honour the cap.
+     A tile with room keeps its label's words whole: they break only
+     where one alone is wider than the tile (the label rule below). */
+  min-width: 0;
   max-width: 100%;
   overflow: clip;
   & .reqore-statistic-content,
@@ -247,8 +247,9 @@ const StyledStatisticWrapper = styled(StyledEffect)<IStyledStatisticWrapper>`
   /* Wrap rather than ellipsis — KPI tiles benefit from the operator
      seeing the whole sub-line rather than a clipped fragment. A label
      is words: it wraps between them, and a word breaks only when it
-     alone is wider than the line (break-word, which unlike anywhere
-     leaves the longest word as the label's narrowest width). */
+     alone is wider than the tile (break-word; anywhere, or
+     word-break: break-all, broke words that had room - "DEPEND / ENCI /
+     ES" on a 120px tile). */
   & .reqore-statistic-label {
     white-space: normal;
     overflow-wrap: break-word;
