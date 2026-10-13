@@ -506,10 +506,10 @@ const ReqoreDropdownList = memo(
 
     return (
       <ReqoreControlGroup vertical fluid>
-        {/* an array prop: keyed here, so a caller passing elements without keys draws no warning */}
-        {customElements?.map((element, index) => (
-          <React.Fragment key={index}>{element}</React.Fragment>
-        ))}
+        {/* An array prop: keyed here, so a caller passing elements without keys draws no warning.
+            `toArray` keeps the keys a caller gave rather than putting keys by position over them,
+            and takes a single node too, which `map` threw on. */}
+        {React.Children.toArray(customElements)}
         {(size(items) && filterable) || _onBackClick ? (
           <>
             <ReqoreControlGroup fluid>
