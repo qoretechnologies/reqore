@@ -1,8 +1,11 @@
+// first: it watches the console for React's warnings before any other module loads (`reactWarnings.ts`)
+import { reactWarnings } from './reactWarnings';
 import { setProjectAnnotations } from '@storybook/react-vite';
 import { createElement } from 'react';
-import { afterEach, beforeAll, beforeEach, expect } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
 import { server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
+import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
 /** Whether this run's browser is the phone the stories tagged `touch` run on (vitest.config.ts). */
@@ -100,4 +103,31 @@ beforeEach(() => {
     : '(hover: hover) and (pointer: fine)';
 
   expect(matchMedia(promised).matches, `the "${project}" project's browser matches ${promised}`).toBe(true);
+});
+
+// No story makes React warn (`src/stories/utils/reactWarningGate.ts`): each warning fails the story it was given in.
+// One given before the story started - as its file loaded, or as the story before it unmounted - fails it too, saying
+// so; one given after a file's last story fails the file.
+let reactWarningsBeforeStory: IReactWarning[] = [];
+
+beforeEach(() => {
+  reactWarningsBeforeStory = reactWarnings.take();
+});
+
+afterEach(() => {
+  const failure = reactWarningsFailure({
+    before: reactWarningsBeforeStory,
+    during: reactWarnings.take(),
+  });
+  reactWarningsBeforeStory = [];
+  if (failure) {
+    throw failure;
+  }
+});
+
+afterAll(() => {
+  const failure = reactWarningsFailure({ after: reactWarnings.take() });
+  if (failure) {
+    throw failure;
+  }
 });
