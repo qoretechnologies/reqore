@@ -463,6 +463,37 @@ const StyledPanelTitleLabelBox = styled.div<{ $clampLines: number }>`
  */
 const ACTIONS_GROW_BEFORE_TITLE = 1000;
 
+/**
+ * The flex of the group of actions that do not collapse, beside a title in a NARROW bar
+ * (qorus#646): sized from what the title leaves, between what its controls cannot do without and
+ * its own width. See where it is used. A wide bar leaves the group at its own width (`0 0 auto`),
+ * as it always was.
+ */
+const NARROW_ACTIONS_BESIDE_TITLE: React.CSSProperties = {
+  flex: `${ACTIONS_GROW_BEFORE_TITLE} 1 0%`,
+  maxWidth: 'max-content',
+};
+
+/** The class of the bar's group of actions that do not collapse, which the title's fit measures. */
+const NON_RESPONSIVE_ACTIONS_CLASS = 'reqore-panel-non-responsive-actions';
+
+/**
+ * How much wider `element` is than the least it can be: its width less its min-content width, read
+ * with its flex and width set aside for the measurement and put back before anything is drawn.
+ */
+const getWidthAboveMinimum = (element: HTMLElement): number => {
+  const width = element.getBoundingClientRect().width;
+  const { flex, width: styleWidth } = element.style;
+
+  element.style.flex = '0 0 auto';
+  element.style.width = 'min-content';
+  const minimum = element.getBoundingClientRect().width;
+  element.style.flex = flex;
+  element.style.width = styleWidth;
+
+  return Math.max(0, width - minimum);
+};
+
 export const StyledPanelTitleHeader = styled.div`
 
   display: flex;
@@ -2139,10 +2170,36 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
         0
       );
       const gaps = gap * Math.max(0, parent.children.length - 1);
-      const next = Math.max(0, Math.round(parent.clientWidth - padding - siblings - gaps));
+      /* What the title could still gain, which the box measured above does not show: the box is
+         only as wide as the title at its present size, so a title shrunk on a narrow bar measured
+         that small box when the bar widened again, and stayed shrunk however wide the bar became
+         (qorus#646). The room is the title box's own beyond what it holds (it grows; what it holds
+         does not), and on a narrow bar the actions group's beyond its least (it gives way to the
+         title, down to what its controls cannot do without). Neither moves when the title's font
+         does: the sum is the title's whole claim on the bar. */
+      const header = node.closest<HTMLElement>('.reqore-panel-title-header');
+      const headerRoom = header
+        ? header.clientWidth -
+          Array.from(header.children).reduce(
+            (total, child) => total + child.getBoundingClientRect().width,
+            0
+          )
+        : 0;
+      const narrowActions = isNarrow
+        ? node
+            .closest('.reqore-panel-title')
+            ?.querySelector<HTMLElement>(`:scope > .${NON_RESPONSIVE_ACTIONS_CLASS}`)
+        : undefined;
+      const actionsRoom = narrowActions ? getWidthAboveMinimum(narrowActions) : 0;
+      const next = Math.max(
+        0,
+        Math.round(
+          parent.clientWidth - padding - siblings - gaps + Math.max(0, headerRoom) + actionsRoom
+        )
+      );
 
       setLabelAvailable((current) => (current === next ? current : next));
-    }, [fitLabel, label, width, badge, actions, panelSize, description, clampLines]);
+    }, [fitLabel, label, width, badge, actions, panelSize, description, clampLines, isNarrow]);
 
     const iconTooltip = useMemo(
       () => ({
@@ -2519,23 +2576,23 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                 expandTooltip={expandTooltip}
                 closeTooltip={closeTooltip}
                 fluid={!hasTitleHeader}
-                // Beside a title the title comes first (qorus#646). The group was `0 0 auto`, so a narrow
-                // bar - a table in a card on a phone - squeezed the title to nothing and still pushed its
-                // last button past the panel's edge. Now the title takes its whole width first and the
-                // group what is left, at least what its controls cannot do without (a search field
-                // narrows, a button never does) and at most its own width, which leaves a wide bar as it
-                // was. A basis of 0 is what gives the title the first claim: the group is sized from the
-                // leftover, so the title shrinks only once the controls are at their smallest - and its
-                // words break only when one is wider than the space left beside them. Shrinking the two
-                // against each other instead, by any factor, took a fraction of a pixel off the title,
-                // and that broke "Services" into "Servic / es". Room the title does not need goes to the
-                // group first (a grow no title's comes near), so a search field widens before the
-                // title's box does.
-                style={
-                  hasTitleHeader
-                    ? { flex: `${ACTIONS_GROW_BEFORE_TITLE} 1 0%`, maxWidth: 'max-content' }
-                    : undefined
-                }
+                className={NON_RESPONSIVE_ACTIONS_CLASS}
+                // Beside a title in a NARROW bar the title comes first (qorus#646). The group is
+                // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title
+                // to nothing and still pushed its last button past the panel's edge. Narrow, the
+                // title takes its whole width first and the group what is left, at least what its
+                // controls cannot do without (a search field narrows, a button never does) and at
+                // most its own width. A basis of 0 is what gives the title the first claim: the
+                // group is sized from the leftover, so the title shrinks only once the controls
+                // are at their smallest - and its words break only when one is wider than the
+                // space left beside them. Shrinking the two against each other instead, by any
+                // factor, took a fraction of a pixel off the title, and that broke "Services" into
+                // "Servic / es". Room the title does not need goes to the group first (a grow no
+                // title's comes near), so a search field widens before the title's box does. A
+                // wide bar keeps the group at its own width: there the title's claim was its
+                // one-line width, a description beside it included, and a long description
+                // squeezed a table's search to its least instead of wrapping.
+                style={hasTitleHeader && isNarrow ? NARROW_ACTIONS_BESIDE_TITLE : undefined}
               >
                 {nonFloatingActions.map(renderNonResponsiveActions())}
               </ReqorePanelNonResponsiveActions>
