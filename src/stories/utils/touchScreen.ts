@@ -63,10 +63,12 @@ interface IVitestBrowser {
 
 /**
  * The Vitest project the stories tagged `touch` run in (vitest.config.ts), and the only one `withTouchScreen`
- * runs in. Chromium cannot hand a page back as it was after its touch emulation: turning it off takes the
- * hover and pointer the machine reports, not the ones Playwright launched the browser with, and a Linux CI
- * runner reports no mouse. So a touch story gets a page of its own, and every other story keeps a page that
- * never was a phone.
+ * runs in: its browser is a phone from the start - Playwright's `isMobile` and `hasTouch` on the context it
+ * makes, so `(pointer: coarse)` and `(hover: none)` match and the touches are a finger's - and nothing turns
+ * that on or off. Turning Chromium's touch emulation off over the DevTools protocol does not give a page back
+ * the mouse Playwright launched it with, but the hover and pointer the machine reports, and a Linux CI runner
+ * reports none: every later story in that page found `(hover: none)` (qorus#646). The other stories run in a
+ * context that never was a phone.
  */
 export const TOUCH_STORY_PROJECT = 'storybook-touch';
 
@@ -240,16 +242,14 @@ const dispatchedTouches = (): Pick<ITouchScreen, 'tap' | 'drag'> => {
 
 /**
  * Run `body` on a phone held in a hand: the story's frame at a phone's size, the browser a touch screen,
- * and touches that are a finger's, then put everything back.
+ * and touches that are a finger's.
  *
- * In the test run, Chromium's own emulation is turned on through the DevTools protocol - touch input
- * (`Emulation.setTouchEmulationEnabled`, which is what Playwright's `hasTouch` does: `(pointer: coarse)` and
- * `(hover: none)` match, and `navigator.maxTouchPoints` is 5) and a mobile device
- * (`Emulation.setDeviceMetricsOverride` with `mobile`, which is what its `isMobile` does) - and the frame is
- * narrowed with the `page.viewport` call qlip makes. Each is put back when `body` ends, passed or failed.
- * Putting the touch screen back cannot give the page back its mouse on every machine (see
- * `TOUCH_STORY_PROJECT`), so a story that calls this is tagged `touch` (`tags: ['touch']`), which runs it
- * in a page of its own, and the test run fails one that is not.
+ * In the test run the browser already is the phone: a story that calls this is tagged `touch`
+ * (`tags: ['touch']`), which runs it in `TOUCH_STORY_PROJECT`, whose browser context is a mobile device with
+ * a touch screen (Playwright's `isMobile` and `hasTouch`), and the test run fails one that is not. The frame
+ * is narrowed to `width` × `height` with the `page.viewport` call qlip makes, if it is not that size already,
+ * and put back when `body` ends, passed or failed. The touches go through the DevTools protocol's input,
+ * which the browser takes as a finger's; no emulation is turned on or off.
  *
  * `vitest/browser` is imported when called, never statically: it throws outside the test runner, and a
  * static import would take the Storybook dev server down. There the touches are dispatched events instead
@@ -275,33 +275,28 @@ export const withTouchScreen = async (
   const project = browser.server.config.name ?? '';
   if (project !== TOUCH_STORY_PROJECT && !project.startsWith(`${TOUCH_STORY_PROJECT} (`)) {
     throw new Error(
-      `withTouchScreen ran in the "${project}" project. A story that uses a touch screen ` +
-        `is tagged 'touch' (tags: ['touch']), so it runs in "${TOUCH_STORY_PROJECT}", in a page of its own: ` +
-        `after a touch screen, Chromium leaves the page with the machine's own hover and pointer, and a ` +
-        `Linux CI runner has no mouse, so every later story in the page would find no hover.`
+      `withTouchScreen ran in the "${project}" project, whose browser has a mouse. A story that uses a ` +
+        `touch screen is tagged 'touch' (tags: ['touch']), so it runs in "${TOUCH_STORY_PROJECT}", whose ` +
+        `browser is a phone with a touch screen.`
     );
   }
 
-  const session = browser.cdp();
-  const top = window.top ?? window;
-  const page = { width: top.innerWidth, height: top.innerHeight, deviceScaleFactor: top.devicePixelRatio };
   const was = { width: window.innerWidth, height: window.innerHeight };
+  const resize = was.width !== width || was.height !== height;
 
-  await browser.page.viewport(width, height);
+  if (resize) {
+    await browser.page.viewport(width, height);
+  }
   try {
-    await session.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
-    await session.send('Emulation.setDeviceMetricsOverride', { ...page, mobile: true });
     await body({
       real: true,
       narrowed: window.innerWidth === width,
       pointIn,
-      ...realTouches(session),
+      ...realTouches(browser.cdp()),
     });
   } finally {
-    // Unconditional, and each on its own: whatever failed, the next story gets a desktop browser.
-    await session.send('Emulation.setTouchEmulationEnabled', { enabled: false }).catch(() => undefined);
-    // this session's override only: the runner's own viewport stays as it was
-    await session.send('Emulation.clearDeviceMetricsOverride').catch(() => undefined);
-    await browser.page.viewport(was.width, was.height);
+    if (resize) {
+      await browser.page.viewport(was.width, was.height);
+    }
   }
 };

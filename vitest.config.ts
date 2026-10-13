@@ -36,8 +36,12 @@ const qlip = qlipVitestPlugin({
   ...(qlipUploadToken ? { upload: { uploadToken: qlipUploadToken } } : {}),
 });
 
-// A new object for each project: Vitest names a project's browser instances on the objects themselves.
-const storyBrowser = () => ({
+/**
+ * The browser a story project runs in: a desktop with a mouse, or - `phone` - the phone the stories tagged
+ * `touch` run on (`src/stories/utils/touchScreen.ts`). A new object for each project: Vitest names a
+ * project's browser instances on the objects themselves.
+ */
+const storyBrowser = (phone = false) => ({
   enabled: true,
   // Vitest 4's @vitest/browser-playwright no longer applies
   // `browser.viewport` to the Playwright context (the line is
@@ -48,8 +52,17 @@ const storyBrowser = () => ({
   // viewport through the provider's `contextOptions` (which IS
   // applied) so the browser window matches qlip's capture viewport
   // 1:1 and screenshots come out at their true resolution.
+  //
+  // The phone is a phone from the start: Playwright makes its context with `isMobile` and `hasTouch`, so
+  // `(pointer: coarse)` and `(hover: none)` match and a touch is a finger's, and nothing turns that on or
+  // off. Turning Chromium's touch emulation off over the DevTools protocol (how a touch story used to
+  // borrow a desktop page) leaves the page with the hover and pointer the machine reports, not the mouse
+  // Playwright launched it with (`--blink-settings=primaryHoverType=2,…`), and a Linux CI runner reports
+  // none: every later story in the page found `(hover: none)` (qorus#646).
   provider: playwright({
-    contextOptions: { viewport: { width: 1920, height: 1080 } },
+    contextOptions: phone
+      ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }
+      : { viewport: { width: 1920, height: 1080 } },
   }),
   headless: true,
   instances: [{ browser: 'chromium' as const }],
@@ -70,14 +83,9 @@ export default mergeConfig(
         // Component/interaction tests: run every story in a real browser via Playwright.
         // Replaces the former @storybook/test-runner.
         //
-        // Stories run in two projects, and so in two browser pages. A story tagged `touch` holds the page as a
-        // phone (`withTouchScreen` in src/stories/utils/touchScreen.ts), and Chromium cannot hand that page back
-        // as it was: turning its touch emulation off takes the hover and pointer the machine reports, not the
-        // ones the browser was launched with. Playwright launches its headless Chromium as a mouse
-        // (`--blink-settings=primaryHoverType=2,…,primaryPointerType=4`); a Linux runner reports no mouse, so in
-        // CI every story after a touch story in the same page found `(hover: none)` - the hover-only actions
-        // shown, the Marquee and NavRail deaf to hover, Table's row menu at the touch size. On a Mac the machine
-        // reports a mouse, so the same run passes there.
+        // Stories run in two projects, each in a browser of its own kind (see `storyBrowser`): every story on
+        // a desktop with a mouse, but those tagged `touch`, which run on a phone. `.storybook/vitest.setup.ts`
+        // checks each story's browser is the one its project promises.
         {
           extends: true,
           plugins: [
@@ -90,12 +98,15 @@ export default mergeConfig(
           ],
           test: {
             name: 'storybook',
+            // after the stories on the phone: each story here checks it still has its mouse
+            sequence: { groupOrder: 1 },
             browser: storyBrowser(),
             ...storyTest,
           },
         },
-        // The stories tagged `touch`, in their own page, after the others (one file at a time: the touch
-        // screen and the narrowed frame belong to the page).
+        // The stories tagged `touch`, on the phone. Before the others, not beside them: the two projects share
+        // Storybook's dependency cache (it is named after the config directory), which is not built twice at
+        // once.
         {
           extends: true,
           plugins: [
@@ -109,9 +120,8 @@ export default mergeConfig(
           test: {
             name: 'storybook-touch',
             exclude: [...configDefaults.exclude, ...storyFilesWithoutTouch()],
-            fileParallelism: false,
-            sequence: { groupOrder: 1 },
-            browser: storyBrowser(),
+            sequence: { groupOrder: 0 },
+            browser: storyBrowser(true),
             ...storyTest,
           },
         },

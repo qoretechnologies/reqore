@@ -1,7 +1,9 @@
 import { setProjectAnnotations } from '@storybook/react-vite';
 import { createElement } from 'react';
 import { afterEach, beforeAll, beforeEach, expect } from 'vitest';
+import { server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
+import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
 // Registers the React renderer (renderToCanvas) plus the project's global
 // decorators/parameters from .storybook/preview for the Storybook Vitest project.
@@ -61,4 +63,17 @@ afterEach(async () => {
     resizeLoops,
     'a ResizeObserver callback changed the layout it observes in the same frame - defer that change to the next frame'
   ).toEqual([]);
+});
+
+/* Each story's browser is the one its project promises (vitest.config.ts): a desktop with a mouse, or, for
+   the stories tagged `touch`, a phone. The phone's stories run first, so every desktop story checks, after
+   them, that it still has its mouse: a touch screen that left a desktop page without one (qorus#646) fails
+   the next story here. */
+beforeEach(() => {
+  // a project's browser runs as a project of its own, named after both: "storybook-touch (chromium)"
+  const project = server.config.name ?? '';
+  const phone = project === TOUCH_STORY_PROJECT || project.startsWith(`${TOUCH_STORY_PROJECT} (`);
+  const promised = phone ? '(hover: none) and (pointer: coarse)' : '(hover: hover) and (pointer: fine)';
+
+  expect(matchMedia(promised).matches, `the "${project}" project's browser matches ${promised}`).toBe(true);
 });

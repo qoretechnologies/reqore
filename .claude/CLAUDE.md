@@ -186,10 +186,13 @@ release on npm.
 - **Command:** `yarn build-storybook` builds the static site.
 - **Touch stories:** a story whose play calls `withTouchScreen` (`src/stories/utils/touchScreen.ts`)
   carries `tags: ['touch']`. `yarn test:stories` runs those stories in their own Vitest project
-  (`storybook-touch`), and so their own browser page, after the others; an untagged one fails with
-  the reason. Chromium cannot give a page its mouse back after touch emulation: it takes the
-  machine's hover and pointer, and a Linux CI runner has no mouse, so every later story in the
-  same page would find `(hover: none)`. This never shows on a Mac, which always reports a mouse.
+  (`storybook-touch`), whose browser context is a phone from the start (Playwright's `isMobile` and
+  `hasTouch`, 390×844), and before the others; an untagged one fails with the reason. Never turn
+  Chromium's touch emulation on or off over the DevTools protocol: turning it off leaves the page
+  with the machine's hover and pointer, not the mouse Playwright launched it with, and a Linux CI
+  runner has none, so every later story in the page finds `(hover: none)` (it never shows on a Mac,
+  which always reports a mouse). `.storybook/vitest.setup.ts` checks every story's browser is its
+  project's: `(hover: hover) and (pointer: fine)`, or on the phone `(hover: none) and (pointer: coarse)`.
 - **No layout change inside a ResizeObserver callback:** a story fails when the browser reports
   "ResizeObserver loop completed with undelivered notifications" (`.storybook/vitest.setup.ts`). It
   means a resize callback changed the layout it observes in the same frame, often by setting state
