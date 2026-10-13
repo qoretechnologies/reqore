@@ -145,6 +145,41 @@ const isChoosableDropdownItem = (item: IReqoreDropdownItem): boolean => {
   return !item.readOnly;
 };
 
+/**
+ * The key of each row the list draws, one for each item and all different.
+ *
+ * A row is keyed by what it says, its label or else its value, so it keeps its key (and React keeps
+ * the row) when an item is added before it. Items that say the same thing take the next free
+ * `#n`; a row that says nothing that can be a key, and a divider, are keyed by their place. Each
+ * kind is named in the key, so an item whose value is `1` never meets the divider at place 1.
+ *
+ * The control group the rows are drawn in keeps a child's own key, so two rows with one key are
+ * the same row to React: it warns, and may drop or repeat one of them.
+ */
+const dropdownRowKeys = (items: IReqoreDropdownItem[]): string[] => {
+  const used = new Set<string>();
+  const sayable = (said: unknown): said is string | number =>
+    (typeof said === 'string' && said !== '') || typeof said === 'number';
+
+  return items.map((item, index) => {
+    const said = sayable(item.label) ? item.label : sayable(item.value) ? item.value : undefined;
+    const base = item.divider
+      ? `divider:${index}`
+      : said !== undefined
+      ? `item:${said}`
+      : `place:${index}`;
+    let key = base;
+
+    for (let next = 1; used.has(key); next++) {
+      key = `${base}#${next}`;
+    }
+
+    used.add(key);
+
+    return key;
+  });
+};
+
 const ReqoreDropdownList = memo(
   ({
     items,
@@ -579,6 +614,8 @@ const ReqoreDropdownList = memo(
           {(_finalItems, Controls, { includeBottomControls, applyPaging }) => {
             // Track which selectable index we're at
             let selectableIndexCounter = 0;
+            const pagedItems: IReqoreDropdownItem[] = applyPaging(filteredItems);
+            const rowKeys = dropdownRowKeys(pagedItems);
 
             return (
               <ReqoreMenu
@@ -601,7 +638,7 @@ const ReqoreDropdownList = memo(
                     </ReqoreP>
                   </ReqoreControlGroup>
                 ) : null}
-                {applyPaging(filteredItems).map(
+                {pagedItems.map(
                   (
                     { dividerAlign, dividerPadded, divider, ...item }: IReqoreDropdownItem,
                     index: number
@@ -620,14 +657,14 @@ const ReqoreDropdownList = memo(
 
                     return divider ? (
                       <ReqoreMenuDivider
-                        key={index}
+                        key={rowKeys[index]}
                         {...(item as unknown as IReqoreMenuDividerProps)}
                         align={dividerAlign}
                         padded={dividerPadded}
                       />
                     ) : (
                       <ReqoreDropdownItem
-                        key={item.label || item.value || index}
+                        key={rowKeys[index]}
                         id={listId ? `${listId}-option-${itemSelectableIndex}` : undefined}
                         rightIcon={
                           'items' in item && size(item.items) ? 'ArrowRightSLine' : item.rightIcon
