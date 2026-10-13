@@ -36,6 +36,8 @@ export interface IReqoreTableHeaderCellProps
   parentHeaderEffect?: IReqoreEffect;
   /** See `IReqoreTableProps.headerDividers`: `false` shows the resize handle only on hover. */
   dividers?: boolean;
+  /** See `IReqoreTableProps.sortIndicator`: `'arrow'` draws an arrow instead of the info wash. */
+  sortIndicator?: 'wash' | 'arrow';
   /** See `IReqoreTableProps.sortAscendingLabel`. */
   sortAscendingLabel?: string;
   /** See `IReqoreTableProps.sortDescendingLabel`. */
@@ -164,6 +166,7 @@ export const ReqoreTableHeaderCell = memo(
     parentMinimal,
     parentHeaderEffect,
     dividers = true,
+    sortIndicator = 'wash',
     hasColumns,
     sortAscendingLabel = 'Sort ascending',
     sortDescendingLabel = 'Sort descending',
@@ -387,6 +390,13 @@ export const ReqoreTableHeaderCell = memo(
                   }}
                   labelEffect={baseHeaderEffect}
                   {...rest}
+                  rightIcon={
+                    sortIndicator === 'arrow' && sortable && sortData.by === dataId
+                      ? sortData.direction === 'desc'
+                        ? 'ArrowDownLine'
+                        : 'ArrowUpLine'
+                      : rest.rightIcon
+                  }
                   effect={{
                     glow: filter
                       ? {
@@ -397,7 +407,7 @@ export const ReqoreTableHeaderCell = memo(
                         }
                       : undefined,
                     gradient:
-                      sortable && sortData.by === dataId
+                      sortable && sortData.by === dataId && sortIndicator !== 'arrow'
                         ? {
                             direction: `to ${sortData.direction === 'desc' ? 'top' : 'bottom'}`,
                             colors: {
@@ -446,7 +456,11 @@ export const ReqoreTableHeaderCell = memo(
               }}
               size={size}
               rounded={false}
-              intent={filter || sortData.by === dataId ? 'info' : rest.intent}
+              intent={
+                filter || (sortData.by === dataId && sortIndicator !== 'arrow')
+                  ? 'info'
+                  : rest.intent
+              }
               filterable={filterable}
               filterPlaceholder={filterPlaceholder || columnFilterPlaceholder}
               filter={filter}

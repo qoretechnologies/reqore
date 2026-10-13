@@ -424,6 +424,13 @@ export interface IReqoreTableProps extends IReqorePanelProps {
    * quiet affordance it is. On a device that cannot hover they stay in full.
    */
   actionsRevealOn?: 'always' | 'hover';
+  /**
+   * How the sorted column says so. `'wash'` (default) tints the header cell with the
+   * `info` colour; `'arrow'` draws an up / down arrow beside the label and leaves the
+   * colour alone — for a table where blue has a meaning of its own (a filter) and
+   * sorting narrows nothing.
+   */
+  sortIndicator?: 'wash' | 'arrow';
   rowComponent?: IReqoreTableRowOptions['rowComponent'];
   bodyCellComponent?: IReqoreTableRowOptions['cellComponent'];
   /**
@@ -549,6 +556,7 @@ const ReqoreTable = ({
   headerEffect,
   headerDividers = true,
   actionsRevealOn = 'always',
+  sortIndicator = 'wash',
   rowComponent,
   bodyCellComponent,
   getRowProps,
@@ -1345,6 +1353,7 @@ const ReqoreTable = ({
           minimal={rest.minimal}
           headerEffect={headerEffect}
           dividers={headerDividers}
+          sortIndicator={sortIndicator}
           sortAscendingLabel={sortAscendingLabel}
           sortDescendingLabel={sortDescendingLabel}
           pinLeftLabel={pinLeftLabel}

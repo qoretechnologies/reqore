@@ -277,7 +277,7 @@ export const Calm: Story = {
     docs: {
       description: {
         story:
-          'The concept list on `ReqoreTable`: `minimal` takes the fill and border off the header cells, `headerEffect` makes the header sentence case and quiet, `headerDividers={false}` hides the column handles until the header is hovered, `selectionStyle=\'checkbox\'` draws square boxes, `expanderPosition=\'none\'` drops the caret column (a row still opens from its own click), and `actionsRevealOn=\'hover\'` rests the row actions at half strength until their row is hovered or focused.',
+          'The concept list on `ReqoreTable`: `minimal` takes the fill and border off the header cells, `headerEffect` makes the header sentence case and quiet, `headerDividers={false}` hides the column handles until the header is hovered, `selectionStyle=\'checkbox\'` draws square boxes, `expanderPosition=\'none\'` drops the caret column (a row still opens from its own click), `actionsRevealOn=\'hover\'` rests the row actions at half strength until their row is hovered or focused, and `sortIndicator=\'arrow\'` marks the sorted column with an arrow instead of the blue wash — blue is a filter here, and sorting narrows nothing.',
       },
     },
   },
@@ -289,6 +289,8 @@ export const Calm: Story = {
       selectionStyle='checkbox'
       expanderPosition='none'
       actionsRevealOn='hover'
+      sortIndicator='arrow'
+      sort={{ by: 'name', direction: 'asc' }}
     />
   ),
   play: async ({ canvasElement }) => {
@@ -313,6 +315,10 @@ export const Calm: Story = {
     (firstRow as HTMLElement).dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
     firstRow.querySelector<HTMLButtonElement>('.reqore-table-cell-actions button')!.focus();
     await waitFor(() => expect(getComputedStyle(actions!).opacity).toBe('1'));
+
+    // The sorted column carries an arrow and no wash: its header has no gradient painted on it.
+    const sortedHeader = canvas.getAllByText('Name')[0].closest('.reqore-table-header-cell')!;
+    expect(getComputedStyle(sortedHeader).backgroundImage).toBe('none');
 
     // The column handles are still there — columns still resize — just not drawn at rest.
     const handle = canvasElement.querySelector<HTMLElement>('.reqore-table-header-resize');

@@ -40,6 +40,7 @@ export interface IReqoreCustomHeaderCellProps
       | 'parentMinimal'
       | 'parentHeaderEffect'
       | 'dividers'
+      | 'sortIndicator'
       | 'sortAscendingLabel'
       | 'sortDescendingLabel'
       | 'pinLeftLabel'
@@ -76,6 +77,8 @@ export interface IReqoreTableSectionProps extends IWithReqoreSize {
   headerEffect?: IReqoreEffect;
   /** See `IReqoreTableProps.headerDividers`. */
   dividers?: boolean;
+  /** See `IReqoreTableProps.sortIndicator`. */
+  sortIndicator?: 'wash' | 'arrow';
   /** See `IReqoreTableProps.sortAscendingLabel`. */
   sortAscendingLabel?: string;
   /** See `IReqoreTableProps.sortDescendingLabel`. */
@@ -196,6 +199,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
       minimal,
       headerEffect,
       dividers,
+      sortIndicator,
       sortAscendingLabel,
       sortDescendingLabel,
       pinLeftLabel,
@@ -275,6 +279,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
         parentMinimal: minimal,
         parentHeaderEffect: headerEffect,
         dividers,
+        sortIndicator,
         sortAscendingLabel,
         sortDescendingLabel,
         pinLeftLabel,
@@ -322,6 +327,7 @@ const ReqoreTableHeader = forwardRef<HTMLDivElement, IReqoreTableSectionProps>(
             parentMinimal: minimal,
         parentHeaderEffect: headerEffect,
         dividers,
+        sortIndicator,
           })}
           <StyledColumnGroupHeaders className='reqore-table-headers'>
             {renderUnpinnedColumns(subColumns)}

@@ -1730,6 +1730,17 @@ describe('calm list props', () => {
     expect(document.querySelector('.reqore-table-cell-actions')).toBeTruthy();
   });
 
+  test("sortIndicator='arrow' renders the sorted column without throwing and keeps the sort", () => {
+    renderTable({
+      sortIndicator: 'arrow',
+      sort: { by: 'id', direction: 'desc' },
+      columns: [{ dataId: 'id', header: { label: 'ID' }, sortable: true }, { dataId: 'firstName', header: { label: 'Name' } }],
+    });
+    const headers = document.querySelectorAll('.reqore-table-header-cell');
+    expect(headers.length).toBeGreaterThan(0);
+    expect(document.body.textContent).toContain('ID');
+  });
+
   test('headerDividers={false} keeps the resize handles so columns still resize', () => {
     renderTable({ headerDividers: false });
     expect(document.querySelectorAll('.reqore-table-header-resize').length).toBeGreaterThan(0);
