@@ -64,6 +64,28 @@ describe("a popover's controls", () => {
     expect(isOpen()).toBe(false);
     expect(handed[handed.length - 1].isOpen()).toBe(false);
   });
+
+  it("open and close with the popover's callbacks as they are now, whichever copy is asked", () => {
+    const handed: IPopoverControls[] = [];
+    const Field = ({ refuse }: { refuse: boolean }) => (
+      <ReqoreDropdown
+        items={items}
+        label='Fields'
+        onBeforeOpen={() => true}
+        onBeforeClose={() => !refuse}
+        passPopoverData={(data) => handed.push(data)}
+      />
+    );
+    const { rerender } = render(wrap(<Field refuse={false} />));
+    // handed out while it was closed and the close was allowed; the popover has not opened since
+    const first = handed[0];
+    rerender(wrap(<Field refuse />));
+    act(() => first.open());
+    expect(isOpen()).toBe(true);
+    // the copy handed out first asks the `onBeforeClose` of now, which refuses
+    act(() => first.close());
+    expect(isOpen()).toBe(true);
+  });
 });
 
 describe('a template list', () => {
@@ -96,7 +118,29 @@ describe('a template list', () => {
     expect(isOpen()).toBe(false);
   });
 
-  it('stays open for input that writes nothing, such as a composition starting', () => {
+  it('is put away by composition text, as an Android keyboard writes ordinary letters', () => {
+    render(wrap(<ReqoreTextarea templates={{ items }} onChange={() => undefined} />));
+    const field = document.querySelector('.reqore-textarea') as HTMLElement;
+    act(() => {
+      fireEvent.click(field);
+    });
+    expect(isOpen()).toBe(true);
+    // Gboard sends an `Unidentified` keydown and writes the letter as a composition
+    act(() => {
+      fireEvent.keyDown(field, { key: 'Unidentified', keyCode: 229 });
+      fireEvent(
+        field,
+        new InputEvent('beforeinput', {
+          bubbles: true,
+          data: 'a',
+          inputType: 'insertCompositionText',
+        })
+      );
+    });
+    expect(isOpen()).toBe(false);
+  });
+
+  it('stays open for composition text with nothing in it, which writes nothing', () => {
     render(wrap(<ReqoreTextarea templates={{ items }} onChange={() => undefined} />));
     const field = document.querySelector('.reqore-textarea') as HTMLElement;
     act(() => {

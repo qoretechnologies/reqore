@@ -352,7 +352,14 @@ function Textarea<T>(
      A press brings the focus only to a field that does not have it: one on the field already focused
      brings none, and its mark would be left for the next focus, from the keyboard, to be taken for a
      pointer's. And a press ends in a click, after the focus it brings, with a mouse and a touch alike:
-     the mark goes with it, whatever became of the focus. */
+     the mark goes with it, whatever became of the focus.
+
+     Not every press ends in a click. A touch that scrolls the page from the field is cancelled - no
+     focus, no click - and a mouse let go outside the window may click nothing; either left the mark
+     for the next keyboard entry, which then opened nothing. So a cancel ends the press too, and so
+     does a mouse's release: a mouse brings the focus as it is pressed, before it is let go. A
+     finger's release does not end it: a tap brings the focus after the release, with the click it
+     makes. */
   const focusByPointer = useRef(false);
   const handlePointerDownCapture = useCallback(
     (event: React.PointerEvent<HTMLTextAreaElement>) => {
@@ -368,9 +375,20 @@ function Textarea<T>(
     const pressEnded = () => {
       focusByPointer.current = false;
     };
+    const released = (event: PointerEvent) => {
+      if (event.pointerType === 'mouse') {
+        pressEnded();
+      }
+    };
     // after the click's own handlers: the bubble phase of the document, the last to hear it
     document.addEventListener('click', pressEnded);
-    return () => document.removeEventListener('click', pressEnded);
+    document.addEventListener('pointercancel', pressEnded);
+    document.addEventListener('pointerup', released);
+    return () => {
+      document.removeEventListener('click', pressEnded);
+      document.removeEventListener('pointercancel', pressEnded);
+      document.removeEventListener('pointerup', released);
+    };
   }, [templates]);
   const handleFocusCapture = useCallback(
     (event: React.FocusEvent<HTMLTextAreaElement>) => {
@@ -445,11 +463,17 @@ function Textarea<T>(
     [popoverData, keepTemplatesOpenWhileTyping]
   );
 
-  /* Text written without a key goes the same way. An on-screen keyboard (a phone, a tablet) sends no keydown
-     for a character - only the input it makes - so on a touch device the list stayed open over what was being
-     written, and over the completion list a typed `@` or `$` opens beside it (qorus#646). Heard natively:
-     React's `onBeforeInput` is a composite of its own, not this event. Input that writes nothing yet (a
-     composition starting) leaves the list alone, as a key that changes nothing does. */
+  /* Text written without a key goes the same way. An on-screen keyboard (a phone, a tablet) sends
+     no keydown for a character - only the input it makes - so on a touch device the list stayed
+     open over what was being written, and over the completion list a typed `@` or `$` opens beside
+     it (qorus#646). Heard natively: React's `onBeforeInput` is a composite of its own, not this
+     event.
+
+     Composition text counts when it has text in it. An Android keyboard (Gboard) writes ordinary
+     letters as a composition (its keydown is `Unidentified`, its input `insertCompositionText`), so
+     leaving composition out left the list over the text until a word was committed. Composition
+     text with nothing in it (a composition cleared or cancelled) writes nothing, and leaves the
+     list alone, as a key that changes nothing does. */
   const latestTypingState = useRef({ popoverData, keepTemplatesOpenWhileTyping });
   latestTypingState.current = { popoverData, keepTemplatesOpenWhileTyping };
   useEffect(() => {
@@ -458,8 +482,9 @@ function Textarea<T>(
     }
     const handleBeforeInput = (event: Event) => {
       const { popoverData: controls, keepTemplatesOpenWhileTyping: keep } = latestTypingState.current;
-      const inputType = (event as InputEvent).inputType ?? '';
-      const writes = /^(insert(?!Composition)|delete)/.test(inputType);
+      const { inputType = '', data } = event as InputEvent;
+      const writes =
+        inputType === 'insertCompositionText' ? !!data : /^(insert|delete)/.test(inputType);
       if (writes && !keep && controls?.isOpen?.()) {
         controls.close();
       }

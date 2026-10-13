@@ -97,6 +97,47 @@ describe('a template list', () => {
     expect(isOpen()).toBe(true);
   });
 
+  it("leaves a tap's focus to its click, though the focus comes after the release", () => {
+    const { field, before } = show();
+    // a finger is released before the browser focuses the field, with the click the tap makes
+    act(() => {
+      fireEvent.pointerDown(field, { pointerType: 'touch' });
+      fireEvent.pointerUp(field, { pointerType: 'touch' });
+      fireEvent.focusIn(field, { relatedTarget: before });
+    });
+    expect(isOpen()).toBe(false);
+    act(() => {
+      fireEvent.click(field);
+    });
+    expect(isOpen()).toBe(true);
+  });
+
+  it('opens from the keyboard after a touch on the field that scrolled the page', () => {
+    const { field, before } = show();
+    // the page takes the touch for a scroll: the press is cancelled, nothing focused or clicked
+    act(() => {
+      fireEvent.pointerDown(field, { pointerType: 'touch' });
+      fireEvent.pointerCancel(field, { pointerType: 'touch' });
+    });
+    act(() => {
+      fireEvent.focusIn(field, { relatedTarget: before });
+    });
+    expect(isOpen()).toBe(true);
+  });
+
+  it('opens from the keyboard after a mouse press released without a click', () => {
+    const { field, before } = show();
+    // a press whose focus the page held back, released somewhere that makes no click
+    act(() => {
+      fireEvent.pointerDown(field, { pointerType: 'mouse' });
+      fireEvent.pointerUp(document.body, { pointerType: 'mouse' });
+    });
+    act(() => {
+      fireEvent.focusIn(field, { relatedTarget: before });
+    });
+    expect(isOpen()).toBe(true);
+  });
+
   it('does not open for focus that comes back from the list', () => {
     const { field } = show();
     act(() => {

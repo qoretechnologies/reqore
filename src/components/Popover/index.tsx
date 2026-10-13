@@ -299,13 +299,15 @@ export const ReqorePopover = memo(
         [keepOpenOnHover, onBeforeClose, content]
       );
 
+      /* Answers whether it closed: `false` when `onBeforeClose` refused, and the popover is still
+         up. Escape asks, because a key the popover did not use is not its to keep. */
       const close = useCallback(
-        (e?: MouseEvent | KeyboardEvent) => {
+        (e?: MouseEvent | KeyboardEvent): boolean => {
           if (onBeforeClose) {
             const shouldClose = onBeforeClose({ content }, e);
 
             if (!shouldClose) {
-              return;
+              return false;
             }
           }
 
@@ -313,6 +315,8 @@ export const ReqorePopover = memo(
           isTargetHovered.current = false;
           isPopoverHovered.current = false;
           setIsOpen(false);
+
+          return true;
         },
         [cancelTimeout, onBeforeClose, content]
       );
@@ -338,6 +342,11 @@ export const ReqorePopover = memo(
           // Cancel any pending close timeout when opening
           cancelTimeout();
 
+          /* The render's `isOpen`, not `isOpenNow`: the popover as it was when this event began. A
+             click on the trigger is heard twice - first by the document's capture listener
+             (`handleClick`), which closes the popover when `closeOnTargetClick` asks it to, then
+             here - and read as it is now, the popover that click had just closed was opened again
+             at once (a dropdown's trigger could not close its list). */
           if (isOpen) {
             if (handler !== 'hoverStay' && handler !== 'focus') {
               if (closeOnInsideClick) {
@@ -546,18 +555,34 @@ export const ReqorePopover = memo(
         ]
       );
 
-      /* Escape puts away the popover that is open, and goes no further. Heard in the CAPTURE phase: on
-         the document's bubble phase it came after every handler in the page, so an editor around the field
-         (a form row, where Escape discards the edit) heard it first, and one Escape meant for a list also
-         closed the editor and threw away what had been typed. With nothing open it is left alone. */
+      /* Escape puts away the popover that is open. Heard in the CAPTURE phase: on the document's
+         bubble phase it came after every handler in the page, so an editor around the field (a form
+         row, where Escape discards the edit) heard it first, and one Escape meant for a list also
+         closed the editor and threw away what had been typed. With nothing open it is left alone.
+
+         The key goes no further only when it was this popover's: pressed in its trigger or on its
+         own surface, and used - the popover closed. Every tooltip is a popover, so one showing
+         anywhere on the page kept every Escape from the page while it was up: a modal with a
+         tooltip showing in it did not close, and a row editor or a table's search never heard the
+         key. A popover the key was not pressed in still closes, and the key goes on; so does one
+         whose `onBeforeClose` refused, since it stays up and used nothing. */
       const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
-          if (event.key === 'Escape' && isOpenNow.current) {
+          if (event.key !== 'Escape' || !isOpenNow.current) {
+            return;
+          }
+
+          const { target } = event;
+          // a key dispatched on the window has no node to be inside
+          const pressedHere =
+            target instanceof Node &&
+            (!!componentRef?.contains(target) || !!popperRef.current?.contains(target));
+
+          if (close() && pressedHere) {
             event.stopPropagation();
-            close();
           }
         },
-        [close]
+        [close, componentRef]
       );
 
       useUpdateEffect(() => {
@@ -568,11 +593,28 @@ export const ReqorePopover = memo(
         onUpdate?.({ content });
       }, [content]);
 
+      /* The functions handed out through `passPopoverData` keep their identity and call the
+         popover's open and close as they are now. The controls are handed out again only when it
+         opens or closes, and a copy of `open` or `close` taken then kept the `onBeforeOpen`,
+         `onBeforeClose` and `content` of that render. Handing them out on every change instead
+         would set the holder's state with each new `content`: a field that keeps them in state
+         renders its list again, with a new `content`. */
+      const latestControls = useRef({ open, close });
+      latestControls.current = { open, close };
+      const openNow = useCallback((e?: MouseEvent | KeyboardEvent) => {
+        latestControls.current.open(e);
+      }, []);
+      const closeNow = useCallback(
+        (e?: MouseEvent | KeyboardEvent) => latestControls.current.close(e),
+        []
+      );
+      const isOpenNowControl = useCallback(() => isOpenNow.current, []);
+
       useEffect(() => {
         passPopoverData?.({
-          close,
-          open,
-          isOpen: () => isOpenNow.current,
+          close: closeNow,
+          open: openNow,
+          isOpen: isOpenNowControl,
         });
       }, [isOpen]);
 
