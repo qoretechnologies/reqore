@@ -1,18 +1,38 @@
 import { act, fireEvent, render } from '@testing-library/react';
+import { Profiler } from 'react';
 import { ReqoreBreadcrumbs, ReqoreLayoutContent, ReqoreUIProvider } from '../src';
+import { getTabsLength } from '../src/components/Tabs/list';
 
 /*
- * jsdom lays nothing out, so these tests lay the trail out themselves: its row is `layout.row` wide from 0,
- * and its parts sit side by side from the row's start - a crumb `layout.crumb` wide, an arrow 20px, the
- * "…" menu 40px, and the dropdown that stands in for the current page as wide as the row (it fills it).
- * The trail folds crumbs from its start until no part reaches past the row's end. The same, in a real
- * browser and before the browser paints, is covered by the Breadcrumbs stories.
+ * jsdom lays nothing out, so these tests lay the trail out themselves: its row is `layout.row` wide
+ * from 0 (or the bar's `maxWidth`, when it is narrower), and its parts sit side by side from the
+ * row's start - a crumb `layout.crumb` wide, an arrow 20px, the "…" menu 40px, the dropdown that
+ * stands in for the current page as wide as the row (it fills it) but never narrower than its 5em
+ * floor, `STAND_IN_FLOOR`, and the crumb holding tabs at the end of the trail as wide as the room
+ * the other parts leave it. Every box is scaled by `layout.scale`, as a transform on an ancestor
+ * scales what `getBoundingClientRect` gives. The trail folds crumbs from its start until no part
+ * reaches past the row's end. The same, in a real browser and before the browser paints, is covered
+ * by the Breadcrumbs stories.
  */
-const layout = { row: 1000, crumb: 100 };
+const layout = { row: 1000, crumb: 100, scale: 1 };
 
-const partWidth = (part: Element): number => {
+const STAND_IN_FLOOR = 70;
+
+/** The row's width: the trail's, or the bar's `maxWidth` when that is less. */
+const rowWidth = (row: Element): number => {
+  const bar = row.closest<HTMLElement>('.reqore-breadcrumbs-wrapper');
+  const maxWidth = parseFloat(bar?.style.maxWidth ?? '');
+
+  return Number.isNaN(maxWidth) ? layout.row : Math.min(layout.row, maxWidth);
+};
+
+/** A part's width, `left` from the start of `row`. */
+const partWidth = (part: Element, row: Element, left: number): number => {
   if (part.classList.contains('reqore-breadcrumbs-overflow-current')) {
-    return layout.row;
+    return Math.max(rowWidth(row), STAND_IN_FLOOR);
+  }
+  if (part.classList.contains('reqore-breadcrumbs-tabs')) {
+    return Math.max(0, rowWidth(row) - left);
   }
   if (part.classList.contains('reqore-breadcrumbs-item')) {
     return layout.crumb;
@@ -21,16 +41,27 @@ const partWidth = (part: Element): number => {
 };
 
 const box = (left: number, width: number) =>
-  ({ left, right: left + width, width, top: 0, bottom: 20, height: 20, x: left, y: 0, toJSON: () => ({}) }) as DOMRect;
+  ({
+    left: left * layout.scale,
+    right: (left + width) * layout.scale,
+    width: width * layout.scale,
+    top: 0,
+    bottom: 20,
+    height: 20,
+    x: left * layout.scale,
+    y: 0,
+    toJSON: () => ({}),
+  }) as DOMRect;
 
 const realRect = Element.prototype.getBoundingClientRect;
 
 beforeEach(() => {
   layout.row = 1000;
   layout.crumb = 100;
+  layout.scale = 1;
   Element.prototype.getBoundingClientRect = function (this: Element) {
     if (this.classList.contains('reqore-breadcrumbs-overflow-list')) {
-      return box(0, layout.row);
+      return box(0, rowWidth(this));
     }
     const row = this.parentElement;
     if (row?.classList.contains('reqore-breadcrumbs-overflow-list')) {
@@ -39,9 +70,9 @@ beforeEach(() => {
         if (part === this) {
           break;
         }
-        left += partWidth(part);
+        left += partWidth(part, row, left);
       }
-      return box(left, partWidth(this));
+      return box(left, partWidth(this, row, left));
     }
     return box(0, 0);
   } as typeof realRect;
@@ -132,26 +163,41 @@ test('Never drops the current page, however much has to collapse', () => {
 });
 
 // The folded dropdown stands in for the current page, whose label it may cut with an ellipsis to fit: it is
-// named in full by its accessible name and its title - the leaf's own when it gives them, else its label.
-test('Names the folded current page in full, by the leaf\'s own words or its label', () => {
+// named in full by its accessible name - the leaf's own when it gives one, else its label, else the
+// label its menu row has (an icon-only leaf). It takes no title of its own: hovering it opens its
+// menu, which names every crumb in full, and a browser's tooltip would cover that menu.
+test("Names the folded current page in full: the leaf's own name, its label or menu label", () => {
   layout.row = 150;
   act(() => {
     renderTrail();
   });
   const byLabel = document.querySelector('.reqore-breadcrumbs-overflow-current')!;
   expect(byLabel.getAttribute('aria-label')).toBe('Page 5');
-  expect(byLabel.getAttribute('title')).toBe('Page 5');
+  expect(byLabel.hasAttribute('title')).toBe(false);
 
   document.body.innerHTML = '';
   act(() => {
     renderTrail([
       ...PAGES.slice(0, 4),
-      { label: 'Job 4711', 'aria-label': 'Daily Payment Reconciliation, job 4711', title: 'Daily Payment Reconciliation' },
+      {
+        label: 'Job 4711',
+        'aria-label': 'Daily Payment Reconciliation, job 4711',
+        title: 'Daily Payment Reconciliation',
+      },
     ] as typeof PAGES);
   });
   const byLeaf = document.querySelector('.reqore-breadcrumbs-overflow-current')!;
   expect(byLeaf.getAttribute('aria-label')).toBe('Daily Payment Reconciliation, job 4711');
+  // a title the leaf gives itself is the leaf's, as on its crumb
   expect(byLeaf.getAttribute('title')).toBe('Daily Payment Reconciliation');
+
+  document.body.innerHTML = '';
+  act(() => {
+    renderTrail([...PAGES.slice(0, 4), { icon: 'Home3Line', menuLabel: 'Home' }] as typeof PAGES);
+  });
+  const byMenuLabel = document.querySelector('.reqore-breadcrumbs-overflow-current')!;
+  expect(byMenuLabel.getAttribute('aria-label')).toBe('Home');
+  expect(byMenuLabel.hasAttribute('title')).toBe(false);
 });
 
 test('A new trail is folded as it is rendered, from the crumbs folded before, unfolding while they fit', () => {
@@ -319,9 +365,16 @@ class RecordingResizeObserver {
   disconnect() {
     this.disconnects++;
   }
-  report(target: Element, width: number) {
+  /** A report of `target`'s border box: its layout size, which a transform does not scale. */
+  report(target: Element, width: number, height = 20) {
     this.callback(
-      [{ target, borderBoxSize: [{ inlineSize: width, blockSize: 20 }] } as unknown as ResizeObserverEntry],
+      [
+        {
+          target,
+          borderBoxSize: [{ inlineSize: width, blockSize: height }],
+          contentRect: { width, height },
+        } as unknown as ResizeObserverEntry,
+      ],
       this as unknown as ResizeObserver
     );
   }
@@ -441,6 +494,7 @@ test('A width that changed by less than half a pixel, or a part that grew and st
     const observer = trailObserver();
     const row = document.querySelector('.reqore-breadcrumbs-overflow-list')!;
 
+    layout.row = 300.4;
     act(() => observer.report(row, 300.4));
     // "…" 40 + arrow 20 + 110 + arrow 20 + 110 = 300: still inside
     layout.crumb = 110;
@@ -449,5 +503,171 @@ test('A width that changed by less than half a pixel, or a part that grew and st
     expect(drawnCrumbs()).toEqual(['Page 4', 'Page 5']);
     expect(observer.disconnects).toBe(0);
     expect(frames).toHaveLength(0);
+  });
+});
+
+const trailOf = (items: typeof PAGES, props: Record<string, unknown> = {}) => (
+  <ReqoreUIProvider>
+    <ReqoreLayoutContent>
+      <ReqoreBreadcrumbs items={items} {...props} />
+    </ReqoreLayoutContent>
+  </ReqoreUIProvider>
+);
+
+const trailRow = () => document.querySelector<HTMLElement>('.reqore-breadcrumbs-overflow-list')!;
+
+// The bar made wider by its own props - a right element that shrinks or goes, a `maxWidth` lifted
+// (the IDE's page going full screen) - draws the trail wider in the same render; the observer
+// reports it after that render, and the trail unfolds what fits, as it does when it gets wider any
+// other way.
+test('A trail its own props make wider unfolds the crumbs that fit again', () => {
+  withRecordingResizeObserver(() => {
+    const { rerender } = render(trailOf(PAGES, { style: { maxWidth: '300px' } }));
+    expect(drawnCrumbs()).toEqual(['Page 4', 'Page 5']);
+
+    act(() => {
+      rerender(trailOf(PAGES, { style: { maxWidth: 'none' } }));
+    });
+    act(() => trailObserver().report(trailRow(), 1000));
+
+    expect(drawnCrumbs()).toEqual(['Page 1', 'Page 2', 'Page 3', 'Page 4', 'Page 5']);
+  });
+});
+
+// A transform on an ancestor (an app that scales its page, a scale-in animation) scales what the
+// trail measures but not the boxes the observer reports, so the two are compared as the trail
+// measures them: a report of the size the trail was drawn at changes nothing, rather than folding
+// again on every frame.
+test('Under a scaled ancestor, a report of the size the trail was drawn at changes nothing', () => {
+  withRecordingResizeObserver((frames) => {
+    layout.row = 300;
+    layout.scale = 0.5;
+    renderTrail();
+    expect(drawnCrumbs()).toEqual(['Page 4', 'Page 5']);
+    const observer = trailObserver();
+
+    // the layout's own sizes: twice what the trail measures at half the scale
+    act(() => observer.report(trailRow(), 300));
+    act(() => observer.report(document.querySelector('.reqore-breadcrumbs-item')!, 100));
+
+    expect(drawnCrumbs()).toEqual(['Page 4', 'Page 5']);
+    expect(observer.disconnects).toBe(0);
+    expect(frames).toHaveLength(0);
+  });
+});
+
+// With every crumb folded, the dropdown standing in for the current page keeps 5em of it, so in a
+// trail narrower than that it reaches past the end for good: there is nothing left to fold, and the
+// observer leaves it so, rather than render the trail again on every frame.
+test("A trail narrower than the current page's dropdown is not rendered on every frame", () => {
+  withRecordingResizeObserver((frames) => {
+    layout.row = 50;
+    const renders = vi.fn();
+    render(<Profiler id='trail' onRender={renders}>{trailOf(PAGES)}</Profiler>);
+    expect(document.querySelector('.reqore-breadcrumbs-overflow-current')).toBeTruthy();
+    const observer = trailObserver();
+    renders.mockClear();
+
+    // ten frames, each reporting the trail as a part taken up again is reported
+    for (let frame = 0; frame < 10; frame++) {
+      act(() => observer.report(trailRow(), 50));
+      for (const next of frames.splice(0)) {
+        act(() => next(0));
+      }
+    }
+
+    expect(renders).not.toHaveBeenCalled();
+    expect(observer.disconnects).toBe(0);
+  });
+});
+
+const TABS = {
+  tabs: [
+    { label: 'Overview', id: 'overview' },
+    { label: 'Code', id: 'code' },
+  ],
+  activeTab: 'overview',
+  onTabChange: () => undefined,
+};
+
+/** The room the tabs list has: the crumb holding it, less the arrow before it. */
+const withTabsRoom = (run: () => void) => {
+  const computed = window.getComputedStyle.bind(window);
+  const spy = vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
+    const style = computed(element, pseudo);
+    const crumb = element.closest<HTMLElement>('.reqore-breadcrumbs-tabs');
+    if (crumb && element.classList.contains('reqore-tabs-list')) {
+      const arrow = crumb.dataset.position === '0' ? 0 : 20;
+      const room = crumb.getBoundingClientRect().width / layout.scale - arrow;
+      Object.defineProperty(style, 'width', { value: `${room}px` });
+    }
+    return style;
+  });
+  try {
+    run();
+  } finally {
+    spy.mockRestore();
+  }
+};
+
+// At the end of the trail, the crumb holding tabs takes the room the other parts leave, and a crumb
+// before it is shown only while that room is what all its tabs need - by the tabs list's own
+// reckoning, not by the tabs it draws now, which are fewer once some are in "More". A trail made
+// wider again unfolds its crumbs only once the tabs have their room back, as a trail first drawn at
+// that width shows them.
+test('A trail made wider unfolds a crumb only while its tabs keep the room they all need', () => {
+  const need = getTabsLength(TABS.tabs, 'width', TABS.activeTab, 'normal');
+  const items = [...PAGES.slice(0, 3), { withTabs: TABS }] as typeof PAGES;
+
+  withTabsRoom(() =>
+    withRecordingResizeObserver(() => {
+      // "…" 40 + arrow 20, then the crumb holding the tabs, first shown: 10px less than they need
+      layout.row = 60 + need - 10;
+      renderTrail(items);
+      const tabs = () => document.querySelector<HTMLElement>('.reqore-breadcrumbs-tabs')!;
+      expect(tabs().dataset.position).toBe('0');
+      expect(drawnCrumbs()).toEqual([]);
+      const observer = trailObserver();
+
+      // room for one crumb: "…" 40 + arrow 20 + Page 3 100, the tabs' arrow 20, and 10px spare
+      layout.row = 180 + need + 10;
+      act(() => observer.report(trailRow(), layout.row));
+
+      expect(drawnCrumbs()).toEqual(['Page 3']);
+      expect(tabs().dataset.position).toBe('1');
+
+      // narrower with the trail, the crumb holding the tabs leaves no room for anything else
+      const disconnects = observer.disconnects;
+      layout.row -= 5;
+      act(() => observer.report(tabs(), 0));
+      expect(observer.disconnects).toBe(disconnects);
+      expect(drawnCrumbs()).toEqual(['Page 3']);
+    })
+  );
+});
+
+// A fold made inside the observer's callback changes the trail's layout there and then. Its width
+// does not change (the trail takes the room the bar gives it), but its height can: a crumb with a
+// description is taller than the others. A height changed there would change the size of what holds
+// the trail - watched, perhaps, by another observer, which the browser would leave unreported and
+// report as an error - so the trail keeps the height the observer last reported until the next
+// frame.
+test('A fold made inside the observer keeps the trail\'s height until the next frame', () => {
+  withRecordingResizeObserver((frames) => {
+    layout.row = 300;
+    renderTrail();
+    const observer = trailObserver();
+    const row = trailRow();
+
+    act(() => observer.report(row, 300, 46));
+    expect(row.style.height).toBe('');
+
+    layout.crumb = 120;
+    act(() => observer.report(document.querySelector('.reqore-breadcrumbs-item')!, 120));
+
+    expect(drawnCrumbs()).toEqual(['Page 5']);
+    expect(row.style.height).toBe('46px');
+    act(() => frames[0](0));
+    expect(row.style.height).toBe('');
   });
 });

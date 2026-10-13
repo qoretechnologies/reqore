@@ -489,7 +489,7 @@ export const FoldedCurrentPageIsNamedInFull: Story = {
     docs: {
       description: {
         story:
-          'Renders a detail page\'s trail on a phone (390 px) beside a page action, with a current page too long for the header: the whole trail folds into one dropdown labelled with the current page, its name cut with an ellipsis. The dropdown still names the page in full, by its accessible name and its title, for a screen reader and a long press.',
+          'Renders a detail page\'s trail on a phone (390 px) beside a page action, with a current page too long for the header: the whole trail folds into one dropdown labelled with the current page, its name cut with an ellipsis. The dropdown still names the page in full, by its accessible name, for a screen reader; it has no title of its own (hovering it opens its menu, which names every crumb in full).',
       },
     },
   },
@@ -516,9 +516,9 @@ export const FoldedCurrentPageIsNamedInFull: Story = {
       // cut to fit...
       const text = current.querySelector<HTMLElement>('.reqore-button-text-content')!;
       await waitFor(() => expect(text.scrollWidth).toBeGreaterThan(text.clientWidth));
-      // ...and named in full
+      // ...and named in full, with no browser tooltip over its menu
       await expect(current).toHaveAttribute('aria-label', LONG_LEAF_NAME);
-      await expect(current).toHaveAttribute('title', LONG_LEAF_NAME);
+      await expect(current).not.toHaveAttribute('title');
     });
   },
 };
@@ -721,5 +721,196 @@ export const CrumbsFoldBeforeTheirTabsAreSqueezed: Story = {
     await expect(seen).toEqual([]);
     // the room came from folding crumbs
     await expect(box.querySelector('.reqore-breadcrumbs-overflow-list .reqore-dropdown-control')).toBeTruthy();
+  },
+};
+
+/** The labels of the crumbs the trail draws, in order. */
+const drawnLabels = (canvasElement: HTMLElement): string[] =>
+  trailParts(canvasElement).crumbs.map((crumb) => crumb.textContent?.trim() ?? '');
+
+/** The trail's "…" menu, or the dropdown standing in for its current page: what it folded. */
+const trailMenu = (canvasElement: HTMLElement) =>
+  canvasElement.querySelector('.reqore-breadcrumbs-overflow-list .reqore-dropdown-control');
+
+/* A trail made wider by its own props (qorus#646). The trail unfolds what fits when it gets wider,
+   and so when the render that changes its bar's props draws it wider: a right element that goes, a
+   `maxWidth` lifted (the IDE's page wrapper lifts its 1280px when the page goes full screen). That
+   render used to be taken as the width the trail had been measured at, so its observer saw no
+   change and the crumbs stayed folded with room to spare. */
+
+const WIDENING_TRAIL: IReqoreBreadcrumbItem[] = [
+  { label: 'Interfaces', icon: 'Home3Line' },
+  { label: 'Jobs', icon: 'CalendarLine' },
+  { label: 'order-sync', icon: 'CalendarLine' },
+  { label: 'Execution 4711', icon: 'CalendarLine' },
+];
+
+const WideningTrail = () => {
+  const [actions, setActions] = useState(true);
+  const [fullWidth, setFullWidth] = useState(false);
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreButton className='hide-actions' fixed onClick={() => setActions(false)}>
+        Hide the page actions
+      </ReqoreButton>
+      <ReqoreButton className='full-width' fixed onClick={() => setFullWidth(true)}>
+        Go full width
+      </ReqoreButton>
+      <div style={{ width: 900 }}>
+        <ReqoreBreadcrumbs
+          items={WIDENING_TRAIL}
+          padded={false}
+          style={{ maxWidth: fullWidth ? 'none' : 440 }}
+          rightElement={actions ? <div style={{ width: 200, height: 32 }} /> : undefined}
+        />
+      </div>
+    </ReqoreControlGroup>
+  );
+};
+
+export const UnfoldsWhenItsPropsMakeItWider: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a four-crumb trail in a bar 440 px wide at most, beside 200 px of page actions, so its first crumbs are folded into the "…" menu. When the page actions go, and again when the bar\'s `maxWidth` is lifted (a page going full width), the render that changes the bar draws the trail wider, and the trail unfolds the crumbs that now fit: more of them without the actions, and all four, with no "…" menu, at full width.',
+      },
+    },
+  },
+  render: () => <WideningTrail />,
+  play: async ({ canvasElement }) => {
+    const folded = await waitFor(() => {
+      expect(trailMenu(canvasElement)).toBeInTheDocument();
+      expect(partsPastTheTrail(canvasElement)).toEqual([]);
+      return drawnLabels(canvasElement);
+    });
+
+    await userEvent.click(canvasElement.querySelector('.hide-actions') as HTMLElement);
+    await waitFor(() => {
+      expect(drawnLabels(canvasElement).length).toBeGreaterThan(folded.length);
+      expect(partsPastTheTrail(canvasElement)).toEqual([]);
+    });
+
+    await userEvent.click(canvasElement.querySelector('.full-width') as HTMLElement);
+    await waitFor(() => {
+      expect(drawnLabels(canvasElement)).toEqual(WIDENING_TRAIL.map(({ label }) => label));
+      expect(trailMenu(canvasElement)).toBeNull();
+    });
+  },
+};
+
+/* The tabs get their room back when the trail widens again (qorus#646). Squeezed, the tabs put some
+   of theirs in a "More" menu and draw narrower; a crumb only as wide as the tabs it draws kept them
+   there however wide the trail got again, while the trail unfolded its crumbs into the room
+   instead. At the end of the trail, the crumb holding tabs takes the room the other parts leave,
+   and a crumb is shown only while the tabs keep all the room they need: as when the trail is first
+   drawn at that width. */
+
+const ResizedTabsTrail = () => (
+  <div className='resized-tabs-trail-box' style={{ width: 1100 }}>
+    <ReqoreBreadcrumbs items={[...breadcrumbs, breadcrumbsTabs]} />
+  </div>
+);
+
+const tabsInMore = (canvasElement: HTMLElement) =>
+  canvasElement.querySelector('.reqore-breadcrumbs-tabs .reqore-tabs-list-item-menu');
+
+export const TabsGetTheirRoomBackWhenTheTrailWidens: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a trail whose last crumb holds tabs in a box 1100 px wide, where it folds some crumbs so that its tabs are all drawn. Narrowed to 420 px, every crumb folds and the tabs put some of theirs in their "More" menu. Widened to 1100 px again, the tabs are all drawn again, unclipped, and the trail shows the same crumbs as when it was first drawn at that width - rather than unfolding its crumbs and leaving the tabs in "More".',
+      },
+    },
+  },
+  render: () => <ResizedTabsTrail />,
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector<HTMLElement>('.resized-tabs-trail-box')!;
+    const firstDrawn = await waitFor(() => {
+      expect(trailParts(canvasElement).list.querySelector('.reqore-tabs-list')).toBeTruthy();
+      expect(tabsInMore(canvasElement)).toBeNull();
+      expect(squeezedTabs(canvasElement)).toEqual([]);
+      return drawnLabels(canvasElement);
+    });
+
+    box.style.width = '420px';
+    await waitFor(() => expect(tabsInMore(canvasElement)).toBeTruthy());
+
+    box.style.width = '1100px';
+    await waitFor(() => {
+      expect(tabsInMore(canvasElement)).toBeNull();
+      expect(squeezedTabs(canvasElement)).toEqual([]);
+      expect(drawnLabels(canvasElement)).toEqual(firstDrawn);
+      expect(partsPastTheTrail(canvasElement)).toEqual([]);
+    });
+  },
+};
+
+/* A fold made inside the trail's ResizeObserver keeps the trail's height for that frame
+   (qorus#646). The trail folds what no longer fits there and then, before the frame is painted. A
+   crumb with a description is taller than the others, so folding it makes the trail lower, and with
+   it whatever holds the trail: a size another observer watches (a panel's, a page layout's) changed
+   inside an observer's callback is left unreported until the next frame, and the browser reports a
+   ResizeObserver loop. The trail keeps its height until the next frame, and only then ends as tall
+   as what it draws. */
+
+const DESCRIBED_TRAIL: IReqoreBreadcrumbItem[] = [
+  { label: 'Jobs', icon: 'CalendarLine', description: 'Scheduled every hour' },
+  { label: 'order-sync', icon: 'CalendarLine' },
+  { label: 'Execution 4711', icon: 'CalendarLine' },
+];
+
+const WatchedTrail = () => {
+  const [shown, setShown] = useState(false);
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreButton className='show-watched-trail' fixed onClick={() => setShown(true)}>
+        Show the trail
+      </ReqoreButton>
+      <div className='watched-trail-box' style={{ width: 900 }}>
+        {shown && <ReqoreBreadcrumbs items={DESCRIBED_TRAIL} padded={false} />}
+      </div>
+    </ReqoreControlGroup>
+  );
+};
+
+export const FoldKeepsTheTrailsHeightForAFrame: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Renders a three-crumb trail whose first crumb has a description, which makes it taller than the others, in a box watched by a ResizeObserver from before the trail is drawn (as a panel or a page layout watches what it holds). When the box narrows, the crumb with the description folds into the "…" menu inside the trail\'s own observer; the trail keeps its height until the next frame and then ends as tall as the crumbs it draws, so the box never changes size inside an observer and the browser reports no ResizeObserver loop.',
+      },
+    },
+  },
+  render: () => <WatchedTrail />,
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector<HTMLElement>('.watched-trail-box')!;
+    const watcher = new ResizeObserver(() => undefined);
+    watcher.observe(box);
+    try {
+      await userEvent.click(canvasElement.querySelector('.show-watched-trail') as HTMLElement);
+      const { list, crumbs } = await waitFor(() => {
+        const parts = trailParts(canvasElement);
+        expect(parts.crumbs).toHaveLength(DESCRIBED_TRAIL.length);
+        return parts;
+      });
+      const tall = list.getBoundingClientRect().height;
+      const needed =
+        crumbs[crumbs.length - 1].getBoundingClientRect().right - list.getBoundingClientRect().left;
+
+      // too narrow for the crumb with the description: it folds
+      box.style.width = `${Math.floor(needed) - 10}px`;
+      await waitFor(() => {
+        const parts = trailParts(canvasElement);
+        expect(parts.crumbs).toHaveLength(DESCRIBED_TRAIL.length - 1);
+        expect(trailMenu(canvasElement)).toBeInTheDocument();
+        expect(parts.list.style.height).toBe('');
+        expect(parts.list.getBoundingClientRect().height).toBeLessThan(tall);
+      });
+    } finally {
+      watcher.disconnect();
+    }
   },
 };
