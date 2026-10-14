@@ -1,4 +1,11 @@
-import { animated, SpringValue, to, useSpring, useTransition } from '@react-spring/web';
+import {
+  animated,
+  Interpolation,
+  SpringValue,
+  to,
+  useSpring,
+  useTransition,
+} from '@react-spring/web';
 import { Resizable } from 're-resizable';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -549,7 +556,20 @@ const getHideShowIcon = (
   }
 };
 
-const getSpringConfig = (isModal?: boolean, position?: TPosition, floating?: boolean) =>
+/** How far beyond its edge a drawer enters from and leaves to, in px. */
+const DRAWER_SLIDE_PX = 80;
+
+/**
+ * The enter / leave spring. A drawer slides in from beyond its edge: `slide` is how far out it
+ * still is, turned into a translate along the edge it is on as it is drawn (`getSlideTransform`).
+ *
+ * Its offset from the edge (`right: 10px` for a `floating` one) is NOT animated: it is the box's
+ * own style, worked out on every render from the edge the drawer is on now. Animated, it was
+ * fixed at the values of the render the drawer entered in - a `responsiveLayout` drawer that
+ * entered as a floating side panel and became a phone sheet kept `right: 10px`, a sheet 10px
+ * short of the screen's edge.
+ */
+const getSpringConfig = (isModal?: boolean) =>
   isModal
     ? {
         from: { opacity: 0, transform: 'scale(0.5)' },
@@ -557,10 +577,28 @@ const getSpringConfig = (isModal?: boolean, position?: TPosition, floating?: boo
         leave: { opacity: 0, transform: 'scale(0.5)' },
       }
     : {
-        from: { opacity: 0, [position]: '-80px' },
-        enter: { opacity: 1, [position]: floating ? '10px' : '0px' },
-        leave: { opacity: 0, [position]: '-80px' },
+        from: { opacity: 0, slide: DRAWER_SLIDE_PX },
+        enter: { opacity: 1, slide: 0 },
+        leave: { opacity: 0, slide: DRAWER_SLIDE_PX },
       };
+
+/**
+ * The translate a drawer `slide` px beyond `position`'s edge is drawn with. Nothing once it is
+ * under half a pixel from rest: a spring settles towards 0 without ever quite reaching it, and a
+ * box left with a hundredth of a pixel of translate is drawn on a layer of its own, its text
+ * anti-aliased differently from the box at rest.
+ */
+const getSlideTransform = (slide: SpringValue<number>, position: TPosition) =>
+  to(slide, (distance) => {
+    if (Math.abs(distance) < 0.5) {
+      return '';
+    }
+
+    const x = position === 'right' ? distance : position === 'left' ? -distance : 0;
+    const y = position === 'bottom' ? distance : position === 'top' ? -distance : 0;
+
+    return `translate(${x}px, ${y}px)`;
+  });
 
 export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
   ({
@@ -672,7 +710,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     }, [position, size, width, height]);
 
     const transitions = useTransition(isOpen, {
-      ...getSpringConfig(_isModal, position, floating),
+      ...getSpringConfig(_isModal),
       config: SPRING_CONFIG,
       // A zero-tension spring never advances from its `from` state. When
       // dialog animations are disabled, apply the entered / left styles
@@ -847,7 +885,7 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
     // sets (a modal scales in), so neither overwrites the other. Nothing at rest, so a sheet
     // keeps the plain box it always had.
     const dragTransform = useCallback(
-      (spring?: SpringValue<string>) => {
+      (spring?: SpringValue<string> | Interpolation<string>) => {
         const own = to([drag.x, drag.y], (x, y) =>
           x || y ? `translate3d(${x}px, ${y}px, 0)` : ''
         );
@@ -1077,8 +1115,10 @@ export const ReqoreDrawer: React.FC<IReqoreDrawerProps> = memo(
                 {...dragHandlers}
                 style={{
                   ...resizeableStyle,
-                  ...styles,
-                  transform: dragTransform(styles.transform),
+                  opacity: styles.opacity,
+                  transform: dragTransform(
+                    _isModal ? styles.transform : getSlideTransform(styles.slide, position)
+                  ),
                 }}
                 handleWrapperStyle={handleWrapperStyle}
                 size={sizeObject}
