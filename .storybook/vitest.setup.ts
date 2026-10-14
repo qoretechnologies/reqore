@@ -5,6 +5,7 @@ import { createElement } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
 import { server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
+import { lowContrastIn } from '../src/stories/utils/contrastGate';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
 import { TOUCH_STORY_PROJECT } from '../src/stories/utils/touchScreen';
 
@@ -130,4 +131,18 @@ afterAll(() => {
   if (failure) {
     throw failure;
   }
+});
+
+/* No story draws text or an icon too close to what it is drawn on (`src/stories/utils/contrastGate.ts`, qorus#646:
+   David's review found black text on dark gray): text at 4.5:1 (3:1 when large) by axe-core, measured over the
+   background it is drawn on - a translucent one over what is under it, a gradient as each of its colors - and an
+   icon at 3:1, as the Qorus IDE's story run checks its own. Measured once the story has settled, in its theme. */
+afterEach(async () => {
+  await new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  );
+  expect(
+    await lowContrastIn(document.body),
+    'text (4.5:1, large 3:1) or icons (3:1) too close to what they are drawn on'
+  ).toEqual([]);
 });

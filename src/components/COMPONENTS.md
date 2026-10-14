@@ -121,6 +121,35 @@ The helpers are exported for a consumer's own hover:
   event after them, which reads what was noted once;
 - `watchHoverGate(target, gate)`: notes the pointer events on an element or the document.
 
+## Text and icons stand out from what they are drawn on (0.78.5)
+
+Reqore picks its text and icon colors against what they are actually drawn on, to WCAG AA: 4.5:1 for text,
+3:1 for an icon or large text (qorus#646: black text on a dark gray background was found in review).
+
+- **Against what is drawn**, not the color a surface is made from: a translucent background (the muted
+  intent, a minimal wash) is drawn over what is under it; a gradient counts as each of its colors, a layered
+  one as each layer over the ones under it; hovered and pressed colors count too.
+- **The surface is handed down.** A component that paints a background (a panel, a button, a message, a
+  callout, a menu, a control group drawn in a gradient, a table cell, a notification, …) hands what it is
+  drawn in - one color, or each color of its gradient - to what it holds, which reads against it.
+  `ReqoreSurfaceProvider color={…}` / `useReqoreSurface()` (and the `TReqoreSurface` type) are exported: an
+  app that draws its own background (an image, a busy gradient behind glass) tells Reqore what it is.
+- **Fades have a floor.** Secondary text and icons (descriptions, metadata, timestamps, placeholders, control
+  icons at 70%, the clear button, a switch's other word, breadcrumb separators) are faded only as far as they
+  still read. An idle `ReqoreNavRail` (`idleReveal`) rests at `idleOpacity` only where its icons still stand
+  out by 3:1 - the marks' and the active mark's on its fill, faded into the page with the rail - and less
+  faded where they would not.
+- **Colored text keeps its hue, in a shade that reads:** an `intent` on text or an icon, an intent named as an
+  effect color (`'warning'`, `'info:lighten:2'`), text drawn in a gradient, a tag's or a notification's own
+  icon color.
+- **What a caller sets is the caller's:** an explicit hex `color` or `effect.opacity` is drawn as given.
+- Disabled content is exempt (WCAG); the components that are not form controls now say they are disabled with
+  `aria-disabled`.
+
+The helpers are exported from `helpers/colors`: `getReadableColorOn`, `getReadableAccentColorOn`,
+`getReadableAlpha`, `getReadableIconLook`, `getReadableGroupOpacity`, `getContrastRatio`, `getDrawnColor`,
+`getThemeSurface(s)`. The story run checks every story (`src/stories/utils/contrastGate.ts`).
+
 ## Props and the DOM (0.78.5)
 
 Reqore styles its components with props, and none of those props is written onto an element:
