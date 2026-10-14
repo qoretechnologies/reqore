@@ -718,6 +718,19 @@ const onTestConnection = fn();
 const onOpenSettings = fn();
 const onRemove = fn();
 
+// One array for every render: the row is memoized.
+const NARROW_CONNECTION_ACTIONS: IReqoreEntityRowProps['actions'] = [
+  { label: 'Test the connection', intent: 'info', icon: 'PulseLine', onClick: onTestConnection },
+  { label: 'Open its settings', icon: 'Settings3Line', onClick: onOpenSettings },
+  {
+    icon: 'DeleteBinLine',
+    tooltip: 'Remove',
+    intent: 'danger',
+    minimal: true,
+    onClick: onRemove,
+  },
+];
+
 const NarrowConnectionRow = ({ narrowActions }: Pick<IReqoreEntityRowProps, 'narrowActions'>) => (
   <div style={{ width: 320, maxWidth: '100%' }}>
     <ReqoreEntityRow
@@ -726,17 +739,7 @@ const NarrowConnectionRow = ({ narrowActions }: Pick<IReqoreEntityRowProps, 'nar
       fluid
       narrowActions={narrowActions}
       onClick={onEntityRowClick}
-      actions={[
-        { label: 'Test the connection', intent: 'info', icon: 'PulseLine', onClick: onTestConnection },
-        { label: 'Open its settings', icon: 'Settings3Line', onClick: onOpenSettings },
-        {
-          icon: 'DeleteBinLine',
-          tooltip: 'Remove',
-          intent: 'danger',
-          minimal: true,
-          onClick: onRemove,
-        },
-      ]}
+      actions={NARROW_CONNECTION_ACTIONS}
     />
   </div>
 );

@@ -529,6 +529,9 @@ const INCIDENT_ACTIONS: IReqoreSeverityRowProps['actions'] = [
   },
 ];
 
+// One element for every render: the row is memoized.
+const CRITICAL_TAG = <ReqoreTag size='tiny' intent='danger' label='Critical' />;
+
 const IncidentRow = ({
   clickable,
   narrowActions = 'menu',
@@ -542,7 +545,7 @@ const IncidentRow = ({
     label='Payment Processing · stripe-webhook-receiver'
     description='Avg duration 4.7s exceeded 3.5s threshold · just now'
     intent='danger'
-    leading={<ReqoreTag size='tiny' intent='danger' label='Critical' />}
+    leading={CRITICAL_TAG}
     fluid
     onClick={clickable ? onRowClick : undefined}
     actions={INCIDENT_ACTIONS}
@@ -653,6 +656,8 @@ const EQUAL_BOX_ROWS: Array<Pick<IReqoreSeverityRowProps, 'label' | 'actions' | 
   },
 ];
 
+const MAJOR_TAG = <ReqoreTag size='tiny' intent='warning' label='Major' />;
+
 const EqualBoxRows = () => (
   <ReqoreControlGroup vertical gapSize='big'>
     {EQUAL_BOX_ROWS.map((row, index) => (
@@ -660,7 +665,7 @@ const EqualBoxRows = () => (
         <ReqoreSeverityRow
           description='Avg duration 4.7s exceeded 3.5s threshold · just now'
           intent='warning'
-          leading={<ReqoreTag size='tiny' intent='warning' label='Major' />}
+          leading={MAJOR_TAG}
           {...row}
         />
       </StoryRowBox>
