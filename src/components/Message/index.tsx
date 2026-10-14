@@ -3,8 +3,9 @@ import React, { forwardRef, memo, useEffect, useMemo, useState } from 'react';
 import { useMount, useUnmount } from 'react-use';
 import { IReqoreTheme } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { getColorFromMaybeString } from '../../helpers/colors';
+import { getColorFromMaybeString, getThemeSurface } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import {
   IReqoreIntent,
   IWithReqoreCustomTheme,
@@ -17,10 +18,11 @@ import {
   IWithReqoreTooltip,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import { TReqoreEffectColor } from '../Effect';
+import { getEffectBackgrounds, TReqoreEffectColor } from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import {
+  getNotificationColors,
   StyledIconWrapper,
   StyledNotificationContent,
   StyledNotificationContentWrapper,
@@ -96,6 +98,19 @@ const ReqoreMessage = memo(
     ) => {
       const [internalTimeout, setInternalTimeout] = useState<NodeJS.Timeout | null>(null);
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      const surface = useReqoreSurface();
+      // What the message holds is drawn on the message, and picks its colors against that.
+      const background = useMemo(
+        () =>
+          getEffectBackgrounds(
+            theme,
+            rest.effect,
+            getNotificationColors({ theme, intent, minimal, opaque: rest.opaque, $surface: surface })
+              .background,
+            getThemeSurface(theme, surface)
+          ),
+        [theme, intent, minimal, rest.opaque, surface, rest.effect]
+      );
 
       useMount(() => {
         if (duration) {
@@ -157,49 +172,52 @@ const ReqoreMessage = memo(
             ref={ref}
             size={size}
             theme={theme}
+            $surface={surface}
             effect={effect}
           >
-            <StyledNotificationContentWrapper size={size} theme={theme}>
-              {leftIcon ? (
-                <>
-                  {intent === 'pending' ? (
-                    <ReqoreSpinner
+            <ReqoreSurfaceProvider color={background}>
+              <StyledNotificationContentWrapper size={size} theme={theme}>
+                {leftIcon ? (
+                  <>
+                    {intent === 'pending' ? (
+                      <ReqoreSpinner
+                        size={size}
+                        iconColor={iconColor}
+                        type={5}
+                        iconMargin={'right'}
+                        iconProps={iconProps}
+                      />
+                    ) : (
+                      <ReqoreIcon
+                        icon={leftIcon}
+                        margin={'right'}
+                        size={size}
+                        color={iconColor}
+                        {...iconProps}
+                      />
+                    )}
+                  </>
+                ) : null}
+                <StyledNotificationInnerContent>
+                  {title && (
+                    <ReqoreHeading
                       size={size}
-                      iconColor={iconColor}
-                      type={5}
-                      iconMargin={'right'}
-                      iconProps={iconProps}
-                    />
-                  ) : (
-                    <ReqoreIcon
-                      icon={leftIcon}
-                      margin={'right'}
-                      size={size}
-                      color={iconColor}
-                      {...iconProps}
-                    />
+                      customTheme={
+                        rest.effect?.color
+                          ? { text: { color: getColorFromMaybeString(theme, rest.effect.color) } }
+                          : undefined
+                      }
+                    >
+                      {title}
+                    </ReqoreHeading>
                   )}
-                </>
-              ) : null}
-              <StyledNotificationInnerContent>
-                {title && (
-                  <ReqoreHeading
-                    size={size}
-                    customTheme={
-                      rest.effect?.color
-                        ? { text: { color: getColorFromMaybeString(theme, rest.effect.color) } }
-                        : undefined
-                    }
-                  >
-                    {title}
-                  </ReqoreHeading>
-                )}
 
-                <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
-                  {children}
-                </StyledNotificationContent>
-              </StyledNotificationInnerContent>
-            </StyledNotificationContentWrapper>
+                  <StyledNotificationContent theme={theme} hasTitle={!!title} size={size}>
+                    {children}
+                  </StyledNotificationContent>
+                </StyledNotificationInnerContent>
+              </StyledNotificationContentWrapper>
+            </ReqoreSurfaceProvider>
             {onClose && (
               <StyledIconWrapper
                 theme={theme}

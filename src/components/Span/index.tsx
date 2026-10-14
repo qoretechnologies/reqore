@@ -1,7 +1,9 @@
 import { forwardRef, memo } from 'react';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import styled, { omitStyleProps } from '../../helpers/styled';
+import { getReadableIntentColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
+import { useReqoreSurface } from '../../context/SurfaceContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import {
   IReqoreIntent,
@@ -46,8 +48,11 @@ export interface IReqoreSpanProps
 export const StyledSpan = styled(StyledTextEffect).withConfig({
   shouldForwardProp: omitStyleProps('_size', 'inline', 'maxWidth'),
 })`
-  color: ${({ theme, intent }) =>
-    intent ? theme.intents[intent] : theme.text?.color || 'inherit'};
+  /* An intent colours the text in a shade of it that reads on the theme's surface. */
+  color: ${({ theme, intent, $surface }) =>
+    intent
+      ? getReadableIntentColor(theme, intent, undefined, $surface)
+      : theme.text?.color || 'inherit'};
   font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
   vertical-align: ${({ inline }) => (inline ? 'middle' : undefined)};
   max-width: ${({ maxWidth }) => maxWidth || undefined};
@@ -71,12 +76,14 @@ export const ReqoreSpan = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      const surface = useReqoreSurface();
 
       return (
         <ReqoreTooltipComponent
           ref={ref}
           as='span'
           theme={theme}
+          $surface={surface}
           color={theme.text.color}
           intent={intent}
           inline={inline}

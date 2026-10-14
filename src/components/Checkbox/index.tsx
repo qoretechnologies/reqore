@@ -12,10 +12,18 @@ import {
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
+  getDrawnColor,
+  getGradientColorList,
   getNthGradientColor,
+  getReadableAlpha,
+  getReadableAccentColorOn,
   getReadableColor,
-  getReadableColorFrom,
+  getReadableColorOn,
+  getReadableTextOn,
+  getThemeSurfaces,
+  READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useComponentTooltip } from '../../hooks/useComponentTooltip';
@@ -32,11 +40,14 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreControlGroup from '../ControlGroup';
 import {
+  getEffectBackgrounds,
   getPrimaryGradient,
+  getReadableTextGradient,
   IReqoreEffect,
   ReqoreTextEffect,
   StyledEffect,
   StyledTextEffect,
+  TReqoreHexColor,
 } from '../Effect';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
 import { ReqoreSpacer } from '../Spacer';
@@ -111,6 +122,48 @@ export interface IReqoreCheckboxStyle extends IReqoreCheckboxProps {
   theme: IReqoreTheme;
 }
 
+/** The switch's knob: lighter than the theme, or than its effect's gradient when it has one. */
+const getSwitchKnobColor = (
+  theme: IReqoreTheme,
+  checked: boolean | undefined,
+  effect?: IReqoreEffect
+): string => {
+  const gradient = getPrimaryGradient(effect?.gradient);
+  const from = gradient ? getNthGradientColor(theme, gradient.colors, checked ? 2 : 1) : undefined;
+
+  return from
+    ? changeLightness(from, 0.2)
+    : changeLightness(theme.main, checked ? 0.25 : 0.2);
+};
+
+/** How much of an unset switch's knob is drawn: a fifth. */
+const UNSET_KNOB_ALPHA = 0.2;
+
+/**
+ * What the knob paints: unset, its stripes (whether or not it is otherwise transparent); set, its color, or nothing
+ * when it only shows an icon or an image.
+ */
+const getSwitchKnobFills = (
+  theme: IReqoreTheme,
+  checked: boolean | undefined,
+  effect: IReqoreEffect | undefined,
+  transparent: boolean
+): string[] => {
+  if (checked === undefined) {
+    // faint: the switch is neither on nor off (its icon is not faded with it, see `knobIconOpacity`)
+    const colors = getPrimaryGradient(effect?.gradient)?.colors;
+    const stripe = (nth: number) =>
+      (colors && getNthGradientColor(theme, colors, nth)) || theme.main;
+
+    return [
+      rgba(changeLightness(stripe(1), 0.1), UNSET_KNOB_ALPHA),
+      rgba(changeLightness(stripe(2), 0.15), UNSET_KNOB_ALPHA),
+    ];
+  }
+
+  return transparent ? [] : [getSwitchKnobColor(theme, checked, effect)];
+};
+
 const StyledSwitchToggle = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('width'),
 })`
@@ -129,41 +182,23 @@ const StyledSwitchToggle = styled.div.withConfig({
       : width || SWITCH_SIZE_TO_PX[size] - 4}px;
   top: 50%;
   transform: translateY(-50%) translateX(${({ checked }) => (checked === undefined ? '-50%' : 0)});
-  ${({ checked, theme, parentEffect }) =>
-    checked === undefined &&
-    css`
+  ${({ checked, theme, parentEffect }) => {
+    if (checked !== undefined) {
+      return undefined;
+    }
+
+    const [first, second] = getSwitchKnobFills(theme, checked, parentEffect, true);
+
+    return css`
       background-image: repeating-linear-gradient(
         45deg,
-        ${rgba(
-            parentEffect?.gradient
-              ? changeLightness(getNthGradientColor(theme, getPrimaryGradient(parentEffect.gradient)?.colors, 1), 0.1)
-              : changeLightness(theme.main, 0.1),
-            1
-          )}
-          0px,
-        ${rgba(
-            parentEffect?.gradient
-              ? changeLightness(getNthGradientColor(theme, getPrimaryGradient(parentEffect.gradient)?.colors, 2), 0.15)
-              : changeLightness(theme.main, 0.15),
-            1
-          )}
-          2px,
-        ${rgba(
-            parentEffect?.gradient
-              ? changeLightness(getNthGradientColor(theme, getPrimaryGradient(parentEffect.gradient)?.colors, 2), 0.15)
-              : changeLightness(theme.main, 0.15),
-            1
-          )}
-          4px,
-        ${rgba(
-            parentEffect?.gradient
-              ? changeLightness(getNthGradientColor(theme, getPrimaryGradient(parentEffect.gradient)?.colors, 1), 0.1)
-              : changeLightness(theme.main, 0.1),
-            1
-          )}
-          6px
+        ${first} 0px,
+        ${second} 2px,
+        ${second} 4px,
+        ${first} 6px
       );
-    `}
+    `;
+  }}
   left: ${({ checked, size, width }) =>
     !checked
       ? checked === undefined
@@ -171,17 +206,10 @@ const StyledSwitchToggle = styled.div.withConfig({
         : '1px'
       : `calc(100% - ${width || SWITCH_SIZE_TO_PX[size] - 4}px - 1px)`};
   border-radius: 50px;
-  opacity: ${({ checked }) => (checked === undefined ? 0.2 : 1)};
   background-color: ${({ theme, checked, transparent, parentEffect }) =>
-    transparent
+    transparent || checked === undefined
       ? 'transparent'
-      : !checked
-      ? parentEffect?.gradient
-        ? changeLightness(getNthGradientColor(theme, parentEffect?.gradient?.colors, 1), 0.2)
-        : changeLightness(theme.main, 0.2)
-      : parentEffect?.gradient
-      ? changeLightness(getNthGradientColor(theme, parentEffect?.gradient?.colors, 2), 0.2)
-      : changeLightness(theme.main, 0.25)};
+      : getSwitchKnobColor(theme, checked, parentEffect)};
 `;
 
 const StyledSwitch = styled(StyledEffect)<IReqoreCheckboxStyle>`
@@ -221,16 +249,18 @@ const StyledSwitchTextWrapper = styled(StyledTextEffect)`
   min-width: ${({ size }) => SWITCH_SIZE_TO_PX[size] - 4}px;
 `;
 
-const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
-  color: ${({ theme, checked, parentHasGradient }) =>
-    !parentHasGradient &&
-    getReadableColorFrom(checked ? changeLightness(theme.main, 0.25) : theme.originalMain)};
+/* Both sides of a switch are written in the one color that reads on the track and on the knob,
+   which slides under the side that is on. */
+const StyledOnSwitchText = styled(StyledSwitchTextWrapper)<
+  IReqoreCheckboxStyle & { $color?: TReqoreHexColor }
+>`
+  color: ${({ $color }) => $color};
 `;
 
-const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<IReqoreCheckboxStyle>`
-  color: ${({ theme, checked, parentHasGradient }) =>
-    !parentHasGradient &&
-    getReadableColorFrom(checked ? theme.originalMain : changeLightness(theme.main, 0.2))};
+const StyledOffSwitchText = styled(StyledSwitchTextWrapper)<
+  IReqoreCheckboxStyle & { $color?: TReqoreHexColor }
+>`
+  color: ${({ $color }) => $color};
 `;
 
 // The row also receives what a `ReqoreControlGroup` hands every child (`fill`, `stack`, …);
@@ -382,6 +412,69 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       ? unsetIntent || intent
       : uncheckedIntent || intent;
     const theme = useReqoreTheme('main', customTheme, _intent, undefined, inheritCustomTheme);
+    /* What the box or the switch is drawn on, and in: its state is visual information, so the box
+       (faded when not checked), the knob's icon and both of the switch's words stand out from it -
+       3:1 for an icon, 4.5:1 for a word (WCAG 1.4.11, 1.4.3). */
+    const surfaces = getThemeSurfaces(theme, useReqoreSurface());
+    const surfacesKey = surfaces.join();
+    // the knob paints nothing when all it shows is an icon or an image
+    const knobTransparent =
+      !!(image || checkedIcon) && !(onText || offText || onText === 0 || offText === 0);
+    const colors = useMemo(() => {
+      const text = getReadableTextOn(theme, surfaces, !checked);
+      const box = _intent
+        ? getReadableAccentColorOn(
+            getDrawnColor(theme.main, surfaces[0]),
+            surfaces,
+            READABLE_ICON_CONTRAST
+          )
+        : text;
+      // the track: a wash of the theme, or the switch's gradient when its effect draws one
+      const tracks = surfaces.flatMap((surface) =>
+        getEffectBackgrounds(
+          theme,
+          effect,
+          getDrawnColor(rgba(changeLightness(theme.main, 0.3), 0.1), surface),
+          surface
+        )
+      );
+      const knobs = getSwitchKnobFills(theme, checked, effect, knobTransparent).flatMap((fill) =>
+        tracks.map((track) => getDrawnColor(fill, track))
+      );
+      /* The word of the side that is on is drawn on the knob, which is sized to it; the other on the track. Unset,
+         the knob is faded to a fifth and what it shows is drawn over both. */
+      const trackText = getReadableColorOn(tracks);
+      const knobText = !knobs.length
+        ? trackText
+        : checked === undefined
+          ? getReadableColorOn([...tracks, ...knobs])
+          : getReadableColorOn(knobs);
+      // the track's word is drawn in its color, or each color of its gradient (made readable on the track)
+      const switchGradient = getPrimaryGradient(switchTextEffect?.gradient);
+      const trackInks = switchGradient
+        ? getGradientColorList(
+            theme,
+            getReadableTextGradient(theme, switchGradient, undefined, tracks).colors
+          )
+        : [trackText];
+
+      const knobIconOpacity = checked
+        ? 1
+        : getReadableAlpha(knobText, knobs.length ? knobs : tracks, 0.5, READABLE_ICON_CONTRAST);
+
+      return {
+        box,
+        boxOpacity: checked ? 1 : getReadableAlpha(box, surfaces, 0.5, READABLE_ICON_CONTRAST),
+        trackText,
+        knobText,
+        tracks,
+        /* what the word on the knob is read against: its color on the knob, a gradient it is drawn in on the knob
+           and the track it slides over */
+        knobSide: [...knobs, ...tracks],
+        offSideOpacity: Math.max(...trackInks.map((ink) => getReadableAlpha(ink, tracks, 0.3))),
+        knobIconOpacity,
+      };
+    }, [theme, checked, surfacesKey, _intent, knobTransparent, effect, switchTextEffect]);
 
     const width = useMemo(() => {
       const selectedWidth = checked ? onWidth : offWidth;
@@ -508,6 +601,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
         size,
         tooltip,
         disabled,
+        // the row is not the input, so it says it is disabled itself (to a contrast check too)
+        'aria-disabled': disabled ? true : undefined,
         checked,
         readOnly,
         className: `${className || ''} reqore-checkbox reqore-control`,
@@ -582,14 +677,15 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 theme={theme}
                 checked={checked}
                 hasMargin={offText || offText === 0}
-                parentHasGradient={!!effect?.gradient}
+                $color={checked === false ? colors.knobText : colors.trackText}
+                $backgrounds={checked === false ? colors.knobSide : colors.tracks}
                 effect={
                   {
                     uppercase: true,
                     textSize: getOneLessSize(size),
                     weight: 'bold',
                     ...switchTextEffect,
-                    opacity: checked || checked === undefined ? 0.3 : 1,
+                    opacity: checked || checked === undefined ? colors.offSideOpacity : 1,
                   } as IReqoreEffect
                 }
               >
@@ -610,15 +706,16 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 size={size}
                 theme={theme}
                 checked={checked}
-                parentHasGradient={!!effect?.gradient}
                 hasMargin={onText || onText === 0}
+                $color={checked ? colors.knobText : colors.trackText}
+                $backgrounds={checked ? colors.knobSide : colors.tracks}
                 effect={
                   {
                     uppercase: true,
                     textSize: getOneLessSize(size),
                     weight: 'thick',
                     ...switchTextEffect,
-                    opacity: checked ? 1 : 0.3,
+                    opacity: checked ? 1 : colors.offSideOpacity,
                   } as IReqoreEffect
                 }
               >
@@ -646,7 +743,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                   size={size}
                   image={image}
                   icon={checked ? checkedIcon : checked === undefined ? unsetIcon : uncheckedIcon}
-                  effect={{ grayscale: !checked, opacity: checked ? 1 : 0.5 }}
+                  color={image ? undefined : colors.knobText}
+                  effect={{ grayscale: !checked, opacity: colors.knobIconOpacity }}
                 />
               ) : null}
             </StyledSwitchToggle>
@@ -664,8 +762,8 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 : undefined
             }
             image={image}
-            effect={{ grayscale: image ? !checked : undefined, opacity: checked ? 1 : 0.5 }}
-            color={_intent ? theme.main : undefined}
+            effect={{ grayscale: image ? !checked : undefined, opacity: colors.boxOpacity }}
+            color={image ? undefined : colors.box}
           />
         )}
         {label && labelPosition === 'right' ? (

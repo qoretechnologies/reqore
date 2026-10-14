@@ -12,9 +12,17 @@ import { IReqoreTheme } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
+  getDrawnColor,
   getMainBackgroundColor,
-  getReadableColor,
+  getReadableAlpha,
+  getReadableFadedColor,
+  getReadableIconLook,
+  getReadableIntentColor,
+  getReadableTextOn,
+  getThemeSurface,
+  READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import { getOneLessSize, resolveAccentSize, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
@@ -33,7 +41,14 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, StyledEffect, StyledTextEffect, TReqoreEffectColor } from '../Effect';
+import {
+  getEffectBackgrounds,
+  IReqoreEffect,
+  StyledEffect,
+  StyledTextEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+} from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
 import { ReqoreSpan } from '../Span';
@@ -316,8 +331,12 @@ const StyledCalloutContent = styled(StyledTextEffect)<{
      copy larger than the heading above it reads as the heading being the
      afterthought. */
   $underLabel?: boolean;
+  /* What the callout is drawn in: the body is a shade softer than the label, as far as it
+     stays readable there. */
+  $background: TReqoreHexColor[];
 }>`
-  color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
+  color: ${({ theme, $background }) =>
+    getReadableFadedColor(getReadableTextOn(theme, $background), $background, 0.84)};
   font-size: ${({ size = 'normal', $underLabel }) =>
     TEXT_FROM_SIZE[size] * ($underLabel ? 1 : 1.2)}px;
   line-height: 1.25;
@@ -376,11 +395,40 @@ export const ReqoreCallout = memo(
       // Exactly one piece of text beside the icon — see `StyledCallout`.
       const loneText = !children && !!label !== !!description;
 
+      const surface = useReqoreSurface();
+      // What the callout is drawn in: its icon, its text and what it holds are read against it.
+      const background = useMemo(
+        () =>
+          transparent
+            ? getThemeSurface(theme, surface)
+            : getDrawnColor(
+                changeDarkness(getMainBackgroundColor(theme), 0.03),
+                getThemeSurface(theme, surface)
+              ),
+        [transparent, theme, surface]
+      );
+      // each color of the callout's gradient, when its effect draws one
+      const backgrounds = useMemo(
+        () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
+        [theme, effect, background, surface]
+      );
+      const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+      // The icon is in its own color, or the intent's, in a shade that stands out by 3:1.
       const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
-        if (iconColor) return iconColor;
-        if (intent) return theme.intents[intent] as TReqoreEffectColor;
-        return getReadableColor(theme, undefined, undefined, true) as TReqoreEffectColor;
-      }, [iconColor, intent, theme]);
+        if (iconColor) {
+          return (getReadableIconLook(theme, backgrounds, text, 1, iconColor).color ??
+            iconColor) as TReqoreEffectColor;
+        }
+        if (intent) {
+          return getReadableIntentColor(
+            theme,
+            intent,
+            READABLE_ICON_CONTRAST,
+            backgrounds
+          ) as TReqoreEffectColor;
+        }
+        return text as TReqoreEffectColor;
+      }, [iconColor, intent, theme, backgrounds, text]);
 
       return (
         <ReqoreTooltipComponent
@@ -397,6 +445,7 @@ export const ReqoreCallout = memo(
           fluid={fluid}
           fixed={fixed}
           disabled={disabled}
+          aria-disabled={disabled ? true : undefined}
           tooltip={tooltip}
           rounded={rounded}
           $transparent={transparent}
@@ -412,100 +461,108 @@ export const ReqoreCallout = memo(
           $loneText={loneText}
           className={`${className || ''} reqore-callout`}
         >
-          {hasIcon && (
-            <ReqoreIcon
-              {...iconProps}
-              icon={icon}
-              size={size}
-              color={resolvedIconColor}
-              className='reqore-callout-icon'
-            />
-          )}
-          {hasStructuredContent ? (
-            <StyledCalloutBody className='reqore-callout-body'>
-              {label && (
-                <StyledCalloutLabelRow className='reqore-callout-label-row'>
-                  <ReqoreSpan
-                    size={size}
-                    effect={{ weight: 'bold', ...labelEffect }}
-                    className='reqore-callout-label'
-                  >
-                    {label}
-                  </ReqoreSpan>
-                  {hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
-                </StyledCalloutLabelRow>
-              )}
-              {description && (
-                <ReqoreP
-                  as={getReqoreTextElement(description)}
-                  size={descriptionSize}
-                  effect={{ opacity: 0.78, ...descriptionEffect }}
-                  className='reqore-callout-description'
-                >
-                  {description}
-                </ReqoreP>
-              )}
-              {/* A label with children used to render the label alone and DROP
-                  the body — silently, which is the worst way for a component to
-                  disagree with its caller. The body goes under the label, in
-                  the same block the unstructured branch uses, in the callout's
-                  body typography rather than the description's.
-
-                  Both render when both are given: prose in the description and
-                  an affordance under it is a real shape, and picking a winner
-                  would be the same silent drop in a smaller box. */}
-              {children && (
-                <StyledCalloutContent
-                  // A div: children may be blocks (a button row, a list), which a span may not hold.
-                  as='div'
-                  theme={theme}
-                  size={label ? descriptionSize : size}
-                  $underLabel={!!label}
-                  effect={contentEffect || {}}
-                  className='reqore-callout-content'
-                >
-                  {children}
-                </StyledCalloutContent>
-              )}
-              {!label && hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
-            </StyledCalloutBody>
-          ) : (
-            <StyledCalloutContent
-              // A div: children may be blocks (a button row, a list), which a span may not hold.
-              as='div'
-              theme={theme}
-              size={size}
-              effect={contentEffect || {}}
-              className='reqore-callout-content'
-            >
-              {children}
-              {hasBadge && (
-                <ButtonBadge
-                  size={size}
-                  content={badge}
-                  margin='left'
-                />
-              )}
-            </StyledCalloutContent>
-          )}
-          {onClose && (
-            <ReqoreControlGroup className='reqore-callout-actions' gapSize='small'>
-              <ReqoreButton
-                {...closeButtonProps}
-                icon={closeButtonProps?.icon ?? 'CloseLine'}
-                tooltip={closeButtonProps?.tooltip ?? closeTooltip}
-                minimal={closeButtonProps?.minimal ?? true}
-                flat={closeButtonProps?.flat ?? true}
-                size={closeButtonProps?.size ?? size}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  closeButtonProps?.onClick?.(event);
-                  onClose();
-                }}
-                className={`reqore-callout-close ${closeButtonProps?.className ?? ''}`.trim()}
+          <ReqoreSurfaceProvider color={backgrounds}>
+            {hasIcon && (
+              <ReqoreIcon
+                {...iconProps}
+                icon={icon}
+                size={size}
+                color={resolvedIconColor}
+                className='reqore-callout-icon'
               />
-            </ReqoreControlGroup>
-          )}
+            )}
+            {hasStructuredContent ? (
+              <StyledCalloutBody className='reqore-callout-body'>
+                {label && (
+                  <StyledCalloutLabelRow className='reqore-callout-label-row'>
+                    <ReqoreSpan
+                      size={size}
+                      effect={{ weight: 'bold', ...labelEffect }}
+                      className='reqore-callout-label'
+                    >
+                      {label}
+                    </ReqoreSpan>
+                    {hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
+                  </StyledCalloutLabelRow>
+                )}
+                {description && (
+                  <ReqoreP
+                    as={getReqoreTextElement(description)}
+                    size={descriptionSize}
+                    effect={{
+                      ...descriptionEffect,
+                      // softer than the label, as far as it stays readable
+                      opacity: getReadableAlpha(text, backgrounds, descriptionEffect?.opacity ?? 0.78),
+                    }}
+                    className='reqore-callout-description'
+                  >
+                    {description}
+                  </ReqoreP>
+                )}
+                {/* A label with children used to render the label alone and DROP
+                    the body — silently, which is the worst way for a component to
+                    disagree with its caller. The body goes under the label, in
+                    the same block the unstructured branch uses, in the callout's
+                    body typography rather than the description's.
+
+                    Both render when both are given: prose in the description and
+                    an affordance under it is a real shape, and picking a winner
+                    would be the same silent drop in a smaller box. */}
+                {children && (
+                  <StyledCalloutContent
+                    // A div: children may be blocks (a button row, a list), which a span may not hold.
+                    as='div'
+                    theme={theme}
+                    size={label ? descriptionSize : size}
+                    $underLabel={!!label}
+                    $background={backgrounds}
+                    effect={contentEffect || {}}
+                    className='reqore-callout-content'
+                  >
+                    {children}
+                  </StyledCalloutContent>
+                )}
+                {!label && hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
+              </StyledCalloutBody>
+            ) : (
+              <StyledCalloutContent
+                // A div: children may be blocks (a button row, a list), which a span may not hold.
+                as='div'
+                theme={theme}
+                size={size}
+                $background={backgrounds}
+                effect={contentEffect || {}}
+                className='reqore-callout-content'
+              >
+                {children}
+                {hasBadge && (
+                  <ButtonBadge
+                    size={size}
+                    content={badge}
+                    margin='left'
+                  />
+                )}
+              </StyledCalloutContent>
+            )}
+            {onClose && (
+              <ReqoreControlGroup className='reqore-callout-actions' gapSize='small'>
+                <ReqoreButton
+                  {...closeButtonProps}
+                  icon={closeButtonProps?.icon ?? 'CloseLine'}
+                  tooltip={closeButtonProps?.tooltip ?? closeTooltip}
+                  minimal={closeButtonProps?.minimal ?? true}
+                  flat={closeButtonProps?.flat ?? true}
+                  size={closeButtonProps?.size ?? size}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    closeButtonProps?.onClick?.(event);
+                    onClose();
+                  }}
+                  className={`reqore-callout-close ${closeButtonProps?.className ?? ''}`.trim()}
+                />
+              </ReqoreControlGroup>
+            )}
+          </ReqoreSurfaceProvider>
         </ReqoreTooltipComponent>
       );
     }

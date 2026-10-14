@@ -25,12 +25,21 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
   getColorFromMaybeString,
+  getContrastRatio,
+  getDrawnColor,
   getOpaqueColor,
   getReadableAccentColor,
-  getReadableColor,
+  getReadableAccentColorOn,
   getReadableColorFrom,
+  getReadableColorOn,
+  getReadableIconLook,
+  getThemeSurface,
+  getThemeSurfaces,
   isAchromatic,
+  READABLE_TEXT_CONTRAST,
+  TReqoreSurface,
 } from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
 import styled, {
   listReqoreStyleProps,
   omitStyleProps,
@@ -52,6 +61,8 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import {
+  getEffectGradientBackgrounds,
+  getPrimaryGradient,
   IReqoreEffect,
   StyledEffect,
   StyledTextEffect,
@@ -84,9 +95,120 @@ export interface IReqoreTagAppearanceColors {
   border?: string;
   /** Behind the `labelKey` half of a key/value tag. */
   keyBackground: string;
+  /** The key's text and icon: the label's colour at a shade that reads on the key's background too. */
+  keyText: TReqoreHexColor;
+  /** What the label is drawn on, as drawn (the wash over the theme's surface), for its icons. */
+  drawnBackground: TReqoreHexColor;
+  /** What the key is drawn on, as drawn. */
+  drawnKeyBackground: TReqoreHexColor;
   /** Behind the remove button and actions on hover. */
   buttonHoverBackground: string;
 }
+
+/** The colours a solid tag is drawn in: what its label and its key are drawn on, as drawn, and their text. */
+export interface IReqoreTagSolidColors {
+  /** The tag's fill as drawn: one colour, or each colour of its gradient. */
+  backgrounds: TReqoreHexColor[];
+  /** The key beside the label, darker than the fill. The same as `backgrounds` with no `labelKey`. */
+  keyBackgrounds: TReqoreHexColor[];
+  /** What darkens the key: black, translucent. */
+  keyShade: string;
+  /** The label, which reads on the fill. */
+  text: TReqoreHexColor;
+  /** The key, which reads on its darker background. */
+  keyText: TReqoreHexColor;
+}
+
+/**
+ * What a solid tag is drawn on and in, at rest or hovered: its fill as drawn over the theme's surface (a minimal
+ * tag's wash, a translucent colour, each colour of a gradient), the key darkened over it, and a label and a key
+ * that read on them. A minimal tag with a colour keeps the colour in its label, in a shade that reads.
+ */
+export const getTagSolidColors = (
+  theme: IReqoreTheme,
+  color: TReqoreColor | undefined,
+  minimal: boolean | undefined,
+  labelKey: boolean,
+  effect: IReqoreEffect | undefined,
+  hovered: boolean = false,
+  surface?: TReqoreSurface
+): IReqoreTagSolidColors => {
+  // what the tag is drawn on: one color, or each color of a gradient (a button's, a panel's)
+  const unders = getThemeSurfaces(theme, surface);
+  const named = color && color !== 'transparent' ? (color as TReqoreHexColor) : undefined;
+  const gradient = getPrimaryGradient(effect?.gradient);
+  const paint = (hover: boolean): TReqoreHexColor[] =>
+    unders.flatMap((under) =>
+      /* A gradient is read as it is painted: a minimal one's translucent fill shows its ring and the tag's own
+         wash through it. */
+      gradient
+        ? getEffectGradientBackgrounds(
+            theme,
+            gradient.colors,
+            minimal,
+            minimal
+              ? named
+                ? rgba(named, 0.2)
+                : rgba(changeLightness('#000000', 0.05), 0.3)
+              : named || changeLightness(theme.main, 0.1),
+            under
+          )
+        : [
+            getDrawnColor(
+              minimal
+                ? named
+                  ? rgba(named, hover ? 0.5 : 0.2)
+                  : rgba(changeLightness('#000000', 0.05), hover ? 0.4 : 0.3)
+                : named || changeLightness(theme.main, hover ? 0.15 : 0.1),
+              under
+            ),
+          ]
+    );
+  const backgrounds = paint(hovered);
+  /* The key is drawn darker than the label, so it has a text colour of its own: black at 30% (10% minimal) over
+     the fill, or darker, as far as it takes for one text colour to read on all of it - over a light colour the key
+     lands in the mid-tones, where neither light nor dark text reads. The shade is the one the tag is painted with
+     at rest, hovered too. */
+  const shadeOver = (fill: TReqoreHexColor[], alpha: number) =>
+    fill.map((background) => getDrawnColor(rgba('#000000', alpha), background));
+  const readsOn = (fill: TReqoreHexColor[]) => {
+    const text = getReadableColorOn(fill);
+
+    return fill.every((background) => getContrastRatio(text, background) >= READABLE_TEXT_CONTRAST);
+  };
+  const resting = paint(false);
+  let keyAlpha = minimal ? 0.1 : 0.3;
+
+  while (labelKey && keyAlpha < 0.8 && !readsOn(shadeOver(resting, keyAlpha))) {
+    keyAlpha = Math.round((keyAlpha + 0.05) * 100) / 100;
+  }
+
+  const keyShade = rgba('#000000', keyAlpha);
+  const keyBackgrounds = labelKey ? shadeOver(backgrounds, keyAlpha) : backgrounds;
+
+  if (minimal && named && !isAchromatic(named) && !hovered && !gradient) {
+    const text = getReadableAccentColorOn(
+      saturate(1, tint(0.8, getOpaqueColor(named))) as TReqoreHexColor,
+      backgrounds
+    );
+
+    return {
+      backgrounds,
+      keyBackgrounds,
+      keyShade,
+      text,
+      keyText: getReadableAccentColorOn(text, keyBackgrounds),
+    };
+  }
+
+  return {
+    backgrounds,
+    keyBackgrounds,
+    keyShade,
+    text: getReadableColorOn(backgrounds),
+    keyText: getReadableColorOn(keyBackgrounds),
+  };
+};
 
 /** Share of the colour laid over the surface behind a soft tag. */
 export const TAG_SOFT_BACKGROUND_OPACITY = 0.2;
@@ -99,14 +221,16 @@ export const TAG_SOFT_BACKGROUND_OPACITY = 0.2;
  * is the tag's own colour pushed lighter (dark theme) or darker (light theme) until it
  * reaches a 4.5:1 contrast there — a green label stays green, only a shade that reads.
  * With no colour at all the tag is neutral: the surface's readable text colour plays
- * the part of the colour.
+ * the part of the colour. The surface is `drawnOn` when the tag knows what it is drawn on
+ * (`useReqoreSurface`), the theme's surface otherwise (`getThemeSurface`).
  */
 export const getTagAppearanceColors = (
   theme: IReqoreTheme,
   appearance: Exclude<TReqoreTagAppearance, 'solid'>,
-  color?: TReqoreColor
+  color?: TReqoreColor,
+  drawnOn?: TReqoreSurface
 ): IReqoreTagAppearanceColors => {
-  const surface = getOpaqueColor(theme.main);
+  const surface = getThemeSurface(theme, drawnOn);
   const base = getOpaqueColor(
     color && color !== 'transparent' ? color : getReadableColorFrom(surface)
   );
@@ -114,24 +238,34 @@ export const getTagAppearanceColors = (
   if (appearance === 'soft') {
     const background = mix(TAG_SOFT_BACKGROUND_OPACITY, base, surface) as TReqoreHexColor;
     const text = getReadableAccentColor(base, background);
+    const keyBackground = rgba(base, 0.15);
+    const drawnKeyBackground = getDrawnColor(keyBackground, background);
 
     return {
       text,
       background: rgba(base, TAG_SOFT_BACKGROUND_OPACITY),
       hoverBackground: rgba(base, TAG_SOFT_BACKGROUND_OPACITY + 0.1),
       border: rgba(text, 0.6),
-      keyBackground: rgba(base, 0.15),
+      keyBackground,
+      keyText: getReadableAccentColor(text, drawnKeyBackground),
+      drawnBackground: background,
+      drawnKeyBackground,
       buttonHoverBackground: rgba(base, 0.25),
     };
   }
 
   const text = getReadableAccentColor(base, surface);
+  const keyBackground = rgba(getReadableColorFrom(surface), 0.08);
+  const drawnKeyBackground = getDrawnColor(keyBackground, surface);
 
   return {
     text,
     background: 'transparent',
     hoverBackground: rgba(text, 0.1),
-    keyBackground: rgba(getReadableColorFrom(surface), 0.08),
+    keyBackground,
+    keyText: getReadableAccentColor(text, drawnKeyBackground),
+    drawnBackground: surface,
+    drawnKeyBackground,
     buttonHoverBackground: rgba(text, 0.15),
   };
 };
@@ -294,6 +428,8 @@ export interface IReqoreTagStyle extends IReqoreTagProps {
   $capped?: boolean;
   /** Set for a `soft` or `text` tag only: a solid tag keeps its original rules. */
   $appearance?: TReqoreTagAppearance;
+  /** What the tag is drawn on (`useReqoreSurface`): the theme's surface when not known. */
+  $surface?: TReqoreSurface;
   $appearanceColors?: IReqoreTagAppearanceColors;
 }
 
@@ -434,23 +570,35 @@ export const StyledTag = styled(StyledEffect).withConfig({
             asBadge ? BADGE_SIZE_TO_PX[size] : TAG_SIZE_TO_PX[size]}px;
         `}
 
-  /* How a MINIMAL tag colours its label.
+  /* How a solid tag colours its label: against what it is actually drawn on
+     (getTagSolidColors), never against the colour it is made from.
 
      Minimal paints the colour at 20% alpha, so what the label actually sits on
      is mostly the surface underneath — not the colour. For a CHROMATIC colour a
-     light tint of it reads on either theme. For an ACHROMATIC one there is no
-     tint to take: a 20% wash of grey over the surface IS the surface, so the
-     label is read against the surface, exactly as the no-colour case does.
+     tint of it, in a shade that reads there, keeps the colour in the label. For
+     an ACHROMATIC one there is no tint to take: a 20% wash of grey over the
+     surface IS the surface, so the label is read against that.
 
      It used to fall through to the readable colour for the colour at FULL
      strength. A near-white muted intent is light, so that returned BLACK, and
      the tag rendered black text on a 20% wash over a near-black page — reported
      as "black text on a dark grey background; it's very hard to read", and true
-     of every minimal tag with a grey intent. */
-  ${({ theme, color, labelKey, minimal, $appearanceColors }: IReqoreTagStyle) => {
+     of every minimal tag with a grey intent. The key beside the label is drawn
+     darker, so it has a text colour of its own. */
+  ${({ theme, color, labelKey, minimal, effect, $appearanceColors, $surface }: IReqoreTagStyle) => {
     if ($appearanceColors) {
       return undefined;
     }
+
+    const { text, keyText, keyShade } = getTagSolidColors(
+      theme,
+      color,
+      minimal,
+      !!labelKey,
+      effect,
+      false,
+      $surface
+    );
 
     return css`
       background-color: ${minimal
@@ -458,21 +606,16 @@ export const StyledTag = styled(StyledEffect).withConfig({
           ? rgba(color, 0.2)
           : rgba(changeLightness('#000000', 0.05), 0.3)
         : color || changeLightness(theme.main, 0.1)};
-      color: ${minimal && color && color !== 'transparent'
-        ? isAchromatic(color)
-          ? getReadableColorFrom(changeLightness(theme.main, 0.1))
-          : saturate(1, tint(0.8, color))
-        : color && color !== 'transparent'
-          ? getReadableColorFrom(color)
-          : getReadableColorFrom(changeLightness(theme.main, 0.1))};
+      color: ${text};
 
       ${StyledTagKeyWrapper} {
-        background-color: ${labelKey ? rgba('#000000', minimal ? 0.1 : 0.3) : undefined};
+        background-color: ${labelKey ? keyShade : undefined};
+        color: ${labelKey ? keyText : undefined};
       }
     `;
   }}
 
-  ${({ theme, color, interactive, minimal, effect, $appearanceColors }) =>
+  ${({ theme, color, interactive, minimal, effect, labelKey, $appearanceColors, $surface }) =>
     interactive && !$appearanceColors
       ? css`
           cursor: pointer;
@@ -489,11 +632,15 @@ export const StyledTag = styled(StyledEffect).withConfig({
                   ? rgba(color, 0.5)
                   : rgba(changeLightness('#000000', 0.05), 0.4)
                 : color || changeLightness(theme.main, 0.15)};
-              color: ${minimal
-                ? getReadableColor(theme, undefined, undefined, false, theme.originalMain)
-                : color
-                  ? getReadableColorFrom(color)
-                  : getReadableColor(theme, undefined, undefined)};
+              color: ${getTagSolidColors(theme, color, minimal, !!labelKey, effect, true, $surface)
+                .text};
+
+              ${StyledTagKeyWrapper} {
+                color: ${labelKey
+                  ? getTagSolidColors(theme, color, minimal, !!labelKey, effect, true, $surface)
+                      .keyText
+                  : undefined};
+              }
             `}
           }
         `
@@ -515,6 +662,7 @@ export const StyledTag = styled(StyledEffect).withConfig({
 
       ${StyledTagKeyWrapper} {
         background-color: ${labelKey ? $appearanceColors.keyBackground : undefined};
+        color: ${labelKey ? $appearanceColors.keyText : undefined};
       }
 
       ${interactive &&
@@ -844,6 +992,8 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       inheritCustomTheme
     );
 
+    const surface = useReqoreSurface();
+
     // If color or intent was specified, set the color
     const getCustomColor = useCallback(
       (itemIntent?: TReqoreIntent): TReqoreHexColor => {
@@ -897,9 +1047,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
     const appearanceColors = useMemo(
       () =>
         appearance === 'soft' || appearance === 'text'
-          ? getTagAppearanceColors(theme, appearance, appearanceColor)
+          ? getTagAppearanceColors(theme, appearance, appearanceColor, surface)
           : undefined,
-      [appearance, theme, appearanceColor]
+      [appearance, theme, appearanceColor, surface]
     );
 
     /* When effect.color IS the soft / text tag's colour, it has been turned into a
@@ -917,12 +1067,62 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
       [intent, interactive, effectColorIsTagColor, JSON.stringify(rest.effect)]
     );
 
+    /* The icons stand out from what they are drawn on, as the text does: the left one
+       sits in the key, the right one and the actions beside the label. */
+    const sides = useMemo(() => {
+      return appearanceColors
+        ? {
+            // the key's own wash is drawn only with a key: an icon alone sits on the tag
+            key: labelKey
+              ? { backgrounds: [appearanceColors.drawnKeyBackground], text: appearanceColors.keyText }
+              : { backgrounds: [appearanceColors.drawnBackground], text: appearanceColors.text },
+            label: { backgrounds: [appearanceColors.drawnBackground], text: appearanceColors.text },
+          }
+        : (() => {
+            const resting = getTagSolidColors(
+              theme,
+              tagColor,
+              minimal,
+              !!labelKey,
+              effect,
+              false,
+              surface
+            );
+            const hovered = interactive
+              ? getTagSolidColors(theme, tagColor, minimal, !!labelKey, effect, true, surface)
+              : resting;
+
+            return {
+              key: {
+                backgrounds: [...resting.keyBackgrounds, ...hovered.keyBackgrounds],
+                text: resting.keyText,
+              },
+              label: {
+                backgrounds: [...resting.backgrounds, ...hovered.backgrounds],
+                text: resting.text,
+              },
+            };
+          })();
+    }, [appearanceColors, theme, tagColor, minimal, labelKey, effect, interactive, surface]);
+
+    const iconLooks = useMemo(() => {
+      const look = (side: { backgrounds: TReqoreHexColor[]; text: TReqoreHexColor }, own?: TReqoreEffectColor) =>
+        getReadableIconLook(theme, side.backgrounds, side.text, CONTROL_ICON_OPACITY, own);
+
+      return {
+        left: look(sides.key, leftIconColor || iconColor),
+        right: look(sides.label, rightIconColor || iconColor),
+        action: look(sides.label),
+      };
+    }, [sides, theme, leftIconColor, rightIconColor, iconColor]);
+
     return (
       <ReqoreTooltipComponent
         {...rest}
         Component={StyledTag}
         tooltip={tooltip}
         theme={theme}
+        $surface={surface}
         effect={effect}
         width={width}
         $maxWidth={maxWidth}
@@ -948,6 +1148,9 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
            control that is itself the tab stop (a chip in a text editor) is
            reached with that control's own keys, not with Tab. */
         tabIndex={interactive ? (rest.tabIndex ?? 0) : undefined}
+        /* Disabled is said, not only drawn dimmed: to assistive technology, and to a
+           contrast check, which leaves what is disabled alone (WCAG 1.4.3). */
+        aria-disabled={rest.disabled ? true : undefined}
         $wrap={wrap}
         $hasWidth={!!width}
       >
@@ -967,10 +1170,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             {leftIcon || leftIconProps?.image ? (
               <ReqoreIcon
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
-                color={leftIconColor || iconColor}
+                color={iconLooks.left.color ?? (leftIconColor || iconColor)}
                 compact={compact}
                 effect={{
-                  opacity: CONTROL_ICON_OPACITY,
+                  opacity: iconLooks.left.opacity,
                 }}
                 {...leftIconProps}
                 animation={loading ? 'spin' : leftIconProps?.animation}
@@ -985,6 +1188,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 $paddingSize={paddingSize}
                 labelAlign={labelKeyAlign}
                 compact={compact}
+                $backgrounds={sides.key.backgrounds}
                 effect={
                   {
                     weight: 'bold',
@@ -1017,6 +1221,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 $capped={capped}
                 labelAlign={labelAlign || (labelKey ? 'left' : 'center')}
                 compact={compact}
+                $backgrounds={sides.label.backgrounds}
                 effect={
                   {
                     weight: 'bold',
@@ -1045,10 +1250,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 icon={rightIcon}
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
                 margin={label || (!icon && !labelKey) ? 'right' : 'both'}
-                color={rightIconColor || iconColor}
+                color={iconLooks.right.color ?? (rightIconColor || iconColor)}
                 compact={compact}
                 effect={{
-                  opacity: CONTROL_ICON_OPACITY,
+                  opacity: iconLooks.right.opacity,
                 }}
                 {...rightIconProps}
               />
@@ -1090,7 +1295,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                       icon={icon}
                       size={`${TAG_ICON_FROM_SIZE[size]}px`}
                       effect={{
-                        opacity: CONTROL_ICON_OPACITY,
+                        opacity: iconLooks.action.opacity,
                       }}
                     />
                   </ReqorePopover>

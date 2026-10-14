@@ -16,10 +16,17 @@ import ReqoreThemeProvider from '../../containers/ThemeProvider';
 import {
   changeDarkness,
   changeLightness,
+  getColorFromMaybeString,
+  getDrawnColor,
   getNotificationIntent,
-  getReadableColor,
+  getReadableAccentColorOn,
+  getReadableAlpha,
   getReadableColorFrom,
+  getReadableTextOn,
+  getThemeSurfaces,
+  READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import { getSwipeStep } from '../../helpers/gestures';
 import { useHoverGate } from '../../helpers/hoveringPointer';
 import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
@@ -97,6 +104,7 @@ export interface IReqoreNotificationProps
   content?: string | React.ReactNode;
   /** Replaces the intent's icon. */
   icon?: IReqoreIconName;
+  /** The icon's colour: drawn in the shade of it that stands out from its tile by 3:1. */
   iconColor?: TReqoreEffectColor;
   /**
    * Draws the icon on a round, intent-tinted tile. Default `true`; `compact`
@@ -413,10 +421,10 @@ const StyledNotificationBody = styled.div<{ $compact?: boolean }>`
   overflow-wrap: anywhere;
 `;
 
-const StyledNotificationText = styled.div<{ $size: TSizes; $dim: boolean }>`
+const StyledNotificationText = styled.div<{ $size: TSizes; $opacity: number }>`
   font-size: ${({ $size }) => TEXT_FROM_SIZE[getOneLessSize($size)]}px;
   line-height: 1.4;
-  opacity: ${({ $dim }) => ($dim ? 0.78 : 1)};
+  opacity: ${({ $opacity }) => $opacity};
 `;
 
 const StyledNotificationTrailing = styled.div`
@@ -680,9 +688,16 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     });
 
     /* ---- colours ---- */
+    const tinted = iconHasBackground ?? !compact;
+    const under = useReqoreSurface();
     const palette = useMemo(() => {
       const surface = changeLightness(theme.main, 0.05);
-      const text = getReadableColor(theme, undefined, undefined, true);
+      /* The notification as it is drawn - its surface, frosted unless opaque, over what is under it
+         (nothing when minimal) - is what its text and its icon are read against. */
+      const drawn = getThemeSurfaces(theme, under).map((page) =>
+        minimal ? page : getDrawnColor(rgba(surface, opaque ? 1 : 0.74), page)
+      );
+      const text = getReadableTextOn(theme, drawn);
       // `muted` is the readable colour at 30% alpha — as a bloom or a line it
       // would paint white — so it takes the neutral grey a notification
       // without an intent gets.
@@ -693,11 +708,34 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
       // The intents are mid-dark colours; on a dark surface an icon painted in
       // one, on a tile tinted with the same one, loses its edge. Lift it there,
       // deepen it on a light surface.
-      const glyph =
-        getLuminance(surface) < 0.4 ? changeLightness(accent, 0.18) : changeDarkness(accent, 0.1);
+      /* ...and then as far as it needs to stand out by 3:1 from its tile, over the surface and over the
+         bloom behind the tile (WCAG 1.4.11): lifted by a fixed step, it did not always. */
+      const tile = (below: TReqoreHexColor) =>
+        tinted ? getDrawnColor(rgba(accent, 0.2), below) : below;
+      const bloomed =
+        resolvedIntent && !minimal
+          ? drawn.map((each) => getDrawnColor(rgba(accent, 0.55), each))
+          : drawn;
+      const tiles = [...drawn.map(tile), ...bloomed.map(tile)];
+      const glyph = getReadableAccentColorOn(
+        getLuminance(surface) < 0.4 ? changeLightness(accent, 0.18) : changeDarkness(accent, 0.1),
+        tiles,
+        READABLE_ICON_CONTRAST
+      );
+      // an icon colour of the caller's own, in the shade of it that stands out from the tile as well
+      const own = iconColor ? getColorFromMaybeString(theme, iconColor) : undefined;
 
-      return { surface, text, accent, glyph, onAccent: getReadableColorFrom(accent, false) };
-    }, [theme, resolvedIntent]);
+      return {
+        surface,
+        drawn,
+        text,
+        accent,
+        glyph: own ? getReadableAccentColorOn(own, tiles, READABLE_ICON_CONTRAST) : glyph,
+        // the content under a title is a shade softer, as far as it stays readable
+        contentOpacity: getReadableAlpha(text, drawn, 0.78),
+        onAccent: getReadableColorFrom(accent, false),
+      };
+    }, [theme, resolvedIntent, under, minimal, opaque, tinted, iconColor]);
 
     const handleClose = useCallback(
       (event?: React.MouseEvent) => {
@@ -708,17 +746,22 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
     );
 
     const hasIcon = !!(icon || resolvedIntent);
-    const tinted = iconHasBackground ?? !compact;
     const controlSize = getOneLessSize(size);
     const progressVisible = !!duration && (showProgress ?? !compact);
     const iconNode =
       resolvedIntent === 'pending' && !icon ? (
-        <ReqoreSpinner size={compact ? controlSize : size} type={5} intent='pending' />
+        // in the glyph's colour: the shade of the intent that stands out from the tile
+        <ReqoreSpinner
+          size={compact ? controlSize : size}
+          type={5}
+          intent='pending'
+          iconColor={palette.glyph}
+        />
       ) : (
         <ReqoreIcon
           icon={icon || INTENT_ICON[resolvedIntent] || typeToIcon[resolvedIntent]}
           size={compact ? controlSize : size}
-          color={iconColor ?? palette.glyph}
+          color={palette.glyph}
         />
       );
     const actionButtons =
@@ -805,61 +848,72 @@ const ReqoreNotification = forwardRef<HTMLDivElement, IReqoreNotificationProps>(
                 {iconNode}
               </StyledNotificationIconTile>
             ) : null}
-            <StyledNotificationBody $compact={compact}>
-              {title ? (
-                compact ? (
-                  <ReqoreSpan
+            <ReqoreSurfaceProvider color={palette.drawn}>
+              <StyledNotificationBody $compact={compact}>
+                {title ? (
+                  compact ? (
+                    <ReqoreSpan
+                      size={controlSize}
+                      effect={{ weight: 'bold', color: palette.text }}
+                      className='reqore-notification-title'
+                    >
+                      {title}
+                    </ReqoreSpan>
+                  ) : (
+                    <ReqoreP
+                      size={size}
+                      effect={{ weight: 'bold', color: palette.text }}
+                      className='reqore-notification-title'
+                    >
+                      {title}
+                    </ReqoreP>
+                  )
+                ) : null}
+                {content ? (
+                  <StyledNotificationText
+                    $size={size}
+                    /* text under a title is a shade softer; content of the caller's own (a tag, a
+                       link) keeps its colours - faded as a whole it was faded off what it is drawn on */
+                    $opacity={
+                      title && (typeof content === 'string' || typeof content === 'number')
+                        ? palette.contentOpacity
+                        : 1
+                    }
+                    className='reqore-notification-content'
+                  >
+                    {content}
+                  </StyledNotificationText>
+                ) : null}
+                {actionButtons ? (
+                  <ReqoreControlGroup
                     size={controlSize}
-                    effect={{ weight: 'bold', color: palette.text }}
-                    className='reqore-notification-title'
+                    gapSize='small'
+                    wrap
+                    style={{ marginTop: PADDING_FROM_SIZE[controlSize] }}
+                    className='reqore-notification-actions'
                   >
-                    {title}
-                  </ReqoreSpan>
-                ) : (
-                  <ReqoreP
-                    size={size}
-                    effect={{ weight: 'bold', color: palette.text }}
-                    className='reqore-notification-title'
-                  >
-                    {title}
-                  </ReqoreP>
-                )
-              ) : null}
-              {content ? (
-                <StyledNotificationText
-                  $size={size}
-                  $dim={!!title}
-                  className='reqore-notification-content'
-                >
-                  {content}
-                </StyledNotificationText>
-              ) : null}
-              {actionButtons ? (
-                <ReqoreControlGroup
-                  size={controlSize}
-                  gapSize='small'
-                  wrap
-                  style={{ marginTop: PADDING_FROM_SIZE[controlSize] }}
-                  className='reqore-notification-actions'
-                >
-                  {actionButtons}
-                </ReqoreControlGroup>
-              ) : null}
-            </StyledNotificationBody>
+                    {actionButtons}
+                  </ReqoreControlGroup>
+                ) : null}
+              </StyledNotificationBody>
+            </ReqoreSurfaceProvider>
             {onClose ? (
-              <StyledNotificationTrailing>
-                <ReqoreButton
-                  icon='CloseLine'
-                  size={controlSize}
-                  minimal
-                  flat
-                  compact
-                  circle={compact}
-                  className='reqore-notification-close'
-                  aria-label={closeLabel}
-                  onClick={handleClose}
-                />
-              </StyledNotificationTrailing>
+              // drawn on the notification, as its body is
+              <ReqoreSurfaceProvider color={palette.drawn}>
+                <StyledNotificationTrailing>
+                  <ReqoreButton
+                    icon='CloseLine'
+                    size={controlSize}
+                    minimal
+                    flat
+                    compact
+                    circle={compact}
+                    className='reqore-notification-close'
+                    aria-label={closeLabel}
+                    onClick={handleClose}
+                  />
+                </StyledNotificationTrailing>
+              </ReqoreSurfaceProvider>
             ) : null}
             {progressVisible ? (
               <StyledNotificationProgress

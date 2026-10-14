@@ -34,9 +34,18 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
+  getColorFromMaybeString,
+  fadeColor,
+  getDrawnColor,
   getMainBackgroundColor,
+  getReadableAlpha,
   getReadableColor,
+  getReadableIconLook,
+  getReadableIntentColor,
+  getReadableTextOn,
+  getThemeSurface,
 } from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import styled, {
   listReqoreStyleProps,
   omitStyleProps,
@@ -76,6 +85,7 @@ import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import {
+  getEffectBackgrounds,
   getPrimaryGradient,
   IReqoreEffect,
   patchPrimaryGradient,
@@ -528,6 +538,9 @@ export const StyledPanelTitleHeaderContent = styled.div<{
   // visually centres the icon against the text row it shares a grid row
   // with — no font-metric guesswork.
   display: ${({ $hasOuterIcon }) => ($hasOuterIcon ? 'grid' : 'flex')};
+  /* Rendered as a link (labelProps.as), the title keeps the panel's text color: the browser's link blue is
+     1.1:1 on the dark theme. */
+  color: inherit;
   ${({ $hasOuterIcon, size, $iconVerticalAlign = 'center', $hasDescription }) =>
     $hasOuterIcon
       ? css`
@@ -756,7 +769,7 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
   ),
 })<IStyledPanel>`
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
+    fadeColor(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)};
   border-radius: ${({ rounded, radiusSize }) =>
     rounded ? resolveRadius('normal', radiusSize) : 0}px;
   border: ${({ theme, flat, intent, accentPosition }) =>
@@ -883,11 +896,8 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
             background-color: ${
               opacity === 0 && flat
                 ? undefined
-                : rgba(
-                    darken(
-                      0.025,
-                      rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
-                    ),
+                : fadeColor(
+                    darken(0.025, changeDarkness(getMainBackgroundColor(theme), 0.03)),
                     opacity
                   )
             };
@@ -904,11 +914,8 @@ export const StyledPanel: TPanelStyle = styled(StyledEffect).withConfig({
                 ${StyledCollectionItemContent}:after {
                   background: linear-gradient(
                     to top,
-                    ${rgba(
-                      darken(
-                        0.025,
-                        rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity)
-                      ),
+                    ${fadeColor(
+                      darken(0.025, changeDarkness(getMainBackgroundColor(theme), 0.03)),
                       opacity
                     )}
                       0%,
@@ -988,7 +995,7 @@ export const StyledPanelTitle = styled.div.withConfig({
     `}
 
   background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    fadeColor(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   justify-content: space-between;
 
   padding: ${({ noHorizontalPadding, size, padded, opacity, flat, intent }: IStyledPanel) =>
@@ -999,7 +1006,7 @@ export const StyledPanelTitle = styled.div.withConfig({
   align-items: center;
   border-bottom: ${({ theme, isCollapsed, flat, opacity = 1 }) =>
     !isCollapsed && !flat && opacity
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
+      ? `1px solid ${fadeColor(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
       : null};
   transition: background-color 0.2s ease-out;
   overflow: hidden;
@@ -1020,7 +1027,7 @@ export const StyledPanelTitle = styled.div.withConfig({
         }
 
         background-color: ${({ theme, opacity = 1 }: IStyledPanel) =>
-          rgba(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
+          fadeColor(changeLightness(getMainBackgroundColor(theme), 0.05), opacity)};
       }
     `}
 `;
@@ -1099,7 +1106,7 @@ export const StyledPanelTopBar = styled(StyledPanelTitle)`
           )}px`
       : undefined};
   background: ${({ theme, opacity = 1 }: IStyledPanel) =>
-    rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
+    fadeColor(changeLightness(getMainBackgroundColor(theme), 0.03), opacity)};
   // When the header is sticky AND the panel is minimal / transparent (opacity === 0), the
   // header has no surface of its own — scrolling content slides straight under it and the
   // label / actions become illegible. Apply a backdrop blur so the underlying content stays
@@ -1130,7 +1137,7 @@ export const StyledPanelBottomActions = styled(StyledPanelTitle)`
   border-bottom: 0;
   border-top: ${({ theme, flat, opacity = 1 }) =>
     !flat
-      ? `1px solid ${rgba(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
+      ? `1px solid ${fadeColor(changeLightness(getMainBackgroundColor(theme), 0.08), opacity)}`
       : null};
 `;
 
@@ -1995,6 +2002,49 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     const opacity = rest.transparent ? 0 : rest.opacity;
     const noHorizontalPadding = opacity === 0 && flat && !intent && !rest.raised;
 
+    /* What the panel holds is drawn on the panel - its content on the panel's background, its
+       title bar and bottom actions on the bar's - and is told so, to pick its text and icons
+       against that rather than the page. */
+    const surface = useReqoreSurface();
+    const contentSurface = useMemo(
+      () =>
+        getDrawnColor(
+          fadeColor(changeDarkness(getMainBackgroundColor(theme), 0.03), opacity ?? 1),
+          getThemeSurface(theme, surface)
+        ),
+      [theme, opacity, surface]
+    );
+    // each color of the content's gradient, when its effect draws one
+    const contentSurfaces = useMemo(
+      () =>
+        getEffectBackgrounds(
+          theme,
+          transformedContentEffect,
+          contentSurface,
+          getThemeSurface(theme, surface)
+        ),
+      [theme, transformedContentEffect, contentSurface, surface]
+    );
+    const barSurface = useMemo(
+      () =>
+        contentSurfaces.map((under) =>
+          getDrawnColor(
+            fadeColor(
+              changeLightness(getMainBackgroundColor(theme), 0.03),
+              minimal ? 0 : (opacity ?? 1)
+            ),
+            under
+          )
+        ),
+      [theme, minimal, opacity, contentSurfaces]
+    );
+    // The bar's description and icon fade only as far as they stay readable there.
+    const barText = useMemo(() => getReadableTextOn(theme, barSurface), [theme, barSurface]);
+    const titleIconLook = useMemo(
+      () => getReadableIconLook(theme, barSurface, barText, CONTROL_ICON_OPACITY, iconColor),
+      [theme, barSurface, barText, iconColor]
+    );
+
     // The media frame's outer corners follow the panel's INNER curve: its radius, less the 1px
     // border when it draws one — the same inset the sticky header and the accent strip take.
     const mediaRadius = rounded
@@ -2126,7 +2176,19 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       ref: descriptionRef,
       className: 'reqore-panel-title-description',
       size: panelSize,
-      effect: { opacity: 0.7, ...descriptionEffect },
+      effect: {
+        ...descriptionEffect,
+        // dimmer than the title, as far as it stays readable on the bar
+        opacity: getReadableAlpha(
+          descriptionEffect.color
+            ? getColorFromMaybeString(theme, descriptionEffect.color)
+            : descriptionIntent
+              ? getReadableIntentColor(theme, descriptionIntent, undefined, barSurface)
+              : barText,
+          barSurface,
+          descriptionEffect.opacity ?? 0.7
+        ),
+      },
       intent: descriptionIntent,
       onClick: handleDescriptionClick,
       ...(descriptionIsInteractive
@@ -2289,6 +2351,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
           opacity={opacity}
           fluid={fluid}
           disabled={disabled}
+          aria-disabled={disabled ? true : undefined}
           Component={StyledPanel}
           ref={(node: any) => {
             handleRef(node);
@@ -2324,337 +2387,339 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               document.body
             )}
           {hasTitleBar && (
-            <StyledPanelTopBar
-              flat={flat}
-              isCollapsed={_isCollapsed}
-              collapsible={collapsible}
-              className='reqore-panel-title'
-              onClick={handleCollapseClick}
-              theme={theme}
-              minimal={minimal || opacity === 0}
-              size={contentSize || panelSize}
-              opacity={minimal ? 0 : (opacity ?? 1)}
-              noHorizontalPadding={noHorizontalPadding}
-              responsive={responsiveTitle}
-              $descriptionBelow={descriptionBelow}
-              $descriptionMaxLines={descriptionIsClamped ? descriptionClamp : 0}
-              $descriptionFontPx={descriptionFontPx}
-              // Stamped for the same reason `EntityRow` stamps it: a narrow container is a fact
-              // about the box, and a test or a story asserting the narrow treatment should read
-              // it rather than infer it from pixels.
-              data-narrow={isNarrow ? 'true' : 'false'}
-              ref={measureRef}
-              padded={padded}
-              wrapperPadding={wrapperPadding}
-              intent={intent}
-              rounded={rounded}
-              radiusSize={rest.radiusSize}
-              stickyHeader={rest.stickyHeader}
-              stickyHeaderOffset={rest.stickyHeaderOffset}
-              stickyHeaderInset={stickyInset}
-              isStuck={isHeaderStuck}
-              $mediaAbove={hasMedia && mediaPosition === 'top' && !_isCollapsed}
-            >
-              {hasTitleHeader && (
-                <StyledPanelTitleHeader className='reqore-panel-title-header'>
-                  {breadcrumbs ? (
-                    <ReqoreBreadcrumbs
-                      {...breadcrumbs}
-                      padded={false}
-                      margin='none'
-                      flat
-                      responsive
-                    />
-                  ) : icon || iconImage || label || badge ? (
-                    (() => {
-                      const hasPanelIcon = !!icon || !!iconImage || loading;
-                      // The icon takes the label's place, so there has to BE an icon. Without one
-                      // the label is the only thing identifying the panel and it stays put — a
-                      // header with neither is not a compact header, it is an empty one. The label
-                      // is not lost either way: it is already this icon's tooltip.
-                      const hideTitleText = hideTitleForIcon && hasPanelIcon;
-
-                      // Layout decision:
-                      // - iconWithLabel=true → render the icon INSIDE the
-                      //   label-and-badge row (no outer icon column). The
-                      //   description sits flush-left under the icon+label.
-                      // - When there is NO description, fall back to the
-                      //   inline layout regardless of iconVerticalAlign — the
-                      //   outer grid only earns its keep when there is a
-                      //   description row to anchor against, and the inline
-                      //   layout aligns icon-to-text glyphs more naturally
-                      //   via the heading's own line-height.
-                      // - Otherwise → outer two-column grid where the icon
-                      //   sits in a reserved column. iconVerticalAlign places
-                      //   the icon in row 1 (label), row 2 (description), or
-                      //   spans both rows (center). The description always
-                      //   indents past the icon column.
-                      const inlineWithLabel =
-                        hasPanelIcon && (iconWithLabel || !description || hideTitleText);
-                      const useOuterGrid = hasPanelIcon && !inlineWithLabel;
-
-                      // Outer grid → grid column-gap handles icon→label
-                      // spacing, so the icon itself takes no margin.
-                      // Inline → keep 'margin=right' so ReqoreIcon adds its
-                      // standard side-spacer between icon and label.
-                      const iconMargin: 'right' | undefined = useOuterGrid ? undefined : 'right';
-
-                      const panelIcon = hasPanelIcon ? (
-                        <ReqoreIcon
-                          size={`${
-                            ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
-                          }px`}
-                          image={loading ? undefined : iconImage}
-                          margin={iconMargin}
-                          color={iconColor}
-                          tooltip={iconTooltip}
-                          effect={{
-                            opacity: CONTROL_ICON_OPACITY,
-                          }}
-                          {...iconProps}
-                          animation={loading ? 'spin' : iconProps?.animation}
-                          icon={
-                            loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
-                          }
-                          className={`reqore-panel-title-icon ${iconProps?.className || ''}`.trim()}
-                        />
-                      ) : null;
-
-                      const labelRow = (
-                        <StyledPanelTitleHeaderLabelAndBadge className='reqore-panel-title-label-row'>
-                          {inlineWithLabel && panelIcon}
-                          {hideTitleText ? null : typeof label === 'string' ? (
-                            // The measured box is this wrapper, not the heading: as a
-                            // `min-width: 0` flex child it reports the width the row actually
-                            // left for the title, where the heading would report what the text
-                            // wants. `overflow: hidden` is what makes it shrinkable at all.
-                            // `display: flex` keeps the wrapper from opening a line box around
-                            // the inline-flex heading: a block wrapper adds the row's leading on
-                            // top of the heading's own box, which made a `tiny` panel 3px taller
-                            // than it was before this wrapper existed.
-                            <StyledPanelTitleLabelBox
-                              ref={labelFitRef}
-                              className='reqore-panel-title-label-box'
-                              $clampLines={clampLines}
-                            >
-                            <LabelEditor
-                              size={labelSize || panelSize}
-                              customTheme={theme}
-                              effect={{
-                                // `noWrap` pins the heading to one line; a clamped title is
-                                // allowed to wrap, and the clamp brings its own ellipsis.
-                                noWrap: clampLines === 1,
-                                ...labelEffect,
-                              }}
-                              style={{
-                                // A clamped title takes its display from the box above, which
-                                // sets `-webkit-box`. Naming a display here would beat that
-                                // rule and quietly turn the clamp off.
-                                ...(clampLines > 1
-                                  ? {}
-                                  : { display: 'inline-flex', alignItems: 'center' }),
-                                minWidth: 0,
-                                // Capped to the measured wrapper so the heading's own
-                                // `text-overflow: ellipsis` (from `noWrap`) has a box to overflow.
-                                // An `inline-flex` heading otherwise sizes to its text, and the
-                                // wrapper clips it mid-word with no ellipsis at all.
-                                maxWidth: '100%',
-                                // Inline, not through `effect.textSize`: `StyledHeader` sets its
-                                // own `font-size` from the heading level in a rule that lands
-                                // after the effect's, so the effect could never win. An inline
-                                // style beats both. A caller pinning `labelEffect.textSize`
-                                // disables the fit, so this never fights them.
-                                ...(fitLabel !== false && !labelEffect?.textSize
-                                  ? { fontSize: `${labelFitPx}px` }
-                                  : {}),
-                              }}
-                              label={label}
-                              onSubmit={onLabelEdit}
-                              tooltip={showLabelTooltip ? customLabelTooltip || label : undefined}
-                            />
-                            </StyledPanelTitleLabelBox>
-                          ) : (
-                            label
-                          )}
-                          {badge || badge === 0 ? (
-                            <ButtonBadge
-                              size={getOneHigherSize(panelSize)}
-                              content={badge}
-                              wrapGroup={isSmall}
-                              margin={label ? 'left' : 'none'}
-                            />
-                          ) : null}
-                        </StyledPanelTitleHeaderLabelAndBadge>
-                      );
-
-                      // Description size is driven by the panel size only —
-                      // explicitly NOT by `labelSize`. `NUMBER_TO_SIZE` maps
-                      // 1..6 → micro..huge, which means bumping `labelSize`
-                      // from 4 to 2 to grow the heading would inversely
-                      // shrink the description to `tiny`. That's the wrong
-                      // pairing: a bigger label should not make supporting
-                      // text smaller. Consumers that want to size the
-                      // description explicitly pass `descriptionEffect.textSize`.
-                      const descriptionRow = description && !hideTitleText && !descriptionBelow ? (
-                        <ReqoreSpan {...descriptionProps}>{description}</ReqoreSpan>
-                      ) : null;
-
-                      return (
-                        <StyledPanelTitleHeaderContent
-                          size={panelSize}
-                          {...labelProps}
-                          hasLabel={!!label && !hideTitleText}
-                          hasIcon={useOuterGrid}
-                          iconSize={
-                            ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
-                          }
-                          $hasOuterIcon={useOuterGrid}
-                          $iconVerticalAlign={iconVerticalAlign}
-                          $hasDescription={!!description && !hideTitleText}
-                        >
-                          {useOuterGrid ? (
-                            <>
-                              {panelIcon}
-                              {labelRow}
-                              {descriptionRow}
-                            </>
-                          ) : (
-                            <StyledPanelTitleHeaderLabelAndDescription>
-                              {labelRow}
-                              {descriptionRow}
-                            </StyledPanelTitleHeaderLabelAndDescription>
-                          )}
-                        </StyledPanelTitleHeaderContent>
-                      );
-                    })()
-                  ) : null}
-                  {breadcrumbs && (badge || badge === 0) ? (
-                    <ButtonBadge
-                      size={getOneHigherSize(panelSize)}
-                      content={badge}
-                      wrapGroup={isSmall}
-                      margin={label ? 'left' : 'none'}
-                    />
-                  ) : null}
-                  <ReqorePanelNonResponsiveActions
-                    // The narrow bar keeps its controls in the trailing group, so this row —
-                    // which existed only for the stacked layout — never shows.
-                    show={false}
-                    isSmall={false}
-                    showControlButtons
-                    size={panelSize}
-                    hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
-                    customTheme={theme}
-                    isCollapsed={_isCollapsed}
-                    onCollapseClick={collapsible ? handleCollapseClick : undefined}
-                    onCloseClick={onClose}
-                    closeButtonProps={closeButtonProps}
-                    collapseButtonProps={collapseButtonProps}
-                    collapseTooltip={collapseTooltip}
-                    expandTooltip={expandTooltip}
-                    closeTooltip={closeTooltip}
-                    fluid={false}
-                    style={{ marginLeft: 'auto' }}
-                  />
-                </StyledPanelTitleHeader>
-              )}
-              {hasResponsiveActions(nonFloatingActions) && (
-                <ReqoreControlGroup
-                  responsive={responsiveActions}
-                  // Not fluid by default. `fluid` emits `width: 100%`, so the group's flex basis
-                  // becomes the whole bar and the title — the only shrinkable thing on the other
-                  // side — collapses to nothing: measured at 0px of title on a 400px panel, and
-                  // 142px of a 518px bar where the buttons needed 90.
-                  //
-                  // A caller whose actions include something with no useful width of its own —
-                  // Collection puts a search input in here — opts back in through
-                  // `responsiveActionsWrapperProps`, because `fluid` is also what ControlGroup
-                  // propagates to its children, and that input has nothing to fill without it.
-                  fluid={false}
-                  horizontalAlign='flex-end'
-                  customTheme={theme}
-                  size={panelSize}
-                  {...responsiveActionsWrapperProps}
-                  // The cap is the whole fix. Half the bar guarantees the title the other half,
-                  // and the moment the buttons need more than their share the group overflows —
-                  // which is what `responsive` collapse watches (`scrollWidth > clientWidth`), so
-                  // the fold into the `…` menu still fires. Floored at 40px because shrinking to
-                  // nothing clips the buttons rather than folding them, and ControlGroup ignores
-                  // its own overflow below that width, which would strand them clipped.
-                  style={{
-                    // Pushed to the trailing edge. A `fluid` group used to span the bar and its
-                    // own `horizontalAlign` put the buttons on the right; a content-sized one is
-                    // only as wide as its buttons, so with no title header beside it — Tree has
-                    // no label — it would sit at the LEFT of an otherwise empty bar. `auto`
-                    // margin restores the edge without giving the group any width back.
-                    marginLeft: 'auto',
-                    // Content basis that may still shrink. `fluid={false}` alone compiles to
-                    // `flex: 0 0 auto`, which pins the group at its content width so it can never
-                    // overflow — and `responsive` collapse watches `scrollWidth > clientWidth`,
-                    // so the fold into the `…` menu would simply stop happening.
-                    flex: '0 1 auto',
-                    // Floored, because shrinking to nothing clips the buttons instead of folding
-                    // them, and ControlGroup ignores its own overflow below 40px.
-                    minWidth: 40,
-                    // Capped, so a group that IS opted back into growing cannot take the row —
-                    // but only while there is a title header to take it FROM. With no label,
-                    // badge, icon or breadcrumbs the bar is the group's alone, and holding a
-                    // Collection's search input to half of an empty bar guards nothing.
-                    maxWidth: hasTitleHeader ? '50%' : undefined,
-                    ...responsiveActionsWrapperProps?.style,
-                  }}
-                >
-                  {nonFloatingActions.map(renderResponsiveActions())}
-                </ReqoreControlGroup>
-              )}
-              <ReqorePanelNonResponsiveActions
-                show={showNonResponsiveGroup()}
-                isSmall={false}
-                showControlButtons
-                size={panelSize}
-                hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
-                customTheme={theme}
+            <ReqoreSurfaceProvider color={barSurface}>
+              <StyledPanelTopBar
+                flat={flat}
                 isCollapsed={_isCollapsed}
-                onCollapseClick={collapsible ? handleCollapseClick : undefined}
-                onCloseClick={onClose}
-                closeButtonProps={closeButtonProps}
-                collapseButtonProps={collapseButtonProps}
-                collapseTooltip={collapseTooltip}
-                expandTooltip={expandTooltip}
-                closeTooltip={closeTooltip}
-                fluid={!hasTitleHeader}
-                className={NON_RESPONSIVE_ACTIONS_CLASS}
-                // Beside a title in a NARROW bar the title comes first (qorus#646). The group is
-                // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title
-                // to nothing and still pushed its last button past the panel's edge. Narrow, the
-                // title takes its whole width first and the group what is left, at least what its
-                // controls cannot do without (a search field narrows, a button never does) and at
-                // most its own width. A basis of 0 is what gives the title the first claim: the
-                // group is sized from the leftover, so the title shrinks only once the controls
-                // are at their smallest - and its words break only when one is wider than the
-                // space left beside them. Shrinking the two against each other instead, by any
-                // factor, took a fraction of a pixel off the title, and that broke "Services" into
-                // "Servic / es". Room the title does not need goes to the group first (a grow no
-                // title's comes near), so a search field widens before the title's box does. A
-                // wide bar keeps the group at its own width: there the title's claim was its
-                // one-line width, a description beside it included, and a long description
-                // squeezed a table's search to its least instead of wrapping.
-                style={hasTitleHeader && isNarrow ? NARROW_ACTIONS_BESIDE_TITLE : undefined}
+                collapsible={collapsible}
+                className='reqore-panel-title'
+                onClick={handleCollapseClick}
+                theme={theme}
+                minimal={minimal || opacity === 0}
+                size={contentSize || panelSize}
+                opacity={minimal ? 0 : (opacity ?? 1)}
+                noHorizontalPadding={noHorizontalPadding}
+                responsive={responsiveTitle}
+                $descriptionBelow={descriptionBelow}
+                $descriptionMaxLines={descriptionIsClamped ? descriptionClamp : 0}
+                $descriptionFontPx={descriptionFontPx}
+                // Stamped for the same reason `EntityRow` stamps it: a narrow container is a fact
+                // about the box, and a test or a story asserting the narrow treatment should read
+                // it rather than infer it from pixels.
+                data-narrow={isNarrow ? 'true' : 'false'}
+                ref={measureRef}
+                padded={padded}
+                wrapperPadding={wrapperPadding}
+                intent={intent}
+                rounded={rounded}
+                radiusSize={rest.radiusSize}
+                stickyHeader={rest.stickyHeader}
+                stickyHeaderOffset={rest.stickyHeaderOffset}
+                stickyHeaderInset={stickyInset}
+                isStuck={isHeaderStuck}
+                $mediaAbove={hasMedia && mediaPosition === 'top' && !_isCollapsed}
               >
-                {nonFloatingActions.map(renderNonResponsiveActions())}
-              </ReqorePanelNonResponsiveActions>
-              {descriptionBelow ? (
-                // `flex-basis: 100%` is what puts it on its own line — the bar is a wrapping
-                // flex row, so a full-width item cannot share one with anything before it.
-                // `min-width: 0` so a long sentence wraps inside the bar instead of widening it.
-                <div
-                  className='reqore-panel-title-description-row'
-                  style={{ flex: '0 0 100%', minWidth: 0 }}
+                {hasTitleHeader && (
+                  <StyledPanelTitleHeader className='reqore-panel-title-header'>
+                    {breadcrumbs ? (
+                      <ReqoreBreadcrumbs
+                        {...breadcrumbs}
+                        padded={false}
+                        margin='none'
+                        flat
+                        responsive
+                      />
+                    ) : icon || iconImage || label || badge ? (
+                      (() => {
+                        const hasPanelIcon = !!icon || !!iconImage || loading;
+                        // The icon takes the label's place, so there has to BE an icon. Without one
+                        // the label is the only thing identifying the panel and it stays put — a
+                        // header with neither is not a compact header, it is an empty one. The label
+                        // is not lost either way: it is already this icon's tooltip.
+                        const hideTitleText = hideTitleForIcon && hasPanelIcon;
+
+                        // Layout decision:
+                        // - iconWithLabel=true → render the icon INSIDE the
+                        //   label-and-badge row (no outer icon column). The
+                        //   description sits flush-left under the icon+label.
+                        // - When there is NO description, fall back to the
+                        //   inline layout regardless of iconVerticalAlign — the
+                        //   outer grid only earns its keep when there is a
+                        //   description row to anchor against, and the inline
+                        //   layout aligns icon-to-text glyphs more naturally
+                        //   via the heading's own line-height.
+                        // - Otherwise → outer two-column grid where the icon
+                        //   sits in a reserved column. iconVerticalAlign places
+                        //   the icon in row 1 (label), row 2 (description), or
+                        //   spans both rows (center). The description always
+                        //   indents past the icon column.
+                        const inlineWithLabel =
+                          hasPanelIcon && (iconWithLabel || !description || hideTitleText);
+                        const useOuterGrid = hasPanelIcon && !inlineWithLabel;
+
+                        // Outer grid → grid column-gap handles icon→label
+                        // spacing, so the icon itself takes no margin.
+                        // Inline → keep 'margin=right' so ReqoreIcon adds its
+                        // standard side-spacer between icon and label.
+                        const iconMargin: 'right' | undefined = useOuterGrid ? undefined : 'right';
+
+                        const panelIcon = hasPanelIcon ? (
+                          <ReqoreIcon
+                            size={`${
+                              ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                            }px`}
+                            image={loading ? undefined : iconImage}
+                            margin={iconMargin}
+                            color={titleIconLook.color ?? iconColor}
+                            tooltip={iconTooltip}
+                            effect={{
+                              opacity: titleIconLook.opacity,
+                            }}
+                            {...iconProps}
+                            animation={loading ? 'spin' : iconProps?.animation}
+                            icon={
+                              loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
+                            }
+                            className={`reqore-panel-title-icon ${iconProps?.className || ''}`.trim()}
+                          />
+                        ) : null;
+
+                        const labelRow = (
+                          <StyledPanelTitleHeaderLabelAndBadge className='reqore-panel-title-label-row'>
+                            {inlineWithLabel && panelIcon}
+                            {hideTitleText ? null : typeof label === 'string' ? (
+                              // The measured box is this wrapper, not the heading: as a
+                              // `min-width: 0` flex child it reports the width the row actually
+                              // left for the title, where the heading would report what the text
+                              // wants. `overflow: hidden` is what makes it shrinkable at all.
+                              // `display: flex` keeps the wrapper from opening a line box around
+                              // the inline-flex heading: a block wrapper adds the row's leading on
+                              // top of the heading's own box, which made a `tiny` panel 3px taller
+                              // than it was before this wrapper existed.
+                              <StyledPanelTitleLabelBox
+                                ref={labelFitRef}
+                                className='reqore-panel-title-label-box'
+                                $clampLines={clampLines}
+                              >
+                              <LabelEditor
+                                size={labelSize || panelSize}
+                                customTheme={theme}
+                                effect={{
+                                  // `noWrap` pins the heading to one line; a clamped title is
+                                  // allowed to wrap, and the clamp brings its own ellipsis.
+                                  noWrap: clampLines === 1,
+                                  ...labelEffect,
+                                }}
+                                style={{
+                                  // A clamped title takes its display from the box above, which
+                                  // sets `-webkit-box`. Naming a display here would beat that
+                                  // rule and quietly turn the clamp off.
+                                  ...(clampLines > 1
+                                    ? {}
+                                    : { display: 'inline-flex', alignItems: 'center' }),
+                                  minWidth: 0,
+                                  // Capped to the measured wrapper so the heading's own
+                                  // `text-overflow: ellipsis` (from `noWrap`) has a box to overflow.
+                                  // An `inline-flex` heading otherwise sizes to its text, and the
+                                  // wrapper clips it mid-word with no ellipsis at all.
+                                  maxWidth: '100%',
+                                  // Inline, not through `effect.textSize`: `StyledHeader` sets its
+                                  // own `font-size` from the heading level in a rule that lands
+                                  // after the effect's, so the effect could never win. An inline
+                                  // style beats both. A caller pinning `labelEffect.textSize`
+                                  // disables the fit, so this never fights them.
+                                  ...(fitLabel !== false && !labelEffect?.textSize
+                                    ? { fontSize: `${labelFitPx}px` }
+                                    : {}),
+                                }}
+                                label={label}
+                                onSubmit={onLabelEdit}
+                                tooltip={showLabelTooltip ? customLabelTooltip || label : undefined}
+                              />
+                              </StyledPanelTitleLabelBox>
+                            ) : (
+                              label
+                            )}
+                            {badge || badge === 0 ? (
+                              <ButtonBadge
+                                size={getOneHigherSize(panelSize)}
+                                content={badge}
+                                wrapGroup={isSmall}
+                                margin={label ? 'left' : 'none'}
+                              />
+                            ) : null}
+                          </StyledPanelTitleHeaderLabelAndBadge>
+                        );
+
+                        // Description size is driven by the panel size only —
+                        // explicitly NOT by `labelSize`. `NUMBER_TO_SIZE` maps
+                        // 1..6 → micro..huge, which means bumping `labelSize`
+                        // from 4 to 2 to grow the heading would inversely
+                        // shrink the description to `tiny`. That's the wrong
+                        // pairing: a bigger label should not make supporting
+                        // text smaller. Consumers that want to size the
+                        // description explicitly pass `descriptionEffect.textSize`.
+                        const descriptionRow = description && !hideTitleText && !descriptionBelow ? (
+                          <ReqoreSpan {...descriptionProps}>{description}</ReqoreSpan>
+                        ) : null;
+
+                        return (
+                          <StyledPanelTitleHeaderContent
+                            size={panelSize}
+                            {...labelProps}
+                            hasLabel={!!label && !hideTitleText}
+                            hasIcon={useOuterGrid}
+                            iconSize={
+                              ICON_FROM_HEADER_SIZE[labelSize || HEADER_SIZE_TO_NUMBER[panelSize]]
+                            }
+                            $hasOuterIcon={useOuterGrid}
+                            $iconVerticalAlign={iconVerticalAlign}
+                            $hasDescription={!!description && !hideTitleText}
+                          >
+                            {useOuterGrid ? (
+                              <>
+                                {panelIcon}
+                                {labelRow}
+                                {descriptionRow}
+                              </>
+                            ) : (
+                              <StyledPanelTitleHeaderLabelAndDescription>
+                                {labelRow}
+                                {descriptionRow}
+                              </StyledPanelTitleHeaderLabelAndDescription>
+                            )}
+                          </StyledPanelTitleHeaderContent>
+                        );
+                      })()
+                    ) : null}
+                    {breadcrumbs && (badge || badge === 0) ? (
+                      <ButtonBadge
+                        size={getOneHigherSize(panelSize)}
+                        content={badge}
+                        wrapGroup={isSmall}
+                        margin={label ? 'left' : 'none'}
+                      />
+                    ) : null}
+                    <ReqorePanelNonResponsiveActions
+                      // The narrow bar keeps its controls in the trailing group, so this row —
+                      // which existed only for the stacked layout — never shows.
+                      show={false}
+                      isSmall={false}
+                      showControlButtons
+                      size={panelSize}
+                      hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
+                      customTheme={theme}
+                      isCollapsed={_isCollapsed}
+                      onCollapseClick={collapsible ? handleCollapseClick : undefined}
+                      onCloseClick={onClose}
+                      closeButtonProps={closeButtonProps}
+                      collapseButtonProps={collapseButtonProps}
+                      collapseTooltip={collapseTooltip}
+                      expandTooltip={expandTooltip}
+                      closeTooltip={closeTooltip}
+                      fluid={false}
+                      style={{ marginLeft: 'auto' }}
+                    />
+                  </StyledPanelTitleHeader>
+                )}
+                {hasResponsiveActions(nonFloatingActions) && (
+                  <ReqoreControlGroup
+                    responsive={responsiveActions}
+                    // Not fluid by default. `fluid` emits `width: 100%`, so the group's flex basis
+                    // becomes the whole bar and the title — the only shrinkable thing on the other
+                    // side — collapses to nothing: measured at 0px of title on a 400px panel, and
+                    // 142px of a 518px bar where the buttons needed 90.
+                    //
+                    // A caller whose actions include something with no useful width of its own —
+                    // Collection puts a search input in here — opts back in through
+                    // `responsiveActionsWrapperProps`, because `fluid` is also what ControlGroup
+                    // propagates to its children, and that input has nothing to fill without it.
+                    fluid={false}
+                    horizontalAlign='flex-end'
+                    customTheme={theme}
+                    size={panelSize}
+                    {...responsiveActionsWrapperProps}
+                    // The cap is the whole fix. Half the bar guarantees the title the other half,
+                    // and the moment the buttons need more than their share the group overflows —
+                    // which is what `responsive` collapse watches (`scrollWidth > clientWidth`), so
+                    // the fold into the `…` menu still fires. Floored at 40px because shrinking to
+                    // nothing clips the buttons rather than folding them, and ControlGroup ignores
+                    // its own overflow below that width, which would strand them clipped.
+                    style={{
+                      // Pushed to the trailing edge. A `fluid` group used to span the bar and its
+                      // own `horizontalAlign` put the buttons on the right; a content-sized one is
+                      // only as wide as its buttons, so with no title header beside it — Tree has
+                      // no label — it would sit at the LEFT of an otherwise empty bar. `auto`
+                      // margin restores the edge without giving the group any width back.
+                      marginLeft: 'auto',
+                      // Content basis that may still shrink. `fluid={false}` alone compiles to
+                      // `flex: 0 0 auto`, which pins the group at its content width so it can never
+                      // overflow — and `responsive` collapse watches `scrollWidth > clientWidth`,
+                      // so the fold into the `…` menu would simply stop happening.
+                      flex: '0 1 auto',
+                      // Floored, because shrinking to nothing clips the buttons instead of folding
+                      // them, and ControlGroup ignores its own overflow below 40px.
+                      minWidth: 40,
+                      // Capped, so a group that IS opted back into growing cannot take the row —
+                      // but only while there is a title header to take it FROM. With no label,
+                      // badge, icon or breadcrumbs the bar is the group's alone, and holding a
+                      // Collection's search input to half of an empty bar guards nothing.
+                      maxWidth: hasTitleHeader ? '50%' : undefined,
+                      ...responsiveActionsWrapperProps?.style,
+                    }}
+                  >
+                    {nonFloatingActions.map(renderResponsiveActions())}
+                  </ReqoreControlGroup>
+                )}
+                <ReqorePanelNonResponsiveActions
+                  show={showNonResponsiveGroup()}
+                  isSmall={false}
+                  showControlButtons
+                  size={panelSize}
+                  hasResponsiveActions={hasResponsiveActions(nonFloatingActions)}
+                  customTheme={theme}
+                  isCollapsed={_isCollapsed}
+                  onCollapseClick={collapsible ? handleCollapseClick : undefined}
+                  onCloseClick={onClose}
+                  closeButtonProps={closeButtonProps}
+                  collapseButtonProps={collapseButtonProps}
+                  collapseTooltip={collapseTooltip}
+                  expandTooltip={expandTooltip}
+                  closeTooltip={closeTooltip}
+                  fluid={!hasTitleHeader}
+                  className={NON_RESPONSIVE_ACTIONS_CLASS}
+                  // Beside a title in a NARROW bar the title comes first (qorus#646). The group is
+                  // `0 0 auto`, so a narrow bar - a table in a card on a phone - squeezed the title
+                  // to nothing and still pushed its last button past the panel's edge. Narrow, the
+                  // title takes its whole width first and the group what is left, at least what its
+                  // controls cannot do without (a search field narrows, a button never does) and at
+                  // most its own width. A basis of 0 is what gives the title the first claim: the
+                  // group is sized from the leftover, so the title shrinks only once the controls
+                  // are at their smallest - and its words break only when one is wider than the
+                  // space left beside them. Shrinking the two against each other instead, by any
+                  // factor, took a fraction of a pixel off the title, and that broke "Services" into
+                  // "Servic / es". Room the title does not need goes to the group first (a grow no
+                  // title's comes near), so a search field widens before the title's box does. A
+                  // wide bar keeps the group at its own width: there the title's claim was its
+                  // one-line width, a description beside it included, and a long description
+                  // squeezed a table's search to its least instead of wrapping.
+                  style={hasTitleHeader && isNarrow ? NARROW_ACTIONS_BESIDE_TITLE : undefined}
                 >
-                  <ReqoreSpan {...descriptionProps}>{description}</ReqoreSpan>
-                </div>
-              ) : null}
-            </StyledPanelTopBar>
+                  {nonFloatingActions.map(renderNonResponsiveActions())}
+                </ReqorePanelNonResponsiveActions>
+                {descriptionBelow ? (
+                  // `flex-basis: 100%` is what puts it on its own line — the bar is a wrapping
+                  // flex row, so a full-width item cannot share one with anything before it.
+                  // `min-width: 0` so a long sentence wraps inside the bar instead of widening it.
+                  <div
+                    className='reqore-panel-title-description-row'
+                    style={{ flex: '0 0 100%', minWidth: 0 }}
+                  >
+                    <ReqoreSpan {...descriptionProps}>{description}</ReqoreSpan>
+                  </div>
+                ) : null}
+              </StyledPanelTopBar>
+            </ReqoreSurfaceProvider>
           )}
           {!_isCollapsed || (_isCollapsed && !unMountContentOnCollapse) ? (
             <StyledPanelContent
@@ -2670,59 +2735,61 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
               ref={getContentRef}
               noHorizontalPadding={noHorizontalPadding}
             >
-              {children}
+              <ReqoreSurfaceProvider color={contentSurfaces}>{children}</ReqoreSurfaceProvider>
             </StyledPanelContent>
           ) : null}
           {hasBottomActions && !_isCollapsed ? (
-            <StyledPanelBottomActions
-              flat={flat}
-              className='reqore-panel-bottom-actions'
-              theme={theme}
-              padded={padded}
-              intent={intent}
-              minimal={minimal || opacity === 0}
-              opacity={minimal ? 0 : (opacity ?? 1)}
-              size={contentSize || panelSize}
-              noHorizontalPadding={noHorizontalPadding}
-            >
-              {hasNonResponsiveActions(leftBottomActions) ? (
-                <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
-                  {leftBottomActions.map(renderNonResponsiveActions('flex-start'))}
-                </ReqoreControlGroup>
-              ) : null}
-              {hasResponsiveActions(leftBottomActions) && (
-                <ReqoreControlGroup
-                  fluid={responsiveActions}
-                  responsive={responsiveActions}
-                  customTheme={theme}
-                  size={panelSize}
-                  style={{ marginRight: 'auto' }}
-                >
-                  {leftBottomActions.map(renderResponsiveActions('flex-start'))}
-                </ReqoreControlGroup>
-              )}
-              {hasResponsiveActions(rightBottomActions) && (
-                <ReqoreControlGroup
-                  fluid={responsiveActions}
-                  horizontalAlign='flex-end'
-                  responsive={responsiveActions}
-                  customTheme={theme}
-                  style={{ marginLeft: 'auto' }}
-                  size={panelSize}
-                >
-                  {rightBottomActions.map(renderResponsiveActions())}
-                </ReqoreControlGroup>
-              )}
-              {hasNonResponsiveActions(rightBottomActions) ? (
-                <ReqoreControlGroup
-                  horizontalAlign='flex-end'
-                  size={panelSize}
-                  style={{ marginLeft: 'auto' }}
-                >
-                  {rightBottomActions.map(renderNonResponsiveActions())}
-                </ReqoreControlGroup>
-              ) : null}
-            </StyledPanelBottomActions>
+            <ReqoreSurfaceProvider color={barSurface}>
+              <StyledPanelBottomActions
+                flat={flat}
+                className='reqore-panel-bottom-actions'
+                theme={theme}
+                padded={padded}
+                intent={intent}
+                minimal={minimal || opacity === 0}
+                opacity={minimal ? 0 : (opacity ?? 1)}
+                size={contentSize || panelSize}
+                noHorizontalPadding={noHorizontalPadding}
+              >
+                {hasNonResponsiveActions(leftBottomActions) ? (
+                  <ReqoreControlGroup size={panelSize} style={{ marginRight: 'auto' }}>
+                    {leftBottomActions.map(renderNonResponsiveActions('flex-start'))}
+                  </ReqoreControlGroup>
+                ) : null}
+                {hasResponsiveActions(leftBottomActions) && (
+                  <ReqoreControlGroup
+                    fluid={responsiveActions}
+                    responsive={responsiveActions}
+                    customTheme={theme}
+                    size={panelSize}
+                    style={{ marginRight: 'auto' }}
+                  >
+                    {leftBottomActions.map(renderResponsiveActions('flex-start'))}
+                  </ReqoreControlGroup>
+                )}
+                {hasResponsiveActions(rightBottomActions) && (
+                  <ReqoreControlGroup
+                    fluid={responsiveActions}
+                    horizontalAlign='flex-end'
+                    responsive={responsiveActions}
+                    customTheme={theme}
+                    style={{ marginLeft: 'auto' }}
+                    size={panelSize}
+                  >
+                    {rightBottomActions.map(renderResponsiveActions())}
+                  </ReqoreControlGroup>
+                )}
+                {hasNonResponsiveActions(rightBottomActions) ? (
+                  <ReqoreControlGroup
+                    horizontalAlign='flex-end'
+                    size={panelSize}
+                    style={{ marginLeft: 'auto' }}
+                  >
+                    {rightBottomActions.map(renderNonResponsiveActions())}
+                  </ReqoreControlGroup>
+                ) : null}
+              </StyledPanelBottomActions>
+            </ReqoreSurfaceProvider>
           ) : null}
           {!_isCollapsed && mediaPosition === 'bottom' ? mediaNode : null}
         </ReqoreTooltipComponent>
