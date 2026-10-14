@@ -92,6 +92,29 @@ test('repositions an open popover when asynchronous content changes size, at the
   expect(popper.forceUpdate).toHaveBeenCalledTimes(1);
 });
 
+test('repositions an open popover when its target changes size, at the next frame', async () => {
+  render(<Preview updater={0} />);
+  const observer = await openObserver();
+
+  // the target is observed with the popover: a target that grows or shrinks with no scroll and no window
+  // resize (its container resized, a label or a font that loaded) moves the edge the popover is placed by
+  const target = screen
+    .getByText('Preview trigger')
+    .closest('.reqore-popover-wrapper') as HTMLElement;
+  expect(observer.observe).toHaveBeenCalledWith(target);
+
+  act(() =>
+    observer.callback(
+      [{ target } as unknown as ResizeObserverEntry],
+      observer as unknown as ResizeObserver
+    )
+  );
+  expect(popper.forceUpdate).not.toHaveBeenCalled();
+
+  act(() => runFrames());
+  expect(popper.forceUpdate).toHaveBeenCalledTimes(1);
+});
+
 test('a frame asked for by a popover that has since closed does not run', async () => {
   const { unmount } = render(<Preview updater={0} />);
   const observer = await openObserver();

@@ -1495,16 +1495,49 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       floatingActionsRef.current.style.left = `${panelRect.right - floatingRect.width}px`;
     }, [flat]);
 
+    const showsFloatingActions = _isHovered && !!floatingActions && size(floatingActionsList) > 0;
+
+    // placed as they are shown, and again whenever the actions change
     useEffect(() => {
-      if (!_isHovered || !floatingActions || !size(floatingActionsList)) return undefined;
+      if (showsFloatingActions) updateFloatingActionsPosition();
+    }, [showsFloatingActions, floatingActionsList, updateFloatingActionsPosition]);
 
-      updateFloatingActionsPosition();
+    /* ...and again whenever what they are placed by moves: the actions are fixed to the screen, placed
+     * by the panel's corner and their own size, so nothing follows on its own. A page that scrolls, a
+     * screen or window that resizes, a panel that grows or shrinks, and actions whose content changes
+     * width (a label, an icon or a font that loads) each moved the panel's corner or the actions' size
+     * without placing them again: they were left where the panel had been - mid-screen once the window
+     * widened - or reached past the panel's edge once they widened. One placement per frame, however
+     * many of these come in; none once they are hidden or the panel is gone. */
+    useEffect(() => {
+      if (!showsFloatingActions) return undefined;
 
-      const onScroll = () => updateFloatingActionsPosition();
+      let frame = 0;
+      const schedule = () => {
+        if (!frame) {
+          frame = requestAnimationFrame(() => {
+            frame = 0;
+            updateFloatingActionsPosition();
+          });
+        }
+      };
 
-      window.addEventListener('scroll', onScroll, true);
-      return () => window.removeEventListener('scroll', onScroll, true);
-    }, [_isHovered, floatingActions, floatingActionsList, updateFloatingActionsPosition]);
+      window.addEventListener('scroll', schedule, true);
+      window.addEventListener('resize', schedule, { passive: true });
+      const observer =
+        typeof ResizeObserver !== 'undefined' ? new ResizeObserver(schedule) : undefined;
+      if (observer) {
+        if (panelRef.current) observer.observe(panelRef.current);
+        if (floatingActionsRef.current) observer.observe(floatingActionsRef.current);
+      }
+
+      return () => {
+        window.removeEventListener('scroll', schedule, true);
+        window.removeEventListener('resize', schedule);
+        observer?.disconnect();
+        if (frame) cancelAnimationFrame(frame);
+      };
+    }, [showsFloatingActions, updateFloatingActionsPosition]);
 
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {

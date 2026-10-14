@@ -990,6 +990,66 @@ export const ClampedToViewport: Story = {
   },
 };
 
+const TARGET_RESIZES_FRAME_STYLE = { width: 600 };
+// a block as wide as its container, whose own content does not change as it narrows: nothing inside it
+// mutates, which the popover would see
+const TARGET_RESIZES_WRAPPER_STYLE = { display: 'block', padding: 10, border: '1px dashed #666' };
+
+/** Resolves after `count` frames: the popover stops polling its target after 3 frames in which it held still. */
+const afterFrames = async (count: number) => {
+  for (let frame = 0; frame < count; frame += 1) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
+};
+
+export const FollowsATargetThatResizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Opens a popover below its target's right end, then narrows the target - its container does, with no scroll, no window resize and nothing changing inside the target - and the popover follows the target's right end. Popper places it again on a scroll and a window resize, and the popover on its own size and on changes inside its target, so a target that grew or shrank by itself, once the popover's first half second was over, left it where the target's edge had been.",
+      },
+    },
+  },
+  render: () => (
+    <div className='popover-target-resizes-frame' style={TARGET_RESIZES_FRAME_STYLE}>
+      <ReqorePopover
+        component='div'
+        wrapperTag='div'
+        wrapperStyle={TARGET_RESIZES_WRAPPER_STYLE}
+        content="Placed by its target's right edge"
+        placement='bottom-end'
+        openOnMount
+      >
+        A target as wide as its container
+      </ReqorePopover>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const frame = canvasElement.querySelector('.popover-target-resizes-frame') as HTMLElement;
+    const target = frame.querySelector('.reqore-popover-wrapper') as HTMLElement;
+    const popover = () => document.querySelector('.reqore-popover-content') as HTMLElement | null;
+    const rightEndGap = () =>
+      popover()!.getBoundingClientRect().right - target.getBoundingClientRect().right;
+
+    await waitFor(() => expect(popover()).toBeInTheDocument(), { timeout: 10000 });
+    // placed, and past the frames in which it watches its target move
+    let gap = Number.NaN;
+    await waitFor(async () => {
+      const before = rightEndGap();
+      await afterFrames(10);
+      gap = rightEndGap();
+      expect(Math.abs(gap - before)).toBeLessThanOrEqual(0.5);
+    });
+    await expect(Math.abs(gap)).toBeLessThanOrEqual(2);
+
+    // the target narrows, by its container
+    frame.style.width = '360px';
+    await waitFor(() => expect(target.getBoundingClientRect().width).toBeLessThanOrEqual(360));
+    await waitFor(() => expect(Math.abs(rightEndGap() - gap)).toBeLessThanOrEqual(1));
+  },
+};
+
 /**
  * A 120px block sitting directly under a trigger, so the tooltip that opens
  * below the trigger lands ON it — which is what makes the hit test below mean
