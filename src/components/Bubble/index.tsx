@@ -25,7 +25,13 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getReadableAlpha,
+  getReadableColor,
+  getThemeSurface,
+} from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { RaisedElement } from '../../styles';
@@ -43,9 +49,9 @@ import { IReqoreEffect, ReqoreEffect, StyledEffect } from '../Effect';
 import ReqoreIcon from '../Icon';
 import { ReqoreSpan } from '../Span';
 
-// Hoisted so the memoised timestamp span keeps a stable `effect` identity.
-// 0.35 matches Qonsole's timestamp — fainter than the label, clearly secondary.
-const TIMESTAMP_EFFECT: IReqoreEffect = { opacity: 0.35 };
+// 0.35 matches Qonsole's timestamp — fainter than the label, clearly secondary; never fainter
+// than it can be read where it is drawn (see the bubble's `timestampEffect`).
+const TIMESTAMP_OPACITY = 0.35;
 
 export type TReqoreBubbleAlign = 'left' | 'right';
 export type TReqoreBubbleGroupPosition = 'single' | 'first' | 'middle' | 'last';
@@ -315,6 +321,19 @@ export const ReqoreBubble = memo(
       ref
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      const surface = useReqoreSurface();
+      // The timestamp is under the bubble, on what the bubble is drawn on, in the page's text color.
+      const timestampEffect: IReqoreEffect = useMemo(() => {
+        const under = getThemeSurface(theme, surface);
+
+        return {
+          opacity: getReadableAlpha(
+            getReadableColor(theme, undefined, undefined, true, under),
+            under,
+            TIMESTAMP_OPACITY
+          ),
+        };
+      }, [theme, surface]);
       const showRaised = !!raised && flat !== false && !intent;
       const coloured = !!intent || !!customTheme;
       const isSet = (value: ReactNode) => value != null && value !== '';
@@ -395,7 +414,7 @@ export const ReqoreBubble = memo(
         <StyledBubbleTimestamp
           className='reqore-bubble-timestamp'
           size={getOneLessSize(size)}
-          effect={TIMESTAMP_EFFECT}
+          effect={timestampEffect}
         >
           {timestamp}
         </StyledBubbleTimestamp>

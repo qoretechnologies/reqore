@@ -7,7 +7,16 @@ import { ReqoreDropdown, ReqoreErrorBoundary } from '../..';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import { MARGIN_FROM_SIZE, PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreBreadcrumbsTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
+import {
+  changeLightness,
+  getDrawnColor,
+  getReadableAlpha,
+  getReadableColor,
+  getReadableColorFrom,
+  getThemeSurface,
+  READABLE_ICON_CONTRAST,
+} from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreComponent } from '../../types/global';
 import { IReqoreButtonProps } from '../Button';
@@ -105,16 +114,12 @@ const StyledTrail = styled.div<{ $color: string }>`
     min-width: 0;
   }
 
-  /* Force the readable item colour onto the crumbs + collapsed dropdowns, as the
-     original did with a descendant selector. A minimal/flat button sets its OWN
-     text colour directly on the element — for a chromatic custom theme that
-     resolves to a near-white tint (saturate(tint(0.8, main))) — which beats the
-     trail's merely-inherited colour. Overriding it here keeps the labels legible
-     (readable-dark on a light themed bar) instead of washing out to white. */
-  .reqore-breadcrumbs-item,
-  .reqore-dropdown-control {
-    color: ${({ $color }) => $color};
-  }
+  /* The crumbs pick their own text colour, against what they are drawn on: the bar
+     (handed to them as their surface) or their own colour, for a crumb with an intent.
+     The bar's colour used to be forced onto every crumb, because a minimal crumb in a
+     chromatic custom theme tinted its label near-white against the page rather than
+     the bar - and it was forced onto a crumb with an intent of its own too, dark text
+     on the warning orange. */
 `;
 
 // The right element NEVER shrinks — this is what makes overlap with the trail
@@ -307,11 +312,16 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   ...rest
 }: IReqoreBreadcrumbsProps) => {
   const theme = useReqoreTheme('breadcrumbs', customTheme, undefined);
+  // What the trail is drawn on: the bar's own colour over what is under it, or that alone.
+  const surface = useReqoreSurface();
+  const barSurface = theme.breadcrumbs?.main
+    ? getDrawnColor(theme.breadcrumbs.main, getThemeSurface(theme, surface))
+    : getThemeSurface(theme, surface);
   const itemColor =
     theme.breadcrumbs?.item?.color ||
     (theme.breadcrumbs?.main
-      ? getReadableColorFrom(theme.breadcrumbs.main, true)
-      : getReadableColor(theme, undefined, undefined, true));
+      ? getReadableColorFrom(barSurface, true)
+      : getReadableColor(theme, undefined, undefined, true, barSurface));
 
   const leafItem = items[items.length - 1];
 
@@ -517,7 +527,11 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       size={size}
       key={key}
       margin='both'
-      effect={{ opacity: 0.5 }}
+      color={itemColor}
+      effect={{
+        // fainter than the crumbs, as far as it stands out from the bar by 3:1
+        opacity: getReadableAlpha(itemColor, barSurface, 0.5, READABLE_ICON_CONTRAST),
+      }}
     />
   );
 
@@ -666,7 +680,14 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           badge={count(overflowItems)}
           items={toMenuItems(overflowItems)}
         >
-          <ReqoreIcon icon='MoreLine' effect={{ opacity: CONTROL_ICON_OPACITY }} />
+          <ReqoreIcon
+            icon='MoreLine'
+            color={itemColor}
+            effect={{
+              // as faint as a control's icon, as far as it stands out from the bar by 3:1
+              opacity: getReadableAlpha(itemColor, barSurface, CONTROL_ICON_OPACITY, READABLE_ICON_CONTRAST),
+            }}
+          />
         </ReqoreDropdown>
         {renderArrow('reqore-breadcrumbs-overflow-arrow')}
       </React.Fragment>
@@ -683,19 +704,21 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         size={size}
         responsive={responsive}
       >
-        <StyledTrail className='reqore-breadcrumbs-trail' $color={itemColor}>
-          {responsive ? (
-            // Every crumb may fold, the current page too: when even it does not fit, the trail is the one
-            // dropdown labelled with it. Keeping the current page out of the fold is what used to leave it
-            // squeezed to an unreadable stub.
-            <StyledFoldingTrail ref={rowRef} className='reqore-breadcrumbs-overflow-list'>
-              {renderOverflow(items.slice(0, folded))}
-              {items.slice(folded).map((item, index) => renderItem(item, index, folded))}
-            </StyledFoldingTrail>
-          ) : (
-            <StyledStaticTrail>{items.map((item, index) => renderItem(item, index, 0))}</StyledStaticTrail>
-          )}
-        </StyledTrail>
+        <ReqoreSurfaceProvider color={barSurface}>
+          <StyledTrail className='reqore-breadcrumbs-trail' $color={itemColor}>
+            {responsive ? (
+              // Every crumb may fold, the current page too: when even it does not fit, the trail is the one
+              // dropdown labelled with it. Keeping the current page out of the fold is what used to leave it
+              // squeezed to an unreadable stub.
+              <StyledFoldingTrail ref={rowRef} className='reqore-breadcrumbs-overflow-list'>
+                {renderOverflow(items.slice(0, folded))}
+                {items.slice(folded).map((item, index) => renderItem(item, index, folded))}
+              </StyledFoldingTrail>
+            ) : (
+              <StyledStaticTrail>{items.map((item, index) => renderItem(item, index, 0))}</StyledStaticTrail>
+            )}
+          </StyledTrail>
+        </ReqoreSurfaceProvider>
         {rightElement && (
           <StyledRight className='reqore-breadcrumbs-right'>{rightElement}</StyledRight>
         )}

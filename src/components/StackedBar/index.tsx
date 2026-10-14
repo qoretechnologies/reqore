@@ -4,7 +4,14 @@ import { css } from 'styled-components';
 import styled from '../../helpers/styled';
 import { RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { getColorFromMaybeString, getReadableColor } from '../../helpers/colors';
+import {
+  getColorFromMaybeString,
+  getDrawnColor,
+  getReadableAlpha,
+  getReadableColor,
+  getReadableColorFrom,
+  getThemeSurface,
+} from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
 import {
@@ -155,6 +162,10 @@ interface IStyledSegmentProps {
   $color: string;
   $percent: number;
   $interactive: boolean;
+  /** The text that reads on the segment's color. */
+  $text: string;
+  /** How faint the segment's label is beside its value: as far as it stays readable. */
+  $labelOpacity: number;
 }
 
 const StyledStackedBarSegment = styled.div<IStyledSegmentProps>`
@@ -169,9 +180,13 @@ const StyledStackedBarSegment = styled.div<IStyledSegmentProps>`
   gap: 1px;
   padding: 0 5px;
   overflow: hidden;
-  color: #ffffff;
+  color: ${({ $text }) => $text};
   line-height: 1;
   text-shadow: 0 1px 1px ${rgba('#000000', 0.35)};
+
+  .reqore-stacked-bar-segment-label {
+    opacity: ${({ $labelOpacity }) => $labelOpacity};
+  }
   white-space: nowrap;
   transition: width 0.3s ease-out, filter 0.15s ease-out;
   cursor: ${({ $interactive }) => ($interactive ? 'pointer' : 'default')};
@@ -203,12 +218,13 @@ const StyledSegmentLabel = styled.span`
   line-height: 1;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  opacity: 0.82;
 `;
 
 interface IResolvedSegment {
   key: string;
   color: string;
+  text: string;
+  labelOpacity: number;
   percent: number;
   value: number;
   label?: string;
@@ -293,9 +309,14 @@ const ReqoreStackedBar = memo(
             item.tooltip ??
             (item.label !== undefined ? `${item.label}: ${item.value}` : `${item.value}`);
           const fits = rawPercent >= valueLabelMinPercent;
+          // the segment as it is drawn (a translucent color over the bar's surface) and what reads on it
+          const drawn = getDrawnColor(color, getThemeSurface(theme));
+          const text = getReadableColorFrom(drawn);
           return {
             key: item.id ?? `${item.label ?? 'segment'}-${index}`,
             color,
+            text,
+            labelOpacity: getReadableAlpha(text, drawn, 0.82),
             percent,
             value: item.value,
             label: item.label,
@@ -332,6 +353,7 @@ const ReqoreStackedBar = memo(
           $fluid={fluid}
           $raised={raised}
           $disabled={disabled}
+          aria-disabled={disabled ? true : undefined}
           className={`${className || ''} reqore-stacked-bar`}
           role='img'
         >
@@ -343,6 +365,9 @@ const ReqoreStackedBar = memo(
                   Component={StyledStackedBarSegment}
                   tooltip={segment.tooltip}
                   $color={segment.color}
+                  // written in what reads on the segment: white on a light one was 1.9:1
+                  $text={segment.text}
+                  $labelOpacity={segment.labelOpacity}
                   $percent={segment.percent}
                   $interactive={!!segment.onClick}
                   onClick={segment.onClick}
@@ -362,7 +387,9 @@ const ReqoreStackedBar = memo(
                 >
                   {segment.showValue ? <StyledSegmentValue>{segment.value}</StyledSegmentValue> : null}
                   {segment.showLabel ? (
-                    <StyledSegmentLabel>{segment.label}</StyledSegmentLabel>
+                    <StyledSegmentLabel className='reqore-stacked-bar-segment-label'>
+                      {segment.label}
+                    </StyledSegmentLabel>
                   ) : null}
                 </ReqoreTooltipComponent>
               ))}

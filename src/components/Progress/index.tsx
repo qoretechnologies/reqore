@@ -325,6 +325,7 @@ const ReqoreProgress = memo(
           size={size}
           fluid={fluid}
           disabled={disabled}
+          aria-disabled={disabled ? true : undefined}
           className={`${className || ''} reqore-progress`}
           role='progressbar'
           aria-valuenow={indeterminate ? undefined : Math.round(percentage)}

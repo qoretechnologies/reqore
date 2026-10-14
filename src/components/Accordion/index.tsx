@@ -13,9 +13,14 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
+  getDrawnColor,
   getMainBackgroundColor,
   getReadableColor,
+  getReadableIconLook,
+  getThemeSurface,
+  TReqoreSurface,
 } from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { ACTIVE_ICON_SCALE, DisabledElement, INACTIVE_ICON_SCALE } from '../../styles';
@@ -30,7 +35,13 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import { ButtonBadge, TReqoreBadge } from '../Button';
-import { IReqoreEffect, patchPrimaryGradient, StyledEffect, TReqoreEffectColor } from '../Effect';
+import {
+  IReqoreEffect,
+  patchPrimaryGradient,
+  StyledEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+} from '../Effect';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { StyledIconWrapper } from '../Icon';
 import { ReqoreSpan } from '../Span';
@@ -113,7 +124,9 @@ interface IStyledAccordionHeader {
   size: TSizes;
   $isOpen?: boolean;
   disabled?: boolean;
-  intent?: string;
+  intent?: TReqoreIntent;
+  /** What the accordion is drawn on (`useReqoreSurface`). */
+  $surface?: TReqoreSurface;
   flat?: boolean;
   minimal?: boolean;
   opacity?: number;
@@ -148,6 +161,40 @@ const StyledAccordionItem = styled.div<IStyledAccordionItem>`
   }
 `;
 
+/** The header's fill: a wash of the intent when minimal, else the item's surface a step lighter. */
+const getAccordionHeaderFill = (
+  theme: IReqoreTheme,
+  opacity: number,
+  minimal?: boolean,
+  intent?: TReqoreIntent
+): string =>
+  minimal
+    ? intent
+      ? rgba(theme.intents[intent], 0.1)
+      : 'transparent'
+    : rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity);
+
+/** The header as it is drawn, over what the accordion is drawn on. */
+const getAccordionHeaderBackground = (
+  theme: IReqoreTheme,
+  opacity: number,
+  minimal?: boolean,
+  intent?: TReqoreIntent,
+  surface?: TReqoreSurface
+): TReqoreHexColor => {
+  const fill = getAccordionHeaderFill(theme, opacity, minimal, intent);
+  const under = getThemeSurface(theme, surface);
+
+  return fill === 'transparent' ? under : getDrawnColor(fill, under);
+};
+
+/** The open item's body as it is drawn. */
+const getAccordionBodyBackground = (theme: IReqoreTheme, surface?: TReqoreSurface) =>
+  getDrawnColor(
+    changeDarkness(getMainBackgroundColor(theme), 0.03),
+    getThemeSurface(theme, surface)
+  );
+
 const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
   display: flex;
   align-items: center;
@@ -156,13 +203,18 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease-out;
-  background-color: ${({ theme, opacity = 1, minimal, intent }) => {
-    if (minimal) {
-      return intent ? rgba(theme.intents[intent], 0.1) : 'transparent';
-    }
-    return rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity);
-  }};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  background-color: ${({ theme, opacity = 1, minimal, intent }) =>
+    getAccordionHeaderFill(theme, opacity, minimal, intent)};
+  /* Read against the header as it is drawn - its own shade of the item's colour - not
+     against the colour it is made from. */
+  color: ${({ theme, opacity = 1, minimal, intent, $surface }) =>
+    getReadableColor(
+      theme,
+      undefined,
+      undefined,
+      true,
+      getAccordionHeaderBackground(theme, opacity, minimal, intent, $surface)
+    )};
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
 
   ${StyledIconWrapper} {
@@ -207,10 +259,21 @@ const StyledAccordionContentInner = styled.div<{ theme: IReqoreTheme; size: TSiz
   overflow: hidden;
 `;
 
-const StyledAccordionContentBody = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
+const StyledAccordionContentBody = styled.div<{
+  theme: IReqoreTheme;
+  size: TSizes;
+  $surface?: TReqoreSurface;
+}>`
   padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 4.6}px`};
   font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ theme, $surface }) =>
+    getReadableColor(
+      theme,
+      undefined,
+      undefined,
+      true,
+      getAccordionBodyBackground(theme, $surface)
+    )};
   background-color: ${({ theme }) => rgba(changeDarkness(getMainBackgroundColor(theme), 0.03), 1)};
   border-top: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.05)};
 `;
@@ -255,6 +318,14 @@ const AccordionItemRenderer = memo(
   }: IAccordionItemRendererProps) => {
     const itemIntent = item.intent || intent;
     const itemTheme = useReqoreTheme('main', customTheme, itemIntent);
+    const surface = useReqoreSurface();
+    const headerBackground = getAccordionHeaderBackground(
+      itemTheme,
+      effectiveOpacity ?? 1,
+      minimal,
+      itemIntent,
+      surface
+    );
     const isItemDisabled = item.disabled || disabled;
 
     return (
@@ -262,6 +333,7 @@ const AccordionItemRenderer = memo(
         theme={theme}
         size={size}
         disabled={isItemDisabled}
+        aria-disabled={isItemDisabled ? true : undefined}
         intent={itemIntent}
         flat={flat}
         isFirst={isFirst}
@@ -279,6 +351,7 @@ const AccordionItemRenderer = memo(
           flat={flat}
           minimal={minimal}
           opacity={effectiveOpacity}
+          $surface={surface}
           onClick={() => onToggle(index)}
           onKeyDown={(e) => onKeyDown(e, index)}
           tabIndex={isItemDisabled ? undefined : 0}
@@ -293,7 +366,18 @@ const AccordionItemRenderer = memo(
             <ReqoreIcon
               icon={item.icon}
               size={getOneLessSize(size)}
-              color={item.iconColor}
+              // in its own color, in a shade that stands out from the header by 3:1
+              color={
+                item.iconColor
+                  ? (getReadableIconLook(
+                      itemTheme,
+                      [headerBackground],
+                      getReadableColor(itemTheme, undefined, undefined, true, headerBackground),
+                      1,
+                      item.iconColor
+                    ).color ?? item.iconColor)
+                  : undefined
+              }
               className='reqore-accordion-icon'
             />
           )}
@@ -311,13 +395,16 @@ const AccordionItemRenderer = memo(
             <StyledAccordionContentBody
               theme={theme}
               size={size}
+              $surface={surface}
               className='reqore-accordion-content'
             >
-              {typeof item.content === 'string' ? (
-                <ReqoreSpan size={size}>{item.content}</ReqoreSpan>
-              ) : (
-                item.content
-              )}
+              <ReqoreSurfaceProvider color={getAccordionBodyBackground(theme, surface)}>
+                {typeof item.content === 'string' ? (
+                  <ReqoreSpan size={size}>{item.content}</ReqoreSpan>
+                ) : (
+                  item.content
+                )}
+              </ReqoreSurfaceProvider>
             </StyledAccordionContentBody>
           </StyledAccordionContentInner>
         </StyledAccordionContentWrapper>
@@ -414,6 +501,7 @@ export const ReqoreAccordion = memo(
           size={size}
           $fluid={fluid}
           disabled={disabled}
+          aria-disabled={disabled ? true : undefined}
           rounded={rounded}
           flat={flat}
           intent={intent}
