@@ -1,7 +1,9 @@
 import { noop } from 'lodash';
 import { CSSProperties, ReactNode } from 'react';
 import { IReqoreNotificationProps } from '../../components/Notifications/notification';
-import { ReqoreP } from '../../index';
+import { TReqoreHexColor } from '../../components/Effect';
+import { getDrawnColor } from '../../helpers/colors';
+import { ReqoreP, ReqoreSurfaceProvider } from '../../index';
 
 /** Realistic notifications, one per intent, with a one-line form for `compact`. */
 export type TSample = Partial<IReqoreNotificationProps> & { key: string; short?: string };
@@ -79,7 +81,7 @@ export const STATIC: Partial<IReqoreNotificationProps> = { onClose: noop, onFini
 
 export const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div style={{ display: 'flex', flexFlow: 'column', gap: 8, minWidth: 0 }}>
-    <ReqoreP size='tiny' effect={{ opacity: 0.6, uppercase: true, spaced: 1 }}>
+    <ReqoreP size='tiny' effect={{ opacity: 0.85, uppercase: true, spaced: 1 }}>
       {label}
     </ReqoreP>
     {children}
@@ -115,6 +117,15 @@ export const Grid = ({
  * Something busy behind the glass, so the frost and the translucency can be
  * judged — a plain canvas hides both.
  */
+const BACKDROP_COLORS: TReqoreHexColor[] = ['#1d3557', '#7b2d7a', '#0f6b4f'];
+
+/* Every color the backdrop shows: its gradient's, and each under a stripe. The notifications on it are told
+   (`ReqoreSurfaceProvider`), so their text and icons read on all of it, as an app does for a background of its own. */
+const BACKDROP_SURFACES: TReqoreHexColor[] = [
+  ...BACKDROP_COLORS,
+  ...BACKDROP_COLORS.map((color) => getDrawnColor('rgba(255,255,255,0.08)', color)),
+];
+
 export const Backdrop = ({ children }: { children: ReactNode }) => (
   <div
     style={{
@@ -126,6 +137,6 @@ export const Backdrop = ({ children }: { children: ReactNode }) => (
       backgroundBlendMode: 'overlay',
     }}
   >
-    {children}
+    <ReqoreSurfaceProvider color={BACKDROP_SURFACES}>{children}</ReqoreSurfaceProvider>
   </div>
 );
