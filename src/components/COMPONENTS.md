@@ -77,6 +77,38 @@
 | **ReqoreUIProvider** | The app's root: theme, layout wrapper, the portal popovers / modals / drawers render into, and the context (`options`). **`theme.fontFamily`** (new in 0.78.0; the `'mono'` / `'system'` shorthands or any CSS font stack) is the font Reqore renders in: it is set on the layout wrapper and on the portal, and the text inside inherits it, buttons and inputs included. **Tags and textareas are excluded:** `ReqoreTag` (badges included) and the `ReqoreKeyboardShortcut` keys keep the platform UI font (`system-ui`), and `ReqoreTextarea` keeps the browser's `monospace`, as before; `effect.fontFamily` still picks a font for one of them. Unset (the default) the wrapper and the portal name no font, so the text, the buttons and the inputs are in the page's font (see ReqoreButton / ReqoreInput: they used to render in the browser's control font). **`layoutWrapperProps`** (new in 0.78.0): props for the layout wrapper — `transparent` (no surface: the page's own background shows through, without a seam), `className` (merged), `style`, `aria-*`, `data-*`; `options.withSidebar` still decides the direction. **`isMobile`, `isTablet` and `isHoverCapable`** on the context (`useReqoreProperty(...)`; `isHoverCapable` is `(hover: hover) and (pointer: fine)`) are live media queries wherever the browser can answer them, the story runner included (`useReqoreMedia`, 0.78.5): they were pinned whenever `NODE_ENV` was `test`, which Vitest also sets for browser-mode stories, so no story could put a phone or a touch screen in front of a component that asks them. Where `matchMedia` does not exist (jsdom, SSR) they keep fixed defaults — `isHoverCapable` `true` — decided once when the module loads. |
 | **Marquee on hover** (a `ReqoreUIProvider` behaviour, not a component) | Truncated text scrolls into view once the pointer has rested on it for 450 ms: right to left at a constant ~40 px/s, easing out at the end, holding a second, snapping back and repeating — so a clipped button label, tag, table cell, panel title, heading or any other element with `text-overflow: ellipsis` can be read in place. Installed once on the document by the provider, so nothing is wired per component; keys off the actual CSS truncation and only runs when something is hidden. Pointer devices only; never under `prefers-reduced-motion`. `options.animations.marquee` — `true` (default), `false`, or `{ delay, speed, pause, rest }`; opt one element and its descendants out with `data-reqore-marquee="false"` (`REQORE_MARQUEE_OPT_OUT`). A component that renders one label in several boxes (ReqoreButton keeps two copies and swaps them on hover) marks itself `data-reqore-marquee="host"` (`REQORE_MARQUEE_HOST`) and each copy `"text"` (`REQORE_MARQUEE_TEXT`): hovering anywhere in the host scrolls every copy in step. While scrolling the element carries `data-reqore-marquee-state="running"` / `"end"`. |
 
+## A hover is a pointer that hovers (0.78.5)
+
+What opens on hover opens for a mouse, or a pen held above the screen, and not at a finger's tap:
+- a popover with a hover trigger (`handler` `hover` or `hoverStay`, or `keepOpenOnHover`), which is every
+  `tooltip` prop: on a button, a tag, a table cell, a menu or dropdown item, a collection item;
+- a panel's `floatingActions`;
+- a notification's `pauseOnHover`;
+- a rating's preview of the stars under the pointer;
+- a nav rail's `idleReveal` and `showLabels: 'hover'`;
+- the marquee of a truncated label.
+
+A tap is followed by mouse events that the browser emulates (`mouseenter`, `mouseover`, `mousemove`) and
+that look exactly like a mouse's. So each of these opened at a tap too, and stayed open until the next tap
+elsewhere. Where the mouse is the primary pointer, on a touch laptop, tapping the screen flashed every
+tooltip it touched, and a `hoverStay` tooltip stayed open over what the finger had pressed.
+
+A browser sends an input's pointer events before the mouse events it emulates, and the pointer event says
+what the pointer is. So the decision is made for each event, not for the device: a touch laptop's mouse
+hovers, and so does a mouse plugged into a tablet. A mouse event with no pointer event before it counts as a
+mouse's, so a test that fires `mouseenter` alone still opens a tooltip.
+
+Unchanged:
+- a popover opened by a click (`handler: 'click'`, as a touch-first tooltip is) or by focus;
+- what closes on leave;
+- `isHoverCapable`, which still says whether the device's primary pointer hovers.
+
+The helpers are exported for a consumer's own hover:
+- `isHoveringPointer({ pointerType, buttons })`;
+- `createHoverGate()` / `useHoverGate()`: `notePointer` on the pointer events, then `isHover()` on the mouse
+  event after them, which reads what was noted once;
+- `watchHoverGate(target, gate)`: notes the pointer events on an element or the document.
+
 ## Props and the DOM (0.78.5)
 
 Reqore styles its components with props, and none of those props is written onto an element:

@@ -1,6 +1,7 @@
 import { Placement } from '@popperjs/core';
 import React, { forwardRef, memo, MutableRefObject, useCallback, useEffect, useRef } from 'react';
 import { useUnmount, useUpdateEffect } from 'react-use';
+import { useHoverGate, watchHoverGate } from '../../helpers/hoveringPointer';
 import styled from '../../helpers/styled';
 import { useReqoreProperty } from '../..';
 import type { IReqoreOptions } from '../../containers/UIProvider';
@@ -239,6 +240,11 @@ export const ReqorePopover = memo(
 
       const startEvent = startEvents[handler];
       const endEvent = endEvents[handler];
+      /* A hover's popover opens for a pointer that hovers, not at a tap: the `mouseenter` a browser emulates
+         after a finger's tap is its own, and opened a tooltip until the click closed it - on a touch laptop,
+         where its mouse is the primary pointer and a tooltip is a hover's. See `createHoverGate`. */
+      const opensOnHover = !!keepOpenOnHover || handler === 'hover' || handler === 'hoverStay';
+      const hoverGate = useHoverGate();
 
       /**
        * A popover takes the pointer only if the pointer can get to it.
@@ -641,11 +647,25 @@ export const ReqorePopover = memo(
 
       const handleTargetMouseEnter = useCallback(
         (e: MouseEvent) => {
+          if (!hoverGate.isHover()) {
+            return;
+          }
           isTargetHovered.current = true;
           cancelTimeout();
           open(e);
         },
-        [open, cancelTimeout]
+        [open, cancelTimeout, hoverGate]
+      );
+
+      /* What starts this popover: `open` itself, or, for a hover, `open` for a pointer that hovers. */
+      const handleStart = useCallback(
+        (e: MouseEvent) => {
+          if (opensOnHover && !hoverGate.isHover()) {
+            return;
+          }
+          open(e);
+        },
+        [open, opensOnHover, hoverGate]
       );
 
       const handleTargetMouseLeave = useCallback(
@@ -667,6 +687,7 @@ export const ReqorePopover = memo(
       }, [attemptClose]);
 
       useEffect(() => {
+        let stopHoverGate: (() => void) | undefined;
         if (componentRef && content) {
           // Use capture phase for click detection
           document.addEventListener('click', handleClick, true);
@@ -675,11 +696,13 @@ export const ReqorePopover = memo(
             document.addEventListener('keydown', handleKeyDown, true);
           }
 
+          stopHoverGate = opensOnHover ? watchHoverGate(componentRef, hoverGate) : undefined;
+
           if (keepOpenOnHover) {
             componentRef.addEventListener('mouseenter', handleTargetMouseEnter);
             componentRef.addEventListener('mouseleave', handleTargetMouseLeave);
           } else {
-            componentRef.addEventListener(startEvent, open);
+            componentRef.addEventListener(startEvent, handleStart);
 
             if (endEvent) {
               componentRef.addEventListener(endEvent, close);
@@ -708,11 +731,13 @@ export const ReqorePopover = memo(
           document.removeEventListener('click', handleClick, true);
           document.removeEventListener('keydown', handleKeyDown, true);
 
+          stopHoverGate?.();
+
           if (keepOpenOnHover) {
             componentRef?.removeEventListener('mouseenter', handleTargetMouseEnter);
             componentRef?.removeEventListener('mouseleave', handleTargetMouseLeave);
           } else {
-            componentRef?.removeEventListener(startEvent, open);
+            componentRef?.removeEventListener(startEvent, handleStart);
 
             if (endEvent) {
               componentRef?.removeEventListener(endEvent, close);
@@ -736,6 +761,9 @@ export const ReqorePopover = memo(
         handleTargetMouseEnter,
         handleTargetMouseLeave,
         closePopoversOnEscPress,
+        handleStart,
+        opensOnHover,
+        hoverGate,
       ]);
 
       const handleRef = useCallback((r) => {

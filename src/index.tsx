@@ -108,6 +108,13 @@ export type { TReqoreKeyboardShortcut } from './helpers/shortcuts';
    so a consumer's gesture can feel the same under the finger. */
 export { getSwipeStep, SWIPE } from './helpers/gestures';
 export type { ISwipeThresholds } from './helpers/gestures';
+export {
+  createHoverGate,
+  isHoveringPointer,
+  useHoverGate,
+  watchHoverGate,
+} from './helpers/hoveringPointer';
+export type { IReqoreHoverGate, IReqoreHoveringPointerEvent } from './helpers/hoveringPointer';
 export { ReqoreKeyValueTable } from './components/KeyValueTable';
 export * from './components/Label';
 export { default as ReqoreLayoutContent } from './components/Layout/content';

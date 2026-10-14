@@ -18,6 +18,8 @@ import {
 } from '../../index';
 import { IReqoreTooltip } from '../../types/global';
 import { StoryMeta } from '../utils';
+import { withMouse } from '../utils/mouse';
+import { PHONE_STORY, withTouchScreen } from '../utils/touchScreen';
 import { FlatArg, argManager } from '../utils/args';
 
 const { createArg } = argManager<IReqorePopoverProps>();
@@ -986,6 +988,116 @@ export const ClampedToViewport: Story = {
       await expect(popover).toBeTruthy();
       // Never wider than the viewport it is rendered into.
       await expect(popover.getBoundingClientRect().width).toBeLessThanOrEqual(window.innerWidth);
+    });
+  },
+};
+
+/** Each popover surface the document is given, as its text, from when this was called until `stop`. */
+const watchPopoversShown = () => {
+  const shown: string[] = [];
+  const observer = new MutationObserver((records) =>
+    records.forEach((record) =>
+      record.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) {
+          [node, ...Array.from(node.querySelectorAll<HTMLElement>('.reqore-popover-content'))]
+            .filter((element) => element.matches('.reqore-popover-content'))
+            .forEach((popover) => shown.push(popover.textContent?.trim() ?? ''));
+        }
+      })
+    )
+  );
+  observer.observe(document.body, { childList: true, subtree: true });
+  return { shown, stop: () => observer.disconnect() };
+};
+
+/** A tooltip that stays once a hover opened it: a click does not close it, as it does a plain hover's. */
+const STAYING_TOOLTIP: IReqoreTooltip = { content: 'What this one does', handler: 'hoverStay' };
+
+/** Two buttons with a hover's tooltip, a plain one and one that stays, that count their presses. */
+const TooltipButtonsThatCount = () => {
+  const [presses, setPresses] = useState(0);
+  return (
+    <ReqoreControlGroup vertical>
+      <ReqoreButton
+        className='button-with-a-hover-tooltip'
+        tooltip='What this button does'
+        onClick={() => setPresses((count) => count + 1)}
+      >
+        Press me
+      </ReqoreButton>
+      <ReqoreButton
+        className='button-with-a-staying-tooltip'
+        tooltip={STAYING_TOOLTIP}
+        onClick={() => setPresses((count) => count + 1)}
+      >
+        Press me too
+      </ReqoreButton>
+      <ReqoreMessage flat size='small' className='presses'>
+        {`Pressed ${presses} times`}
+      </ReqoreMessage>
+    </ReqoreControlGroup>
+  );
+};
+
+let popoversShown: ReturnType<typeof watchPopoversShown> | undefined;
+
+export const TapOpensNoHoverTooltip: Story = {
+  tags: ['touch'],
+  globals: PHONE_STORY.globals,
+  parameters: {
+    ...PHONE_STORY.parameters,
+    docs: {
+      description: {
+        story:
+          "Renders two buttons with a hover's tooltip on a phone (390 px) - a plain one, and one that stays once opened (`hoverStay`) - and taps each with a finger: each is pressed, and no tooltip opens. A finger cannot hover, and the mouseenter a browser emulates after a tap is not one: it opened the plain tooltip until the tap's click closed it (on a touch laptop, whose mouse makes its tooltips a hover's), and the one that stays stayed open over what the finger had pressed.",
+      },
+    },
+  },
+  render: () => <TooltipButtonsThatCount />,
+  // watched from before the taps: the tooltip a tap opened was closed again by its click
+  beforeEach: () => {
+    popoversShown = watchPopoversShown();
+    return () => {
+      popoversShown?.stop();
+      popoversShown = undefined;
+    };
+  },
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector('.button-with-a-hover-tooltip') as HTMLElement;
+    const staying = canvasElement.querySelector('.button-with-a-staying-tooltip') as HTMLElement;
+    await withTouchScreen(async (touch) => {
+      await touch.tap(button);
+      // the press is the tap's last event: the mouseenter before it has been heard by then
+      await waitFor(() =>
+        expect(canvasElement.querySelector('.presses')).toHaveTextContent('Pressed 1 times')
+      );
+      await touch.tap(staying);
+      await waitFor(() =>
+        expect(canvasElement.querySelector('.presses')).toHaveTextContent('Pressed 2 times')
+      );
+    });
+    await expect(popoversShown?.shown).toEqual([]);
+  },
+};
+
+export const HoverTooltipOpensForAMouse: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Renders a button with a hover's tooltip and rests the browser's own mouse on it: the tooltip opens, as a hover's does. The mouse is moved off the page when the play ends, so it hovers nothing in the stories after it.",
+      },
+    },
+  },
+  render: () => <TooltipButtonsThatCount />,
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector('.button-with-a-hover-tooltip') as HTMLElement;
+    await withMouse(async (mouse) => {
+      await mouse.restOn(button);
+      await waitFor(() => {
+        const tooltip = document.querySelector('.reqore-popover-content');
+        expect(tooltip).toHaveTextContent('What this button does');
+      });
     });
   },
 };

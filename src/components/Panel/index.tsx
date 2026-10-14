@@ -44,6 +44,7 @@ import styled, {
   TReqoreStylePropKeys,
 } from '../../helpers/styled';
 import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
+import { useHoverGate } from '../../helpers/hoveringPointer';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { FIT_TEXT_FLOOR_PX, useFitTextSize } from '../../hooks/useFitTextSize';
@@ -1539,15 +1540,27 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       };
     }, [showsFloatingActions, updateFloatingActionsPosition]);
 
+    /* The floating actions are a hover's: a finger's tap - and the `mouseenter` a browser emulates after it -
+       shows none (see `createHoverGate`). A finger has the actions in the panel's own bar where it is the
+       primary pointer (`floatingActions` off), and on a touch laptop its tap left them floating until the next. */
+    const hoverGate = useHoverGate();
+    const handlePointerEnter = useCallback(
+      (e: React.PointerEvent<HTMLDivElement>) => {
+        hoverGate.notePointer(e);
+        rest.onPointerEnter?.(e);
+      },
+      [hoverGate, rest.onPointerEnter]
+    );
+
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
-        if (floatingActions) {
+        if (floatingActions && hoverGate.isHover()) {
           if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
           hoverTimerRef.current = setTimeout(() => setIsHovered(true), 150);
         }
         rest.onMouseEnter?.(e);
       },
-      [floatingActions, rest.onMouseEnter]
+      [floatingActions, rest.onMouseEnter, hoverGate]
     );
 
     const cancelHover = useCallback(() => {
@@ -2281,6 +2294,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
             handleRef(node);
             panelRef.current = node;
           }}
+          onPointerEnter={handlePointerEnter}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >

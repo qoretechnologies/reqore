@@ -20,6 +20,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getColorFromMaybeString, getMainBackgroundColor } from '../../helpers/colors';
+import { createHoverGate, watchHoverGate } from '../../helpers/hoveringPointer';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -963,7 +964,15 @@ export const ReqoreNavRail = memo(
       const el = railRef.current;
       if (!el) return undefined;
       let dwell: ReturnType<typeof setTimeout> | undefined;
+      /* Approached by a pointer that hovers: a finger's tap - and the `mouseenter` a browser emulates after it -
+         is no approach (see `createHoverGate`), and on a touch laptop it revealed the rail, and dwelled its
+         labels open, until the next tap elsewhere. */
+      const gate = createHoverGate();
+      const stopGate = watchHoverGate(el, gate);
       const enter = () => {
+        if (!gate.isHover()) {
+          return;
+        }
         hoveredRef.current = true;
         if (idleReveal) setHovered(true);
         if (hoverLabels) {
@@ -984,6 +993,7 @@ export const ReqoreNavRail = memo(
       el.addEventListener('mouseleave', leave);
       return () => {
         clearTimeout(dwell);
+        stopGate();
         el.removeEventListener('mouseenter', enter);
         el.removeEventListener('mouseleave', leave);
       };
