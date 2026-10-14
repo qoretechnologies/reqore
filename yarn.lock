@@ -12694,15 +12694,6 @@ react-universal-interface@^0.6.2:
   resolved "https://registry.yarnpkg.com/react-universal-interface/-/react-universal-interface-0.6.2.tgz#5e8d438a01729a4dbbcbeeceb0b86be146fe2b3b"
   integrity sha512-dg8yXdcQmvgR13RIlZbTRQOoUrDciFVoSBZILwjE2LFISxZZ8loVJKAkuzswl5js8BHda79bIb2b84ehU8IjXw==
 
-react-use-pagination-hook@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/react-use-pagination-hook/-/react-use-pagination-hook-1.1.2.tgz#a9ce122cea7544d9472ce66cd2eddd3492b42a6e"
-  integrity sha512-1acMTXIPH/1mut+0jkfgBJK+YkSO0EQwHdxi1Mv6jSDaK/gAKDXQHUCzeCUXBppiU5EAZ4qg5HbzAn951lZoaQ==
-  dependencies:
-    react "^18.2.0"
-    react-dom "^18.2.0"
-    web-vitals "^2.1.4"
-
 react-use@^17.6.0:
   version "17.6.0"
   resolved "https://registry.yarnpkg.com/react-use/-/react-use-17.6.0.tgz#2101a3a79dc965a25866b21f5d6de4b128488a14"
@@ -14925,11 +14916,6 @@ web-namespaces@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/web-namespaces/-/web-namespaces-2.0.1.tgz#1010ff7c650eccb2592cebeeaf9a1b253fd40692"
   integrity sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ==
-
-web-vitals@^2.1.4:
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/web-vitals/-/web-vitals-2.1.4.tgz#76563175a475a5e835264d373704f9dde718290c"
-  integrity sha512-sVWcwhU5mX6crfI5Vd2dC4qchyTqxV8URinzt25XqVh+bHEPGH4C3NPrNionCP7Obx59wrYEbNlw4Z8sjALzZg==
 
 webidl-conversions@^8.0.1:
   version "8.0.1"
