@@ -224,7 +224,8 @@ const Template: StoryFn<IReqorePanelProps> = (args: IReqorePanelProps) => {
         {
           effect: {
             gradient: {
-              colors: { 0: '#f98304', 100: '#ffc20c' },
+              // light enough at both ends, and under the badge's darker key, for its dark text to read
+              colors: { 0: '#ffa033', 100: '#ffc20c' },
               direction: 'to right bottom',
             },
             spaced: 2,
@@ -1976,16 +1977,16 @@ export const MultipleGradients: Story = {
               100: '#0066ff:darken:1:0',
             },
           },
-          // Small magenta sphere leaking in from the right
+          // Small magenta sphere leaking in from the right (deep enough for the light text over it)
           {
             type: 'radial',
             shape: 'circle',
             size: '320px',
             direction: 'at 100% 250%',
             colors: {
-              0: '#ff3da6:darken:1:0.95',
-              60: '#ff3da6:darken:1:0.35',
-              100: '#ff3da6:darken:1:0',
+              0: '#d0207f:darken:1:0.95',
+              60: '#d0207f:darken:1:0.35',
+              100: '#d0207f:darken:1:0',
             },
           },
           // Linear gradient base — purple-ish middle to dark edges

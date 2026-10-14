@@ -39,7 +39,7 @@ const Template: StoryFn<IReqoreSpinnerProps> = (args) => {
       <ReqoreSpinner
         {...args}
         type={4}
-        iconColor='#f21616'
+        iconColor='#ff4d4d'
         labelEffect={{
           gradient: { colors: 'warning' },
           uppercase: true,
