@@ -19,8 +19,21 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getColorFromMaybeString, getMainBackgroundColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  fadeColor as fadeColorBy,
+  getColorFromMaybeString,
+  getDrawnColor,
+  getMainBackgroundColor,
+  getReadableColor,
+  getReadableGroupOpacity,
+  getThemeSurface,
+  IReqoreGroupMark,
+  READABLE_ICON_CONTRAST,
+} from '../../helpers/colors';
 import { createHoverGate, watchHoverGate } from '../../helpers/hoveringPointer';
+import { CONTROL_ICON_OPACITY } from '../../constants/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { getOneLessSize } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
@@ -39,7 +52,7 @@ import {
   TReqoreTooltipProp,
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
-import ReqoreButton, { IReqoreButtonProps } from '../Button';
+import ReqoreButton, { getButtonColors, getButtonIconLook, IReqoreButtonProps } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import { IReqoreEffect, StyledEffect, TReqoreHexColor, withGlow } from '../Effect';
 import ReqoreMenu from '../Menu';
@@ -147,6 +160,8 @@ export interface IReqoreNavRailProps
   floating?: boolean;
   /** Rest at `idleOpacity` and fade fully in on approach (or while a menu is open). */
   idleReveal?: boolean;
+  /** How faded an idle rail rests (0.34): no fainter than its icons can still stand out by 3:1 (WCAG 1.4.11) -
+   *  on a rail where they cannot, it rests that much less faded. */
   idleOpacity?: number;
   /** Mobile pattern: stay hidden, appear while the user scrolls, hide when they
    *  stop (after `scrollHideDelay`). Takes precedence over `idleReveal`. */
@@ -903,6 +918,18 @@ export const ReqoreNavRail = memo(
     const tipSide: 'left' | 'right' = position === 'right' ? 'left' : 'right';
     const activeIntent: TReqoreIntent = intent ?? 'info';
     const isTransparent = !!(transparent || minimal);
+    // What the rail's items are drawn on: its surface over what is under it, unless it has none.
+    const surroundingSurface = useReqoreSurface();
+    const railSurface = useMemo(
+      () =>
+        isTransparent
+          ? getThemeSurface(theme, surroundingSurface)
+          : getDrawnColor(
+              fadeColorBy(changeLightness(getMainBackgroundColor(theme), 0.02), opacity),
+              getThemeSurface(theme, surroundingSurface)
+            ),
+      [isTransparent, theme, surroundingSurface, opacity]
+    );
     const isFlat = !!(flat || minimal);
 
     const [internalId, setInternalId] = useState(defaultActiveId ?? items[0]?.id);
@@ -1156,7 +1183,63 @@ export const ReqoreNavRail = memo(
       : idleReveal
         ? hovered || openMenus > 0
         : true;
-    const restOpacity = revealOnScroll ? 0 : idleOpacity;
+    /* Hidden while scrolling is not drawn at all; resting idle, the rail stays usable, so it fades only as far
+       as its icons still stand out by 3:1 from what they are drawn on: a mark's (a control icon's 70%) on the rail,
+       the active mark's on its fill - each fading into the page with the rail. */
+    const activeMarkTheme = useReqoreTheme(
+      'main',
+      customTheme,
+      activeItem?.intent ?? activeIntent,
+      undefined,
+      inheritCustomTheme
+    );
+    const restOpacity = useMemo(() => {
+      if (revealOnScroll) {
+        return 0;
+      }
+
+      const marks: IReqoreGroupMark[] = [
+        {
+          color: getReadableColor(theme, undefined, undefined, true, railSurface),
+          alpha: CONTROL_ICON_OPACITY,
+          on: railSurface,
+        },
+      ];
+
+      if (activeItem) {
+        const style = {
+          theme: activeMarkTheme,
+          minimal: false,
+          effect: { interactive: true },
+          $surface: railSurface,
+        };
+        const look = getButtonIconLook(style);
+        const active = getButtonColors(style, 'active');
+
+        marks.push(
+          ...active.backgrounds.map((on) => ({
+            color: look.color ?? active.text,
+            alpha: look.opacity,
+            on,
+          }))
+        );
+      }
+
+      return getReadableGroupOpacity(
+        marks,
+        getThemeSurface(theme, surroundingSurface),
+        idleOpacity,
+        READABLE_ICON_CONTRAST
+      );
+    }, [
+      revealOnScroll,
+      theme,
+      railSurface,
+      activeItem,
+      activeMarkTheme,
+      surroundingSurface,
+      idleOpacity,
+    ]);
 
     const pill = rounded && !radiusSize;
     const radius = resolveRadius(size, radiusSize);
@@ -1350,66 +1433,68 @@ export const ReqoreNavRail = memo(
           $restOpacity={restOpacity}
           $maxHeight={expandedCap}
         >
-          <ReqoreControlGroup
-            vertical
-            gapSize={size}
-            horizontalAlign={columnAlign}
-            // Expanded, the column must be allowed to shrink so the scroll
-            // region inside it (not the header / toggle / footer) takes the cut.
-            style={isExpanded ? EXPANDED_GROUP_STYLE : undefined}
-          >
-            {renderSlot(header)}
-            <NavRailScroll
-              ref={scrollWrapRef}
-              className='reqore-nav-rail-scroll'
-              $fadeFrom={fadeFrom}
-              $fadeTo={fadeTo}
-              $fadeSize={SIZE_TO_PX[size]}
-              $fadeRadius={pill ? Math.round(SIZE_TO_PX[size] / 2) + pad : Math.max(0, radius - 1)}
-              $bleed={pad}
-              $scrollable={isExpanded}
-              $labelled={labelled}
+          <ReqoreSurfaceProvider color={railSurface}>
+            <ReqoreControlGroup
+              vertical
+              gapSize={size}
+              horizontalAlign={columnAlign}
+              // Expanded, the column must be allowed to shrink so the scroll
+              // region inside it (not the header / toggle / footer) takes the cut.
+              style={isExpanded ? EXPANDED_GROUP_STYLE : undefined}
             >
-              <NavRailScrollBox
-                ref={scrollBoxRef}
-                className='reqore-nav-rail-scroll-box'
-                $scrollable={isExpanded}
+              {renderSlot(header)}
+              <NavRailScroll
+                ref={scrollWrapRef}
+                className='reqore-nav-rail-scroll'
+                $fadeFrom={fadeFrom}
+                $fadeTo={fadeTo}
+                $fadeSize={SIZE_TO_PX[size]}
+                $fadeRadius={pill ? Math.round(SIZE_TO_PX[size] / 2) + pad : Math.max(0, radius - 1)}
                 $bleed={pad}
+                $scrollable={isExpanded}
+                $labelled={labelled}
               >
-                <ReqoreControlGroup vertical gapSize={size} horizontalAlign={columnAlign}>
-                  {before.map(renderPrimary)}
-                  {activeAt >= 0 && activeItem ? renderActiveGroup(activeItem) : null}
-                  {after.map(renderPrimary)}
-                  {!expandable && itemsHidden.length ? (
-                    <NavRailOverflow
-                      items={itemsHidden.map((i) => ({ id: i.id, label: i.label, icon: i.icon }))}
-                      size={size}
-                      placement={tipSide}
-                      ariaLabel={moreItemsLabel}
-                      tooltipSuffix={overflowTooltipSuffix}
-                      labelled={labelled}
-                      onSelect={onItemSelect}
-                      onOpenChange={onMenuToggle}
-                    />
-                  ) : null}
-                </ReqoreControlGroup>
-              </NavRailScrollBox>
-            </NavRailScroll>
-            {expandable && hiddenWhenCollapsed > 0 ? (
-              <NavRailExpandToggle
-                expanded={isExpanded}
-                hiddenCount={hiddenWhenCollapsed}
-                size={size}
-                tipSide={tipSide}
-                labelled={labelled}
-                expandLabel={expandLabel}
-                collapseLabel={collapseLabel}
-                tooltipSuffix={overflowTooltipSuffix}
-                onToggle={toggleExpanded}
-              />
-            ) : null}
-            {renderSlot(footer)}
-          </ReqoreControlGroup>
+                <NavRailScrollBox
+                  ref={scrollBoxRef}
+                  className='reqore-nav-rail-scroll-box'
+                  $scrollable={isExpanded}
+                  $bleed={pad}
+                >
+                  <ReqoreControlGroup vertical gapSize={size} horizontalAlign={columnAlign}>
+                    {before.map(renderPrimary)}
+                    {activeAt >= 0 && activeItem ? renderActiveGroup(activeItem) : null}
+                    {after.map(renderPrimary)}
+                    {!expandable && itemsHidden.length ? (
+                      <NavRailOverflow
+                        items={itemsHidden.map((i) => ({ id: i.id, label: i.label, icon: i.icon }))}
+                        size={size}
+                        placement={tipSide}
+                        ariaLabel={moreItemsLabel}
+                        tooltipSuffix={overflowTooltipSuffix}
+                        labelled={labelled}
+                        onSelect={onItemSelect}
+                        onOpenChange={onMenuToggle}
+                      />
+                    ) : null}
+                  </ReqoreControlGroup>
+                </NavRailScrollBox>
+              </NavRailScroll>
+              {expandable && hiddenWhenCollapsed > 0 ? (
+                <NavRailExpandToggle
+                  expanded={isExpanded}
+                  hiddenCount={hiddenWhenCollapsed}
+                  size={size}
+                  tipSide={tipSide}
+                  labelled={labelled}
+                  expandLabel={expandLabel}
+                  collapseLabel={collapseLabel}
+                  tooltipSuffix={overflowTooltipSuffix}
+                  onToggle={toggleExpanded}
+                />
+              ) : null}
+              {renderSlot(footer)}
+            </ReqoreControlGroup>
+          </ReqoreSurfaceProvider>
         </NavRailSurface>
       </ReqoreThemeProvider>
     );

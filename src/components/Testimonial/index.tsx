@@ -12,9 +12,17 @@ import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeDarkness,
   changeLightness,
+  getDrawnColor,
   getMainBackgroundColor,
+  getReadableAlpha,
   getReadableColor,
+  getReadableIconLook,
+  getReadableIntentColor,
+  getReadableTextOn,
+  getThemeSurface,
+  READABLE_ICON_CONTRAST,
 } from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import { getOneLessSize, resolvePadding, TReqorePadded } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { DisabledElement, RaisedElement } from '../../styles';
@@ -32,7 +40,7 @@ import {
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import { getEffectBackgrounds, IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
 import ReqoreEntityRow from '../EntityRow';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
@@ -222,11 +230,13 @@ const StyledTestimonial = styled(StyledEffect).withConfig({
 const StyledQuoteIconWrapper = styled.div<{
   theme: IReqoreTheme;
   $intent?: TReqoreIntent;
+  /** As faint as it is drawn, as far as its icon stands out from the card by 3:1. */
+  $opacity: number;
 }>`
   display: flex;
   color: ${({ theme, $intent }) =>
     $intent ? theme.intents[$intent] : changeLightness(getMainBackgroundColor(theme), 0.22)};
-  opacity: 0.7;
+  opacity: ${({ $opacity }) => $opacity};
 `;
 
 const StyledQuote = styled.div<{ $wrap: boolean; size: TSizes; theme: IReqoreTheme }>`
@@ -304,11 +314,41 @@ const ReqoreTestimonial = memo(
       const hasAttribution = !!author || !!role || hasAvatar || hasBadge;
       const quoteContent = quote ?? children;
 
+      /* What the card is drawn in: what it holds is read against it, and the quote mark, in its own
+         color or the intent's, stands out from it by 3:1 however faint it is drawn. */
+      const surface = useReqoreSurface();
+      const background = useMemo(
+        () =>
+          transparent
+            ? getThemeSurface(theme, surface)
+            : getDrawnColor(tintedBgFor(theme, intent), getThemeSurface(theme, surface)),
+        [transparent, theme, intent, surface]
+      );
+      // each color of the card's gradient, when its effect draws one
+      const backgrounds = useMemo(
+        () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
+        [theme, effect, background, surface]
+      );
+      const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
       const resolvedAvatarColor: TReqoreEffectColor = useMemo(() => {
-        if (avatarColor) return avatarColor;
-        if (intent) return theme.intents[intent] as TReqoreEffectColor;
-        return getReadableColor(theme, undefined, undefined, true) as TReqoreEffectColor;
-      }, [avatarColor, intent, theme]);
+        if (avatarColor) {
+          return (getReadableIconLook(theme, backgrounds, text, 1, avatarColor).color ??
+            avatarColor) as TReqoreEffectColor;
+        }
+        if (intent) {
+          return getReadableIntentColor(
+            theme,
+            intent,
+            READABLE_ICON_CONTRAST,
+            backgrounds
+          ) as TReqoreEffectColor;
+        }
+        return text as TReqoreEffectColor;
+      }, [avatarColor, intent, theme, backgrounds, text]);
+      const quoteMarkOpacity = useMemo(
+        () => getReadableAlpha(resolvedAvatarColor, backgrounds, 0.7, READABLE_ICON_CONTRAST),
+        [resolvedAvatarColor, backgrounds]
+      );
 
       return (
         <ReqoreTooltipComponent
@@ -332,88 +372,92 @@ const ReqoreTestimonial = memo(
           $padded={padded}
           $paddingSize={paddingSize ?? size}
           disabled={disabled}
+          aria-disabled={disabled ? true : undefined}
           effect={effect}
           onClick={onClick}
           className={`${className || ''} reqore-testimonial`}
         >
-          {showQuoteIcon && (
-            <StyledQuoteIconWrapper
-              theme={theme}
-              $intent={intent}
-              className='reqore-testimonial-quote-icon'
-              aria-hidden
-            >
-              <ReqoreIcon icon='DoubleQuotesL' size={size} color={resolvedAvatarColor} />
-            </StyledQuoteIconWrapper>
-          )}
-          {rating !== undefined && (
-            <ReqoreRating
-              className='reqore-testimonial-rating'
-              value={rating}
-              max={maxRating}
-              size={secondarySize}
-              intent={intent}
-              readOnly
-              allowHalf
-              aria-label={ratingAriaLabel(rating, maxRating)}
-            />
-          )}
-          {quoteContent && (
-            <StyledQuote
-              theme={theme}
-              size={size}
-              $wrap={wrap}
-              className='reqore-testimonial-quote'
-            >
-              <ReqoreP
-                as={getReqoreTextElement(quoteContent)}
-                size={size}
-                effect={quoteEffect}
-                className='reqore-testimonial-quote-text'
+          <ReqoreSurfaceProvider color={backgrounds}>
+            {showQuoteIcon && (
+              <StyledQuoteIconWrapper
+                theme={theme}
+                $intent={intent}
+                $opacity={quoteMarkOpacity}
+                className='reqore-testimonial-quote-icon'
+                aria-hidden
               >
-                {quoteContent}
-              </ReqoreP>
-            </StyledQuote>
-          )}
-          {hasAttribution && (
-            <ReqoreEntityRow
-              className='reqore-testimonial-footer'
-              label={author}
-              labelEffect={{ weight: 'bold', italic: false, ...authorEffect }}
-              description={role}
-              descriptionEffect={{ italic: false, ...roleEffect }}
-              icon={avatarIcon}
-              iconImage={avatar}
-              iconColor={resolvedAvatarColor}
-              iconProps={avatarIconProps}
-              iconHasBackground={false}
-              showIcon={hasAvatar}
-              badge={badge}
-              size={size}
-              intent={intent}
-              transparent
-              flat
-              fluid
-              padded={false}
-              wrap={wrap}
-              customTheme={customTheme}
-              inheritCustomTheme={inheritCustomTheme}
-            />
-          )}
-          {actions && actions.length > 0 && (
-            <ReqoreControlGroup gapSize='small' className='reqore-testimonial-actions'>
-              {actions.map((action, idx) => (
-                <ReqoreButton
-                  key={idx}
-                  size={secondarySize}
-                  intent={action.intent ?? intent}
-                  {...action}
+                <ReqoreIcon icon='DoubleQuotesL' size={size} color={resolvedAvatarColor} />
+              </StyledQuoteIconWrapper>
+            )}
+            {rating !== undefined && (
+              <ReqoreRating
+                className='reqore-testimonial-rating'
+                value={rating}
+                max={maxRating}
+                size={secondarySize}
+                intent={intent}
+                readOnly
+                allowHalf
+                aria-label={ratingAriaLabel(rating, maxRating)}
+              />
+            )}
+            {quoteContent && (
+              <StyledQuote
+                theme={theme}
+                size={size}
+                $wrap={wrap}
+                className='reqore-testimonial-quote'
+              >
+                <ReqoreP
+                  as={getReqoreTextElement(quoteContent)}
+                  size={size}
+                  effect={quoteEffect}
+                  className='reqore-testimonial-quote-text'
                 >
-                  {action.label}
-                </ReqoreButton>
-              ))}
-            </ReqoreControlGroup>
-          )}
+                  {quoteContent}
+                </ReqoreP>
+              </StyledQuote>
+            )}
+            {hasAttribution && (
+              <ReqoreEntityRow
+                className='reqore-testimonial-footer'
+                label={author}
+                labelEffect={{ weight: 'bold', italic: false, ...authorEffect }}
+                description={role}
+                descriptionEffect={{ italic: false, ...roleEffect }}
+                icon={avatarIcon}
+                iconImage={avatar}
+                iconColor={resolvedAvatarColor}
+                iconProps={avatarIconProps}
+                iconHasBackground={false}
+                showIcon={hasAvatar}
+                badge={badge}
+                size={size}
+                intent={intent}
+                transparent
+                flat
+                fluid
+                padded={false}
+                wrap={wrap}
+                customTheme={customTheme}
+                inheritCustomTheme={inheritCustomTheme}
+              />
+            )}
+            {actions && actions.length > 0 && (
+              <ReqoreControlGroup gapSize='small' className='reqore-testimonial-actions'>
+                {actions.map((action, idx) => (
+                  <ReqoreButton
+                    key={idx}
+                    size={secondarySize}
+                    intent={action.intent ?? intent}
+                    {...action}
+                  >
+                    {action.label}
+                  </ReqoreButton>
+                ))}
+              </ReqoreControlGroup>
+            )}
+          </ReqoreSurfaceProvider>
         </ReqoreTooltipComponent>
       );
     }

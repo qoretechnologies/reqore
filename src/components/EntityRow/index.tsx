@@ -4,7 +4,19 @@ import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import { PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TOUCH_TARGET_PX, TSizes } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getMainBackgroundColor, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getDrawnColor,
+  getMainBackgroundColor,
+  getReadableAlpha,
+  getReadableColor,
+  getReadableIconLook,
+  getReadableIntentColor,
+  getReadableTextOn,
+  getThemeSurface,
+  READABLE_ICON_CONTRAST,
+} from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import {
   getOneLessSize,
   resolvePadding,
@@ -29,7 +41,13 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup from '../ControlGroup';
 import ReqoreDropdown, { IReqoreDropdownProps } from '../Dropdown';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor } from '../Effect';
+import {
+  getEffectBackgrounds,
+  IReqoreEffect,
+  StyledEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+} from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { IReqorePanelSubAction } from '../Panel';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
@@ -174,6 +192,8 @@ interface IStyledRowProps {
   theme: IReqoreTheme;
   $intent?: TReqoreIntent;
   $transparent?: boolean;
+  /** The row as it is drawn, over what is under it: its text is read against it. */
+  $background?: TReqoreHexColor;
   size: TSizes;
   $fluid?: boolean;
   flat?: boolean;
@@ -201,6 +221,12 @@ const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
   intent
     ? rgba(theme.intents[intent], 0.06)
     : rgba(changeLightness(getMainBackgroundColor(theme), 0.04), 1);
+
+/** The icon's tile: a wash of the intent, or the row's surface a step lighter. */
+const iconTileFillFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
+  intent
+    ? rgba(theme.intents[intent], 0.15)
+    : rgba(changeLightness(getMainBackgroundColor(theme), 0.06), 1);
 
 /* Wrapper the ResizeObserver measures. Width follows the row's `fluid` prop so a
    `fluid={false}` row nested in a flex parent still shrinks to content and the
@@ -245,7 +271,8 @@ const StyledRow = styled(StyledEffect).withConfig({
         )}`};
   align-items: center;
   width: ${({ $fluid }) => ($fluid ? '100%' : 'auto')};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ theme, $background }) =>
+    getReadableColor(theme, undefined, undefined, true, $background)};
   transition: background-color 0.15s ease-out;
 
   /* Narrow-container layout, driven by the data-narrow attribute the row's
@@ -335,10 +362,7 @@ const StyledIconTile = styled.div<IStyledIconTileProps>`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background-color: ${({ theme, $intent }) =>
-    $intent
-      ? rgba(theme.intents[$intent], 0.15)
-      : rgba(changeLightness(getMainBackgroundColor(theme), 0.06), 1)};
+  background-color: ${({ theme, $intent }) => iconTileFillFor(theme, $intent)};
 `;
 
 const StyledBody = styled.div`
@@ -447,11 +471,46 @@ const ReqoreEntityRow = memo(
       const isPhone = useReqoreProperty('isMobile');
       const actionsSpanRow = actionsStacked && !!isPhone;
 
+      /* What the row is drawn on and in - its tint over what is under it, and the icon's tile over
+         that - and its text: what it holds, its fainter description and metadata and its icon are read
+         against them. */
+      const surface = useReqoreSurface();
+      const background = useMemo(
+        () =>
+          transparent
+            ? getThemeSurface(theme, surface)
+            : getDrawnColor(tintedBgFor(theme, intent), getThemeSurface(theme, surface)),
+        [transparent, theme, intent, surface]
+      );
+      // each color of the row's gradient, when its effect draws one
+      const backgrounds = useMemo(
+        () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
+        [theme, effect, background, surface]
+      );
+      const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+      const iconBackgrounds = useMemo(
+        () =>
+          resolvedIconHasBackground
+            ? backgrounds.map((under) => getDrawnColor(iconTileFillFor(theme, intent), under))
+            : backgrounds,
+        [resolvedIconHasBackground, theme, intent, backgrounds]
+      );
+      // The icon is in its own color, or the intent's, in a shade that stands out by 3:1 from its tile.
       const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
-        if (iconColor) return iconColor;
-        if (intent) return theme.intents[intent] as TReqoreEffectColor;
-        return getReadableColor(theme, undefined, undefined, true) as TReqoreEffectColor;
-      }, [iconColor, intent, theme]);
+        if (iconColor) {
+          return (getReadableIconLook(theme, iconBackgrounds, text, 1, iconColor).color ??
+            iconColor) as TReqoreEffectColor;
+        }
+        if (intent) {
+          return getReadableIntentColor(
+            theme,
+            intent,
+            READABLE_ICON_CONTRAST,
+            iconBackgrounds
+          ) as TReqoreEffectColor;
+        }
+        return text as TReqoreEffectColor;
+      }, [iconColor, intent, theme, iconBackgrounds, text]);
 
       return (
         <StyledContainer ref={containerRef} $fluid={fluid} className='reqore-entity-row-container'>
@@ -473,6 +532,7 @@ const ReqoreEntityRow = memo(
             theme={theme}
             $intent={intent}
             $transparent={transparent}
+            $background={background}
             size={size}
             $fluid={fluid}
             flat={flat}
@@ -480,6 +540,7 @@ const ReqoreEntityRow = memo(
             $raised={raised}
             $clickable={interactive}
             disabled={disabled}
+            aria-disabled={disabled ? true : undefined}
             $hasIcon={hasIcon}
             $iconHasBackground={resolvedIconHasBackground}
             $padded={padded}
@@ -513,39 +574,48 @@ const ReqoreEntityRow = memo(
                   className={`reqore-entity-row-icon ${iconProps?.className || ''}`.trim()}
                 />
               ))}
-            <StyledBody className='reqore-entity-row-body'>
-              <StyledLabelLine $wrap={wrap} className='reqore-entity-row-label'>
-                <StyledTextSlot $wrap={wrap}>
-                  <ReqoreSpan size={size} effect={labelEffect}>
-                    {label}
-                  </ReqoreSpan>
-                </StyledTextSlot>
-                {hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
-              </StyledLabelLine>
-              {description && (
-                <StyledTextSlot $wrap={wrap}>
-                  <ReqoreP
-                    as={getReqoreTextElement(description)}
-                    size={secondarySize}
-                    effect={{ opacity: 0.7, ...descriptionEffect }}
-                    className='reqore-entity-row-description'
-                  >
-                    {description}
-                  </ReqoreP>
-                </StyledTextSlot>
-              )}
-              {metadata && (
-                <StyledTextSlot $wrap={wrap}>
-                  <ReqoreSpan
-                    size={secondarySize}
-                    effect={{ opacity: 0.5, ...metadataEffect }}
-                    className='reqore-entity-row-metadata'
-                  >
-                    {metadata}
-                  </ReqoreSpan>
-                </StyledTextSlot>
-              )}
-            </StyledBody>
+            <ReqoreSurfaceProvider color={backgrounds}>
+              <StyledBody className='reqore-entity-row-body'>
+                <StyledLabelLine $wrap={wrap} className='reqore-entity-row-label'>
+                  <StyledTextSlot $wrap={wrap}>
+                    <ReqoreSpan size={size} effect={labelEffect}>
+                      {label}
+                    </ReqoreSpan>
+                  </StyledTextSlot>
+                  {hasBadge && <ButtonBadge size={size} content={badge} margin='none' />}
+                </StyledLabelLine>
+                {description && (
+                  <StyledTextSlot $wrap={wrap}>
+                    <ReqoreP
+                      as={getReqoreTextElement(description)}
+                      size={secondarySize}
+                      effect={{
+                        ...descriptionEffect,
+                        // fainter than the label, as far as it stays readable
+                        opacity: getReadableAlpha(text, backgrounds, descriptionEffect?.opacity ?? 0.7),
+                      }}
+                      className='reqore-entity-row-description'
+                    >
+                      {description}
+                    </ReqoreP>
+                  </StyledTextSlot>
+                )}
+                {metadata && (
+                  <StyledTextSlot $wrap={wrap}>
+                    <ReqoreSpan
+                      size={secondarySize}
+                      effect={{
+                        ...metadataEffect,
+                        opacity: getReadableAlpha(text, backgrounds, metadataEffect?.opacity ?? 0.5),
+                      }}
+                      className='reqore-entity-row-metadata'
+                    >
+                      {metadata}
+                    </ReqoreSpan>
+                  </StyledTextSlot>
+                )}
+              </StyledBody>
+            </ReqoreSurfaceProvider>
             {actionsAsMenu && (
               <ReqoreRowActionsMenu
                 className='reqore-entity-row-actions'

@@ -21,7 +21,13 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import {
+  changeLightness,
+  getDrawnColor,
+  getReadableColorFrom,
+  getThemeSurface,
+} from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -331,6 +337,18 @@ const ReqoreSegmentedControl = memo(
     ) => {
       const animations = useReqoreProperty('animations');
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
+      // What the items are drawn on: the track, over what the control is drawn on; the selected one on the
+      // indicator, which is drawn in the theme's own colour.
+      const surroundingSurface = useReqoreSurface();
+      const trackSurface = useMemo(
+        () =>
+          getDrawnColor(changeLightness(theme.main, 0.03), getThemeSurface(theme, surroundingSurface)),
+        [theme, surroundingSurface]
+      );
+      const indicatorSurface = useMemo(
+        () => getDrawnColor(theme.main, trackSurface),
+        [theme, trackSurface]
+      );
 
       const [_value, _setValue] = useState<string | undefined>(
         value ?? defaultValue ?? items[0]?.value
@@ -551,54 +569,56 @@ const ReqoreSegmentedControl = memo(
                 theme={theme}
                 fluid={fluid}
               >
-                <ReqoreButton
-                  {...item.props}
-                  ref={(el) => {
-                    itemRefs.current[item.value] = el;
-                  }}
-                  flat
-                  transparent
-                  // The item's own fields win over its props, but only where they are set.
-                  {...omitBy(
-                    {
-                      icon: item.icon,
-                      rightIcon: item.rightIcon,
-                      badge: item.badge,
-                      tooltip: item.tooltip,
-                      effect: item.effect,
-                    },
-                    isUndefined
-                  )}
-                  disabled={itemDisabled}
-                  size={size}
-                  fluid={fluid}
-                  intent={
-                    isSelected && selectedItemIntent
-                      ? selectedItemIntent
-                      : undefined
-                  }
-                  customTheme={
-                    isSelected && !selectedItemIntent
-                      ? {
-                          main: getReadableColorFrom(theme.main),
-                        }
-                      : customTheme
-                  }
-                  onClick={() => handleSelect(item.value)}
-                  role='radio'
-                  aria-checked={isSelected}
-                  tabIndex={
-                    isSelected
-                      ? 0
-                      : selectedVisibleIndex < 0 && index === 0
-                      ? 0
-                      : -1
-                  }
-                  className={`${item.props?.className || ''} reqore-segmented-control-item`}
-                  pill={pill}
-                >
-                  {item.label}
-                </ReqoreButton>
+                <ReqoreSurfaceProvider color={isSelected ? indicatorSurface : trackSurface}>
+                  <ReqoreButton
+                    {...item.props}
+                    ref={(el) => {
+                      itemRefs.current[item.value] = el;
+                    }}
+                    flat
+                    transparent
+                    // The item's own fields win over its props, but only where they are set.
+                    {...omitBy(
+                      {
+                        icon: item.icon,
+                        rightIcon: item.rightIcon,
+                        badge: item.badge,
+                        tooltip: item.tooltip,
+                        effect: item.effect,
+                      },
+                      isUndefined
+                    )}
+                    disabled={itemDisabled}
+                    size={size}
+                    fluid={fluid}
+                    intent={
+                      isSelected && selectedItemIntent
+                        ? selectedItemIntent
+                        : undefined
+                    }
+                    customTheme={
+                      isSelected && !selectedItemIntent
+                        ? {
+                            main: getReadableColorFrom(theme.main),
+                          }
+                        : customTheme
+                    }
+                    onClick={() => handleSelect(item.value)}
+                    role='radio'
+                    aria-checked={isSelected}
+                    tabIndex={
+                      isSelected
+                        ? 0
+                        : selectedVisibleIndex < 0 && index === 0
+                        ? 0
+                        : -1
+                    }
+                    className={`${item.props?.className || ''} reqore-segmented-control-item`}
+                    pill={pill}
+                  >
+                    {item.label}
+                  </ReqoreButton>
+                </ReqoreSurfaceProvider>
               </StyledItemWrapper>
             );
           })}

@@ -5,7 +5,14 @@ import { ReqoreErrorBoundary } from '../..';
 import { HALF_PADDING_FROM_SIZE, RADIUS_FROM_SIZE } from '../../constants/sizes';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import ReqoreThemeProvider from '../../containers/ThemeProvider';
-import { changeDarkness, changeLightness, getMainBackgroundColor } from '../../helpers/colors';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
+import {
+  changeDarkness,
+  changeLightness,
+  getDrawnColor,
+  getMainBackgroundColor,
+  getThemeSurfaces,
+} from '../../helpers/colors';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { useCloneThroughFragments } from '../../hooks/useCloneThroughFragments';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -19,7 +26,7 @@ import {
   IWithReqoreTransparent,
 } from '../../types/global';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
-import { StyledEffect } from '../Effect';
+import { getEffectBackgrounds, getPrimaryGradient, StyledEffect } from '../Effect';
 import { ReqoreSkeleton } from '../Skeleton';
 
 export interface IReqoreMenuProps
@@ -156,6 +163,24 @@ const ReqoreMenu = memo(
       );
 
       const style = useMemo(() => ({ minHeight: '0', flex: '1 1 auto' }), []);
+      const parentSurface = useReqoreSurface();
+      // what the items are drawn on: the menu's color (none when transparent), its effect's gradient over it
+      const menuSurfaces = useMemo(
+        () =>
+          rest.transparent && !getPrimaryGradient(rest.effect?.gradient)
+            ? undefined
+            : getThemeSurfaces(theme, parentSurface).flatMap((under) =>
+                getEffectBackgrounds(
+                  theme,
+                  rest.effect,
+                  rest.transparent
+                    ? under
+                    : getDrawnColor(changeDarkness(getMainBackgroundColor(theme), 0.03), under),
+                  under
+                )
+              ),
+        [theme, parentSurface, rest.transparent, rest.effect]
+      );
 
       return (
         <ReqoreErrorBoundary {...errorBoundaryOptions}>
@@ -173,13 +198,15 @@ const ReqoreMenu = memo(
               theme={theme}
               ref={handleMenuRef}
             >
-              <ReqoreControlGroup vertical gapSize={itemGap} fluid style={style}>
-                {skeleton
-                  ? React.Children.map(children, (_child, index) => (
-                      <ReqoreSkeleton key={index} size={size} width='100%' />
-                    ))
-                  : clone(children)}
-              </ReqoreControlGroup>
+              <ReqoreSurfaceProvider color={menuSurfaces}>
+                <ReqoreControlGroup vertical gapSize={itemGap} fluid style={style}>
+                  {skeleton
+                    ? React.Children.map(children, (_child, index) => (
+                        <ReqoreSkeleton key={index} size={size} width='100%' />
+                      ))
+                    : clone(children)}
+                </ReqoreControlGroup>
+              </ReqoreSurfaceProvider>
             </StyledReqoreMenu>
           </ReqoreThemeProvider>
         </ReqoreErrorBoundary>

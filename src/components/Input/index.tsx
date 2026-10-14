@@ -12,7 +12,18 @@ import {
   TSizes,
 } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
-import { changeLightness, getReadableColor } from '../../helpers/colors';
+import {
+  changeLightness,
+  getDrawnColor,
+  getReadableAlpha,
+  getReadableColor,
+  getReadableFadedColor,
+  getReadableIconLook,
+  getThemeSurface,
+  READABLE_ICON_CONTRAST,
+  TReqoreSurface,
+} from '../../helpers/colors';
+import { useReqoreSurface } from '../../context/SurfaceContext';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -30,7 +41,7 @@ import {
 } from '../../types/global';
 import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton from '../Button';
-import { StyledEffect, TReqoreEffectColor } from '../Effect';
+import { StyledEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import ReqoreInputClearButton from '../InputClearButton';
 import { ReqoreKeyboardShortcut } from '../KeyboardShortcut';
@@ -111,6 +122,8 @@ export interface IReqoreInputPasswordToggle {
 
 export interface IReqoreInputStyle extends IReqoreInputProps {
   theme: IReqoreTheme;
+  /** What the input is drawn on (`useReqoreSurface`): the theme's surface when not known. */
+  $surface?: TReqoreSurface;
   _size?: TSizes;
   clearable?: boolean;
   hasIcon?: boolean;
@@ -119,6 +132,55 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
 }
 
 // `width` is the field's CSS width; on a `div` it is not an attribute.
+/**
+ * What an input (or a text area) is drawn on and in: its background as drawn over the theme it sits on (a 10% wash
+ * of the theme's main, or nothing when minimal or transparent; focused, 15%), and the text that reads there.
+ */
+export const getInputColors = (
+  theme: IReqoreTheme,
+  minimal?: boolean,
+  transparent?: boolean,
+  focused: boolean = false,
+  surface?: TReqoreSurface
+): { background: TReqoreHexColor; text: TReqoreHexColor } => {
+  const under = getThemeSurface(theme, surface);
+  const background =
+    minimal || transparent
+      ? getDrawnColor(under)
+      : getDrawnColor(rgba(theme.main, focused ? 0.15 : 0.1), under);
+
+  return { background, text: getReadableColor(theme, undefined, undefined, true, background) };
+};
+
+/** A placeholder, fainter than a value (30%, 50% focused) but never too faint to read. */
+export const getInputPlaceholderColor = (
+  theme: IReqoreTheme,
+  minimal?: boolean,
+  transparent?: boolean,
+  focused: boolean = false,
+  surface?: TReqoreSurface
+): string => {
+  const { background, text } = getInputColors(theme, minimal, transparent, focused, surface);
+
+  return getReadableFadedColor(text, background, focused ? 0.5 : 0.3);
+};
+
+/** The clear button's opacity when shown: 50%, or as much more as it needs to stand out by 3:1. */
+export const getInputClearButtonOpacity = (
+  theme: IReqoreTheme,
+  minimal?: boolean,
+  transparent?: boolean,
+  surface?: TReqoreSurface
+): number => {
+  const resting = getInputColors(theme, minimal, transparent, false, surface);
+  const focused = getInputColors(theme, minimal, transparent, true, surface);
+
+  return Math.max(
+    getReadableAlpha(resting.text, resting.background, 0.5, READABLE_ICON_CONTRAST),
+    getReadableAlpha(focused.text, focused.background, 0.5, READABLE_ICON_CONTRAST)
+  );
+};
+
 export const StyledInputWrapper = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('width'),
 })<IReqoreInputStyle>`
@@ -135,6 +197,11 @@ export const StyledInputWrapper = styled.div.withConfig({
     minimal || rounded === false
       ? 0
       : resolveRadius(_size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px;
+
+  /* The icons beside the text (and the clear button) are drawn in its colour, not in
+     whatever the page around the input is written in. */
+  color: ${({ theme, minimal, transparent, $surface }) =>
+    getInputColors(theme, minimal, transparent, false, $surface).text};
 
   ${InactiveIconScale}
 
@@ -248,8 +315,8 @@ export const StyledInput = styled(StyledEffect).withConfig({
 
   background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
     minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
-  color: ${({ theme }: IReqoreInputStyle) =>
-    getReadableColor(theme, undefined, undefined, true, theme.originalMain)};
+  color: ${({ theme, minimal, transparent, $surface }: IReqoreInputStyle) =>
+    getInputColors(theme, minimal, transparent, false, $surface).text};
 
   transition: all 0.2s ease-out;
 
@@ -262,14 +329,14 @@ export const StyledInput = styled(StyledEffect).withConfig({
 
   &::placeholder {
     transition: all 0.2s ease-out;
-    color: ${({ theme }) =>
-      rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.3)};
+    color: ${({ theme, minimal, transparent, $surface }) =>
+      getInputPlaceholderColor(theme, minimal, transparent, false, $surface)};
   }
 
   &:focus {
     &::placeholder {
-      color: ${({ theme }) =>
-        rgba(getReadableColor(theme, undefined, undefined, true, theme.originalMain), 0.5)};
+      color: ${({ theme, minimal, transparent, $surface }) =>
+        getInputPlaceholderColor(theme, minimal, transparent, true, $surface)};
     }
   }
 
@@ -342,6 +409,30 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       ? `Loader${loadingIconType || ''}Line`
       : icon || leftIconProps?.icon;
 
+    // The icons stand out from the input's background, as its text does.
+    const surface = useReqoreSurface();
+    const { background: inputBackground, text: inputText } = getInputColors(
+      theme,
+      minimal,
+      rest.transparent,
+      false,
+      surface
+    );
+    const leftIconLook = getReadableIconLook(
+      theme,
+      [inputBackground],
+      inputText,
+      CONTROL_ICON_OPACITY,
+      iconColor
+    );
+    const rightIconLook = getReadableIconLook(
+      theme,
+      [inputBackground],
+      inputText,
+      CONTROL_ICON_OPACITY,
+      rightIconColor
+    );
+
     const hasPasswordToggle = rest.type === 'password' && !!passwordToggle;
     const passwordToggleConfig: IReqoreInputPasswordToggle =
       typeof passwordToggle === 'object' ? passwordToggle : {};
@@ -380,6 +471,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       <ReqoreTooltipComponent
         Component={StyledInputWrapper}
         className='reqore-control-wrapper'
+        $surface={surface}
         fluid={fluid}
         fixed={fixed}
         width={width}
@@ -400,8 +492,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           <StyledIconWrapper _size={size}>
             <ReqoreIcon
               size={size}
-              color={iconColor}
-              effect={{ opacity: CONTROL_ICON_OPACITY }}
+              color={leftIconLook.color ?? iconColor}
+              effect={{ opacity: leftIconLook.opacity }}
               {...leftIconProps}
               icon={leftIcon}
               animation={loading ? 'spin' : leftIconProps?.animation}
@@ -411,6 +503,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         <StyledInput
           as='input'
           {...omit(rest, ['children'])}
+          $surface={surface}
           id={inputId}
           type={hasPasswordToggle && passwordVisible ? 'text' : rest.type}
           effect={{
@@ -441,6 +534,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           label={clearLabel}
           hasRightIcon={!!rightIcon}
           rightOffset={passwordToggleWidth}
+          shownOpacity={getInputClearButtonOpacity(theme, minimal, rest.transparent, surface)}
           size={size}
           show={rest?.value && rest.value !== '' ? true : false}
         />
@@ -449,8 +543,8 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             <ReqoreIcon
               size={size}
               icon={rightIcon}
-              color={rightIconColor}
-              effect={{ opacity: CONTROL_ICON_OPACITY }}
+              color={rightIconLook.color ?? rightIconColor}
+              effect={{ opacity: rightIconLook.opacity }}
               {...rightIconProps}
             />
           </StyledIconWrapper>
