@@ -412,6 +412,8 @@ const ReqoreTabsList = ({
                 isReqoreComponent
                 noWrapper
                 handler='hoverStay'
+                // the hidden tabs' only way in: a tap opens it too
+                opensOnTap
                 {...overflowPopoverProps}
                 content={
                   <ReqoreMenu
