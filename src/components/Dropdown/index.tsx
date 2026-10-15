@@ -268,6 +268,8 @@ function ReqoreDropdown<T = IReqoreButtonProps>({
       noWrapper
       placement={placement || 'bottom-start'}
       handler={handler || 'click'}
+      // a list is a way in: a hover dropdown opens at a tap too
+      opensOnTap
       openOnMount={isDefaultOpen}
       content={popoverContent}
       passPopoverData={passPopoverData}

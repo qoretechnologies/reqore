@@ -664,6 +664,8 @@ const ReqoreSegmentedControl = memo(
                 isReqoreComponent
                 noWrapper
                 handler='hoverStay'
+                // the hidden segments' only way in: a tap opens it too
+                opensOnTap
                 content={
                   <ReqoreMenu customTheme={customTheme}>
                     {hiddenItems.map((overflowItem) => (
