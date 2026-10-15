@@ -226,7 +226,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const TABLE_PROPS: Partial<IReqoreTableProps> = {
+const TABLE_PROPS = {
   columns,
   data: rows,
   selectable: true,
@@ -234,10 +234,10 @@ const TABLE_PROPS: Partial<IReqoreTableProps> = {
   flat: true,
   rounded: true,
   height: 620,
-  renderExpandedRow: (row) => (
+  renderExpandedRow: (row: IReqoreTableRowData) => (
     <ReqoreP size='small'>{`${(row as IWorkflow).name} — the opened row would show the object's summary here.`}</ReqoreP>
   ),
-};
+} satisfies Partial<IReqoreTableProps> & Pick<IReqoreTableProps, 'columns'>;
 
 const Template = (args: Partial<IReqoreTableProps>) => (
   <ThemedSurface>
