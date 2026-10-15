@@ -8,6 +8,7 @@
  * pointer event says what the pointer is: that decides, event by event.
  */
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createHoverGate,
@@ -51,10 +52,16 @@ describe('isHoveringPointer', () => {
     expect(isHoveringPointer({ pointerType: 'pen', buttons: 1 })).toBe(false);
   });
 
-  it('is never a finger, nor a pointer the browser does not name', () => {
+  it('is never a finger', () => {
     expect(isHoveringPointer({ pointerType: 'touch', buttons: 0 })).toBe(false);
     expect(isHoveringPointer({ pointerType: 'touch', buttons: 1 })).toBe(false);
-    expect(isHoveringPointer({ pointerType: '', buttons: 0 })).toBe(false);
+  });
+
+  it('is a pointer the event does not name: one it cannot tell, or none at all', () => {
+    // '' where the type cannot be told - and what user-event sends under jsdom
+    expect(isHoveringPointer({ pointerType: '', buttons: 0 })).toBe(true);
+    expect(isHoveringPointer({ pointerType: undefined, buttons: undefined })).toBe(true);
+    expect(isHoveringPointer({})).toBe(true);
   });
 });
 
@@ -145,6 +152,24 @@ describe('a hover popover', () => {
 
   it('opens at a mouseenter no pointer event came before (a test that fires it alone)', () => {
     renderTrigger();
+    fireEvent.mouseEnter(trigger());
+    settle();
+
+    expect(popovers()).toBe(1);
+  });
+
+  it("opens at user-event's hover", async () => {
+    renderTrigger();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.hover(trigger());
+    settle();
+
+    expect(popovers()).toBe(1);
+  });
+
+  it("opens for a pointer event that names no pointer type (user-event's under some jsdom setups)", () => {
+    renderTrigger();
+    fireEvent.pointerEnter(trigger(), { pointerType: '', buttons: 0 });
     fireEvent.mouseEnter(trigger());
     settle();
 

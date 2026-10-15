@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 
 /** What `isHoveringPointer` reads of a pointer event: a DOM `PointerEvent` or React's own. */
 export interface IReqoreHoveringPointerEvent {
-  pointerType: string;
-  buttons: number;
+  pointerType?: string;
+  buttons?: number;
 }
 
 /**
@@ -17,9 +17,15 @@ export interface IReqoreHoveringPointerEvent {
  * Asked of each event, not of the device (`isHoverCapable` asks about the device's primary pointer): a touch
  * laptop's mouse hovers, and so does a mouse plugged into a tablet, whose screen is still a finger's. A pen
  * hovers while it is held above the screen (`buttons` 0); pressed to it, it is drawing.
+ *
+ * Only what cannot hover is turned away: a finger, and a pen pressed to the screen. A pointer the event does
+ * not name (`pointerType` '' - which the specification allows where the type cannot be told, and which
+ * user-event sends under jsdom - or none at all) is taken for one that hovers, as a `mouseenter` no pointer
+ * event came before is. Taken for one that does not, it closed every tooltip a consumer's test opened with
+ * `userEvent.hover` (qorus-ide: MiniBarChart, IncompleteCasesStrip, valueControlAndChips).
  */
 export const isHoveringPointer = ({ pointerType, buttons }: IReqoreHoveringPointerEvent): boolean =>
-  pointerType === 'mouse' || (pointerType === 'pen' && buttons === 0);
+  pointerType !== 'touch' && !(pointerType === 'pen' && buttons !== 0);
 
 /**
  * Tells a mouse event a hovering pointer sent from one a browser emulated after a finger's tap.

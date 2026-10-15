@@ -96,7 +96,9 @@ tooltip it touched, and a `hoverStay` tooltip stayed open over what the finger h
 A browser sends an input's pointer events before the mouse events it emulates, and the pointer event says
 what the pointer is. So the decision is made for each event, not for the device: a touch laptop's mouse
 hovers, and so does a mouse plugged into a tablet. A mouse event with no pointer event before it counts as a
-mouse's, so a test that fires `mouseenter` alone still opens a tooltip.
+mouse's, so a test that fires `mouseenter` alone still opens a tooltip. Only what cannot hover is turned
+away, a finger and a pen pressed to the screen: a pointer event that names no pointer type (`''`, as the
+specification allows and user-event sends under some jsdom setups) counts as a mouse's too.
 
 Unchanged:
 - a popover opened by a click (`handler: 'click'`, as a touch-first tooltip is) or by focus;
