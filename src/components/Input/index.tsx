@@ -32,6 +32,7 @@ import {
   TReqoreSurface,
 } from '../../helpers/colors';
 import { useReqoreSurface } from '../../context/SurfaceContext';
+import { splitIconColor } from '../../helpers/iconProps';
 import styled, { omitStyleProps } from '../../helpers/styled';
 import { IReqoreAutoFocusRules, useAutoFocus } from '../../hooks/useAutoFocus';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
@@ -423,19 +424,24 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       false,
       surface
     );
+    // an icon's own color: in its props (which win, as they are spread over the rest), else the input's
+    const [leftIconPropsColor, leftIconRest] = splitIconColor(leftIconProps);
+    const [rightIconPropsColor, rightIconRest] = splitIconColor(rightIconProps);
+    const leftIconOwn = leftIconPropsColor || iconColor;
+    const rightIconOwn = rightIconPropsColor || rightIconColor;
     const leftIconLook = getReadableIconLook(
       theme,
       [inputBackground],
       inputText,
       CONTROL_ICON_OPACITY,
-      iconColor
+      leftIconOwn
     );
     const rightIconLook = getReadableIconLook(
       theme,
       [inputBackground],
       inputText,
       CONTROL_ICON_OPACITY,
-      rightIconColor
+      rightIconOwn
     );
     // one object for as long as the opacity holds: an icon is a memo component
     const leftIconEffect = useMemo(
@@ -506,9 +512,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           <StyledIconWrapper _size={size}>
             <ReqoreIcon
               size={size}
-              color={leftIconLook.color ?? iconColor}
+              color={leftIconLook.color ?? leftIconOwn}
               effect={leftIconEffect}
-              {...leftIconProps}
+              {...leftIconRest}
               icon={leftIcon}
               animation={loading ? 'spin' : leftIconProps?.animation}
             />
@@ -556,9 +562,9 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
             <ReqoreIcon
               size={size}
               icon={rightIcon}
-              color={rightIconLook.color ?? rightIconColor}
+              color={rightIconLook.color ?? rightIconOwn}
               effect={rightIconEffect}
-              {...rightIconProps}
+              {...rightIconRest}
             />
           </StyledIconWrapper>
         )}

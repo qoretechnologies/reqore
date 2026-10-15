@@ -54,6 +54,7 @@ import styled, {
 } from '../../helpers/styled';
 import { getOneHigherSize, isActionShown, resolveAccentSize } from '../../helpers/utils';
 import { useHoverGate } from '../../helpers/hoveringPointer';
+import { splitIconColor } from '../../helpers/iconProps';
 import { useCombinedRefs } from '../../hooks/useCombinedRefs';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { FIT_TEXT_FLOOR_PX, useFitTextSize } from '../../hooks/useFitTextSize';
@@ -2040,9 +2041,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     );
     // The bar's description and icon fade only as far as they stay readable there.
     const barText = useMemo(() => getReadableTextOn(theme, barSurface), [theme, barSurface]);
+    // the title icon's own color: in its props (which win, as they are spread over the rest), else the panel's
+    const [titleIconPropsColor, titleIconRest] = splitIconColor(iconProps);
+    const titleIconOwn = titleIconPropsColor || iconColor;
     const titleIconLook = useMemo(
-      () => getReadableIconLook(theme, barSurface, barText, CONTROL_ICON_OPACITY, iconColor),
-      [theme, barSurface, barText, iconColor]
+      () => getReadableIconLook(theme, barSurface, barText, CONTROL_ICON_OPACITY, titleIconOwn),
+      [theme, barSurface, barText, titleIconOwn]
     );
 
     // The media frame's outer corners follow the panel's INNER curve: its radius, less the 1px
@@ -2470,12 +2474,12 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
                             }px`}
                             image={loading ? undefined : iconImage}
                             margin={iconMargin}
-                            color={titleIconLook.color ?? iconColor}
+                            color={titleIconLook.color ?? titleIconOwn}
                             tooltip={iconTooltip}
                             effect={{
                               opacity: titleIconLook.opacity,
                             }}
-                            {...iconProps}
+                            {...titleIconRest}
                             animation={loading ? 'spin' : iconProps?.animation}
                             icon={
                               loading ? `Loader${loadingIconType || ''}Line` : icon || iconProps?.icon
