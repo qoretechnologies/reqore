@@ -131,7 +131,8 @@ Reqore picks its text and icon colors against what they are actually drawn on, t
   faded where they would not.
 - **Colored text keeps its hue, in a shade that reads:** an `intent` on text or an icon, an intent named as an
   effect color (`'warning'`, `'info:lighten:2'`), text drawn in a gradient, a tag's or a notification's own
-  icon color.
+  icon color. A button's icon color counts whether it is the button's (`leftIconColor`) or given in the icon's
+  own props (`leftIconProps={{ intent }}`): either is picked to stand out at the 70% the button draws it at.
 - **What a caller sets is the caller's:** an explicit hex `color` or `effect.opacity` is drawn as given.
 - Disabled content is exempt (WCAG); the components that are not form controls now say they are disabled with
   `aria-disabled`.
