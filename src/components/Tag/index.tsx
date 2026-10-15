@@ -46,6 +46,7 @@ import styled, {
   REQORE_CONTROL_GROUP_CHILD_PROPS,
   TReqoreStylePropKeys,
 } from '../../helpers/styled';
+import { splitIconColor } from '../../helpers/iconProps';
 import { ActiveIconScale, InactiveIconScale, RaisedElement, ReadOnlyElement } from '../../styles';
 import {
   IReqoreDisabled,
@@ -1105,16 +1106,21 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
           })();
     }, [appearanceColors, theme, tagColor, minimal, labelKey, effect, interactive, surface]);
 
+    // an icon's own color: in its props (which win, as they are spread over the rest), else the tag's
+    const [leftIconPropsColor, leftIconRest] = splitIconColor(leftIconProps);
+    const [rightIconPropsColor, rightIconRest] = splitIconColor(rightIconProps);
+    const leftIconOwn = leftIconPropsColor || leftIconColor || iconColor;
+    const rightIconOwn = rightIconPropsColor || rightIconColor || iconColor;
     const iconLooks = useMemo(() => {
       const look = (side: { backgrounds: TReqoreHexColor[]; text: TReqoreHexColor }, own?: TReqoreEffectColor) =>
         getReadableIconLook(theme, side.backgrounds, side.text, CONTROL_ICON_OPACITY, own);
 
       return {
-        left: look(sides.key, leftIconColor || iconColor),
-        right: look(sides.label, rightIconColor || iconColor),
+        left: look(sides.key, leftIconOwn),
+        right: look(sides.label, rightIconOwn),
         action: look(sides.label),
       };
-    }, [sides, theme, leftIconColor, rightIconColor, iconColor]);
+    }, [sides, theme, leftIconOwn, rightIconOwn]);
     // one object per icon for as long as its opacity holds: an icon is a memo component
     const leftIconEffect = useMemo(
       () => ({ opacity: iconLooks.left.opacity }),
@@ -1183,10 +1189,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
             {leftIcon || leftIconProps?.image ? (
               <ReqoreIcon
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
-                color={iconLooks.left.color ?? (leftIconColor || iconColor)}
+                color={iconLooks.left.color ?? leftIconOwn}
                 compact={compact}
                 effect={leftIconEffect}
-                {...leftIconProps}
+                {...leftIconRest}
                 animation={loading ? 'spin' : leftIconProps?.animation}
                 icon={leftIcon}
               />
@@ -1261,10 +1267,10 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 icon={rightIcon}
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
                 margin={label || (!icon && !labelKey) ? 'right' : 'both'}
-                color={iconLooks.right.color ?? (rightIconColor || iconColor)}
+                color={iconLooks.right.color ?? rightIconOwn}
                 compact={compact}
                 effect={rightIconEffect}
-                {...rightIconProps}
+                {...rightIconRest}
               />
             ) : null}
           </StyledTagContentWrapper>
