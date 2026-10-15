@@ -157,7 +157,8 @@ Reqore picks its text and icon colors against what they are actually drawn on, t
   effect color (`'warning'`, `'info:lighten:2'`), text drawn in a gradient, a tag's or a notification's own
   icon color. An icon's color counts whether it is the component's (`leftIconColor`, `iconColor`) or given in
   the icon's own props (`leftIconProps={{ intent }}`, a panel's `iconProps`): a button's, an input's, a tag's and
-  a panel's title icon are picked to stand out at the 70% they are drawn at.
+  a panel's title icon are picked to stand out at the 70% they are drawn at. A link's intent reads on the
+  surface it is drawn on (a tinted table cell, an entity row's gradient).
 - **What a caller sets is the caller's:** an explicit hex `color` or `effect.opacity` is drawn as given.
 - Disabled content is exempt (WCAG); the components that are not form controls now say they are disabled with
   `aria-disabled`.
