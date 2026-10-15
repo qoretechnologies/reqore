@@ -277,7 +277,7 @@ function Textarea<T>(
   }: T & IReqoreTextareaProps,
   ref
 ) {
-  const { targetRef }: any = useCombinedRefs(ref);
+  const { setRef }: any = useCombinedRefs(ref);
   const [inputRef, setInputRef] = useState<HTMLTextAreaElement>(null);
   const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
   const shortcutHintsEnabled = useReqoreProperty('shortcutHints');
@@ -566,7 +566,7 @@ function Textarea<T>(
         _size={size}
         theme={theme}
         style={wrapperStyle}
-        ref={targetRef}
+        ref={setRef}
         onItemSelect={handleItemSelect}
         closeOnTargetClick={false}
         /* A template list belongs UNDER the field it writes into. Flipped, it
@@ -601,7 +601,7 @@ function Textarea<T>(
       rounded={rounded}
       theme={theme}
       style={wrapperStyle}
-      ref={targetRef}
+      ref={setRef}
     >
       {renderChildren()}
     </ReqoreTooltipComponent>

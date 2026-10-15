@@ -110,7 +110,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     }: IReqoreTableSectionBodyProps,
     ref
   ) => {
-    const { targetRef } = useCombinedRefs(ref);
+    const { targetRef, setRef } = useCombinedRefs(ref);
 
     const rowHeight = useMemo(() => {
       if (typeof rowHeightOverride === 'number' && rowHeightOverride > 0) {
@@ -340,7 +340,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
         <StyledBodyWrapper>
           <StyledNonVirtualizedBody
             className='reqore-table-body'
-            ref={targetRef}
+            ref={setRef}
             maxHeight={height || height === 0 ? height : undefined}
             minWidth={totalColumnsWidth}
           >
@@ -356,7 +356,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
         <StyledBodyWrapper>
           <StyledVariableList
             ref={listRef}
-            outerRef={targetRef}
+            outerRef={setRef}
             itemCount={itemCount}
             height={measuredHeight}
             className='reqore-table-body'
@@ -376,7 +376,7 @@ const ReqoreTableBody = forwardRef<HTMLDivElement, IReqoreTableSectionBodyProps>
     return (
       <StyledBodyWrapper>
         <StyledFixedList
-          outerRef={targetRef}
+          outerRef={setRef}
           itemCount={itemCount}
           height={measuredHeight}
           className='reqore-table-body'
