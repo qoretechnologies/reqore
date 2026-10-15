@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useContext, useMemo } from 'react';
 import type { TReqoreSurface } from '../helpers/colors';
 
 /**
@@ -9,10 +9,18 @@ import type { TReqoreSurface } from '../helpers/colors';
  */
 const SurfaceContext = createContext<TReqoreSurface | undefined>(undefined);
 
+/** One key for a surface's colors: the same colors, in the same order, are the same key. */
+const getSurfaceKey = (surface?: TReqoreSurface): string | undefined =>
+  Array.isArray(surface) ? `[${surface.join('|')}]` : surface;
+
 /**
  * Hands `color` (opaque; what this component is drawn in - each color of its gradient, when it has one) to the
  * components inside as their surface. Without a `color` (a component that paints nothing), they keep the surface
  * around it.
+ *
+ * The surface handed down stays the same value for as long as its colors do. A component that works its colors out
+ * again on each render (an inline effect or content effect, a new list each time) would otherwise hand down a new
+ * list with the same colors, and every component below that reads the surface would render again with it.
  */
 export const ReqoreSurfaceProvider = ({
   color,
@@ -22,8 +30,12 @@ export const ReqoreSurfaceProvider = ({
   children?: ReactNode;
 }) => {
   const around = useContext(SurfaceContext);
+  const surface = color ?? around;
+  const key = getSurfaceKey(surface);
+  // the first surface with these colors, for as long as they hold
+  const value = useMemo(() => surface, [key]);
 
-  return <SurfaceContext.Provider value={color ?? around}>{children}</SurfaceContext.Provider>;
+  return <SurfaceContext.Provider value={value}>{children}</SurfaceContext.Provider>;
 };
 
 /** The color this component is drawn on, when a component around it has said; undefined when none has. */
