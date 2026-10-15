@@ -1115,6 +1115,19 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
         action: look(sides.label),
       };
     }, [sides, theme, leftIconColor, rightIconColor, iconColor]);
+    // one object per icon for as long as its opacity holds: an icon is a memo component
+    const leftIconEffect = useMemo(
+      () => ({ opacity: iconLooks.left.opacity }),
+      [iconLooks.left.opacity]
+    );
+    const rightIconEffect = useMemo(
+      () => ({ opacity: iconLooks.right.opacity }),
+      [iconLooks.right.opacity]
+    );
+    const actionIconEffect = useMemo(
+      () => ({ opacity: iconLooks.action.opacity }),
+      [iconLooks.action.opacity]
+    );
 
     return (
       <ReqoreTooltipComponent
@@ -1172,9 +1185,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 size={`${TAG_ICON_FROM_SIZE[size]}px`}
                 color={iconLooks.left.color ?? (leftIconColor || iconColor)}
                 compact={compact}
-                effect={{
-                  opacity: iconLooks.left.opacity,
-                }}
+                effect={leftIconEffect}
                 {...leftIconProps}
                 animation={loading ? 'spin' : leftIconProps?.animation}
                 icon={leftIcon}
@@ -1252,9 +1263,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                 margin={label || (!icon && !labelKey) ? 'right' : 'both'}
                 color={iconLooks.right.color ?? (rightIconColor || iconColor)}
                 compact={compact}
-                effect={{
-                  opacity: iconLooks.right.opacity,
-                }}
+                effect={rightIconEffect}
                 {...rightIconProps}
               />
             ) : null}
@@ -1294,9 +1303,7 @@ const ReqoreTag = forwardRef<HTMLSpanElement, IReqoreTagProps>(
                     <ReqoreIcon
                       icon={icon}
                       size={`${TAG_ICON_FROM_SIZE[size]}px`}
-                      effect={{
-                        opacity: iconLooks.action.opacity,
-                      }}
+                      effect={actionIconEffect}
                     />
                   </ReqorePopover>
                 </React.Fragment>

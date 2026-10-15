@@ -502,6 +502,16 @@ const ReqoreStatistic = memo(
         [hasBackground, theme, effect, background, surface]
       );
       const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+      // fainter than the value, as far as it stays readable: one object while it holds, for a memo component
+      const labelLook = useMemo(
+        () => ({
+          uppercase: true,
+          spaced: 1,
+          ...labelEffect,
+          opacity: getReadableAlpha(text, backgrounds, labelEffect?.opacity ?? 0.7),
+        }),
+        [labelEffect, text, backgrounds]
+      );
       const prefixSuffixEffect: IReqoreEffect = useMemo(
         () => ({ opacity: getReadableAlpha(text, backgrounds, PREFIX_SUFFIX_OPACITY) }),
         [text, backgrounds]
@@ -587,12 +597,7 @@ const ReqoreStatistic = memo(
                 <ReqoreSpan
                   size={secondarySize}
                   className='reqore-statistic-label'
-                  effect={{
-                    uppercase: true,
-                    spaced: 1,
-                    ...labelEffect,
-                    opacity: getReadableAlpha(text, backgrounds, labelEffect?.opacity ?? 0.7),
-                  }}
+                  effect={labelLook}
                 >
                   {label}
                 </ReqoreSpan>

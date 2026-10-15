@@ -494,6 +494,16 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
       };
     }, [theme, checked, surfacesKey, _intent, knobTransparent, effect, switchTextEffect]);
 
+    // one object for as long as what it holds holds: an icon is a memo component
+    const knobIconEffect = useMemo(
+      () => ({ grayscale: !checked, opacity: colors.knobIconOpacity }),
+      [checked, colors.knobIconOpacity]
+    );
+    const boxIconEffect = useMemo(
+      () => ({ grayscale: image ? !checked : undefined, opacity: colors.boxOpacity }),
+      [image, checked, colors.boxOpacity]
+    );
+
     const width = useMemo(() => {
       const selectedWidth = checked ? onWidth : offWidth;
       const addedWidth = checked
@@ -767,7 +777,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                   image={image}
                   icon={checked ? checkedIcon : checked === undefined ? unsetIcon : uncheckedIcon}
                   color={image ? undefined : colors.knobText}
-                  effect={{ grayscale: !checked, opacity: colors.knobIconOpacity }}
+                  effect={knobIconEffect}
                 />
               ) : null}
             </StyledSwitchToggle>
@@ -785,7 +795,7 @@ const Checkbox = forwardRef<HTMLDivElement, IReqoreCheckboxProps>(
                 : undefined
             }
             image={image}
-            effect={{ grayscale: image ? !checked : undefined, opacity: colors.boxOpacity }}
+            effect={boxIconEffect}
             color={image ? undefined : colors.box}
           />
         )}

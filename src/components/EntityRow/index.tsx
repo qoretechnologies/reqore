@@ -488,6 +488,21 @@ const ReqoreEntityRow = memo(
         [theme, effect, background, surface]
       );
       const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+      // fainter than the label, as far as each stays readable: one object while it holds, for memo components
+      const descriptionLook = useMemo(
+        () => ({
+          ...descriptionEffect,
+          opacity: getReadableAlpha(text, backgrounds, descriptionEffect?.opacity ?? 0.7),
+        }),
+        [descriptionEffect, text, backgrounds]
+      );
+      const metadataLook = useMemo(
+        () => ({
+          ...metadataEffect,
+          opacity: getReadableAlpha(text, backgrounds, metadataEffect?.opacity ?? 0.5),
+        }),
+        [metadataEffect, text, backgrounds]
+      );
       const iconBackgrounds = useMemo(
         () =>
           resolvedIconHasBackground
@@ -589,11 +604,7 @@ const ReqoreEntityRow = memo(
                     <ReqoreP
                       as={getReqoreTextElement(description)}
                       size={secondarySize}
-                      effect={{
-                        ...descriptionEffect,
-                        // fainter than the label, as far as it stays readable
-                        opacity: getReadableAlpha(text, backgrounds, descriptionEffect?.opacity ?? 0.7),
-                      }}
+                      effect={descriptionLook}
                       className='reqore-entity-row-description'
                     >
                       {description}
@@ -604,10 +615,7 @@ const ReqoreEntityRow = memo(
                   <StyledTextSlot $wrap={wrap}>
                     <ReqoreSpan
                       size={secondarySize}
-                      effect={{
-                        ...metadataEffect,
-                        opacity: getReadableAlpha(text, backgrounds, metadataEffect?.opacity ?? 0.5),
-                      }}
+                      effect={metadataLook}
                       className='reqore-entity-row-metadata'
                     >
                       {metadata}
