@@ -52,7 +52,7 @@ import {
 } from '../../constants/sizes';
 import { MONO_FONT, getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
-import { TReqoreEffectColor } from '../Effect';
+import { IReqoreEffect, TReqoreEffectColor } from '../Effect';
 import { changeLightness, getReadableColor, getReadableColorFrom } from '../../helpers/colors';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import ReqoreButton from '../Button';
@@ -81,6 +81,12 @@ import {
   reqoreSetAtPath,
   reqoreUnwrapEnvelope,
 } from './helpers';
+
+// A tag's effects, one object each for every tag that draws them: a tag is a memo component.
+/** A key or a value written bold. */
+const BOLD_TAG_EFFECT: IReqoreEffect = { weight: 'bold' };
+/** A value's type: faint small capitals. */
+const TYPE_TAG_EFFECT: IReqoreEffect = { uppercase: true, spaced: 1, opacity: 0.6 };
 
 /**
  * Bag of user-visible strings the DataView renders. Every entry is optional;
@@ -809,7 +815,7 @@ const renderScalarChip = (
       wrap
       label={scalar.display}
       intent={intent}
-      effect={{ weight: 'bold' }}
+      effect={BOLD_TAG_EFFECT}
       onClick={
         ctx.onItemClick ? () => ctx.onItemClick!(value, path) : undefined
       }
@@ -1160,7 +1166,7 @@ const EditableKeyCell = memo<IEditableKeyCellProps>(
             intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
             color={ctx.keyColor}
             label={keyName}
-            effect={{ weight: 'bold' }}
+            effect={BOLD_TAG_EFFECT}
             className='reqore-data-view-key'
           />
         </EditCellShell>
@@ -1510,7 +1516,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={TYPE_TAG_EFFECT}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1567,7 +1573,7 @@ const renderScalar = (
           flat
           minimal
           label={displayType}
-          effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+          effect={TYPE_TAG_EFFECT}
           className='reqore-data-view-type'
         />
       </ScalarRow>
@@ -1594,9 +1600,7 @@ const renderScalar = (
       wrap
       label={scalar.display}
       intent={intent}
-      effect={{
-        weight: 'bold',
-      }}
+      effect={BOLD_TAG_EFFECT}
       onClick={
         ctx.onItemClick
           ? () => ctx.onItemClick!(value, path)
@@ -1616,7 +1620,7 @@ const renderScalar = (
         flat
         minimal
         label={displayType}
-        effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+        effect={TYPE_TAG_EFFECT}
         className='reqore-data-view-type'
       />
     </ScalarRow>
@@ -1720,7 +1724,7 @@ const RecordTable = memo(
                   intent={ctx.keyIntent === null ? undefined : ctx.keyIntent ?? 'info'}
                   color={ctx.keyColor}
                   label={key}
-                  effect={{ weight: 'bold' }}
+                  effect={BOLD_TAG_EFFECT}
                   className='reqore-data-view-key'
                 />
               )}
@@ -1801,7 +1805,7 @@ const renderTree = (
               minimal
               flat={false}
               label={envelopeType}
-              effect={{ uppercase: true, spaced: 1, opacity: 0.6 }}
+              effect={TYPE_TAG_EFFECT}
               className='reqore-data-view-type'
             />
           ) : null}
