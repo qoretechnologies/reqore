@@ -1,6 +1,5 @@
 import { REQORE_MARQUEE_HOST, REQORE_MARQUEE_TEXT } from '../../hooks/useMarqueeOnHover';
 import { size } from 'lodash';
-import { rgba, saturate, tint } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { css, keyframes } from 'styled-components';
@@ -21,6 +20,7 @@ import {
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
+  getColorAtAlpha,
   getDrawnColor,
   getGradientColorList,
   getGradientMix,
@@ -29,6 +29,7 @@ import {
   getReadableColorOn,
   getReadableFadedColor,
   getReadableIconLook,
+  getSaturatedTint,
   getThemeSurfaces,
   isAchromatic,
   READABLE_ICON_CONTRAST,
@@ -315,6 +316,8 @@ export interface IReqoreButtonStyle extends IReqoreButtonProps {
   color?: TReqoreHexColor;
   /** Rendered as an `<a>`: no underline from the browser's link style. */
   $isLink?: boolean;
+  /** What the button is painted with, worked out once per render (`getButtonPaint`). */
+  $paint?: IReqoreButtonPaint;
 }
 
 const getButtonMainColor = (
@@ -365,6 +368,8 @@ export const getButtonColors = (
   const unders = getThemeSurfaces(theme, $surface);
   const outlined = minimal || transparent;
   const gradient = getPrimaryGradient(effect?.gradient);
+  // an outlined button's text starts from a light tint of its color, lighter hovered
+  const tintAmount = state === 'hover' ? 0.9 : 0.8;
   let fills: string[];
 
   if (gradient && !transparent) {
@@ -373,17 +378,20 @@ export const getButtonColors = (
     if (minimal) {
       // as a minimal gradient is painted: a translucent fill over a translucent ring over the button's wash
       const painted = unders.flatMap((under) =>
-        getEffectGradientBackgrounds(theme, gradient.colors, true, rgba(main, 0.2), under)
+        getEffectGradientBackgrounds(
+          theme,
+          gradient.colors,
+          true,
+          getColorAtAlpha(main, 0.2),
+          under
+        )
       );
 
       return {
         backgrounds: painted,
         text: isAchromatic(main)
           ? getReadableColorOn(painted, state === 'rest')
-          : getReadableAccentColorOn(
-              saturate(1, tint(state === 'hover' ? 0.9 : 0.8, getDrawnColor(main))) as TReqoreHexColor,
-              painted
-            ),
+          : getReadableAccentColorOn(getSaturatedTint(main, tintAmount), painted),
       };
     }
 
@@ -392,13 +400,9 @@ export const getButtonColors = (
   } else if (state === 'active') {
     fills = [changeLightness(main, 0.1)];
   } else if (state === 'hover') {
-    fills = [
-      outlined
-        ? rgba(changeLightness(main, 0.1), transparent ? 0.2 : 0.4)
-        : changeLightness(getButtonMainColor(theme, color), 0.05),
-    ];
+    fills = [getButtonHoverFill(theme, color, main, minimal, transparent)];
   } else {
-    fills = [transparent ? 'transparent' : minimal ? rgba(main, 0.2) : color || main];
+    fills = [getButtonRestFill(color, main, minimal, transparent)];
   }
 
   const backgrounds = unders.flatMap((under) =>
@@ -408,16 +412,44 @@ export const getButtonColors = (
   let text: TReqoreHexColor;
 
   if (outlined && state !== 'active' && !isAchromatic(main)) {
-    text = getReadableAccentColorOn(
-      saturate(1, tint(state === 'hover' ? 0.9 : 0.8, getDrawnColor(main))) as TReqoreHexColor,
-      backgrounds
-    );
+    // a color the helpers cannot read (a CSS variable) is as it is given: the text is written in it
+    text = getReadableAccentColorOn(getSaturatedTint(main, tintAmount), backgrounds);
   } else {
     text = getReadableColorOn(backgrounds, dim);
   }
 
   return { backgrounds, text };
 };
+
+/**
+ * The fill a button paints at rest: nothing when transparent, a wash of its color when minimal (one the helpers
+ * cannot read, a CSS variable, is washed by the browser), else its color.
+ */
+const getButtonRestFill = (
+  color: TReqoreHexColor | undefined,
+  main: TReqoreHexColor,
+  minimal?: boolean,
+  transparent?: boolean
+): string => (transparent ? 'transparent' : minimal ? getColorAtAlpha(main, 0.2) : color || main);
+
+/** The fill a button paints hovered: a stronger wash when minimal or transparent, else its color a step lighter. */
+const getButtonHoverFill = (
+  theme: IReqoreTheme,
+  color: TReqoreHexColor | undefined,
+  main: TReqoreHexColor,
+  minimal?: boolean,
+  transparent?: boolean
+): string =>
+  minimal || transparent
+    ? getColorAtAlpha(changeLightness(main, 0.1), transparent ? 0.2 : 0.4)
+    : changeLightness(getButtonMainColor(theme, color), 0.05);
+
+/** A button's colors in each state it is drawn in: at rest, hovered (when it is not active), and active. */
+export interface IReqoreButtonStateColors {
+  rest: IReqoreButtonColors;
+  hover?: IReqoreButtonColors;
+  active?: IReqoreButtonColors;
+}
 
 /**
  * How a button draws an icon, at rest and hovered alike: in its own color (`color`, in a shade that stands out by
@@ -427,12 +459,20 @@ export const getButtonIconLook = (
   style: TReqoreButtonColorProps,
   color?: TReqoreEffectColor,
   active?: boolean
+): { color?: TReqoreHexColor; opacity: number } =>
+  getButtonIconLookIn(style.theme, getButtonStateColors(style, active), color);
+
+/** `getButtonIconLook`, from the button's colors worked out already (`IReqoreButtonStateColors`). */
+const getButtonIconLookIn = (
+  theme: IReqoreTheme,
+  states: IReqoreButtonStateColors,
+  color?: TReqoreEffectColor
 ): { color?: TReqoreHexColor; opacity: number } => {
   // an active button (a selected menu item) is drawn in its fill, hovered or not
-  const rest = getButtonColors(style, active ? 'active' : 'rest');
-  const hover = active ? rest : getButtonColors(style, 'hover');
+  const rest = states.active ?? states.rest;
+  const hover = states.active ?? states.hover ?? rest;
   const look = getReadableIconLook(
-    style.theme,
+    theme,
     [...rest.backgrounds, ...hover.backgrounds],
     rest.text,
     CONTROL_ICON_OPACITY,
@@ -454,6 +494,79 @@ export const getButtonIconLook = (
         ),
       };
 };
+
+/** What a button's styles paint it with, worked out once per render (`getButtonPaint`), not in each style rule. */
+export interface IReqoreButtonPaint {
+  /** Its fill and text at rest. */
+  background: string;
+  text: TReqoreHexColor;
+  /** Its color a step lighter: the edge (`flat={false}`), the focus ring and an active button's fill. */
+  edge: string;
+  /** The ring drawn while it is hovered or pressed, and its edge then. */
+  ring: string;
+  /** Hovered (not when active): its fill and text. */
+  hoverBackground?: string;
+  hoverText?: TReqoreHexColor;
+  /** Active (a selected menu item): its text and edge, at rest and hovered. */
+  activeText?: TReqoreHexColor;
+  activeEdge: string;
+  activeHoverEdge: string;
+  /** The description's color, faded as far as it still reads (with a description only). */
+  description?: string;
+}
+
+/**
+ * A button's colors in the states it is drawn in (`IReqoreButtonStateColors`): at rest, and hovered or - when it
+ * is `active` - active.
+ */
+export const getButtonStateColors = (
+  style: TReqoreButtonColorProps,
+  active?: boolean
+): IReqoreButtonStateColors => ({
+  rest: getButtonColors(style),
+  hover: active ? undefined : getButtonColors(style, 'hover'),
+  active: active ? getButtonColors(style, 'active') : undefined,
+});
+
+/**
+ * Everything a button is painted with (`IReqoreButtonPaint`), from its colors in each state. `description`: whether
+ * it has one, whose color is then worked out too.
+ */
+export const getButtonPaint = (
+  style: TReqoreButtonColorProps,
+  states: IReqoreButtonStateColors,
+  description?: boolean
+): IReqoreButtonPaint => {
+  const { theme, color, minimal, transparent, effect } = style;
+  const main = getButtonMainColor(theme, color, effect);
+  const drawn = states.active ?? states.rest;
+
+  return {
+    background: transparent ? 'transparent' : minimal ? getColorAtAlpha(main, 0.2) : color,
+    text: states.rest.text,
+    edge: changeLightness(main, 0.1),
+    ring: changeLightness(main, 0.25),
+    hoverBackground: states.hover
+      ? getButtonHoverFill(theme, color, main, minimal, transparent)
+      : undefined,
+    hoverText: states.hover?.text,
+    activeText: states.active?.text,
+    activeEdge: changeLightness(main, 0.175),
+    activeHoverEdge: changeLightness(main, 0.275),
+    // on the button as it is drawn: at rest, or filled when active (a selected menu item)
+    description: description
+      ? getReadableFadedColor(drawn.text, drawn.backgrounds, 0.7)
+      : undefined,
+  };
+};
+
+/**
+ * What a styled button is painted with: what the button worked out for this render, or - a `StyledButton`
+ * rendered on its own - worked out from its props.
+ */
+const getStyledButtonPaint = (props: IReqoreButtonStyle): IReqoreButtonPaint =>
+  props.$paint ??
+  getButtonPaint(props, getButtonStateColors(props, props.active), !!props.description);
 
 export const StyledAnimatedTextWrapper = styled.span`
   min-width: 5px;
@@ -547,8 +660,8 @@ export const StyledButton = styled(StyledEffect).withConfig({
   position: relative;
   overflow: hidden;
   vertical-align: middle;
-  border: ${({ theme, color, flat, effect }) =>
-    !flat ? `1px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)}` : 0};
+  border: ${(props: IReqoreButtonStyle) =>
+    !props.flat ? `1px solid ${getStyledButtonPaint(props).edge}` : 0};
   padding: ${({ size, compact, verticalPadding = 'normal', square }) =>
     `${
       CONTROL_VERTICAL_PADDING_FROM_SIZE[size] +
@@ -608,113 +721,90 @@ export const StyledButton = styled(StyledEffect).withConfig({
       ? '9999px'
       : `${resolveRadius(size, radiusSize) * (pill ? PILL_RADIUS_MODIFIER : 1)}px`};
 
-  background-color: ${({ minimal, color, theme, transparent, effect }) => {
-    if (transparent) {
-      return 'transparent';
-    }
+  background-color: ${(props: IReqoreButtonStyle) => getStyledButtonPaint(props).background};
 
-    if (minimal) {
-      return css`
-        ${rgba(getButtonMainColor(theme, color, effect), 0.2)}
-      `;
-    }
-
-    return color;
-  }};
-
-  color: ${({ color, minimal, transparent, theme, effect, $surface }) =>
-    getButtonColors({ color, minimal, transparent, theme, effect, $surface }).text};
+  color: ${(props: IReqoreButtonStyle) => getStyledButtonPaint(props).text};
 
   ${InactiveIconScale};
 
   ${({ raised, flat, transparent }) => raised && flat && !transparent && RaisedElement}
 
-  ${({ readOnly, animate, active, theme, color, effect }) =>
-    !readOnly && !active
-      ? css`
-          &:not(:disabled) {
-            ${ScaleIconOnHover}
+  ${(props: IReqoreButtonStyle) => {
+    const { readOnly, animate, active, flat } = props;
 
-            cursor: pointer;
-            transition: all 0.2s ease-out;
+    if (readOnly || active) {
+      return readOnly
+        ? css`
+            ${ReadOnlyElement};
+          `
+        : undefined;
+    }
 
-            &:active {
-              outline: 3px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
-              outline-offset: -3px;
-              transition: none;
-            }
+    const { ring, hoverBackground, hoverText } = getStyledButtonPaint(props);
 
-            &:hover:not(:active) {
-              outline: 2px solid ${changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
-              transition: none;
-            }
+    return css`
+      &:not(:disabled) {
+        ${ScaleIconOnHover}
 
-            &:hover,
-            &:active {
-              border-color: ${({ flat, theme, color }) =>
-                flat ? undefined : changeLightness(getButtonMainColor(theme, color, effect), 0.25)};
-              background-color: ${({ theme, color, minimal, transparent }: IReqoreButtonStyle) =>
-                minimal || transparent
-                  ? rgba(
-                      changeLightness(getButtonMainColor(theme, color, effect), 0.1),
-                      transparent ? 0.2 : 0.4
-                    )
-                  : changeLightness(getButtonMainColor(theme, color), 0.05)};
-              color: ${({ theme, color, minimal, transparent, effect, $surface }) =>
-                getButtonColors({ theme, color, minimal, transparent, effect, $surface }, 'hover')
-                  .text}
-                ${animate
-                  ? css`
-                      cursor: pointer;
+        cursor: pointer;
+        transition: all 0.2s ease-out;
 
-                      ${StyledInActiveContent} {
-                        transform: translateY(150%);
-                        filter: blur(10px);
-                        opacity: 0;
-                      }
+        &:active {
+          outline: 3px solid ${ring};
+          outline-offset: -3px;
+          transition: none;
+        }
 
-                      ${StyledActiveContent} {
-                        transform: translateY(0px);
-                        filter: blur(0);
-                        opacity: 1;
-                      }
-                    `
-                  : undefined};
-            }
-          }
-        `
-      : readOnly
-      ? css`
-          ${ReadOnlyElement};
-        `
-      : undefined};
+        &:hover:not(:active) {
+          outline: 2px solid ${ring};
+          transition: none;
+        }
 
-  ${({
-    active,
-    flat,
-    theme,
-    color,
-    effect,
-    minimal,
-    transparent,
-    $surface,
-  }: IReqoreButtonStyle) => {
-    if (active) {
+        &:hover,
+        &:active {
+          border-color: ${flat ? undefined : ring};
+          background-color: ${hoverBackground};
+          /* Ended here: the animated content's rules below ran on into this declaration, which the
+             browser then dropped - a hovered button kept its resting text on its hovered fill. */
+          color: ${hoverText};
+
+          ${animate
+            ? css`
+                cursor: pointer;
+
+                ${StyledInActiveContent} {
+                  transform: translateY(150%);
+                  filter: blur(10px);
+                  opacity: 0;
+                }
+
+                ${StyledActiveContent} {
+                  transform: translateY(0px);
+                  filter: blur(0);
+                  opacity: 1;
+                }
+              `
+            : undefined};
+        }
+      }
+    `;
+  }};
+
+  ${(props: IReqoreButtonStyle) => {
+    if (props.active) {
+      const { flat } = props;
+      const { edge, activeText, activeEdge, activeHoverEdge } = getStyledButtonPaint(props);
+
       return css`
         cursor: pointer;
-        background-color: ${changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
-        color: ${getButtonColors({ theme, color, effect, minimal, transparent, $surface }, 'active')
-          .text};
-        border-color: ${flat
-          ? undefined
-          : changeLightness(getButtonMainColor(theme, color, effect), 0.175)};
+        background-color: ${edge};
+        color: ${activeText};
+        border-color: ${flat ? undefined : activeEdge};
 
         &:hover,
         &:active,
         &:focus {
-          border-color: ${flat
-            ? undefined
-            : changeLightness(getButtonMainColor(theme, color, effect), 0.275)};
+          border-color: ${flat ? undefined : activeHoverEdge};
         }
 
         ${ActiveIconScale}
@@ -740,31 +830,15 @@ export const StyledButton = styled(StyledEffect).withConfig({
 
   &:focus,
   &:active {
-    outline: 2px solid
-      ${({ theme, color, effect }) =>
-        changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
-    border-color: ${({ minimal, theme, color, effect }) =>
-      minimal ? undefined : changeLightness(getButtonMainColor(theme, color, effect), 0.1)};
+    outline: 2px solid ${(props: IReqoreButtonStyle) => getStyledButtonPaint(props).edge};
+    border-color: ${(props: IReqoreButtonStyle) =>
+      props.minimal ? undefined : getStyledButtonPaint(props).edge};
   }
 
   .reqore-button-description {
     padding-top: ${({ size }) => PADDING_FROM_SIZE[size] / 2}px;
     /* on the button as it is drawn: at rest, or filled when active (a selected menu item) */
-    color: ${({ theme, color, minimal, transparent, effect, $surface, active }) => {
-      const { text, backgrounds } = getButtonColors(
-        {
-          theme,
-          color,
-          minimal,
-          transparent,
-          effect,
-          $surface,
-        },
-        active ? 'active' : 'rest'
-      );
-
-      return getReadableFadedColor(text, backgrounds, 0.7);
-    }};
+    color: ${(props: IReqoreButtonStyle) => getStyledButtonPaint(props).description};
   }
 `;
 
@@ -1058,6 +1132,9 @@ const ReqoreButton = memo(
         }),
         [fixedEffect, intent, readOnly, rest.disabled]
       );
+      /* The button's colors depend on its gradient alone of its effect: an effect the caller writes inline (a new
+         object each render) with the same gradient keeps them. */
+      const gradientKey = memoEffect?.gradient ? JSON.stringify(memoEffect.gradient) : undefined;
       // The icons stand out from what the button is drawn on, as its text does.
       const colorProps: TReqoreButtonColorProps = useMemo(
         () => ({
@@ -1068,35 +1145,51 @@ const ReqoreButton = memo(
           effect: memoEffect,
           $surface: surface,
         }),
-        [theme, customColor, minimal, transparent, memoEffect, surface]
+        [theme, customColor, minimal, transparent, gradientKey, surface]
+      );
+      /* Its colors in the states it is drawn in, and what its styles paint it with, worked out once per render
+         rather than in each of its style rules. */
+      const states = useMemo(() => getButtonStateColors(colorProps, active), [colorProps, active]);
+      // whether it has a description, not the description: a node given inline is new each render
+      const hasDescription = !!description;
+      const paint = useMemo(
+        () => getButtonPaint(colorProps, states, hasDescription),
+        [colorProps, states, hasDescription]
       );
       // an icon's own color: in its props (which win, as they are spread over the rest), else the button's
       const [leftIconPropsColor, leftIconRest] = splitIconColor(leftIconProps);
       const [rightIconPropsColor, rightIconRest] = splitIconColor(rightIconProps);
       const leftIconOwn = leftIconPropsColor || leftIconColor || iconColor;
       const rightIconOwn = rightIconPropsColor || rightIconColor || iconColor;
+      // only for the icons the button draws
       const leftIconLook = useMemo(
-        () => getButtonIconLook(colorProps, leftIconOwn, active),
-        [colorProps, leftIconOwn, active]
+        () => (hasLeftIcon ? getButtonIconLookIn(theme, states, leftIconOwn) : undefined),
+        [hasLeftIcon, theme, states, leftIconOwn]
       );
       const rightIconLook = useMemo(
-        () => getButtonIconLook(colorProps, rightIconOwn, active),
-        [colorProps, rightIconOwn, active]
+        () => (hasRightIcon ? getButtonIconLookIn(theme, states, rightIconOwn) : undefined),
+        [hasRightIcon, theme, states, rightIconOwn]
       );
       /* What the button holds (its badges, a label given as a node) is drawn on the button: at rest, or in its
          fill when it is active (a selected menu item, whose badges were picked for the resting wash). */
-      const restingBackground = useMemo(
-        () => getButtonColors(colorProps, active ? 'active' : 'rest').backgrounds,
-        [colorProps, active]
+      const restingBackground = (states.active ?? states.rest).backgrounds;
+      /* Its effect's color is written on its own fill, at rest and hovered (or active), not on the surface
+         around it: an info text on a success button was read on the page, 2.7:1 on the green. */
+      const fillBackgrounds = useMemo(
+        () =>
+          states.active
+            ? states.active.backgrounds
+            : [...states.rest.backgrounds, ...(states.hover?.backgrounds ?? [])],
+        [states]
       );
       // one object for as long as the opacity holds: an icon is a memo component
       const leftIconEffect = useMemo(
-        () => ({ opacity: leftIconLook.opacity }),
-        [leftIconLook.opacity]
+        () => ({ opacity: leftIconLook?.opacity }),
+        [leftIconLook?.opacity]
       );
       const rightIconEffect = useMemo(
-        () => ({ opacity: rightIconLook.opacity }),
-        [rightIconLook.opacity]
+        () => ({ opacity: rightIconLook?.opacity }),
+        [rightIconLook?.opacity]
       );
 
       const indicatorConfig = useMemo(() => {
@@ -1139,6 +1232,8 @@ const ReqoreButton = memo(
             intent,
             color: customColor,
             $surface: surface,
+            $backgrounds: fillBackgrounds,
+            $paint: paint,
             animate,
             flat: _flat,
             active,
@@ -1162,7 +1257,7 @@ const ReqoreButton = memo(
                 <>
                   <ReqoreIcon
                     size={size}
-                    color={leftIconLook.color ?? leftIconOwn}
+                    color={leftIconLook?.color ?? leftIconOwn}
                     compact
                     effect={leftIconEffect}
                     {...leftIconRest}
@@ -1274,7 +1369,7 @@ const ReqoreButton = memo(
                   <ReqoreIcon
                     icon={rightIcon}
                     size={size}
-                    color={rightIconLook.color ?? rightIconOwn}
+                    color={rightIconLook?.color ?? rightIconOwn}
                     effect={rightIconEffect}
                     {...rightIconRest}
                     style={

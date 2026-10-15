@@ -1,7 +1,9 @@
 import { animated, useTransition } from '@react-spring/web';
+import { memo, useMemo } from 'react';
 import { SPRING_CONFIG } from '../../constants/animations';
 import { SIZE_TO_PX } from '../../constants/sizes';
 import styled, { omitStyleProps } from '../../helpers/styled';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 import { IReqoreButtonProps } from '../Button';
 import ReqoreIcon from '../Icon';
 
@@ -37,6 +39,8 @@ export const StyledInputClearButton = styled(ReqoreIcon).withConfig({
   }
 `;
 
+const HIDDEN = { opacity: 0, filter: 'blur(10px)' };
+
 const ReqoreInputClearButton = ({
   show,
   enabled,
@@ -45,10 +49,14 @@ const ReqoreInputClearButton = ({
   label = 'Clear',
   ...rest
 }: IReqoreInputClearButtonProps) => {
+  // Where motion is unwelcome it is shown and hidden at once, at its settled opacity from its first paint.
+  const reducedMotion = usePrefersReducedMotion();
+  const shown = useMemo(() => ({ opacity: shownOpacity, filter: 'blur(0px)' }), [shownOpacity]);
   const transitions = useTransition(show && enabled, {
-    from: { opacity: 0, filter: 'blur(10px)' },
-    enter: { opacity: shownOpacity, filter: 'blur(0px)' },
-    leave: { opacity: 0, filter: 'blur(10px)' },
+    from: reducedMotion ? shown : HIDDEN,
+    enter: shown,
+    leave: HIDDEN,
+    immediate: reducedMotion,
     config: SPRING_CONFIG,
   });
 
@@ -73,4 +81,4 @@ const ReqoreInputClearButton = ({
   );
 };
 
-export default ReqoreInputClearButton;
+export default memo(ReqoreInputClearButton);

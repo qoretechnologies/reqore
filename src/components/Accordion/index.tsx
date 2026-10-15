@@ -333,7 +333,6 @@ const AccordionItemRenderer = memo(
         theme={theme}
         size={size}
         disabled={isItemDisabled}
-        aria-disabled={isItemDisabled ? true : undefined}
         intent={itemIntent}
         flat={flat}
         isFirst={isFirst}
@@ -356,6 +355,8 @@ const AccordionItemRenderer = memo(
           onKeyDown={(e) => onKeyDown(e, index)}
           tabIndex={isItemDisabled ? undefined : 0}
           role='button'
+          // the header is the control: it says it is disabled, not the item around it
+          aria-disabled={isItemDisabled ? true : undefined}
           aria-expanded={isOpen}
           className='reqore-accordion-header'
         >
@@ -501,7 +502,8 @@ export const ReqoreAccordion = memo(
           size={size}
           $fluid={fluid}
           disabled={disabled}
-          aria-disabled={disabled ? true : undefined}
+          // disabled says so; when not, the caller's own (it was spread above) stands
+          aria-disabled={disabled ? true : rest['aria-disabled']}
           rounded={rounded}
           flat={flat}
           intent={intent}

@@ -47,11 +47,18 @@ import { IReqoreIconName } from '../../types/icons';
 import ReqoreButton, { ButtonBadge, IReqoreButtonProps, TReqoreBadge } from '../Button';
 import ReqoreControlGroup, { IReqoreControlGroupProps } from '../ControlGroup';
 import ReqoreControlGroupItem from '../ControlGroup/item';
-import { IReqoreEffect, StyledEffect, TReqoreEffectColor, TReqoreHexColor } from '../Effect';
-import { useReqoreSurface } from '../../context/SurfaceContext';
+import {
+  getEffectBackgrounds,
+  IReqoreEffect,
+  StyledEffect,
+  TReqoreEffectColor,
+  TReqoreHexColor,
+} from '../Effect';
+import { ReqoreSurfaceProvider, useReqoreSurface } from '../../context/SurfaceContext';
 import { ReqoreHeading } from '../Header';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
+import { getDrawnEffectTextColor, getUnpaintedSurface } from '../Panel/surface';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
 export type TReqoreFeatureCardMarker = 'line' | 'number' | 'icon' | 'none';
@@ -164,6 +171,8 @@ interface IStyledFeatureCardProps extends Omit<IReqoreFeatureCardProps, 'transpa
   $raised?: boolean;
   $padded: TReqorePadded;
   $paddingSize: TSizes;
+  /** Its text color when it paints nothing (transparent): read on what it is drawn on. */
+  $color?: string;
 }
 
 // Its styling flags, and the layout flags a containing `ReqoreControlGroup` hands it, are not
@@ -201,7 +210,7 @@ const StyledFeatureCard = styled(StyledEffect).withConfig({
         )}`};
   border-radius: ${({ rounded, size = 'normal' as TSizes, radiusSize }) =>
     rounded === false ? 0 : `${resolveRadius(size, radiusSize)}px`};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ theme, $color }) => $color ?? getReadableColor(theme, undefined, undefined, true)};
   overflow: hidden;
   position: relative;
   flex: ${({ fluid }) => (fluid ? '1 auto' : '0 0 auto')};
@@ -421,8 +430,13 @@ export const ReqoreFeatureCard = memo(
       const marker: TReqoreFeatureCardMarker = markerProp ?? (icon ? 'icon' : 'line');
       const hasActions = !!actions?.length;
       const hasFooter = (footer !== undefined && footer !== null && footer !== false) || hasActions;
-      // What the card is drawn in: its marker and its fainter description are read against it.
-      const surface = useReqoreSurface();
+      // What the card is drawn in: its marker, its text and its footer are read against it.
+      const aroundSurface = useReqoreSurface();
+      // transparent, it is on what is around it: what a component there says, or its customTheme's main
+      const surface = useMemo(
+        () => getUnpaintedSurface(theme, customTheme, aroundSurface, transparent),
+        [theme, customTheme, aroundSurface, transparent]
+      );
       const background = useMemo(
         () =>
           transparent
@@ -433,18 +447,33 @@ export const ReqoreFeatureCard = memo(
               ),
         [transparent, theme, surface]
       );
-      // fainter than the label, as far as it stays readable on the card: one object while it holds, for a memo
-      // component
+      const text = useMemo(
+        () => getReadableColor(theme, undefined, undefined, true, background),
+        [theme, background]
+      );
+      /* fainter than the label, as far as it stays readable on the card in the color it is drawn in - its effect's,
+         where the theme can resolve it, else the card's text - unless the caller gives its opacity: one object
+         while it holds, for a memo component */
       const descriptionLook = useMemo(
-        () => ({
-          ...descriptionEffect,
-          opacity: getReadableAlpha(
-            getReadableColor(theme, undefined, undefined, true, background),
-            background,
-            descriptionEffect?.opacity ?? 0.72
-          ),
-        }),
-        [descriptionEffect, theme, background]
+        () =>
+          descriptionEffect?.opacity !== undefined
+            ? descriptionEffect
+            : {
+                ...descriptionEffect,
+                opacity: getReadableAlpha(
+                  getDrawnEffectTextColor(theme, descriptionEffect?.color, [background]) ?? text,
+                  background,
+                  0.72
+                ),
+              },
+        [descriptionEffect, theme, text, background]
+      );
+      /* what its footer's actions are drawn on: each color of the card's gradient, when its effect draws one - for
+         as long as its colors hold, not the effect object, which given inline is new on every render */
+      const gradientKey = JSON.stringify(effect?.gradient ?? null);
+      const backgrounds = useMemo(
+        () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
+        [theme, gradientKey, background, surface]
       );
 
       return (
@@ -465,6 +494,8 @@ export const ReqoreFeatureCard = memo(
           tooltip={tooltip}
           rounded={rounded}
           $transparent={transparent}
+          // transparent, its own text is read where it is drawn, not on its theme's main
+          $color={transparent ? text : undefined}
           $raised={raised}
           $padded={padded}
           $paddingSize={paddingSize ?? size}
@@ -525,44 +556,47 @@ export const ReqoreFeatureCard = memo(
             )}
           </StyledFeatureCardContent>
           {hasFooter && (
-            <ReqoreControlGroup
-              wrap
-              gapSize='small'
-              verticalAlign='center'
-              size={size}
-              {...footerProps}
-              className={`${footerProps?.className || ''} reqore-feature-card-footer`}
-            >
-              {footer !== undefined && footer !== null && footer !== false ? (
-                <ReqoreControlGroupItem className='reqore-feature-card-footer-content'>
-                  {typeof footer === 'string' || typeof footer === 'number' ? (
-                    // Text gets the description's size, so a footer note reads as card text.
-                    <ReqoreP size={descriptionSize} customTheme={theme}>
-                      {footer}
-                    </ReqoreP>
-                  ) : (
-                    footer
-                  )}
-                </ReqoreControlGroupItem>
-              ) : null}
-              {actions?.map(({ label: actionLabel, ...action }, index) => (
-                <ReqoreButton
-                  key={index}
-                  size={size}
-                  intent={intent}
-                  customTheme={customTheme}
-                  // A disabled card is out of the pointer's reach, but not the keyboard's.
-                  disabled={disabled}
-                  {...action}
-                  className={`${action.className || ''} reqore-feature-card-action`}
-                  // After the spread, so it wraps the consumer's handler: an action is a
-                  // control, and a click on it is never a click on the card.
-                  onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
-                >
-                  {actionLabel}
-                </ReqoreButton>
-              ))}
-            </ReqoreControlGroup>
+            // its actions are drawn on the card: they read against it, not what is around it
+            <ReqoreSurfaceProvider color={backgrounds}>
+              <ReqoreControlGroup
+                wrap
+                gapSize='small'
+                verticalAlign='center'
+                size={size}
+                {...footerProps}
+                className={`${footerProps?.className || ''} reqore-feature-card-footer`}
+              >
+                {footer !== undefined && footer !== null && footer !== false ? (
+                  <ReqoreControlGroupItem className='reqore-feature-card-footer-content'>
+                    {typeof footer === 'string' || typeof footer === 'number' ? (
+                      // Text gets the description's size, so a footer note reads as card text.
+                      <ReqoreP size={descriptionSize} customTheme={theme}>
+                        {footer}
+                      </ReqoreP>
+                    ) : (
+                      footer
+                    )}
+                  </ReqoreControlGroupItem>
+                ) : null}
+                {actions?.map(({ label: actionLabel, ...action }, index) => (
+                  <ReqoreButton
+                    key={index}
+                    size={size}
+                    intent={intent}
+                    customTheme={customTheme}
+                    // A disabled card is out of the pointer's reach, but not the keyboard's.
+                    disabled={disabled}
+                    {...action}
+                    className={`${action.className || ''} reqore-feature-card-action`}
+                    // After the spread, so it wraps the consumer's handler: an action is a
+                    // control, and a click on it is never a click on the card.
+                    onClick={withStoppedPropagation<HTMLButtonElement>(action.onClick)}
+                  >
+                    {actionLabel}
+                  </ReqoreButton>
+                ))}
+              </ReqoreControlGroup>
+            </ReqoreSurfaceProvider>
           )}
         </ReqoreTooltipComponent>
       );

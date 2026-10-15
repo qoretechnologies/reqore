@@ -101,7 +101,7 @@ const StyledReqoreBreadcrumbs = styled.div<IStyledBreadcrumbs>`
 // ellipsise; `overflow: hidden` is the final safety net. Its single child (the
 // folding row, or the static row) fills it, so the row's end is the end of the
 // AVAILABLE width, not of its own content.
-const StyledTrail = styled.div<{ $color: string }>`
+const StyledTrail = styled.div<{ $color: string; $crumbColor?: string }>`
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -114,13 +114,34 @@ const StyledTrail = styled.div<{ $color: string }>`
     min-width: 0;
   }
 
-  /* The crumbs pick their own text colour, against what they are drawn on: the bar
-     (handed to them as their surface) or their own colour, for a crumb with an intent.
-     The bar's colour used to be forced onto every crumb, because a minimal crumb in a
-     chromatic custom theme tinted its label near-white against the page rather than
-     the bar - and it was forced onto a crumb with an intent of its own too, dark text
-     on the warning orange. */
+  /* A crumb drawn on the bar (data-on-bar, see isDrawnOnBar) is written in the bar's
+     item colour when the bar has one: the theme's breadcrumbs.item.color, or the colour
+     that reads on a bar drawn in a colour of its own - readable-dark on a light themed bar
+     (e3e8742). A minimal crumb would otherwise tint its label with the bar's hue, and the
+     theme's item colour would reach nothing but the arrows. A crumb in a colour of its own
+     (an intent, a solid or active chip) and the tabs crumb pick their text against it. */
+  ${({ $crumbColor }) =>
+    $crumbColor &&
+    css`
+      .reqore-breadcrumbs-item[data-on-bar],
+      .reqore-breadcrumbs-overflow-current[data-on-bar] {
+        color: ${$crumbColor};
+      }
+    `}
 `;
+
+/**
+ * Whether a crumb is drawn on the bar, as one is by default (a minimal, flat button), rather than in a colour of its
+ * own: an intent, a color, a theme or a gradient of its own, or a solid chip (active, or not minimal).
+ */
+const isDrawnOnBar = (crumb?: IReqoreBreadcrumbItem): boolean =>
+  !!crumb &&
+  !crumb.intent &&
+  !crumb.color &&
+  !crumb.customTheme &&
+  !crumb.effect?.gradient &&
+  !crumb.active &&
+  crumb.minimal !== false;
 
 // The right element NEVER shrinks — this is what makes overlap with the trail
 // structurally impossible at any width.
@@ -314,14 +335,44 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
   const theme = useReqoreTheme('breadcrumbs', customTheme, undefined);
   // What the trail is drawn on: the bar's own colour over what is under it, or that alone.
   const surface = useReqoreSurface();
-  const barSurface = theme.breadcrumbs?.main
-    ? getDrawnColor(theme.breadcrumbs.main, getThemeSurface(theme, surface))
-    : getThemeSurface(theme, surface);
-  const itemColor =
-    theme.breadcrumbs?.item?.color ||
-    (theme.breadcrumbs?.main
-      ? getReadableColorFrom(barSurface, true)
-      : getReadableColor(theme, undefined, undefined, true, barSurface));
+  const barSurface = useMemo(
+    () =>
+      theme.breadcrumbs?.main
+        ? getDrawnColor(theme.breadcrumbs.main, getThemeSurface(theme, surface))
+        : getThemeSurface(theme, surface),
+    [theme, surface]
+  );
+  const itemColor = useMemo(
+    () =>
+      theme.breadcrumbs?.item?.color ||
+      (theme.breadcrumbs?.main
+        ? getReadableColorFrom(barSurface, true)
+        : getReadableColor(theme, undefined, undefined, true, barSurface)),
+    [theme, barSurface]
+  );
+  // the colour a crumb drawn on the bar is written in, when the bar has one (see `StyledTrail`)
+  const crumbColor =
+    theme.breadcrumbs?.item?.color || theme.breadcrumbs?.main ? itemColor : undefined;
+  // one object each for as long as the colours hold: an icon is a memo component
+  const arrowEffect = useMemo(
+    () => ({
+      // fainter than the crumbs, as far as it stands out from the bar by 3:1
+      opacity: getReadableAlpha(itemColor, barSurface, 0.5, READABLE_ICON_CONTRAST),
+    }),
+    [itemColor, barSurface]
+  );
+  const moreIconEffect = useMemo(
+    () => ({
+      // as faint as a control's icon, as far as it stands out from the bar by 3:1
+      opacity: getReadableAlpha(
+        itemColor,
+        barSurface,
+        CONTROL_ICON_OPACITY,
+        READABLE_ICON_CONTRAST
+      ),
+    }),
+    [itemColor, barSurface]
+  );
 
   const leafItem = items[items.length - 1];
 
@@ -532,10 +583,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
       key={key}
       margin='both'
       color={itemColor}
-      effect={{
-        // fainter than the crumbs, as far as it stands out from the bar by 3:1
-        opacity: getReadableAlpha(itemColor, barSurface, 0.5, READABLE_ICON_CONTRAST),
-      }}
+      effect={arrowEffect}
     />
   );
 
@@ -597,6 +645,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           customTheme={customTheme}
           {...item}
           size={size}
+          data-on-bar={isDrawnOnBar(item) || undefined}
         />
       </React.Fragment>
     );
@@ -661,6 +710,8 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           // own: hovering opens the menu, which names every crumb in full, and a browser's tooltip
           // would sit on it (a phone shows none).
           aria-label={leafItem?.['aria-label'] ?? leafItem?.label ?? leafItem?.menuLabel}
+          // written as that crumb would be, on the bar (see `StyledTrail`)
+          data-on-bar={isDrawnOnBar(leafItem) || undefined}
           title={leafItem?.title}
           // A floor so the current page always keeps a few readable characters —
           // never just an icon — however tight the bar gets. This can't cause an
@@ -694,10 +745,7 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
           <ReqoreIcon
             icon='MoreLine'
             color={itemColor}
-            effect={{
-              // as faint as a control's icon, as far as it stands out from the bar by 3:1
-              opacity: getReadableAlpha(itemColor, barSurface, CONTROL_ICON_OPACITY, READABLE_ICON_CONTRAST),
-            }}
+            effect={moreIconEffect}
           />
         </ReqoreDropdown>
         {renderArrow('reqore-breadcrumbs-overflow-arrow')}
@@ -715,8 +763,13 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
         size={size}
         responsive={responsive}
       >
+        {/* the trail and the right element are both drawn on the bar */}
         <ReqoreSurfaceProvider color={barSurface}>
-          <StyledTrail className='reqore-breadcrumbs-trail' $color={itemColor}>
+          <StyledTrail
+            className='reqore-breadcrumbs-trail'
+            $color={itemColor}
+            $crumbColor={crumbColor}
+          >
             {responsive ? (
               // Every crumb may fold, the current page too: when even it does not fit, the trail is the one
               // dropdown labelled with it. Keeping the current page out of the fold is what used to leave it
@@ -729,10 +782,10 @@ const ReqoreBreadcrumbs: React.FC<IReqoreBreadcrumbsProps> = ({
               <StyledStaticTrail>{items.map((item, index) => renderItem(item, index, 0))}</StyledStaticTrail>
             )}
           </StyledTrail>
+          {rightElement && (
+            <StyledRight className='reqore-breadcrumbs-right'>{rightElement}</StyledRight>
+          )}
         </ReqoreSurfaceProvider>
-        {rightElement && (
-          <StyledRight className='reqore-breadcrumbs-right'>{rightElement}</StyledRight>
-        )}
       </StyledReqoreBreadcrumbs>
     </ReqoreErrorBoundary>
   );

@@ -1,4 +1,3 @@
-import { Globals } from '@react-spring/web';
 import { cloneDeep } from 'lodash';
 import type { IReqoreNotificationDefaults } from '../components/Notifications/notification';
 import merge from 'lodash/merge';
@@ -13,7 +12,6 @@ import { IReqoreContext } from '../context/ReqoreContext';
 import { TReqoreDataAttributes } from '../types/global';
 import ThemeContext from '../context/ThemeContext';
 import { buildTheme, getMainBackgroundColor, getReadableColor } from '../helpers/colors';
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import ReqoreProvider from './ReqoreProvider';
 import ReqoreThemeProvider from './ThemeProvider';
 
@@ -52,6 +50,21 @@ export interface IReqoreUIProviderProps {
 }
 
 /**
+ * What reduced motion stills: Reqore's own elements, each named by a class that starts with
+ * `reqore-`, and what they draw before and after them, in the layout and in the portal its dialogs,
+ * popovers and notifications open in. Not every element in there: the app's own elements inside the
+ * layout keep the transitions the app gave them.
+ */
+export const REDUCED_MOTION_SELECTORS: string[] = [
+  '.reqore-layout-wrapper',
+  ...['.reqore-layout-wrapper', '#reqore-portal'].flatMap((scope) =>
+    ['', '::before', '::after'].flatMap((part) =>
+      ["[class^='reqore-']", "[class*=' reqore-']"].map((own) => `${scope} ${own}${part}`)
+    )
+  ),
+];
+
+/**
  * The children of a wrapped control group (`ReqoreControlGroup` with `wrap`), which are never wider than the group:
  * each is capped at the row, and may shrink below its content to fit it. All of it is in `:where()`, so the rule
  * weighs nothing and a child that sets its own width limits (a button's `maxWidth`) keeps them. It is a global
@@ -85,46 +98,19 @@ const GlobalStyle = createGlobalStyle`
     min-width: 0;
   }
 
-  /* Reduced motion (WCAG 2.3.3): what Reqore draws - the layout and the portal its dialogs, popovers and
-     notifications open in - changes at once. A hair of a duration, not none: a transition of no time sends no
-     transitionend, which some components wait for. Its springs settle at once too (see useSpringsHonourReducedMotion). */
+  /* Reduced motion (WCAG 2.3.3): what Reqore draws changes at once - its own elements only, see
+     REDUCED_MOTION_SELECTORS. A hair of a duration, not none: a transition of no time sends no
+     transitionend, which some components wait for. Reqore's springs settle at once in their own
+     components (immediate under usePrefersReducedMotion), not through react-spring's global switch,
+     which settled the app's springs too. (No backticks in here: this comment lives inside a
+     template literal.) */
   @media (prefers-reduced-motion: reduce) {
-    .reqore-layout-wrapper,
-    .reqore-layout-wrapper *,
-    .reqore-layout-wrapper *::before,
-    .reqore-layout-wrapper *::after,
-    #reqore-portal,
-    #reqore-portal *,
-    #reqore-portal *::before,
-    #reqore-portal *::after {
+    ${REDUCED_MOTION_SELECTORS.join(', ')} {
       transition-duration: 0.01ms !important;
       transition-delay: 0s !important;
     }
   }
 `;
-
-/* Whether Reqore turned react-spring's skipAnimation on: it turns off only what it turned on. */
-let springsSkippedForReducedMotion = false;
-
-/**
- * Reqore's springs (a fade, a slide, a reveal, built on react-spring) honour the reduced-motion preference: under
- * it every spring settles at once, at its end. Set while the provider renders, so the springs of its first render
- * already settle, and again whenever the preference changes. It is react-spring's own switch, so an app's springs
- * on the same react-spring settle with Reqore's.
- */
-const useSpringsHonourReducedMotion = (): void => {
-  const reduced = usePrefersReducedMotion();
-
-  useMemo(() => {
-    if (reduced) {
-      springsSkippedForReducedMotion = true;
-      Globals.assign({ skipAnimation: true });
-    } else if (springsSkippedForReducedMotion) {
-      springsSkippedForReducedMotion = false;
-      Globals.assign({ skipAnimation: false });
-    }
-  }, [reduced]);
-};
 
 const StyledPortal = styled.div`
   * {
@@ -159,8 +145,6 @@ const ReqorePortal = memo(
 const ReqoreUIProvider: React.FC<IReqoreUIProviderProps> = memo(
   ({ children, theme, options, layoutWrapperProps }) => {
     const [modalPortal, setModalPortal] = useState<any>(false);
-
-    useSpringsHonourReducedMotion();
 
     const _theme: Partial<IReqoreTheme> = useMemo(() => cloneDeep(theme || {}), [theme]);
     const _defaultTheme: IReqoreTheme = useMemo(() => cloneDeep(DEFAULT_THEME), []);

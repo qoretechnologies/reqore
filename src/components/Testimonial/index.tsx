@@ -44,6 +44,7 @@ import { getEffectBackgrounds, IReqoreEffect, StyledEffect, TReqoreEffectColor }
 import ReqoreEntityRow from '../EntityRow';
 import ReqoreIcon, { IReqoreIconProps } from '../Icon';
 import { getReqoreTextElement, ReqoreP } from '../Paragraph';
+import { getUnpaintedSurface } from '../Panel/surface';
 import ReqoreRating from '../Rating';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 
@@ -157,6 +158,8 @@ interface IStyledTestimonialProps {
   $interactive?: boolean;
   $padded: TReqorePadded;
   $paddingSize: TSizes;
+  /** Its text color when it paints nothing (transparent): read on what it is drawn on, as what it holds is. */
+  $color?: string;
 }
 
 const tintedBgFor = (theme: IReqoreTheme, intent?: TReqoreIntent) =>
@@ -199,7 +202,7 @@ const StyledTestimonial = styled(StyledEffect).withConfig({
         )}`};
   border-radius: ${({ rounded, size, radiusSize }) =>
     rounded ? `${resolveRadius(size, radiusSize)}px` : '0'};
-  color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
+  color: ${({ theme, $color }) => $color ?? getReadableColor(theme, undefined, undefined, true)};
   flex: ${({ $fluid }) => ($fluid ? '1 auto' : '0 0 auto')};
   margin: 0;
   transition:
@@ -316,7 +319,12 @@ const ReqoreTestimonial = memo(
 
       /* What the card is drawn in: what it holds is read against it, and the quote mark, in its own
          color or the intent's, stands out from it by 3:1 however faint it is drawn. */
-      const surface = useReqoreSurface();
+      const aroundSurface = useReqoreSurface();
+      // transparent, it is on what is around it: what a component there says, or its customTheme's main
+      const surface = useMemo(
+        () => getUnpaintedSurface(theme, customTheme, aroundSurface, transparent),
+        [theme, customTheme, aroundSurface, transparent]
+      );
       const background = useMemo(
         () =>
           transparent
@@ -324,10 +332,12 @@ const ReqoreTestimonial = memo(
             : getDrawnColor(tintedBgFor(theme, intent), getThemeSurface(theme, surface)),
         [transparent, theme, intent, surface]
       );
-      // each color of the card's gradient, when its effect draws one
+      /* each color of the card's gradient, when its effect draws one: for as long as its colors hold, not the
+         effect object - one given inline is new on every render, and so was the surface handed down */
+      const gradientKey = JSON.stringify(effect?.gradient ?? null);
       const backgrounds = useMemo(
         () => getEffectBackgrounds(theme, effect, background, getThemeSurface(theme, surface)),
-        [theme, effect, background, surface]
+        [theme, gradientKey, background, surface]
       );
       const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
       const resolvedAvatarColor: TReqoreEffectColor = useMemo(() => {
@@ -372,7 +382,10 @@ const ReqoreTestimonial = memo(
           $padded={padded}
           $paddingSize={paddingSize ?? size}
           disabled={disabled}
-          aria-disabled={disabled ? true : undefined}
+          // a disabled card says so; any other keeps what the caller says
+          aria-disabled={disabled ? true : rest['aria-disabled']}
+          // transparent, its own text is read where it is drawn, not on its theme's main
+          $color={transparent ? text : undefined}
           effect={effect}
           onClick={onClick}
           className={`${className || ''} reqore-testimonial`}

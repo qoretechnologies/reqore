@@ -1,7 +1,7 @@
-import { forwardRef, memo } from 'react';
+import { forwardRef, memo, useMemo } from 'react';
 import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
-import { getReadableIntentColor } from '../../helpers/colors';
+import { getReadableTextColor } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreSurface } from '../../context/SurfaceContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -41,11 +41,10 @@ export const StyledParagraph = styled(StyledTextEffect).withConfig({
 })`
   padding: 0;
   margin: 0;
-  /* An intent colours the text in a shade of it that reads on the theme's surface. */
-  color: ${({ theme, intent, $surface }) =>
-    intent
-      ? getReadableIntentColor(theme, intent, undefined, $surface)
-      : theme.text?.color || 'inherit'};
+  /* An intent colours the text in a shade of it that reads on what the paragraph is drawn on
+     ($textColor: worked out once per render by the component). */
+  color: ${({ theme, intent, $surface, $textColor }) =>
+    $textColor ?? getReadableTextColor(theme, intent, $surface)};
   font-size: ${({ _size }) => (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size)};
 `;
 
@@ -75,11 +74,16 @@ export const ReqoreP = memo(
     ) => {
       const theme = useReqoreTheme('main', customTheme, intent, undefined, inheritCustomTheme);
       const surface = useReqoreSurface();
+      const textColor = useMemo(
+        () => getReadableTextColor(theme, intent, surface),
+        [theme, intent, surface]
+      );
 
       return (
         <ReqoreTooltipComponent
           as='p'
           $surface={surface}
+          $textColor={textColor}
           theme={theme}
           color={theme.text.color}
           intent={intent}

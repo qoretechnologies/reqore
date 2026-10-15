@@ -133,6 +133,8 @@ export interface IReqoreInputStyle extends IReqoreInputProps {
   theme: IReqoreTheme;
   /** What the input is drawn on (`useReqoreSurface`): the theme's surface when not known. */
   $surface?: TReqoreSurface;
+  /** Its colors, worked out once by the component (`getInputLook`); else from the rest. */
+  $look?: IReqoreInputLook;
   _size?: TSizes;
   clearable?: boolean;
   hasIcon?: boolean;
@@ -190,6 +192,50 @@ export const getInputClearButtonOpacity = (
   );
 };
 
+/** Everything an input (or a text area) is drawn in, worked out at once (see `getInputLook`). */
+export interface IReqoreInputLook {
+  /** Its background as drawn, at rest. */
+  background: TReqoreHexColor;
+  /** Its text, and the icons and the clear button beside it. */
+  text: TReqoreHexColor;
+  /** The placeholder, at rest and focused (`getInputPlaceholderColor`). */
+  placeholder: string;
+  focusedPlaceholder: string;
+  /** The clear button's opacity when shown (`getInputClearButtonOpacity`). */
+  clearOpacity: number;
+}
+
+/**
+ * An input's colors - its text, its placeholder at rest and focused, its clear button's
+ * opacity - from the two states it is drawn in, at once: a component works them out on what
+ * decides them (`useMemo`) and hands its styles plain values. Asked for one by one, a
+ * controlled input worked them out seven times on every keystroke.
+ */
+export const getInputLook = (
+  theme: IReqoreTheme,
+  minimal?: boolean,
+  transparent?: boolean,
+  surface?: TReqoreSurface
+): IReqoreInputLook => {
+  const resting = getInputColors(theme, minimal, transparent, false, surface);
+  const focused = getInputColors(theme, minimal, transparent, true, surface);
+
+  return {
+    background: resting.background,
+    text: resting.text,
+    placeholder: getReadableFadedColor(resting.text, resting.background, 0.3),
+    focusedPlaceholder: getReadableFadedColor(focused.text, focused.background, 0.5),
+    clearOpacity: Math.max(
+      getReadableAlpha(resting.text, resting.background, 0.5, READABLE_ICON_CONTRAST),
+      getReadableAlpha(focused.text, focused.background, 0.5, READABLE_ICON_CONTRAST)
+    ),
+  };
+};
+
+/** An input's look: the component's, or worked out from its style props where it has none. */
+const lookOf = ({ $look, theme, minimal, transparent, $surface }: IReqoreInputStyle) =>
+  $look ?? getInputLook(theme, minimal, transparent, $surface);
+
 export const StyledInputWrapper = styled.div.withConfig({
   shouldForwardProp: omitStyleProps('width'),
 })<IReqoreInputStyle>`
@@ -209,8 +255,7 @@ export const StyledInputWrapper = styled.div.withConfig({
 
   /* The icons beside the text (and the clear button) are drawn in its colour, not in
      whatever the page around the input is written in. */
-  color: ${({ theme, minimal, transparent, $surface }) =>
-    getInputColors(theme, minimal, transparent, false, $surface).text};
+  color: ${(props) => lookOf(props).text};
 
   ${InactiveIconScale}
 
@@ -324,8 +369,7 @@ export const StyledInput = styled(StyledEffect).withConfig({
 
   background-color: ${({ theme, minimal, transparent }: IReqoreInputStyle) =>
     minimal || transparent ? 'transparent' : rgba(theme.main, 0.1)};
-  color: ${({ theme, minimal, transparent, $surface }: IReqoreInputStyle) =>
-    getInputColors(theme, minimal, transparent, false, $surface).text};
+  color: ${(props) => lookOf(props).text};
 
   transition: all 0.2s ease-out;
 
@@ -338,14 +382,12 @@ export const StyledInput = styled(StyledEffect).withConfig({
 
   &::placeholder {
     transition: all 0.2s ease-out;
-    color: ${({ theme, minimal, transparent, $surface }) =>
-      getInputPlaceholderColor(theme, minimal, transparent, false, $surface)};
+    color: ${(props) => lookOf(props).placeholder};
   }
 
   &:focus {
     &::placeholder {
-      color: ${({ theme, minimal, transparent, $surface }) =>
-        getInputPlaceholderColor(theme, minimal, transparent, true, $surface)};
+      color: ${(props) => lookOf(props).focusedPlaceholder};
     }
   }
 
@@ -376,7 +418,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       minimal,
       readOnly,
       customTheme,
-        inheritCustomTheme,
+      inheritCustomTheme,
       intent,
       wrapperStyle,
       focusRules,
@@ -418,33 +460,41 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
       ? `Loader${loadingIconType || ''}Line`
       : icon || leftIconProps?.icon;
 
-    // The icons stand out from the input's background, as its text does.
+    /* Its colors, once for as long as what decides them holds - its styles take them as they
+       are: a controlled input renders on every keystroke. The icons stand out from the input's
+       background, as its text does. */
     const surface = useReqoreSurface();
-    const { background: inputBackground, text: inputText } = getInputColors(
-      theme,
-      minimal,
-      rest.transparent,
-      false,
-      surface
+    const transparent = rest.transparent;
+    const look = useMemo(
+      () => getInputLook(theme, minimal, transparent, surface),
+      [theme, minimal, transparent, surface]
     );
     // an icon's own color: in its props (which win, as they are spread over the rest), else the input's
     const [leftIconPropsColor, leftIconRest] = splitIconColor(leftIconProps);
     const [rightIconPropsColor, rightIconRest] = splitIconColor(rightIconProps);
     const leftIconOwn = leftIconPropsColor || iconColor;
     const rightIconOwn = rightIconPropsColor || rightIconColor;
-    const leftIconLook = getReadableIconLook(
-      theme,
-      [inputBackground],
-      inputText,
-      CONTROL_ICON_OPACITY,
-      leftIconOwn
+    const leftIconLook = useMemo(
+      () =>
+        getReadableIconLook(
+          theme,
+          [look.background],
+          look.text,
+          CONTROL_ICON_OPACITY,
+          leftIconOwn
+        ),
+      [theme, look, leftIconOwn]
     );
-    const rightIconLook = getReadableIconLook(
-      theme,
-      [inputBackground],
-      inputText,
-      CONTROL_ICON_OPACITY,
-      rightIconOwn
+    const rightIconLook = useMemo(
+      () =>
+        getReadableIconLook(
+          theme,
+          [look.background],
+          look.text,
+          CONTROL_ICON_OPACITY,
+          rightIconOwn
+        ),
+      [theme, look, rightIconOwn]
     );
     // one object for as long as the opacity holds: an icon is a memo component
     const leftIconEffect = useMemo(
@@ -495,6 +545,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         Component={StyledInputWrapper}
         className='reqore-control-wrapper'
         $surface={surface}
+        $look={look}
         fluid={fluid}
         fixed={fixed}
         width={width}
@@ -527,6 +578,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           as='input'
           {...omit(rest, ['children'])}
           $surface={surface}
+          $look={look}
           id={inputId}
           type={hasPasswordToggle && passwordVisible ? 'text' : rest.type}
           effect={{
@@ -557,7 +609,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
           label={clearLabel}
           hasRightIcon={!!rightIcon}
           rightOffset={passwordToggleWidth}
-          shownOpacity={getInputClearButtonOpacity(theme, minimal, rest.transparent, surface)}
+          shownOpacity={look.clearOpacity}
           size={size}
           show={rest?.value && rest.value !== '' ? true : false}
         />
