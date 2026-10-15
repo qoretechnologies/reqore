@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 /**
  * Whether this environment can answer a media query at all. Decided ONCE at
@@ -28,28 +28,32 @@ export const CAN_QUERY_MEDIA =
  * asks the browser in an effect: on a phone, a `responsiveLayout` drawer
  * mounted as the caller's side panel for one render before it became a sheet,
  * and a floating one kept the side panel's `right: 10px` from that render (a
- * 380px sheet on a 390px phone). Where the query can be evaluated it is asked
- * as the state is made, and the effect keeps it current from then on.
+ * 380px sheet on a 390px phone).
+ *
+ * And it is hydration-safe: the query is an external store
+ * (`useSyncExternalStore`), whose server snapshot is `defaultState`. A page
+ * rendered on a server (the docs site renders `ReqoreUIProvider` there) is
+ * hydrated with the server's answer, so React finds what the server drew, and
+ * the browser's answer follows straight after. Asked in `useState`'s
+ * initialiser, the browser's answer was in the hydrating render itself: a
+ * phone's `isMobile` against the server's `false`, a mismatch. A page rendered
+ * only in the browser still has the browser's answer from its first render.
  */
 export const useReqoreMedia = (query: string, defaultState = false): boolean => {
-  const [matches, setMatches] = useState(() =>
-    CAN_QUERY_MEDIA ? window.matchMedia(query).matches : defaultState
+  // One list per query: `matchMedia` makes a new one on every call, and the snapshot is read on
+  // every render.
+  const list = useMemo(() => (CAN_QUERY_MEDIA ? window.matchMedia(query) : undefined), [query]);
+
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      list?.addEventListener('change', onChange);
+
+      return () => list?.removeEventListener('change', onChange);
+    },
+    [list]
   );
+  const getSnapshot = useCallback(() => (list ? list.matches : defaultState), [list, defaultState]);
+  const getServerSnapshot = useCallback(() => defaultState, [defaultState]);
 
-  useEffect(() => {
-    if (!CAN_QUERY_MEDIA) {
-      return undefined;
-    }
-
-    const list = window.matchMedia(query);
-    const update = () => setMatches(list.matches);
-
-    // A new query, or a change between the render and this effect.
-    update();
-    list.addEventListener('change', update);
-
-    return () => list.removeEventListener('change', update);
-  }, [query]);
-
-  return matches;
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 };

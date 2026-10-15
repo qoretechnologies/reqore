@@ -1333,7 +1333,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       loadingIconType,
       skeleton,
       errorBoundaryOptions,
-      floatingActions,
+      floatingActions: floatingActionsProp,
       collapseTooltip = 'Collapse',
       expandTooltip = 'Expand',
       closeTooltip = 'Close',
@@ -1376,6 +1376,11 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }, []);
 
     const isMobile = useReqoreProperty('isMobile');
+    /* Floating actions are a hover's. Where the device cannot hover (a phone, a tablet), nothing
+       would ever float them, so its hover actions stay in the panel's own bar, shown (see the
+       hover gate on StyledPanel). */
+    const isHoverCapable = useReqoreProperty('isHoverCapable');
+    const floatingActions = !!floatingActionsProp && isHoverCapable !== false;
     const { targetRef } = useCombinedRefs(ref);
     const [measureRef, { width }] = useMeasure();
     const [_isHovered, setIsHovered] = useState(false);
@@ -1541,8 +1546,9 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
     }, [showsFloatingActions, updateFloatingActionsPosition]);
 
     /* The floating actions are a hover's: a finger's tap - and the `mouseenter` a browser emulates after it -
-       shows none (see `createHoverGate`). A finger has the actions in the panel's own bar where it is the
-       primary pointer (`floatingActions` off), and on a touch laptop its tap left them floating until the next. */
+       shows none (see `createHoverGate`). Where a finger is the primary pointer (`isHoverCapable` false) the
+       actions are in the panel's own bar instead (`floatingActions` is off, above), and on a touch laptop its
+       tap left them floating until the next. */
     const hoverGate = useHoverGate();
     const handlePointerEnter = useCallback(
       (e: React.PointerEvent<HTMLDivElement>) => {
