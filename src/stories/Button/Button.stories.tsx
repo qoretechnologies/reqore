@@ -91,8 +91,9 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
           minimal
           flat={false}
           iconColor='#38fdb2'
-          leftIconColor='#33023c:lighten:3'
-          rightIconColor='#0a487b:lighten:3'
+          // an icon color given as a hex is drawn as given: light, to stand out on every intent's wash
+          leftIconColor='#e0b8f5'
+          rightIconColor='#8cc8ff'
         >
           Minimal not flat
         </ReqoreButton>
@@ -220,7 +221,8 @@ const Template: StoryFn<typeof ReqoreButton> = (buttonProps) => {
           leftIconProps={{ rotation: 180 }}
           rightIconProps={{ rotation: 270 }}
           description='This is a very interesting description for a button, I like it very much'
-          iconColor='#38fdb2'
+          // a theme color, drawn in the shade that stands out on each intent's fill (white, warning)
+          iconColor='success:lighten:2'
         >
           With Default Description
         </ReqoreButton>
