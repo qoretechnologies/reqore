@@ -9,6 +9,27 @@ import { IReqorePanelSubAction } from '../Panel';
 export const flipSortDirection = (direction: 'asc' | 'desc'): 'asc' | 'desc' =>
   direction === 'asc' ? 'desc' : 'asc';
 
+/**
+ * Set by the body on itself and on the header while unpinned columns are hidden
+ * under a pinned edge: `left`, `right` or `left right`, absent when every column
+ * is in view. The pinned edge's shadow reads it, so a pinned column that has
+ * nothing scrolling under it looks exactly like an unpinned one.
+ */
+export const TABLE_OVERFLOW_ATTRIBUTE = 'data-reqore-table-overflow';
+
+/** Carried by every pinned body and header cell: which edge it is pinned to. */
+export const TABLE_PIN_ATTRIBUTE = 'data-reqore-table-pin';
+
+/**
+ * The selector under which a pinned edge draws its shadow: the scroll container
+ * says a column is hidden under THIS edge, and the cell is pinned to it. Keyed on
+ * the cell's own attribute rather than on `&` alone, because styled-components
+ * resolves a nested `&` to the component's shared class — one rule for every
+ * pinned cell, left or right.
+ */
+export const pinnedEdgeShadowSelector = (pin: 'left' | 'right'): string =>
+  `[${TABLE_OVERFLOW_ATTRIBUTE}~='${pin}'] &[${TABLE_PIN_ATTRIBUTE}='${pin}']::after`;
+
 export { getQueryMatchScore };
 
 export const fixSort = (sort: IReqoreTableSort) => {

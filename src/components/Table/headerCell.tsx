@@ -6,12 +6,12 @@ import styled, { css } from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableSort } from '.';
 import { ReqoreControlGroup, ReqoreDropdown, ReqoreIcon } from '../..';
 import { IReqoreTheme } from '../../constants/theme';
-import { getReadableColor } from '../../helpers/colors';
+import { getPanelBackgroundColor, getReadableColor } from '../../helpers/colors';
 import { getOneLessSize } from '../../helpers/utils';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
 import { IReqoreDropdownItem } from '../Dropdown/list';
 import { IReqoreEffect } from '../Effect';
-import { getColumnRenderedWidth } from './helpers';
+import { TABLE_PIN_ATTRIBUTE, getColumnRenderedWidth, pinnedEdgeShadowSelector } from './helpers';
 import { TColumnsUpdater } from './header';
 
 export interface IReqoreTableHeaderCellProps
@@ -109,12 +109,23 @@ const StyledHeaderResizable = styled(Resizable)<{
       }
     `}
 
+  /* A pinned header cell paints the surface the table sits on, so the header
+     cells scrolling under it do not show through. Under minimal the cell's own
+     button is transparent, and a pinned column used to need header.transparent
+     set to false (a filled button, i.e. a different-looking header) to stay opaque. */
+  ${({ $pin, theme }) =>
+    $pin &&
+    css`
+      background: ${getPanelBackgroundColor(theme)};
+    `}
+
   ${({ $pin, $pinEdge }) =>
     $pin &&
     $pinEdge &&
     css`
       /* Bounded-height pseudo-shadow (matches body pinned cells). Override the inline
-         overflow:hidden so the 12px projection isn't clipped on this cell. */
+         overflow:hidden so the 12px projection isn't clipped on this cell. Drawn only
+         while a column is hidden under this edge — see TABLE_OVERFLOW_ATTRIBUTE. */
       overflow: visible !important;
 
       &::after {
@@ -124,6 +135,8 @@ const StyledHeaderResizable = styled(Resizable)<{
         bottom: 0;
         width: 12px;
         pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.12s ease;
         ${$pin === 'left' ? 'right: -12px;' : 'left: -12px;'}
         background: linear-gradient(
           to ${$pin === 'left' ? 'right' : 'left'},
@@ -131,6 +144,9 @@ const StyledHeaderResizable = styled(Resizable)<{
           rgba(0, 0, 0, 0)
         );
         z-index: 1;
+      }
+      ${pinnedEdgeShadowSelector($pin)} {
+        opacity: 1;
       }
     `}
 `;
@@ -324,6 +340,7 @@ export const ReqoreTableHeaderCell = memo(
       <StyledHeaderResizable
         {...({ $pin: pin, $pinEdge: pinEdge, $minimal: parentMinimal } as any)}
         data-reqore-table-column-id={hasColumns ? undefined : dataId}
+        {...{ [TABLE_PIN_ATTRIBUTE]: pin }}
         minWidth={minWidth ?? renderedWidth}
         maxWidth={maxWidth}
         onResize={(_event, _direction, _component) => {

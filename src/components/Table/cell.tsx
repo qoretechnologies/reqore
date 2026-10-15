@@ -6,6 +6,7 @@ import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeLightness,
+  getPanelBackgroundColor,
   getReadableColorFrom,
   getThemePanelSurface,
 } from '../../helpers/colors';
@@ -13,6 +14,7 @@ import { omitStyleProps } from '../../helpers/styled';
 import { alignToFlexAlign } from '../../helpers/utils';
 import { IWithReqoreTooltip } from '../../types/global';
 import ReqoreButton, { IReqoreButtonProps } from '../Button';
+import { TABLE_PIN_ATTRIBUTE, pinnedEdgeShadowSelector } from './helpers';
 import { TReqoreColor, TReqoreHexColor } from '../Effect';
 import { ReqoreTooltipComponent } from '../TooltipComponent';
 import { IReqoreTableCellStyle } from './row';
@@ -98,9 +100,14 @@ export const StyledTableCell = styled.div.withConfig({
         opacity += 0.08;
       }
 
-      // Pinned cells must paint opaque — otherwise non-pinned cells scrolling underneath show through
+      // At rest a pinned cell is 'transparent' like any other: its opaque paint
+      // comes from `pinnedBackground` below, which lays the SAME surface the
+      // table sits on under it. It used to return `theme.main` here, which was
+      // then washed to 30% and layered over the panel surface — so every pinned
+      // column sat a step darker than its neighbours, at rest, for no reason a
+      // reader could see.
       if (opacity === 0) {
-        return pin ? theme.main : 'transparent';
+        return 'transparent';
       }
 
       return changeLightness(color, opacity);
@@ -112,7 +119,7 @@ export const StyledTableCell = styled.div.withConfig({
     const themedPanel = getThemePanelSurface(theme);
     const displayedBackgroundColor =
       backgroundColor === 'transparent'
-        ? themedPanel?.main ?? theme.main
+        ? getPanelBackgroundColor(theme)
         : (rgba(backgroundColor, 0.3) as TReqoreHexColor);
     const cellBorderColor =
       backgroundColor === 'transparent' && themedPanel?.border
@@ -120,11 +127,12 @@ export const StyledTableCell = styled.div.withConfig({
         : changeLightness(displayedBackgroundColor, 0.1);
 
     // Pinned cells need an opaque paint so non-pinned cells scrolling underneath don't show
-    // through. We layer the semi-transparent displayed color over a solid theme.main base.
+    // through. We layer the semi-transparent displayed color over the surface a table is
+    // drawn on — a panel's — so at rest a pinned cell is indistinguishable from its neighbours.
     const pinnedBackground = pin
-      ? `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${
-          themedPanel?.main ?? theme.main
-        }`
+      ? `linear-gradient(${displayedBackgroundColor}, ${displayedBackgroundColor}), ${getPanelBackgroundColor(
+          theme
+        )}`
       : undefined;
 
     return css`
@@ -164,7 +172,12 @@ export const StyledTableCell = styled.div.withConfig({
         css`
           /* Use a pseudo-element instead of box-shadow so the shadow is strictly bounded to
              the cell's height — a blurred box-shadow bleeds vertically and stacks across
-             neighboring pinned cells, producing dark bands between rows. */
+             neighboring pinned cells, producing dark bands between rows.
+
+             Drawn only while a column really is hidden under this edge (the body marks
+             its scroll containers, see TABLE_OVERFLOW_ATTRIBUTE): a table whose columns
+             all fit has nothing to announce, and a permanent dark band beside the
+             actions column was the one thing that made a pinned column look different. */
           &::after {
             content: '';
             position: absolute;
@@ -172,12 +185,17 @@ export const StyledTableCell = styled.div.withConfig({
             bottom: 0;
             width: 12px;
             pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.12s ease;
             ${pin === 'left' ? 'right: -12px;' : 'left: -12px;'}
             background: linear-gradient(
               to ${pin === 'left' ? 'right' : 'left'},
               rgba(0, 0, 0, 0.35),
               rgba(0, 0, 0, 0)
             );
+          }
+          ${pinnedEdgeShadowSelector(pin)} {
+            opacity: 1;
           }
         `}
       `}
@@ -194,7 +212,7 @@ export const StyledTableCell = styled.div.withConfig({
                     ${lighten(0.1, displayedBackgroundColor)},
                     ${lighten(0.1, displayedBackgroundColor)}
                   ),
-                  ${theme.main};
+                  ${getPanelBackgroundColor(theme)};
               `
             : css`
                 background-color: ${lighten(0.1, displayedBackgroundColor)};
@@ -361,6 +379,7 @@ export const ReqoreTableBodyCell = memo(
         <ReqoreTooltipComponent
           Component={StyledTableCell}
           {...cellStyleProps}
+          {...{ [TABLE_PIN_ATTRIBUTE]: cellStyleProps.pin }}
           maxHeight={effectiveMaxHeight}
           ref={setRefs}
         >

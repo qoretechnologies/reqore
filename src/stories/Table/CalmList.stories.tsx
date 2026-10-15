@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { IReqoreTableColumn, IReqoreTableProps, IReqoreTableRowData } from '../../components/Table';
 import { ReqoreControlGroup, ReqoreIcon, ReqoreP, ReqoreSpan, ReqoreTable, ReqoreTag } from '../../index';
 import { StoryMeta } from '../utils';
-import { ThemedSurface } from '../utils/themedSurface';
+import { THEMED_SURFACE, ThemedSurface } from '../utils/themedSurface';
 
 /**
  * A list page's table the way a calm product draws it: a status dot, the name
@@ -353,5 +353,78 @@ export const ExpanderAtEnd: Story = {
     const cells = firstRow.querySelectorAll('.reqore-table-cell');
     expect(cells[cells.length - 1].querySelector('[aria-expanded]')).toBeTruthy();
     expect(cells[0].querySelector('[aria-expanded]')).toBeNull();
+  },
+};
+
+/** The actions column pinned to the right edge, as every list in a product pins it. */
+export const PinnedActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Pinning is a behaviour, not a look. At rest a pinned column paints the same surface as its neighbours — no darker base, no filled header cell, no shadow at its edge. The edge shadow is drawn only while a column really is hidden under it, which the body says through the `data-reqore-table-overflow` attribute on its scroll containers; the play narrows the host to make that happen.',
+      },
+    },
+  },
+  render: () => (
+    // A table is drawn inside a panel, and that surface (`theme.panel.main`) is
+    // what a pinned cell paints — so the host here is that surface.
+    <div className='pinned-host' style={{ width: '100%', background: THEMED_SURFACE.panel!.main }}>
+      <Template
+        columns={columns.map((column) =>
+          column.dataId === 'actions' ? { ...column, pin: 'right' } : column
+        )}
+        minimal
+        headerEffect={{ uppercase: false, spaced: 0, weight: 'bold', color: TEXT_3 }}
+        headerDividers={false}
+        selectionStyle='checkbox'
+        expanderPosition='none'
+        actionsRevealOn='hover'
+        sortIndicator='arrow'
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByText('Chargeback Handler')).toBeInTheDocument());
+    const firstRow = canvasElement.querySelector('.reqore-table-row')!;
+    const cells = Array.from(firstRow.querySelectorAll<HTMLElement>('.reqore-table-cell'));
+    const pinned = cells[cells.length - 1];
+    const unpinned = cells[cells.length - 2];
+    // Everything fits, so the pinned column is marked with nothing…
+    const body = canvasElement.querySelector('.reqore-table-body')!;
+    const header = canvasElement.querySelector('.reqore-table-header-wrapper')!;
+    expect(body.getAttribute('data-reqore-table-overflow')).toBeNull();
+    expect(header.getAttribute('data-reqore-table-overflow')).toBeNull();
+    // …its edge shadow is not drawn…
+    expect(getComputedStyle(pinned, '::after').opacity).toBe('0');
+    // …and its paint is the panel surface (`theme.panel.main`), which its
+    // neighbour shows through to.
+    const host = canvasElement.querySelector<HTMLElement>('.pinned-host')!;
+    const panelSurface = THEMED_SURFACE.panel!.main;
+    const asRgb = (hex: string) =>
+      `rgb(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)})`;
+    expect(getComputedStyle(unpinned).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(pinned).backgroundColor).toBe(asRgb(panelSurface));
+    expect(getComputedStyle(host).backgroundColor).toBe(asRgb(panelSurface));
+    // The header cell of a pinned column is not a filled button either.
+    const pinnedHeaderButton = header.querySelector<HTMLElement>(
+      '[data-reqore-table-column-id="actions"] .reqore-table-header-cell'
+    );
+    expect(pinnedHeaderButton).toBeTruthy();
+    expect(getComputedStyle(pinnedHeaderButton!).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+
+    // Narrow the host until columns are hidden under the pinned edge: now the
+    // shadow says so, on the body and on the header, and goes away again when
+    // the row is scrolled all the way to the right.
+    host.style.width = '640px';
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-overflow')).toBe('right'));
+    expect(header.getAttribute('data-reqore-table-overflow')).toBe('right');
+    await waitFor(() => expect(getComputedStyle(pinned, '::after').opacity).toBe('1'));
+    body.scrollLeft = body.scrollWidth;
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-overflow')).toBe('left'));
+    await waitFor(() => expect(getComputedStyle(pinned, '::after').opacity).toBe('0'));
+    host.style.width = '100%';
+    await waitFor(() => expect(body.getAttribute('data-reqore-table-overflow')).toBeNull());
   },
 };

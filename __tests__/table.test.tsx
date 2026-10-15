@@ -634,6 +634,59 @@ test('<Table /> renders a single header wrapper even with pinned columns', () =>
   expect(document.querySelectorAll('.reqore-table-wrapper').length).toBe(1);
 });
 
+test('<Table /> marks its scroll containers only while columns are hidden under a pinned edge', () => {
+  const data: IReqoreTableProps = {
+    ...tableData,
+    columns: [
+      { dataId: 'id', header: { label: 'ID' }, width: 60, pin: 'left' },
+      { dataId: 'firstName', header: { label: 'First Name' }, width: 150 },
+      { dataId: 'lastName', header: { label: 'Last Name' }, width: 150 },
+      { dataId: 'address', header: { label: 'Address' }, width: 300, pin: 'right' },
+    ],
+  };
+
+  render(
+    <ReqoreUIProvider>
+      <ReqoreLayoutContent>
+        <ReqoreTable {...data} />
+      </ReqoreLayoutContent>
+    </ReqoreUIProvider>
+  );
+
+  const body = document.querySelector('.reqore-table-body')!;
+  const header = document.querySelector('.reqore-table-header-wrapper')!;
+  // jsdom lays nothing out: nothing is wider than its viewport, nothing is hidden.
+  expect(body.getAttribute('data-reqore-table-overflow')).toBeNull();
+  expect(header.getAttribute('data-reqore-table-overflow')).toBeNull();
+
+  // A viewport narrower than its columns, scrolled to the start: columns are
+  // hidden to the right, under the right-pinned edge only.
+  Object.defineProperty(body, 'scrollWidth', { configurable: true, value: 660 });
+  Object.defineProperty(body, 'clientWidth', { configurable: true, value: 400 });
+  body.scrollLeft = 0;
+  fireEvent.scroll(body);
+  expect(body.getAttribute('data-reqore-table-overflow')).toBe('right');
+  expect(header.getAttribute('data-reqore-table-overflow')).toBe('right');
+
+  // Part-way: hidden under both edges.
+  body.scrollLeft = 100;
+  fireEvent.scroll(body);
+  expect(body.getAttribute('data-reqore-table-overflow')).toBe('left right');
+
+  // Scrolled to the end: only the left-pinned edge has columns under it.
+  body.scrollLeft = 260;
+  fireEvent.scroll(body);
+  expect(body.getAttribute('data-reqore-table-overflow')).toBe('left');
+  expect(header.getAttribute('data-reqore-table-overflow')).toBe('left');
+
+  // Wide enough again: the mark goes away on both.
+  Object.defineProperty(body, 'clientWidth', { configurable: true, value: 660 });
+  body.scrollLeft = 0;
+  fireEvent.scroll(body);
+  expect(body.getAttribute('data-reqore-table-overflow')).toBeNull();
+  expect(header.getAttribute('data-reqore-table-overflow')).toBeNull();
+});
+
 test('Rows on <Table /> are all selected/deselected when clicking on header', () => {
   const data: IReqoreTableProps = {
     ...tableData,
