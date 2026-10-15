@@ -226,21 +226,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const TABLE_PROPS: Partial<IReqoreTableProps> = {
+  columns,
+  data: rows,
+  selectable: true,
+  rowHeight: 56,
+  flat: true,
+  rounded: true,
+  height: 620,
+  renderExpandedRow: (row) => (
+    <ReqoreP size='small'>{`${(row as IWorkflow).name} — the opened row would show the object's summary here.`}</ReqoreP>
+  ),
+};
+
 const Template = (args: Partial<IReqoreTableProps>) => (
   <ThemedSurface>
-    <ReqoreTable
-      columns={columns}
-      data={rows}
-      selectable
-      rowHeight={56}
-      flat
-      rounded
-      height={620}
-      renderExpandedRow={(row) => (
-        <ReqoreP size='small'>{`${(row as IWorkflow).name} — the opened row would show the object's summary here.`}</ReqoreP>
-      )}
-      {...args}
-    />
+    <ReqoreTable {...TABLE_PROPS} {...args} />
   </ThemedSurface>
 );
 
@@ -367,22 +368,25 @@ export const PinnedActions: Story = {
     },
   },
   render: () => (
-    // A table is drawn inside a panel, and that surface (`theme.panel.main`) is
-    // what a pinned cell paints — so the host here is that surface.
-    <div className='pinned-host' style={{ width: '100%', background: THEMED_SURFACE.panel!.main }}>
-      <Template
-        columns={columns.map((column) =>
-          column.dataId === 'actions' ? { ...column, pin: 'right' } : column
-        )}
-        minimal
-        headerEffect={{ uppercase: false, spaced: 0, weight: 'bold', color: TEXT_3 }}
-        headerDividers={false}
-        selectionStyle='checkbox'
-        expanderPosition='none'
-        actionsRevealOn='hover'
-        sortIndicator='arrow'
-      />
-    </div>
+    <ThemedSurface>
+      {/* A table is drawn inside a panel, and that surface (`theme.panel.main`)
+          is what a pinned cell paints — so the host here is that surface. */}
+      <div className='pinned-host' style={{ width: '100%', background: THEMED_SURFACE.panel!.main }}>
+        <ReqoreTable
+          {...TABLE_PROPS}
+          columns={columns.map((column) =>
+            column.dataId === 'actions' ? { ...column, pin: 'right' } : column
+          )}
+          minimal
+          headerEffect={{ uppercase: false, spaced: 0, weight: 'bold', color: TEXT_3 }}
+          headerDividers={false}
+          selectionStyle='checkbox'
+          expanderPosition='none'
+          actionsRevealOn='hover'
+          sortIndicator='arrow'
+        />
+      </div>
+    </ThemedSurface>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
