@@ -1,5 +1,5 @@
 import { rgba } from 'polished';
-import { forwardRef, memo, useMemo } from 'react';
+import { forwardRef, memo, useCallback, useMemo } from 'react';
 import { css } from 'styled-components';
 import styled, { omitStyleProps, REQORE_CONTROL_GROUP_CHILD_PROPS } from '../../helpers/styled';
 import {
@@ -413,6 +413,23 @@ export const ReqoreCallout = memo(
         [theme, effect, background, surface]
       );
       const text = useMemo(() => getReadableTextOn(theme, backgrounds), [theme, backgrounds]);
+      // softer than the label, as far as it stays readable: one object while it holds, for a memo component
+      const descriptionLook = useMemo(
+        () => ({
+          ...descriptionEffect,
+          opacity: getReadableAlpha(text, backgrounds, descriptionEffect?.opacity ?? 0.78),
+        }),
+        [descriptionEffect, text, backgrounds]
+      );
+      // one function for as long as what it calls holds: the close button is a memo component
+      const handleCloseClick = useCallback(
+        (event: React.MouseEvent<any>) => {
+          event.stopPropagation();
+          closeButtonProps?.onClick?.(event);
+          onClose?.();
+        },
+        [closeButtonProps, onClose]
+      );
       // The icon is in its own color, or the intent's, in a shade that stands out by 3:1.
       const resolvedIconColor: TReqoreEffectColor = useMemo(() => {
         if (iconColor) {
@@ -489,11 +506,7 @@ export const ReqoreCallout = memo(
                   <ReqoreP
                     as={getReqoreTextElement(description)}
                     size={descriptionSize}
-                    effect={{
-                      ...descriptionEffect,
-                      // softer than the label, as far as it stays readable
-                      opacity: getReadableAlpha(text, backgrounds, descriptionEffect?.opacity ?? 0.78),
-                    }}
+                    effect={descriptionLook}
                     className='reqore-callout-description'
                   >
                     {description}
@@ -553,11 +566,7 @@ export const ReqoreCallout = memo(
                   minimal={closeButtonProps?.minimal ?? true}
                   flat={closeButtonProps?.flat ?? true}
                   size={closeButtonProps?.size ?? size}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    closeButtonProps?.onClick?.(event);
-                    onClose();
-                  }}
+                  onClick={handleCloseClick}
                   className={`reqore-callout-close ${closeButtonProps?.className ?? ''}`.trim()}
                 />
               </ReqoreControlGroup>

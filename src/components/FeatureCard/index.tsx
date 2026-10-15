@@ -433,6 +433,19 @@ export const ReqoreFeatureCard = memo(
               ),
         [transparent, theme, surface]
       );
+      // fainter than the label, as far as it stays readable on the card: one object while it holds, for a memo
+      // component
+      const descriptionLook = useMemo(
+        () => ({
+          ...descriptionEffect,
+          opacity: getReadableAlpha(
+            getReadableColor(theme, undefined, undefined, true, background),
+            background,
+            descriptionEffect?.opacity ?? 0.72
+          ),
+        }),
+        [descriptionEffect, theme, background]
+      );
 
       return (
         <ReqoreTooltipComponent
@@ -503,15 +516,7 @@ export const ReqoreFeatureCard = memo(
                   as={getReqoreTextElement(description)}
                   size={descriptionSize}
                   customTheme={theme}
-                  effect={{
-                    ...descriptionEffect,
-                    // fainter than the label, as far as it stays readable on the card
-                    opacity: getReadableAlpha(
-                      getReadableColor(theme, undefined, undefined, true, background),
-                      background,
-                      descriptionEffect?.opacity ?? 0.72
-                    ),
-                  }}
+                  effect={descriptionLook}
                   className='reqore-feature-card-description'
                 >
                   {description}

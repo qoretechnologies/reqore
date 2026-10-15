@@ -355,6 +355,19 @@ const ReqoreSegmentedControl = memo(
       );
 
       const itemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+      /* One ref callback per item for the life of the control: an item's button is a memo component, and a
+         new callback with every render was a new prop each time. */
+      const itemRefCallbacks = useRef(new Map<string, (el: HTMLButtonElement | null) => void>());
+      const itemRefFor = (value: string) => {
+        let callback = itemRefCallbacks.current.get(value);
+        if (!callback) {
+          callback = (el) => {
+            itemRefs.current[value] = el;
+          };
+          itemRefCallbacks.current.set(value, callback);
+        }
+        return callback;
+      };
       const wrapperRefs = useRef<Record<string, HTMLDivElement | null>>({});
       const containerRef = useRef<HTMLDivElement>(null);
       const [measureRef, { width: measuredWidth }] = useMeasure();
@@ -572,9 +585,7 @@ const ReqoreSegmentedControl = memo(
                 <ReqoreSurfaceProvider color={isSelected ? indicatorSurface : trackSurface}>
                   <ReqoreButton
                     {...item.props}
-                    ref={(el) => {
-                      itemRefs.current[item.value] = el;
-                    }}
+                    ref={itemRefFor(item.value)}
                     flat
                     transparent
                     // The item's own fields win over its props, but only where they are set.

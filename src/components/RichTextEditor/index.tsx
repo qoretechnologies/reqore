@@ -290,36 +290,43 @@ const usePlaceholderOpacity = (): number => {
   }, [theme, surface]);
 };
 
+const PLACEHOLDER_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  pointerEvents: 'none',
+  userSelect: 'none',
+};
+
+const PARAGRAPH_STYLE: React.CSSProperties = { position: 'relative' };
+
 const Placeholder = ({
   placeholder,
   placeholderProps,
 }: {
   placeholder: string;
   placeholderProps?: IReqoreSpanProps;
-}) => (
-  <ReqoreSpan
-    inline
-    effect={{ opacity: usePlaceholderOpacity() }}
-    {...placeholderProps}
-    contentEditable={false}
-    style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      pointerEvents: 'none',
-      userSelect: 'none',
-      ...placeholderProps?.style,
-    }}
-  >
-    {placeholder}
-  </ReqoreSpan>
-);
+}) => {
+  const opacity = usePlaceholderOpacity();
+  // one object for as long as what it holds holds: the span is a memo component
+  const effect = useMemo(() => ({ opacity }), [opacity]);
+  const ownStyle = placeholderProps?.style;
+  const style = useMemo(
+    () => (ownStyle ? { ...PLACEHOLDER_STYLE, ...ownStyle } : PLACEHOLDER_STYLE),
+    [ownStyle]
+  );
+  return (
+    <ReqoreSpan inline effect={effect} {...placeholderProps} contentEditable={false} style={style}>
+      {placeholder}
+    </ReqoreSpan>
+  );
+};
 
 export const DefaultElement = (
   props: RenderElementProps & { placeholder?: string; placeholderProps?: IReqoreSpanProps }
 ) => (
-  <ReqoreP {...props.attributes} style={{ position: 'relative' }}>
+  <ReqoreP {...props.attributes} style={PARAGRAPH_STYLE}>
     {props.placeholder && (
       <Placeholder placeholder={props.placeholder} placeholderProps={props.placeholderProps} />
     )}

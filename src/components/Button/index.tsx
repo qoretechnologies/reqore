@@ -1077,6 +1077,15 @@ const ReqoreButton = memo(
         () => getButtonIconLook(colorProps, rightIconOwn),
         [colorProps, rightIconOwn]
       );
+      // one object for as long as the opacity holds: an icon is a memo component
+      const leftIconEffect = useMemo(
+        () => ({ opacity: leftIconLook.opacity }),
+        [leftIconLook.opacity]
+      );
+      const rightIconEffect = useMemo(
+        () => ({ opacity: rightIconLook.opacity }),
+        [rightIconLook.opacity]
+      );
       // What the button holds (its badges, a label given as a node) is drawn on the button.
       const restingBackground = useMemo(() => getButtonColors(colorProps).backgrounds, [colorProps]);
 
@@ -1144,9 +1153,7 @@ const ReqoreButton = memo(
                     size={size}
                     color={leftIconLook.color ?? leftIconOwn}
                     compact
-                    effect={{
-                      opacity: leftIconLook.opacity,
-                    }}
+                    effect={leftIconEffect}
                     {...leftIconRest}
                     style={
                       textAlign !== 'left' || iconsAlign === 'center' || !_children
@@ -1257,9 +1264,7 @@ const ReqoreButton = memo(
                     icon={rightIcon}
                     size={size}
                     color={rightIconLook.color ?? rightIconOwn}
-                    effect={{
-                      opacity: rightIconLook.opacity,
-                    }}
+                    effect={rightIconEffect}
                     {...rightIconRest}
                     style={
                       textAlign !== 'right' || iconsAlign === 'center'
