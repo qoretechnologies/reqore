@@ -3,7 +3,7 @@ import { reactWarnings } from './reactWarnings';
 import { setProjectAnnotations } from '@storybook/react-vite';
 import { createElement } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, expect } from 'vitest';
-import { server } from 'vitest/browser';
+import { commands, server } from 'vitest/browser';
 import * as previewAnnotations from './preview';
 import { lowContrastIn } from '../src/stories/utils/contrastGate';
 import { reactWarningsFailure, type IReactWarning } from '../src/stories/utils/reactWarningGate';
@@ -37,7 +37,11 @@ const annotations = setProjectAnnotations([
        a tag the story only has once it runs - spread into it from a shared object - is not one of
        them, and the story would run here, on the desktop, with a mouse. It fails instead, saying
        how to tag it. */
-    beforeEach: ({ tags, title, name }) => {
+    beforeEach: async ({ tags, title, name }) => {
+      /* A story runs with the motion the user would see, unless it is about reduced motion (tagged
+         `reduced-motion`): the contrast gate after the story before it asked for reduced motion. */
+      await commands.emulateReducedMotion(tags.includes('reduced-motion'));
+
       if (tags.includes('touch') && !onThePhone()) {
         throw new Error(
           `"${title} / ${name}" is tagged 'touch' only once it runs, so it ran in the ` +
@@ -136,8 +140,10 @@ afterAll(() => {
 /* No story draws text or an icon too close to what it is drawn on (`src/stories/utils/contrastGate.ts`, qorus#646:
    David's review found black text on dark gray): text at 4.5:1 (3:1 when large) by axe-core, measured over the
    background it is drawn on - a translucent one over what is under it, a gradient as each of its colors - and an
-   icon at 3:1, as the Qorus IDE's story run checks its own. Measured once the story has settled, in its theme. */
+   icon at 3:1, as the Qorus IDE's story run checks its own. Measured once the story has settled, in its theme, and
+   under reduced motion, which Reqore honours: what stays on screen, never a frame of a fade or a spring. */
 afterEach(async () => {
+  await commands.emulateReducedMotion(true);
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
   );
@@ -146,3 +152,10 @@ afterEach(async () => {
     'text (4.5:1, large 3:1) or icons (3:1) too close to what they are drawn on'
   ).toEqual([]);
 });
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    /** Asks for reduced motion, or stops asking (vitest.config.ts). */
+    emulateReducedMotion: (reduce: boolean) => Promise<void>;
+  }
+}
