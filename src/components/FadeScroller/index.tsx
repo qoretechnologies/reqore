@@ -355,7 +355,7 @@ export const ReqoreFadeScroller = memo(
       const scrollRef = useRef<HTMLDivElement>(null);
       const trackRef = useRef<HTMLDivElement>(null);
       const groupRef = useRef<HTMLDivElement>(null);
-      const { targetRef } = useCombinedRefs<HTMLDivElement>(ref);
+      const { targetRef, setRef } = useCombinedRefs<HTMLDivElement>(ref);
       // Someone who asked their OS for less motion gets the plain row: no copy,
       // no animation, and the fades measured like any other row.
       const reducedMotion = useMemo(
@@ -492,7 +492,7 @@ export const ReqoreFadeScroller = memo(
           {...rest}
           Component={StyledFadeScrollerWrapper}
           tooltip={tooltip}
-          ref={targetRef}
+          ref={setRef}
           theme={theme}
           className={[
             className || '',

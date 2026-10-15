@@ -956,7 +956,7 @@ const ReqoreButton = memo(
       const theme = useReqoreTheme('main', customTheme, intent);
       const surface = useReqoreSurface();
       const fixedEffect = useReqoreEffect('buttons', theme, effect);
-      const { targetRef } = useCombinedRefs(ref);
+      const { targetRef, setRef } = useCombinedRefs(ref);
 
       // Square chips have no horizontal padding, so the content would
       // stick to the left edge if we kept `textAlign`'s usual `'left'`
@@ -1137,7 +1137,7 @@ const ReqoreButton = memo(
             ...REQORE_MARQUEE_HOST,
           }}
           Component={StyledButton}
-          ref={targetRef}
+          ref={setRef}
         >
           <ReqoreSurfaceProvider color={restingBackground}>
             <StyledButtonContent size={size} wrap={wrap} description={description} flat={_flat}>

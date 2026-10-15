@@ -388,7 +388,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
     }: IReqoreInputProps,
     ref
   ) => {
-    const { targetRef } = useCombinedRefs(ref);
+    const { setRef } = useCombinedRefs(ref);
     const [inputRef, setInputRef] = useState<HTMLInputElement>(null);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const generatedId = useId();
@@ -501,7 +501,7 @@ const ReqoreInput = forwardRef<HTMLDivElement, IReqoreInputProps>(
         radiusSize={radiusSize}
         minimal={minimal}
         _size={size}
-        ref={targetRef}
+        ref={setRef}
         readOnly={readOnly || loading}
         disabled={rest.disabled}
         style={wrapperStyle}

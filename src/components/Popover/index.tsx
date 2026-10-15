@@ -221,7 +221,7 @@ export const ReqorePopover = memo(
       const tooltips = useReqoreProperty('tooltips');
       const closePopoversOnEscPress = useReqoreProperty('closePopoversOnEscPress');
 
-      const { targetRef } = useCombinedRefs(ref);
+      const { setRef } = useCombinedRefs(ref);
       const [componentRef, setComponentRef] = React.useState(null);
       const popperRef = useRef(null);
 
@@ -845,10 +845,13 @@ export const ReqorePopover = memo(
         hoverGate,
       ]);
 
-      const handleRef = useCallback((r) => {
-        setComponentRef(r);
-        targetRef.current = r;
-      }, []);
+      const handleRef = useCallback(
+        (r) => {
+          setComponentRef(r);
+          setRef(r);
+        },
+        [setRef]
+      );
 
       // Theme props are meaningful to Reqore/custom components, but React
       // warns if they are forwarded to a native trigger such as `span`.

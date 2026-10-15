@@ -1389,7 +1389,7 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
        hover gate on StyledPanel). */
     const isHoverCapable = useReqoreProperty('isHoverCapable');
     const floatingActions = !!floatingActionsProp && isHoverCapable !== false;
-    const { targetRef } = useCombinedRefs(ref);
+    const { setRef } = useCombinedRefs(ref);
     const [measureRef, { width }] = useMeasure();
     const [_isHovered, setIsHovered] = useState(false);
     const floatingActionsRef = useRef<HTMLDivElement>(null);
@@ -2326,15 +2326,18 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       [label]
     );
 
-    const handleRef = useCallback((ref) => {
-      let _ref = ref;
+    const handleRef = useCallback(
+      (ref) => {
+        let _ref = ref;
 
-      if (ref?.resizable) {
-        _ref = ref.resizable;
-      }
+        if (ref?.resizable) {
+          _ref = ref.resizable;
+        }
 
-      targetRef.current = _ref;
-    }, []);
+        setRef(_ref);
+      },
+      [setRef]
+    );
 
     if (skeleton) {
       return <ReqorePanelSkeleton size={panelSize} isCollapsed={_isCollapsed} />;
