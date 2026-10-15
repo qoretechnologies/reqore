@@ -1,13 +1,8 @@
 import { rgba } from 'polished';
 import React, { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 import styled, { css } from 'styled-components';
-import {
-  GAP_FROM_SIZE,
-  PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { GAP_FROM_SIZE, PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -163,7 +158,7 @@ const StyledAccordionHeader = styled.div<IStyledAccordionHeader>`
     return rgba(changeLightness(getMainBackgroundColor(theme), 0.03), opacity);
   }};
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getTextSize(theme, size)}px;
 
   ${StyledIconWrapper} {
     transform: scale(${INACTIVE_ICON_SCALE});
@@ -209,7 +204,7 @@ const StyledAccordionContentInner = styled.div<{ theme: IReqoreTheme; size: TSiz
 
 const StyledAccordionContentBody = styled.div<{ theme: IReqoreTheme; size: TSizes }>`
   padding: ${({ size }) => `${PADDING_FROM_SIZE[size] * 3}px ${PADDING_FROM_SIZE[size] * 4.6}px`};
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getTextSize(theme, size)}px;
   color: ${({ theme }) => getReadableColor(theme, undefined, undefined, true)};
   background-color: ${({ theme }) => rgba(getPanelBackgroundColor(theme), 1)};
   border-top: 1px solid ${({ theme }) => changeLightness(getMainBackgroundColor(theme), 0.05)};

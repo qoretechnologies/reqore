@@ -10,7 +10,7 @@
  */
 import styled from 'styled-components';
 import { MONO_FONT } from '../../constants/fonts';
-import { TEXT_FROM_SIZE } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { structuredValueTooltip } from '../../helpers/selectItem';
 import type { IReqoreTagProps } from '../Tag';
 import type { TReqoreSelectItem, TReqoreSelectValue } from '.';
@@ -35,10 +35,10 @@ import type { TReqoreSelectItem, TReqoreSelectValue } from '.';
 const StyledValuePreview = styled.span`
   display: block;
   font-family: ${MONO_FONT};
-  /* The scale, not the number it currently resolves to. 12px IS
-     TEXT_FROM_SIZE.small, so writing the literal changes nothing today and
-     silently stops tracking the day the scale moves. */
-  font-size: ${TEXT_FROM_SIZE.small}px;
+  /* The scale, not the number it currently resolves to: the theme's \`small\`
+     running-text size (12px on Reqore's own scale), so the preview tracks the
+     scale when it moves, a theme's \`typeScale\` included. */
+  font-size: ${({ theme }) => getTextSize(theme, 'small')}px;
   white-space: pre;
 `;
 

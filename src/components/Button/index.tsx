@@ -7,7 +7,6 @@ import styled, { css, keyframes } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
-  CONTROL_TEXT_FROM_SIZE,
   CONTROL_VERTICAL_PADDING_FROM_SIZE,
   CONTROL_VERTICAL_PADDING_MODIFIER_FROM_SIZE,
   ICON_FROM_SIZE,
@@ -18,6 +17,7 @@ import {
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreCustomTheme, IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -365,7 +365,7 @@ export const StyledButton = styled(StyledEffect).withConfig({
         ? CONTROL_VERTICAL_PADDING_FROM_SIZE[size]
         : CONTROL_HORIZONTAL_PADDING_FROM_SIZE[size]
     }px`};
-  font-size: ${({ size }) => CONTROL_TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getControlTextSize(theme, size)}px;
   outline-offset: -2px;
 
   min-height: ${({ size, verticalPadding = 'normal' }) =>

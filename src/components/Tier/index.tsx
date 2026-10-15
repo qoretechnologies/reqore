@@ -2,7 +2,8 @@ import { isNumber } from 'lodash';
 import { mix, rgba } from 'polished';
 import { memo, useMemo } from 'react';
 import styled from 'styled-components';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   getOpaqueColor,
@@ -520,7 +521,7 @@ const ReqoreModernTier = memo(
     const accentIntent = highlight ? intent : undefined;
     const colors = useMemo(() => getTierColors(theme, accentIntent), [theme, accentIntent]);
     const gap = TIER_GAP_FROM_SIZE[size];
-    const textSize = TEXT_FROM_SIZE[size];
+    const textSize = getTextSize(theme, size);
     const lineHeight = Math.round(textSize * TIER_LINE_HEIGHT);
 
     // A highlighted tier: a faint wash of its accent, its border, and a soft shadow in the same

@@ -27,9 +27,9 @@ import {
   PADDING_FROM_SIZE,
   resolveRadius,
   SPECIAL_PADDING_FROM_SIZE,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -852,12 +852,12 @@ export const StyledPanelTitle = styled.div.withConfig({
   ${({ $descriptionFontPx }) =>
     !!$descriptionFontPx &&
     css`
-      /* The description is a fixed px from \`TEXT_FROM_SIZE\` and knows nothing about the title
-         having shrunk, so a fitted title crosses under it: at the 12px floor the support text
-         renders at 15px and outranks the heading it supports. Scaling it by the SAME factor the
-         title took keeps the two in their original proportion instead of giving the description
-         a fit of its own — which would size it against its own box and let the pair drift apart
-         again, in the other direction. */
+      /* The description is a fixed px from the type scale (\`getTextSize\`) and knows nothing
+         about the title having shrunk, so a fitted title crosses under it: at the 12px floor
+         the support text renders at 15px and outranks the heading it supports. Scaling it by
+         the SAME factor the title took keeps the two in their original proportion instead of
+         giving the description a fit of its own — which would size it against its own box and
+         let the pair drift apart again, in the other direction. */
       .reqore-panel-title-description {
         font-size: ${$descriptionFontPx}px;
       }
@@ -1054,7 +1054,7 @@ export const StyledPanelContent = styled.div<IStyledPanel>`
   min-height: 0;
   overflow: auto;
   overflow-wrap: anywhere;
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size, theme }) => getTextSize(theme, size)}px;
 `;
 
 /** The media frame. Its outer corners take the panel's inner curve, so the media is clipped to
@@ -1955,7 +1955,10 @@ export const ReqorePanel = forwardRef<HTMLDivElement, IReqorePanelProps>(
       fitLabel && !descriptionEffect?.textSize && labelFitPx < labelNaturalPx
         ? Math.max(
             FIT_TEXT_FLOOR_PX,
-            Math.round((TEXT_FROM_SIZE[panelSize] ?? TEXT_FROM_SIZE.normal) * (labelFitPx / labelNaturalPx))
+            Math.round(
+              (getTextSize(theme, panelSize) ?? getTextSize(theme, 'normal')) *
+                (labelFitPx / labelNaturalPx)
+            )
           )
         : 0;
 

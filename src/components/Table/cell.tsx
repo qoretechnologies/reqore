@@ -2,7 +2,8 @@ import { lighten, rgba } from 'polished';
 import { forwardRef, memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { IReqoreTableColumn } from '.';
-import { TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeLightness,
@@ -153,7 +154,7 @@ export const StyledTableCell = styled.div.withConfig({
 
       padding: ${!padded || padded === 'both' || padded === 'vertical' ? (wrap ? '6px' : 0) : undefined}
         ${!padded || padded === 'both' || padded === 'horizontal' ? '10px' : undefined};
-      font-size: ${TEXT_FROM_SIZE[size]}px;
+      font-size: ${getTextSize(theme, size)}px;
       background: ${pinnedBackground ??
       (backgroundColor === 'transparent' ? 'transparent' : displayedBackgroundColor)};
       color: ${getReadableColorFrom(getOriginalBackgroundColor(), !hovered)};

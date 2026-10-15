@@ -3,7 +3,8 @@ import { HTMLAttributes } from 'react';
 import styled, { css, keyframes } from 'styled-components';
 import { Colors } from '../../constants/colors';
 import { getFontFamily, TReqoreFontFamilyShorthand } from '../../constants/fonts';
-import { TEXT_FROM_SIZE, TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
+import { TSizes, WEIGHT_TO_NUMBER } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -698,11 +699,11 @@ ${({ effect }: IReqoreTextEffectProps) =>
         `
       : undefined}
 
-  ${({ effect }: IReqoreTextEffectProps) =>
+  ${({ effect, theme }: IReqoreTextEffectProps) =>
     effect && effect.textSize
       ? css`
           font-size: ${isStringSize(effect.textSize)
-            ? `${TEXT_FROM_SIZE[effect.textSize]}px`
+            ? `${getTextSize(theme, effect.textSize as TSizes)}px`
             : effect.textSize} !important;
         `
       : undefined}

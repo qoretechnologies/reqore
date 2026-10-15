@@ -4,13 +4,13 @@ import React, { forwardRef, useCallback, useId, useLayoutEffect, useRef, useStat
 import styled, { css } from 'styled-components';
 import { CONTROL_ICON_OPACITY } from '../../constants/colors';
 import {
-  CONTROL_TEXT_FROM_SIZE,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
   resolveRadius,
   SIZE_TO_PX,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
@@ -126,7 +126,7 @@ export const StyledInputWrapper = styled.div.withConfig({
   min-width: 60px;
   flex: ${({ fluid, fixed }) => (fixed ? '0 auto' : fluid ? '1 auto' : '0 1 auto')};
   align-self: ${({ fixed, fluid }) => (fixed ? 'flex-start' : fluid ? 'stretch' : undefined)};
-  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size, theme }) => getControlTextSize(theme, _size)}px;
   position: relative;
   overflow: hidden;
   border-radius: ${({ minimal, rounded, _size, radiusSize, pill }) =>
@@ -224,7 +224,7 @@ export const StyledInput = styled(StyledEffect).withConfig({
   padding-left: ${({ hasIcon, _size }) => (hasIcon ? SIZE_TO_PX[_size] : 7)}px;
   /* The page's font (or the theme's), not the browser's form-control font. */
   font-family: inherit;
-  font-size: ${({ _size }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size, theme }) => getControlTextSize(theme, _size)}px;
   transition: all 0.2s ease-out;
   border-radius: inherit;
 

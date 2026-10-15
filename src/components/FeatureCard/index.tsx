@@ -6,9 +6,9 @@ import {
   PADDING_FROM_SIZE,
   RADIUS_FROM_SIZE,
   resolveRadius,
-  TEXT_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeLightness,
@@ -218,7 +218,7 @@ const StyledFeatureCardMarker = styled.div<{
   align-items: flex-start;
   color: ${({ theme, intent }) =>
     intent ? theme.intents[intent] : changeLightness(getMainBackgroundColor(theme), 0.22)};
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size] * 1.4}px;
+  font-size: ${({ size, theme }) => getTextSize(theme, size) * 1.4}px;
   font-weight: 900;
   line-height: 0.9;
 
@@ -248,8 +248,8 @@ const StyledFeatureCardMarker = styled.div<{
       ? css`
           align-items: center;
           justify-content: center;
-          width: ${TEXT_FROM_SIZE[size] * 2.2}px;
-          height: ${TEXT_FROM_SIZE[size] * 2.2}px;
+          width: ${getTextSize(theme, size) * 2.2}px;
+          height: ${getTextSize(theme, size) * 2.2}px;
           border-radius: ${RADIUS_FROM_SIZE[size]}px;
           background: ${rgba(
             intent

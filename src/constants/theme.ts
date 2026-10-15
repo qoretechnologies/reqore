@@ -1,6 +1,7 @@
 import { IReqoreEffect, TReqoreEffectColor, TReqoreHexColor } from '../components/Effect';
 import { Colors } from './colors';
 import { TReqoreFontFamilyShorthand } from './fonts';
+import { TSizes } from './sizes';
 
 export interface IReqoreSidebarTheme {
   main?: TReqoreHexColor;
@@ -71,6 +72,39 @@ export interface IReqorePanelTheme {
   border?: TReqoreHexColor;
 }
 
+/**
+ * The px every `size` renders its text at, decided once for the whole app. Each table names only
+ * the sizes it changes; a size it leaves out — and every size when `typeScale` is unset — keeps
+ * Reqore's own value (`TEXT_FROM_SIZE`, `CONTROL_TEXT_FROM_SIZE`, `TAG_TEXT_FROM_SIZE`), so a
+ * theme without it renders exactly as before.
+ *
+ * What a component derives from its text size (a feature card's title at 1.4×, a data view's
+ * secondary line a pixel smaller, the width a tab list measures a label at) is derived from the
+ * theme's value. Box heights are not type: a button, an input, a tag or a table row keeps its
+ * height from the size, and its text is centred in it.
+ */
+export interface IReqoreTypeScale {
+  /**
+   * px per size for running text: ReqoreP, ReqoreSpan, ReqoreLink, table cells,
+   * panel/accordion/callout/bubble/notification/dataview text, `effect.textSize` given as a
+   * size name (which is how table header cells are sized: one size below the table's).
+   */
+  text?: Partial<Record<TSizes, number>>;
+  /**
+   * px per size for controls: buttons, inputs, textareas, tabs, checkboxes, segmented control,
+   * progress, a tag's actions.
+   */
+  control?: Partial<Record<TSizes, number>>;
+  /** px per size for tags, badges and keyboard keys. */
+  tag?: Partial<Record<TSizes, number>>;
+  /**
+   * Unitless line height for running text, set where `theme.fontFamily` is set (the layout
+   * wrapper and the portal popovers, modals and drawers render into) and inherited from there.
+   * Unset, neither names one: the browser's `normal` applies, as before.
+   */
+  lineHeight?: number;
+}
+
 export interface IReqoreTheme {
   main: TReqoreHexColor;
   originalMain?: TReqoreHexColor;
@@ -91,6 +125,8 @@ export interface IReqoreTheme {
    * Unset (the default), the wrapper and the portal name no font: the page's font reaches them.
    */
   fontFamily?: TReqoreFontFamilyShorthand | string;
+  /** Text sizes and line height for the whole app. See `IReqoreTypeScale`. */
+  typeScale?: IReqoreTypeScale;
   intents: IReqoreIntents;
   sidebar?: IReqoreSidebarTheme;
   notifications: IReqoreIntents;

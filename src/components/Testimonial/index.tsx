@@ -1,12 +1,8 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import {
-  PADDING_FROM_SIZE,
-  resolveRadius,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, resolveRadius, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import {
   changeLightness,
@@ -215,7 +211,7 @@ const StyledQuoteIconWrapper = styled.div<{
 `;
 
 const StyledQuote = styled.div<{ $wrap: boolean; size: TSizes; theme: IReqoreTheme }>`
-  font-size: ${({ size }) => TEXT_FROM_SIZE[size] * 1.1}px;
+  font-size: ${({ size, theme }) => getTextSize(theme, size) * 1.1}px;
   line-height: 1.5;
   font-weight: 500;
   font-style: italic;

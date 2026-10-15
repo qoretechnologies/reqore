@@ -12,7 +12,6 @@ import { useMeasure, useUpdateEffect } from 'react-use';
 import styled, { css } from 'styled-components';
 import {
   CONTROL_HORIZONTAL_PADDING_FROM_SIZE,
-  CONTROL_TEXT_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
   PILL_RADIUS_MODIFIER,
@@ -21,6 +20,7 @@ import {
 } from '../../constants/sizes';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { changeLightness, getReadableColorFrom } from '../../helpers/colors';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels } from '../../helpers/utils';
 import { useReqoreProperty } from '../../hooks/useReqoreContext';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -211,7 +211,8 @@ const StyledItemWrapper = styled.div<{
  */
 const estimateItemWidth = (
   item: IReqoreSegmentedControlItem,
-  itemSize: TSizes = 'normal'
+  itemSize: TSizes = 'normal',
+  theme?: IReqoreTheme
 ): number => {
   const hPad = CONTROL_HORIZONTAL_PADDING_FROM_SIZE[itemSize];
   let width = hPad * 2;
@@ -219,7 +220,7 @@ const estimateItemWidth = (
   if (item.label) {
     width += calculateStringSizeInPixels(
       item.label.toString(),
-      CONTROL_TEXT_FROM_SIZE[itemSize]
+      getControlTextSize(theme, itemSize)
     );
   }
 
@@ -242,7 +243,8 @@ const getItemsLength = (
   items: (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[],
   itemSize: TSizes = 'normal',
   selectedValue?: string,
-  overflowLabel: string = 'More'
+  overflowLabel: string = 'More',
+  theme?: IReqoreTheme
 ): number =>
   items.reduce((len, item) => {
     if (Array.isArray(item)) {
@@ -255,12 +257,12 @@ const getItemsLength = (
       const iconWidth = ICON_FROM_SIZE[itemSize] + PADDING_FROM_SIZE[itemSize] / 2;
       const labelWidth = calculateStringSizeInPixels(
         moreLabel.toString(),
-        CONTROL_TEXT_FROM_SIZE[itemSize]
+        getControlTextSize(theme, itemSize)
       );
       return len + hPad * 2 + iconWidth + labelWidth;
     }
 
-    return len + estimateItemWidth(item, itemSize);
+    return len + estimateItemWidth(item, itemSize, theme);
   }, 0);
 
 /**
@@ -273,7 +275,8 @@ const getTransformedItems = (
   availableWidth: number,
   itemSize: TSizes = 'normal',
   selectedValue?: string,
-  overflowLabel: string = 'More'
+  overflowLabel: string = 'More',
+  theme?: IReqoreTheme
 ): (IReqoreSegmentedControlItem | IReqoreSegmentedControlItem[])[] => {
   if (!availableWidth) {
     return items;
@@ -282,7 +285,7 @@ const getTransformedItems = (
   let newItems = [...items];
 
   while (
-    getItemsLength(newItems, itemSize, selectedValue, overflowLabel) > availableWidth &&
+    getItemsLength(newItems, itemSize, selectedValue, overflowLabel, theme) > availableWidth &&
     newItems.length > 1
   ) {
     const last = newItems[newItems.length - 1];
@@ -358,8 +361,8 @@ const ReqoreSegmentedControl = memo(
 
       // Transform items using the Tabs-style width estimation approach
       const transformedItems = useMemo(
-        () => getTransformedItems(items, availableWidth, size, _value, overflowLabel),
-        [items, availableWidth, size, _value, overflowLabel]
+        () => getTransformedItems(items, availableWidth, size, _value, overflowLabel, theme),
+        [items, availableWidth, size, _value, overflowLabel, theme]
       );
 
       // Split into visible items and hidden items (the More group)

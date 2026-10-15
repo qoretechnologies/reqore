@@ -1,12 +1,8 @@
 import { rgba } from 'polished';
 import { forwardRef, memo, useMemo } from 'react';
 import styled, { css } from 'styled-components';
-import {
-  PADDING_FROM_SIZE,
-  resolveRadius,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { PADDING_FROM_SIZE, resolveRadius, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import {
   changeLightness,
@@ -305,8 +301,8 @@ const StyledCalloutContent = styled(StyledTextEffect)<{
   $underLabel?: boolean;
 }>`
   color: ${({ theme }) => rgba(getReadableColor(theme, undefined, undefined, true), 0.84)};
-  font-size: ${({ size = 'normal', $underLabel }) =>
-    TEXT_FROM_SIZE[size] * ($underLabel ? 1 : 1.2)}px;
+  font-size: ${({ size = 'normal', $underLabel, theme }) =>
+    getTextSize(theme, size as TSizes) * ($underLabel ? 1 : 1.2)}px;
   line-height: 1.25;
 `;
 

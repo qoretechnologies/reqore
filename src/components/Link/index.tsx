@@ -1,6 +1,7 @@
 import { forwardRef, memo, useMemo, MouseEvent } from 'react';
 import styled, { css } from 'styled-components';
-import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { changeLightness } from '../../helpers/colors';
 import { isStringSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
@@ -165,8 +166,12 @@ export const StyledLink = styled(StyledSpan)<IReqoreLinkStyle>`
   background: transparent;
   font-family: inherit;
   font-weight: inherit;
-  font-size: ${({ _size }) =>
-    _size ? (isStringSize(_size) ? `${TEXT_FROM_SIZE[_size]}px` : _size) : 'inherit'};
+  font-size: ${({ _size, theme }) =>
+    _size
+      ? isStringSize(_size)
+        ? `${getTextSize(theme, _size as TSizes)}px`
+        : _size
+      : 'inherit'};
   text-align: left;
   cursor: pointer;
   /* Doubled selector raises specificity above the Layout's global

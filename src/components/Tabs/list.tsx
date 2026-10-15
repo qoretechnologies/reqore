@@ -5,7 +5,6 @@ import styled, { css } from 'styled-components';
 import { IReqoreTabsListItem, IReqoreTabsProps } from '.';
 import { ReqorePopover } from '../..';
 import {
-  CONTROL_TEXT_FROM_SIZE,
   GAP_FROM_SIZE,
   ICON_FROM_SIZE,
   PADDING_FROM_SIZE,
@@ -20,6 +19,7 @@ import {
   getNthGradientColor,
 } from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { calculateStringSizeInPixels, getOneLessSize } from '../../helpers/utils';
 import { useReqoreTheme } from '../../hooks/useTheme';
 import { IReqoreBreadcrumbItem } from '../Breadcrumbs';
@@ -130,23 +130,30 @@ const getMoreLabel = (
   return overflowLabel;
 };
 
-const getBadgeLength = (badge: IReqoreButtonProps['badge'], tabsSize: TSizes = 'normal') => {
+const getBadgeLength = (
+  badge: IReqoreButtonProps['badge'],
+  tabsSize: TSizes = 'normal',
+  theme?: IReqoreTheme
+) => {
   if (!badge) {
     return 0;
   }
 
   if (isArray(badge)) {
-    return badge.reduce((len, b) => len + getBadgeLength(b), 0);
+    return badge.reduce((len, b) => len + getBadgeLength(b, undefined, theme), 0);
   }
 
   if (isObject(badge)) {
-    return getLabelLength(badge, undefined, getOneLessSize(tabsSize)) + PADDING_FROM_SIZE[tabsSize];
+    return (
+      getLabelLength(badge, undefined, getOneLessSize(tabsSize), theme) +
+      PADDING_FROM_SIZE[tabsSize]
+    );
   }
 
   return (
     calculateStringSizeInPixels(
       badge.toString(),
-      CONTROL_TEXT_FROM_SIZE[getOneLessSize(tabsSize)]
+      getControlTextSize(theme, getOneLessSize(tabsSize))
     ) + PADDING_FROM_SIZE[tabsSize]
   );
 };
@@ -154,7 +161,9 @@ const getBadgeLength = (badge: IReqoreButtonProps['badge'], tabsSize: TSizes = '
 export const getLabelLength = (
   item: IReqoreBreadcrumbItem | IReqoreTabsListItem | IReqoreTabsListItem[] | IReqoreTagProps,
   activeTab?: string | number,
-  tabsSize: TSizes = 'normal'
+  tabsSize: TSizes = 'normal',
+  /** The theme whose `typeScale` the labels render at; Reqore's own scale without one. */
+  theme?: IReqoreTheme
 ) => {
   if (!item) {
     return 0;
@@ -174,18 +183,18 @@ export const getLabelLength = (
       : ICON_FROM_SIZE[tabsSize] * 2;
   const badgeLength = isArray(item)
     ? 0
-    : getBadgeLength((item as IReqoreTabsListItem).badge, tabsSize);
+    : getBadgeLength((item as IReqoreTabsListItem).badge, tabsSize, theme);
   const descriptionLength = isArray(item)
     ? 0
     : calculateStringSizeInPixels(
         (item as IReqoreBreadcrumbItem | IReqoreTabsListItem)?.description?.toString(),
-        CONTROL_TEXT_FROM_SIZE[getOneLessSize(tabsSize)]
+        getControlTextSize(theme, getOneLessSize(tabsSize))
       );
 
   const topLabelLength =
     calculateStringSizeInPixels(
       label?.toString(),
-      CONTROL_TEXT_FROM_SIZE[tabsSize],
+      getControlTextSize(theme, tabsSize),
       (item as IReqoreBreadcrumbItem).effect?.spaced
     ) +
     icon +
@@ -214,11 +223,12 @@ export const getTabsLength = (
   items: (IReqoreTabsListItem | IReqoreTabsListItem[])[],
   type: 'width' | 'height' = 'width',
   activeTab?: string | number,
-  tabsSize?: TSizes
+  tabsSize?: TSizes,
+  theme?: IReqoreTheme
 ): number =>
   items.reduce((len, item) => {
     if (type === 'height') {
-      const rows = getLabelLength(item, activeTab, tabsSize) / 4 || 1;
+      const rows = getLabelLength(item, activeTab, tabsSize, theme) / 4 || 1;
 
       return len + rows * 15 + 10;
     }
@@ -226,7 +236,7 @@ export const getTabsLength = (
     const labelLength: number =
       PADDING_FROM_SIZE[tabsSize] +
       GAP_FROM_SIZE[tabsSize] +
-      getLabelLength(item, activeTab, tabsSize);
+      getLabelLength(item, activeTab, tabsSize, theme);
 
     return len + labelLength;
   }, 0);
@@ -236,14 +246,18 @@ const getTransformedItems = (
   size: number,
   type: 'width' | 'height' = 'width',
   activeTab?: string | number,
-  tabsSize?: TSizes
+  tabsSize?: TSizes,
+  theme?: IReqoreTheme
 ): (IReqoreTabsListItem | IReqoreTabsListItem[])[] => {
   if (!size) {
     return items;
   }
   let newItems = [...items];
 
-  while (getTabsLength(newItems, type, activeTab, tabsSize) > size && newItems.length > 1) {
+  while (
+    getTabsLength(newItems, type, activeTab, tabsSize, theme) > size &&
+    newItems.length > 1
+  ) {
     if (isArray(newItems[newItems.length - 1])) {
       (newItems[newItems.length - 1] as IReqoreTabsListItem[]).unshift(
         newItems[newItems.length - 2] as IReqoreTabsListItem
@@ -365,8 +379,15 @@ const ReqoreTabsList = ({
     () =>
       vertical
         ? filteredItems
-        : getTransformedItems(filteredItems, _testWidth || width, 'width', activeTab, size),
-    [filteredItems, _testWidth, width, vertical, activeTab, size]
+        : getTransformedItems(
+            filteredItems,
+            _testWidth || width,
+            'width',
+            activeTab,
+            size,
+            theme
+          ),
+    [filteredItems, _testWidth, width, vertical, activeTab, size, theme]
   );
 
   return (

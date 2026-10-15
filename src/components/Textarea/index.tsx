@@ -4,12 +4,12 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 import styled, { css } from 'styled-components';
 import { ReqoreDropdown, useReqoreTheme } from '../..';
 import {
-  CONTROL_TEXT_FROM_SIZE,
   resolveRadius,
   SIZE_TO_PX,
   TEXTAREA_PADDING_FROM_SIZE,
   TSizes,
 } from '../../constants/sizes';
+import { getControlTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme } from '../../constants/theme';
 import { changeLightness, getReadableColor } from '../../helpers/colors';
 import { omitStyleProps } from '../../helpers/styled';
@@ -130,13 +130,14 @@ export const StyledTextarea = styled(StyledEffect).withConfig({
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  font-size: ${({ _size = 'normal' }) => CONTROL_TEXT_FROM_SIZE[_size]}px;
+  font-size: ${({ _size = 'normal', theme }) => getControlTextSize(theme, _size as TSizes)}px;
   margin: 0;
   padding: ${({ _size = 'normal' }) => TEXTAREA_PADDING_FROM_SIZE[_size]}px;
   padding-right: ${({ hasClearButton, _size = 'normal' }) =>
     hasClearButton ? `${SIZE_TO_PX[_size]}px` : undefined};
   min-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size]}px;
-  line-height: ${({ _size = 'normal' }) => SIZE_TO_PX[_size] - CONTROL_TEXT_FROM_SIZE[_size]}px;
+  line-height: ${({ _size = 'normal', theme }) =>
+    SIZE_TO_PX[_size] - getControlTextSize(theme, _size as TSizes)}px;
   vertical-align: middle;
   /* Height only. The textarea fills its wrapper, so the browser's default
      \`resize: both\` let a drag narrow the textarea while the wrapper — border,

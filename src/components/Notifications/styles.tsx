@@ -1,6 +1,7 @@
 import { rgba } from 'polished';
 import styled, { css, keyframes } from 'styled-components';
-import { PADDING_FROM_SIZE, TEXT_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { PADDING_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { fadeIn } from '../../helpers/animations';
 import { changeDarkness, changeLightness, getNotificationIntent, getReadableColor } from '../../helpers/colors';
@@ -243,7 +244,7 @@ export const StyledNotificationContent = styled.div`
   margin: 0;
   padding: 0;
   flex: 1;
-  font-size: ${({ size = 'normal' }) => TEXT_FROM_SIZE[size]}px;
+  font-size: ${({ size = 'normal', theme }) => getTextSize(theme, size as TSizes)}px;
   overflow-wrap: anywhere;
   display: flex;
   flex-flow: column;

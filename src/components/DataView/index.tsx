@@ -42,13 +42,8 @@ import {
 } from 'react';
 import { rgba } from 'polished';
 import styled, { css } from 'styled-components';
-import {
-  GAP_FROM_SIZE,
-  PADDING_FROM_SIZE,
-  RADIUS_FROM_SIZE,
-  TEXT_FROM_SIZE,
-  TSizes,
-} from '../../constants/sizes';
+import { GAP_FROM_SIZE, PADDING_FROM_SIZE, RADIUS_FROM_SIZE, TSizes } from '../../constants/sizes';
+import { getTextSize } from '../../helpers/typeScale';
 import { MONO_FONT, getFontFamily } from '../../constants/fonts';
 import { IReqoreTheme, TReqoreIntent } from '../../constants/theme';
 import { TReqoreEffectColor } from '../Effect';
@@ -335,7 +330,7 @@ const Tree = styled.div<IStyledThemeProps>`
   gap: ${({ $size }) => GAP_FROM_SIZE[$size]}px;
   min-width: 0;
   width: 100%;
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size]}px;
+  font-size: ${({ $size, $theme }) => getTextSize($theme, $size)}px;
   color: ${({ $theme }) => $theme.text.color || $theme.main};
 
   /* Force monospace on every tag we render inside the view — keys,
@@ -490,7 +485,7 @@ const ValueCell = styled.div<IStyledThemeProps & { $complex?: boolean }>`
   min-width: 0;
   max-width: 100%;
   font-family: ${MONO_FONT};
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
+  font-size: ${({ $size, $theme }) => getTextSize($theme, $size) - 1}px;
   word-break: break-word;
 
   /* The monospace is for the data, not for the controls in the cell. Buttons and inputs take
@@ -548,7 +543,7 @@ const MultilineValue = styled.pre<IStyledThemeProps & { $interactive?: boolean }
   background: ${rgba(changeLightness('#000000', 0.05), 0.3)};
   color: ${({ $theme }) => getReadableColorFrom(changeLightness($theme.main, 0.1))};
   font-family: ${MONO_FONT};
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 1}px;
+  font-size: ${({ $size, $theme }) => getTextSize($theme, $size) - 1}px;
   font-variant-ligatures: none;
   line-height: 1.45;
   cursor: ${({ $interactive }) => ($interactive ? 'pointer' : 'text')};
@@ -637,7 +632,7 @@ const SectionSummary = styled.summary<IStyledThemeProps>`
   cursor: pointer;
   user-select: none;
   font-family: ${MONO_FONT};
-  font-size: ${({ $size }) => TEXT_FROM_SIZE[$size] - 2}px;
+  font-size: ${({ $size, $theme }) => getTextSize($theme, $size) - 2}px;
   font-weight: 700;
   /* Section labels MUST stay readable — they're the only way the
      operator knows what's nested below. We derive a high-contrast
